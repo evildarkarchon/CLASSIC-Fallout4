@@ -280,6 +280,7 @@ mod ffi {
         name_a: String,
         name_b: String,
         description: String,
+        has_fix: bool,
         fix: String,
         has_link: bool,
         link: String,
@@ -345,6 +346,7 @@ mod ffi {
         name_a: String,
         name_b: String,
         description: String,
+        has_fix: bool,
         fix: String,
         has_link: bool,
         link: String,
@@ -709,6 +711,7 @@ mod ffi {
         LocalIgnoreResetConflict = 1,
         LocalIgnoreResetBackupFailure = 2,
         LocalIgnoreResetReplacementFailure = 3,
+        LocalIgnoreResetDurabilityUnknown = 4,
     }
 
     /// Durable publication stage retained by a Local Ignore reset failure.
@@ -873,6 +876,10 @@ mod ffi {
         actual_identity: ScanRunYamlDataContentIdentityDto,
         has_backup_path: bool,
         backup_path: String,
+        has_durability_receipt: bool,
+        malformed_identity: ScanRunYamlDataContentIdentityDto,
+        backup_identity: ScanRunYamlDataContentIdentityDto,
+        replacement_identity: ScanRunYamlDataContentIdentityDto,
     }
 
     /// Exactly one of `result`, `error`, or `resume_error`, identified by presence flags.

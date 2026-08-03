@@ -597,6 +597,7 @@ def test_local_ignore_reset_projects_defaults_unavailable_and_error_hierarchy(
         classic_config.LocalIgnoreResetBackupPublicationError,
         classic_config.LocalIgnoreResetBackupVerificationError,
         classic_config.LocalIgnoreResetReplacementPublicationError,
+        classic_config.LocalIgnoreResetReplacementDurabilityUnknownError,
     ):
         assert issubclass(error_type, classic_config.LocalIgnoreResetError)
 

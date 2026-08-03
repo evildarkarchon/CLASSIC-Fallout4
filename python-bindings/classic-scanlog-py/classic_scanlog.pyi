@@ -692,7 +692,13 @@ class ScanRunLocalIgnoreResetBackupError(RuntimeError):
     code: Literal["local_ignore_reset_backup_failure"]
     kind: Literal["local_ignore_reset_backup_failure"]
     path: Path
-    stage: Literal["create", "write", "flush", "sync", "publish"] | None
+    stage: Literal[
+        "create",
+        "write",
+        "flush",
+        "sync",
+        "publish",
+    ] | None
 
 class ScanRunLocalIgnoreResetReplacementError(RuntimeError):
     """Raised when reset fails while publishing retained defaults."""
@@ -700,7 +706,24 @@ class ScanRunLocalIgnoreResetReplacementError(RuntimeError):
     code: Literal["local_ignore_reset_replacement_failure"]
     kind: Literal["local_ignore_reset_replacement_failure"]
     path: Path
-    stage: Literal["create", "write", "flush", "sync", "publish"] | None
+    stage: Literal[
+        "create",
+        "write",
+        "flush",
+        "sync",
+        "publish",
+    ] | None
+
+class ScanRunLocalIgnoreResetDurabilityUnknownError(RuntimeError):
+    """Raised when defaults are visible but canonical replacement durability is unconfirmed."""
+
+    code: Literal["local_ignore_reset_durability_unknown"]
+    kind: Literal["local_ignore_reset_durability_unknown"]
+    path: Path
+    backup_path: Path
+    malformed_identity: ScanRunYamlDataContentIdentity
+    backup_identity: ScanRunYamlDataContentIdentity
+    replacement_identity: ScanRunYamlDataContentIdentity
 
 class ScanRunResult:
     """Complete terminal Crash Log Scan Run result."""
@@ -970,7 +993,7 @@ class ModGuidanceConflictRule:
         name_a: str,
         name_b: str,
         description: str,
-        fix: str,
+        fix: str | None = None,
         link: str | None = None,
     ) -> None: ...
     @property
@@ -984,7 +1007,7 @@ class ModGuidanceConflictRule:
     @property
     def description(self) -> str: ...
     @property
-    def fix(self) -> str: ...
+    def fix(self) -> str | None: ...
     @property
     def link(self) -> str | None: ...
 
@@ -1064,7 +1087,7 @@ class ModConflictGuidance:
     @property
     def description(self) -> str: ...
     @property
-    def fix(self) -> str: ...
+    def fix(self) -> str | None: ...
     @property
     def link(self) -> str | None: ...
 

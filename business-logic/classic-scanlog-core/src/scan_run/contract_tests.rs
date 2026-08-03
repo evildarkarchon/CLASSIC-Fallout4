@@ -9,6 +9,7 @@ use crate::scan_run::{
     CrashLogScanSetupContext, StandardCrashLogScanSource, StandardUnsolvedLogsIntent,
     TargetedCrashLogScanSource,
 };
+use classic_config_core::YamlDataContentIdentity;
 use classic_shared_core::GameId;
 use classic_shared_core::get_runtime;
 use serde::Deserialize;
@@ -71,6 +72,7 @@ struct SharedInfrastructureFailure {
 #[serde(rename_all = "camelCase")]
 struct SharedResetOutcomes {
     replacement_failure_code: String,
+    durability_unknown_code: String,
     backup_must_equal_malformed_bytes: bool,
     pre_reset_cancellation_mutates: bool,
     post_critical_cancellation_status: String,
@@ -957,6 +959,44 @@ fn reset_replacement_publication_failure_projects_stable_typed_details() {
         "publish"
     );
     assert!(failure.message.contains("injected replacement failure"));
+}
+
+/// Durability uncertainty retains the verified backup receipt instead of masquerading as failure.
+#[test]
+fn reset_replacement_durability_unknown_projects_recoverable_receipt() {
+    let expected = shared_reset_outcomes();
+    let path = PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml");
+    let backup_path = PathBuf::from("C:/CLASSIC/CLASSIC Backup/ignore.bak");
+    let malformed_identity = YamlDataContentIdentity::from_bytes(b"malformed");
+    let backup_identity = malformed_identity.clone();
+    let replacement_identity = YamlDataContentIdentity::from_bytes(b"defaults");
+    let error = contract::project_local_ignore_reset_error(
+        classic_config_core::LocalIgnoreResetError::ReplacementDurabilityUnknown {
+            receipt: Box::new(classic_config_core::LocalIgnoreResetDurabilityReceipt {
+                path: path.clone(),
+                backup_path: backup_path.clone(),
+                malformed_identity: malformed_identity.clone(),
+                backup_identity: backup_identity.clone(),
+                replacement_identity: replacement_identity.clone(),
+            }),
+            source: std::io::Error::other("directory sync failed"),
+        },
+    );
+
+    let contract::ResumeError::LocalIgnoreResetDurabilityUnknown(receipt) = &error else {
+        panic!("expected reset durability uncertainty, got {error:?}");
+    };
+    assert_eq!(
+        error.kind(),
+        contract::ResumeErrorKind::LocalIgnoreResetDurabilityUnknown
+    );
+    assert_eq!(error.kind().as_str(), expected.durability_unknown_code);
+    assert_eq!(receipt.path, path);
+    assert_eq!(receipt.backup_path, backup_path);
+    assert_eq!(receipt.malformed_identity, malformed_identity);
+    assert_eq!(receipt.backup_identity, backup_identity);
+    assert_eq!(receipt.replacement_identity, replacement_identity);
+    assert!(receipt.message.contains("directory sync failed"));
 }
 
 /// Cancellation observed before reset begins performs no backup, replacement, or analysis.
@@ -1906,6 +1946,10 @@ fn final_contract_exposes_all_stable_variant_identifiers() {
     assert_eq!(
         contract::ResumeErrorKind::LocalIgnoreResetReplacementFailure.as_str(),
         "local_ignore_reset_replacement_failure"
+    );
+    assert_eq!(
+        contract::ResumeErrorKind::LocalIgnoreResetDurabilityUnknown.as_str(),
+        "local_ignore_reset_durability_unknown"
     );
 
     assert_eq!(

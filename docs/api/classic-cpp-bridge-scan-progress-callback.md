@@ -127,8 +127,10 @@ may receive a corresponding finished event, but never a started event.
 `ScanRunContractExecutionResult` is an explicit result/error envelope. Initial
 execution sets exactly one of `has_result` and `has_error`. Resume sets exactly
 one of `has_result`, `has_error`, and `has_resume_error`; the last distinguishes
-`ContinuationConsumed`, reset conflict, reset backup failure, and reset
-replacement failure with stable codes and applicable structured metadata.
+`ContinuationConsumed`, reset conflict, reset backup failure, reset replacement
+failure, and replacement durability uncertainty with stable codes and
+applicable structured metadata. Durability uncertainty includes canonical and
+verified-backup paths plus malformed, backup, and replacement identities.
 
 The result retains lifecycle status, optional discovery and setup data,
 optional Installed YAML Data metadata, optional effective concurrency,

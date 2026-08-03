@@ -294,7 +294,7 @@ print(f"Version: {classic_scanlog.__version__}")
 
 ### Profile Rust code
 ```bash
-cargo build --release --manifest-path ClassicLib-rs/Cargo.toml
+cargo build --release
 perf record target/release/deps/<crate-or-binary>
 perf report
 ```
@@ -303,5 +303,5 @@ perf report
 
 - [PyO3 0.27 Migration Guide](PyO3-0.27-migration.md) - Detailed migration documentation
 - [PyO3 Documentation](https://pyo3.rs/v0.27.0/) - Official PyO3 documentation
-- [Rust Usage Guide](usage_guide.md) - Using Rust components in CLASSIC
+- [Rust Usage Guide](rust_usage_guide.md) - Using Rust components in CLASSIC
 - [Development with Rust](development_with_rust.md) - Development workflow

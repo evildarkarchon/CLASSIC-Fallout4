@@ -12,7 +12,7 @@ Define requirements for retiring obsolete `classic-pybridge-py` now that the Pyt
 - **THEN** `"python-bindings/classic-pybridge-py"` SHALL NOT appear in the `members` array
 
 #### Scenario: Crate directory absent
-- **WHEN** the `ClassicLib-rs/python-bindings/` directory is listed
+- **WHEN** the `python-bindings/` directory is listed
 - **THEN** no `classic-pybridge-py/` subdirectory SHALL exist
 
 ### Requirement: Python parity tooling no longer expects classic_pybridge

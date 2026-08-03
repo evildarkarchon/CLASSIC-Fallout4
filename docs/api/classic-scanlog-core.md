@@ -177,11 +177,15 @@ input while paused cannot change the resumed run.
 
 Cancellation already observed before Reset To Default begins performs no
 backup, replacement, or analysis. Once the synchronous reset transaction has
-begun, it completes durably before cancellation is observed again; the run then
-returns the ordinary post-discovery `Cancelled` result without analysis. Reset
-conflict, backup failure, and replacement failure are distinct typed
-`ResumeError` variants with stable codes and applicable identities, path, and
-publication stage metadata.
+begun, cancellation is not observed again until publication returns. A
+successful transaction completes durably, then returns the ordinary
+post-discovery `Cancelled` result without analysis when cancellation raced it. Reset
+conflict, backup failure, replacement failure, and replacement durability
+uncertainty are distinct typed `ResumeError` variants with stable codes and
+applicable identities, paths, and publication stage metadata. Durability
+uncertainty uses `local_ignore_reset_durability_unknown` and returns canonical
+and verified-backup paths plus malformed, backup, and replacement identities;
+it is never reported as a successful or cancelled run.
 
 ### Durable finalization
 
@@ -291,10 +295,11 @@ only a complete Crash Log Scan Run needs to coordinate all six results.
   owned `ModGuidanceAnalysisInput` containing plugin load-order ids, optional
   GPU facts, and XSE module names.
 - `ModGuidanceAnalysisResult` preserves typed matched, missing, and GPU-mismatch
-  state together with authored names, descriptions, fixes, links, warnings,
+  state together with authored names, descriptions, optional fixes, links, warnings,
   and matched plugin ids. It carries no headings, group order, icons,
   separators, markdown, or report lines; completed no-match analysis is an
-  explicit empty result.
+  explicit empty result. A conflict without an authored fix remains `None`, and
+  Autoscan Report Assembly omits that remediation line.
 - `PluginEvidenceAnalyzer` validates and normalizes owned game-plugin ignore
   configuration during construction. Its immutable, cloneable `Send + Sync`
   handle accepts one owned `PluginEvidenceAnalysisInput` containing call-stack

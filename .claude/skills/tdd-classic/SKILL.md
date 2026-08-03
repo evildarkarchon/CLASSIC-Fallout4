@@ -3,7 +3,7 @@ name: tdd
 description: Test-Driven Development skill for a Rust-first project with Python, C++, and Node.js bindings. Enforces Red-Green-Refactor cycle with Rust-primary testing patterns and binding-layer verification.
 ---
 
-This skill guides test-driven development for the CLASSIC project. All business logic lives in Rust core crates (`ClassicLib-rs/`). Python, C++, and Node.js are binding layers only. Follow the Red-Green-Refactor cycle strictly: write a failing test first, implement minimal code to pass, then refactor while keeping tests green.
+This skill guides test-driven development for the CLASSIC project. All business logic lives in Rust core crates under `foundation/` and `business-logic/`, in a Cargo workspace rooted at the repository root. Python, C++, and Node.js are binding layers only. Follow the Red-Green-Refactor cycle strictly: write a failing test first, implement minimal code to pass, then refactor while keeping tests green.
 
 ## TDD Workflow
 
@@ -173,95 +173,63 @@ fn test_something() {
 
 ### Test Execution (Rust)
 
+Run these from the repository root; it is the workspace root, so no `--manifest-path` is needed.
+
 ```bash
 # All Rust tests
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
+cargo test --workspace
 
 # Specific crate
-cargo test -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml
+cargo test -p classic-scanlog-core
 
 # With stdout output
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
+cargo test --workspace -- --nocapture
 
 # Specific test by name
-cargo test -p classic-yaml-core --manifest-path ClassicLib-rs/Cargo.toml -- load_modify_save
+cargo test -p classic-settings-core -- load_modify_save
 ```
+
+Set `PYO3_PYTHON` first if the command can build a PyO3 crate — see `AGENTS.md`.
 
 ## Python Testing Patterns (Binding Layer)
 
-Python tests verify that PyO3 bindings expose Rust functionality correctly and that the Python orchestration layer works.
+Python tests are binding smoke tests: they verify that the PyO3 surface exposes Rust
+functionality correctly and returns the expected types. They are **not** where business
+logic gets tested — that belongs in the `-core` crate's Rust tests.
 
-### Binding Tests (`tests/rust_integration/`)
+### Layout
 
-Verify that Rust functions are callable from Python and return expected types:
-
-```python
-@pytest.mark.unit
-def test_rust_yaml_loads_correctly():
-    """Verify PyO3 binding exposes YAML loading."""
-    import classic_yaml
-
-    result = classic_yaml.load_yaml_string("key: value")
-    assert result["key"] == "value"
-```
-
-### Python Orchestration Tests (`tests/`)
-
-For testing Python-layer code that coordinates Rust modules:
+Tests live as flat `test_*.py` modules under `python-bindings/tests/`, with shared data
+under `python-bindings/tests/fixtures/`. There is no `conftest.py` and no registered
+pytest marker set, so do not add `@pytest.mark.*` decorators expecting them to be
+selectable.
 
 ```python
-@pytest.mark.unit
-def test_analysis_config_from_yamldata():
-    """Test Python adapter builds config from Rust YamlData."""
-    from classic_config import YamlData
-    config = AnalysisConfig.from_yamldata(yaml_data, game="Fallout4", vr_mode=False)
-    assert config.game == "Fallout4"
+def test_shared_module_loads():
+    """Verify the PyO3 binding imports and exposes its version."""
+    import classic_shared
+
+    assert hasattr(classic_shared, "__version__")
 ```
-
-### Required Markers
-
-Every Python test MUST have appropriate markers:
-
-```python
-@pytest.mark.unit           # Isolated unit test
-@pytest.mark.integration    # Cross-component test
-@pytest.mark.asyncio        # Async test (required for async def)
-@pytest.mark.slow           # Test takes >1 second
-@pytest.mark.gui            # GUI component test
-@pytest.mark.performance    # Performance test
-@pytest.mark.rust           # Rust binding test
-@pytest.mark.network        # Network-dependent test
-@pytest.mark.stress         # Stress/load test
-```
-
-### Fixture Rules
-
-- **All fixtures MUST be in `tests/fixtures/`** -- never in individual test files
-- Add new fixtures to the appropriate module in `tests/fixtures/`
-- Import via `tests/conftest.py`
-
-### Singleton Cleanup (Python)
-
-The autouse `reset_all_singletons` fixture handles this automatically. Do not add manual singleton cleanup to individual tests.
 
 ### Test Execution (Python)
 
-```bash
-# Quick unit tests
-uv run pytest -m "unit and not slow"
+Python tests run against maturin-built wheels, so the build order matters. The full
+four-step sequence (pin `PYO3_PYTHON` → `uv sync --inexact` → `rebuild_rust.ps1` →
+pytest) is in `CLAUDE.md`; skipping the rebuild fails at collection time with
+`ModuleNotFoundError`.
 
-# Rust binding tests
-uv run pytest tests/rust_integration/ -v
+```powershell
+# Whole binding suite
+uv run --project python-bindings python -m pytest python-bindings/tests -q
 
-# Integration tests
-uv run pytest -m "integration"
-
-# Specific test
-uv run pytest tests/path/to/test_file.py::test_function -v
-
-# CI-like run (skip optional categories)
-uv run pytest --skip-slow --skip-network --skip-performance --skip-stress
+# Single file or test
+uv run --project python-bindings python -m pytest python-bindings/tests/test_classic_shared_smoke.py -v
+uv run --project python-bindings python -m pytest python-bindings/tests/test_classic_shared_smoke.py::test_name -v
 ```
+
+Use `python -m pytest`, never the `pytest.exe` entrypoint — the config crate anchors
+settings lookup to `sys.argv[0]`'s parent.
 
 ## C++ Testing Patterns (CLI Frontend)
 

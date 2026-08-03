@@ -506,6 +506,14 @@ fn structured_result_mapping_preserves_pairs_options_failures_and_paths() {
     assert_eq!(error.path, "database-é.db");
 }
 
+/// Loads the shared reset-outcome codes used by CXX continuation mapping tests.
+fn shared_reset_outcomes() -> serde_json::Value {
+    serde_json::from_str::<serde_json::Value>(SHARED_SCAN_RUN_MANIFEST)
+        .expect("shared scan-run manifest should deserialize")["fixtures"]["installedYamlData"]
+        ["resetOutcomes"]
+        .clone()
+}
+
 #[test]
 fn shared_failure_fixture_maps_every_cxx_failure_field() {
     let fixtures = shared_failure_fixtures();
@@ -1181,6 +1189,56 @@ fn cxx_resume_operational_errors_preserve_every_stable_reset_outcome_field() {
             );
         }
     }
+}
+
+/// Visible replacement durability uncertainty retains the complete CXX recovery receipt.
+#[test]
+fn cxx_resume_durability_unknown_preserves_recovery_receipt() {
+    let expected = shared_reset_outcomes();
+    let malformed_identity =
+        classic_config_core::YamlDataContentIdentity::from_bytes(b"malformed");
+    let backup_identity = malformed_identity.clone();
+    let replacement_identity =
+        classic_config_core::YamlDataContentIdentity::from_bytes(b"defaults");
+    let projected = super::resume_error_to_dto(
+        contract::ResumeError::LocalIgnoreResetDurabilityUnknown(Box::new(
+            contract::LocalIgnoreResetDurabilityUnknownError {
+                path: PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml"),
+                backup_path: PathBuf::from("C:/CLASSIC/backups/local-ignore.bak"),
+                malformed_identity: malformed_identity.clone(),
+                backup_identity: backup_identity.clone(),
+                replacement_identity: replacement_identity.clone(),
+                message: "replacement visible; durability unknown".to_string(),
+            },
+        )),
+    );
+
+    assert_eq!(
+        projected.kind,
+        ffi::ScanRunContractResumeErrorKind::LocalIgnoreResetDurabilityUnknown
+    );
+    assert_eq!(
+        projected.code,
+        expected["durabilityUnknownCode"]
+            .as_str()
+            .expect("shared durability-unknown code should be a string")
+    );
+    assert!(projected.has_path);
+    assert!(projected.has_backup_path);
+    assert!(projected.has_durability_receipt);
+    assert!(!projected.has_stage);
+    assert_eq!(
+        projected.malformed_identity.sha256,
+        malformed_identity.sha256_hex()
+    );
+    assert_eq!(
+        projected.backup_identity.sha256,
+        backup_identity.sha256_hex()
+    );
+    assert_eq!(
+        projected.replacement_identity.sha256,
+        replacement_identity.sha256_hex()
+    );
 }
 
 #[test]

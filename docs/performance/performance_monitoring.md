@@ -1,6 +1,6 @@
 # Performance Monitoring Guide for CLASSIC Rust Components
 
-Note: this guide includes material from the earlier Python-facing Rust acceleration model. For the current maintained contributor workflow, prefer the modular `ClassicLib-rs/` guides and the active binding validation docs.
+Note: this guide includes material from the earlier Python-facing Rust acceleration model. For the current maintained contributor workflow, prefer the repo-root workspace guides and the active binding validation docs.
 
 ## Overview
 

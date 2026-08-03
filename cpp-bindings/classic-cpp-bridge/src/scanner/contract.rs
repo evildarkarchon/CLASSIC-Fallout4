@@ -635,6 +635,17 @@ fn resume_error_to_dto(error: contract::ResumeError) -> ffi::ScanRunContractResu
                 dto.stage = map_reset_failure_stage(stage);
             }
         }
+        contract::ResumeError::LocalIgnoreResetDurabilityUnknown(receipt) => {
+            dto.has_path = true;
+            dto.path = path_to_string(receipt.path);
+            dto.has_backup_path = true;
+            dto.backup_path = path_to_string(receipt.backup_path);
+            dto.has_durability_receipt = true;
+            dto.malformed_identity = yaml_data_content_identity_to_dto(receipt.malformed_identity);
+            dto.backup_identity = yaml_data_content_identity_to_dto(receipt.backup_identity);
+            dto.replacement_identity =
+                yaml_data_content_identity_to_dto(receipt.replacement_identity);
+        }
     }
     dto
 }
@@ -654,6 +665,10 @@ fn empty_resume_error_dto() -> ffi::ScanRunContractResumeError {
         actual_identity: empty_yaml_data_content_identity_dto(),
         has_backup_path: false,
         backup_path: String::new(),
+        has_durability_receipt: false,
+        malformed_identity: empty_yaml_data_content_identity_dto(),
+        backup_identity: empty_yaml_data_content_identity_dto(),
+        replacement_identity: empty_yaml_data_content_identity_dto(),
     }
 }
 
@@ -964,6 +979,9 @@ fn map_resume_error_kind(value: contract::ResumeErrorKind) -> ffi::ScanRunContra
         }
         contract::ResumeErrorKind::LocalIgnoreResetReplacementFailure => {
             ffi::ScanRunContractResumeErrorKind::LocalIgnoreResetReplacementFailure
+        }
+        contract::ResumeErrorKind::LocalIgnoreResetDurabilityUnknown => {
+            ffi::ScanRunContractResumeErrorKind::LocalIgnoreResetDurabilityUnknown
         }
         contract::ResumeErrorKind::Infrastructure => {
             unreachable!("infrastructure resume errors use the infrastructure envelope")

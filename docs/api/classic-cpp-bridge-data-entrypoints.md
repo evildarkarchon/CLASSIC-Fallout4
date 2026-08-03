@@ -227,7 +227,12 @@ from owned conflict, frequent-crash, solution, and important-mod DTOs. The
 construction result reports invalid rules or matcher state before the handle is
 used. `mod_guidance_analyze(...)` accepts owned plugin/load-order, optional GPU,
 and XSE-module facts and returns typed match state plus authored guidance in
-four semantic collections. The DTOs contain no report headings, group order,
+four semantic collections. Conflict configuration and result DTOs use
+`has_fix` plus `fix`, just as optional links use an explicit presence flag; an
+absent fix is never synthesized. The legacy parallel-vector YAML accessor keeps
+`yaml_data_mods_conf_fixes(...)` source-compatible by returning an empty-string
+sentinel for absence, with `yaml_data_mods_conf_has_fixes(...)` providing the
+lossless presence vector. The DTOs contain no report headings, group order,
 icons, separators, markdown, or rendered lines; construction and execution
 failures retain `AnalyzerKind::ModGuidance` and the shared stable analyzer error
 code.
@@ -341,10 +346,11 @@ The opaque operation owns one `ScanRunContractExecutionResult`; callers move it
 out with `scan_run_contract_execution_take_result(...)`. Exactly one of
 `has_result`, `has_error`, and `has_resume_error` is true for a populated
 envelope. Initial expected recovery remains result data. Replay of a consumed
-continuation and reset conflict/backup/replacement failures set
-`has_resume_error` with stable kinds and codes; the reset variants also retain
-expected/current identities, optional verified backup path, or applicable
-path/publication stage. Failures reached by otherwise valid resumed execution
+continuation and reset conflict/backup/replacement failures or durability
+uncertainty set `has_resume_error` with stable kinds and codes; the reset
+variants also retain expected/current identities, optional verified backup
+path, applicable path/publication stage, or the complete durability recovery
+receipt. Failures reached by otherwise valid resumed execution
 continue to use the typed infrastructure envelope.
 
 The result retains:

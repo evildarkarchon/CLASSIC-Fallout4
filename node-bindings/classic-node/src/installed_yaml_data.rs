@@ -875,19 +875,27 @@ fn load_error_to_napi(env: Env, error: CoreInstalledYamlDataLoadError) -> napi::
 
 /// Project every Local Ignore reset failure into stable JavaScript operation metadata.
 fn local_ignore_reset_error_to_napi(env: Env, error: CoreLocalIgnoreResetError) -> napi::Error {
-    let (code, path, stage, reason) = match &error {
-        CoreLocalIgnoreResetError::DefaultsUnavailable { path, reason } => {
-            ("defaults_unavailable", path.clone(), None, reason.clone())
-        }
+    let (code, path, stage, reason, durability_receipt) = match &error {
+        CoreLocalIgnoreResetError::DefaultsUnavailable { path, reason } => (
+            "defaults_unavailable",
+            path.clone(),
+            None,
+            reason.clone(),
+            None,
+        ),
         CoreLocalIgnoreResetError::Lock { path, source } => {
-            ("lock", path.clone(), None, source.to_string())
+            ("lock", path.clone(), None, source.to_string(), None)
         }
         CoreLocalIgnoreResetError::Read { path, source } => {
-            ("read", path.clone(), None, source.to_string())
+            ("read", path.clone(), None, source.to_string(), None)
         }
-        CoreLocalIgnoreResetError::BackupDirectory { path, source } => {
-            ("backup_directory", path.clone(), None, source.to_string())
-        }
+        CoreLocalIgnoreResetError::BackupDirectory { path, source } => (
+            "backup_directory",
+            path.clone(),
+            None,
+            source.to_string(),
+            None,
+        ),
         CoreLocalIgnoreResetError::BackupPublication {
             path,
             stage,
@@ -897,10 +905,15 @@ fn local_ignore_reset_error_to_napi(env: Env, error: CoreLocalIgnoreResetError) 
             path.clone(),
             Some(*stage),
             source.to_string(),
+            None,
         ),
-        CoreLocalIgnoreResetError::BackupVerification { path, reason } => {
-            ("backup_verification", path.clone(), None, reason.clone())
-        }
+        CoreLocalIgnoreResetError::BackupVerification { path, reason } => (
+            "backup_verification",
+            path.clone(),
+            None,
+            reason.clone(),
+            None,
+        ),
         CoreLocalIgnoreResetError::ReplacementPublication {
             path,
             stage,
@@ -910,6 +923,19 @@ fn local_ignore_reset_error_to_napi(env: Env, error: CoreLocalIgnoreResetError) 
             path.clone(),
             Some(*stage),
             source.to_string(),
+            None,
+        ),
+        CoreLocalIgnoreResetError::ReplacementDurabilityUnknown { receipt, source } => (
+            "replacement_durability_unknown",
+            receipt.path.clone(),
+            None,
+            source.to_string(),
+            Some(InstalledYamlDataDurabilityReceipt {
+                backup_path: receipt.backup_path.clone(),
+                malformed_identity: content_identity_to_js(&receipt.malformed_identity),
+                backup_identity: content_identity_to_js(&receipt.backup_identity),
+                replacement_identity: content_identity_to_js(&receipt.replacement_identity),
+            }),
         ),
     };
     installed_yaml_data_error(
@@ -921,9 +947,18 @@ fn local_ignore_reset_error_to_napi(env: Env, error: CoreLocalIgnoreResetError) 
             path: Some(path),
             stage,
             reason: Some(reason),
+            durability_receipt,
             ..InstalledYamlDataErrorMetadata::default()
         },
     )
+}
+
+/// Recovery facts returned when replacement is visible but its directory barrier failed.
+struct InstalledYamlDataDurabilityReceipt {
+    backup_path: PathBuf,
+    malformed_identity: JsYamlDataContentIdentity,
+    backup_identity: JsYamlDataContentIdentity,
+    replacement_identity: JsYamlDataContentIdentity,
 }
 
 /// Optional JavaScript metadata shared by Installed YAML Data operation failures.
@@ -934,6 +969,7 @@ struct InstalledYamlDataErrorMetadata {
     diagnostics: Vec<JsInstalledYamlDataDiagnostic>,
     stage: Option<CoreLocalIgnoreResetPublicationStage>,
     reason: Option<String>,
+    durability_receipt: Option<InstalledYamlDataDurabilityReceipt>,
 }
 
 /// Build one JavaScript `Error` with only the metadata applicable to its core variant.
@@ -949,6 +985,7 @@ fn installed_yaml_data_error(
         diagnostics,
         stage,
         reason,
+        durability_receipt,
     } = metadata;
     let raw_error = JsError::from(napi::Error::new(code, message.clone())).into_unknown(env);
     let Ok(mut object) = raw_error.coerce_to_object() else {
@@ -982,6 +1019,23 @@ fn installed_yaml_data_error(
     }
     if let Some(reason) = reason
         && object.set_named_property("reason", reason).is_err()
+    {
+        return base_inspection_error(env, code, message);
+    }
+    if let Some(receipt) = durability_receipt
+        && object
+            .set_named_property(
+                "backupPath",
+                receipt.backup_path.to_string_lossy().into_owned(),
+            )
+            .and_then(|()| {
+                object.set_named_property("malformedIdentity", receipt.malformed_identity)
+            })
+            .and_then(|()| object.set_named_property("backupIdentity", receipt.backup_identity))
+            .and_then(|()| {
+                object.set_named_property("replacementIdentity", receipt.replacement_identity)
+            })
+            .is_err()
     {
         return base_inspection_error(env, code, message);
     }

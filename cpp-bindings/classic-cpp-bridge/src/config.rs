@@ -920,8 +920,13 @@ fn local_ignore_reset_error_to_dto(
             path,
             Some(*stage),
         ),
+        CoreLocalIgnoreResetError::ReplacementDurabilityUnknown { receipt, .. } => (
+            ffi::LocalIgnoreResetErrorKind::ReplacementDurabilityUnknown,
+            &receipt.path,
+            None,
+        ),
     };
-    ffi::LocalIgnoreResetErrorDto {
+    let mut dto = ffi::LocalIgnoreResetErrorDto {
         kind,
         has_path: true,
         path: path.to_string_lossy().into_owned(),
@@ -929,8 +934,21 @@ fn local_ignore_reset_error_to_dto(
         stage: stage
             .map(local_ignore_reset_publication_stage_to_ffi)
             .unwrap_or(ffi::LocalIgnoreResetPublicationStage::Create),
+        has_durability_receipt: false,
+        backup_path: String::new(),
+        malformed_identity: empty_content_identity(),
+        backup_identity: empty_content_identity(),
+        replacement_identity: empty_content_identity(),
         message: error.to_string(),
+    };
+    if let CoreLocalIgnoreResetError::ReplacementDurabilityUnknown { receipt, .. } = error {
+        dto.has_durability_receipt = true;
+        dto.backup_path = receipt.backup_path.to_string_lossy().into_owned();
+        dto.malformed_identity = content_identity_to_dto(&receipt.malformed_identity);
+        dto.backup_identity = content_identity_to_dto(&receipt.backup_identity);
+        dto.replacement_identity = content_identity_to_dto(&receipt.replacement_identity);
     }
+    dto
 }
 
 /// Return the placeholder nested error used when reset `has_error` is false.
@@ -942,6 +960,11 @@ fn empty_local_ignore_reset_error() -> ffi::LocalIgnoreResetErrorDto {
         path: String::new(),
         has_stage: false,
         stage: ffi::LocalIgnoreResetPublicationStage::Create,
+        has_durability_receipt: false,
+        backup_path: String::new(),
+        malformed_identity: empty_content_identity(),
+        backup_identity: empty_content_identity(),
+        replacement_identity: empty_content_identity(),
         message: String::new(),
     }
 }
@@ -1468,7 +1491,15 @@ fn yaml_data_mods_conf_fixes(data: &YamlData) -> Vec<String> {
     data.inner
         .game_mods_conf
         .iter()
-        .map(|e| e.fix.clone())
+        .map(|e| e.fix.clone().unwrap_or_default())
+        .collect()
+}
+
+fn yaml_data_mods_conf_has_fixes(data: &YamlData) -> Vec<bool> {
+    data.inner
+        .game_mods_conf
+        .iter()
+        .map(|e| e.fix.is_some())
         .collect()
 }
 
@@ -1744,6 +1775,8 @@ mod ffi {
         BackupPublication = 4,
         BackupVerification = 5,
         ReplacementPublication = 6,
+        /// Replacement is visible with a verified backup, but durability is unconfirmed.
+        ReplacementDurabilityUnknown = 7,
     }
 
     /// Durable publication boundary attributed by a Local Ignore reset failure.
@@ -1850,6 +1883,11 @@ mod ffi {
         path: String,
         has_stage: bool,
         stage: LocalIgnoreResetPublicationStage,
+        has_durability_receipt: bool,
+        backup_path: String,
+        malformed_identity: YamlDataContentIdentityDto,
+        backup_identity: YamlDataContentIdentityDto,
+        replacement_identity: YamlDataContentIdentityDto,
         message: String,
     }
 
@@ -2218,6 +2256,7 @@ mod ffi {
         fn yaml_data_mods_conf_name_b(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_conf_descriptions(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_conf_fixes(data: &YamlData) -> Vec<String>;
+        fn yaml_data_mods_conf_has_fixes(data: &YamlData) -> Vec<bool>;
         fn yaml_data_mods_conf_links(data: &YamlData) -> Vec<String>;
         fn yaml_data_mods_conf_count(data: &YamlData) -> usize;
         fn yaml_data_mods_solu_entries(data: &YamlData) -> Vec<YamlDataModSolutionEntry>;

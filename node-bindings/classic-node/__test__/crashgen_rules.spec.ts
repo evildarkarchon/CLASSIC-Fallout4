@@ -162,7 +162,7 @@ describe("crashgen_rules: JsSuspectStackRule shape", () => {
 });
 
 describe("crashgen_rules: JsModConflictEntry shape", () => {
-  test("has modA, modB, nameA, nameB, description, fix fields", () => {
+  test("has conflict identity and optional remediation fields", () => {
     const entry: JsModConflictEntry = {
       modA: "mod-a.esp",
       modB: "mod-b.esp",
@@ -176,5 +176,14 @@ describe("crashgen_rules: JsModConflictEntry shape", () => {
     expect(typeof entry.description).toBe("string");
     expect(typeof entry.fix).toBe("string");
     expect(entry.link).toBeUndefined();
+
+    const withoutFix: JsModConflictEntry = {
+      modA: "mod-c.esp",
+      modB: "mod-d.esp",
+      nameA: "Mod C",
+      nameB: "Mod D",
+      description: "These mods are redundant",
+    };
+    expect(withoutFix.fix).toBeUndefined();
   });
 });

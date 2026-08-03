@@ -15,7 +15,7 @@ The main utility-style Rust surfaces now live in dedicated crates, for example:
 - `classic-web-core`
 - `classic-xse-core`
 
-Related Python bindings live in matching `ClassicLib-rs/python-bindings/*-py` crates, and Node/C++ consumers access the same underlying Rust logic through their own layers.
+Related Python bindings live in matching `python-bindings/*-py` crates, and Node/C++ consumers access the same underlying Rust logic through their own layers.
 
 ## Current usage rule
 
@@ -26,10 +26,10 @@ Related Python bindings live in matching `ClassicLib-rs/python-bindings/*-py` cr
 ## Validation shortcuts
 
 ```powershell
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
+cargo test --workspace
 python tools/python_api_parity/check_parity_gate.py --repo-root .
 ```
 
 ## Historical note
 
-This file replaces an older phase-specific migration guide that referenced the temporary Python integration layer. The maintained source of truth is the current modular workspace under `ClassicLib-rs/`.
+This file replaces an older phase-specific migration guide that referenced the temporary Python integration layer. The maintained source of truth is the current modular workspace at the repository root.

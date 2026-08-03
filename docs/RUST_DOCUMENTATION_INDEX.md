@@ -11,7 +11,7 @@ This index tracks Rust-centric documentation for the **active** CLASSIC architec
 - Active bridge to native frontends: [`cpp-bindings/classic-cpp-bridge/`](../cpp-bindings/classic-cpp-bridge)
 - Maintained integration bindings: [`node-bindings/classic-node/`](../node-bindings/classic-node), [`python-bindings/`](../python-bindings)
 - Active Rust TUI app: [`ui-applications/classic-tui/`](../ui-applications/classic-tui)
-- Deprecated Python runtime entrypoints/orchestration: [`deprecated/`](../deprecated)
+- Retired pure-Python runtime: removed from the repo; docs preserved under [`docs/archive/python-era/`](archive/python-era)
 
 For contributor policy and canonical command expectations, see [`AGENTS.md`](../AGENTS.md).
 For old-to-new workspace translations, see the [Workspace Migration Matrix](workspace-migration-matrix.md).
@@ -98,7 +98,7 @@ For old-to-new workspace translations, see the [Workspace Migration Matrix](work
 
 - [`docs/performance/performance_monitoring.md`](performance/performance_monitoring.md)
 - [`docs/performance/rust_db_benchmark_baseline.md`](performance/rust_db_benchmark_baseline.md)
-- [`docs/implementation/performance_optimization_complete.md`](implementation/performance_optimization_complete.md)
+- [`docs/archive/performance_optimization_complete.md`](archive/performance_optimization_complete.md) (archived historical report)
 
 ---
 
@@ -134,7 +134,7 @@ Older documents may still discuss hybrid Python-runtime execution or fallback-he
 
 1. Current active architecture (`classic-cli` + `classic-gui` + repo-root Rust workspace layers)
 2. Maintained binding surfaces (`python-bindings`, `node-bindings/classic-node`)
-3. Deprecated runtime scope (`deprecated/`)
+3. Retired pure-Python runtime scope (see `docs/archive/python-era/`)
 
 > Migration note: a historical `ClassicLib-rs/...` mention is not live workspace guidance; translate it through the [Workspace Migration Matrix](workspace-migration-matrix.md).
 

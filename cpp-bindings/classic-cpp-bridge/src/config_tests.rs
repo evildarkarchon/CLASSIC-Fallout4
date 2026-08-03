@@ -19,6 +19,12 @@ const EXPLICIT_GAME_YAML: &str = concat!(
     "  Main_Root_Name: \"Fallout 4\"\n",
     "Crashlog_Error_Check: []\n",
     "Crashlog_Stack_Check: []\n",
+    "Mods_CONF:\n",
+    "  - mod_a: Upscaling.dll\n",
+    "    mod_b: FSR3_AA.dll\n",
+    "    name_a: Upscaling\n",
+    "    name_b: FSR 3 Antialiasing\n",
+    "    description: The mods are redundant with each other.\n",
     "Mods_FREQ: []\n",
     "Mods_SOLU: []\n",
 );
@@ -129,6 +135,9 @@ fn explicit_yaml_data_bridge_returns_typed_snapshot_and_exact_identities() {
     let data = explicit_yaml_data_snapshot_yaml_data(&snapshot);
     assert_eq!(yaml_data_classic_version(&data), "9.1.0");
     assert!(yaml_data_ignore_list(&data).is_empty());
+    assert_eq!(yaml_data_mods_conf_count(&data), 1);
+    assert_eq!(yaml_data_mods_conf_fixes(&data), [""]);
+    assert_eq!(yaml_data_mods_conf_has_fixes(&data), [false]);
 }
 
 #[test]
@@ -801,6 +810,40 @@ fn local_ignore_reset_bridge_maps_every_error_kind_and_publication_stage() {
         ]
     );
     assert!(dtos[5..].iter().all(|error| error.has_stage));
+
+    let malformed_identity = YamlDataContentIdentity::from_bytes(b"malformed");
+    let backup_identity = malformed_identity.clone();
+    let replacement_identity = YamlDataContentIdentity::from_bytes(b"defaults");
+    let durability_error = CoreLocalIgnoreResetError::ReplacementDurabilityUnknown {
+        receipt: Box::new(classic_config_core::LocalIgnoreResetDurabilityReceipt {
+            path: std::path::PathBuf::from("isolated/CLASSIC Ignore.yaml"),
+            backup_path: std::path::PathBuf::from("isolated/backup.bak"),
+            malformed_identity: malformed_identity.clone(),
+            backup_identity: backup_identity.clone(),
+            replacement_identity: replacement_identity.clone(),
+        }),
+        source: io_error(),
+    };
+    let durability_dto = local_ignore_reset_error_to_dto(&durability_error);
+    assert_eq!(
+        durability_dto.kind,
+        ffi::LocalIgnoreResetErrorKind::ReplacementDurabilityUnknown
+    );
+    assert!(!durability_dto.has_stage);
+    assert!(durability_dto.has_durability_receipt);
+    assert_eq!(durability_dto.backup_path, "isolated/backup.bak");
+    assert_eq!(
+        durability_dto.malformed_identity.sha256,
+        malformed_identity.sha256_hex()
+    );
+    assert_eq!(
+        durability_dto.backup_identity.sha256,
+        backup_identity.sha256_hex()
+    );
+    assert_eq!(
+        durability_dto.replacement_identity.sha256,
+        replacement_identity.sha256_hex()
+    );
 }
 
 #[test]

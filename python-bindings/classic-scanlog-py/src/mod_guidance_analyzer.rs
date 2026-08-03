@@ -95,7 +95,7 @@ pub struct PyModGuidanceConflictRule {
     #[pyo3(get)]
     description: String,
     #[pyo3(get)]
-    fix: String,
+    fix: Option<String>,
     #[pyo3(get)]
     link: Option<String>,
 }
@@ -104,7 +104,7 @@ pub struct PyModGuidanceConflictRule {
 impl PyModGuidanceConflictRule {
     /// Creates one owned YAML-authored conflict rule.
     #[new]
-    #[pyo3(signature = (mod_a, mod_b, name_a, name_b, description, fix, link = None))]
+    #[pyo3(signature = (mod_a, mod_b, name_a, name_b, description, fix = None, link = None))]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         mod_a: String,
@@ -112,7 +112,7 @@ impl PyModGuidanceConflictRule {
         name_a: String,
         name_b: String,
         description: String,
-        fix: String,
+        fix: Option<String>,
         link: Option<String>,
     ) -> Self {
         Self {
@@ -306,7 +306,7 @@ pub struct PyModConflictGuidance {
     #[pyo3(get)]
     description: String,
     #[pyo3(get)]
-    fix: String,
+    fix: Option<String>,
     #[pyo3(get)]
     link: Option<String>,
 }

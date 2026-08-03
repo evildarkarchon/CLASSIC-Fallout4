@@ -12,11 +12,11 @@ CLASSIC is a **C++ + Rust** application:
   - [`classic-cli/`](../../classic-cli)
   - [`classic-gui/`](../../classic-gui)
 - Core domain logic in Rust workspace:
-  - [`ClassicLib-rs/`](../../ClassicLib-rs)
+  - Rust workspace root: the repository root (`../../Cargo.toml`)
 - C++/Rust integration boundary:
-  - [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge)
+  - [`cpp-bindings/classic-cpp-bridge/`](../../cpp-bindings/classic-cpp-bridge)
 
-Python runtime entrypoints/orchestration are **not** the active product path and are archived under [`deprecated/`](../../deprecated).
+The pure-Python runtime and orchestration layer has been removed from the repo; its documentation is preserved under [`docs/archive/python-era/`](../archive/python-era).
 
 ---
 
@@ -40,7 +40,7 @@ flowchart TB
     end
 
     subgraph Legacy[Deprecated Runtime Paths (Archival)]
-        PYRT[deprecated/\nlegacy Python entrypoints/orchestration]
+        PYRT[removed\nlegacy Python entrypoints/orchestration]
     end
 
     CLI --> CPPBRIDGE
@@ -59,28 +59,28 @@ flowchart TB
 | ------------------------------------------------ | --------------------- | ---------------------------------------------------------------------------- |
 | `classic-cli/`                                   | Active                | Primary CLI runtime in C++                                                   |
 | `classic-gui/`                                   | Active                | Primary desktop GUI runtime in Qt/C++                                        |
-| `ClassicLib-rs/business-logic/`                  | Active                | Primary domain/business logic                                                |
-| `ClassicLib-rs/cpp-bindings/classic-cpp-bridge/` | Active                | Native bridge consumed by C++ apps                                           |
-| `ClassicLib-rs/node-bindings/`                   | Maintained            | Integration/API surface for Node                                             |
-| `ClassicLib-rs/python-bindings/`                 | Maintained            | Integration/API surface for Python consumers                                 |
-| `deprecated/` Python entrypoints/orchestration   | Deprecated (archival) | No new product feature work unless migration support is explicitly requested |
+| `business-logic/`                  | Active                | Primary domain/business logic                                                |
+| `cpp-bindings/classic-cpp-bridge/` | Active                | Native bridge consumed by C++ apps                                           |
+| `node-bindings/`                   | Maintained            | Integration/API surface for Node                                             |
+| `python-bindings/`                 | Maintained            | Integration/API surface for Python consumers                                 |
+| Pure-Python entrypoints/orchestration            | Removed from repo     | Docs preserved under `docs/archive/python-era/`; no product work targets this |
 
 ---
 
 ## Rust Workspace Layers
 
-1. **Foundation** — [`ClassicLib-rs/foundation/`](../../ClassicLib-rs/foundation)
+1. **Foundation** — [`foundation/`](../../foundation)
    - Shared runtime/utilities (including single shared Tokio runtime facilities).
 
-2. **Business logic** — [`ClassicLib-rs/business-logic/`](../../ClassicLib-rs/business-logic)
+2. **Business logic** — [`business-logic/`](../../business-logic)
    - Pure Rust `*-core` crates.
    - Crash scan, config/yaml, file I/O, version registry, update system, and related services.
 
-3. **Bindings** — [`ClassicLib-rs/cpp-bindings/`](../../ClassicLib-rs/cpp-bindings), [`ClassicLib-rs/node-bindings/`](../../ClassicLib-rs/node-bindings), [`ClassicLib-rs/python-bindings/`](../../ClassicLib-rs/python-bindings)
+3. **Bindings** — [`cpp-bindings/`](../../cpp-bindings), [`node-bindings/`](../../node-bindings), [`python-bindings/`](../../python-bindings)
    - C++ bridge for native applications.
    - Node and Python maintained integration surfaces.
 
-4. **UI applications (Rust workspace-local)** — [`ClassicLib-rs/ui-applications/`](../../ClassicLib-rs/ui-applications)
+4. **UI applications (Rust workspace-local)** — [`ui-applications/`](../../ui-applications)
    - Rust UI/tooling crates where applicable.
 
 ---
@@ -100,16 +100,16 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
 ### Rust core
 
 ```powershell
-cargo build --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
-cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
+cargo build --workspace
+cargo test --workspace
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
 ### Node bindings (when API/bindings change)
 
 ```powershell
-# From ClassicLib-rs/node-bindings/classic-node
+# From node-bindings/classic-node
 bun install
 bun run build
 bun run parity:gate:local
@@ -120,12 +120,13 @@ bun run test:node
 ### Python bindings (when API/bindings change)
 
 ```powershell
-uv venv ClassicLib-rs/python-bindings/.venv
-uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
+# python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
+# --inexact is load-bearing: it keeps uv from pruning maturin-built classic-*-py wheels.
+uv sync --project python-bindings --inexact
 python tools/python_api_parity/check_parity_gate.py --repo-root .
-python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
+uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
 ```
 
 ---
@@ -142,5 +143,5 @@ uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m
 
 ## Transition/Deprecation Note
 
-Historical docs that describe Python runtime entrypoints as first-class app architecture should be treated as legacy context. For active development, prioritize C++ frontends and Rust core, with Python scope limited to maintained bindings under [`ClassicLib-rs/python-bindings/`](../../ClassicLib-rs/python-bindings).
+Historical docs that describe Python runtime entrypoints as first-class app architecture should be treated as legacy context. For active development, prioritize C++ frontends and Rust core, with Python scope limited to maintained bindings under [`python-bindings/`](../../python-bindings).
 

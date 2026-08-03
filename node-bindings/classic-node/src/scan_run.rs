@@ -886,6 +886,13 @@ enum ScanRunResumeErrorMetadata {
         path: String,
         stage: Option<&'static str>,
     },
+    DurabilityUnknown {
+        path: String,
+        backup_path: String,
+        malformed_identity: JsYamlDataContentIdentity,
+        backup_identity: JsYamlDataContentIdentity,
+        replacement_identity: JsYamlDataContentIdentity,
+    },
 }
 
 /// Stable code, message, and optional metadata for one rejected continuation resume.
@@ -919,6 +926,15 @@ fn project_scan_run_resume_error(error: contract::ResumeError) -> ScanRunResumeE
                 stage: failure
                     .stage
                     .map(contract::LocalIgnoreResetFailureStage::as_str),
+            }
+        }
+        contract::ResumeError::LocalIgnoreResetDurabilityUnknown(receipt) => {
+            ScanRunResumeErrorMetadata::DurabilityUnknown {
+                path: receipt.path.to_string_lossy().into_owned(),
+                backup_path: receipt.backup_path.to_string_lossy().into_owned(),
+                malformed_identity: content_identity_to_js(&receipt.malformed_identity),
+                backup_identity: content_identity_to_js(&receipt.backup_identity),
+                replacement_identity: content_identity_to_js(&receipt.replacement_identity),
             }
         }
         contract::ResumeError::ContinuationConsumed | contract::ResumeError::Infrastructure(_) => {
@@ -977,6 +993,18 @@ fn scan_run_resume_error_to_napi(env: Env, error: contract::ResumeError) -> napi
                 Some(stage) => object.set_named_property("stage", stage),
                 None => Ok(()),
             }),
+        ScanRunResumeErrorMetadata::DurabilityUnknown {
+            path,
+            backup_path,
+            malformed_identity,
+            backup_identity,
+            replacement_identity,
+        } => object
+            .set_named_property("path", path)
+            .and_then(|()| object.set_named_property("backupPath", backup_path))
+            .and_then(|()| object.set_named_property("malformedIdentity", malformed_identity))
+            .and_then(|()| object.set_named_property("backupIdentity", backup_identity))
+            .and_then(|()| object.set_named_property("replacementIdentity", replacement_identity)),
         ScanRunResumeErrorMetadata::None => Ok(()),
     };
     if metadata_result.is_err() {

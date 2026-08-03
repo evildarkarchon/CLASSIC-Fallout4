@@ -4,8 +4,8 @@ This page summarizes the current maintained Rust module families in CLASSIC.
 
 ## Foundation crates
 
-- `ClassicLib-rs/foundation/classic-shared-core` - shared runtime, shared helpers, cross-cutting support
-- `ClassicLib-rs/foundation/classic-shared-py` - Python-facing shared support module
+- `foundation/classic-shared-core` - shared runtime, shared helpers, cross-cutting support
+- `foundation/classic-shared-py` - Python-facing shared support module
 
 ## Business-logic crates
 
@@ -26,7 +26,7 @@ Representative maintained crates include:
 - `classic-version-registry-core`
 - `classic-web-core`
 - `classic-xse-core`
-- `classic-yaml-core`
+- `classic-settings-core` (absorbed the former `classic-yaml-core` in v9.1.0 Phase 1)
 
 ## Binding crates
 
@@ -37,15 +37,15 @@ Maintained Python modules are split across binding crates such as:
 - `classic-config-py` -> `classic_config`
 - `classic-scanlog-py` -> `classic_scanlog`
 - `classic-version-registry-py` -> `classic_version_registry`
-- additional `*-py` crates for other domains under `ClassicLib-rs/python-bindings/`
+- additional `*-py` crates for other domains under `python-bindings/`
 
 ### Node
 
-- `ClassicLib-rs/node-bindings/classic-node`
+- `node-bindings/classic-node`
 
 ### C++
 
-- `ClassicLib-rs/cpp-bindings/classic-cpp-bridge`
+- `cpp-bindings/classic-cpp-bridge`
 
 ## Important note
 

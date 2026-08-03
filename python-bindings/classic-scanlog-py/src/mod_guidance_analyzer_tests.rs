@@ -8,7 +8,7 @@ fn analyzer() -> PyModGuidanceAnalyzer {
             "Alpha Mod".to_string(),
             "Beta Mod".to_string(),
             "Authored conflict description".to_string(),
-            "Install the authored compatibility patch".to_string(),
+            Some("Install the authored compatibility patch".to_string()),
             Some("https://example.invalid/patch".to_string()),
         )],
         vec![PyModGuidanceSolutionRule::new(
@@ -163,7 +163,7 @@ fn invalid_configuration_raises_the_shared_analyzer_error() {
                 "Alpha Mod".to_string(),
                 "Beta Mod".to_string(),
                 "Description".to_string(),
-                "Fix".to_string(),
+                Some("Fix".to_string()),
                 None,
             )],
             Vec::new(),
@@ -188,4 +188,41 @@ fn invalid_configuration_raises_the_shared_analyzer_error() {
             "invalid_configuration"
         );
     });
+}
+
+#[test]
+fn optional_conflict_fix_projects_as_none() {
+    let analyzer = PyModGuidanceAnalyzer::new(
+        vec![PyModGuidanceConflictRule::new(
+            "alpha".to_string(),
+            "beta".to_string(),
+            "Alpha Mod".to_string(),
+            "Beta Mod".to_string(),
+            "Description".to_string(),
+            None,
+            None,
+        )],
+        Vec::new(),
+        Vec::new(),
+        Vec::new(),
+    )
+    .unwrap();
+
+    let result: PyModGuidanceAnalysisResult = analyzer
+        .inner
+        .analyze(CoreAnalysisInput {
+            plugins: [
+                ("Alpha.esp".to_string(), "01".to_string()),
+                ("Beta.esp".to_string(), "02".to_string()),
+            ]
+            .into_iter()
+            .collect(),
+            user_gpu: None,
+            xse_modules: HashSet::new(),
+        })
+        .unwrap()
+        .into();
+
+    assert_eq!(result.conflicts.len(), 1);
+    assert_eq!(result.conflicts[0].fix, None);
 }

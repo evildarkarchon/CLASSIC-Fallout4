@@ -38,8 +38,8 @@ pub struct ModConflictEntry {
     pub name_b: String,
     /// Why the conflict matters
     pub description: String,
-    /// What the user should do
-    pub fix: String,
+    /// Optional authored remediation guidance
+    pub fix: Option<String>,
     /// Optional URL for patch or alternative
     pub link: Option<String>,
 }
@@ -207,27 +207,25 @@ fn parse_mods_conf(game_data: &Yaml) -> Vec<ModConflictEntry> {
                 .map(|s| s.trim().to_string())
         };
 
-        let (mod_a, mod_b, name_a, name_b, description, fix) = match (
+        let (mod_a, mod_b, name_a, name_b, description) = match (
             get_str("mod_a"),
             get_str("mod_b"),
             get_str("name_a"),
             get_str("name_b"),
             get_str("description"),
-            get_str("fix"),
         ) {
-            (Some(a), Some(b), Some(na), Some(nb), Some(desc), Some(fx)) => {
-                (a, b, na, nb, desc, fx)
-            }
+            (Some(a), Some(b), Some(na), Some(nb), Some(desc)) => (a, b, na, nb, desc),
             _ => {
                 log::debug!(
-                    "Skipping Mods_CONF[{}]: missing required field(s) (mod_a, mod_b, name_a, name_b, description, fix)",
+                    "Skipping Mods_CONF[{}]: missing required field(s) (mod_a, mod_b, name_a, name_b, description)",
                     index
                 );
                 continue;
             }
         };
 
-        let link = get_str("link");
+        let fix = get_str("fix").filter(|value| !value.is_empty());
+        let link = get_str("link").filter(|value| !value.is_empty());
 
         let canonical = {
             let a_lower = mod_a.to_lowercase();

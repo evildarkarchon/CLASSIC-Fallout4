@@ -48,8 +48,8 @@ pub struct ModConflictGuidance {
     pub name_b: String,
     /// Authored explanation of the conflict.
     pub description: String,
-    /// Authored remediation guidance.
-    pub fix: String,
+    /// Optional authored remediation guidance.
+    pub fix: Option<String>,
     /// Optional authored external reference.
     pub link: Option<String>,
 }
@@ -229,8 +229,9 @@ fn compile_conflicts(
             validate_required(&entry.name_a, "conflict name_a")?;
             validate_required(&entry.name_b, "conflict name_b")?;
             validate_required(&entry.description, "conflict description")?;
-            validate_required(&entry.fix, "conflict fix")?;
-
+            if let Some(fix) = &entry.fix {
+                validate_required(fix, "conflict fix")?;
+            }
             let mod_a_token = entry.mod_a.to_lowercase();
             let mod_b_token = entry.mod_b.to_lowercase();
             tokens.extend([mod_a_token.clone(), mod_b_token.clone()]);

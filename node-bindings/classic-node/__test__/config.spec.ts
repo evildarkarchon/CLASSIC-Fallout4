@@ -108,6 +108,11 @@ Mods_CONF:
     name_b: Mod B
     description: "Config for ModA"
     fix: "Remove one."
+  - mod_a: modC
+    mod_b: modD
+    name_a: Mod C
+    name_b: Mod D
+    description: "Config without authored remediation"
 Mods_CORE:
   - detect: ModB
     name: Core Mod B
@@ -1248,9 +1253,11 @@ describe("YamlData mod databases", () => {
   });
 
   test("gameModsConf returns structured entries", () => {
-    expect(data.gameModsConf).toHaveLength(1);
+    expect(data.gameModsConf).toHaveLength(2);
     expect(data.gameModsConf[0].modA).toBe("modA");
     expect(data.gameModsConf[0].description).toBe("Config for ModA");
+    expect(data.gameModsConf[0].fix).toBe("Remove one.");
+    expect(data.gameModsConf[1].fix).toBeUndefined();
   });
 
   test("gameModsCoreCount returns correct count", () => {

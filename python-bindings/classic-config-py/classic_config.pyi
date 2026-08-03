@@ -241,7 +241,8 @@ class YamlData:
 
         Returns:
             List of mod conflict entry dicts with keys:
-                mod_a, mod_b, name_a, name_b, description, fix, link (optional)
+                mod_a, mod_b, name_a, name_b, description, fix, link.
+                The fix and link values may be None.
 
         """
 
@@ -604,9 +605,16 @@ class LocalIgnoreResetError(Exception):
         "backup_publication",
         "backup_verification",
         "replacement_publication",
+        "replacement_durability_unknown",
     ]
     path: str
-    stage: Literal["create", "write", "flush", "sync", "publish"] | None
+    stage: Literal[
+        "create",
+        "write",
+        "flush",
+        "sync",
+        "publish",
+    ] | None
     reason: str
 
 class LocalIgnoreResetDefaultsUnavailableError(LocalIgnoreResetError): ...
@@ -616,6 +624,14 @@ class LocalIgnoreResetBackupDirectoryError(LocalIgnoreResetError): ...
 class LocalIgnoreResetBackupPublicationError(LocalIgnoreResetError): ...
 class LocalIgnoreResetBackupVerificationError(LocalIgnoreResetError): ...
 class LocalIgnoreResetReplacementPublicationError(LocalIgnoreResetError): ...
+class LocalIgnoreResetReplacementDurabilityUnknownError(LocalIgnoreResetError):
+    """Raised when defaults are visible but canonical replacement durability is unconfirmed."""
+
+    code: Literal["replacement_durability_unknown"]
+    backup_path: str
+    malformed_identity: YamlDataContentIdentity
+    backup_identity: YamlDataContentIdentity
+    replacement_identity: YamlDataContentIdentity
 
 class InstalledYamlDataInspectionError(Exception):
     """Base class for Installed YAML Data inspection failures."""

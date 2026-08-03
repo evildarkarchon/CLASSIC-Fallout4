@@ -134,6 +134,34 @@ def test_mod_guidance_analyzer_returns_aggregate_semantic_guidance() -> None:
         result.conflicts = []
 
 
+def test_mod_guidance_analyzer_accepts_and_preserves_missing_fix() -> None:
+    """Represent absent conflict remediation as ``None`` end to end."""
+    analyzer = classic_scanlog.ModGuidanceAnalyzer(
+        [
+            classic_scanlog.ModGuidanceConflictRule(
+                "alpha",
+                "beta",
+                "Alpha Mod",
+                "Beta Mod",
+                "Authored conflict description",
+                None,
+            )
+        ],
+        [],
+        [],
+        [],
+    )
+
+    result = analyzer.analyze(
+        classic_scanlog.ModGuidanceAnalysisInput(
+            {"Alpha.esp": "01", "Beta.esp": "02"},
+        )
+    )
+
+    assert len(result.conflicts) == 1
+    assert result.conflicts[0].fix is None
+
+
 def test_mod_guidance_analyzer_returns_explicit_empty_result() -> None:
     analyzer = classic_scanlog.ModGuidanceAnalyzer([], [], [], [])
 

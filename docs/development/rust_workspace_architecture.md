@@ -4,10 +4,11 @@ This guide describes the current CLASSIC Rust workspace structure.
 
 ## Workspace layout
 
-The active Rust workspace lives under `ClassicLib-rs/`.
+The active Cargo workspace is rooted at the repository root.
 
 ```text
-ClassicLib-rs/
+<repo root>/
+|- Cargo.toml           workspace manifest
 |- foundation/          shared runtime, error, and support crates
 |- business-logic/      pure Rust product logic (`*-core`)
 |- python-bindings/     PyO3 binding crates (`*-py`)
@@ -20,22 +21,22 @@ ClassicLib-rs/
 
 ### Foundation layer
 
-- Lives under `ClassicLib-rs/foundation/`
+- Lives under `foundation/`
 - Holds shared runtime and support crates such as `classic-shared-core`
 - Owns the shared Tokio runtime facilities
 
 ### Business-logic layer
 
-- Lives under `ClassicLib-rs/business-logic/`
+- Lives under `business-logic/`
 - Uses crate names like `classic-config-core`, `classic-scanlog-core`, `classic-version-registry-core`
 - Contains product logic, validation rules, parsing, matching, persistence rules, and shared behavior
 - Should not depend on PyO3, Node, or C++ bridge code
 
 ### Binding layers
 
-- Python bindings live under `ClassicLib-rs/python-bindings/*-py`
-- Node bindings live under `ClassicLib-rs/node-bindings/`
-- C++ bindings live under `ClassicLib-rs/cpp-bindings/`
+- Python bindings live under `python-bindings/*-py`
+- Node bindings live under `node-bindings/`
+- C++ bindings live under `cpp-bindings/`
 - These layers should stay thin and delegate real logic to Rust core crates
 
 ## Naming conventions
@@ -46,10 +47,10 @@ ClassicLib-rs/
 
 Examples:
 
-- `ClassicLib-rs/business-logic/classic-config-core`
-- `ClassicLib-rs/python-bindings/classic-config-py`
-- `ClassicLib-rs/business-logic/classic-scanlog-core`
-- `ClassicLib-rs/python-bindings/classic-scanlog-py`
+- `business-logic/classic-config-core`
+- `python-bindings/classic-config-py`
+- `business-logic/classic-scanlog-core`
+- `python-bindings/classic-scanlog-py`
 
 ## Dependency direction
 
@@ -66,7 +67,7 @@ Bindings should not become alternate homes for business logic.
 ## Important current-state notes
 
 - There is no maintained `classic_core` facade crate in the current workspace.
-- There is no `classic-rust/` workspace directory; the active workspace root is `ClassicLib-rs/`.
+- There is no nested Rust workspace directory; the active workspace root is the repository root.
 - C++ frontends live outside the workspace in `classic-cli/` and `classic-gui/`, but consume Rust through the C++ bridge.
 
 ## Validation by surface
@@ -74,23 +75,24 @@ Bindings should not become alternate homes for business logic.
 ### Rust core changes
 
 ```powershell
-cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
-cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace
 ```
 
 ### Python binding changes
 
 ```powershell
-uv venv ClassicLib-rs/python-bindings/.venv
-uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
+# python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
+# --inexact is load-bearing: it keeps uv from pruning maturin-built classic-*-py wheels.
+uv sync --project python-bindings --inexact
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
+uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
 ```
 
 ### Node binding changes
 
-Run from `ClassicLib-rs/node-bindings/classic-node`:
+Run from `node-bindings/classic-node`:
 
 ```powershell
 bun run build:debug

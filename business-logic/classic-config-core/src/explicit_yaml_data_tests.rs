@@ -76,6 +76,124 @@ async fn explicit_loader_uses_caller_selected_files_and_accepts_empty_local_igno
 }
 
 #[tokio::test]
+async fn explicit_loader_accepts_mod_conflict_without_optional_fix() {
+    let temp = tempdir().expect("temporary directory should be created");
+    let game_with_optional_fix = GAME_YAML.replace(
+        "Mods_FREQ: []",
+        r#"Mods_CONF:
+  - mod_a: Upscaling.dll
+    mod_b: FSR3_AA.dll
+    name_a: Upscaling
+    name_b: FSR 3 Antialiasing
+    description: The mods are redundant with each other.
+Mods_FREQ: []"#,
+    );
+    let (main_path, game_path, ignore_path) = write_explicit_files(
+        temp.path(),
+        MAIN_YAML.as_bytes(),
+        game_with_optional_fix.as_bytes(),
+        EMPTY_IGNORE_YAML.as_bytes(),
+    );
+
+    let snapshot = load_explicit_yaml_data(ExplicitYamlDataRequest {
+        main_path,
+        game_path,
+        ignore_path,
+        game: GameId::Fallout4,
+        selected_game_version: "Original".to_string(),
+    })
+    .await
+    .expect("a Mods_CONF entry may omit optional remediation guidance");
+
+    assert_eq!(snapshot.yaml_data().game_mods_conf.len(), 1);
+    assert_eq!(snapshot.yaml_data().game_mods_conf[0].fix, None);
+}
+
+#[tokio::test]
+async fn explicit_loader_preserves_present_mod_conflict_fix() {
+    let temp = tempdir().expect("temporary directory should be created");
+    let game_with_fix = GAME_YAML.replace(
+        "Mods_FREQ: []",
+        r#"Mods_CONF:
+  - mod_a: Upscaling.dll
+    mod_b: FSR3_AA.dll
+    name_a: Upscaling
+    name_b: FSR 3 Antialiasing
+    description: The mods are redundant with each other.
+    fix: Remove one of the conflicting mods.
+Mods_FREQ: []"#,
+    );
+    let (main_path, game_path, ignore_path) = write_explicit_files(
+        temp.path(),
+        MAIN_YAML.as_bytes(),
+        game_with_fix.as_bytes(),
+        EMPTY_IGNORE_YAML.as_bytes(),
+    );
+
+    let snapshot = load_explicit_yaml_data(ExplicitYamlDataRequest {
+        main_path,
+        game_path,
+        ignore_path,
+        game: GameId::Fallout4,
+        selected_game_version: "Original".to_string(),
+    })
+    .await
+    .expect("a present non-empty Mods_CONF fix should remain valid");
+
+    assert_eq!(
+        snapshot.yaml_data().game_mods_conf[0].fix.as_deref(),
+        Some("Remove one of the conflicting mods.")
+    );
+}
+
+#[tokio::test]
+async fn explicit_loader_rejects_malformed_present_mod_conflict_fix() {
+    for invalid_fix in ["fix: \"   \"", "fix: 42", "fix: null"] {
+        let temp = tempdir().expect("temporary directory should be created");
+        let game_with_invalid_fix = GAME_YAML.replace(
+            "Mods_FREQ: []",
+            &format!(
+                r#"Mods_CONF:
+  - mod_a: Upscaling.dll
+    mod_b: FSR3_AA.dll
+    name_a: Upscaling
+    name_b: FSR 3 Antialiasing
+    description: The mods are redundant with each other.
+    {invalid_fix}
+Mods_FREQ: []"#
+            ),
+        );
+        let (main_path, game_path, ignore_path) = write_explicit_files(
+            temp.path(),
+            MAIN_YAML.as_bytes(),
+            game_with_invalid_fix.as_bytes(),
+            EMPTY_IGNORE_YAML.as_bytes(),
+        );
+
+        let error = load_explicit_yaml_data(ExplicitYamlDataRequest {
+            main_path,
+            game_path: game_path.clone(),
+            ignore_path,
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        })
+        .await
+        .expect_err("a present Mods_CONF fix must be a non-empty string");
+
+        assert!(matches!(
+            error,
+            ExplicitYamlDataLoadError::InvalidRoleData {
+                role: ExplicitYamlDataRole::Game,
+                path,
+                reason,
+            } if path == game_path
+                && reason
+                    == "`Mods_CONF[0].fix` must be a non-empty string when present"
+        ));
+    }
+}
+
+#[tokio::test]
 async fn fallout4_vr_selects_the_shared_fallout4_game_data_role() {
     let temp = tempdir().expect("temporary directory should be created");
     let ignore = "CLASSIC_Ignore_Fallout4:\n  - shared-entry\n";

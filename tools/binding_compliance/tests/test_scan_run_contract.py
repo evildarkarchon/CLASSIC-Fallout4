@@ -159,6 +159,87 @@ def test_missing_shared_infrastructure_stage_fails_closed() -> None:
         validate_manifest(REPO_ROOT, manifest)
 
 
+def test_missing_reset_fixture_root_fails_closed() -> None:
+    """Reset parity cannot survive after its shared fixture corpus is detached."""
+
+    manifest = copy.deepcopy(load_manifest(REPO_ROOT))
+    manifest.pop("fixtureRoot")
+
+    with pytest.raises(ManifestValidationError, match="fixtureRoot"):
+        validate_manifest(REPO_ROOT, manifest)
+
+
+def test_missing_reset_fixture_fails_closed() -> None:
+    """The shared reset outcomes cannot disappear while adapter evidence remains."""
+
+    manifest = copy.deepcopy(load_manifest(REPO_ROOT))
+    manifest["fixtures"].pop("installedYamlData")
+
+    with pytest.raises(
+        ManifestValidationError,
+        match=r"fixtures\.installedYamlData",
+    ):
+        validate_manifest(REPO_ROOT, manifest)
+
+
+def test_missing_reset_outcome_fails_closed() -> None:
+    """Every stable reset error category remains owned by the shared fixture."""
+
+    manifest = copy.deepcopy(load_manifest(REPO_ROOT))
+    manifest["fixtures"]["installedYamlData"]["resetOutcomes"].pop(
+        "replacementFailureCode"
+    )
+
+    with pytest.raises(
+        ManifestValidationError,
+        match=r"replacementFailureCode",
+    ):
+        validate_manifest(REPO_ROOT, manifest)
+
+
+def test_missing_durability_unknown_reset_outcome_fails_closed() -> None:
+    """The visible-but-unconfirmed replacement receipt remains a shared outcome."""
+
+    manifest = copy.deepcopy(load_manifest(REPO_ROOT))
+    manifest["fixtures"]["installedYamlData"]["resetOutcomes"].pop(
+        "durabilityUnknownCode"
+    )
+
+    with pytest.raises(
+        ManifestValidationError,
+        match=r"durabilityUnknownCode",
+    ):
+        validate_manifest(REPO_ROOT, manifest)
+
+
+def test_changed_reset_fixture_semantics_fail_closed() -> None:
+    """Reset success retains its typed state, diagnostics, and durable outcome facts."""
+
+    manifest = copy.deepcopy(load_manifest(REPO_ROOT))
+    manifest["fixtures"]["installedYamlData"]["expectedResetToDefault"][
+        "localIgnoreState"
+    ] = "existing"
+
+    with pytest.raises(
+        ManifestValidationError,
+        match=r"expectedResetToDefault\.localIgnoreState",
+    ):
+        validate_manifest(REPO_ROOT, manifest)
+
+
+def test_missing_reset_scenario_fails_closed() -> None:
+    """All supported adapters must retain executable Reset To Default evidence."""
+
+    manifest = copy.deepcopy(load_manifest(REPO_ROOT))
+    manifest["scenarios"].pop("reset_to_default_continuation")
+
+    with pytest.raises(
+        ManifestValidationError,
+        match="reset_to_default_continuation",
+    ):
+        validate_manifest(REPO_ROOT, manifest)
+
+
 def test_manifest_is_machine_readable_json() -> None:
     """The fixture manifest remains consumable by every language runner."""
 

@@ -112,9 +112,9 @@ coverage.json
 too-many-branches.txt
 test-results.txt
 
-# Ephemeral parity gate artifacts (baselines are committed separately)
-ClassicLib-rs/cpp-bindings/classic-cpp-bridge/parity-artifacts/
-ClassicLib-rs/node-bindings/classic-node/parity-artifacts/
+# Ephemeral parity gate artifacts (baselines are committed separately).
+# The bridge and Node parity-artifacts dirs are covered by their own nested
+# .gitignore files; python-bindings/parity-artifacts/ is deliberately tracked.
 tools/binding_compliance/artifacts/
 
 # Code signing certificates (auto-generated, contains private key)
@@ -127,11 +127,11 @@ Cargo.lock
 *.so
 *.pyd
 *.dll
-# Rust workspace
-.cargo/
-!ClassicLib-rs/.cargo/config.toml
-!ClassicLib-rs/ui-applications/classic-gui/.cargo/
-!ClassicLib-rs/ui-applications/classic-gui/.cargo/config.toml
+# Rust workspace. Ignore local cargo state but keep the tracked workspace
+# config. Git cannot re-include a file inside an ignored *directory*, so the
+# repo-root .cargo must be excluded per-entry rather than as a whole directory.
+/.cargo/*
+!/.cargo/config.toml
 # Rust debugging
 *.pdb
 *.dSYM/
@@ -160,9 +160,9 @@ cprofile*.txt
 *.db-wal
 CLASSIC Data/graphics/Scanner 111*.svg
 test-collection.txt
-ClassicLib-rs/clippy_full_report.txt
-ClassicLib-rs/clippy_report.txt
-ClassicLib-rs/CLASSIC_Settings.yaml
+clippy_full_report.txt
+clippy_report.txt
+CLASSIC_Settings.yaml
 performance/results/orchestrator_batch.txt
 performance/results/orchestrator_single_log.txt
 prompts/
@@ -332,7 +332,6 @@ con
 !**/fixtures/*.log
 !**/fixtures/**/*.log
 classic-gui/result.txt
-ClassicLib-rs/ui-applications/classic-gui-slint/CLASSIC Data/
 Qt6/
 # Legacy flat-deployment artifact only; do not re-broaden to 'styles/'
 # because that would also ignore classic-gui/src/styles/, which holds

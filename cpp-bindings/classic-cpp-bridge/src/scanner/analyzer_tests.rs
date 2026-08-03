@@ -120,6 +120,7 @@ fn valid_mod_guidance_configuration() -> ffi::ModGuidanceAnalyzerConfigurationDt
                 name_a: "Alpha Mod".to_string(),
                 name_b: "Beta Mod".to_string(),
                 description: "These mods conflict".to_string(),
+                has_fix: true,
                 fix: "Install the compatibility patch".to_string(),
                 has_link: true,
                 link: "https://example.com/patch".to_string(),
@@ -130,7 +131,8 @@ fn valid_mod_guidance_configuration() -> ffi::ModGuidanceAnalyzerConfigurationDt
                 name_a: "Gamma Mod".to_string(),
                 name_b: "Delta Mod".to_string(),
                 description: "These mods also conflict".to_string(),
-                fix: "Remove one mod".to_string(),
+                has_fix: false,
+                fix: "ignored".to_string(),
                 has_link: false,
                 link: "ignored".to_string(),
             },
@@ -276,9 +278,12 @@ fn mod_guidance_analysis_projects_all_families_and_optional_presence() {
     let linked_conflict = &execution.result.conflicts[0];
     assert_eq!(linked_conflict.state, ffi::ModGuidanceMatchState::Matched);
     assert_eq!(linked_conflict.name_a, "Alpha Mod");
+    assert!(linked_conflict.has_fix);
     assert_eq!(linked_conflict.fix, "Install the compatibility patch");
     assert!(linked_conflict.has_link);
     assert_eq!(linked_conflict.link, "https://example.com/patch");
+    assert!(!execution.result.conflicts[1].has_fix);
+    assert!(execution.result.conflicts[1].fix.is_empty());
     assert!(!execution.result.conflicts[1].has_link);
     assert!(execution.result.conflicts[1].link.is_empty());
 

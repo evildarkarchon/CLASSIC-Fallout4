@@ -8,7 +8,7 @@ Define the maintained Node binding CLI behavior for end-to-end crash log scannin
 The maintained Node bindings package SHALL provide a Node-native CLI whose default execution path performs real crash-log scanning through the maintained binding surface.
 
 #### Scenario: Contributor runs the Node CLI with scan defaults
-- **WHEN** a contributor invokes the packaged Node CLI without a subcommand from `ClassicLib-rs/node-bindings/classic-node`
+- **WHEN** a contributor invokes the packaged Node CLI without a subcommand from `node-bindings/classic-node`
 - **THEN** the CLI resolves the required scan inputs, loads the native binding, and executes the crash-log scan workflow instead of only running a smoke test
 
 #### Scenario: Binding load fails before scanning starts

@@ -425,6 +425,8 @@ pub enum ResumeErrorKind {
     LocalIgnoreResetBackupFailure,
     /// Reset failed while publishing the retained defaults as authoritative.
     LocalIgnoreResetReplacementFailure,
+    /// Replacement is visible and recoverable, but namespace durability is unconfirmed.
+    LocalIgnoreResetDurabilityUnknown,
     /// The retained run encountered a run-wide infrastructure failure after resume.
     Infrastructure,
 }
@@ -438,6 +440,7 @@ impl ResumeErrorKind {
             Self::LocalIgnoreResetConflict => "local_ignore_reset_conflict",
             Self::LocalIgnoreResetBackupFailure => "local_ignore_reset_backup_failure",
             Self::LocalIgnoreResetReplacementFailure => "local_ignore_reset_replacement_failure",
+            Self::LocalIgnoreResetDurabilityUnknown => "local_ignore_reset_durability_unknown",
             Self::Infrastructure => "infrastructure",
         }
     }
@@ -494,6 +497,23 @@ pub struct LocalIgnoreResetFailure {
     pub message: String,
 }
 
+/// Recoverable receipt for a visible replacement whose durability barrier failed.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LocalIgnoreResetDurabilityUnknownError {
+    /// Canonical Local Ignore path containing the complete retained defaults.
+    pub path: PathBuf,
+    /// Durable byte-exact backup published before replacement.
+    pub backup_path: PathBuf,
+    /// Identity of the malformed bytes retained by the recovery plan.
+    pub malformed_identity: YamlDataContentIdentity,
+    /// Identity independently verified from the durable backup bytes.
+    pub backup_identity: YamlDataContentIdentity,
+    /// Identity of the complete defaults now visible at the canonical path.
+    pub replacement_identity: YamlDataContentIdentity,
+    /// Human-readable durability diagnostic.
+    pub message: String,
+}
+
 /// Typed failure returned by [`CrashLogScanRunContinuation::resume`].
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ResumeError {
@@ -505,6 +525,8 @@ pub enum ResumeError {
     LocalIgnoreResetBackupFailure(LocalIgnoreResetFailure),
     /// Reset failed while publishing the retained defaults.
     LocalIgnoreResetReplacementFailure(LocalIgnoreResetFailure),
+    /// Reset replacement is visible with a verified backup, but durability is unconfirmed.
+    LocalIgnoreResetDurabilityUnknown(Box<LocalIgnoreResetDurabilityUnknownError>),
     /// Resume reached a run-wide infrastructure failure.
     Infrastructure(InfrastructureError),
 }
@@ -522,6 +544,9 @@ impl ResumeError {
             Self::LocalIgnoreResetReplacementFailure(_) => {
                 ResumeErrorKind::LocalIgnoreResetReplacementFailure
             }
+            Self::LocalIgnoreResetDurabilityUnknown(_) => {
+                ResumeErrorKind::LocalIgnoreResetDurabilityUnknown
+            }
             Self::Infrastructure(_) => ResumeErrorKind::Infrastructure,
         }
     }
@@ -533,7 +558,8 @@ impl ResumeError {
             Self::ContinuationConsumed
             | Self::LocalIgnoreResetConflict(_)
             | Self::LocalIgnoreResetBackupFailure(_)
-            | Self::LocalIgnoreResetReplacementFailure(_) => None,
+            | Self::LocalIgnoreResetReplacementFailure(_)
+            | Self::LocalIgnoreResetDurabilityUnknown(_) => None,
             Self::Infrastructure(error) => Some(error),
         }
     }
@@ -552,6 +578,9 @@ impl fmt::Display for ResumeError {
             | Self::LocalIgnoreResetReplacementFailure(failure) => {
                 formatter.write_str(&failure.message)
             }
+            Self::LocalIgnoreResetDurabilityUnknown(failure) => {
+                formatter.write_str(&failure.message)
+            }
             Self::Infrastructure(error) => error.fmt(formatter),
         }
     }
@@ -563,7 +592,8 @@ impl std::error::Error for ResumeError {
             Self::ContinuationConsumed
             | Self::LocalIgnoreResetConflict(_)
             | Self::LocalIgnoreResetBackupFailure(_)
-            | Self::LocalIgnoreResetReplacementFailure(_) => None,
+            | Self::LocalIgnoreResetReplacementFailure(_)
+            | Self::LocalIgnoreResetDurabilityUnknown(_) => None,
             Self::Infrastructure(error) => Some(error),
         }
     }
@@ -583,6 +613,22 @@ fn project_local_ignore_reset_conflict(
 /// Converts config-core reset failures into stable continuation outcomes for every adapter.
 fn project_local_ignore_reset_error(error: LocalIgnoreResetError) -> ResumeError {
     let message = error.to_string();
+    let error = match error {
+        LocalIgnoreResetError::ReplacementDurabilityUnknown { receipt, .. } => {
+            let receipt = *receipt;
+            return ResumeError::LocalIgnoreResetDurabilityUnknown(Box::new(
+                LocalIgnoreResetDurabilityUnknownError {
+                    path: receipt.path,
+                    backup_path: receipt.backup_path,
+                    malformed_identity: receipt.malformed_identity,
+                    backup_identity: receipt.backup_identity,
+                    replacement_identity: receipt.replacement_identity,
+                    message,
+                },
+            ));
+        }
+        other => other,
+    };
     let (replacement_failure, path, stage) = match error {
         LocalIgnoreResetError::DefaultsUnavailable { path, .. }
         | LocalIgnoreResetError::Lock { path, .. }
@@ -594,6 +640,9 @@ fn project_local_ignore_reset_error(error: LocalIgnoreResetError) -> ResumeError
         }
         LocalIgnoreResetError::ReplacementPublication { path, stage, .. } => {
             (true, path, Some(project_reset_publication_stage(stage)))
+        }
+        LocalIgnoreResetError::ReplacementDurabilityUnknown { .. } => {
+            unreachable!("durability uncertainty returns before failure projection")
         }
     };
     let failure = LocalIgnoreResetFailure {

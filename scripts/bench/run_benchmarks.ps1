@@ -92,10 +92,10 @@ if ($SaveBaseline -and [string]::IsNullOrWhiteSpace($BaselineName)) {
     $BaselineName = "baseline-$(Get-Date -Format 'yyyy-MM-dd-HHmmss')"
 }
 
-# Resolve ClassicLib-rs from script location first, then fallback to CWD.
+# The Cargo workspace root is the repo root. Resolve it from the script
+# location first, then fall back to CWD for out-of-tree invocations.
 $rustDirCandidates = @(
-    (Join-Path $PSScriptRoot "../../ClassicLib-rs"),
-    (Join-Path (Get-Location) "ClassicLib-rs"),
+    (Join-Path $PSScriptRoot "../.."),
     (Get-Location)
 )
 
@@ -109,7 +109,7 @@ foreach ($candidate in $rustDirCandidates) {
 }
 
 if (-not $rustDir) {
-    Write-Error "Could not locate ClassicLib-rs/Cargo.toml."
+    Write-Error "Could not locate the workspace Cargo.toml. Run this script from the repository root."
     exit 1
 }
 

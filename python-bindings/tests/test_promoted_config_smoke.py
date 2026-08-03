@@ -121,6 +121,33 @@ def test_yaml_data_from_yaml_content_fixture() -> None:
     assert isinstance(data.game_mods_solu, list)  # ModSolutionEntry list (SOLU)
     assert isinstance(data.suspect_error_rules, list)  # SuspectErrorRule list
     assert isinstance(data.suspect_stack_rules, list)  # SuspectStackRule list
+
+
+def test_yaml_data_mod_conflict_fix_is_optional() -> None:
+    """Missing Mods_CONF remediation remains absent in the Python projection."""
+    game_yaml = PARITY_GAME_YAML.replace(
+        "Mods_CONF: []",
+        "\n".join(
+            (
+                "Mods_CONF:",
+                "  - mod_a: Upscaling.dll",
+                "    mod_b: FSR3_AA.dll",
+                "    name_a: Upscaling",
+                "    name_b: FSR 3 Antialiasing",
+                "    description: The mods are redundant with each other.",
+            )
+        ),
+    )
+
+    data = classic_config.YamlData.from_yaml_content(
+        PARITY_MAIN_YAML,
+        game_yaml,
+        PARITY_IGNORE_YAML,
+        "Fallout4",
+        "auto",
+    )
+
+    assert data.game_mods_conf[0]["fix"] is None
     # __repr__ dunder
     assert "YamlData(" in repr(data)
 

@@ -120,7 +120,7 @@ On `InstalledYamlDataLoadOutcome::Ready`, `InstalledYamlDataSnapshot` privately 
 
 An existing Local Ignore document that is invalid UTF-8, syntactically malformed, or invalid for the selected game role returns `InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired`. Its opaque `LocalIgnoreRecoveryPlan` retains the exact selected Main/game snapshot, selected-Main default state, malformed path and identity, selected game-version mode, and diagnostics without exposing raw documents. Valid defaults expose an identity; invalid or unavailable defaults are retained as unavailable for a future reset decision and do not block Proceed Without Ignore. `proceed_without_ignore()` consumes that plan and returns the retained snapshot with `LocalIgnoreYamlDataState::ProceedWithoutIgnore` and an empty operation-scoped `ignore_list`. It performs no filesystem operation, so every installed file remains byte-identical and the next load encounters the same malformed document again.
 
-`reset_to_default()` consumes the same plan without reselecting installed data. It conflict-checks the canonical bytes, durably publishes and rereads a byte-exact backup at a uniquely owned identity-bearing path, then stages and atomically replaces the canonical file with the retained default text. Success returns `LocalIgnoreYamlDataState::ResetToDefault`, reset/backup identities and paths, plus a `LocalIgnoreReset` diagnostic. Conflict is typed and never overwrites changed or removed state; backup/verification/replacement failures leave the malformed original authoritative and never publish partial default content. Reset is synchronous and non-interruptible after entry so a scan coordinator can check cancellation before the call and again only after the durable transaction returns.
+`reset_to_default()` consumes the same plan without reselecting installed data. It conflict-checks the canonical bytes, durably publishes and rereads a byte-exact backup at a uniquely owned identity-bearing path, then stages and atomically replaces the canonical file with the retained default text. Success returns `LocalIgnoreYamlDataState::ResetToDefault`, reset/backup identities and paths, plus a `LocalIgnoreReset` diagnostic. Conflict is typed and never overwrites changed or removed state; pre-publication backup/verification/replacement failures leave the malformed original authoritative and never publish partial default content. A distinct `ReplacementDurabilityUnknown` error means complete retained defaults are visible but Unix parent-directory durability could not be confirmed; its verified-backup and three content identities form a recovery receipt. Reset is synchronous and non-interruptible after entry so a scan coordinator can check cancellation before the call and again only after a confirmed durable transaction returns.
 
 ---
 
@@ -276,8 +276,10 @@ Accepted placement values are:
 | `name_a` | string | yes | human-readable display name for mod A |
 | `name_b` | string | yes | human-readable display name for mod B |
 | `description` | string | yes | why the conflict matters |
-| `fix` | string | yes | what the user should do |
+| `fix` | string | no | optional remediation guidance; when present, it must be non-empty |
 | `link` | string | no | optional URL for patch or alternative |
+
+Omitting `fix` means the conflict has no separately authored remediation line; consumers preserve that absence instead of inventing an empty string or fallback prose. A present blank, null, or non-string `fix` is malformed at strict Explicit and Installed YAML Data boundaries.
 
 Deduplication: at parse time each pair is canonicalized to `(min(mod_a, mod_b), max(mod_a, mod_b))` using case-insensitive comparison. If a duplicate canonical pair is found, it is skipped with a warning log.
 

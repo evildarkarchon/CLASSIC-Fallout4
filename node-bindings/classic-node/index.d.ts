@@ -4086,7 +4086,7 @@ export interface JsModConflictEntry {
   nameA: string
   nameB: string
   description: string
-  fix: string
+  fix?: string
   link?: string
 }
 
@@ -4104,8 +4104,8 @@ export interface JsModConflictGuidance {
   nameB: string
   /** Authored explanation of the conflict. */
   description: string
-  /** Authored remediation guidance. */
-  fix: string
+  /** Optional authored remediation guidance. */
+  fix?: string
   /** Optional authored external reference. */
   link?: string
 }
@@ -4122,8 +4122,8 @@ export interface JsModConflictRule {
   nameB: string
   /** Authored explanation of the conflict. */
   description: string
-  /** Authored remediation guidance. */
-  fix: string
+  /** Optional authored remediation guidance. */
+  fix?: string
   /** Optional authored external reference. */
   link?: string
 }

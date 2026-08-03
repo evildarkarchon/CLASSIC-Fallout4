@@ -275,6 +275,7 @@ trait LocalIgnoreResetPublisher {
 enum ConditionalReplacement {
     Replaced,
     Conflict(Option<YamlDataContentIdentity>),
+    DurabilityUnknown(std::io::Error),
 }
 
 /// Which durable publication in the reset transaction is being staged.
@@ -290,12 +291,18 @@ struct SystemLocalIgnoreResetPublisher {
         LocalIgnoreResetPublicationKind,
         LocalIgnoreResetPublicationStage,
     )>,
+    fail_replacement_read: bool,
+    fail_after_replacement_publish: bool,
 }
 
 impl SystemLocalIgnoreResetPublisher {
     /// Build the production publisher without fault injection.
     const fn system() -> Self {
-        Self { fail_at: None }
+        Self {
+            fail_at: None,
+            fail_replacement_read: false,
+            fail_after_replacement_publish: false,
+        }
     }
 
     /// Build a publisher that fails immediately before one real publication boundary.
@@ -306,6 +313,28 @@ impl SystemLocalIgnoreResetPublisher {
     ) -> Self {
         Self {
             fail_at: Some((kind, stage)),
+            fail_replacement_read: false,
+            fail_after_replacement_publish: false,
+        }
+    }
+
+    /// Build a publisher that fails the conflict-protection reread after backup verification.
+    #[cfg(test)]
+    const fn failing_replacement_read() -> Self {
+        Self {
+            fail_at: None,
+            fail_replacement_read: true,
+            fail_after_replacement_publish: false,
+        }
+    }
+
+    /// Build a publisher that fails after canonical replacement but before durability is confirmed.
+    #[cfg(test)]
+    const fn failing_after_replacement_publish() -> Self {
+        Self {
+            fail_at: None,
+            fail_replacement_read: false,
+            fail_after_replacement_publish: true,
         }
     }
 
@@ -356,14 +385,25 @@ impl LocalIgnoreResetPublisher for SystemLocalIgnoreResetPublisher {
             stage: failure.stage,
             source: failure.source,
         })?;
+        if self.fail_replacement_read {
+            return Err(LocalIgnoreResetError::ReplacementPublication {
+                path: path.to_path_buf(),
+                stage: LocalIgnoreResetPublicationStage::Publish,
+                source: std::io::Error::new(
+                    std::io::ErrorKind::PermissionDenied,
+                    "injected replacement conflict-protection reread failure",
+                ),
+            });
+        }
         let current = match std::fs::read(path) {
             Ok(bytes) => bytes,
             Err(source) if source.kind() == std::io::ErrorKind::NotFound => {
                 return Ok(ConditionalReplacement::Conflict(None));
             }
             Err(source) => {
-                return Err(LocalIgnoreResetError::Read {
+                return Err(LocalIgnoreResetError::ReplacementPublication {
                     path: path.to_path_buf(),
+                    stage: LocalIgnoreResetPublicationStage::Publish,
                     source,
                 });
             }
@@ -383,17 +423,21 @@ impl LocalIgnoreResetPublisher for SystemLocalIgnoreResetPublisher {
             stage: failure.stage,
             source: failure.source,
         })?;
-        staged
-            .persist(path)
-            .map_err(|failure| LocalIgnoreResetError::ReplacementPublication {
-                path: path.to_path_buf(),
-                stage: LocalIgnoreResetPublicationStage::Publish,
-                source: failure.error,
-            })?;
-        if let Some(parent) = path.parent() {
-            sync_replacement_parent_best_effort(parent);
+        match publish_local_ignore_reset_replacement(
+            staged,
+            path,
+            self.fail_after_replacement_publish,
+        )
+        .map_err(|failure| LocalIgnoreResetError::ReplacementPublication {
+            path: path.to_path_buf(),
+            stage: failure.stage,
+            source: failure.source,
+        })? {
+            ReplacementPublication::Durable => Ok(ConditionalReplacement::Replaced),
+            ReplacementPublication::DurabilityUnknown(source) => {
+                Ok(ConditionalReplacement::DurabilityUnknown(source))
+            }
         }
-        Ok(ConditionalReplacement::Replaced)
     }
 }
 
@@ -482,19 +526,78 @@ fn publish_local_ignore_reset_backup(
     Ok(())
 }
 
-/// Best-effort directory synchronization after canonical replacement is already authoritative.
+/// Replace canonical Local Ignore and distinguish a post-rename durability failure.
+fn publish_local_ignore_reset_replacement(
+    staged: NamedTempFile,
+    path: &Path,
+    fail_after_publish: bool,
+) -> Result<ReplacementPublication, ResetPublicationFailure> {
+    let (staged_file, staged_path) = staged.keep().map_err(|failure| ResetPublicationFailure {
+        stage: LocalIgnoreResetPublicationStage::Publish,
+        source: failure.error,
+    })?;
+    drop(staged_file);
+    let publication = match publish_staged_local_ignore_reset_replacement(&staged_path, path) {
+        Ok(publication) => publication,
+        Err(failure) => {
+            // A pre-publish failure leaves caller-owned staging content to remove. After a Unix rename,
+            // the staging path no longer exists and durability uncertainty is returned as data.
+            let _ = std::fs::remove_file(&staged_path);
+            return Err(failure);
+        }
+    };
+    if fail_after_publish {
+        return Ok(ReplacementPublication::DurabilityUnknown(
+            std::io::Error::new(
+                std::io::ErrorKind::PermissionDenied,
+                "injected post-publish replacement directory sync failure",
+            ),
+        ));
+    }
+    Ok(publication)
+}
+
+/// Result of publishing synchronized replacement bytes at the canonical path.
+enum ReplacementPublication {
+    /// Replacement and its namespace entry reached the platform's durability barrier.
+    Durable,
+    /// Complete replacement bytes are visible, but namespace durability is unconfirmed.
+    DurabilityUnknown(std::io::Error),
+}
+
+/// Rename and synchronize a Unix directory while preserving the post-rename failure boundary.
 #[cfg(unix)]
-fn sync_replacement_parent_best_effort(parent: &Path) {
-    // A post-replacement sync failure cannot be reported without falsely claiming the prior
-    // canonical file remains authoritative, so replacement metadata durability is best-effort.
-    if let Ok(directory) = std::fs::File::open(parent) {
-        let _ = directory.sync_all();
+fn publish_staged_local_ignore_reset_replacement(
+    staged_path: &Path,
+    path: &Path,
+) -> Result<ReplacementPublication, ResetPublicationFailure> {
+    let parent = path.parent().unwrap_or_else(|| Path::new("."));
+    let directory = std::fs::File::open(parent).map_err(|source| ResetPublicationFailure {
+        stage: LocalIgnoreResetPublicationStage::Publish,
+        source,
+    })?;
+    std::fs::rename(staged_path, path).map_err(|source| ResetPublicationFailure {
+        stage: LocalIgnoreResetPublicationStage::Publish,
+        source,
+    })?;
+    match directory.sync_all() {
+        Ok(()) => Ok(ReplacementPublication::Durable),
+        Err(source) => Ok(ReplacementPublication::DurabilityUnknown(source)),
     }
 }
 
-/// Windows journals same-directory replacement metadata; std has no directory fsync handle.
+/// Use one write-through replacement call on platforms without Unix directory synchronization.
 #[cfg(not(unix))]
-fn sync_replacement_parent_best_effort(_parent: &Path) {}
+fn publish_staged_local_ignore_reset_replacement(
+    staged_path: &Path,
+    path: &Path,
+) -> Result<ReplacementPublication, ResetPublicationFailure> {
+    atomicwrites::replace_atomic(staged_path, path).map_err(|source| ResetPublicationFailure {
+        stage: LocalIgnoreResetPublicationStage::Publish,
+        source,
+    })?;
+    Ok(ReplacementPublication::Durable)
+}
 
 /// Immutable parsed Installed YAML Data backed by the exact selected file bytes.
 pub struct InstalledYamlDataSnapshot {
@@ -634,7 +737,7 @@ pub enum LocalIgnoreResetPublicationStage {
     Publish,
 }
 
-/// Operational failure encountered before a Local Ignore reset became authoritative.
+/// Operational failure encountered while publishing a Local Ignore reset.
 #[derive(Debug, Error)]
 pub enum LocalIgnoreResetError {
     /// The selected Main defaults retained by the plan were unusable.
@@ -691,7 +794,8 @@ pub enum LocalIgnoreResetError {
         /// Stable verification detail.
         reason: String,
     },
-    /// Retained defaults could not be atomically published at the canonical path.
+    /// Retained defaults could not be published durably at the canonical path.
+    ///
     #[error("failed to publish Local Ignore replacement `{}` at {stage:?}: {source}", path.display())]
     ReplacementPublication {
         /// Canonical Local Ignore path.
@@ -702,6 +806,34 @@ pub enum LocalIgnoreResetError {
         #[source]
         source: std::io::Error,
     },
+    /// Replacement is visible and recoverable from its verified backup, but not proven durable.
+    #[error(
+        "Local Ignore replacement `{}` is visible but durability is unconfirmed; verified backup is `{}`: {source}",
+        receipt.path.display(),
+        receipt.backup_path.display()
+    )]
+    ReplacementDurabilityUnknown {
+        /// Boxed recovery facts keep the operational error enum cheap to return.
+        receipt: Box<LocalIgnoreResetDurabilityReceipt>,
+        /// Parent-directory synchronization failure that prevented durability confirmation.
+        #[source]
+        source: std::io::Error,
+    },
+}
+
+/// Recovery facts for a visible Local Ignore replacement whose durability is unconfirmed.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LocalIgnoreResetDurabilityReceipt {
+    /// Canonical Local Ignore path now containing the complete retained defaults.
+    pub path: PathBuf,
+    /// Durable byte-exact backup published before replacement.
+    pub backup_path: PathBuf,
+    /// Identity of the malformed bytes retained by the recovery plan.
+    pub malformed_identity: YamlDataContentIdentity,
+    /// Identity independently verified from the durable backup bytes.
+    pub backup_identity: YamlDataContentIdentity,
+    /// Identity of the complete retained defaults now visible at the canonical path.
+    pub replacement_identity: YamlDataContentIdentity,
 }
 
 // A custom formatter prevents private retained bytes and parsed YAML documents from becoming
@@ -912,8 +1044,10 @@ impl LocalIgnoreRecoveryPlan {
     /// # Errors
     ///
     /// Returns a stage-specific [`LocalIgnoreResetError`] before replacement becomes
-    /// authoritative. A typed [`LocalIgnoreResetOutcome::Conflict`] means the malformed file was
-    /// changed or removed after this plan was created and was not overwritten.
+    /// authoritative. [`LocalIgnoreResetError::ReplacementDurabilityUnknown`] is distinct: the
+    /// complete replacement is visible and recoverable from its verified backup, but the namespace
+    /// durability barrier failed. A typed [`LocalIgnoreResetOutcome::Conflict`] means the malformed
+    /// file was changed or removed after this plan was created and was not overwritten.
     pub fn reset_to_default(self) -> Result<LocalIgnoreResetOutcome, LocalIgnoreResetError> {
         self.reset_to_default_with_publisher(&SystemLocalIgnoreResetPublisher::system())
     }
@@ -1004,6 +1138,18 @@ impl LocalIgnoreRecoveryPlan {
                         backup_path: Some(backup_path),
                     },
                 ));
+            }
+            ConditionalReplacement::DurabilityUnknown(source) => {
+                return Err(LocalIgnoreResetError::ReplacementDurabilityUnknown {
+                    receipt: Box::new(LocalIgnoreResetDurabilityReceipt {
+                        path: local_ignore_path,
+                        backup_path,
+                        malformed_identity: expected_identity,
+                        backup_identity,
+                        replacement_identity,
+                    }),
+                    source,
+                });
             }
         }
 

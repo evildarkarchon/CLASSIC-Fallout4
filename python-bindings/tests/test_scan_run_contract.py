@@ -725,6 +725,10 @@ def test_reset_to_default_exposes_typed_conflict_and_backup_failure(
     import classic_scanlog
 
     fixture = SHARED_SCAN_RUN_MANIFEST["fixtures"]["installedYamlData"]
+    assert issubclass(
+        classic_scanlog.ScanRunLocalIgnoreResetDurabilityUnknownError,
+        RuntimeError,
+    )
 
     def paused(root: Path) -> tuple[object, Path]:
         _copy_shared_scan_run_data_root(root)

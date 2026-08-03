@@ -64,7 +64,7 @@ A binding function SHALL NOT call back into Python modules via `PyModule::import
 - **THEN** no `-py` binding crate SHALL contain `PyModule::import` calls to legacy Python modules where a Rust core equivalent exists
 
 ### Requirement: Parity artifacts updated after API changes
-After any binding API is removed, renamed, or has its signature changed, the parity tracking system SHALL be updated. This includes: (a) the parity diff report at `ClassicLib-rs/python-bindings/parity-artifacts/parity_diff_report.md`, (b) all affected `.pyi` type stub files, and (c) any parity gate tests under `ClassicLib-rs/python-bindings/tests/`.
+After any binding API is removed, renamed, or has its signature changed, the parity tracking system SHALL be updated. This includes: (a) the parity diff report at `python-bindings/parity-artifacts/parity_diff_report.md`, (b) all affected `.pyi` type stub files, and (c) any parity gate tests under `python-bindings/tests/`.
 
 #### Scenario: Removed API reflected in parity report
 - **WHEN** a deprecated Python API function is removed from a binding crate

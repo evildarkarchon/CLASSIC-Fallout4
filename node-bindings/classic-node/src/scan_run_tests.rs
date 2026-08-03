@@ -1,4 +1,5 @@
 use super::*;
+use classic_config_core::YamlDataContentIdentity;
 use classic_scanlog_core::scan_run::contract::{
     InfrastructureError, InfrastructureErrorStage, LogDisposition, LogEvent, LogFailure,
     LogFailureStage, LogResult, RunResult,
@@ -175,6 +176,53 @@ fn replacement_failure_projects_shared_node_rejection_metadata() {
     };
     assert_eq!(PathBuf::from(projected_path), path);
     assert_eq!(stage, Some("publish"));
+}
+
+/// Visible replacement durability uncertainty retains every recovery receipt field.
+#[test]
+fn durability_unknown_projects_shared_node_recovery_receipt() {
+    let expected = shared_reset_outcomes();
+    let path = PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml");
+    let backup_path = PathBuf::from("C:/CLASSIC/backups/local-ignore.bak");
+    let malformed_identity = YamlDataContentIdentity::from_bytes(b"malformed");
+    let backup_identity = malformed_identity.clone();
+    let replacement_identity = YamlDataContentIdentity::from_bytes(b"defaults");
+    let projection =
+        project_scan_run_resume_error(contract::ResumeError::LocalIgnoreResetDurabilityUnknown(
+            Box::new(contract::LocalIgnoreResetDurabilityUnknownError {
+                path: path.clone(),
+                backup_path: backup_path.clone(),
+                malformed_identity: malformed_identity.clone(),
+                backup_identity: backup_identity.clone(),
+                replacement_identity: replacement_identity.clone(),
+                message: "replacement visible; durability unknown".to_string(),
+            }),
+        ));
+
+    assert_eq!(
+        projection.code,
+        expected["durabilityUnknownCode"]
+            .as_str()
+            .expect("shared durability-unknown code should be a string")
+    );
+    let ScanRunResumeErrorMetadata::DurabilityUnknown {
+        path: projected_path,
+        backup_path: projected_backup_path,
+        malformed_identity: projected_malformed,
+        backup_identity: projected_backup,
+        replacement_identity: projected_replacement,
+    } = projection.metadata
+    else {
+        panic!("durability uncertainty should retain a recovery receipt");
+    };
+    assert_eq!(PathBuf::from(projected_path), path);
+    assert_eq!(PathBuf::from(projected_backup_path), backup_path);
+    assert_eq!(projected_malformed.sha256, malformed_identity.sha256_hex());
+    assert_eq!(projected_backup.sha256, backup_identity.sha256_hex());
+    assert_eq!(
+        projected_replacement.sha256,
+        replacement_identity.sha256_hex()
+    );
 }
 
 #[test]

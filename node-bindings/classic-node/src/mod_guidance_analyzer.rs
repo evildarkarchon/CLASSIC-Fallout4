@@ -68,8 +68,8 @@ pub struct JsModConflictRule {
     pub name_b: String,
     /// Authored explanation of the conflict.
     pub description: String,
-    /// Authored remediation guidance.
-    pub fix: String,
+    /// Optional authored remediation guidance.
+    pub fix: Option<String>,
     /// Optional authored external reference.
     pub link: Option<String>,
 }
@@ -148,8 +148,8 @@ pub struct JsModConflictGuidance {
     pub name_b: String,
     /// Authored explanation of the conflict.
     pub description: String,
-    /// Authored remediation guidance.
-    pub fix: String,
+    /// Optional authored remediation guidance.
+    pub fix: Option<String>,
     /// Optional authored external reference.
     pub link: Option<String>,
 }

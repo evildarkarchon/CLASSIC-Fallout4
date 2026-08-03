@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 
-use classic_config_core::{InstalledYamlDataProvenance, InstalledYamlDataRole};
+use classic_config_core::{
+    InstalledYamlDataProvenance, InstalledYamlDataRole, YamlDataContentIdentity,
+};
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanRejectedInput,
@@ -16,7 +18,7 @@ use super::{
     installed_yaml_data_provenance_to_string, installed_yaml_data_role_to_string,
     local_ignore_state_to_string, log_failure_stage_to_string, log_result_to_py, phase_to_string,
     run_result_to_py, run_status_to_string, scan_run_reset_error_to_py, setup_to_py,
-    ScanRunLocalIgnoreResetReplacementError,
+    ScanRunLocalIgnoreResetDurabilityUnknownError, ScanRunLocalIgnoreResetReplacementError,
 };
 
 const SHARED_SCAN_RUN_MANIFEST: &str = include_str!(concat!(
@@ -181,12 +183,14 @@ fn maps_every_stable_enum_identifier() {
             contract::ResumeErrorKind::LocalIgnoreResetConflict,
             contract::ResumeErrorKind::LocalIgnoreResetBackupFailure,
             contract::ResumeErrorKind::LocalIgnoreResetReplacementFailure,
+            contract::ResumeErrorKind::LocalIgnoreResetDurabilityUnknown,
         ]
         .map(contract::ResumeErrorKind::as_str),
         [
             "local_ignore_reset_conflict",
             "local_ignore_reset_backup_failure",
             "local_ignore_reset_replacement_failure",
+            "local_ignore_reset_durability_unknown",
         ]
     );
     assert_eq!(
@@ -264,6 +268,79 @@ fn replacement_failure_maps_shared_outcome_to_typed_python_exception() {
                 .expect("replacement stage should be a string"),
             "publish"
         );
+    });
+}
+
+/// Visible replacement durability uncertainty maps every recovery receipt field.
+#[test]
+fn durability_unknown_maps_shared_outcome_to_typed_python_exception() {
+    let expected = shared_reset_outcomes();
+    Python::initialize();
+    Python::attach(|py| {
+        let path = PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml");
+        let backup_path = PathBuf::from("C:/CLASSIC/backups/local-ignore.bak");
+        let malformed_identity = YamlDataContentIdentity::from_bytes(b"malformed");
+        let backup_identity = malformed_identity.clone();
+        let replacement_identity = YamlDataContentIdentity::from_bytes(b"defaults");
+        let error = scan_run_reset_error_to_py(
+            py,
+            contract::ResumeError::LocalIgnoreResetDurabilityUnknown(
+                Box::new(contract::LocalIgnoreResetDurabilityUnknownError {
+                    path: path.clone(),
+                    backup_path: backup_path.clone(),
+                    malformed_identity: malformed_identity.clone(),
+                    backup_identity: backup_identity.clone(),
+                    replacement_identity: replacement_identity.clone(),
+                    message: "replacement visible; durability unknown".to_string(),
+                }),
+            ),
+        );
+
+        assert!(error.is_instance_of::<ScanRunLocalIgnoreResetDurabilityUnknownError>(py));
+        let value = error.value(py);
+        assert_eq!(
+            value
+                .getattr("code")
+                .expect("durability exception should expose code")
+                .extract::<String>()
+                .expect("durability code should be a string"),
+            expected["durabilityUnknownCode"]
+                .as_str()
+                .expect("shared durability-unknown code should be a string")
+        );
+        assert_eq!(
+            value
+                .getattr("path")
+                .expect("durability exception should expose path")
+                .extract::<PathBuf>()
+                .expect("canonical path should remain pathlib-compatible"),
+            path
+        );
+        assert_eq!(
+            value
+                .getattr("backup_path")
+                .expect("durability exception should expose backup path")
+                .extract::<PathBuf>()
+                .expect("backup path should remain pathlib-compatible"),
+            backup_path
+        );
+        for (attribute, expected_sha256) in [
+            ("malformed_identity", malformed_identity.sha256_hex()),
+            ("backup_identity", backup_identity.sha256_hex()),
+            ("replacement_identity", replacement_identity.sha256_hex()),
+        ] {
+            let identity = value
+                .getattr(attribute)
+                .expect("durability exception should expose every receipt identity");
+            assert_eq!(
+                identity
+                    .getattr("sha256")
+                    .expect("receipt identity should expose sha256")
+                    .extract::<String>()
+                    .expect("receipt sha256 should be a string"),
+                expected_sha256
+            );
+        }
     });
 }
 

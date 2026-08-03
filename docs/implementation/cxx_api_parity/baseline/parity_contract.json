@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T09:34:38Z",
+  "generated_at_utc": "2026-07-27T04:22:24Z",
   "schema_version": 1,
   "entries": [
     {
@@ -166,7 +166,8 @@
         "BackupDirectory",
         "BackupPublication",
         "BackupVerification",
-        "ReplacementPublication"
+        "ReplacementPublication",
+        "ReplacementDurabilityUnknown"
       ]
     },
     {
@@ -1644,6 +1645,23 @@
       }
     },
     {
+      "id": "8493807e8eab5ab3",
+      "rustSymbol": "yaml_data_mods_conf_has_fixes",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "data",
+            "type": "&YamlData"
+          }
+        ],
+        "returnType": "Vec<bool>"
+      }
+    },
+    {
       "id": "824098a1b1722d6f",
       "rustSymbol": "yaml_data_mods_conf_links",
       "kind": "function",
@@ -2415,6 +2433,26 @@
         {
           "name": "stage",
           "type": "LocalIgnoreResetPublicationStage"
+        },
+        {
+          "name": "has_durability_receipt",
+          "type": "bool"
+        },
+        {
+          "name": "backup_path",
+          "type": "String"
+        },
+        {
+          "name": "malformed_identity",
+          "type": "YamlDataContentIdentityDto"
+        },
+        {
+          "name": "backup_identity",
+          "type": "YamlDataContentIdentityDto"
+        },
+        {
+          "name": "replacement_identity",
+          "type": "YamlDataContentIdentityDto"
         },
         {
           "name": "message",
@@ -6168,7 +6206,8 @@
         "ContinuationConsumed",
         "LocalIgnoreResetConflict",
         "LocalIgnoreResetBackupFailure",
-        "LocalIgnoreResetReplacementFailure"
+        "LocalIgnoreResetReplacementFailure",
+        "LocalIgnoreResetDurabilityUnknown"
       ]
     },
     {
@@ -7997,6 +8036,10 @@
           "type": "String"
         },
         {
+          "name": "has_fix",
+          "type": "bool"
+        },
+        {
           "name": "fix",
           "type": "String"
         },
@@ -8163,6 +8206,10 @@
         {
           "name": "description",
           "type": "String"
+        },
+        {
+          "name": "has_fix",
+          "type": "bool"
         },
         {
           "name": "fix",
@@ -8907,6 +8954,22 @@
         {
           "name": "backup_path",
           "type": "String"
+        },
+        {
+          "name": "has_durability_receipt",
+          "type": "bool"
+        },
+        {
+          "name": "malformed_identity",
+          "type": "ScanRunYamlDataContentIdentityDto"
+        },
+        {
+          "name": "backup_identity",
+          "type": "ScanRunYamlDataContentIdentityDto"
+        },
+        {
+          "name": "replacement_identity",
+          "type": "ScanRunYamlDataContentIdentityDto"
         }
       ]
     },

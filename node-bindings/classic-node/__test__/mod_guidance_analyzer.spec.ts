@@ -144,6 +144,34 @@ describe("ModGuidanceAnalyzer", () => {
     expect("lines" in result).toBe(false);
   });
 
+  test("accepts and preserves an omitted conflict fix", () => {
+    const analyzer = new ModGuidanceAnalyzer(
+      [
+        {
+          modA: "alpha",
+          modB: "beta",
+          nameA: "Alpha Mod",
+          nameB: "Beta Mod",
+          description: "Authored conflict description",
+        },
+      ],
+      [],
+      [],
+      [],
+    );
+
+    const result = analyzer.analyze({
+      plugins: [
+        { name: "Alpha.esp", id: "01" },
+        { name: "Beta.esp", id: "02" },
+      ],
+      xseModules: [],
+    });
+
+    expect(result.conflicts).toHaveLength(1);
+    expect(result.conflicts[0].fix).toBeUndefined();
+  });
+
   test("returns explicit empty results without leaking prior findings", () => {
     const analyzer = new ModGuidanceAnalyzer(
       conflicts,

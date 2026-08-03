@@ -19,6 +19,15 @@ This file supplements `AGENTS.md`. Keep always-on architecture rules there; keep
 
 Run from the repo root. The wrappers initialize the Visual Studio developer shell, configure CMake/Ninja, and support `-Compiler clang-cl` while keeping the MSVC ABI. `-Package` implies `-Install` for both wrappers.
 
+The two wrappers do **not** take the same parameters. Check this table before composing a command; passing a parameter the other wrapper lacks fails with "parameter cannot be found".
+
+| Parameter | `build_cli.ps1` | `build_gui.ps1` |
+| --- | --- | --- |
+| `-Clean`, `-Test`, `-Debug`, `-Install`, `-Package`, `-Compiler` | yes | yes |
+| `-CTestName`, `-CTestArgs` | yes | yes |
+| `-IntegrationTestName` | yes | **no** |
+| `-Preset`, `-TestTimeoutSec` | **no** | yes |
+
 ```powershell
 # Build
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
@@ -94,11 +103,21 @@ Run from `node-bindings/classic-node`.
 ```powershell
 bun install
 bun run parity:gate
-bun run parity:gate:local
+bun run parity:gate:ci        # parity:gate + dts:freshness:ci, the CI-equivalent pair
+bun run parity:gate:local     # drift refresh; see caveat below
 bun run test:bun
 bun run test:node
+bun run test:types
 bun run dts:freshness:check
+bun run dts:refresh
 bun run cli -- --version
+```
+
+`parity:gate:local` needs the MSVC developer shell because it rebuilds the native addon via `dts:refresh`. If it fails on toolchain resolution, use the wrapped form instead, which enters the VS dev shell first:
+
+```powershell
+bun run parity:gate:local:vsdev
+bun run shell:vsdev           # interactive VS dev shell in this directory
 ```
 
 Use `parity:gate:local` only for intentional source-backed drift; it refreshes `index.d.ts`, updates the tracked Node baseline, and verifies declaration freshness. Commit affected files under `docs/implementation/node_api_parity/baseline/`, `node-bindings/classic-node/index.d.ts`, and `node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json` when ownership changes. Do not commit `node-bindings/classic-node/parity-artifacts/` or generated `index.js`.
@@ -149,7 +168,7 @@ uv sync --project python-bindings --inexact --group drift-guards
 uv run --project python-bindings python tools/publish_app_notification/validate.py --source "CLASSIC Data/app-notification.yaml"
 $publishedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 uv run --project python-bindings python tools/publish_app_notification/generate_manifest.py --source "CLASSIC Data/app-notification.yaml" --output "$env:TEMP\classic-app-notification-manifest.json" --published-at $publishedAt
-uv run --project python-bindings python tools/publish_app_notification/dry_run.py --workflow-tag app-notification-v9.2.0 --published-at $publishedAt
+uv run --project python-bindings python tools/publish_app_notification/dry_run.py --workflow-tag app-notification-v<VERSION> --published-at $publishedAt
 uv run --project python-bindings python -m pytest tools/publish_app_notification/tests -q
 ```
 

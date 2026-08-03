@@ -6,7 +6,7 @@ This document describes the different caching patterns used in the CLASSIC Rust 
 
 | Pattern | Crate | Key Type | Value Type | Invalidation | Use Case |
 |---------|-------|----------|------------|--------------|----------|
-| File Mod-Time Cache | `classic-yaml-core` | `PathBuf` | YAML + metadata | Automatic (file change) | Config files |
+| File Mod-Time Cache | `classic-settings-core` | `PathBuf` | YAML + metadata | Automatic (file change) | Config files |
 | String-Key Cache | `classic-settings-core` | `String` | `Arc<Vec<Yaml>>` | Manual | Loaded YAML settings |
 | Dynamic Registry | `classic-registry-core` | `String` | `Arc<dyn Any>` | Manual | Application state |
 | Path Hash Cache | `classic-file-io-core` | `PathBuf` | `String` | Manual | File integrity |
@@ -17,7 +17,7 @@ This document describes the different caching patterns used in the CLASSIC Rust 
 
 ### 1. File Mod-Time Cache (YAML)
 
-**Location**: `ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs`
+**Location**: `business-logic/classic-settings-core/src/` (absorbed the former `classic-yaml-core` in v9.1.0 Phase 1)
 
 **Purpose**: Cache parsed YAML files with automatic invalidation when the source file changes.
 
@@ -58,7 +58,7 @@ if let Some(cached) = CACHE.get(&path) {
 
 ### 2. String-Key Cache (Settings)
 
-**Location**: `ClassicLib-rs/business-logic/classic-settings-core/src/cache.rs`
+**Location**: `business-logic/classic-settings-core/src/cache.rs`
 
 **Purpose**: Cache loaded YAML settings with logical names for fast lookup.
 
@@ -98,7 +98,7 @@ if is_cached("game_config") {
 
 ### 3. Dynamic Registry
 
-**Location**: `ClassicLib-rs/business-logic/classic-registry-core/src/registry.rs`
+**Location**: `business-logic/classic-registry-core/src/registry.rs`
 
 **Purpose**: Store application-wide state with dynamic typing.
 
@@ -139,7 +139,7 @@ let is_gui = is_gui_mode(); // Returns bool
 
 ### 4. Path Hash Cache
 
-**Location**: `ClassicLib-rs/business-logic/classic-file-io-core/src/hash.rs`
+**Location**: `business-logic/classic-file-io-core/src/hash.rs`
 
 **Purpose**: Cache SHA256 file hashes to avoid redundant calculations.
 
@@ -178,7 +178,7 @@ let size = FileHasher::cache_size();
 
 ### 5. Time Series Metrics
 
-**Location**: `ClassicLib-rs/business-logic/classic-perf-core/src/metrics.rs`
+**Location**: `business-logic/classic-perf-core/src/metrics.rs`
 
 **Purpose**: Record and summarize performance timing data.
 
@@ -218,7 +218,7 @@ clear_metrics();
 
 ### 6. Typed FormID Lookup Cache
 
-**Location**: `ClassicLib-rs/business-logic/classic-database-core/src/pool_sqlx.rs`
+**Location**: `business-logic/classic-database-core/src/pool_sqlx.rs`
 
 **Purpose**: Cache FormID database lookups with explicit key normalization semantics and lower allocation pressure on hot paths.
 

@@ -488,20 +488,44 @@ TEST_CASE("CXX Reset To Default exposes durable metadata and typed failures", "[
     auto initial_operation = scanner::scan_run_contract_execute(
         *request, *scanner::scan_run_cancellation_new(), nullptr);
     const auto initial = scanner::scan_run_contract_execution_take_result(*initial_operation);
+    REQUIRE(initial.has_result);
+    const auto retained_main_sha = std::string(initial.result.installed_yaml_data.main.sha256);
+    const auto retained_game_sha = std::string(initial.result.installed_yaml_data.game_file.sha256);
     auto continuation = scanner::scan_run_contract_execution_take_continuation(*initial_operation);
 
+    {
+        std::ofstream changed_main(
+            temporary.path() / "CLASSIC Data" / "databases" / "CLASSIC Main.yaml",
+            std::ios::binary | std::ios::trunc);
+        changed_main << "invalid: [unterminated";
+        std::ofstream changed_game(
+            temporary.path() / "CLASSIC Data" / "databases" / "CLASSIC Fallout4.yaml",
+            std::ios::binary | std::ios::trunc);
+        changed_game << "invalid: [unterminated";
+    }
+    const RecordingObserver reset_observer;
     auto reset_operation = scanner::scan_run_continuation_resume(
         *continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
-        *scanner::scan_run_cancellation_new(), nullptr);
+        *scanner::scan_run_cancellation_new(), &reset_observer);
     const auto reset = scanner::scan_run_contract_execution_take_result(*reset_operation);
     REQUIRE(reset.has_result);
     REQUIRE(reset.result.status == scanner::ScanRunContractStatus::Completed);
     REQUIRE(reset.result.discovery.accepted_logs.size() == initial.result.discovery.accepted_logs.size());
     REQUIRE(std::string(reset.result.discovery.accepted_logs[0]) ==
             std::string(initial.result.discovery.accepted_logs[0]));
+    REQUIRE(std::string(reset.result.installed_yaml_data.main.sha256) == retained_main_sha);
+    REQUIRE(std::string(reset.result.installed_yaml_data.game_file.sha256) == retained_game_sha);
+    REQUIRE_FALSE(reset_observer.kinds().contains(scanner::ScanRunContractEventKind::DiscoveryCompleted));
     REQUIRE(reset.result.installed_yaml_data.local_ignore_state ==
             scanner::ScanRunLocalIgnoreYamlDataState::ResetToDefault);
     REQUIRE(reset.result.installed_yaml_data.has_local_ignore_reset);
+    bool saw_reset_diagnostic = false;
+    for (const auto& diagnostic : reset.result.installed_yaml_data.diagnostics) {
+        saw_reset_diagnostic =
+            saw_reset_diagnostic ||
+            diagnostic.kind == scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreReset;
+    }
+    REQUIRE(saw_reset_diagnostic);
     REQUIRE(read_file_bytes(native_path(reset.result.installed_yaml_data.local_ignore_reset.backup_path)) ==
             fixture::MALFORMED_LOCAL_IGNORE);
     REQUIRE(reset.result.installed_yaml_data.local_ignore_reset.malformed_identity.sha256 ==
@@ -515,6 +539,12 @@ TEST_CASE("CXX Reset To Default exposes durable metadata and typed failures", "[
     const auto replay = scanner::scan_run_contract_execution_take_result(*replay_operation);
     REQUIRE(replay.has_resume_error);
     REQUIRE(std::string(replay.resume_error.code) == fixture::RESET_CONSUMED_CODE);
+    fs::copy_file(SHARED_FIXTURE_ROOT / "CLASSIC Data" / "databases" / "CLASSIC Main.yaml",
+                  temporary.path() / "CLASSIC Data" / "databases" / "CLASSIC Main.yaml",
+                  fs::copy_options::overwrite_existing);
+    fs::copy_file(SHARED_FIXTURE_ROOT / "CLASSIC Data" / "databases" / "CLASSIC Fallout4.yaml",
+                  temporary.path() / "CLASSIC Data" / "databases" / "CLASSIC Fallout4.yaml",
+                  fs::copy_options::overwrite_existing);
 
     TemporaryDirectory pre_cancel_temporary;
     copy_shared_yaml_tree(pre_cancel_temporary.path());

@@ -45,21 +45,21 @@ provides:
 
 ### Method 1: Download Pre-built Binary (Recommended)
 
-1. Download `ClassicLib-rs/ui-applications/classic-tui.exe` from the [releases page](https://github.com/evildarkarchon/CLASSIC-Fallout4/releases)
+1. Download `ui-applications/classic-tui.exe` from the [releases page](https://github.com/evildarkarchon/CLASSIC-Fallout4/releases)
 2. Place in a directory of your choice
 3. (Optional) Add to PATH for system-wide access
 
 ### Method 2: Install via Cargo
 
 ```bash
-cargo install --git https://github.com/evildarkarchon/CLASSIC-Fallout4 ClassicLib-rs/ui-applications/classic-tui
+cargo install --git https://github.com/evildarkarchon/CLASSIC-Fallout4 ui-applications/classic-tui
 ```
 
 ### Verification
 
 ```bash
-ClassicLib-rs/ui-applications/classic-tui --version
-# Output: ClassicLib-rs/ui-applications/classic-tui 0.1.0
+ui-applications/classic-tui --version
+# Output: ui-applications/classic-tui 0.1.0
 ```
 
 ---
@@ -69,7 +69,7 @@ ClassicLib-rs/ui-applications/classic-tui --version
 ### Launch TUI
 
 ```bash
-ClassicLib-rs/ui-applications/classic-tui
+ui-applications/classic-tui
 ```
 
 ### First-Time Setup
@@ -357,7 +357,7 @@ Top suspects:
 2. **Set 256-color mode:**
    ```bash
    export TERM=xterm-256color
-   ClassicLib-rs/ui-applications/classic-tui
+   ui-applications/classic-tui
    ```
 
 3. **Try different terminal:**
@@ -546,7 +546,7 @@ printf '\e[8;40;120t'
 
 ```bash
 # Enable compression
-ssh -C user@host ClassicLib-rs/ui-applications/classic-tui
+ssh -C user@host ui-applications/classic-tui
 
 # Use multiplexing
 ssh -o ControlMaster=auto -o ControlPath=/tmp/ssh-%r@%h:%p user@host
@@ -565,7 +565,7 @@ ssh -o ControlMaster=auto -o ControlPath=/tmp/ssh-%r@%h:%p user@host
 tmux new -s classic
 
 # Launch CLASSIC
-ClassicLib-rs/ui-applications/classic-tui
+ui-applications/classic-tui
 
 # Detach: Ctrl+B, D
 # Reattach: tmux attach -t classic
@@ -578,7 +578,7 @@ ClassicLib-rs/ui-applications/classic-tui
 screen -S classic
 
 # Launch CLASSIC
-ClassicLib-rs/ui-applications/classic-tui
+ui-applications/classic-tui
 
 # Detach: Ctrl+A, D
 # Reattach: screen -r classic
@@ -591,7 +591,7 @@ Not needed! CLASSIC TUI works over plain SSH without X11.
 ```bash
 # Just SSH normally
 ssh user@server
-ClassicLib-rs/ui-applications/classic-tui  # Works great!
+ui-applications/classic-tui  # Works great!
 ```
 
 ### Automation
@@ -609,7 +609,7 @@ CLASSIC_Settings:
   MODS Folder Path: "/path/to/mods"
 EOF
 
-ClassicLib-rs/ui-applications/classic-tui
+ui-applications/classic-tui
 ```
 
 ---

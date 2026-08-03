@@ -10,7 +10,7 @@
     - `<scenario>/new/estimates.json` (candidate)
     - `<scenario>/<baseline>/estimates.json` (reference)
 
-    for each discovered scenario under `ClassicLib-rs/target/criterion`.
+    for each discovered scenario under `target/criterion`.
 
 .PARAMETER Baseline
     Baseline name to compare against (required).
@@ -141,8 +141,8 @@ function Format-Ns {
 }
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "../..")
-$rustDir = Join-Path $repoRoot "ClassicLib-rs"
-$criterionDir = Join-Path $rustDir "target/criterion"
+# The Cargo workspace root is the repo root, so Criterion output lands in ./target.
+$criterionDir = Join-Path $repoRoot "target/criterion"
 $runnerScript = Join-Path $PSScriptRoot "run_benchmarks.ps1"
 
 if (-not $NoRun) {

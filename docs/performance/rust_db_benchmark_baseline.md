@@ -92,7 +92,7 @@ Classification thresholds use repository policy defaults:
 
 Baseline capture artifacts are local-only:
 
-- Keep Criterion baselines in `ClassicLib-rs/target/criterion/` (gitignored).
+- Keep Criterion baselines in `target/criterion/` (gitignored).
 - Optional exported comparison JSON files are local workflow artifacts unless a PR explicitly requests committing reports.
 
 ## Standard Command Set
@@ -107,7 +107,7 @@ pwsh -ExecutionPolicy Bypass -File scripts/bench/run_benchmarks.ps1 -Suite rust-
 pwsh -ExecutionPolicy Bypass -File scripts/bench/run_benchmarks.ps1 -Suite rust-db-baseline -Mode thorough -SaveBaseline -BaselineName "db-baseline-main"
 
 # 3) Compare candidate run against baseline with per-scenario deltas
-pwsh -ExecutionPolicy Bypass -File scripts/bench/compare_baselines.ps1 -Suite rust-db-baseline -Mode thorough -Baseline "db-baseline-main" -ExportJson "ClassicLib-rs/target/criterion/db-delta-report.json"
+pwsh -ExecutionPolicy Bypass -File scripts/bench/compare_baselines.ps1 -Suite rust-db-baseline -Mode thorough -Baseline "db-baseline-main" -ExportJson "target/criterion/db-delta-report.json"
 ```
 
 Fast-path command set limited to canonical DB baseline scenarios:
@@ -178,7 +178,7 @@ For follow-up Rust DB optimization work:
 
 - `FormIDFindingAnalyzer::analyze` now stages resolved identifiers and performs one strict `FormIdValueLookup::lookup_batch` operation.
 - Query chunking and its bounded defaults belong to `classic-database-core`; scanlog no longer owns a separate FormID batch-size constant.
-- Quick-mode comparison against baseline `db-baseline-local-v2` (export: `ClassicLib-rs/target/criterion/formid-batch-delta.json`) showed large cold-path gains:
+- Quick-mode comparison against baseline `db-baseline-local-v2` (export: `target/criterion/formid-batch-delta.json`) showed large cold-path gains:
   - `cold_small_32`: `-89.44%`
   - `cold_medium_128`: `-90.25%`
   - `cold_large_512`: `-90.67%`
@@ -215,10 +215,10 @@ These defaults cap memory growth while avoiding over-aggressive cleanup churn in
 Run:
 
 ```powershell
-pwsh -ExecutionPolicy Bypass -File scripts/bench/compare_baselines.ps1 -Suite rust-db-baseline -Mode quick -Baseline "db-baseline-main" -BenchFilter "db_|scanlog_formid_resolution" -ScenarioFilter "^(db_|scanlog_formid_resolution)" -ExportJson "ClassicLib-rs/target/criterion/db-delta-report.json"
+pwsh -ExecutionPolicy Bypass -File scripts/bench/compare_baselines.ps1 -Suite rust-db-baseline -Mode quick -Baseline "db-baseline-main" -BenchFilter "db_|scanlog_formid_resolution" -ScenarioFilter "^(db_|scanlog_formid_resolution)" -ExportJson "target/criterion/db-delta-report.json"
 ```
 
-Result summary from `ClassicLib-rs/target/criterion/db-delta-report.json`:
+Result summary from `target/criterion/db-delta-report.json`:
 
 - Total scenarios: `12`
 - `improved`: `6`
@@ -256,7 +256,7 @@ Interpretation: higher budget improves secondary-hit throughput; miss-all paths 
 Run:
 
 ```powershell
-pwsh -ExecutionPolicy Bypass -File scripts/bench/compare_baselines.ps1 -Suite rust-db-baseline -Mode quick -Baseline "db-baseline-main" -BenchFilter "db_multi_db_fallback" -ScenarioFilter "^db_multi_db_fallback/" -ExportJson "ClassicLib-rs/target/criterion/db-multi-db-delta-report.json"
+pwsh -ExecutionPolicy Bypass -File scripts/bench/compare_baselines.ps1 -Suite rust-db-baseline -Mode quick -Baseline "db-baseline-main" -BenchFilter "db_multi_db_fallback" -ScenarioFilter "^db_multi_db_fallback/" -ExportJson "target/criterion/db-multi-db-delta-report.json"
 ```
 
 Quick-mode result summary (`db-multi-db-delta-report.json`):

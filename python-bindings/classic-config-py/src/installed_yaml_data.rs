@@ -137,6 +137,12 @@ create_exception!(
     LocalIgnoreResetError,
     "Raised when retained defaults cannot be atomically published as Local Ignore."
 );
+create_exception!(
+    classic_config,
+    LocalIgnoreResetReplacementDurabilityUnknownError,
+    LocalIgnoreResetError,
+    "Raised when retained defaults are visible but replacement durability is unconfirmed."
+);
 
 /// One structured selection, candidate-rejection, or Local Ignore generation diagnostic.
 #[pyclass(name = "InstalledYamlDataDiagnostic", frozen, skip_from_py_object)]
@@ -817,6 +823,41 @@ fn installed_yaml_data_load_error_to_py(error: CoreLoadError) -> PyErr {
 /// Convert every operational reset failure into its typed Python subclass and metadata.
 fn local_ignore_reset_error_to_py(error: CoreResetError) -> PyErr {
     let message = error.to_string();
+    let error = match error {
+        CoreResetError::ReplacementDurabilityUnknown { receipt, source } => {
+            let receipt = *receipt;
+            let py_error = LocalIgnoreResetReplacementDurabilityUnknownError::new_err(message);
+            Python::attach(|py| {
+                let value = py_error.value(py);
+                value.setattr("code", "replacement_durability_unknown")?;
+                value.setattr("path", receipt.path.to_string_lossy().into_owned())?;
+                value.setattr("stage", py.None())?;
+                value.setattr("reason", source.to_string())?;
+                value.setattr(
+                    "backup_path",
+                    receipt.backup_path.to_string_lossy().into_owned(),
+                )?;
+                value.setattr(
+                    "malformed_identity",
+                    content_identity_to_py(&receipt.malformed_identity),
+                )?;
+                value.setattr(
+                    "backup_identity",
+                    content_identity_to_py(&receipt.backup_identity),
+                )?;
+                value.setattr(
+                    "replacement_identity",
+                    content_identity_to_py(&receipt.replacement_identity),
+                )?;
+                Ok::<(), PyErr>(())
+            })
+            .expect(
+                "CLASSIC Local Ignore durability exceptions must accept recovery receipt attributes",
+            );
+            return py_error;
+        }
+        other => other,
+    };
     let (code, path, stage, reason, py_error) = match error {
         CoreResetError::DefaultsUnavailable { path, reason } => (
             "defaults_unavailable",
@@ -875,6 +916,9 @@ fn local_ignore_reset_error_to_py(error: CoreResetError) -> PyErr {
             source.to_string(),
             LocalIgnoreResetReplacementPublicationError::new_err(message),
         ),
+        CoreResetError::ReplacementDurabilityUnknown { .. } => {
+            unreachable!("durability uncertainty returns before publication failure projection")
+        }
     };
     Python::attach(|py| {
         let value = py_error.value(py);
@@ -1018,5 +1062,13 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
         "LocalIgnoreResetReplacementPublicationError",
         py.get_type::<LocalIgnoreResetReplacementPublicationError>(),
     )?;
+    module.add(
+        "LocalIgnoreResetReplacementDurabilityUnknownError",
+        py.get_type::<LocalIgnoreResetReplacementDurabilityUnknownError>(),
+    )?;
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "installed_yaml_data_tests.rs"]
+mod tests;

@@ -484,7 +484,7 @@ fn build_mod_guidance_analyzer(
             name_a: entry.name_a,
             name_b: entry.name_b,
             description: entry.description,
-            fix: entry.fix,
+            fix: entry.has_fix.then_some(entry.fix),
             link: entry.has_link.then_some(entry.link),
         })
         .collect();
@@ -571,8 +571,9 @@ fn mod_guidance_result_to_dto(
     }
 }
 
-/// Projects one conflict while preserving optional link presence explicitly.
+/// Projects one conflict while preserving optional remediation and link presence explicitly.
 fn mod_conflict_guidance_to_dto(guidance: ModConflictGuidance) -> ffi::ModConflictGuidanceDto {
+    let (has_fix, fix) = flatten_optional(guidance.fix);
     let (has_link, link) = flatten_optional(guidance.link);
     ffi::ModConflictGuidanceDto {
         state: mod_guidance_match_state_to_dto(guidance.state),
@@ -581,7 +582,8 @@ fn mod_conflict_guidance_to_dto(guidance: ModConflictGuidance) -> ffi::ModConfli
         name_a: guidance.name_a,
         name_b: guidance.name_b,
         description: guidance.description,
-        fix: guidance.fix,
+        has_fix,
+        fix,
         has_link,
         link,
     }

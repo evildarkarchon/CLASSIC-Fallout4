@@ -149,8 +149,8 @@ pub use scan_run::{
     PyScanRunSetupContext, PyScanRunSetupPathUpdate, PyScanRunSetupResult, PyScanRunStandardSource,
     PyScanRunTargetedSource, PyScanRunUnsolvedLogs, PyScanRunYamlDataContentIdentity,
     ScanRunContinuationConsumedError, ScanRunLocalIgnoreResetBackupError,
-    ScanRunLocalIgnoreResetConflictError, ScanRunLocalIgnoreResetReplacementError,
-    scan_run_execute, scan_run_resume,
+    ScanRunLocalIgnoreResetConflictError, ScanRunLocalIgnoreResetDurabilityUnknownError,
+    ScanRunLocalIgnoreResetReplacementError, scan_run_execute, scan_run_resume,
 };
 pub use version::{
     PyCrashgenVersion, PyCrashgenVersionStatus, check_crashgen_version_status,
@@ -233,6 +233,11 @@ fn register_scan_run_exports(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add(
         "ScanRunLocalIgnoreResetReplacementError",
         m.py().get_type::<ScanRunLocalIgnoreResetReplacementError>(),
+    )?;
+    m.add(
+        "ScanRunLocalIgnoreResetDurabilityUnknownError",
+        m.py()
+            .get_type::<ScanRunLocalIgnoreResetDurabilityUnknownError>(),
     )?;
     Ok(())
 }

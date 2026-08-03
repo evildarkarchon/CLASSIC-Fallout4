@@ -53,6 +53,7 @@ struct ResetOutcomeExpectations {
     conflict_code: String,
     backup_failure_code: String,
     replacement_failure_code: String,
+    durability_unknown_code: String,
     consumed_code: String,
     backup_must_equal_malformed_bytes: bool,
     report_must_equal_existing_bytes: bool,
@@ -572,6 +573,10 @@ fn shared_installed_yaml_data_fixture_preserves_report_bytes_with_isolated_cache
     assert_eq!(
         contract::ResumeErrorKind::LocalIgnoreResetReplacementFailure.as_str(),
         fixture.reset_outcomes.replacement_failure_code
+    );
+    assert_eq!(
+        contract::ResumeErrorKind::LocalIgnoreResetDurabilityUnknown.as_str(),
+        fixture.reset_outcomes.durability_unknown_code
     );
     assert_eq!(
         contract::ResumeErrorKind::ContinuationConsumed.as_str(),

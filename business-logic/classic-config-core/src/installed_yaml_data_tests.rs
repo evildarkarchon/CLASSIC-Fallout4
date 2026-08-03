@@ -8,7 +8,7 @@ use crate::{
     InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome,
     InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole,
     LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage,
-    LocalIgnoreYamlDataState, inspect_installed_yaml_data_with_env,
+    LocalIgnoreYamlDataState, YamlDataContentIdentity, inspect_installed_yaml_data_with_env,
     load_installed_yaml_data_with_env,
 };
 use classic_shared_core::GameId;
@@ -1358,6 +1358,126 @@ fn local_ignore_reset_is_failure_atomic_at_every_backup_and_replacement_boundary
             }
         }
     }
+}
+
+#[test]
+/// A late canonical reread failure is a replacement failure after the verified backup exists.
+fn local_ignore_reset_types_replacement_reread_failure_after_verified_backup() {
+    let installation = tempdir().expect("installation root should be created");
+    let cache_root = tempdir().expect("cache root should be created");
+    write_bundled_install_with_main(installation.path(), MAIN_WITH_DEFAULT_YAML);
+    let ignore_path = installation
+        .path()
+        .join("CLASSIC Data")
+        .join("CLASSIC Ignore.yaml");
+    let malformed_ignore = b"CLASSIC_Ignore_Fallout4: [unterminated";
+    std::fs::write(&ignore_path, malformed_ignore)
+        .expect("malformed Local Ignore should be written");
+    let outcome = load_installed_yaml_data_with_env(
+        InstalledYamlDataLoadRequest {
+            installation_root: installation.path().to_path_buf(),
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        },
+        isolated_cache_env(cache_root.path()),
+    )
+    .expect("malformed Local Ignore should require recovery");
+    let InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(plan) = outcome else {
+        panic!("malformed Local Ignore should return a recovery plan");
+    };
+    let publisher = SystemLocalIgnoreResetPublisher::failing_replacement_read();
+
+    let error = plan
+        .reset_to_default_with_publisher(&publisher)
+        .expect_err("late canonical reread failure should abort replacement");
+
+    match error {
+        LocalIgnoreResetError::ReplacementPublication {
+            path,
+            stage,
+            source,
+        } => {
+            assert_eq!(path, ignore_path);
+            assert_eq!(stage, LocalIgnoreResetPublicationStage::Publish);
+            assert_eq!(source.kind(), std::io::ErrorKind::PermissionDenied);
+        }
+        other => panic!("expected replacement failure, got {other}"),
+    }
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("original Local Ignore should remain readable"),
+        malformed_ignore
+    );
+    let backup_directory = installation
+        .path()
+        .join("CLASSIC Backup")
+        .join("YAML Data")
+        .join("Local Ignore");
+    let backups = std::fs::read_dir(backup_directory)
+        .expect("verified backup directory should remain readable")
+        .map(|entry| entry.expect("backup entry should be readable").path())
+        .collect::<Vec<_>>();
+    assert_eq!(backups.len(), 1);
+    assert_eq!(
+        std::fs::read(&backups[0]).expect("verified backup should remain readable"),
+        malformed_ignore
+    );
+}
+
+#[test]
+/// A post-publish sync failure reports that canonical defaults are already authoritative.
+fn local_ignore_reset_types_durability_unknown_after_canonical_replacement() {
+    let installation = tempdir().expect("installation root should be created");
+    let cache_root = tempdir().expect("cache root should be created");
+    write_bundled_install_with_main(installation.path(), MAIN_WITH_DEFAULT_YAML);
+    let ignore_path = installation
+        .path()
+        .join("CLASSIC Data")
+        .join("CLASSIC Ignore.yaml");
+    let malformed_ignore = b"CLASSIC_Ignore_Fallout4: [unterminated";
+    std::fs::write(&ignore_path, malformed_ignore)
+        .expect("malformed Local Ignore should be written");
+    let outcome = load_installed_yaml_data_with_env(
+        InstalledYamlDataLoadRequest {
+            installation_root: installation.path().to_path_buf(),
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        },
+        isolated_cache_env(cache_root.path()),
+    )
+    .expect("malformed Local Ignore should require recovery");
+    let InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(plan) = outcome else {
+        panic!("malformed Local Ignore should return a recovery plan");
+    };
+    let publisher = SystemLocalIgnoreResetPublisher::failing_after_replacement_publish();
+
+    let error = plan
+        .reset_to_default_with_publisher(&publisher)
+        .expect_err("post-publish directory sync failure should remain typed");
+
+    match error {
+        LocalIgnoreResetError::ReplacementDurabilityUnknown { receipt, .. } => {
+            assert_eq!(receipt.path, ignore_path);
+            assert_eq!(
+                std::fs::read(&receipt.backup_path)
+                    .expect("verified backup should remain readable"),
+                malformed_ignore
+            );
+            assert_eq!(
+                receipt.malformed_identity,
+                YamlDataContentIdentity::from_bytes(malformed_ignore)
+            );
+            assert_eq!(receipt.backup_identity, receipt.malformed_identity);
+            assert_eq!(
+                receipt.replacement_identity,
+                YamlDataContentIdentity::from_bytes(DEFAULT_IGNORE_YAML.as_bytes())
+            );
+        }
+        other => panic!("expected replacement durability uncertainty, got {other}"),
+    }
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("published defaults should remain authoritative"),
+        DEFAULT_IGNORE_YAML.as_bytes()
+    );
 }
 
 /// Publisher that corrupts a completed backup before the reset can verify it.

@@ -247,8 +247,8 @@ Examples:
     parser.add_argument(
         "--criterion-dir",
         type=Path,
-        default=Path("ClassicLib-rs/target/criterion"),
-        help="Path to Criterion results directory (default: ClassicLib-rs/target/criterion)",
+        default=Path("target/criterion"),
+        help="Path to Criterion results directory (default: target/criterion)",
     )
     parser.add_argument(
         "--quiet",

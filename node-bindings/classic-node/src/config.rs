@@ -45,7 +45,7 @@ pub struct JsModConflictEntry {
     pub name_a: String,
     pub name_b: String,
     pub description: String,
-    pub fix: String,
+    pub fix: Option<String>,
     pub link: Option<String>,
 }
 

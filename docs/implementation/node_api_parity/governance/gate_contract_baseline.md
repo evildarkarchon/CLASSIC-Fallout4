@@ -2,7 +2,7 @@
 
 ## Command Workflow Validation
 
-Validated on `2026-02-25` from `ClassicLib-rs/node-bindings/classic-node`:
+Validated on `2026-02-25` from `node-bindings/classic-node`:
 
 ```bash
 bun run parity:gate:local
@@ -30,7 +30,7 @@ Each wave/subwave is accepted only when all are true:
 
 1. Scope matches `tier2_wave_manifest.json` exactly.
 2. Promotion rows are reflected in `parity_contract.json`.
-3. `ClassicLib-rs/node-bindings/classic-node/index.d.ts` is regenerated, committed as the tracked snapshot, and fresh.
+3. `node-bindings/classic-node/index.d.ts` is regenerated, committed as the tracked snapshot, and fresh.
 4. Local gates pass:
    - `bun run parity:gate:local`
    - `bun run test:bun`

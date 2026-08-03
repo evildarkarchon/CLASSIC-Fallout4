@@ -7,7 +7,7 @@ This guide covers testing patterns, fixtures, and coverage requirements for CLAS
 ## Rust Test Structure
 
 ```
-ClassicLib-rs/
+<repo root>/
 ├── foundation/
 │   └── classic-shared-core/
 │       └── tests/                    # Foundation layer tests
@@ -15,7 +15,7 @@ ClassicLib-rs/
 │           └── test_path_lru.rs
 │
 ├── business-logic/
-│   ├── classic-yaml-core/
+│   ├── classic-settings-core/
 │   │   └── tests/
 │   │       └── integration_tests.rs  # YAML operations tests
 │   ├── classic-database-core/
@@ -30,10 +30,6 @@ ClassicLib-rs/
 │   └── classic-*-py/                 # Tested via Python integration
 │
 └── ui-applications/
-    ├── classic-cli/
-    │   └── tests/
-    │       ├── integration_tests.rs
-    │       └── memory_tests.rs
     └── classic-tui/
         └── tests/
             ├── widget_integration_tests.rs
@@ -41,39 +37,43 @@ ClassicLib-rs/
             └── dirty_tracking_tests.rs
 ```
 
+`ui-applications/` holds only the TUI. The Rust CLI that used to sit beside it was retired in
+favor of the C++ CLI at `classic-cli/`, which is a CMake project rather than a cargo crate —
+test it through `classic-cli/build_cli.ps1 -Test`, never `cargo test`.
+
 ## Running Rust Tests
 
 ### Run All Rust Tests
 
 ```bash
 # From workspace root
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
+cargo test --workspace
 
 # Run with output
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
+cargo test --workspace -- --nocapture
 ```
 
 ### Run Tests for Specific Crate
 
 ```bash
-# Run classic-yaml-core tests
-cargo test -p classic-yaml-core --manifest-path ClassicLib-rs/Cargo.toml
+# Run classic-settings-core tests
+cargo test -p classic-settings-core
 
 # Run classic-database-core tests (requires async runtime)
-cargo test -p classic-database-core --manifest-path ClassicLib-rs/Cargo.toml
+cargo test -p classic-database-core
 
 # Run classic-config-core tests
-cargo test -p classic-config-core --manifest-path ClassicLib-rs/Cargo.toml
+cargo test -p classic-config-core
 ```
 
 ### Run Integration Tests Only
 
 ```bash
 # Run all integration tests
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml --test integration_tests
+cargo test --workspace --test integration_tests
 
 # Run specific crate integration tests
-cargo test -p classic-yaml-core --test integration_tests --manifest-path ClassicLib-rs/Cargo.toml
+cargo test -p classic-settings-core --test integration_tests
 ```
 
 ## Test Patterns
@@ -205,7 +205,7 @@ fn test_concurrent_access() {
 | classic-file-io-core/core.rs | 15% | 70% | CRITICAL |
 | classic-config-core/yamldata.rs | 0% | 70% | HIGH |
 | classic-scanlog-core (5 modules) | 0% | 60% | HIGH |
-| classic-yaml-core | 57% | 75% | MEDIUM |
+| classic-settings-core | 57% | 75% | MEDIUM |
 | classic-file-io-core/encoding.rs | 53% | 80% | MEDIUM |
 
 ### Well-Covered Crates (No Action Needed)
@@ -225,17 +225,17 @@ fn test_concurrent_access() {
 cargo install cargo-llvm-cov
 
 # Run coverage for workspace
-cargo llvm-cov --workspace --manifest-path ClassicLib-rs/Cargo.toml
+cargo llvm-cov --workspace
 
 # Generate HTML report
-cargo llvm-cov --workspace --manifest-path ClassicLib-rs/Cargo.toml --html
+cargo llvm-cov --workspace --html
 
 # View report
 start target/llvm-cov/html/index.html  # Windows
 open target/llvm-cov/html/index.html   # macOS
 
 # Exclude Python binding crates (not tested via Rust)
-cargo llvm-cov --workspace --manifest-path ClassicLib-rs/Cargo.toml \
+cargo llvm-cov --workspace \
   --exclude classic-yaml-py \
   --exclude classic-database-py \
   --exclude classic-file-io-py \
@@ -407,7 +407,7 @@ fn test_increment() {
 
 ## Integration with Python Tests
 
-Python binding crates (`-py` crates) are tested via Python integration tests in `tests/rust_integration/`. These tests verify:
+Python binding crates (`-py` crates) are tested via binding smoke tests in `python-bindings/tests/`. These tests verify:
 
 1. PyO3 bindings work correctly
 2. Error handling propagates properly
@@ -416,7 +416,7 @@ Python binding crates (`-py` crates) are tested via Python integration tests in 
 
 ```bash
 # Run Python integration tests for Rust bindings
-uv run pytest tests/rust_integration/ -v
+uv run --project python-bindings python -m pytest python-bindings/tests -q
 ```
 
 ## CI Integration
@@ -501,7 +501,7 @@ RUST_BACKTRACE=1 cargo test -p problematic-crate
 ```bash
 # Clean and rebuild
 cargo clean
-cargo llvm-cov --workspace --manifest-path ClassicLib-rs/Cargo.toml
+cargo llvm-cov --workspace
 ```
 
 ## Related Documentation

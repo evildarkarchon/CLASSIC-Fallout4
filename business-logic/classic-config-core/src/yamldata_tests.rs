@@ -364,6 +364,7 @@ fn test_from_yaml_content_extracts_mod_databases() {
     assert_eq!(config.game_mods_conf.len(), 1);
     assert_eq!(config.game_mods_conf[0].mod_a, "modA");
     assert_eq!(config.game_mods_conf[0].description, "Config for ModA");
+    assert_eq!(config.game_mods_conf[0].fix.as_deref(), Some("Remove one."));
 
     assert_eq!(config.game_mods_core.len(), 3);
     assert_eq!(config.game_mods_core[0].detect, "ModB");

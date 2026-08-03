@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T10:13:17.309539+00:00",
+  "generated_at_utc": "2026-07-27T04:34:58.374333+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -536,6 +536,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-config-py/classic_config.pyi",
       "signature": "class LocalIgnoreResetReadError(LocalIgnoreResetError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "LocalIgnoreResetReplacementDurabilityUnknownError",
+      "export_path": "LocalIgnoreResetReplacementDurabilityUnknownError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class LocalIgnoreResetReplacementDurabilityUnknownError(LocalIgnoreResetError):"
     },
     {
       "module": "classic_config",
@@ -6268,7 +6278,7 @@
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def __init__( self, mod_a: str, mod_b: str, name_a: str, name_b: str, description: str, fix: str, link: str | None = None, ) -> None: ..."
+      "signature": "def __init__( self, mod_a: str, mod_b: str, name_a: str, name_b: str, description: str, fix: str | None = None, link: str | None = None, ) -> None: ..."
     },
     {
       "module": "classic_scanlog",
@@ -7041,6 +7051,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "class ScanRunLocalIgnoreResetConflictError(RuntimeError):"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLocalIgnoreResetDurabilityUnknownError",
+      "export_path": "ScanRunLocalIgnoreResetDurabilityUnknownError",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunLocalIgnoreResetDurabilityUnknownError(RuntimeError):"
     },
     {
       "module": "classic_scanlog",

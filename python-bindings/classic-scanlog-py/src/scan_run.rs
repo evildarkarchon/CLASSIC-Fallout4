@@ -47,6 +47,12 @@ create_exception!(
     PyRuntimeError,
     "Local Ignore reset failed while publishing retained defaults."
 );
+create_exception!(
+    classic_scanlog,
+    ScanRunLocalIgnoreResetDurabilityUnknownError,
+    PyRuntimeError,
+    "Local Ignore reset replacement is visible but durability is unconfirmed."
+);
 
 /// Explicit configuration shared by Standard and Targeted requests.
 #[pyclass(name = "ScanRunConfiguration", from_py_object)]
@@ -1604,6 +1610,36 @@ fn scan_run_reset_error_to_py(py: Python<'_>, error: contract::ResumeError) -> P
                 .expect("scan-run reset replacement exceptions must accept contract attributes");
             py_error
         }
+        contract::ResumeError::LocalIgnoreResetDurabilityUnknown(receipt) => {
+            let receipt = *receipt;
+            let py_error = ScanRunLocalIgnoreResetDurabilityUnknownError::new_err(message);
+            let value = py_error.value(py);
+            value
+                .setattr("code", code)
+                .and_then(|()| value.setattr("kind", code))
+                .and_then(|()| value.setattr("path", receipt.path))
+                .and_then(|()| value.setattr("backup_path", receipt.backup_path))
+                .and_then(|()| {
+                    value.setattr(
+                        "malformed_identity",
+                        installed_yaml_data_identity_to_py(receipt.malformed_identity),
+                    )
+                })
+                .and_then(|()| {
+                    value.setattr(
+                        "backup_identity",
+                        installed_yaml_data_identity_to_py(receipt.backup_identity),
+                    )
+                })
+                .and_then(|()| {
+                    value.setattr(
+                        "replacement_identity",
+                        installed_yaml_data_identity_to_py(receipt.replacement_identity),
+                    )
+                })
+                .expect("scan-run durability exceptions must accept recovery receipt attributes");
+            py_error
+        }
         contract::ResumeError::ContinuationConsumed | contract::ResumeError::Infrastructure(_) => {
             unreachable!("non-reset resume errors are handled before reset exception projection")
         }
@@ -1614,9 +1650,9 @@ fn scan_run_reset_error_to_py(py: Python<'_>, error: contract::ResumeError) -> P
 ///
 /// The GIL is released while the shared runtime executes. Sequential or concurrent replay raises
 /// [`ScanRunContinuationConsumedError`] with code `scan_run_continuation_consumed`. Reset conflict,
-/// backup failure, and replacement failure raise their dedicated typed exceptions with applicable
-/// identity, path, and publication-stage metadata. Resumed infrastructure failures retain the same
-/// execution envelope as [`scan_run_execute`].
+/// backup failure, replacement failure, and replacement durability uncertainty raise dedicated
+/// typed exceptions with applicable identity, path, stage, and recovery-receipt metadata. Resumed
+/// infrastructure failures retain the same execution envelope as [`scan_run_execute`].
 #[pyfunction]
 #[pyo3(signature = (continuation, decision, cancellation, observer=None, cancel_on_observer_error=false))]
 pub fn scan_run_resume(

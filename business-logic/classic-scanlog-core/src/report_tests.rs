@@ -430,3 +430,33 @@ fn autoscan_report_assembler_sorts_solution_matches_by_plugin_load_order() {
     let middle = text.find("[05] Middle Entry").unwrap();
     assert!(earlier < middle);
 }
+
+#[test]
+fn autoscan_report_assembler_omits_absent_mod_conflict_fix_line() {
+    let guidance = ModGuidanceAnalysisResult {
+        conflicts: vec![crate::ModConflictGuidance {
+            state: ModGuidanceMatchState::Matched,
+            mod_a: "Upscaling.dll".to_string(),
+            mod_b: "FSR3_AA.dll".to_string(),
+            name_a: "Upscaling".to_string(),
+            name_b: "FSR 3 Antialiasing".to_string(),
+            description: "The mods are redundant with each other.".to_string(),
+            fix: None,
+            link: None,
+        }],
+        ..ModGuidanceAnalysisResult::default()
+    };
+
+    let text = AutoscanReportAssembler::new()
+        .assemble(
+            &base_facts(),
+            AutoscanReportContributions {
+                mod_guidance: Some(guidance),
+                ..AutoscanReportContributions::default()
+            },
+        )
+        .join("");
+
+    assert!(text.contains("    The mods are redundant with each other.\n    -----\n"));
+    assert!(!text.contains("    \n    -----\n"));
+}

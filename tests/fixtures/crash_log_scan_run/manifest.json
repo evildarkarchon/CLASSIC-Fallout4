@@ -112,6 +112,7 @@
         "conflictCode": "local_ignore_reset_conflict",
         "backupFailureCode": "local_ignore_reset_backup_failure",
         "replacementFailureCode": "local_ignore_reset_replacement_failure",
+        "durabilityUnknownCode": "local_ignore_reset_durability_unknown",
         "consumedCode": "scan_run_continuation_consumed",
         "backupMustEqualMalformedBytes": true,
         "reportMustEqualExistingBytes": true,
@@ -329,6 +330,7 @@
     "resume_error_kind.local_ignore_reset_conflict",
     "resume_error_kind.local_ignore_reset_backup_failure",
     "resume_error_kind.local_ignore_reset_replacement_failure",
+    "resume_error_kind.local_ignore_reset_durability_unknown",
     "resume_error_kind.infrastructure",
     "recovery_continuation.retained_snapshot",
     "recovery_continuation.single_use",
@@ -681,6 +683,7 @@
         "resume_error_kind.local_ignore_reset_conflict",
         "resume_error_kind.local_ignore_reset_backup_failure",
         "resume_error_kind.local_ignore_reset_replacement_failure",
+        "resume_error_kind.local_ignore_reset_durability_unknown",
         "resume_error_kind.infrastructure",
         "recovery_continuation.retained_snapshot",
         "recovery_continuation.single_use",
@@ -781,6 +784,7 @@
         "resume_error_kind.local_ignore_reset_conflict",
         "resume_error_kind.local_ignore_reset_backup_failure",
         "resume_error_kind.local_ignore_reset_replacement_failure",
+        "resume_error_kind.local_ignore_reset_durability_unknown",
         "resume_error_kind.infrastructure",
         "recovery_continuation.retained_snapshot",
         "recovery_continuation.single_use",
@@ -880,6 +884,7 @@
         "resume_error_kind.local_ignore_reset_conflict",
         "resume_error_kind.local_ignore_reset_backup_failure",
         "resume_error_kind.local_ignore_reset_replacement_failure",
+        "resume_error_kind.local_ignore_reset_durability_unknown",
         "resume_error_kind.infrastructure",
         "recovery_continuation.retained_snapshot",
         "recovery_continuation.single_use",
@@ -980,6 +985,7 @@
         "resume_error_kind.local_ignore_reset_conflict",
         "resume_error_kind.local_ignore_reset_backup_failure",
         "resume_error_kind.local_ignore_reset_replacement_failure",
+        "resume_error_kind.local_ignore_reset_durability_unknown",
         "resume_error_kind.infrastructure",
         "recovery_continuation.retained_snapshot",
         "recovery_continuation.single_use",
@@ -1196,6 +1202,87 @@
             "contains": [
               "test_shared_local_ignore_recovery_continuation_retains_snapshot_and_rejects_replay",
               "test_pre_resume_cancellation_wins_without_mutating_local_ignore"
+            ]
+          }
+        ]
+      }
+    },
+    "reset_to_default_continuation": {
+      "requiredOwners": [
+        "rust",
+        "cxx",
+        "node",
+        "python"
+      ],
+      "evidence": {
+        "rust": [
+          {
+            "path": "business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs",
+            "contains": [
+              "targeted_run_resets_local_ignore_and_resumes_retained_discovery_and_snapshot",
+              "reset_to_default_returns_typed_conflict_without_overwriting_current_local_ignore",
+              "reset_to_default_returns_typed_backup_failure_without_mutation_or_analysis",
+              "reset_replacement_publication_failure_projects_stable_typed_details",
+              "reset_replacement_durability_unknown_projects_recoverable_receipt",
+              "cancellation_before_reset_to_default_performs_no_durable_or_analysis_work",
+              "cancellation_racing_after_reset_begins_returns_cancelled_after_durable_reset"
+            ]
+          },
+          {
+            "path": "business-logic/classic-scanlog-core/tests/scan_run_contract_parity.rs",
+            "contains": [
+              "shared_installed_yaml_data_fixture_preserves_report_bytes_when_ignore_is_generated"
+            ]
+          }
+        ],
+        "cxx": [
+          {
+            "path": "classic-cli/tests/test_scan_run_contract.cpp",
+            "contains": [
+              "CXX Reset To Default exposes durable metadata and typed failures"
+            ]
+          },
+          {
+            "path": "cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs",
+            "contains": [
+              "cxx_resume_operational_errors_preserve_every_stable_reset_outcome_field",
+              "cxx_resume_durability_unknown_preserves_recovery_receipt"
+            ]
+          }
+        ],
+        "node": [
+          {
+            "path": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+            "contains": [
+              "Reset To Default returns durable metadata and the unchanged shared report",
+              "Reset To Default exposes typed conflict and backup failure outcomes",
+              "pre-resume cancellation wins without changing malformed Local Ignore",
+              "cancellation observed after reset entry waits for durable repair"
+            ]
+          },
+          {
+            "path": "node-bindings/classic-node/src/scan_run_tests.rs",
+            "contains": [
+              "replacement_failure_projects_shared_node_rejection_metadata",
+              "durability_unknown_projects_shared_node_recovery_receipt"
+            ]
+          }
+        ],
+        "python": [
+          {
+            "path": "python-bindings/tests/test_scan_run_contract.py",
+            "contains": [
+              "test_reset_to_default_returns_durable_metadata_and_unchanged_shared_report",
+              "test_reset_to_default_exposes_typed_conflict_and_backup_failure",
+              "test_pre_resume_cancellation_wins_without_mutating_local_ignore",
+              "test_post_critical_cancellation_waits_for_durable_reset"
+            ]
+          },
+          {
+            "path": "python-bindings/classic-scanlog-py/src/scan_run_tests.rs",
+            "contains": [
+              "replacement_failure_maps_shared_outcome_to_typed_python_exception",
+              "durability_unknown_maps_shared_outcome_to_typed_python_exception"
             ]
           }
         ]

@@ -519,7 +519,9 @@ impl AutoscanReportAssembler {
                 conflict.name_a, conflict.name_b
             ));
             lines.push(format!("    {}\n", conflict.description));
-            lines.push(format!("    {}\n", conflict.fix));
+            if let Some(fix) = &conflict.fix {
+                lines.push(format!("    {fix}\n"));
+            }
             if let Some(link) = &conflict.link {
                 lines.push(format!("    Link: {link}\n"));
             }

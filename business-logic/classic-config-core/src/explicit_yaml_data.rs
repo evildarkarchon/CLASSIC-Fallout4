@@ -62,7 +62,12 @@ pub struct YamlDataContentIdentity {
 }
 
 impl YamlDataContentIdentity {
-    pub(crate) fn from_bytes(bytes: &[u8]) -> Self {
+    /// Calculate the canonical identity for an exact byte sequence.
+    ///
+    /// This constructor is also used by contract adapters to preserve recovery receipts without
+    /// reopening mutable filesystem paths.
+    #[must_use]
+    pub fn from_bytes(bytes: &[u8]) -> Self {
         Self {
             sha256: Sha256::digest(bytes).into(),
             byte_len: bytes.len() as u64,
@@ -695,9 +700,10 @@ fn validate_mod_conf(yaml: &Yaml, path: &Path) -> Result<(), ExplicitYamlDataLoa
     for (index, entry) in entries.iter().enumerate() {
         let context = format!("Mods_CONF[{index}]");
         let mapping = require_entry_mapping(entry, "Mods_CONF", index, path)?;
-        for key in ["mod_a", "mod_b", "name_a", "name_b", "description", "fix"] {
+        for key in ["mod_a", "mod_b", "name_a", "name_b", "description"] {
             require_entry_string(mapping, key, &context, path)?;
         }
+        validate_optional_entry_string(mapping, "fix", &context, path)?;
         validate_optional_entry_string(mapping, "link", &context, path)?;
     }
     Ok(())
