@@ -17,6 +17,9 @@ crossterm = "0.28"
 
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
+# The final scan-run contract exposes Installed YAML Data provenance from config core without
+# re-exporting it, so presenting selection diagnostics requires naming those types directly.
+classic-config-core = { path = "../../business-logic/classic-config-core" }
 classic-user-settings-core = { path = "../../business-logic/classic-user-settings-core" }
 classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
 classic-path-core = { path = "../../business-logic/classic-path-core" }

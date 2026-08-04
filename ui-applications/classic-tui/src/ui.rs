@@ -153,11 +153,12 @@ impl App {
             return;
         };
 
-        let (maximum_width, maximum_height) = if matches!(overlay, Overlay::ScanSummary) {
-            (88, 22)
-        } else {
-            (68, 11)
-        };
+        let (maximum_width, maximum_height) =
+            if matches!(overlay, Overlay::ScanSummary | Overlay::LocalIgnoreRecovery) {
+                (88, 22)
+            } else {
+                (68, 11)
+            };
         let width = area.width.min(maximum_width);
         let height = area.height.min(maximum_height);
         let x = area.x + (area.width.saturating_sub(width)) / 2;
@@ -180,6 +181,10 @@ impl App {
                 self.settings_overlay_text(),
             ),
             Overlay::ScanSummary => ("Last Crash Log Scan Run", self.scan_run_summary_text()),
+            Overlay::LocalIgnoreRecovery => (
+                "Local Ignore Recovery Required",
+                self.local_ignore_recovery_text(),
+            ),
             Overlay::ConfirmRemoveBackup(backup_type) => {
                 let text = format!(
                     "Remove {} backup?\n\nThis will delete all backed up files permanently.\n\nPress Enter to confirm, Esc to cancel",
@@ -207,10 +212,12 @@ impl App {
             .block(block)
             .alignment(Alignment::Left)
             .wrap(Wrap { trim: false });
-        let paragraph = if matches!(overlay, Overlay::ScanSummary) {
-            paragraph.scroll((self.scan_summary_scroll, 0))
-        } else {
-            paragraph
+        let paragraph = match overlay {
+            Overlay::ScanSummary => paragraph.scroll((self.scan_summary_scroll, 0)),
+            Overlay::LocalIgnoreRecovery => {
+                paragraph.scroll((self.local_ignore_recovery_scroll, 0))
+            }
+            _ => paragraph,
         };
 
         frame.render_widget(paragraph, overlay_area);

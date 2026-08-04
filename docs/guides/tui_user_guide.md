@@ -184,6 +184,22 @@ ui-applications/classic-tui
 | `Enter` | Confirm and save  |
 | `Esc`   | Cancel and return |
 
+### Local Ignore Recovery
+
+Shown when your `CLASSIC Ignore.yaml` cannot be parsed. The scan pauses with its discovered Crash
+Logs retained; answering resumes that same scan rather than starting a new one.
+
+| Key                       | Action                                                                                     |
+|---------------------------|--------------------------------------------------------------------------------------------|
+| `P`                       | Proceed Without Ignore — scan with an empty ignore list; your file is left unchanged         |
+| `R`                       | Reset To Default — back up your file byte-exactly, then replace it with the CLASSIC defaults |
+| `Esc` / `C`               | Cancel — stop the scan; nothing is analyzed and your file is not modified                    |
+| `↑` `↓` `Page Up/Down`    | Scroll the Installed YAML Data diagnostics below the choices                                 |
+| `Home`                    | Scroll back to the top                                                                       |
+
+`Enter` is deliberately unbound here, so no reflex key press can authorize replacing your file.
+CLASSIC never picks a recovery for you.
+
 ---
 
 ## Features

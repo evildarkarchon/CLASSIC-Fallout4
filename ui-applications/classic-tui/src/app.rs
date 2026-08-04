@@ -4,8 +4,9 @@ use std::time::{Duration, Instant};
 use classic_file_io_core::BackupType;
 use classic_path_core::validate_custom_scan_path;
 use classic_scanlog_core::scan_run::contract::{
-    self as scan_run_contract, Cancellation, Configuration, Event as ScanRunEvent,
-    InfrastructureError, Options, RunResult,
+    self as scan_run_contract, Cancellation, Configuration, CrashLogScanRunContinuation,
+    Event as ScanRunEvent, InfrastructureError, LocalIgnoreRecoveryDecision, Options, ResumeError,
+    RunResult,
 };
 use classic_scanlog_core::{
     CrashLogScanFacts, CrashLogScanSetupContext, StandardCrashLogScanSource,
@@ -28,7 +29,10 @@ mod results_workflow;
 mod update_workflow;
 
 use crate::results_markdown::MarkdownLink;
-use crate::scan_run::{ScanRunIntent, build_request, format_error, format_event, format_result};
+use crate::scan_run::{
+    LocalIgnoreRecoveryPrompt, ScanRunIntent, build_request, describe_local_ignore_recovery,
+    format_error, format_event, format_result, format_resume_error,
+};
 use crate::state::{classic_root, legacy_tui_state_file_path};
 use crate::tabs::articles_tab::{ARTICLE_LINKS, ArticlesClickAreas};
 use crate::tabs::backup_tab::BackupClickAreas;
@@ -92,6 +96,51 @@ pub enum Overlay {
     ScanSummary,
     ConfirmRemoveBackup(BackupType),
     ConfirmDeleteReport(String),
+    /// A Crash Log Scan Run paused for an explicit Local Ignore recovery decision.
+    ///
+    /// This variant is intentionally payload-free. `Overlay` is cloned on every key press, so the
+    /// non-cloneable continuation lives in [`App::pending_local_ignore_recovery`] instead.
+    LocalIgnoreRecovery,
+}
+
+/// Non-cloneable owner of one Crash Log Scan Run paused on Local Ignore recovery.
+///
+/// The opaque single-use continuation and the run's cancellation control live here and are never
+/// embedded in `Overlay` or any other cloneable or serializable presentation state. Accepting or
+/// dismissing a decision moves the whole value out, which is what makes the continuation
+/// single-use at the TUI seam as well as inside Rust.
+pub struct PendingLocalIgnoreRecovery {
+    /// Opaque process-local continuation retaining discovery and prepared intake.
+    continuation: CrashLogScanRunContinuation,
+    /// The paused run's monotonic cancellation control, reused so a prior cancel still wins.
+    cancellation: Cancellation,
+    /// Cloneable facts the overlay renders while awaiting a decision.
+    prompt: LocalIgnoreRecoveryPrompt,
+}
+
+/// How the user answered a Local Ignore recovery question.
+///
+/// Rust defines only two decisions, so dismissal is not one of them; it is modelled here because
+/// the TUI has to express it, and a named alternative reads better at the call site than a bool.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum RecoveryAnswer {
+    /// Apply one explicit Rust-defined decision to the retained run.
+    Accept(LocalIgnoreRecoveryDecision),
+    /// Dismiss the question, cancelling before the retained recovery plan can be consumed.
+    Dismiss,
+}
+
+/// Retained outcome of the most recent Crash Log Scan Run, including a resumed run.
+#[derive(Debug)]
+pub enum LastScanRun {
+    /// One Crash Log Scan Run result, whether terminal or paused for a recovery decision.
+    ///
+    /// Boxed because `RunResult` dwarfs the two typed failure variants.
+    Run(Box<RunResult>),
+    /// A run-wide typed infrastructure failure.
+    Failed(InfrastructureError),
+    /// A typed failure raised while resuming a retained Local Ignore recovery.
+    RecoveryFailed(ResumeError),
 }
 
 #[derive(Default)]
@@ -251,6 +300,8 @@ impl InputState {
 pub enum AsyncMessage {
     ScanEvent(ScanRunEvent),
     ScanFinished(Box<Result<RunResult, InfrastructureError>>),
+    /// Terminal outcome of resuming a retained Local Ignore recovery continuation.
+    ScanResumeFinished(Box<Result<RunResult, ResumeError>>),
     UpdateResult(Result<NotificationStatus, String>),
     BackupStatuses([bool; 4]),
     BackupComplete(String),
@@ -282,6 +333,8 @@ pub struct App {
     pub scan_progress: f64,
     pub scan_status: String,
     pub scan_summary_scroll: u16,
+    /// Scroll offset for the recovery overlay, so long diagnostics stay reachable on any terminal.
+    pub local_ignore_recovery_scroll: u16,
     pub status_clear_at: Option<Instant>,
     pub update_checking: bool,
     pub last_update_notification: Option<NotificationStatus>,
@@ -303,7 +356,9 @@ pub struct App {
     pub async_tx: mpsc::UnboundedSender<AsyncMessage>,
     pub async_rx: mpsc::UnboundedReceiver<AsyncMessage>,
     pub scan_cancellation: Option<Cancellation>,
-    pub last_scan_run: Option<Result<RunResult, InfrastructureError>>,
+    pub last_scan_run: Option<LastScanRun>,
+    /// Continuation-owning state for a run paused on Local Ignore recovery, if any.
+    pub pending_local_ignore_recovery: Option<PendingLocalIgnoreRecovery>,
 
     pub url_opener: UrlOpener,
     pub clipboard_writer: ClipboardWriter,
@@ -394,6 +449,7 @@ impl App {
             scan_progress: 0.0,
             scan_status: initial_status,
             scan_summary_scroll: 0,
+            local_ignore_recovery_scroll: 0,
             status_clear_at: None,
             update_checking: false,
             last_update_notification: None,
@@ -411,6 +467,7 @@ impl App {
             async_rx: rx,
             scan_cancellation: None,
             last_scan_run: None,
+            pending_local_ignore_recovery: None,
             url_opener,
             clipboard_writer,
         };
@@ -479,34 +536,55 @@ impl App {
             }
             AsyncMessage::ScanFinished(outcome) => {
                 self.scan_in_progress = false;
-                self.scan_cancellation = None;
-                let should_switch_to_results = match &*outcome {
+                match *outcome {
+                    // Local Ignore recovery is an expected pause, not a finished run: keep the
+                    // cancellation control alive so the retained continuation resumes under it.
+                    Ok(result)
+                        if result.status
+                            == classic_scanlog_core::CrashLogScanRunStatus::LocalIgnoreRecoveryRequired =>
+                    {
+                        self.begin_local_ignore_recovery(result);
+                    }
                     Ok(result) => {
-                        let presentation = format_result(result);
-                        self.scan_progress = presentation.percent;
-                        self.scan_status = presentation.status;
-                        result.status == classic_scanlog_core::CrashLogScanRunStatus::Completed
-                            && result.total > 0
+                        self.scan_cancellation = None;
+                        self.apply_terminal_run_result(result);
                     }
                     Err(error) => {
-                        let presentation = format_error(error);
+                        self.scan_cancellation = None;
+                        let presentation = format_error(&error);
                         self.scan_progress = presentation.percent;
                         self.scan_status = presentation.status;
-                        false
+                        self.status_clear_at =
+                            Some(Instant::now() + Duration::from_secs(STATUS_CLEAR_SECONDS));
+                        self.last_scan_run = Some(LastScanRun::Failed(error));
                     }
-                };
-                self.status_clear_at =
-                    Some(Instant::now() + Duration::from_secs(STATUS_CLEAR_SECONDS));
-                if self
-                    .settings
-                    .frontend_state()
-                    .preferences()
-                    .auto_switch_after_scan()
-                    && should_switch_to_results
-                {
-                    self.set_active_tab(TabIndex::Results);
                 }
-                self.last_scan_run = Some(*outcome);
+            }
+            AsyncMessage::ScanResumeFinished(outcome) => {
+                self.scan_in_progress = false;
+                self.scan_cancellation = None;
+                match *outcome {
+                    Ok(result)
+                        if result.status
+                            == classic_scanlog_core::CrashLogScanRunStatus::LocalIgnoreRecoveryRequired =>
+                    {
+                        // Resume reuses the retained plan exactly once, so a second recovery
+                        // request is an adapter invariant to report rather than a loop to enter.
+                        self.report_recovery_invariant(
+                            "Crash Log Scan recovery returned an unexpected second recovery request",
+                            result,
+                        );
+                    }
+                    Ok(result) => self.apply_terminal_run_result(result),
+                    Err(error) => {
+                        let presentation = format_resume_error(&error);
+                        self.scan_progress = presentation.percent;
+                        self.scan_status = presentation.status;
+                        // Typed recovery failures stay actionable; they never silently expire.
+                        self.status_clear_at = None;
+                        self.last_scan_run = Some(LastScanRun::RecoveryFailed(error));
+                    }
+                }
             }
             AsyncMessage::UpdateResult(result) => {
                 self.update_checking = false;
@@ -545,6 +623,166 @@ impl App {
                     Some(Instant::now() + Duration::from_secs(STATUS_CLEAR_SECONDS));
             }
         }
+    }
+
+    /// Applies one meaningful terminal run result to retained TUI presentation state.
+    ///
+    /// Shared by an initial run and a resumed one so both present identical Rust-owned facts.
+    fn apply_terminal_run_result(&mut self, result: RunResult) {
+        let presentation = format_result(&result);
+        self.scan_progress = presentation.percent;
+        self.scan_status = presentation.status;
+        let should_switch_to_results = result.status
+            == classic_scanlog_core::CrashLogScanRunStatus::Completed
+            && result.total > 0;
+        self.status_clear_at = Some(Instant::now() + Duration::from_secs(STATUS_CLEAR_SECONDS));
+        if self
+            .settings
+            .frontend_state()
+            .preferences()
+            .auto_switch_after_scan()
+            && should_switch_to_results
+        {
+            self.set_active_tab(TabIndex::Results);
+        }
+        self.last_scan_run = Some(LastScanRun::Run(Box::new(result)));
+    }
+
+    /// Reports a recovery invariant the TUI cannot act on, retaining the typed result behind it.
+    ///
+    /// These states are unanswerable rather than merely unsuccessful, so the status deliberately
+    /// does not auto-clear: quietly returning to "Ready" would hide a question that was never put
+    /// to the user.
+    fn report_recovery_invariant(&mut self, message: &str, result: RunResult) {
+        self.scan_progress = 0.0;
+        self.scan_status = message.to_string();
+        self.status_clear_at = None;
+        self.last_scan_run = Some(LastScanRun::Run(Box::new(result)));
+    }
+
+    /// Takes ownership of a paused run's continuation and presents the recovery choice.
+    ///
+    /// The continuation is moved out of the result before anything is shown, so the retained run
+    /// is owned by exactly one place and the summary overlay keeps the rest of the typed result.
+    fn begin_local_ignore_recovery(&mut self, mut result: RunResult) {
+        let prompt = describe_local_ignore_recovery(&result);
+        let Some(continuation) = result.continuation.take() else {
+            // Reported rather than guessed at: without a retained continuation the run cannot be
+            // resumed, and deciding on the user's behalf is exactly what this contract forbids.
+            self.scan_cancellation = None;
+            self.report_recovery_invariant(
+                "Crash Log Scan Run requested Local Ignore recovery without retaining its continuation",
+                result,
+            );
+            return;
+        };
+
+        // A missing control means no cancellation was ever requested for this run, so a fresh
+        // un-cancelled token is the accurate stand-in; the run's own control is deliberately kept
+        // alive past `ScanFinished` for exactly this reason.
+        let cancellation = self.scan_cancellation.take().unwrap_or_default();
+        self.scan_progress = 0.0;
+        self.local_ignore_recovery_scroll = 0;
+        self.pending_local_ignore_recovery = Some(PendingLocalIgnoreRecovery {
+            continuation,
+            cancellation: cancellation.clone(),
+            prompt: prompt.clone(),
+        });
+        self.last_scan_run = Some(LastScanRun::Run(Box::new(result)));
+
+        if cancellation.is_cancelled() {
+            // Cancellation observed before the question is asked already decided this run. Never
+            // offer a destructive choice to a user who is on their way out; go straight to the
+            // cancelled result the contract guarantees. This mirrors the pre-question cancellation
+            // check in the native CLI's `read_cli_local_ignore_recovery_choice`.
+            self.resume_local_ignore_recovery(RecoveryAnswer::Dismiss);
+            return;
+        }
+
+        self.scan_status = prompt.message;
+        // No auto-clear: the question stays visible until the user answers it.
+        self.status_clear_at = None;
+        self.active_overlay = Some(Overlay::LocalIgnoreRecovery);
+    }
+
+    /// Accepts one explicit Rust-defined Local Ignore recovery decision and resumes the paused run.
+    pub fn accept_local_ignore_recovery(&mut self, decision: LocalIgnoreRecoveryDecision) {
+        self.resume_local_ignore_recovery(RecoveryAnswer::Accept(decision));
+    }
+
+    /// Dismisses the recovery question without mutating Local Ignore or analyzing any Crash Log.
+    ///
+    /// Rust defines only two decisions, so dismissal is expressed by cancelling first and then
+    /// resuming with the non-destructive placeholder. `resume` observes cancellation after it
+    /// claims the continuation but before it consumes the recovery plan, so no backup,
+    /// replacement, or analysis can happen and the run returns its ordinary cancelled result.
+    pub fn cancel_local_ignore_recovery(&mut self) {
+        self.resume_local_ignore_recovery(RecoveryAnswer::Dismiss);
+    }
+
+    /// Consumes the retained continuation exactly once through the shared Rust runtime.
+    ///
+    /// `answer` selects between applying a Rust-defined decision and dismissing the question;
+    /// [`RecoveryAnswer::Dismiss`] cancels first and then resumes with the non-destructive
+    /// placeholder decision, because Rust exposes no "cancel" decision of its own.
+    ///
+    /// Taking the pending state first means a second key press finds nothing to resume, which
+    /// matches the continuation's own single-use contract instead of relying on the overlay
+    /// closing in time. Does nothing when no run is paused.
+    fn resume_local_ignore_recovery(&mut self, answer: RecoveryAnswer) {
+        let Some(pending) = self.pending_local_ignore_recovery.take() else {
+            return;
+        };
+        let PendingLocalIgnoreRecovery {
+            continuation,
+            cancellation,
+            prompt,
+        } = pending;
+
+        let decision = match answer {
+            RecoveryAnswer::Accept(decision) => decision,
+            RecoveryAnswer::Dismiss => {
+                cancellation.cancel();
+                LocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+            }
+        };
+
+        self.active_overlay = None;
+        self.scan_in_progress = true;
+        self.scan_progress = -1.0;
+        self.scan_status = match answer {
+            RecoveryAnswer::Accept(_) => prompt.resume_status(),
+            RecoveryAnswer::Dismiss => {
+                "Cancelling; Local Ignore will not be modified...".to_string()
+            }
+        };
+        self.status_clear_at = None;
+        self.scan_cancellation = Some(cancellation.clone());
+
+        let tx = self.async_tx.clone();
+        get_runtime().spawn(async move {
+            let delivery_cancellation = cancellation.clone();
+            let event_tx = tx.clone();
+            let mut observer = move |event| {
+                // Losing the UI delivery channel explicitly requests safe cancellation so queued
+                // work does not continue without a usable presentation consumer.
+                if event_tx.send(AsyncMessage::ScanEvent(event)).is_err() {
+                    delivery_cancellation.cancel();
+                }
+            };
+            let result = continuation
+                .resume(decision, &cancellation, Some(&mut observer))
+                .await;
+            let _ = tx.send(AsyncMessage::ScanResumeFinished(Box::new(result)));
+        });
+    }
+
+    /// Returns the recovery overlay body, including the expected outcome of every offered decision.
+    pub fn local_ignore_recovery_text(&self) -> String {
+        self.pending_local_ignore_recovery.as_ref().map_or_else(
+            || "No Crash Log Scan Run is awaiting a Local Ignore recovery decision.".to_string(),
+            |pending| pending.prompt.overlay_text(),
+        )
     }
 
     /// Validates the editable path fields and commits them as one canonical settings update.
@@ -882,6 +1120,12 @@ impl App {
     }
 
     pub fn close_overlay(&mut self) {
+        if self.pending_local_ignore_recovery.is_some() {
+            // Dismissing this overlay is itself a decision, not a passive close. Cancel explicitly
+            // so the paused run returns its ordinary cancelled result instead of being abandoned.
+            self.cancel_local_ignore_recovery();
+            return;
+        }
         self.active_overlay = None;
         self.pending_backup_remove = None;
         self.pending_delete_report = None;
@@ -1023,8 +1267,9 @@ impl App {
     /// Returns the retained terminal scan presentation shown by the Last Scan overlay.
     pub fn scan_run_summary_text(&self) -> String {
         match self.last_scan_run.as_ref() {
-            Some(Ok(result)) => format_result(result).details,
-            Some(Err(error)) => format_error(error).details,
+            Some(LastScanRun::Run(result)) => format_result(result).details,
+            Some(LastScanRun::Failed(error)) => format_error(error).details,
+            Some(LastScanRun::RecoveryFailed(error)) => format_resume_error(error).details,
             None => "No Crash Log Scan Run has completed yet.".to_string(),
         }
     }
