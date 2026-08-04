@@ -10,6 +10,8 @@ qt_add_executable(ClassicGui WIN32
     # Application windows and dialogs
     app/mainwindow.h
     app/mainwindow.cpp
+    app/localignorerecoveryprompt.h
+    app/localignorerecoveryprompt.cpp
     app/errordialog.h
     app/errordialog.cpp
     app/settingsdialog.h

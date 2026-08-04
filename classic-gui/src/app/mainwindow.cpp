@@ -47,6 +47,7 @@
 #include "widgets/markdownviewer.h"
 #include "widgets/reportlistwidget.h"
 #include "widgets/reportmetadatawidget.h"
+#include "app/localignorerecoveryprompt.h"
 #include "workers/papyrusworker.h"
 #include "workers/updateworker.h"
 
@@ -77,68 +78,10 @@ QString format_elapsed_seconds(const QElapsedTimer& timer)
     return QString::number(static_cast<double>(elapsedMs) / 1000.0, 'f', 1);
 }
 
-/// Returns the stable GUI label for the #146 scan-run Local Ignore state inventory.
-QString localIgnoreStateLabel(classic::scanner::ScanRunLocalIgnoreYamlDataState state)
-{
-    using State = classic::scanner::ScanRunLocalIgnoreYamlDataState;
-    switch (state) {
-    case State::Existing:
-        return QStringLiteral("existing");
-    case State::Generated:
-        return QStringLiteral("generated");
-    case State::RecoveryRequired:
-        return QStringLiteral("recovery required");
-    case State::ProceedWithoutIgnore:
-        return QStringLiteral("proceed without Ignore");
-    case State::ResetToDefault:
-        return QStringLiteral("reset to default");
-    }
-    return QStringLiteral("unknown");
-}
-
-/// Returns the stable GUI label for every selected YAML Data provenance.
-QString installedYamlDataProvenanceLabel(classic::scanner::ScanRunInstalledYamlDataProvenance provenance)
-{
-    using Provenance = classic::scanner::ScanRunInstalledYamlDataProvenance;
-    switch (provenance) {
-    case Provenance::Updated:
-        return QStringLiteral("updated");
-    case Provenance::Previous:
-        return QStringLiteral("previous");
-    case Provenance::Bundled:
-        return QStringLiteral("bundled");
-    }
-    return QStringLiteral("unknown");
-}
-
-/// Returns the stable GUI label for the #146 scan-run Installed YAML Data diagnostic inventory.
-QString installedYamlDataDiagnosticKindLabel(classic::scanner::ScanRunInstalledYamlDataDiagnosticKind kind)
-{
-    using Kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind;
-    switch (kind) {
-    case Kind::CacheUnavailable:
-        return QStringLiteral("cache unavailable");
-    case Kind::Missing:
-        return QStringLiteral("missing");
-    case Kind::Read:
-        return QStringLiteral("read");
-    case Kind::InvalidUtf8:
-        return QStringLiteral("invalid UTF-8");
-    case Kind::Parse:
-        return QStringLiteral("parse");
-    case Kind::InvalidSchema:
-        return QStringLiteral("invalid schema");
-    case Kind::IncompatibleSchema:
-        return QStringLiteral("incompatible schema");
-    case Kind::InvalidRoleData:
-        return QStringLiteral("invalid role data");
-    case Kind::LocalIgnoreGenerated:
-        return QStringLiteral("local ignore generated");
-    case Kind::LocalIgnoreReset:
-        return QStringLiteral("local ignore reset");
-    }
-    return QStringLiteral("unknown");
-}
+// The Installed YAML Data label helpers live in `workers/scanrunpresentation.h` so the run-level
+// warning text and this window's log/status text cannot drift apart.
+using classic::gui::installedYamlDataProvenanceLabel;
+using classic::gui::localIgnoreStateLabel;
 
 /// Resolve an existing Fallout 4 script-extender log to use as a setup detection hint.
 /// The selected version controls preference, while checking both names keeps auto-detected VR installs working.
@@ -350,8 +293,9 @@ void MainWindow::initializeControllers()
     m_signalHub = &SignalHub::instance();
     m_threadManager = new ThreadManager(this);
     m_scanController = new ScanController(m_signalHub, m_threadManager, this);
-    m_scanController->setLocalIgnoreRecoveryPrompt(
-        [this](const QString& message) { return promptLocalIgnoreRecovery(message); });
+    m_scanController->setLocalIgnoreRecoveryPrompt([this](const QString& message) {
+        return classic::gui::promptLocalIgnoreRecoveryChoice(this, message);
+    });
     m_gameFilesController = new GameFilesController(m_signalHub, m_threadManager, this);
     m_backupController = new BackupController(QString(), m_signalHub, this);
     m_resultsController =
@@ -1614,34 +1558,6 @@ void MainWindow::onScanError(const QString& message)
     QMessageBox::critical(this, QStringLiteral("Scan Error"), message);
 }
 
-classic::gui::ScanRunLocalIgnoreRecoveryChoice MainWindow::promptLocalIgnoreRecovery(const QString& message)
-{
-    QMessageBox prompt(this);
-    prompt.setIcon(QMessageBox::Warning);
-    prompt.setWindowTitle(QStringLiteral("Local Ignore Recovery Required"));
-    prompt.setText(message);
-    prompt.setInformativeText(QStringLiteral(
-        "Back Up & Reset preserves the malformed CLASSIC Ignore.yaml in CLASSIC Backup before replacing it "
-        "with the retained default. Continue Without Ignore leaves the file unchanged and disables local ignores "
-        "for this scan only."));
-    auto* resetButton =
-        prompt.addButton(QStringLiteral("Back Up && Reset to Default"), QMessageBox::AcceptRole);
-    auto* proceedButton =
-        prompt.addButton(QStringLiteral("Continue Without Ignore"), QMessageBox::ActionRole);
-    auto* cancelButton = prompt.addButton(QMessageBox::Cancel);
-    prompt.setDefaultButton(cancelButton);
-    prompt.setEscapeButton(cancelButton);
-    prompt.exec();
-
-    if (prompt.clickedButton() == resetButton) {
-        return classic::gui::ScanRunLocalIgnoreRecoveryChoice::ResetToDefault;
-    }
-    if (prompt.clickedButton() == proceedButton) {
-        return classic::gui::ScanRunLocalIgnoreRecoveryChoice::ProceedWithoutIgnore;
-    }
-    return classic::gui::ScanRunLocalIgnoreRecoveryChoice::Cancel;
-}
-
 void MainWindow::onScanWarning(const QString& message)
 {
     QMessageBox::warning(this, QStringLiteral("Scan Warning"), message);
@@ -1680,22 +1596,16 @@ void MainWindow::onScanInstalledYamlDataResolved(
                                  .arg(installedYamlData.localIgnoreReset.backupIdentity.sha256);
     }
     for (const auto& diagnostic : installedYamlData.diagnostics) {
-        QStringList context;
-        if (diagnostic.hasRole) {
-            context.append(diagnostic.role == classic::scanner::ScanRunInstalledYamlDataRole::Main
-                               ? QStringLiteral("Main")
-                               : QStringLiteral("Game"));
-        }
-        if (diagnostic.hasCandidate) {
-            context.append(installedYamlDataProvenanceLabel(diagnostic.candidate));
-        }
-        if (diagnostic.hasPath) {
-            context.append(diagnostic.path);
-        }
-        const QString suffix = context.isEmpty() ? QString{} : QStringLiteral(" [%1]").arg(context.join(", "));
-        qInfo().noquote() << QStringLiteral("Installed YAML Data diagnostic (%1): %2%3")
-                                 .arg(installedYamlDataDiagnosticKindLabel(diagnostic.kind), diagnostic.message,
-                                      suffix);
+        // The log and the run-level warning share one projection so their wording cannot drift.
+        qInfo().noquote() << QStringLiteral("Installed YAML Data diagnostic — %1")
+                                 .arg(classic::gui::formatInstalledYamlDataDiagnostic(diagnostic));
+    }
+
+    // Degraded selection and durable Local Ignore recovery are run-level facts the user should see
+    // once, not per Crash Log. They never reach Autoscan Report content.
+    const QString warning = classic::gui::formatInstalledYamlDataWarning(installedYamlData);
+    if (!warning.isEmpty()) {
+        onScanWarning(warning);
     }
 }
 

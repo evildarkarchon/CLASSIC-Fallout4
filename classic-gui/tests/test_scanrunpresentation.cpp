@@ -47,6 +47,12 @@ private slots:
     void installed_yaml_data_presence_preserves_generated_ignore_metadata_and_diagnostics();
     /// Verifies successful reset metadata remains typed and Qt-owned for later interaction work.
     void reset_to_default_preserves_durable_metadata_and_diagnostic();
+    /// Verifies degraded selection and durable recovery aggregate into one run-level warning.
+    void fallback_and_recovery_diagnostics_become_one_run_level_warning();
+    /// Verifies an expected first-run Ignore generation never escalates to a run-level warning.
+    void expected_local_ignore_generation_produces_no_run_level_warning();
+    /// Verifies a recovery the user already answered is not re-reported as a warning.
+    void answered_recovery_does_not_restate_the_local_ignore_problem();
     /// Verifies continuation replay misuse retains its stable code and message.
     void consumed_resume_error_preserves_typed_context();
     /// Verifies reset failures retain path, publication stage, identities, and any verified backup.
@@ -158,6 +164,123 @@ void ScanRunPresentationTests::reset_to_default_preserves_durable_metadata_and_d
              QStringLiteral("replacement-hash"));
     QCOMPARE(presentation.installedYamlData.diagnostics[0].kind,
              classic::scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreReset);
+}
+
+void ScanRunPresentationTests::fallback_and_recovery_diagnostics_become_one_run_level_warning()
+{
+    classic::gui::ScanRunInstalledYamlDataPresentation installed{};
+    installed.localIgnoreState = classic::scanner::ScanRunLocalIgnoreYamlDataState::ResetToDefault;
+
+    classic::gui::ScanRunInstalledYamlDataDiagnosticPresentation rejected{};
+    rejected.kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind::IncompatibleSchema;
+    rejected.message = QStringLiteral("updated Main schema 9.0 is newer than this client supports");
+    rejected.hasRole = true;
+    rejected.role = classic::scanner::ScanRunInstalledYamlDataRole::Main;
+    rejected.hasCandidate = true;
+    rejected.candidate = classic::scanner::ScanRunInstalledYamlDataProvenance::Updated;
+    rejected.hasPath = true;
+    rejected.path = QStringLiteral("C:/CLASSIC/cache/CLASSIC Main.yaml");
+    installed.diagnostics.append(rejected);
+
+    // An expected first-run generation must not add noise to a warning raised for other reasons.
+    classic::gui::ScanRunInstalledYamlDataDiagnosticPresentation generated{};
+    generated.kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated;
+    generated.message = QStringLiteral("generated missing Local Ignore YAML Data");
+    installed.diagnostics.append(generated);
+
+    // Local Ignore diagnostics carry no role. Once the user has answered the recovery dialog they
+    // must not be restated, so neither of these two reaches the warning.
+    classic::gui::ScanRunInstalledYamlDataDiagnosticPresentation answeredParse{};
+    answeredParse.kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind::Parse;
+    answeredParse.message = QStringLiteral("existing Local Ignore YAML Data could not be parsed");
+    installed.diagnostics.append(answeredParse);
+
+    classic::gui::ScanRunInstalledYamlDataDiagnosticPresentation reset{};
+    reset.kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreReset;
+    reset.message = QStringLiteral("reset malformed Local Ignore from retained defaults");
+    installed.diagnostics.append(reset);
+
+    installed.hasLocalIgnoreReset = true;
+    installed.localIgnoreReset.localIgnorePath = QStringLiteral("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml");
+    installed.localIgnoreReset.backupPath = QStringLiteral("C:/CLASSIC/CLASSIC Backup/CLASSIC Ignore.yaml");
+    installed.localIgnoreReset.backupIdentity.sha256 = QStringLiteral("malformed-hash");
+    installed.localIgnoreReset.backupIdentity.byteLength = 30;
+
+    const QString warning = classic::gui::formatInstalledYamlDataWarning(installed);
+
+    QVERIFY(!warning.isEmpty());
+    QVERIFY(warning.contains(QStringLiteral("incompatible schema")));
+    QVERIFY(warning.contains(QStringLiteral("updated Main schema 9.0 is newer than this client supports")));
+    QVERIFY(warning.contains(QStringLiteral("Main")));
+    QVERIFY(warning.contains(QStringLiteral("C:/CLASSIC/cache/CLASSIC Main.yaml")));
+    // The durable backup location is the one fact a user needs to recover their prior edits.
+    QVERIFY(warning.contains(QStringLiteral("C:/CLASSIC/CLASSIC Backup/CLASSIC Ignore.yaml")));
+    QVERIFY(warning.contains(QStringLiteral("malformed-hash")));
+    QVERIFY2(!warning.contains(QStringLiteral("generated missing Local Ignore YAML Data")),
+             "expected-success generation must not be reported as a warning");
+    QVERIFY2(!warning.contains(QStringLiteral("could not be parsed")),
+             "a Local Ignore problem the user already answered must not be restated");
+    QVERIFY2(!warning.contains(QStringLiteral("reset malformed Local Ignore from retained defaults")),
+             "the reset diagnostic is superseded by the durable backup paragraph");
+}
+
+void ScanRunPresentationTests::answered_recovery_does_not_restate_the_local_ignore_problem()
+{
+    // Proceed Without Ignore leaves the malformed file in place, so its parse diagnostic survives
+    // into the resumed snapshot. The user chose that outcome in the dialog, so warning again would
+    // report a resolved question.
+    classic::gui::ScanRunInstalledYamlDataPresentation proceeded{};
+    proceeded.localIgnoreState = classic::scanner::ScanRunLocalIgnoreYamlDataState::ProceedWithoutIgnore;
+    classic::gui::ScanRunInstalledYamlDataDiagnosticPresentation answeredParse{};
+    answeredParse.kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind::Parse;
+    answeredParse.message = QStringLiteral("existing Local Ignore YAML Data could not be parsed");
+    answeredParse.hasPath = true;
+    answeredParse.path = QStringLiteral("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml");
+    proceeded.diagnostics.append(answeredParse);
+
+    QVERIFY(classic::gui::formatInstalledYamlDataWarning(proceeded).isEmpty());
+
+    // A Main or game selection problem is unrelated to the answered question and still warns, which
+    // is what the missing role distinguishes.
+    classic::gui::ScanRunInstalledYamlDataDiagnosticPresentation selectionFallback{};
+    selectionFallback.kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind::InvalidRoleData;
+    selectionFallback.message = QStringLiteral("updated game YAML Data failed role validation");
+    selectionFallback.hasRole = true;
+    selectionFallback.role = classic::scanner::ScanRunInstalledYamlDataRole::Game;
+    proceeded.diagnostics.append(selectionFallback);
+
+    const QString warning = classic::gui::formatInstalledYamlDataWarning(proceeded);
+    QVERIFY(warning.contains(QStringLiteral("updated game YAML Data failed role validation")));
+    QVERIFY(!warning.contains(QStringLiteral("could not be parsed")));
+}
+
+void ScanRunPresentationTests::expected_local_ignore_generation_produces_no_run_level_warning()
+{
+    classic::gui::ScanRunInstalledYamlDataPresentation installed{};
+    installed.localIgnoreState = classic::scanner::ScanRunLocalIgnoreYamlDataState::Generated;
+
+    classic::gui::ScanRunInstalledYamlDataDiagnosticPresentation generated{};
+    generated.kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated;
+    generated.message = QStringLiteral("generated missing Local Ignore YAML Data");
+    generated.hasPath = true;
+    generated.path = QStringLiteral("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml");
+    installed.diagnostics.append(generated);
+
+    // A clean first run is an expected successful path, so it must never interrupt the user.
+    QVERIFY(classic::gui::formatInstalledYamlDataWarning(installed).isEmpty());
+
+    // A run with nothing to report at all is likewise silent.
+    QVERIFY(classic::gui::formatInstalledYamlDataWarning({}).isEmpty());
+
+    // The pre-decision snapshot is presented by the recovery choice dialog, so warning on it would
+    // both double-report the problem and interrupt the user before they can answer.
+    classic::gui::ScanRunInstalledYamlDataPresentation awaitingChoice{};
+    awaitingChoice.localIgnoreState = classic::scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired;
+    classic::gui::ScanRunInstalledYamlDataDiagnosticPresentation malformed{};
+    malformed.kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind::Parse;
+    malformed.message = QStringLiteral("Local Ignore YAML Data is malformed");
+    awaitingChoice.diagnostics.append(malformed);
+    QVERIFY(classic::gui::formatInstalledYamlDataWarning(awaitingChoice).isEmpty());
 }
 
 void ScanRunPresentationTests::discovery_report_directories_are_deduplicated_case_insensitively()

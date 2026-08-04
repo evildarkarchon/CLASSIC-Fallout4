@@ -30,6 +30,14 @@ public:
     void cancelScan();
     bool isScanning() const;
 
+    /// Builds the prompt handed to a ScanWorker so a paused recovery is decided on the GUI thread.
+    ///
+    /// The returned callable is invoked on the worker thread while Rust still holds the single-use
+    /// continuation. It marshals only the message across, blocks until the GUI thread answers, and
+    /// returns a typed decision; no continuation or discovery state crosses the boundary. Every
+    /// failure to reach a live controller resolves to `Cancel`, which mutates nothing.
+    [[nodiscard]] classic::gui::ScanRunLocalIgnoreRecoveryPrompt makeLocalIgnoreRecoveryPrompt();
+
 signals:
     void scanStarted();
     void scanDiscovered(int totalLogs);

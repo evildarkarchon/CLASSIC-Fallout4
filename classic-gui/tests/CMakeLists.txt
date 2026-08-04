@@ -217,6 +217,29 @@ add_classic_gui_qt_test(classic-gui-test-scan-request-builder
 )
 link_classic_gui_rust_bridge(classic-gui-test-scan-request-builder)
 
+# Local Ignore recovery dialog behavior. Drives the real modal prompt so the offered choices, the
+# non-destructive default, and every dismissal path are asserted at runtime rather than by grepping
+# mainwindow.cpp for button labels.
+add_classic_gui_qt_test(classic-gui-test-local-ignore-recovery-prompt
+    test_localignorerecoveryprompt.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/localignorerecoveryprompt.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanrunpresentation.cpp
+)
+link_classic_gui_rust_bridge(classic-gui-test-local-ignore-recovery-prompt)
+
+# ScanController's GUI-thread handoff for a paused recovery, exercised across a real worker thread.
+add_classic_gui_qt_test(classic-gui-test-scancontroller-recovery
+    test_scancontroller_recovery.cpp
+    ${CMAKE_SOURCE_DIR}/src/controllers/scancontroller.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/signalhub.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/threadmanager.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanworker.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanrequestbuilder.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanprogressmodel.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanrunpresentation.cpp
+)
+link_classic_gui_rust_bridge(classic-gui-test-scancontroller-recovery)
+
 add_classic_gui_qt_test(classic-gui-test-scanworker-cancellation
     test_scanworker_cancellation.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanworker.cpp

@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QSet>
+#include <QStringList>
 
 #include <utility>
 
@@ -190,6 +191,137 @@ ScanRunInstalledYamlDataPresentation presentInstalledYamlData(
 }
 
 } // namespace
+
+QString localIgnoreStateLabel(classic::scanner::ScanRunLocalIgnoreYamlDataState state)
+{
+    using State = classic::scanner::ScanRunLocalIgnoreYamlDataState;
+    switch (state) {
+    case State::Existing:
+        return QStringLiteral("existing");
+    case State::Generated:
+        return QStringLiteral("generated");
+    case State::RecoveryRequired:
+        return QStringLiteral("recovery required");
+    case State::ProceedWithoutIgnore:
+        return QStringLiteral("proceed without Ignore");
+    case State::ResetToDefault:
+        return QStringLiteral("reset to default");
+    }
+    return QStringLiteral("unknown");
+}
+
+QString installedYamlDataProvenanceLabel(classic::scanner::ScanRunInstalledYamlDataProvenance provenance)
+{
+    using Provenance = classic::scanner::ScanRunInstalledYamlDataProvenance;
+    switch (provenance) {
+    case Provenance::Updated:
+        return QStringLiteral("updated");
+    case Provenance::Previous:
+        return QStringLiteral("previous");
+    case Provenance::Bundled:
+        return QStringLiteral("bundled");
+    }
+    return QStringLiteral("unknown");
+}
+
+QString installedYamlDataDiagnosticKindLabel(classic::scanner::ScanRunInstalledYamlDataDiagnosticKind kind)
+{
+    using Kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind;
+    switch (kind) {
+    case Kind::CacheUnavailable:
+        return QStringLiteral("cache unavailable");
+    case Kind::Missing:
+        return QStringLiteral("missing");
+    case Kind::Read:
+        return QStringLiteral("read");
+    case Kind::InvalidUtf8:
+        return QStringLiteral("invalid UTF-8");
+    case Kind::Parse:
+        return QStringLiteral("parse");
+    case Kind::InvalidSchema:
+        return QStringLiteral("invalid schema");
+    case Kind::IncompatibleSchema:
+        return QStringLiteral("incompatible schema");
+    case Kind::InvalidRoleData:
+        return QStringLiteral("invalid role data");
+    case Kind::LocalIgnoreGenerated:
+        return QStringLiteral("local ignore generated");
+    case Kind::LocalIgnoreReset:
+        return QStringLiteral("local ignore reset");
+    }
+    return QStringLiteral("unknown");
+}
+
+QString formatInstalledYamlDataDiagnostic(const ScanRunInstalledYamlDataDiagnosticPresentation& diagnostic)
+{
+    QStringList context;
+    if (diagnostic.hasRole) {
+        context.append(diagnostic.role == classic::scanner::ScanRunInstalledYamlDataRole::Main
+                           ? QStringLiteral("Main")
+                           : QStringLiteral("Game"));
+    }
+    if (diagnostic.hasCandidate) {
+        context.append(installedYamlDataProvenanceLabel(diagnostic.candidate));
+    }
+    if (diagnostic.hasPath) {
+        context.append(diagnostic.path);
+    }
+    const QString suffix = context.isEmpty() ? QString{} : QStringLiteral(" [%1]").arg(context.join(", "));
+    return QStringLiteral("%1: %2%3")
+        .arg(installedYamlDataDiagnosticKindLabel(diagnostic.kind), diagnostic.message, suffix);
+}
+
+QString formatInstalledYamlDataWarning(const ScanRunInstalledYamlDataPresentation& installedYamlData)
+{
+    if (installedYamlData.localIgnoreState == classic::scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired) {
+        // This is the pre-decision snapshot published while the run still awaits a recovery choice.
+        // The choice dialog is that snapshot's presentation, so a warning here would double-report it
+        // and would interrupt the user before they can answer.
+        return {};
+    }
+
+    using State = classic::scanner::ScanRunLocalIgnoreYamlDataState;
+    const bool localIgnoreWasDecided = installedYamlData.localIgnoreState == State::ProceedWithoutIgnore ||
+                                       installedYamlData.localIgnoreState == State::ResetToDefault;
+
+    QStringList lines;
+    for (const auto& diagnostic : installedYamlData.diagnostics) {
+        if (diagnostic.kind == classic::scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated) {
+            // Generating an absent Local Ignore file is an expected successful path, not a warning.
+            continue;
+        }
+        if (localIgnoreWasDecided && !diagnostic.hasRole) {
+            // Local Ignore diagnostics carry no Main/Game role, which is what distinguishes them
+            // from selection fallback. The recovery dialog already showed this exact problem and the
+            // user answered it, so restating it would warn about a resolved question. Anything the
+            // answer did not cover is reported by the durable reset paragraph below.
+            continue;
+        }
+        lines.append(QStringLiteral("- ") + formatInstalledYamlDataDiagnostic(diagnostic));
+    }
+
+    if (lines.isEmpty() && !installedYamlData.hasLocalIgnoreReset) {
+        return {};
+    }
+
+    QStringList sections;
+    if (!lines.isEmpty()) {
+        sections.append(QStringLiteral("CLASSIC could not use some of its installed YAML Data for this scan:\n\n") +
+                        lines.join(QStringLiteral("\n")));
+    }
+    if (installedYamlData.hasLocalIgnoreReset) {
+        // The backup location is the only way a user recovers the edits the reset replaced.
+        sections.append(QStringLiteral("Your malformed %1 was backed up byte-exactly to %2 (%3 bytes, sha256 %4) "
+                                       "before it was replaced with the retained defaults.")
+                            .arg(installedYamlData.localIgnoreReset.localIgnorePath.isEmpty()
+                                     ? QStringLiteral("CLASSIC Ignore.yaml")
+                                     : installedYamlData.localIgnoreReset.localIgnorePath,
+                                 installedYamlData.localIgnoreReset.backupPath)
+                            .arg(installedYamlData.localIgnoreReset.backupIdentity.byteLength)
+                            .arg(installedYamlData.localIgnoreReset.backupIdentity.sha256));
+    }
+    return sections.join(QStringLiteral("\n\n"));
+}
 
 QString formatScanRunRejections(const classic::scanner::ScanRunContractDiscoveryResult& discovery)
 {

@@ -35,24 +35,9 @@ ScanController::requestLocalIgnoreRecoveryChoice(const QString& message) const
     return m_localIgnoreRecoveryPrompt(message);
 }
 
-void ScanController::startScan(const QString& installationRoot,
-                               const classic::gui::CrashLogScanLaunchSettings& settings, const QString& setupXseLogPath,
-                               const QStringList& targetedInputs)
+classic::gui::ScanRunLocalIgnoreRecoveryPrompt ScanController::makeLocalIgnoreRecoveryPrompt()
 {
-    if (m_scanning) {
-        return;
-    }
-
-    m_scanning = true;
-    emit scanStarted();
-    if (m_signalHub) {
-        emit m_signalHub->scanStarted();
-    }
-
-    const QString baseDir = QDir::cleanPath(QCoreApplication::applicationDirPath());
-
-    // Create worker and thread
-    auto* worker = new ScanWorker([controller = QPointer<ScanController>(this)](const QString& message) {
+    return [controller = QPointer<ScanController>(this)](const QString& message) {
         using Choice = classic::gui::ScanRunLocalIgnoreRecoveryChoice;
         if (!controller) {
             return Choice::Cancel;
@@ -72,7 +57,27 @@ void ScanController::startScan(const QString& installationRoot,
             },
             Qt::BlockingQueuedConnection);
         return invoked ? choice : Choice::Cancel;
-    });
+    };
+}
+
+void ScanController::startScan(const QString& installationRoot,
+                               const classic::gui::CrashLogScanLaunchSettings& settings, const QString& setupXseLogPath,
+                               const QStringList& targetedInputs)
+{
+    if (m_scanning) {
+        return;
+    }
+
+    m_scanning = true;
+    emit scanStarted();
+    if (m_signalHub) {
+        emit m_signalHub->scanStarted();
+    }
+
+    const QString baseDir = QDir::cleanPath(QCoreApplication::applicationDirPath());
+
+    // Create worker and thread
+    auto* worker = new ScanWorker(makeLocalIgnoreRecoveryPrompt());
     auto* thread = new QThread();
     m_currentWorker = worker;
 

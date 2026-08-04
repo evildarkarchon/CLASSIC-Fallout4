@@ -111,6 +111,29 @@ struct ScanRunTerminalPresentation {
     ScanRunInstalledYamlDataPresentation installedYamlData;
 };
 
+/// Returns the stable GUI label for the #146 scan-run Local Ignore state inventory.
+QString localIgnoreStateLabel(classic::scanner::ScanRunLocalIgnoreYamlDataState state);
+
+/// Returns the stable GUI label for every selected YAML Data provenance.
+QString installedYamlDataProvenanceLabel(classic::scanner::ScanRunInstalledYamlDataProvenance provenance);
+
+/// Returns the stable GUI label for the #146 scan-run Installed YAML Data diagnostic inventory.
+QString installedYamlDataDiagnosticKindLabel(classic::scanner::ScanRunInstalledYamlDataDiagnosticKind kind);
+
+/// Formats one structured diagnostic as `<kind>: <message> [<role>, <candidate>, <path>]`.
+///
+/// Only the context the diagnostic actually carries is appended, so callers do not re-derive which
+/// optional fields Rust populated for a given kind.
+QString formatInstalledYamlDataDiagnostic(const ScanRunInstalledYamlDataDiagnosticPresentation& diagnostic);
+
+/// Aggregates degraded Installed YAML Data selection and durable Local Ignore recovery into one
+/// run-level warning, or returns an empty string when the run has nothing the user must act on.
+///
+/// `LocalIgnoreGenerated` is deliberately excluded: generating a missing Local Ignore file from the
+/// selected Main defaults is an expected successful path, so a clean first run stays silent. The
+/// result is run-level only and never contributes to Autoscan Report content.
+QString formatInstalledYamlDataWarning(const ScanRunInstalledYamlDataPresentation& installedYamlData);
+
 /// Formats Targeted discovery rejections without reapplying GUI-owned rejection policy.
 QString formatScanRunRejections(const classic::scanner::ScanRunContractDiscoveryResult& discovery);
 
