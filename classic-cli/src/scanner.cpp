@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fmt/core.h>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -202,8 +203,21 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
     const auto request = build_cli_scan_run_request(args, *prepared, dirs.root, base_dir);
     CliScanRunCancellation cancellation;
     CliScanRunObserver observer(prepared->game, cancellation);
-    auto operation = classic::scanner::scan_run_contract_execute(*request, cancellation.token(), &observer);
-    const auto execution = classic::scanner::scan_run_contract_execution_take_result(*operation);
+
+    // Local Ignore recovery is an expected interactive choice, not a failure. The prompt clears any
+    // live progress frame first so the question is not overwritten by the next render.
+    const CliLocalIgnoreRecoveryPrompt recovery_prompt =
+        [&observer, &cancellation](const std::vector<CliScanRunMessage>& details) {
+            observer.finish();
+            fmt::print("\n");
+            for (const auto& message : details) {
+                print_cli_scan_message(message);
+            }
+            return read_cli_local_ignore_recovery_choice(std::cin, std::cout, cancellation);
+        };
+
+    const auto outcome = execute_cli_scan_run(*request, cancellation, &observer, recovery_prompt);
+    const auto& execution = outcome.execution;
     observer.finish();
 
     if (observer.delivery_failed()) {

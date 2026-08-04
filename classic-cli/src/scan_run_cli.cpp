@@ -6,10 +6,15 @@
 #include <windows.h>
 #endif
 
+#include <algorithm>
 #include <atomic>
+#include <cctype>
 #include <chrono>
 #include <fmt/format.h>
+#include <istream>
+#include <ostream>
 #include <stdexcept>
+#include <string_view>
 #include <thread>
 #include <utility>
 
@@ -82,6 +87,23 @@ std::string infrastructure_stage_name(scanner::ScanRunContractInfrastructureErro
         return "initialization";
     case scanner::ScanRunContractInfrastructureErrorStage::InternalInvariant:
         return "internal invariant validation";
+    }
+    return "unknown stage";
+}
+
+/// Returns the stable user-facing label for every durable Local Ignore reset publication stage.
+std::string local_ignore_reset_failure_stage_name(scanner::ScanRunLocalIgnoreResetFailureStage stage) {
+    switch (stage) {
+    case scanner::ScanRunLocalIgnoreResetFailureStage::Create:
+        return "create";
+    case scanner::ScanRunLocalIgnoreResetFailureStage::Write:
+        return "write";
+    case scanner::ScanRunLocalIgnoreResetFailureStage::Flush:
+        return "flush";
+    case scanner::ScanRunLocalIgnoreResetFailureStage::Sync:
+        return "sync";
+    case scanner::ScanRunLocalIgnoreResetFailureStage::Publish:
+        return "publish";
     }
     return "unknown stage";
 }
@@ -185,6 +207,40 @@ void append_installed_yaml_data_messages(const scanner::ScanRunContractRunResult
     }
 }
 
+/// Appends every retained fact that makes one typed recovery-resume failure actionable.
+///
+/// A durability receipt is reported even though the resume failed: the reset reached a safe durable
+/// state, so the user must know the malformed file was already replaced and where its backup lives.
+void append_resume_error_details(const scanner::ScanRunContractResumeError& error,
+                                 std::vector<CliScanRunMessage>& messages) {
+    if (error.has_path) {
+        messages.push_back({true, fmt::format("  Path: {}", to_std_string(error.path))});
+    }
+    if (error.has_stage) {
+        messages.push_back({true, fmt::format("  Stage: {}", local_ignore_reset_failure_stage_name(error.stage))});
+    }
+    if (error.has_expected_identity) {
+        messages.push_back({true, fmt::format("  Expected identity: sha256 {} ({} bytes)",
+                                              to_std_string(error.expected_identity.sha256),
+                                              error.expected_identity.byte_len)});
+    }
+    if (error.has_actual_identity) {
+        messages.push_back({true, fmt::format("  Actual identity: sha256 {} ({} bytes)",
+                                              to_std_string(error.actual_identity.sha256),
+                                              error.actual_identity.byte_len)});
+    }
+    if (error.has_backup_path) {
+        messages.push_back({true, fmt::format("  Verified backup: {}", to_std_string(error.backup_path))});
+    }
+    if (error.has_durability_receipt) {
+        messages.push_back({true, fmt::format("  Durable reset receipt: malformed sha256 {}, backup sha256 {}, "
+                                              "replacement sha256 {}",
+                                              to_std_string(error.malformed_identity.sha256),
+                                              to_std_string(error.backup_identity.sha256),
+                                              to_std_string(error.replacement_identity.sha256))});
+    }
+}
+
 /// Appends all present run-scoped FCX setup facts, diagnostics, and actions.
 void append_setup_messages(const scanner::ScanRunContractRunResult& result, std::vector<CliScanRunMessage>& messages) {
     if (!result.has_setup) {
@@ -284,6 +340,39 @@ scanner::ScanRunConfigurationDto make_configuration(const PreparedScanUserSettin
     configuration.has_max_concurrent = settings.max_concurrent > 0;
     configuration.max_concurrent = settings.max_concurrent;
     return configuration;
+}
+
+/// Trims surrounding whitespace and lowercases one console answer for choice matching.
+std::string normalize_console_answer(const std::string& answer) {
+    const auto first = answer.find_first_not_of(" \t\r\n");
+    if (first == std::string::npos) {
+        return {};
+    }
+    const auto last = answer.find_last_not_of(" \t\r\n");
+    std::string normalized = answer.substr(first, last - first + 1);
+    std::transform(normalized.begin(), normalized.end(), normalized.begin(),
+                   [](unsigned char character) { return static_cast<char>(std::tolower(character)); });
+    return normalized;
+}
+
+/// Maps one normalized console answer onto an explicit choice, or nothing when unusable.
+///
+/// Only the two Rust-owned decisions have affirmative spellings. Every other answer is rejected
+/// rather than defaulted, because a mistyped answer must never mutate Local Ignore YAML Data.
+bool match_recovery_choice(std::string_view answer, CliLocalIgnoreRecoveryChoice& choice) {
+    if (answer == "p" || answer == "proceed") {
+        choice = CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore;
+        return true;
+    }
+    if (answer == "r" || answer == "reset") {
+        choice = CliLocalIgnoreRecoveryChoice::ResetToDefault;
+        return true;
+    }
+    if (answer == "c" || answer == "cancel" || answer == "q" || answer == "quit") {
+        choice = CliLocalIgnoreRecoveryChoice::Cancel;
+        return true;
+    }
+    return false;
 }
 
 /// Projects optional typed setup paths into explicit presence/value pairs for FCX requests.
@@ -392,6 +481,7 @@ CliScanRunPresentation present_cli_scan_run_execution(const scanner::ScanRunCont
             {true, fmt::format("Fatal: Crash Log Scan recovery failed ({}): {}",
                                to_std_string(execution.resume_error.code),
                                to_std_string(execution.resume_error.message))});
+        append_resume_error_details(execution.resume_error, presentation.messages);
         return presentation;
     }
     if (!execution.has_result) {
@@ -543,4 +633,101 @@ void CliScanRunCancellation::request() {
 
 const scanner::ScanRunCancellation& CliScanRunCancellation::token() const noexcept {
     return impl_->token();
+}
+
+std::vector<CliScanRunMessage> describe_cli_local_ignore_recovery(const scanner::ScanRunContractRunResult& result) {
+    std::vector<CliScanRunMessage> messages;
+    messages.push_back({false, result.has_message
+                                   ? to_std_string(result.message)
+                                   : "Local Ignore recovery is required before scanning can continue."});
+    append_installed_yaml_data_messages(result, messages);
+    if (result.has_discovery) {
+        // The retained discovery set is the reason recovery is a choice rather than a restart:
+        // whichever decision the user makes resumes these exact Crash Logs.
+        const auto accepted = result.discovery.accepted_logs.size();
+        messages.push_back({false, fmt::format("  Retained discovery: {} {} will be scanned once you decide.",
+                                               accepted, plural(accepted, "crash log", "crash logs"))});
+    }
+    return messages;
+}
+
+CliLocalIgnoreRecoveryChoice read_cli_local_ignore_recovery_choice(std::istream& input, std::ostream& output,
+                                                                   const CliScanRunCancellation& cancellation) {
+    // Ctrl+C observed before the question is asked already decided the run; never offer a
+    // destructive default to a user who is on their way out.
+    if (scanner::scan_run_cancellation_is_cancelled(cancellation.token())) {
+        return CliLocalIgnoreRecoveryChoice::Cancel;
+    }
+
+    output << "Choose how to continue:\n"
+           << "  [P] Proceed without Ignore - scan now with no ignore entries; the malformed file is left "
+              "unchanged\n"
+           << "  [R] Reset to default       - back up the malformed file byte-exactly, then restore selected "
+              "Main defaults\n"
+           << "  [C] Cancel                 - stop this scan without changing any file\n";
+
+    for (int attempt = 0; attempt < CLI_LOCAL_IGNORE_RECOVERY_PROMPT_ATTEMPTS; ++attempt) {
+        output << "Local Ignore recovery [P/R/C]: " << std::flush;
+        std::string answer;
+        if (!std::getline(input, answer)) {
+            // End of input is not an answer. Treat it as dismissal so redirected or closed stdin
+            // cannot silently authorize a reset.
+            output << "\nNo answer was available; cancelling without changing Local Ignore YAML Data.\n";
+            return CliLocalIgnoreRecoveryChoice::Cancel;
+        }
+        if (scanner::scan_run_cancellation_is_cancelled(cancellation.token())) {
+            return CliLocalIgnoreRecoveryChoice::Cancel;
+        }
+
+        CliLocalIgnoreRecoveryChoice choice = CliLocalIgnoreRecoveryChoice::Cancel;
+        if (match_recovery_choice(normalize_console_answer(answer), choice)) {
+            return choice;
+        }
+        output << "Unrecognized answer. Enter P, R, or C.\n";
+    }
+
+    output << "No usable answer after " << CLI_LOCAL_IGNORE_RECOVERY_PROMPT_ATTEMPTS
+           << " attempts; cancelling without changing Local Ignore YAML Data.\n";
+    return CliLocalIgnoreRecoveryChoice::Cancel;
+}
+
+CliScanRunExecutionOutcome execute_cli_scan_run(const scanner::ScanRunRequest& request,
+                                                CliScanRunCancellation& cancellation,
+                                                const scanner::ScanRunObserver* observer,
+                                                const CliLocalIgnoreRecoveryPrompt& prompt) {
+    CliScanRunExecutionOutcome outcome{};
+    auto operation = scanner::scan_run_contract_execute(request, cancellation.token(), observer);
+    const bool has_continuation = scanner::scan_run_contract_execution_has_continuation(*operation);
+    outcome.execution = scanner::scan_run_contract_execution_take_result(*operation);
+
+    const bool recovery_required =
+        outcome.execution.has_result &&
+        outcome.execution.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired;
+    if (!recovery_required || !has_continuation || !prompt) {
+        return outcome;
+    }
+
+    // The continuation must be taken before the prompt runs so a decision can never observe a
+    // half-owned operation, and so a prompt that throws cannot leave the run resumable.
+    auto continuation = scanner::scan_run_contract_execution_take_continuation(*operation);
+    const auto choice = prompt(describe_cli_local_ignore_recovery(outcome.execution.result));
+
+    auto decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
+    switch (choice) {
+    case CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore:
+        break;
+    case CliLocalIgnoreRecoveryChoice::ResetToDefault:
+        decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault;
+        break;
+    case CliLocalIgnoreRecoveryChoice::Cancel:
+        // Rust observes cancellation before any recovery mutation, so the non-destructive
+        // placeholder decision below can never back up, replace, or analyze anything.
+        cancellation.request();
+        break;
+    }
+
+    auto resumed = scanner::scan_run_continuation_resume(*continuation, decision, cancellation.token(), observer);
+    outcome.execution = scanner::scan_run_contract_execution_take_result(*resumed);
+    outcome.resumed_after_local_ignore_recovery = true;
+    return outcome;
 }

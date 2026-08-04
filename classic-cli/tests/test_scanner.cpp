@@ -4,8 +4,13 @@
 
 #include "scan_run_cli.h"
 
+#include <cstddef>
+#include <istream>
+#include <sstream>
+#include <streambuf>
 #include <string>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -44,6 +49,44 @@ scanner::ScanRunContractLogResult log_result(std::size_t index, std::string path
     result.disposition = disposition;
     return result;
 }
+
+/// Serves console input one character at a time and cancels as the answer's newline is consumed.
+///
+/// Models Ctrl+C landing while a console read is already in flight: the answer is fully entered,
+/// but cancellation is visible by the time the prompt inspects it.
+class CancellingInputBuffer final : public std::streambuf {
+public:
+    /// Borrows the cancellation owner, which must outlive every read through this buffer.
+    CancellingInputBuffer(std::string contents, CliScanRunCancellation& cancellation)
+        : contents_(std::move(contents))
+        , cancellation_(cancellation) {}
+
+protected:
+    /// Peeks the next character without consuming it, so no cancellation is published.
+    int_type underflow() override {
+        if (position_ >= contents_.size()) {
+            return traits_type::eof();
+        }
+        return traits_type::to_int_type(contents_[position_]);
+    }
+
+    /// Consumes one character and publishes cancellation once the entered line terminates.
+    int_type uflow() override {
+        if (position_ >= contents_.size()) {
+            return traits_type::eof();
+        }
+        const char character = contents_[position_++];
+        if (character == '\n') {
+            cancellation_.request();
+        }
+        return traits_type::to_int_type(character);
+    }
+
+private:
+    std::string contents_;
+    CliScanRunCancellation& cancellation_;
+    std::size_t position_ = 0;
+};
 
 PreparedScanUserSettings minimal_settings() {
     PreparedScanUserSettings settings{};
@@ -255,6 +298,104 @@ TEST_CASE("CLI scan presentation keeps Local Ignore recovery distinct from setup
     REQUIRE(presentation.messages.back().text == "Local Ignore recovery is required");
 }
 
+TEST_CASE("CLI Local Ignore recovery description offers retained discovery and diagnostics",
+          "[scanner][scan-run][local-ignore]") {
+    auto execution = execution_with_result(scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
+    execution.result.has_message = true;
+    execution.result.message = "Local Ignore YAML Data is malformed";
+    execution.result.has_discovery = true;
+    execution.result.discovery.accepted_logs.push_back("C:/one.log");
+    execution.result.discovery.accepted_logs.push_back("C:/two.log");
+    execution.result.has_installed_yaml_data = true;
+    auto& installed = execution.result.installed_yaml_data;
+    installed.local_ignore_state = scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired;
+    installed.local_ignore_identity.sha256 = "malformed-hash";
+    installed.local_ignore_identity.byte_len = 12;
+    scanner::ScanRunInstalledYamlDataDiagnosticDto diagnostic{};
+    diagnostic.kind = scanner::ScanRunInstalledYamlDataDiagnosticKind::Parse;
+    diagnostic.has_path = true;
+    diagnostic.path = "C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml";
+    diagnostic.message = "mapping values are not allowed here";
+    installed.diagnostics.push_back(std::move(diagnostic));
+
+    const auto lines = message_text(describe_cli_local_ignore_recovery(execution.result));
+
+    REQUIRE(lines[0] == "Local Ignore YAML Data is malformed");
+    REQUIRE(lines[1] == "Installed YAML Data:");
+    REQUIRE(lines[4].find("Local Ignore: recovery required") != std::string::npos);
+    REQUIRE(lines[5].find("mapping values are not allowed here") != std::string::npos);
+    REQUIRE(lines[5].find("CLASSIC Ignore.yaml") != std::string::npos);
+    REQUIRE(lines.back() == "  Retained discovery: 2 crash logs will be scanned once you decide.");
+}
+
+TEST_CASE("CLI Local Ignore recovery prompt accepts both Rust-defined decisions",
+          "[scanner][scan-run][local-ignore]") {
+    for (const auto& answer : {std::string("p"), std::string("Proceed"), std::string("  P  ")}) {
+        std::istringstream input(answer + "\n");
+        std::ostringstream output;
+        const CliScanRunCancellation cancellation(false);
+        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation) ==
+                CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore);
+    }
+
+    for (const auto& answer : {std::string("r"), std::string("RESET")}) {
+        std::istringstream input(answer + "\n");
+        std::ostringstream output;
+        const CliScanRunCancellation cancellation(false);
+        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation) ==
+                CliLocalIgnoreRecoveryChoice::ResetToDefault);
+    }
+
+    std::istringstream input("c\n");
+    std::ostringstream output;
+    const CliScanRunCancellation cancellation(false);
+    REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation) ==
+            CliLocalIgnoreRecoveryChoice::Cancel);
+    REQUIRE(output.str().find("[R] Reset to default") != std::string::npos);
+}
+
+TEST_CASE("CLI Local Ignore recovery prompt never infers Reset To Default", "[scanner][scan-run][local-ignore]") {
+    SECTION("end of input cancels instead of answering") {
+        std::istringstream input("");
+        std::ostringstream output;
+        const CliScanRunCancellation cancellation(false);
+        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation) ==
+                CliLocalIgnoreRecoveryChoice::Cancel);
+        REQUIRE(output.str().find("No answer was available") != std::string::npos);
+    }
+
+    SECTION("exhausted invalid answers cancel instead of defaulting") {
+        std::istringstream input("yes\nreset to default please\n1\nr\n");
+        std::ostringstream output;
+        const CliScanRunCancellation cancellation(false);
+        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation) ==
+                CliLocalIgnoreRecoveryChoice::Cancel);
+        REQUIRE(output.str().find("No usable answer after 3 attempts") != std::string::npos);
+    }
+
+    SECTION("cancellation observed before the question consumes no input") {
+        std::istringstream input("r\n");
+        std::ostringstream output;
+        CliScanRunCancellation cancellation(false);
+        cancellation.request();
+        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation) ==
+                CliLocalIgnoreRecoveryChoice::Cancel);
+        REQUIRE(output.str().empty());
+        std::string unread;
+        REQUIRE(static_cast<bool>(std::getline(input, unread)));
+        REQUIRE(unread == "r");
+    }
+
+    SECTION("cancellation racing the answer overrides an entered reset") {
+        std::ostringstream output;
+        CliScanRunCancellation cancellation(false);
+        CancellingInputBuffer buffer("r\n", cancellation);
+        std::istream racing_input(&buffer);
+        REQUIRE(read_cli_local_ignore_recovery_choice(racing_input, output, cancellation) ==
+                CliLocalIgnoreRecoveryChoice::Cancel);
+    }
+}
+
 TEST_CASE("CLI scan presentation preserves consumed continuation replay details", "[scanner][scan-run]") {
     scanner::ScanRunContractExecutionResult execution{};
     execution.has_resume_error = true;
@@ -270,6 +411,57 @@ TEST_CASE("CLI scan presentation preserves consumed continuation replay details"
     REQUIRE(presentation.messages[0].text ==
             "Fatal: Crash Log Scan recovery failed (scan_run_continuation_consumed): Crash Log Scan Run continuation "
             "was already consumed");
+}
+
+TEST_CASE("CLI scan presentation makes typed reset failures actionable", "[scanner][scan-run][local-ignore]") {
+    scanner::ScanRunContractExecutionResult execution{};
+    execution.has_resume_error = true;
+    execution.resume_error.kind = scanner::ScanRunContractResumeErrorKind::LocalIgnoreResetConflict;
+    execution.resume_error.code = "scan_run_local_ignore_reset_conflict";
+    execution.resume_error.message = "Local Ignore YAML Data changed while the decision was pending";
+    execution.resume_error.has_path = true;
+    execution.resume_error.path = "C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml";
+    execution.resume_error.has_expected_identity = true;
+    execution.resume_error.expected_identity.sha256 = "expected-hash";
+    execution.resume_error.expected_identity.byte_len = 12;
+    execution.resume_error.has_actual_identity = true;
+    execution.resume_error.actual_identity.sha256 = "actual-hash";
+    execution.resume_error.actual_identity.byte_len = 30;
+
+    const auto presentation = present_cli_scan_run_execution(execution, 0.5);
+    const auto lines = message_text(presentation.messages);
+
+    REQUIRE(presentation.exit_code == 2);
+    REQUIRE(lines[1] == "  Path: C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml");
+    REQUIRE(lines[2] == "  Expected identity: sha256 expected-hash (12 bytes)");
+    REQUIRE(lines[3] == "  Actual identity: sha256 actual-hash (30 bytes)");
+    for (const auto& message : presentation.messages) {
+        REQUIRE(message.error);
+    }
+}
+
+TEST_CASE("CLI scan presentation reports a durable reset that outlived its failed resume",
+          "[scanner][scan-run][local-ignore]") {
+    scanner::ScanRunContractExecutionResult execution{};
+    execution.has_resume_error = true;
+    execution.resume_error.kind = scanner::ScanRunContractResumeErrorKind::LocalIgnoreResetDurabilityUnknown;
+    execution.resume_error.code = "scan_run_local_ignore_reset_durability_unknown";
+    execution.resume_error.message = "Local Ignore reset durability could not be confirmed";
+    execution.resume_error.has_stage = true;
+    execution.resume_error.stage = scanner::ScanRunLocalIgnoreResetFailureStage::Sync;
+    execution.resume_error.has_backup_path = true;
+    execution.resume_error.backup_path = "C:/CLASSIC/CLASSIC Backup/YAML Data/Local Ignore/ignore.yaml";
+    execution.resume_error.has_durability_receipt = true;
+    execution.resume_error.malformed_identity.sha256 = "malformed-hash";
+    execution.resume_error.backup_identity.sha256 = "backup-hash";
+    execution.resume_error.replacement_identity.sha256 = "replacement-hash";
+
+    const auto lines = message_text(present_cli_scan_run_execution(execution, 0.5).messages);
+
+    REQUIRE(lines[1] == "  Stage: sync");
+    REQUIRE(lines[2] == "  Verified backup: C:/CLASSIC/CLASSIC Backup/YAML Data/Local Ignore/ignore.yaml");
+    REQUIRE(lines[3] == "  Durable reset receipt: malformed sha256 malformed-hash, backup sha256 backup-hash, "
+                        "replacement sha256 replacement-hash");
 }
 
 TEST_CASE("CLI scan presentation distinguishes mixed per-log outcomes", "[scanner][scan-run]") {
