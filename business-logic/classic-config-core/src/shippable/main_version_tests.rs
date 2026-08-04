@@ -39,7 +39,7 @@ fn v1_2_payload() -> &'static str {
 }
 
 // Post-change shape: schema_version 2.0 drops the `CLASSIC v` decoration
-// and stores a bare SemVer per `openspec/specs/yaml-app-version-field/spec.md`.
+// and stores a bare SemVer per `docs/api/classic-config-core-yaml-schema.md`.
 // Uses a valid release SemVer because the loader now enforces strict
 // `v?MAJOR.MINOR.PATCH` shape at post-load time (no prerelease suffix, no
 // build metadata, no legacy `CLASSIC ` decoration); a made-up token like

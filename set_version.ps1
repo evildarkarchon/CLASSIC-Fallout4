@@ -17,10 +17,8 @@
     script's `-Version` argument. Prerelease status is signaled instead via
     `-IsPrerelease $true` (which writes `is_prerelease: true` to the YAML)
     paired with a bumped `-Date`; the publish workflow mirrors the same
-    boolean through `gh release --prerelease=true/false`. See the
-    `yaml-app-version-field` capability spec
-    (openspec/specs/yaml-app-version-field/spec.md) for the normative
-    contract.
+    boolean through `gh release --prerelease=true/false`. See
+    docs/api/classic-config-core-yaml-schema.md for the normative contract.
 
     The CLI's CMakeLists configures a build-time guard that compares its
     project(VERSION) against CLASSIC_Info.version in CLASSIC Main.yaml; this
@@ -117,10 +115,8 @@ DESCRIPTION
     script's -Version argument. Prerelease status is signaled instead via
     -IsPrerelease ``$true`` (which writes ``is_prerelease: true`` to the
     YAML) paired with a bumped -Date; the publish workflow mirrors the
-    same boolean through ``gh release --prerelease=true/false``. See the
-    yaml-app-version-field capability spec
-    (openspec/specs/yaml-app-version-field/spec.md) for the normative
-    contract.
+    same boolean through ``gh release --prerelease=true/false``. See
+    docs/api/classic-config-core-yaml-schema.md for the normative contract.
 
     The CLI's CMakeLists configures a build-time guard that compares its
     project(VERSION) against CLASSIC_Info.version in CLASSIC Main.yaml; this

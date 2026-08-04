@@ -51,8 +51,7 @@ With passing tests as a safety net:
 ### Unit Tests (Sibling File)
 
 Unit tests live in a sibling `<stem>_tests.rs` file colocated with the module
-under test. See `openspec/specs/rust-test-module-layout/spec.md` for the
-workspace-wide rule.
+under test. See rule 11 in `AGENTS.md` for the workspace-wide rule.
 
 In `src/parser.rs`:
 

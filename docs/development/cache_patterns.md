@@ -331,8 +331,8 @@ static CACHE: LazyLock<DashMap<K, V>> = LazyLock::new(DashMap::new);
 ### Testing
 
 Always provide cache clearing for test isolation. Unit tests live in a sibling
-`<stem>_tests.rs` file, not inline (see
-`openspec/specs/rust-test-module-layout/spec.md`).
+`<stem>_tests.rs` file, not inline (see rule 11 in
+[`AGENTS.md`](../../AGENTS.md)).
 
 In the parent source file (e.g. `src/my_cache.rs`):
 

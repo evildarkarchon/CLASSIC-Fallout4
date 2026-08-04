@@ -5,6 +5,8 @@ members = [
     "foundation/classic-shared-core",
     "foundation/classic-shared-py",
     # Business Logic (Pure Rust - no PyO3)
+    # Workspace-internal: no binding surface, absent from the parity matrix.
+    "business-logic/classic-durable-publication",
     "business-logic/classic-database-core",
     "business-logic/classic-file-io-core",
     "business-logic/classic-scanlog-core",

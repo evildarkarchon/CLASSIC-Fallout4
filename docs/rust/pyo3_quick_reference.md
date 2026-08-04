@@ -200,8 +200,8 @@ for (key, value) in dict.iter() {
 
 ## Testing Patterns
 
-Unit tests live in a sibling `<stem>_tests.rs` file, not inline. See
-`openspec/specs/rust-test-module-layout/spec.md` for the workspace-wide rule.
+Unit tests live in a sibling `<stem>_tests.rs` file, not inline. See rule 11 in
+[`AGENTS.md`](../../AGENTS.md) for the workspace-wide rule.
 
 In `src/lib.rs` (or any parent source file), declare the sibling module:
 

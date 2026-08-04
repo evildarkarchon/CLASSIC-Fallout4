@@ -84,8 +84,17 @@ _Avoid_: automatic repair, fatal scan failure, silent empty fallback
 An immutable proposal produced from one Installed YAML Data Snapshot when Local Ignore YAML Data is malformed. It preserves the selected defaults and observed malformed-file identity so an accepted recovery can detect intervening changes before proceeding.
 _Avoid_: retry flag, mutable recovery request, unguarded reset
 
+**Durable Publication**:
+The act of making complete bytes visible at a canonical path such that a crash
+cannot leave partial content behind: staged in the target's own directory,
+synchronized, then atomically published. It reports whether the namespace entry
+reached the platform's durability barrier, and may pair the publication with a
+re-read byte-exact verified backup. It does not own backup location, conflict
+policy, or rollback generations.
+_Avoid_: atomic write, safe save, file swap, `.prev`
+
 **Local Ignore Reset Result**:
-The structured success from explicitly accepting Reset To Default on a Local Ignore Recovery Plan. It pairs the retained reset-ready Installed YAML Data Snapshot with the canonical path, a durable byte-exact verified backup, malformed/backup/replacement identities, and reset diagnostics; it is not YAML Data Update Channel rollback state.
+The structured success from explicitly accepting Reset To Default on a Local Ignore Recovery Plan. It pairs the retained reset-ready Installed YAML Data Snapshot with the canonical path, the byte-exact verified backup from its Durable Publication, malformed/backup/replacement identities, and reset diagnostics; it is not YAML Data Update Channel rollback state.
 _Avoid_: backup path string, automatic repair, `.prev` rollback
 
 **YAML Data Update Channel**:
@@ -105,7 +114,7 @@ A deterministic, revision-anchored proposal that describes how one supported leg
 _Avoid_: automatic migration, migration write, settings cleanup
 
 **User Settings Migration Receipt**:
-The opaque result of explicitly applying a caller-approved User Settings Migration Plan. It attests the source and destination endpoints, the reopened migrated revision, and a retained byte-exact backup that was durably published and reread before migration publication.
+The opaque result of explicitly applying a caller-approved User Settings Migration Plan. It attests the source and destination endpoints, the reopened migrated revision, and a retained byte-exact backup that Durable Publication published and reread before the migration itself was published.
 _Avoid_: backup path string, mutable restore request, migration result DTO
 
 **User Settings Migration Restore**:

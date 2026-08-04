@@ -68,7 +68,7 @@ cannot resurrect the just-unpublished manifest.
 ### Resolved decisions
 
 - **Doc/spec scope = Standard.** Implement steps 1-4 (code fix, helper, tests,
-  and the `docs/api` runtime-flow update). **Do NOT edit the OpenSpec spec**
+  and the `docs/api` runtime-flow update). **Skip the spec sync**
   (step 5 is dropped from this change).
 - **Purge artifacts = marker + body + ETag.** `clear_fallback_cache` removes
   all three for a clean "confirmed absent => empty cache" invariant.
@@ -237,9 +237,8 @@ alignment (match the interior width of adjacent rows):
 
 ### 5. Spec sync — NOT included
 
-Dropped per the resolved Standard scope. The OpenSpec spec
-(`openspec/specs/app-update-notification/spec.md`) is left unchanged; the fix
-is treated as a bug fix matching the existing `NotPublished` intent.
+Dropped per the resolved Standard scope. No spec is updated; the fix is
+treated as a bug fix matching the existing `NotPublished` intent.
 
 ## Validation
 
@@ -261,4 +260,4 @@ AGENTS.md. From pwsh this is not needed.)
 - No change to public API, error variants, bindings, or parity baselines.
 - No behavioral change to the `NotPublished` classification value itself; only
   the on-disk cache side effect is added.
-- OpenSpec spec is intentionally not edited (Standard scope).
+- No spec is edited (Standard scope).

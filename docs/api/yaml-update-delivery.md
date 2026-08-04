@@ -2,7 +2,7 @@
 
 Contributor-facing reference for CLASSIC's YAML data update channel: how shippable YAML files are versioned, how the client discovers and installs newer copies from GitHub Releases, and how maintainers publish a new release.
 
-This page describes the cross-crate flow introduced by the `yaml-update-delivery` OpenSpec change. For per-crate APIs, see the page for each owner crate:
+This page describes the cross-crate YAML data update flow. For per-crate APIs, see the page for each owner crate:
 
 - [`classic-settings-core`](classic-settings-core.md) — `SchemaVersion`, `SchemaCompat`, `extract_schema_version`, `schema_compat_check`
 - [`classic-config-core`](classic-config-core.md) — config-owned `inspect_installed_yaml_data`, compatibility metadata, exact-byte identity, semantic validation, and installed candidate policy
@@ -35,7 +35,7 @@ The authoritative list, plus per-file client-schema ranges, lives in [`CLASSIC D
 
 - **MINOR bump** — the file added an optional key or value that existing clients can ignore. Existing client binaries remain compatible; the publisher may widen `max_client_schema` in `client-schema-ranges.yaml` to advertise that fact.
 - **MAJOR bump** — the file removed, renamed, or reshaped a key an older client depended on. Existing client binaries stop accepting the file. Raising the client's `MAIN_YAML.accepted_major` / `GAME_FALLOUT4_YAML.accepted_major` constant is required before the new file is even parseable; contributors should bump both sides in the same change.
-  - **Concrete example (2026-04):** `CLASSIC_Info.version` dropped the legacy `CLASSIC v` display prefix and became a bare SemVer string (`v9.1.0` instead of `CLASSIC v9.1.0`). The *shape* of an existing key's value changed, so `CLASSIC Main.yaml` bumped `schema_version` from `"1.0"` → `"2.0"` and `client_schemas::MAIN_YAML.accepted_major` bumped from 1 → 2 in the same commit. Full contract: [`openspec/specs/yaml-app-version-field/spec.md`](../../openspec/specs/yaml-app-version-field/spec.md).
+  - **Concrete example (2026-04):** `CLASSIC_Info.version` dropped the legacy `CLASSIC v` display prefix and became a bare SemVer string (`v9.1.0` instead of `CLASSIC v9.1.0`). The *shape* of an existing key's value changed, so `CLASSIC Main.yaml` bumped `schema_version` from `"1.0"` → `"2.0"` and `client_schemas::MAIN_YAML.accepted_major` bumped from 1 → 2 in the same commit. Full contract: [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md).
 
 Current additive history:
 

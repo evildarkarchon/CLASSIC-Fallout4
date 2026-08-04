@@ -2,7 +2,7 @@
 
 Contributor-facing reference for CLASSIC's binary-release notification channel: how clients learn that a new CLASSIC build is available, how the client-side pipeline resolves and caches the manifest, and how maintainers publish a new notification.
 
-This page describes the cross-crate flow introduced by the `app-update-manifest-notification` OpenSpec change. Companion to [`yaml-update-delivery.md`](yaml-update-delivery.md) — both channels share the same Pages-first + Releases-fallback mental model, but this one is deliberately payload-free (no SHA-256 checksums, no atomic install, no rollback).
+This page describes the cross-crate app-update notification flow. Companion to [`yaml-update-delivery.md`](yaml-update-delivery.md) — both channels share the same Pages-first + Releases-fallback mental model, but this one is deliberately payload-free (no SHA-256 checksums, no atomic install, no rollback).
 
 For per-crate APIs:
 
