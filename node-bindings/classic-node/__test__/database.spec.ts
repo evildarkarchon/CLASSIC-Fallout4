@@ -22,6 +22,51 @@ type FormIdLookupError = Error & {
   plugin?: string;
 };
 
+/** Stable typed fields a rejected strict FormID Value Lookup must expose. */
+type ExpectedLookupRejection = {
+  code: string;
+  /** Omit to assert the error carries no FormID, as construction failures do. */
+  formid?: string;
+  /** Omit to assert the error carries no plugin, as construction failures do. */
+  plugin?: string;
+  messageContains: string;
+};
+
+/**
+ * Asserts a strict FormID Value Lookup call rejects with the expected typed error.
+ *
+ * The try/catch captures the call itself, not just its promise: the `sqlite`
+ * factory rejects synchronously rather than returning a rejected promise, so a
+ * promise-only form would let that error escape. The sentinel for an unexpected
+ * success then lives outside the catch, so it surfaces as itself instead of
+ * failing indirectly via a missing `code`.
+ *
+ * @param call Thunk invoking the lookup under test; may throw sync or async.
+ * @param expected Typed error fields; omitted formid/plugin assert absence.
+ */
+async function expectLookupRejects(
+  call: () => Promise<unknown>,
+  expected: ExpectedLookupRejection,
+): Promise<void> {
+  let rejection: FormIdLookupError | null = null;
+  try {
+    await call();
+  } catch (error) {
+    rejection = error as FormIdLookupError;
+  }
+
+  if (rejection === null) {
+    throw new Error(
+      `strict lookup unexpectedly succeeded; expected ${expected.code}`,
+    );
+  }
+
+  expect(rejection.code).toBe(expected.code);
+  expect(rejection.formid).toBe(expected.formid);
+  expect(rejection.plugin).toBe(expected.plugin);
+  expect(rejection.message).toContain(expected.messageContains);
+}
+
 // ============================================================================
 // Cache TTL Constants
 // ============================================================================
@@ -162,16 +207,12 @@ describe("FormID Value Lookup", () => {
       },
     ]);
 
-    try {
-      await lookup.lookup("00012345", "Fallout4.esm");
-      throw new Error("lookup unexpectedly succeeded");
-    } catch (error) {
-      const typed = error as FormIdLookupError;
-      expect(typed.code).toBe("malformed_result");
-      expect(typed.formid).toBe("00012345");
-      expect(typed.plugin).toBe("Fallout4.esm");
-      expect(typed.message).toContain("blank value");
-    }
+    await expectLookupRejects(() => lookup.lookup("00012345", "Fallout4.esm"), {
+      code: "malformed_result",
+      formid: "00012345",
+      plugin: "Fallout4.esm",
+      messageContains: "blank value",
+    });
   });
 
   test("operational failures reject without becoming misses", async () => {
@@ -183,16 +224,12 @@ describe("FormID Value Lookup", () => {
       },
     ]);
 
-    try {
-      await lookup.lookup("00012345", "Fallout4.esm");
-      throw new Error("lookup unexpectedly succeeded");
-    } catch (error) {
-      const typed = error as FormIdLookupError;
-      expect(typed.code).toBe("operational_failure");
-      expect(typed.formid).toBe("00012345");
-      expect(typed.plugin).toBe("Fallout4.esm");
-      expect(typed.message).toContain("fixture offline");
-    }
+    await expectLookupRejects(() => lookup.lookup("00012345", "Fallout4.esm"), {
+      code: "operational_failure",
+      formid: "00012345",
+      plugin: "Fallout4.esm",
+      messageContains: "fixture offline",
+    });
   });
 
   test("shared-pool and SQLite factories preserve operational semantics", async () => {
@@ -201,32 +238,27 @@ describe("FormID Value Lookup", () => {
     // configuration rather than a successful miss, so the lookup must reject.
     const pool = new JsDatabasePool("Fallout4");
     const shared = JsFormIdValueLookup.fromSharedPool(pool);
-    try {
-      await shared.lookup("00012345", "Fallout4.esm");
-      throw new Error("table-less shared pool lookup unexpectedly succeeded");
-    } catch (error) {
-      const typed = error as FormIdLookupError;
-      expect(typed.code).toBe("operational_failure");
-      expect(typed.formid).toBe("00012345");
-      expect(typed.plugin).toBe("Fallout4.esm");
-      expect(typed.message).toContain(
+    await expectLookupRejects(() => shared.lookup("00012345", "Fallout4.esm"), {
+      code: "operational_failure",
+      formid: "00012345",
+      plugin: "Fallout4.esm",
+      messageContains:
         'no initialized database exposes active game table "Fallout4"',
-      );
-    }
+    });
 
-    try {
-      await JsFormIdValueLookup.sqlite(
-        "Z:\\nonexistent\\path\\formids.db",
-        "Fallout4",
-      );
-      throw new Error("SQLite construction unexpectedly succeeded");
-    } catch (error) {
-      const typed = error as FormIdLookupError;
-      expect(typed.code).toBe("operational_failure");
-      expect(typed.formid).toBeUndefined();
-      expect(typed.plugin).toBeUndefined();
-      expect(typed.message).toContain("database file not found");
-    }
+    // Construction fails before any pair is in play, so this error carries
+    // neither a FormID nor a plugin.
+    await expectLookupRejects(
+      () =>
+        JsFormIdValueLookup.sqlite(
+          "Z:\\nonexistent\\path\\formids.db",
+          "Fallout4",
+        ),
+      {
+        code: "operational_failure",
+        messageContains: "database file not found",
+      },
+    );
   });
 });
 
