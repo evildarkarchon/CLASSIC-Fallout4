@@ -373,6 +373,16 @@ TEST_CASE("CLI Local Ignore recovery prompt never infers Reset To Default", "[sc
         REQUIRE(output.str().find("No usable answer after 3 attempts") != std::string::npos);
     }
 
+    SECTION("only the advertised P/R/C answers are honored") {
+        // `q` is deliberately not a synonym: the offered menu is the whole input surface.
+        std::istringstream input("q\nquit\ny\nr\n");
+        std::ostringstream output;
+        const CliScanRunCancellation cancellation(false);
+        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation) ==
+                CliLocalIgnoreRecoveryChoice::Cancel);
+        REQUIRE(output.str().find("No usable answer after 3 attempts") != std::string::npos);
+    }
+
     SECTION("cancellation observed before the question consumes no input") {
         std::istringstream input("r\n");
         std::ostringstream output;
@@ -411,6 +421,41 @@ TEST_CASE("CLI scan presentation preserves consumed continuation replay details"
     REQUIRE(presentation.messages[0].text ==
             "Fatal: Crash Log Scan recovery failed (scan_run_continuation_consumed): Crash Log Scan Run continuation "
             "was already consumed");
+}
+
+TEST_CASE("CLI recovery invariant diagnostics outrank the terminal envelope",
+          "[scanner][scan-run][local-ignore]") {
+    CliScanRunExecutionOutcome outcome{};
+    outcome.execution = execution_with_result(scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
+    outcome.execution.result.has_message = true;
+    outcome.execution.result.message = "Local Ignore recovery is required";
+    outcome.recovery_diagnostics.push_back(
+        {true, "Fatal: Crash Log Scan Run requested Local Ignore recovery without retaining its continuation."});
+
+    const auto presentation = present_cli_scan_run_outcome(outcome, 0.5);
+    const auto lines = message_text(presentation.messages);
+
+    // A recovery the CLI could not honor is an infrastructure failure, not a status worth exit 1.
+    REQUIRE(presentation.exit_code == 2);
+    REQUIRE(lines[0] ==
+            "Fatal: Crash Log Scan Run requested Local Ignore recovery without retaining its continuation.");
+    REQUIRE(presentation.messages[0].error);
+    REQUIRE(lines.back() == "Local Ignore recovery is required");
+}
+
+TEST_CASE("CLI outcome presentation is unchanged without recovery diagnostics",
+          "[scanner][scan-run][local-ignore]") {
+    CliScanRunExecutionOutcome outcome{};
+    outcome.execution = execution_with_result(scanner::ScanRunContractStatus::Completed);
+    outcome.execution.result.total = 1;
+    outcome.execution.result.succeeded = 1;
+    outcome.local_ignore_continuation_consumed = true;
+
+    const auto direct = present_cli_scan_run_execution(outcome.execution, 1.0);
+    const auto via_outcome = present_cli_scan_run_outcome(outcome, 1.0);
+
+    REQUIRE(via_outcome.exit_code == direct.exit_code);
+    REQUIRE(message_text(via_outcome.messages) == message_text(direct.messages));
 }
 
 TEST_CASE("CLI scan presentation makes typed reset failures actionable", "[scanner][scan-run][local-ignore]") {

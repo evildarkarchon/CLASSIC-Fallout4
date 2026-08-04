@@ -887,7 +887,7 @@ TEST_CASE("CLI Standard and Targeted scans reach recovery from one installation 
     const auto standard = execute_cli_scan_run(*standard_request, standard_cancellation, nullptr, no_prompt);
 
     REQUIRE(standard.execution.has_result);
-    REQUIRE_FALSE(standard.resumed_after_local_ignore_recovery);
+    REQUIRE_FALSE(standard.local_ignore_continuation_consumed);
     REQUIRE(standard.execution.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
     REQUIRE(standard.execution.result.discovery.source == scanner::ScanRunContractDiscoverySource::Standard);
     REQUIRE(standard.execution.result.installed_yaml_data.local_ignore_state ==
@@ -935,7 +935,7 @@ TEST_CASE("CLI Proceed Without Ignore resumes the retained discovery once", "[cl
                                               });
 
     REQUIRE(prompt.invocations() == 1);
-    REQUIRE(outcome.resumed_after_local_ignore_recovery);
+    REQUIRE(outcome.local_ignore_continuation_consumed);
     REQUIRE(outcome.execution.has_result);
     REQUIRE(outcome.execution.result.status == scanner::ScanRunContractStatus::Completed);
     REQUIRE(outcome.execution.result.installed_yaml_data.local_ignore_state ==
@@ -1010,7 +1010,7 @@ TEST_CASE("CLI cancellation at the recovery prompt mutates nothing", "[cli][scan
                                               });
 
     REQUIRE(prompt.invocations() == 1);
-    REQUIRE(outcome.resumed_after_local_ignore_recovery);
+    REQUIRE(outcome.local_ignore_continuation_consumed);
     REQUIRE(outcome.execution.has_result);
     REQUIRE(outcome.execution.result.status == scanner::ScanRunContractStatus::Cancelled);
     REQUIRE(outcome.execution.result.logs.size() == 1);

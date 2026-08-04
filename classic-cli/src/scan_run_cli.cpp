@@ -368,7 +368,7 @@ bool match_recovery_choice(std::string_view answer, CliLocalIgnoreRecoveryChoice
         choice = CliLocalIgnoreRecoveryChoice::ResetToDefault;
         return true;
     }
-    if (answer == "c" || answer == "cancel" || answer == "q" || answer == "quit") {
+    if (answer == "c" || answer == "cancel") {
         choice = CliLocalIgnoreRecoveryChoice::Cancel;
         return true;
     }
@@ -703,7 +703,18 @@ CliScanRunExecutionOutcome execute_cli_scan_run(const scanner::ScanRunRequest& r
     const bool recovery_required =
         outcome.execution.has_result &&
         outcome.execution.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired;
-    if (!recovery_required || !has_continuation || !prompt) {
+    if (!recovery_required) {
+        return outcome;
+    }
+    if (!has_continuation) {
+        // Rust always retains a continuation with this status, so its absence is a broken contract
+        // rather than a user decision. Say so instead of presenting an unanswerable question.
+        outcome.recovery_diagnostics.push_back(
+            {true, "Fatal: Crash Log Scan Run requested Local Ignore recovery without retaining its continuation."});
+        return outcome;
+    }
+    if (!prompt) {
+        // Expected for a non-interactive invocation: report the typed outcome and make no choice.
         return outcome;
     }
 
@@ -728,6 +739,27 @@ CliScanRunExecutionOutcome execute_cli_scan_run(const scanner::ScanRunRequest& r
 
     auto resumed = scanner::scan_run_continuation_resume(*continuation, decision, cancellation.token(), observer);
     outcome.execution = scanner::scan_run_contract_execution_take_result(*resumed);
-    outcome.resumed_after_local_ignore_recovery = true;
+    outcome.local_ignore_continuation_consumed = true;
+
+    if (outcome.execution.has_result &&
+        outcome.execution.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired) {
+        // The continuation is single-use, so a resumed run can never ask again. Refuse to present a
+        // second question the CLI has no continuation left to answer.
+        outcome.recovery_diagnostics.push_back(
+            {true, "Fatal: Crash Log Scan recovery returned an unexpected second recovery request."});
+    }
     return outcome;
+}
+
+CliScanRunPresentation present_cli_scan_run_outcome(const CliScanRunExecutionOutcome& outcome,
+                                                    double duration_seconds) {
+    auto presentation = present_cli_scan_run_execution(outcome.execution, duration_seconds);
+    if (outcome.recovery_diagnostics.empty()) {
+        return presentation;
+    }
+
+    presentation.messages.insert(presentation.messages.begin(), outcome.recovery_diagnostics.begin(),
+                                 outcome.recovery_diagnostics.end());
+    presentation.exit_code = 2;
+    return presentation;
 }

@@ -217,7 +217,6 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
         };
 
     const auto outcome = execute_cli_scan_run(*request, cancellation, &observer, recovery_prompt);
-    const auto& execution = outcome.execution;
     observer.finish();
 
     if (observer.delivery_failed()) {
@@ -226,7 +225,7 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
 
     const auto total_end = std::chrono::steady_clock::now();
     const double duration = std::chrono::duration<double>(total_end - total_start).count();
-    const auto presentation = present_cli_scan_run_execution(execution, duration);
+    const auto presentation = present_cli_scan_run_outcome(outcome, duration);
     fmt::print("\n");
     for (const auto& message : presentation.messages) {
         print_cli_scan_message(message);
