@@ -44,18 +44,30 @@ def test_in_memory_lookup_distinguishes_hit_miss_malformed_and_failure() -> None
 
 
 def test_disabled_and_shared_pool_adapters_remain_owned() -> None:
-    """Disabled and existing-pool adapters expose positional semantic outcomes."""
+    """Disabled stays a semantic outcome while a table-less shared pool fails strictly."""
 
     async def run() -> None:
         disabled = classic_database.FormIdValueLookup.disabled()
         disabled_outcome = await disabled.lookup("000800", "SomeMod.esp")
         assert disabled_outcome.kind == "disabled"
 
+        # An uninitialized pool exposes no database carrying the active game table.
+        # Strict lookup treats that empty filtered set as an invalid adapter/schema
+        # configuration rather than a successful miss, so the batch must reject.
         pool = classic_database.DatabasePool(game_table="Fallout4")
         shared = classic_database.FormIdValueLookup.from_shared_pool(pool)
-        outcomes = await shared.lookup_batch(
-            [("000800", "SomeMod.esp"), ("000801", "OtherMod.esp")]
+        with pytest.raises(classic_database.FormIdValueLookupError) as absent_table:
+            await shared.lookup_batch(
+                [("000800", "SomeMod.esp"), ("000801", "OtherMod.esp")]
+            )
+        assert absent_table.value.code == "operational_failure"
+        # A failed batch attributes the error to its first pair, so the caller can
+        # still tell which lookup the strict rejection came from.
+        assert absent_table.value.formid == "000800"
+        assert absent_table.value.plugin == "SomeMod.esp"
+        assert (
+            'no initialized database exposes active game table "Fallout4"'
+            in absent_table.value.message
         )
-        assert [outcome.kind for outcome in outcomes] == ["missing", "missing"]
 
     asyncio.run(run())

@@ -366,3 +366,4 @@ opencode.json
 # Intentially unignored as part of transition from submodule to regular directory.
 # Since worktrees and submodules don't work well together, it's easier to just use a normal directory.
 !sample_logs/**
+graphify-out/

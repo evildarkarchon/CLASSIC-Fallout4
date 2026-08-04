@@ -363,3 +363,32 @@ fn strict_lookup_existing_db_pool_adapter_preserves_operational_failure() {
             .contains("Invalid game table identifier")
     );
 }
+
+#[test]
+fn strict_lookup_rejects_a_pool_without_the_active_game_table() {
+    // The table identifier is valid here, so validation passes and the lookup reaches
+    // the empty-queryable-pools check instead. An uninitialized pool exposes no
+    // database carrying the active table, and strict lookup treats that empty
+    // filtered set as an invalid adapter/schema configuration rather than a
+    // successful miss. This is the CXX counterpart of the Rust, Node, and Python
+    // coverage for the same contract.
+    let pool = db_pool_new("Fallout4", 1, 60);
+    let lookup = formid_value_lookup_shared_pool_new(&pool);
+    let construction = formid_value_lookup_construction_result(&lookup);
+    assert!(construction.has_lookup);
+
+    let result = formid_value_lookup_lookup(&lookup, "000807", "SomeMod.esp");
+    assert!(result.has_error);
+    assert_eq!(
+        result.error.code,
+        ffi::FormIdValueLookupErrorCode::OperationalFailure
+    );
+    assert_eq!(result.error.formid, "000807");
+    assert_eq!(result.error.plugin, "SomeMod.esp");
+    assert!(
+        result
+            .error
+            .message
+            .contains("no initialized database exposes active game table \"Fallout4\"")
+    );
+}

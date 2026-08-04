@@ -196,11 +196,23 @@ describe("FormID Value Lookup", () => {
   });
 
   test("shared-pool and SQLite factories preserve operational semantics", async () => {
+    // An uninitialized pool exposes no database carrying the active game table.
+    // Strict lookup treats that empty filtered set as an invalid adapter/schema
+    // configuration rather than a successful miss, so the lookup must reject.
     const pool = new JsDatabasePool("Fallout4");
     const shared = JsFormIdValueLookup.fromSharedPool(pool);
-    expect(await shared.lookup("00012345", "Fallout4.esm")).toEqual({
-      kind: "missing",
-    });
+    try {
+      await shared.lookup("00012345", "Fallout4.esm");
+      throw new Error("table-less shared pool lookup unexpectedly succeeded");
+    } catch (error) {
+      const typed = error as FormIdLookupError;
+      expect(typed.code).toBe("operational_failure");
+      expect(typed.formid).toBe("00012345");
+      expect(typed.plugin).toBe("Fallout4.esm");
+      expect(typed.message).toContain(
+        'no initialized database exposes active game table "Fallout4"',
+      );
+    }
 
     try {
       await JsFormIdValueLookup.sqlite(
