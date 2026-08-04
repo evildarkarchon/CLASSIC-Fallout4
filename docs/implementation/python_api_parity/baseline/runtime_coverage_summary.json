@@ -1,24 +1,24 @@
 {
-  "generated_at_utc": "2026-07-27T03:18:33.127654+00:00",
+  "generated_at_utc": "2026-08-04T10:37:25.774461+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
     "runtime_registry": "python-bindings/tests/fixtures/runtime_coverage_registry.json"
   },
   "summary": {
-    "tracked_surface_total": 1692,
-    "runtime_verified_total": 1692,
+    "tracked_surface_total": 1688,
+    "runtime_verified_total": 1688,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 1236,
+    "tier1_contract_total": 1234,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
   "registryMismatches": [],
   "perOwnerModule": {
     "config": {
-      "runtime_verified": 101,
-      "total": 101
+      "runtime_verified": 97,
+      "total": 97
     },
     "database": {
       "runtime_verified": 56,
@@ -4347,27 +4347,6 @@
       "notes": null
     },
     {
-      "trackedId": "contract:config.yamldata.YamlData.__init__",
-      "trackedType": "contract_row",
-      "contractId": "config.yamldata.YamlData.__init__",
-      "ownerModule": "config",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "YamlDataCore",
-      "bindingIdentifier": "classic_config.YamlData.__init__",
-      "coverageId": "python-tier1-config",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
-      "testCaseId": "config-tier1-smoke",
-      "fixtureRefs": [
-        "PARITY_MAIN_YAML",
-        "PARITY_GAME_YAML",
-        "PARITY_IGNORE_YAML"
-      ],
-      "notes": null
-    },
-    {
       "trackedId": "contract:config.yamldata.YamlData.__repr__",
       "trackedType": "contract_row",
       "contractId": "config.yamldata.YamlData.__repr__",
@@ -4377,27 +4356,6 @@
       "classification": "runtime_verified",
       "rustSymbol": "YamlDataCore",
       "bindingIdentifier": "classic_config.YamlData.__repr__",
-      "coverageId": "python-tier1-config",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
-      "testCaseId": "config-tier1-smoke",
-      "fixtureRefs": [
-        "PARITY_MAIN_YAML",
-        "PARITY_GAME_YAML",
-        "PARITY_IGNORE_YAML"
-      ],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:config.yamldata.create_yamldata",
-      "trackedType": "contract_row",
-      "contractId": "config.yamldata.create_yamldata",
-      "ownerModule": "config",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "YamlDataCore",
-      "bindingIdentifier": "classic_config.create_yamldata",
       "coverageId": "python-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
@@ -4439,7 +4397,7 @@
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "format_registry_game_version",
-      "bindingIdentifier": "classic_config.create_yamldata",
+      "bindingIdentifier": "classic_config.YamlData",
       "coverageId": "python-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
@@ -4460,7 +4418,7 @@
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "resolve_registry_version_info",
-      "bindingIdentifier": "classic_config.create_yamldata",
+      "bindingIdentifier": "classic_config.YamlData",
       "coverageId": "python-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
@@ -23698,25 +23656,6 @@
       "notes": "Direct public-module coverage includes the filesystem-free published-defaults projection; read-only open; typed Crash Log Scan and Game Setup settings; nested frontend state; all-or-nothing update previews and conflict-safe commits; plus python-bindings/tests/test_user_settings_migration_planning.py coverage for deterministic flat and previous-location plans, schema/location/change DTOs, exact in-memory reversal, current no-op outcomes, unsupported version-gap diagnostics, and no-write behavior."
     },
     {
-      "trackedId": "binding:classic_config.YamlData.__init__",
-      "trackedType": "registry_only",
-      "ownerModule": "config",
-      "tier": "tier1",
-      "gapType": "registry_only",
-      "classification": "runtime_verified",
-      "rustSymbol": null,
-      "bindingIdentifier": "classic_config.YamlData.__init__",
-      "coverageId": "python-tier1-config-plan06-promoted",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "python-bindings/tests/test_promoted_config_smoke.py",
-      "testCaseId": "config-plan06-promoted-smoke",
-      "fixtureRefs": [],
-      "wave": null,
-      "owner": null,
-      "deferReason": null,
-      "notes": "Per-class smoke tests for the 28 promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent)."
-    },
-    {
       "trackedId": "binding:classic_config.YamlData.__repr__",
       "trackedType": "registry_only",
       "ownerModule": "config",
@@ -23733,7 +23672,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Per-class smoke tests for the 28 promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent)."
+      "notes": "Per-class smoke tests for the promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent). YamlData.__init__ and create_yamldata were dropped by the Installed YAML Data cutover: the positional directory constructor and its functional alias bypassed Rust-owned selection, and their smoke rows are now contraction guards asserting both are absent."
     },
     {
       "trackedId": "binding:classic_config.YamlSource.__eq__",
@@ -23752,7 +23691,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Per-class smoke tests for the 28 promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent)."
+      "notes": "Per-class smoke tests for the promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent). YamlData.__init__ and create_yamldata were dropped by the Installed YAML Data cutover: the positional directory constructor and its functional alias bypassed Rust-owned selection, and their smoke rows are now contraction guards asserting both are absent."
     },
     {
       "trackedId": "binding:classic_config.YamlSource.__hash__",
@@ -23771,7 +23710,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Per-class smoke tests for the 28 promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent)."
+      "notes": "Per-class smoke tests for the promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent). YamlData.__init__ and create_yamldata were dropped by the Installed YAML Data cutover: the positional directory constructor and its functional alias bypassed Rust-owned selection, and their smoke rows are now contraction guards asserting both are absent."
     },
     {
       "trackedId": "binding:classic_config.YamlSource.__repr__",
@@ -23790,7 +23729,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Per-class smoke tests for the 28 promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent)."
+      "notes": "Per-class smoke tests for the promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent). YamlData.__init__ and create_yamldata were dropped by the Installed YAML Data cutover: the positional directory constructor and its functional alias bypassed Rust-owned selection, and their smoke rows are now contraction guards asserting both are absent."
     },
     {
       "trackedId": "binding:classic_config.YamlSource.__str__",
@@ -23809,26 +23748,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Per-class smoke tests for the 28 promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent)."
-    },
-    {
-      "trackedId": "binding:classic_config.create_yamldata",
-      "trackedType": "registry_only",
-      "ownerModule": "config",
-      "tier": "tier1",
-      "gapType": "registry_only",
-      "classification": "runtime_verified",
-      "rustSymbol": null,
-      "bindingIdentifier": "classic_config.create_yamldata",
-      "coverageId": "python-tier1-config-plan06-promoted",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "python-bindings/tests/test_promoted_config_smoke.py",
-      "testCaseId": "config-plan06-promoted-smoke",
-      "fixtureRefs": [],
-      "wave": null,
-      "owner": null,
-      "deferReason": null,
-      "notes": "Per-class smoke tests for the 28 promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent)."
+      "notes": "Per-class smoke tests for the promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent). YamlData.__init__ and create_yamldata were dropped by the Installed YAML Data cutover: the positional directory constructor and its functional alias bypassed Rust-owned selection, and their smoke rows are now contraction guards asserting both are absent."
     },
     {
       "trackedId": "binding:classic_config.get_application_dir",
@@ -23847,7 +23767,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Per-class smoke tests for the 28 promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent)."
+      "notes": "Per-class smoke tests for the promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent). YamlData.__init__ and create_yamldata were dropped by the Installed YAML Data cutover: the positional directory constructor and its functional alias bypassed Rust-owned selection, and their smoke rows are now contraction guards asserting both are absent."
     },
     {
       "trackedId": "binding:classic_config.set_application_dir",
@@ -23866,7 +23786,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Per-class smoke tests for the 28 promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent)."
+      "notes": "Per-class smoke tests for the promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent). YamlData.__init__ and create_yamldata were dropped by the Installed YAML Data cutover: the positional directory constructor and its functional alias bypassed Rust-owned selection, and their smoke rows are now contraction guards asserting both are absent."
     },
     {
       "trackedId": "binding:classic_config.load_installed_yaml_data",

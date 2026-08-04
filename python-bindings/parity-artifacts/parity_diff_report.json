@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-07-19T03:52:56.431969+00:00",
+  "generated_at_utc": "2026-08-04T10:37:25.767167+00:00",
   "summary": {
-    "tier1_contract_total": 1236,
-    "tier1_matched": 1236,
+    "tier1_contract_total": 1234,
+    "tier1_matched": 1234,
     "tier1_missing_rust": 0,
     "tier1_missing_python": 0,
     "tier1_signature_mismatch": 0,
@@ -3281,21 +3281,6 @@
       "actual_python_arity": null
     },
     {
-      "id": "config.yamldata.YamlData.__init__",
-      "tier": "tier1",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "YamlDataCore",
-      "python_module": "classic_config",
-      "python_export": "YamlData.__init__",
-      "python_export_path": "YamlData.__init__",
-      "status": "matched",
-      "expected_python_kind": "method",
-      "actual_python_kind": "method",
-      "expected_python_arity": 3,
-      "actual_python_arity": 3
-    },
-    {
       "id": "config.yamldata.YamlData.__repr__",
       "tier": "tier1",
       "owner_module": "config",
@@ -3309,21 +3294,6 @@
       "actual_python_kind": "method",
       "expected_python_arity": 0,
       "actual_python_arity": 0
-    },
-    {
-      "id": "config.yamldata.create_yamldata",
-      "tier": "tier1",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "YamlDataCore",
-      "python_module": "classic_config",
-      "python_export": "create_yamldata",
-      "python_export_path": "create_yamldata",
-      "status": "matched",
-      "expected_python_kind": "function",
-      "actual_python_kind": "function",
-      "expected_python_arity": 3,
-      "actual_python_arity": 3
     },
     {
       "id": "config.game_local.persist_game_local_paths",
@@ -3347,13 +3317,13 @@
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": "format_registry_game_version",
       "python_module": "classic_config",
-      "python_export": "create_yamldata",
-      "python_export_path": "create_yamldata",
+      "python_export": "YamlData",
+      "python_export_path": "YamlData",
       "status": "matched",
-      "expected_python_kind": "function",
-      "actual_python_kind": "function",
-      "expected_python_arity": 3,
-      "actual_python_arity": 3
+      "expected_python_kind": "class",
+      "actual_python_kind": "class",
+      "expected_python_arity": null,
+      "actual_python_arity": null
     },
     {
       "id": "config.yamldata.resolve_registry_version_info@rust",
@@ -3362,13 +3332,13 @@
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": "resolve_registry_version_info",
       "python_module": "classic_config",
-      "python_export": "create_yamldata",
-      "python_export_path": "create_yamldata",
+      "python_export": "YamlData",
+      "python_export_path": "YamlData",
       "status": "matched",
-      "expected_python_kind": "function",
-      "actual_python_kind": "function",
-      "expected_python_arity": 3,
-      "actual_python_arity": 3
+      "expected_python_kind": "class",
+      "actual_python_kind": "class",
+      "expected_python_arity": null,
+      "actual_python_arity": null
     },
     {
       "id": "config.yamldata.yamldata@rust",

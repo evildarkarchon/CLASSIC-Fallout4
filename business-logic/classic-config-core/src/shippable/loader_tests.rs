@@ -30,9 +30,13 @@ fn write(path: &Path, contents: &str) {
     std::fs::write(path, contents).unwrap();
 }
 
-/// Thin wrapper over the public [`load_shippable_yaml_with_env`] so the
+/// Thin wrapper over the crate-private [`load_shippable_yaml_with_env`] so the
 /// test call sites stay terse. Kept here so any breaking refactor of the
 /// env-injection surface shows up as a compile error in one place.
+///
+/// These tests reach into the module directly because selection is no longer a
+/// public interface; the behavior they pin is still real and still reached in
+/// production through `installed_yaml_data` and `load_main_yaml_version`.
 async fn load_with_env<F>(
     file: ShippableFile,
     compat: &SchemaCompat,

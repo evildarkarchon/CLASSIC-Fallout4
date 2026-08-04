@@ -58,6 +58,42 @@ fn write_explicit_bridge_fixtures(
     }
 }
 
+/// Build a `YamlData` handle from three caller-selected files.
+///
+/// The bridge no longer exposes a positional directory-pair loader, so bridge
+/// tests that need a `YamlData` handle acquire one the same way C++ does: load
+/// exactly the files they wrote, then take the snapshot's YAML Data. Because
+/// explicit loading gates on `schema_version` and role-specific semantics, the
+/// caller's fixtures must be valid — that is the point of the retained seam.
+fn yaml_data_from_explicit_files(
+    root: &std::path::Path,
+    main: &str,
+    game: &str,
+    ignore: &str,
+    game_id: ffi::ExplicitYamlDataGameId,
+    selected_game_version: &str,
+) -> Box<YamlData> {
+    let main_path = root.join("selected-main.yaml");
+    let game_path = root.join("selected-game.yaml");
+    let ignore_path = root.join("selected-ignore.yaml");
+    std::fs::write(&main_path, main).expect("write Main fixture");
+    std::fs::write(&game_path, game).expect("write game fixture");
+    std::fs::write(&ignore_path, ignore).expect("write Local Ignore fixture");
+
+    let load = explicit_yaml_data_load(
+        ffi::ExplicitYamlDataPathsDto {
+            main_path: main_path.to_string_lossy().into_owned(),
+            game_path: game_path.to_string_lossy().into_owned(),
+            ignore_path: ignore_path.to_string_lossy().into_owned(),
+        },
+        game_id,
+        selected_game_version,
+    );
+    let snapshot =
+        explicit_yaml_data_load_take_snapshot(load).expect("explicit fixture load should succeed");
+    explicit_yaml_data_snapshot_yaml_data(&snapshot)
+}
+
 /// Write valid bundled Main and game files under one isolated installation root.
 fn write_installed_bridge_fixtures(root: &std::path::Path) {
     let data = root.join("CLASSIC Data");
@@ -980,97 +1016,79 @@ fn installed_yaml_data_load_bridge_maps_every_core_error_kind() {
     assert!(!error_dtos[5].has_role);
 }
 
+/// An absent caller-selected file surfaces as a typed `Read` status, not a panic.
+///
+/// This replaces the removed positional loader's "invalid dirs" case: C++ now
+/// always receives an operation handle and inspects its status before consuming
+/// a snapshot.
 #[test]
-fn test_yaml_data_load_invalid_dirs() {
-    let result = yaml_data_load(
-        "nonexistent_root_dir",
-        "nonexistent_data_dir",
-        "Fallout4",
+fn explicit_yaml_data_bridge_reports_absent_files_as_typed_read_errors() {
+    let temp = tempdir().expect("failed to create temp dir");
+    let load = explicit_yaml_data_load(
+        ffi::ExplicitYamlDataPathsDto {
+            main_path: temp
+                .path()
+                .join("absent-main.yaml")
+                .to_string_lossy()
+                .into_owned(),
+            game_path: temp
+                .path()
+                .join("absent-game.yaml")
+                .to_string_lossy()
+                .into_owned(),
+            ignore_path: temp
+                .path()
+                .join("absent-ignore.yaml")
+                .to_string_lossy()
+                .into_owned(),
+        },
+        ffi::ExplicitYamlDataGameId::Fallout4,
         "auto",
     );
-    assert!(result.is_err());
-}
 
-#[test]
-fn test_yaml_data_load_from_real_dirs() {
-    let root_dir = "J:\\CLASSIC-Fallout4";
-    let data_dir = "J:\\CLASSIC-Fallout4\\ClassicLib";
-
-    let result = yaml_data_load(root_dir, data_dir, "Fallout4", "auto");
-    if let Ok(data) = result {
-        assert!(!yaml_data_classic_version(&data).is_empty());
-        assert!(!yaml_data_xse_acronym(&data).is_empty());
-        assert!(!yaml_data_crashgen_name_field(&data).is_empty());
-        assert!(!yaml_data_game_version(&data).is_empty());
-        assert!(!yaml_data_mods_freq_entries(&data).is_empty());
-        assert!(!yaml_data_mods_solu_entries(&data).is_empty());
-
-        let name = yaml_data_get_crashgen_name(&data);
-        assert!(!name.is_empty());
-
-        // IndexMap key/value pairs should have matching lengths
-        let err_keys = yaml_data_suspects_error_keys(&data);
-        let err_vals = yaml_data_suspects_error_values(&data);
-        assert_eq!(err_keys.len(), err_vals.len());
-    }
-}
-
-#[test]
-fn test_yaml_data_game_version_mode() {
-    let root_dir = "J:\\CLASSIC-Fallout4";
-    let data_dir = "J:\\CLASSIC-Fallout4\\ClassicLib";
-
-    let result_og = yaml_data_load(root_dir, data_dir, "Fallout4", "auto");
-    let result_vr = yaml_data_load(root_dir, data_dir, "Fallout4", "VR");
-
-    if let (Ok(og), Ok(vr)) = (result_og, result_vr) {
-        let og_root = yaml_data_get_game_root_name(&og);
-        let vr_root = yaml_data_get_game_root_name(&vr);
-        assert!(!og_root.is_empty());
-        assert!(!vr_root.is_empty());
-    }
+    let status = explicit_yaml_data_load_status(&load);
+    assert!(!status.has_snapshot);
+    assert!(status.has_error);
+    assert_eq!(status.error.kind, ffi::ExplicitYamlDataLoadErrorKind::Read);
+    assert!(status.error.has_role);
+    assert_eq!(status.error.role, ffi::ExplicitYamlDataRole::Main);
+    assert!(status.error.has_path);
 }
 
 #[test]
 fn test_yaml_data_accessors_fallback_when_game_info_is_minimal() {
     let temp = tempdir().expect("failed to create temp dir");
-    let data_dir = temp.path().join("CLASSIC Data");
-    let db_dir = data_dir.join("databases");
-    std::fs::create_dir_all(&db_dir).expect("failed to create db dir");
 
-    let main_yaml = r#"
-CLASSIC_Info:
-  version: "7.31.0"
-  version_date: "2024-01-15"
-CLASSIC_Interface:
-  autoscan_text_Fallout4: "Autoscan Fallout 4"
-"#;
-    let game_yaml = r#"
-Game_Info:
-  Main_Root_Name: "Fallout 4"
-Crashgen_Registry:
-  "Buffout 4":
-    ignore_keys:
-      - "BuffoutSpecificIgnore"
-    checks: []
-  default:
-    ignore_keys:
-      - "DefaultIgnore"
-    checks: []
-"#;
-    let ignore_yaml = r#"
-CLASSIC_Ignore_Fallout4: []
-"#;
+    // `Game_Info` carries only `Main_Root_Name`, so the Crashgen name, its
+    // ignore keys, and the game version must all come from the registry and
+    // `Crashgen_Registry` fallbacks rather than from explicit Game_Info fields.
+    let game_yaml = concat!(
+        "schema_version: \"1.0\"\n",
+        "Game_Info:\n",
+        "  Main_Root_Name: \"Fallout 4\"\n",
+        "Crashlog_Error_Check: []\n",
+        "Crashlog_Stack_Check: []\n",
+        "Mods_FREQ: []\n",
+        "Mods_SOLU: []\n",
+        "Crashgen_Registry:\n",
+        "  \"Buffout 4\":\n",
+        "    ignore_keys:\n",
+        "      - \"BuffoutSpecificIgnore\"\n",
+        "    checks: []\n",
+        "  default:\n",
+        "    ignore_keys:\n",
+        "      - \"DefaultIgnore\"\n",
+        "    checks: []\n",
+    );
 
-    std::fs::write(db_dir.join("CLASSIC Main.yaml"), main_yaml).expect("write main yaml");
-    std::fs::write(db_dir.join("CLASSIC Fallout4.yaml"), game_yaml).expect("write game yaml");
-    std::fs::write(temp.path().join("CLASSIC Ignore.yaml"), ignore_yaml)
-        .expect("write ignore yaml");
-
-    let root_dir = temp.path().to_string_lossy().to_string();
-    let data_dir_str = data_dir.to_string_lossy().to_string();
-    let data = yaml_data_load(&root_dir, &data_dir_str, "Fallout4", "auto")
-        .expect("yaml_data_load should succeed");
+    let data = yaml_data_from_explicit_files(
+        temp.path(),
+        EXPLICIT_MAIN_YAML,
+        game_yaml,
+        EXPLICIT_EMPTY_IGNORE_YAML,
+        ffi::ExplicitYamlDataGameId::Fallout4,
+        "auto",
+    );
 
     assert!(!yaml_data_get_crashgen_name(&data).is_empty());
     assert_eq!(
@@ -1083,39 +1101,26 @@ CLASSIC_Ignore_Fallout4: []
 #[test]
 fn fallout4_vr_loads_the_shared_fallout4_yaml_through_the_bridge() {
     let temp = tempdir().expect("failed to create temp dir");
-    let data_dir = temp.path().join("CLASSIC Data");
-    let db_dir = data_dir.join("databases");
-    std::fs::create_dir_all(&db_dir).expect("failed to create db dir");
 
-    std::fs::write(
-        db_dir.join("CLASSIC Main.yaml"),
+    let data = yaml_data_from_explicit_files(
+        temp.path(),
+        EXPLICIT_MAIN_YAML,
         concat!(
-            "CLASSIC_Info:\n",
-            "  version: 7.31.0\n",
-            "CLASSIC_Interface:\n",
-            "  autoscan_text_Fallout4: Autoscan Fallout 4\n",
+            "schema_version: \"1.0\"\n",
+            "Game_Info:\n",
+            "  Main_Root_Name: Fallout 4\n",
+            "Crashlog_Error_Check: []\n",
+            "Crashlog_Stack_Check: []\n",
+            "Mods_FREQ: []\n",
+            "Mods_SOLU: []\n",
         ),
-    )
-    .expect("write main yaml");
-    std::fs::write(
-        db_dir.join("CLASSIC Fallout4.yaml"),
-        "Game_Info:\n  Main_Root_Name: Fallout 4\n",
-    )
-    .expect("write shared Fallout 4 yaml");
-    std::fs::write(
-        temp.path().join("CLASSIC Ignore.yaml"),
-        "CLASSIC_Ignore_Fallout4: []\n",
-    )
-    .expect("write ignore yaml");
-
-    let data = yaml_data_load(
-        &temp.path().to_string_lossy(),
-        &data_dir.to_string_lossy(),
-        "Fallout4VR",
+        EXPLICIT_EMPTY_IGNORE_YAML,
+        ffi::ExplicitYamlDataGameId::Fallout4VR,
         "VR",
-    )
-    .expect("Fallout 4 VR should load the shared Fallout 4 YAML");
+    );
 
+    // The shared Fallout 4 game file declares no VR-specific facts, so both
+    // come from the Version Registry keyed by the VR game identity.
     assert_eq!(yaml_data_xse_acronym(&data), "F4SEVR");
     assert_eq!(yaml_data_game_version(&data), "1.2.72");
 }
@@ -1191,187 +1196,173 @@ fn test_save_local_yaml_paths_preserves_empty_adapter_field() {
 // ── CXXS-07 typed suspect-rule tests ───────────────────────────────
 
 /// Builds a minimal YamlData with suspect error rules for testing.
-fn make_yaml_data_with_suspect_rules() -> Option<Box<YamlData>> {
+///
+/// The snapshot owns its bytes, so the temporary directory can drop as soon as
+/// the load returns — no fixture leak is needed to keep the handle valid.
+fn make_yaml_data_with_suspect_rules() -> Box<YamlData> {
     let temp = tempdir().expect("failed to create temp dir");
-    let data_dir = temp.path().join("CLASSIC Data");
-    let db_dir = data_dir.join("databases");
-    std::fs::create_dir_all(&db_dir).expect("failed to create db dir");
 
-    let main_yaml = r#"
-CLASSIC_Info:
-  version: "7.31.0"
-  version_date: "2024-01-15"
-CLASSIC_Interface:
-  autoscan_text_Fallout4: "Autoscan Fallout 4"
-"#;
+    let game_yaml = concat!(
+        "schema_version: \"1.0\"\n",
+        "Game_Info:\n",
+        "  Main_Root_Name: \"Fallout 4\"\n",
+        "Mods_FREQ: []\n",
+        "Mods_SOLU: []\n",
+        "Crashgen_Registry:\n",
+        "  \"Buffout 4\":\n",
+        "    ignore_keys: []\n",
+        "    checks: []\n",
+        "  default:\n",
+        "    ignore_keys: []\n",
+        "    checks: []\n",
+        "Crashlog_Error_Check:\n",
+        "  - id: \"err_test_rule\"\n",
+        "    name: \"Test Error Rule\"\n",
+        "    severity: 3\n",
+        "    main_error_contains_any:\n",
+        "      - \"AccessViolation\"\n",
+        "      - \"NullPointer\"\n",
+        "Crashlog_Stack_Check:\n",
+        "  - id: \"stack_test_rule\"\n",
+        "    name: \"Test Stack Rule\"\n",
+        "    severity: 2\n",
+        "    main_error_required_any:\n",
+        "      - \"RequiredPattern\"\n",
+        "    main_error_optional_any:\n",
+        "      - \"OptionalPattern\"\n",
+        "    stack_contains_any:\n",
+        "      - \"StackPattern1\"\n",
+        "      - \"StackPattern2\"\n",
+        "    exclude_if_stack_contains_any:\n",
+        "      - \"ExcludePattern\"\n",
+        "    stack_contains_at_least:\n",
+        "      - substring: \"RepeatedFunc\"\n",
+        "        count: 2\n",
+    );
 
-    let game_yaml = r#"
-Game_Info:
-  Main_Root_Name: "Fallout 4"
-Crashgen_Registry:
-  "Buffout 4":
-    ignore_keys: []
-    checks: []
-  default:
-    ignore_keys: []
-    checks: []
-Crashlog_Error_Check:
-  - id: "err_test_rule"
-    name: "Test Error Rule"
-    severity: 3
-    main_error_contains_any:
-      - "AccessViolation"
-      - "NullPointer"
-Crashlog_Stack_Check:
-  - id: "stack_test_rule"
-    name: "Test Stack Rule"
-    severity: 2
-    main_error_required_any:
-      - "RequiredPattern"
-    main_error_optional_any:
-      - "OptionalPattern"
-    stack_contains_any:
-      - "StackPattern1"
-      - "StackPattern2"
-    exclude_if_stack_contains_any:
-      - "ExcludePattern"
-    stack_contains_at_least:
-      - substring: "RepeatedFunc"
-        count: 2
-"#;
-
-    let ignore_yaml = r#"
-CLASSIC_Ignore_Fallout4: []
-"#;
-
-    std::fs::write(db_dir.join("CLASSIC Main.yaml"), main_yaml).ok()?;
-    std::fs::write(db_dir.join("CLASSIC Fallout4.yaml"), game_yaml).ok()?;
-    std::fs::write(temp.path().join("CLASSIC Ignore.yaml"), ignore_yaml).ok()?;
-
-    let root_dir = temp.path().to_string_lossy().to_string();
-    let data_dir_str = data_dir.to_string_lossy().to_string();
-
-    // Keep temp alive by leaking — test fixture only
-    std::mem::forget(temp);
-
-    yaml_data_load(&root_dir, &data_dir_str, "Fallout4", "auto").ok()
+    yaml_data_from_explicit_files(
+        temp.path(),
+        EXPLICIT_MAIN_YAML,
+        game_yaml,
+        EXPLICIT_EMPTY_IGNORE_YAML,
+        ffi::ExplicitYamlDataGameId::Fallout4,
+        "auto",
+    )
 }
 
 #[test]
 fn test_yaml_data_suspects_error_rules_empty() {
     let temp = tempdir().expect("failed to create temp dir");
-    let data_dir = temp.path().join("CLASSIC Data");
-    let db_dir = data_dir.join("databases");
-    std::fs::create_dir_all(&db_dir).expect("failed to create db dir");
 
-    let main_yaml = "CLASSIC_Info:\n  version: \"7.0.0\"\n  version_date: \"2024-01-01\"\nCLASSIC_Interface:\n  autoscan_text_Fallout4: \"Autoscan\"\n";
-    let game_yaml = "Game_Info:\n  Main_Root_Name: \"Fallout 4\"\nCrashgen_Registry:\n  default:\n    ignore_keys: []\n    checks: []\n";
-    let ignore_yaml = "CLASSIC_Ignore_Fallout4: []\n";
+    let data = yaml_data_from_explicit_files(
+        temp.path(),
+        EXPLICIT_MAIN_YAML,
+        concat!(
+            "schema_version: \"1.0\"\n",
+            "Game_Info:\n",
+            "  Main_Root_Name: \"Fallout 4\"\n",
+            "Crashlog_Error_Check: []\n",
+            "Crashlog_Stack_Check: []\n",
+            "Mods_FREQ: []\n",
+            "Mods_SOLU: []\n",
+            "Crashgen_Registry:\n",
+            "  default:\n",
+            "    ignore_keys: []\n",
+            "    checks: []\n",
+        ),
+        EXPLICIT_EMPTY_IGNORE_YAML,
+        ffi::ExplicitYamlDataGameId::Fallout4,
+        "auto",
+    );
 
-    std::fs::write(db_dir.join("CLASSIC Main.yaml"), main_yaml).expect("write main yaml");
-    std::fs::write(db_dir.join("CLASSIC Fallout4.yaml"), game_yaml).expect("write game yaml");
-    std::fs::write(temp.path().join("CLASSIC Ignore.yaml"), ignore_yaml)
-        .expect("write ignore yaml");
-
-    let root_dir = temp.path().to_string_lossy().to_string();
-    let data_dir_str = data_dir.to_string_lossy().to_string();
-
-    if let Ok(data) = yaml_data_load(&root_dir, &data_dir_str, "Fallout4", "auto") {
-        assert!(yaml_data_suspects_error_rules(&data).is_empty());
-    }
+    assert!(yaml_data_suspects_error_rules(&data).is_empty());
 }
 
 #[test]
 fn test_yaml_data_suspects_error_rules_populated() {
-    if let Some(data) = make_yaml_data_with_suspect_rules() {
-        let rules = yaml_data_suspects_error_rules(&data);
-        assert!(!rules.is_empty(), "expected at least one error rule");
-        let rule = &rules[0];
-        assert_eq!(rule.id, "err_test_rule");
-        assert_eq!(rule.name, "Test Error Rule");
-        assert_eq!(rule.severity, 3);
-        assert!(
-            rule.main_error_contains_any
-                .contains(&"AccessViolation".to_string()),
-            "expected AccessViolation in main_error_contains_any"
-        );
-    }
+    let data = make_yaml_data_with_suspect_rules();
+    let rules = yaml_data_suspects_error_rules(&data);
+    assert!(!rules.is_empty(), "expected at least one error rule");
+    let rule = &rules[0];
+    assert_eq!(rule.id, "err_test_rule");
+    assert_eq!(rule.name, "Test Error Rule");
+    assert_eq!(rule.severity, 3);
+    assert!(
+        rule.main_error_contains_any
+            .contains(&"AccessViolation".to_string()),
+        "expected AccessViolation in main_error_contains_any"
+    );
 }
 
 #[test]
 fn test_yaml_data_suspects_stack_rules_metadata_no_count_rules_field() {
-    if let Some(data) = make_yaml_data_with_suspect_rules() {
-        let metadata = yaml_data_suspects_stack_rules_metadata(&data);
-        assert!(!metadata.is_empty(), "expected at least one stack rule");
-        let rule = &metadata[0];
-        assert_eq!(rule.id, "stack_test_rule");
-        assert_eq!(rule.name, "Test Stack Rule");
-        assert_eq!(rule.severity, 2);
-        // Verify all flat Vec<String> fields are accessible (no nested Vec<Struct>)
-        assert!(
-            rule.main_error_required_any
-                .contains(&"RequiredPattern".to_string())
-        );
-        assert!(
-            rule.main_error_optional_any
-                .contains(&"OptionalPattern".to_string())
-        );
-        assert!(
-            rule.stack_contains_any
-                .contains(&"StackPattern1".to_string())
-        );
-        assert!(
-            rule.exclude_if_stack_contains_any
-                .contains(&"ExcludePattern".to_string())
-        );
-        // Pitfall 6 compile-time proof: no stack_contains_at_least field on the DTO
-    }
+    let data = make_yaml_data_with_suspect_rules();
+    let metadata = yaml_data_suspects_stack_rules_metadata(&data);
+    assert!(!metadata.is_empty(), "expected at least one stack rule");
+    let rule = &metadata[0];
+    assert_eq!(rule.id, "stack_test_rule");
+    assert_eq!(rule.name, "Test Stack Rule");
+    assert_eq!(rule.severity, 2);
+    // Verify all flat Vec<String> fields are accessible (no nested Vec<Struct>)
+    assert!(
+        rule.main_error_required_any
+            .contains(&"RequiredPattern".to_string())
+    );
+    assert!(
+        rule.main_error_optional_any
+            .contains(&"OptionalPattern".to_string())
+    );
+    assert!(
+        rule.stack_contains_any
+            .contains(&"StackPattern1".to_string())
+    );
+    assert!(
+        rule.exclude_if_stack_contains_any
+            .contains(&"ExcludePattern".to_string())
+    );
+    // Pitfall 6 compile-time proof: no stack_contains_at_least field on the DTO
 }
 
 #[test]
 fn test_yaml_data_suspects_stack_count_rules_unknown_id_returns_empty() {
-    if let Some(data) = make_yaml_data_with_suspect_rules() {
-        let count_rules =
-            yaml_data_suspects_stack_count_rules_for_id(&data, "definitely_not_a_real_id_xyz");
-        assert!(count_rules.is_empty());
-    }
+    let data = make_yaml_data_with_suspect_rules();
+    let count_rules =
+        yaml_data_suspects_stack_count_rules_for_id(&data, "definitely_not_a_real_id_xyz");
+    assert!(count_rules.is_empty());
 }
 
 #[test]
 fn test_yaml_data_suspects_stack_count_rules_known_id_returns_populated() {
-    if let Some(data) = make_yaml_data_with_suspect_rules() {
-        let count_rules = yaml_data_suspects_stack_count_rules_for_id(&data, "stack_test_rule");
-        assert!(
-            !count_rules.is_empty(),
-            "expected count rules for stack_test_rule"
-        );
-        assert_eq!(count_rules[0].substring, "RepeatedFunc");
-        assert_eq!(count_rules[0].count, 2);
-    }
+    let data = make_yaml_data_with_suspect_rules();
+    let count_rules = yaml_data_suspects_stack_count_rules_for_id(&data, "stack_test_rule");
+    assert!(
+        !count_rules.is_empty(),
+        "expected count rules for stack_test_rule"
+    );
+    assert_eq!(count_rules[0].substring, "RepeatedFunc");
+    assert_eq!(count_rules[0].count, 2);
 }
 
 #[test]
 fn test_yaml_data_suspects_error_keys_still_works_d08_regression() {
     // D-08 regression: existing fn must remain unchanged
-    if let Some(data) = make_yaml_data_with_suspect_rules() {
-        let keys = yaml_data_suspects_error_keys(&data);
-        assert!(
-            !keys.is_empty(),
-            "yaml_data_suspects_error_keys must still work (D-08)"
-        );
-    }
+    let data = make_yaml_data_with_suspect_rules();
+    let keys = yaml_data_suspects_error_keys(&data);
+    assert!(
+        !keys.is_empty(),
+        "yaml_data_suspects_error_keys must still work (D-08)"
+    );
 }
 
 #[test]
 fn test_yaml_data_suspects_stack_keys_still_works_d08_regression() {
     // D-08 regression: existing fn must remain unchanged
-    if let Some(data) = make_yaml_data_with_suspect_rules() {
-        let keys = yaml_data_suspects_stack_keys(&data);
-        assert!(
-            !keys.is_empty(),
-            "yaml_data_suspects_stack_keys must still work (D-08)"
-        );
-    }
+    let data = make_yaml_data_with_suspect_rules();
+    let keys = yaml_data_suspects_stack_keys(&data);
+    assert!(
+        !keys.is_empty(),
+        "yaml_data_suspects_stack_keys must still work (D-08)"
+    );
 }
 
 #[test]

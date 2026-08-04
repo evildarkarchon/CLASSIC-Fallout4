@@ -3,10 +3,42 @@
 //! These tests verify cross-component workflows involving configuration loading,
 //! YAML parsing, and the interaction between classic-yaml-core and classic-config-core.
 
-use classic_config_core::{ConfigError, YamlDataCore};
+use classic_config_core::{
+    ConfigError, ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole,
+    YamlDataCore, load_explicit_yaml_data,
+};
+use classic_shared_core::GameId;
 use std::fs;
-use std::path::PathBuf;
 use tempfile::tempdir;
+
+/// Main YAML accepted by the explicit loader's schema-2.0 and semantic gates.
+///
+/// The `minimal_*` fixtures below predate those gates and are used only with
+/// `from_yaml_content`, which performs no schema validation.
+fn explicit_main_yaml() -> &'static str {
+    r#"schema_version: "2.0"
+CLASSIC_Info:
+  version: "9.1.0"
+  version_date: "2026-07-17"
+CLASSIC_Interface:
+  autoscan_text_Fallout4: "Autoscan Fallout 4"
+catch_log_records: []
+"#
+}
+
+/// Game YAML accepted by the explicit loader's Fallout 4 role validation.
+fn explicit_game_yaml() -> &'static str {
+    r#"schema_version: "1.0"
+Game_Info:
+  Main_Root_Name: "Fallout 4"
+  XSE_Acronym: "F4SE"
+  GameVersion: "1.10.163"
+Crashlog_Error_Check: []
+Crashlog_Stack_Check: []
+Mods_FREQ: []
+Mods_SOLU: []
+"#
+}
 
 // ============================================================================
 // Test Data Fixtures
@@ -123,39 +155,22 @@ CLASSIC_Ignore_Skyrim:
 mod config_loading_workflows {
     use super::*;
 
-    /// Test complete configuration loading from files
-    #[tokio::test]
-    async fn test_complete_config_load_workflow() {
-        let temp_dir = tempdir().expect("Failed to create temp dir");
-
-        // Create directory structure matching CLASSIC layout
-        let databases_dir = temp_dir.path().join("databases");
-        fs::create_dir_all(&databases_dir).expect("Failed to create databases dir");
-
-        // Write config files
-        fs::write(databases_dir.join("CLASSIC Main.yaml"), minimal_main_yaml())
-            .expect("Failed to write main YAML");
-        fs::write(
-            databases_dir.join("CLASSIC Fallout4.yaml"),
+    /// Every section of all three documents reaches its own `YamlDataCore` field.
+    ///
+    /// This previously drove the positional two-directory loader. That loader is
+    /// gone — installed selection now belongs to `load_installed_yaml_data` and
+    /// caller-selected files to `load_explicit_yaml_data`, both of which end in
+    /// the same document-to-field assembly exercised here.
+    #[test]
+    fn test_complete_config_load_workflow() {
+        let config = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
             minimal_game_yaml(),
-        )
-        .expect("Failed to write game YAML");
-        fs::write(
-            temp_dir.path().join("CLASSIC Ignore.yaml"),
             minimal_ignore_yaml(),
-        )
-        .expect("Failed to write ignore YAML");
-
-        // Load configuration using 2-element API (root_dir, data_dir)
-        let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
-
-        let config = YamlDataCore::load_from_yaml_files(
-            yaml_dirs,
             "Fallout4".to_string(),
             "auto".to_string(),
         )
-        .await
-        .expect("Config load should succeed");
+        .expect("Config assembly should succeed");
 
         // Verify all configuration sections loaded correctly
         // Main YAML
@@ -179,72 +194,17 @@ mod config_loading_workflows {
         assert_eq!(config.ignore_list, vec!["IgnoreItem1", "IgnoreItem2"]);
     }
 
-    /// Test loading with 3-directory API (legacy)
-    #[tokio::test]
-    async fn test_three_directory_api_workflow() {
-        let temp_dir = tempdir().expect("Failed to create temp dir");
-
-        // Create separate directories for each config type
-        let main_dir = temp_dir.path().join("main");
-        let game_dir = temp_dir.path().join("game");
-        let ignore_dir = temp_dir.path().join("ignore");
-
-        fs::create_dir_all(&main_dir).expect("Failed to create main dir");
-        fs::create_dir_all(&game_dir).expect("Failed to create game dir");
-        fs::create_dir_all(&ignore_dir).expect("Failed to create ignore dir");
-
-        // Write files in their respective directories
-        fs::write(main_dir.join("CLASSIC Main.yaml"), minimal_main_yaml())
-            .expect("Failed to write main YAML");
-        fs::write(game_dir.join("CLASSIC Fallout4.yaml"), minimal_game_yaml())
-            .expect("Failed to write game YAML");
-        fs::write(
-            ignore_dir.join("CLASSIC Ignore.yaml"),
-            minimal_ignore_yaml(),
-        )
-        .expect("Failed to write ignore YAML");
-
-        // Load using 3-element API
-        let yaml_dirs = vec![main_dir, game_dir, ignore_dir];
-
-        let config = YamlDataCore::load_from_yaml_files(
-            yaml_dirs,
-            "Fallout4".to_string(),
-            "auto".to_string(),
-        )
-        .await
-        .expect("Config load should succeed");
-
-        assert_eq!(config.classic_version, "7.31.0");
-        assert_eq!(config.xse_acronym, "F4SE");
-    }
-
     /// Test selected game version mode does not override explicit Game_Info values
-    #[tokio::test]
-    async fn test_selected_game_version_does_not_affect_loading_workflow() {
-        let temp_dir = tempdir().expect("Failed to create temp dir");
-        let databases_dir = temp_dir.path().join("databases");
-        fs::create_dir_all(&databases_dir).expect("Failed to create databases dir");
-
-        fs::write(databases_dir.join("CLASSIC Main.yaml"), minimal_main_yaml())
-            .expect("Failed to write main YAML");
-        fs::write(
-            databases_dir.join("CLASSIC Fallout4.yaml"),
+    #[test]
+    fn test_selected_game_version_does_not_affect_loading_workflow() {
+        let config = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
             minimal_game_yaml(),
-        )
-        .expect("Failed to write game YAML");
-        fs::write(
-            temp_dir.path().join("CLASSIC Ignore.yaml"),
             minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            "VR".to_string(),
         )
-        .expect("Failed to write ignore YAML");
-
-        let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
-
-        let config =
-            YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "VR".to_string())
-                .await
-                .expect("VR config load should succeed");
+        .expect("VR config assembly should succeed");
 
         // Game_Info fields populated
         assert_eq!(config.crashgen_name, "crash-og");
@@ -265,24 +225,11 @@ mod config_loading_workflows {
 mod multi_game_config {
     use super::*;
 
-    /// Test loading configuration for different games
-    #[tokio::test]
-    async fn test_multi_game_configuration() {
-        let temp_dir = tempdir().expect("Failed to create temp dir");
-        let databases_dir = temp_dir.path().join("databases");
-        fs::create_dir_all(&databases_dir).expect("Failed to create databases dir");
-
-        // Write main YAML (shared)
-        fs::write(databases_dir.join("CLASSIC Main.yaml"), minimal_main_yaml())
-            .expect("Failed to write main YAML");
-
-        // Write game-specific YAMLs
-        fs::write(
-            databases_dir.join("CLASSIC Fallout4.yaml"),
-            minimal_game_yaml(),
-        )
-        .expect("Failed to write Fallout4 YAML");
-
+    /// One shared Main document plus per-game game/Ignore data keys off the
+    /// selected game, so two games assembled from the same Main and Ignore
+    /// documents resolve different interface text and ignore entries.
+    #[test]
+    fn test_multi_game_configuration() {
         let skyrim_yaml = r#"
 Game_Info:
   XSE_Acronym: "SKSE"
@@ -290,26 +237,15 @@ Game_Info:
 Game_Hints:
   - "Skyrim Hint 1"
 "#;
-        fs::write(databases_dir.join("CLASSIC Skyrim.yaml"), skyrim_yaml)
-            .expect("Failed to write Skyrim YAML");
 
-        // Write ignore YAML with both games
-        fs::write(
-            temp_dir.path().join("CLASSIC Ignore.yaml"),
+        let fallout_config = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            minimal_game_yaml(),
             minimal_ignore_yaml(),
-        )
-        .expect("Failed to write ignore YAML");
-
-        let base_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
-
-        // Load Fallout4 config
-        let fallout_config = YamlDataCore::load_from_yaml_files(
-            base_dirs.clone(),
             "Fallout4".to_string(),
             "auto".to_string(),
         )
-        .await
-        .expect("Fallout4 config should load");
+        .expect("Fallout4 config should assemble");
 
         assert_eq!(fallout_config.xse_acronym, "F4SE");
         assert_eq!(fallout_config.autoscan_text, "Autoscan Fallout 4");
@@ -318,11 +254,14 @@ Game_Hints:
             vec!["IgnoreItem1", "IgnoreItem2"]
         );
 
-        // Load Skyrim config
-        let skyrim_config =
-            YamlDataCore::load_from_yaml_files(base_dirs, "Skyrim".to_string(), "auto".to_string())
-                .await
-                .expect("Skyrim config should load");
+        let skyrim_config = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            skyrim_yaml,
+            minimal_ignore_yaml(),
+            "Skyrim".to_string(),
+            "auto".to_string(),
+        )
+        .expect("Skyrim config should assemble");
 
         assert_eq!(skyrim_config.xse_acronym, "SKSE");
         assert_eq!(skyrim_config.autoscan_text, "Autoscan Skyrim");
@@ -463,35 +402,35 @@ mod from_content_workflows {
 mod error_handling_workflows {
     use super::*;
 
-    /// Test missing file error handling
+    /// A caller-selected file that does not exist fails with a typed role and path.
+    ///
+    /// The positional loader this replaced reported one untyped `IOError` no
+    /// matter which of the three files was absent. The retained explicit seam
+    /// names the role, which is what a tooling caller needs to fix its input.
     #[tokio::test]
     async fn test_missing_file_error() {
         let temp_dir = tempdir().expect("Failed to create temp dir");
-        let databases_dir = temp_dir.path().join("databases");
-        fs::create_dir_all(&databases_dir).expect("Failed to create databases dir");
+        let main_path = temp_dir.path().join("main.yaml");
+        fs::write(&main_path, explicit_main_yaml()).expect("Failed to write main YAML");
 
-        // Only create main YAML, missing game and ignore
-        fs::write(databases_dir.join("CLASSIC Main.yaml"), minimal_main_yaml())
-            .expect("Failed to write main YAML");
+        // Game and Local Ignore are deliberately absent.
+        let missing_game = temp_dir.path().join("absent-game.yaml");
 
-        let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
-
-        let result = YamlDataCore::load_from_yaml_files(
-            yaml_dirs,
-            "Fallout4".to_string(),
-            "auto".to_string(),
-        )
+        let result = load_explicit_yaml_data(ExplicitYamlDataRequest {
+            main_path,
+            game_path: missing_game.clone(),
+            ignore_path: temp_dir.path().join("absent-ignore.yaml"),
+            game: GameId::Fallout4,
+            selected_game_version: "auto".to_string(),
+        })
         .await;
 
-        assert!(result.is_err());
         match result {
-            Err(ConfigError::IOError { context, .. }) => {
-                assert!(
-                    context.contains("not found") || context.contains("YAML file"),
-                    "Should mention file not found"
-                );
+            Err(ExplicitYamlDataLoadError::Read { role, path, .. }) => {
+                assert_eq!(role, ExplicitYamlDataRole::Game);
+                assert_eq!(path, missing_game);
             }
-            Err(e) => panic!("Expected IOError, got {:?}", e),
+            Err(e) => panic!("Expected a typed Read failure, got {e:?}"),
             Ok(_) => panic!("Should fail with missing files"),
         }
     }
@@ -566,70 +505,37 @@ mod error_handling_workflows {
             Ok(_) => panic!("Should fail with empty document"),
         }
     }
-
-    /// Test invalid directory count error
-    #[tokio::test]
-    async fn test_invalid_directory_count() {
-        // 1 directory (invalid)
-        let result = YamlDataCore::load_from_yaml_files(
-            vec![PathBuf::from("/some/path")],
-            "Fallout4".to_string(),
-            "auto".to_string(),
-        )
-        .await;
-
-        assert!(result.is_err());
-        match result {
-            Err(ConfigError::InvalidInput(msg)) => {
-                assert!(
-                    msg.contains("2") || msg.contains("3"),
-                    "Should mention required directory count"
-                );
-            }
-            Err(e) => panic!("Expected InvalidInput, got {:?}", e),
-            Ok(_) => panic!("Should fail with invalid directory count"),
-        }
-
-        // 4 directories (also invalid)
-        let result = YamlDataCore::load_from_yaml_files(
-            vec![
-                PathBuf::from("/a"),
-                PathBuf::from("/b"),
-                PathBuf::from("/c"),
-                PathBuf::from("/d"),
-            ],
-            "Fallout4".to_string(),
-            "auto".to_string(),
-        )
-        .await;
-
-        assert!(result.is_err());
-        match result {
-            Err(ConfigError::InvalidInput(_)) => (),
-            Err(e) => panic!("Expected InvalidInput, got {:?}", e),
-            Ok(_) => panic!("Should fail with invalid directory count"),
-        }
-    }
 }
 
 // ============================================================================
-// Parallel Loading Tests
+// Explicit-File Loading Tests
+//
+// The removed positional loader read its three files with `tokio::join!`, so
+// these cases used to be framed as "parallel loading". The retained
+// deterministic seam is `load_explicit_yaml_data`; what still matters is that
+// concurrent loads stay independent and that multi-document files merge.
 // ============================================================================
 
-mod parallel_loading {
+mod explicit_file_loading {
     use super::*;
 
+    /// Each of the three files may carry several `---` documents, which merge
+    /// within that file before the roles are assembled.
     #[tokio::test]
-    async fn test_load_from_yaml_files_merges_multiple_documents() {
+    async fn test_explicit_load_merges_multiple_documents_per_file() {
         let temp_dir = tempdir().expect("Failed to create temp dir");
-        let databases_dir = temp_dir.path().join("databases");
-        fs::create_dir_all(&databases_dir).expect("Failed to create databases dir");
+        let main_path = temp_dir.path().join("main.yaml");
+        let game_path = temp_dir.path().join("game.yaml");
+        let ignore_path = temp_dir.path().join("ignore.yaml");
 
         fs::write(
-            databases_dir.join("CLASSIC Main.yaml"),
+            &main_path,
             concat!(
+                "schema_version: \"2.0\"\n",
                 "CLASSIC_Info:\n",
-                "  version: \"7.31.0\"\n",
+                "  version: \"9.1.0\"\n",
+                "  version_date: \"2026-07-17\"\n",
+                "catch_log_records: []\n",
                 "---\n",
                 "CLASSIC_Interface:\n",
                 "  autoscan_text_Fallout4: \"Merged Autoscan\"\n",
@@ -637,10 +543,17 @@ mod parallel_loading {
         )
         .expect("Failed to write main YAML");
         fs::write(
-            databases_dir.join("CLASSIC Fallout4.yaml"),
+            &game_path,
             concat!(
+                "schema_version: \"1.0\"\n",
                 "Game_Info:\n",
+                "  Main_Root_Name: \"Fallout 4\"\n",
                 "  XSE_Acronym: \"F4SE\"\n",
+                "  GameVersion: \"1.10.163\"\n",
+                "Crashlog_Error_Check: []\n",
+                "Crashlog_Stack_Check: []\n",
+                "Mods_FREQ: []\n",
+                "Mods_SOLU: []\n",
                 "---\n",
                 "Warnings_CRASHGEN:\n",
                 "  Warn_NOPlugins: \"Merged warning\"\n",
@@ -648,7 +561,7 @@ mod parallel_loading {
         )
         .expect("Failed to write game YAML");
         fs::write(
-            temp_dir.path().join("CLASSIC Ignore.yaml"),
+            &ignore_path,
             concat!(
                 "CLASSIC_Ignore_Fallout4:\n",
                 "  - \"IgnoreA\"\n",
@@ -659,114 +572,60 @@ mod parallel_loading {
         )
         .expect("Failed to write ignore YAML");
 
-        let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
-
-        let config = YamlDataCore::load_from_yaml_files(
-            yaml_dirs,
-            "Fallout4".to_string(),
-            "auto".to_string(),
-        )
+        let snapshot = load_explicit_yaml_data(ExplicitYamlDataRequest {
+            main_path,
+            game_path,
+            ignore_path,
+            game: GameId::Fallout4,
+            selected_game_version: "auto".to_string(),
+        })
         .await
-        .expect("load_from_yaml_files should merge multiple documents");
+        .expect("explicit loading should merge multiple documents per file");
 
-        assert_eq!(config.classic_version, "7.31.0");
+        let config = snapshot.yaml_data();
+        assert_eq!(config.classic_version, "9.1.0");
         assert_eq!(config.autoscan_text, "Merged Autoscan");
         assert_eq!(config.xse_acronym, "F4SE");
         assert_eq!(config.warn_noplugins, "Merged warning");
+        // Only the selected game's Ignore key is read.
         assert_eq!(config.ignore_list, vec!["IgnoreA"]);
     }
 
-    /// Test that parallel loading preserves file order
+    /// Concurrent explicit loads of the same files each produce an independent
+    /// snapshot; nothing is shared or cached across them.
     #[tokio::test]
-    async fn test_parallel_loading_order_preserved() {
+    async fn test_concurrent_explicit_loading() {
         let temp_dir = tempdir().expect("Failed to create temp dir");
-        let databases_dir = temp_dir.path().join("databases");
-        fs::create_dir_all(&databases_dir).expect("Failed to create databases dir");
+        let main_path = temp_dir.path().join("main.yaml");
+        let game_path = temp_dir.path().join("game.yaml");
+        let ignore_path = temp_dir.path().join("ignore.yaml");
 
-        // Create files with unique identifiers
-        let main_yaml = r#"
-CLASSIC_Info:
-  version: "MAIN_UNIQUE_VERSION"
-"#;
-        let game_yaml = r#"
-Game_Info:
-  XSE_Acronym: "GAME_UNIQUE_XSE"
-"#;
-        let ignore_yaml = r#"
-CLASSIC_Ignore_TestGame:
-  - "IGNORE_UNIQUE_ITEM"
-"#;
-
-        fs::write(databases_dir.join("CLASSIC Main.yaml"), main_yaml)
-            .expect("Failed to write main YAML");
-        fs::write(databases_dir.join("CLASSIC TestGame.yaml"), game_yaml)
-            .expect("Failed to write game YAML");
-        fs::write(temp_dir.path().join("CLASSIC Ignore.yaml"), ignore_yaml)
+        fs::write(&main_path, explicit_main_yaml()).expect("Failed to write main YAML");
+        fs::write(&game_path, explicit_game_yaml()).expect("Failed to write game YAML");
+        fs::write(&ignore_path, "CLASSIC_Ignore_Fallout4: []\n")
             .expect("Failed to write ignore YAML");
 
-        let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
-
-        let config = YamlDataCore::load_from_yaml_files(
-            yaml_dirs,
-            "TestGame".to_string(),
-            "auto".to_string(),
-        )
-        .await
-        .expect("Config load should succeed");
-
-        // Verify values from each file are correctly assigned
-        assert_eq!(
-            config.classic_version, "MAIN_UNIQUE_VERSION",
-            "Version should come from main YAML"
-        );
-        assert_eq!(
-            config.xse_acronym, "GAME_UNIQUE_XSE",
-            "XSE should come from game YAML"
-        );
-        assert_eq!(
-            config.ignore_list,
-            vec!["IGNORE_UNIQUE_ITEM"],
-            "Ignore list should come from ignore YAML"
-        );
-    }
-
-    /// Test concurrent configuration loading
-    #[tokio::test]
-    async fn test_concurrent_config_loading() {
-        let temp_dir = tempdir().expect("Failed to create temp dir");
-        let databases_dir = temp_dir.path().join("databases");
-        fs::create_dir_all(&databases_dir).expect("Failed to create databases dir");
-
-        fs::write(databases_dir.join("CLASSIC Main.yaml"), minimal_main_yaml())
-            .expect("Failed to write main YAML");
-        fs::write(
-            databases_dir.join("CLASSIC Fallout4.yaml"),
-            minimal_game_yaml(),
-        )
-        .expect("Failed to write game YAML");
-        fs::write(
-            temp_dir.path().join("CLASSIC Ignore.yaml"),
-            minimal_ignore_yaml(),
-        )
-        .expect("Failed to write ignore YAML");
-
-        let base_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
-
-        // Spawn multiple concurrent loads
         let mut handles = Vec::new();
         for _ in 0..4 {
-            let dirs = base_dirs.clone();
+            let request = ExplicitYamlDataRequest {
+                main_path: main_path.clone(),
+                game_path: game_path.clone(),
+                ignore_path: ignore_path.clone(),
+                game: GameId::Fallout4,
+                selected_game_version: "auto".to_string(),
+            };
             handles.push(tokio::spawn(async move {
-                YamlDataCore::load_from_yaml_files(dirs, "Fallout4".to_string(), "auto".to_string())
-                    .await
+                load_explicit_yaml_data(request).await
             }));
         }
 
-        // All loads should succeed
         for handle in handles {
-            let result = handle.await.expect("Task should complete");
-            let config = result.expect("Config load should succeed");
-            assert_eq!(config.classic_version, "7.31.0");
+            let snapshot = handle
+                .await
+                .expect("Task should complete")
+                .expect("explicit load should succeed");
+            assert_eq!(snapshot.yaml_data().classic_version, "9.1.0");
+            assert_eq!(snapshot.yaml_data().xse_acronym, "F4SE");
         }
     }
 }

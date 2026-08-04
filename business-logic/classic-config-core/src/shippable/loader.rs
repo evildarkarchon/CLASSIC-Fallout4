@@ -43,20 +43,19 @@
 //!
 //! # Consumer pattern
 //!
-//! ```rust,no_run
-//! use classic_config_core::{
-//!     client_schemas,
-//!     shippable::{load_shippable_yaml, ShippableFile},
-//! };
+//! This loader is **crate-private**. Selection policy is owned by
+//! [`crate::installed_yaml_data`], and the only other in-crate consumers are
+//! [`super::main_version`] (the `CLASSIC Main.yaml` version reader) and
+//! [`crate::yaml_source`]. Each supplies its own `ShippableFile` and the
+//! matching `client_schemas` range internally, so no external caller can pair
+//! an arbitrary file with an arbitrary compatibility range:
 //!
-//! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//! ```ignore
 //! let loaded = load_shippable_yaml(
 //!     ShippableFile::main(),
-//!     &client_schemas::MAIN_YAML,
+//!     &crate::client_schemas::MAIN_YAML,
 //! ).await?;
 //! println!("loaded from {:?}, schema {}", loaded.source, loaded.schema_version);
-//! # Ok(())
-//! # }
 //! ```
 
 use classic_file_io_core::{SelfHealOutcome, self_heal};
@@ -128,6 +127,14 @@ pub struct LoadedShippable {
     /// Where the document came from.
     pub source: LoadSource,
     /// The compatible `schema_version` header observed on that source.
+    ///
+    /// Now that shippable selection is crate-private, the only non-test reader
+    /// of a `LoadedShippable` is [`super::main_version`], which needs `yaml`
+    /// and `source` but not the accepted header. The field stays because it is
+    /// how `loader_tests.rs` proves *which* candidate's header satisfied the
+    /// compatibility gate — a fact `source` alone does not carry — so
+    /// dead-code is allowed only outside `cfg(test)`.
+    #[cfg_attr(not(test), allow(dead_code))]
     pub schema_version: SchemaVersion,
 }
 

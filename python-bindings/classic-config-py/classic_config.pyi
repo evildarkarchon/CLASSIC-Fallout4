@@ -9,10 +9,15 @@ Architecture:
     - classic-config-py: Python bindings (this module - PyO3 adapters)
 
 Usage:
-    from classic_config import YamlData, create_yamldata
+    from classic_config import ExplicitYamlDataGame, load_installed_yaml_data
 
-    # Create YamlData instance
-    yaml_data = create_yamldata()
+    # Select Installed YAML Data, then read the parsed view off the snapshot.
+    outcome = load_installed_yaml_data(
+        installation_root="C:/Games/CLASSIC",
+        game=ExplicitYamlDataGame.FALLOUT4,
+        selected_game_version="auto",
+    )
+    yaml_data = outcome.snapshot.yaml_data
 
     # Access configuration properties
     game_version = yaml_data.game_version
@@ -20,7 +25,6 @@ Usage:
     records = yaml_data.game_ignore_records
 """
 
-from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Literal
 
@@ -30,43 +34,26 @@ class YamlData:
     """Python wrapper for YamlDataCore.
 
     This is a thin adapter that:
-    1. Calls YamlDataCore::load_from_yaml_files (business logic in classic-config-core)
-    2. Converts Rust types (Vec, HashMap) to Python types (PyList, PyDict)
-    3. Exposes fields as Python properties
+    1. Converts Rust types (Vec, HashMap) to Python types (PyList, PyDict)
+    2. Exposes fields as Python properties
 
     The YamlData class provides access to all CLASSIC configuration loaded from
     YAML files including game settings, mod lists, ignore lists, and version information.
 
-    All properties are read-only and loaded during initialization. Configuration is
-    cached and shared across instances for performance.
+    It has **no public constructor**. Instances are produced by Rust-owned
+    selection and reached through a snapshot:
+
+    - :func:`load_installed_yaml_data` — the authoritative runtime path, which
+      applies compatibility, fallback, and Local Ignore policy.
+    - :func:`load_explicit_yaml_data` — deterministic caller-selected files for
+      tests and tooling; never consults installation layout or the update cache.
+
+    :meth:`from_yaml_content` remains available for content-string tests; it
+    reads no paths at all.
+
+    All properties are read-only. Configuration is fixed for the lifetime of the
+    snapshot that produced it.
     """
-
-    def __init__(
-        self, yaml_dirs: Sequence[str | Path], game: str, game_version: str
-    ) -> None:
-        """Create a new YamlData instance by loading all YAML configuration files.
-
-        Args:
-            yaml_dirs: List of directories containing YAML configuration files.
-                      Accepts both string paths and pathlib.Path objects.
-            game: Game name (e.g., "Fallout4", "Skyrim")
-            game_version: Selected mode
-                ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR")
-
-        Raises:
-            FileNotFoundError: If required YAML files are missing
-            ValueError: If YAML data is malformed or invalid
-
-        Example:
-            >>> from pathlib import Path
-            >>> # Using Path objects
-            >>> yaml_data = YamlData([Path("YAML/Main")], "Fallout4", "auto")
-            >>> # Using strings
-            >>> yaml_data = YamlData(["YAML/Main"], "Fallout4", "auto")
-            >>> # Mixed
-            >>> yaml_data = YamlData([Path("YAML/Main"), "YAML/Local"], "Fallout4", "auto")
-
-        """
 
     @staticmethod
     def from_yaml_content(
@@ -701,37 +688,6 @@ def load_installed_yaml_data(
             atomically created.
         InstalledYamlDataLoadInvalidSelectedDataError: Selected documents cannot form
             the parsed YAML Data view.
-    """
-
-def create_yamldata(
-    yaml_dirs: Sequence[str | Path], game: str, game_version: str
-) -> YamlData:
-    """Create via factory create a YamlData instance.
-
-    This is a convenience function that creates and returns a new YamlData instance.
-    Equivalent to calling YamlData() directly.
-
-    Args:
-        yaml_dirs: List of directories containing YAML configuration files.
-                  Accepts both string paths and pathlib.Path objects.
-        game: Game name (e.g., "Fallout4", "Skyrim")
-        game_version: Selected mode ("auto", "Original", "NextGen", "VR")
-
-    Returns:
-        Configured YamlData instance with all YAML data loaded
-
-    Raises:
-        IOError: If required YAML files are missing
-        ValueError: If YAML data is malformed or invalid
-
-    Example:
-        >>> from classic_config import create_yamldata
-        >>> from pathlib import Path
-        >>> # Now this won't cause type errors:
-        >>> yaml_data = create_yamldata([Path("YAML/Main")], "Fallout4", "auto")
-        >>> print(yaml_data.classic_version)
-        '8.0.0'
-
     """
 
 def persist_game_local_paths(

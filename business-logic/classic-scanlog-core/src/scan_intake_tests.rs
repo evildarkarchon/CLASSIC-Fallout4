@@ -1,11 +1,22 @@
 use super::*;
+use classic_config_core::{
+    InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, load_installed_yaml_data_with_env,
+};
+use classic_shared_core::GameId;
 use tempfile::tempdir;
 
-fn write_minimal_yaml_tree(root: &Path, data: &Path) {
+/// Write one isolated installed tree in the layout `load_installed_yaml_data`
+/// resolves from a single installation root.
+///
+/// Unlike the removed positional loader, installed selection gates every
+/// candidate on its `schema_version` header and on role-specific semantic
+/// validation, so these fixtures carry both.
+fn write_minimal_yaml_tree(data: &Path) {
     std::fs::create_dir_all(data.join("databases")).expect("database dir should be created");
     std::fs::write(
         data.join("databases").join("CLASSIC Main.yaml"),
         concat!(
+            "schema_version: \"2.0\"\n",
             "CLASSIC_Info:\n",
             "  version: \"v9.1.0\"\n",
             "  version_date: \"2026-06-30\"\n",
@@ -22,6 +33,7 @@ fn write_minimal_yaml_tree(root: &Path, data: &Path) {
     std::fs::write(
         data.join("databases").join("CLASSIC Fallout4.yaml"),
         concat!(
+            "schema_version: \"1.0\"\n",
             "Game_Info:\n",
             "  XSE_Acronym: \"F4SE\"\n",
             "  GameVersion: \"1.10.163\"\n",
@@ -32,6 +44,10 @@ fn write_minimal_yaml_tree(root: &Path, data: &Path) {
             "  - Fallout4.esm\n",
             "Crashlog_Records_Exclude:\n",
             "  - IgnoreMe\n",
+            "Crashlog_Error_Check: []\n",
+            "Crashlog_Stack_Check: []\n",
+            "Mods_FREQ: []\n",
+            "Mods_SOLU: []\n",
             "Crashgen_Registry:\n",
             "  default:\n",
             "    display_section: \"\"\n",
@@ -45,19 +61,63 @@ fn write_minimal_yaml_tree(root: &Path, data: &Path) {
         ),
     )
     .expect("game YAML should be written");
+    // Installed Local Ignore lives under `CLASSIC Data/`, beside the databases
+    // directory rather than at the installation root. Writing it anywhere else
+    // makes selection treat it as absent and try to generate one.
     std::fs::write(
-        root.join("CLASSIC Ignore.yaml"),
+        data.join("CLASSIC Ignore.yaml"),
         "CLASSIC_Ignore_Fallout4:\n  - IgnoreThis.dll\n",
     )
     .expect("ignore YAML should be written");
 }
 
-fn prepare_path_backed(root: &Path, data: &Path) -> Result<ScanReadyAnalysis> {
+/// Redirect the YAML update cache at an empty temporary root.
+///
+/// Installed selection consults the per-user cache first. Tests must never read
+/// or write the developer's real cache, and an absent cache directory is the
+/// bundled-only shape these intake fixtures want.
+fn isolated_cache_env(cache_root: &Path) -> impl Fn(&str) -> Option<String> + use<> {
+    let cache_root = cache_root.to_string_lossy().into_owned();
+    move |name| match name {
+        #[cfg(target_os = "windows")]
+        "LOCALAPPDATA" => Some(cache_root.clone()),
+        #[cfg(not(target_os = "windows"))]
+        "XDG_CACHE_HOME" => Some(cache_root.clone()),
+        _ => None,
+    }
+}
+
+/// Select one Installed YAML Data Snapshot from `root` the way a production
+/// scan run does.
+///
+/// Intake no longer opens YAML paths itself, so every fixture that used to call
+/// the removed `from_yaml_paths` now goes through the authoritative selection
+/// operation and hands intake the resulting snapshot.
+fn installed_snapshot(root: &Path, selected_game_version: &str) -> Arc<InstalledYamlDataSnapshot> {
+    let cache_root = root.join("isolated-yaml-cache");
+    let outcome = load_installed_yaml_data_with_env(
+        InstalledYamlDataLoadRequest {
+            installation_root: root.to_path_buf(),
+            game: GameId::Fallout4,
+            selected_game_version: selected_game_version.to_string(),
+        },
+        isolated_cache_env(&cache_root),
+    )
+    .expect("fixture installation should select cleanly");
+
+    match outcome {
+        InstalledYamlDataLoadOutcome::Ready(snapshot) => Arc::new(snapshot),
+        InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(_) => {
+            panic!("fixture Local Ignore is well-formed and must not require recovery")
+        }
+    }
+}
+
+fn prepare_installed(root: &Path) -> Result<ScanReadyAnalysis> {
     classic_shared_core::get_runtime().block_on(
-        CrashLogScanIntake::from_yaml_paths(
+        CrashLogScanIntake::from_installed_yaml_data(
+            installed_snapshot(root, "auto"),
             root,
-            data,
-            "Fallout4",
             "auto",
             CrashLogScanOptions::default(),
         )
@@ -66,35 +126,37 @@ fn prepare_path_backed(root: &Path, data: &Path) -> Result<ScanReadyAnalysis> {
 }
 
 #[test]
-fn path_backed_and_in_memory_yaml_prepare_equivalent_scan_ready_payloads() {
+fn installed_snapshot_and_in_memory_yaml_prepare_equivalent_scan_ready_payloads() {
     let temp = tempdir().expect("tempdir should be created");
     let root = temp.path();
     let data = root.join("CLASSIC Data");
-    write_minimal_yaml_tree(root, &data);
+    write_minimal_yaml_tree(&data);
     let options = CrashLogScanOptions::new(true, true, true);
     let scan_facts = CrashLogScanFacts {
         formid_database_paths: vec![PathBuf::from("databases/custom.db")],
         unsolved_logs_destination: None,
     };
 
-    let path_ready = classic_shared_core::get_runtime()
+    let snapshot = installed_snapshot(root, "auto");
+    let installed_ready = classic_shared_core::get_runtime()
         .block_on(
-            CrashLogScanIntake::from_yaml_paths(root, &data, "Fallout4", "auto", options)
-                .with_scan_facts(scan_facts.clone())
-                .prepare(),
+            CrashLogScanIntake::from_installed_yaml_data(
+                Arc::clone(&snapshot),
+                root,
+                "auto",
+                options,
+            )
+            .with_scan_facts(scan_facts.clone())
+            .prepare(),
         )
-        .expect("path-backed intake should prepare");
-    let yaml = classic_shared_core::get_runtime()
-        .block_on(YamlDataCore::load_from_yaml_files(
-            vec![root.to_path_buf(), data.clone()],
-            "Fallout4".to_string(),
-            "auto".to_string(),
-        ))
-        .expect("fixture YAML should load");
+        .expect("installed-snapshot intake should prepare");
+    // Feeding the same already-selected YAML Data in as borrowed in-memory data
+    // must produce the same payload: the snapshot variant adds ownership and
+    // sidecar wiring, not different analysis configuration.
     let in_memory_ready = classic_shared_core::get_runtime()
         .block_on(
             CrashLogScanIntake::from_yaml_data(
-                &yaml,
+                snapshot.yaml_data(),
                 Some(CrashLogScanIntakePaths::new(root, &data)),
                 "Fallout4",
                 "auto",
@@ -106,44 +168,44 @@ fn path_backed_and_in_memory_yaml_prepare_equivalent_scan_ready_payloads() {
         .expect("in-memory intake should prepare");
 
     assert_eq!(
-        path_ready.analysis_config().classic_version,
+        installed_ready.analysis_config().classic_version,
         in_memory_ready.analysis_config().classic_version
     );
     assert_eq!(
-        path_ready.analysis_config().crashgen_name,
+        installed_ready.analysis_config().crashgen_name,
         in_memory_ready.analysis_config().crashgen_name
     );
     assert_eq!(
-        path_ready.analysis_config().game_version,
+        installed_ready.analysis_config().game_version,
         in_memory_ready.analysis_config().game_version
     );
-    assert_eq!(path_ready.analysis_config().xse_acronym, "F4SE");
-    assert_eq!(path_ready.analysis_config().crashgen_name, "Buffout 4");
+    assert_eq!(installed_ready.analysis_config().xse_acronym, "F4SE");
+    assert_eq!(installed_ready.analysis_config().crashgen_name, "Buffout 4");
     assert!(
-        !path_ready.analysis_config().crashgen_latest.is_empty(),
+        !installed_ready.analysis_config().crashgen_latest.is_empty(),
         "intake should resolve Crashgen metadata through registry or YAML fallback"
     );
-    assert!(path_ready.analysis_config().show_formid_values);
-    assert!(path_ready.analysis_config().fcx_mode);
-    assert!(path_ready.analysis_config().simplify_logs);
+    assert!(installed_ready.analysis_config().show_formid_values);
+    assert!(installed_ready.analysis_config().fcx_mode);
+    assert!(installed_ready.analysis_config().simplify_logs);
     assert_eq!(
-        path_ready.analysis_config().remove_list,
+        installed_ready.analysis_config().remove_list,
         vec!["(void*)".to_string(), "Basic Render Driver".to_string()]
     );
     assert_eq!(
-        path_ready.analysis_config().remove_list,
+        installed_ready.analysis_config().remove_list,
         in_memory_ready.analysis_config().remove_list
     );
     assert_eq!(
-        path_ready.formid_readiness(),
+        installed_ready.formid_readiness(),
         in_memory_ready.formid_readiness()
     );
-    assert!(path_ready.should_initialize_formid_database());
+    assert!(installed_ready.should_initialize_formid_database());
     assert_eq!(
-        path_ready.paths(),
+        installed_ready.paths(),
         Some(&CrashLogScanIntakePaths::new(root, &data))
     );
-    assert!(path_ready.unsolved_logs_destination().is_none());
+    assert!(installed_ready.unsolved_logs_destination().is_none());
 }
 
 #[test]
@@ -151,18 +213,29 @@ fn selected_game_version_resolution_flows_through_intake() {
     let temp = tempdir().expect("tempdir should be created");
     let root = temp.path();
     let data = root.join("CLASSIC Data");
-    write_minimal_yaml_tree(root, &data);
+    write_minimal_yaml_tree(&data);
     let options = CrashLogScanOptions::default();
 
     let original_ready = classic_shared_core::get_runtime()
         .block_on(
-            CrashLogScanIntake::from_yaml_paths(root, &data, "Fallout4", "Original", options)
-                .prepare(),
+            CrashLogScanIntake::from_installed_yaml_data(
+                installed_snapshot(root, "Original"),
+                root,
+                "Original",
+                options,
+            )
+            .prepare(),
         )
         .expect("Original intake should prepare");
     let vr_ready = classic_shared_core::get_runtime()
         .block_on(
-            CrashLogScanIntake::from_yaml_paths(root, &data, "Fallout4", "VR", options).prepare(),
+            CrashLogScanIntake::from_installed_yaml_data(
+                installed_snapshot(root, "VR"),
+                root,
+                "VR",
+                options,
+            )
+            .prepare(),
         )
         .expect("VR intake should prepare");
 
@@ -228,9 +301,9 @@ fn missing_unsolved_logs_destination_produces_no_configured_destination() {
     let temp = tempdir().expect("tempdir should be created");
     let root = temp.path();
     let data = root.join("CLASSIC Data");
-    write_minimal_yaml_tree(root, &data);
+    write_minimal_yaml_tree(&data);
 
-    let ready = prepare_path_backed(root, &data).expect("intake should prepare");
+    let ready = prepare_installed(root).expect("intake should prepare");
 
     assert!(ready.unsolved_logs_destination().is_none());
 }
@@ -240,8 +313,8 @@ fn typed_none_unsolved_logs_destination_produces_no_configured_destination() {
     let temp = tempdir().expect("tempdir should be created");
     let root = temp.path();
     let data = root.join("CLASSIC Data");
-    write_minimal_yaml_tree(root, &data);
-    let ready = prepare_path_backed(root, &data).expect("intake should prepare");
+    write_minimal_yaml_tree(&data);
+    let ready = prepare_installed(root).expect("intake should prepare");
 
     assert!(ready.unsolved_logs_destination().is_none());
 }
@@ -251,11 +324,11 @@ fn malformed_user_settings_is_not_opened_during_intake() {
     let temp = tempdir().expect("tempdir should be created");
     let root = temp.path();
     let data = root.join("CLASSIC Data");
-    write_minimal_yaml_tree(root, &data);
+    write_minimal_yaml_tree(&data);
     std::fs::write(root.join("CLASSIC Settings.yaml"), "CLASSIC_Settings: [\n")
         .expect("settings YAML should be written");
 
-    let ready = prepare_path_backed(root, &data).expect("intake should prepare fail-soft");
+    let ready = prepare_installed(root).expect("intake should prepare fail-soft");
 
     assert!(ready.unsolved_logs_destination().is_none());
 }
@@ -266,13 +339,12 @@ fn typed_absolute_unsolved_logs_destination_is_stored_without_existing() {
     let root = temp.path();
     let data = root.join("CLASSIC Data");
     let destination = root.join("custom unsolved logs");
-    write_minimal_yaml_tree(root, &data);
+    write_minimal_yaml_tree(&data);
     let ready = classic_shared_core::get_runtime()
         .block_on(
-            CrashLogScanIntake::from_yaml_paths(
+            CrashLogScanIntake::from_installed_yaml_data(
+                installed_snapshot(root, "auto"),
                 root,
-                &data,
-                "Fallout4",
                 "auto",
                 CrashLogScanOptions::default(),
             )
@@ -296,12 +368,11 @@ fn typed_relative_unsolved_logs_destination_fails_setup() {
     let temp = tempdir().expect("tempdir should be created");
     let root = temp.path();
     let data = root.join("CLASSIC Data");
-    write_minimal_yaml_tree(root, &data);
+    write_minimal_yaml_tree(&data);
     let result = classic_shared_core::get_runtime().block_on(
-        CrashLogScanIntake::from_yaml_paths(
+        CrashLogScanIntake::from_installed_yaml_data(
+            installed_snapshot(root, "auto"),
             root,
-            &data,
-            "Fallout4",
             "auto",
             CrashLogScanOptions::default(),
         )
@@ -316,7 +387,7 @@ fn typed_relative_unsolved_logs_destination_fails_setup() {
         Err(error) => error,
     };
 
-    assert!(matches!(error, ScanLogError::InvalidInput(_)));
+    assert!(matches!(error, crate::error::ScanLogError::InvalidInput(_)));
 }
 
 #[test]

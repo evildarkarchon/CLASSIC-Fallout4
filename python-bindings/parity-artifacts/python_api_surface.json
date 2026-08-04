@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-27T04:34:58.374333+00:00",
+  "generated_at_utc": "2026-08-04T10:37:26.228959+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -569,18 +569,6 @@
     },
     {
       "module": "classic_config",
-      "export": "__init__",
-      "export_path": "YamlData.__init__",
-      "parent_class": "YamlData",
-      "kind": "method",
-      "arity": 3,
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "def __init__( self, yaml_dirs: Sequence[str | Path], game: str, game_version: str ) -> None:"
-    },
-    {
-      "module": "classic_config",
       "export": "__repr__",
       "export_path": "YamlData.__repr__",
       "parent_class": "YamlData",
@@ -717,17 +705,6 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def clear_yaml_cache() -> None:"
-    },
-    {
-      "module": "classic_config",
-      "export": "create_yamldata",
-      "export_path": "create_yamldata",
-      "kind": "function",
-      "arity": 3,
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "def create_yamldata( yaml_dirs: Sequence[str | Path], game: str, game_version: str ) -> YamlData:"
     },
     {
       "module": "classic_config",

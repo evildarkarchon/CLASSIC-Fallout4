@@ -649,83 +649,75 @@ fn core_outcome_to_js(outcome: &core::FileInstallOutcome) -> JsYamlUpdateFileOut
     }
 }
 
-/// Check for a YAML data update.
+/// Check the first-party YAML Data Update Channel.
 ///
-/// Drives the Pages-first manifest fetch with anonymous API fallback, then
-/// classifies the manifest against `entries`. When `enabled` is `false`,
-/// returns `{ tag: "disabled" }` immediately without any HTTP call.
+/// Rust owns the channel URL, the `yaml-data-v` tag namespace, and the accepted
+/// schema ranges. The installed schema versions and exact-byte digests come
+/// from config-owned Installed YAML Data inspection, so this check and a
+/// runtime `loadInstalledYamlData` agree about which bytes are installed.
 ///
-/// @param pagesUrl   Absolute HTTPS URL of the Pages manifest (normally
-///                   `https://<owner>.github.io/<repo>/yaml-data/manifest-latest.json`).
-/// @param tagPrefix  Release-tag prefix for the anonymous API fallback
-///                   (e.g. `"yaml-data-v"`).
-/// @param entries    Per-file accepted-range + currently-installed schema
-///                   the client knows about.
-/// @param enabled    `false` → short-circuit with `tag: "disabled"`.
-/// @param bundledYamlDir  Install-tree directory containing the bundled
-///                        shippable YAML files (`CLASSIC Data/databases`).
-///                        Node callers should pass the package-local path
-///                        (for example `path.join(__dirname, "CLASSIC Data", "databases")`)
-///                        so clean installs whose bundled bytes already
-///                        match the manifest are classified as `upToDate`.
-///                        `null` / omitted falls back to probing
-///                        `current_exe()`, which yields the wrong path under
-///                        `node.exe` / `bun.exe`.
-/// @throws on network failure that even the fallback can't recover from.
+/// There is deliberately no variant that accepts caller-supplied schema
+/// entries: an adapter able to declare its own accepted ranges could classify
+/// — and then install — under a policy `classic-config-core` does not own.
+///
+/// When `enabled` is `false`, returns `{ tag: "disabled" }` immediately without
+/// any HTTP call.
+///
+/// @param enabled           `false` → short-circuit with `tag: "disabled"`.
+/// @param installationRoot  CLASSIC installation root used for Installed YAML
+///                          Data inspection. Node callers should pass the
+///                          package-local root (for example `__dirname`) so
+///                          clean installs whose bundled bytes already match
+///                          the manifest are classified as `upToDate`. `null` /
+///                          omitted falls back to probing `current_exe()`,
+///                          which yields the wrong path under `node.exe` /
+///                          `bun.exe`.
+/// @throws on network failure that even the fallback can't recover from, or
+///         when the installation root cannot be resolved or inspected.
 #[napi]
-pub async fn check_yaml_update(
-    pages_url: String,
-    tag_prefix: String,
-    entries: Vec<JsYamlClientSchemaEntry>,
+pub async fn check_yaml_data_update(
     enabled: bool,
-    bundled_yaml_dir: Option<String>,
+    installation_root: Option<String>,
 ) -> napi::Result<JsYamlUpdateStatus> {
     let client =
         core::GithubClient::new("evildarkarchon", "CLASSIC-Fallout4").map_err(to_napi_err)?;
-    let set = js_entries_to_core(&entries);
-    let config = build_yaml_update_config(enabled, bundled_yaml_dir);
+    let config = build_yaml_update_config(enabled, installation_root);
     let handle = classic_shared_core::get_runtime().handle().clone();
     let status = handle
-        .spawn(async move {
-            core::check_yaml_update(&client, &pages_url, &tag_prefix, &set, config).await
-        })
+        .spawn(async move { core::check_yaml_data_update(&client, config).await })
         .await
         .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
         .map_err(to_napi_err)?;
     Ok(core_status_to_js(status))
 }
 
-/// Fetch + download + atomically install the files the user approved at
-/// check time.
+/// Fetch + download + atomically install the first-party YAML Data files the
+/// user approved at check time.
 ///
-/// This is the reviewed-decision form of apply. `request.enabled` mirrors the
-/// `Update Check` settings toggle, and `request.approved` carries the exact
-/// release/file identity the user confirmed from a prior `checkYamlUpdate`
-/// call. If the publisher has rotated the manifest to a newer tag or replaced
-/// an approved asset in place, the call throws a `decision stale` error
-/// instead of silently installing the new bytes.
+/// This is the reviewed-decision form of apply. `enabled` mirrors the
+/// `Update Check` settings toggle, and `approved` carries the exact
+/// release/file identity the user confirmed from a prior
+/// `checkYamlDataUpdate` call. If the publisher has rotated the manifest to a
+/// newer tag or replaced an approved asset in place, the call throws a
+/// `decision stale` error instead of silently installing the new bytes.
 ///
 /// Returns per-file outcomes — a mixed batch is a valid success (the
 /// successful subset is installed).
 ///
-/// @param request Structured apply request. See `JsYamlApplyRequest` and
-///                `JsApprovedUpdate` for the required fields.
+/// @param enabled           Mirrors the `Update Check` settings toggle.
+/// @param approved          Release/file identity reviewed at check time.
+/// @param installationRoot  See `checkYamlDataUpdate`.
 /// @throws when the whole batch fails, when the update check is disabled,
 ///         or when the decision is stale.
 #[napi]
-pub async fn apply_yaml_update(request: JsYamlApplyRequest) -> napi::Result<JsYamlUpdateReport> {
-    let JsYamlApplyRequest {
-        pages_url,
-        tag_prefix,
-        entries,
-        enabled,
-        approved,
-        bundled_yaml_dir,
-    } = request;
+pub async fn apply_yaml_data_update_with_decision(
+    enabled: bool,
+    approved: JsApprovedUpdate,
+    installation_root: Option<String>,
+) -> napi::Result<JsYamlUpdateReport> {
     let client =
         core::GithubClient::new("evildarkarchon", "CLASSIC-Fallout4").map_err(to_napi_err)?;
-    let set = js_entries_to_core(&entries);
-    let config = build_yaml_update_config(enabled, bundled_yaml_dir);
+    let config = build_yaml_update_config(enabled, installation_root);
     let approved = core::ApprovedUpdate {
         release_tag: approved.release_tag,
         file_names: approved.file_names,
@@ -734,15 +726,7 @@ pub async fn apply_yaml_update(request: JsYamlApplyRequest) -> napi::Result<JsYa
     let handle = classic_shared_core::get_runtime().handle().clone();
     let report = handle
         .spawn(async move {
-            core::apply_yaml_update_with_decision(
-                &client,
-                &pages_url,
-                &tag_prefix,
-                &set,
-                config,
-                &approved,
-            )
-            .await
+            core::apply_yaml_data_update_with_decision(&client, config, &approved).await
         })
         .await
         .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
@@ -751,6 +735,42 @@ pub async fn apply_yaml_update(request: JsYamlApplyRequest) -> napi::Result<JsYa
         installed: report.installed.iter().map(core_outcome_to_js).collect(),
         failed: report.failed.iter().map(core_outcome_to_js).collect(),
     })
+}
+
+/// Roll back every current first-party shippable YAML Data file.
+///
+/// Rust expands the first-party target list, so callers never name individual
+/// files. The returned vector preserves target order and carries the requested
+/// file name beside each outcome, letting a frontend identify failed targets
+/// without duplicating the file list.
+#[napi]
+pub async fn rollback_yaml_data_update() -> napi::Result<Vec<JsYamlRollbackTargetOutcome>> {
+    let handle = classic_shared_core::get_runtime().handle().clone();
+    let outcomes = handle
+        .spawn(async move { core::rollback_yaml_data_update().await })
+        .await
+        .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?;
+    outcomes
+        .into_iter()
+        .map(|(file_name, outcome)| {
+            outcome
+                .map(|outcome| JsYamlRollbackTargetOutcome {
+                    file_name: file_name.clone(),
+                    outcome: core_rollback_to_js(&outcome),
+                    error_message: None,
+                })
+                .or_else(|error| {
+                    // A per-target failure is data, not a rejection: rolling
+                    // back two files must report both results even when only
+                    // one succeeded.
+                    Ok(JsYamlRollbackTargetOutcome {
+                        file_name,
+                        outcome: JsYamlRollbackOutcome::Failed,
+                        error_message: Some(error.to_string()),
+                    })
+                })
+        })
+        .collect()
 }
 
 // ============================================================================

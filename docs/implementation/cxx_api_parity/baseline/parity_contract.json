@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-27T04:22:24Z",
+  "generated_at_utc": "2026-08-04T10:30:49Z",
   "schema_version": 1,
   "entries": [
     {
@@ -1562,35 +1562,6 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
-    },
-    {
-      "id": "6f60d869f9e9dff0",
-      "rustSymbol": "yaml_data_load",
-      "kind": "function",
-      "bridgeModule": "config",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "yaml_dir_root",
-            "type": "&str"
-          },
-          {
-            "name": "yaml_dir_data",
-            "type": "&str"
-          },
-          {
-            "name": "game",
-            "type": "&str"
-          },
-          {
-            "name": "game_version",
-            "type": "&str"
-          }
-        ],
-        "returnType": "Result<Box<YamlData>>"
       }
     },
     {

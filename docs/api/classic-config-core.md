@@ -280,20 +280,23 @@ Representative field groups:
 
 Important methods:
 
-- `load_from_yaml_files(yaml_dirs, game, selected_game_version) -> Result<YamlDataCore, ConfigError>`
 - `from_yaml_content(main_content, game_content, ignore_content, game, selected_game_version) -> Result<YamlDataCore, ConfigError>`
 - `get_crashgen_name(&self) -> &str`
 - `get_crashgen_ignore(&self) -> &[String]`
 - `get_game_root_name(&self) -> &str`
 
-Two accepted directory layouts for `load_from_yaml_files()`:
+`YamlDataCore` owns the parsed shape of YAML Data; it does not decide which
+files to read. There is no constructor that takes a directory list. Every
+instance originates in one of the two owning operations above:
 
-- preferred 2-dir API: `[root_dir, data_dir]`
-  - expects `CLASSIC Ignore.yaml` under `root_dir`
-  - expects `databases/CLASSIC Main.yaml` and `databases/CLASSIC {game}.yaml` under `data_dir`; Fallout 4 VR uses the Fallout 4 filename and keyed data identity
-- legacy 3-dir API: `[main_dir, game_dir, ignore_dir]`
+- `load_installed_yaml_data(request)` — the authoritative runtime path. It
+  takes one installation root plus a typed `GameId` and applies compatibility,
+  validation, fallback, Local Ignore generation, and recovery policy.
+- `load_explicit_yaml_data(request)` — the mutation-free tooling and test path.
+  It takes three complete file identities and applies no installation policy.
 
-If `yaml_dirs` has any other length, the function returns `ConfigError::InvalidInput`.
+`from_yaml_content` remains for content-string tests. It reads no paths, so it
+cannot reach installation layout, the update cache, or Local Ignore recovery.
 
 ## `CrashgenEntryRaw`
 
@@ -403,7 +406,7 @@ Malformed optional substructures inside `Crashgen_Registry` are usually not fata
 
 This crate performs async file I/O and assumes the shared CLASSIC Tokio runtime model.
 
-- The crate exposes async APIs such as `YamlSource::load()` and `YamlDataCore::load_from_yaml_files()`.
+- The crate exposes async APIs such as `YamlSource::load()` and `load_explicit_yaml_data()`. Installed selection (`load_installed_yaml_data`, `inspect_installed_yaml_data`) is synchronous by design so its Local Ignore critical section cannot be interleaved.
 - `lib.rs` re-exports `get_runtime` from [`classic-shared-core`](../../foundation/classic-shared-core).
 - The crate-level docs explicitly say it should use the shared global runtime rather than creating its own runtime.
 - FFI/binding layers in this repo call these async APIs via `get_runtime().block_on(...)` rather than constructing separate runtimes.
@@ -452,27 +455,31 @@ println!("Main SHA-256: {}", snapshot.main_identity().sha256_hex());
 
 The paths may use arbitrary fixture or tooling filenames. Their basenames and directories do not participate in role selection; the request fields declare each role, and the document content must validate for that role.
 
-### Load the three-file YAML dataset
+### Load the three-file YAML dataset from an installation
 
-This example matches the preferred 2-directory API used in tests and bindings.
+Runtime callers name one installation root and a typed game. There is no
+positional directory-vector entry point: layout resolution, candidate
+selection, and Local Ignore policy all belong to this operation.
 
 ```rust
-use classic_config_core::YamlDataCore;
+use classic_config_core::{InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, load_installed_yaml_data};
+use classic_shared_core::GameId;
 use std::path::PathBuf;
 
-# async fn example() -> Result<(), classic_config_core::ConfigError> {
-let yaml_dirs = vec![
-    PathBuf::from("C:/CLASSIC"),
-    PathBuf::from("C:/CLASSIC/CLASSIC Data"),
-];
+# fn example() -> Result<(), classic_config_core::InstalledYamlDataLoadError> {
+let outcome = load_installed_yaml_data(InstalledYamlDataLoadRequest {
+    installation_root: PathBuf::from("C:/CLASSIC"),
+    game: GameId::Fallout4,
+    selected_game_version: "auto".to_string(),
+})?;
 
-let yaml = YamlDataCore::load_from_yaml_files(
-    yaml_dirs,
-    "Fallout4".to_string(),
-    "auto".to_string(),
-)
-.await?;
+let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome else {
+    // Malformed Local Ignore is an expected outcome, not an error: the caller
+    // must choose Proceed Without Ignore or Reset To Default.
+    return Ok(());
+};
 
+let yaml = snapshot.yaml_data();
 println!("CLASSIC version: {}", yaml.classic_version);
 println!("Crashgen: {}", yaml.get_crashgen_name());
 println!("Game root name: {}", yaml.get_game_root_name());
@@ -480,13 +487,17 @@ println!("Game root name: {}", yaml.get_game_root_name());
 # }
 ```
 
-Expected file layout for that call:
+Layout resolved from that installation root:
 
 ```text
-C:/CLASSIC/CLASSIC Ignore.yaml
+C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml
 C:/CLASSIC/CLASSIC Data/databases/CLASSIC Main.yaml
 C:/CLASSIC/CLASSIC Data/databases/CLASSIC Fallout4.yaml
 ```
+
+Fallout 4 VR selects the shared `CLASSIC Fallout4.yaml` game file. An
+unregistered game returns a typed unsupported-game error rather than
+constructing a filename from an arbitrary string.
 
 ## Contributor Notes And Known Limits
 
@@ -498,7 +509,7 @@ If you extend the crate, update this document when you change:
 
 - exported types or re-exports
 - explicit request, snapshot, identity, role-validation, or mutation-free behavior
-- accepted directory layout rules
+- the installation layout `load_installed_yaml_data` resolves
 - fallback precedence between YAML and version registry data
 - runtime assumptions
 - behavior that bindings depend on
@@ -819,21 +830,43 @@ shippable YAML files:
 
 - `MAIN_YAML` — accepted range for `CLASSIC Main.yaml`
 - `GAME_FALLOUT4_YAML` — accepted range for `CLASSIC Fallout4.yaml`
-- `shippable_schema_entries()` — returns `ShippableSchemaEntry { file, accepted }`
-  for the current first-party shippable set, pairing each `ShippableFile` with
-  its governing `SchemaCompat`
+- `shippable_schema_entries()` — returns `ShippableSchemaEntry { file_name, accepted }`
+  for the current first-party shippable set, pairing each canonical file name
+  with its governing `SchemaCompat`
+
+The entry carries a **file name only**, never a resolvable bundled or cache
+path. Selection is owned by `installed_yaml_data`, so handing update callers a
+path here would let them reopen an Installed YAML Data candidate under their
+own policy.
 
 `classic-update-core` consumes `shippable_schema_entries()` for the first-party
 YAML Data Update Channel so native callers do not duplicate the file list or
 schema ranges. If a new first-party shippable YAML file is added, update this
 metadata and the schema drift guard together.
 
+### The shippable selection module is private
+
+`classic-config-core::shippable` is `pub(crate)`. Its cache-then-bundled
+candidate loader, the file-identity type, and the caller-supplied compatibility
+argument are all crate-internal, because a caller able to pair an arbitrary
+file with an arbitrary `SchemaCompat` would be selecting Installed YAML Data
+under a policy config core does not own. Only two things escape:
+
+- `YamlLoadError` and `CandidateRejection` — diagnostics. They describe what
+  selection rejected and cannot select anything themselves.
+- the `load_main_yaml_version*` family below — a typed, policy-free operation
+  that builds its own file identity and applies `client_schemas::MAIN_YAML`
+  internally.
+
+The binding compliance suite's `forbiddenExports` audit asserts the private
+names never reappear on the crate's public surface.
+
 ## Schema-gated `CLASSIC Main.yaml` version reader
 
 The `shippable` module exports a narrow startup-path reader,
-`load_main_yaml_version`, that loads `CLASSIC Main.yaml` via
-`shippable::load_shippable_yaml` (so both the per-user YAML cache and the
-bundled install-tree copy are candidates) and returns the trimmed
+`load_main_yaml_version`, that loads `CLASSIC Main.yaml` through the private
+shippable selection path (so both the per-user YAML cache and the bundled
+install-tree copy are candidates) and returns the trimmed
 `CLASSIC_Info.version` value. It enforces `client_schemas::MAIN_YAML`, which
 means a stale `schema_version: 1.x` payload still carrying the legacy
 `CLASSIC v…` decoration is rejected at this boundary instead of flowing
@@ -858,7 +891,7 @@ Entry points:
 
 Error type: `MainYamlVersionError` (`#[non_exhaustive]`). Variants:
 
-- `Load(YamlLoadError)` — the generic shippable-loader rejection. Covers
+- `Load(YamlLoadError)` — the shippable-selection rejection. Covers
   file missing, YAML parse failure, missing / malformed `schema_version`,
   and incompatible-schema cases via the per-candidate
   `CandidateRejection.reason` strings.

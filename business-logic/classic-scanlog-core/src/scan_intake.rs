@@ -5,7 +5,7 @@
 //! database settings into a payload ready for `OrchestratorCore`.
 
 use crate::AnalysisConfig;
-use crate::error::{Result, ScanLogError};
+use crate::error::Result;
 use crate::orchestrator::build_analysis_config_from_yaml;
 use crate::scan_sidecar_settings::{self, ScanSidecarSettings};
 use classic_config_core::{InstalledYamlDataSnapshot, YamlDataCore};
@@ -232,8 +232,14 @@ impl ScanReadyAnalysis {
     }
 }
 
+/// Where a prepared scan's `YamlDataCore` comes from.
+///
+/// There is deliberately no path-backed variant. Intake never resolves an
+/// installation layout or reopens a bundled YAML path itself: selection is
+/// owned by `classic_config_core::load_installed_yaml_data`, and intake only
+/// ever receives an already-selected snapshot (or, for adapters and tests,
+/// already-parsed in-memory data).
 enum YamlDataSource<'a> {
-    PathBacked,
     InMemory(&'a YamlDataCore),
     InstalledSnapshot(Arc<InstalledYamlDataSnapshot>),
     InstalledSnapshotBorrowed(&'a InstalledYamlDataSnapshot),
@@ -250,29 +256,6 @@ pub struct CrashLogScanIntake<'a> {
 }
 
 impl<'a> CrashLogScanIntake<'a> {
-    /// Creates intake for YAML Data loaded from the standard path-backed layout.
-    ///
-    /// The returned intake loads `YamlDataCore` from `yaml_dir_root` and
-    /// `yaml_dir_data`, then loads simplify-log rules from YAML Data. FormID and
-    /// Unsolved Logs settings must be supplied through [`Self::with_scan_facts`].
-    #[must_use]
-    pub fn from_yaml_paths(
-        yaml_dir_root: impl Into<PathBuf>,
-        yaml_dir_data: impl Into<PathBuf>,
-        game: impl Into<String>,
-        selected_game_version: impl Into<String>,
-        options: CrashLogScanOptions,
-    ) -> Self {
-        Self {
-            game: game.into(),
-            selected_game_version: selected_game_version.into(),
-            options,
-            paths: Some(CrashLogScanIntakePaths::new(yaml_dir_root, yaml_dir_data)),
-            scan_facts: CrashLogScanFacts::default(),
-            yaml_source: YamlDataSource::PathBacked,
-        }
-    }
-
     /// Creates intake from already-loaded in-memory YAML Data.
     ///
     /// Supplying `paths` lets in-memory tests or adapters load the same
@@ -365,38 +348,14 @@ impl<'a> CrashLogScanIntake<'a> {
     ///
     /// # Errors
     ///
-    /// Returns `ScanLogError::ConfigError` when path-backed YAML Data fails to
-    /// load or parse through `classic-config-core`, or
-    /// `ScanLogError::InvalidInput` when the typed Unsolved Logs Destination is
-    /// relative.
+    /// Returns `ScanLogError::InvalidInput` when the typed Unsolved Logs
+    /// Destination is relative, and propagates sidecar settings failures.
+    ///
+    /// This operation performs no Installed YAML Data selection: every YAML
+    /// source it accepts is already selected and parsed, so there is no
+    /// load-or-parse failure left for it to report.
     pub async fn prepare(&self) -> Result<ScanReadyAnalysis> {
-        let loaded_yaml = match &self.yaml_source {
-            YamlDataSource::PathBacked => {
-                let paths = self.paths.as_ref().ok_or_else(|| {
-                    ScanLogError::Internal(
-                        "path-backed Crash Log Scan Intake missing path roots".to_string(),
-                    )
-                })?;
-                let yaml_dirs = vec![paths.yaml_dir_root.clone(), paths.yaml_dir_data.clone()];
-                Some(
-                    YamlDataCore::load_from_yaml_files(
-                        yaml_dirs,
-                        self.game.clone(),
-                        self.selected_game_version.clone(),
-                    )
-                    .await
-                    .map_err(|error| ScanLogError::ConfigError(error.to_string()))?,
-                )
-            }
-            YamlDataSource::InMemory(_)
-            | YamlDataSource::InstalledSnapshot(_)
-            | YamlDataSource::InstalledSnapshotBorrowed(_) => None,
-        };
-
         let yaml = match &self.yaml_source {
-            YamlDataSource::PathBacked => loaded_yaml.as_ref().ok_or_else(|| {
-                ScanLogError::Internal("path-backed YAML Data was not loaded".to_string())
-            })?,
             YamlDataSource::InMemory(yaml) => *yaml,
             YamlDataSource::InstalledSnapshot(snapshot) => snapshot.yaml_data(),
             YamlDataSource::InstalledSnapshotBorrowed(snapshot) => snapshot.yaml_data(),
@@ -450,9 +409,7 @@ impl<'a> CrashLogScanIntake<'a> {
             unsolved_logs_destination,
             match &self.yaml_source {
                 YamlDataSource::InstalledSnapshot(snapshot) => Some(Arc::clone(snapshot)),
-                YamlDataSource::PathBacked
-                | YamlDataSource::InMemory(_)
-                | YamlDataSource::InstalledSnapshotBorrowed(_) => None,
+                YamlDataSource::InMemory(_) | YamlDataSource::InstalledSnapshotBorrowed(_) => None,
             },
         ))
     }

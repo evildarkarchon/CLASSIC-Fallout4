@@ -18,7 +18,10 @@ pub mod explicit_yaml_data;
 pub(crate) mod game_data;
 pub mod game_local;
 pub mod installed_yaml_data;
-pub mod shippable;
+// Private: shippable selection is implementation machinery owned by
+// `installed_yaml_data`. Its public diagnostics and the version reader for
+// `CLASSIC Main.yaml` are re-exported below.
+pub(crate) mod shippable;
 pub mod yaml_source;
 pub mod yamldata;
 
@@ -43,10 +46,15 @@ pub use installed_yaml_data::{
     inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data,
     load_installed_yaml_data_with_env,
 };
+// Only diagnostics and the typed version reader escape `shippable`. Its
+// low-level selection entry points, and the file-identity and
+// compatibility-range types a caller would need to drive them, are all
+// crate-private, so no consumer can select Installed YAML Data outside
+// `installed_yaml_data`'s policy. The compliance suite's `forbiddenExports`
+// audit asserts those names never reappear on this surface.
 pub use shippable::{
-    CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile,
-    YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir,
-    load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env,
+    CandidateRejection, MainYamlVersionError, YamlLoadError, load_main_yaml_version,
+    load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env,
 };
 pub use yaml_source::YamlSource;
 pub use yamldata::{

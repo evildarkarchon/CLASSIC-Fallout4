@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-19T03:52:56.431969+00:00`
-- Tier-1 contract rows: **1236**
-- Tier-1 matched: **1236**
+- Generated: `2026-08-04T10:37:25.767167+00:00`
+- Tier-1 contract rows: **1234**
+- Tier-1 matched: **1234**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -230,12 +230,10 @@
 | `config.yamldata.SuspectErrorRule@rust` | `config` | `SuspectErrorRule` | `classic_config.YamlData` | `matched` |
 | `config.yamldata.SuspectStackCountRule@rust` | `config` | `SuspectStackCountRule` | `classic_config.YamlData` | `matched` |
 | `config.yamldata.SuspectStackRule@rust` | `config` | `SuspectStackRule` | `classic_config.YamlData` | `matched` |
-| `config.yamldata.YamlData.__init__` | `config` | `YamlDataCore` | `classic_config.YamlData.__init__` | `matched` |
 | `config.yamldata.YamlData.__repr__` | `config` | `YamlDataCore` | `classic_config.YamlData.__repr__` | `matched` |
-| `config.yamldata.create_yamldata` | `config` | `YamlDataCore` | `classic_config.create_yamldata` | `matched` |
 | `config.game_local.persist_game_local_paths` | `config` | `persist_game_local_paths` | `classic_config.persist_game_local_paths` | `matched` |
-| `config.yamldata.format_registry_game_version@rust` | `config` | `format_registry_game_version` | `classic_config.create_yamldata` | `matched` |
-| `config.yamldata.resolve_registry_version_info@rust` | `config` | `resolve_registry_version_info` | `classic_config.create_yamldata` | `matched` |
+| `config.yamldata.format_registry_game_version@rust` | `config` | `format_registry_game_version` | `classic_config.YamlData` | `matched` |
+| `config.yamldata.resolve_registry_version_info@rust` | `config` | `resolve_registry_version_info` | `classic_config.YamlData` | `matched` |
 | `config.yamldata.yamldata@rust` | `config` | `yamldata` | `classic_config.YamlData` | `matched` |
 | `version_registry.lib.Fallout4Version` | `version_registry` | `Fallout4Version` | `classic_version_registry.Fallout4Version` | `matched` |
 | `version_registry.lib.Fallout4Version.__eq__` | `version_registry` | `Fallout4Version` | `classic_version_registry.Fallout4Version.__eq__` | `matched` |

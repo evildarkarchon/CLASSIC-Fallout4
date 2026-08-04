@@ -1148,7 +1148,7 @@ fn build_yaml_data_pages_url(client: &GithubClient) -> String {
 fn yaml_data_rollback_targets() -> Vec<String> {
     client_schemas::shippable_schema_entries()
         .into_iter()
-        .map(|entry| entry.file.file_name)
+        .map(|entry| entry.file_name)
         .collect()
 }
 

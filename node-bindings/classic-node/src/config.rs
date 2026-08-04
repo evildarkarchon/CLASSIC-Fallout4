@@ -249,8 +249,13 @@ pub async fn persist_game_local_paths(
 /// suspect patterns, ignore lists, version info, and UI text. It is immutable
 /// after creation and thread-safe.
 ///
-/// Construct via `new YamlData(yamlDirs, game, gameVersion)` or the static
-/// `YamlData.fromYamlContent(...)` method for testing.
+/// It has no public constructor. Instances come from Rust-owned selection —
+/// `loadInstalledYamlData(...).snapshot.yamlData` for the authoritative runtime
+/// path, or `loadExplicitYamlData(...).yamlData` for deterministic
+/// caller-selected files — so JavaScript cannot assemble YAML Data under a
+/// policy `classic-config-core` does not own. The static
+/// `YamlData.fromYamlContent(...)` factory remains for content-string tests; it
+/// reads no paths at all.
 #[napi]
 pub struct YamlData {
     inner: YamlDataCore,
@@ -265,23 +270,6 @@ impl YamlData {
 
 #[napi]
 impl YamlData {
-    /// Load all configuration from YAML files.
-    ///
-    /// @param yamlDirs - Array of directory paths containing YAML files.
-    ///   Either 2 elements `[rootDir, dataDir]` or 3 elements `[mainDir, gameDir, ignoreDir]`.
-    /// @param game - Game identifier (e.g., "Fallout4", "Skyrim").
-    /// @param gameVersion - Selected mode
-    ///   ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR").
-    /// @throws on I/O errors, parse errors, or invalid input.
-    #[napi(constructor)]
-    pub fn new(yaml_dirs: Vec<String>, game: String, game_version: String) -> Result<Self> {
-        let dirs: Vec<PathBuf> = yaml_dirs.into_iter().map(PathBuf::from).collect();
-        let inner = get_runtime()
-            .block_on(async { YamlDataCore::load_from_yaml_files(dirs, game, game_version).await })
-            .map_err(|err| config_error_to_napi_err(&err, &err.to_string()))?;
-        Ok(Self { inner })
-    }
-
     /// Create YamlData from YAML content strings (for testing without file I/O).
     ///
     /// @param mainContent - Content of the main YAML configuration file.

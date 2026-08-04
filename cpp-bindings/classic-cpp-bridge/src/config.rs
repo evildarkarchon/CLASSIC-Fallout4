@@ -107,23 +107,6 @@ pub struct LocalIgnoreResetConflict {
 
 // ── Construction ────────────────────────────────────────────────────
 
-fn yaml_data_load(
-    yaml_dir_root: &str,
-    yaml_dir_data: &str,
-    game: &str,
-    game_version: &str,
-) -> Result<Box<YamlData>, String> {
-    let dirs = vec![PathBuf::from(yaml_dir_root), PathBuf::from(yaml_dir_data)];
-    let inner = get_runtime()
-        .block_on(YamlDataCore::load_from_yaml_files(
-            dirs,
-            game.to_string(),
-            game_version.to_string(),
-        ))
-        .map_err(|e| format!("{e}"))?;
-    Ok(Box::new(YamlData { inner }))
-}
-
 /// Load exactly the three caller-selected YAML Data files without installation policy.
 ///
 /// The returned handle always exists so C++ callers can inspect the stable typed
@@ -1207,8 +1190,9 @@ fn save_local_yaml_paths(
 
 // ── Main YAML version (schema-gated) ────────────────────────────────
 //
-// Unlike `yaml_data_load`, this helper is scoped to exactly one field
-// (`CLASSIC_Info.version`) and is intentionally schema-gated by
+// Unlike the Installed YAML Data load operation above, this helper is scoped
+// to exactly one field (`CLASSIC_Info.version`), selects nothing a caller can
+// influence, and is intentionally schema-gated by
 // `client_schemas::MAIN_YAML`. Native frontends call it on startup to
 // populate `QApplication::applicationVersion()` (GUI) or the
 // binary-release update-check input (CLI) without ever trusting a
@@ -1989,12 +1973,11 @@ mod ffi {
         type LocalIgnoreResetConflict;
 
         // Construction (async, block_on)
-        fn yaml_data_load(
-            yaml_dir_root: &str,
-            yaml_dir_data: &str,
-            game: &str,
-            game_version: &str,
-        ) -> Result<Box<YamlData>>;
+        //
+        // There is no positional directory-pair loader. A `YamlData` handle is
+        // only reachable through `installed_yaml_data_snapshot_yaml_data` or
+        // `explicit_yaml_data_snapshot_yaml_data`, so C++ cannot select
+        // Installed YAML Data outside the Rust-owned policy.
 
         /// Begin a deterministic load of exactly the supplied Main, game, and
         /// Local Ignore files. This operation never consults installation state.

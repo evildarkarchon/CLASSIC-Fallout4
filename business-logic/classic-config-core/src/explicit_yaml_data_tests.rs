@@ -219,6 +219,75 @@ async fn fallout4_vr_selects_the_shared_fallout4_game_data_role() {
     assert_eq!(snapshot.yaml_data().ignore_list, ["shared-entry"]);
 }
 
+/// Migrated from the removed positional loader's three `missing_*_file` cases.
+/// That loader reported one untyped `ConfigError::IOError` whichever file was
+/// absent; the retained explicit seam must name the exact role and path so a
+/// tooling caller can tell which of its three selections was wrong.
+#[tokio::test]
+async fn a_missing_file_is_attributed_to_its_exact_role_and_path() {
+    let temp = tempdir().expect("temporary directory should be created");
+    let (main_path, game_path, ignore_path) = write_explicit_files(
+        temp.path(),
+        MAIN_YAML.as_bytes(),
+        GAME_YAML.as_bytes(),
+        EMPTY_IGNORE_YAML.as_bytes(),
+    );
+
+    for (role, absent) in [
+        (
+            ExplicitYamlDataRole::Main,
+            temp.path().join("absent-main.fixture"),
+        ),
+        (
+            ExplicitYamlDataRole::Game,
+            temp.path().join("absent-game.fixture"),
+        ),
+        (
+            ExplicitYamlDataRole::LocalIgnore,
+            temp.path().join("absent-ignore.fixture"),
+        ),
+    ] {
+        // Start from the fully present triple and knock out exactly the role
+        // under test, so the loader has one and only one reason to fail and the
+        // reported role cannot be an accident of read order. The match is
+        // deliberately exhaustive: a new role must fail to compile here rather
+        // than silently reuse another role's slot.
+        let mut request = ExplicitYamlDataRequest {
+            main_path: main_path.clone(),
+            game_path: game_path.clone(),
+            ignore_path: ignore_path.clone(),
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        };
+        match role {
+            ExplicitYamlDataRole::Main => request.main_path = absent.clone(),
+            ExplicitYamlDataRole::Game => request.game_path = absent.clone(),
+            ExplicitYamlDataRole::LocalIgnore => request.ignore_path = absent.clone(),
+        }
+
+        let error = load_explicit_yaml_data(request)
+            .await
+            .expect_err("an absent caller-selected file must fail");
+
+        match error {
+            ExplicitYamlDataLoadError::Read {
+                role: reported_role,
+                path,
+                ..
+            } => {
+                assert_eq!(
+                    reported_role,
+                    role,
+                    "role attribution for {}",
+                    absent.display()
+                );
+                assert_eq!(path, absent, "path attribution for {role}");
+            }
+            other => panic!("expected a typed Read failure for {role}, got {other:?}"),
+        }
+    }
+}
+
 #[tokio::test]
 async fn unregistered_game_returns_typed_unsupported_game_without_reading_paths() {
     let missing = PathBuf::from("paths-must-not-be-read-for-an-unsupported-game");

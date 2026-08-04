@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-27T04:35:23.650174+00:00",
+  "generated_at_utc": "2026-08-04T10:37:43.718616+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -66,27 +66,8 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
+      "source_decl": "pub use shippable::{ CandidateRejection, MainYamlVersionError, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, };",
       "source_expr": "shippable::CandidateRejection",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "CandidateRejection",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable.rs",
-      "source_decl": "pub use loader::{ CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError, load_shippable_yaml, load_shippable_yaml_with_env, };",
-      "source_expr": "loader::CandidateRejection",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "CandidateRejection",
-      "kind": "struct",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable/loader.rs",
-      "source_decl": "pub struct CandidateRejection",
       "tier": "tier1"
     },
     {
@@ -617,64 +598,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "LoadSource",
-      "kind": "enum",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable/loader.rs",
-      "source_decl": "pub enum LoadSource",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "LoadSource",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
-      "source_expr": "shippable::LoadSource",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "LoadSource",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable.rs",
-      "source_decl": "pub use loader::{ CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError, load_shippable_yaml, load_shippable_yaml_with_env, };",
-      "source_expr": "loader::LoadSource",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "LoadedShippable",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
-      "source_expr": "shippable::LoadedShippable",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "LoadedShippable",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable.rs",
-      "source_decl": "pub use loader::{ CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError, load_shippable_yaml, load_shippable_yaml_with_env, };",
-      "source_expr": "loader::LoadedShippable",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "LoadedShippable",
-      "kind": "struct",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable/loader.rs",
-      "source_decl": "pub struct LoadedShippable",
-      "tier": "tier1"
-    },
-    {
       "symbol": "LocalIgnoreRecoveryPlan",
       "kind": "reexport",
       "crate": "classic-config-core",
@@ -837,31 +760,12 @@
     },
     {
       "symbol": "MainYamlVersionError",
-      "kind": "enum",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable/main_version.rs",
-      "source_decl": "pub enum MainYamlVersionError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "MainYamlVersionError",
       "kind": "reexport",
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
+      "source_decl": "pub use shippable::{ CandidateRejection, MainYamlVersionError, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, };",
       "source_expr": "shippable::MainYamlVersionError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "MainYamlVersionError",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable.rs",
-      "source_decl": "pub use main_version::{ MainYamlVersionError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, };",
-      "source_expr": "main_version::MainYamlVersionError",
       "tier": "tier1"
     },
     {
@@ -1003,35 +907,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "ShippableFile",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
-      "source_expr": "shippable::ShippableFile",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ShippableFile",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable.rs",
-      "source_decl": "pub use loader::{ CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError, load_shippable_yaml, load_shippable_yaml_with_env, };",
-      "source_expr": "loader::ShippableFile",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ShippableFile",
-      "kind": "struct",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable/loader.rs",
-      "source_decl": "pub struct ShippableFile",
-      "tier": "tier1"
-    },
-    {
       "symbol": "ShippableSchemaEntry",
       "kind": "struct",
       "crate": "classic-config-core",
@@ -1146,31 +1021,12 @@
     },
     {
       "symbol": "YamlLoadError",
-      "kind": "enum",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable/loader.rs",
-      "source_decl": "pub enum YamlLoadError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "YamlLoadError",
       "kind": "reexport",
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
+      "source_decl": "pub use shippable::{ CandidateRejection, MainYamlVersionError, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, };",
       "source_expr": "shippable::YamlLoadError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "YamlLoadError",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable.rs",
-      "source_decl": "pub use loader::{ CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError, load_shippable_yaml, load_shippable_yaml_with_env, };",
-      "source_expr": "loader::YamlLoadError",
       "tier": "tier1"
     },
     {
@@ -1722,16 +1578,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "game",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable/loader.rs",
-      "source_decl": "pub fn game(game: &str)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "game_local",
       "kind": "module",
       "crate": "classic-config-core",
@@ -1905,101 +1751,31 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
+      "source_decl": "pub use shippable::{ CandidateRejection, MainYamlVersionError, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, };",
       "source_expr": "shippable::load_main_yaml_version",
       "tier": "tier1"
     },
     {
-      "symbol": "load_main_yaml_version",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable.rs",
-      "source_decl": "pub use main_version::{ MainYamlVersionError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, };",
-      "source_expr": "main_version::load_main_yaml_version",
-      "tier": "tier1"
-    },
-    {
       "symbol": "load_main_yaml_version_with_bundled_dir",
       "kind": "reexport",
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
+      "source_decl": "pub use shippable::{ CandidateRejection, MainYamlVersionError, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, };",
       "source_expr": "shippable::load_main_yaml_version_with_bundled_dir",
       "tier": "tier1"
     },
     {
-      "symbol": "load_main_yaml_version_with_bundled_dir",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable.rs",
-      "source_decl": "pub use main_version::{ MainYamlVersionError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, };",
-      "source_expr": "main_version::load_main_yaml_version_with_bundled_dir",
-      "tier": "tier1"
-    },
-    {
       "symbol": "load_main_yaml_version_with_env",
       "kind": "reexport",
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
+      "source_decl": "pub use shippable::{ CandidateRejection, MainYamlVersionError, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, };",
       "source_expr": "shippable::load_main_yaml_version_with_env",
       "tier": "tier1"
     },
     {
-      "symbol": "load_main_yaml_version_with_env",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable.rs",
-      "source_decl": "pub use main_version::{ MainYamlVersionError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, };",
-      "source_expr": "main_version::load_main_yaml_version_with_env",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "load_shippable_yaml",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
-      "source_expr": "shippable::load_shippable_yaml",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "load_shippable_yaml",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable.rs",
-      "source_decl": "pub use loader::{ CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError, load_shippable_yaml, load_shippable_yaml_with_env, };",
-      "source_expr": "loader::load_shippable_yaml",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "load_shippable_yaml_with_env",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use shippable::{ CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile, YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env, };",
-      "source_expr": "shippable::load_shippable_yaml_with_env",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "load_shippable_yaml_with_env",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable.rs",
-      "source_decl": "pub use loader::{ CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError, load_shippable_yaml, load_shippable_yaml_with_env, };",
-      "source_expr": "loader::load_shippable_yaml_with_env",
-      "tier": "tier1"
-    },
-    {
       "symbol": "local_ignore_path",
       "kind": "function",
       "arity": 1,
@@ -2017,16 +1793,6 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
       "source_decl": "pub fn local_ignore_path(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "main",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/shippable/loader.rs",
-      "source_decl": "pub fn main()",
       "tier": "tier1"
     },
     {
@@ -2207,15 +1973,6 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
       "source_decl": "pub fn sha256_hex(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "shippable",
-      "kind": "module",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub mod shippable;",
       "tier": "tier1"
     },
     {

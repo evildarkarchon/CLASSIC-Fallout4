@@ -365,9 +365,39 @@
           "FcxResetError",
           "GLOBAL_FCX_HANDLER"
         ]
+      },
+      {
+        "path": "business-logic/classic-config-core/src/yamldata.rs",
+        "symbols": [
+          "load_from_yaml_files"
+        ]
+      },
+      {
+        "path": "business-logic/classic-config-core/src/lib.rs",
+        "symbols": [
+          "pub mod shippable",
+          "load_shippable_yaml",
+          "load_shippable_yaml_with_env",
+          "ShippableFile",
+          "LoadedShippable",
+          "LoadSource"
+        ]
+      },
+      {
+        "path": "business-logic/classic-scanlog-core/src/scan_intake.rs",
+        "symbols": [
+          "from_yaml_paths",
+          "PathBacked"
+        ]
       }
     ],
     "cxx": [
+      {
+        "path": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+        "symbols": [
+          "yaml_data_load"
+        ]
+      },
       {
         "path": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
         "symbols": [
@@ -444,6 +474,12 @@
     ],
     "node": [
       {
+        "path": "node-bindings/classic-node/src/config.rs",
+        "symbols": [
+          "yaml_dirs"
+        ]
+      },
+      {
         "path": "node-bindings/classic-node/src/scanlog.rs",
         "symbols": [
           "create_analysis_config",
@@ -475,7 +511,8 @@
           "getFcxConfigIssues",
           "writeAutoscanReport",
           "JsAnalysisConfig",
-          "JsAnalysisResult"
+          "JsAnalysisResult",
+          "yamlDirs"
         ]
       },
       {
@@ -514,6 +551,20 @@
       }
     ],
     "python": [
+      {
+        "path": "python-bindings/classic-config-py/src/lib.rs",
+        "symbols": [
+          "create_yamldata",
+          "yaml_dirs"
+        ]
+      },
+      {
+        "path": "python-bindings/classic-config-py/classic_config.pyi",
+        "symbols": [
+          "create_yamldata",
+          "yaml_dirs"
+        ]
+      },
       {
         "path": "python-bindings/classic-scanlog-py/src/lib.rs",
         "symbols": [

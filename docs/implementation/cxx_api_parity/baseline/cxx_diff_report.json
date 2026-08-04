@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 631,
-    "current_total": 631,
-    "matched": 631,
+    "contract_total": 630,
+    "current_total": 630,
+    "matched": 630,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -755,14 +755,6 @@
     {
       "id": "908512331205c1b5",
       "rustSymbol": "yaml_data_ignore_list",
-      "kind": "function",
-      "bridgeModule": "config",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "6f60d869f9e9dff0",
-      "rustSymbol": "yaml_data_load",
       "kind": "function",
       "bridgeModule": "config",
       "status": "matched",

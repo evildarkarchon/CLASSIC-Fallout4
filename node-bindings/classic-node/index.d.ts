@@ -1414,21 +1414,15 @@ export declare class XseVersion {
  * suspect patterns, ignore lists, version info, and UI text. It is immutable
  * after creation and thread-safe.
  *
- * Construct via `new YamlData(yamlDirs, game, gameVersion)` or the static
- * `YamlData.fromYamlContent(...)` method for testing.
+ * It has no public constructor. Instances come from Rust-owned selection —
+ * `loadInstalledYamlData(...).snapshot.yamlData` for the authoritative runtime
+ * path, or `loadExplicitYamlData(...).yamlData` for deterministic
+ * caller-selected files — so JavaScript cannot assemble YAML Data under a
+ * policy `classic-config-core` does not own. The static
+ * `YamlData.fromYamlContent(...)` factory remains for content-string tests; it
+ * reads no paths at all.
  */
 export declare class YamlData {
-  /**
-   * Load all configuration from YAML files.
-   *
-   * @param yamlDirs - Array of directory paths containing YAML files.
-   *   Either 2 elements `[rootDir, dataDir]` or 3 elements `[mainDir, gameDir, ignoreDir]`.
-   * @param game - Game identifier (e.g., "Fallout4", "Skyrim").
-   * @param gameVersion - Selected mode
-   *   ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR").
-   * @throws on I/O errors, parse errors, or invalid input.
-   */
-  constructor(yamlDirs: Array<string>, game: string, gameVersion: string)
   /**
    * Create YamlData from YAML content strings (for testing without file I/O).
    *
