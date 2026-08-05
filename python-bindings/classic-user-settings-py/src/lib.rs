@@ -5,14 +5,15 @@ use classic_user_settings_core::{
     AcceptedUserSettingsUpdate, CommitEligibility, CrashLogScanSettings, DocumentClassification,
     FrontendPreferences, FrontendState, GameSetupSettings, GuiWindow, GuiWindowGeometry,
     LegacyTuiStateImportOutcome, LegacyTuiStateImportReceipt, LegacyTuiStateImportRestoreOutcome,
-    MigrationChange, MigrationChangeKind, MigrationDiagnostic, MigrationEndpoint,
-    MigrationPlanningOutcome, PreferenceOrigin, Revision, SourceLocation, TuiRememberedState,
-    UserSettings, UserSettingsCommitOutcome,
+    MigrationChange, MigrationDiagnostic, MigrationEndpoint, MigrationPlanningOutcome,
+    PreferenceOrigin, Revision, SourceLocation, TuiRememberedState, UserSettings,
+    UserSettingsCommitOutcome,
     UserSettingsFrontendTransitionOutcome as CoreUserSettingsFrontendTransitionOutcome,
     UserSettingsMigrationApplyOutcome, UserSettingsMigrationPlan, UserSettingsMigrationReceipt,
     UserSettingsMigrationRestoreOutcome, UserSettingsSchemaVersion, UserSettingsUpdate,
     UserSettingsUpdateField, UserSettingsUpdatePreview, WindowGeometry, import_legacy_tui_state,
 };
+use classic_vocabulary::Vocabulary;
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict};
@@ -1603,7 +1604,9 @@ fn user_settings_schema_version_to_py(
 /// Converts one ordered core migration change into a reviewable Python row.
 fn migration_change_to_py(change: &MigrationChange) -> PyUserSettingsMigrationChange {
     PyUserSettingsMigrationChange {
-        kind: migration_change_kind_token(change.kind()).to_string(),
+        // The Python surface publishes the canonical snake_case Vocabulary
+        // Token unchanged, so there is nothing left here to get wrong.
+        kind: change.kind().as_str().to_string(),
         source_path: change.source_path().map(str::to_string),
         target_path: change.target_path().map(str::to_string),
         before: change.before().map(str::to_string),
@@ -1618,17 +1621,6 @@ fn migration_diagnostic_to_py(
     PyUserSettingsMigrationDiagnostic {
         code: diagnostic.code().to_string(),
         message: diagnostic.message().to_string(),
-    }
-}
-
-/// Returns the Python token for one stable migration change category.
-fn migration_change_kind_token(kind: MigrationChangeKind) -> &'static str {
-    match kind {
-        MigrationChangeKind::LocationTransition => "location_transition",
-        MigrationChangeKind::SchemaVersionTransition => "schema_version_transition",
-        MigrationChangeKind::FieldTransition => "field_transition",
-        MigrationChangeKind::AliasCanonicalization => "alias_canonicalization",
-        MigrationChangeKind::KnownValueCanonicalization => "known_value_canonicalization",
     }
 }
 
@@ -1803,3 +1795,7 @@ fn classic_user_settings(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(user_settings_published_defaults, module)?)?;
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "lib_tests.rs"]
+mod tests;

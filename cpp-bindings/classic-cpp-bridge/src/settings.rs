@@ -56,6 +56,7 @@ use classic_user_settings_core::{
     UserSettingsUpdatePreview as CoreUserSettingsUpdatePreview, WindowGeometry,
     import_legacy_tui_state,
 };
+use classic_vocabulary::Vocabulary;
 use std::{collections::BTreeMap, path::Path};
 use yaml_rust2::Yaml;
 
@@ -482,7 +483,9 @@ fn user_settings_migration_change_dto(
     change: &classic_user_settings_core::MigrationChange,
 ) -> ffi::UserSettingsMigrationChangeDto {
     ffi::UserSettingsMigrationChangeDto {
-        kind: migration_change_kind_token(change.kind()).to_string(),
+        // The C++ surface publishes the canonical snake_case Vocabulary Token
+        // unchanged, so there is nothing left here to get wrong.
+        kind: change.kind().as_str().to_string(),
         has_source_path: change.source_path().is_some(),
         source_path: change.source_path().unwrap_or_default().to_string(),
         has_target_path: change.target_path().is_some(),
@@ -1363,29 +1366,16 @@ fn source_location_from_token(token: &str) -> Result<SourceLocation, String> {
     }
 }
 
-/// Returns the stable cross-language token for one migration review-row category.
-fn migration_change_kind_token(kind: MigrationChangeKind) -> &'static str {
-    match kind {
-        MigrationChangeKind::LocationTransition => "location_transition",
-        MigrationChangeKind::SchemaVersionTransition => "schema_version_transition",
-        MigrationChangeKind::FieldTransition => "field_transition",
-        MigrationChangeKind::AliasCanonicalization => "alias_canonicalization",
-        MigrationChangeKind::KnownValueCanonicalization => "known_value_canonicalization",
-    }
-}
-
 /// Parses one stable CXX migration-change token for review-only core reconstruction.
+///
+/// Delegates to the core vocabulary rather than restating the token table. The
+/// bridge round-trips a plan through the DTO — emit tokens, hand them to C++,
+/// take them back, rebuild the plan — so a forward table and a reverse table
+/// that disagreed would corrupt a reversal silently. Derived from the same
+/// variant list, they cannot.
 fn migration_change_kind_from_token(token: &str) -> Result<MigrationChangeKind, String> {
-    match token {
-        "location_transition" => Ok(MigrationChangeKind::LocationTransition),
-        "schema_version_transition" => Ok(MigrationChangeKind::SchemaVersionTransition),
-        "field_transition" => Ok(MigrationChangeKind::FieldTransition),
-        "alias_canonicalization" => Ok(MigrationChangeKind::AliasCanonicalization),
-        "known_value_canonicalization" => Ok(MigrationChangeKind::KnownValueCanonicalization),
-        _ => Err(format!(
-            "unsupported User Settings migration change kind: {token}"
-        )),
-    }
+    classic_vocabulary::from_token(token)
+        .ok_or_else(|| format!("unsupported User Settings migration change kind: {token}"))
 }
 
 /// Returns the stable cross-language token for document classification.

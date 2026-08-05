@@ -33,6 +33,10 @@ mod plugin_evidence_analyzer;
 mod runtime;
 mod shared;
 mod version;
+// The camelCase projection of the core-owned Vocabulary Tokens. Shared across
+// modules so that this surface has exactly one casing rule rather than one per
+// enum.
+mod vocabulary;
 
 // Wave 2: Complete Existing Modules
 mod scan_run;

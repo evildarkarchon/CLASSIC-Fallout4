@@ -30,6 +30,11 @@ anyhow = { workspace = true }
 # Foundation
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
+# Workspace-internal Vocabulary naming contract: brings the `Vocabulary` trait
+# into scope so `src/vocabulary.rs` can camelize core-owned tokens instead of
+# this crate keeping its own camelCase variant lists. It adds no Node surface.
+classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
+
 # Wave 1: Core Infrastructure
 classic-perf-core = { path = "../../business-logic/classic-perf-core" }
 classic-registry-core = { path = "../../business-logic/classic-registry-core" }

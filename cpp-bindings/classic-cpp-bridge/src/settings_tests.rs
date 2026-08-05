@@ -151,6 +151,82 @@ fn test_user_settings_migration_plan_bridge_reverses_entire_plan_in_memory() {
     );
 }
 
+/// Builds a review-only plan carrying one change per migration change kind.
+///
+/// Real planning only ever emits the subset of kinds a given document needs, so
+/// a fixture-driven test can never reach every variant. Reconstructing a plan
+/// from binding-safe components is the same path the bridge uses for reversal,
+/// which keeps this exhaustive check on the production conversion rather than a
+/// test-only one.
+fn plan_with_every_migration_change_kind() -> UserSettingsMigrationPlan {
+    UserSettingsMigrationPlan::from((
+        true,
+        (SourceLocation::Legacy, None),
+        (
+            SourceLocation::Canonical,
+            Some(UserSettingsSchemaVersion::new(1, 0)),
+        ),
+        MigrationChangeKind::VARIANTS
+            .iter()
+            .copied()
+            .map(|kind| (kind, None, None, None, None))
+            .collect(),
+        b"original".to_vec(),
+        b"proposed".to_vec(),
+    ))
+}
+
+#[test]
+fn test_user_settings_migration_change_kinds_project_the_core_vocabulary_tokens() {
+    // The expectation is derived from the core, not restated here. A test that
+    // listed the tokens again would be a fourth copy of the vocabulary and
+    // would pass just as happily against a bridge that had drifted.
+    let dto = user_settings_migration_plan_dto(&plan_with_every_migration_change_kind());
+
+    let projected: Vec<&str> = dto
+        .changes
+        .iter()
+        .map(|change| change.kind.as_str())
+        .collect();
+    let expected: Vec<&str> = MigrationChangeKind::VARIANTS
+        .iter()
+        .copied()
+        .map(MigrationChangeKind::as_str)
+        .collect();
+
+    assert_eq!(projected, expected);
+}
+
+#[test]
+fn test_user_settings_migration_change_kind_tokens_round_trip_through_the_dto() {
+    // The bridge's reversal path takes tokens back from C++ and rebuilds a
+    // core plan, so emitting and parsing must be the same rule read in two
+    // directions. Anything less corrupts a reversal silently.
+    let dto = user_settings_migration_plan_dto(&plan_with_every_migration_change_kind());
+
+    let rebuilt = user_settings_migration_plan_from_dto(&dto).expect("rebuild plan from DTO");
+
+    let round_tripped: Vec<MigrationChangeKind> = rebuilt
+        .changes()
+        .iter()
+        .map(|change| change.kind())
+        .collect();
+    assert_eq!(round_tripped, MigrationChangeKind::VARIANTS);
+}
+
+#[test]
+fn test_user_settings_migration_change_kind_rejects_an_unknown_token() {
+    let mut dto = user_settings_migration_plan_dto(&plan_with_every_migration_change_kind());
+    dto.changes[0].kind = "not_a_change_kind".to_string();
+
+    let error = user_settings_migration_plan_from_dto(&dto).unwrap_err();
+
+    assert_eq!(
+        error,
+        "unsupported User Settings migration change kind: not_a_change_kind"
+    );
+}
+
 #[test]
 fn test_user_settings_migration_plan_bridge_maps_location_transition() {
     let root = tempfile::tempdir().unwrap();

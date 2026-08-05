@@ -11,6 +11,7 @@ use classic_user_settings_core::{
     UserSettingsMigrationRestoreOutcome, UserSettingsSchemaVersion, UserSettingsUpdate,
     UserSettingsUpdateField, UserSettingsUpdatePreview, WindowGeometry, import_legacy_tui_state,
 };
+use classic_vocabulary::Vocabulary;
 use napi::bindgen_prelude::{Buffer, Either, Either5, Null};
 use std::collections::HashMap;
 
@@ -1059,7 +1060,9 @@ fn schema_version_to_js(version: UserSettingsSchemaVersion) -> JsUserSettingsSch
 /// Converts one ordered migration review row into a plain NAPI object.
 fn migration_change_to_js(change: &MigrationChange) -> JsUserSettingsMigrationChange {
     JsUserSettingsMigrationChange {
-        kind: migration_change_kind_token(change.kind()).to_string(),
+        // The core token, camelized by the one shared rule this surface uses
+        // for every enum.
+        kind: crate::vocabulary::js_token(change.kind().as_str()),
         source_path: change.source_path().map(ToOwned::to_owned),
         target_path: change.target_path().map(ToOwned::to_owned),
         before: change.before().map(ToOwned::to_owned),
@@ -1067,30 +1070,19 @@ fn migration_change_to_js(change: &MigrationChange) -> JsUserSettingsMigrationCh
     }
 }
 
-/// Returns the JavaScript token for one reviewable migration change category.
-fn migration_change_kind_token(kind: MigrationChangeKind) -> &'static str {
-    match kind {
-        MigrationChangeKind::LocationTransition => "locationTransition",
-        MigrationChangeKind::SchemaVersionTransition => "schemaVersionTransition",
-        MigrationChangeKind::FieldTransition => "fieldTransition",
-        MigrationChangeKind::AliasCanonicalization => "aliasCanonicalization",
-        MigrationChangeKind::KnownValueCanonicalization => "knownValueCanonicalization",
-    }
-}
-
 /// Parses one stable JavaScript migration-change token for review-only core reconstruction.
+///
+/// Delegates to the shared casing projection rather than restating the token
+/// table. The plan round-trips through JavaScript — emit tokens, hand them to
+/// the caller, take them back, rebuild the plan — so a forward table and a
+/// reverse table that disagreed would corrupt a reversal silently.
 fn migration_change_kind_from_token(token: &str) -> napi::Result<MigrationChangeKind, String> {
-    match token {
-        "locationTransition" => Ok(MigrationChangeKind::LocationTransition),
-        "schemaVersionTransition" => Ok(MigrationChangeKind::SchemaVersionTransition),
-        "fieldTransition" => Ok(MigrationChangeKind::FieldTransition),
-        "aliasCanonicalization" => Ok(MigrationChangeKind::AliasCanonicalization),
-        "knownValueCanonicalization" => Ok(MigrationChangeKind::KnownValueCanonicalization),
-        _ => Err(user_settings_migration_error(
+    crate::vocabulary::from_js_token(token).ok_or_else(|| {
+        user_settings_migration_error(
             "migration_plan_review_invalid",
             format!("unsupported User Settings migration change kind: {token}"),
-        )),
-    }
+        )
+    })
 }
 
 /// Converts the Rust-owned frontend state group into nested NAPI DTOs.

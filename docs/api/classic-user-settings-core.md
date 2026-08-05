@@ -172,6 +172,8 @@ Required plans target `<CLASSIC root>/CLASSIC Settings.yaml`. Unversioned and fl
 
 Stable migration-planning diagnostics are `unsupported_schema_version_gap`, `future_major_schema_read_only`, `migration_source_untrusted`, `migration_source_unavailable`, and `migration_plan_failed`.
 
+`MigrationChangeKind` implements the [Vocabulary naming contract](classic-vocabulary.md), so this crate owns both names for every change category: the frozen Vocabulary Token from `as_str()` and the reworkable Display Label from `label()`. The tokens are `location_transition`, `schema_version_transition`, `field_transition`, `alias_canonicalization`, and `known_value_canonicalization`; all three bindings project them rather than keeping their own tables, with the Node surface applying only its documented camelCase transform. Changing a token is breaking for every binding consumer; rewording a label is not.
+
 ## Apply, verified backup, and restore
 
 `UserSettingsMigrationPlan::apply(classic_root)` is the only core operation that begins a migration. It holds the same persistent `CLASSIC Settings.yaml.commit.lock` used by accepted User Settings Updates, reopens the selected source, and compares both its exact-byte revision and location before creating any backup. A stale plan returns `UserSettingsMigrationApplyOutcome::Conflict { expected_revision, actual_revision }`; it creates no backup and performs no publication.

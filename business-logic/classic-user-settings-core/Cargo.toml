@@ -17,6 +17,11 @@ classic-settings-core = { path = "../classic-settings-core" }
 # Workspace-internal Durable Publication: staging, synchronization, the platform publish step,
 # and the one cross-process lock implementation.
 classic-durable-publication = { path = "../classic-durable-publication" }
+
+# Workspace-internal Vocabulary naming contract: this crate owns the frozen
+# Vocabulary Tokens and the Display Labels for its own domain enums, so that the
+# three bindings project them instead of each keeping a table.
+classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
 

@@ -10,6 +10,12 @@ All Rust public API symbols in business-logic `-core` crates are exposed through
 
 When a new `pub fn` or `pub struct` is added to a `-core` crate's `lib.rs`, all three bindings must expose it before CI passes. The only current exception is `classic-resource-core`, which has no dedicated C++ bridge module -- its functionality is accessed transitively through the `classic-file-io-core` bridge surface.
 
+### Scope: methods from workspace-internal traits
+
+Implementing a workspace-internal trait on a `-core` type does not by itself create a parity obligation. The obligation attaches to the crate's own exported surface -- the `pub fn` and `pub struct` entries a binding is meant to publish -- not to every method a shared trait makes callable. `Vocabulary` from [`classic-vocabulary`](classic-vocabulary.md) is the current case: `as_str()` supplies the Vocabulary Token that all three bindings already published under their own names, so adopting it changes nothing on any surface, while `label()` becomes projectable rather than automatically projected. A Display Label crosses a binding seam when a frontend needs to render it, and that projection is a deliberate, separately reviewed addition with its own baseline and coverage-registry cost.
+
+Note that the gates cannot decide this for you. Both surface parsers match `pub fn` and `pub struct` at the start of a line, and trait-impl members carry no `pub`, so a trait method is invisible to them either way. Treat this as a contributor judgement recorded in review, not a check CI will make.
+
 For the semantic Autoscan Report Contribution architecture, parity is both
 positive and negative. CXX, Node, and Python expose the six public Focused
 Semantic Analyzers, owned inputs/results, and shared typed errors. They must not expose

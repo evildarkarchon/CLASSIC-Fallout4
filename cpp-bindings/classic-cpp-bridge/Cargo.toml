@@ -35,6 +35,11 @@ semver = { workspace = true }
 # Foundation
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
+# Workspace-internal Vocabulary naming contract: brings the `Vocabulary` trait
+# into scope so this bridge can project core-owned tokens rather than keep its
+# own table of them. It adds no CXX surface.
+classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
+
 # Business Logic crates
 classic-registry-core = { path = "../../business-logic/classic-registry-core" }
 classic-perf-core = { path = "../../business-logic/classic-perf-core" }

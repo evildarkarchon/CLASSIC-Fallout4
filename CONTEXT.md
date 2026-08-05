@@ -220,3 +220,11 @@ _Avoid_: manual scan, selected-file scan
 **Version Registry**:
 The source of truth for supported game versions and their game-specific metadata, including XSE metadata used when deriving the XSE Folder.
 _Avoid_: hardcoded version table, version YAML
+
+**Vocabulary Token**:
+The frozen adapter-facing identifier for one variant of a CLASSIC domain concept. Every binding surface projects the same token for the same variant, differing only by that binding's documented identifier casing.
+_Avoid_: name, enum name, serialized name, stage name, wire value
+
+**Display Label**:
+The human-facing prose naming one variant of a CLASSIC domain concept, capitalized as this glossary capitalizes the domain terms it contains. It is presentation only, is never parsed, and may be reworded without changing a Vocabulary Token.
+_Avoid_: name, stage name, user message, enum string, Vocabulary Token

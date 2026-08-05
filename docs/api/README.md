@@ -12,6 +12,7 @@ Use this directory in this order:
 2. [`classic-shared-core.md`](classic-shared-core.md) - shared runtime, error, path, performance, and string foundation helpers
 2a. [`classic-operation-context.md`](classic-operation-context.md) - unpublished task-local operation controls shared across Rust crate boundaries
 2b. [`classic-durable-publication.md`](classic-durable-publication.md) - unpublished business-logic staging, verified-backup, verified-install, and atomic publish mechanism that sits under its config, file-I/O, and User Settings consumers
+2c. [`classic-vocabulary.md`](classic-vocabulary.md) - unpublished Vocabulary naming contract: the trait by which a core crate owns the frozen Vocabulary Token and the reworkable Display Label for each variant of its domain enums
 3. [`classic-perf-core.md`](classic-perf-core.md) - global timing sample collection, summaries, and scoped timer helpers
 4. [`classic-registry-core.md`](classic-registry-core.md) - process-wide typed singleton registry and convenience key helpers
 5. [`classic-message-core.md`](classic-message-core.md) - shared message DTOs, routing enums, and startup/log formatting helpers
@@ -55,6 +56,7 @@ That order matches the current repo-root layering across `foundation/`, `busines
 - `classic-shared-core` provides the shared Tokio runtime plus common error, path, performance, and string helpers
 - `classic-operation-context` carries workspace-internal per-operation cancellation state without owning a runtime or adding a binding surface
 - `classic-durable-publication` owns the workspace-internal staging, synchronization, verified-backup, verified-install, and atomic publish sequence plus the one cross-process publication lock, without owning backup location, conflict policy, or any binding surface. Rollback generations stay YAML Data Update Channel policy: the `.prev` convention is implemented only inside `install_verified`, unreachable from the operations the Local Ignore path uses
+- `classic-vocabulary` owns the workspace-internal Vocabulary naming contract - one trait, one token lookup, and one conformance assertion - so that the core crate defining a domain enum also owns what its variants are called, and every frontend and binding projects those names instead of maintaining a table. Vocabulary Tokens are frozen and breaking to change; Display Labels are presentation only and may be reworded. Only the enums cross a binding seam, so the crate itself has no binding surface
 - `classic-perf-core` provides process-wide timing buckets, scoped timers, and summary computation for lightweight metrics collection
 - `classic-registry-core` provides process-wide typed singleton storage and key helpers for callers that share state across boundaries
 - `classic-message-core` provides shared message DTOs, routing enums, and structured/startup logging helpers used by bindings and bridge code

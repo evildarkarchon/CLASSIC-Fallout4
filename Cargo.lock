@@ -753,6 +753,7 @@ dependencies = [
  "classic-user-settings-core",
  "classic-version-core",
  "classic-version-registry-core",
+ "classic-vocabulary",
  "classic-web-core",
  "classic-xse-core",
  "cxx",
@@ -898,6 +899,7 @@ dependencies = [
  "classic-user-settings-core",
  "classic-version-core",
  "classic-version-registry-core",
+ "classic-vocabulary",
  "classic-web-core",
  "classic-xse-core",
  "indexmap",
@@ -1280,6 +1282,7 @@ dependencies = [
  "classic-durable-publication",
  "classic-settings-core",
  "classic-shared-core",
+ "classic-vocabulary",
  "serde_json",
  "sha2 0.11.0",
  "tempfile",
@@ -1291,6 +1294,7 @@ version = "9.1.0"
 dependencies = [
  "classic-shared-py",
  "classic-user-settings-core",
+ "classic-vocabulary",
  "pyo3",
 ]
 
@@ -1339,6 +1343,10 @@ dependencies = [
  "classic-version-registry-core",
  "pyo3",
 ]
+
+[[package]]
+name = "classic-vocabulary"
+version = "9.1.0"
 
 [[package]]
 name = "classic-web-core"
