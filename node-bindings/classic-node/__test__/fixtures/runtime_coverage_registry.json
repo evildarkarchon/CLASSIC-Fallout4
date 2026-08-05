@@ -111,8 +111,8 @@
         "ownerModule": "version_registry",
         "tier": "tier1"
       },
-      "contractCount": 89,
-      "contractIdsHash": "d1619a623e58bd32a9565c81ce283526baa61fcddc609c111453cada1ec7d9d6",
+      "contractCount": 74,
+      "contractIdsHash": "3a5110a57dc783ace900e8e69364742aa18c6909a332768957d1992d4fef56d0",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "version-registry-tier1-parity",
@@ -492,7 +492,7 @@
         "tier": "tier1"
       },
       "contractCount": 27,
-      "contractIdsHash": "279ddc4698e5154c73f0c3336e175fd76ce7f8245b01dfe197f25819c740db78",
+      "contractIdsHash": "4ced8ed5610024b4e328e3c9851fbd0cee5816d0eb262a6163c4e661ee860a65",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "path-tier1-parity",

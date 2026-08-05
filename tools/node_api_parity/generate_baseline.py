@@ -486,7 +486,15 @@ def generate_diff_report(
         status = "matched"
         reason = ""
 
-        if rust_item is None:
+        # A row that explicitly declares no verified Rust counterpart is
+        # tracked debt, not drift. It is neither "matched" (nothing was
+        # verified) nor "missing_rust" (nothing is claimed to be missing) --
+        # counting it as either would misstate the gate. It gets its own status
+        # so the total is visible and can be driven down deliberately.
+        if rust_symbol is None and mapping.get("unmappedReason"):
+            status = "unmapped"
+            reason = mapping["unmappedReason"]
+        elif rust_item is None:
             status = "missing_rust"
             reason = f"Rust symbol '{effective_rust_symbol}' not found in target crate exports."
         elif is_proxy:
@@ -521,7 +529,10 @@ def generate_diff_report(
             contract_row["reason"] = reason
         contract_results.append(contract_row)
 
-        if status != "matched":
+        # `unmapped` rows are reported via their own summary counter rather
+        # than as gaps: a gap means "these two surfaces disagree", and an
+        # unmapped row makes no claim to disagree with.
+        if status not in {"matched", "unmapped"}:
             gaps.append(
                 {
                     "gap_type": f"tier1_{status}",
@@ -550,6 +561,9 @@ def generate_diff_report(
         "tier1_missing_rust": status_counts.get("missing_rust", 0),
         "tier1_missing_node": status_counts.get("missing_node", 0),
         "tier1_signature_mismatch": status_counts.get("signature_mismatch", 0),
+        # Exports tracked by the contract with no verified Rust counterpart.
+        # Not drift -- outstanding mapping debt, to be driven toward zero.
+        "tier1_unmapped": status_counts.get("unmapped", 0),
         "total_gaps": len(gaps),
         "tier1_gap_total": sum(1 for gap in gaps if gap["tier"] == "tier1"),
     }

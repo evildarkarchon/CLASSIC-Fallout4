@@ -55,13 +55,33 @@ def validate_contract_rust_symbols(
     rust_symbols: set[str] = {
         item["symbol"] for item in rust_manifest.get("symbols", [])
     }
+    # Symbols whose ONLY appearance in the Rust surface is as a module. A row
+    # naming one of these verifies nothing about the Python export it claims to
+    # cover -- see the module rule below.
+    # `kind` is read defensively: a manifest entry without one carries no
+    # evidence that the symbol is a module, so it must not be flagged.
+    rust_symbol_kinds: dict[str, set[str]] = {}
+    for item in rust_manifest.get("symbols", []):
+        kind = item.get("kind")
+        if kind is not None:
+            rust_symbol_kinds.setdefault(item["symbol"], set()).add(kind)
+    rust_module_only_symbols: set[str] = {
+        symbol for symbol, kinds in rust_symbol_kinds.items() if kinds == {"module"}
+    }
     diagnostics: list[str] = []
     for mapping in contract.get("tier1Mappings", []):
         rust_symbol = mapping.get("rustSymbol")
+        # An explicitly unmapped row declares that no verified Rust counterpart
+        # is known. It is counted in tier1_unmapped rather than being treated
+        # as a match, so it is valid here.
+        if rust_symbol is None and mapping.get("unmappedReason"):
+            continue
         if not rust_symbol:
             diagnostics.append(
                 f"Pitfall 2: contract row '{mapping.get('id', '<unknown>')}' "
-                f"is missing 'rustSymbol'."
+                f"is missing 'rustSymbol'. If this export genuinely has no "
+                f"verified Rust counterpart, set rustSymbol to null and add an "
+                f"'unmappedReason'."
             )
             continue
         if rust_symbol not in rust_symbols:
@@ -77,6 +97,23 @@ def validate_contract_rust_symbols(
                     rust_symbol=rust_symbol,
                     crate=mapping.get("rustCrate", "<unknown>"),
                 )
+            )
+            continue
+
+        # A Python export may not claim a Rust *module* as its counterpart.
+        # The existence check above is satisfied by a symbol of any kind, which
+        # is how placeholder rows accumulated: `FileIOCore` was mapped to the
+        # modules `core`, `game_files` and `similarity` in three separate rows,
+        # none of which verified anything. Map the row to the specific core
+        # symbol the PyO3 wrapper uses, or set rustSymbol to null with an
+        # 'unmappedReason'.
+        if rust_symbol in rust_module_only_symbols:
+            diagnostics.append(
+                f"Contract row '{mapping['id']}' maps python export "
+                f"'{mapping.get('pythonExportPath') or mapping.get('pythonExport')}' "
+                f"to '{rust_symbol}', which is a Rust module rather than a "
+                f"function, type, or re-export. A module match does not verify "
+                f"anything about the export."
             )
     return diagnostics
 

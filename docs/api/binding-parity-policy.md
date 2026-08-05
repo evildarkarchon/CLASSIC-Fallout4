@@ -97,6 +97,40 @@ Three modules under `tools/` are shared by the per-binding gates. Change them wi
 
 The Node and Python gates previously carried independent copies of the Rust parser, which let them disagree about which Rust exports exist while both reported success. They now share one parser and differ only in their **crate list** — `RUST_TARGET_CRATES` / `RUST_OWNER_BY_CRATE` stay per-gate and are passed into `parse_rust_surface()` at call time. When you add a `-core` crate that a binding depends on, add it to that binding's crate list; a crate missing from the list is invisible to that gate, and any contract row naming one of its symbols will be rejected as "not in the parsed Rust surface".
 
+### What a Contract Row Must Prove
+
+A row's `rustSymbol` check used to be satisfied by *any* symbol of any kind. That is weaker than it reads, and placeholder rows accumulated behind it — at one point 82 unrelated Node exports all named the Rust module `path_core`, and the gate still reported 913/913 matched. Three rules now hold:
+
+1. **A binding export may not map to a Rust module.** A module match verifies nothing about the export. Map the row to the specific core symbol the wrapper actually uses. Two resolvers derive that from the binding source rather than guessing — `tools/node_api_parity/resolve_node_rust_symbols.py` for NAPI wrappers and `tools/python_api_parity/resolve_python_rust_symbols.py` for PyO3 wrappers. Run either against the repo to see the proposed mapping and the evidence behind it.
+2. **`@rust` proxy rows may name a module.** They carry no binding export and exist precisely to record Rust-only surface.
+3. **An export with no verified counterpart must say so.** Set `rustSymbol` to `null` and add an `unmappedReason`. The row is then counted in the diff report's `tier1_unmapped` rather than being disguised as a match. A `null` `rustSymbol` without a reason is a malformed row.
+
+`tier1_unmapped` is **tracked debt, not drift** — it does not fail the gate, but it is the number to drive toward zero. It is deliberately separate from `tier1_matched` so neither figure lies.
+
+### Resolver Evidence Tiers
+
+Both resolvers rank evidence rather than pattern-matching on names alone, because the obvious guess is sometimes wrong. Strongest first:
+
+| Tier | Evidence |
+|---|---|
+| `exact` | The wrapper calls a crate-qualified core symbol of the same name |
+| `from_impl` | `impl From<CoreType> for Wrapper` |
+| `conversion_fn` | A helper `fn …(x: CoreType) -> JsDto` pairs a DTO with its core type |
+| `inner_field` | The wrapper struct holds a field of a core type — the newtype pattern |
+| `js_prefix` / `name_match` | The exported name matches a core type, case-insensitively for acronyms |
+| `core_method` | A method called on a core-typed value, when that method exists in the surface |
+| `core_assoc` | `CoreType::assoc(…)`, an enum variant, or a `parse::<CoreType>()` turbofish |
+| `qualified` / `imported` | Any other core symbol the wrapper references — weakest; `imported` is not auto-applied |
+
+The ordering earns its keep. `FormIDAnalyzer` exists in `classic-scanlog-core`, so a name match looks right — but the PyO3 wrapper is `PyRustFormIDAnalyzer { inner: RustFormIDAnalyzer }`, and `inner_field` picks the type actually wrapped.
+
+Two filters keep the weaker tiers honest:
+
+- **Plumbing is never a counterpart.** `get_runtime`, `block_on`, `*Error` appear in nearly every wrapper.
+- **Ubiquitous method names are never a counterpart.** Almost every crate defines a `new`, `all`, or `as_str`, so matching one says only "this wrapper called a constructor". Without this filter the resolver produced `checkForUpdates -> new` and `getAllGameIds -> all` — as meaningless as the module matches it exists to replace.
+
+If a resolver reports `unresolved`, that is a real answer: the export may have no core counterpart. Seven Node DTOs (`QueryParam`, `ResourceCount`, `JsBatchEntry` …) are assembled entirely in the binding layer and have none. Record those with `rustSymbol: null` and an `unmappedReason` rather than inventing one.
+
 ---
 
 ## How To Add a New Public Rust API

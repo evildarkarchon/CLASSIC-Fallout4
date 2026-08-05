@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-08-04T10:37:25.767167+00:00`
-- Tier-1 contract rows: **1234**
-- Tier-1 matched: **1234**
+- Generated: `2026-08-05T01:33:40.402601+00:00`
+- Tier-1 contract rows: **1216**
+- Tier-1 matched: **1215**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -234,7 +234,7 @@
 | `config.game_local.persist_game_local_paths` | `config` | `persist_game_local_paths` | `classic_config.persist_game_local_paths` | `matched` |
 | `config.yamldata.format_registry_game_version@rust` | `config` | `format_registry_game_version` | `classic_config.YamlData` | `matched` |
 | `config.yamldata.resolve_registry_version_info@rust` | `config` | `resolve_registry_version_info` | `classic_config.YamlData` | `matched` |
-| `config.yamldata.yamldata@rust` | `config` | `yamldata` | `classic_config.YamlData` | `matched` |
+| `config.yamldata.yamldata@rust` | `config` | `YamlDataCore` | `classic_config.YamlData` | `matched` |
 | `version_registry.lib.Fallout4Version` | `version_registry` | `Fallout4Version` | `classic_version_registry.Fallout4Version` | `matched` |
 | `version_registry.lib.Fallout4Version.__eq__` | `version_registry` | `Fallout4Version` | `classic_version_registry.Fallout4Version.__eq__` | `matched` |
 | `version_registry.lib.Fallout4Version.__hash__` | `version_registry` | `Fallout4Version` | `classic_version_registry.Fallout4Version.__hash__` | `matched` |
@@ -271,7 +271,6 @@
 | `settings.lib.YamlFile.description` | `settings` | `YamlFile` | `classic_settings.YamlFile.description` | `matched` |
 | `version_registry.lib.display_name@rust` | `version_registry` | `display_name` | `classic_version_registry.Fallout4Version` | `matched` |
 | `version_registry.lib.display_name_string@rust` | `version_registry` | `display_name_string` | `classic_version_registry.Fallout4Version` | `matched` |
-| `version_registry.lib.fn@rust` | `version_registry` | `fn` | `classic_version_registry.Fallout4Version` | `matched` |
 | `version_registry.lib.game_version@rust` | `version_registry` | `game_version` | `classic_version_registry.Fallout4Version` | `matched` |
 | `version_registry.lib.get_version_info@rust` | `version_registry` | `get_version_info` | `classic_version_registry.Fallout4Version` | `matched` |
 | `version_registry.lib.short_name@rust` | `version_registry` | `short_name` | `classic_version_registry.Fallout4Version` | `matched` |
@@ -368,10 +367,8 @@
 | `file_io.core.TargetedResolution@rust` | `file_io` | `TargetedResolution` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.backup@rust` | `file_io` | `backup` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.calculate_similarity` | `file_io` | `calculate_similarity` | `classic_file_io.calculate_similarity` | `matched` |
-| `file_io.core.core@rust` | `file_io` | `core` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.game_files@rust` | `file_io` | `game_files` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.core@rust` | `file_io` | `FileIOCore` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.resolve_targeted_inputs@rust` | `file_io` | `resolve_targeted_inputs` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.similarity@rust` | `file_io` | `similarity` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.similarity_ratio` | `file_io` | `similarity_ratio` | `classic_file_io.similarity_ratio` | `matched` |
 | `file_io.dds.DDSAnalyzer@rust` | `file_io` | `DDSAnalyzer` | `classic_file_io.DDSHeader` | `matched` |
 | `file_io.dds.DDSHeader` | `file_io` | `DDSHeader` | `classic_file_io.DDSHeader` | `matched` |
@@ -382,7 +379,7 @@
 | `file_io.dds.DDSHeader.is_bc_compressed` | `file_io` | `DDSHeader` | `classic_file_io.DDSHeader.is_bc_compressed` | `matched` |
 | `file_io.dds.DDSHeader.is_reasonable_size` | `file_io` | `DDSHeader` | `classic_file_io.DDSHeader.is_reasonable_size` | `matched` |
 | `file_io.dds.DDSIssue@rust` | `file_io` | `DDSIssue` | `classic_file_io.DDSHeader` | `matched` |
-| `file_io.dds.dds@rust` | `file_io` | `dds` | `classic_file_io.DDSHeader` | `matched` |
+| `file_io.dds.dds@rust` | `file_io` | `DDSHeader` | `classic_file_io.DDSHeader` | `matched` |
 | `file_io.encoding.EncodingDetector` | `file_io` | `EncodingDetector` | `classic_file_io.EncodingDetector` | `matched` |
 | `file_io.encoding.EncodingDetector.__init__` | `file_io` | `EncodingDetector` | `classic_file_io.EncodingDetector.__init__` | `matched` |
 | `file_io.encoding.EncodingDetector.detect_encoding` | `file_io` | `EncodingDetector` | `classic_file_io.EncodingDetector.detect_encoding` | `matched` |
@@ -402,7 +399,7 @@
 | `file_io.generation.FileGeneratorConfig.__init__` | `file_io` | `FileGeneratorConfig` | `classic_file_io.FileGeneratorConfig.__init__` | `matched` |
 | `file_io.generation.generate_ignore_file_async` | `file_io` | `generate_ignore_file` | `classic_file_io.generate_ignore_file_async` | `matched` |
 | `file_io.generation.generate_local_yaml_async` | `file_io` | `generate_local_yaml` | `classic_file_io.generate_local_yaml_async` | `matched` |
-| `file_io.generation.generation@rust` | `file_io` | `generation` | `classic_file_io.FileGenerator` | `matched` |
+| `file_io.generation.generation@rust` | `file_io` | `FileGenerator` | `classic_file_io.FileGenerator` | `matched` |
 | `file_io.hash.FileHasher` | `file_io` | `FileHasher` | `classic_file_io.FileHasher` | `matched` |
 | `file_io.hash.FileHasher.cache_size` | `file_io` | `FileHasher` | `classic_file_io.FileHasher.cache_size` | `matched` |
 | `file_io.hash.FileHasher.cache_stats` | `file_io` | `FileHasher` | `classic_file_io.FileHasher.cache_stats` | `matched` |
@@ -412,7 +409,7 @@
 | `file_io.hash.FileHasher.hash_files_to_map` | `file_io` | `FileHasher` | `classic_file_io.FileHasher.hash_files_to_map` | `matched` |
 | `file_io.hash.FileHasher.reset_cache_stats` | `file_io` | `FileHasher` | `classic_file_io.FileHasher.reset_cache_stats` | `matched` |
 | `file_io.hash.FileHasherCacheStats` | `file_io` | `FileHasher` | `classic_file_io.FileHasherCacheStats` | `matched` |
-| `file_io.hash.hash@rust` | `file_io` | `hash` | `classic_file_io.FileHasher` | `matched` |
+| `file_io.hash.hash@rust` | `file_io` | `FileHasher` | `classic_file_io.FileHasher` | `matched` |
 | `file_io.log_collection.CRASH_AUTOSCAN_PATTERN@rust` | `file_io` | `CRASH_AUTOSCAN_PATTERN` | `classic_file_io.PyLogCollector` | `matched` |
 | `file_io.log_collection.CRASH_LOG_PATTERN@rust` | `file_io` | `CRASH_LOG_PATTERN` | `classic_file_io.PyLogCollector` | `matched` |
 | `file_io.log_collection.PyLineStreamer` | `file_io` | `LogCollector` | `classic_file_io.PyLineStreamer` | `matched` |
@@ -429,7 +426,7 @@
 | `file_io.log_collection.PySyncLineStreamer` | `file_io` | `LogCollector` | `classic_file_io.PySyncLineStreamer` | `matched` |
 | `file_io.log_collection.PySyncLineStreamer.__iter__` | `file_io` | `LogCollector` | `classic_file_io.PySyncLineStreamer.__iter__` | `matched` |
 | `file_io.log_collection.PySyncLineStreamer.__next__` | `file_io` | `LogCollector` | `classic_file_io.PySyncLineStreamer.__next__` | `matched` |
-| `file_io.log_collection.log_collection@rust` | `file_io` | `log_collection` | `classic_file_io.PyLogCollector` | `matched` |
+| `file_io.log_collection.log_collection@rust` | `file_io` | `LogCollector` | `classic_file_io.PyLogCollector` | `matched` |
 | `message.lib.Message` | `message` | `Message` | `classic_message.Message` | `matched` |
 | `message.lib.Message.__init__` | `message` | `Message` | `classic_message.Message.__init__` | `matched` |
 | `message.lib.Message.content` | `message` | `Message` | `classic_message.Message.content` | `matched` |
@@ -472,7 +469,7 @@
 | `message.logging.Logger.name` | `message` | `Logger` | `classic_message.Logger.name` | `matched` |
 | `message.logging.Logger.trace` | `message` | `Logger` | `classic_message.Logger.trace` | `matched` |
 | `message.logging.Logger.warning` | `message` | `Logger` | `classic_message.Logger.warning` | `matched` |
-| `message.logging.logging@rust` | `message` | `logging` | `classic_message.Logger` | `matched` |
+| `message.logging.logging@rust` | `message` | `Logger` | `classic_message.Logger` | `matched` |
 | `message.logging.redact_contract_fields@rust` | `message` | `redact_contract_fields` | `classic_message.Logger` | `matched` |
 | `message.logging.redact_field_value@rust` | `message` | `redact_field_value` | `classic_message.Logger` | `matched` |
 | `path.lib.BackupError@rust` | `path` | `BackupError` | `classic_path.BackupManager` | `matched` |
@@ -665,10 +662,10 @@
 | `scangame.enb.EnbValidationResult.is_fully_configured` | `scangame` | `EnbValidationResult` | `classic_scangame.EnbValidationResult.is_fully_configured` | `matched` |
 | `scangame.enb.EnbValidationResult.is_present` | `scangame` | `EnbValidationResult` | `classic_scangame.EnbValidationResult.is_present` | `matched` |
 | `scangame.enb.check_enb` | `scangame` | `EnbResult` | `classic_scangame.check_enb` | `matched` |
-| `scangame.game_report.build_archived_report` | `scangame` | `game_report` | `classic_scangame.build_archived_report` | `matched` |
-| `scangame.game_report.build_combined_scan_report` | `scangame` | `game_report` | `classic_scangame.build_combined_scan_report` | `matched` |
-| `scangame.game_report.build_unpacked_report` | `scangame` | `game_report` | `classic_scangame.build_unpacked_report` | `matched` |
-| `scangame.game_report.get_scan_issue_messages` | `scangame` | `game_report` | `classic_scangame.get_scan_issue_messages` | `matched` |
+| `scangame.game_report.build_archived_report` | `scangame` | `build_archived_report` | `classic_scangame.build_archived_report` | `matched` |
+| `scangame.game_report.build_combined_scan_report` | `scangame` | `build_combined_report` | `classic_scangame.build_combined_scan_report` | `matched` |
+| `scangame.game_report.build_unpacked_report` | `scangame` | `build_unpacked_report` | `classic_scangame.build_unpacked_report` | `matched` |
+| `scangame.game_report.get_scan_issue_messages` | `scangame` | `get_issue_messages` | `classic_scangame.get_scan_issue_messages` | `matched` |
 | `scangame.ini.ConfigIssue` | `scangame` | `ConfigIssue` | `classic_scangame.ConfigIssue` | `matched` |
 | `scangame.ini.IniValidator` | `scangame` | `IniValidator` | `classic_scangame.IniValidator` | `matched` |
 | `scangame.ini.IniValidator.__init__` | `scangame` | `IniValidator` | `classic_scangame.IniValidator.__init__` | `matched` |
@@ -755,20 +752,9 @@
 | `scangame.xse.XseChecker.check` | `scangame` | `XseChecker` | `classic_scangame.XseChecker.check` | `matched` |
 | `scangame.xse.XseChecker.validate` | `scangame` | `XseChecker` | `classic_scangame.XseChecker.validate` | `matched` |
 | `scangame.xse.XseError@rust` | `scangame` | `XseError` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scangame.xse.ba2@rust` | `scangame` | `ba2` | `classic_scangame.AddressLibInfo` | `matched` |
+| `scangame.xse.ba2@rust` | `scangame` | `AddressLibInfo` | `classic_scangame.AddressLibInfo` | `matched` |
 | `scangame.xse.check_xse_plugins` | `scangame` | `GameVersion` | `classic_scangame.check_xse_plugins` | `matched` |
-| `scangame.xse.config_cache@rust` | `scangame` | `config_cache` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scangame.xse.crashgen_orchestrator@rust` | `scangame` | `crashgen_orchestrator` | `classic_scangame.AddressLibInfo` | `matched` |
 | `scangame.xse.detect_config_issues@rust` | `scangame` | `detect_config_issues` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scangame.xse.enb@rust` | `scangame` | `enb` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scangame.xse.ini@rust` | `scangame` | `ini` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scangame.xse.integrity@rust` | `scangame` | `integrity` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scangame.xse.logs@rust` | `scangame` | `logs` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scangame.xse.mod_ini@rust` | `scangame` | `mod_ini` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scangame.xse.toml@rust` | `scangame` | `toml` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scangame.xse.unpacked@rust` | `scangame` | `unpacked` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scangame.xse.wrye@rust` | `scangame` | `wrye` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scangame.xse.xse@rust` | `scangame` | `xse` | `classic_scangame.AddressLibInfo` | `matched` |
 | `scanlog-crashgen-version-class` | `scanlog` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion` | `matched` |
 | `scanlog-crashgen-version-status` | `scanlog` | `check_crashgen_version_status` | `classic_scanlog.check_crashgen_version_status` | `matched` |
 | `scanlog-crashgen-version-status-class` | `scanlog` | `CrashgenVersionStatus` | `classic_scanlog.CrashgenVersionStatus` | `matched` |
@@ -786,7 +772,7 @@
 | `scanlog-pattern-matcher-find-first` | `scanlog` | `PatternMatcher` | `classic_scanlog.PatternMatcher.find_first` | `matched` |
 | `scanlog.crashgen_registry.CrashgenEntry@rust` | `scanlog` | `CrashgenEntry` | `classic_scanlog.CrashgenVersion` | `matched` |
 | `scanlog.crashgen_registry.CrashgenRegistry@rust` | `scanlog` | `CrashgenRegistry` | `classic_scanlog.CrashgenVersion` | `matched` |
-| `scanlog.crashgen_registry.crashgen_registry@rust` | `scanlog` | `crashgen_registry` | `classic_scanlog.CrashgenVersion` | `matched` |
+| `scanlog.crashgen_registry.crashgen_registry@rust` | `scanlog` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion` | `matched` |
 | `scanlog.error.ScanLogError@rust` | `scanlog` | `ScanLogError` | `classic_scanlog.CrashgenVersion` | `matched` |
 | `scanlog.error.error@rust` | `scanlog` | `error` | `classic_scanlog.CrashgenVersion` | `matched` |
 | `scanlog.fcx_handler.ConfigIssue` | `scanlog` | `ConfigIssue` | `classic_scanlog.ConfigIssue` | `matched` |
@@ -802,7 +788,7 @@
 | `scanlog.formid_analyzer.FormIDAnalyzer.extract_formids` | `scanlog` | `RustFormIDAnalyzer` | `classic_scanlog.FormIDAnalyzer.extract_formids` | `matched` |
 | `scanlog.formid_analyzer.FormIDAnalyzer.parse_formid` | `scanlog` | `RustFormIDAnalyzer` | `classic_scanlog.FormIDAnalyzer.parse_formid` | `matched` |
 | `scanlog.formid_analyzer.FormIDAnalyzer@rust` | `scanlog` | `FormIDAnalyzer` | `classic_scanlog.FormIDAnalyzer` | `matched` |
-| `scanlog.formid_analyzer.formid_analyzer@rust` | `scanlog` | `formid_analyzer` | `classic_scanlog.FormIDAnalyzer` | `matched` |
+| `scanlog.formid_analyzer.formid_analyzer@rust` | `scanlog` | `RustFormIDAnalyzer` | `classic_scanlog.FormIDAnalyzer` | `matched` |
 | `scanlog.formid_analyzer.is_valid_formid` | `scanlog` | `is_valid_formid` | `classic_scanlog.is_valid_formid` | `matched` |
 | `scanlog.formid_analyzer.is_valid_formid@rust` | `scanlog` | `is_valid_formid` | `classic_scanlog.is_valid_formid` | `matched` |
 | `scanlog.formid_analyzer.validate_formids_batch` | `scanlog` | `validate_formids_batch` | `classic_scanlog.validate_formids_batch` | `matched` |
@@ -816,7 +802,7 @@
 | `scanlog.gpu_detector.GpuVendor` | `scanlog` | `GpuVendor` | `classic_scanlog.GpuVendor` | `matched` |
 | `scanlog.gpu_detector.GpuVendor.__init__` | `scanlog` | `GpuVendor` | `classic_scanlog.GpuVendor.__init__` | `matched` |
 | `scanlog.gpu_detector.GpuVendor@rust` | `scanlog` | `GpuVendor` | `classic_scanlog.GpuVendor` | `matched` |
-| `scanlog.gpu_detector.gpu_detector@rust` | `scanlog` | `gpu_detector` | `classic_scanlog.GpuDetector` | `matched` |
+| `scanlog.gpu_detector.gpu_detector@rust` | `scanlog` | `GpuDetector` | `classic_scanlog.GpuDetector` | `matched` |
 | `scanlog.mod_guidance_analyzer.ImportantModGuidance` | `scanlog` | `ImportantModGuidance` | `classic_scanlog.ImportantModGuidance` | `matched` |
 | `scanlog.mod_guidance_analyzer.ModConflictGuidance` | `scanlog` | `ModConflictGuidance` | `classic_scanlog.ModConflictGuidance` | `matched` |
 | `scanlog.mod_guidance_analyzer.ModGuidanceAnalysisInput` | `scanlog` | `ModGuidanceAnalysisInput` | `classic_scanlog.ModGuidanceAnalysisInput` | `matched` |
@@ -834,7 +820,7 @@
 | `scanlog.mod_guidance_analyzer.ModGuidanceSolutionRule` | `scanlog` | `ModSolutionEntry` | `classic_scanlog.ModGuidanceSolutionRule` | `matched` |
 | `scanlog.mod_guidance_analyzer.ModGuidanceSolutionRule.__init__` | `scanlog` | `ModSolutionEntry` | `classic_scanlog.ModGuidanceSolutionRule.__init__` | `matched` |
 | `scanlog.mod_guidance_analyzer.ModSolutionGuidance` | `scanlog` | `ModSolutionGuidance` | `classic_scanlog.ModSolutionGuidance` | `matched` |
-| `scanlog.mod_guidance_analyzer.mod_guidance_analyzer@rust` | `scanlog` | `mod_guidance_analyzer` | `classic_scanlog.ModGuidanceAnalyzer` | `matched` |
+| `scanlog.mod_guidance_analyzer.mod_guidance_analyzer@rust` | `scanlog` | `ModGuidanceAnalyzer` | `classic_scanlog.ModGuidanceAnalyzer` | `matched` |
 | `scanlog.plugin_evidence_analyzer.PluginEvidence` | `scanlog` | `PluginEvidence` | `classic_scanlog.PluginEvidence` | `matched` |
 | `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisInput` | `scanlog` | `PluginEvidenceAnalysisInput` | `classic_scanlog.PluginEvidenceAnalysisInput` | `matched` |
 | `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisInput.__init__` | `scanlog` | `PluginEvidenceAnalysisInput` | `classic_scanlog.PluginEvidenceAnalysisInput.__init__` | `matched` |
@@ -842,7 +828,7 @@
 | `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer` | `scanlog` | `PluginEvidenceAnalyzer` | `classic_scanlog.PluginEvidenceAnalyzer` | `matched` |
 | `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer.__init__` | `scanlog` | `PluginEvidenceAnalyzer` | `classic_scanlog.PluginEvidenceAnalyzer.__init__` | `matched` |
 | `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer.analyze` | `scanlog` | `PluginEvidenceAnalyzer` | `classic_scanlog.PluginEvidenceAnalyzer.analyze` | `matched` |
-| `scanlog.plugin_evidence_analyzer.plugin_evidence_analyzer@rust` | `scanlog` | `plugin_evidence_analyzer` | `classic_scanlog.PluginEvidenceAnalyzer` | `matched` |
+| `scanlog.plugin_evidence_analyzer.plugin_evidence_analyzer@rust` | `scanlog` | `PluginEvidenceAnalyzer` | `classic_scanlog.PluginEvidenceAnalyzer` | `matched` |
 | `scanlog.named_record_finding_analyzer.NamedRecordFinding` | `scanlog` | `NamedRecordFinding` | `classic_scanlog.NamedRecordFinding` | `matched` |
 | `scanlog.formid_finding_analyzer.FormIDFinding` | `scanlog` | `FormIDFinding` | `classic_scanlog.FormIDFinding` | `matched` |
 | `scanlog.formid_finding_analyzer.FormIDFindingAnalysisInput` | `scanlog` | `FormIDFindingAnalysisInput` | `classic_scanlog.FormIDFindingAnalysisInput` | `matched` |
@@ -854,14 +840,14 @@
 | `scanlog.formid_finding_analyzer.FormIDPlugin` | `scanlog` | `FormIDPlugin` | `classic_scanlog.FormIDPlugin` | `matched` |
 | `scanlog.formid_finding_analyzer.FormIDPlugin.__init__` | `scanlog` | `FormIDPlugin` | `classic_scanlog.FormIDPlugin.__init__` | `matched` |
 | `scanlog.formid_finding_analyzer.FormIDValueLookupStatus` | `scanlog` | `FormIDValueLookupStatus` | `classic_scanlog.FormIDValueLookupStatus` | `matched` |
-| `scanlog.formid_finding_analyzer.formid_finding_analyzer@rust` | `scanlog` | `formid_finding_analyzer` | `classic_scanlog.FormIDFindingAnalyzer` | `matched` |
+| `scanlog.formid_finding_analyzer.formid_finding_analyzer@rust` | `scanlog` | `FormIDFindingAnalyzer` | `classic_scanlog.FormIDFindingAnalyzer` | `matched` |
 | `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput` | `scanlog` | `NamedRecordFindingAnalysisInput` | `classic_scanlog.NamedRecordFindingAnalysisInput` | `matched` |
 | `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput.__init__` | `scanlog` | `NamedRecordFindingAnalysisInput` | `classic_scanlog.NamedRecordFindingAnalysisInput.__init__` | `matched` |
 | `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisResult` | `scanlog` | `NamedRecordFindingAnalysisResult` | `classic_scanlog.NamedRecordFindingAnalysisResult` | `matched` |
 | `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer` | `scanlog` | `NamedRecordFindingAnalyzer` | `classic_scanlog.NamedRecordFindingAnalyzer` | `matched` |
 | `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer.__init__` | `scanlog` | `NamedRecordFindingAnalyzer` | `classic_scanlog.NamedRecordFindingAnalyzer.__init__` | `matched` |
 | `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer.analyze` | `scanlog` | `NamedRecordFindingAnalyzer` | `classic_scanlog.NamedRecordFindingAnalyzer.analyze` | `matched` |
-| `scanlog.named_record_finding_analyzer.named_record_finding_analyzer@rust` | `scanlog` | `named_record_finding_analyzer` | `classic_scanlog.NamedRecordFindingAnalyzer` | `matched` |
+| `scanlog.named_record_finding_analyzer.named_record_finding_analyzer@rust` | `scanlog` | `NamedRecordFindingAnalyzer` | `classic_scanlog.NamedRecordFindingAnalyzer` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.__init__` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.__init__` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.analyze_to_string` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.analyze_to_string` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.check_for_updates` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.check_for_updates` | `matched` |
@@ -875,7 +861,7 @@
 | `scanlog.papyrus.PapyrusStats.__init__` | `scanlog` | `PapyrusStats` | `classic_scanlog.PapyrusStats.__init__` | `matched` |
 | `scanlog.papyrus.PapyrusStats.dumps_to_stacks_ratio` | `scanlog` | `PapyrusStats` | `classic_scanlog.PapyrusStats.dumps_to_stacks_ratio` | `matched` |
 | `scanlog.papyrus.PapyrusStats@rust` | `scanlog` | `PapyrusStats` | `classic_scanlog.PapyrusStats` | `matched` |
-| `scanlog.papyrus.papyrus@rust` | `scanlog` | `papyrus` | `classic_scanlog.PapyrusAnalyzer` | `matched` |
+| `scanlog.papyrus.papyrus@rust` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer` | `matched` |
 | `scanlog.papyrus.papyrus_logging` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.papyrus_logging` | `matched` |
 | `scanlog.parser.LogParser.__init__` | `scanlog` | `LogParser` | `classic_scanlog.LogParser.__init__` | `matched` |
 | `scanlog.parser.LogParser.add_pattern` | `scanlog` | `LogParser` | `classic_scanlog.LogParser.add_pattern` | `matched` |
@@ -899,12 +885,12 @@
 | `scanlog.parser.ScanOutput` | `scanlog` | `LogParser` | `classic_scanlog.ScanOutput` | `matched` |
 | `scanlog.parser.StreamingIteratorParser@rust` | `scanlog` | `StreamingIteratorParser` | `classic_scanlog.LogParser` | `matched` |
 | `scanlog.parser.StreamingLogParser@rust` | `scanlog` | `StreamingLogParser` | `classic_scanlog.LogParser` | `matched` |
-| `scanlog.parser.parser@rust` | `scanlog` | `parser` | `classic_scanlog.LogParser` | `matched` |
+| `scanlog.parser.parser@rust` | `scanlog` | `LogParser` | `classic_scanlog.LogParser` | `matched` |
 | `scanlog.patterns.PatternMatcher.__init__` | `scanlog` | `PatternMatcher` | `classic_scanlog.PatternMatcher.__init__` | `matched` |
 | `scanlog.patterns.PatternMatcher.clear_cache` | `scanlog` | `PatternMatcher` | `classic_scanlog.PatternMatcher.clear_cache` | `matched` |
 | `scanlog.patterns.PatternMatcher.get_stats` | `scanlog` | `PatternMatcher` | `classic_scanlog.PatternMatcher.get_stats` | `matched` |
 | `scanlog.patterns.PatternMatcher.replace_all` | `scanlog` | `PatternMatcher` | `classic_scanlog.PatternMatcher.replace_all` | `matched` |
-| `scanlog.patterns.patterns@rust` | `scanlog` | `patterns` | `classic_scanlog.PatternMatcher` | `matched` |
+| `scanlog.patterns.patterns@rust` | `scanlog` | `PatternMatcher` | `classic_scanlog.PatternMatcher` | `matched` |
 | `scanlog.plugin_analyzer.PluginAnalyzer` | `scanlog` | `PluginAnalyzer` | `classic_scanlog.PluginAnalyzer` | `matched` |
 | `scanlog.plugin_analyzer.PluginAnalyzer.__init__` | `scanlog` | `PluginAnalyzer` | `classic_scanlog.PluginAnalyzer.__init__` | `matched` |
 | `scanlog.plugin_analyzer.PluginAnalyzer.check_plugin_limit` | `scanlog` | `PluginAnalyzer` | `classic_scanlog.PluginAnalyzer.check_plugin_limit` | `matched` |
@@ -915,7 +901,7 @@
 | `scanlog.plugin_analyzer.contains_plugin@rust` | `scanlog` | `contains_plugin` | `classic_scanlog.contains_plugin` | `matched` |
 | `scanlog.plugin_analyzer.detect_plugins_batch` | `scanlog` | `detect_plugins_batch` | `classic_scanlog.detect_plugins_batch` | `matched` |
 | `scanlog.plugin_analyzer.detect_plugins_batch@rust` | `scanlog` | `detect_plugins_batch` | `classic_scanlog.detect_plugins_batch` | `matched` |
-| `scanlog.plugin_analyzer.plugin_analyzer@rust` | `scanlog` | `plugin_analyzer` | `classic_scanlog.PluginAnalyzer` | `matched` |
+| `scanlog.plugin_analyzer.plugin_analyzer@rust` | `scanlog` | `PluginAnalyzer` | `classic_scanlog.PluginAnalyzer` | `matched` |
 | `scanlog.record_scanner.RecordScanner` | `scanlog` | `RecordScanner` | `classic_scanlog.RecordScanner` | `matched` |
 | `scanlog.record_scanner.RecordScanner.__init__` | `scanlog` | `RecordScanner` | `classic_scanlog.RecordScanner.__init__` | `matched` |
 | `scanlog.record_scanner.RecordScanner.clear_cache` | `scanlog` | `RecordScanner` | `classic_scanlog.RecordScanner.clear_cache` | `matched` |
@@ -923,10 +909,9 @@
 | `scanlog.record_scanner.RecordScanner@rust` | `scanlog` | `RecordScanner` | `classic_scanlog.RecordScanner` | `matched` |
 | `scanlog.record_scanner.contains_record` | `scanlog` | `contains_record` | `classic_scanlog.contains_record` | `matched` |
 | `scanlog.record_scanner.contains_record@rust` | `scanlog` | `contains_record` | `classic_scanlog.contains_record` | `matched` |
-| `scanlog.record_scanner.record_scanner@rust` | `scanlog` | `record_scanner` | `classic_scanlog.RecordScanner` | `matched` |
+| `scanlog.record_scanner.record_scanner@rust` | `scanlog` | `RecordScanner` | `classic_scanlog.RecordScanner` | `matched` |
 | `scanlog.record_scanner.scan_records_batch` | `scanlog` | `scan_records_batch` | `classic_scanlog.scan_records_batch` | `matched` |
 | `scanlog.record_scanner.scan_records_batch@rust` | `scanlog` | `scan_records_batch` | `classic_scanlog.scan_records_batch` | `matched` |
-| `scanlog.segment_key.segment_key@rust` | `scanlog` | `segment_key` | `classic_scanlog.CrashgenVersion` | `matched` |
 | `scanlog.analyzer.AnalyzerError` | `scanlog` | `AnalyzerError` | `classic_scanlog.AnalyzerError` | `matched` |
 | `scanlog.analyzer.AnalyzerError@rust` | `scanlog` | `AnalyzerError` | `classic_scanlog.AnalyzerError` | `matched` |
 | `scanlog.analyzer.AnalyzerErrorCode@rust` | `scanlog` | `AnalyzerErrorCode` | `classic_scanlog.AnalyzerError` | `matched` |
@@ -949,7 +934,7 @@
 | `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalyzer@rust` | `scanlog` | `CrashgenSettingsAnalyzer` | `classic_scanlog.CrashgenSettingsAnalyzer` | `matched` |
 | `scanlog.crashgen_settings_analyzer.DisabledSettingNotice` | `scanlog` | `DisabledSettingNotice` | `classic_scanlog.DisabledSettingNotice` | `matched` |
 | `scanlog.crashgen_settings_analyzer.DisabledSettingNotice@rust` | `scanlog` | `DisabledSettingNotice` | `classic_scanlog.DisabledSettingNotice` | `matched` |
-| `scanlog.crashgen_settings_analyzer.crashgen_settings_analyzer@rust` | `scanlog` | `crashgen_settings_analyzer` | `classic_scanlog.CrashgenSettingsAnalyzer` | `matched` |
+| `scanlog.crashgen_settings_analyzer.crashgen_settings_analyzer@rust` | `scanlog` | `CrashgenSettingsAnalyzer` | `classic_scanlog.CrashgenSettingsAnalyzer` | `matched` |
 | `scanlog.crash_suspect_analyzer.CrashSuspectAnalysisInput@rust` | `scanlog` | `CrashSuspectAnalysisInput` | `classic_scanlog.CrashSuspectAnalysisInput` | `matched` |
 | `scanlog.crash_suspect_analyzer.CrashSuspectAnalysisInput.__init__` | `scanlog` | `CrashSuspectAnalysisInput` | `classic_scanlog.CrashSuspectAnalysisInput.__init__` | `matched` |
 | `scanlog.crash_suspect_analyzer.CrashSuspectAnalysisResult` | `scanlog` | `CrashSuspectAnalysisResult` | `classic_scanlog.CrashSuspectAnalysisResult` | `matched` |
@@ -967,15 +952,14 @@
 | `scanlog.crash_suspect_analyzer.CrashSuspectStackCountRule.__init__` | `scanlog` | `SuspectStackCountRule` | `classic_scanlog.CrashSuspectStackCountRule.__init__` | `matched` |
 | `scanlog.crash_suspect_analyzer.CrashSuspectStackRule` | `scanlog` | `SuspectStackRule` | `classic_scanlog.CrashSuspectStackRule` | `matched` |
 | `scanlog.crash_suspect_analyzer.CrashSuspectStackRule.__init__` | `scanlog` | `SuspectStackRule` | `classic_scanlog.CrashSuspectStackRule.__init__` | `matched` |
-| `scanlog.crash_suspect_analyzer.crash_suspect_analyzer@rust` | `scanlog` | `crash_suspect_analyzer` | `classic_scanlog.CrashSuspectAnalyzer` | `matched` |
+| `scanlog.crash_suspect_analyzer.crash_suspect_analyzer@rust` | `scanlog` | `CrashSuspectAnalyzer` | `classic_scanlog.CrashSuspectAnalyzer` | `matched` |
 | `scanlog.version.CrashgenVersion.__eq__` | `scanlog` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion.__eq__` | `matched` |
 | `scanlog.version.CrashgenVersion.__hash__` | `scanlog` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion.__hash__` | `matched` |
 | `scanlog.version.CrashgenVersion.__init__` | `scanlog` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion.__init__` | `matched` |
 | `scanlog.version.CrashgenVersion.to_tuple` | `scanlog` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion.to_tuple` | `matched` |
 | `scanlog.version.crashgen_version_gen@rust` | `scanlog` | `crashgen_version_gen` | `classic_scanlog.parse_crashgen_version` | `matched` |
-| `scanlog.version.version@rust` | `scanlog` | `version` | `classic_scanlog.CrashgenVersion` | `matched` |
 | `settings.lib.CacheStats@rust` | `settings` | `CacheStats` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.SettingsCacheStats` | `settings` | `validators` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.SettingsCacheStats` | `settings` | `None` | `classic_settings.SettingsCacheStats` | `unmapped` |
 | `settings.lib.SettingsError@rust` | `settings` | `SettingsError` | `classic_settings.SettingsCacheStats` | `matched` |
 | `settings.lib.SettingsSource@rust` | `settings` | `SettingsSource` | `classic_settings.SettingsCacheStats` | `matched` |
 | `settings.lib.Yaml@rust` | `settings` | `Yaml` | `classic_settings.SettingsCacheStats` | `matched` |
@@ -983,7 +967,7 @@
 | `settings.lib.cache_size` | `settings` | `cache_size` | `classic_settings.cache_size` | `matched` |
 | `settings.lib.cache_stats` | `settings` | `cache_stats` | `classic_settings.cache_stats` | `matched` |
 | `settings.lib.clear_cache` | `settings` | `clear_cache` | `classic_settings.clear_cache` | `matched` |
-| `settings.lib.coerce_setting_value` | `settings` | `validators` | `classic_settings.coerce_setting_value` | `matched` |
+| `settings.lib.coerce_setting_value` | `settings` | `coerce_setting_value` | `classic_settings.coerce_setting_value` | `matched` |
 | `settings.lib.get_cached` | `settings` | `get_cached` | `classic_settings.get_cached` | `matched` |
 | `settings.lib.invalidate` | `settings` | `invalidate` | `classic_settings.invalidate` | `matched` |
 | `settings.lib.is_cached` | `settings` | `is_cached` | `classic_settings.is_cached` | `matched` |
@@ -1000,7 +984,7 @@
 | `settings.lib.merge_yaml_documents@rust` | `settings` | `merge_yaml_documents` | `classic_settings.SettingsCacheStats` | `matched` |
 | `settings.lib.parse_yaml_content@rust` | `settings` | `parse_yaml_content` | `classic_settings.SettingsCacheStats` | `matched` |
 | `settings.lib.reset_cache_stats` | `settings` | `reset_cache_stats` | `classic_settings.reset_cache_stats` | `matched` |
-| `settings.lib.validate_setting_value` | `settings` | `validators` | `classic_settings.validate_setting_value` | `matched` |
+| `settings.lib.validate_setting_value` | `settings` | `validate_setting_value` | `classic_settings.validate_setting_value` | `matched` |
 | `shared.path.PathHandler` | `shared` | `PyPathHandler` | `classic_shared.PathHandler` | `matched` |
 | `shared.path.PathHandler.__init__` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.__init__` | `matched` |
 | `shared.path.PathHandler.cache_metrics` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.cache_metrics` | `matched` |
@@ -1021,7 +1005,7 @@
 | `shared.path.PathHandler.validate_paths_batch_fast` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.validate_paths_batch_fast` | `matched` |
 | `shared.path.PathLike@rust` | `shared` | `PathLike` | `classic_shared.PathHandler` | `matched` |
 | `shared.path.path@rust` | `shared` | `path` | `classic_shared.PathHandler` | `matched` |
-| `shared.path.path_py@rust` | `shared` | `path_py` | `classic_shared.PathHandler` | `matched` |
+| `shared.path.path_py@rust` | `shared` | `PathHandler` | `classic_shared.PathHandler` | `matched` |
 | `shared.performance.RustPerformanceMonitor` | `shared` | `PyRustPerformanceMonitor` | `classic_shared.RustPerformanceMonitor` | `matched` |
 | `shared.performance.RustPerformanceMonitor.__init__` | `shared` | `PyRustPerformanceMonitor` | `classic_shared.RustPerformanceMonitor.__init__` | `matched` |
 | `shared.performance.RustPerformanceMonitor.clear_metrics` | `shared` | `PyRustPerformanceMonitor` | `classic_shared.RustPerformanceMonitor.clear_metrics` | `matched` |
@@ -1030,16 +1014,14 @@
 | `shared.performance.RustPerformanceMonitor.record_metric` | `shared` | `PyRustPerformanceMonitor` | `classic_shared.RustPerformanceMonitor.record_metric` | `matched` |
 | `shared.performance.RustPerformanceMonitor.start_timer` | `shared` | `PyRustPerformanceMonitor` | `classic_shared.RustPerformanceMonitor.start_timer` | `matched` |
 | `shared.performance.RustPerformanceMonitor.stop_timer` | `shared` | `PyRustPerformanceMonitor` | `classic_shared.RustPerformanceMonitor.stop_timer` | `matched` |
-| `shared.performance.performance_py@rust` | `shared` | `performance_py` | `classic_shared.RustPerformanceMonitor` | `matched` |
+| `shared.performance.performance_py@rust` | `shared` | `record_timing` | `classic_shared.RustPerformanceMonitor` | `matched` |
 | `shared.runtime.ClassicError@rust` | `shared` | `ClassicError` | `classic_shared.RuntimeStats` | `matched` |
 | `shared.runtime.ClassicResult@rust` | `shared` | `ClassicResult` | `classic_shared.RuntimeStats` | `matched` |
 | `shared.runtime.ResultExt@rust` | `shared` | `ResultExt` | `classic_shared.RuntimeStats` | `matched` |
 | `shared.runtime.RuntimeStats` | `shared` | `RuntimeStats` | `classic_shared.RuntimeStats` | `matched` |
 | `shared.runtime.ToPyErr@rust` | `shared` | `ToPyErr` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.error_convert@rust` | `shared` | `error_convert` | `classic_shared.RuntimeStats` | `matched` |
-| `shared.runtime.exceptions@rust` | `shared` | `exceptions` | `classic_shared.RuntimeStats` | `matched` |
+| `shared.runtime.error_convert@rust` | `shared` | `RuntimeStats` | `classic_shared.RuntimeStats` | `matched` |
 | `shared.runtime.get_runtime_stats` | `shared` | `get_runtime_stats` | `classic_shared.get_runtime_stats` | `matched` |
-| `shared.runtime.indexmap_utils@rust` | `shared` | `indexmap_utils` | `classic_shared.RuntimeStats` | `matched` |
 | `shared.runtime.is_runtime_healthy` | `shared` | `is_runtime_healthy` | `classic_shared.is_runtime_healthy` | `matched` |
 | `shared.runtime.pyany_to_indexmap_str@rust` | `shared` | `pyany_to_indexmap_str` | `classic_shared.RuntimeStats` | `matched` |
 | `shared.runtime.pyany_to_indexmap_vecstr@rust` | `shared` | `pyany_to_indexmap_vecstr` | `classic_shared.RuntimeStats` | `matched` |
@@ -1061,7 +1043,7 @@
 | `shared.strings.StringProcessor.process_batch_fast` | `shared` | `PyStringProcessor` | `classic_shared.StringProcessor.process_batch_fast` | `matched` |
 | `shared.strings.StringProcessor.split_lines` | `shared` | `PyStringProcessor` | `classic_shared.StringProcessor.split_lines` | `matched` |
 | `shared.strings.StringProcessor.split_lines_fast` | `shared` | `PyStringProcessor` | `classic_shared.StringProcessor.split_lines_fast` | `matched` |
-| `shared.strings.strings_py@rust` | `shared` | `strings_py` | `classic_shared.StringProcessor` | `matched` |
+| `shared.strings.strings_py@rust` | `shared` | `StringProcessor` | `classic_shared.StringProcessor` | `matched` |
 | `update.github.GithubAsset` | `update` | `GithubAsset` | `classic_update.GithubAsset` | `matched` |
 | `update.github.GithubClient` | `update` | `GithubClient` | `classic_update.GithubClient` | `matched` |
 | `update.github.GithubClient.__init__` | `update` | `GithubClient` | `classic_update.GithubClient.__init__` | `matched` |
@@ -1071,7 +1053,7 @@
 | `update.github.GithubClient.repo_url` | `update` | `GithubClient` | `classic_update.GithubClient.repo_url` | `matched` |
 | `update.github.GithubRelease` | `update` | `GithubRelease` | `classic_update.GithubRelease` | `matched` |
 | `update.github.UpdateError@rust` | `update` | `UpdateError` | `classic_update.GithubAsset` | `matched` |
-| `update.github.github@rust` | `update` | `github` | `classic_update.GithubAsset` | `matched` |
+| `update.github.github@rust` | `update` | `GithubAsset` | `classic_update.GithubAsset` | `matched` |
 | `version-registry-class` | `version_registry` | `VersionRegistry` | `classic_version_registry.VersionRegistry` | `matched` |
 | `version-registry-game-version-class` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion` | `matched` |
 | `version-registry-get-address-library-filename` | `version_registry` | `VersionRegistry` | `classic_version_registry.VersionRegistry.get_address_library_filename` | `matched` |
@@ -1108,7 +1090,7 @@
 | `version.lib.format_version` | `version` | `format_version` | `classic_version.format_version` | `matched` |
 | `version.lib.is_known_f4se_version` | `version` | `is_known_f4se_version` | `classic_version.is_known_f4se_version` | `matched` |
 | `version.lib.is_known_fallout4_version` | `version` | `is_known_fallout4_version` | `classic_version.is_known_fallout4_version` | `matched` |
-| `version.lib.is_valid_pe_path` | `version` | `pe_version` | `classic_version.is_valid_pe_path` | `matched` |
+| `version.lib.is_valid_pe_path` | `version` | `is_valid_executable_path` | `classic_version.is_valid_pe_path` | `matched` |
 | `version.lib.parse_version` | `version` | `parse_version` | `classic_version.parse_version` | `matched` |
 | `version.lib.try_parse_version` | `version` | `try_parse_version` | `classic_version.try_parse_version` | `matched` |
 | `version_registry.error.VersionRegistryError@rust` | `version_registry` | `VersionRegistryError` | `classic_version_registry.VersionRegistry` | `matched` |

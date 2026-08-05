@@ -87,6 +87,19 @@ def validate_contract_surface(
     rust_symbols: set[str] = {
         item["symbol"] for item in rust_manifest.get("symbols", [])
     }
+    # Symbols whose ONLY appearance in the Rust surface is as a module. A name
+    # that is both a module and a type elsewhere stays acceptable, since the
+    # row may legitimately mean the type.
+    # `kind` is read defensively: a manifest entry without one carries no
+    # evidence that the symbol is a module, so it must not be flagged.
+    rust_symbol_kinds: dict[str, set[str]] = {}
+    for item in rust_manifest.get("symbols", []):
+        kind = item.get("kind")
+        if kind is not None:
+            rust_symbol_kinds.setdefault(item["symbol"], set()).add(kind)
+    rust_module_only_symbols: set[str] = {
+        symbol for symbol, kinds in rust_symbol_kinds.items() if kinds == {"module"}
+    }
     node_exports: set[str] = {
         item["export"] for item in node_manifest.get("exports", [])
     }
@@ -105,9 +118,26 @@ def validate_contract_surface(
             )
             continue
 
+        # A row may declare that no verified Rust counterpart is known, but
+        # only explicitly. `rustSymbol: null` plus an `unmappedReason` records
+        # the export as tracked-but-unmapped debt; it is counted in the diff
+        # report's tier1_unmapped total rather than being silently treated as a
+        # match. Without a reason a null rustSymbol is still a malformed row.
+        if rust_symbol is None and mapping.get("unmappedReason"):
+            if node_export is None:
+                diagnostics.append(
+                    f"Row '{row_id}' is unmapped but has no nodeExport; an "
+                    f"unmapped row must still name the binding surface it tracks."
+                )
+            continue
+
         # H1 fail-closed: missing rustSymbol.
         if rust_symbol is None:
-            diagnostics.append(f"Row '{row_id}' missing rustSymbol.")
+            diagnostics.append(
+                f"Row '{row_id}' missing rustSymbol. If this export genuinely "
+                f"has no verified Rust counterpart, set rustSymbol to null and "
+                f"add an 'unmappedReason' explaining why."
+            )
             continue
 
         # Round 2 Fix 1.1: non-string rustSymbol (list, dict, int, ...).
@@ -167,6 +197,29 @@ def validate_contract_surface(
                 f"Row '{row_id}' rustSymbol '{effective_rust_symbol}' not in "
                 f"rust surface. Add 'pub use <sub_module>::"
                 f"{effective_rust_symbol};' to {rust_crate}/lib.rs."
+            )
+
+        # A Node export may not claim a Rust *module* as its counterpart. The
+        # existence check above is satisfied by any symbol of any kind, which is
+        # how placeholder rows accumulated: 82 unrelated exports once all named
+        # the module `path_core` and the gate still reported 100% matched.
+        # Matching a module says nothing about the export, so it is rejected.
+        #
+        # @rust proxy rows are exempt: they have no nodeExport and exist
+        # precisely to record that a Rust module has no binding counterpart.
+        if (
+            not is_proxy
+            and effective_rust_symbol
+            and effective_rust_symbol in rust_module_only_symbols
+        ):
+            diagnostics.append(
+                f"Row '{row_id}' maps nodeExport '{node_export}' to "
+                f"'{effective_rust_symbol}', which is a Rust module rather than "
+                f"a function, type, or re-export. A module match does not verify "
+                f"anything about the export. Map it to the specific core symbol "
+                f"the NAPI wrapper uses (see "
+                f"tools/node_api_parity/resolve_node_rust_symbols.py), or set "
+                f"rustSymbol to null with an 'unmappedReason'."
             )
 
         # Positive: Node-side lookup (skipped for @rust proxy rows).

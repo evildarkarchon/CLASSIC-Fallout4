@@ -199,8 +199,8 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 238,
-      "contractIdsHash": "ccf561cc51989f2ccf5c3cd19026ff4ca5337f2b830c071f3553cd37db2dee7e",
+      "contractCount": 236,
+      "contractIdsHash": "bd06fd3321e6af1076625b37178871fccfe4aa24e8b6e7bd8d1bddf64bb339b3",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "scanlog-tier1-smoke",
@@ -641,8 +641,8 @@
         "ownerModule": "version_registry",
         "tier": "tier1"
       },
-      "contractCount": 88,
-      "contractIdsHash": "dc1837a236e03a1db4a8fa610f3c91cf527f037f8b2f9e6ae162a93f49d69e51",
+      "contractCount": 87,
+      "contractIdsHash": "3e419916a8e217d11607f3fcf45c2c53336395f39520bdbabb8ddd9b2402886f",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "version-registry-tier1-smoke",
@@ -670,8 +670,8 @@
         "ownerModule": "shared",
         "tier": "tier1"
       },
-      "contractCount": 69,
-      "contractIdsHash": "8b1478fba68df7b0dad1df1e7ede1fbc02c133063490b8e4fae661177a736b65",
+      "contractCount": 67,
+      "contractIdsHash": "7dc707ace11a72846e5d6d3c8cad190b952211caf68d81ce4a19ccc0bfdae6fb",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_classic_shared_smoke.py",
       "testCaseId": "classic-shared-smoke-suite",
@@ -686,8 +686,8 @@
         "ownerModule": "file_io",
         "tier": "tier1"
       },
-      "contractCount": 95,
-      "contractIdsHash": "4bb08d07639ba26f99842fe935cbf20088bb72ad05ba2c954b6dc1296ead465d",
+      "contractCount": 93,
+      "contractIdsHash": "49aada48f29d379273ffda86db5e1bde88211e95e1bb2f0a29a40cf975d885a5",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_promoted_file_io_aux_smoke.py",
       "testCaseId": "classic-file-io-promoted-smoke",
@@ -740,8 +740,8 @@
         "ownerModule": "scangame",
         "tier": "tier1"
       },
-      "contractCount": 166,
-      "contractIdsHash": "03e0cac1b5a5aa6dcdf4ae1bac67a981547ada4ece14e19d7c013582db4de768",
+      "contractCount": 155,
+      "contractIdsHash": "26b189ff9b44d8dd5446b433963da09229a06db5d4140accf53c2b8ab717d3d7",
       "bindingIdentifiers": [
         "classic_scangame.GameSetupPathUpdate",
         "classic_scangame.GameSetupIntakeResult.path_updates",

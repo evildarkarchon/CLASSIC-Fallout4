@@ -29,6 +29,48 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+#: Modifiers that may sit between ``pub`` and ``fn`` in a Rust declaration.
+#:
+#: Matching these is load-bearing in two directions. Without them the parser
+#: missed every ``pub const fn`` and ``pub async fn`` outright -- 204 public
+#: functions across the workspace, including 73 async ones, which for an
+#: async-core codebase is a large blind spot. Worse, ``pub const fn foo(...)``
+#: also matched the *type* pattern below as "a const named ``fn``", so 131
+#: distinct declarations collapsed into a single bogus symbol called ``fn``
+#: that contract rows could then match against. The ``(?!fn\b)`` lookahead in
+#: :data:`_PUB_TYPE_RE` is what stops that second failure.
+#:
+#: The group is repeated rather than ordered because Rust permits combinations
+#: such as ``pub const unsafe fn`` and ``pub async unsafe fn``.
+_FN_MODIFIERS = r"(?:const\s+|async\s+|unsafe\s+|extern\s+\"[^\"]*\"\s+)*"
+
+#: Public function declarations, including modifier forms.
+_PUB_FN_RE = rf"^\s*pub\s+{_FN_MODIFIERS}fn\s+([A-Za-z0-9_]+)\s*\((.*?)\)"
+
+#: Public type-ish declarations. ``(?!fn\b)`` keeps ``pub const fn foo`` from
+#: being recorded as a const named ``fn``; it is a function and is matched by
+#: :data:`_PUB_FN_RE` instead.
+_PUB_TYPE_RE = (
+    r"(?m)^\s*pub\s+(struct|enum|type|trait|const|static)\s+(?!fn\b)([A-Za-z0-9_]+)"
+)
+
+#: Comments inside a multi-line ``pub use`` group.
+#:
+#: These MUST be stripped while the newlines are still present. A grouped
+#: re-export is commonly annotated:
+#:
+#:     pub use path::{
+#:         // Permission and accessibility checks
+#:         is_valid_executable_path,
+#:     };
+#:
+#: Collapsing whitespace first would join the comment onto the name and yield a
+#: symbol literally called ``// Permission and accessibility checks
+#: is_valid_executable_path``; stripping after that point would instead let the
+#: ``//`` swallow the remainder of the joined line.
+_LINE_COMMENT_RE = re.compile(r"//[^\n]*")
+_BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
+
 #: Bracket pairs tracked when splitting a signature's parameter list.
 _DEPTH_PAIRS = {"(": ")", "[": "]", "{": "}", "<": ">"}
 _OPENING = set(_DEPTH_PAIRS)
@@ -91,7 +133,10 @@ def expand_pub_use_statement(body: str) -> list[tuple[str, str]]:
     (``pub use foo::{A, B as C};``), ``self`` inside a group (which re-exports
     the module under its own or an aliased name), and plain aliased paths.
     """
-    statement = normalize_whitespace(body).rstrip(";")
+    # Strip comments before collapsing whitespace -- see _LINE_COMMENT_RE.
+    uncommented = _BLOCK_COMMENT_RE.sub(" ", body)
+    uncommented = _LINE_COMMENT_RE.sub("", uncommented)
+    statement = normalize_whitespace(uncommented).rstrip(";")
     if not statement:
         return []
 
@@ -218,7 +263,7 @@ def extract_rust_symbols(
         )
 
     for match in re.finditer(
-        r"^\s*pub\s+fn\s+([A-Za-z0-9_]+)\s*\((.*?)\)",
+        _PUB_FN_RE,
         content,
         flags=re.MULTILINE | re.DOTALL,
     ):
@@ -237,10 +282,7 @@ def extract_rust_symbols(
             }
         )
 
-    for match in re.finditer(
-        r"(?m)^\s*pub\s+(struct|enum|type|trait|const|static)\s+([A-Za-z0-9_]+)",
-        content,
-    ):
+    for match in re.finditer(_PUB_TYPE_RE, content):
         kind = match.group(1)
         symbol = match.group(2)
         entries.append(

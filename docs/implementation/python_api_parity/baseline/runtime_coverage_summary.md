@@ -1,8 +1,8 @@
 # Python Runtime Coverage Summary
 
-- Generated: `2026-08-04T10:37:25.774461+00:00`
-- Tracked surfaces: **1688**
-- Runtime verified: **1688**
+- Generated: `2026-08-05T01:33:40.416348+00:00`
+- Tracked surfaces: **1670**
+- Runtime verified: **1670**
 - Contract mapped only: **0**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
@@ -13,20 +13,20 @@
 |---|---:|---:|---:|---:|
 | `config` | 97 | 0 | 0 | 97 |
 | `database` | 56 | 0 | 0 | 56 |
-| `file_io` | 95 | 0 | 0 | 95 |
+| `file_io` | 93 | 0 | 0 | 93 |
 | `message` | 45 | 0 | 0 | 45 |
 | `path` | 72 | 0 | 0 | 72 |
 | `perf` | 10 | 0 | 0 | 10 |
 | `registry` | 20 | 0 | 0 | 20 |
 | `resource` | 36 | 0 | 0 | 36 |
-| `scangame` | 169 | 0 | 0 | 169 |
-| `scanlog` | 539 | 0 | 0 | 539 |
+| `scangame` | 158 | 0 | 0 | 158 |
+| `scanlog` | 537 | 0 | 0 | 537 |
 | `settings` | 65 | 0 | 0 | 65 |
-| `shared` | 69 | 0 | 0 | 69 |
+| `shared` | 67 | 0 | 0 | 67 |
 | `update` | 10 | 0 | 0 | 10 |
 | `user_settings` | 218 | 0 | 0 | 218 |
 | `version` | 15 | 0 | 0 | 15 |
-| `version_registry` | 113 | 0 | 0 | 113 |
+| `version_registry` | 112 | 0 | 0 | 112 |
 | `web` | 23 | 0 | 0 | 23 |
 | `xse` | 36 | 0 | 0 | 36 |
 
