@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-05T06:02:34.222920+00:00",
+  "generated_at_utc": "2026-08-05T08:43:57.436045+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -18035,6 +18035,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "from_token",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn from_token(token: &str)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "frontend_state",
       "kind": "function",
       "arity": 1,
@@ -18872,6 +18882,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
       "source_decl": "pub fn target_path(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "token",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn token(&self)",
       "tier": "tier1"
     },
     {

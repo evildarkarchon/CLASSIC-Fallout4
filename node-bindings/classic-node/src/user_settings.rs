@@ -1,11 +1,14 @@
 //! Thin NAPI adapter for User Settings snapshots, migration plans, updates, and commits.
 
 use crate::shared::{JsGameId, core_to_js_game_id, js_to_core_game_id};
+// The one shared casing rule this surface applies to every Vocabulary Token.
+// Imported rather than path-qualified because it now wraps every enum
+// projection in this module, not just the migration tracer.
+use crate::vocabulary::{from_js_token, js_token};
 use classic_user_settings_core::{
-    CommitEligibility, DocumentClassification, GuiWindow, LegacyTuiStateImportOutcome,
-    LegacyTuiStateImportReceipt, LegacyTuiStateImportRestoreOutcome, MigrationChange,
-    MigrationChangeKind, MigrationEndpoint, MigrationPlanningOutcome, PreferenceOrigin, Revision,
-    SourceLocation, UserSettings, UserSettingsCommitOutcome,
+    GuiWindow, LegacyTuiStateImportOutcome, LegacyTuiStateImportReceipt,
+    LegacyTuiStateImportRestoreOutcome, MigrationChange, MigrationChangeKind, MigrationEndpoint,
+    MigrationPlanningOutcome, Revision, SourceLocation, UserSettings, UserSettingsCommitOutcome,
     UserSettingsFrontendTransitionOutcome as CoreUserSettingsFrontendTransitionOutcome,
     UserSettingsMigrationApplyOutcome, UserSettingsMigrationPlan, UserSettingsMigrationReceipt,
     UserSettingsMigrationRestoreOutcome, UserSettingsSchemaVersion, UserSettingsUpdate,
@@ -409,25 +412,25 @@ impl JsLegacyTuiStateImportReceipt {
     /// Returns the revision of the exact parsed legacy bytes.
     #[napi(getter)]
     pub fn source_revision(&self) -> String {
-        revision_token(self.inner.source_revision())
+        self.inner.source_revision().token()
     }
 
     /// Returns the independently verified legacy backup revision.
     #[napi(getter)]
     pub fn backup_revision(&self) -> String {
-        revision_token(self.inner.backup_revision())
+        self.inner.backup_revision().token()
     }
 
     /// Returns the User Settings base revision selected by import.
     #[napi(getter)]
     pub fn base_settings_revision(&self) -> String {
-        revision_token(self.inner.base_settings_revision())
+        self.inner.base_settings_revision().token()
     }
 
     /// Returns the User Settings revision published by import.
     #[napi(getter)]
     pub fn published_settings_revision(&self) -> String {
-        revision_token(self.inner.published_settings_revision())
+        self.inner.published_settings_revision().token()
     }
 
     /// Restores the pre-import User Settings state through this verified receipt.
@@ -440,7 +443,7 @@ impl JsLegacyTuiStateImportReceipt {
             Ok(LegacyTuiStateImportRestoreOutcome::Restored { revision }) => {
                 Ok(JsLegacyTuiStateImportRestoreOutcome {
                     status: "restored".to_string(),
-                    revision: Some(revision_token(&revision)),
+                    revision: Some(revision.token()),
                     expected_revision: None,
                     actual_revision: None,
                 })
@@ -451,8 +454,8 @@ impl JsLegacyTuiStateImportReceipt {
             }) => Ok(JsLegacyTuiStateImportRestoreOutcome {
                 status: "conflict".to_string(),
                 revision: None,
-                expected_revision: Some(revision_token(&expected_revision)),
-                actual_revision: Some(revision_token(&actual_revision)),
+                expected_revision: Some(expected_revision.token()),
+                actual_revision: Some(actual_revision.token()),
             }),
             Err(error) => Err(napi::Error::new(
                 error.code().to_string(),
@@ -617,13 +620,13 @@ impl JsUserSettingsMigrationReceipt {
     /// Returns the exact-byte revision attested by the retained backup.
     #[napi(getter)]
     pub fn backup_revision(&self) -> String {
-        revision_token(self.inner.backup_revision())
+        self.inner.backup_revision().token()
     }
 
     /// Returns the exact-byte revision verified after migrated publication.
     #[napi(getter)]
     pub fn published_revision(&self) -> String {
-        revision_token(self.inner.published_revision())
+        self.inner.published_revision().token()
     }
 
     /// Explicitly restores this receipt's retained backup under core coordination.
@@ -635,12 +638,12 @@ impl JsUserSettingsMigrationReceipt {
         &self,
         classic_root: String,
     ) -> napi::Result<JsUserSettingsMigrationRestoreResult, String> {
-        let expected_revision = revision_token(self.inner.published_revision());
+        let expected_revision = self.inner.published_revision().token();
         match self.inner.restore(classic_root) {
             Ok(UserSettingsMigrationRestoreOutcome::Restored { revision }) => {
                 Ok(JsUserSettingsMigrationRestoreResult {
                     status: "restored".to_string(),
-                    revision: Some(revision_token(&revision)),
+                    revision: Some(revision.token()),
                     expected_revision,
                     actual_revision: None,
                 })
@@ -651,8 +654,8 @@ impl JsUserSettingsMigrationReceipt {
             }) => Ok(JsUserSettingsMigrationRestoreResult {
                 status: "conflict".to_string(),
                 revision: None,
-                expected_revision: revision_token(&expected_revision),
-                actual_revision: Some(revision_token(&actual_revision)),
+                expected_revision: expected_revision.token(),
+                actual_revision: Some(actual_revision.token()),
             }),
             Err(error) => Err(user_settings_migration_error(error.code(), error.message())),
         }
@@ -739,26 +742,26 @@ fn legacy_tui_state_import_outcome_to_js(
             revision,
         } => {
             result.status = "requiresSettingsMigration".to_string();
-            result.classification = Some(classification_token(classification).to_string());
-            result.revision = Some(revision_token(&revision));
+            result.classification = Some(js_token(classification.as_str()));
+            result.revision = Some(revision.token());
         }
         LegacyTuiStateImportOutcome::UntrustedSettingsBase {
             classification,
             revision,
         } => {
             result.status = "untrustedSettingsBase".to_string();
-            result.classification = Some(classification_token(classification).to_string());
-            result.revision = Some(revision_token(&revision));
+            result.classification = Some(js_token(classification.as_str()));
+            result.revision = Some(revision.token());
         }
         LegacyTuiStateImportOutcome::Applied(receipt) => {
             result.status = "applied".to_string();
             result.source_path = Some(receipt.source_path().display().to_string());
             result.backup_path = Some(receipt.backup_path().display().to_string());
-            result.source_revision = Some(revision_token(receipt.source_revision()));
-            result.backup_revision = Some(revision_token(receipt.backup_revision()));
-            result.base_settings_revision = Some(revision_token(receipt.base_settings_revision()));
+            result.source_revision = Some(receipt.source_revision().token());
+            result.backup_revision = Some(receipt.backup_revision().token());
+            result.base_settings_revision = Some(receipt.base_settings_revision().token());
             result.published_settings_revision =
-                Some(revision_token(receipt.published_settings_revision()));
+                Some(receipt.published_settings_revision().token());
             result.receipt = Some(JsLegacyTuiStateImportReceipt { inner: receipt });
         }
         LegacyTuiStateImportOutcome::SettingsConflict {
@@ -766,16 +769,16 @@ fn legacy_tui_state_import_outcome_to_js(
             actual_revision,
         } => {
             result.status = "settingsConflict".to_string();
-            result.expected_revision = Some(revision_token(&expected_revision));
-            result.actual_revision = Some(revision_token(&actual_revision));
+            result.expected_revision = Some(expected_revision.token());
+            result.actual_revision = Some(actual_revision.token());
         }
         LegacyTuiStateImportOutcome::LegacySourceConflict {
             expected_revision,
             actual_revision,
         } => {
             result.status = "legacySourceConflict".to_string();
-            result.expected_revision = Some(revision_token(&expected_revision));
-            result.actual_revision = Some(revision_token(&actual_revision));
+            result.expected_revision = Some(expected_revision.token());
+            result.actual_revision = Some(actual_revision.token());
         }
     }
     result
@@ -798,31 +801,32 @@ fn user_settings_snapshot_to_js(settings: &UserSettings) -> JsUserSettingsSnapsh
     JsUserSettingsSnapshot {
         update_preferences: JsUpdatePreferences {
             update_check: settings.update_preferences().update_check(),
-            origin: preference_origin_token(settings.update_preferences().update_check_origin())
-                .to_string(),
+            origin: js_token(settings.update_preferences().update_check_origin().as_str()),
             update_source: settings
                 .update_preferences()
                 .update_source()
                 .as_str()
                 .to_string(),
-            update_source_origin: preference_origin_token(
-                settings.update_preferences().update_source_origin(),
-            )
-            .to_string(),
+            update_source_origin: js_token(
+                settings
+                    .update_preferences()
+                    .update_source_origin()
+                    .as_str(),
+            ),
         },
         crash_log_scan_settings: crash_log_scan_settings_to_js(settings),
         game_setup_settings: game_setup_settings_to_js(settings),
         frontend_state: frontend_state_to_js(settings),
-        source_location: source_location_token(settings.source().location()).to_string(),
+        source_location: js_token(settings.source().location().as_str()),
         source_path: settings
             .source()
             .path()
             .map(|path| path.display().to_string()),
-        classification: classification_token(settings.classification()).to_string(),
+        classification: js_token(settings.classification().as_str()),
         schema_major,
         schema_minor,
-        revision: revision_token(settings.revision()),
-        commit_eligibility: commit_eligibility_token(settings.commit_eligibility()).to_string(),
+        revision: settings.revision().token(),
+        commit_eligibility: js_token(settings.commit_eligibility().as_str()),
         diagnostics: settings
             .diagnostics()
             .iter()
@@ -896,7 +900,7 @@ pub fn apply_user_settings_migration(
     approved_proposed_content: Buffer,
 ) -> napi::Result<JsUserSettingsMigrationApplyResult, String> {
     let settings = UserSettings::open(&classic_root);
-    let actual_revision = revision_token(settings.revision());
+    let actual_revision = settings.revision().token();
     if actual_revision != approved_base_revision {
         return Ok(user_settings_migration_apply_conflict(
             approved_base_revision,
@@ -929,10 +933,10 @@ pub fn apply_user_settings_migration(
             ));
         }
     };
-    if revision_token(plan.base_revision()) != approved_base_revision {
+    if plan.base_revision().token() != approved_base_revision {
         return Ok(user_settings_migration_apply_conflict(
             approved_base_revision,
-            revision_token(plan.base_revision()),
+            plan.base_revision().token(),
         ));
     }
     if plan.proposed_bytes() != approved_proposed_content.as_ref() {
@@ -955,8 +959,8 @@ pub fn apply_user_settings_migration(
             expected_revision,
             actual_revision,
         }) => Ok(user_settings_migration_apply_conflict(
-            revision_token(&expected_revision),
-            revision_token(&actual_revision),
+            expected_revision.token(),
+            actual_revision.token(),
         )),
         Err(error) => Err(user_settings_migration_error(error.code(), error.message())),
     }
@@ -1032,7 +1036,7 @@ fn user_settings_migration_plan_to_js(
 ) -> JsUserSettingsMigrationPlan {
     JsUserSettingsMigrationPlan {
         required: plan.required(),
-        base_revision: revision_token(plan.base_revision()),
+        base_revision: plan.base_revision().token(),
         source: migration_endpoint_to_js(plan.source()),
         target: migration_endpoint_to_js(plan.target()),
         changes: plan.changes().iter().map(migration_change_to_js).collect(),
@@ -1044,7 +1048,7 @@ fn user_settings_migration_plan_to_js(
 /// Converts one migration endpoint without interpreting its compatibility policy.
 fn migration_endpoint_to_js(endpoint: &MigrationEndpoint) -> JsUserSettingsMigrationEndpoint {
     JsUserSettingsMigrationEndpoint {
-        location: source_location_token(endpoint.location()).to_string(),
+        location: js_token(endpoint.location().as_str()),
         schema_version: endpoint.schema_version().map(schema_version_to_js),
     }
 }
@@ -1062,7 +1066,7 @@ fn migration_change_to_js(change: &MigrationChange) -> JsUserSettingsMigrationCh
     JsUserSettingsMigrationChange {
         // The core token, camelized by the one shared rule this surface uses
         // for every enum.
-        kind: crate::vocabulary::js_token(change.kind().as_str()),
+        kind: js_token(change.kind().as_str()),
         source_path: change.source_path().map(ToOwned::to_owned),
         target_path: change.target_path().map(ToOwned::to_owned),
         before: change.before().map(ToOwned::to_owned),
@@ -1077,7 +1081,7 @@ fn migration_change_to_js(change: &MigrationChange) -> JsUserSettingsMigrationCh
 /// the caller, take them back, rebuild the plan — so a forward table and a
 /// reverse table that disagreed would corrupt a reversal silently.
 fn migration_change_kind_from_token(token: &str) -> napi::Result<MigrationChangeKind, String> {
-    crate::vocabulary::from_js_token(token).ok_or_else(|| {
+    from_js_token(token).ok_or_else(|| {
         user_settings_migration_error(
             "migration_plan_review_invalid",
             format!("unsupported User Settings migration change kind: {token}"),
@@ -1095,15 +1099,13 @@ fn frontend_state_to_js(settings: &UserSettings) -> JsFrontendState {
     JsFrontendState {
         preferences: JsFrontendPreferences {
             auto_switch_after_scan: preferences.auto_switch_after_scan(),
-            auto_switch_after_scan_origin: preference_origin_token(
-                preferences.auto_switch_after_scan_origin(),
-            )
-            .to_string(),
+            auto_switch_after_scan_origin: js_token(
+                preferences.auto_switch_after_scan_origin().as_str(),
+            ),
             auto_refresh_interval_ms: preferences.auto_refresh_interval_ms() as f64,
-            auto_refresh_interval_ms_origin: preference_origin_token(
-                preferences.auto_refresh_interval_ms_origin(),
-            )
-            .to_string(),
+            auto_refresh_interval_ms_origin: js_token(
+                preferences.auto_refresh_interval_ms_origin().as_str(),
+            ),
         },
         window_geometry: JsGuiWindowGeometry {
             main_tab: window_geometry_to_js(geometry.main_tab()),
@@ -1113,12 +1115,11 @@ fn frontend_state_to_js(settings: &UserSettings) -> JsFrontendState {
         },
         tui: JsTuiRememberedState {
             active_tab: tui.active_tab(),
-            active_tab_origin: preference_origin_token(tui.active_tab_origin()).to_string(),
+            active_tab_origin: js_token(tui.active_tab_origin().as_str()),
             results_panel_width: tui.results_panel_width(),
-            results_panel_width_origin: preference_origin_token(tui.results_panel_width_origin())
-                .to_string(),
+            results_panel_width_origin: js_token(tui.results_panel_width_origin().as_str()),
             sort_ascending: tui.sort_ascending(),
-            sort_ascending_origin: preference_origin_token(tui.sort_ascending_origin()).to_string(),
+            sort_ascending_origin: js_token(tui.sort_ascending_origin().as_str()),
         },
     }
 }
@@ -1127,11 +1128,11 @@ fn frontend_state_to_js(settings: &UserSettings) -> JsFrontendState {
 fn window_geometry_to_js(geometry: &WindowGeometry) -> JsWindowGeometry {
     JsWindowGeometry {
         maximized: geometry.maximized(),
-        maximized_origin: preference_origin_token(geometry.maximized_origin()).to_string(),
+        maximized_origin: js_token(geometry.maximized_origin().as_str()),
         width: geometry.width(),
-        width_origin: preference_origin_token(geometry.width_origin()).to_string(),
+        width_origin: js_token(geometry.width_origin().as_str()),
         height: geometry.height(),
-        height_origin: preference_origin_token(geometry.height_origin()).to_string(),
+        height_origin: js_token(geometry.height_origin().as_str()),
     }
 }
 
@@ -1140,27 +1141,23 @@ fn game_setup_settings_to_js(settings: &UserSettings) -> JsGameSetupSettings {
     let setup = settings.game_setup_settings();
     JsGameSetupSettings {
         managed_game: core_to_js_game_id(&setup.managed_game()),
-        managed_game_origin: preference_origin_token(setup.managed_game_origin()).to_string(),
+        managed_game_origin: js_token(setup.managed_game_origin().as_str()),
         game_version_selection: setup.game_version_selection().as_str().to_string(),
-        game_version_selection_origin: preference_origin_token(
-            setup.game_version_selection_origin(),
-        )
-        .to_string(),
+        game_version_selection_origin: js_token(setup.game_version_selection_origin().as_str()),
         game_root: setup.game_root().map(ToOwned::to_owned),
-        game_root_origin: preference_origin_token(setup.game_root_origin()).to_string(),
+        game_root_origin: js_token(setup.game_root_origin().as_str()),
         game_executable: setup.game_executable().map(ToOwned::to_owned),
-        game_executable_origin: preference_origin_token(setup.game_executable_origin()).to_string(),
+        game_executable_origin: js_token(setup.game_executable_origin().as_str()),
         documents_root: setup.documents_root().map(ToOwned::to_owned),
-        documents_root_origin: preference_origin_token(setup.documents_root_origin()).to_string(),
+        documents_root_origin: js_token(setup.documents_root_origin().as_str()),
         ini_folder: setup.ini_folder().map(ToOwned::to_owned),
-        ini_folder_origin: preference_origin_token(setup.ini_folder_origin()).to_string(),
+        ini_folder_origin: js_token(setup.ini_folder_origin().as_str()),
         mods_root: setup.mods_root().map(ToOwned::to_owned),
-        mods_root_origin: preference_origin_token(setup.mods_root_origin()).to_string(),
+        mods_root_origin: js_token(setup.mods_root_origin().as_str()),
         custom_scan_input: setup.custom_scan_input().map(ToOwned::to_owned),
-        custom_scan_input_origin: preference_origin_token(setup.custom_scan_input_origin())
-            .to_string(),
+        custom_scan_input_origin: js_token(setup.custom_scan_input_origin().as_str()),
         papyrus_log: setup.papyrus_log().map(ToOwned::to_owned),
-        papyrus_log_origin: preference_origin_token(setup.papyrus_log_origin()).to_string(),
+        papyrus_log_origin: js_token(setup.papyrus_log_origin().as_str()),
     }
 }
 
@@ -1250,7 +1247,7 @@ pub fn commit_frontend_geometry_transition(
     window: JsGuiWindow,
     transition: JsWindowGeometryUpdate,
 ) -> napi::Result<JsUserSettingsCommitResult, String> {
-    let expected = revision_from_token(&expected_revision).ok_or_else(|| {
+    let expected = Revision::from_token(&expected_revision).ok_or_else(|| {
         user_settings_commit_error(
             "invalid_user_settings_revision",
             format!("unrecognized revision token {expected_revision:?}"),
@@ -1273,7 +1270,7 @@ pub fn commit_frontend_geometry_transition(
         Ok(CoreUserSettingsFrontendTransitionOutcome::Committed { revision }) => {
             Ok(JsUserSettingsCommitResult {
                 status: "committed".to_string(),
-                revision: Some(revision_token(&revision)),
+                revision: Some(revision.token()),
                 expected_revision,
                 actual_revision: None,
                 diagnostics: Vec::new(),
@@ -1295,8 +1292,8 @@ pub fn commit_frontend_geometry_transition(
             expected_revision,
             actual_revision,
         }) => Ok(user_settings_commit_conflict(
-            revision_token(&expected_revision),
-            revision_token(&actual_revision),
+            expected_revision.token(),
+            actual_revision.token(),
         )),
         Err(error) => Err(user_settings_commit_error(error.code(), error.message())),
     }
@@ -1317,7 +1314,7 @@ fn commit_user_settings(
     kind: UserSettingsCommitKind,
 ) -> napi::Result<JsUserSettingsCommitResult, String> {
     let settings = UserSettings::open(&classic_root);
-    let actual_revision = revision_token(settings.revision());
+    let actual_revision = settings.revision().token();
     if matches!(settings.revision(), Revision::Unavailable) {
         return Err(user_settings_commit_error(
             "commit_source_unavailable",
@@ -1355,7 +1352,7 @@ fn commit_user_settings(
     match accepted.commit(&classic_root) {
         Ok(UserSettingsCommitOutcome::Committed { revision }) => Ok(JsUserSettingsCommitResult {
             status: "committed".to_string(),
-            revision: Some(revision_token(&revision)),
+            revision: Some(revision.token()),
             expected_revision: base_revision,
             actual_revision: None,
             diagnostics: Vec::new(),
@@ -1364,8 +1361,8 @@ fn commit_user_settings(
             expected_revision,
             actual_revision,
         }) => Ok(user_settings_commit_conflict(
-            revision_token(&expected_revision),
-            revision_token(&actual_revision),
+            expected_revision.token(),
+            actual_revision.token(),
         )),
         Err(error) => Err(user_settings_commit_error(error.code(), error.message())),
     }
@@ -1398,40 +1395,31 @@ fn crash_log_scan_settings_to_js(settings: &UserSettings) -> JsCrashLogScanSetti
     let scan = settings.crash_log_scan_settings();
     JsCrashLogScanSettings {
         fcx_mode: scan.fcx_mode(),
-        fcx_mode_origin: preference_origin_token(scan.fcx_mode_origin()).to_string(),
+        fcx_mode_origin: js_token(scan.fcx_mode_origin().as_str()),
         simplify_logs: scan.simplify_logs(),
-        simplify_logs_origin: preference_origin_token(scan.simplify_logs_origin()).to_string(),
+        simplify_logs_origin: js_token(scan.simplify_logs_origin().as_str()),
         show_statistics: scan.show_statistics(),
-        show_statistics_origin: preference_origin_token(scan.show_statistics_origin()).to_string(),
+        show_statistics_origin: js_token(scan.show_statistics_origin().as_str()),
         formid_value_lookup: scan.formid_value_lookup(),
-        formid_value_lookup_origin: preference_origin_token(scan.formid_value_lookup_origin())
-            .to_string(),
+        formid_value_lookup_origin: js_token(scan.formid_value_lookup_origin().as_str()),
         formid_databases: scan
             .formid_databases()
             .iter()
             .map(|(game, paths)| (game.clone(), paths.clone()))
             .collect(),
-        formid_databases_origin: preference_origin_token(scan.formid_databases_origin())
-            .to_string(),
+        formid_databases_origin: js_token(scan.formid_databases_origin().as_str()),
         move_unsolved_logs: scan.move_unsolved_logs(),
-        move_unsolved_logs_origin: preference_origin_token(scan.move_unsolved_logs_origin())
-            .to_string(),
+        move_unsolved_logs_origin: js_token(scan.move_unsolved_logs_origin().as_str()),
         unsolved_logs_destination: scan.unsolved_logs_destination().map(ToOwned::to_owned),
-        unsolved_logs_destination_origin: preference_origin_token(
-            scan.unsolved_logs_destination_origin(),
-        )
-        .to_string(),
+        unsolved_logs_destination_origin: js_token(
+            scan.unsolved_logs_destination_origin().as_str(),
+        ),
         custom_scan_input: scan.custom_scan_input().map(ToOwned::to_owned),
-        custom_scan_input_origin: preference_origin_token(scan.custom_scan_input_origin())
-            .to_string(),
+        custom_scan_input_origin: js_token(scan.custom_scan_input_origin().as_str()),
         game_version_selection: scan.game_version_selection().as_str().to_string(),
-        game_version_selection_origin: preference_origin_token(
-            scan.game_version_selection_origin(),
-        )
-        .to_string(),
+        game_version_selection_origin: js_token(scan.game_version_selection_origin().as_str()),
         max_concurrent_scans: scan.max_concurrent_scans(),
-        max_concurrent_scans_origin: preference_origin_token(scan.max_concurrent_scans_origin())
-            .to_string(),
+        max_concurrent_scans_origin: js_token(scan.max_concurrent_scans_origin().as_str()),
     }
 }
 
@@ -1567,24 +1555,6 @@ fn tui_integer_to_core(value: f64) -> i64 {
     }
 }
 
-/// Parses the stable revision representation accepted from JavaScript callers.
-fn revision_from_token(token: &str) -> Option<Revision> {
-    match token {
-        "missing" => return Some(Revision::Missing),
-        "unavailable" => return Some(Revision::Unavailable),
-        _ => {}
-    }
-    let encoded = token.strip_prefix("sha256:")?;
-    if encoded.len() != 64 {
-        return None;
-    }
-    let mut digest = [0_u8; 32];
-    for (index, byte) in digest.iter_mut().enumerate() {
-        *byte = u8::from_str_radix(&encoded[index * 2..index * 2 + 2], 16).ok()?;
-    }
-    Some(Revision::ContentSha256(digest))
-}
-
 /// Converts an explicit JavaScript string-or-null input into the core optional value.
 fn nullable_string_to_option(value: Either<String, Null>) -> Option<String> {
     match value {
@@ -1600,7 +1570,7 @@ fn user_settings_update_preview_to_js(
     match preview {
         UserSettingsUpdatePreview::Accepted(accepted) => JsUserSettingsUpdatePreview {
             accepted: true,
-            base_revision: Some(revision_token(accepted.base_revision())),
+            base_revision: Some(accepted.base_revision().token()),
             fields: accepted
                 .fields()
                 .iter()
@@ -1678,73 +1648,34 @@ fn user_settings_update_field_to_js(field: &UserSettingsUpdateField) -> JsUserSe
     }
 }
 
-/// Returns the JavaScript token for preference provenance.
-fn preference_origin_token(origin: PreferenceOrigin) -> &'static str {
-    match origin {
-        PreferenceOrigin::Document => "document",
-        PreferenceOrigin::Default => "default",
-        PreferenceOrigin::DegradedFallback => "degradedFallback",
-    }
-}
-
-/// Returns the JavaScript token for source location.
-fn source_location_token(location: SourceLocation) -> &'static str {
-    match location {
-        SourceLocation::Canonical => "canonical",
-        SourceLocation::Legacy => "legacy",
-        SourceLocation::Missing => "missing",
-    }
-}
+// The Vocabulary Tokens for preference origin, source location, document
+// classification, and commit eligibility are owned by
+// `classic-user-settings-core`. This surface projects `Vocabulary::as_str`
+// through `js_token`, the one shared casing rule it applies
+// to every enum, so the four hand-written camelCase tables that used to live
+// here are gone rather than delegating.
 
 /// Parses one stable JavaScript source-location token for review-only core reconstruction.
+///
+/// Delegates to the shared casing projection rather than restating the token
+/// table. The plan round-trips through JavaScript — emit tokens, hand them to
+/// the caller, take them back, rebuild the plan — so a forward table and a
+/// reverse table that disagreed would corrupt a reversal silently.
 fn source_location_from_token(token: &str) -> napi::Result<SourceLocation, String> {
-    match token {
-        "canonical" => Ok(SourceLocation::Canonical),
-        "legacy" => Ok(SourceLocation::Legacy),
-        "missing" => Ok(SourceLocation::Missing),
-        _ => Err(user_settings_migration_error(
+    from_js_token(token).ok_or_else(|| {
+        user_settings_migration_error(
             "migration_plan_review_invalid",
             format!("unsupported User Settings source location: {token}"),
-        )),
-    }
+        )
+    })
 }
 
-/// Returns the JavaScript token for document classification.
-fn classification_token(classification: DocumentClassification) -> &'static str {
-    match classification {
-        DocumentClassification::Current => "current",
-        DocumentClassification::Unversioned => "unversioned",
-        DocumentClassification::Older => "older",
-        DocumentClassification::NewerCompatible => "newerCompatible",
-        DocumentClassification::FutureMajor => "futureMajor",
-        DocumentClassification::LegacyFlat => "legacyFlat",
-        DocumentClassification::Malformed => "malformed",
-        DocumentClassification::Missing => "missing",
-    }
-}
+// The revision token pair is owned by `classic-user-settings-core`
+// (`Revision::token` / `Revision::from_token`) so the CXX, Node, and Python
+// surfaces cannot drift apart. Unlike the finite domain enums above, the
+// revision token is not casing-transformed: `missing`, `unavailable`, and
+// `sha256:<hex>` are already single-word or content-derived.
 
-/// Returns the JavaScript token for commit eligibility.
-fn commit_eligibility_token(eligibility: CommitEligibility) -> &'static str {
-    match eligibility {
-        CommitEligibility::Eligible => "eligible",
-        CommitEligibility::RequiresMigration => "requiresMigration",
-        CommitEligibility::BlockedUntrusted => "blockedUntrusted",
-    }
-}
-
-/// Formats the content revision for JavaScript consumers.
-fn revision_token(revision: &Revision) -> String {
-    match revision {
-        Revision::Missing => "missing".to_string(),
-        Revision::Unavailable => "unavailable".to_string(),
-        Revision::ContentSha256(digest) => {
-            let mut token = String::with_capacity("sha256:".len() + digest.len() * 2);
-            token.push_str("sha256:");
-            for byte in digest {
-                use std::fmt::Write as _;
-                write!(&mut token, "{byte:02x}").expect("writing to a String cannot fail");
-            }
-            token
-        }
-    }
-}
+#[cfg(test)]
+#[path = "user_settings_tests.rs"]
+mod tests;

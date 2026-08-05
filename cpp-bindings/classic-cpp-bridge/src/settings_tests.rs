@@ -1,4 +1,8 @@
 use super::*;
+// Imported here rather than in `settings.rs`: the bridge no longer names these
+// types, because it asks each value for its own Vocabulary Token instead of
+// matching on it.
+use classic_user_settings_core::DocumentClassification;
 use serial_test::serial;
 use std::{
     io::Write,
@@ -224,6 +228,106 @@ fn test_user_settings_migration_change_kind_rejects_an_unknown_token() {
     assert_eq!(
         error,
         "unsupported User Settings migration change kind: not_a_change_kind"
+    );
+}
+
+// ── Document vocabulary projection ──────────────────────────────────
+//
+// These drive the *production* DTO conversions for the two document enums a
+// binding-safe constructor can reach exhaustively: `DocumentClassification`,
+// through the legacy-import outcome, and `SourceLocation`, through a
+// review-only plan. Both derive their expectation from the core rather than
+// restating it.
+//
+// `PreferenceOrigin` and `CommitEligibility` are only reachable by opening a
+// real document, so no exhaustive constructor exists for them. That leaves
+// nothing untested, because after this change the bridge holds no per-enum
+// projection code at all — every one of these four is projected by the same
+// `Vocabulary::as_str` call, and the fixture-driven snapshot tests below still
+// pin the token each fixture actually yields.
+
+/// Builds a review-only plan whose endpoints carry `location` on both sides.
+fn plan_anchored_at(location: SourceLocation) -> UserSettingsMigrationPlan {
+    UserSettingsMigrationPlan::from((
+        true,
+        (location, None),
+        (location, Some(UserSettingsSchemaVersion::new(1, 0))),
+        Vec::new(),
+        b"original".to_vec(),
+        b"proposed".to_vec(),
+    ))
+}
+
+#[test]
+fn test_user_settings_document_classifications_project_the_core_vocabulary_tokens() {
+    // The expectation is derived from the core, not restated here. A test that
+    // listed the tokens again would be a fourth copy of the vocabulary and
+    // would pass just as happily against a bridge that had drifted.
+    let projected: Vec<String> = DocumentClassification::VARIANTS
+        .iter()
+        .copied()
+        .map(|classification| {
+            legacy_tui_state_import_outcome_dto(
+                &CoreLegacyTuiStateImportOutcome::RequiresSettingsMigration {
+                    classification,
+                    revision: Revision::Missing,
+                },
+            )
+            .classification
+        })
+        .collect();
+    let expected: Vec<String> = DocumentClassification::VARIANTS
+        .iter()
+        .copied()
+        .map(|classification| classification.as_str().to_string())
+        .collect();
+
+    assert_eq!(projected, expected);
+}
+
+#[test]
+fn test_user_settings_source_locations_project_the_core_vocabulary_tokens() {
+    let projected: Vec<String> = SourceLocation::VARIANTS
+        .iter()
+        .copied()
+        .map(|location| {
+            user_settings_migration_plan_dto(&plan_anchored_at(location)).source_location
+        })
+        .collect();
+    let expected: Vec<String> = SourceLocation::VARIANTS
+        .iter()
+        .copied()
+        .map(|location| location.as_str().to_string())
+        .collect();
+
+    assert_eq!(projected, expected);
+}
+
+#[test]
+fn test_user_settings_source_location_tokens_round_trip_through_the_dto() {
+    // The bridge's reversal path takes tokens back from C++ and rebuilds a
+    // core plan, so emitting and parsing must be the same rule read in two
+    // directions. Anything less corrupts a reversal silently.
+    for location in SourceLocation::VARIANTS.iter().copied() {
+        let dto = user_settings_migration_plan_dto(&plan_anchored_at(location));
+
+        let rebuilt = user_settings_migration_plan_from_dto(&dto).expect("rebuild plan from DTO");
+
+        assert_eq!(rebuilt.source().location(), location);
+        assert_eq!(rebuilt.target().location(), location);
+    }
+}
+
+#[test]
+fn test_user_settings_source_location_rejects_an_unknown_token() {
+    let mut dto = user_settings_migration_plan_dto(&plan_anchored_at(SourceLocation::Legacy));
+    dto.source_location = "not_a_location".to_string();
+
+    let error = user_settings_migration_plan_from_dto(&dto).unwrap_err();
+
+    assert_eq!(
+        error,
+        "unsupported User Settings source location: not_a_location"
     );
 }
 

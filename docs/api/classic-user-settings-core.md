@@ -60,6 +60,34 @@ Open reads bytes directly and never uses `Path::exists()`, so permission failure
 
 Retaining exact bytes keeps unknown root and nested mappings, sequences, nulls, booleans, numbers, strings, and untouched invalid known values available to later User Settings Update commits. Semantic preservation does not promise to retain comments, quoting style, or whitespace after a future explicit commit.
 
+### Revision token
+
+`Revision` owns its own adapter-facing string form as an inherent pair:
+
+- `Revision::token()` — `missing`, `unavailable`, or `sha256:` followed by the lowercase hex digest
+- `Revision::from_token(token)` — the exact inverse, returning `None` for anything else
+
+Every revision string published by the CXX, Node, and Python surfaces is this token verbatim, and every caller-supplied base revision they accept is parsed by this function. The format is frozen: changing it changes all three binding contracts at once.
+
+`Revision` is deliberately outside the `Vocabulary` naming contract that the finite User Settings enums implement. It carries a content-digest data variant, so it has no finite variant list and its token is built at runtime rather than being a static string.
+
+Parsing is case-insensitive over the hex digits and rejects any non-ASCII encoded segment, so a caller-supplied string can never split a character boundary at a binding seam.
+
+### Vocabulary Tokens for the document enums
+
+`SourceLocation`, `DocumentClassification`, `CommitEligibility`, and `PreferenceOrigin` implement the [Vocabulary naming contract](classic-vocabulary.md) alongside `MigrationChangeKind`, so this crate owns both names for every variant: the frozen Vocabulary Token from `as_str()` and the reworkable Display Label from `label()`.
+
+| Enum | Vocabulary Tokens |
+| --- | --- |
+| `SourceLocation` | `canonical`, `legacy`, `missing` |
+| `DocumentClassification` | `current`, `unversioned`, `older`, `newer_compatible`, `future_major`, `legacy_flat`, `malformed`, `missing` |
+| `CommitEligibility` | `eligible`, `requires_migration`, `blocked_untrusted` |
+| `PreferenceOrigin` | `document`, `default`, `degraded_fallback` |
+
+All three bindings project these rather than keeping their own tables. The CXX and Python surfaces publish the canonical snake_case spelling unchanged; the Node surface applies only its documented camelCase transform, so `degraded_fallback` reaches JavaScript as `degradedFallback` and `newer_compatible` as `newerCompatible`. The reverse-parse paths that reconstruct a review-only migration plan from a caller-supplied source-location token derive their accepted inputs from the same variant list, so the forward and reverse directions cannot disagree.
+
+Changing a token is breaking for every binding consumer; rewording a label is not. No frontend renders these Display Labels yet, so none of them crosses a binding seam — they exist because the contract requires every variant to have one, which is what stops a new variant from shipping with nothing to render.
+
 ## Document classifications and trust
 
 The current schema is `1.0`.

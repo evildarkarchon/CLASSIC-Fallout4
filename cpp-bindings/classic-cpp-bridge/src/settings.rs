@@ -42,11 +42,10 @@ use classic_settings_core::{
     yaml_cache_stats,
 };
 use classic_user_settings_core::{
-    CommitEligibility, DocumentClassification, GuiWindow,
-    LegacyTuiStateImportOutcome as CoreLegacyTuiStateImportOutcome,
+    GuiWindow, LegacyTuiStateImportOutcome as CoreLegacyTuiStateImportOutcome,
     LegacyTuiStateImportRestoreOutcome as CoreLegacyTuiStateImportRestoreOutcome,
-    MigrationChangeKind, MigrationPlanningOutcome, PreferenceOrigin, Revision, SourceLocation,
-    UserSettings, UserSettingsCommitOutcome as CoreUserSettingsCommitOutcome,
+    MigrationChangeKind, MigrationPlanningOutcome, Revision, SourceLocation, UserSettings,
+    UserSettingsCommitOutcome as CoreUserSettingsCommitOutcome,
     UserSettingsFrontendTransitionOutcome as CoreUserSettingsFrontendTransitionOutcome,
     UserSettingsMigrationApplyOutcome as CoreUserSettingsMigrationApplyOutcome,
     UserSettingsMigrationPlan, UserSettingsMigrationReceipt as CoreUserSettingsMigrationReceipt,
@@ -109,29 +108,31 @@ fn user_settings_update_preferences_dto(settings: &UserSettings) -> ffi::UpdateP
 
     ffi::UpdatePreferencesDto {
         update_check_enabled: settings.update_preferences().update_check(),
-        update_check_origin: preference_origin_token(
-            settings.update_preferences().update_check_origin(),
-        )
-        .to_string(),
+        update_check_origin: settings
+            .update_preferences()
+            .update_check_origin()
+            .as_str()
+            .to_string(),
         update_source: settings
             .update_preferences()
             .update_source()
             .as_str()
             .to_string(),
-        update_source_origin: preference_origin_token(
-            settings.update_preferences().update_source_origin(),
-        )
-        .to_string(),
-        source_location: source_location_token(source.location()).to_string(),
+        update_source_origin: settings
+            .update_preferences()
+            .update_source_origin()
+            .as_str()
+            .to_string(),
+        source_location: source.location().as_str().to_string(),
         source_path: source
             .path()
             .map_or_else(String::new, |path| path.display().to_string()),
-        classification: document_classification_token(settings.classification()).to_string(),
+        classification: settings.classification().as_str().to_string(),
         has_schema_version,
         schema_major,
         schema_minor,
-        revision: revision_token(settings.revision()),
-        commit_eligibility: commit_eligibility_token(settings.commit_eligibility()).to_string(),
+        revision: settings.revision().token(),
+        commit_eligibility: settings.commit_eligibility().as_str().to_string(),
         diagnostics: settings
             .diagnostics()
             .iter()
@@ -212,7 +213,7 @@ fn user_settings_apply_migration(
 
     let root = Path::new(classic_root);
     let reopened = UserSettings::open(root);
-    let actual_revision = revision_token(reopened.revision());
+    let actual_revision = reopened.revision().token();
     if actual_revision != approved.base_revision {
         return Ok(Box::new(UserSettingsMigrationApplyHandle {
             state: UserSettingsMigrationApplyState::Conflict {
@@ -239,11 +240,11 @@ fn user_settings_apply_migration(
             return Err(format!("migration_approval_invalid: {detail}"));
         }
     };
-    if revision_token(fresh_plan.base_revision()) != approved.base_revision {
+    if fresh_plan.base_revision().token() != approved.base_revision {
         return Ok(Box::new(UserSettingsMigrationApplyHandle {
             state: UserSettingsMigrationApplyState::Conflict {
                 expected_revision: approved.base_revision.clone(),
-                actual_revision: revision_token(fresh_plan.base_revision()),
+                actual_revision: fresh_plan.base_revision().token(),
             },
         }));
     }
@@ -262,8 +263,8 @@ fn user_settings_apply_migration(
             expected_revision,
             actual_revision,
         } => UserSettingsMigrationApplyState::Conflict {
-            expected_revision: revision_token(&expected_revision),
-            actual_revision: revision_token(&actual_revision),
+            expected_revision: expected_revision.token(),
+            actual_revision: actual_revision.token(),
         },
     };
     Ok(Box::new(UserSettingsMigrationApplyHandle { state }))
@@ -317,7 +318,7 @@ fn user_settings_restore_migration(
         CoreUserSettingsMigrationRestoreOutcome::Restored { revision } => {
             Ok(ffi::UserSettingsMigrationRestoreOutcomeDto {
                 status: "restored".to_string(),
-                revision: revision_token(&revision),
+                revision: revision.token(),
                 expected_revision: String::new(),
                 actual_revision: String::new(),
             })
@@ -328,8 +329,8 @@ fn user_settings_restore_migration(
         } => Ok(ffi::UserSettingsMigrationRestoreOutcomeDto {
             status: "conflict".to_string(),
             revision: String::new(),
-            expected_revision: revision_token(&expected_revision),
-            actual_revision: revision_token(&actual_revision),
+            expected_revision: expected_revision.token(),
+            actual_revision: actual_revision.token(),
         }),
     }
 }
@@ -344,16 +345,16 @@ fn user_settings_migration_receipt_dto(
         source_path: receipt.source_path().display().to_string(),
         destination_path: receipt.destination_path().display().to_string(),
         backup_path: receipt.backup_path().display().to_string(),
-        source_location: source_location_token(receipt.source().location()).to_string(),
+        source_location: receipt.source().location().as_str().to_string(),
         has_source_schema_version: source_version.is_some(),
         source_schema_major: source_version.map_or(0, |version| version.major()),
         source_schema_minor: source_version.map_or(0, |version| version.minor()),
-        target_location: source_location_token(receipt.target().location()).to_string(),
+        target_location: receipt.target().location().as_str().to_string(),
         has_target_schema_version: target_version.is_some(),
         target_schema_major: target_version.map_or(0, |version| version.major()),
         target_schema_minor: target_version.map_or(0, |version| version.minor()),
-        backup_revision: revision_token(receipt.backup_revision()),
-        published_revision: revision_token(receipt.published_revision()),
+        backup_revision: receipt.backup_revision().token(),
+        published_revision: receipt.published_revision().token(),
     }
 }
 
@@ -429,12 +430,12 @@ fn user_settings_migration_plan_dto(
         status: "planned".to_string(),
         required: plan.required(),
         has_plan: true,
-        base_revision: revision_token(plan.base_revision()),
-        source_location: source_location_token(plan.source().location()).to_string(),
+        base_revision: plan.base_revision().token(),
+        source_location: plan.source().location().as_str().to_string(),
         has_source_schema_version: source_version.is_some(),
         source_schema_major: source_version.map_or(0, |version| version.major()),
         source_schema_minor: source_version.map_or(0, |version| version.minor()),
-        target_location: source_location_token(plan.target().location()).to_string(),
+        target_location: plan.target().location().as_str().to_string(),
         has_target_schema_version: target_version.is_some(),
         target_schema_major: target_version.map_or(0, |version| version.major()),
         target_schema_minor: target_version.map_or(0, |version| version.minor()),
@@ -520,42 +521,34 @@ fn user_settings_crash_log_scan_settings_dto(
 
     ffi::CrashLogScanSettingsDto {
         fcx_mode: scan.fcx_mode(),
-        fcx_mode_origin: preference_origin_token(scan.fcx_mode_origin()).to_string(),
+        fcx_mode_origin: scan.fcx_mode_origin().as_str().to_string(),
         simplify_logs: scan.simplify_logs(),
-        simplify_logs_origin: preference_origin_token(scan.simplify_logs_origin()).to_string(),
+        simplify_logs_origin: scan.simplify_logs_origin().as_str().to_string(),
         show_statistics: scan.show_statistics(),
-        show_statistics_origin: preference_origin_token(scan.show_statistics_origin()).to_string(),
+        show_statistics_origin: scan.show_statistics_origin().as_str().to_string(),
         formid_value_lookup: scan.formid_value_lookup(),
-        formid_value_lookup_origin: preference_origin_token(scan.formid_value_lookup_origin())
-            .to_string(),
+        formid_value_lookup_origin: scan.formid_value_lookup_origin().as_str().to_string(),
         formid_database_games,
         formid_database_paths,
-        formid_databases_origin: preference_origin_token(scan.formid_databases_origin())
-            .to_string(),
+        formid_databases_origin: scan.formid_databases_origin().as_str().to_string(),
         move_unsolved_logs: scan.move_unsolved_logs(),
-        move_unsolved_logs_origin: preference_origin_token(scan.move_unsolved_logs_origin())
-            .to_string(),
+        move_unsolved_logs_origin: scan.move_unsolved_logs_origin().as_str().to_string(),
         has_unsolved_logs_destination,
         unsolved_logs_destination,
-        unsolved_logs_destination_origin: preference_origin_token(
-            scan.unsolved_logs_destination_origin(),
-        )
-        .to_string(),
+        unsolved_logs_destination_origin: scan
+            .unsolved_logs_destination_origin()
+            .as_str()
+            .to_string(),
         has_custom_scan_input,
         custom_scan_input,
-        custom_scan_input_origin: preference_origin_token(scan.custom_scan_input_origin())
-            .to_string(),
+        custom_scan_input_origin: scan.custom_scan_input_origin().as_str().to_string(),
         game_version_selection: scan.game_version_selection().as_str().to_string(),
-        game_version_selection_origin: preference_origin_token(
-            scan.game_version_selection_origin(),
-        )
-        .to_string(),
+        game_version_selection_origin: scan.game_version_selection_origin().as_str().to_string(),
         max_concurrent_scans: scan.max_concurrent_scans(),
-        max_concurrent_scans_origin: preference_origin_token(scan.max_concurrent_scans_origin())
-            .to_string(),
-        classification: document_classification_token(settings.classification()).to_string(),
-        revision: revision_token(settings.revision()),
-        commit_eligibility: commit_eligibility_token(settings.commit_eligibility()).to_string(),
+        max_concurrent_scans_origin: scan.max_concurrent_scans_origin().as_str().to_string(),
+        classification: settings.classification().as_str().to_string(),
+        revision: settings.revision().token(),
+        commit_eligibility: settings.commit_eligibility().as_str().to_string(),
         diagnostics: settings
             .diagnostics()
             .iter()
@@ -598,37 +591,33 @@ fn user_settings_game_setup_settings_dto(settings: &UserSettings) -> ffi::GameSe
 
     ffi::GameSetupSettingsDto {
         managed_game: setup.managed_game().as_str().to_string(),
-        managed_game_origin: preference_origin_token(setup.managed_game_origin()).to_string(),
+        managed_game_origin: setup.managed_game_origin().as_str().to_string(),
         game_version_selection: setup.game_version_selection().as_str().to_string(),
-        game_version_selection_origin: preference_origin_token(
-            setup.game_version_selection_origin(),
-        )
-        .to_string(),
+        game_version_selection_origin: setup.game_version_selection_origin().as_str().to_string(),
         has_game_root,
         game_root,
-        game_root_origin: preference_origin_token(setup.game_root_origin()).to_string(),
+        game_root_origin: setup.game_root_origin().as_str().to_string(),
         has_game_executable,
         game_executable,
-        game_executable_origin: preference_origin_token(setup.game_executable_origin()).to_string(),
+        game_executable_origin: setup.game_executable_origin().as_str().to_string(),
         has_documents_root,
         documents_root,
-        documents_root_origin: preference_origin_token(setup.documents_root_origin()).to_string(),
+        documents_root_origin: setup.documents_root_origin().as_str().to_string(),
         has_ini_folder,
         ini_folder,
-        ini_folder_origin: preference_origin_token(setup.ini_folder_origin()).to_string(),
+        ini_folder_origin: setup.ini_folder_origin().as_str().to_string(),
         has_mods_root,
         mods_root,
-        mods_root_origin: preference_origin_token(setup.mods_root_origin()).to_string(),
+        mods_root_origin: setup.mods_root_origin().as_str().to_string(),
         has_custom_scan_input,
         custom_scan_input,
-        custom_scan_input_origin: preference_origin_token(setup.custom_scan_input_origin())
-            .to_string(),
+        custom_scan_input_origin: setup.custom_scan_input_origin().as_str().to_string(),
         has_papyrus_log,
         papyrus_log,
-        papyrus_log_origin: preference_origin_token(setup.papyrus_log_origin()).to_string(),
-        classification: document_classification_token(settings.classification()).to_string(),
-        revision: revision_token(settings.revision()),
-        commit_eligibility: commit_eligibility_token(settings.commit_eligibility()).to_string(),
+        papyrus_log_origin: setup.papyrus_log_origin().as_str().to_string(),
+        classification: settings.classification().as_str().to_string(),
+        revision: settings.revision().token(),
+        commit_eligibility: settings.commit_eligibility().as_str().to_string(),
         diagnostics: settings
             .diagnostics()
             .iter()
@@ -653,15 +642,15 @@ fn user_settings_frontend_state_dto(settings: &UserSettings) -> ffi::FrontendSta
 
     ffi::FrontendStateDto {
         auto_switch_after_scan: preferences.auto_switch_after_scan(),
-        auto_switch_after_scan_origin: preference_origin_token(
-            preferences.auto_switch_after_scan_origin(),
-        )
-        .to_string(),
+        auto_switch_after_scan_origin: preferences
+            .auto_switch_after_scan_origin()
+            .as_str()
+            .to_string(),
         auto_refresh_interval_ms: preferences.auto_refresh_interval_ms(),
-        auto_refresh_interval_ms_origin: preference_origin_token(
-            preferences.auto_refresh_interval_ms_origin(),
-        )
-        .to_string(),
+        auto_refresh_interval_ms_origin: preferences
+            .auto_refresh_interval_ms_origin()
+            .as_str()
+            .to_string(),
         window_geometry: vec![
             frontend_window_geometry_dto("main_tab", geometry.main_tab()),
             frontend_window_geometry_dto("backups_tab", geometry.backups_tab()),
@@ -669,15 +658,14 @@ fn user_settings_frontend_state_dto(settings: &UserSettings) -> ffi::FrontendSta
             frontend_window_geometry_dto("results_tab", geometry.results_tab()),
         ],
         tui_active_tab: tui.active_tab(),
-        tui_active_tab_origin: preference_origin_token(tui.active_tab_origin()).to_string(),
+        tui_active_tab_origin: tui.active_tab_origin().as_str().to_string(),
         tui_results_panel_width: tui.results_panel_width(),
-        tui_results_panel_width_origin: preference_origin_token(tui.results_panel_width_origin())
-            .to_string(),
+        tui_results_panel_width_origin: tui.results_panel_width_origin().as_str().to_string(),
         tui_sort_ascending: tui.sort_ascending(),
-        tui_sort_ascending_origin: preference_origin_token(tui.sort_ascending_origin()).to_string(),
-        classification: document_classification_token(settings.classification()).to_string(),
-        revision: revision_token(settings.revision()),
-        commit_eligibility: commit_eligibility_token(settings.commit_eligibility()).to_string(),
+        tui_sort_ascending_origin: tui.sort_ascending_origin().as_str().to_string(),
+        classification: settings.classification().as_str().to_string(),
+        revision: settings.revision().token(),
+        commit_eligibility: settings.commit_eligibility().as_str().to_string(),
         diagnostics: settings
             .diagnostics()
             .iter()
@@ -713,11 +701,11 @@ fn frontend_window_geometry_dto(tab: &str, geometry: &WindowGeometry) -> ffi::Wi
     ffi::WindowGeometryDto {
         tab: tab.to_string(),
         maximized: geometry.maximized(),
-        maximized_origin: preference_origin_token(geometry.maximized_origin()).to_string(),
+        maximized_origin: geometry.maximized_origin().as_str().to_string(),
         width: geometry.width(),
-        width_origin: preference_origin_token(geometry.width_origin()).to_string(),
+        width_origin: geometry.width_origin().as_str().to_string(),
         height: geometry.height(),
-        height_origin: preference_origin_token(geometry.height_origin()).to_string(),
+        height_origin: geometry.height_origin().as_str().to_string(),
     }
 }
 
@@ -771,7 +759,7 @@ fn user_settings_update_preview_dto(
 
             ffi::UserSettingsUpdatePreviewDto {
                 accepted: true,
-                base_revision: revision_token(accepted.base_revision()),
+                base_revision: accepted.base_revision().token(),
                 accepted_fields: accepted
                     .fields()
                     .iter()
@@ -843,7 +831,7 @@ fn user_settings_restore_legacy_tui_import(
         CoreLegacyTuiStateImportRestoreOutcome::Restored { revision } => {
             Ok(ffi::LegacyTuiStateImportRestoreOutcomeDto {
                 status: "restored".to_string(),
-                revision: revision_token(&revision),
+                revision: revision.token(),
                 expected_revision: String::new(),
                 actual_revision: String::new(),
             })
@@ -854,8 +842,8 @@ fn user_settings_restore_legacy_tui_import(
         } => Ok(ffi::LegacyTuiStateImportRestoreOutcomeDto {
             status: "conflict".to_string(),
             revision: String::new(),
-            expected_revision: revision_token(&expected_revision),
-            actual_revision: revision_token(&actual_revision),
+            expected_revision: expected_revision.token(),
+            actual_revision: actual_revision.token(),
         }),
     }
 }
@@ -889,25 +877,25 @@ fn legacy_tui_state_import_outcome_dto(
             revision,
         } => {
             dto.status = "requires_settings_migration".to_string();
-            dto.classification = document_classification_token(*classification).to_string();
-            dto.revision = revision_token(revision);
+            dto.classification = classification.as_str().to_string();
+            dto.revision = revision.token();
         }
         CoreLegacyTuiStateImportOutcome::UntrustedSettingsBase {
             classification,
             revision,
         } => {
             dto.status = "untrusted_settings_base".to_string();
-            dto.classification = document_classification_token(*classification).to_string();
-            dto.revision = revision_token(revision);
+            dto.classification = classification.as_str().to_string();
+            dto.revision = revision.token();
         }
         CoreLegacyTuiStateImportOutcome::Applied(receipt) => {
             dto.status = "applied".to_string();
             dto.source_path = receipt.source_path().display().to_string();
             dto.backup_path = receipt.backup_path().display().to_string();
-            dto.source_revision = revision_token(receipt.source_revision());
-            dto.backup_revision = revision_token(receipt.backup_revision());
-            dto.base_settings_revision = revision_token(receipt.base_settings_revision());
-            dto.published_settings_revision = revision_token(receipt.published_settings_revision());
+            dto.source_revision = receipt.source_revision().token();
+            dto.backup_revision = receipt.backup_revision().token();
+            dto.base_settings_revision = receipt.base_settings_revision().token();
+            dto.published_settings_revision = receipt.published_settings_revision().token();
             dto.settings_path = receipt.settings_path().display().to_string();
             dto.has_settings_backup_path = receipt.settings_backup_path().is_some();
             dto.settings_backup_path = receipt
@@ -919,16 +907,16 @@ fn legacy_tui_state_import_outcome_dto(
             actual_revision,
         } => {
             dto.status = "settings_conflict".to_string();
-            dto.expected_revision = revision_token(expected_revision);
-            dto.actual_revision = revision_token(actual_revision);
+            dto.expected_revision = expected_revision.token();
+            dto.actual_revision = actual_revision.token();
         }
         CoreLegacyTuiStateImportOutcome::LegacySourceConflict {
             expected_revision,
             actual_revision,
         } => {
             dto.status = "legacy_source_conflict".to_string();
-            dto.expected_revision = revision_token(expected_revision);
-            dto.actual_revision = revision_token(actual_revision);
+            dto.expected_revision = expected_revision.token();
+            dto.actual_revision = actual_revision.token();
         }
     }
     dto
@@ -940,7 +928,7 @@ fn user_settings_commit_frontend_geometry_transition(
     base_revision: &str,
     transition: &ffi::UserSettingsWindowGeometryUpdateDto,
 ) -> Result<ffi::UserSettingsCommitResultDto, String> {
-    let Some(expected_revision) = revision_from_token(base_revision) else {
+    let Some(expected_revision) = Revision::from_token(base_revision) else {
         return Err(format!(
             "invalid_user_settings_revision: unrecognized revision token {base_revision:?}"
         ));
@@ -966,7 +954,7 @@ fn user_settings_commit_frontend_geometry_transition(
         Ok(CoreUserSettingsFrontendTransitionOutcome::Committed { revision }) => {
             Ok(ffi::UserSettingsCommitResultDto {
                 status: "committed".to_string(),
-                revision: revision_token(&revision),
+                revision: revision.token(),
                 expected_revision: base_revision.to_string(),
                 actual_revision: String::new(),
                 diagnostics: Vec::new(),
@@ -987,8 +975,8 @@ fn user_settings_commit_frontend_geometry_transition(
         }) => Ok(ffi::UserSettingsCommitResultDto {
             status: "conflict".to_string(),
             revision: String::new(),
-            expected_revision: revision_token(&expected_revision),
-            actual_revision: revision_token(&actual_revision),
+            expected_revision: expected_revision.token(),
+            actual_revision: actual_revision.token(),
             diagnostics: Vec::new(),
         }),
         Err(error) => Err(error.to_string()),
@@ -1021,7 +1009,7 @@ fn commit_user_settings_update(
                 .to_string(),
         );
     }
-    let actual_revision = revision_token(settings.revision());
+    let actual_revision = settings.revision().token();
     if actual_revision != base_revision {
         return Ok(ffi::UserSettingsCommitResultDto {
             status: "conflict".to_string(),
@@ -1067,7 +1055,7 @@ fn commit_user_settings_update(
         Ok(CoreUserSettingsCommitOutcome::Committed { revision }) => {
             Ok(ffi::UserSettingsCommitResultDto {
                 status: "committed".to_string(),
-                revision: revision_token(&revision),
+                revision: revision.token(),
                 expected_revision: base_revision.to_string(),
                 actual_revision: String::new(),
                 diagnostics: Vec::new(),
@@ -1079,8 +1067,8 @@ fn commit_user_settings_update(
         }) => Ok(ffi::UserSettingsCommitResultDto {
             status: "conflict".to_string(),
             revision: String::new(),
-            expected_revision: revision_token(&expected_revision),
-            actual_revision: revision_token(&actual_revision),
+            expected_revision: expected_revision.token(),
+            actual_revision: actual_revision.token(),
             diagnostics: Vec::new(),
         }),
         Err(error) => Err(error.to_string()),
@@ -1336,34 +1324,21 @@ fn user_settings_diagnostic_dto(
     }
 }
 
-/// Returns the stable cross-language token for a preference's provenance.
-fn preference_origin_token(origin: PreferenceOrigin) -> &'static str {
-    match origin {
-        PreferenceOrigin::Document => "document",
-        PreferenceOrigin::Default => "default",
-        PreferenceOrigin::DegradedFallback => "degraded_fallback",
-    }
-}
-
-/// Returns the stable cross-language token for the selected source location.
-fn source_location_token(location: SourceLocation) -> &'static str {
-    match location {
-        SourceLocation::Canonical => "canonical",
-        SourceLocation::Legacy => "legacy",
-        SourceLocation::Missing => "missing",
-    }
-}
+// The Vocabulary Tokens for preference origin, source location, document
+// classification, and commit eligibility are owned by
+// `classic-user-settings-core`. This bridge projects `Vocabulary::as_str`
+// directly — the CXX surface publishes the canonical snake_case spelling
+// unchanged — so the four hand-written token tables that used to live here are
+// gone rather than delegating.
 
 /// Parses one stable CXX source-location token for review-only core reconstruction.
+///
+/// Derives its accepted inputs from the core variant list rather than restating
+/// them. The bridge round-trips a plan through the DTO, so a forward table and
+/// a reverse table that disagreed would corrupt a reversal silently.
 fn source_location_from_token(token: &str) -> Result<SourceLocation, String> {
-    match token {
-        "canonical" => Ok(SourceLocation::Canonical),
-        "legacy" => Ok(SourceLocation::Legacy),
-        "missing" => Ok(SourceLocation::Missing),
-        _ => Err(format!(
-            "unsupported User Settings source location: {token}"
-        )),
-    }
+    classic_vocabulary::from_token(token)
+        .ok_or_else(|| format!("unsupported User Settings source location: {token}"))
 }
 
 /// Parses one stable CXX migration-change token for review-only core reconstruction.
@@ -1378,63 +1353,10 @@ fn migration_change_kind_from_token(token: &str) -> Result<MigrationChangeKind, 
         .ok_or_else(|| format!("unsupported User Settings migration change kind: {token}"))
 }
 
-/// Returns the stable cross-language token for document classification.
-fn document_classification_token(classification: DocumentClassification) -> &'static str {
-    match classification {
-        DocumentClassification::Current => "current",
-        DocumentClassification::Unversioned => "unversioned",
-        DocumentClassification::Older => "older",
-        DocumentClassification::NewerCompatible => "newer_compatible",
-        DocumentClassification::FutureMajor => "future_major",
-        DocumentClassification::LegacyFlat => "legacy_flat",
-        DocumentClassification::Malformed => "malformed",
-        DocumentClassification::Missing => "missing",
-    }
-}
-
-/// Returns the stable cross-language token for commit eligibility.
-fn commit_eligibility_token(eligibility: CommitEligibility) -> &'static str {
-    match eligibility {
-        CommitEligibility::Eligible => "eligible",
-        CommitEligibility::RequiresMigration => "requires_migration",
-        CommitEligibility::BlockedUntrusted => "blocked_untrusted",
-    }
-}
-
-/// Formats a content revision without exposing Rust-only enum layout through CXX.
-fn revision_token(revision: &Revision) -> String {
-    match revision {
-        Revision::Missing => "missing".to_string(),
-        Revision::Unavailable => "unavailable".to_string(),
-        Revision::ContentSha256(digest) => {
-            let mut token = String::with_capacity("sha256:".len() + digest.len() * 2);
-            token.push_str("sha256:");
-            for byte in digest {
-                use std::fmt::Write as _;
-                write!(&mut token, "{byte:02x}").expect("writing to a String cannot fail");
-            }
-            token
-        }
-    }
-}
-
-/// Parses the stable revision representation accepted at the CXX boundary.
-fn revision_from_token(token: &str) -> Option<Revision> {
-    match token {
-        "missing" => return Some(Revision::Missing),
-        "unavailable" => return Some(Revision::Unavailable),
-        _ => {}
-    }
-    let encoded = token.strip_prefix("sha256:")?;
-    if encoded.len() != 64 {
-        return None;
-    }
-    let mut digest = [0_u8; 32];
-    for (index, byte) in digest.iter_mut().enumerate() {
-        *byte = u8::from_str_radix(&encoded[index * 2..index * 2 + 2], 16).ok()?;
-    }
-    Some(Revision::ContentSha256(digest))
-}
+// The revision token pair is owned by `classic-user-settings-core`
+// (`Revision::token` / `Revision::from_token`) so the CXX, Node, and Python
+// surfaces cannot drift apart. This bridge projects it without exposing the
+// Rust-only enum layout through CXX.
 
 // ── Construction ────────────────────────────────────────────────────
 

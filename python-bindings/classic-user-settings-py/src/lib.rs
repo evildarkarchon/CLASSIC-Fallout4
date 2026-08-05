@@ -2,12 +2,11 @@
 
 use classic_shared::without_gil;
 use classic_user_settings_core::{
-    AcceptedUserSettingsUpdate, CommitEligibility, CrashLogScanSettings, DocumentClassification,
-    FrontendPreferences, FrontendState, GameSetupSettings, GuiWindow, GuiWindowGeometry,
-    LegacyTuiStateImportOutcome, LegacyTuiStateImportReceipt, LegacyTuiStateImportRestoreOutcome,
-    MigrationChange, MigrationDiagnostic, MigrationEndpoint, MigrationPlanningOutcome,
-    PreferenceOrigin, Revision, SourceLocation, TuiRememberedState, UserSettings,
-    UserSettingsCommitOutcome,
+    AcceptedUserSettingsUpdate, CrashLogScanSettings, FrontendPreferences, FrontendState,
+    GameSetupSettings, GuiWindow, GuiWindowGeometry, LegacyTuiStateImportOutcome,
+    LegacyTuiStateImportReceipt, LegacyTuiStateImportRestoreOutcome, MigrationChange,
+    MigrationDiagnostic, MigrationEndpoint, MigrationPlanningOutcome, TuiRememberedState,
+    UserSettings, UserSettingsCommitOutcome,
     UserSettingsFrontendTransitionOutcome as CoreUserSettingsFrontendTransitionOutcome,
     UserSettingsMigrationApplyOutcome, UserSettingsMigrationPlan, UserSettingsMigrationReceipt,
     UserSettingsMigrationRestoreOutcome, UserSettingsSchemaVersion, UserSettingsUpdate,
@@ -676,25 +675,25 @@ impl PyLegacyTuiStateImportReceipt {
     /// Returns the revision of the exact parsed legacy bytes.
     #[getter]
     fn source_revision(&self) -> String {
-        revision_token(self.inner.source_revision())
+        self.inner.source_revision().token()
     }
 
     /// Returns the independently verified legacy backup revision.
     #[getter]
     fn backup_revision(&self) -> String {
-        revision_token(self.inner.backup_revision())
+        self.inner.backup_revision().token()
     }
 
     /// Returns the User Settings base revision selected by import.
     #[getter]
     fn base_settings_revision(&self) -> String {
-        revision_token(self.inner.base_settings_revision())
+        self.inner.base_settings_revision().token()
     }
 
     /// Returns the User Settings revision published by import.
     #[getter]
     fn published_settings_revision(&self) -> String {
-        revision_token(self.inner.published_settings_revision())
+        self.inner.published_settings_revision().token()
     }
 
     /// Restores the pre-import User Settings state through this verified receipt.
@@ -1119,31 +1118,35 @@ fn user_settings_snapshot_to_py(settings: UserSettings) -> PyUserSettingsSnapsho
     PyUserSettingsSnapshot {
         update_preferences: PyUpdatePreferences {
             update_check: settings.update_preferences().update_check(),
-            origin: preference_origin_token(settings.update_preferences().update_check_origin())
+            origin: settings
+                .update_preferences()
+                .update_check_origin()
+                .as_str()
                 .to_string(),
             update_source: settings
                 .update_preferences()
                 .update_source()
                 .as_str()
                 .to_string(),
-            update_source_origin: preference_origin_token(
-                settings.update_preferences().update_source_origin(),
-            )
-            .to_string(),
+            update_source_origin: settings
+                .update_preferences()
+                .update_source_origin()
+                .as_str()
+                .to_string(),
         },
         crash_log_scan_settings: crash_log_scan_settings_to_py(settings.crash_log_scan_settings()),
         game_setup_settings: game_setup_settings_to_py(settings.game_setup_settings()),
         frontend_state: frontend_state_to_py(settings.frontend_state()),
-        source_location: source_location_token(settings.source().location()).to_string(),
+        source_location: settings.source().location().as_str().to_string(),
         source_path: settings
             .source()
             .path()
             .map(|path| path.display().to_string()),
-        classification: classification_token(settings.classification()).to_string(),
+        classification: settings.classification().as_str().to_string(),
         schema_major,
         schema_minor,
-        revision: revision_token(settings.revision()),
-        commit_eligibility: commit_eligibility_token(settings.commit_eligibility()).to_string(),
+        revision: settings.revision().token(),
+        commit_eligibility: settings.commit_eligibility().as_str().to_string(),
         diagnostics: settings
             .diagnostics()
             .iter()
@@ -1170,15 +1173,15 @@ fn frontend_state_to_py(state: &FrontendState) -> PyFrontendState {
 fn frontend_preferences_to_py(preferences: &FrontendPreferences) -> PyFrontendPreferences {
     PyFrontendPreferences {
         auto_switch_after_scan: preferences.auto_switch_after_scan(),
-        auto_switch_after_scan_origin: preference_origin_token(
-            preferences.auto_switch_after_scan_origin(),
-        )
-        .to_string(),
+        auto_switch_after_scan_origin: preferences
+            .auto_switch_after_scan_origin()
+            .as_str()
+            .to_string(),
         auto_refresh_interval_ms: preferences.auto_refresh_interval_ms(),
-        auto_refresh_interval_ms_origin: preference_origin_token(
-            preferences.auto_refresh_interval_ms_origin(),
-        )
-        .to_string(),
+        auto_refresh_interval_ms_origin: preferences
+            .auto_refresh_interval_ms_origin()
+            .as_str()
+            .to_string(),
     }
 }
 
@@ -1196,11 +1199,11 @@ fn gui_window_geometry_to_py(geometry: &GuiWindowGeometry) -> PyGuiWindowGeometr
 fn window_geometry_to_py(geometry: &WindowGeometry) -> PyWindowGeometry {
     PyWindowGeometry {
         maximized: geometry.maximized(),
-        maximized_origin: preference_origin_token(geometry.maximized_origin()).to_string(),
+        maximized_origin: geometry.maximized_origin().as_str().to_string(),
         width: geometry.width(),
-        width_origin: preference_origin_token(geometry.width_origin()).to_string(),
+        width_origin: geometry.width_origin().as_str().to_string(),
         height: geometry.height(),
-        height_origin: preference_origin_token(geometry.height_origin()).to_string(),
+        height_origin: geometry.height_origin().as_str().to_string(),
     }
 }
 
@@ -1208,12 +1211,11 @@ fn window_geometry_to_py(geometry: &WindowGeometry) -> PyWindowGeometry {
 fn tui_remembered_state_to_py(state: &TuiRememberedState) -> PyTuiRememberedState {
     PyTuiRememberedState {
         active_tab: state.active_tab(),
-        active_tab_origin: preference_origin_token(state.active_tab_origin()).to_string(),
+        active_tab_origin: state.active_tab_origin().as_str().to_string(),
         results_panel_width: state.results_panel_width(),
-        results_panel_width_origin: preference_origin_token(state.results_panel_width_origin())
-            .to_string(),
+        results_panel_width_origin: state.results_panel_width_origin().as_str().to_string(),
         sort_ascending: state.sort_ascending(),
-        sort_ascending_origin: preference_origin_token(state.sort_ascending_origin()).to_string(),
+        sort_ascending_origin: state.sort_ascending_origin().as_str().to_string(),
     }
 }
 
@@ -1221,29 +1223,26 @@ fn tui_remembered_state_to_py(state: &TuiRememberedState) -> PyTuiRememberedStat
 fn game_setup_settings_to_py(settings: &GameSetupSettings) -> PyGameSetupSettings {
     PyGameSetupSettings {
         managed_game: settings.managed_game().as_str().to_string(),
-        managed_game_origin: preference_origin_token(settings.managed_game_origin()).to_string(),
+        managed_game_origin: settings.managed_game_origin().as_str().to_string(),
         game_version_selection: settings.game_version_selection().as_str().to_string(),
-        game_version_selection_origin: preference_origin_token(
-            settings.game_version_selection_origin(),
-        )
-        .to_string(),
+        game_version_selection_origin: settings
+            .game_version_selection_origin()
+            .as_str()
+            .to_string(),
         game_root: settings.game_root().map(str::to_string),
-        game_root_origin: preference_origin_token(settings.game_root_origin()).to_string(),
+        game_root_origin: settings.game_root_origin().as_str().to_string(),
         game_executable: settings.game_executable().map(str::to_string),
-        game_executable_origin: preference_origin_token(settings.game_executable_origin())
-            .to_string(),
+        game_executable_origin: settings.game_executable_origin().as_str().to_string(),
         documents_root: settings.documents_root().map(str::to_string),
-        documents_root_origin: preference_origin_token(settings.documents_root_origin())
-            .to_string(),
+        documents_root_origin: settings.documents_root_origin().as_str().to_string(),
         ini_folder: settings.ini_folder().map(str::to_string),
-        ini_folder_origin: preference_origin_token(settings.ini_folder_origin()).to_string(),
+        ini_folder_origin: settings.ini_folder_origin().as_str().to_string(),
         mods_root: settings.mods_root().map(str::to_string),
-        mods_root_origin: preference_origin_token(settings.mods_root_origin()).to_string(),
+        mods_root_origin: settings.mods_root_origin().as_str().to_string(),
         custom_scan_input: settings.custom_scan_input().map(str::to_string),
-        custom_scan_input_origin: preference_origin_token(settings.custom_scan_input_origin())
-            .to_string(),
+        custom_scan_input_origin: settings.custom_scan_input_origin().as_str().to_string(),
         papyrus_log: settings.papyrus_log().map(str::to_string),
-        papyrus_log_origin: preference_origin_token(settings.papyrus_log_origin()).to_string(),
+        papyrus_log_origin: settings.papyrus_log_origin().as_str().to_string(),
     }
 }
 
@@ -1251,43 +1250,35 @@ fn game_setup_settings_to_py(settings: &GameSetupSettings) -> PyGameSetupSetting
 fn crash_log_scan_settings_to_py(settings: &CrashLogScanSettings) -> PyCrashLogScanSettings {
     PyCrashLogScanSettings {
         fcx_mode: settings.fcx_mode(),
-        fcx_mode_origin: preference_origin_token(settings.fcx_mode_origin()).to_string(),
+        fcx_mode_origin: settings.fcx_mode_origin().as_str().to_string(),
         simplify_logs: settings.simplify_logs(),
-        simplify_logs_origin: preference_origin_token(settings.simplify_logs_origin()).to_string(),
+        simplify_logs_origin: settings.simplify_logs_origin().as_str().to_string(),
         show_statistics: settings.show_statistics(),
-        show_statistics_origin: preference_origin_token(settings.show_statistics_origin())
-            .to_string(),
+        show_statistics_origin: settings.show_statistics_origin().as_str().to_string(),
         formid_value_lookup: settings.formid_value_lookup(),
-        formid_value_lookup_origin: preference_origin_token(settings.formid_value_lookup_origin())
-            .to_string(),
+        formid_value_lookup_origin: settings.formid_value_lookup_origin().as_str().to_string(),
         formid_databases: settings
             .formid_databases()
             .iter()
             .map(|(game, paths)| (game.clone(), paths.clone()))
             .collect(),
-        formid_databases_origin: preference_origin_token(settings.formid_databases_origin())
-            .to_string(),
+        formid_databases_origin: settings.formid_databases_origin().as_str().to_string(),
         move_unsolved_logs: settings.move_unsolved_logs(),
-        move_unsolved_logs_origin: preference_origin_token(settings.move_unsolved_logs_origin())
-            .to_string(),
+        move_unsolved_logs_origin: settings.move_unsolved_logs_origin().as_str().to_string(),
         unsolved_logs_destination: settings.unsolved_logs_destination().map(str::to_string),
-        unsolved_logs_destination_origin: preference_origin_token(
-            settings.unsolved_logs_destination_origin(),
-        )
-        .to_string(),
-        custom_scan_input: settings.custom_scan_input().map(str::to_string),
-        custom_scan_input_origin: preference_origin_token(settings.custom_scan_input_origin())
+        unsolved_logs_destination_origin: settings
+            .unsolved_logs_destination_origin()
+            .as_str()
             .to_string(),
+        custom_scan_input: settings.custom_scan_input().map(str::to_string),
+        custom_scan_input_origin: settings.custom_scan_input_origin().as_str().to_string(),
         game_version_selection: settings.game_version_selection().as_str().to_string(),
-        game_version_selection_origin: preference_origin_token(
-            settings.game_version_selection_origin(),
-        )
-        .to_string(),
+        game_version_selection_origin: settings
+            .game_version_selection_origin()
+            .as_str()
+            .to_string(),
         max_concurrent_scans: settings.max_concurrent_scans(),
-        max_concurrent_scans_origin: preference_origin_token(
-            settings.max_concurrent_scans_origin(),
-        )
-        .to_string(),
+        max_concurrent_scans_origin: settings.max_concurrent_scans_origin().as_str().to_string(),
     }
 }
 
@@ -1296,7 +1287,7 @@ fn update_preview_to_py(preview: UserSettingsUpdatePreview) -> PyUserSettingsUpd
     match preview {
         UserSettingsUpdatePreview::Accepted(accepted) => PyUserSettingsUpdatePreview {
             accepted: true,
-            base_revision: Some(revision_token(accepted.base_revision())),
+            base_revision: Some(accepted.base_revision().token()),
             fields: accepted.fields().iter().map(update_field_to_py).collect(),
             diagnostics: Vec::new(),
             accepted_update: Some(accepted),
@@ -1323,7 +1314,7 @@ fn commit_outcome_to_py(outcome: UserSettingsCommitOutcome) -> PyUserSettingsCom
     match outcome {
         UserSettingsCommitOutcome::Committed { revision } => PyUserSettingsCommitOutcome {
             status: "committed".to_string(),
-            revision: Some(revision_token(&revision)),
+            revision: Some(revision.token()),
             expected_revision: None,
             actual_revision: None,
         },
@@ -1333,8 +1324,8 @@ fn commit_outcome_to_py(outcome: UserSettingsCommitOutcome) -> PyUserSettingsCom
         } => PyUserSettingsCommitOutcome {
             status: "conflict".to_string(),
             revision: None,
-            expected_revision: Some(revision_token(&expected_revision)),
-            actual_revision: Some(revision_token(&actual_revision)),
+            expected_revision: Some(expected_revision.token()),
+            actual_revision: Some(actual_revision.token()),
         },
     }
 }
@@ -1347,7 +1338,7 @@ fn frontend_transition_outcome_to_py(
         CoreUserSettingsFrontendTransitionOutcome::Committed { revision } => {
             PyUserSettingsFrontendTransitionOutcome {
                 status: "committed".to_string(),
-                revision: Some(revision_token(&revision)),
+                revision: Some(revision.token()),
                 expected_revision: None,
                 actual_revision: None,
                 diagnostics: Vec::new(),
@@ -1375,8 +1366,8 @@ fn frontend_transition_outcome_to_py(
         } => PyUserSettingsFrontendTransitionOutcome {
             status: "conflict".to_string(),
             revision: None,
-            expected_revision: Some(revision_token(&expected_revision)),
-            actual_revision: Some(revision_token(&actual_revision)),
+            expected_revision: Some(expected_revision.token()),
+            actual_revision: Some(actual_revision.token()),
             diagnostics: Vec::new(),
         },
     }
@@ -1409,26 +1400,26 @@ fn legacy_tui_state_import_outcome_to_py(
             revision,
         } => {
             result.status = "requires_settings_migration".to_string();
-            result.classification = Some(classification_token(classification).to_string());
-            result.revision = Some(revision_token(&revision));
+            result.classification = Some(classification.as_str().to_string());
+            result.revision = Some(revision.token());
         }
         LegacyTuiStateImportOutcome::UntrustedSettingsBase {
             classification,
             revision,
         } => {
             result.status = "untrusted_settings_base".to_string();
-            result.classification = Some(classification_token(classification).to_string());
-            result.revision = Some(revision_token(&revision));
+            result.classification = Some(classification.as_str().to_string());
+            result.revision = Some(revision.token());
         }
         LegacyTuiStateImportOutcome::Applied(receipt) => {
             result.status = "applied".to_string();
             result.source_path = Some(receipt.source_path().display().to_string());
             result.backup_path = Some(receipt.backup_path().display().to_string());
-            result.source_revision = Some(revision_token(receipt.source_revision()));
-            result.backup_revision = Some(revision_token(receipt.backup_revision()));
-            result.base_settings_revision = Some(revision_token(receipt.base_settings_revision()));
+            result.source_revision = Some(receipt.source_revision().token());
+            result.backup_revision = Some(receipt.backup_revision().token());
+            result.base_settings_revision = Some(receipt.base_settings_revision().token());
             result.published_settings_revision =
-                Some(revision_token(receipt.published_settings_revision()));
+                Some(receipt.published_settings_revision().token());
             result.receipt = Some(PyLegacyTuiStateImportReceipt { inner: receipt });
         }
         LegacyTuiStateImportOutcome::SettingsConflict {
@@ -1436,16 +1427,16 @@ fn legacy_tui_state_import_outcome_to_py(
             actual_revision,
         } => {
             result.status = "settings_conflict".to_string();
-            result.expected_revision = Some(revision_token(&expected_revision));
-            result.actual_revision = Some(revision_token(&actual_revision));
+            result.expected_revision = Some(expected_revision.token());
+            result.actual_revision = Some(actual_revision.token());
         }
         LegacyTuiStateImportOutcome::LegacySourceConflict {
             expected_revision,
             actual_revision,
         } => {
             result.status = "legacy_source_conflict".to_string();
-            result.expected_revision = Some(revision_token(&expected_revision));
-            result.actual_revision = Some(revision_token(&actual_revision));
+            result.expected_revision = Some(expected_revision.token());
+            result.actual_revision = Some(actual_revision.token());
         }
     }
     result
@@ -1459,7 +1450,7 @@ fn legacy_tui_state_import_restore_outcome_to_py(
         LegacyTuiStateImportRestoreOutcome::Restored { revision } => {
             PyLegacyTuiStateImportRestoreOutcome {
                 status: "restored".to_string(),
-                revision: Some(revision_token(&revision)),
+                revision: Some(revision.token()),
                 expected_revision: None,
                 actual_revision: None,
             }
@@ -1470,8 +1461,8 @@ fn legacy_tui_state_import_restore_outcome_to_py(
         } => PyLegacyTuiStateImportRestoreOutcome {
             status: "conflict".to_string(),
             revision: None,
-            expected_revision: Some(revision_token(&expected_revision)),
-            actual_revision: Some(revision_token(&actual_revision)),
+            expected_revision: Some(expected_revision.token()),
+            actual_revision: Some(actual_revision.token()),
         },
     }
 }
@@ -1505,7 +1496,7 @@ fn migration_planning_outcome_to_py(
 fn migration_plan_to_py(plan: UserSettingsMigrationPlan) -> PyUserSettingsMigrationPlan {
     PyUserSettingsMigrationPlan {
         required: plan.required(),
-        base_revision: revision_token(plan.base_revision()),
+        base_revision: plan.base_revision().token(),
         source: migration_endpoint_to_py(plan.source()),
         target: migration_endpoint_to_py(plan.target()),
         changes: plan.changes().iter().map(migration_change_to_py).collect(),
@@ -1534,8 +1525,8 @@ fn migration_apply_outcome_to_py(
         } => PyUserSettingsMigrationApplyOutcome {
             status: "conflict".to_string(),
             receipt: None,
-            expected_revision: Some(revision_token(&expected_revision)),
-            actual_revision: Some(revision_token(&actual_revision)),
+            expected_revision: Some(expected_revision.token()),
+            actual_revision: Some(actual_revision.token()),
         },
     }
 }
@@ -1550,8 +1541,8 @@ fn migration_receipt_to_py(
         backup_path: receipt.backup_path().display().to_string(),
         source: migration_endpoint_to_py(receipt.source()),
         target: migration_endpoint_to_py(receipt.target()),
-        backup_revision: revision_token(receipt.backup_revision()),
-        published_revision: revision_token(receipt.published_revision()),
+        backup_revision: receipt.backup_revision().token(),
+        published_revision: receipt.published_revision().token(),
         inner: receipt,
     }
 }
@@ -1564,7 +1555,7 @@ fn migration_restore_outcome_to_py(
         UserSettingsMigrationRestoreOutcome::Restored { revision } => {
             PyUserSettingsMigrationRestoreOutcome {
                 status: "restored".to_string(),
-                revision: Some(revision_token(&revision)),
+                revision: Some(revision.token()),
                 expected_revision: None,
                 actual_revision: None,
             }
@@ -1575,8 +1566,8 @@ fn migration_restore_outcome_to_py(
         } => PyUserSettingsMigrationRestoreOutcome {
             status: "conflict".to_string(),
             revision: None,
-            expected_revision: Some(revision_token(&expected_revision)),
-            actual_revision: Some(revision_token(&actual_revision)),
+            expected_revision: Some(expected_revision.token()),
+            actual_revision: Some(actual_revision.token()),
         },
     }
 }
@@ -1584,7 +1575,7 @@ fn migration_restore_outcome_to_py(
 /// Converts one core migration endpoint into Python-owned location and version values.
 fn migration_endpoint_to_py(endpoint: &MigrationEndpoint) -> PyUserSettingsMigrationEndpoint {
     PyUserSettingsMigrationEndpoint {
-        location: source_location_token(endpoint.location()).to_string(),
+        location: endpoint.location().as_str().to_string(),
         schema_version: endpoint
             .schema_version()
             .map(user_settings_schema_version_to_py),
@@ -1684,63 +1675,20 @@ fn update_field_to_py(field: &UserSettingsUpdateField) -> PyUserSettingsUpdateFi
     }
 }
 
-/// Returns the Python token for preference provenance.
-fn preference_origin_token(origin: PreferenceOrigin) -> &'static str {
-    match origin {
-        PreferenceOrigin::Document => "document",
-        PreferenceOrigin::Default => "default",
-        PreferenceOrigin::DegradedFallback => "degraded_fallback",
-    }
-}
+// The Vocabulary Tokens for preference origin, source location, document
+// classification, and commit eligibility are owned by
+// `classic-user-settings-core`. This binding projects `Vocabulary::as_str`
+// directly — the Python surface publishes the canonical snake_case spelling
+// unchanged — so the four hand-written token tables that used to live here are
+// gone rather than delegating. No reverse-parse counterpart exists on this
+// surface: Python retains the immutable core plan rather than reopening
+// against a caller-supplied token.
 
-/// Returns the Python token for source location.
-fn source_location_token(location: SourceLocation) -> &'static str {
-    match location {
-        SourceLocation::Canonical => "canonical",
-        SourceLocation::Legacy => "legacy",
-        SourceLocation::Missing => "missing",
-    }
-}
-
-/// Returns the Python token for document classification.
-fn classification_token(classification: DocumentClassification) -> &'static str {
-    match classification {
-        DocumentClassification::Current => "current",
-        DocumentClassification::Unversioned => "unversioned",
-        DocumentClassification::Older => "older",
-        DocumentClassification::NewerCompatible => "newer_compatible",
-        DocumentClassification::FutureMajor => "future_major",
-        DocumentClassification::LegacyFlat => "legacy_flat",
-        DocumentClassification::Malformed => "malformed",
-        DocumentClassification::Missing => "missing",
-    }
-}
-
-/// Returns the Python token for commit eligibility.
-fn commit_eligibility_token(eligibility: CommitEligibility) -> &'static str {
-    match eligibility {
-        CommitEligibility::Eligible => "eligible",
-        CommitEligibility::RequiresMigration => "requires_migration",
-        CommitEligibility::BlockedUntrusted => "blocked_untrusted",
-    }
-}
-
-/// Formats the content revision for Python consumers.
-fn revision_token(revision: &Revision) -> String {
-    match revision {
-        Revision::Missing => "missing".to_string(),
-        Revision::Unavailable => "unavailable".to_string(),
-        Revision::ContentSha256(digest) => {
-            let mut token = String::with_capacity("sha256:".len() + digest.len() * 2);
-            token.push_str("sha256:");
-            for byte in digest {
-                use std::fmt::Write as _;
-                write!(&mut token, "{byte:02x}").expect("writing to a String cannot fail");
-            }
-            token
-        }
-    }
-}
+// Revision formatting is owned by `classic-user-settings-core`
+// (`Revision::token`) so the CXX, Node, and Python surfaces cannot drift apart.
+// This binding projects revisions outward only; the inverse
+// (`Revision::from_token`) has no caller here because Python retains the
+// immutable core plan rather than reopening against a caller-supplied token.
 
 /// Python module for typed User Settings access and explicit conflict-safe updates.
 #[pymodule]

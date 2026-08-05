@@ -45,7 +45,17 @@ Neither form is derived from the other. A mechanical transform turns `field_tran
 
 ## Current adopters
 
-`MigrationChangeKind` in `classic-user-settings-core` is the first, chosen as the tracer for two reasons: it is the enum whose Node token already diverges to camelCase, so it exercises the casing transform for real, and no frontend renders it, so no Display Label has to cross a binding seam yet. That keeps the parity cost at zero and makes the verification signal sharp — any baseline movement is a defect rather than expected churn.
+All five come from [`classic-user-settings-core`](classic-user-settings-core.md), and none is rendered by a frontend yet, so no Display Label has crossed a binding seam so far. That keeps the parity cost at zero for every adoption to date and makes the verification signal sharp — any baseline movement is a defect rather than expected churn.
+
+| Enum | Notes |
+| --- | --- |
+| `MigrationChangeKind` | The tracer. Chosen first because its Node token already diverged to camelCase, so it exercises the casing transform for real. |
+| `SourceLocation` | Every token is a single word, so the Node transform is an identity. Its reverse-parse path on the CXX and Node surfaces derives from `VARIANTS`. |
+| `DocumentClassification` | Three multi-word tokens reach JavaScript as `newerCompatible`, `futureMajor`, and `legacyFlat`. |
+| `CommitEligibility` | Two multi-word tokens reach JavaScript as `requiresMigration` and `blockedUntrusted`. |
+| `PreferenceOrigin` | One multi-word token reaches JavaScript as `degradedFallback`. Projected at more call sites than any other adopter, since every typed preference carries one. |
+
+Two of the four later adopters are reachable exhaustively through a binding-safe constructor (`DocumentClassification` through the legacy-import outcome, `SourceLocation` through a review-only migration plan), so their per-binding projection tests drive the real conversion functions. `CommitEligibility` and `PreferenceOrigin` only exist inside a `UserSettings` that was opened from a real document; rather than add a test-only constructor for a path production never takes, their exhaustive check sits at the pure projection rule instead. After adoption there is no per-enum projection code left for a production path to exercise differently, so the two seams cover the same ground.
 
 ## Testing
 

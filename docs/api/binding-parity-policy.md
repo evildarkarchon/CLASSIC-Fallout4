@@ -16,6 +16,12 @@ Implementing a workspace-internal trait on a `-core` type does not by itself cre
 
 Note that the gates cannot decide this for you. Both surface parsers match `pub fn` and `pub struct` at the start of a line, and trait-impl members carry no `pub`, so a trait method is invisible to them either way. Treat this as a contributor judgement recorded in review, not a check CI will make.
 
+### Scope: inherent methods that supply an already-published value
+
+The same reasoning covers an inherent method added to a type a binding already publishes. `Revision::token()` and `Revision::from_token()` in [`classic-user-settings-core`](classic-user-settings-core.md) are the current case: each binding previously carried its own byte-identical copy of that formatting, so consolidating it changes which code produces the revision strings the three surfaces already expose, not which strings they expose. No new adapter symbol is warranted, and no contract row moves.
+
+Unlike trait-impl members, inherent `pub fn` entries *are* visible to the Node and Python surface parsers — they match `pub fn` with leading whitespace allowed. So this case does cost two rows in `docs/implementation/{node,python}_api_parity/baseline/rust_api_surface.json` and requires `--update-baseline`, while leaving `parity_contract.json`, the binding surface inventories, and both runtime coverage-registry contract hashes untouched. A baseline that moves and a contract that does not is the expected shape here.
+
 For the semantic Autoscan Report Contribution architecture, parity is both
 positive and negative. CXX, Node, and Python expose the six public Focused
 Semantic Analyzers, owned inputs/results, and shared typed errors. They must not expose
