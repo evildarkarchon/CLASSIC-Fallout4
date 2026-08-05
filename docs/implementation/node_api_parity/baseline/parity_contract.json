@@ -1940,6 +1940,28 @@
       "nodeArity": 1
     },
     {
+      "id": "scanlog.scan_run.scanRunInstalledYamlDataDiagnosticKindLabel",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "InstalledYamlDataRunDiagnosticKind",
+      "rustKind": "enum",
+      "nodeExport": "scanRunInstalledYamlDataDiagnosticKindLabel",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog.scan_run.scanRunLocalIgnoreYamlDataStateLabel",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "LocalIgnoreRunState",
+      "rustKind": "enum",
+      "nodeExport": "scanRunLocalIgnoreYamlDataStateLabel",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
       "id": "config-yaml-source-enum",
       "tier": "tier1",
       "ownerModule": "config",

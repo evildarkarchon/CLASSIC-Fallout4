@@ -21,6 +21,7 @@ use classic_scanlog_core::{
     CrashLogScanRunStatus, CrashLogScanSetupContext, CrashLogScanSetupResult, ScanProgressPhase,
     StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
 };
+use classic_vocabulary::display_label;
 use napi::bindgen_prelude::{AsyncTask, Either, FnArgs, Function, JsObjectValue, ToNapiValue};
 use napi::threadsafe_function::{
     ThreadsafeFunction, ThreadsafeFunctionCallMode, UnknownReturnValue,
@@ -297,6 +298,11 @@ pub struct JsScanRunLogResult {
 }
 
 /// Local Ignore states possible for the complete scan-run recovery contract.
+// `PartialEq` exists so the Display Label projection can resolve a variant by
+// running the forward `local_ignore_run_state_to_js` map over the core
+// `VARIANTS` list. A reverse `match` would be a second variant mapping that
+// could disagree with the forward one; derived from it, the two cannot.
+#[derive(PartialEq, Eq)]
 #[napi(string_enum)]
 pub enum JsScanRunLocalIgnoreState {
     /// A valid user-owned Local Ignore file already existed in the installation.
@@ -327,6 +333,8 @@ pub struct ScanRunContinuation {
 }
 
 /// Stable diagnostic categories emitted by valid-or-generated scan-run intake.
+// See `JsScanRunLocalIgnoreState` for why `PartialEq` is derived.
+#[derive(PartialEq, Eq)]
 #[napi(string_enum)]
 pub enum JsScanRunInstalledYamlDataDiagnosticKind {
     /// The per-user update cache could not be resolved.
@@ -872,6 +880,36 @@ const fn installed_yaml_data_run_diagnostic_kind_to_js(
         }
         Kind::LocalIgnoreReset => JsScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreReset,
     }
+}
+
+/// Returns the human-facing Display Label for one scan-run diagnostic kind.
+///
+/// A frontend prints this label as a bare prefix before the diagnostic message,
+/// so four of the ten read as failures rather than statuses: `Parse` resolves to
+/// `parse failure`, not `parse`.
+///
+/// The wording is the configuration crate's, because the core enum behind this
+/// projection is a contract-stability twin that delegates both naming forms
+/// there. This surface therefore returns exactly what
+/// `installedYamlDataDiagnosticKindLabel` does, without either being told twice.
+///
+/// Presentation only. Labels are reworded freely between releases, so branch on
+/// the enum and never on this string — the enum value is the stable form.
+#[napi]
+pub fn scan_run_installed_yaml_data_diagnostic_kind_label(
+    kind: JsScanRunInstalledYamlDataDiagnosticKind,
+) -> String {
+    display_label(kind, installed_yaml_data_run_diagnostic_kind_to_js).to_string()
+}
+
+/// Returns the human-facing Display Label for one scan-run Local Ignore state.
+///
+/// `RecoveryRequired` is the one variant whose prose the run contract owns
+/// itself, since a paused run has no configuration counterpart. Same stability
+/// caveat as [`scan_run_installed_yaml_data_diagnostic_kind_label`].
+#[napi]
+pub fn scan_run_local_ignore_yaml_data_state_label(state: JsScanRunLocalIgnoreState) -> String {
+    display_label(state, local_ignore_run_state_to_js).to_string()
 }
 
 /// Pure metadata projected before allocating a JavaScript reset error.

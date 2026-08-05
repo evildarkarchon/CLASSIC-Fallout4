@@ -73,8 +73,8 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 113,
-      "contractIdsHash": "38f7263df0fdfed5b61f5ba3c65419c05662286176e7942d582d534ef5fbdcdb",
+      "contractCount": 115,
+      "contractIdsHash": "e9d092fb9b7e0b6d0ced9a4cdc42f9ebe0b844974029be53a52bfe94407247d2",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
       "testCaseId": "final Crash Log Scan Run contract",

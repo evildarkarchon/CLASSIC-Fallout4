@@ -1,16 +1,16 @@
 {
-  "generated_at_utc": "2026-08-05T10:18:02.129069+00:00",
+  "generated_at_utc": "2026-08-05T11:27:48.255399+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
     "runtime_registry": "python-bindings/tests/fixtures/runtime_coverage_registry.json"
   },
   "summary": {
-    "tracked_surface_total": 1673,
-    "runtime_verified_total": 1673,
+    "tracked_surface_total": 1675,
+    "runtime_verified_total": 1675,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 1219,
+    "tier1_contract_total": 1221,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -53,8 +53,8 @@
       "total": 158
     },
     "scanlog": {
-      "runtime_verified": 537,
-      "total": 537
+      "runtime_verified": 539,
+      "total": 539
     },
     "settings": {
       "runtime_verified": 65,
@@ -772,6 +772,48 @@
       "classification": "runtime_verified",
       "rustSymbol": "Request",
       "bindingIdentifier": "classic_scanlog.scan_run_execute",
+      "coverageId": "python-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
+      "testCaseId": "scanlog-tier1-smoke",
+      "fixtureRefs": [
+        "PARITY_MAIN_YAML",
+        "PARITY_GAME_YAML",
+        "PARITY_IGNORE_YAML"
+      ],
+      "notes": "Covers the retained Tier-1 scanlog surface through public workflow smoke tests. Report-fragment and legacy SettingsValidator rows were retired by issue #136 after semantic analyzer and byte-exact Autoscan Report coverage replaced them. Issue #123 supplies the final Crash Log Scan Run contract, and issues #128 through #134 supply focused shared semantic analyzer contracts."
+    },
+    {
+      "trackedId": "contract:scanlog.scan_run.scan_run_installed_yaml_data_diagnostic_kind_label",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.scan_run.scan_run_installed_yaml_data_diagnostic_kind_label",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "InstalledYamlDataRunDiagnosticKind",
+      "bindingIdentifier": "classic_scanlog.scan_run_installed_yaml_data_diagnostic_kind_label",
+      "coverageId": "python-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
+      "testCaseId": "scanlog-tier1-smoke",
+      "fixtureRefs": [
+        "PARITY_MAIN_YAML",
+        "PARITY_GAME_YAML",
+        "PARITY_IGNORE_YAML"
+      ],
+      "notes": "Covers the retained Tier-1 scanlog surface through public workflow smoke tests. Report-fragment and legacy SettingsValidator rows were retired by issue #136 after semantic analyzer and byte-exact Autoscan Report coverage replaced them. Issue #123 supplies the final Crash Log Scan Run contract, and issues #128 through #134 supply focused shared semantic analyzer contracts."
+    },
+    {
+      "trackedId": "contract:scanlog.scan_run.scan_run_local_ignore_yaml_data_state_label",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.scan_run.scan_run_local_ignore_yaml_data_state_label",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "LocalIgnoreRunState",
+      "bindingIdentifier": "classic_scanlog.scan_run_local_ignore_yaml_data_state_label",
       "coverageId": "python-tier1-scanlog",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",

@@ -1037,3 +1037,132 @@ def test_observer_failure_is_adapter_data_and_can_request_safe_cancellation(
     assert cancellation.is_cancelled is True
     assert execution.result.status == "cancelled"
     assert execution.result.logs[0].disposition == "cancelled_before_start"
+
+
+def test_scan_run_display_labels_carry_the_settled_descriptive_wording() -> None:
+    """The twin surfaces the wording the configuration crate settled."""
+
+    import classic_scanlog
+
+    label = classic_scanlog.scan_run_installed_yaml_data_diagnostic_kind_label
+    assert label("parse") == "parse failure"
+    assert label("read") == "read failure"
+    assert label("missing") == "missing candidate"
+    assert label("cache_unavailable") == "update cache unavailable"
+    assert (
+        classic_scanlog.scan_run_local_ignore_yaml_data_state_label("generated")
+        == "generated from selected Main defaults"
+    )
+
+
+def test_scan_run_display_labels_match_the_configuration_surface() -> None:
+    """The run surface and the configuration surface return the same prose.
+
+    Both project the same core vocabulary -- the run contract's enums are
+    contract-stability twins that delegate their naming to the configuration
+    crate's -- so a divergence here means one of the two stopped delegating.
+    """
+
+    import classic_config
+    import classic_scanlog
+
+    for token in ("parse", "read", "missing", "local_ignore_reset"):
+        assert classic_scanlog.scan_run_installed_yaml_data_diagnostic_kind_label(
+            token
+        ) == classic_config.installed_yaml_data_diagnostic_kind_label(token)
+
+    for token in ("existing", "generated", "proceed_without_ignore", "reset_to_default"):
+        assert classic_scanlog.scan_run_local_ignore_yaml_data_state_label(
+            token
+        ) == classic_config.local_ignore_yaml_data_state_label(token)
+
+
+def test_recovery_required_state_supplies_its_own_display_label() -> None:
+    """The one state with no configuration counterpart owns both of its forms."""
+
+    import classic_config
+    import classic_scanlog
+
+    assert (
+        classic_scanlog.scan_run_local_ignore_yaml_data_state_label("recovery_required")
+        == "recovery required"
+    )
+    # The asymmetry, from the other side: the configuration surface does not
+    # know this token at all, which is why the twin cannot delegate it.
+    with pytest.raises(ValueError):
+        classic_config.local_ignore_yaml_data_state_label("recovery_required")
+
+
+def test_scan_run_display_label_uses_glossary_capitalization_for_domain_terms() -> None:
+    """`Local Ignore` is a domain term, so no token transform could derive it."""
+
+    import classic_scanlog
+
+    assert (
+        classic_scanlog.scan_run_installed_yaml_data_diagnostic_kind_label(
+            "local_ignore_reset"
+        )
+        == "Local Ignore reset"
+    )
+
+
+def test_every_token_a_real_run_publishes_resolves_to_a_label(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Every token a completed run emits resolves to non-empty prose.
+
+    Exhaustive coverage of every variant lives in the Rust sibling module, which
+    can iterate the core's ``VARIANTS``; Python cannot see that list. What this
+    level can check without restating the vocabulary is the boundary itself --
+    that a token this surface actually published round-trips into a label.
+    """
+
+    import classic_scanlog
+
+    _write_scan_run_data_root(tmp_path)
+    _write_logs(tmp_path / "logs", ["crash-2026-01-01-000000.log"])
+    documents_root = tmp_path / "Documents"
+    documents_root.mkdir()
+    monkeypatch.chdir(tmp_path)
+
+    request = classic_scanlog.ScanRunRequest.standard(
+        _configuration(classic_scanlog, tmp_path),
+        classic_scanlog.ScanRunStandardSource(
+            base_directory=str(tmp_path),
+            custom_scan_directory=str(tmp_path / "logs"),
+            configured_documents_root=str(documents_root),
+        ),
+        classic_scanlog.ScanRunUnsolvedLogs.leave_in_place(),
+    )
+    execution = classic_scanlog.scan_run_execute(
+        request,
+        classic_scanlog.ScanRunCancellation(),
+    )
+
+    assert execution.error is None
+    installed = execution.result.installed_yaml_data
+    assert installed is not None
+
+    assert classic_scanlog.scan_run_local_ignore_yaml_data_state_label(
+        installed.local_ignore_state
+    )
+    for diagnostic in installed.diagnostics:
+        assert classic_scanlog.scan_run_installed_yaml_data_diagnostic_kind_label(
+            diagnostic.kind
+        )
+
+
+@pytest.mark.parametrize(
+    "resolver",
+    [
+        "scan_run_installed_yaml_data_diagnostic_kind_label",
+        "scan_run_local_ignore_yaml_data_state_label",
+    ],
+)
+def test_scan_run_display_label_rejects_an_unknown_token(resolver: str) -> None:
+    """An unrecognized token raises rather than resolving to a placeholder."""
+
+    import classic_scanlog
+
+    with pytest.raises(ValueError):
+        getattr(classic_scanlog, resolver)("not_a_real_token")

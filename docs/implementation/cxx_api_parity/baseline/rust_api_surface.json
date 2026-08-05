@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-05T10:14:18Z",
+  "generated_at_utc": "2026-08-05T11:25:07Z",
   "entries": [
     {
       "id": "0f1ce653765981f0",
@@ -7031,6 +7031,40 @@
           }
         ],
         "returnType": "ScanRunContractExecutionResult"
+      }
+    },
+    {
+      "id": "78b3cc5fa73a4c33",
+      "rustSymbol": "scan_run_installed_yaml_data_diagnostic_kind_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "kind",
+            "type": "ScanRunInstalledYamlDataDiagnosticKind"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "e339f7882fe08cf9",
+      "rustSymbol": "scan_run_local_ignore_yaml_data_state_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "state",
+            "type": "ScanRunLocalIgnoreYamlDataState"
+          }
+        ],
+        "returnType": "String"
       }
     },
     {

@@ -396,6 +396,28 @@
       "pythonKind": "function"
     },
     {
+      "id": "scanlog.scan_run.scan_run_installed_yaml_data_diagnostic_kind_label",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "InstalledYamlDataRunDiagnosticKind",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "scan_run_installed_yaml_data_diagnostic_kind_label",
+      "pythonKind": "function",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.scan_run.scan_run_local_ignore_yaml_data_state_label",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "LocalIgnoreRunState",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "scan_run_local_ignore_yaml_data_state_label",
+      "pythonKind": "function",
+      "pythonArity": 1
+    },
+    {
       "id": "user_settings.commit_eligibility",
       "tier": "tier1",
       "ownerModule": "user_settings",

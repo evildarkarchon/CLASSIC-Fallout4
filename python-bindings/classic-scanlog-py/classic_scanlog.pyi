@@ -811,6 +811,43 @@ def scan_run_resume(
 ) -> ScanRunExecution:
     """Resume retained work without repeating discovery or YAML Data selection."""
 
+def scan_run_installed_yaml_data_diagnostic_kind_label(token: str) -> str:
+    """Return the human-facing Display Label for one diagnostic-kind token.
+
+    ``token`` is what this module publishes on
+    :attr:`ScanRunInstalledYamlDataDiagnostic.kind`. The label reads as a
+    failure where the outcome is one, so ``parse`` resolves to ``parse
+    failure``. It is the same string
+    :func:`classic_config.installed_yaml_data_diagnostic_kind_label` returns,
+    because the run contract's enum delegates its naming to the configuration
+    crate's.
+
+    Labels are presentation only and may be reworded between releases, so do
+    not parse or compare them -- compare the token.
+
+    Args:
+        token: A published diagnostic-kind token.
+
+    Raises:
+        ValueError: ``token`` is not a published diagnostic-kind token.
+    """
+
+def scan_run_local_ignore_yaml_data_state_label(token: str) -> str:
+    """Return the human-facing Display Label for one Local Ignore state token.
+
+    ``token`` is what this module publishes on
+    :attr:`ScanRunInstalledYamlDataRunData.local_ignore_state`. Four of the five
+    labels are the configuration crate's; ``recovery_required`` is the one the
+    run contract owns itself, since a paused run has no configuration
+    counterpart.
+
+    Args:
+        token: A published Local Ignore state token.
+
+    Raises:
+        ValueError: ``token`` is not a published Local Ignore state token.
+    """
+
 
 # =============================================================================
 # Standalone Functions

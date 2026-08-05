@@ -5,6 +5,11 @@ use classic_scanlog_core::scan_run::contract::{
     LogFailureStage, LogResult, RunResult,
 };
 use classic_scanlog_core::{CrashLogScanRejectedInput, CrashLogScanRunStatus};
+// Imported here rather than in `scan_run.rs`: the module itself only projects
+// labels through `crate::vocabulary::display_label`, so the trait is in scope
+// only where these tests read `label()` off a core variant to derive their
+// expectation from.
+use classic_vocabulary::Vocabulary;
 
 const SHARED_SCAN_RUN_MANIFEST: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -498,5 +503,63 @@ fn shared_failure_fixture_maps_every_node_failure_field() {
         assert_eq!(mapped.stage, expected["stage"].as_str().unwrap());
         assert_eq!(mapped.message, expected["message"].as_str().unwrap());
         assert_eq!(mapped.path.as_deref(), expected["path"].as_str());
+    }
+}
+
+// --- Vocabulary projection ------------------------------------------------
+//
+// Expectations are derived from `classic-scanlog-core`, never restated. A
+// hand-written array here would be another copy of the vocabulary: it would
+// pass against a surface that had already drifted, because it would only be
+// comparing this file's copy against itself. Iterating `VARIANTS` also means a
+// new variant is covered without anyone remembering to extend these tests.
+
+#[test]
+/// Every projected JavaScript variant resolves back to the core Display Label.
+fn every_scan_run_twin_projects_its_core_display_label() {
+    for variant in contract::InstalledYamlDataRunDiagnosticKind::VARIANTS
+        .iter()
+        .copied()
+    {
+        assert_eq!(
+            scan_run_installed_yaml_data_diagnostic_kind_label(
+                installed_yaml_data_run_diagnostic_kind_to_js(variant)
+            ),
+            variant.label(),
+        );
+    }
+
+    for variant in contract::LocalIgnoreRunState::VARIANTS.iter().copied() {
+        assert_eq!(
+            scan_run_local_ignore_yaml_data_state_label(local_ignore_run_state_to_js(variant)),
+            variant.label(),
+        );
+    }
+}
+
+#[test]
+/// No scan-run Display Label reaches JavaScript empty.
+fn no_scan_run_display_label_reaches_javascript_empty() {
+    // The label functions fall back to an empty string for a value the forward
+    // projection cannot produce. That fallback must stay unreachable for every
+    // real variant, because an empty label is exactly the "variant that renders
+    // as nothing" the naming contract exists to prevent.
+    for variant in contract::InstalledYamlDataRunDiagnosticKind::VARIANTS
+        .iter()
+        .copied()
+    {
+        assert!(
+            !scan_run_installed_yaml_data_diagnostic_kind_label(
+                installed_yaml_data_run_diagnostic_kind_to_js(variant)
+            )
+            .is_empty()
+        );
+    }
+
+    for variant in contract::LocalIgnoreRunState::VARIANTS.iter().copied() {
+        assert!(
+            !scan_run_local_ignore_yaml_data_state_label(local_ignore_run_state_to_js(variant))
+                .is_empty()
+        );
     }
 }

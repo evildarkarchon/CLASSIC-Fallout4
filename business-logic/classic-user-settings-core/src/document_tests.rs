@@ -56,10 +56,7 @@ fn document_classification_tokens_are_the_frozen_published_spelling() {
         DocumentClassification::NewerCompatible.as_str(),
         "newer_compatible"
     );
-    assert_eq!(
-        DocumentClassification::FutureMajor.as_str(),
-        "future_major"
-    );
+    assert_eq!(DocumentClassification::FutureMajor.as_str(), "future_major");
     assert_eq!(DocumentClassification::LegacyFlat.as_str(), "legacy_flat");
     assert_eq!(DocumentClassification::Malformed.as_str(), "malformed");
     assert_eq!(DocumentClassification::Missing.as_str(), "missing");

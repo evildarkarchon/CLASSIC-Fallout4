@@ -17,7 +17,9 @@ The fix is ownership, not another gate. One definition site, projected everywher
   - `fn as_str(self) -> &'static str` — the frozen adapter-facing **Vocabulary Token**, snake_case.
   - `fn label(self) -> &'static str` — the human-facing **Display Label**, glossary capitalization.
 - `from_token<T: Vocabulary>(token: &str) -> Option<T>` — resolves the variant whose token is exactly `token`. A scan over `VARIANTS` rather than a reverse table, so the forward and parse directions cannot disagree.
+- `display_label<T, U>(value: U, project: fn(T) -> U) -> &'static str` — resolves the Display Label for a value an adapter already projected, by running that adapter's *existing* forward projection over `VARIANTS`. Same reasoning as `from_token`, applied to a binding's mirror enum instead of a string: a reverse `match` would be a second variant mapping able to disagree with the forward one. Returns `""` for a value the projection cannot produce, so no adapter invents a label or borrows another variant's. It lives here rather than per-binding because nothing about it is surface-specific — the contrasting case is the Node casing transform, which encodes a JavaScript identifier convention and therefore belongs to the surface that has the convention.
 - `assert_vocabulary_conformance<T: Vocabulary>()` — the reusable conformance assertion, called once per adopting enum from that crate's sibling test module.
+- `assert_twin_vocabulary_conformance<Twin, Source>(source_of, locally_owned_tokens)` — the same, for a **delegating twin**: an enum one crate declares so another crate's type does not leak into its contract, and which mirrors that other enum. Called *instead of* the plain assertion, since it runs the base contract first. `source_of` is the twin-to-source direction of the mapping, returning `None` for a variant the source has no counterpart for; `locally_owned_tokens` names exactly those. It additionally checks that every paired variant agrees with its counterpart on **both** forms, that the unpaired set is exactly the declared one in both directions, and that every *source* variant is reachable from some twin variant — the clause that catches a variant added to the source and not to the twin.
 
 ## The two stability guarantees
 
@@ -73,8 +75,25 @@ These three are the first adopters whose Display Labels cross a binding seam, an
 
 Adopting these also deleted two Python restatements of the same vocabulary — `classic-config-py` and `classic-scanlog-py` each wrote out the provenance tokens — and replaced `classic-config-py`'s copy of the five durable-publication stage tokens with delegation to the crate that owns them.
 
-The CXX and Node label projections resolve a variant by running that surface's *existing* forward projection over `VARIANTS`, rather than matching on the binding-side enum. A reverse `match` would be a second variant mapping that could disagree with the forward one; derived from it, the two cannot. This is the same reasoning `from_token` applies to strings.
+The CXX and Node label projections resolve a variant through the shared `display_label`, which runs that surface's *existing* forward projection over `VARIANTS` rather than matching on the binding-side enum. A reverse `match` would be a second variant mapping that could disagree with the forward one; derived from it, the two cannot. This is the same reasoning `from_token` applies to strings.
+
+### From [`classic-scanlog-core`](classic-scanlog-core.md)
+
+Both are **delegating twins** of the configuration enums above. The Crash Log Scan Run contract declares its own types so that configuration types do not leak into it — an architectural decision this adoption preserves rather than works around — and those types obtain both naming forms by delegating through the near-identity mapping instead of restating them. Restating would have opened a new divergence axis inside the change that closes an old one.
+
+| Enum | Notes |
+| --- | --- |
+| `InstalledYamlDataRunDiagnosticKind` | A true identity mapping: all ten variants delegate, and the twin owns no vocabulary of its own. It had no token method at all before; three binding surfaces each wrote the ten strings out. |
+| `LocalIgnoreRunState` | Identity-plus-one. `RecoveryRequired` has no configuration counterpart — a run can pause for a caller decision and a stored snapshot cannot — so it supplies `recovery_required` and `recovery required` locally. Its inherent `as_str` was replaced by the trait method rather than kept alongside it. |
+
+The asymmetry is asserted rather than assumed: `assert_twin_vocabulary_conformance` is told which tokens are locally owned and checks that set in both directions, so a twin that quietly stopped delegating a variant reads as a failure and not as one more locally owned variant.
+
+Rust cannot invert a `match`, so each twin carries both halves of its mapping as separate functions, and a round-trip test pins them against each other. That is the one place a twin could still go wrong that no single-direction check would see: a variant delegating to the *wrong* counterpart inherits the wrong prose while both halves stay exhaustive.
+
+Adopting these deleted the two remaining hand-written token tables in `classic-scanlog-py` and replaced the last two hardcoded expectation arrays in its projection tests with `VARIANTS` loops.
 
 ## Testing
 
 Expected values are derived from the core wherever the thing under test is a projection of the core. A test that restated the vocabulary would be another copy that can drift, and would pass just as happily against a binding that had already diverged. The one legitimate restatement is in the owning crate, where the literal token strings *are* the specification of the frozen identifiers, and in `node-bindings/classic-node/src/vocabulary_tests.rs`, where the published camelCase spellings are pinned and the table is separately checked for completeness against `VARIANTS`.
+
+The scripted per-binding suites — `__test__/*.spec.ts` and `python-bindings/tests/test_*.py` — do quote a handful of settled Display Labels as literals. That is deliberate and narrow: neither language can see `VARIANTS`, so the exhaustive check has to live in the Rust sibling module, and what is left for these to prove is that the projection survives the binding boundary and that a settled wording reached it. Keep them to the wordings a ticket actually decided, and prefer comparing two surfaces to each other over quoting a literal where both publish the same vocabulary — as the Crash Log Scan Run suites do against their configuration counterparts.

@@ -17,10 +17,16 @@ import {
   ScanRunRequest,
   ScanRunUnsolvedLogs,
   JsGameId,
+  JsInstalledYamlDataDiagnosticKind,
+  JsLocalIgnoreYamlDataState,
   JsScanRunInstalledYamlDataDiagnosticKind,
   JsScanRunLocalIgnoreRecoveryDecision,
   JsScanRunLocalIgnoreState,
+  installedYamlDataDiagnosticKindLabel,
+  localIgnoreYamlDataStateLabel,
   scanRunExecute,
+  scanRunInstalledYamlDataDiagnosticKindLabel,
+  scanRunLocalIgnoreYamlDataStateLabel,
   scanRunResume,
   parseLogSegments,
   extractFormIds,
@@ -1628,6 +1634,73 @@ describe("scanlog Plan 2 promotion: parseXseLog", () => {
       expect(result === null || typeof result === "string").toBe(true);
     } catch (e) {
       expect(e).toBeInstanceOf(Error);
+    }
+  });
+});
+
+describe("scanlog: Crash Log Scan Run Display Labels", () => {
+  // These pin the strings a JavaScript consumer actually receives. The Rust
+  // sibling module proves each label equals the core's, so what is left to
+  // check here is that the projection survives the N-API boundary, and that the
+  // wording the configuration crate settled reaches this surface too - these
+  // two enums are contract-stability twins that delegate their naming to it.
+  test("the settled wordings reach JavaScript through the twin", () => {
+    expect(
+      scanRunInstalledYamlDataDiagnosticKindLabel(JsScanRunInstalledYamlDataDiagnosticKind.Parse),
+    ).toBe("parse failure");
+    expect(
+      scanRunInstalledYamlDataDiagnosticKindLabel(JsScanRunInstalledYamlDataDiagnosticKind.Read),
+    ).toBe("read failure");
+    expect(
+      scanRunInstalledYamlDataDiagnosticKindLabel(JsScanRunInstalledYamlDataDiagnosticKind.Missing),
+    ).toBe("missing candidate");
+    expect(
+      scanRunInstalledYamlDataDiagnosticKindLabel(
+        JsScanRunInstalledYamlDataDiagnosticKind.CacheUnavailable,
+      ),
+    ).toBe("update cache unavailable");
+    expect(scanRunLocalIgnoreYamlDataStateLabel(JsScanRunLocalIgnoreState.Generated)).toBe(
+      "generated from selected Main defaults",
+    );
+  });
+
+  test("the recovery-required state supplies its own label", () => {
+    // The one variant with no configuration counterpart, so its prose is the
+    // run contract's own rather than delegated.
+    expect(scanRunLocalIgnoreYamlDataStateLabel(JsScanRunLocalIgnoreState.RecoveryRequired)).toBe(
+      "recovery required",
+    );
+  });
+
+  test("the twin returns the same prose as the configuration surface", () => {
+    // Both project the same core vocabulary, so a divergence here means one of
+    // the two stopped delegating. Comparing the two surfaces rather than
+    // restating a literal is what makes this check rather than record.
+    expect(
+      scanRunInstalledYamlDataDiagnosticKindLabel(JsScanRunInstalledYamlDataDiagnosticKind.Parse),
+    ).toBe(installedYamlDataDiagnosticKindLabel(JsInstalledYamlDataDiagnosticKind.Parse));
+    expect(scanRunLocalIgnoreYamlDataStateLabel(JsScanRunLocalIgnoreState.Generated)).toBe(
+      localIgnoreYamlDataStateLabel(JsLocalIgnoreYamlDataState.Generated),
+    );
+  });
+
+  test("Local Ignore keeps its glossary capitalization", () => {
+    expect(
+      scanRunInstalledYamlDataDiagnosticKindLabel(
+        JsScanRunInstalledYamlDataDiagnosticKind.LocalIgnoreReset,
+      ),
+    ).toBe("Local Ignore reset");
+  });
+
+  test("every enum member resolves to a non-empty label", () => {
+    // Iterated rather than listed: a variant added later is covered without
+    // anyone remembering to extend this test, and an empty label is exactly the
+    // "renders as nothing" failure the naming contract exists to prevent.
+    for (const kind of Object.values(JsScanRunInstalledYamlDataDiagnosticKind)) {
+      expect(scanRunInstalledYamlDataDiagnosticKindLabel(kind)).not.toBe("");
+    }
+    for (const state of Object.values(JsScanRunLocalIgnoreState)) {
+      expect(scanRunLocalIgnoreYamlDataStateLabel(state)).not.toBe("");
     }
   });
 });

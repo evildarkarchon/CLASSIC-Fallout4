@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-08-05T10:18:02.120791+00:00`
-- Tier-1 contract rows: **1219**
-- Tier-1 matched: **1218**
+- Generated: `2026-08-05T11:26:49.215883+00:00`
+- Tier-1 contract rows: **1221**
+- Tier-1 matched: **1220**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -45,6 +45,8 @@
 | `scanlog.scan_run.ScanRunEvent` | `scanlog` | `Event` | `classic_scanlog.ScanRunEvent` | `matched` |
 | `scanlog.scan_run.ScanRunExecution` | `scanlog` | `RunResult` | `classic_scanlog.ScanRunExecution` | `matched` |
 | `scanlog.scan_run.scan_run_execute` | `scanlog` | `Request` | `classic_scanlog.scan_run_execute` | `matched` |
+| `scanlog.scan_run.scan_run_installed_yaml_data_diagnostic_kind_label` | `scanlog` | `InstalledYamlDataRunDiagnosticKind` | `classic_scanlog.scan_run_installed_yaml_data_diagnostic_kind_label` | `matched` |
+| `scanlog.scan_run.scan_run_local_ignore_yaml_data_state_label` | `scanlog` | `LocalIgnoreRunState` | `classic_scanlog.scan_run_local_ignore_yaml_data_state_label` | `matched` |
 | `user_settings.commit_eligibility` | `user_settings` | `CommitEligibility` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
 | `user_settings.diagnostic` | `user_settings` | `Diagnostic` | `classic_user_settings.UserSettingsDiagnostic` | `matched` |
 | `user_settings.document_classification` | `user_settings` | `DocumentClassification` | `classic_user_settings.UserSettingsSnapshot` | `matched` |

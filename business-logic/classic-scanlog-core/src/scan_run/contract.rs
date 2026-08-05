@@ -27,6 +27,7 @@ use classic_config_core::{
     LocalIgnoreYamlDataState, YamlDataContentIdentity,
 };
 use classic_shared_core::GameId;
+use classic_vocabulary::Vocabulary;
 use std::fmt;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -1039,16 +1040,95 @@ pub enum LocalIgnoreRunState {
     ResetToDefault,
 }
 
-impl LocalIgnoreRunState {
-    /// Returns the stable adapter-facing Local Ignore state identifier.
-    #[must_use]
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            Self::Existing => "existing",
-            Self::Generated => "generated",
-            Self::RecoveryRequired => "recovery_required",
-            Self::ProceedWithoutIgnore => "proceed_without_ignore",
-            Self::ResetToDefault => "reset_to_default",
+/// The Vocabulary Token for the one run state with no configuration counterpart.
+const RECOVERY_REQUIRED_TOKEN: &str = "recovery_required";
+
+/// The Display Label for that same state.
+///
+/// Both C++ frontends and the TUI already render exactly this wording, so unlike
+/// the delegated variants it settles no divergence — it only moves an agreed
+/// string to the place the other four now come from.
+const RECOVERY_REQUIRED_LABEL: &str = "recovery required";
+
+/// Returns the run state one configuration state maps onto.
+///
+/// The source-to-twin half of the near-identity mapping, named rather than
+/// inlined into [`InstalledYamlDataRunData::from_snapshot`] so that the round
+/// trip against [`local_ignore_run_state_to_source`] can be asserted. Adding a
+/// configuration variant stops this `match` from compiling, which is where a
+/// contributor is told the twin needs extending.
+const fn local_ignore_run_state_from_source(
+    state: LocalIgnoreYamlDataState,
+) -> LocalIgnoreRunState {
+    match state {
+        LocalIgnoreYamlDataState::Existing => LocalIgnoreRunState::Existing,
+        LocalIgnoreYamlDataState::Generated => LocalIgnoreRunState::Generated,
+        LocalIgnoreYamlDataState::ProceedWithoutIgnore => LocalIgnoreRunState::ProceedWithoutIgnore,
+        LocalIgnoreYamlDataState::ResetToDefault => LocalIgnoreRunState::ResetToDefault,
+    }
+}
+
+/// Returns the configuration state a run state mirrors, if there is one.
+///
+/// This is the twin-to-source half of the near-identity mapping whose
+/// source-to-twin half is inlined in [`InstalledYamlDataRunData::from_snapshot`].
+/// The two halves are written separately because Rust cannot invert a `match`,
+/// and they are pinned against each other by a round-trip test rather than by
+/// review.
+///
+/// It stays private: the run contract deliberately does not leak configuration
+/// types, and exposing this would hand callers the very type the twin exists to
+/// keep out of the contract.
+const fn local_ignore_run_state_to_source(
+    state: LocalIgnoreRunState,
+) -> Option<LocalIgnoreYamlDataState> {
+    match state {
+        LocalIgnoreRunState::Existing => Some(LocalIgnoreYamlDataState::Existing),
+        LocalIgnoreRunState::Generated => Some(LocalIgnoreYamlDataState::Generated),
+        // A run can pause for a caller decision; a stored snapshot cannot, so
+        // the configuration enum has nothing to delegate to here.
+        LocalIgnoreRunState::RecoveryRequired => None,
+        LocalIgnoreRunState::ProceedWithoutIgnore => {
+            Some(LocalIgnoreYamlDataState::ProceedWithoutIgnore)
+        }
+        LocalIgnoreRunState::ResetToDefault => Some(LocalIgnoreYamlDataState::ResetToDefault),
+    }
+}
+
+impl Vocabulary for LocalIgnoreRunState {
+    const VARIANTS: &'static [Self] = &[
+        Self::Existing,
+        Self::Generated,
+        Self::RecoveryRequired,
+        Self::ProceedWithoutIgnore,
+        Self::ResetToDefault,
+    ];
+
+    /// Delegated for the four variants the configuration enum also has, so the
+    /// frozen tokens keep exactly one definition site. The strings are the ones
+    /// this contract already published, so nothing a consumer parses moves.
+    ///
+    /// Adding a variant to this enum stops `local_ignore_run_state_to_source` from
+    /// compiling, which is where a contributor must decide between delegating
+    /// and owning. Answering `None` without also declaring the variant as
+    /// locally owned collapses it onto `recovery_required`, which the
+    /// conformance assertion rejects twice over — as a duplicate token, and as
+    /// an undeclared locally owned variant.
+    fn as_str(self) -> &'static str {
+        match local_ignore_run_state_to_source(self) {
+            Some(source) => source.as_str(),
+            None => RECOVERY_REQUIRED_TOKEN,
+        }
+    }
+
+    /// Delegated on the same split as [`Self::as_str`]. This is where
+    /// delegation earns its keep: `Generated` reads as `generated from selected
+    /// Main defaults` here because the configuration crate settled that wording,
+    /// and a twin that restated its labels would have had to be told.
+    fn label(self) -> &'static str {
+        match local_ignore_run_state_to_source(self) {
+            Some(source) => source.label(),
+            None => RECOVERY_REQUIRED_LABEL,
         }
     }
 }
@@ -1076,6 +1156,110 @@ pub enum InstalledYamlDataRunDiagnosticKind {
     LocalIgnoreGenerated,
     /// Malformed Local Ignore YAML Data was reset from retained selected-Main defaults.
     LocalIgnoreReset,
+}
+
+/// Returns the run diagnostic kind one configuration diagnostic kind maps onto.
+///
+/// The source-to-twin half of the mapping, named rather than inlined into
+/// [`InstalledYamlDataRunData::map_diagnostics`] for the same reason as
+/// [`local_ignore_run_state_from_source`]: so the round trip against its
+/// inverse can be asserted, and so a configuration variant added later stops
+/// this `match` from compiling.
+const fn installed_yaml_data_run_diagnostic_kind_from_source(
+    kind: InstalledYamlDataDiagnosticKind,
+) -> InstalledYamlDataRunDiagnosticKind {
+    match kind {
+        InstalledYamlDataDiagnosticKind::CacheUnavailable => {
+            InstalledYamlDataRunDiagnosticKind::CacheUnavailable
+        }
+        InstalledYamlDataDiagnosticKind::Missing => InstalledYamlDataRunDiagnosticKind::Missing,
+        InstalledYamlDataDiagnosticKind::Read => InstalledYamlDataRunDiagnosticKind::Read,
+        InstalledYamlDataDiagnosticKind::InvalidUtf8 => {
+            InstalledYamlDataRunDiagnosticKind::InvalidUtf8
+        }
+        InstalledYamlDataDiagnosticKind::Parse => InstalledYamlDataRunDiagnosticKind::Parse,
+        InstalledYamlDataDiagnosticKind::InvalidSchema => {
+            InstalledYamlDataRunDiagnosticKind::InvalidSchema
+        }
+        InstalledYamlDataDiagnosticKind::IncompatibleSchema => {
+            InstalledYamlDataRunDiagnosticKind::IncompatibleSchema
+        }
+        InstalledYamlDataDiagnosticKind::InvalidRoleData => {
+            InstalledYamlDataRunDiagnosticKind::InvalidRoleData
+        }
+        InstalledYamlDataDiagnosticKind::LocalIgnoreGenerated => {
+            InstalledYamlDataRunDiagnosticKind::LocalIgnoreGenerated
+        }
+        InstalledYamlDataDiagnosticKind::LocalIgnoreReset => {
+            InstalledYamlDataRunDiagnosticKind::LocalIgnoreReset
+        }
+    }
+}
+
+/// Returns the configuration diagnostic kind a run diagnostic kind mirrors.
+///
+/// Total, unlike [`local_ignore_run_state_to_source`]: this twin is a true identity
+/// mapping, so every variant delegates and there is no local vocabulary at all.
+/// It is the twin-to-source half of the mapping whose source-to-twin half is
+/// inlined in [`InstalledYamlDataRunData::map_diagnostics`], and is private for
+/// the same reason — the run contract does not leak configuration types.
+const fn installed_yaml_data_run_diagnostic_kind_to_source(
+    kind: InstalledYamlDataRunDiagnosticKind,
+) -> InstalledYamlDataDiagnosticKind {
+    match kind {
+        InstalledYamlDataRunDiagnosticKind::CacheUnavailable => {
+            InstalledYamlDataDiagnosticKind::CacheUnavailable
+        }
+        InstalledYamlDataRunDiagnosticKind::Missing => InstalledYamlDataDiagnosticKind::Missing,
+        InstalledYamlDataRunDiagnosticKind::Read => InstalledYamlDataDiagnosticKind::Read,
+        InstalledYamlDataRunDiagnosticKind::InvalidUtf8 => {
+            InstalledYamlDataDiagnosticKind::InvalidUtf8
+        }
+        InstalledYamlDataRunDiagnosticKind::Parse => InstalledYamlDataDiagnosticKind::Parse,
+        InstalledYamlDataRunDiagnosticKind::InvalidSchema => {
+            InstalledYamlDataDiagnosticKind::InvalidSchema
+        }
+        InstalledYamlDataRunDiagnosticKind::IncompatibleSchema => {
+            InstalledYamlDataDiagnosticKind::IncompatibleSchema
+        }
+        InstalledYamlDataRunDiagnosticKind::InvalidRoleData => {
+            InstalledYamlDataDiagnosticKind::InvalidRoleData
+        }
+        InstalledYamlDataRunDiagnosticKind::LocalIgnoreGenerated => {
+            InstalledYamlDataDiagnosticKind::LocalIgnoreGenerated
+        }
+        InstalledYamlDataRunDiagnosticKind::LocalIgnoreReset => {
+            InstalledYamlDataDiagnosticKind::LocalIgnoreReset
+        }
+    }
+}
+
+impl Vocabulary for InstalledYamlDataRunDiagnosticKind {
+    const VARIANTS: &'static [Self] = &[
+        Self::CacheUnavailable,
+        Self::Missing,
+        Self::Read,
+        Self::InvalidUtf8,
+        Self::Parse,
+        Self::InvalidSchema,
+        Self::IncompatibleSchema,
+        Self::InvalidRoleData,
+        Self::LocalIgnoreGenerated,
+        Self::LocalIgnoreReset,
+    ];
+
+    /// Fully delegated. Before this, three binding surfaces each wrote these ten
+    /// tokens out; the strings are unchanged, so nothing a consumer parses moves.
+    fn as_str(self) -> &'static str {
+        installed_yaml_data_run_diagnostic_kind_to_source(self).as_str()
+    }
+
+    /// Fully delegated, which is what carries the settled wording into the run
+    /// contract for free: `Parse` reads as `parse failure` and `Read` as `read
+    /// failure` here because the configuration crate decided so.
+    fn label(self) -> &'static str {
+        installed_yaml_data_run_diagnostic_kind_to_source(self).label()
+    }
 }
 
 /// Structured attribution for one scan-run selection, fallback, or generation event.
@@ -1156,14 +1340,7 @@ impl InstalledYamlDataRunData {
     /// Copies scan-run metadata from a selected Installed YAML Data snapshot.
     #[must_use]
     pub(super) fn from_snapshot(snapshot: &InstalledYamlDataSnapshot) -> Option<Self> {
-        let local_ignore_state = match snapshot.local_ignore_state() {
-            LocalIgnoreYamlDataState::Existing => LocalIgnoreRunState::Existing,
-            LocalIgnoreYamlDataState::Generated => LocalIgnoreRunState::Generated,
-            LocalIgnoreYamlDataState::ProceedWithoutIgnore => {
-                LocalIgnoreRunState::ProceedWithoutIgnore
-            }
-            LocalIgnoreYamlDataState::ResetToDefault => LocalIgnoreRunState::ResetToDefault,
-        };
+        let local_ignore_state = local_ignore_run_state_from_source(snapshot.local_ignore_state());
         let diagnostics = Self::map_diagnostics(snapshot.diagnostics())?;
 
         Some(Self {
@@ -1210,43 +1387,11 @@ impl InstalledYamlDataRunData {
         diagnostics
             .iter()
             .map(|diagnostic| {
-                let kind = match diagnostic.kind() {
-                    InstalledYamlDataDiagnosticKind::CacheUnavailable => {
-                        InstalledYamlDataRunDiagnosticKind::CacheUnavailable
-                    }
-                    InstalledYamlDataDiagnosticKind::Missing => {
-                        InstalledYamlDataRunDiagnosticKind::Missing
-                    }
-                    InstalledYamlDataDiagnosticKind::Read => {
-                        InstalledYamlDataRunDiagnosticKind::Read
-                    }
-                    InstalledYamlDataDiagnosticKind::InvalidUtf8 => {
-                        InstalledYamlDataRunDiagnosticKind::InvalidUtf8
-                    }
-                    InstalledYamlDataDiagnosticKind::Parse => {
-                        InstalledYamlDataRunDiagnosticKind::Parse
-                    }
-                    InstalledYamlDataDiagnosticKind::InvalidSchema => {
-                        InstalledYamlDataRunDiagnosticKind::InvalidSchema
-                    }
-                    InstalledYamlDataDiagnosticKind::IncompatibleSchema => {
-                        InstalledYamlDataRunDiagnosticKind::IncompatibleSchema
-                    }
-                    InstalledYamlDataDiagnosticKind::InvalidRoleData => {
-                        InstalledYamlDataRunDiagnosticKind::InvalidRoleData
-                    }
-                    InstalledYamlDataDiagnosticKind::LocalIgnoreGenerated => {
-                        InstalledYamlDataRunDiagnosticKind::LocalIgnoreGenerated
-                    }
-                    InstalledYamlDataDiagnosticKind::LocalIgnoreReset => {
-                        InstalledYamlDataRunDiagnosticKind::LocalIgnoreReset
-                    }
-                };
                 Some(InstalledYamlDataRunDiagnostic {
                     role: diagnostic.role(),
                     candidate: diagnostic.candidate(),
                     path: diagnostic.path().map(std::path::Path::to_path_buf),
-                    kind,
+                    kind: installed_yaml_data_run_diagnostic_kind_from_source(diagnostic.kind()),
                     message: diagnostic.message().to_string(),
                 })
             })

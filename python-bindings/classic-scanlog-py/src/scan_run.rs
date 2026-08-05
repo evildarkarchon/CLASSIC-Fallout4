@@ -16,7 +16,7 @@ use classic_scanlog_core::{
 };
 use classic_shared::without_gil_block_on;
 use classic_shared_core::GameId;
-use classic_vocabulary::Vocabulary;
+use classic_vocabulary::{Vocabulary, from_token};
 use pyo3::create_exception;
 use pyo3::exceptions::{PyRuntimeError, PyTypeError, PyValueError};
 use pyo3::prelude::*;
@@ -1249,33 +1249,76 @@ fn installed_yaml_data_provenance_to_string(value: InstalledYamlDataProvenance) 
 }
 
 /// Returns the stable Python token for every valid-or-generated diagnostic kind.
-const fn installed_yaml_data_diagnostic_kind_to_string(
+///
+/// Delegates rather than restating. The ten strings this replaced were correct,
+/// and that is the problem the delegation solves: a correct copy is
+/// indistinguishable from a drifted one until someone edits the other side.
+fn installed_yaml_data_diagnostic_kind_to_string(
     value: contract::InstalledYamlDataRunDiagnosticKind,
 ) -> &'static str {
-    use contract::InstalledYamlDataRunDiagnosticKind as Kind;
-    match value {
-        Kind::CacheUnavailable => "cache_unavailable",
-        Kind::Missing => "missing",
-        Kind::Read => "read",
-        Kind::InvalidUtf8 => "invalid_utf8",
-        Kind::Parse => "parse",
-        Kind::InvalidSchema => "invalid_schema",
-        Kind::IncompatibleSchema => "incompatible_schema",
-        Kind::InvalidRoleData => "invalid_role_data",
-        Kind::LocalIgnoreGenerated => "local_ignore_generated",
-        Kind::LocalIgnoreReset => "local_ignore_reset",
-    }
+    value.as_str()
 }
 
 /// Returns the stable Python token for every scan-run Local Ignore state.
-const fn local_ignore_state_to_string(value: contract::LocalIgnoreRunState) -> &'static str {
-    match value {
-        contract::LocalIgnoreRunState::Existing => "existing",
-        contract::LocalIgnoreRunState::Generated => "generated",
-        contract::LocalIgnoreRunState::RecoveryRequired => "recovery_required",
-        contract::LocalIgnoreRunState::ProceedWithoutIgnore => "proceed_without_ignore",
-        contract::LocalIgnoreRunState::ResetToDefault => "reset_to_default",
-    }
+///
+/// Delegates for the same reason as
+/// [`installed_yaml_data_diagnostic_kind_to_string`]. The core enum is itself a
+/// contract-stability twin that delegates four of its five tokens onward to the
+/// configuration crate, so this surface now publishes the same strings
+/// `classic_config` does without either surface being told what they are.
+fn local_ignore_state_to_string(value: contract::LocalIgnoreRunState) -> &'static str {
+    value.as_str()
+}
+
+/// Returns the human-facing Display Label for one scan-run diagnostic kind token.
+///
+/// The token is what this surface publishes on
+/// `ScanRunInstalledYamlDataDiagnostic.kind`; this resolves it to the prose a
+/// frontend renders, so `parse` reads as `parse failure` rather than as a
+/// status. The wording is the configuration crate's, because the core enum
+/// behind these tokens is a contract-stability twin that delegates both naming
+/// forms there — this returns exactly what
+/// `classic_config.installed_yaml_data_diagnostic_kind_label` does.
+///
+/// Labels are presentation only and may be reworded between releases, so
+/// callers must not parse or compare them — compare the token.
+///
+/// # Errors
+///
+/// Raises `ValueError` when `token` is not a published diagnostic kind token.
+#[pyfunction]
+pub fn scan_run_installed_yaml_data_diagnostic_kind_label(token: &str) -> PyResult<&'static str> {
+    from_token::<contract::InstalledYamlDataRunDiagnosticKind>(token)
+        .map(Vocabulary::label)
+        .ok_or_else(|| {
+            PyValueError::new_err(format!(
+                "unknown Crash Log Scan Run Installed YAML Data diagnostic kind token `{token}`"
+            ))
+        })
+}
+
+/// Returns the human-facing Display Label for one scan-run Local Ignore state token.
+///
+/// The token is what this surface publishes on
+/// `ScanRunInstalledYamlDataRunData.local_ignore_state`. Four of the five
+/// labels are the configuration crate's; `recovery_required` is the one the run
+/// contract owns itself, since a paused run has no configuration counterpart.
+///
+/// Same stability caveat as
+/// [`scan_run_installed_yaml_data_diagnostic_kind_label`].
+///
+/// # Errors
+///
+/// Raises `ValueError` when `token` is not a published Local Ignore state token.
+#[pyfunction]
+pub fn scan_run_local_ignore_yaml_data_state_label(token: &str) -> PyResult<&'static str> {
+    from_token::<contract::LocalIgnoreRunState>(token)
+        .map(Vocabulary::label)
+        .ok_or_else(|| {
+            PyValueError::new_err(format!(
+                "unknown Crash Log Scan Run Local Ignore state token `{token}`"
+            ))
+        })
 }
 
 /// Projects selected file metadata with the same shape as `classic_config`.

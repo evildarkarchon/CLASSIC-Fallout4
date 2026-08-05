@@ -29,6 +29,12 @@ classic-database-core = { path = "../classic-database-core" }
 classic-settings-core = { path = "../classic-settings-core" }
 classic-version-registry-core = { path = "../classic-version-registry-core" }
 
+# Workspace-internal Vocabulary naming contract: the Crash Log Scan Run
+# contract's two twin enums implement it by delegating to the configuration
+# enums they mirror, so the run contract keeps its own types without keeping a
+# second copy of their strings.
+classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
+
 # Parsing and pattern matching
 regex = { workspace = true }
 memchr = { workspace = true }

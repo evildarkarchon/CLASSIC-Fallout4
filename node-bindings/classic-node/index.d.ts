@@ -5875,6 +5875,32 @@ export declare function scanModInis(gameRoot: string, gameName: string): JsModIn
 export declare function scanRunExecute(request: ScanRunRequest, cancellation: ScanRunCancellation, observer?: (event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
 
 /**
+ * Returns the human-facing Display Label for one scan-run diagnostic kind.
+ *
+ * A frontend prints this label as a bare prefix before the diagnostic message,
+ * so four of the ten read as failures rather than statuses: `Parse` resolves to
+ * `parse failure`, not `parse`.
+ *
+ * The wording is the configuration crate's, because the core enum behind this
+ * projection is a contract-stability twin that delegates both naming forms
+ * there. This surface therefore returns exactly what
+ * `installedYamlDataDiagnosticKindLabel` does, without either being told twice.
+ *
+ * Presentation only. Labels are reworded freely between releases, so branch on
+ * the enum and never on this string — the enum value is the stable form.
+ */
+export declare function scanRunInstalledYamlDataDiagnosticKindLabel(kind: JsScanRunInstalledYamlDataDiagnosticKind): string
+
+/**
+ * Returns the human-facing Display Label for one scan-run Local Ignore state.
+ *
+ * `RecoveryRequired` is the one variant whose prose the run contract owns
+ * itself, since a paused run has no configuration counterpart. Same stability
+ * caveat as [`scan_run_installed_yaml_data_diagnostic_kind_label`].
+ */
+export declare function scanRunLocalIgnoreYamlDataStateLabel(state: JsScanRunLocalIgnoreState): string
+
+/**
  * Resumes one retained Crash Log Scan Run through an explicit Rust-owned recovery decision.
  *
  * Replay and concurrent double consumption reject with JavaScript error code

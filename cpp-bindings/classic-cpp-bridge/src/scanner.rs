@@ -29,7 +29,8 @@ pub(crate) use contract::{
     ScanRunUnsolvedLogs, scan_run_cancellation_cancel, scan_run_cancellation_is_cancelled,
     scan_run_cancellation_new, scan_run_continuation_resume, scan_run_contract_execute,
     scan_run_contract_execution_has_continuation, scan_run_contract_execution_take_continuation,
-    scan_run_contract_execution_take_result, scan_run_request_standard,
+    scan_run_contract_execution_take_result, scan_run_installed_yaml_data_diagnostic_kind_label,
+    scan_run_local_ignore_yaml_data_state_label, scan_run_request_standard,
     scan_run_request_standard_with_fcx, scan_run_request_targeted,
     scan_run_request_targeted_with_fcx, scan_run_unsolved_logs_leave_in_place,
     scan_run_unsolved_logs_move_to_configured_or_default, scan_run_unsolved_logs_move_to_custom,
@@ -1138,6 +1139,22 @@ mod ffi {
             cancellation: &ScanRunCancellation,
             observer: *const ScanRunObserver,
         ) -> Result<Box<ScanRunContractExecution>>;
+
+        /// Human-facing Display Label for one scan-run Installed YAML Data
+        /// diagnostic kind.
+        ///
+        /// Rendered as a bare prefix before the diagnostic message, so `Parse`
+        /// reads as `parse failure`. Presentation only: the label is reworkable
+        /// between releases, so branch on the enum and never on this string. An
+        /// out-of-range enum value yields an empty string.
+        fn scan_run_installed_yaml_data_diagnostic_kind_label(
+            kind: ScanRunInstalledYamlDataDiagnosticKind,
+        ) -> String;
+        /// Human-facing Display Label for one scan-run Local Ignore state.
+        /// Same stability caveat as above.
+        fn scan_run_local_ignore_yaml_data_state_label(
+            state: ScanRunLocalIgnoreYamlDataState,
+        ) -> String;
 
         // Utilities
         fn detect_vr_log(content: &str) -> bool;

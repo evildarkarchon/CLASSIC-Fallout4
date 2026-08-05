@@ -48,7 +48,7 @@ use classic_settings_core::{
 };
 use classic_shared_core::GameId as CoreGameId;
 use classic_shared_core::get_runtime;
-use classic_vocabulary::Vocabulary;
+use classic_vocabulary::display_label;
 use std::path::{Path, PathBuf};
 
 /// Opaque wrapper around `YamlDataCore` for CXX FFI.
@@ -1027,31 +1027,6 @@ fn installed_yaml_data_diagnostic_kind_to_ffi(
     }
 }
 
-/// Resolve the core Display Label for one already-projected CXX enum value.
-///
-/// Runs the *existing* forward projection over `VARIANTS` rather than matching
-/// on the CXX enum. A reverse `match` would be a second variant mapping that
-/// could disagree with the forward one; derived from it, the two cannot. Taking
-/// `project` as a parameter is what lets all three label entry points share that
-/// guarantee instead of restating the scan.
-///
-/// An out-of-range CXX value — reachable only if a caller fabricates one, never
-/// from a value this bridge produced, since CXX shared enums are open at the FFI
-/// boundary — yields an empty string rather than an invented label.
-fn display_label<T, U>(value: U, project: fn(T) -> U) -> String
-where
-    T: Vocabulary,
-    U: PartialEq,
-{
-    T::VARIANTS
-        .iter()
-        .copied()
-        .find(|variant| project(*variant) == value)
-        .map(Vocabulary::label)
-        .unwrap_or_default()
-        .to_string()
-}
-
 /// Return the human-facing Display Label for one candidate provenance.
 ///
 /// The C++ frontends reach the core only through this bridge, and a Qt view is
@@ -1060,7 +1035,7 @@ where
 /// binding seam as its own entry point rather than being folded into a DTO
 /// string.
 fn installed_yaml_data_provenance_label(provenance: ffi::InstalledYamlDataProvenance) -> String {
-    display_label(provenance, installed_yaml_data_provenance_to_ffi)
+    display_label(provenance, installed_yaml_data_provenance_to_ffi).to_string()
 }
 
 /// Return the human-facing Display Label for one diagnostic kind.
@@ -1069,12 +1044,12 @@ fn installed_yaml_data_provenance_label(provenance: ffi::InstalledYamlDataProven
 /// so four of the ten read as failures rather than statuses: `Parse` resolves to
 /// `parse failure`, not `parse`.
 fn installed_yaml_data_diagnostic_kind_label(kind: ffi::InstalledYamlDataDiagnosticKind) -> String {
-    display_label(kind, installed_yaml_data_diagnostic_kind_to_ffi)
+    display_label(kind, installed_yaml_data_diagnostic_kind_to_ffi).to_string()
 }
 
 /// Return the human-facing Display Label for one Local Ignore snapshot state.
 fn local_ignore_yaml_data_state_label(state: ffi::LocalIgnoreYamlDataState) -> String {
-    display_label(state, local_ignore_yaml_data_state_to_ffi)
+    display_label(state, local_ignore_yaml_data_state_to_ffi).to_string()
 }
 
 /// Flatten one selected core file into its CXX metadata DTO.

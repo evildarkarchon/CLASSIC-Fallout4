@@ -297,6 +297,27 @@ no public orchestration object, single-log analysis executor, batch lifecycle,
 reconstructable prepared-run executor, resettable scan token, process-global
 FCX control, or direct report writer.
 
+### Scan-run Display Labels
+
+Two free functions project the human-facing Display Label for the run contract's
+two mirror enums, so a C++ frontend renders one without writing a `switch`:
+
+- `scan_run_installed_yaml_data_diagnostic_kind_label(ScanRunInstalledYamlDataDiagnosticKind) -> String`
+- `scan_run_local_ignore_yaml_data_state_label(ScanRunLocalIgnoreYamlDataState) -> String`
+
+The core enums behind these are contract-stability twins that delegate their
+naming to the configuration enums they mirror, so these labels are the same
+strings `installed_yaml_data_diagnostic_kind_label` and
+`local_ignore_yaml_data_state_label` return. The one exception is
+`RecoveryRequired`, which the run contract owns itself because a paused run has
+no configuration counterpart.
+
+Same conventions as the `classic::config` labels above: a separate entry point
+rather than a DTO field so a Qt view can style variant and label as independent
+table columns; presentation only and reworded freely between releases, so branch
+on the enum and never on the string; an out-of-range value returns an empty
+string rather than an invented label.
+
 ### Tagged request construction
 
 `ScanRunRequest` and `ScanRunUnsolvedLogs` are opaque Rust-owned values. C++

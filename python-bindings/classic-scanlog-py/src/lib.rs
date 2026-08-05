@@ -150,7 +150,9 @@ pub use scan_run::{
     PyScanRunTargetedSource, PyScanRunUnsolvedLogs, PyScanRunYamlDataContentIdentity,
     ScanRunContinuationConsumedError, ScanRunLocalIgnoreResetBackupError,
     ScanRunLocalIgnoreResetConflictError, ScanRunLocalIgnoreResetDurabilityUnknownError,
-    ScanRunLocalIgnoreResetReplacementError, scan_run_execute, scan_run_resume,
+    ScanRunLocalIgnoreResetReplacementError, scan_run_execute,
+    scan_run_installed_yaml_data_diagnostic_kind_label,
+    scan_run_local_ignore_yaml_data_state_label, scan_run_resume,
 };
 pub use version::{
     PyCrashgenVersion, PyCrashgenVersionStatus, check_crashgen_version_status,
@@ -218,6 +220,14 @@ fn register_scan_run_exports(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyScanRunExecution>()?;
     m.add_function(wrap_pyfunction!(scan_run_execute, m)?)?;
     m.add_function(wrap_pyfunction!(scan_run_resume, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        scan_run_installed_yaml_data_diagnostic_kind_label,
+        m
+    )?)?;
+    m.add_function(wrap_pyfunction!(
+        scan_run_local_ignore_yaml_data_state_label,
+        m
+    )?)?;
     m.add(
         "ScanRunContinuationConsumedError",
         m.py().get_type::<ScanRunContinuationConsumedError>(),

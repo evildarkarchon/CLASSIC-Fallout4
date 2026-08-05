@@ -26,7 +26,7 @@ use classic_config_core::{
     inspect_installed_yaml_data as core_inspect_installed_yaml_data,
     load_installed_yaml_data as core_load_installed_yaml_data,
 };
-use classic_vocabulary::Vocabulary;
+use classic_vocabulary::display_label;
 use napi::bindgen_prelude::*;
 use std::path::PathBuf;
 
@@ -727,38 +727,13 @@ fn local_ignore_reset_conflict_to_js(
     }
 }
 
-/// Resolves the core Display Label for one already-projected JavaScript enum value.
-///
-/// Runs the *existing* forward projection over `VARIANTS` rather than matching
-/// on the JavaScript enum. A reverse `match` would be a second variant mapping
-/// that could disagree with the forward one; derived from it, the two cannot.
-/// Taking `project` as a parameter is what lets all three label exports share
-/// that guarantee instead of restating the scan.
-///
-/// The empty-string fallback is unreachable for every real variant, and a test
-/// pins that: napi rejects an unknown string at the boundary before it reaches
-/// here, so JavaScript cannot supply a value the projection does not cover.
-fn display_label<T, U>(value: U, project: fn(T) -> U) -> String
-where
-    T: Vocabulary,
-    U: PartialEq,
-{
-    T::VARIANTS
-        .iter()
-        .copied()
-        .find(|variant| project(*variant) == value)
-        .map(Vocabulary::label)
-        .unwrap_or_default()
-        .to_string()
-}
-
 /// Returns the human-facing Display Label for one candidate provenance.
 ///
 /// Presentation only. Labels are reworded freely between releases, so branch on
 /// the enum and never on this string — the enum value is the stable form.
 #[napi]
 pub fn installed_yaml_data_provenance_label(provenance: JsInstalledYamlDataProvenance) -> String {
-    display_label(provenance, provenance_to_js)
+    display_label(provenance, provenance_to_js).to_string()
 }
 
 /// Returns the human-facing Display Label for one diagnostic kind.
@@ -771,7 +746,7 @@ pub fn installed_yaml_data_provenance_label(provenance: JsInstalledYamlDataProve
 pub fn installed_yaml_data_diagnostic_kind_label(
     kind: JsInstalledYamlDataDiagnosticKind,
 ) -> String {
-    display_label(kind, diagnostic_kind_to_js)
+    display_label(kind, diagnostic_kind_to_js).to_string()
 }
 
 /// Returns the human-facing Display Label for one Local Ignore snapshot state.
@@ -779,7 +754,7 @@ pub fn installed_yaml_data_diagnostic_kind_label(
 /// Same stability caveat as [`installed_yaml_data_provenance_label`].
 #[napi]
 pub fn local_ignore_yaml_data_state_label(state: JsLocalIgnoreYamlDataState) -> String {
-    display_label(state, local_ignore_state_to_js)
+    display_label(state, local_ignore_state_to_js).to_string()
 }
 
 const fn role_to_js(role: CoreInstalledYamlDataRole) -> JsInstalledYamlDataRole {

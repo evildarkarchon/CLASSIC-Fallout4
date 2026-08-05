@@ -7035,6 +7035,40 @@
       }
     },
     {
+      "id": "78b3cc5fa73a4c33",
+      "rustSymbol": "scan_run_installed_yaml_data_diagnostic_kind_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "kind",
+            "type": "ScanRunInstalledYamlDataDiagnosticKind"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "e339f7882fe08cf9",
+      "rustSymbol": "scan_run_local_ignore_yaml_data_state_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "state",
+            "type": "ScanRunLocalIgnoreYamlDataState"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
       "id": "ff0c442b4af6143e",
       "rustSymbol": "scan_run_request_standard",
       "kind": "function",

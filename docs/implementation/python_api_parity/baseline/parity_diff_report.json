@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-08-05T10:18:02.120791+00:00",
+  "generated_at_utc": "2026-08-05T11:26:49.215883+00:00",
   "summary": {
-    "tier1_contract_total": 1219,
-    "tier1_matched": 1218,
+    "tier1_contract_total": 1221,
+    "tier1_matched": 1220,
     "tier1_missing_rust": 0,
     "tier1_missing_python": 0,
     "tier1_signature_mismatch": 0,
@@ -505,6 +505,36 @@
       "actual_python_kind": "function",
       "expected_python_arity": null,
       "actual_python_arity": 4
+    },
+    {
+      "id": "scanlog.scan_run.scan_run_installed_yaml_data_diagnostic_kind_label",
+      "tier": "tier1",
+      "owner_module": "scanlog",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "InstalledYamlDataRunDiagnosticKind",
+      "python_module": "classic_scanlog",
+      "python_export": "scan_run_installed_yaml_data_diagnostic_kind_label",
+      "python_export_path": "scan_run_installed_yaml_data_diagnostic_kind_label",
+      "status": "matched",
+      "expected_python_kind": "function",
+      "actual_python_kind": "function",
+      "expected_python_arity": 1,
+      "actual_python_arity": 1
+    },
+    {
+      "id": "scanlog.scan_run.scan_run_local_ignore_yaml_data_state_label",
+      "tier": "tier1",
+      "owner_module": "scanlog",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "LocalIgnoreRunState",
+      "python_module": "classic_scanlog",
+      "python_export": "scan_run_local_ignore_yaml_data_state_label",
+      "python_export_path": "scan_run_local_ignore_yaml_data_state_label",
+      "status": "matched",
+      "expected_python_kind": "function",
+      "actual_python_kind": "function",
+      "expected_python_arity": 1,
+      "actual_python_arity": 1
     },
     {
       "id": "user_settings.commit_eligibility",

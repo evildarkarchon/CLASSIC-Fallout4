@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-05T10:15:15.249222+00:00",
+  "generated_at_utc": "2026-08-05T11:26:49.213222+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -7461,6 +7461,28 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def scan_run_execute( request: ScanRunRequest, cancellation: ScanRunCancellation, observer: Callable[[ScanRunEvent], None] | None = None, cancel_on_observer_error: bool = False, ) -> ScanRunExecution:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "scan_run_installed_yaml_data_diagnostic_kind_label",
+      "export_path": "scan_run_installed_yaml_data_diagnostic_kind_label",
+      "kind": "function",
+      "arity": 1,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def scan_run_installed_yaml_data_diagnostic_kind_label(token: str) -> str:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "scan_run_local_ignore_yaml_data_state_label",
+      "export_path": "scan_run_local_ignore_yaml_data_state_label",
+      "kind": "function",
+      "arity": 1,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def scan_run_local_ignore_yaml_data_state_label(token: str) -> str:"
     },
     {
       "module": "classic_scanlog",

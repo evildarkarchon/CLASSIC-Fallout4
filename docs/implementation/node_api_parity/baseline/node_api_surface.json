@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-05T10:19:47.738794+00:00",
+  "generated_at_utc": "2026-08-05T11:53:42.647932+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -3764,6 +3764,24 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function scanRunExecute(request: ScanRunRequest, cancellation: ScanRunCancellation, observer?: (event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
       "arity": 4
+    },
+    {
+      "export": "scanRunInstalledYamlDataDiagnosticKindLabel",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function scanRunInstalledYamlDataDiagnosticKindLabel(kind: JsScanRunInstalledYamlDataDiagnosticKind): string",
+      "arity": 1
+    },
+    {
+      "export": "scanRunLocalIgnoreYamlDataStateLabel",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function scanRunLocalIgnoreYamlDataStateLabel(state: JsScanRunLocalIgnoreState): string",
+      "arity": 1
     },
     {
       "export": "scanRunResume",

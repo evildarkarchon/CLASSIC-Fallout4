@@ -12,6 +12,7 @@ use crate::scan_run::{
 use classic_config_core::YamlDataContentIdentity;
 use classic_shared_core::GameId;
 use classic_shared_core::get_runtime;
+use classic_vocabulary::{Vocabulary, assert_twin_vocabulary_conformance};
 use serde::Deserialize;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -3002,5 +3003,87 @@ fn injected_infrastructure_failures_preserve_every_stable_contract_field() {
         assert_eq!(error.stage, stage);
         assert_eq!(error.message, fixture.message);
         assert_eq!(error.path, expected_path);
+    }
+}
+
+// --- Vocabulary naming contract -------------------------------------------
+//
+// Both enums below are contract-stability twins: this crate declares its own
+// types so that configuration types stay out of the run contract, and those
+// types obtain both naming forms by delegating to the configuration enums they
+// mirror. What these tests protect is that the delegation is real, because a
+// twin that quietly restated its strings would reintroduce exactly the
+// divergence axis the twin arrangement was supposed to have no room for.
+
+#[test]
+fn local_ignore_run_state_delegates_to_the_configuration_state() {
+    // `recovery_required` is the one variant that owns both forms: a run can
+    // pause for a caller decision, and a stored snapshot cannot, so the
+    // configuration enum has no counterpart to delegate to. Naming it here is
+    // what makes the asymmetry asserted rather than assumed.
+    assert_twin_vocabulary_conformance(
+        contract::local_ignore_run_state_to_source,
+        &["recovery_required"],
+    );
+}
+
+#[test]
+fn installed_yaml_data_run_diagnostic_kind_delegates_to_the_configuration_kind() {
+    // A true identity mapping, so nothing is locally owned. The closure adapts
+    // a total mapping to the partial one the helper takes; writing the source
+    // function as returning `Option` instead would misdescribe a bijection.
+    assert_twin_vocabulary_conformance(
+        |kind| {
+            Some(contract::installed_yaml_data_run_diagnostic_kind_to_source(
+                kind,
+            ))
+        },
+        &[],
+    );
+}
+
+#[test]
+fn every_twin_variant_is_listed_for_iteration() {
+    // Nothing at runtime can observe whether `VARIANTS` is complete - no Rust
+    // construct reports how many variants an enum has - so adding a variant
+    // must land a contributor on a line that says so. Both counts are also the
+    // arity every binding's exhaustive projection test iterates.
+    assert_eq!(contract::LocalIgnoreRunState::VARIANTS.len(), 5);
+    assert_eq!(
+        contract::InstalledYamlDataRunDiagnosticKind::VARIANTS.len(),
+        10
+    );
+}
+
+#[test]
+fn the_two_halves_of_each_near_identity_mapping_are_inverses() {
+    // Rust cannot invert a `match`, so the source-to-twin direction used when
+    // building run data and the twin-to-source direction the delegation reads
+    // are written separately and could disagree. A twin variant delegating to
+    // the wrong counterpart would inherit the wrong prose while still looking
+    // exhaustive on both sides, so the round trip is checked rather than
+    // reviewed.
+    for state in contract::LocalIgnoreRunState::VARIANTS.iter().copied() {
+        let Some(source) = contract::local_ignore_run_state_to_source(state) else {
+            continue;
+        };
+        assert_eq!(
+            contract::local_ignore_run_state_from_source(source),
+            state,
+            "the two halves of the Local Ignore state mapping disagree"
+        );
+    }
+
+    for kind in contract::InstalledYamlDataRunDiagnosticKind::VARIANTS
+        .iter()
+        .copied()
+    {
+        assert_eq!(
+            contract::installed_yaml_data_run_diagnostic_kind_from_source(
+                contract::installed_yaml_data_run_diagnostic_kind_to_source(kind)
+            ),
+            kind,
+            "the two halves of the diagnostic kind mapping disagree"
+        );
     }
 }

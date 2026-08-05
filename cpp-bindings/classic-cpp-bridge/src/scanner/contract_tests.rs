@@ -1,4 +1,9 @@
 use super::*;
+// Imported here rather than in `contract.rs`: the module itself only projects
+// labels through `crate::vocabulary::display_label`, so the trait is in scope
+// only where the tests read `label()` off a core variant to derive their
+// expectation from.
+use classic_vocabulary::Vocabulary;
 use tempfile::tempdir;
 
 const FIXTURE_LOG_SMALL: &str = include_str!(
@@ -1270,5 +1275,86 @@ fn execute_preserves_typed_intake_failure_stage_and_relevant_path() {
     assert_eq!(
         execution.error.path,
         missing_data.join("CLASSIC Data").to_string_lossy()
+    );
+}
+
+// --- Vocabulary projection ------------------------------------------------
+//
+// Expectations are derived from `classic-scanlog-core`, never restated. A
+// hand-written array here would be another copy of the vocabulary: it would
+// pass against a bridge that had already drifted, because it would only be
+// comparing this file's copy against itself. Iterating `VARIANTS` also means a
+// new variant is covered without anyone remembering to extend these tests.
+
+#[test]
+/// Every projected CXX variant resolves back to the core Display Label.
+fn every_scan_run_twin_projects_its_core_display_label() {
+    for variant in contract::InstalledYamlDataRunDiagnosticKind::VARIANTS
+        .iter()
+        .copied()
+    {
+        assert_eq!(
+            scan_run_installed_yaml_data_diagnostic_kind_label(
+                map_installed_yaml_data_diagnostic_kind(variant)
+            ),
+            variant.label(),
+        );
+    }
+
+    for variant in contract::LocalIgnoreRunState::VARIANTS.iter().copied() {
+        assert_eq!(
+            scan_run_local_ignore_yaml_data_state_label(map_local_ignore_yaml_data_state(variant)),
+            variant.label(),
+        );
+    }
+}
+
+#[test]
+/// No scan-run Display Label reaches C++ empty.
+fn no_scan_run_display_label_reaches_cxx_empty() {
+    // The label functions fall back to an empty string for a value the forward
+    // projection cannot produce. That fallback must stay unreachable for every
+    // real variant, because an empty label is exactly the "variant that renders
+    // as nothing" the naming contract exists to prevent.
+    for variant in contract::InstalledYamlDataRunDiagnosticKind::VARIANTS
+        .iter()
+        .copied()
+    {
+        assert!(
+            !scan_run_installed_yaml_data_diagnostic_kind_label(
+                map_installed_yaml_data_diagnostic_kind(variant)
+            )
+            .is_empty()
+        );
+    }
+
+    for variant in contract::LocalIgnoreRunState::VARIANTS.iter().copied() {
+        assert!(
+            !scan_run_local_ignore_yaml_data_state_label(map_local_ignore_yaml_data_state(variant))
+                .is_empty()
+        );
+    }
+}
+
+#[test]
+/// A fabricated CXX enum value yields nothing rather than an invented label.
+fn an_out_of_range_scan_run_cxx_enum_value_yields_an_empty_display_label() {
+    // CXX shared enums are open at the FFI boundary: C++ can hand back any
+    // `u8`. The bridge never produces one of these, but returning some other
+    // variant's label - or a hand-written "unknown" string - would put
+    // vocabulary back in the adapter, which is what this work removes.
+    assert_eq!(
+        scan_run_installed_yaml_data_diagnostic_kind_label(
+            ffi::ScanRunInstalledYamlDataDiagnosticKind { repr: u8::MAX }
+        ),
+        ""
+    );
+    // Both twins, because both are open at the boundary. Covering only one
+    // would leave the other free to grow a fallback that invents a label.
+    assert_eq!(
+        scan_run_local_ignore_yaml_data_state_label(ffi::ScanRunLocalIgnoreYamlDataState {
+            repr: u8::MAX
+        }),
+        ""
     );
 }

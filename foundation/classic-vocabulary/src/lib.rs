@@ -63,7 +63,7 @@
 
 mod conformance;
 
-pub use conformance::assert_vocabulary_conformance;
+pub use conformance::{assert_twin_vocabulary_conformance, assert_vocabulary_conformance};
 
 /// The two names one variant of a CLASSIC domain concept carries.
 ///
@@ -115,6 +115,38 @@ pub fn from_token<T: Vocabulary>(token: &str) -> Option<T> {
         .iter()
         .copied()
         .find(|variant| variant.as_str() == token)
+}
+
+/// Resolves the Display Label for a value some adapter already projected.
+///
+/// A binding that mirrors a core enum as its own type needs to get back from
+/// one of its own values to the core label. Running the adapter's *existing*
+/// forward projection over [`VARIANTS`](Vocabulary::VARIANTS) is how it does so
+/// without a reverse `match`, which would be a second variant mapping able to
+/// disagree with the forward one. Derived from it, the two cannot. This is the
+/// same reasoning [`from_token`] applies to strings.
+///
+/// Returns `""` for a value the projection cannot produce. Every adapter that
+/// needs this wants the same answer there — render nothing rather than invent a
+/// label or borrow another variant's — and the surfaces differ only in whether
+/// that case is reachable at all: open CXX shared enums admit a fabricated
+/// discriminant, while N-API rejects an unknown string at the boundary.
+///
+/// It lives here rather than in each binding because nothing about it is
+/// surface-specific. The Node casing transform is the contrasting case: that
+/// one encodes a JavaScript identifier convention, so it belongs to the surface
+/// that has the convention.
+#[must_use]
+pub fn display_label<T, U>(value: U, project: fn(T) -> U) -> &'static str
+where
+    T: Vocabulary,
+    U: PartialEq,
+{
+    T::VARIANTS
+        .iter()
+        .copied()
+        .find(|variant| project(*variant) == value)
+        .map_or("", Vocabulary::label)
 }
 
 #[cfg(test)]

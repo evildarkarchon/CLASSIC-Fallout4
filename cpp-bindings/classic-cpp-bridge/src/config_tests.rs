@@ -1,4 +1,9 @@
 use super::*;
+// Imported here rather than in `config.rs`: the module itself only projects
+// labels through `crate::vocabulary::display_label`, so the trait is in scope
+// only where the tests read `label()` off a core variant to derive their
+// expectation from.
+use classic_vocabulary::Vocabulary;
 use std::io::Write;
 use tempfile::NamedTempFile;
 use tempfile::tempdir;

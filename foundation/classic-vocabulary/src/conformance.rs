@@ -92,6 +92,126 @@ pub fn assert_vocabulary_conformance<T: Vocabulary>() {
     }
 }
 
+/// Asserts that a delegating twin enum cannot disagree with the enum it mirrors.
+///
+/// A *twin* is an enum one crate declares so that another crate's type does not
+/// leak into its contract, and which is a near-identity mirror of that other
+/// enum. The twin keeps its own type but obtains both naming forms by
+/// delegating through the mapping between them, so this assertion checks the
+/// delegation actually holds rather than trusting that two `match` expressions
+/// were kept in step.
+///
+/// Call this *instead of* [`assert_vocabulary_conformance`] for a twin — it
+/// runs the full base contract on the twin first, then the twin-specific
+/// clauses below.
+///
+/// `source_of` is the twin-to-source direction of the near-identity mapping,
+/// returning `None` for a twin variant the source has no counterpart for.
+/// `locally_owned_tokens` names exactly those variants: they are the ones
+/// allowed — and required — to supply both forms themselves.
+///
+/// ```ignore
+/// #[test]
+/// fn local_ignore_run_state_delegates_to_the_configuration_state() {
+///     assert_twin_vocabulary_conformance(source_local_ignore_state, &["recovery_required"]);
+/// }
+/// ```
+///
+/// # Checks
+///
+/// - The twin satisfies the base Vocabulary contract in its own right.
+/// - Every twin variant with a counterpart agrees with it on *both* forms. One
+///   form matching is not enough: a twin that restated a Display Label would
+///   still project the right token, and the drift would surface only in shipped
+///   prose.
+/// - The variants without a counterpart are exactly `locally_owned_tokens`.
+///   Pinning the set in both directions is what makes an asymmetric twin
+///   assertable — a twin that quietly stopped delegating a variant would
+///   otherwise read as one more locally owned variant.
+/// - Every *source* variant is claimed by some twin variant. This is the clause
+///   that catches a variant added to the source and not to the twin. A twin
+///   whose forward mapping is an exhaustive `match` already fails to compile in
+///   that case, and this is the backstop for one written with a catch-all arm,
+///   where the compiler has nothing to say.
+///
+/// Variants are compared by Vocabulary Token rather than by value, so that this
+/// helper does not force a `PartialEq` bound onto the naming contract for the
+/// sake of a test. The base assertion has already established that tokens are
+/// unique within each enum, which is what makes a token a sound identity here.
+///
+/// # Panics
+///
+/// Panics on the first violation, naming both enums and the offending token.
+pub fn assert_twin_vocabulary_conformance<Twin, Source>(
+    source_of: fn(Twin) -> Option<Source>,
+    locally_owned_tokens: &[&str],
+) where
+    Twin: Vocabulary,
+    Source: Vocabulary,
+{
+    assert_vocabulary_conformance::<Twin>();
+
+    let twin_name = core::any::type_name::<Twin>();
+    let source_name = core::any::type_name::<Source>();
+
+    let mut unpaired: Vec<&'static str> = Vec::new();
+    let mut claimed: Vec<&'static str> = Vec::new();
+
+    for variant in Twin::VARIANTS.iter().copied() {
+        let token = variant.as_str();
+        let Some(source) = source_of(variant) else {
+            unpaired.push(token);
+            continue;
+        };
+
+        assert_eq!(
+            token,
+            source.as_str(),
+            "{twin_name}: the variant with Vocabulary Token `{token}` maps to a \
+             {source_name} variant whose token is `{}`; a twin delegates its \
+             token rather than spelling its own",
+            source.as_str()
+        );
+        assert_eq!(
+            variant.label(),
+            source.label(),
+            "{twin_name}: the variant with Vocabulary Token `{token}` has \
+             Display Label `{}` while its {source_name} counterpart has `{}`; a \
+             twin delegates both forms, not just the token",
+            variant.label(),
+            source.label()
+        );
+
+        claimed.push(source.as_str());
+    }
+
+    for token in &unpaired {
+        assert!(
+            locally_owned_tokens.iter().any(|owned| owned == token),
+            "{twin_name}: the variant with Vocabulary Token `{token}` has no \
+             {source_name} counterpart but was not declared as locally owned; \
+             either restore its delegation or add it to the locally owned set"
+        );
+    }
+    for owned in locally_owned_tokens {
+        assert!(
+            unpaired.iter().any(|token| token == owned),
+            "{twin_name}: `{owned}` is declared as locally owned but does map to \
+             a {source_name} counterpart; a variant that can delegate must"
+        );
+    }
+
+    for source in Source::VARIANTS.iter().copied() {
+        let token = source.as_str();
+        assert!(
+            claimed.contains(&token),
+            "{source_name}: the variant with Vocabulary Token `{token}` is not \
+             reachable from any {twin_name} variant; the twin was not extended \
+             when this variant was added"
+        );
+    }
+}
+
 #[cfg(test)]
 #[path = "conformance_tests.rs"]
 mod tests;

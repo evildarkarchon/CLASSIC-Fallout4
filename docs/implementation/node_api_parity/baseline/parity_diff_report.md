@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-08-05T10:19:47.741560+00:00`
-- Tier-1 contract rows: **901**
-- Tier-1 matched: **894**
+- Generated: `2026-08-05T11:53:42.650092+00:00`
+- Tier-1 contract rows: **903**
+- Tier-1 matched: **896**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -202,6 +202,8 @@
 | `config.installed_yaml_data.installedYamlDataProvenanceLabel` | `config` | `InstalledYamlDataProvenance` | `installedYamlDataProvenanceLabel` | `matched` |
 | `config.installed_yaml_data.installedYamlDataDiagnosticKindLabel` | `config` | `InstalledYamlDataDiagnosticKind` | `installedYamlDataDiagnosticKindLabel` | `matched` |
 | `config.installed_yaml_data.localIgnoreYamlDataStateLabel` | `config` | `LocalIgnoreYamlDataState` | `localIgnoreYamlDataStateLabel` | `matched` |
+| `scanlog.scan_run.scanRunInstalledYamlDataDiagnosticKindLabel` | `scanlog` | `InstalledYamlDataRunDiagnosticKind` | `scanRunInstalledYamlDataDiagnosticKindLabel` | `matched` |
+| `scanlog.scan_run.scanRunLocalIgnoreYamlDataStateLabel` | `scanlog` | `LocalIgnoreRunState` | `scanRunLocalIgnoreYamlDataStateLabel` | `matched` |
 | `config-yaml-source-enum` | `config` | `YamlSource` | `JsYamlSource` | `matched` |
 | `config-yaml-source-path` | `config` | `YamlSource` | `getYamlSourcePath` | `matched` |
 | `config-yaml-source-display-name` | `config` | `YamlSource` | `getYamlSourceDisplayName` | `matched` |

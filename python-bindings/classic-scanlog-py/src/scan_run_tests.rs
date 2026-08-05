@@ -18,7 +18,8 @@ use super::{
     infrastructure_error_to_py, installed_yaml_data_diagnostic_kind_to_string,
     installed_yaml_data_provenance_to_string, installed_yaml_data_role_to_string,
     local_ignore_state_to_string, log_failure_stage_to_string, log_result_to_py, phase_to_string,
-    run_result_to_py, run_status_to_string, scan_run_reset_error_to_py, setup_to_py,
+    run_result_to_py, run_status_to_string, scan_run_installed_yaml_data_diagnostic_kind_label,
+    scan_run_local_ignore_yaml_data_state_label, scan_run_reset_error_to_py, setup_to_py,
     ScanRunLocalIgnoreResetDurabilityUnknownError, ScanRunLocalIgnoreResetReplacementError,
 };
 
@@ -153,23 +154,17 @@ fn maps_every_stable_enum_identifier() {
             "the run surface must publish the configuration crate's own token",
         );
     }
-    assert_eq!(
-        [
-            contract::LocalIgnoreRunState::Existing,
-            contract::LocalIgnoreRunState::Generated,
-            contract::LocalIgnoreRunState::RecoveryRequired,
-            contract::LocalIgnoreRunState::ProceedWithoutIgnore,
-            contract::LocalIgnoreRunState::ResetToDefault,
-        ]
-        .map(local_ignore_state_to_string),
-        [
-            "existing",
-            "generated",
-            "recovery_required",
-            "proceed_without_ignore",
-            "reset_to_default",
-        ],
-    );
+    // Derived from the core for the same reason as the provenance loop above.
+    // These two enums are contract-stability twins, so the strings they publish
+    // are the configuration crate's; restating them here would have recorded
+    // that agreement rather than checking it.
+    for variant in contract::LocalIgnoreRunState::VARIANTS.iter().copied() {
+        assert_eq!(
+            local_ignore_state_to_string(variant),
+            variant.as_str(),
+            "the run surface must publish the core's own token",
+        );
+    }
     assert_eq!(
         super::PyScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore as u8,
         0
@@ -197,33 +192,16 @@ fn maps_every_stable_enum_identifier() {
             "local_ignore_reset_durability_unknown",
         ]
     );
-    assert_eq!(
-        [
-            contract::InstalledYamlDataRunDiagnosticKind::CacheUnavailable,
-            contract::InstalledYamlDataRunDiagnosticKind::Missing,
-            contract::InstalledYamlDataRunDiagnosticKind::Read,
-            contract::InstalledYamlDataRunDiagnosticKind::InvalidUtf8,
-            contract::InstalledYamlDataRunDiagnosticKind::Parse,
-            contract::InstalledYamlDataRunDiagnosticKind::InvalidSchema,
-            contract::InstalledYamlDataRunDiagnosticKind::IncompatibleSchema,
-            contract::InstalledYamlDataRunDiagnosticKind::InvalidRoleData,
-            contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreGenerated,
-            contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreReset,
-        ]
-        .map(installed_yaml_data_diagnostic_kind_to_string),
-        [
-            "cache_unavailable",
-            "missing",
-            "read",
-            "invalid_utf8",
-            "parse",
-            "invalid_schema",
-            "incompatible_schema",
-            "invalid_role_data",
-            "local_ignore_generated",
-            "local_ignore_reset",
-        ],
-    );
+    for variant in contract::InstalledYamlDataRunDiagnosticKind::VARIANTS
+        .iter()
+        .copied()
+    {
+        assert_eq!(
+            installed_yaml_data_diagnostic_kind_to_string(variant),
+            variant.as_str(),
+            "the run surface must publish the core's own token",
+        );
+    }
 }
 
 /// Replacement publication failure maps to the dedicated Python exception and shared metadata.
@@ -676,5 +654,50 @@ fn maps_setup_and_run_optional_fields_without_loss() {
         assert!(without_values.setup.is_none());
         assert!(without_values.effective_concurrency.is_none());
         assert!(without_values.message.is_none());
+    });
+}
+
+// --- Vocabulary projection ------------------------------------------------
+//
+// Expectations are derived from `classic-scanlog-core`, never restated. A
+// hand-written array here would be another copy of the vocabulary: it would
+// pass against a surface that had already drifted, because it would only be
+// comparing this file's copy against itself. Iterating `VARIANTS` also means a
+// new variant is covered without anyone remembering to extend these tests.
+
+#[test]
+/// Every Display Label this surface resolves is the core label for that token.
+fn every_scan_run_vocabulary_token_resolves_to_the_core_display_label() {
+    for variant in contract::InstalledYamlDataRunDiagnosticKind::VARIANTS
+        .iter()
+        .copied()
+    {
+        assert_eq!(
+            scan_run_installed_yaml_data_diagnostic_kind_label(variant.as_str())
+                .expect("a published token must resolve"),
+            variant.label(),
+        );
+    }
+
+    for variant in contract::LocalIgnoreRunState::VARIANTS.iter().copied() {
+        assert_eq!(
+            scan_run_local_ignore_yaml_data_state_label(variant.as_str())
+                .expect("a published token must resolve"),
+            variant.label(),
+        );
+    }
+}
+
+#[test]
+/// An unrecognized token is rejected rather than resolved to a default label.
+fn an_unknown_scan_run_token_raises_rather_than_returning_a_placeholder_label() {
+    Python::initialize();
+    Python::attach(|py| {
+        for error in [
+            scan_run_installed_yaml_data_diagnostic_kind_label("not_a_kind").unwrap_err(),
+            scan_run_local_ignore_yaml_data_state_label("not_a_state").unwrap_err(),
+        ] {
+            assert!(error.is_instance_of::<pyo3::exceptions::PyValueError>(py));
+        }
     });
 }

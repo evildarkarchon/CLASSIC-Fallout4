@@ -11,6 +11,7 @@ use classic_scanlog_core::{
     TargetedCrashLogScanSource,
 };
 use classic_shared_core::GameId;
+use classic_vocabulary::display_label;
 use std::path::PathBuf;
 
 use super::ffi;
@@ -925,6 +926,35 @@ fn map_local_ignore_yaml_data_state(
             ffi::ScanRunLocalIgnoreYamlDataState::ResetToDefault
         }
     }
+}
+
+/// Return the human-facing Display Label for one scan-run diagnostic kind.
+///
+/// The C++ frontends reach the core only through this bridge, and a Qt view is
+/// not line-oriented — it wants the variant and its label separately so it can
+/// style them as independent table columns. That is why the label crosses the
+/// binding seam as its own entry point rather than being folded into a DTO
+/// string.
+///
+/// The wording is the configuration crate's, because the core enum behind this
+/// projection is a contract-stability twin that delegates both naming forms
+/// there. This bridge therefore renders the same prose the configuration
+/// entry points do, without either surface being told twice.
+pub(crate) fn scan_run_installed_yaml_data_diagnostic_kind_label(
+    kind: ffi::ScanRunInstalledYamlDataDiagnosticKind,
+) -> String {
+    display_label(kind, map_installed_yaml_data_diagnostic_kind).to_string()
+}
+
+/// Return the human-facing Display Label for one scan-run Local Ignore state.
+///
+/// Same reasoning as [`scan_run_installed_yaml_data_diagnostic_kind_label`].
+/// `RecoveryRequired` is the one variant whose prose the run contract owns
+/// itself, since a paused run has no configuration counterpart.
+pub(crate) fn scan_run_local_ignore_yaml_data_state_label(
+    state: ffi::ScanRunLocalIgnoreYamlDataState,
+) -> String {
+    display_label(state, map_local_ignore_yaml_data_state).to_string()
 }
 
 /// Maps the explicit CXX recovery choice into the Rust-owned continuation contract.

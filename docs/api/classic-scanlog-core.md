@@ -187,6 +187,56 @@ uncertainty uses `local_ignore_reset_durability_unknown` and returns canonical
 and verified-backup paths plus malformed, backup, and replacement identities;
 it is never reported as a successful or cancelled run.
 
+### Vocabulary Tokens and Display Labels
+
+`LocalIgnoreRunState` and `InstalledYamlDataRunDiagnosticKind` implement the
+[Vocabulary naming contract](classic-vocabulary.md). Both are
+contract-stability twins: this crate declares its own types so that
+configuration types stay out of the run contract, and both obtain their naming
+by delegating to the configuration enums they mirror rather than restating it.
+Nothing in this crate spells a token or a label for a variant that has a
+counterpart.
+
+| Enum | Vocabulary Tokens |
+| --- | --- |
+| `LocalIgnoreRunState` | `existing`, `generated`, `recovery_required`, `proceed_without_ignore`, `reset_to_default` |
+| `InstalledYamlDataRunDiagnosticKind` | `cache_unavailable`, `missing`, `read`, `invalid_utf8`, `parse`, `invalid_schema`, `incompatible_schema`, `invalid_role_data`, `local_ignore_generated`, `local_ignore_reset` |
+
+The two twins are not symmetrical, and the conformance assertion covers that
+asymmetry rather than assuming a bijection. `InstalledYamlDataRunDiagnosticKind`
+is a true identity mapping and delegates all ten variants.
+`LocalIgnoreRunState` is identity-plus-one: `RecoveryRequired` has no
+configuration counterpart, because a run can pause for a caller decision and a
+stored snapshot cannot, so it supplies both `recovery_required` and `recovery
+required` locally. Every other variant delegates.
+
+Delegation is what carries the settled wording in for free: `Parse` reads as
+`parse failure`, `Read` as `read failure`, `Generated` as `generated from
+selected Main defaults`, and `LocalIgnoreReset` keeps the glossary
+capitalization in `Local Ignore reset` — none of which this crate had to be
+told.
+
+Each surface exposes a Display Label projection for both twins:
+
+| Surface | Projection |
+| --- | --- |
+| CXX | `scan_run_installed_yaml_data_diagnostic_kind_label`, `scan_run_local_ignore_yaml_data_state_label` — take the frozen FFI mirror enum, return `String` |
+| Node | the same two names in camelCase, taking the `string_enum` value |
+| Python | the same two names, taking the published snake_case token and raising `ValueError` for anything else |
+
+The label crosses the binding seam as its own entry point rather than being
+folded into a DTO string, because two of the three frontends are C++ and a Qt
+view is not line-oriented — it wants the variant and its label separately, for
+independently styled table columns.
+
+Adding a variant to a configuration enum cannot pass silently: the
+source-to-twin `match` stops compiling, and if that guard is ever given up for a
+catch-all arm the conformance assertion still fails, because it checks that
+every configuration variant is reachable from some twin variant.
+
+Tokens are frozen and changing one is breaking; labels are presentation only and
+may be reworded.
+
 ### Durable finalization
 
 For an admitted log, Rust owns one durable unit:
