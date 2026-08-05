@@ -190,6 +190,83 @@ pub fn publish(
     publish_locked(target, bytes, PublicationMode::Replace)
 }
 
+/// Complete bytes staged and synchronized beside a target, not yet visible.
+///
+/// Holding one of these means every fallible part of a publication except the
+/// final move has already succeeded: the bytes are written and at the
+/// platform's durability barrier, and [`Self::publish`] is the single remaining
+/// step. Nothing is visible at the target until that call.
+///
+/// `#[must_use]` because dropping this discards work rather than performing it.
+/// Dropping is safe — the staging file is removed — but it is never what a
+/// caller means.
+#[must_use = "a staged publication is only visible once it is published"]
+#[derive(Debug)]
+pub struct StagedPublication<'a> {
+    staged: NamedTempFile,
+    target: &'a Path,
+    identity: ContentIdentity,
+}
+
+impl<'a> StagedPublication<'a> {
+    /// Return the target these bytes will become visible at.
+    #[must_use]
+    pub const fn target(&self) -> &'a Path {
+        self.target
+    }
+
+    /// Return the identity of the bytes waiting to be published.
+    #[must_use]
+    pub const fn identity(&self) -> &ContentIdentity {
+        &self.identity
+    }
+
+    /// Move the synchronized staging file onto the target, replacing it.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`PublicationError::Stage`] with a [`PublicationStage::Publish`]
+    /// stage when the move fails; the target retains its prior content and the
+    /// staging file is removed best-effort.
+    pub fn publish(self) -> Result<Publication, PublicationError> {
+        let durability = publish_staged(self.staged, self.target, PublicationMode::Replace)?;
+        Ok(Publication {
+            identity: self.identity,
+            durability,
+        })
+    }
+}
+
+/// Stage complete bytes beside `target` without making them visible.
+///
+/// This is [`publish`] stopped one step short, for the caller that must run a
+/// check of its own in the narrowest possible window before the final move.
+/// `classic-config-core`'s Local Ignore reset is that caller: it rereads the
+/// canonical bytes and byte-compares them against what the user approved, and
+/// the value of that check is inversely proportional to how much work sits
+/// between it and the move. Staging first collapses that gap to the move alone.
+///
+/// # Concurrency
+///
+/// Takes no lock, for the same reason [`publish_verified_backup`] does not: a
+/// lock scoped to staging alone would release before the move it exists to
+/// guard. A caller splitting the sequence holds its own lock across both.
+///
+/// # Errors
+///
+/// Returns [`PublicationError::Stage`] when any of the create, write, flush, or
+/// sync steps fails. Nothing has been made visible at `target` in any case.
+pub fn stage<'a>(
+    target: &'a Path,
+    bytes: &[u8],
+) -> Result<StagedPublication<'a>, PublicationError> {
+    Ok(StagedPublication {
+        staged: stage_bytes(target, bytes)?,
+        target,
+        identity: ContentIdentity::from_bytes(bytes),
+    })
+}
+
 /// Publish a verified backup, then replace `target` only if the backup holds.
 ///
 /// The ordering is the point of this operation:
@@ -230,6 +307,55 @@ pub fn publish_with_verified_backup(
 ) -> Result<VerifiedBackupPublication, PublicationError> {
     let _lock = lock.acquire(target)?;
 
+    let backup_identity = publish_verified_backup_locked(backup)?;
+    let replacement = publish_locked(target, bytes, PublicationMode::Replace)?;
+    Ok(VerifiedBackupPublication {
+        backup_identity,
+        replacement,
+    })
+}
+
+/// Publish a backup and prove it byte-exact, without replacing anything.
+///
+/// This is the first half of [`publish_with_verified_backup`], exposed on its
+/// own for the caller whose conflict policy has to run *between* the
+/// verification and the replacement. Splitting it here keeps the ordering that
+/// makes a backup trustworthy — unique publish, reread from disk, byte-compare,
+/// abort on mismatch — inside this module, while leaving the caller free to
+/// decide, after the backup exists, whether replacing is still the right thing
+/// to do.
+///
+/// The returned [`ContentIdentity`] is calculated from the *reread* bytes
+/// rather than from `backup.original()`, so it attests what is actually on
+/// disk.
+///
+/// # Concurrency
+///
+/// This operation takes no lock of its own, because a lock scoped to it alone
+/// would be worthless: it would release before the caller's replacement, which
+/// is exactly the window the lock exists to close. A caller that splits the
+/// sequence this way must hold its own lock across this call, its policy check,
+/// and the subsequent [`publish`]. Callers with nothing to do in between should
+/// use [`publish_with_verified_backup`], which locks all four steps together.
+///
+/// # Errors
+///
+/// Returns [`PublicationError::Stage`] when the backup fails to stage or
+/// publish — a backup path that already exists surfaces here with an
+/// [`std::io::ErrorKind::AlreadyExists`] source;
+/// [`PublicationError::BackupUnreadable`] when the reread fails; and
+/// [`PublicationError::BackupMismatch`] when the reread bytes differ. No
+/// replacement is ever attempted by this operation.
+pub fn publish_verified_backup(
+    backup: VerifiedBackup<'_>,
+) -> Result<ContentIdentity, PublicationError> {
+    publish_verified_backup_locked(backup)
+}
+
+/// Publish and verify a backup with any caller lock already held.
+fn publish_verified_backup_locked(
+    backup: VerifiedBackup<'_>,
+) -> Result<ContentIdentity, PublicationError> {
     // The backup's own durability outcome is deliberately not surfaced: the
     // reread below is a stronger statement about the backup than a directory
     // synchronization would be, and backup durability policy belongs to the
@@ -254,13 +380,7 @@ pub fn publish_with_verified_backup(
             actual: ContentIdentity::from_bytes(&reread),
         });
     }
-    let backup_identity = ContentIdentity::from_bytes(&reread);
-
-    let replacement = publish_locked(target, bytes, PublicationMode::Replace)?;
-    Ok(VerifiedBackupPublication {
-        backup_identity,
-        replacement,
-    })
+    Ok(ContentIdentity::from_bytes(&reread))
 }
 
 /// Run the staging-and-publish sequence with any lock already held.

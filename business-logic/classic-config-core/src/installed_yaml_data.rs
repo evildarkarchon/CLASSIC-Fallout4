@@ -6,6 +6,7 @@ use crate::explicit_yaml_data::{
     registered_game_data_role, validate_game, validate_ignore, validate_main,
 };
 use crate::yamldata::{YamlDataCore, parse_and_merge_yaml_content};
+use classic_durable_publication as durable_publication;
 use classic_path_core::yaml_cache_dir_with_env;
 use classic_settings_core::{
     Compatibility, SchemaCompat, SchemaVersion, YamlOperations, extract_schema_version,
@@ -257,347 +258,91 @@ impl LocalIgnoreFileSystem for SystemLocalIgnoreFileSystem {
     }
 }
 
-/// Private durable-publication seam for Local Ignore reset fault and race tests.
-trait LocalIgnoreResetPublisher {
-    /// Durably publish the byte-exact backup without replacing an existing backup identity.
-    fn publish_backup(&self, path: &Path, bytes: &[u8]) -> Result<(), LocalIgnoreResetError>;
-
-    /// Stage replacement bytes, recheck the canonical bytes, then atomically replace on match.
-    fn replace_if_unchanged(
-        &self,
-        path: &Path,
-        expected: &[u8],
-        replacement: &[u8],
-    ) -> Result<ConditionalReplacement, LocalIgnoreResetError>;
-}
-
-/// Result of the conflict check immediately adjacent to atomic replacement.
-enum ConditionalReplacement {
-    Replaced,
-    Conflict(Option<YamlDataContentIdentity>),
-    DurabilityUnknown(std::io::Error),
-}
-
-/// Which durable publication in the reset transaction is being staged.
+/// Which durable publication in the reset transaction failed.
+///
+/// Reset performs two publications with distinct published error codes, so a stage on its own
+/// does not identify a failure. This is only needed where a failure is attributed, which is the
+/// error mapping and the fault injection that drives it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum LocalIgnoreResetPublicationKind {
     Backup,
     Replacement,
 }
 
-/// Production reset publisher using fully synchronized same-directory staging files.
-struct SystemLocalIgnoreResetPublisher {
-    fail_at: Option<(
-        LocalIgnoreResetPublicationKind,
-        LocalIgnoreResetPublicationStage,
-    )>,
-    fail_replacement_read: bool,
-    fail_after_replacement_publish: bool,
-}
-
-impl SystemLocalIgnoreResetPublisher {
-    /// Build the production publisher without fault injection.
-    const fn system() -> Self {
-        Self {
-            fail_at: None,
-            fail_replacement_read: false,
-            fail_after_replacement_publish: false,
-        }
-    }
-
-    /// Build a publisher that fails immediately before one real publication boundary.
-    #[cfg(test)]
-    const fn failing_at(
-        kind: LocalIgnoreResetPublicationKind,
-        stage: LocalIgnoreResetPublicationStage,
-    ) -> Self {
-        Self {
-            fail_at: Some((kind, stage)),
-            fail_replacement_read: false,
-            fail_after_replacement_publish: false,
-        }
-    }
-
-    /// Build a publisher that fails the conflict-protection reread after backup verification.
-    #[cfg(test)]
-    const fn failing_replacement_read() -> Self {
-        Self {
-            fail_at: None,
-            fail_replacement_read: true,
-            fail_after_replacement_publish: false,
-        }
-    }
-
-    /// Build a publisher that fails after canonical replacement but before durability is confirmed.
-    #[cfg(test)]
-    const fn failing_after_replacement_publish() -> Self {
-        Self {
-            fail_at: None,
-            fail_replacement_read: false,
-            fail_after_replacement_publish: true,
-        }
-    }
-
-    /// Return an injected I/O failure before the requested boundary mutates state.
-    fn before(
-        &self,
-        kind: LocalIgnoreResetPublicationKind,
-        stage: LocalIgnoreResetPublicationStage,
-    ) -> Result<(), ResetPublicationFailure> {
-        if self.fail_at == Some((kind, stage)) {
-            return Err(ResetPublicationFailure {
-                stage,
-                source: std::io::Error::new(
-                    std::io::ErrorKind::PermissionDenied,
-                    format!("injected {kind:?} {stage:?} failure"),
-                ),
-            });
-        }
-        Ok(())
+/// Translate the shared stage vocabulary into this crate's published stage.
+///
+/// The two enums are structurally identical by design: `classic-durable-publication` owns one
+/// neutral vocabulary, and every caller maps it onto its own stable, binding-visible codes rather
+/// than exporting the shared type.
+const fn project_publication_stage(
+    stage: durable_publication::PublicationStage,
+) -> LocalIgnoreResetPublicationStage {
+    match stage {
+        durable_publication::PublicationStage::Create => LocalIgnoreResetPublicationStage::Create,
+        durable_publication::PublicationStage::Write => LocalIgnoreResetPublicationStage::Write,
+        durable_publication::PublicationStage::Flush => LocalIgnoreResetPublicationStage::Flush,
+        durable_publication::PublicationStage::Sync => LocalIgnoreResetPublicationStage::Sync,
+        durable_publication::PublicationStage::Publish => LocalIgnoreResetPublicationStage::Publish,
     }
 }
 
-impl LocalIgnoreResetPublisher for SystemLocalIgnoreResetPublisher {
-    fn publish_backup(&self, path: &Path, bytes: &[u8]) -> Result<(), LocalIgnoreResetError> {
-        publish_local_ignore_reset_backup(self, path, bytes).map_err(|failure| {
-            LocalIgnoreResetError::BackupPublication {
-                path: path.to_path_buf(),
-                stage: failure.stage,
-                source: failure.source,
-            }
-        })
-    }
-
-    fn replace_if_unchanged(
-        &self,
-        path: &Path,
-        expected: &[u8],
-        replacement: &[u8],
-    ) -> Result<ConditionalReplacement, LocalIgnoreResetError> {
-        let staged = stage_local_ignore_reset_bytes(
-            self,
-            LocalIgnoreResetPublicationKind::Replacement,
-            path,
-            replacement,
-        )
-        .map_err(|failure| LocalIgnoreResetError::ReplacementPublication {
-            path: path.to_path_buf(),
-            stage: failure.stage,
-            source: failure.source,
-        })?;
-        if self.fail_replacement_read {
-            return Err(LocalIgnoreResetError::ReplacementPublication {
-                path: path.to_path_buf(),
-                stage: LocalIgnoreResetPublicationStage::Publish,
-                source: std::io::Error::new(
-                    std::io::ErrorKind::PermissionDenied,
-                    "injected replacement conflict-protection reread failure",
-                ),
-            });
-        }
-        let current = match std::fs::read(path) {
-            Ok(bytes) => bytes,
-            Err(source) if source.kind() == std::io::ErrorKind::NotFound => {
-                return Ok(ConditionalReplacement::Conflict(None));
-            }
-            Err(source) => {
-                return Err(LocalIgnoreResetError::ReplacementPublication {
-                    path: path.to_path_buf(),
-                    stage: LocalIgnoreResetPublicationStage::Publish,
-                    source,
-                });
-            }
-        };
-        if current != expected {
-            return Ok(ConditionalReplacement::Conflict(Some(
-                YamlDataContentIdentity::from_bytes(&current),
-            )));
-        }
-
-        self.before(
-            LocalIgnoreResetPublicationKind::Replacement,
-            LocalIgnoreResetPublicationStage::Publish,
-        )
-        .map_err(|failure| LocalIgnoreResetError::ReplacementPublication {
-            path: path.to_path_buf(),
-            stage: failure.stage,
-            source: failure.source,
-        })?;
-        match publish_local_ignore_reset_replacement(
-            staged,
-            path,
-            self.fail_after_replacement_publish,
-        )
-        .map_err(|failure| LocalIgnoreResetError::ReplacementPublication {
-            path: path.to_path_buf(),
-            stage: failure.stage,
-            source: failure.source,
-        })? {
-            ReplacementPublication::Durable => Ok(ConditionalReplacement::Replaced),
-            ReplacementPublication::DurabilityUnknown(source) => {
-                Ok(ConditionalReplacement::DurabilityUnknown(source))
-            }
-        }
-    }
-}
-
-/// Stage-specific internal filesystem failure used by both reset publications.
-struct ResetPublicationFailure {
-    stage: LocalIgnoreResetPublicationStage,
-    source: std::io::Error,
-}
-
-/// Write, flush, and synchronize a same-directory staging file without publishing it.
-fn stage_local_ignore_reset_bytes(
-    publisher: &SystemLocalIgnoreResetPublisher,
+/// Map a neutral publication failure onto this crate's published reset error codes.
+///
+/// `path` is the reset's own path for `kind`, not [`durable_publication::PublicationError::path`]:
+/// a lock failure would otherwise report a lock file, and the published contract names the file
+/// the user cares about. Lock variants are unreachable in practice because reset passes
+/// [`durable_publication::LockPolicy::none`] and holds its own lock instead, but they are mapped
+/// rather than panicked on so that a future policy change cannot turn into an abort.
+fn project_publication_error(
     kind: LocalIgnoreResetPublicationKind,
     path: &Path,
-    bytes: &[u8],
-) -> Result<NamedTempFile, ResetPublicationFailure> {
-    let parent = path.parent().ok_or_else(|| ResetPublicationFailure {
-        stage: LocalIgnoreResetPublicationStage::Create,
-        source: std::io::Error::new(
-            std::io::ErrorKind::InvalidInput,
-            "Local Ignore publication path has no parent directory",
-        ),
-    })?;
-    publisher.before(kind, LocalIgnoreResetPublicationStage::Create)?;
-    let mut staged = tempfile::Builder::new()
-        .prefix(".classic-local-ignore-reset-")
-        .suffix(".tmp")
-        .tempfile_in(parent)
-        .map_err(|source| ResetPublicationFailure {
-            stage: LocalIgnoreResetPublicationStage::Create,
-            source,
-        })?;
-    publisher.before(kind, LocalIgnoreResetPublicationStage::Write)?;
-    staged
-        .write_all(bytes)
-        .map_err(|source| ResetPublicationFailure {
-            stage: LocalIgnoreResetPublicationStage::Write,
-            source,
-        })?;
-    publisher.before(kind, LocalIgnoreResetPublicationStage::Flush)?;
-    staged.flush().map_err(|source| ResetPublicationFailure {
-        stage: LocalIgnoreResetPublicationStage::Flush,
-        source,
-    })?;
-    publisher.before(kind, LocalIgnoreResetPublicationStage::Sync)?;
-    staged
-        .as_file()
-        .sync_all()
-        .map_err(|source| ResetPublicationFailure {
-            stage: LocalIgnoreResetPublicationStage::Sync,
-            source,
-        })?;
-    Ok(staged)
-}
-
-/// Durably publish complete backup bytes to one uniquely owned final path.
-fn publish_local_ignore_reset_backup(
-    publisher: &SystemLocalIgnoreResetPublisher,
-    path: &Path,
-    bytes: &[u8],
-) -> Result<(), ResetPublicationFailure> {
-    let staged = stage_local_ignore_reset_bytes(
-        publisher,
-        LocalIgnoreResetPublicationKind::Backup,
-        path,
-        bytes,
-    )?;
-    publisher.before(
-        LocalIgnoreResetPublicationKind::Backup,
-        LocalIgnoreResetPublicationStage::Publish,
-    )?;
-    let (staged_file, staged_path) = staged.keep().map_err(|failure| ResetPublicationFailure {
-        stage: LocalIgnoreResetPublicationStage::Publish,
-        source: failure.error,
-    })?;
-    drop(staged_file);
-    if let Err(source) = atomicwrites::move_atomic(&staged_path, path) {
-        // `keep` must clear Windows' temporary attribute before a write-through move; remove the
-        // now caller-owned staging path best-effort when that final move fails.
-        let _ = std::fs::remove_file(&staged_path);
-        return Err(ResetPublicationFailure {
-            stage: LocalIgnoreResetPublicationStage::Publish,
-            source,
-        });
-    }
-    Ok(())
-}
-
-/// Replace canonical Local Ignore and distinguish a post-rename durability failure.
-fn publish_local_ignore_reset_replacement(
-    staged: NamedTempFile,
-    path: &Path,
-    fail_after_publish: bool,
-) -> Result<ReplacementPublication, ResetPublicationFailure> {
-    let (staged_file, staged_path) = staged.keep().map_err(|failure| ResetPublicationFailure {
-        stage: LocalIgnoreResetPublicationStage::Publish,
-        source: failure.error,
-    })?;
-    drop(staged_file);
-    let publication = match publish_staged_local_ignore_reset_replacement(&staged_path, path) {
-        Ok(publication) => publication,
-        Err(failure) => {
-            // A pre-publish failure leaves caller-owned staging content to remove. After a Unix rename,
-            // the staging path no longer exists and durability uncertainty is returned as data.
-            let _ = std::fs::remove_file(&staged_path);
-            return Err(failure);
+    error: durable_publication::PublicationError,
+) -> LocalIgnoreResetError {
+    // Reread and byte-comparison failures are verification outcomes rather than publication
+    // stages, and this crate publishes a separate code for them that carries no stage at all.
+    let (stage, source) = match error {
+        durable_publication::PublicationError::BackupUnreadable { source, .. } => {
+            return LocalIgnoreResetError::BackupVerification {
+                path: path.to_path_buf(),
+                reason: source.to_string(),
+            };
+        }
+        durable_publication::PublicationError::BackupMismatch { .. } => {
+            return LocalIgnoreResetError::BackupVerification {
+                path: path.to_path_buf(),
+                reason: "published backup bytes differ from the retained malformed bytes"
+                    .to_string(),
+            };
+        }
+        durable_publication::PublicationError::Stage { stage, source, .. } => {
+            (project_publication_stage(stage), source)
+        }
+        // A lock failure has no sequence stage of its own. `Publish` is the honest attribution:
+        // nothing was staged, so the transaction failed at the point of making bytes visible.
+        durable_publication::PublicationError::LockOpen { source, .. }
+        | durable_publication::PublicationError::LockAcquire { source, .. } => {
+            (LocalIgnoreResetPublicationStage::Publish, source)
         }
     };
-    if fail_after_publish {
-        return Ok(ReplacementPublication::DurabilityUnknown(
-            std::io::Error::new(
-                std::io::ErrorKind::PermissionDenied,
-                "injected post-publish replacement directory sync failure",
-            ),
-        ));
-    }
-    Ok(publication)
-}
-
-/// Result of publishing synchronized replacement bytes at the canonical path.
-enum ReplacementPublication {
-    /// Replacement and its namespace entry reached the platform's durability barrier.
-    Durable,
-    /// Complete replacement bytes are visible, but namespace durability is unconfirmed.
-    DurabilityUnknown(std::io::Error),
-}
-
-/// Rename and synchronize a Unix directory while preserving the post-rename failure boundary.
-#[cfg(unix)]
-fn publish_staged_local_ignore_reset_replacement(
-    staged_path: &Path,
-    path: &Path,
-) -> Result<ReplacementPublication, ResetPublicationFailure> {
-    let parent = path.parent().unwrap_or_else(|| Path::new("."));
-    let directory = std::fs::File::open(parent).map_err(|source| ResetPublicationFailure {
-        stage: LocalIgnoreResetPublicationStage::Publish,
-        source,
-    })?;
-    std::fs::rename(staged_path, path).map_err(|source| ResetPublicationFailure {
-        stage: LocalIgnoreResetPublicationStage::Publish,
-        source,
-    })?;
-    match directory.sync_all() {
-        Ok(()) => Ok(ReplacementPublication::Durable),
-        Err(source) => Ok(ReplacementPublication::DurabilityUnknown(source)),
+    match kind {
+        LocalIgnoreResetPublicationKind::Backup => LocalIgnoreResetError::BackupPublication {
+            path: path.to_path_buf(),
+            stage,
+            source,
+        },
+        LocalIgnoreResetPublicationKind::Replacement => {
+            LocalIgnoreResetError::ReplacementPublication {
+                path: path.to_path_buf(),
+                stage,
+                source,
+            }
+        }
     }
 }
 
-/// Use one write-through replacement call on platforms without Unix directory synchronization.
-#[cfg(not(unix))]
-fn publish_staged_local_ignore_reset_replacement(
-    staged_path: &Path,
-    path: &Path,
-) -> Result<ReplacementPublication, ResetPublicationFailure> {
-    atomicwrites::replace_atomic(staged_path, path).map_err(|source| ResetPublicationFailure {
-        stage: LocalIgnoreResetPublicationStage::Publish,
-        source,
-    })?;
-    Ok(ReplacementPublication::Durable)
-}
+#[cfg(test)]
+#[path = "installed_yaml_data_reset_fault.rs"]
+mod reset_fault;
 
 /// Immutable parsed Installed YAML Data backed by the exact selected file bytes.
 pub struct InstalledYamlDataSnapshot {
@@ -1049,14 +794,6 @@ impl LocalIgnoreRecoveryPlan {
     /// durability barrier failed. A typed [`LocalIgnoreResetOutcome::Conflict`] means the malformed
     /// file was changed or removed after this plan was created and was not overwritten.
     pub fn reset_to_default(self) -> Result<LocalIgnoreResetOutcome, LocalIgnoreResetError> {
-        self.reset_to_default_with_publisher(&SystemLocalIgnoreResetPublisher::system())
-    }
-
-    /// Runs reset through an injected durable-publication boundary for fault and race tests.
-    fn reset_to_default_with_publisher(
-        self,
-        publisher: &impl LocalIgnoreResetPublisher,
-    ) -> Result<LocalIgnoreResetOutcome, LocalIgnoreResetError> {
         let Self {
             proceed_without_ignore_snapshot,
             local_ignore_path,
@@ -1106,51 +843,110 @@ impl LocalIgnoreRecoveryPlan {
 
         create_local_ignore_backup_directory(&backup_directory)?;
         let backup_path = unique_local_ignore_backup_path(&backup_directory, &expected_identity);
-        publisher.publish_backup(&backup_path, &expected_bytes)?;
-        let backup_bytes = std::fs::read(&backup_path).map_err(|source| {
-            LocalIgnoreResetError::BackupVerification {
-                path: backup_path.clone(),
-                reason: source.to_string(),
-            }
+
+        // Durable Publication owns the backup half: a unique-path publication that refuses to
+        // clobber, a reread from disk, and a byte-comparison that aborts before anything at the
+        // canonical path is touched. Backup *location* stays here, which is why the module is
+        // handed a finished path rather than a directory.
+        //
+        // No module-level lock is taken anywhere on this path. Reset already holds
+        // `.classic-local-ignore-reset.lock` two directories above the canonical file, spanning
+        // the conflict check, this backup, the recheck below, and the replacement — which is
+        // wider than any single publication call could lock. A second lock would only add a file
+        // beside the user's editable data for a window this one already covers.
+        durable_publication::publish_verified_backup(durable_publication::VerifiedBackup::new(
+            &backup_path,
+            &expected_bytes,
+        ))
+        .map_err(|error| {
+            project_publication_error(LocalIgnoreResetPublicationKind::Backup, &backup_path, error)
         })?;
-        if backup_bytes != expected_bytes.as_ref() {
-            return Err(LocalIgnoreResetError::BackupVerification {
-                path: backup_path,
-                reason: "published backup bytes differ from the retained malformed bytes"
-                    .to_string(),
-            });
-        }
-        let backup_identity = YamlDataContentIdentity::from_bytes(&backup_bytes);
+        // The module proved the bytes on disk equal `expected_bytes`, so hashing the retained
+        // copy attests the backup exactly as rehashing the reread bytes did before.
+        let backup_identity = YamlDataContentIdentity::from_bytes(&expected_bytes);
 
         let replacement_bytes = reset_snapshot.local_ignore.bytes.clone();
         let replacement_identity = reset_snapshot.local_ignore.identity.clone();
-        match publisher.replace_if_unchanged(
-            &local_ignore_path,
-            &expected_bytes,
-            &replacement_bytes,
-        )? {
-            ConditionalReplacement::Replaced => {}
-            ConditionalReplacement::Conflict(actual_identity) => {
-                return Ok(LocalIgnoreResetOutcome::Conflict(
-                    LocalIgnoreResetConflict {
-                        expected_identity,
-                        actual_identity,
-                        backup_path: Some(backup_path),
-                    },
-                ));
-            }
-            ConditionalReplacement::DurabilityUnknown(source) => {
-                return Err(LocalIgnoreResetError::ReplacementDurabilityUnknown {
-                    receipt: Box::new(LocalIgnoreResetDurabilityReceipt {
-                        path: local_ignore_path,
-                        backup_path,
-                        malformed_identity: expected_identity,
-                        backup_identity,
-                        replacement_identity,
-                    }),
+
+        #[cfg(test)]
+        reset_fault::after_verified_backup();
+
+        // Stage the replacement *before* rechecking, so that everything that can fail is already
+        // behind us and only the final move separates the check from the replacement. That
+        // ordering is the whole value of the check: this path holds no lock against a
+        // non-CLASSIC writer such as the user's own editor, so the gap between reading the
+        // canonical bytes and replacing them is the exposure, and staging first collapses that
+        // gap to the move alone.
+        let staged = durable_publication::stage(&local_ignore_path, &replacement_bytes).map_err(
+            |error| {
+                project_publication_error(
+                    LocalIgnoreResetPublicationKind::Replacement,
+                    &local_ignore_path,
+                    error,
+                )
+            },
+        )?;
+
+        // Conflict policy stays here, deliberately adjacent to the replacement: a change that
+        // landed while the backup was publishing must be preserved and reported with the backup
+        // that now exists, never overwritten.
+        //
+        // Not `read_reset_canonical`, despite the identical read: a failure here is attributed to
+        // the replacement rather than reported as `Read`, because by this point a verified backup
+        // exists and the transaction the user is waiting on is the replacement.
+        let current = match std::fs::read(&local_ignore_path) {
+            Ok(bytes) => Some(bytes),
+            Err(source) if source.kind() == std::io::ErrorKind::NotFound => None,
+            Err(source) => {
+                return Err(LocalIgnoreResetError::ReplacementPublication {
+                    path: local_ignore_path,
+                    stage: LocalIgnoreResetPublicationStage::Publish,
                     source,
                 });
             }
+        };
+        if current.as_deref() != Some(expected_bytes.as_ref()) {
+            return Ok(LocalIgnoreResetOutcome::Conflict(
+                LocalIgnoreResetConflict {
+                    expected_identity,
+                    actual_identity: current.as_deref().map(YamlDataContentIdentity::from_bytes),
+                    backup_path: Some(backup_path),
+                },
+            ));
+        }
+
+        let replacement = staged.publish().map_err(|error| {
+            project_publication_error(
+                LocalIgnoreResetPublicationKind::Replacement,
+                &local_ignore_path,
+                error,
+            )
+        })?;
+        // This caller is the one that reports durability uncertainty rather than discarding it:
+        // the replacement is visible and recoverable from its verified backup, but the namespace
+        // entry is not proven to survive a crash, and the user is told which is which.
+        #[cfg(test)]
+        let durability = if reset_fault::replacement_durability_unknown() {
+            durable_publication::Durability::Unknown(std::io::Error::new(
+                std::io::ErrorKind::PermissionDenied,
+                "injected post-publish replacement directory sync failure",
+            ))
+        } else {
+            replacement.into_durability()
+        };
+        #[cfg(not(test))]
+        let durability = replacement.into_durability();
+        if let durable_publication::Durability::Unknown(source) = durability {
+            return Err(LocalIgnoreResetError::ReplacementDurabilityUnknown {
+                receipt: Box::new(LocalIgnoreResetDurabilityReceipt {
+                    path: local_ignore_path,
+                    backup_path,
+                    malformed_identity: expected_identity,
+                    backup_identity,
+                    replacement_identity,
+                }),
+                source,
+            });
         }
 
         reset_snapshot.diagnostics.push(InstalledYamlDataDiagnostic {

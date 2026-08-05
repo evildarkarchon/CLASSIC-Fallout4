@@ -25,6 +25,11 @@ classic-version-registry-core = { path = "../classic-version-registry-core" }
 classic-path-core = { path = "../classic-path-core" }
 classic-file-io-core = { path = "../classic-file-io-core" }
 
+# Durable Publication (staging, verified backup, atomic publish) for the
+# Local Ignore reset critical section. Backup location, conflict policy, and
+# the reset lock stay here; only the durability sequence lives there.
+classic-durable-publication = { path = "../classic-durable-publication" }
+
 # Async runtime (for JoinSet and file I/O)
 tokio = { workspace = true, features = ["full"] }
 

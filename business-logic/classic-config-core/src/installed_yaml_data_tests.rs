@@ -1,7 +1,6 @@
 use super::{
-    LocalIgnoreFileSystem, LocalIgnoreResetPublicationKind, LocalIgnoreResetPublisher,
-    SystemLocalIgnoreFileSystem, SystemLocalIgnoreResetPublisher,
-    load_installed_yaml_data_with_env_and_io,
+    LocalIgnoreFileSystem, LocalIgnoreResetPublicationKind, SystemLocalIgnoreFileSystem,
+    load_installed_yaml_data_with_env_and_io, project_publication_error, reset_fault,
 };
 use crate::{
     InstalledYamlDataDiagnosticKind, InstalledYamlDataInspectionError,
@@ -1247,180 +1246,113 @@ fn stale_local_ignore_reset_plan_returns_typed_conflict_without_overwriting_curr
 }
 
 #[test]
-/// Every durable publication boundary fails before a partial replacement can become visible.
-fn local_ignore_reset_is_failure_atomic_at_every_backup_and_replacement_boundary() {
-    let stages = [
-        LocalIgnoreResetPublicationStage::Create,
-        LocalIgnoreResetPublicationStage::Write,
-        LocalIgnoreResetPublicationStage::Flush,
-        LocalIgnoreResetPublicationStage::Sync,
-        LocalIgnoreResetPublicationStage::Publish,
-    ];
+/// Every neutral publication failure reaches the published reset code the bindings expect.
+///
+/// The failures themselves are provoked against real files in `classic-durable-publication`. What
+/// stays this crate's responsibility, and what this covers directly rather than through a fake, is
+/// the projection: which published error code a failure becomes, which stage it carries, and which
+/// path it names.
+fn every_publication_failure_projects_onto_its_published_reset_code() {
+    let backup = Path::new("CLASSIC Backup/YAML Data/Local Ignore/CLASSIC Ignore.yaml.bak");
+    let canonical = Path::new("CLASSIC Data/CLASSIC Ignore.yaml");
 
-    for kind in [
-        LocalIgnoreResetPublicationKind::Backup,
-        LocalIgnoreResetPublicationKind::Replacement,
+    for (publication_stage, reset_stage) in [
+        (
+            classic_durable_publication::PublicationStage::Create,
+            LocalIgnoreResetPublicationStage::Create,
+        ),
+        (
+            classic_durable_publication::PublicationStage::Write,
+            LocalIgnoreResetPublicationStage::Write,
+        ),
+        (
+            classic_durable_publication::PublicationStage::Flush,
+            LocalIgnoreResetPublicationStage::Flush,
+        ),
+        (
+            classic_durable_publication::PublicationStage::Sync,
+            LocalIgnoreResetPublicationStage::Sync,
+        ),
+        (
+            classic_durable_publication::PublicationStage::Publish,
+            LocalIgnoreResetPublicationStage::Publish,
+        ),
     ] {
-        for stage in stages {
-            let installation = tempdir().expect("installation root should be created");
-            let cache_root = tempdir().expect("cache root should be created");
-            write_bundled_install_with_main(installation.path(), MAIN_WITH_DEFAULT_YAML);
-            let ignore_path = installation
-                .path()
-                .join("CLASSIC Data")
-                .join("CLASSIC Ignore.yaml");
-            let malformed_ignore = b"CLASSIC_Ignore_Fallout4: [unterminated";
-            std::fs::write(&ignore_path, malformed_ignore)
-                .expect("malformed Local Ignore should be written");
-            let outcome = load_installed_yaml_data_with_env(
-                InstalledYamlDataLoadRequest {
-                    installation_root: installation.path().to_path_buf(),
-                    game: GameId::Fallout4,
-                    selected_game_version: "Original".to_string(),
-                },
-                isolated_cache_env(cache_root.path()),
-            )
-            .expect("malformed Local Ignore should require recovery");
-            let InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(plan) = outcome else {
-                panic!("malformed Local Ignore should return a recovery plan");
-            };
-            let publisher = SystemLocalIgnoreResetPublisher::failing_at(kind, stage);
+        let stage_failure = || classic_durable_publication::PublicationError::Stage {
+            stage: publication_stage,
+            path: PathBuf::from("ignored; the reset names its own path"),
+            source: io::Error::new(io::ErrorKind::PermissionDenied, "denied"),
+        };
 
-            let error = plan
-                .reset_to_default_with_publisher(&publisher)
-                .expect_err("injected publication failure should abort reset");
-
-            match (kind, error) {
-                (
-                    LocalIgnoreResetPublicationKind::Backup,
-                    LocalIgnoreResetError::BackupPublication { stage: actual, .. },
-                ) => assert_eq!(actual, stage),
-                (
-                    LocalIgnoreResetPublicationKind::Replacement,
-                    LocalIgnoreResetError::ReplacementPublication { stage: actual, .. },
-                ) => assert_eq!(actual, stage),
-                (_, other) => panic!("unexpected {kind:?} {stage:?} failure: {other}"),
+        // The same stage means different things depending on which publication failed, which is
+        // exactly why the kind is threaded through the projection.
+        match project_publication_error(
+            LocalIgnoreResetPublicationKind::Backup,
+            backup,
+            stage_failure(),
+        ) {
+            LocalIgnoreResetError::BackupPublication {
+                path,
+                stage,
+                source,
+            } => {
+                assert_eq!(path, backup);
+                assert_eq!(stage, reset_stage);
+                assert_eq!(source.kind(), io::ErrorKind::PermissionDenied);
             }
-            assert_eq!(
-                std::fs::read(&ignore_path).expect("original Local Ignore should remain readable"),
-                malformed_ignore,
-                "{kind:?} {stage:?}"
-            );
-            let backup_directory = installation
-                .path()
-                .join("CLASSIC Backup")
-                .join("YAML Data")
-                .join("Local Ignore");
-            let backup_files = std::fs::read_dir(&backup_directory)
-                .map(|entries| {
-                    entries
-                        .map(|entry| entry.expect("backup entry should be readable").path())
-                        .collect::<Vec<_>>()
-                })
-                .unwrap_or_default();
-            assert!(
-                backup_files.iter().all(|path| {
-                    !path.file_name().is_some_and(|name| {
-                        name.to_string_lossy()
-                            .starts_with(".classic-local-ignore-reset-")
-                    })
-                }),
-                "{kind:?} {stage:?} must clean staging artifacts"
-            );
-            let canonical_staging_files = std::fs::read_dir(
-                ignore_path
-                    .parent()
-                    .expect("canonical Local Ignore should have a parent"),
-            )
-            .expect("canonical directory should remain readable")
-            .filter_map(Result::ok)
-            .filter(|entry| {
-                entry
-                    .file_name()
-                    .to_string_lossy()
-                    .starts_with(".classic-local-ignore-reset-")
-            })
-            .count();
-            assert_eq!(
-                canonical_staging_files, 0,
-                "{kind:?} {stage:?} must clean canonical staging artifacts"
-            );
-            if kind == LocalIgnoreResetPublicationKind::Backup {
-                assert!(backup_files.is_empty(), "{kind:?} {stage:?}");
-            } else {
-                assert_eq!(backup_files.len(), 1, "{kind:?} {stage:?}");
-                assert_eq!(
-                    std::fs::read(&backup_files[0])
-                        .expect("replacement failure should retain verified backup"),
-                    malformed_ignore,
-                    "{kind:?} {stage:?}"
-                );
+            other => panic!("expected a backup publication failure, got {other}"),
+        }
+        match project_publication_error(
+            LocalIgnoreResetPublicationKind::Replacement,
+            canonical,
+            stage_failure(),
+        ) {
+            LocalIgnoreResetError::ReplacementPublication {
+                path,
+                stage,
+                source,
+            } => {
+                assert_eq!(path, canonical);
+                assert_eq!(stage, reset_stage);
+                assert_eq!(source.kind(), io::ErrorKind::PermissionDenied);
             }
+            other => panic!("expected a replacement publication failure, got {other}"),
         }
     }
-}
 
-#[test]
-/// A late canonical reread failure is a replacement failure after the verified backup exists.
-fn local_ignore_reset_types_replacement_reread_failure_after_verified_backup() {
-    let installation = tempdir().expect("installation root should be created");
-    let cache_root = tempdir().expect("cache root should be created");
-    write_bundled_install_with_main(installation.path(), MAIN_WITH_DEFAULT_YAML);
-    let ignore_path = installation
-        .path()
-        .join("CLASSIC Data")
-        .join("CLASSIC Ignore.yaml");
-    let malformed_ignore = b"CLASSIC_Ignore_Fallout4: [unterminated";
-    std::fs::write(&ignore_path, malformed_ignore)
-        .expect("malformed Local Ignore should be written");
-    let outcome = load_installed_yaml_data_with_env(
-        InstalledYamlDataLoadRequest {
-            installation_root: installation.path().to_path_buf(),
-            game: GameId::Fallout4,
-            selected_game_version: "Original".to_string(),
+    // Verification failures carry no stage at all, and their reason strings are published contract.
+    match project_publication_error(
+        LocalIgnoreResetPublicationKind::Backup,
+        backup,
+        classic_durable_publication::PublicationError::BackupUnreadable {
+            path: backup.to_path_buf(),
+            source: io::Error::new(io::ErrorKind::PermissionDenied, "denied"),
         },
-        isolated_cache_env(cache_root.path()),
-    )
-    .expect("malformed Local Ignore should require recovery");
-    let InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(plan) = outcome else {
-        panic!("malformed Local Ignore should return a recovery plan");
-    };
-    let publisher = SystemLocalIgnoreResetPublisher::failing_replacement_read();
-
-    let error = plan
-        .reset_to_default_with_publisher(&publisher)
-        .expect_err("late canonical reread failure should abort replacement");
-
-    match error {
-        LocalIgnoreResetError::ReplacementPublication {
-            path,
-            stage,
-            source,
-        } => {
-            assert_eq!(path, ignore_path);
-            assert_eq!(stage, LocalIgnoreResetPublicationStage::Publish);
-            assert_eq!(source.kind(), std::io::ErrorKind::PermissionDenied);
+    ) {
+        LocalIgnoreResetError::BackupVerification { path, reason } => {
+            assert_eq!(path, backup);
+            assert_eq!(reason, "denied");
         }
-        other => panic!("expected replacement failure, got {other}"),
+        other => panic!("expected a backup verification failure, got {other}"),
     }
-    assert_eq!(
-        std::fs::read(&ignore_path).expect("original Local Ignore should remain readable"),
-        malformed_ignore
-    );
-    let backup_directory = installation
-        .path()
-        .join("CLASSIC Backup")
-        .join("YAML Data")
-        .join("Local Ignore");
-    let backups = std::fs::read_dir(backup_directory)
-        .expect("verified backup directory should remain readable")
-        .map(|entry| entry.expect("backup entry should be readable").path())
-        .collect::<Vec<_>>();
-    assert_eq!(backups.len(), 1);
-    assert_eq!(
-        std::fs::read(&backups[0]).expect("verified backup should remain readable"),
-        malformed_ignore
-    );
+    match project_publication_error(
+        LocalIgnoreResetPublicationKind::Backup,
+        backup,
+        classic_durable_publication::PublicationError::BackupMismatch {
+            path: backup.to_path_buf(),
+            expected: classic_durable_publication::ContentIdentity::from_bytes(b"original"),
+            actual: classic_durable_publication::ContentIdentity::from_bytes(b"corrupted"),
+        },
+    ) {
+        LocalIgnoreResetError::BackupVerification { path, reason } => {
+            assert_eq!(path, backup);
+            assert_eq!(
+                reason,
+                "published backup bytes differ from the retained malformed bytes"
+            );
+        }
+        other => panic!("expected a backup verification failure, got {other}"),
+    }
 }
 
 #[test]
@@ -1448,10 +1380,13 @@ fn local_ignore_reset_types_durability_unknown_after_canonical_replacement() {
     let InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(plan) = outcome else {
         panic!("malformed Local Ignore should return a recovery plan");
     };
-    let publisher = SystemLocalIgnoreResetPublisher::failing_after_replacement_publish();
+    let _faults = reset_fault::install(reset_fault::ResetFaults {
+        replacement_durability_unknown: true,
+        ..reset_fault::ResetFaults::default()
+    });
 
     let error = plan
-        .reset_to_default_with_publisher(&publisher)
+        .reset_to_default()
         .expect_err("post-publish directory sync failure should remain typed");
 
     match error {
@@ -1477,70 +1412,6 @@ fn local_ignore_reset_types_durability_unknown_after_canonical_replacement() {
     assert_eq!(
         std::fs::read(&ignore_path).expect("published defaults should remain authoritative"),
         DEFAULT_IGNORE_YAML.as_bytes()
-    );
-}
-
-/// Publisher that corrupts a completed backup before the reset can verify it.
-struct CorruptingBackupPublisher;
-
-impl LocalIgnoreResetPublisher for CorruptingBackupPublisher {
-    fn publish_backup(&self, path: &Path, bytes: &[u8]) -> Result<(), LocalIgnoreResetError> {
-        SystemLocalIgnoreResetPublisher::system().publish_backup(path, bytes)?;
-        std::fs::write(path, b"corrupted after publication").map_err(|source| {
-            LocalIgnoreResetError::BackupVerification {
-                path: path.to_path_buf(),
-                reason: source.to_string(),
-            }
-        })
-    }
-
-    fn replace_if_unchanged(
-        &self,
-        path: &Path,
-        expected: &[u8],
-        replacement: &[u8],
-    ) -> Result<super::ConditionalReplacement, LocalIgnoreResetError> {
-        SystemLocalIgnoreResetPublisher::system().replace_if_unchanged(path, expected, replacement)
-    }
-}
-
-#[test]
-/// Backup reread verification blocks replacement when durable bytes do not match the original.
-fn local_ignore_reset_verifies_backup_bytes_before_replacement() {
-    let installation = tempdir().expect("installation root should be created");
-    let cache_root = tempdir().expect("cache root should be created");
-    write_bundled_install_with_main(installation.path(), MAIN_WITH_DEFAULT_YAML);
-    let ignore_path = installation
-        .path()
-        .join("CLASSIC Data")
-        .join("CLASSIC Ignore.yaml");
-    let malformed_ignore = b"CLASSIC_Ignore_Fallout4: [unterminated";
-    std::fs::write(&ignore_path, malformed_ignore)
-        .expect("malformed Local Ignore should be written");
-    let outcome = load_installed_yaml_data_with_env(
-        InstalledYamlDataLoadRequest {
-            installation_root: installation.path().to_path_buf(),
-            game: GameId::Fallout4,
-            selected_game_version: "Original".to_string(),
-        },
-        isolated_cache_env(cache_root.path()),
-    )
-    .expect("malformed Local Ignore should require recovery");
-    let InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(plan) = outcome else {
-        panic!("malformed Local Ignore should return a recovery plan");
-    };
-
-    let error = plan
-        .reset_to_default_with_publisher(&CorruptingBackupPublisher)
-        .expect_err("corrupted backup must abort reset");
-
-    assert!(matches!(
-        error,
-        LocalIgnoreResetError::BackupVerification { .. }
-    ));
-    assert_eq!(
-        std::fs::read(&ignore_path).expect("original Local Ignore should remain readable"),
-        malformed_ignore
     );
 }
 
@@ -1585,33 +1456,6 @@ fn local_ignore_reset_reports_unavailable_defaults_without_mutation() {
     assert!(!installation.path().join("CLASSIC Backup").exists());
 }
 
-/// Publisher that replaces the canonical file after backup but before the adjacent recheck.
-struct RacingReplacementPublisher {
-    path: PathBuf,
-    newer_bytes: Vec<u8>,
-}
-
-impl LocalIgnoreResetPublisher for RacingReplacementPublisher {
-    fn publish_backup(&self, path: &Path, bytes: &[u8]) -> Result<(), LocalIgnoreResetError> {
-        SystemLocalIgnoreResetPublisher::system().publish_backup(path, bytes)
-    }
-
-    fn replace_if_unchanged(
-        &self,
-        path: &Path,
-        expected: &[u8],
-        replacement: &[u8],
-    ) -> Result<super::ConditionalReplacement, LocalIgnoreResetError> {
-        std::fs::write(&self.path, &self.newer_bytes).map_err(|source| {
-            LocalIgnoreResetError::Read {
-                path: self.path.clone(),
-                source,
-            }
-        })?;
-        SystemLocalIgnoreResetPublisher::system().replace_if_unchanged(path, expected, replacement)
-    }
-}
-
 #[test]
 /// A change during durable backup is preserved and reported with the verified backup location.
 fn local_ignore_reset_rechecks_conflict_immediately_before_atomic_replacement() {
@@ -1638,13 +1482,20 @@ fn local_ignore_reset_rechecks_conflict_immediately_before_atomic_replacement() 
     let InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(plan) = outcome else {
         panic!("malformed Local Ignore should return a recovery plan");
     };
-    let publisher = RacingReplacementPublisher {
-        path: ignore_path.clone(),
-        newer_bytes: newer_bytes.clone(),
-    };
+    // Land a user edit in the window the verified backup occupies, which is exactly what the
+    // recheck adjacent to the replacement exists to catch.
+    let racing_path = ignore_path.clone();
+    let racing_bytes = newer_bytes.clone();
+    let _faults = reset_fault::install(reset_fault::ResetFaults {
+        after_verified_backup: Some(Box::new(move || {
+            std::fs::write(&racing_path, &racing_bytes)
+                .expect("a racing edit should be writable during backup publication");
+        })),
+        ..reset_fault::ResetFaults::default()
+    });
 
     let reset = plan
-        .reset_to_default_with_publisher(&publisher)
+        .reset_to_default()
         .expect("late file change should be a typed conflict");
     let LocalIgnoreResetOutcome::Conflict(conflict) = reset else {
         panic!("late file change must not be overwritten");
@@ -1671,29 +1522,6 @@ fn local_ignore_reset_rechecks_conflict_immediately_before_atomic_replacement() 
         std::fs::read(&ignore_path).expect("newer Local Ignore should remain authoritative"),
         newer_bytes
     );
-}
-
-/// Publisher that exposes a barrier after critical-section entry and before replacement.
-struct BlockingReplacementPublisher {
-    entered: Arc<Barrier>,
-    release: Arc<Barrier>,
-}
-
-impl LocalIgnoreResetPublisher for BlockingReplacementPublisher {
-    fn publish_backup(&self, path: &Path, bytes: &[u8]) -> Result<(), LocalIgnoreResetError> {
-        SystemLocalIgnoreResetPublisher::system().publish_backup(path, bytes)
-    }
-
-    fn replace_if_unchanged(
-        &self,
-        path: &Path,
-        expected: &[u8],
-        replacement: &[u8],
-    ) -> Result<super::ConditionalReplacement, LocalIgnoreResetError> {
-        self.entered.wait();
-        self.release.wait();
-        SystemLocalIgnoreResetPublisher::system().replace_if_unchanged(path, expected, replacement)
-    }
 }
 
 #[test]
@@ -1723,12 +1551,22 @@ fn local_ignore_reset_critical_section_is_explicitly_non_interruptible() {
     let entered = Arc::new(Barrier::new(2));
     let release = Arc::new(Barrier::new(2));
     let cancellation = Arc::new(AtomicBool::new(false));
-    let publisher = BlockingReplacementPublisher {
-        entered: Arc::clone(&entered),
-        release: Arc::clone(&release),
-    };
+    let worker_entered = Arc::clone(&entered);
+    let worker_release = Arc::clone(&release);
 
-    let resetter = std::thread::spawn(move || plan.reset_to_default_with_publisher(&publisher));
+    // Faults are thread-local, so the hook is installed on the worker thread rather than here.
+    // It parks the reset between the verified backup and the replacement, which is the middle of
+    // the critical section, and holds it there while cancellation is requested.
+    let resetter = std::thread::spawn(move || {
+        let _faults = reset_fault::install(reset_fault::ResetFaults {
+            after_verified_backup: Some(Box::new(move || {
+                worker_entered.wait();
+                worker_release.wait();
+            })),
+            ..reset_fault::ResetFaults::default()
+        });
+        plan.reset_to_default()
+    });
     entered.wait();
     cancellation.store(true, Ordering::Release);
     release.wait();

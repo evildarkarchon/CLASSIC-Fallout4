@@ -36,6 +36,13 @@
 //! - [`publish_with_verified_backup`] publishes a backup, rereads it from
 //!   disk, byte-compares it against the caller's retained original, and only
 //!   then replaces the target — aborting entirely if the comparison fails.
+//! - [`publish_verified_backup`] is the first half of that on its own, for the
+//!   caller whose conflict policy must run between the verification and the
+//!   replacement.
+//! - [`stage`] stops one step short of [`publish`], handing back a
+//!   [`StagedPublication`] the caller publishes itself. This exists so that a
+//!   caller's own last-moment check can sit in the narrowest possible window:
+//!   everything fallible is already done, and only the move remains.
 //!
 //! These are separate named operations over one shared implementation rather
 //! than one operation with a policy struct, because a policy matrix would make
@@ -43,7 +50,7 @@
 //!
 //! # Concurrency contract
 //!
-//! Both operations take a [`LockPolicy`] and honour it identically:
+//! The two locking operations take a [`LockPolicy`] and honour it identically:
 //!
 //! - [`LockPolicy::sibling`] acquires an exclusive cross-process lock on a
 //!   sibling lock file *before* any staging, holds it for the whole sequence,
@@ -59,6 +66,11 @@
 //! Lock filenames stay caller policy so that adopting this crate changes
 //! nothing on disk. Lock files are never removed — deleting one races with any
 //! process that has opened but not yet acquired it.
+//!
+//! [`publish_verified_backup`] and [`stage`] take no [`LockPolicy`] at all. A
+//! lock scoped to either alone would release before the move it exists to
+//! guard, which is precisely the window a lock closes, so a caller that splits
+//! the sequence must hold its own lock across every part.
 //!
 //! # What this crate does not own
 //!
@@ -82,6 +94,6 @@ pub use error::{PublicationError, PublicationStage};
 pub use identity::ContentIdentity;
 pub use lock::LockPolicy;
 pub use publication::{
-    Durability, Publication, VerifiedBackup, VerifiedBackupPublication, publish,
-    publish_with_verified_backup,
+    Durability, Publication, StagedPublication, VerifiedBackup, VerifiedBackupPublication, publish,
+    publish_verified_backup, publish_with_verified_backup, stage,
 };

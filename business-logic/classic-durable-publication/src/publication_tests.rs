@@ -1,7 +1,8 @@
 use std::path::{Path, PathBuf};
 
 use super::{
-    Durability, STAGING_PREFIX, VerifiedBackup, fault, publish, publish_with_verified_backup,
+    Durability, STAGING_PREFIX, VerifiedBackup, fault, publish, publish_verified_backup,
+    publish_with_verified_backup, stage,
 };
 use crate::error::{PublicationError, PublicationStage};
 use crate::lock::LockPolicy;
@@ -407,4 +408,208 @@ fn the_lock_is_taken_on_the_target_and_not_on_the_backup_path() {
         !fixture.path("target.yaml.bak.reset.lock").exists(),
         "one lock spans the whole operation, so the backup path is not locked separately"
     );
+}
+
+// ---------------------------------------------------------------------------
+// stage
+// ---------------------------------------------------------------------------
+
+#[test]
+fn staging_makes_nothing_visible_at_the_target() {
+    let fixture = Fixture::new();
+    let target = fixture.seed("target.yaml", b"the original");
+
+    let staged = stage(&target, b"the replacement").expect("staging");
+
+    assert_eq!(
+        fixture.read("target.yaml"),
+        b"the original",
+        "nothing is visible at the target until the staged publication is published"
+    );
+    assert_eq!(staged.target(), target);
+    assert_eq!(
+        staged.identity(),
+        &crate::ContentIdentity::from_bytes(b"the replacement")
+    );
+    assert_eq!(
+        staging_artifacts(fixture.root()).len(),
+        1,
+        "the staging file exists while the handle is held"
+    );
+}
+
+#[test]
+fn publishing_a_staged_publication_replaces_the_target() {
+    let fixture = Fixture::new();
+    let target = fixture.seed("target.yaml", b"the original");
+
+    let publication = stage(&target, b"the replacement")
+        .expect("staging")
+        .publish()
+        .expect("publishing the staged bytes");
+
+    assert_eq!(fixture.read("target.yaml"), b"the replacement");
+    assert!(publication.durability().is_durable());
+    assert!(staging_artifacts(fixture.root()).is_empty());
+}
+
+#[test]
+fn dropping_a_staged_publication_leaves_the_target_and_the_directory_clean() {
+    let fixture = Fixture::new();
+    let target = fixture.seed("target.yaml", b"the original");
+
+    drop(stage(&target, b"the replacement").expect("staging"));
+
+    assert_eq!(fixture.read("target.yaml"), b"the original");
+    assert!(
+        staging_artifacts(fixture.root()).is_empty(),
+        "an abandoned staging file must not accumulate beside a user's data"
+    );
+}
+
+#[test]
+fn staging_reports_its_own_failures_before_anything_is_committed_to() {
+    let fixture = Fixture::new();
+    let target = fixture.path("absent-directory").join("target.yaml");
+
+    let error = stage(&target, b"bytes").expect_err("staging has nowhere to land");
+
+    assert_eq!(error.stage(), Some(PublicationStage::Create));
+    assert_eq!(error.path(), target);
+}
+
+#[test]
+fn a_staged_publication_only_leaves_the_final_move_between_a_check_and_the_target() {
+    let fixture = Fixture::new();
+    let target = fixture.seed("target.yaml", b"the original");
+
+    // The shape the Local Ignore reset relies on: stage everything fallible, run the caller's own
+    // check, then publish. The check sees the pre-replacement bytes, and only the move follows it.
+    let staged = stage(&target, b"the replacement").expect("staging");
+    let observed = std::fs::read(&target).expect("the caller's own check");
+    assert_eq!(observed, b"the original");
+    let publication = staged.publish().expect("publishing after the check");
+
+    assert_eq!(fixture.read("target.yaml"), b"the replacement");
+    assert_eq!(
+        publication.identity(),
+        &crate::ContentIdentity::from_bytes(b"the replacement")
+    );
+}
+
+// ---------------------------------------------------------------------------
+// publish_verified_backup
+// ---------------------------------------------------------------------------
+
+#[test]
+fn a_standalone_verified_backup_publishes_and_attests_the_bytes_on_disk() {
+    let fixture = Fixture::new();
+    let backup_path = fixture.path("target.yaml.bak");
+
+    let identity = publish_verified_backup(VerifiedBackup::new(&backup_path, b"the original"))
+        .expect("standalone verified backup");
+
+    assert_eq!(fixture.read("target.yaml.bak"), b"the original");
+    assert_eq!(
+        &identity,
+        &crate::ContentIdentity::from_bytes(b"the original")
+    );
+    assert!(staging_artifacts(fixture.root()).is_empty());
+}
+
+#[test]
+fn a_standalone_verified_backup_replaces_nothing() {
+    let fixture = Fixture::new();
+    let target = fixture.seed("target.yaml", b"the original");
+    let backup_path = fixture.path("target.yaml.bak");
+
+    let _identity = publish_verified_backup(VerifiedBackup::new(&backup_path, b"the original"))
+        .expect("standalone verified backup");
+
+    assert_eq!(
+        std::fs::read(&target).expect("target"),
+        b"the original",
+        "this half of the sequence never touches a target; the caller decides"
+    );
+}
+
+#[test]
+fn a_standalone_backup_whose_reread_bytes_do_not_match_is_rejected() {
+    let fixture = Fixture::new();
+    let backup_path = fixture.path("target.yaml.bak");
+
+    // Model a backup that appeared to write but landed empty.
+    let _fault = fault::corrupt_published_backups(b"");
+    let error = publish_verified_backup(VerifiedBackup::new(&backup_path, b"the only copy"))
+        .expect_err("a backup that cannot be trusted must be reported, not returned");
+
+    let PublicationError::BackupMismatch {
+        path,
+        expected,
+        actual,
+    } = &error
+    else {
+        panic!("expected a backup mismatch, got: {error}")
+    };
+    assert_eq!(path, &backup_path);
+    assert_eq!(
+        expected,
+        &crate::ContentIdentity::from_bytes(b"the only copy")
+    );
+    assert_eq!(actual.byte_len(), 0);
+}
+
+#[test]
+fn a_standalone_backup_path_that_already_exists_is_refused_rather_than_clobbered() {
+    let fixture = Fixture::new();
+    let backup_path = fixture.seed("target.yaml.bak", b"an earlier backup");
+
+    let error = publish_verified_backup(VerifiedBackup::new(&backup_path, b"the original"))
+        .expect_err("a unique-path publication must not overwrite");
+
+    assert_eq!(error.stage(), Some(PublicationStage::Publish));
+    assert_eq!(
+        error.io_source().map(std::io::Error::kind),
+        Some(std::io::ErrorKind::AlreadyExists)
+    );
+    assert_eq!(fixture.read("target.yaml.bak"), b"an earlier backup");
+}
+
+#[test]
+fn a_standalone_backup_that_cannot_be_staged_reports_the_create_stage() {
+    let fixture = Fixture::new();
+    let backup_path = fixture.path("absent-directory").join("target.yaml.bak");
+
+    let error = publish_verified_backup(VerifiedBackup::new(&backup_path, b"the original"))
+        .expect_err("the backup cannot be staged");
+
+    assert_eq!(error.stage(), Some(PublicationStage::Create));
+    assert_eq!(error.path(), backup_path);
+}
+
+#[test]
+fn splitting_the_sequence_yields_the_same_bytes_as_the_combined_operation() {
+    let fixture = Fixture::new();
+    let target = fixture.seed("target.yaml", b"the original");
+    let backup_path = fixture.path("target.yaml.bak");
+
+    // What a caller with a policy check in the middle does: verify the backup,
+    // decide, then replace. The observable result must match the welded form.
+    let backup_identity =
+        publish_verified_backup(VerifiedBackup::new(&backup_path, b"the original"))
+            .expect("standalone verified backup");
+    let replacement = publish(&target, b"the replacement", &LockPolicy::none())
+        .expect("replacement after the caller's own policy check");
+
+    assert_eq!(fixture.read("target.yaml.bak"), b"the original");
+    assert_eq!(fixture.read("target.yaml"), b"the replacement");
+    assert_eq!(
+        &backup_identity,
+        &crate::ContentIdentity::from_bytes(b"the original")
+    );
+    assert_eq!(
+        replacement.identity(),
+        &crate::ContentIdentity::from_bytes(b"the replacement")
+    );
+    assert!(staging_artifacts(fixture.root()).is_empty());
 }

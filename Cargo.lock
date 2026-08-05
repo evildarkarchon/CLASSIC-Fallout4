@@ -699,6 +699,7 @@ version = "9.1.0"
 dependencies = [
  "anyhow",
  "atomicwrites",
+ "classic-durable-publication",
  "classic-file-io-core",
  "classic-path-core",
  "classic-registry-core",
