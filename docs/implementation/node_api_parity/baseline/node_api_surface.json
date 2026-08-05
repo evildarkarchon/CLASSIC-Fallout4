@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-05T11:53:42.647932+00:00",
+  "generated_at_utc": "2026-08-05T12:38:58.790839+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -3766,6 +3766,15 @@
       "arity": 4
     },
     {
+      "export": "scanRunInfrastructureErrorStageLabel",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function scanRunInfrastructureErrorStageLabel(token: string): string",
+      "arity": 1
+    },
+    {
       "export": "scanRunInstalledYamlDataDiagnosticKindLabel",
       "kind": "function",
       "owner_module": "scanlog",
@@ -3775,12 +3784,39 @@
       "arity": 1
     },
     {
+      "export": "scanRunLocalIgnoreResetFailureStageLabel",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function scanRunLocalIgnoreResetFailureStageLabel(token: string): string",
+      "arity": 1
+    },
+    {
       "export": "scanRunLocalIgnoreYamlDataStateLabel",
       "kind": "function",
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function scanRunLocalIgnoreYamlDataStateLabel(state: JsScanRunLocalIgnoreState): string",
+      "arity": 1
+    },
+    {
+      "export": "scanRunLogDispositionLabel",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function scanRunLogDispositionLabel(token: string): string",
+      "arity": 1
+    },
+    {
+      "export": "scanRunLogFailureStageLabel",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function scanRunLogFailureStageLabel(token: string): string",
       "arity": 1
     },
     {

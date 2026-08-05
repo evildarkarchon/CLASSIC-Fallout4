@@ -1174,22 +1174,42 @@ fn setup_to_py(value: CrashLogScanSetupResult) -> PyScanRunSetupResult {
     }
 }
 
-fn disposition_to_string(value: contract::LogDisposition) -> String {
-    match value {
-        contract::LogDisposition::Succeeded => "succeeded",
-        contract::LogDisposition::Failed => "failed",
-        contract::LogDisposition::CancelledBeforeStart => "cancelled_before_start",
-    }
-    .to_string()
+/// Returns the stable Python token for one terminal per-log disposition.
+///
+/// Delegates rather than restating. The three strings this replaced were
+/// correct, and that is the problem the delegation solves: a correct copy is
+/// indistinguishable from a drifted one until someone edits the other side.
+/// Unlike the twins below, the core enum owns these tokens outright — this
+/// surface was simply the second place they were written down.
+fn disposition_to_string(value: contract::LogDisposition) -> &'static str {
+    value.as_str()
 }
 
-fn log_failure_stage_to_string(value: contract::LogFailureStage) -> String {
-    match value {
-        contract::LogFailureStage::Analysis => "analysis",
-        contract::LogFailureStage::ReportWrite => "report_write",
-        contract::LogFailureStage::UnsolvedLogsFinalization => "unsolved_logs_finalization",
-    }
-    .to_string()
+/// Returns the stable Python token for one per-log failure stage.
+///
+/// Delegates for the same reason as [`disposition_to_string`].
+fn log_failure_stage_to_string(value: contract::LogFailureStage) -> &'static str {
+    value.as_str()
+}
+
+/// Returns the stable Python token for one run-wide infrastructure failure stage.
+///
+/// Delegates for the same reason as [`disposition_to_string`]. This one was not
+/// even a named function before — the six strings were inlined into
+/// [`infrastructure_error_to_py`], which is how a duplicate table hides from a
+/// reviewer scanning for them.
+fn infrastructure_error_stage_to_string(value: contract::InfrastructureErrorStage) -> &'static str {
+    value.as_str()
+}
+
+/// Returns the stable Python token for one Local Ignore reset publication stage.
+///
+/// Named rather than left as an inline `stage.as_str()` on two exception paths.
+/// The delegation was already correct there, but an unnamed projection is not
+/// something a test can hold onto, and it sat beside four tables that were *not*
+/// delegating — which is how the odd one out went unnoticed.
+fn reset_failure_stage_to_string(value: contract::LocalIgnoreResetFailureStage) -> &'static str {
+    value.as_str()
 }
 
 /// Maps one complete terminal log result without collapsing structured failures.
@@ -1198,12 +1218,12 @@ fn log_result_to_py(value: contract::LogResult) -> PyScanRunLogResult {
         discovery_index: value.discovery_index,
         crash_log: path_to_string(value.crash_log),
         autoscan_report: value.autoscan_report.map(path_to_string),
-        disposition: disposition_to_string(value.disposition),
+        disposition: disposition_to_string(value.disposition).to_string(),
         failures: value
             .failures
             .into_iter()
             .map(|failure| PyScanRunLogFailure {
-                stage: log_failure_stage_to_string(failure.stage),
+                stage: log_failure_stage_to_string(failure.stage).to_string(),
                 message: failure.message,
             })
             .collect(),
@@ -1217,16 +1237,14 @@ fn log_result_to_py(value: contract::LogResult) -> PyScanRunLogResult {
     }
 }
 
-fn run_status_to_string(value: CrashLogScanRunStatus) -> String {
-    match value {
-        CrashLogScanRunStatus::Completed => "completed",
-        CrashLogScanRunStatus::NoCrashLogsFound => "no_crash_logs_found",
-        CrashLogScanRunStatus::SetupFailed => "setup_failed",
-        CrashLogScanRunStatus::LocalIgnoreRecoveryRequired => "local_ignore_recovery_required",
-        CrashLogScanRunStatus::CancelledBeforeDiscovery => "cancelled_before_discovery",
-        CrashLogScanRunStatus::Cancelled => "cancelled",
-    }
-    .to_string()
+/// Returns the stable Python token for one run-wide lifecycle status.
+///
+/// Delegates for the same reason as [`disposition_to_string`]. The run status
+/// does not implement the Vocabulary naming contract — no frontend renders a
+/// Display Label for it — but the core has always owned an inherent token
+/// method, and this surface was writing the same six strings out beside it.
+fn run_status_to_string(value: CrashLogScanRunStatus) -> &'static str {
+    value.as_str()
 }
 
 /// Returns the stable Python token for one selected Installed YAML Data role.
@@ -1321,6 +1339,97 @@ pub fn scan_run_local_ignore_yaml_data_state_label(token: &str) -> PyResult<&'st
         })
 }
 
+/// Resolves the Display Label for one published Vocabulary Token, or raises.
+///
+/// Extracted because the four resolvers below differ only in their type
+/// parameter and the noun in their message. Raising rather than returning `""`
+/// is the shared decision: an empty label would surface as a blank cell in a
+/// frontend with nothing to diagnose it by.
+fn scan_run_label_for_token<T: Vocabulary>(
+    token: &str,
+    vocabulary: &str,
+) -> PyResult<&'static str> {
+    from_token::<T>(token).map(Vocabulary::label).ok_or_else(|| {
+        PyValueError::new_err(format!(
+            "unknown Crash Log Scan Run {vocabulary} token `{token}`"
+        ))
+    })
+}
+
+/// Returns the human-facing Display Label for one terminal log disposition token.
+///
+/// The token is what this surface publishes on `ScanRunLogResult.disposition`
+/// and on a `log_finished` event. Unlike the two twins above, the wording is the
+/// run crate's own — this enum has no counterpart to delegate to, so there is no
+/// `classic_config` function returning the same prose.
+///
+/// Labels are presentation only and may be reworded between releases, so
+/// callers must not parse or compare them — compare the token.
+///
+/// # Errors
+///
+/// Raises `ValueError` when `token` is not a published disposition token.
+#[pyfunction]
+pub fn scan_run_log_disposition_label(token: &str) -> PyResult<&'static str> {
+    scan_run_label_for_token::<contract::LogDisposition>(token, "disposition")
+}
+
+/// Returns the human-facing Display Label for one per-log failure stage token.
+///
+/// The token is what this surface publishes on `ScanRunLogFailure.stage`.
+/// `unsolved_logs_finalization` resolves to `Unsolved Logs finalization`,
+/// keeping the glossary capitalization of the domain term — which is exactly
+/// what no mechanical transform of the token could have produced.
+///
+/// Same stability caveat as [`scan_run_log_disposition_label`].
+///
+/// # Errors
+///
+/// Raises `ValueError` when `token` is not a published failure stage token.
+#[pyfunction]
+pub fn scan_run_log_failure_stage_label(token: &str) -> PyResult<&'static str> {
+    scan_run_label_for_token::<contract::LogFailureStage>(token, "log failure stage")
+}
+
+/// Returns the human-facing Display Label for one infrastructure stage token.
+///
+/// The token is what this surface publishes on
+/// `ScanRunInfrastructureError.stage`. `formid_database_access` resolves to
+/// `FormID database access` and `internal_invariant` to `internal invariant
+/// validation`.
+///
+/// Same stability caveat as [`scan_run_log_disposition_label`].
+///
+/// # Errors
+///
+/// Raises `ValueError` when `token` is not a published infrastructure stage
+/// token.
+#[pyfunction]
+pub fn scan_run_infrastructure_error_stage_label(token: &str) -> PyResult<&'static str> {
+    scan_run_label_for_token::<contract::InfrastructureErrorStage>(token, "infrastructure stage")
+}
+
+/// Returns the human-facing Display Label for one reset failure stage token.
+///
+/// The token is what this surface publishes on the `stage` attribute of a Local
+/// Ignore reset backup or replacement error. These five labels deliberately
+/// equal their tokens: the core enum is a twin of the workspace's shared durable
+/// publication stage vocabulary, which names ordinary steps rather than domain
+/// terms. The entry point exists anyway so a caller can resolve every scan-run
+/// token the same way, rather than having to know which vocabularies happen to
+/// need it.
+///
+/// Same stability caveat as [`scan_run_log_disposition_label`].
+///
+/// # Errors
+///
+/// Raises `ValueError` when `token` is not a published reset failure stage
+/// token.
+#[pyfunction]
+pub fn scan_run_local_ignore_reset_failure_stage_label(token: &str) -> PyResult<&'static str> {
+    scan_run_label_for_token::<contract::LocalIgnoreResetFailureStage>(token, "reset failure stage")
+}
+
 /// Projects selected file metadata with the same shape as `classic_config`.
 fn installed_yaml_data_file_to_py(value: InspectedYamlDataFile) -> PyScanRunInspectedYamlDataFile {
     let schema = value.schema_version();
@@ -1407,7 +1516,7 @@ fn run_result_to_py(py: Python<'_>, value: contract::RunResult) -> PyResult<Py<P
     Py::new(
         py,
         PyScanRunResult {
-            status: run_status_to_string(value.status),
+            status: run_status_to_string(value.status).to_string(),
             discovery: value.discovery.map(discovery_to_py),
             setup: value.setup.map(setup_to_py),
             installed_yaml_data: value.installed_yaml_data.map(installed_yaml_data_to_py),
@@ -1427,16 +1536,8 @@ fn run_result_to_py(py: Python<'_>, value: contract::RunResult) -> PyResult<Py<P
 fn infrastructure_error_to_py(
     value: contract::InfrastructureError,
 ) -> PyScanRunInfrastructureError {
-    let stage = match value.stage {
-        contract::InfrastructureErrorStage::RequestValidation => "request_validation",
-        contract::InfrastructureErrorStage::Discovery => "discovery",
-        contract::InfrastructureErrorStage::Intake => "intake",
-        contract::InfrastructureErrorStage::FormIdDatabaseAccess => "formid_database_access",
-        contract::InfrastructureErrorStage::Initialization => "initialization",
-        contract::InfrastructureErrorStage::InternalInvariant => "internal_invariant",
-    };
     PyScanRunInfrastructureError {
-        stage: stage.to_string(),
+        stage: infrastructure_error_stage_to_string(value.stage).to_string(),
         message: value.message,
         path: value.path.map(path_to_string),
     }
@@ -1512,7 +1613,7 @@ fn event_to_py(value: contract::Event) -> PyScanRunEvent {
             effective_concurrency: None,
             log: Some(log_event_to_py(log)),
             phase: None,
-            disposition: Some(disposition_to_string(disposition)),
+            disposition: Some(disposition_to_string(disposition).to_string()),
         },
     }
 }
@@ -1639,7 +1740,7 @@ fn scan_run_reset_error_to_py(py: Python<'_>, error: contract::ResumeError) -> P
                 .setattr("code", code)
                 .and_then(|()| value.setattr("kind", code))
                 .and_then(|()| value.setattr("path", failure.path))
-                .and_then(|()| value.setattr("stage", failure.stage.map(|stage| stage.as_str())))
+                .and_then(|()| value.setattr("stage", failure.stage.map(reset_failure_stage_to_string)))
                 .expect("scan-run reset backup exceptions must accept contract attributes");
             py_error
         }
@@ -1650,7 +1751,7 @@ fn scan_run_reset_error_to_py(py: Python<'_>, error: contract::ResumeError) -> P
                 .setattr("code", code)
                 .and_then(|()| value.setattr("kind", code))
                 .and_then(|()| value.setattr("path", failure.path))
-                .and_then(|()| value.setattr("stage", failure.stage.map(|stage| stage.as_str())))
+                .and_then(|()| value.setattr("stage", failure.stage.map(reset_failure_stage_to_string)))
                 .expect("scan-run reset replacement exceptions must accept contract attributes");
             py_error
         }

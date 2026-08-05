@@ -418,6 +418,50 @@
       "pythonArity": 1
     },
     {
+      "id": "scanlog.scan_run.scan_run_log_disposition_label",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "LogDisposition",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "scan_run_log_disposition_label",
+      "pythonKind": "function",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.scan_run.scan_run_log_failure_stage_label",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "LogFailureStage",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "scan_run_log_failure_stage_label",
+      "pythonKind": "function",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.scan_run.scan_run_infrastructure_error_stage_label",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "InfrastructureErrorStage",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "scan_run_infrastructure_error_stage_label",
+      "pythonKind": "function",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.scan_run.scan_run_local_ignore_reset_failure_stage_label",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "LocalIgnoreResetFailureStage",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "scan_run_local_ignore_reset_failure_stage_label",
+      "pythonKind": "function",
+      "pythonArity": 1
+    },
+    {
       "id": "user_settings.commit_eligibility",
       "tier": "tier1",
       "ownerModule": "user_settings",

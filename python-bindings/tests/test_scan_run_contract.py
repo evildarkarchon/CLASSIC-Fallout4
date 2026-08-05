@@ -1151,12 +1151,92 @@ def test_every_token_a_real_run_publishes_resolves_to_a_label(
             diagnostic.kind
         )
 
+    assert execution.result.logs, "the fixture run must publish at least one log"
+    for log in execution.result.logs:
+        assert classic_scanlog.scan_run_log_disposition_label(log.disposition)
+        for failure in log.failures:
+            assert classic_scanlog.scan_run_log_failure_stage_label(failure.stage)
+
+
+def test_run_owned_scan_run_display_labels_reach_python() -> None:
+    """The four run-owned vocabularies resolve to the prose the frontends render.
+
+    These are the labels a mechanical transform of the token could not produce,
+    plus the one case where label and token deliberately coincide. Quoted as
+    literals because that is the one thing a derived expectation cannot prove:
+    reading the answer back out of the core would pass just as happily if the
+    core had lowercased them.
+    """
+
+    import classic_scanlog
+
+    assert (
+        classic_scanlog.scan_run_log_failure_stage_label("unsolved_logs_finalization")
+        == "Unsolved Logs finalization"
+    )
+    assert (
+        classic_scanlog.scan_run_infrastructure_error_stage_label(
+            "formid_database_access"
+        )
+        == "FormID database access"
+    )
+    assert (
+        classic_scanlog.scan_run_infrastructure_error_stage_label("internal_invariant")
+        == "internal invariant validation"
+    )
+    assert (
+        classic_scanlog.scan_run_log_disposition_label("cancelled_before_start")
+        == "cancelled before start"
+    )
+    # Deliberately its own token: this vocabulary mirrors the workspace's shared
+    # durable-publication stages, which name ordinary steps rather than domain
+    # terms. Pinned so a contributor who "fixes" it has to read why first.
+    for token in ("create", "write", "flush", "sync", "publish"):
+        assert (
+            classic_scanlog.scan_run_local_ignore_reset_failure_stage_label(token)
+            == token
+        )
+
+
+def test_run_owned_display_labels_have_no_configuration_counterpart() -> None:
+    """No :mod:`classic_config` function answers for a run-owned vocabulary.
+
+    The two twin resolvers deliberately agree with a configuration counterpart,
+    and a reader could reasonably assume the same of the three checked below.
+    It is not true: the run crate is the only definition site for their prose,
+    which is why the twin tests compare two surfaces and the run-owned ones
+    compare against a literal.
+
+    The fourth run-surface resolver added alongside them --
+    ``scan_run_local_ignore_reset_failure_stage_label`` -- is deliberately
+    absent: it *is* a twin, of the shared durable-publication stage vocabulary,
+    so it is not run-owned and this test would be asserting the wrong thing
+    about it.
+
+    What this guards is a second definition site appearing later. Adding, say,
+    ``classic_config.log_disposition_label`` would be exactly the duplication
+    this contract exists to remove, and it would otherwise pass every gate.
+    """
+
+    import classic_config
+
+    for name in (
+        "log_disposition_label",
+        "log_failure_stage_label",
+        "infrastructure_error_stage_label",
+    ):
+        assert not hasattr(classic_config, name)
+
 
 @pytest.mark.parametrize(
     "resolver",
     [
         "scan_run_installed_yaml_data_diagnostic_kind_label",
         "scan_run_local_ignore_yaml_data_state_label",
+        "scan_run_log_disposition_label",
+        "scan_run_log_failure_stage_label",
+        "scan_run_infrastructure_error_stage_label",
+        "scan_run_local_ignore_reset_failure_stage_label",
     ],
 )
 def test_scan_run_display_label_rejects_an_unknown_token(resolver: str) -> None:

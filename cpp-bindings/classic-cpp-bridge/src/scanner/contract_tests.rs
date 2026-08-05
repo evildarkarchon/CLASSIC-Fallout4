@@ -1336,6 +1336,53 @@ fn no_scan_run_display_label_reaches_cxx_empty() {
     }
 }
 
+/// Asserts one enum's CXX label projection agrees with the core, for every variant.
+///
+/// Written once and applied per enum because the four run-owned enums differ
+/// only in their types: repeating the loop four times would be four chances to
+/// paste the wrong `label_of` beside the right `project`, which is the class of
+/// mistake a test cannot catch about itself.
+///
+/// Both clauses matter and neither implies the other. The equality is the real
+/// check. The non-empty assertion pins the `display_label` `""` fallback as
+/// unreachable for a real variant — an empty label is exactly the "variant that
+/// renders as nothing" the naming contract exists to prevent, and core
+/// conformance guarantees it only on the core side of the seam.
+fn assert_cxx_labels_match_the_core<Core, Cxx>(project: fn(Core) -> Cxx, label_of: fn(Cxx) -> String)
+where
+    Core: Vocabulary,
+    Cxx: Copy + PartialEq,
+{
+    for variant in Core::VARIANTS.iter().copied() {
+        let label = label_of(project(variant));
+        assert_eq!(label, variant.label());
+        assert!(!label.is_empty());
+    }
+}
+
+#[test]
+/// Every enum the run crate owns outright projects its core Display Label to C++.
+///
+/// Separate from the twin test above because these four have no counterpart to
+/// delegate to: the run crate is the single definition site for their prose, so
+/// what this pins is only that the bridge relays it unchanged.
+fn every_scan_run_run_owned_enum_projects_its_core_display_label() {
+    assert_cxx_labels_match_the_core(map_log_disposition, scan_run_log_disposition_label);
+    assert_cxx_labels_match_the_core(map_log_failure_stage, scan_run_log_failure_stage_label);
+    assert_cxx_labels_match_the_core(
+        map_infrastructure_error_stage,
+        scan_run_infrastructure_error_stage_label,
+    );
+    // A twin of the shared durable publication stage vocabulary rather than
+    // run-owned, but it needs no separate twin assertion here: the core-side
+    // delegation is what `classic-scanlog-core` proves, and all this seam owes
+    // is that the bridge relays whatever the core settled on.
+    assert_cxx_labels_match_the_core(
+        map_reset_failure_stage,
+        scan_run_local_ignore_reset_failure_stage_label,
+    );
+}
+
 #[test]
 /// A fabricated CXX enum value yields nothing rather than an invented label.
 fn an_out_of_range_scan_run_cxx_enum_value_yields_an_empty_display_label() {
@@ -1353,6 +1400,29 @@ fn an_out_of_range_scan_run_cxx_enum_value_yields_an_empty_display_label() {
     // would leave the other free to grow a fallback that invents a label.
     assert_eq!(
         scan_run_local_ignore_yaml_data_state_label(ffi::ScanRunLocalIgnoreYamlDataState {
+            repr: u8::MAX
+        }),
+        ""
+    );
+    // Every enum with a label projection, for the same reason: each one is a
+    // separate `display_label` call site, and each could independently grow a
+    // fallback that invents a label instead of rendering nothing.
+    assert_eq!(
+        scan_run_log_disposition_label(ffi::ScanRunContractLogDisposition { repr: u8::MAX }),
+        ""
+    );
+    assert_eq!(
+        scan_run_log_failure_stage_label(ffi::ScanRunContractLogFailureStage { repr: u8::MAX }),
+        ""
+    );
+    assert_eq!(
+        scan_run_infrastructure_error_stage_label(ffi::ScanRunContractInfrastructureErrorStage {
+            repr: u8::MAX
+        }),
+        ""
+    );
+    assert_eq!(
+        scan_run_local_ignore_reset_failure_stage_label(ffi::ScanRunLocalIgnoreResetFailureStage {
             repr: u8::MAX
         }),
         ""

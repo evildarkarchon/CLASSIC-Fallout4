@@ -25,8 +25,12 @@ import {
   installedYamlDataDiagnosticKindLabel,
   localIgnoreYamlDataStateLabel,
   scanRunExecute,
+  scanRunInfrastructureErrorStageLabel,
   scanRunInstalledYamlDataDiagnosticKindLabel,
+  scanRunLocalIgnoreResetFailureStageLabel,
   scanRunLocalIgnoreYamlDataStateLabel,
+  scanRunLogDispositionLabel,
+  scanRunLogFailureStageLabel,
   scanRunResume,
   parseLogSegments,
   extractFormIds,
@@ -1701,6 +1705,56 @@ describe("scanlog: Crash Log Scan Run Display Labels", () => {
     }
     for (const state of Object.values(JsScanRunLocalIgnoreState)) {
       expect(scanRunLocalIgnoreYamlDataStateLabel(state)).not.toBe("");
+    }
+  });
+});
+
+describe("scanlog: Crash Log Scan Run token Display Labels", () => {
+  // The four vocabularies the run crate publishes as bare token strings rather
+  // than as `string_enum` types. Their resolvers therefore take a `string`, and
+  // these tests pin what that difference costs a JavaScript consumer: an
+  // unknown token throws here, where an unknown `string_enum` member cannot
+  // exist. Exhaustive per-variant coverage lives in the Rust sibling module,
+  // which can iterate the core's `VARIANTS`; JavaScript cannot see that list.
+  test("a label a frontend could not have derived from the token reaches JavaScript", () => {
+    // The two labels in this change that no mechanical transform of the token
+    // could produce, which is the whole reason a label crosses this seam at all
+    // instead of being camelCased out of the token on the JavaScript side.
+    expect(scanRunLogFailureStageLabel("unsolved_logs_finalization")).toBe(
+      "Unsolved Logs finalization",
+    );
+    expect(scanRunInfrastructureErrorStageLabel("formid_database_access")).toBe(
+      "FormID database access",
+    );
+  });
+
+  test("a token whose label is only a respelling still resolves", () => {
+    expect(scanRunLogDispositionLabel("cancelled_before_start")).toBe("cancelled before start");
+    expect(scanRunInfrastructureErrorStageLabel("internal_invariant")).toBe(
+      "internal invariant validation",
+    );
+  });
+
+  test("the reset failure stage labels are deliberately their own tokens", () => {
+    // Not an oversight: this vocabulary mirrors the workspace's shared durable
+    // publication stages, which name ordinary steps rather than domain terms.
+    // Pinned so that a contributor who "fixes" it has to read why first.
+    for (const token of ["create", "write", "flush", "sync", "publish"]) {
+      expect(scanRunLocalIgnoreResetFailureStageLabel(token)).toBe(token);
+    }
+  });
+
+  test("an unknown token throws rather than resolving to a placeholder", () => {
+    // Reachable here in a way it is not for the two `string_enum` twins above.
+    // Returning "" would surface as a blank cell in a frontend with nothing to
+    // diagnose it by.
+    for (const resolve of [
+      scanRunLogDispositionLabel,
+      scanRunLogFailureStageLabel,
+      scanRunInfrastructureErrorStageLabel,
+      scanRunLocalIgnoreResetFailureStageLabel,
+    ]) {
+      expect(() => resolve("not_a_real_token")).toThrow();
     }
   });
 });

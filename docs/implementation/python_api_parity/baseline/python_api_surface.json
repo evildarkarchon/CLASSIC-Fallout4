@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-05T11:26:49.213222+00:00",
+  "generated_at_utc": "2026-08-05T12:39:09.261090+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -7464,6 +7464,17 @@
     },
     {
       "module": "classic_scanlog",
+      "export": "scan_run_infrastructure_error_stage_label",
+      "export_path": "scan_run_infrastructure_error_stage_label",
+      "kind": "function",
+      "arity": 1,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def scan_run_infrastructure_error_stage_label(token: str) -> str:"
+    },
+    {
+      "module": "classic_scanlog",
       "export": "scan_run_installed_yaml_data_diagnostic_kind_label",
       "export_path": "scan_run_installed_yaml_data_diagnostic_kind_label",
       "kind": "function",
@@ -7475,6 +7486,17 @@
     },
     {
       "module": "classic_scanlog",
+      "export": "scan_run_local_ignore_reset_failure_stage_label",
+      "export_path": "scan_run_local_ignore_reset_failure_stage_label",
+      "kind": "function",
+      "arity": 1,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def scan_run_local_ignore_reset_failure_stage_label(token: str) -> str:"
+    },
+    {
+      "module": "classic_scanlog",
       "export": "scan_run_local_ignore_yaml_data_state_label",
       "export_path": "scan_run_local_ignore_yaml_data_state_label",
       "kind": "function",
@@ -7483,6 +7505,28 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def scan_run_local_ignore_yaml_data_state_label(token: str) -> str:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "scan_run_log_disposition_label",
+      "export_path": "scan_run_log_disposition_label",
+      "kind": "function",
+      "arity": 1,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def scan_run_log_disposition_label(token: str) -> str:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "scan_run_log_failure_stage_label",
+      "export_path": "scan_run_log_failure_stage_label",
+      "kind": "function",
+      "arity": 1,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def scan_run_log_failure_stage_label(token: str) -> str:"
     },
     {
       "module": "classic_scanlog",

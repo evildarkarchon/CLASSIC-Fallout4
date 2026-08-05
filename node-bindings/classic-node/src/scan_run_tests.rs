@@ -280,41 +280,34 @@ fn event_mapping_covers_every_variant_and_phase() {
         assert_eq!(mapped.phase.as_deref(), Some(expected));
     }
 
-    for (disposition, expected) in [
-        (LogDisposition::Succeeded, "succeeded"),
-        (LogDisposition::Failed, "failed"),
-        (
-            LogDisposition::CancelledBeforeStart,
-            "cancelled_before_start",
-        ),
-    ] {
+    // Iterated over `VARIANTS` and compared against the core token rather than
+    // a hand-written pair list. The list this replaced was correct, and that is
+    // the problem: a correct copy is indistinguishable from a drifted one until
+    // someone edits the other side, so it recorded the agreement instead of
+    // checking it. Iterating also covers a variant added later for free.
+    for disposition in LogDisposition::VARIANTS.iter().copied() {
         let mapped = event_to_js(contract::Event::LogFinished {
             log: log_event(),
             disposition,
         });
         assert_eq!(mapped.kind, "log_finished");
-        assert_eq!(mapped.disposition.as_deref(), Some(expected));
+        assert_eq!(mapped.disposition.as_deref(), Some(disposition.as_str()));
     }
 }
 
 #[test]
 fn terminal_mapping_preserves_every_status_failure_and_optional_path() {
-    for (status, expected) in [
-        (CrashLogScanRunStatus::Completed, "completed"),
-        (
-            CrashLogScanRunStatus::NoCrashLogsFound,
-            "no_crash_logs_found",
-        ),
-        (CrashLogScanRunStatus::SetupFailed, "setup_failed"),
-        (
-            CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
-            "local_ignore_recovery_required",
-        ),
-        (
-            CrashLogScanRunStatus::CancelledBeforeDiscovery,
-            "cancelled_before_discovery",
-        ),
-        (CrashLogScanRunStatus::Cancelled, "cancelled"),
+    // The variant list stays written out - the run status does not implement
+    // the Vocabulary contract, so there is no `VARIANTS` to iterate - but the
+    // expected string is the core's own token rather than a second spelling of
+    // it. That is the half of the check that can actually fail.
+    for status in [
+        CrashLogScanRunStatus::Completed,
+        CrashLogScanRunStatus::NoCrashLogsFound,
+        CrashLogScanRunStatus::SetupFailed,
+        CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
+        CrashLogScanRunStatus::CancelledBeforeDiscovery,
+        CrashLogScanRunStatus::Cancelled,
     ] {
         let mapped = run_result_to_js(RunResult {
             status,
@@ -330,7 +323,7 @@ fn terminal_mapping_preserves_every_status_failure_and_optional_path() {
             cancelled: 0,
             logs: vec![],
         });
-        assert_eq!(mapped.status, expected);
+        assert_eq!(mapped.status, status.as_str());
         assert_eq!(mapped.effective_concurrency, Some(2));
         assert_eq!(mapped.message.as_deref(), Some("terminal message"));
     }
@@ -340,20 +333,17 @@ fn terminal_mapping_preserves_every_status_failure_and_optional_path() {
         crash_log: PathBuf::from("C:/logs/crash.log"),
         autoscan_report: Some(PathBuf::from("C:/logs/crash-AUTOSCAN.md")),
         disposition: LogDisposition::Failed,
-        failures: vec![
-            LogFailure {
-                stage: LogFailureStage::Analysis,
-                message: "analysis".to_string(),
-            },
-            LogFailure {
-                stage: LogFailureStage::ReportWrite,
-                message: "report".to_string(),
-            },
-            LogFailure {
-                stage: LogFailureStage::UnsolvedLogsFinalization,
-                message: "finalization".to_string(),
-            },
-        ],
+        // Built from `VARIANTS` so that "every failure stage" stays true when a
+        // stage is added, rather than meaning "the three that were current when
+        // this test was written".
+        failures: LogFailureStage::VARIANTS
+            .iter()
+            .copied()
+            .map(|stage| LogFailure {
+                stage,
+                message: format!("{} failed", stage.as_str()),
+            })
+            .collect(),
         message: Some("all failures".to_string()),
         moved_to_unsolved_logs: true,
         processing_time_us: u64::MAX,
@@ -369,7 +359,11 @@ fn terminal_mapping_preserves_every_status_failure_and_optional_path() {
             .iter()
             .map(|failure| failure.stage.as_str())
             .collect::<Vec<_>>(),
-        ["analysis", "report_write", "unsolved_logs_finalization"]
+        LogFailureStage::VARIANTS
+            .iter()
+            .copied()
+            .map(Vocabulary::as_str)
+            .collect::<Vec<_>>()
     );
     assert_eq!(mapped_log.processing_time_us, i64::MAX);
     assert_eq!(
@@ -380,29 +374,15 @@ fn terminal_mapping_preserves_every_status_failure_and_optional_path() {
 
 #[test]
 fn infrastructure_mapping_covers_every_stage_with_and_without_paths() {
-    for (stage, expected) in [
-        (
-            InfrastructureErrorStage::RequestValidation,
-            "request_validation",
-        ),
-        (InfrastructureErrorStage::Discovery, "discovery"),
-        (InfrastructureErrorStage::Intake, "intake"),
-        (
-            InfrastructureErrorStage::FormIdDatabaseAccess,
-            "formid_database_access",
-        ),
-        (InfrastructureErrorStage::Initialization, "initialization"),
-        (
-            InfrastructureErrorStage::InternalInvariant,
-            "internal_invariant",
-        ),
-    ] {
+    // Derived from `VARIANTS` and the core token, for the same reason as the
+    // disposition loop above.
+    for stage in InfrastructureErrorStage::VARIANTS.iter().copied() {
         let mapped = infrastructure_error_to_js(InfrastructureError {
             stage,
             message: "failure".to_string(),
             path: Some(PathBuf::from("C:/failure/path")),
         });
-        assert_eq!(mapped.stage, expected);
+        assert_eq!(mapped.stage, stage.as_str());
         assert_eq!(mapped.message, "failure");
         assert_eq!(mapped.path.as_deref(), Some("C:/failure/path"));
     }
@@ -562,4 +542,76 @@ fn no_scan_run_display_label_reaches_javascript_empty() {
                 .is_empty()
         );
     }
+}
+
+/// Asserts one token-taking label function agrees with the core, for every variant.
+///
+/// Written once and applied per enum because the four differ only in their type
+/// parameter: repeating the loop four times would be four chances to paste the
+/// wrong core enum beside the right resolver, which is the class of mistake a
+/// test cannot catch about itself.
+fn assert_token_labels_match_the_core<T: Vocabulary>(
+    label_of: fn(String) -> napi::Result<String>,
+) {
+    for variant in T::VARIANTS.iter().copied() {
+        let label = label_of(variant.as_str().to_string())
+            .expect("a token this surface publishes must resolve");
+        assert_eq!(label, variant.label());
+        assert!(!label.is_empty());
+    }
+}
+
+#[test]
+/// Every published scan-run token resolves to the core Display Label.
+///
+/// Separate from the twin test above because these four are not modelled as
+/// `string_enum` types on this surface - they are published as bare token
+/// strings - so their label functions take a `string` and are checked by
+/// round-tripping the token rather than by projecting an enum value.
+fn every_published_scan_run_token_resolves_to_the_core_display_label() {
+    assert_token_labels_match_the_core::<contract::LogDisposition>(scan_run_log_disposition_label);
+    assert_token_labels_match_the_core::<contract::LogFailureStage>(
+        scan_run_log_failure_stage_label,
+    );
+    assert_token_labels_match_the_core::<contract::InfrastructureErrorStage>(
+        scan_run_infrastructure_error_stage_label,
+    );
+    assert_token_labels_match_the_core::<contract::LocalIgnoreResetFailureStage>(
+        scan_run_local_ignore_reset_failure_stage_label,
+    );
+}
+
+#[test]
+/// An unrecognized token is rejected rather than resolved to a placeholder.
+fn an_unknown_scan_run_token_is_rejected_rather_than_labelled() {
+    // Reachable here in a way it is not for the two `string_enum` twins, which
+    // N-API rejects at the boundary. Returning `""` instead would surface as a
+    // blank cell in a frontend with nothing to diagnose it by.
+    for label_of in [
+        scan_run_log_disposition_label,
+        scan_run_log_failure_stage_label,
+        scan_run_infrastructure_error_stage_label,
+        scan_run_local_ignore_reset_failure_stage_label,
+    ] {
+        assert!(label_of("not_a_real_token".to_string()).is_err());
+    }
+}
+
+#[test]
+/// A label a frontend could not have derived from the token reaches JavaScript.
+fn glossary_capitalization_survives_the_javascript_boundary() {
+    // The two labels in this change that a mechanical transform of the token
+    // could not produce. Quoted as literals deliberately: this is the one thing
+    // a derived expectation cannot prove, since deriving it from `label()`
+    // would pass just as happily if the core had lowercased both.
+    assert_eq!(
+        scan_run_log_failure_stage_label("unsolved_logs_finalization".to_string())
+            .expect("a published token must resolve"),
+        "Unsolved Logs finalization"
+    );
+    assert_eq!(
+        scan_run_infrastructure_error_stage_label("formid_database_access".to_string())
+            .expect("a published token must resolve"),
+        "FormID database access"
+    );
 }

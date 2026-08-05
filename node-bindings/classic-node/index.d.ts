@@ -5875,6 +5875,21 @@ export declare function scanModInis(gameRoot: string, gameName: string): JsModIn
 export declare function scanRunExecute(request: ScanRunRequest, cancellation: ScanRunCancellation, observer?: (event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
 
 /**
+ * Returns the human-facing Display Label for one infrastructure stage token.
+ *
+ * The token is what this surface publishes on
+ * `JsScanRunInfrastructureError.stage`. `formid_database_access` resolves to
+ * `FormID database access` and `internal_invariant` to `internal invariant
+ * validation`.
+ *
+ * # Errors
+ *
+ * Rejects with an `Error` when `token` is not a published infrastructure stage
+ * token.
+ */
+export declare function scanRunInfrastructureErrorStageLabel(token: string): string
+
+/**
  * Returns the human-facing Display Label for one scan-run diagnostic kind.
  *
  * A frontend prints this label as a bare prefix before the diagnostic message,
@@ -5892,6 +5907,23 @@ export declare function scanRunExecute(request: ScanRunRequest, cancellation: Sc
 export declare function scanRunInstalledYamlDataDiagnosticKindLabel(kind: JsScanRunInstalledYamlDataDiagnosticKind): string
 
 /**
+ * Returns the human-facing Display Label for one reset failure stage token.
+ *
+ * The token is what this surface publishes on a Local Ignore reset rejection's
+ * `stage`. These five labels deliberately equal their tokens: the core enum is
+ * a twin of the workspace's shared durable publication stage vocabulary, which
+ * names ordinary steps rather than domain terms. The entry point exists anyway
+ * so a caller can resolve every scan-run token the same way, rather than
+ * knowing which vocabularies happen to need it.
+ *
+ * # Errors
+ *
+ * Rejects with an `Error` when `token` is not a published reset failure stage
+ * token.
+ */
+export declare function scanRunLocalIgnoreResetFailureStageLabel(token: string): string
+
+/**
  * Returns the human-facing Display Label for one scan-run Local Ignore state.
  *
  * `RecoveryRequired` is the one variant whose prose the run contract owns
@@ -5899,6 +5931,37 @@ export declare function scanRunInstalledYamlDataDiagnosticKindLabel(kind: JsScan
  * caveat as [`scan_run_installed_yaml_data_diagnostic_kind_label`].
  */
 export declare function scanRunLocalIgnoreYamlDataStateLabel(state: JsScanRunLocalIgnoreState): string
+
+/**
+ * Returns the human-facing Display Label for one terminal log disposition token.
+ *
+ * The token is what this surface publishes on a log result's `disposition` and
+ * on the `logFinished` observer event. Unlike the two twins above, the wording
+ * is the run crate's own — this enum has no counterpart to delegate to.
+ *
+ * Presentation only. Labels are reworded freely between releases, so compare
+ * the token and never the label.
+ *
+ * # Errors
+ *
+ * Rejects with an `Error` when `token` is not a published disposition token.
+ */
+export declare function scanRunLogDispositionLabel(token: string): string
+
+/**
+ * Returns the human-facing Display Label for one per-log failure stage token.
+ *
+ * The token is what this surface publishes on `JsScanRunLogFailure.stage`.
+ * `unsolved_logs_finalization` resolves to `Unsolved Logs finalization`,
+ * keeping the glossary capitalization of the domain term — which is exactly
+ * what no mechanical transform of the token could have produced, and why the
+ * label is worth crossing the seam at all.
+ *
+ * # Errors
+ *
+ * Rejects with an `Error` when `token` is not a published failure stage token.
+ */
+export declare function scanRunLogFailureStageLabel(token: string): string
 
 /**
  * Resumes one retained Crash Log Scan Run through an explicit Rust-owned recovery decision.

@@ -199,8 +199,8 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 238,
-      "contractIdsHash": "16f8a793dafacf76a2f13f354b8362ab3850c22b5c28912e62fd43f333ec2931",
+      "contractCount": 242,
+      "contractIdsHash": "fcbeff557ff24c377e47600b15ac1d367e851f3debbb4bffbca743a374e149ef",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "scanlog-tier1-smoke",

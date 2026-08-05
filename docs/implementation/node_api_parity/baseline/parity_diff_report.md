@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-08-05T11:53:42.650092+00:00`
-- Tier-1 contract rows: **903**
-- Tier-1 matched: **896**
+- Generated: `2026-08-05T12:38:58.793038+00:00`
+- Tier-1 contract rows: **907**
+- Tier-1 matched: **900**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -204,6 +204,10 @@
 | `config.installed_yaml_data.localIgnoreYamlDataStateLabel` | `config` | `LocalIgnoreYamlDataState` | `localIgnoreYamlDataStateLabel` | `matched` |
 | `scanlog.scan_run.scanRunInstalledYamlDataDiagnosticKindLabel` | `scanlog` | `InstalledYamlDataRunDiagnosticKind` | `scanRunInstalledYamlDataDiagnosticKindLabel` | `matched` |
 | `scanlog.scan_run.scanRunLocalIgnoreYamlDataStateLabel` | `scanlog` | `LocalIgnoreRunState` | `scanRunLocalIgnoreYamlDataStateLabel` | `matched` |
+| `scanlog.scan_run.scanRunLogDispositionLabel` | `scanlog` | `LogDisposition` | `scanRunLogDispositionLabel` | `matched` |
+| `scanlog.scan_run.scanRunLogFailureStageLabel` | `scanlog` | `LogFailureStage` | `scanRunLogFailureStageLabel` | `matched` |
+| `scanlog.scan_run.scanRunInfrastructureErrorStageLabel` | `scanlog` | `InfrastructureErrorStage` | `scanRunInfrastructureErrorStageLabel` | `matched` |
+| `scanlog.scan_run.scanRunLocalIgnoreResetFailureStageLabel` | `scanlog` | `LocalIgnoreResetFailureStage` | `scanRunLocalIgnoreResetFailureStageLabel` | `matched` |
 | `config-yaml-source-enum` | `config` | `YamlSource` | `JsYamlSource` | `matched` |
 | `config-yaml-source-path` | `config` | `YamlSource` | `getYamlSourcePath` | `matched` |
 | `config-yaml-source-display-name` | `config` | `YamlSource` | `getYamlSourceDisplayName` | `matched` |

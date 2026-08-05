@@ -808,6 +808,7 @@ name = "classic-durable-publication"
 version = "9.1.0"
 dependencies = [
  "atomicwrites",
+ "classic-vocabulary",
  "sha2 0.11.0",
  "tempfile",
  "thiserror 2.0.18",

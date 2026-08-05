@@ -940,7 +940,11 @@ const fn role_token(role: CoreRole) -> &'static str {
 /// the workspace's single durable-publication stage vocabulary, which already
 /// owns these five strings. The copy this replaced was byte-identical to that
 /// owner and could only ever have differed by drifting away from it.
-const fn reset_publication_stage_token(stage: CoreResetPublicationStage) -> &'static str {
+///
+/// Not `const`: that vocabulary now supplies its token through the Vocabulary
+/// naming contract, and a trait method cannot be called in a constant function.
+/// Nothing calls this in a constant context, so the cost is the keyword alone.
+fn reset_publication_stage_token(stage: CoreResetPublicationStage) -> &'static str {
     stage.as_str()
 }
 

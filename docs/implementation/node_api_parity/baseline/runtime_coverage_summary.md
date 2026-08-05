@@ -1,8 +1,8 @@
 # Node Runtime Coverage Summary
 
-- Generated: `2026-08-05T11:53:42.654999+00:00`
-- Tracked surfaces: **1053**
-- Runtime verified: **1053**
+- Generated: `2026-08-05T12:38:58.800624+00:00`
+- Tracked surfaces: **1057**
+- Runtime verified: **1057**
 - Contract mapped only: **0**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
@@ -20,7 +20,7 @@
 | `perf` | 2 | 0 | 0 | 2 |
 | `registry` | 14 | 0 | 0 | 14 |
 | `scangame` | 77 | 0 | 0 | 77 |
-| `scanlog` | 193 | 0 | 0 | 193 |
+| `scanlog` | 197 | 0 | 0 | 197 |
 | `settings` | 45 | 0 | 0 | 45 |
 | `shared` | 10 | 0 | 0 | 10 |
 | `update` | 6 | 0 | 0 | 6 |

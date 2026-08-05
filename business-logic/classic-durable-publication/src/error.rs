@@ -8,6 +8,7 @@
 use std::fmt;
 use std::path::{Path, PathBuf};
 
+use classic_vocabulary::Vocabulary;
 use thiserror::Error;
 
 use crate::identity::ContentIdentity;
@@ -30,10 +31,42 @@ pub enum PublicationStage {
     Publish,
 }
 
-impl PublicationStage {
-    /// Return the stable lowercase identifier used in rendered messages.
-    #[must_use]
-    pub const fn as_str(self) -> &'static str {
+impl Vocabulary for PublicationStage {
+    const VARIANTS: &'static [Self] = &[
+        Self::Create,
+        Self::Write,
+        Self::Flush,
+        Self::Sync,
+        Self::Publish,
+    ];
+
+    /// These tokens are frozen. They are the exact strings this enum has always
+    /// returned from its inherent `as_str`, which every caller that mirrors this
+    /// vocabulary as its own type already publishes — the Crash Log Scan Run
+    /// contract's reset failure stage among them. This crate is where the
+    /// workspace's single stage vocabulary lives, so this is the one definition
+    /// site those mirrors delegate to rather than restate.
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Create => "create",
+            Self::Write => "write",
+            Self::Flush => "flush",
+            Self::Sync => "sync",
+            Self::Publish => "publish",
+        }
+    }
+
+    /// Each label equals its own token, which the contract permits — the two
+    /// forms are governed separately, not required to differ.
+    ///
+    /// That is the right answer here rather than a shortcut. The CLI, the GUI,
+    /// and the TUI already render exactly these five words for a reset
+    /// publication failure, so adopting them changes no shipped output, and
+    /// these are ordinary English verbs rather than domain terms, so there is no
+    /// glossary capitalization to apply and no divergence to settle. Inventing
+    /// prose like `staging file creation` would reword three frontends at once
+    /// for no reader's benefit.
+    fn label(self) -> &'static str {
         match self {
             Self::Create => "create",
             Self::Write => "write",
@@ -46,7 +79,7 @@ impl PublicationStage {
 
 impl fmt::Display for PublicationStage {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(self.as_str())
+        formatter.write_str(Vocabulary::as_str(*self))
     }
 }
 

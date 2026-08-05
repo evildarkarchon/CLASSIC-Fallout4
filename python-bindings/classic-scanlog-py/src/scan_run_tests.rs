@@ -10,17 +10,22 @@ use classic_scanlog_core::{
     CrashLogScanSetupResult, ScanProgressPhase,
 };
 use classic_vocabulary::Vocabulary;
+use pyo3::PyResult;
 use pyo3::Python;
 use pyo3::types::PyAnyMethods;
 
 use super::{
     PyScanRunConfiguration, configuration_to_core, disposition_to_string, event_to_py,
-    infrastructure_error_to_py, installed_yaml_data_diagnostic_kind_to_string,
-    installed_yaml_data_provenance_to_string, installed_yaml_data_role_to_string,
-    local_ignore_state_to_string, log_failure_stage_to_string, log_result_to_py, phase_to_string,
-    run_result_to_py, run_status_to_string, scan_run_installed_yaml_data_diagnostic_kind_label,
-    scan_run_local_ignore_yaml_data_state_label, scan_run_reset_error_to_py, setup_to_py,
-    ScanRunLocalIgnoreResetDurabilityUnknownError, ScanRunLocalIgnoreResetReplacementError,
+    infrastructure_error_stage_to_string, infrastructure_error_to_py,
+    installed_yaml_data_diagnostic_kind_to_string, installed_yaml_data_provenance_to_string,
+    installed_yaml_data_role_to_string, local_ignore_state_to_string, log_failure_stage_to_string,
+    log_result_to_py, phase_to_string, reset_failure_stage_to_string, run_result_to_py,
+    run_status_to_string, scan_run_infrastructure_error_stage_label,
+    scan_run_installed_yaml_data_diagnostic_kind_label,
+    scan_run_local_ignore_reset_failure_stage_label, scan_run_local_ignore_yaml_data_state_label,
+    scan_run_log_disposition_label, scan_run_log_failure_stage_label, scan_run_reset_error_to_py,
+    setup_to_py, ScanRunLocalIgnoreResetDurabilityUnknownError,
+    ScanRunLocalIgnoreResetReplacementError,
 };
 
 const SHARED_SCAN_RUN_MANIFEST: &str = include_str!(concat!(
@@ -85,6 +90,11 @@ fn configuration_conversion_treats_blank_destination_as_absent() {
 
 #[test]
 fn maps_every_stable_enum_identifier() {
+    // The run status has no `VARIANTS` to iterate - it does not implement the
+    // Vocabulary contract, because no frontend renders a Display Label for it -
+    // so the variant list stays written out here. The expected string does not:
+    // it is the core's own token rather than a second spelling of it, which is
+    // the half of this check that can actually fail.
     let statuses = [
         CrashLogScanRunStatus::Completed,
         CrashLogScanRunStatus::NoCrashLogsFound,
@@ -95,36 +105,44 @@ fn maps_every_stable_enum_identifier() {
     ];
     assert_eq!(
         statuses.map(run_status_to_string),
-        [
-            "completed",
-            "no_crash_logs_found",
-            "setup_failed",
-            "local_ignore_recovery_required",
-            "cancelled_before_discovery",
-            "cancelled",
-        ]
-        .map(str::to_string),
+        statuses.map(CrashLogScanRunStatus::as_str),
     );
 
-    let dispositions = [
-        contract::LogDisposition::Succeeded,
-        contract::LogDisposition::Failed,
-        contract::LogDisposition::CancelledBeforeStart,
-    ];
-    assert_eq!(
-        dispositions.map(disposition_to_string),
-        ["succeeded", "failed", "cancelled_before_start"].map(str::to_string),
-    );
-
-    let failure_stages = [
-        contract::LogFailureStage::Analysis,
-        contract::LogFailureStage::ReportWrite,
-        contract::LogFailureStage::UnsolvedLogsFinalization,
-    ];
-    assert_eq!(
-        failure_stages.map(log_failure_stage_to_string),
-        ["analysis", "report_write", "unsolved_logs_finalization"].map(str::to_string),
-    );
+    // Derived from `VARIANTS` for the same reason as the twins further down,
+    // and the reason applies even though these two enums are not twins: the
+    // strings they publish are the run crate's own, and this surface was the
+    // second place they were written down.
+    for variant in contract::LogDisposition::VARIANTS.iter().copied() {
+        assert_eq!(
+            disposition_to_string(variant),
+            variant.as_str(),
+            "the run surface must publish the core's own token",
+        );
+    }
+    for variant in contract::LogFailureStage::VARIANTS.iter().copied() {
+        assert_eq!(
+            log_failure_stage_to_string(variant),
+            variant.as_str(),
+            "the run surface must publish the core's own token",
+        );
+    }
+    for variant in contract::InfrastructureErrorStage::VARIANTS.iter().copied() {
+        assert_eq!(
+            infrastructure_error_stage_to_string(variant),
+            variant.as_str(),
+            "the run surface must publish the core's own token",
+        );
+    }
+    for variant in contract::LocalIgnoreResetFailureStage::VARIANTS
+        .iter()
+        .copied()
+    {
+        assert_eq!(
+            variant.as_str(),
+            reset_failure_stage_to_string(variant),
+            "the run surface must publish the core's own token",
+        );
+    }
 
     let phases = [
         ScanProgressPhase::Setup,
@@ -328,35 +346,22 @@ fn durability_unknown_maps_shared_outcome_to_typed_python_exception() {
 
 #[test]
 fn maps_every_infrastructure_stage_and_optional_path() {
-    let cases = [
-        (
-            contract::InfrastructureErrorStage::RequestValidation,
-            "request_validation",
-        ),
-        (contract::InfrastructureErrorStage::Discovery, "discovery"),
-        (contract::InfrastructureErrorStage::Intake, "intake"),
-        (
-            contract::InfrastructureErrorStage::FormIdDatabaseAccess,
-            "formid_database_access",
-        ),
-        (
-            contract::InfrastructureErrorStage::Initialization,
-            "initialization",
-        ),
-        (
-            contract::InfrastructureErrorStage::InternalInvariant,
-            "internal_invariant",
-        ),
-    ];
-
-    for (index, (stage, expected)) in cases.into_iter().enumerate() {
+    // Iterated over `VARIANTS` and compared against the core token rather than
+    // a hand-written pair list. The list this replaced was a second copy of the
+    // six strings, one file away from the mapper's own copy - so the two could
+    // only ever have agreed with each other, never with the core.
+    for (index, stage) in contract::InfrastructureErrorStage::VARIANTS
+        .iter()
+        .copied()
+        .enumerate()
+    {
         let path = (index % 2 == 0).then(|| PathBuf::from(format!("failure-{index}")));
         let mapped = infrastructure_error_to_py(contract::InfrastructureError {
             stage,
             message: format!("failure {index}"),
             path: path.clone(),
         });
-        assert_eq!(mapped.stage, expected);
+        assert_eq!(mapped.stage, stage.as_str());
         assert_eq!(mapped.message, format!("failure {index}"));
         assert_eq!(
             mapped.path,
@@ -417,20 +422,17 @@ fn maps_complete_log_result_and_all_failure_stages() {
         crash_log: PathBuf::from("logs/crash.log"),
         autoscan_report: Some(PathBuf::from("logs/crash-AUTOSCAN.md")),
         disposition: contract::LogDisposition::Failed,
-        failures: vec![
-            contract::LogFailure {
-                stage: contract::LogFailureStage::Analysis,
-                message: "analysis".to_string(),
-            },
-            contract::LogFailure {
-                stage: contract::LogFailureStage::ReportWrite,
-                message: "write".to_string(),
-            },
-            contract::LogFailure {
-                stage: contract::LogFailureStage::UnsolvedLogsFinalization,
-                message: "move".to_string(),
-            },
-        ],
+        // Built from `VARIANTS` so that "all failure stages" in this test's name
+        // stays true when a stage is added, rather than quietly narrowing to
+        // "the three that were current when it was written".
+        failures: contract::LogFailureStage::VARIANTS
+            .iter()
+            .copied()
+            .map(|stage| contract::LogFailure {
+                stage,
+                message: format!("{} failed", stage.as_str()),
+            })
+            .collect(),
         message: Some("failed".to_string()),
         moved_to_unsolved_logs: true,
         processing_time_us: 1_500,
@@ -453,7 +455,11 @@ fn maps_complete_log_result_and_all_failure_stages() {
             .iter()
             .map(|failure| failure.stage.as_str())
             .collect::<Vec<_>>(),
-        ["analysis", "report_write", "unsolved_logs_finalization"],
+        contract::LogFailureStage::VARIANTS
+            .iter()
+            .copied()
+            .map(Vocabulary::as_str)
+            .collect::<Vec<_>>(),
     );
     assert_eq!(mapped.message.as_deref(), Some("failed"));
     assert!(mapped.moved_to_unsolved_logs);
@@ -688,6 +694,58 @@ fn every_scan_run_vocabulary_token_resolves_to_the_core_display_label() {
     }
 }
 
+/// Asserts one resolver agrees with the core Display Label, for every variant.
+///
+/// Written once and applied per enum because the four resolvers differ only in
+/// their type parameter: repeating the loop four times would be four chances to
+/// paste the wrong core enum beside the right resolver, which is the class of
+/// mistake a test cannot catch about itself.
+fn assert_labels_match_the_core<T: Vocabulary>(
+    resolver: fn(&str) -> PyResult<&'static str>,
+) {
+    for variant in T::VARIANTS.iter().copied() {
+        let label = resolver(variant.as_str()).expect("a published token must resolve");
+        assert_eq!(label, variant.label());
+        assert!(!label.is_empty());
+    }
+}
+
+#[test]
+/// Every run-owned scan-run token resolves to the core Display Label.
+///
+/// Separate from the twin test above because these four have no configuration
+/// counterpart: their prose has exactly one definition site, in the run crate,
+/// and there is no second surface to compare against.
+fn every_run_owned_scan_run_token_resolves_to_the_core_display_label() {
+    assert_labels_match_the_core::<contract::LogDisposition>(scan_run_log_disposition_label);
+    assert_labels_match_the_core::<contract::LogFailureStage>(scan_run_log_failure_stage_label);
+    assert_labels_match_the_core::<contract::InfrastructureErrorStage>(
+        scan_run_infrastructure_error_stage_label,
+    );
+    assert_labels_match_the_core::<contract::LocalIgnoreResetFailureStage>(
+        scan_run_local_ignore_reset_failure_stage_label,
+    );
+}
+
+#[test]
+/// A label a frontend could not have derived from the token reaches Python.
+fn glossary_capitalization_survives_the_python_boundary() {
+    // The two labels in this change that a mechanical transform of the token
+    // could not produce. Quoted as literals deliberately: this is the one thing
+    // a derived expectation cannot prove, since deriving it from `label()`
+    // would pass just as happily if the core had lowercased both.
+    assert_eq!(
+        scan_run_log_failure_stage_label("unsolved_logs_finalization")
+            .expect("a published token must resolve"),
+        "Unsolved Logs finalization"
+    );
+    assert_eq!(
+        scan_run_infrastructure_error_stage_label("formid_database_access")
+            .expect("a published token must resolve"),
+        "FormID database access"
+    );
+}
+
 #[test]
 /// An unrecognized token is rejected rather than resolved to a default label.
 fn an_unknown_scan_run_token_raises_rather_than_returning_a_placeholder_label() {
@@ -696,6 +754,10 @@ fn an_unknown_scan_run_token_raises_rather_than_returning_a_placeholder_label() 
         for error in [
             scan_run_installed_yaml_data_diagnostic_kind_label("not_a_kind").unwrap_err(),
             scan_run_local_ignore_yaml_data_state_label("not_a_state").unwrap_err(),
+            scan_run_log_disposition_label("not_a_disposition").unwrap_err(),
+            scan_run_log_failure_stage_label("not_a_stage").unwrap_err(),
+            scan_run_infrastructure_error_stage_label("not_a_stage").unwrap_err(),
+            scan_run_local_ignore_reset_failure_stage_label("not_a_stage").unwrap_err(),
         ] {
             assert!(error.is_instance_of::<pyo3::exceptions::PyValueError>(py));
         }

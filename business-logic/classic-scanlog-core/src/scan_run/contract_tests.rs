@@ -12,7 +12,9 @@ use crate::scan_run::{
 use classic_config_core::YamlDataContentIdentity;
 use classic_shared_core::GameId;
 use classic_shared_core::get_runtime;
-use classic_vocabulary::{Vocabulary, assert_twin_vocabulary_conformance};
+use classic_vocabulary::{
+    Vocabulary, assert_twin_vocabulary_conformance, assert_vocabulary_conformance,
+};
 use serde::Deserialize;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -3008,12 +3010,53 @@ fn injected_infrastructure_failures_preserve_every_stable_contract_field() {
 
 // --- Vocabulary naming contract -------------------------------------------
 //
-// Both enums below are contract-stability twins: this crate declares its own
-// types so that configuration types stay out of the run contract, and those
-// types obtain both naming forms by delegating to the configuration enums they
-// mirror. What these tests protect is that the delegation is real, because a
-// twin that quietly restated its strings would reintroduce exactly the
-// divergence axis the twin arrangement was supposed to have no room for.
+// Two kinds of adopter live below. Three enums - the per-log disposition, the
+// per-log failure stage, and the run-wide infrastructure error stage - own
+// their vocabulary outright, because this crate is where those concepts live;
+// for them the base conformance assertion is the whole check.
+//
+// The other three are contract-stability twins: this crate declares its own
+// types so that the types they mirror stay out of the run contract, and those
+// types obtain both naming forms by delegating to the enums they mirror. What
+// the twin tests protect is that the delegation is real, because a twin that
+// quietly restated its strings would reintroduce exactly the divergence axis
+// the twin arrangement was supposed to have no room for.
+
+#[test]
+/// The per-log disposition satisfies the contract in its own right.
+fn log_disposition_satisfies_the_vocabulary_contract() {
+    assert_vocabulary_conformance::<contract::LogDisposition>();
+}
+
+#[test]
+/// The per-log failure stage satisfies the contract in its own right.
+fn log_failure_stage_satisfies_the_vocabulary_contract() {
+    assert_vocabulary_conformance::<contract::LogFailureStage>();
+}
+
+#[test]
+/// The run-wide infrastructure error stage satisfies the contract in its own right.
+fn infrastructure_error_stage_satisfies_the_vocabulary_contract() {
+    assert_vocabulary_conformance::<contract::InfrastructureErrorStage>();
+}
+
+#[test]
+fn local_ignore_reset_failure_stage_delegates_to_the_durable_publication_stage() {
+    // A true identity mapping onto the workspace's single stage vocabulary, so
+    // nothing is locally owned. This is the twin whose restated strings were
+    // the sharpest contradiction: its source documents itself as *the* stage
+    // vocabulary for the whole workspace, and a second copy here made that
+    // claim untrue. The closure adapts a total mapping to the partial one the
+    // helper takes, for the same reason as the diagnostic kind below.
+    assert_twin_vocabulary_conformance(
+        |stage| {
+            Some(contract::local_ignore_reset_failure_stage_to_source(
+                stage,
+            ))
+        },
+        &[],
+    );
+}
 
 #[test]
 fn local_ignore_run_state_delegates_to_the_configuration_state() {
@@ -3046,13 +3089,26 @@ fn installed_yaml_data_run_diagnostic_kind_delegates_to_the_configuration_kind()
 fn every_twin_variant_is_listed_for_iteration() {
     // Nothing at runtime can observe whether `VARIANTS` is complete - no Rust
     // construct reports how many variants an enum has - so adding a variant
-    // must land a contributor on a line that says so. Both counts are also the
+    // must land a contributor on a line that says so. Each count is also the
     // arity every binding's exhaustive projection test iterates.
     assert_eq!(contract::LocalIgnoreRunState::VARIANTS.len(), 5);
     assert_eq!(
         contract::InstalledYamlDataRunDiagnosticKind::VARIANTS.len(),
         10
     );
+    assert_eq!(contract::LocalIgnoreResetFailureStage::VARIANTS.len(), 5);
+}
+
+#[test]
+fn every_self_owned_variant_is_listed_for_iteration() {
+    // The same backstop as the twin counts above, for the three enums this
+    // crate owns outright. A twin at least fails to compile when its source
+    // gains a variant; these three have no source to be told by, so an
+    // incomplete `VARIANTS` here would silently narrow every binding's
+    // exhaustive projection test into a vacuous pass.
+    assert_eq!(contract::LogDisposition::VARIANTS.len(), 3);
+    assert_eq!(contract::LogFailureStage::VARIANTS.len(), 3);
+    assert_eq!(contract::InfrastructureErrorStage::VARIANTS.len(), 6);
 }
 
 #[test]
@@ -3084,6 +3140,19 @@ fn the_two_halves_of_each_near_identity_mapping_are_inverses() {
             ),
             kind,
             "the two halves of the diagnostic kind mapping disagree"
+        );
+    }
+
+    for stage in contract::LocalIgnoreResetFailureStage::VARIANTS
+        .iter()
+        .copied()
+    {
+        assert_eq!(
+            contract::local_ignore_reset_failure_stage_from_source(
+                contract::local_ignore_reset_failure_stage_to_source(stage)
+            ),
+            stage,
+            "the two halves of the reset failure stage mapping disagree"
         );
     }
 }

@@ -1,7 +1,19 @@
 use std::path::{Path, PathBuf};
 
+use classic_vocabulary::{Vocabulary, assert_vocabulary_conformance};
+
 use super::{PublicationError, PublicationStage};
 use crate::identity::ContentIdentity;
+
+#[test]
+/// The workspace's single stage vocabulary satisfies the naming contract.
+///
+/// This enum owns its strings rather than delegating, so the assertion here is
+/// what the callers mirroring it — the Crash Log Scan Run contract's reset
+/// failure stage among them — rely on when they delegate both forms onward.
+fn publication_stage_satisfies_the_vocabulary_contract() {
+    assert_vocabulary_conformance::<PublicationStage>();
+}
 
 #[test]
 fn every_stage_renders_a_stable_lowercase_identifier() {
@@ -17,6 +29,20 @@ fn every_stage_renders_a_stable_lowercase_identifier() {
     .collect();
 
     assert_eq!(rendered, ["create", "write", "flush", "sync", "publish"]);
+}
+
+#[test]
+/// Every stage's Display Label is deliberately identical to its token.
+///
+/// Pinned rather than left implicit because the equality is a decision, not an
+/// oversight: three frontends already render the token spelling for a reset
+/// publication failure, so rewording a label here would change shipped output
+/// on all three at once. A contributor who wants prose has to delete this
+/// assertion, which is where they will read why.
+fn every_stage_label_is_its_own_token() {
+    for stage in PublicationStage::VARIANTS.iter().copied() {
+        assert_eq!(stage.label(), stage.as_str());
+    }
 }
 
 #[test]

@@ -12,6 +12,12 @@ repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 crate-type = ["rlib"] # Pure Rust library ONLY - no PyO3
 
 [dependencies]
+# Workspace-internal Vocabulary naming contract. `PublicationStage` is the
+# workspace's single stage vocabulary, so it owns both naming forms here and
+# every caller that mirrors it as its own type delegates rather than restating
+# the strings. Like this crate, `classic-vocabulary` has no binding surface.
+classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
+
 # Content identity for published and verified bytes.
 sha2 = { workspace = true }
 

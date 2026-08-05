@@ -189,23 +189,48 @@ it is never reported as a successful or cancelled run.
 
 ### Vocabulary Tokens and Display Labels
 
-`LocalIgnoreRunState` and `InstalledYamlDataRunDiagnosticKind` implement the
-[Vocabulary naming contract](classic-vocabulary.md). Both are
-contract-stability twins: this crate declares its own types so that
-configuration types stay out of the run contract, and both obtain their naming
-by delegating to the configuration enums they mirror rather than restating it.
-Nothing in this crate spells a token or a label for a variant that has a
-counterpart.
+Six enums in the Crash Log Scan Run contract implement the
+[Vocabulary naming contract](classic-vocabulary.md), in two groups.
 
-| Enum | Vocabulary Tokens |
-| --- | --- |
-| `LocalIgnoreRunState` | `existing`, `generated`, `recovery_required`, `proceed_without_ignore`, `reset_to_default` |
-| `InstalledYamlDataRunDiagnosticKind` | `cache_unavailable`, `missing`, `read`, `invalid_utf8`, `parse`, `invalid_schema`, `incompatible_schema`, `invalid_role_data`, `local_ignore_generated`, `local_ignore_reset` |
+**Three the run crate owns outright.** These concepts live here, so this crate
+is the single definition site for both their token and their prose. There is no
+counterpart anywhere else in the workspace returning the same strings.
 
-The two twins are not symmetrical, and the conformance assertion covers that
-asymmetry rather than assuming a bijection. `InstalledYamlDataRunDiagnosticKind`
-is a true identity mapping and delegates all ten variants.
-`LocalIgnoreRunState` is identity-plus-one: `RecoveryRequired` has no
+| Enum | Vocabulary Tokens | Display Labels that are more than a respelling |
+| --- | --- | --- |
+| `LogDisposition` | `succeeded`, `failed`, `cancelled_before_start` | — |
+| `LogFailureStage` | `analysis`, `report_write`, `unsolved_logs_finalization` | `Unsolved Logs finalization` |
+| `InfrastructureErrorStage` | `request_validation`, `discovery`, `intake`, `formid_database_access`, `initialization`, `internal_invariant` | `FormID database access`, `internal invariant validation` |
+
+None of these three settles a wording conflict: the CLI, the GUI, and the TUI
+already render exactly these phrases, so adopting them changes no shipped
+output. The one gap they close is the TUI's infrastructure stage, which renders
+the *token* today and now has prose to adopt.
+
+The right-hand column is what makes labels worth their own form. `Unsolved Logs`
+and `FormID` are domain terms carrying glossary capitalization, and
+`internal_invariant` names the thing rather than the failure — no mechanical
+transform of a token could produce any of the three.
+
+`InfrastructureErrorStage` also implements `Display`, which renders the
+**token**, not the label. That is the form embedded in a rendered
+`InfrastructureError` message and it is unchanged by this adoption.
+
+**Three contract-stability twins.** This crate declares its own types so that
+the types it mirrors stay out of the run contract, and each obtains its naming
+by delegating to the enum it mirrors rather than restating it. Nothing in this
+crate spells a token or a label for a variant that has a counterpart.
+
+| Enum | Mirrors | Vocabulary Tokens |
+| --- | --- | --- |
+| `LocalIgnoreRunState` | `LocalIgnoreYamlDataState` | `existing`, `generated`, `recovery_required`, `proceed_without_ignore`, `reset_to_default` |
+| `InstalledYamlDataRunDiagnosticKind` | `InstalledYamlDataDiagnosticKind` | `cache_unavailable`, `missing`, `read`, `invalid_utf8`, `parse`, `invalid_schema`, `incompatible_schema`, `invalid_role_data`, `local_ignore_generated`, `local_ignore_reset` |
+| `LocalIgnoreResetFailureStage` | `classic-durable-publication`'s `PublicationStage` | `create`, `write`, `flush`, `sync`, `publish` |
+
+The twins are not all symmetrical, and the conformance assertion covers that
+rather than assuming a bijection. `InstalledYamlDataRunDiagnosticKind` and
+`LocalIgnoreResetFailureStage` are true identity mappings and delegate every
+variant. `LocalIgnoreRunState` is identity-plus-one: `RecoveryRequired` has no
 configuration counterpart, because a run can pause for a caller decision and a
 stored snapshot cannot, so it supplies both `recovery_required` and `recovery
 required` locally. Every other variant delegates.
@@ -216,23 +241,37 @@ selected Main defaults`, and `LocalIgnoreReset` keeps the glossary
 capitalization in `Local Ignore reset` — none of which this crate had to be
 told.
 
-Each surface exposes a Display Label projection for both twins:
+`LocalIgnoreResetFailureStage` delegates for a sharper reason than the other
+two. Its source documents itself as *the* stage vocabulary for the whole
+workspace, so a twin restating those five strings made that claim untrue. The
+labels it inherits equal their tokens, which is that vocabulary's deliberate
+choice: these name ordinary steps rather than domain terms, and rewording them
+would change what all three frontends print for no reader's benefit.
+
+Each surface exposes a Display Label projection for all six:
 
 | Surface | Projection |
 | --- | --- |
-| CXX | `scan_run_installed_yaml_data_diagnostic_kind_label`, `scan_run_local_ignore_yaml_data_state_label` — take the frozen FFI mirror enum, return `String` |
-| Node | the same two names in camelCase, taking the `string_enum` value |
-| Python | the same two names, taking the published snake_case token and raising `ValueError` for anything else |
+| CXX | `scan_run_installed_yaml_data_diagnostic_kind_label`, `scan_run_local_ignore_yaml_data_state_label`, `scan_run_log_disposition_label`, `scan_run_log_failure_stage_label`, `scan_run_infrastructure_error_stage_label`, `scan_run_local_ignore_reset_failure_stage_label` — each takes the frozen FFI mirror enum and returns `String`, or `""` for an out-of-range value |
+| Node | the same six names in camelCase. The two twins take a `string_enum` value; the other four take the published snake_case token as a `string`, because this surface publishes those four as bare token strings rather than as `string_enum` types, and they throw for an unrecognized token |
+| Python | the same six names, each taking the published snake_case token and raising `ValueError` for anything else |
 
 The label crosses the binding seam as its own entry point rather than being
 folded into a DTO string, because two of the three frontends are C++ and a Qt
 view is not line-oriented — it wants the variant and its label separately, for
 independently styled table columns.
 
-Adding a variant to a configuration enum cannot pass silently: the
-source-to-twin `match` stops compiling, and if that guard is ever given up for a
-catch-all arm the conformance assertion still fails, because it checks that
-every configuration variant is reachable from some twin variant.
+The two Node shapes are a consequence of what each enum already published, not a
+new inconsistency: a `string_enum` argument makes an unknown value unreachable,
+while a `string` argument makes a typo reachable and therefore worth reporting.
+Both surfaces that take a free-form token — Node's four and all six on Python —
+reject rather than returning an empty label, because a blank cell in a frontend
+carries nothing to diagnose it by.
+
+Adding a variant to a mirrored enum cannot pass silently: the source-to-twin
+`match` stops compiling, and if that guard is ever given up for a catch-all arm
+the conformance assertion still fails, because it checks that every source
+variant is reachable from some twin variant.
 
 Tokens are frozen and changing one is breaking; labels are presentation only and
 may be reworded.

@@ -957,6 +957,57 @@ pub(crate) fn scan_run_local_ignore_yaml_data_state_label(
     display_label(state, map_local_ignore_yaml_data_state).to_string()
 }
 
+/// Return the human-facing Display Label for one terminal log disposition.
+///
+/// Same reasoning as [`scan_run_installed_yaml_data_diagnostic_kind_label`] for
+/// why the label crosses the seam as its own entry point. What differs is where
+/// the wording comes from: this enum has no counterpart to mirror, so the run
+/// crate owns its prose outright.
+///
+/// The CLI already renders exactly these three phrases from a `switch` of its
+/// own. This is the entry point that lets it delete that `switch`.
+pub(crate) fn scan_run_log_disposition_label(
+    disposition: ffi::ScanRunContractLogDisposition,
+) -> String {
+    display_label(disposition, map_log_disposition).to_string()
+}
+
+/// Return the human-facing Display Label for one per-log failure stage.
+///
+/// Same reasoning as [`scan_run_log_disposition_label`].
+/// `UnsolvedLogsFinalization` reads as `Unsolved Logs finalization` because
+/// `Unsolved Logs` is a domain term and keeps its glossary capitalization.
+pub(crate) fn scan_run_log_failure_stage_label(
+    stage: ffi::ScanRunContractLogFailureStage,
+) -> String {
+    display_label(stage, map_log_failure_stage).to_string()
+}
+
+/// Return the human-facing Display Label for one run-wide infrastructure stage.
+///
+/// Same reasoning as [`scan_run_log_disposition_label`]. Two labels are more
+/// than a respelling of their token: `FormIdDatabaseAccess` capitalizes `FormID`
+/// as the domain term it is, and `InternalInvariant` reads as `internal
+/// invariant validation`.
+pub(crate) fn scan_run_infrastructure_error_stage_label(
+    stage: ffi::ScanRunContractInfrastructureErrorStage,
+) -> String {
+    display_label(stage, map_infrastructure_error_stage).to_string()
+}
+
+/// Return the human-facing Display Label for one Local Ignore reset failure stage.
+///
+/// Same reasoning as [`scan_run_log_disposition_label`] for the seam, but this
+/// enum *is* a twin — of the workspace's shared durable publication stage
+/// vocabulary, which deliberately keeps each label equal to its token. So this
+/// projection returns the token spelling, and that is a decision rather than an
+/// omission: the reset stage names ordinary steps rather than domain terms.
+pub(crate) fn scan_run_local_ignore_reset_failure_stage_label(
+    stage: ffi::ScanRunLocalIgnoreResetFailureStage,
+) -> String {
+    display_label(stage, map_reset_failure_stage).to_string()
+}
+
 /// Maps the explicit CXX recovery choice into the Rust-owned continuation contract.
 fn map_local_ignore_recovery_decision(
     value: ffi::ScanRunLocalIgnoreRecoveryDecision,

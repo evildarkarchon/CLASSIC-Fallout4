@@ -7,6 +7,7 @@ use classic_scanlog_core::scan_run::{
     TargetedCrashLogScanSource,
 };
 use classic_shared_core::{GameId, get_runtime};
+use classic_vocabulary::Vocabulary;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 use tempfile::tempdir;

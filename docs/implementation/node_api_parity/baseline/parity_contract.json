@@ -1962,6 +1962,50 @@
       "nodeArity": 1
     },
     {
+      "id": "scanlog.scan_run.scanRunLogDispositionLabel",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "LogDisposition",
+      "rustKind": "enum",
+      "nodeExport": "scanRunLogDispositionLabel",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog.scan_run.scanRunLogFailureStageLabel",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "LogFailureStage",
+      "rustKind": "enum",
+      "nodeExport": "scanRunLogFailureStageLabel",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog.scan_run.scanRunInfrastructureErrorStageLabel",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "InfrastructureErrorStage",
+      "rustKind": "enum",
+      "nodeExport": "scanRunInfrastructureErrorStageLabel",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog.scan_run.scanRunLocalIgnoreResetFailureStageLabel",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "LocalIgnoreResetFailureStage",
+      "rustKind": "enum",
+      "nodeExport": "scanRunLocalIgnoreResetFailureStageLabel",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
       "id": "config-yaml-source-enum",
       "tier": "tier1",
       "ownerModule": "config",

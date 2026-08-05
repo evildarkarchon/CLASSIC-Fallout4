@@ -21,7 +21,7 @@ use classic_scanlog_core::{
     CrashLogScanRunStatus, CrashLogScanSetupContext, CrashLogScanSetupResult, ScanProgressPhase,
     StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
 };
-use classic_vocabulary::display_label;
+use classic_vocabulary::{Vocabulary, display_label, from_token};
 use napi::bindgen_prelude::{AsyncTask, Either, FnArgs, Function, JsObjectValue, ToNapiValue};
 use napi::threadsafe_function::{
     ThreadsafeFunction, ThreadsafeFunctionCallMode, UnknownReturnValue,
@@ -910,6 +910,102 @@ pub fn scan_run_installed_yaml_data_diagnostic_kind_label(
 #[napi]
 pub fn scan_run_local_ignore_yaml_data_state_label(state: JsScanRunLocalIgnoreState) -> String {
     display_label(state, local_ignore_run_state_to_js).to_string()
+}
+
+/// Resolves the Display Label for one published Vocabulary Token, or rejects it.
+///
+/// The two label functions above take a `string_enum`, so N-API rejects an
+/// unknown value at the boundary and the "not a variant" case is unreachable.
+/// The four enums below are not modelled that way on this surface — they are
+/// published as bare token strings on `JsScanRunLogFailure.stage`,
+/// `JsScanRunInfrastructureError.stage`, the observer's `disposition`, and a
+/// Local Ignore reset rejection's `stage` — so their label functions take a
+/// `string`, and a typo *is* reachable.
+///
+/// Throwing rather than returning `""` is the point. An empty string would
+/// surface as a blank cell in a frontend with nothing to diagnose it by, and
+/// this is the same answer the Python surface gives for the same reason: both
+/// take a free-form token, so both owe the caller an error rather than a
+/// silence.
+///
+/// The token spelling is snake_case here, not the camelCase this surface uses
+/// for enum *identifiers*, because these four are published as snake_case token
+/// strings today and those strings are frozen.
+fn scan_run_label_for_token<T: Vocabulary>(token: &str, vocabulary: &str) -> napi::Result<String> {
+    from_token::<T>(token)
+        .map(|variant| variant.label().to_string())
+        .ok_or_else(|| {
+            napi::Error::from_reason(format!(
+                "unknown Crash Log Scan Run {vocabulary} token `{token}`"
+            ))
+        })
+}
+
+/// Returns the human-facing Display Label for one terminal log disposition token.
+///
+/// The token is what this surface publishes on a log result's `disposition` and
+/// on the `logFinished` observer event. Unlike the two twins above, the wording
+/// is the run crate's own — this enum has no counterpart to delegate to.
+///
+/// Presentation only. Labels are reworded freely between releases, so compare
+/// the token and never the label.
+///
+/// # Errors
+///
+/// Rejects with an `Error` when `token` is not a published disposition token.
+#[napi]
+pub fn scan_run_log_disposition_label(token: String) -> napi::Result<String> {
+    scan_run_label_for_token::<contract::LogDisposition>(&token, "disposition")
+}
+
+/// Returns the human-facing Display Label for one per-log failure stage token.
+///
+/// The token is what this surface publishes on `JsScanRunLogFailure.stage`.
+/// `unsolved_logs_finalization` resolves to `Unsolved Logs finalization`,
+/// keeping the glossary capitalization of the domain term — which is exactly
+/// what no mechanical transform of the token could have produced, and why the
+/// label is worth crossing the seam at all.
+///
+/// # Errors
+///
+/// Rejects with an `Error` when `token` is not a published failure stage token.
+#[napi]
+pub fn scan_run_log_failure_stage_label(token: String) -> napi::Result<String> {
+    scan_run_label_for_token::<contract::LogFailureStage>(&token, "log failure stage")
+}
+
+/// Returns the human-facing Display Label for one infrastructure stage token.
+///
+/// The token is what this surface publishes on
+/// `JsScanRunInfrastructureError.stage`. `formid_database_access` resolves to
+/// `FormID database access` and `internal_invariant` to `internal invariant
+/// validation`.
+///
+/// # Errors
+///
+/// Rejects with an `Error` when `token` is not a published infrastructure stage
+/// token.
+#[napi]
+pub fn scan_run_infrastructure_error_stage_label(token: String) -> napi::Result<String> {
+    scan_run_label_for_token::<contract::InfrastructureErrorStage>(&token, "infrastructure stage")
+}
+
+/// Returns the human-facing Display Label for one reset failure stage token.
+///
+/// The token is what this surface publishes on a Local Ignore reset rejection's
+/// `stage`. These five labels deliberately equal their tokens: the core enum is
+/// a twin of the workspace's shared durable publication stage vocabulary, which
+/// names ordinary steps rather than domain terms. The entry point exists anyway
+/// so a caller can resolve every scan-run token the same way, rather than
+/// knowing which vocabularies happen to need it.
+///
+/// # Errors
+///
+/// Rejects with an `Error` when `token` is not a published reset failure stage
+/// token.
+#[napi]
+pub fn scan_run_local_ignore_reset_failure_stage_label(token: String) -> napi::Result<String> {
+    scan_run_label_for_token::<contract::LocalIgnoreResetFailureStage>(&token, "reset failure stage")
 }
 
 /// Pure metadata projected before allocating a JavaScript reset error.

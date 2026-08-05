@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-05T10:14:18Z",
+  "generated_at_utc": "2026-08-05T12:36:38Z",
   "schema_version": 1,
   "entries": [
     {
@@ -7035,6 +7035,23 @@
       }
     },
     {
+      "id": "e48cf5838f378baf",
+      "rustSymbol": "scan_run_infrastructure_error_stage_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "stage",
+            "type": "ScanRunContractInfrastructureErrorStage"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
       "id": "78b3cc5fa73a4c33",
       "rustSymbol": "scan_run_installed_yaml_data_diagnostic_kind_label",
       "kind": "function",
@@ -7052,6 +7069,23 @@
       }
     },
     {
+      "id": "3e7dcba09e694224",
+      "rustSymbol": "scan_run_local_ignore_reset_failure_stage_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "stage",
+            "type": "ScanRunLocalIgnoreResetFailureStage"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
       "id": "e339f7882fe08cf9",
       "rustSymbol": "scan_run_local_ignore_yaml_data_state_label",
       "kind": "function",
@@ -7063,6 +7097,40 @@
           {
             "name": "state",
             "type": "ScanRunLocalIgnoreYamlDataState"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "10d97d2dc9c9c401",
+      "rustSymbol": "scan_run_log_disposition_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "disposition",
+            "type": "ScanRunContractLogDisposition"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "594f2973e02fe0ce",
+      "rustSymbol": "scan_run_log_failure_stage_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "stage",
+            "type": "ScanRunContractLogFailureStage"
           }
         ],
         "returnType": "String"

@@ -848,6 +848,80 @@ def scan_run_local_ignore_yaml_data_state_label(token: str) -> str:
         ValueError: ``token`` is not a published Local Ignore state token.
     """
 
+def scan_run_log_disposition_label(token: str) -> str:
+    """Return the human-facing Display Label for one log disposition token.
+
+    ``token`` is what this module publishes on
+    :attr:`ScanRunLogResult.disposition` and on a ``log_finished`` event. Unlike
+    the two above, the wording is the run crate's own -- this enum has no
+    configuration counterpart, so there is no :mod:`classic_config` function
+    returning the same prose.
+
+    Labels are presentation only and may be reworded between releases, so do
+    not parse or compare them -- compare the token.
+
+    Args:
+        token: A published disposition token.
+
+    Raises:
+        ValueError: ``token`` is not a published disposition token.
+    """
+
+def scan_run_log_failure_stage_label(token: str) -> str:
+    """Return the human-facing Display Label for one log failure stage token.
+
+    ``token`` is what this module publishes on :attr:`ScanRunLogFailure.stage`.
+    ``unsolved_logs_finalization`` resolves to ``Unsolved Logs finalization``,
+    keeping the glossary capitalization of the domain term -- which is exactly
+    what no mechanical transform of the token could have produced.
+
+    Same stability caveat as :func:`scan_run_log_disposition_label`.
+
+    Args:
+        token: A published failure stage token.
+
+    Raises:
+        ValueError: ``token`` is not a published failure stage token.
+    """
+
+def scan_run_infrastructure_error_stage_label(token: str) -> str:
+    """Return the human-facing Display Label for one infrastructure stage token.
+
+    ``token`` is what this module publishes on
+    :attr:`ScanRunInfrastructureError.stage`. ``formid_database_access``
+    resolves to ``FormID database access`` and ``internal_invariant`` to
+    ``internal invariant validation``.
+
+    Same stability caveat as :func:`scan_run_log_disposition_label`.
+
+    Args:
+        token: A published infrastructure stage token.
+
+    Raises:
+        ValueError: ``token`` is not a published infrastructure stage token.
+    """
+
+def scan_run_local_ignore_reset_failure_stage_label(token: str) -> str:
+    """Return the human-facing Display Label for one reset failure stage token.
+
+    ``token`` is what this module publishes on the ``stage`` attribute of
+    :class:`ScanRunLocalIgnoreResetBackupError` and
+    :class:`ScanRunLocalIgnoreResetReplacementError`. These five labels
+    deliberately equal their tokens: the core enum mirrors the workspace's
+    shared durable-publication stage vocabulary, which names ordinary steps
+    rather than domain terms. The function exists anyway so a caller can resolve
+    every scan-run token the same way, rather than having to know which
+    vocabularies happen to need it.
+
+    Same stability caveat as :func:`scan_run_log_disposition_label`.
+
+    Args:
+        token: A published reset failure stage token.
+
+    Raises:
+        ValueError: ``token`` is not a published reset failure stage token.
+    """
+
 
 # =============================================================================
 # Standalone Functions

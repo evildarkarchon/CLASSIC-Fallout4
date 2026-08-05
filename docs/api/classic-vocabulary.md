@@ -77,20 +77,41 @@ Adopting these also deleted two Python restatements of the same vocabulary — `
 
 The CXX and Node label projections resolve a variant through the shared `display_label`, which runs that surface's *existing* forward projection over `VARIANTS` rather than matching on the binding-side enum. A reverse `match` would be a second variant mapping that could disagree with the forward one; derived from it, the two cannot. This is the same reasoning `from_token` applies to strings.
 
+### From [`classic-durable-publication`](classic-durable-publication.md)
+
+One enum, and the only adopter that is itself a workspace-internal crate with no binding surface. It adopts the contract not because anything renders it directly, but because two other crates mirror it as their own type and needed something to delegate *to*.
+
+| Enum | Notes |
+| --- | --- |
+| `PublicationStage` | Every label equals its own token, for the same reason as `InstalledYamlDataProvenance`: all three frontends already render exactly `create`, `write`, `flush`, `sync`, and `publish` for a reset publication failure, and these name ordinary steps rather than domain terms. A test pins the equality so that a contributor who wants prose has to read why first. Its inherent `as_str` was replaced by the trait method, and `Display` now renders through it. |
+
+This is the crate that documents itself as *the* stage vocabulary for the whole workspace. Before this adoption two mirrors — `classic-config-py`'s Python token table and the Crash Log Scan Run contract's `LocalIgnoreResetFailureStage` — each restated the five strings, which made the claim untrue. Both now delegate.
+
 ### From [`classic-scanlog-core`](classic-scanlog-core.md)
 
-Both are **delegating twins** of the configuration enums above. The Crash Log Scan Run contract declares its own types so that configuration types do not leak into it — an architectural decision this adoption preserves rather than works around — and those types obtain both naming forms by delegating through the near-identity mapping instead of restating them. Restating would have opened a new divergence axis inside the change that closes an old one.
+Six enums, in two groups.
+
+Three are **delegating twins**. The Crash Log Scan Run contract declares its own types so that the types it mirrors do not leak into it — an architectural decision this adoption preserves rather than works around — and those types obtain both naming forms by delegating through the near-identity mapping instead of restating them. Restating would have opened a new divergence axis inside the change that closes an old one.
 
 | Enum | Notes |
 | --- | --- |
 | `InstalledYamlDataRunDiagnosticKind` | A true identity mapping: all ten variants delegate, and the twin owns no vocabulary of its own. It had no token method at all before; three binding surfaces each wrote the ten strings out. |
 | `LocalIgnoreRunState` | Identity-plus-one. `RecoveryRequired` has no configuration counterpart — a run can pause for a caller decision and a stored snapshot cannot — so it supplies `recovery_required` and `recovery required` locally. Its inherent `as_str` was replaced by the trait method rather than kept alongside it. |
+| `LocalIgnoreResetFailureStage` | A true identity mapping onto [`classic-durable-publication`](classic-durable-publication.md)'s `PublicationStage` — not a configuration enum, unlike the other two. The sharpest case for delegating: its source documents itself as *the* stage vocabulary for the whole workspace, and the five byte-identical strings restated here made that claim untrue. |
 
 The asymmetry is asserted rather than assumed: `assert_twin_vocabulary_conformance` is told which tokens are locally owned and checks that set in both directions, so a twin that quietly stopped delegating a variant reads as a failure and not as one more locally owned variant.
 
 Rust cannot invert a `match`, so each twin carries both halves of its mapping as separate functions, and a round-trip test pins them against each other. That is the one place a twin could still go wrong that no single-direction check would see: a variant delegating to the *wrong* counterpart inherits the wrong prose while both halves stay exhaustive.
 
-Adopting these deleted the two remaining hand-written token tables in `classic-scanlog-py` and replaced the last two hardcoded expectation arrays in its projection tests with `VARIANTS` loops.
+Three the run crate **owns outright**. Nothing mirrors them, so the plain `assert_vocabulary_conformance` is the whole check and the labels are authored here rather than inherited.
+
+| Enum | Notes |
+| --- | --- |
+| `LogDisposition` | Three variants. The only label that differs from its token does so by the word separator alone. |
+| `LogFailureStage` | Three variants. `Unsolved Logs finalization` keeps the glossary capitalization of a domain term — the case that shows why a label is not derivable from a token. |
+| `InfrastructureErrorStage` | Six variants. `FormID database access` capitalizes a domain term and `internal invariant validation` reads as the failure rather than the noun. Its `Display` impl renders the **token**, not the label, and is unchanged. |
+
+Adopting all six deleted every remaining hand-written token table in `classic-scanlog-py` — including the run status and reset stage projections, which the parent issue had not counted — and replaced the remaining hardcoded expectation arrays in the Node and Python projection tests with `VARIANTS` loops.
 
 ## Testing
 

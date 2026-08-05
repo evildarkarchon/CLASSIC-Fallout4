@@ -299,18 +299,35 @@ FCX control, or direct report writer.
 
 ### Scan-run Display Labels
 
-Two free functions project the human-facing Display Label for the run contract's
-two mirror enums, so a C++ frontend renders one without writing a `switch`:
+Six free functions project the human-facing Display Label for the run contract's
+enums, so a C++ frontend renders one without writing a `switch`:
 
 - `scan_run_installed_yaml_data_diagnostic_kind_label(ScanRunInstalledYamlDataDiagnosticKind) -> String`
 - `scan_run_local_ignore_yaml_data_state_label(ScanRunLocalIgnoreYamlDataState) -> String`
+- `scan_run_log_disposition_label(ScanRunContractLogDisposition) -> String`
+- `scan_run_log_failure_stage_label(ScanRunContractLogFailureStage) -> String`
+- `scan_run_infrastructure_error_stage_label(ScanRunContractInfrastructureErrorStage) -> String`
+- `scan_run_local_ignore_reset_failure_stage_label(ScanRunLocalIgnoreResetFailureStage) -> String`
 
-The core enums behind these are contract-stability twins that delegate their
-naming to the configuration enums they mirror, so these labels are the same
-strings `installed_yaml_data_diagnostic_kind_label` and
+The first two sit on contract-stability twins that delegate their naming to the
+configuration enums they mirror, so these labels are the same strings
+`installed_yaml_data_diagnostic_kind_label` and
 `local_ignore_yaml_data_state_label` return. The one exception is
 `RecoveryRequired`, which the run contract owns itself because a paused run has
 no configuration counterpart.
+
+The next three sit on enums the run crate owns outright — there is no
+configuration function returning the same prose. They are the ones that let the
+CLI and the GUI delete a `switch` each: both already render exactly these
+strings, including `Unsolved Logs finalization`, `FormID database access`, and
+`internal invariant validation`, whose capitalization no transform of the token
+could have produced.
+
+The last is also a twin, of the workspace's shared durable-publication stage
+vocabulary. Its five labels equal their tokens by that vocabulary's deliberate
+choice — they name ordinary steps rather than domain terms — so this entry point
+buys uniformity rather than new prose. It exists so a frontend can resolve every
+scan-run label the same way instead of knowing which enums happen to need one.
 
 Same conventions as the `classic::config` labels above: a separate entry point
 rather than a DTO field so a Qt view can style variant and label as independent

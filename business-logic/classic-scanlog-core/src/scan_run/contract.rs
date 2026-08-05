@@ -473,17 +473,69 @@ pub enum LocalIgnoreResetFailureStage {
     Publish,
 }
 
-impl LocalIgnoreResetFailureStage {
-    /// Returns the stable adapter-facing publication stage identifier.
-    #[must_use]
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            Self::Create => "create",
-            Self::Write => "write",
-            Self::Flush => "flush",
-            Self::Sync => "sync",
-            Self::Publish => "publish",
-        }
+/// Returns the reset failure stage one durable publication stage maps onto.
+///
+/// The source-to-twin half of the identity mapping. Named rather than inlined
+/// into [`project_local_ignore_reset_error`] for the same reason as
+/// [`local_ignore_run_state_from_source`]: so the round trip against
+/// [`local_ignore_reset_failure_stage_to_source`] can be asserted, and so a
+/// stage added to the shared vocabulary later stops this `match` from
+/// compiling.
+const fn local_ignore_reset_failure_stage_from_source(
+    stage: LocalIgnoreResetPublicationStage,
+) -> LocalIgnoreResetFailureStage {
+    match stage {
+        LocalIgnoreResetPublicationStage::Create => LocalIgnoreResetFailureStage::Create,
+        LocalIgnoreResetPublicationStage::Write => LocalIgnoreResetFailureStage::Write,
+        LocalIgnoreResetPublicationStage::Flush => LocalIgnoreResetFailureStage::Flush,
+        LocalIgnoreResetPublicationStage::Sync => LocalIgnoreResetFailureStage::Sync,
+        LocalIgnoreResetPublicationStage::Publish => LocalIgnoreResetFailureStage::Publish,
+    }
+}
+
+/// Returns the durable publication stage a reset failure stage mirrors.
+///
+/// Total, like [`installed_yaml_data_run_diagnostic_kind_to_source`]: this twin
+/// is a true identity mapping, so every variant delegates and there is no local
+/// vocabulary at all. It stays private because the run contract deliberately
+/// does not leak the types it mirrors, and because `LocalIgnoreResetPublicationStage`
+/// is a re-export of the shared durable publication stage — handing it to
+/// callers would undo the separation this twin exists to keep.
+const fn local_ignore_reset_failure_stage_to_source(
+    stage: LocalIgnoreResetFailureStage,
+) -> LocalIgnoreResetPublicationStage {
+    match stage {
+        LocalIgnoreResetFailureStage::Create => LocalIgnoreResetPublicationStage::Create,
+        LocalIgnoreResetFailureStage::Write => LocalIgnoreResetPublicationStage::Write,
+        LocalIgnoreResetFailureStage::Flush => LocalIgnoreResetPublicationStage::Flush,
+        LocalIgnoreResetFailureStage::Sync => LocalIgnoreResetPublicationStage::Sync,
+        LocalIgnoreResetFailureStage::Publish => LocalIgnoreResetPublicationStage::Publish,
+    }
+}
+
+impl Vocabulary for LocalIgnoreResetFailureStage {
+    const VARIANTS: &'static [Self] = &[
+        Self::Create,
+        Self::Write,
+        Self::Flush,
+        Self::Sync,
+        Self::Publish,
+    ];
+
+    /// Fully delegated. These five strings were byte-identical to the shared
+    /// durable publication stage vocabulary — which documents itself as *the*
+    /// stage vocabulary for the whole workspace — so restating them here was a
+    /// twin contradicting the claim its own source makes. The strings are
+    /// unchanged, so nothing a consumer parses moves.
+    fn as_str(self) -> &'static str {
+        local_ignore_reset_failure_stage_to_source(self).as_str()
+    }
+
+    /// Fully delegated on the same split as [`Self::as_str`]. The shared
+    /// vocabulary deliberately keeps each label equal to its token, and this
+    /// twin inherits that decision rather than making a second one.
+    fn label(self) -> &'static str {
+        local_ignore_reset_failure_stage_to_source(self).label()
     }
 }
 
@@ -636,12 +688,16 @@ fn project_local_ignore_reset_error(error: LocalIgnoreResetError) -> ResumeError
         | LocalIgnoreResetError::Read { path, .. }
         | LocalIgnoreResetError::BackupDirectory { path, .. }
         | LocalIgnoreResetError::BackupVerification { path, .. } => (false, path, None),
-        LocalIgnoreResetError::BackupPublication { path, stage, .. } => {
-            (false, path, Some(project_reset_publication_stage(stage)))
-        }
-        LocalIgnoreResetError::ReplacementPublication { path, stage, .. } => {
-            (true, path, Some(project_reset_publication_stage(stage)))
-        }
+        LocalIgnoreResetError::BackupPublication { path, stage, .. } => (
+            false,
+            path,
+            Some(local_ignore_reset_failure_stage_from_source(stage)),
+        ),
+        LocalIgnoreResetError::ReplacementPublication { path, stage, .. } => (
+            true,
+            path,
+            Some(local_ignore_reset_failure_stage_from_source(stage)),
+        ),
         LocalIgnoreResetError::ReplacementDurabilityUnknown { .. } => {
             unreachable!("durability uncertainty returns before failure projection")
         }
@@ -655,19 +711,6 @@ fn project_local_ignore_reset_error(error: LocalIgnoreResetError) -> ResumeError
         ResumeError::LocalIgnoreResetReplacementFailure(failure)
     } else {
         ResumeError::LocalIgnoreResetBackupFailure(failure)
-    }
-}
-
-/// Maps config-core durable-publication stages into the scan-run contract vocabulary.
-const fn project_reset_publication_stage(
-    stage: LocalIgnoreResetPublicationStage,
-) -> LocalIgnoreResetFailureStage {
-    match stage {
-        LocalIgnoreResetPublicationStage::Create => LocalIgnoreResetFailureStage::Create,
-        LocalIgnoreResetPublicationStage::Write => LocalIgnoreResetFailureStage::Write,
-        LocalIgnoreResetPublicationStage::Flush => LocalIgnoreResetFailureStage::Flush,
-        LocalIgnoreResetPublicationStage::Sync => LocalIgnoreResetFailureStage::Sync,
-        LocalIgnoreResetPublicationStage::Publish => LocalIgnoreResetFailureStage::Publish,
     }
 }
 
@@ -891,14 +934,31 @@ pub enum LogDisposition {
     CancelledBeforeStart,
 }
 
-impl LogDisposition {
-    /// Returns the stable adapter-facing disposition identifier.
-    #[must_use]
-    pub const fn as_str(self) -> &'static str {
+impl Vocabulary for LogDisposition {
+    const VARIANTS: &'static [Self] = &[Self::Succeeded, Self::Failed, Self::CancelledBeforeStart];
+
+    /// These tokens are frozen. They are the exact strings this contract has
+    /// always returned from its inherent `as_str`, and which the Python scan-run
+    /// binding separately wrote out a second time — so respelling one here
+    /// breaks every binding consumer at once.
+    fn as_str(self) -> &'static str {
         match self {
             Self::Succeeded => "succeeded",
             Self::Failed => "failed",
             Self::CancelledBeforeStart => "cancelled_before_start",
+        }
+    }
+
+    /// Settles nothing, which is the point: the CLI, the GUI, and the TUI
+    /// already render exactly these three phrases for a terminal disposition, so
+    /// adopting them moves agreed wording to one home without changing shipped
+    /// output. Only `CancelledBeforeStart` differs from its token, and only by
+    /// the word separator.
+    fn label(self) -> &'static str {
+        match self {
+            Self::Succeeded => "succeeded",
+            Self::Failed => "failed",
+            Self::CancelledBeforeStart => "cancelled before start",
         }
     }
 }
@@ -914,14 +974,34 @@ pub enum LogFailureStage {
     UnsolvedLogsFinalization,
 }
 
-impl LogFailureStage {
-    /// Returns the stable adapter-facing per-log failure stage identifier.
-    #[must_use]
-    pub const fn as_str(self) -> &'static str {
+impl Vocabulary for LogFailureStage {
+    const VARIANTS: &'static [Self] = &[
+        Self::Analysis,
+        Self::ReportWrite,
+        Self::UnsolvedLogsFinalization,
+    ];
+
+    /// These tokens are frozen. They are the exact strings this contract has
+    /// always returned, and which the Python scan-run binding separately wrote
+    /// out a second time.
+    fn as_str(self) -> &'static str {
         match self {
             Self::Analysis => "analysis",
             Self::ReportWrite => "report_write",
             Self::UnsolvedLogsFinalization => "unsolved_logs_finalization",
+        }
+    }
+
+    /// All three frontends already render exactly these phrases, so no wording
+    /// is settled here. `UnsolvedLogsFinalization` is the one that could not
+    /// have been derived from its token: `Unsolved Logs` is a domain term and
+    /// keeps its glossary capitalization, which no mechanical transform of
+    /// `unsolved_logs_finalization` could know to apply.
+    fn label(self) -> &'static str {
+        match self {
+            Self::Analysis => "analysis",
+            Self::ReportWrite => "report write",
+            Self::UnsolvedLogsFinalization => "Unsolved Logs finalization",
         }
     }
 }
@@ -1445,10 +1525,24 @@ pub enum InfrastructureErrorStage {
     InternalInvariant,
 }
 
-impl InfrastructureErrorStage {
-    /// Returns the stable adapter-facing stage identifier.
-    #[must_use]
-    pub const fn as_str(self) -> &'static str {
+impl Vocabulary for InfrastructureErrorStage {
+    const VARIANTS: &'static [Self] = &[
+        Self::RequestValidation,
+        Self::Discovery,
+        Self::Intake,
+        Self::FormIdDatabaseAccess,
+        Self::Initialization,
+        Self::InternalInvariant,
+    ];
+
+    /// These tokens are frozen. `formid_database_access` in particular is the
+    /// published spelling rather than the `form_id_database_access` a mechanical
+    /// snake_case of the variant name would produce, which is why this contract
+    /// writes the strings out instead of deriving them.
+    ///
+    /// [`fmt::Display`] renders this form, so it is also the stage that appears
+    /// inside a rendered [`InfrastructureError`] message.
+    fn as_str(self) -> &'static str {
         match self {
             Self::RequestValidation => "request_validation",
             Self::Discovery => "discovery",
@@ -1458,11 +1552,30 @@ impl InfrastructureErrorStage {
             Self::InternalInvariant => "internal_invariant",
         }
     }
+
+    /// The wording the CLI and the GUI already render. Two labels are more than
+    /// a respelling of their token and could not have been derived from one:
+    /// `FormIdDatabaseAccess` capitalizes `FormID` as the domain term it is, and
+    /// `InternalInvariant` reads as `internal invariant validation` because the
+    /// bare noun phrase names the thing rather than the failure.
+    ///
+    /// The TUI renders the *token* here rather than prose, so this is the one
+    /// enum in this change where a frontend has something to adopt.
+    fn label(self) -> &'static str {
+        match self {
+            Self::RequestValidation => "request validation",
+            Self::Discovery => "discovery",
+            Self::Intake => "intake",
+            Self::FormIdDatabaseAccess => "FormID database access",
+            Self::Initialization => "initialization",
+            Self::InternalInvariant => "internal invariant validation",
+        }
+    }
 }
 
 impl fmt::Display for InfrastructureErrorStage {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(self.as_str())
+        formatter.write_str(Vocabulary::as_str(*self))
     }
 }
 

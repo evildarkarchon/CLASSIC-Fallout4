@@ -29,8 +29,10 @@ pub(crate) use contract::{
     ScanRunUnsolvedLogs, scan_run_cancellation_cancel, scan_run_cancellation_is_cancelled,
     scan_run_cancellation_new, scan_run_continuation_resume, scan_run_contract_execute,
     scan_run_contract_execution_has_continuation, scan_run_contract_execution_take_continuation,
-    scan_run_contract_execution_take_result, scan_run_installed_yaml_data_diagnostic_kind_label,
-    scan_run_local_ignore_yaml_data_state_label, scan_run_request_standard,
+    scan_run_contract_execution_take_result, scan_run_infrastructure_error_stage_label,
+    scan_run_installed_yaml_data_diagnostic_kind_label,
+    scan_run_local_ignore_reset_failure_stage_label, scan_run_local_ignore_yaml_data_state_label,
+    scan_run_log_disposition_label, scan_run_log_failure_stage_label, scan_run_request_standard,
     scan_run_request_standard_with_fcx, scan_run_request_targeted,
     scan_run_request_targeted_with_fcx, scan_run_unsolved_logs_leave_in_place,
     scan_run_unsolved_logs_move_to_configured_or_default, scan_run_unsolved_logs_move_to_custom,
@@ -1154,6 +1156,35 @@ mod ffi {
         /// Same stability caveat as above.
         fn scan_run_local_ignore_yaml_data_state_label(
             state: ScanRunLocalIgnoreYamlDataState,
+        ) -> String;
+        /// Human-facing Display Label for one terminal per-log disposition.
+        /// Same stability caveat as above.
+        fn scan_run_log_disposition_label(
+            disposition: ScanRunContractLogDisposition,
+        ) -> String;
+        /// Human-facing Display Label for one per-log failure stage.
+        ///
+        /// `UnsolvedLogsFinalization` keeps the glossary capitalization of the
+        /// domain term in `Unsolved Logs finalization`. Same stability caveat as
+        /// above.
+        fn scan_run_log_failure_stage_label(
+            stage: ScanRunContractLogFailureStage,
+        ) -> String;
+        /// Human-facing Display Label for one run-wide infrastructure stage.
+        ///
+        /// `FormIdDatabaseAccess` reads as `FormID database access` and
+        /// `InternalInvariant` as `internal invariant validation`. Same
+        /// stability caveat as above.
+        fn scan_run_infrastructure_error_stage_label(
+            stage: ScanRunContractInfrastructureErrorStage,
+        ) -> String;
+        /// Human-facing Display Label for one Local Ignore reset failure stage.
+        ///
+        /// These five deliberately equal their tokens: the shared durable
+        /// publication stage vocabulary this mirrors names ordinary steps rather
+        /// than domain terms. Same stability caveat as above.
+        fn scan_run_local_ignore_reset_failure_stage_label(
+            stage: ScanRunLocalIgnoreResetFailureStage,
         ) -> String;
 
         // Utilities

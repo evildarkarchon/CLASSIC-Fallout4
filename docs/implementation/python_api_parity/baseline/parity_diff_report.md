@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-08-05T11:26:49.215883+00:00`
-- Tier-1 contract rows: **1221**
-- Tier-1 matched: **1220**
+- Generated: `2026-08-05T12:39:09.263704+00:00`
+- Tier-1 contract rows: **1225**
+- Tier-1 matched: **1224**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -47,6 +47,10 @@
 | `scanlog.scan_run.scan_run_execute` | `scanlog` | `Request` | `classic_scanlog.scan_run_execute` | `matched` |
 | `scanlog.scan_run.scan_run_installed_yaml_data_diagnostic_kind_label` | `scanlog` | `InstalledYamlDataRunDiagnosticKind` | `classic_scanlog.scan_run_installed_yaml_data_diagnostic_kind_label` | `matched` |
 | `scanlog.scan_run.scan_run_local_ignore_yaml_data_state_label` | `scanlog` | `LocalIgnoreRunState` | `classic_scanlog.scan_run_local_ignore_yaml_data_state_label` | `matched` |
+| `scanlog.scan_run.scan_run_log_disposition_label` | `scanlog` | `LogDisposition` | `classic_scanlog.scan_run_log_disposition_label` | `matched` |
+| `scanlog.scan_run.scan_run_log_failure_stage_label` | `scanlog` | `LogFailureStage` | `classic_scanlog.scan_run_log_failure_stage_label` | `matched` |
+| `scanlog.scan_run.scan_run_infrastructure_error_stage_label` | `scanlog` | `InfrastructureErrorStage` | `classic_scanlog.scan_run_infrastructure_error_stage_label` | `matched` |
+| `scanlog.scan_run.scan_run_local_ignore_reset_failure_stage_label` | `scanlog` | `LocalIgnoreResetFailureStage` | `classic_scanlog.scan_run_local_ignore_reset_failure_stage_label` | `matched` |
 | `user_settings.commit_eligibility` | `user_settings` | `CommitEligibility` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
 | `user_settings.diagnostic` | `user_settings` | `Diagnostic` | `classic_user_settings.UserSettingsDiagnostic` | `matched` |
 | `user_settings.document_classification` | `user_settings` | `DocumentClassification` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
