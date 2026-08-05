@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-05T01:45:50.482664+00:00",
+  "generated_at_utc": "2026-08-05T10:19:47.746671+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,11 +7,11 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 1048,
-    "runtime_verified_total": 1048,
+    "tracked_surface_total": 1051,
+    "runtime_verified_total": 1051,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 898,
+    "tier1_contract_total": 901,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -22,8 +22,8 @@
       "total": 166
     },
     "config": {
-      "runtime_verified": 121,
-      "total": 121
+      "runtime_verified": 124,
+      "total": 124
     },
     "database": {
       "runtime_verified": 23,
@@ -3635,6 +3635,63 @@
       "classification": "runtime_verified",
       "rustSymbol": "persist_game_local_paths",
       "bindingIdentifier": "persistGameLocalPaths",
+      "coverageId": "node-tier1-config",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
+    },
+    {
+      "trackedId": "contract:config.installed_yaml_data.installedYamlDataProvenanceLabel",
+      "trackedType": "contract_row",
+      "contractId": "config.installed_yaml_data.installedYamlDataProvenanceLabel",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "InstalledYamlDataProvenance",
+      "bindingIdentifier": "installedYamlDataProvenanceLabel",
+      "coverageId": "node-tier1-config",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
+    },
+    {
+      "trackedId": "contract:config.installed_yaml_data.installedYamlDataDiagnosticKindLabel",
+      "trackedType": "contract_row",
+      "contractId": "config.installed_yaml_data.installedYamlDataDiagnosticKindLabel",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "InstalledYamlDataDiagnosticKind",
+      "bindingIdentifier": "installedYamlDataDiagnosticKindLabel",
+      "coverageId": "node-tier1-config",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
+    },
+    {
+      "trackedId": "contract:config.installed_yaml_data.localIgnoreYamlDataStateLabel",
+      "trackedType": "contract_row",
+      "contractId": "config.installed_yaml_data.localIgnoreYamlDataStateLabel",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "LocalIgnoreYamlDataState",
+      "bindingIdentifier": "localIgnoreYamlDataStateLabel",
       "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",

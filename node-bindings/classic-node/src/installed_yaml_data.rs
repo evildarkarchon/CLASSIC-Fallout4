@@ -26,6 +26,7 @@ use classic_config_core::{
     inspect_installed_yaml_data as core_inspect_installed_yaml_data,
     load_installed_yaml_data as core_load_installed_yaml_data,
 };
+use classic_vocabulary::Vocabulary;
 use napi::bindgen_prelude::*;
 use std::path::PathBuf;
 
@@ -59,6 +60,11 @@ pub enum JsInstalledYamlDataRole {
 }
 
 /// Candidate that supplied one selected Installed YAML Data file.
+// `PartialEq` exists so the Display Label projection can resolve a variant by
+// running the forward `provenance_to_js` map over the core `VARIANTS` list. A
+// reverse `match` would be a second variant mapping that could disagree with
+// the forward one; derived from it, the two cannot.
+#[derive(PartialEq, Eq)]
 #[napi(string_enum)]
 pub enum JsInstalledYamlDataProvenance {
     /// Canonical per-user updated candidate.
@@ -70,6 +76,8 @@ pub enum JsInstalledYamlDataProvenance {
 }
 
 /// Stable category for an Installed YAML Data diagnostic.
+// See `JsInstalledYamlDataProvenance` for why `PartialEq` is derived.
+#[derive(PartialEq, Eq)]
 #[napi(string_enum)]
 pub enum JsInstalledYamlDataDiagnosticKind {
     /// The per-user update cache could not be resolved.
@@ -112,6 +120,8 @@ pub enum JsInstalledYamlDataLoadStatus {
 }
 
 /// How Local Ignore YAML Data entered an installed snapshot.
+// See `JsInstalledYamlDataProvenance` for why `PartialEq` is derived.
+#[derive(PartialEq, Eq)]
 #[napi(string_enum)]
 pub enum JsLocalIgnoreYamlDataState {
     /// A valid user-owned Local Ignore file already existed.
@@ -717,6 +727,61 @@ fn local_ignore_reset_conflict_to_js(
     }
 }
 
+/// Resolves the core Display Label for one already-projected JavaScript enum value.
+///
+/// Runs the *existing* forward projection over `VARIANTS` rather than matching
+/// on the JavaScript enum. A reverse `match` would be a second variant mapping
+/// that could disagree with the forward one; derived from it, the two cannot.
+/// Taking `project` as a parameter is what lets all three label exports share
+/// that guarantee instead of restating the scan.
+///
+/// The empty-string fallback is unreachable for every real variant, and a test
+/// pins that: napi rejects an unknown string at the boundary before it reaches
+/// here, so JavaScript cannot supply a value the projection does not cover.
+fn display_label<T, U>(value: U, project: fn(T) -> U) -> String
+where
+    T: Vocabulary,
+    U: PartialEq,
+{
+    T::VARIANTS
+        .iter()
+        .copied()
+        .find(|variant| project(*variant) == value)
+        .map(Vocabulary::label)
+        .unwrap_or_default()
+        .to_string()
+}
+
+/// Returns the human-facing Display Label for one candidate provenance.
+///
+/// Presentation only. Labels are reworded freely between releases, so branch on
+/// the enum and never on this string — the enum value is the stable form.
+#[napi]
+pub fn installed_yaml_data_provenance_label(provenance: JsInstalledYamlDataProvenance) -> String {
+    display_label(provenance, provenance_to_js)
+}
+
+/// Returns the human-facing Display Label for one diagnostic kind.
+///
+/// A frontend prints this label as a bare prefix before the diagnostic message,
+/// so four of the ten read as failures rather than statuses: `Parse` resolves to
+/// `parse failure`, not `parse`. Same stability caveat as
+/// [`installed_yaml_data_provenance_label`].
+#[napi]
+pub fn installed_yaml_data_diagnostic_kind_label(
+    kind: JsInstalledYamlDataDiagnosticKind,
+) -> String {
+    display_label(kind, diagnostic_kind_to_js)
+}
+
+/// Returns the human-facing Display Label for one Local Ignore snapshot state.
+///
+/// Same stability caveat as [`installed_yaml_data_provenance_label`].
+#[napi]
+pub fn local_ignore_yaml_data_state_label(state: JsLocalIgnoreYamlDataState) -> String {
+    display_label(state, local_ignore_state_to_js)
+}
+
 const fn role_to_js(role: CoreInstalledYamlDataRole) -> JsInstalledYamlDataRole {
     match role {
         CoreInstalledYamlDataRole::Main => JsInstalledYamlDataRole::Main,
@@ -1055,3 +1120,7 @@ const fn role_name(role: CoreInstalledYamlDataRole) -> &'static str {
 fn base_inspection_error(env: Env, code: &str, message: String) -> napi::Error {
     napi::Error::from(JsError::from(napi::Error::new(code, message)).into_unknown(env))
 }
+
+#[cfg(test)]
+#[path = "installed_yaml_data_tests.rs"]
+mod tests;

@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-08-05T01:45:50.477786+00:00`
-- Tier-1 contract rows: **898**
-- Tier-1 matched: **891**
+- Generated: `2026-08-05T10:19:47.741560+00:00`
+- Tier-1 contract rows: **901**
+- Tier-1 matched: **894**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -199,6 +199,9 @@
 | `config-create-yamldata-content` | `config` | `YamlDataCore` | `createYamlDataFromContent` | `matched` |
 | `config-clear-yaml-cache` | `config` | `clear_global_yaml_cache` | `clearYamlCache` | `matched` |
 | `config.game_local.persistGameLocalPaths` | `config` | `persist_game_local_paths` | `persistGameLocalPaths` | `matched` |
+| `config.installed_yaml_data.installedYamlDataProvenanceLabel` | `config` | `InstalledYamlDataProvenance` | `installedYamlDataProvenanceLabel` | `matched` |
+| `config.installed_yaml_data.installedYamlDataDiagnosticKindLabel` | `config` | `InstalledYamlDataDiagnosticKind` | `installedYamlDataDiagnosticKindLabel` | `matched` |
+| `config.installed_yaml_data.localIgnoreYamlDataStateLabel` | `config` | `LocalIgnoreYamlDataState` | `localIgnoreYamlDataStateLabel` | `matched` |
 | `config-yaml-source-enum` | `config` | `YamlSource` | `JsYamlSource` | `matched` |
 | `config-yaml-source-path` | `config` | `YamlSource` | `getYamlSourcePath` | `matched` |
 | `config-yaml-source-display-name` | `config` | `YamlSource` | `getYamlSourceDisplayName` | `matched` |

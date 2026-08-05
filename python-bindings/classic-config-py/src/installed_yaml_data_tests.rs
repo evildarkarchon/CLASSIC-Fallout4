@@ -73,3 +73,75 @@ fn replacement_durability_unknown_projects_string_paths_and_receipt() {
         );
     });
 }
+
+// --- Vocabulary projection ------------------------------------------------
+//
+// Expectations are derived from `classic-config-core`, never restated. A
+// hand-written array here would be a fourth copy of the vocabulary: it would
+// pass against a surface that had already drifted, because it would only be
+// comparing this file's copy against itself. Iterating `VARIANTS` also means a
+// new variant is covered without anyone remembering to extend these tests.
+
+#[test]
+/// Every Display Label this surface resolves is the core label for that token.
+fn every_config_vocabulary_token_resolves_to_the_core_display_label() {
+    for variant in CoreProvenance::VARIANTS.iter().copied() {
+        assert_eq!(
+            installed_yaml_data_provenance_label(variant.as_str())
+                .expect("a published token must resolve"),
+            variant.label(),
+        );
+    }
+    for variant in classic_config_core::InstalledYamlDataDiagnosticKind::VARIANTS
+        .iter()
+        .copied()
+    {
+        assert_eq!(
+            installed_yaml_data_diagnostic_kind_label(variant.as_str())
+                .expect("a published token must resolve"),
+            variant.label(),
+        );
+    }
+    for variant in classic_config_core::LocalIgnoreYamlDataState::VARIANTS
+        .iter()
+        .copied()
+    {
+        assert_eq!(
+            local_ignore_yaml_data_state_label(variant.as_str())
+                .expect("a published token must resolve"),
+            variant.label(),
+        );
+    }
+}
+
+#[test]
+/// An unrecognized token is rejected rather than resolved to a default label.
+fn an_unknown_token_raises_rather_than_returning_a_placeholder_label() {
+    Python::initialize();
+    Python::attach(|py| {
+        for error in [
+            installed_yaml_data_provenance_label("not_a_provenance").unwrap_err(),
+            installed_yaml_data_diagnostic_kind_label("not_a_kind").unwrap_err(),
+            local_ignore_yaml_data_state_label("not_a_state").unwrap_err(),
+        ] {
+            assert!(error.is_instance_of::<pyo3::exceptions::PyValueError>(py));
+        }
+    });
+}
+
+#[test]
+/// The durable publication stage token comes from the vocabulary that owns it.
+fn reset_publication_stage_tokens_delegate_to_the_shared_stage_vocabulary() {
+    // Not a restatement of the five strings: the assertion is that this surface
+    // and the durable-publication crate produce the same bytes, which is the
+    // property the deleted copy could violate.
+    for stage in [
+        CoreResetPublicationStage::Create,
+        CoreResetPublicationStage::Write,
+        CoreResetPublicationStage::Flush,
+        CoreResetPublicationStage::Sync,
+        CoreResetPublicationStage::Publish,
+    ] {
+        assert_eq!(reset_publication_stage_token(stage), stage.as_str());
+    }
+}

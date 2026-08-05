@@ -16,6 +16,7 @@ use classic_scanlog_core::{
 };
 use classic_shared::without_gil_block_on;
 use classic_shared_core::GameId;
+use classic_vocabulary::Vocabulary;
 use pyo3::create_exception;
 use pyo3::exceptions::{PyRuntimeError, PyTypeError, PyValueError};
 use pyo3::prelude::*;
@@ -1237,14 +1238,14 @@ const fn installed_yaml_data_role_to_string(value: InstalledYamlDataRole) -> &'s
 }
 
 /// Returns the stable Python token for one selected candidate provenance.
-const fn installed_yaml_data_provenance_to_string(
-    value: InstalledYamlDataProvenance,
-) -> &'static str {
-    match value {
-        InstalledYamlDataProvenance::Updated => "updated",
-        InstalledYamlDataProvenance::Previous => "previous",
-        InstalledYamlDataProvenance::Bundled => "bundled",
-    }
+///
+/// This is the *configuration* enum, not a scan-run twin of it, so the run
+/// surface projects the token `classic-config-core` owns instead of restating
+/// it. Before this delegation the same three strings were written out here and
+/// in `classic-config-py`, which meant one Python surface could drift from the
+/// other while both stayed internally exhaustive.
+fn installed_yaml_data_provenance_to_string(value: InstalledYamlDataProvenance) -> &'static str {
+    value.as_str()
 }
 
 /// Returns the stable Python token for every valid-or-generated diagnostic kind.

@@ -1907,6 +1907,39 @@
       "nodeArity": 3
     },
     {
+      "id": "config.installed_yaml_data.installedYamlDataProvenanceLabel",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "InstalledYamlDataProvenance",
+      "rustKind": "enum",
+      "nodeExport": "installedYamlDataProvenanceLabel",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "config.installed_yaml_data.installedYamlDataDiagnosticKindLabel",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "InstalledYamlDataDiagnosticKind",
+      "rustKind": "enum",
+      "nodeExport": "installedYamlDataDiagnosticKindLabel",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "config.installed_yaml_data.localIgnoreYamlDataStateLabel",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "LocalIgnoreYamlDataState",
+      "rustKind": "enum",
+      "nodeExport": "localIgnoreYamlDataStateLabel",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
       "id": "config-yaml-source-enum",
       "tier": "tier1",
       "ownerModule": "config",

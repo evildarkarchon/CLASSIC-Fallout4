@@ -30,6 +30,12 @@ classic-file-io-core = { path = "../classic-file-io-core" }
 # the reset lock stay here; only the durability sequence lives there.
 classic-durable-publication = { path = "../classic-durable-publication" }
 
+# Workspace-internal Vocabulary naming contract: this crate owns the frozen
+# Vocabulary Tokens and the Display Labels for its own Installed YAML Data and
+# Local Ignore enums, so that the three bindings project them instead of each
+# keeping a table.
+classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
+
 # Async runtime (for JoinSet and file I/O)
 tokio = { workspace = true, features = ["full"] }
 

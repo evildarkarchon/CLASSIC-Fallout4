@@ -95,6 +95,44 @@ Config-owned selection and immutable loading of Installed YAML Data.
 - `load_installed_yaml_data()` - production installed snapshot entry point
 - `load_installed_yaml_data_with_env()` - deterministic Rust test/tooling seam for cache-environment injection
 
+### Vocabulary Tokens and Display Labels
+
+`InstalledYamlDataProvenance`, `InstalledYamlDataDiagnosticKind`, and `LocalIgnoreYamlDataState` implement the [Vocabulary naming contract](classic-vocabulary.md), so this crate owns both names for every variant: the frozen Vocabulary Token from `as_str()` and the reworkable Display Label from `label()`.
+
+| Enum | Vocabulary Tokens |
+| --- | --- |
+| `InstalledYamlDataProvenance` | `updated`, `previous`, `bundled` |
+| `InstalledYamlDataDiagnosticKind` | `cache_unavailable`, `missing`, `read`, `invalid_utf8`, `parse`, `invalid_schema`, `incompatible_schema`, `invalid_role_data`, `local_ignore_generated`, `local_ignore_reset` |
+| `LocalIgnoreYamlDataState` | `existing`, `generated`, `proceed_without_ignore`, `reset_to_default` |
+
+`invalid_utf8` is the published spelling, not the `invalid_utf_8` a mechanical snake_case of the variant name would produce. The core adopted the strings the bindings already shipped rather than deriving them, because these tokens are parsed by consumers.
+
+These are the first adopters whose Display Labels cross a binding seam. All three surfaces expose a label projection alongside the variant they already published:
+
+| Surface | Projection |
+| --- | --- |
+| CXX | `installed_yaml_data_provenance_label`, `installed_yaml_data_diagnostic_kind_label`, `local_ignore_yaml_data_state_label` — take the frozen FFI mirror enum, return `String` |
+| Node | the same three names in camelCase, taking the `string_enum` value |
+| Python | the same three names, taking the published snake_case token and raising `ValueError` for anything else |
+
+The label is separate from the variant rather than folded into a DTO string because a Qt frontend is not line-oriented: it renders the two in independently styled table columns.
+
+Five variants settle a wording divergence. The CLI and GUI printed a terse form and the TUI printed a descriptive one; the descriptive form is canonical, because a frontend renders the label as a bare prefix before a message and `parse: <message>` does not tell a user it describes a failure while `parse failure: <message>` does.
+
+| Variant | Display Label |
+| --- | --- |
+| `LocalIgnoreYamlDataState::Generated` | `generated from selected Main defaults` |
+| `InstalledYamlDataDiagnosticKind::Parse` | `parse failure` |
+| `InstalledYamlDataDiagnosticKind::Read` | `read failure` |
+| `InstalledYamlDataDiagnosticKind::Missing` | `missing candidate` |
+| `InstalledYamlDataDiagnosticKind::CacheUnavailable` | `update cache unavailable` |
+
+`LocalIgnoreGenerated` and `LocalIgnoreReset` additionally carry glossary capitalization — `Local Ignore generated` and `Local Ignore reset`. No mechanical transform of a token could produce that capitalization, which is the reason the two forms are written out separately rather than one derived from the other.
+
+`LocalIgnoreYamlDataState::ProceedWithoutIgnore` diverges too (`proceed without Ignore` on the C++ frontends, `proceeded without ignore entries` on the TUI) but is absent from the table above. The standing rule settles it — the descriptive form wins — and the TUI string is adopted verbatim rather than improved in passing, because the same wording is what the Crash Log Scan Run twin will later delegate to.
+
+Changing a token is breaking for every binding consumer; rewording a label is not. Frontends do not consume these labels yet — that lands per frontend later — and the labels never appear in the persisted Autoscan Report, only in frontend output.
+
 ### Re-exports from `lib.rs`
 
 - `get_runtime` from [`classic-shared-core`](../../foundation/classic-shared-core)

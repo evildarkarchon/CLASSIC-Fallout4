@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-04T23:38:52.833024+00:00",
+  "generated_at_utc": "2026-08-05T10:19:47.738794+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -3163,6 +3163,24 @@
       "arity": 1
     },
     {
+      "export": "installedYamlDataDiagnosticKindLabel",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function installedYamlDataDiagnosticKindLabel(kind: JsInstalledYamlDataDiagnosticKind): string",
+      "arity": 1
+    },
+    {
+      "export": "installedYamlDataProvenanceLabel",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function installedYamlDataProvenanceLabel(provenance: JsInstalledYamlDataProvenance): string",
+      "arity": 1
+    },
+    {
       "export": "internString",
       "kind": "function",
       "owner_module": "aux",
@@ -3359,6 +3377,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function loadSettingsSync(key: string, path: string): any",
       "arity": 2
+    },
+    {
+      "export": "localIgnoreYamlDataStateLabel",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function localIgnoreYamlDataStateLabel(state: JsLocalIgnoreYamlDataState): string",
+      "arity": 1
     },
     {
       "export": "matchVersion",

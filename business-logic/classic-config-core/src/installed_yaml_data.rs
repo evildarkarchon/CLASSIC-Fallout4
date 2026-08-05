@@ -13,6 +13,7 @@ use classic_settings_core::{
     schema_compat_check,
 };
 use classic_shared_core::GameId;
+use classic_vocabulary::Vocabulary;
 use fs4::fs_std::FileExt;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
@@ -54,6 +55,35 @@ pub enum InstalledYamlDataProvenance {
     Bundled,
 }
 
+impl Vocabulary for InstalledYamlDataProvenance {
+    const VARIANTS: &'static [Self] = &[Self::Updated, Self::Previous, Self::Bundled];
+
+    /// These tokens are frozen. They are the exact strings the Python surface
+    /// already published from two separate hand-written tables — one in the
+    /// config binding and one in the scan-run binding — so respelling one here
+    /// breaks every consumer of both at once.
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Updated => "updated",
+            Self::Previous => "previous",
+            Self::Bundled => "bundled",
+        }
+    }
+
+    /// The one enum in this file whose wording never diverged: the CLI, the GUI,
+    /// and the TUI all already render exactly these three words, so adopting
+    /// them changes no shipped output. Each label equals its own token, which
+    /// the contract permits — the forms are governed separately, not required
+    /// to differ, and inventing prose here would make the labels worse.
+    fn label(self) -> &'static str {
+        match self {
+            Self::Updated => "updated",
+            Self::Previous => "previous",
+            Self::Bundled => "bundled",
+        }
+    }
+}
+
 /// Stable category for an inspection diagnostic.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum InstalledYamlDataDiagnosticKind {
@@ -77,6 +107,66 @@ pub enum InstalledYamlDataDiagnosticKind {
     LocalIgnoreGenerated,
     /// Malformed Local Ignore YAML Data was reset from retained selected-Main defaults.
     LocalIgnoreReset,
+}
+
+impl Vocabulary for InstalledYamlDataDiagnosticKind {
+    const VARIANTS: &'static [Self] = &[
+        Self::CacheUnavailable,
+        Self::Missing,
+        Self::Read,
+        Self::InvalidUtf8,
+        Self::Parse,
+        Self::InvalidSchema,
+        Self::IncompatibleSchema,
+        Self::InvalidRoleData,
+        Self::LocalIgnoreGenerated,
+        Self::LocalIgnoreReset,
+    ];
+
+    /// These tokens are frozen. `invalid_utf8` in particular is the published
+    /// spelling rather than the `invalid_utf_8` a mechanical snake_case of the
+    /// variant name would produce, which is exactly why the core adopts the
+    /// strings the bindings already shipped instead of deriving them.
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::CacheUnavailable => "cache_unavailable",
+            Self::Missing => "missing",
+            Self::Read => "read",
+            Self::InvalidUtf8 => "invalid_utf8",
+            Self::Parse => "parse",
+            Self::InvalidSchema => "invalid_schema",
+            Self::IncompatibleSchema => "incompatible_schema",
+            Self::InvalidRoleData => "invalid_role_data",
+            Self::LocalIgnoreGenerated => "local_ignore_generated",
+            Self::LocalIgnoreReset => "local_ignore_reset",
+        }
+    }
+
+    /// Four of these settle a divergence: the CLI and GUI rendered `cache
+    /// unavailable`, `missing`, `read`, and `parse`, while the TUI rendered the
+    /// descriptive forms below. The descriptive form is canonical because a
+    /// frontend prints this label as a bare prefix before the diagnostic
+    /// message, and `parse: <message>` does not tell a user that it describes a
+    /// failure while `parse failure: <message>` does.
+    ///
+    /// The last two additionally apply glossary capitalization: `Local Ignore`
+    /// is a domain term, and no mechanical transform of `local_ignore_reset`
+    /// could know that — which is the reason labels are written out rather than
+    /// derived from tokens.
+    fn label(self) -> &'static str {
+        match self {
+            Self::CacheUnavailable => "update cache unavailable",
+            Self::Missing => "missing candidate",
+            Self::Read => "read failure",
+            Self::InvalidUtf8 => "invalid UTF-8",
+            Self::Parse => "parse failure",
+            Self::InvalidSchema => "invalid schema",
+            Self::IncompatibleSchema => "incompatible schema",
+            Self::InvalidRoleData => "invalid role data",
+            Self::LocalIgnoreGenerated => "Local Ignore generated",
+            Self::LocalIgnoreReset => "Local Ignore reset",
+        }
+    }
 }
 
 /// Structured attribution for Installed YAML Data selection or local generation events.
@@ -187,6 +277,48 @@ pub enum LocalIgnoreYamlDataState {
     ProceedWithoutIgnore,
     /// Malformed Local Ignore bytes were backed up and reset from retained defaults.
     ResetToDefault,
+}
+
+impl Vocabulary for LocalIgnoreYamlDataState {
+    const VARIANTS: &'static [Self] = &[
+        Self::Existing,
+        Self::Generated,
+        Self::ProceedWithoutIgnore,
+        Self::ResetToDefault,
+    ];
+
+    /// These tokens are frozen. They are the exact strings the Python surface
+    /// already published from the inlined `local_ignore_state` getter.
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Existing => "existing",
+            Self::Generated => "generated",
+            Self::ProceedWithoutIgnore => "proceed_without_ignore",
+            Self::ResetToDefault => "reset_to_default",
+        }
+    }
+
+    /// `Generated` settles a divergence: the CLI and GUI rendered the bare
+    /// `generated`, which says nothing about where the content came from, while
+    /// the TUI rendered the descriptive form below. The descriptive form is
+    /// canonical, and `Main` keeps its glossary capitalization as a domain term.
+    ///
+    /// `ProceedWithoutIgnore` also diverged (`proceed without Ignore` on the
+    /// C++ frontends, `proceeded without ignore entries` on the TUI). Issue #163
+    /// did not name it in its wording table, so the standing rule applies and
+    /// the descriptive TUI form is adopted *verbatim*. Capitalizing `Ignore`
+    /// into the domain term here would be a rewording rather than the glossary
+    /// capitalization the contract allows, and this variant's wording is also
+    /// the source the Crash Log Scan Run twin will delegate to — deciding it
+    /// beyond what #163 settled would pre-empt that ticket.
+    fn label(self) -> &'static str {
+        match self {
+            Self::Existing => "existing",
+            Self::Generated => "generated from selected Main defaults",
+            Self::ProceedWithoutIgnore => "proceeded without ignore entries",
+            Self::ResetToDefault => "reset to default",
+        }
+    }
 }
 
 /// Selected update-eligible YAML Data facts from one inspection.

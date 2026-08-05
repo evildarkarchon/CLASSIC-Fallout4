@@ -2536,6 +2536,24 @@ export declare function importLegacyTuiStateIntoUserSettings(classicRoot: string
 export declare function inspectInstalledYamlData(request: JsInstalledYamlDataInspectionRequest): Promise<JsInstalledYamlDataInspection>
 
 /**
+ * Returns the human-facing Display Label for one diagnostic kind.
+ *
+ * A frontend prints this label as a bare prefix before the diagnostic message,
+ * so four of the ten read as failures rather than statuses: `Parse` resolves to
+ * `parse failure`, not `parse`. Same stability caveat as
+ * [`installed_yaml_data_provenance_label`].
+ */
+export declare function installedYamlDataDiagnosticKindLabel(kind: JsInstalledYamlDataDiagnosticKind): string
+
+/**
+ * Returns the human-facing Display Label for one candidate provenance.
+ *
+ * Presentation only. Labels are reworded freely between releases, so branch on
+ * the enum and never on this string — the enum value is the stable form.
+ */
+export declare function installedYamlDataProvenanceLabel(provenance: JsInstalledYamlDataProvenance): string
+
+/**
  * Intern a string for memory-efficient deduplication.
  *
  * Returns the interned string (content-identical, but stored in a shared pool).
@@ -5463,6 +5481,13 @@ export declare function loadSettingsAsync(key: string, path: string): Promise<an
  * (most files contain a single document).
  */
 export declare function loadSettingsSync(key: string, path: string): any
+
+/**
+ * Returns the human-facing Display Label for one Local Ignore snapshot state.
+ *
+ * Same stability caveat as [`installed_yaml_data_provenance_label`].
+ */
+export declare function localIgnoreYamlDataStateLabel(state: JsLocalIgnoreYamlDataState): string
 
 /**
  * Match a detected version to the nearest known version in the registry.

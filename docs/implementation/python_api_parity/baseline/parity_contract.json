@@ -2308,6 +2308,39 @@
       "pythonArity": 3
     },
     {
+      "id": "config.installed_yaml_data.installed_yaml_data_provenance_label",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "InstalledYamlDataProvenance",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "installed_yaml_data_provenance_label",
+      "pythonKind": "function",
+      "pythonArity": 1
+    },
+    {
+      "id": "config.installed_yaml_data.installed_yaml_data_diagnostic_kind_label",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "InstalledYamlDataDiagnosticKind",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "installed_yaml_data_diagnostic_kind_label",
+      "pythonKind": "function",
+      "pythonArity": 1
+    },
+    {
+      "id": "config.installed_yaml_data.local_ignore_yaml_data_state_label",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "LocalIgnoreYamlDataState",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "local_ignore_yaml_data_state_label",
+      "pythonKind": "function",
+      "pythonArity": 1
+    },
+    {
       "id": "config.yamldata.format_registry_game_version@rust",
       "tier": "tier1",
       "ownerModule": "config",

@@ -1388,3 +1388,50 @@ fn test_settings_cache_stats_helpers_forward_core_surface() {
     assert_eq!(settings_cache_size(), 1);
     assert_eq!(populated.size, 1);
 }
+
+// --- Vocabulary projection ------------------------------------------------
+//
+// Expectations are derived from `classic-config-core`, never restated. A
+// hand-written array here would be another copy of the vocabulary: it would
+// pass against a bridge that had already drifted, because it would only be
+// comparing this file's copy against itself. Iterating `VARIANTS` also means a
+// new variant is covered without anyone remembering to extend these tests.
+
+#[test]
+/// Every projected CXX variant resolves back to the core Display Label.
+fn every_config_enum_projects_its_core_display_label() {
+    for variant in CoreInstalledYamlDataProvenance::VARIANTS.iter().copied() {
+        assert_eq!(
+            installed_yaml_data_provenance_label(installed_yaml_data_provenance_to_ffi(variant)),
+            variant.label(),
+        );
+    }
+    for variant in CoreInstalledYamlDataDiagnosticKind::VARIANTS
+        .iter()
+        .copied()
+    {
+        assert_eq!(
+            installed_yaml_data_diagnostic_kind_label(installed_yaml_data_diagnostic_kind_to_ffi(
+                variant
+            )),
+            variant.label(),
+        );
+    }
+    for variant in CoreLocalIgnoreYamlDataState::VARIANTS.iter().copied() {
+        assert_eq!(
+            local_ignore_yaml_data_state_label(local_ignore_yaml_data_state_to_ffi(variant)),
+            variant.label(),
+        );
+    }
+}
+
+#[test]
+/// A fabricated CXX enum value yields nothing rather than an invented label.
+fn an_out_of_range_cxx_enum_value_yields_an_empty_display_label() {
+    // CXX shared enums are open at the FFI boundary: C++ can hand back any
+    // `u8`. The bridge never produces one of these, but returning some other
+    // variant's label - or a hand-written "unknown" string - would put
+    // vocabulary back in the adapter, which is what this work removes.
+    let fabricated = ffi::InstalledYamlDataDiagnosticKind { repr: u8::MAX };
+    assert_eq!(installed_yaml_data_diagnostic_kind_label(fabricated), "");
+}

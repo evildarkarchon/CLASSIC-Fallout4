@@ -32,8 +32,11 @@ import {
   JsLocalIgnoreResetStatus,
   JsLocalIgnoreYamlDataState,
   inspectInstalledYamlData,
+  installedYamlDataDiagnosticKindLabel,
+  installedYamlDataProvenanceLabel,
   loadExplicitYamlData,
   loadInstalledYamlData,
+  localIgnoreYamlDataStateLabel,
 } from "../index.js";
 import { getRuntimeCoverageEntries } from "./fixtures/runtime_coverage_registry";
 
@@ -1617,5 +1620,60 @@ describe("config: game setup path detection helpers (Plan 3 promotion)", () => {
     const result = gameSetupNeedsPathDetection();
     expect(typeof result.needsGamePath).toBe("boolean");
     expect(typeof result.needsDocsPath).toBe("boolean");
+  });
+});
+
+describe("config: Installed YAML Data Display Labels", () => {
+  // These pin the strings a JavaScript consumer actually receives. The Rust
+  // sibling module proves each label equals the core's, so what is left to
+  // check here is that the projection survives the N-API boundary and that the
+  // five settled wordings reach JavaScript intact.
+  test("the settled wordings reach JavaScript in their descriptive form", () => {
+    expect(
+      installedYamlDataDiagnosticKindLabel(
+        JsInstalledYamlDataDiagnosticKind.Parse,
+      ),
+    ).toBe("parse failure");
+    expect(
+      installedYamlDataDiagnosticKindLabel(
+        JsInstalledYamlDataDiagnosticKind.Read,
+      ),
+    ).toBe("read failure");
+    expect(
+      installedYamlDataDiagnosticKindLabel(
+        JsInstalledYamlDataDiagnosticKind.Missing,
+      ),
+    ).toBe("missing candidate");
+    expect(
+      installedYamlDataDiagnosticKindLabel(
+        JsInstalledYamlDataDiagnosticKind.CacheUnavailable,
+      ),
+    ).toBe("update cache unavailable");
+    expect(
+      localIgnoreYamlDataStateLabel(JsLocalIgnoreYamlDataState.Generated),
+    ).toBe("generated from selected Main defaults");
+  });
+
+  test("Local Ignore keeps its glossary capitalization", () => {
+    expect(
+      installedYamlDataDiagnosticKindLabel(
+        JsInstalledYamlDataDiagnosticKind.LocalIgnoreReset,
+      ),
+    ).toBe("Local Ignore reset");
+  });
+
+  test("every enum member resolves to a non-empty label", () => {
+    // Iterated rather than listed: a variant added later is covered without
+    // anyone remembering to extend this test, and an empty label is exactly the
+    // "renders as nothing" failure the naming contract exists to prevent.
+    for (const provenance of Object.values(JsInstalledYamlDataProvenance)) {
+      expect(installedYamlDataProvenanceLabel(provenance)).not.toBe("");
+    }
+    for (const kind of Object.values(JsInstalledYamlDataDiagnosticKind)) {
+      expect(installedYamlDataDiagnosticKindLabel(kind)).not.toBe("");
+    }
+    for (const state of Object.values(JsLocalIgnoreYamlDataState)) {
+      expect(localIgnoreYamlDataStateLabel(state)).not.toBe("");
+    }
   });
 });

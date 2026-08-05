@@ -7,7 +7,6 @@ use super::explicit_yaml_data::{
 use classic_config_core::{
     InspectedYamlDataFile as CoreInspectedYamlDataFile,
     InstalledYamlDataDiagnostic as CoreInstalledYamlDataDiagnostic,
-    InstalledYamlDataDiagnosticKind as CoreInstalledYamlDataDiagnosticKind,
     InstalledYamlDataInspectionError as CoreInstalledYamlDataInspectionError,
     InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError as CoreLoadError,
     InstalledYamlDataLoadOutcome as CoreLoadOutcome, InstalledYamlDataLoadRequest,
@@ -15,14 +14,14 @@ use classic_config_core::{
     InstalledYamlDataSnapshot as CoreSnapshot, LocalIgnoreRecoveryPlan as CoreRecoveryPlan,
     LocalIgnoreResetError as CoreResetError, LocalIgnoreResetOutcome as CoreResetOutcome,
     LocalIgnoreResetPublicationStage as CoreResetPublicationStage,
-    LocalIgnoreYamlDataState as CoreLocalIgnoreState,
     YamlDataContentIdentity as CoreYamlDataContentIdentity,
     inspect_installed_yaml_data as core_inspect_installed_yaml_data,
     load_installed_yaml_data as core_load_installed_yaml_data,
 };
 use classic_shared::without_gil;
+use classic_vocabulary::{Vocabulary, from_token};
 use pyo3::create_exception;
-use pyo3::exceptions::{PyException, PyRuntimeError};
+use pyo3::exceptions::{PyException, PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use std::path::PathBuf;
 
@@ -602,12 +601,7 @@ impl PyInstalledYamlDataSnapshot {
     /// Return how Local Ignore YAML Data entered this Ready snapshot.
     #[getter]
     fn local_ignore_state(&self) -> &'static str {
-        match self.inner.local_ignore_state() {
-            CoreLocalIgnoreState::Existing => "existing",
-            CoreLocalIgnoreState::Generated => "generated",
-            CoreLocalIgnoreState::ProceedWithoutIgnore => "proceed_without_ignore",
-            CoreLocalIgnoreState::ResetToDefault => "reset_to_default",
-        }
+        self.inner.local_ignore_state().as_str()
     }
 
     /// Return the identity of the exact retained Local Ignore bytes.
@@ -711,7 +705,7 @@ fn inspected_file_to_py(file: &CoreInspectedYamlDataFile) -> PyInspectedYamlData
     let schema = file.schema_version();
     PyInspectedYamlDataFile {
         role: role_token(file.role()).to_string(),
-        provenance: provenance_token(file.provenance()).to_string(),
+        provenance: file.provenance().as_str().to_string(),
         schema_major: schema.major,
         schema_minor: schema.minor,
         sha256: file.identity().sha256_hex(),
@@ -725,10 +719,10 @@ fn diagnostic_to_py(diagnostic: &CoreInstalledYamlDataDiagnostic) -> PyInstalled
         role: diagnostic.role().map(role_token).map(str::to_string),
         candidate: diagnostic
             .candidate()
-            .map(provenance_token)
+            .map(CoreProvenance::as_str)
             .map(str::to_string),
         path: diagnostic.path().map(PathBuf::from),
-        kind: diagnostic_kind_token(diagnostic.kind()).to_string(),
+        kind: diagnostic.kind().as_str().to_string(),
         message: diagnostic.message().to_string(),
     }
 }
@@ -940,40 +934,71 @@ const fn role_token(role: CoreRole) -> &'static str {
     }
 }
 
-/// Returns the stable Python candidate-provenance token.
-const fn provenance_token(provenance: CoreProvenance) -> &'static str {
-    match provenance {
-        CoreProvenance::Updated => "updated",
-        CoreProvenance::Previous => "previous",
-        CoreProvenance::Bundled => "bundled",
-    }
-}
-
 /// Returns the stable Python token for one durable reset publication boundary.
+///
+/// Delegates rather than restating: `CoreResetPublicationStage` is an alias of
+/// the workspace's single durable-publication stage vocabulary, which already
+/// owns these five strings. The copy this replaced was byte-identical to that
+/// owner and could only ever have differed by drifting away from it.
 const fn reset_publication_stage_token(stage: CoreResetPublicationStage) -> &'static str {
-    match stage {
-        CoreResetPublicationStage::Create => "create",
-        CoreResetPublicationStage::Write => "write",
-        CoreResetPublicationStage::Flush => "flush",
-        CoreResetPublicationStage::Sync => "sync",
-        CoreResetPublicationStage::Publish => "publish",
-    }
+    stage.as_str()
 }
 
-/// Returns the stable Python diagnostic-kind token.
-const fn diagnostic_kind_token(kind: CoreInstalledYamlDataDiagnosticKind) -> &'static str {
-    match kind {
-        CoreInstalledYamlDataDiagnosticKind::CacheUnavailable => "cache_unavailable",
-        CoreInstalledYamlDataDiagnosticKind::Missing => "missing",
-        CoreInstalledYamlDataDiagnosticKind::Read => "read",
-        CoreInstalledYamlDataDiagnosticKind::InvalidUtf8 => "invalid_utf8",
-        CoreInstalledYamlDataDiagnosticKind::Parse => "parse",
-        CoreInstalledYamlDataDiagnosticKind::InvalidSchema => "invalid_schema",
-        CoreInstalledYamlDataDiagnosticKind::IncompatibleSchema => "incompatible_schema",
-        CoreInstalledYamlDataDiagnosticKind::InvalidRoleData => "invalid_role_data",
-        CoreInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated => "local_ignore_generated",
-        CoreInstalledYamlDataDiagnosticKind::LocalIgnoreReset => "local_ignore_reset",
-    }
+/// Returns the human-facing Display Label for one candidate-provenance token.
+///
+/// The token is what this surface publishes on `InspectedYamlDataFile.provenance`
+/// and `InstalledYamlDataDiagnostic.candidate`; this resolves it to the prose a
+/// frontend renders. Labels are presentation only and may be reworded between
+/// releases, so callers must not parse or compare them — compare the token.
+///
+/// # Errors
+///
+/// Raises `ValueError` when `token` is not a published provenance token.
+#[pyfunction]
+fn installed_yaml_data_provenance_label(token: &str) -> PyResult<&'static str> {
+    from_token::<classic_config_core::InstalledYamlDataProvenance>(token)
+        .map(Vocabulary::label)
+        .ok_or_else(|| {
+            PyValueError::new_err(format!(
+                "unknown Installed YAML Data provenance token `{token}`"
+            ))
+        })
+}
+
+/// Returns the human-facing Display Label for one diagnostic-kind token.
+///
+/// Frontends print this label as a bare prefix before the diagnostic message, so
+/// four of the ten read as failures rather than statuses: `parse` resolves to
+/// `parse failure`, not `parse`.
+///
+/// # Errors
+///
+/// Raises `ValueError` when `token` is not a published diagnostic-kind token.
+#[pyfunction]
+fn installed_yaml_data_diagnostic_kind_label(token: &str) -> PyResult<&'static str> {
+    from_token::<classic_config_core::InstalledYamlDataDiagnosticKind>(token)
+        .map(Vocabulary::label)
+        .ok_or_else(|| {
+            PyValueError::new_err(format!(
+                "unknown Installed YAML Data diagnostic kind token `{token}`"
+            ))
+        })
+}
+
+/// Returns the human-facing Display Label for one Local Ignore state token.
+///
+/// # Errors
+///
+/// Raises `ValueError` when `token` is not a published Local Ignore state token.
+#[pyfunction]
+fn local_ignore_yaml_data_state_label(token: &str) -> PyResult<&'static str> {
+    from_token::<classic_config_core::LocalIgnoreYamlDataState>(token)
+        .map(Vocabulary::label)
+        .ok_or_else(|| {
+            PyValueError::new_err(format!(
+                "unknown Local Ignore YAML Data state token `{token}`"
+            ))
+        })
 }
 
 /// Registers Installed YAML Data DTOs, inspection operation, and exception hierarchy.
@@ -989,6 +1014,18 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyLocalIgnoreResetConflictOutcome>()?;
     module.add_function(wrap_pyfunction!(inspect_installed_yaml_data, module)?)?;
     module.add_function(wrap_pyfunction!(load_installed_yaml_data, module)?)?;
+    module.add_function(wrap_pyfunction!(
+        installed_yaml_data_provenance_label,
+        module
+    )?)?;
+    module.add_function(wrap_pyfunction!(
+        installed_yaml_data_diagnostic_kind_label,
+        module
+    )?)?;
+    module.add_function(wrap_pyfunction!(
+        local_ignore_yaml_data_state_label,
+        module
+    )?)?;
     let py = module.py();
     module.add(
         "InstalledYamlDataInspectionError",

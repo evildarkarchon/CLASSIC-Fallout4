@@ -11,6 +11,7 @@ use crate::{
     load_installed_yaml_data_with_env,
 };
 use classic_shared_core::GameId;
+use classic_vocabulary::{Vocabulary, assert_vocabulary_conformance, from_token};
 use sha2::{Digest, Sha256};
 use std::io;
 use std::path::{Path, PathBuf};
@@ -2103,4 +2104,207 @@ fn identity_is_derived_from_selected_bytes_and_local_ignore_is_untouched() {
         std::fs::read(&local_ignore).expect("Local Ignore should remain readable"),
         malformed_ignore
     );
+}
+
+// --- Vocabulary naming contract -------------------------------------------
+//
+// These sit in the owning crate because they assert what only the owner can:
+// that the names this crate now owns satisfy the contract, and that the frozen
+// tokens are the exact bytes the bindings already published. Every per-binding
+// assertion about these strings derives its expectation from here.
+
+#[test]
+fn installed_yaml_data_provenance_satisfies_the_vocabulary_contract() {
+    assert_vocabulary_conformance::<InstalledYamlDataProvenance>();
+}
+
+#[test]
+fn installed_yaml_data_diagnostic_kind_satisfies_the_vocabulary_contract() {
+    assert_vocabulary_conformance::<InstalledYamlDataDiagnosticKind>();
+}
+
+#[test]
+fn local_ignore_yaml_data_state_satisfies_the_vocabulary_contract() {
+    assert_vocabulary_conformance::<LocalIgnoreYamlDataState>();
+}
+
+#[test]
+fn every_installed_yaml_data_provenance_variant_is_listed_for_iteration() {
+    // Nothing can ask a Rust enum how many variants it has, so this count is the
+    // only guard against a variant that compiles - because `as_str` and `label`
+    // are exhaustive matches - yet never appears in an exhaustive iteration. A
+    // contributor adding a variant lands here and is told to add it to
+    // `VARIANTS` too.
+    assert_eq!(InstalledYamlDataProvenance::VARIANTS.len(), 3);
+}
+
+#[test]
+fn every_installed_yaml_data_diagnostic_kind_variant_is_listed_for_iteration() {
+    assert_eq!(InstalledYamlDataDiagnosticKind::VARIANTS.len(), 10);
+}
+
+#[test]
+fn every_local_ignore_yaml_data_state_variant_is_listed_for_iteration() {
+    assert_eq!(LocalIgnoreYamlDataState::VARIANTS.len(), 4);
+}
+
+#[test]
+fn installed_yaml_data_provenance_tokens_are_the_frozen_published_spelling() {
+    // One of the few places in the workspace where these literals are
+    // legitimate: this is the definition of the frozen identifiers, not a
+    // restatement of them. A change to any arm below is a breaking change to
+    // every binding consumer and must fail loudly right now.
+    assert_eq!(InstalledYamlDataProvenance::Updated.as_str(), "updated");
+    assert_eq!(InstalledYamlDataProvenance::Previous.as_str(), "previous");
+    assert_eq!(InstalledYamlDataProvenance::Bundled.as_str(), "bundled");
+}
+
+#[test]
+fn installed_yaml_data_diagnostic_kind_tokens_are_the_frozen_published_spelling() {
+    use InstalledYamlDataDiagnosticKind as Kind;
+    assert_eq!(Kind::CacheUnavailable.as_str(), "cache_unavailable");
+    assert_eq!(Kind::Missing.as_str(), "missing");
+    assert_eq!(Kind::Read.as_str(), "read");
+    // Not `invalid_utf_8`: the published spelling wins over what a mechanical
+    // snake_case of the variant name would produce.
+    assert_eq!(Kind::InvalidUtf8.as_str(), "invalid_utf8");
+    assert_eq!(Kind::Parse.as_str(), "parse");
+    assert_eq!(Kind::InvalidSchema.as_str(), "invalid_schema");
+    assert_eq!(Kind::IncompatibleSchema.as_str(), "incompatible_schema");
+    assert_eq!(Kind::InvalidRoleData.as_str(), "invalid_role_data");
+    assert_eq!(
+        Kind::LocalIgnoreGenerated.as_str(),
+        "local_ignore_generated"
+    );
+    assert_eq!(Kind::LocalIgnoreReset.as_str(), "local_ignore_reset");
+}
+
+#[test]
+fn local_ignore_yaml_data_state_tokens_are_the_frozen_published_spelling() {
+    use LocalIgnoreYamlDataState as State;
+    assert_eq!(State::Existing.as_str(), "existing");
+    assert_eq!(State::Generated.as_str(), "generated");
+    assert_eq!(
+        State::ProceedWithoutIgnore.as_str(),
+        "proceed_without_ignore"
+    );
+    assert_eq!(State::ResetToDefault.as_str(), "reset_to_default");
+}
+
+#[test]
+fn the_five_conflicting_variants_carry_the_descriptive_display_label() {
+    // The wording decision this crate is the arbiter of. The CLI and GUI printed
+    // the terse form and the TUI printed the descriptive one; the descriptive
+    // form is canonical because a frontend renders this label as a bare prefix
+    // before a message, where the terse form reads as a status rather than a
+    // fault. Pinned exactly, unlike the other labels, because these five are the
+    // settled decision rather than free prose.
+    assert_eq!(
+        LocalIgnoreYamlDataState::Generated.label(),
+        "generated from selected Main defaults"
+    );
+    assert_eq!(
+        InstalledYamlDataDiagnosticKind::Parse.label(),
+        "parse failure"
+    );
+    assert_eq!(
+        InstalledYamlDataDiagnosticKind::Read.label(),
+        "read failure"
+    );
+    assert_eq!(
+        InstalledYamlDataDiagnosticKind::Missing.label(),
+        "missing candidate"
+    );
+    assert_eq!(
+        InstalledYamlDataDiagnosticKind::CacheUnavailable.label(),
+        "update cache unavailable"
+    );
+}
+
+#[test]
+fn local_ignore_display_labels_use_glossary_capitalization() {
+    // The reason a Display Label cannot be derived from its Vocabulary Token:
+    // `Local Ignore` is a domain term, and no mechanical transform of
+    // `local_ignore_reset` could know to capitalize it. Both variants below are
+    // *named* for that term, which is what makes capitalizing it the glossary
+    // spelling rather than a reword.
+    assert_eq!(
+        InstalledYamlDataDiagnosticKind::LocalIgnoreGenerated.label(),
+        "Local Ignore generated"
+    );
+    assert_eq!(
+        InstalledYamlDataDiagnosticKind::LocalIgnoreReset.label(),
+        "Local Ignore reset"
+    );
+}
+
+#[test]
+fn the_sixth_diverging_variant_takes_the_descriptive_form_verbatim() {
+    // Issue #163's table settles five variants; this one also diverges between
+    // the terse C++ frontends and the descriptive TUI but was not named there.
+    // The standing rule decides it, and the TUI string is adopted exactly as it
+    // reads today rather than being improved in passing — this same wording is
+    // what the Crash Log Scan Run twin will delegate to, so any change here
+    // would pre-empt that ticket's decision.
+    assert_eq!(
+        LocalIgnoreYamlDataState::ProceedWithoutIgnore.label(),
+        "proceeded without ignore entries"
+    );
+}
+
+#[test]
+fn every_config_vocabulary_token_resolves_back_to_its_variant() {
+    for variant in InstalledYamlDataProvenance::VARIANTS.iter().copied() {
+        assert_eq!(
+            from_token::<InstalledYamlDataProvenance>(variant.as_str()),
+            Some(variant),
+            "token `{}` did not resolve back to its own variant",
+            variant.as_str()
+        );
+    }
+    for variant in InstalledYamlDataDiagnosticKind::VARIANTS.iter().copied() {
+        assert_eq!(
+            from_token::<InstalledYamlDataDiagnosticKind>(variant.as_str()),
+            Some(variant),
+            "token `{}` did not resolve back to its own variant",
+            variant.as_str()
+        );
+    }
+    for variant in LocalIgnoreYamlDataState::VARIANTS.iter().copied() {
+        assert_eq!(
+            from_token::<LocalIgnoreYamlDataState>(variant.as_str()),
+            Some(variant),
+            "token `{}` did not resolve back to its own variant",
+            variant.as_str()
+        );
+    }
+}
+
+#[test]
+fn no_config_display_label_looks_like_a_vocabulary_token() {
+    // Deliberately weaker than the tracer enum's equivalent, which also asserts
+    // that a label never equals its own token. Three provenance labels and
+    // `existing` legitimately do: all three frontends already render exactly
+    // those words, and inventing prose to force a difference would make the
+    // labels worse. What must still hold is that a label is never a token
+    // *spelling* that leaked into presentation.
+    let labels = InstalledYamlDataProvenance::VARIANTS
+        .iter()
+        .map(|variant| variant.label())
+        .chain(
+            InstalledYamlDataDiagnosticKind::VARIANTS
+                .iter()
+                .map(|variant| variant.label()),
+        )
+        .chain(
+            LocalIgnoreYamlDataState::VARIANTS
+                .iter()
+                .map(|variant| variant.label()),
+        );
+    for label in labels {
+        assert!(
+            !label.contains('_'),
+            "Display Label `{label}` looks like a Vocabulary Token"
+        );
+    }
 }

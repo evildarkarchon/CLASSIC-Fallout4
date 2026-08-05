@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-04T10:30:49Z",
+  "generated_at_utc": "2026-08-05T10:14:18Z",
   "schema_version": 1,
   "entries": [
     {
@@ -375,6 +375,23 @@
       }
     },
     {
+      "id": "4edaf409db8e95cb",
+      "rustSymbol": "installed_yaml_data_diagnostic_kind_label",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "kind",
+            "type": "InstalledYamlDataDiagnosticKind"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
       "id": "f214164a9d4eb6f0",
       "rustSymbol": "installed_yaml_data_inspect",
       "kind": "function",
@@ -588,6 +605,23 @@
           }
         ],
         "returnType": "Result<Box<InstalledYamlDataSnapshot>>"
+      }
+    },
+    {
+      "id": "52396b1071598365",
+      "rustSymbol": "installed_yaml_data_provenance_label",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "provenance",
+            "type": "InstalledYamlDataProvenance"
+          }
+        ],
+        "returnType": "String"
       }
     },
     {
@@ -1217,6 +1251,23 @@
           }
         ],
         "returnType": "Result<Box<LocalIgnoreResetResult>>"
+      }
+    },
+    {
+      "id": "88a8165b0039518c",
+      "rustSymbol": "local_ignore_yaml_data_state_label",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "state",
+            "type": "LocalIgnoreYamlDataState"
+          }
+        ],
+        "returnType": "String"
       }
     },
     {

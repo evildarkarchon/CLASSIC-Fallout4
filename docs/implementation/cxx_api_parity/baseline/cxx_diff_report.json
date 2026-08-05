@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 630,
-    "current_total": 630,
-    "matched": 630,
+    "contract_total": 633,
+    "current_total": 633,
+    "matched": 633,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -201,6 +201,14 @@
       "reason": "-"
     },
     {
+      "id": "4edaf409db8e95cb",
+      "rustSymbol": "installed_yaml_data_diagnostic_kind_label",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "f214164a9d4eb6f0",
       "rustSymbol": "installed_yaml_data_inspect",
       "kind": "function",
@@ -291,6 +299,14 @@
     {
       "id": "df6e0230342a3d0b",
       "rustSymbol": "installed_yaml_data_load_take_snapshot",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "52396b1071598365",
+      "rustSymbol": "installed_yaml_data_provenance_label",
       "kind": "function",
       "bridgeModule": "config",
       "status": "matched",
@@ -587,6 +603,14 @@
     {
       "id": "66f714501c41701b",
       "rustSymbol": "local_ignore_reset_take_result",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "88a8165b0039518c",
+      "rustSymbol": "local_ignore_yaml_data_state_label",
       "kind": "function",
       "bridgeModule": "config",
       "status": "matched",

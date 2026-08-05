@@ -94,6 +94,16 @@ Runtime callers use the Installed YAML Data load flow for valid, missing, or mal
 
 The adapter owns no source-selection, validation, generation, recovery, repair, or fallback policy. Existing Local Ignore bytes are never replaced implicitly; the bridge exposes neither raw bytes nor parsed YAML documents.
 
+Three free functions project the human-facing Display Label for the enums above, so a C++ frontend renders one without writing a `switch`:
+
+- `installed_yaml_data_provenance_label(InstalledYamlDataProvenance) -> String`
+- `installed_yaml_data_diagnostic_kind_label(InstalledYamlDataDiagnosticKind) -> String`
+- `local_ignore_yaml_data_state_label(LocalIgnoreYamlDataState) -> String`
+
+The label is a separate entry point rather than a DTO field because a Qt view is not line-oriented: it wants the variant and its label in independently styled table columns. `classic-config-core` owns both names under the [Vocabulary naming contract](classic-vocabulary.md), so these labels are identical to the ones the Node and Python surfaces publish.
+
+Labels are presentation only and are reworded freely between releases — branch on the enum, never on the string. Because CXX shared enums are open at the FFI boundary, an out-of-range value returns an empty string rather than an invented label; no value this bridge produces can reach that path.
+
 The namespace also exposes selected cache controls and generic config helpers.
 These are data-access APIs; they are not partial Crash Log Scan Run entry
 points.

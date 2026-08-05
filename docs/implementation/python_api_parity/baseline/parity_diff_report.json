@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-08-05T01:33:40.402601+00:00",
+  "generated_at_utc": "2026-08-05T10:18:02.120791+00:00",
   "summary": {
-    "tier1_contract_total": 1216,
-    "tier1_matched": 1215,
+    "tier1_contract_total": 1219,
+    "tier1_matched": 1218,
     "tier1_missing_rust": 0,
     "tier1_missing_python": 0,
     "tier1_signature_mismatch": 0,
@@ -3310,6 +3310,51 @@
       "actual_python_kind": "function",
       "expected_python_arity": 3,
       "actual_python_arity": 3
+    },
+    {
+      "id": "config.installed_yaml_data.installed_yaml_data_provenance_label",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "InstalledYamlDataProvenance",
+      "python_module": "classic_config",
+      "python_export": "installed_yaml_data_provenance_label",
+      "python_export_path": "installed_yaml_data_provenance_label",
+      "status": "matched",
+      "expected_python_kind": "function",
+      "actual_python_kind": "function",
+      "expected_python_arity": 1,
+      "actual_python_arity": 1
+    },
+    {
+      "id": "config.installed_yaml_data.installed_yaml_data_diagnostic_kind_label",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "InstalledYamlDataDiagnosticKind",
+      "python_module": "classic_config",
+      "python_export": "installed_yaml_data_diagnostic_kind_label",
+      "python_export_path": "installed_yaml_data_diagnostic_kind_label",
+      "status": "matched",
+      "expected_python_kind": "function",
+      "actual_python_kind": "function",
+      "expected_python_arity": 1,
+      "actual_python_arity": 1
+    },
+    {
+      "id": "config.installed_yaml_data.local_ignore_yaml_data_state_label",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "LocalIgnoreYamlDataState",
+      "python_module": "classic_config",
+      "python_export": "local_ignore_yaml_data_state_label",
+      "python_export_path": "local_ignore_yaml_data_state_label",
+      "status": "matched",
+      "expected_python_kind": "function",
+      "actual_python_kind": "function",
+      "expected_python_arity": 1,
+      "actual_python_arity": 1
     },
     {
       "id": "config.yamldata.format_registry_game_version@rust",

@@ -616,3 +616,92 @@ def test_installed_load_exports_invalid_selected_data_failure_type() -> None:
         classic_config.InstalledYamlDataLoadInvalidSelectedDataError,
         classic_config.InstalledYamlDataLoadError,
     )
+
+
+def test_display_labels_carry_the_settled_descriptive_wording() -> None:
+    """The wording decision, pinned where a Python consumer observes it.
+
+    The Rust sibling module proves each label equals the core's; what is left to
+    check here is that the projection survives the PyO3 boundary and that the
+    five settled wordings arrive intact rather than in the terse form the CLI
+    and GUI used to print.
+    """
+    assert (
+        classic_config.installed_yaml_data_diagnostic_kind_label("parse")
+        == "parse failure"
+    )
+    assert (
+        classic_config.installed_yaml_data_diagnostic_kind_label("read")
+        == "read failure"
+    )
+    assert (
+        classic_config.installed_yaml_data_diagnostic_kind_label("missing")
+        == "missing candidate"
+    )
+    assert (
+        classic_config.installed_yaml_data_diagnostic_kind_label("cache_unavailable")
+        == "update cache unavailable"
+    )
+    assert (
+        classic_config.local_ignore_yaml_data_state_label("generated")
+        == "generated from selected Main defaults"
+    )
+
+
+def test_display_labels_use_glossary_capitalization_for_domain_terms() -> None:
+    """`Local Ignore` is a domain term, so no token transform could derive it."""
+    assert (
+        classic_config.installed_yaml_data_diagnostic_kind_label("local_ignore_reset")
+        == "Local Ignore reset"
+    )
+
+
+def test_every_token_a_real_inspection_publishes_resolves_to_a_label(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Tokens come from an inspection this test drives, never from a literal.
+
+    Exhaustive coverage of every variant lives in the Rust sibling module, which
+    can iterate the core's ``VARIANTS``; Python cannot see that list. What this
+    level can check without restating the vocabulary is the boundary itself:
+    every token the surface actually emitted resolves to a Display Label.
+    """
+    installation = tmp_path / "install"
+    write_install(installation)
+    cache = isolate_cache(monkeypatch, tmp_path / "cache-root")
+    cache.mkdir(parents=True)
+    (cache / "CLASSIC Main.yaml").write_bytes(MAIN_BYTES.replace(b'"2.0"', b'"99.0"'))
+
+    result = classic_config.inspect_installed_yaml_data(
+        installation,
+        classic_config.ExplicitYamlDataGame.FALLOUT4,
+    )
+
+    provenance_tokens = {result.main.provenance, result.game_file.provenance}
+    provenance_tokens.update(
+        diagnostic.candidate
+        for diagnostic in result.diagnostics
+        if diagnostic.candidate is not None
+    )
+    assert provenance_tokens, "the inspection must publish at least one provenance"
+    for token in provenance_tokens:
+        assert classic_config.installed_yaml_data_provenance_label(token)
+
+    kind_tokens = {diagnostic.kind for diagnostic in result.diagnostics}
+    assert kind_tokens, "the rejected candidate must publish a diagnostic kind"
+    for token in kind_tokens:
+        assert classic_config.installed_yaml_data_diagnostic_kind_label(token)
+
+
+@pytest.mark.parametrize(
+    "resolver",
+    [
+        "installed_yaml_data_provenance_label",
+        "installed_yaml_data_diagnostic_kind_label",
+        "local_ignore_yaml_data_state_label",
+    ],
+)
+def test_display_label_rejects_an_unknown_token(resolver: str) -> None:
+    """An unrecognized token raises rather than resolving to a placeholder."""
+    with pytest.raises(ValueError):
+        getattr(classic_config, resolver)("not_a_real_token")

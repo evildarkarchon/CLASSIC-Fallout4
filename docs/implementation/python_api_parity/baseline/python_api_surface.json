@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-04T10:37:25.765195+00:00",
+  "generated_at_utc": "2026-08-05T10:15:15.249222+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -730,6 +730,28 @@
     },
     {
       "module": "classic_config",
+      "export": "installed_yaml_data_diagnostic_kind_label",
+      "export_path": "installed_yaml_data_diagnostic_kind_label",
+      "kind": "function",
+      "arity": 1,
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def installed_yaml_data_diagnostic_kind_label(token: str) -> str:"
+    },
+    {
+      "module": "classic_config",
+      "export": "installed_yaml_data_provenance_label",
+      "export_path": "installed_yaml_data_provenance_label",
+      "kind": "function",
+      "arity": 1,
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def installed_yaml_data_provenance_label(token: str) -> str:"
+    },
+    {
+      "module": "classic_config",
       "export": "load_explicit_yaml_data",
       "export_path": "load_explicit_yaml_data",
       "kind": "function",
@@ -760,6 +782,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def load_main_yaml_version(bundled_yaml_dir: str | None = None) -> str:"
+    },
+    {
+      "module": "classic_config",
+      "export": "local_ignore_yaml_data_state_label",
+      "export_path": "local_ignore_yaml_data_state_label",
+      "kind": "function",
+      "arity": 1,
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def local_ignore_yaml_data_state_label(token: str) -> str:"
     },
     {
       "module": "classic_config",

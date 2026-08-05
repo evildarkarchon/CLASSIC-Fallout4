@@ -43,9 +43,13 @@ Neither form is derived from the other. A mechanical transform turns `field_tran
 3. Replace each binding's hand-written token function with `kind.as_str()`, and each parse counterpart with `classic_vocabulary::from_token` — or, on the Node surface, with `crate::vocabulary::js_token` and `crate::vocabulary::from_js_token`.
 4. Confirm the three committed parity baselines are byte-identical. A moved baseline means the token projection is wrong, not that the baseline needs regenerating.
 
+   The exception is an enum a frontend renders, which also needs a Display Label projection on each surface. Those projections are new public adapter symbols, so they *do* move all three baselines and invalidate `contractIdsHash`/`contractCount` in both runtime coverage registries. Regenerate with the [per-gate refresh commands](binding-parity-policy.md) and hand-edit the two registry fixtures — the baseline generators normalize those fields in memory only and never write them back.
+
 ## Current adopters
 
-All five come from [`classic-user-settings-core`](classic-user-settings-core.md), and none is rendered by a frontend yet, so no Display Label has crossed a binding seam so far. That keeps the parity cost at zero for every adoption to date and makes the verification signal sharp — any baseline movement is a defect rather than expected churn.
+### From [`classic-user-settings-core`](classic-user-settings-core.md)
+
+None of these five is rendered by a frontend, so no Display Label of theirs crosses a binding seam. That kept the parity cost at zero for every adoption up to and including them.
 
 | Enum | Notes |
 | --- | --- |
@@ -56,6 +60,20 @@ All five come from [`classic-user-settings-core`](classic-user-settings-core.md)
 | `PreferenceOrigin` | One multi-word token reaches JavaScript as `degradedFallback`. Projected at more call sites than any other adopter, since every typed preference carries one. |
 
 Two of the four later adopters are reachable exhaustively through a binding-safe constructor (`DocumentClassification` through the legacy-import outcome, `SourceLocation` through a review-only migration plan), so their per-binding projection tests drive the real conversion functions. `CommitEligibility` and `PreferenceOrigin` only exist inside a `UserSettings` that was opened from a real document; rather than add a test-only constructor for a path production never takes, their exhaustive check sits at the pure projection rule instead. After adoption there is no per-enum projection code left for a production path to exercise differently, so the two seams cover the same ground.
+
+### From [`classic-config-core`](classic-config-core.md)
+
+These three are the first adopters whose Display Labels cross a binding seam, and the first adoption to move a parity baseline. Each surface gained a label projection, so a moved baseline here is expected churn rather than a defect — the opposite of the rule that applied to the User Settings enums.
+
+| Enum | Notes |
+| --- | --- |
+| `InstalledYamlDataProvenance` | Every label equals its own token. All three frontends already rendered exactly `updated`, `previous`, and `bundled`, and inventing prose to force a difference would make the labels worse. The contract permits this: the two forms are governed separately, not required to differ. |
+| `InstalledYamlDataDiagnosticKind` | Four labels settle a CLI/GUI-versus-TUI wording divergence in favor of the descriptive form. Two more carry glossary capitalization (`Local Ignore generated`, `Local Ignore reset`) — the exemplar of why a label cannot be derived from its token. |
+| `LocalIgnoreYamlDataState` | `generated` becomes `generated from selected Main defaults`. Python published its tokens from a match inlined in the snapshot getter rather than a named table, so adopting the contract deleted the getter's body rather than a helper. |
+
+Adopting these also deleted two Python restatements of the same vocabulary — `classic-config-py` and `classic-scanlog-py` each wrote out the provenance tokens — and replaced `classic-config-py`'s copy of the five durable-publication stage tokens with delegation to the crate that owns them.
+
+The CXX and Node label projections resolve a variant by running that surface's *existing* forward projection over `VARIANTS`, rather than matching on the binding-side enum. A reverse `match` would be a second variant mapping that could disagree with the forward one; derived from it, the two cannot. This is the same reasoning `from_token` applies to strings.
 
 ## Testing
 

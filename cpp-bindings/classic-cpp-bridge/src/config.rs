@@ -48,6 +48,7 @@ use classic_settings_core::{
 };
 use classic_shared_core::GameId as CoreGameId;
 use classic_shared_core::get_runtime;
+use classic_vocabulary::Vocabulary;
 use std::path::{Path, PathBuf};
 
 /// Opaque wrapper around `YamlDataCore` for CXX FFI.
@@ -646,7 +647,18 @@ fn installed_yaml_data_snapshot_game_file(
 fn installed_yaml_data_snapshot_local_ignore_state(
     snapshot: &InstalledYamlDataSnapshot,
 ) -> ffi::LocalIgnoreYamlDataState {
-    match snapshot.inner.local_ignore_state() {
+    local_ignore_yaml_data_state_to_ffi(snapshot.inner.local_ignore_state())
+}
+
+/// Convert a core Local Ignore state to its stable CXX projection.
+///
+/// Named rather than inlined into the snapshot getter because
+/// [`local_ignore_yaml_data_state_label`] resolves through this same forward
+/// map; one mapping serves both directions and so the two cannot disagree.
+fn local_ignore_yaml_data_state_to_ffi(
+    state: CoreLocalIgnoreYamlDataState,
+) -> ffi::LocalIgnoreYamlDataState {
+    match state {
         CoreLocalIgnoreYamlDataState::Existing => ffi::LocalIgnoreYamlDataState::Existing,
         CoreLocalIgnoreYamlDataState::Generated => ffi::LocalIgnoreYamlDataState::Generated,
         CoreLocalIgnoreYamlDataState::ProceedWithoutIgnore => {
@@ -1013,6 +1025,56 @@ fn installed_yaml_data_diagnostic_kind_to_ffi(
             ffi::InstalledYamlDataDiagnosticKind::LocalIgnoreReset
         }
     }
+}
+
+/// Resolve the core Display Label for one already-projected CXX enum value.
+///
+/// Runs the *existing* forward projection over `VARIANTS` rather than matching
+/// on the CXX enum. A reverse `match` would be a second variant mapping that
+/// could disagree with the forward one; derived from it, the two cannot. Taking
+/// `project` as a parameter is what lets all three label entry points share that
+/// guarantee instead of restating the scan.
+///
+/// An out-of-range CXX value — reachable only if a caller fabricates one, never
+/// from a value this bridge produced, since CXX shared enums are open at the FFI
+/// boundary — yields an empty string rather than an invented label.
+fn display_label<T, U>(value: U, project: fn(T) -> U) -> String
+where
+    T: Vocabulary,
+    U: PartialEq,
+{
+    T::VARIANTS
+        .iter()
+        .copied()
+        .find(|variant| project(*variant) == value)
+        .map(Vocabulary::label)
+        .unwrap_or_default()
+        .to_string()
+}
+
+/// Return the human-facing Display Label for one candidate provenance.
+///
+/// The C++ frontends reach the core only through this bridge, and a Qt view is
+/// not line-oriented — it wants the variant and its label separately so it can
+/// style them as independent table columns. That is why the label crosses the
+/// binding seam as its own entry point rather than being folded into a DTO
+/// string.
+fn installed_yaml_data_provenance_label(provenance: ffi::InstalledYamlDataProvenance) -> String {
+    display_label(provenance, installed_yaml_data_provenance_to_ffi)
+}
+
+/// Return the human-facing Display Label for one diagnostic kind.
+///
+/// A frontend prints this label as a bare prefix before the diagnostic message,
+/// so four of the ten read as failures rather than statuses: `Parse` resolves to
+/// `parse failure`, not `parse`.
+fn installed_yaml_data_diagnostic_kind_label(kind: ffi::InstalledYamlDataDiagnosticKind) -> String {
+    display_label(kind, installed_yaml_data_diagnostic_kind_to_ffi)
+}
+
+/// Return the human-facing Display Label for one Local Ignore snapshot state.
+fn local_ignore_yaml_data_state_label(state: ffi::LocalIgnoreYamlDataState) -> String {
+    display_label(state, local_ignore_yaml_data_state_to_ffi)
 }
 
 /// Flatten one selected core file into its CXX metadata DTO.
@@ -2181,6 +2243,22 @@ mod ffi {
         fn installed_yaml_data_snapshot_diagnostics(
             snapshot: &InstalledYamlDataSnapshot,
         ) -> Vec<InstalledYamlDataDiagnosticDto>;
+
+        /// Human-facing Display Label for one candidate provenance.
+        ///
+        /// Presentation only. The label is reworkable between releases, so
+        /// branch on the enum and never on this string. An out-of-range enum
+        /// value yields an empty string.
+        fn installed_yaml_data_provenance_label(provenance: InstalledYamlDataProvenance) -> String;
+        /// Human-facing Display Label for one Installed YAML Data diagnostic
+        /// kind. Rendered as a bare prefix before the diagnostic message, so
+        /// `Parse` reads as `parse failure`. Same stability caveat as above.
+        fn installed_yaml_data_diagnostic_kind_label(
+            kind: InstalledYamlDataDiagnosticKind,
+        ) -> String;
+        /// Human-facing Display Label for one Local Ignore snapshot state.
+        /// Same stability caveat as above.
+        fn local_ignore_yaml_data_state_label(state: LocalIgnoreYamlDataState) -> String;
 
         fn save_local_yaml_paths(
             local_yaml_path: &str,

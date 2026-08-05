@@ -690,6 +690,46 @@ def load_installed_yaml_data(
             the parsed YAML Data view.
     """
 
+def installed_yaml_data_provenance_label(token: str) -> str:
+    """Return the human-facing Display Label for one candidate-provenance token.
+
+    ``token`` is what this module publishes on
+    :attr:`InspectedYamlDataFile.provenance` and
+    :attr:`InstalledYamlDataDiagnostic.candidate`. Labels are presentation only
+    and may be reworded between releases, so do not parse or compare them --
+    compare the token.
+
+    Args:
+        token: A published provenance token.
+
+    Raises:
+        ValueError: ``token`` is not a published provenance token.
+    """
+
+def installed_yaml_data_diagnostic_kind_label(token: str) -> str:
+    """Return the human-facing Display Label for one diagnostic-kind token.
+
+    Frontends print this label as a bare prefix before the diagnostic message,
+    so four of the ten read as failures rather than statuses: ``"parse"``
+    resolves to ``"parse failure"``.
+
+    Args:
+        token: A published diagnostic-kind token.
+
+    Raises:
+        ValueError: ``token`` is not a published diagnostic-kind token.
+    """
+
+def local_ignore_yaml_data_state_label(token: str) -> str:
+    """Return the human-facing Display Label for one Local Ignore state token.
+
+    Args:
+        token: A published Local Ignore state token.
+
+    Raises:
+        ValueError: ``token`` is not a published Local Ignore state token.
+    """
+
 def persist_game_local_paths(
     local_yaml_path: str | Path,
     game_root: str | Path | None = None,

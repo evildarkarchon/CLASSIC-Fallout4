@@ -9,6 +9,7 @@ use classic_scanlog_core::{
     CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupPathUpdate,
     CrashLogScanSetupResult, ScanProgressPhase,
 };
+use classic_vocabulary::Vocabulary;
 use pyo3::Python;
 use pyo3::types::PyAnyMethods;
 
@@ -140,15 +141,18 @@ fn maps_every_stable_enum_identifier() {
             .map(installed_yaml_data_role_to_string),
         ["main", "game"],
     );
-    assert_eq!(
-        [
-            InstalledYamlDataProvenance::Updated,
-            InstalledYamlDataProvenance::Previous,
-            InstalledYamlDataProvenance::Bundled,
-        ]
-        .map(installed_yaml_data_provenance_to_string),
-        ["updated", "previous", "bundled"],
-    );
+    // Derived from the core, not restated. A hand-written array here would pass
+    // just as happily against a surface that had already drifted, because it
+    // would only be comparing this file's copy of the vocabulary against
+    // itself. Iterating `VARIANTS` also means a new provenance variant is
+    // covered without anyone remembering to extend this test.
+    for variant in InstalledYamlDataProvenance::VARIANTS.iter().copied() {
+        assert_eq!(
+            installed_yaml_data_provenance_to_string(variant),
+            variant.as_str(),
+            "the run surface must publish the configuration crate's own token",
+        );
+    }
     assert_eq!(
         [
             contract::LocalIgnoreRunState::Existing,
