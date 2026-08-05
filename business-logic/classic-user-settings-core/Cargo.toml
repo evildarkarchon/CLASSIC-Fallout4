@@ -13,8 +13,17 @@ crate-type = ["rlib"]
 [dependencies]
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-settings-core = { path = "../classic-settings-core" }
+
+# Workspace-internal Durable Publication: staging, synchronization, the platform publish step,
+# and the one cross-process lock implementation.
+classic-durable-publication = { path = "../classic-durable-publication" }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
+
+[dev-dependencies]
+# Test roots only. Staging temporary files is no longer this crate's business: it moved to
+# `classic-durable-publication`, and keeping `tempfile` out of `[dependencies]` is what stops it
+# quietly coming back.
 tempfile = { workspace = true }
 
 [lints.rust]

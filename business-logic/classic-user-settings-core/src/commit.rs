@@ -5,13 +5,11 @@ use crate::{
     AcceptedUserSettingsUpdate, GuiWindow, Revision, UpdateDiagnostic, UserSettings,
     UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview,
 };
+use classic_durable_publication as durable_publication;
 use classic_settings_core::{Yaml, YamlOperations, parse_yaml_content};
 use sha2::{Digest, Sha256};
-use std::cell::Cell;
 use std::fmt;
-use std::fs::{File, OpenOptions};
-use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 const CANONICAL_FILENAME: &str = "CLASSIC Settings.yaml";
 const COMMIT_LOCK_SUFFIX: &str = ".commit.lock";
@@ -213,30 +211,60 @@ impl AcceptedUserSettingsUpdate {
     }
 }
 
+/// Returns the one cross-process lock policy every User Settings publication shares.
+///
+/// The suffix is appended to the whole target path, so the lock file is exactly the
+/// `CLASSIC Settings.yaml.commit.lock` sibling this crate has always used. Nothing on disk moved
+/// when the implementation behind it did.
+fn commit_lock_policy() -> durable_publication::LockPolicy {
+    durable_publication::LockPolicy::sibling(COMMIT_LOCK_SUFFIX)
+}
+
 /// Opens and exclusively locks the persistent sibling coordination file.
-pub(crate) fn acquire_commit_lock(target: &Path) -> Result<File, UserSettingsCommitError> {
-    let mut lock_name = target.as_os_str().to_os_string();
-    lock_name.push(COMMIT_LOCK_SUFFIX);
-    let lock_path = PathBuf::from(lock_name);
-    let lock = OpenOptions::new()
-        .create(true)
-        .read(true)
-        .write(true)
-        .truncate(false)
-        .open(&lock_path)
-        .map_err(|error| {
+///
+/// The lock itself is the workspace's single cross-process implementation, from
+/// `classic-durable-publication`. Because this guard already spans every publication in a commit,
+/// migration, or import sequence, the publications made underneath it pass
+/// [`durable_publication::LockPolicy::none`]: a second lock scoped to one publication would
+/// release before the sequence it exists to protect had finished.
+pub(crate) fn acquire_commit_lock(
+    target: &Path,
+) -> Result<durable_publication::PublicationLock, UserSettingsCommitError> {
+    let lock = commit_lock_policy()
+        .acquire(target)
+        .map_err(map_lock_error)?;
+    // Only `LockPolicy::none` yields `None`, and this policy is always a sibling.
+    Ok(lock.expect("a sibling lock policy always names a lock file"))
+}
+
+/// Preserves this crate's two published lock codes, and their messages, across the adoption.
+fn map_lock_error(error: durable_publication::PublicationError) -> UserSettingsCommitError {
+    match error {
+        durable_publication::PublicationError::LockOpen { path, source } => {
             UserSettingsCommitError::new(
                 "commit_lock_open_failed",
-                format!("could not open {}: {error}", lock_path.display()),
+                format!("could not open {}: {source}", path.display()),
             )
-        })?;
-    lock.lock().map_err(|error| {
-        UserSettingsCommitError::new(
-            "commit_lock_failed",
-            format!("could not lock {}: {error}", lock_path.display()),
-        )
-    })?;
-    Ok(lock)
+        }
+        durable_publication::PublicationError::LockAcquire { path, source } => {
+            UserSettingsCommitError::new(
+                "commit_lock_failed",
+                format!("could not lock {}: {source}", path.display()),
+            )
+        }
+        // Every remaining variant belongs to a publication, and this function only ever acquires
+        // a lock, so none of them can arrive here. They are listed rather than caught by a
+        // wildcard so that a new variant in the shared module fails this build instead of being
+        // silently absorbed — and mapped rather than panicked on so that reaching one somehow
+        // cannot turn into an abort.
+        other @ (durable_publication::PublicationError::Stage { .. }
+        | durable_publication::PublicationError::BackupUnreadable { .. }
+        | durable_publication::PublicationError::StagedUnreadable { .. }
+        | durable_publication::PublicationError::DigestMismatch { .. }
+        | durable_publication::PublicationError::BackupMismatch { .. }) => {
+            UserSettingsCommitError::new("commit_lock_failed", other.to_string())
+        }
+    }
 }
 
 /// Reconstructs the latest trusted YAML document, including first-run missing state.
@@ -340,14 +368,16 @@ pub(crate) trait Publisher {
     fn publish(&self, target: &Path, bytes: &[u8]) -> Result<(), UserSettingsCommitError>;
 }
 
-/// Production publisher backed by a randomized same-directory temporary file.
-pub(crate) struct SystemPublisher {
-    fail_at: Option<PublicationStage>,
-    fail_on_publication: Option<usize>,
-    publication_count: Cell<usize>,
-}
+/// Production publisher backed by the workspace's shared Durable Publication module.
+pub(crate) struct SystemPublisher;
 
-/// Fallible publication stages exposed only to the internal fault-injection seam.
+/// Fallible publication stages in this crate's own, already-published vocabulary.
+///
+/// These mirror the shared module's stages one-for-one except at the end: this crate has always
+/// named its terminal stage `Replace` and published `commit_replace_failed`, while the shared
+/// module's terminal stage is `Publish`. The two vocabularies are reconciled in exactly one
+/// place, [`PublicationStage::from_publication`], so that adopting the shared module changes no
+/// published error code.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum PublicationStage {
     Create,
@@ -358,8 +388,23 @@ pub(crate) enum PublicationStage {
 }
 
 impl PublicationStage {
+    /// Projects the shared module's stage vocabulary onto this crate's.
+    ///
+    /// The terminal rename is the whole reason this function exists: mapping `Publish` to
+    /// anything but [`Self::Replace`] would silently retire `commit_replace_failed` and every
+    /// operation code derived from it.
+    const fn from_publication(stage: durable_publication::PublicationStage) -> Self {
+        match stage {
+            durable_publication::PublicationStage::Create => Self::Create,
+            durable_publication::PublicationStage::Write => Self::Write,
+            durable_publication::PublicationStage::Flush => Self::Flush,
+            durable_publication::PublicationStage::Sync => Self::Sync,
+            durable_publication::PublicationStage::Publish => Self::Replace,
+        }
+    }
+
     /// Returns the public error code corresponding to this publication stage.
-    fn error_code(self) -> &'static str {
+    pub(crate) const fn error_code(self) -> &'static str {
         match self {
             Self::Create => "commit_temp_create_failed",
             Self::Write => "commit_temp_write_failed",
@@ -368,128 +413,83 @@ impl PublicationStage {
             Self::Replace => "commit_replace_failed",
         }
     }
+
+    /// Builds the failure this crate reports when a publication fails at this stage.
+    ///
+    /// This is the only way to construct a stage failure outside this module, which is what lets
+    /// [`UserSettingsCommitError::new`] stay private: the test fakes that stand in for the
+    /// publisher need a stage failure specifically, not a general-purpose error constructor.
+    pub(crate) fn failure(self, detail: impl fmt::Display) -> UserSettingsCommitError {
+        UserSettingsCommitError::new(self.error_code(), detail.to_string())
+    }
 }
 
 impl SystemPublisher {
-    /// Builds the production durable publisher without fault injection.
+    /// Builds the production durable publisher.
     pub(crate) const fn system() -> Self {
-        Self {
-            fail_at: None,
-            fail_on_publication: None,
-            publication_count: Cell::new(0),
-        }
-    }
-
-    /// Builds a publisher that deterministically fails before one requested stage.
-    #[cfg(test)]
-    pub(crate) fn failing_at(stage: PublicationStage) -> Self {
-        Self {
-            fail_at: Some(stage),
-            fail_on_publication: Some(1),
-            publication_count: Cell::new(0),
-        }
-    }
-
-    /// Builds a publisher that fails at one stage of the selected publication call.
-    #[cfg(test)]
-    pub(crate) fn failing_at_publication(stage: PublicationStage, publication: usize) -> Self {
-        Self {
-            fail_at: Some(stage),
-            fail_on_publication: Some(publication),
-            publication_count: Cell::new(0),
-        }
-    }
-
-    /// Returns the injected failure before the stage mutates publication state.
-    fn before(
-        &self,
-        stage: PublicationStage,
-        publication: usize,
-    ) -> Result<(), UserSettingsCommitError> {
-        if self.fail_at == Some(stage) && self.fail_on_publication == Some(publication) {
-            return Err(UserSettingsCommitError::new(
-                stage.error_code(),
-                format!("injected {stage:?} failure"),
-            ));
-        }
-        Ok(())
+        Self
     }
 }
 
 impl Publisher for SystemPublisher {
     fn publish(&self, target: &Path, bytes: &[u8]) -> Result<(), UserSettingsCommitError> {
-        let publication = self.publication_count.get() + 1;
-        self.publication_count.set(publication);
-        let parent = target.parent().ok_or_else(|| {
-            UserSettingsCommitError::new(
-                "commit_temp_create_failed",
-                format!("target has no parent: {}", target.display()),
-            )
-        })?;
-        self.before(PublicationStage::Create, publication)?;
-        let mut temp = tempfile::Builder::new()
-            .prefix(".classic-user-settings-")
-            .suffix(".tmp")
-            .tempfile_in(parent)
-            .map_err(|error| {
-                UserSettingsCommitError::new("commit_temp_create_failed", error.to_string())
-            })?;
-        let staged = (|| {
-            self.before(PublicationStage::Write, publication)?;
-            temp.write_all(bytes).map_err(|error| {
-                UserSettingsCommitError::new("commit_temp_write_failed", error.to_string())
-            })?;
-            self.before(PublicationStage::Flush, publication)?;
-            temp.flush().map_err(|error| {
-                UserSettingsCommitError::new("commit_temp_flush_failed", error.to_string())
-            })?;
-            self.before(PublicationStage::Sync, publication)?;
-            temp.as_file().sync_all().map_err(|error| {
-                UserSettingsCommitError::new("commit_temp_sync_failed", error.to_string())
-            })?;
-            self.before(PublicationStage::Replace, publication)
-        })();
-        if let Err(error) = staged {
-            return Err(cleanup_failed_publication(temp, error));
-        }
+        // Every call site holds `acquire_commit_lock` across its complete sequence, so the
+        // publication takes no lock of its own. Cross-process serialization is unchanged: it is
+        // the same lock file, held over a strictly wider window than one publication.
+        let publication =
+            durable_publication::publish(target, bytes, &durable_publication::LockPolicy::none())
+                .map_err(|error| map_publication_error(&error))?;
 
-        if let Err(error) = temp.persist(target) {
-            let replacement =
-                UserSettingsCommitError::new("commit_replace_failed", error.error.to_string());
-            return Err(cleanup_failed_publication(error.file, replacement));
-        }
-        sync_parent_directory(parent);
+        // Durability uncertainty is deliberately discarded rather than reported. Surfacing it
+        // would require new stable codes across the C++, Node, and Python bindings plus
+        // refreshed parity baselines. Follow-up: GitHub issue #153 ("Deepen Durable
+        // Publication"), under "Out of Scope" — "Surfacing durability uncertainty on User
+        // Settings commit ... tracked separately".
+        //
+        // The previous implementation discarded the same signal by not checking the
+        // parent-directory fsync at all, which was invisible. Naming it here does not change
+        // behavior; it makes the decision reviewable.
+        let _commit_durability = publication.into_durability();
         Ok(())
     }
 }
 
-/// Explicitly removes a failed publication artifact and retains both failures when cleanup fails.
-fn cleanup_failed_publication(
-    temp: tempfile::NamedTempFile,
-    primary: UserSettingsCommitError,
-) -> UserSettingsCommitError {
-    match temp.close() {
-        Ok(()) => primary,
-        Err(cleanup) => UserSettingsCommitError::new(
-            "commit_temp_cleanup_failed",
-            format!("{primary}; temporary-file cleanup also failed: {cleanup}"),
-        ),
+/// Projects a neutral durable publication failure onto this crate's stable commit codes.
+///
+/// The message keeps the underlying filesystem failure, which the shared module carries as a
+/// `#[source]` and therefore leaves out of its own `Display`.
+fn map_publication_error(error: &durable_publication::PublicationError) -> UserSettingsCommitError {
+    let message = match error.io_source() {
+        Some(source) => format!("{error}: {source}"),
+        None => error.to_string(),
+    };
+    match error {
+        // Built through `PublicationStage::failure` rather than by naming a code here, so that a
+        // real stage failure and the one a test fake stands in for are constructed identically.
+        durable_publication::PublicationError::Stage { stage, .. } => {
+            PublicationStage::from_publication(*stage).failure(message)
+        }
+        // Unreachable while this seam passes `LockPolicy::none`, but mapped rather than panicked
+        // on so that a future policy change cannot turn into an abort.
+        durable_publication::PublicationError::LockOpen { .. } => {
+            UserSettingsCommitError::new("commit_lock_open_failed", message)
+        }
+        durable_publication::PublicationError::LockAcquire { .. } => {
+            UserSettingsCommitError::new("commit_lock_failed", message)
+        }
+        // The verified-backup and verified-install operations are not reachable through this
+        // seam, which only ever calls `publish`, so none of these can arrive. They are listed
+        // rather than caught by a wildcard so that a new variant in the shared module fails this
+        // build and gets a deliberate code, instead of silently inheriting one. The terminal stage
+        // is the honest fallback for the ones that exist today: no replacement took place.
+        durable_publication::PublicationError::BackupUnreadable { .. }
+        | durable_publication::PublicationError::StagedUnreadable { .. }
+        | durable_publication::PublicationError::DigestMismatch { .. }
+        | durable_publication::PublicationError::BackupMismatch { .. } => {
+            PublicationStage::Replace.failure(message)
+        }
     }
 }
-
-/// Best-effort directory synchronization after the atomic replacement is visible.
-#[cfg(unix)]
-fn sync_parent_directory(parent: &Path) {
-    // A post-replacement sync failure cannot be reported without falsely implying the old
-    // document survived, so directory durability is best-effort after the atomic boundary.
-    if let Ok(directory) = File::open(parent) {
-        let _ = directory.sync_all();
-    }
-}
-
-/// Windows journals same-directory replacement metadata; std has no directory fsync handle.
-#[cfg(not(unix))]
-fn sync_parent_directory(_parent: &Path) {}
 
 #[cfg(test)]
 #[path = "commit_tests.rs"]

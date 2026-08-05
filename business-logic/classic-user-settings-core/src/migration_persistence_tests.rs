@@ -1,7 +1,47 @@
 use super::*;
 use crate::MigrationPlanningOutcome;
-use crate::commit::{PublicationStage, Publisher, SystemPublisher};
+use crate::commit::{PublicationStage, Publisher, SystemPublisher, UserSettingsCommitError};
 use std::cell::Cell;
+
+/// Publisher that fails one selected publication and really publishes every other one.
+///
+/// The failing publication is a pure fake: it returns the stage failure and performs no
+/// filesystem work at all, because the staging-and-publish sequence it used to interleave with
+/// now lives in `classic-durable-publication`. The publications *before* it must still be real —
+/// migration apply rereads its published backup before it reaches the publication under test, so
+/// a fake backup would fail verification instead of the stage being exercised.
+struct FailAtPublication {
+    stage: PublicationStage,
+    publication: usize,
+    seen: Cell<usize>,
+    real: SystemPublisher,
+}
+
+impl FailAtPublication {
+    /// Builds a publisher that fails at `stage` on the 1-based `publication` call.
+    fn new(stage: PublicationStage, publication: usize) -> Self {
+        Self {
+            stage,
+            publication,
+            seen: Cell::new(0),
+            real: SystemPublisher::system(),
+        }
+    }
+}
+
+impl Publisher for FailAtPublication {
+    /// Fails the selected publication without touching the filesystem; publishes the rest.
+    fn publish(&self, target: &Path, bytes: &[u8]) -> Result<(), UserSettingsCommitError> {
+        let publication = self.seen.get() + 1;
+        self.seen.set(publication);
+        if publication == self.publication {
+            return Err(self
+                .stage
+                .failure(format!("injected {:?} failure", self.stage)));
+        }
+        self.real.publish(target, bytes)
+    }
+}
 
 /// Publisher that corrupts only the first canonical publication after it becomes visible.
 struct CorruptFirstCanonicalPublication {
@@ -152,7 +192,7 @@ fn every_interrupted_backup_or_publish_stage_preserves_the_last_accepted_documen
             else {
                 panic!("the supported flat shape must produce a migration plan");
             };
-            let publisher = SystemPublisher::failing_at_publication(stage, publication);
+            let publisher = FailAtPublication::new(stage, publication);
 
             let error = plan
                 .apply_with_publisher(root.path(), &publisher)
@@ -219,7 +259,7 @@ fn every_interrupted_restore_stage_preserves_the_migrated_document() {
         let migrated = std::fs::read(&settings_path).unwrap();
 
         let error = receipt
-            .restore_with_publisher(root.path(), &SystemPublisher::failing_at(stage))
+            .restore_with_publisher(root.path(), &FailAtPublication::new(stage, 1))
             .unwrap_err();
 
         assert!(error.code().starts_with("migration_restore"));

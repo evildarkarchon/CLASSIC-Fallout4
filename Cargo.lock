@@ -1277,6 +1277,7 @@ dependencies = [
 name = "classic-user-settings-core"
 version = "9.1.0"
 dependencies = [
+ "classic-durable-publication",
  "classic-settings-core",
  "classic-shared-core",
  "serde_json",

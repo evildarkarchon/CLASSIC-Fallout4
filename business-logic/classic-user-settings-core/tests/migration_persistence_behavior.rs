@@ -103,6 +103,50 @@ fn explicit_restore_republishes_verified_backup_byte_for_byte_and_retains_it() {
 }
 
 #[test]
+fn reapplying_after_a_restore_republishes_the_same_content_addressed_backup() {
+    // Backup paths are derived from a digest of the original bytes, so they are deliberately
+    // stable across invocations rather than unique per publication. Apply/restore/apply therefore
+    // publishes a backup onto a path that already holds byte-identical content, and that must
+    // remain an ordinary replacement. A publication mode that refused to clobber would turn this
+    // supported sequence into a backup-stage failure.
+    let root = tempfile::tempdir().unwrap();
+    let settings_path = install_fixture(
+        root.path(),
+        Path::new("CLASSIC Settings.yaml"),
+        "flat_classic_config.yaml",
+    );
+    let original = std::fs::read(&settings_path).unwrap();
+    let MigrationPlanningOutcome::Planned(plan) = UserSettings::open(root.path()).plan_migration()
+    else {
+        panic!("the supported flat shape must produce a migration plan");
+    };
+    let UserSettingsMigrationApplyOutcome::Applied(receipt) = plan.apply(root.path()).unwrap()
+    else {
+        panic!("an unchanged approved plan must apply");
+    };
+    let first_backup_path = receipt.backup_path().to_path_buf();
+    let UserSettingsMigrationRestoreOutcome::Restored { .. } =
+        receipt.restore(root.path()).unwrap()
+    else {
+        panic!("an unchanged migrated document must restore");
+    };
+
+    let MigrationPlanningOutcome::Planned(replan) =
+        UserSettings::open(root.path()).plan_migration()
+    else {
+        panic!("the restored flat shape must produce a migration plan again");
+    };
+    let UserSettingsMigrationApplyOutcome::Applied(reapplied) = replan.apply(root.path()).unwrap()
+    else {
+        panic!("an unchanged approved plan must apply a second time");
+    };
+
+    assert_eq!(reapplied.backup_path(), first_backup_path);
+    assert_eq!(std::fs::read(&first_backup_path).unwrap(), original);
+    assert_eq!(reapplied.backup_revision(), replan.base_revision());
+}
+
+#[test]
 fn legacy_location_restore_reactivates_the_verified_legacy_source() {
     let root = tempfile::tempdir().unwrap();
     let legacy_path = install_fixture(
