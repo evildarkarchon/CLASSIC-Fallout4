@@ -1,6 +1,6 @@
 use super::*;
 use crate::UserSettingsCommitError;
-use crate::commit::PublicationStage;
+use crate::commit::{CommitPublicationStage, PublicationStage};
 use std::cell::Cell;
 
 /// Pure fake that returns one publication stage failure and touches no files.

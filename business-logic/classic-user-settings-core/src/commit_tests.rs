@@ -1,5 +1,6 @@
 use super::{
-    PublicationStage, Publisher, SystemPublisher, UserSettingsCommitError, durable_publication,
+    CommitPublicationStage, PublicationStage, Publisher, SystemPublisher, UserSettingsCommitError,
+    durable_publication,
 };
 use crate::{UserSettings, UserSettingsUpdate, UserSettingsUpdatePreview};
 use std::path::Path;
@@ -48,7 +49,7 @@ fn every_injected_publication_failure_preserves_a_parseable_original_and_cleans_
         PublicationStage::Write,
         PublicationStage::Flush,
         PublicationStage::Sync,
-        PublicationStage::Replace,
+        PublicationStage::Publish,
     ] {
         let root = tempfile::tempdir().unwrap();
         let path = root.path().join("CLASSIC Settings.yaml");
@@ -88,41 +89,45 @@ fn every_injected_publication_failure_preserves_a_parseable_original_and_cleans_
 
 #[test]
 fn the_shared_terminal_publish_stage_keeps_this_crates_replace_error_code() {
-    // The shared module's stage vocabulary ends in `Publish`; this crate's ends in `Replace` and
-    // publishes `commit_replace_failed`. Every operation-specific code in this crate is derived
-    // from these five, so a drift here silently retires a published contract in three places at
-    // once. Pinned directly rather than only through a filesystem failure, because no portable
-    // condition provokes each stage on demand.
-    for (shared, local, code) in [
+    // This crate now shares the stage vocabulary but not the naming: the shared module's terminal
+    // stage is `Publish`, while the code this crate publishes for it is `commit_replace_failed`.
+    // Every operation-specific code in this crate is derived from these five, so a drift here
+    // silently retires a published contract in three bindings at once. Pinned directly rather than
+    // only through a filesystem failure, because no portable condition provokes each stage on
+    // demand.
+    for (shared, code) in [
         (
             durable_publication::PublicationStage::Create,
-            PublicationStage::Create,
             "commit_temp_create_failed",
         ),
         (
             durable_publication::PublicationStage::Write,
-            PublicationStage::Write,
             "commit_temp_write_failed",
         ),
         (
             durable_publication::PublicationStage::Flush,
-            PublicationStage::Flush,
             "commit_temp_flush_failed",
         ),
         (
             durable_publication::PublicationStage::Sync,
-            PublicationStage::Sync,
             "commit_temp_sync_failed",
         ),
         (
             durable_publication::PublicationStage::Publish,
-            PublicationStage::Replace,
             "commit_replace_failed",
         ),
     ] {
-        assert_eq!(PublicationStage::from_publication(shared), local);
-        assert_eq!(local.error_code(), code);
+        assert_eq!(shared.error_code(), code);
+        assert_eq!(shared.failure("injected").code(), code);
     }
+
+    // Stated on its own so that deleting the loop's last row cannot quietly drop the one mapping
+    // that is not a mechanical rename of the shared variant's spelling.
+    assert_eq!(
+        durable_publication::PublicationStage::Publish.error_code(),
+        "commit_replace_failed",
+        "the shared terminal stage is named `Publish`, but this crate publishes `replace`"
+    );
 }
 
 #[test]

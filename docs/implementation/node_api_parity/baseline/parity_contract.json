@@ -7957,7 +7957,7 @@
       "ownerModule": "config",
       "rustCrate": "classic-config-core",
       "rustSymbol": "LocalIgnoreResetPublicationStage",
-      "rustKind": "enum",
+      "rustKind": "type",
       "nodeExport": "JsLocalIgnoreResetPublicationStage",
       "nodeKind": "const_enum"
     },

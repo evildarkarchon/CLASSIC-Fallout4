@@ -1356,6 +1356,36 @@ fn every_publication_failure_projects_onto_its_published_reset_code() {
 }
 
 #[test]
+/// The shared terminal stage keeps this crate's published `Publish` spelling.
+///
+/// Stated on its own, outside the table above, because the other caller of the shared module —
+/// `classic-user-settings-core` — names this same terminal stage `Replace` for its own published
+/// codes. The two vocabularies agreeing here is a fact about these enums, not a rule, so it is
+/// checked rather than assumed. If it ever stopped holding, the CXX bridge's frozen FFI enum, the
+/// Node string enum, the Python `"publish"` token, and the scan-run contract's `Publish` failure
+/// stage would all shift together and silently.
+fn the_shared_terminal_publish_stage_keeps_this_crates_publish_spelling() {
+    let projected = project_publication_error(
+        LocalIgnoreResetPublicationKind::Replacement,
+        Path::new("CLASSIC Data/CLASSIC Ignore.yaml"),
+        classic_durable_publication::PublicationError::Stage {
+            stage: classic_durable_publication::PublicationStage::Publish,
+            path: PathBuf::from("ignored; the reset names its own path"),
+            source: io::Error::other("terminal stage failure"),
+        },
+    );
+
+    let LocalIgnoreResetError::ReplacementPublication { stage, .. } = &projected else {
+        panic!("expected a replacement publication failure, got {projected}");
+    };
+    assert_eq!(*stage, LocalIgnoreResetPublicationStage::Publish);
+    // The published message renders the stage with `{stage:?}`, so the variant's *spelling* is
+    // contract too, not only its identity.
+    assert_eq!(format!("{stage:?}"), "Publish");
+    assert!(projected.to_string().contains("at Publish"));
+}
+
+#[test]
 /// A post-publish sync failure reports that canonical defaults are already authoritative.
 fn local_ignore_reset_types_durability_unknown_after_canonical_replacement() {
     let installation = tempdir().expect("installation root should be created");

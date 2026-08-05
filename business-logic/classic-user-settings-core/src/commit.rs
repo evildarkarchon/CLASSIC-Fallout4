@@ -371,55 +371,47 @@ pub(crate) trait Publisher {
 /// Production publisher backed by the workspace's shared Durable Publication module.
 pub(crate) struct SystemPublisher;
 
-/// Fallible publication stages in this crate's own, already-published vocabulary.
+/// The workspace's single publication stage vocabulary, under this crate's local name.
 ///
-/// These mirror the shared module's stages one-for-one except at the end: this crate has always
-/// named its terminal stage `Replace` and published `commit_replace_failed`, while the shared
-/// module's terminal stage is `Publish`. The two vocabularies are reconciled in exactly one
-/// place, [`PublicationStage::from_publication`], so that adopting the shared module changes no
-/// published error code.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum PublicationStage {
-    Create,
-    Write,
-    Flush,
-    Sync,
-    Replace,
-}
+/// This crate keeps no stage definition of its own. What it keeps is the projection below: the
+/// shared module owns the five-state sequence, and this crate owns what each state is *called* on
+/// the way out.
+pub(crate) use durable_publication::PublicationStage;
 
-impl PublicationStage {
-    /// Projects the shared module's stage vocabulary onto this crate's.
-    ///
-    /// The terminal rename is the whole reason this function exists: mapping `Publish` to
-    /// anything but [`Self::Replace`] would silently retire `commit_replace_failed` and every
-    /// operation code derived from it.
-    const fn from_publication(stage: durable_publication::PublicationStage) -> Self {
-        match stage {
-            durable_publication::PublicationStage::Create => Self::Create,
-            durable_publication::PublicationStage::Write => Self::Write,
-            durable_publication::PublicationStage::Flush => Self::Flush,
-            durable_publication::PublicationStage::Sync => Self::Sync,
-            durable_publication::PublicationStage::Publish => Self::Replace,
-        }
-    }
-
+/// Projects a publication stage onto the error code this crate publishes for it.
+///
+/// This is an extension rather than a rename because the two vocabularies genuinely disagree at
+/// the end. The shared module's terminal stage is `Publish`; this crate has always published
+/// `commit_replace_failed`, and every operation-specific code in `migration_persistence` and
+/// `legacy_tui_state_import` is derived from that string. Collapsing onto the shared type must
+/// not collapse that name with it.
+pub(crate) trait CommitPublicationStage {
     /// Returns the public error code corresponding to this publication stage.
-    pub(crate) const fn error_code(self) -> &'static str {
-        match self {
-            Self::Create => "commit_temp_create_failed",
-            Self::Write => "commit_temp_write_failed",
-            Self::Flush => "commit_temp_flush_failed",
-            Self::Sync => "commit_temp_sync_failed",
-            Self::Replace => "commit_replace_failed",
-        }
-    }
+    fn error_code(self) -> &'static str;
 
     /// Builds the failure this crate reports when a publication fails at this stage.
     ///
     /// This is the only way to construct a stage failure outside this module, which is what lets
     /// [`UserSettingsCommitError::new`] stay private: the test fakes that stand in for the
     /// publisher need a stage failure specifically, not a general-purpose error constructor.
-    pub(crate) fn failure(self, detail: impl fmt::Display) -> UserSettingsCommitError {
+    fn failure(self, detail: impl fmt::Display) -> UserSettingsCommitError;
+}
+
+impl CommitPublicationStage for PublicationStage {
+    fn error_code(self) -> &'static str {
+        match self {
+            Self::Create => "commit_temp_create_failed",
+            Self::Write => "commit_temp_write_failed",
+            Self::Flush => "commit_temp_flush_failed",
+            Self::Sync => "commit_temp_sync_failed",
+            // The shared vocabulary calls this stage `Publish`. Mapping it to anything but
+            // `commit_replace_failed` would silently retire that published code and every
+            // operation code derived from it, across three bindings at once.
+            Self::Publish => "commit_replace_failed",
+        }
+    }
+
+    fn failure(self, detail: impl fmt::Display) -> UserSettingsCommitError {
         UserSettingsCommitError::new(self.error_code(), detail.to_string())
     }
 }
@@ -464,11 +456,10 @@ fn map_publication_error(error: &durable_publication::PublicationError) -> UserS
         None => error.to_string(),
     };
     match error {
-        // Built through `PublicationStage::failure` rather than by naming a code here, so that a
-        // real stage failure and the one a test fake stands in for are constructed identically.
-        durable_publication::PublicationError::Stage { stage, .. } => {
-            PublicationStage::from_publication(*stage).failure(message)
-        }
+        // Built through `CommitPublicationStage::failure` rather than by naming a code here, so
+        // that a real stage failure and the one a test fake stands in for are constructed
+        // identically.
+        durable_publication::PublicationError::Stage { stage, .. } => stage.failure(message),
         // Unreachable while this seam passes `LockPolicy::none`, but mapped rather than panicked
         // on so that a future policy change cannot turn into an abort.
         durable_publication::PublicationError::LockOpen { .. } => {
@@ -486,7 +477,7 @@ fn map_publication_error(error: &durable_publication::PublicationError) -> UserS
         | durable_publication::PublicationError::StagedUnreadable { .. }
         | durable_publication::PublicationError::DigestMismatch { .. }
         | durable_publication::PublicationError::BackupMismatch { .. } => {
-            PublicationStage::Replace.failure(message)
+            PublicationStage::Publish.failure(message)
         }
     }
 }

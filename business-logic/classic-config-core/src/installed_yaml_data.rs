@@ -269,23 +269,6 @@ enum LocalIgnoreResetPublicationKind {
     Replacement,
 }
 
-/// Translate the shared stage vocabulary into this crate's published stage.
-///
-/// The two enums are structurally identical by design: `classic-durable-publication` owns one
-/// neutral vocabulary, and every caller maps it onto its own stable, binding-visible codes rather
-/// than exporting the shared type.
-const fn project_publication_stage(
-    stage: durable_publication::PublicationStage,
-) -> LocalIgnoreResetPublicationStage {
-    match stage {
-        durable_publication::PublicationStage::Create => LocalIgnoreResetPublicationStage::Create,
-        durable_publication::PublicationStage::Write => LocalIgnoreResetPublicationStage::Write,
-        durable_publication::PublicationStage::Flush => LocalIgnoreResetPublicationStage::Flush,
-        durable_publication::PublicationStage::Sync => LocalIgnoreResetPublicationStage::Sync,
-        durable_publication::PublicationStage::Publish => LocalIgnoreResetPublicationStage::Publish,
-    }
-}
-
 /// Map a neutral publication failure onto this crate's published reset error codes.
 ///
 /// `path` is the reset's own path for `kind`, not [`durable_publication::PublicationError::path`]:
@@ -314,9 +297,7 @@ fn project_publication_error(
                     .to_string(),
             };
         }
-        durable_publication::PublicationError::Stage { stage, source, .. } => {
-            (project_publication_stage(stage), source)
-        }
+        durable_publication::PublicationError::Stage { stage, source, .. } => (stage, source),
         // A lock failure has no sequence stage of its own. `Publish` is the honest attribution:
         // nothing was staged, so the transaction failed at the point of making bytes visible.
         durable_publication::PublicationError::LockOpen { source, .. }
@@ -480,19 +461,23 @@ impl LocalIgnoreResetResult {
 }
 
 /// Durable publication stage attributed by a Local Ignore reset failure.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum LocalIgnoreResetPublicationStage {
-    /// A same-directory staging file could not be created.
-    Create,
-    /// Complete bytes could not be written to the staging file.
-    Write,
-    /// Buffered staging bytes could not be flushed.
-    Flush,
-    /// Staging bytes could not be synchronized to durable storage.
-    Sync,
-    /// The fully synchronized staging file could not be atomically or durably published.
-    Publish,
-}
+///
+/// This is the workspace's single stage vocabulary — [`durable_publication::PublicationStage`] —
+/// under the name this crate publishes for it. The five variants were always spelled identically
+/// to the shared ones, terminal `Publish` included, so nothing but the name was ever this crate's
+/// own: `Create`, `Write`, `Flush`, `Sync`, and `Publish` reach the bindings byte for byte as
+/// before, and the CXX bridge's frozen FFI enum and the Node binding's mirror are unchanged.
+///
+/// Contrast `classic-user-settings-core`, whose terminal stage is named `Replace` and whose
+/// published `commit_replace_failed` code therefore cannot be an alias of the shared vocabulary.
+/// The symmetry here is a fact about these two enums, not a rule about callers.
+///
+/// Aliasing also inherits the shared type's inherent API, of which one item is a hazard worth
+/// naming: `Display` and `as_str` render the *lowercase* `"publish"`, while `Debug` renders
+/// `Publish`. [`LocalIgnoreResetError`]'s messages interpolate `{stage:?}`, so a `{stage}` typo
+/// would lowercase a published message instead of failing to compile. A test pins the `Debug`
+/// spelling for exactly that reason.
+pub type LocalIgnoreResetPublicationStage = durable_publication::PublicationStage;
 
 /// Operational failure encountered while publishing a Local Ignore reset.
 #[derive(Debug, Error)]

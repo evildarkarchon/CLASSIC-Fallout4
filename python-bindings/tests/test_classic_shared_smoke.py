@@ -295,14 +295,14 @@ def test_rust_performance_monitor_start_stop_timer() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Pitfall 2 rust-only guard — all 19 @rust-suffixed symbols exist in the
-# classic-shared-py surface. This locks the @rust proxy row contract and
-# prevents silent surface drift.
+# Pitfall 2 rust-only guard — every @rust-suffixed shared row resolves to a
+# real symbol in the crate that row names. This locks the @rust proxy row
+# contract and prevents silent surface drift.
 # ---------------------------------------------------------------------------
 
 
 def test_rust_only_symbols_in_core_surface() -> None:
-    """All 19 classic_shared @rust-suffixed rust_symbol values exist in the parsed Rust surface.
+    """Every classic_shared @rust-suffixed row resolves in the crate it names.
 
     Matches the Wave 1/Plan 06/Plan 07 Pitfall 2 guard pattern.
     """
@@ -317,9 +317,16 @@ def test_rust_only_symbols_in_core_surface() -> None:
     with contract_path.open(encoding="utf-8") as f:
         contract = json.load(f)
 
-    shared_symbols = {
-        s["symbol"] for s in surface["symbols"] if s.get("crate") == "classic-shared-py"
-    }
+    # Keyed by (crate, symbol) rather than by symbol alone, because a shared
+    # row's owning crate is not always the `-py` binding crate. "Enforce
+    # verified Rust symbols in binding parity contracts" re-pointed several
+    # rows at the crate that actually declares the symbol: `PathHandler` and
+    # `StringProcessor` live in `classic-shared-core` and `record_timing` in
+    # `classic-perf-core`, while `classic-shared-py` exports the wrapper types
+    # `PyPathHandler` and `PyStringProcessor` under different names. Honouring
+    # each row's own `rustCrate` also verifies the crate attribution, which
+    # matching on the bare symbol never did.
+    surface_symbols = {(s.get("crate"), s["symbol"]) for s in surface["symbols"]}
 
     rust_only_rows = [
         r for r in contract["tier1Mappings"]
@@ -328,8 +335,8 @@ def test_rust_only_symbols_in_core_surface() -> None:
 
     missing: list[str] = []
     for row in rust_only_rows:
-        if row["rustSymbol"] not in shared_symbols:
-            missing.append(f"{row['id']} -> {row['rustSymbol']}")
+        if (row.get("rustCrate"), row["rustSymbol"]) not in surface_symbols:
+            missing.append(f"{row['id']} -> {row.get('rustCrate')}::{row['rustSymbol']}")
 
     assert not missing, "Rust-only @rust-suffix shared rows missing from rust_api_surface: " + ", ".join(missing)
 

@@ -1,6 +1,8 @@
 use super::*;
 use crate::MigrationPlanningOutcome;
-use crate::commit::{PublicationStage, Publisher, SystemPublisher, UserSettingsCommitError};
+use crate::commit::{
+    CommitPublicationStage, PublicationStage, Publisher, SystemPublisher, UserSettingsCommitError,
+};
 use std::cell::Cell;
 
 /// Publisher that fails one selected publication and really publishes every other one.
@@ -181,7 +183,7 @@ fn every_interrupted_backup_or_publish_stage_preserves_the_last_accepted_documen
             PublicationStage::Write,
             PublicationStage::Flush,
             PublicationStage::Sync,
-            PublicationStage::Replace,
+            PublicationStage::Publish,
         ] {
             let root = tempfile::tempdir().unwrap();
             let settings_path = root.path().join(CANONICAL_RELATIVE_PATH);
@@ -242,7 +244,7 @@ fn every_interrupted_restore_stage_preserves_the_migrated_document() {
         PublicationStage::Write,
         PublicationStage::Flush,
         PublicationStage::Sync,
-        PublicationStage::Replace,
+        PublicationStage::Publish,
     ] {
         let root = tempfile::tempdir().unwrap();
         let settings_path = root.path().join(CANONICAL_RELATIVE_PATH);
