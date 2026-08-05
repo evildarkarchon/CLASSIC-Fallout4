@@ -43,6 +43,11 @@
 //!   [`StagedPublication`] the caller publishes itself. This exists so that a
 //!   caller's own last-moment check can sit in the narrowest possible window:
 //!   everything fallible is already done, and only the move remains.
+//! - [`install_verified`] adopts a file the caller already staged on disk,
+//!   verifies its SHA-256 against an expected digest, and installs it while
+//!   preserving one rollback generation. It is the only operation here that
+//!   creates a rollback generation, and the only one that starts from bytes
+//!   this crate did not write.
 //!
 //! These are separate named operations over one shared implementation rather
 //! than one operation with a policy struct, because a policy matrix would make
@@ -50,7 +55,8 @@
 //!
 //! # Concurrency contract
 //!
-//! The two locking operations take a [`LockPolicy`] and honour it identically:
+//! The three locking operations take a [`LockPolicy`] and honour it
+//! identically:
 //!
 //! - [`LockPolicy::sibling`] acquires an exclusive cross-process lock on a
 //!   sibling lock file *before* any staging, holds it for the whole sequence,
@@ -72,12 +78,25 @@
 //! guard, which is precisely the window a lock closes, so a caller that splits
 //! the sequence must hold its own lock across every part.
 //!
+//! [`LockPolicy::acquire`] is public for one narrow reason: a caller may have
+//! a *neighbouring* operation that publishes nothing but moves the same files
+//! an install moves, and it must serialize against that install. Taking the
+//! same lock from here is what keeps the workspace at one cross-process lock
+//! implementation instead of drifting back to two.
+//!
 //! # What this crate does not own
 //!
-//! Backup location, conflict or revision policy, and rollback generations all
-//! stay with the callers. This crate never decides whether a
-//! [`Durability::Unknown`] outcome matters; it only guarantees that the
-//! outcome is reported rather than discarded.
+//! Backup location and conflict or revision policy stay with the callers. This
+//! crate never decides whether a [`Durability::Unknown`] outcome matters; it
+//! only guarantees that the outcome is reported rather than discarded.
+//!
+//! Rollback generations are a narrower case. The `.prev` convention is YAML
+//! Data Update Channel policy, and it lives here only inside
+//! [`install_verified`] — never in [`publish`] or
+//! [`publish_with_verified_backup`]. That placement is load-bearing: it is how
+//! ADR-0006's prohibition on creating that state for Local Ignore YAML Data
+//! holds structurally, because the operation that caller uses cannot produce
+//! a rollback generation at all.
 //!
 //! # Error contract
 //!
@@ -92,8 +111,9 @@ mod publication;
 
 pub use error::{PublicationError, PublicationStage};
 pub use identity::ContentIdentity;
-pub use lock::LockPolicy;
+pub use lock::{LockPolicy, PublicationLock};
 pub use publication::{
-    Durability, Publication, StagedPublication, VerifiedBackup, VerifiedBackupPublication, publish,
-    publish_verified_backup, publish_with_verified_backup, stage,
+    Durability, Install, Publication, StagedPublication, VerifiedBackup, VerifiedBackupPublication,
+    install_verified, publish, publish_verified_backup, publish_with_verified_backup,
+    rollback_generation_path, stage,
 };

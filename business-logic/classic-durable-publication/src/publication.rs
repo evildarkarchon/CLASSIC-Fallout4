@@ -1,8 +1,8 @@
 //! The staging-and-publish sequence and the two operations built on it.
 
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io::Write as _;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use tempfile::NamedTempFile;
 
@@ -140,6 +140,55 @@ impl VerifiedBackupPublication {
     }
 }
 
+/// A completed verified install, with its rollback generation accounted for.
+///
+/// `#[must_use]` for the same reason as [`Publication`]: it carries the
+/// replacement's durability outcome, which is the one thing a caller can
+/// accidentally drop.
+#[must_use]
+#[derive(Debug)]
+pub struct Install {
+    identity: ContentIdentity,
+    created_rollback_generation: bool,
+    durability: Durability,
+}
+
+impl Install {
+    /// Return the verified identity of the bytes now visible at the target.
+    ///
+    /// This is calculated from the staged bytes that were actually installed,
+    /// not from the caller's expected digest, so it attests what is on disk.
+    #[must_use]
+    pub const fn identity(&self) -> &ContentIdentity {
+        &self.identity
+    }
+
+    /// Return whether a rollback generation was created by this install.
+    ///
+    /// `false` means the target did not previously exist, so there is nothing
+    /// to roll back to — not that the rollback generation was skipped.
+    #[must_use]
+    pub const fn created_rollback_generation(&self) -> bool {
+        self.created_rollback_generation
+    }
+
+    /// Return whether the namespace entry reached the durability barrier.
+    #[must_use]
+    pub const fn durability(&self) -> &Durability {
+        &self.durability
+    }
+
+    /// Consume the install and return only its durability outcome.
+    ///
+    /// Callers that deliberately discard durability uncertainty should do so
+    /// through this method, so the discard is a named expression rather than
+    /// an omitted error check.
+    #[must_use]
+    pub fn into_durability(self) -> Durability {
+        self.durability
+    }
+}
+
 /// Whether a publication may replace an existing entry at its final path.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum PublicationMode {
@@ -157,6 +206,17 @@ const STAGING_PREFIX: &str = ".classic-durable-publication-";
 
 /// Suffix for the same-directory staging file.
 const STAGING_SUFFIX: &str = ".tmp";
+
+/// Suffix naming the single rollback generation kept beside an install target.
+///
+/// This literal is deliberately the *only* place `.prev` appears in this
+/// crate, and it is reachable from [`install_verified`] alone. Rollback
+/// generations are YAML Data Update Channel policy, not a general durability
+/// feature, and keeping them out of [`publish`] and
+/// [`publish_with_verified_backup`] is how ADR-0006's prohibition on creating
+/// that state for Local Ignore YAML Data holds structurally rather than by
+/// convention: the operation that path uses simply cannot produce one.
+const ROLLBACK_GENERATION_SUFFIX: &str = ".prev";
 
 /// Durably publish complete bytes at `target`, replacing whatever is there.
 ///
@@ -350,6 +410,151 @@ pub fn publish_verified_backup(
     backup: VerifiedBackup<'_>,
 ) -> Result<ContentIdentity, PublicationError> {
     publish_verified_backup_locked(backup)
+}
+
+/// Return the rollback generation path this crate keeps beside `target`.
+///
+/// Exposed so the operations that *consume* a rollback generation — rolling
+/// one back, or promoting one after an interrupted install — agree with
+/// [`install_verified`] by construction rather than by both spelling `.prev`.
+/// Only one generation is ever kept; there is no chain to walk.
+#[must_use]
+pub fn rollback_generation_path(target: &Path) -> PathBuf {
+    let mut path = target.as_os_str().to_os_string();
+    path.push(ROLLBACK_GENERATION_SUFFIX);
+    PathBuf::from(path)
+}
+
+/// Verify an already-staged file's digest, then install it over `target`.
+///
+/// This is the digest-verifying, rollback-generation-keeping operation. Unlike
+/// [`publish`], the caller has already produced the bytes on disk — a
+/// downloaded asset, typically — so this adopts `staged` where it lies instead
+/// of writing it. That makes the caller responsible for one precondition this
+/// crate cannot check for it: `staged` must sit in `target`'s own directory,
+/// or the final move is not same-volume and therefore not atomic.
+///
+/// The sequence is:
+///
+/// 1. Calculate `staged`'s digest and compare it against `expected_sha256`,
+///    ignoring case.
+/// 2. Delete `staged` and abort if they differ, leaving `target` and any
+///    existing rollback generation exactly as they were.
+/// 3. Synchronize `staged` to the durability barrier. A caller that wrote it
+///    through an async writer has typically only drained user-space buffers,
+///    and without this step a crash after the move can leave the canonical
+///    path holding truncated bytes — a state self-heal cannot recover from,
+///    because the target exists.
+/// 4. Move an existing `target` aside to its rollback generation path,
+///    replacing any older generation.
+/// 5. Move `staged` onto `target`.
+///
+/// # Concurrency
+///
+/// `lock` decides whether this call takes an exclusive cross-process lock. The
+/// lock is taken before verification and held across the whole sequence, so
+/// two installs racing on one target cannot interleave their moves and leave
+/// the rollback generation pointing at a partially-installed state. Operations
+/// that move the same files without publishing — rollback and self-heal — must
+/// take the same lock through [`crate::LockPolicy::acquire`].
+///
+/// # Errors
+///
+/// Returns [`PublicationError::LockOpen`] or [`PublicationError::LockAcquire`]
+/// when a requested lock cannot be taken;
+/// [`PublicationError::StagedUnreadable`] when `staged` cannot be read for
+/// verification; [`PublicationError::DigestMismatch`] when its bytes do not
+/// match, in which case `staged` has been deleted; and
+/// [`PublicationError::Stage`] when synchronization or either move fails.
+///
+/// A failure at step 5 leaves `target` absent with its previous content in the
+/// rollback generation. That is a recoverable state by design — it is exactly
+/// what self-heal promotes — and it is why the rollback generation is written
+/// before the target is replaced rather than after.
+pub fn install_verified(
+    target: &Path,
+    staged: &Path,
+    expected_sha256: &str,
+    lock: &LockPolicy,
+) -> Result<Install, PublicationError> {
+    let _lock = lock.acquire(target)?;
+
+    let identity = verify_staged_digest(staged, expected_sha256)?;
+    sync_staged_file(staged)?;
+    let created_rollback_generation = rotate_rollback_generation(target)?;
+    // Deliberately not `publish_staged`: that helper removes the staging file
+    // when the move fails, which is right for a staging file this crate
+    // created and wrong for one the caller owns. A caller whose move failed
+    // still has its verified bytes and can retry.
+    let durability = publish_staged_path(staged, target, PublicationMode::Replace)?;
+
+    Ok(Install {
+        identity,
+        created_rollback_generation,
+        durability,
+    })
+}
+
+/// Calculate a staged file's identity and reject it if the digest differs.
+fn verify_staged_digest(
+    staged: &Path,
+    expected_sha256: &str,
+) -> Result<ContentIdentity, PublicationError> {
+    let unreadable = |source: std::io::Error| PublicationError::StagedUnreadable {
+        path: staged.to_path_buf(),
+        source,
+    };
+    let file = File::open(staged).map_err(unreadable)?;
+    let identity = ContentIdentity::from_reader(file).map_err(unreadable)?;
+
+    if !identity.matches_sha256_hex(expected_sha256) {
+        // Remove the rejected bytes before reporting. Leaving them would put a
+        // file that failed integrity verification in the same directory as the
+        // target, under a name the caller chose for a payload it trusted.
+        let _ = std::fs::remove_file(staged);
+        return Err(PublicationError::DigestMismatch {
+            path: staged.to_path_buf(),
+            expected: expected_sha256.to_string(),
+            actual: identity,
+        });
+    }
+    Ok(identity)
+}
+
+/// Push a caller-written staged file to the platform's durability barrier.
+fn sync_staged_file(staged: &Path) -> Result<(), PublicationError> {
+    let sync_failure = |source: std::io::Error| {
+        PublicationError::stage_failure(PublicationStage::Sync, staged, source)
+    };
+    // Windows enforces GENERIC_WRITE on FlushFileBuffers, so the handle has to
+    // be reopened for write even though nothing is written through it. The
+    // handle is dropped at the end of this function, before the move.
+    let file = OpenOptions::new()
+        .write(true)
+        .open(staged)
+        .map_err(sync_failure)?;
+    file.sync_all().map_err(sync_failure)
+}
+
+/// Move an existing target aside, replacing any older rollback generation.
+///
+/// Returns whether a generation was created — `false` means there was no
+/// target to preserve.
+fn rotate_rollback_generation(target: &Path) -> Result<bool, PublicationError> {
+    if !target.exists() {
+        return Ok(false);
+    }
+    let previous = rollback_generation_path(target);
+    let rotation_failure = |source: std::io::Error| {
+        PublicationError::stage_failure(PublicationStage::Publish, &previous, source)
+    };
+    // Exactly one generation is kept, so an older one is discarded rather than
+    // chained. Multiple rollback generations are explicitly out of scope.
+    if previous.exists() {
+        std::fs::remove_file(&previous).map_err(rotation_failure)?;
+    }
+    std::fs::rename(target, &previous).map_err(rotation_failure)?;
+    Ok(true)
 }
 
 /// Publish and verify a backup with any caller lock already held.

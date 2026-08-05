@@ -109,6 +109,39 @@ pub enum PublicationError {
         source: std::io::Error,
     },
 
+    /// The staged file offered for installation could not be read.
+    ///
+    /// Nothing has been replaced and no rollback generation has been created;
+    /// the staged file is left exactly where the caller put it, because a
+    /// failure to read it is not evidence that its bytes are wrong.
+    #[error("staged file {} could not be read for verification", path.display())]
+    StagedUnreadable {
+        /// The staged path whose digest could not be calculated.
+        path: PathBuf,
+        /// The underlying filesystem failure.
+        #[source]
+        source: std::io::Error,
+    },
+
+    /// The staged file's digest differs from the expected one.
+    ///
+    /// The staged file has been deleted and every existing file — the target
+    /// and any rollback generation beside it — is untouched. Deleting is the
+    /// point: bytes that failed verification must not survive where a later
+    /// caller could mistake them for a verified payload.
+    #[error(
+        "staged file {} does not match the expected digest {expected}",
+        path.display()
+    )]
+    DigestMismatch {
+        /// The staged path whose bytes were rejected and then deleted.
+        path: PathBuf,
+        /// The expected digest exactly as the caller supplied it, case included.
+        expected: String,
+        /// Identity actually calculated from the staged bytes.
+        actual: ContentIdentity,
+    },
+
     /// The reread backup bytes differ from the retained original.
     ///
     /// Replacement was aborted, so the original is still the only copy at the
@@ -139,6 +172,8 @@ impl PublicationError {
             Self::Stage { path, .. }
             | Self::LockOpen { path, .. }
             | Self::LockAcquire { path, .. }
+            | Self::StagedUnreadable { path, .. }
+            | Self::DigestMismatch { path, .. }
             | Self::BackupUnreadable { path, .. }
             | Self::BackupMismatch { path, .. } => path,
         }
@@ -158,16 +193,17 @@ impl PublicationError {
 
     /// Return the underlying filesystem failure, if this failure has one.
     ///
-    /// [`Self::BackupMismatch`] is a verification result rather than an I/O
-    /// failure and therefore returns `None`.
+    /// [`Self::BackupMismatch`] and [`Self::DigestMismatch`] are verification
+    /// results rather than I/O failures and therefore return `None`.
     #[must_use]
     pub const fn io_source(&self) -> Option<&std::io::Error> {
         match self {
             Self::Stage { source, .. }
             | Self::LockOpen { source, .. }
             | Self::LockAcquire { source, .. }
+            | Self::StagedUnreadable { source, .. }
             | Self::BackupUnreadable { source, .. } => Some(source),
-            Self::BackupMismatch { .. } => None,
+            Self::BackupMismatch { .. } | Self::DigestMismatch { .. } => None,
         }
     }
 

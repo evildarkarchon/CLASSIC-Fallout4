@@ -1,11 +1,17 @@
 use std::path::{Path, PathBuf};
 
 use super::{
-    Durability, STAGING_PREFIX, VerifiedBackup, fault, publish, publish_verified_backup,
-    publish_with_verified_backup, stage,
+    Durability, STAGING_PREFIX, VerifiedBackup, fault, install_verified, publish,
+    publish_verified_backup, publish_with_verified_backup, rollback_generation_path, stage,
 };
 use crate::error::{PublicationError, PublicationStage};
+use crate::identity::ContentIdentity;
 use crate::lock::LockPolicy;
+
+/// Render the lowercase digest of `bytes`, as an expected-digest argument.
+fn digest_of(bytes: &[u8]) -> String {
+    ContentIdentity::from_bytes(bytes).sha256_hex()
+}
 
 /// List leftover staging artifacts in one directory.
 ///
@@ -612,4 +618,312 @@ fn splitting_the_sequence_yields_the_same_bytes_as_the_combined_operation() {
         &crate::ContentIdentity::from_bytes(b"the replacement")
     );
     assert!(staging_artifacts(fixture.root()).is_empty());
+}
+
+// ---------------------------------------------------------------------------
+// install_verified
+// ---------------------------------------------------------------------------
+
+#[test]
+fn a_verified_install_over_an_absent_target_creates_no_rollback_generation() {
+    let fixture = Fixture::new();
+    let target = fixture.path("CLASSIC Main.yaml");
+    let staged = fixture.seed("CLASSIC Main.yaml.new", b"the delivered payload");
+
+    let install = install_verified(
+        &target,
+        &staged,
+        &digest_of(b"the delivered payload"),
+        &LockPolicy::none(),
+    )
+    .expect("install over an absent target");
+
+    assert_eq!(fixture.read("CLASSIC Main.yaml"), b"the delivered payload");
+    assert!(
+        !install.created_rollback_generation(),
+        "there was no target to preserve"
+    );
+    assert!(!rollback_generation_path(&target).exists());
+    assert!(!staged.exists(), "the staged file is moved, not copied");
+}
+
+#[test]
+fn a_verified_install_preserves_the_replaced_target_as_a_rollback_generation() {
+    let fixture = Fixture::new();
+    let target = fixture.seed("CLASSIC Main.yaml", b"the installed generation");
+    let staged = fixture.seed("CLASSIC Main.yaml.new", b"the delivered payload");
+
+    let install = install_verified(
+        &target,
+        &staged,
+        &digest_of(b"the delivered payload"),
+        &LockPolicy::none(),
+    )
+    .expect("install over an existing target");
+
+    assert!(install.created_rollback_generation());
+    assert_eq!(fixture.read("CLASSIC Main.yaml"), b"the delivered payload");
+    assert_eq!(
+        std::fs::read(rollback_generation_path(&target)).expect("the rollback generation"),
+        b"the installed generation"
+    );
+}
+
+#[test]
+fn a_verified_install_keeps_exactly_one_rollback_generation() {
+    let fixture = Fixture::new();
+    let target = fixture.seed("CLASSIC Main.yaml", b"generation two");
+    fixture.seed("CLASSIC Main.yaml.prev", b"generation zero");
+    let staged = fixture.seed("CLASSIC Main.yaml.new", b"generation three");
+
+    let _install = install_verified(
+        &target,
+        &staged,
+        &digest_of(b"generation three"),
+        &LockPolicy::none(),
+    )
+    .expect("install over an existing rollback generation");
+
+    assert_eq!(
+        fixture.read("CLASSIC Main.yaml.prev"),
+        b"generation two",
+        "the rollback generation holds the version installed immediately before"
+    );
+    assert_eq!(fixture.read("CLASSIC Main.yaml"), b"generation three");
+}
+
+#[test]
+fn a_verified_install_attests_the_bytes_it_installed() {
+    let fixture = Fixture::new();
+    let target = fixture.path("CLASSIC Main.yaml");
+    let staged = fixture.seed("CLASSIC Main.yaml.new", b"the delivered payload");
+
+    let install = install_verified(
+        &target,
+        &staged,
+        &digest_of(b"the delivered payload"),
+        &LockPolicy::none(),
+    )
+    .expect("install");
+
+    assert_eq!(
+        install.identity(),
+        &ContentIdentity::from_bytes(b"the delivered payload")
+    );
+    assert_eq!(install.identity().byte_len(), 21);
+}
+
+#[test]
+fn a_verified_install_accepts_an_expected_digest_in_any_letter_case() {
+    let fixture = Fixture::new();
+    let target = fixture.path("CLASSIC Main.yaml");
+    let staged = fixture.seed("CLASSIC Main.yaml.new", b"the delivered payload");
+
+    let _install = install_verified(
+        &target,
+        &staged,
+        &digest_of(b"the delivered payload").to_uppercase(),
+        &LockPolicy::none(),
+    )
+    .expect("an uppercase manifest digest is the same digest");
+
+    assert_eq!(fixture.read("CLASSIC Main.yaml"), b"the delivered payload");
+}
+
+#[test]
+fn a_digest_mismatch_deletes_the_staged_file_and_preserves_every_existing_file() {
+    let fixture = Fixture::new();
+    let target = fixture.seed("CLASSIC Main.yaml", b"keep the installed bytes");
+    fixture.seed("CLASSIC Main.yaml.prev", b"keep the rollback generation");
+    let staged = fixture.seed("CLASSIC Main.yaml.new", b"the tampered payload");
+
+    let error = install_verified(
+        &target,
+        &staged,
+        &digest_of(b"the payload the manifest promised"),
+        &LockPolicy::none(),
+    )
+    .expect_err("a digest mismatch must abort the install");
+
+    match error {
+        PublicationError::DigestMismatch {
+            path,
+            expected,
+            actual,
+        } => {
+            assert_eq!(path, staged);
+            assert_eq!(expected, digest_of(b"the payload the manifest promised"));
+            assert_eq!(actual, ContentIdentity::from_bytes(b"the tampered payload"));
+        }
+        other => panic!("expected a digest mismatch, got {other:?}"),
+    }
+
+    assert!(
+        !staged.exists(),
+        "bytes that failed verification must not survive beside the target"
+    );
+    assert_eq!(
+        fixture.read("CLASSIC Main.yaml"),
+        b"keep the installed bytes"
+    );
+    assert_eq!(
+        fixture.read("CLASSIC Main.yaml.prev"),
+        b"keep the rollback generation"
+    );
+}
+
+#[test]
+fn a_staged_file_that_cannot_be_read_is_reported_without_touching_the_target() {
+    let fixture = Fixture::new();
+    let target = fixture.seed("CLASSIC Main.yaml", b"the installed bytes");
+    let staged = fixture.path("CLASSIC Main.yaml.new");
+
+    let error = install_verified(
+        &target,
+        &staged,
+        &digest_of(b"anything"),
+        &LockPolicy::none(),
+    )
+    .expect_err("an absent staged file cannot be verified");
+
+    assert!(matches!(error, PublicationError::StagedUnreadable { .. }));
+    assert_eq!(error.path(), staged);
+    assert_eq!(fixture.read("CLASSIC Main.yaml"), b"the installed bytes");
+    assert!(!rollback_generation_path(&target).exists());
+}
+
+#[test]
+fn a_verified_install_of_a_caller_written_file_needs_no_synchronization_from_the_caller() {
+    use std::io::Write as _;
+
+    let fixture = Fixture::new();
+    let target = fixture.path("CLASSIC Main.yaml");
+    let staged = fixture.path("CLASSIC Main.yaml.new");
+
+    // The shape an async downloader produces: open, write, drop — user-space
+    // buffers drained, nothing pushed to the durability barrier. Owning that
+    // synchronization is why the staged file is adopted rather than trusted.
+    {
+        let mut file = std::fs::File::create(&staged).expect("creating the staged file");
+        file.write_all(b"the downloaded payload")
+            .expect("writing the staged file");
+    }
+
+    let _install = install_verified(
+        &target,
+        &staged,
+        &digest_of(b"the downloaded payload"),
+        &LockPolicy::none(),
+    )
+    .expect("install of an unsynchronized staged file");
+
+    assert_eq!(fixture.read("CLASSIC Main.yaml"), b"the downloaded payload");
+}
+
+#[test]
+fn a_verified_install_always_reports_a_durability_outcome() {
+    let fixture = Fixture::new();
+    let target = fixture.path("CLASSIC Main.yaml");
+    let staged = fixture.seed("CLASSIC Main.yaml.new", b"payload");
+
+    let install = install_verified(
+        &target,
+        &staged,
+        &digest_of(b"payload"),
+        &LockPolicy::none(),
+    )
+    .expect("install");
+
+    assert!(install.durability().is_durable());
+    assert!(install.into_durability().is_durable());
+}
+
+#[test]
+fn a_verified_install_reports_an_uncertain_barrier_rather_than_failing() {
+    let fixture = Fixture::new();
+    let target = fixture.path("CLASSIC Main.yaml");
+    let staged = fixture.seed("CLASSIC Main.yaml.new", b"payload");
+
+    let install = {
+        let _fault = fault::fail_directory_sync();
+        install_verified(
+            &target,
+            &staged,
+            &digest_of(b"payload"),
+            &LockPolicy::none(),
+        )
+        .expect("an uncertain barrier is a value, not a failure")
+    };
+
+    assert_eq!(
+        fixture.read("CLASSIC Main.yaml"),
+        b"payload",
+        "the bytes are visible even when the namespace entry is unconfirmed"
+    );
+    assert!(matches!(install.durability(), Durability::Unknown(_)));
+    assert_eq!(
+        install
+            .durability()
+            .unknown_source()
+            .map(std::io::Error::kind),
+        Some(std::io::ErrorKind::PermissionDenied)
+    );
+}
+
+#[test]
+fn a_verified_install_takes_and_releases_the_requested_sibling_lock() {
+    let fixture = Fixture::new();
+    let target = fixture.path("CLASSIC Main.yaml");
+    let policy = LockPolicy::sibling(".install.lock");
+
+    let first = fixture.seed("CLASSIC Main.yaml.a", b"first payload");
+    let _first = install_verified(&target, &first, &digest_of(b"first payload"), &policy)
+        .expect("first install");
+    let second = fixture.seed("CLASSIC Main.yaml.b", b"second payload");
+    let _second = install_verified(&target, &second, &digest_of(b"second payload"), &policy)
+        .expect("the second install must not block on a released lock");
+
+    assert_eq!(fixture.read("CLASSIC Main.yaml"), b"second payload");
+    assert!(
+        policy
+            .lock_path(&target)
+            .expect("sibling lock path")
+            .exists()
+    );
+}
+
+#[test]
+fn the_rollback_generation_path_is_a_sibling_of_the_whole_target_name() {
+    let target = Path::new("cache").join("CLASSIC Main.yaml");
+
+    assert_eq!(
+        rollback_generation_path(&target),
+        Path::new("cache").join("CLASSIC Main.yaml.prev"),
+        "the suffix appends to the full name, never replacing the extension"
+    );
+}
+
+#[test]
+fn no_publication_operation_can_produce_a_rollback_generation() {
+    let fixture = Fixture::new();
+    let target = fixture.seed("CLASSIC Ignore.yaml", b"the malformed original");
+    let backup_path = fixture.path("CLASSIC Ignore.yaml.bak");
+
+    let _replacement =
+        publish(&target, b"the defaults", &LockPolicy::none()).expect("plain publication");
+    let _backed = publish_with_verified_backup(
+        &target,
+        b"the defaults again",
+        VerifiedBackup::new(&backup_path, b"the defaults"),
+        &LockPolicy::none(),
+    )
+    .expect("verified-backup publication");
+
+    // ADR-0006 prohibits creating a rollback generation for Local Ignore YAML
+    // Data. That holds because the operations that path uses cannot express
+    // one, not because the caller remembers not to ask.
+    assert!(
+        !rollback_generation_path(&target).exists(),
+        "only install_verified may create a rollback generation"
+    );
 }

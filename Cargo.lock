@@ -816,6 +816,7 @@ version = "9.1.0"
 dependencies = [
  "anyhow",
  "chrono",
+ "classic-durable-publication",
  "classic-operation-context",
  "classic-shared-core",
  "classic-xse-core",
@@ -823,7 +824,6 @@ dependencies = [
  "dashmap",
  "ddsfile",
  "encoding_rs",
- "fs4",
  "futures",
  "glob",
  "log",

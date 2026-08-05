@@ -102,8 +102,22 @@ impl LockPolicy {
     /// Acquire the lock this policy describes for `target`.
     ///
     /// Returns `Ok(None)` for [`LockPolicy::none`]. The returned guard must
-    /// stay in scope for the whole publication sequence.
-    pub(crate) fn acquire(&self, target: &Path) -> Result<Option<Lock>, PublicationError> {
+    /// stay in scope for the whole sequence it protects.
+    ///
+    /// The publication operations call this for themselves, so a caller only
+    /// reaches for it directly to put a *neighbouring* operation under the
+    /// same lock — `classic-file-io-core`'s rollback and self-heal are that
+    /// case: they perform no publication of their own, but they move the same
+    /// files an install moves and must serialize against it. Using this rather
+    /// than a second hand-rolled lock is what makes "one cross-process lock
+    /// implementation" true rather than aspirational.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`PublicationError::LockOpen`] when the lock file cannot be
+    /// opened or created, and [`PublicationError::LockAcquire`] when it is
+    /// opened but cannot be locked.
+    pub fn acquire(&self, target: &Path) -> Result<Option<PublicationLock>, PublicationError> {
         let Some(lock_path) = self.lock_path(target) else {
             return Ok(None);
         };
@@ -124,15 +138,18 @@ impl LockPolicy {
                 path: lock_path,
                 source,
             })?;
-        Ok(Some(Lock { _file: file }))
+        Ok(Some(PublicationLock { _file: file }))
     }
 }
 
 /// Guard holding an exclusive cross-process publication lock.
 ///
-/// Dropping the guard closes the handle, which releases the lock.
+/// Dropping the guard closes the handle, which releases the lock — including
+/// on panic and on process termination. It carries no methods because holding
+/// it is the entire contract.
+#[must_use = "the lock is released as soon as this guard is dropped"]
 #[derive(Debug)]
-pub(crate) struct Lock {
+pub struct PublicationLock {
     _file: File,
 }
 

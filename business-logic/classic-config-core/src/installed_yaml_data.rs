@@ -323,6 +323,18 @@ fn project_publication_error(
         | durable_publication::PublicationError::LockAcquire { source, .. } => {
             (LocalIgnoreResetPublicationStage::Publish, source)
         }
+        // Install-only outcomes. Reset publishes only bytes it wrote itself and verifies no
+        // digest against a manifest, so neither is reachable from this caller. They are mapped
+        // rather than panicked on, for the same reason the lock variants are: a change to the
+        // shared enum must not become an abort on a user-data path. `Write` is the honest
+        // attribution — both say the staged bytes are not what they were meant to be.
+        durable_publication::PublicationError::StagedUnreadable { source, .. } => {
+            (LocalIgnoreResetPublicationStage::Write, source)
+        }
+        durable_publication::PublicationError::DigestMismatch { .. } => (
+            LocalIgnoreResetPublicationStage::Write,
+            std::io::Error::other("staged bytes did not match the expected digest"),
+        ),
     };
     match kind {
         LocalIgnoreResetPublicationKind::Backup => LocalIgnoreResetError::BackupPublication {

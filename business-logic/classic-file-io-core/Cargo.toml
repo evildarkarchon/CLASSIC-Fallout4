@@ -16,6 +16,12 @@ classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-operation-context = { path = "../../foundation/classic-operation-context" }
 classic-xse-core = { path = "../classic-xse-core" }
 
+# Durable Publication (staging, verified backup, atomic publish) for the YAML
+# Data Update Channel install path. It owns the digest verification, the
+# `.prev` rollback generation, and the one cross-process lock this module's
+# rollback and self-heal also serialize on.
+classic-durable-publication = { path = "../classic-durable-publication" }
+
 # File I/O
 encoding_rs = { workspace = true }
 memmap2 = { workspace = true }
@@ -40,10 +46,9 @@ regex = { workspace = true }
 # Hashing
 sha2 = "0.10"
 
-# Cross-process file locking for atomic install / rollback serialization.
-# `fs4` is an actively-maintained fork of `fs2`; we pick it for the `fs_std`
-# feature that adds `lock_exclusive` / `try_lock_exclusive` to std::fs::File.
-fs4 = { version = "0.12", features = ["sync"] }
+# Cross-process file locking for atomic install / rollback serialization now
+# comes from `classic-durable-publication`, which uses std's `File::lock`. The
+# former `fs4` dependency was this crate's only use of that library.
 
 # Error handling
 anyhow = { workspace = true }
