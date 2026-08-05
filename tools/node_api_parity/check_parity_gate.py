@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-import shutil
 from typing import Any
 import sys
 
@@ -16,6 +15,12 @@ from binding_parity_runtime_coverage import (
     build_coverage_summary,
     load_json_file,
     render_coverage_summary_markdown,
+)
+
+from parity_artifact_io import (
+    artifacts_match,
+    preserve_baseline_generated_at_all,
+    sync_baseline_artifacts,
 )
 
 from generate_baseline import (
@@ -227,39 +232,6 @@ def render_tier1_gate_markdown(diff_report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def artifacts_match(expected: Path, actual: Path) -> bool:
-    """Return whether two artifact files have identical content."""
-    if not expected.exists() or not actual.exists():
-        return False
-    if expected.suffix == ".json":
-        expected_payload = json.loads(expected.read_text(encoding="utf-8"))
-        actual_payload = json.loads(actual.read_text(encoding="utf-8"))
-        expected_payload.pop("generated_at_utc", None)
-        actual_payload.pop("generated_at_utc", None)
-        return expected_payload == actual_payload
-
-    expected_lines = [
-        line
-        for line in expected.read_text(encoding="utf-8").splitlines()
-        if not line.startswith("- Generated:")
-    ]
-    actual_lines = [
-        line
-        for line in actual.read_text(encoding="utf-8").splitlines()
-        if not line.startswith("- Generated:")
-    ]
-    return expected_lines == actual_lines
-
-
-def sync_baseline_artifacts(
-    output_dir: Path, baseline_output_dir: Path, artifact_names: tuple[str, ...]
-) -> None:
-    """Copy generated artifacts into the checked-in baseline directory."""
-    baseline_output_dir.mkdir(parents=True, exist_ok=True)
-    for name in artifact_names:
-        shutil.copyfile(output_dir / name, baseline_output_dir / name)
-
-
 def main() -> int:
     """CLI entrypoint."""
     parser = argparse.ArgumentParser(
@@ -369,6 +341,21 @@ def main() -> int:
             "contract": args.contract,
             "runtime_registry": args.runtime_registry,
             "index_dts": args.index_dts,
+        },
+    )
+
+    # Carry the committed timestamps forward on any artifact whose substance is
+    # unchanged, so `--update-baseline` copies byte-identical files into the
+    # tracked baseline instead of a timestamp-only diff. The markdown reports
+    # follow for free: their "- Generated:" header renders from the
+    # corresponding JSON payload rather than calling the clock again.
+    preserve_baseline_generated_at_all(
+        baseline_output_dir,
+        {
+            "rust_api_surface.json": rust_manifest,
+            "node_api_surface.json": node_manifest,
+            "parity_diff_report.json": diff_report,
+            "runtime_coverage_summary.json": coverage_summary,
         },
     )
 

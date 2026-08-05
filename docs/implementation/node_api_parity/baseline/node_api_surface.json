@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-04T10:37:43.721494+00:00",
+  "generated_at_utc": "2026-08-04T23:38:52.833024+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -1973,6 +1973,14 @@
       "signature": "export interface JsYamlRollbackOutcome {"
     },
     {
+      "export": "JsYamlRollbackTargetOutcome",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsYamlRollbackTargetOutcome {"
+    },
+    {
       "export": "JsYamlSource",
       "kind": "const_enum",
       "owner_module": "config",
@@ -2183,13 +2191,13 @@
       "arity": 3
     },
     {
-      "export": "applyYamlUpdate",
+      "export": "applyYamlDataUpdateWithDecision",
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function applyYamlUpdate(request: JsYamlApplyRequest): Promise<JsYamlUpdateReport>",
-      "arity": 1
+      "signature": "export declare function applyYamlDataUpdateWithDecision(enabled: boolean, approved: JsApprovedUpdate, installationRoot?: string | undefined | null): Promise<JsYamlUpdateReport>",
+      "arity": 3
     },
     {
       "export": "buildUrlWithQuery",
@@ -2327,13 +2335,13 @@
       "arity": 2
     },
     {
-      "export": "checkYamlUpdate",
+      "export": "checkYamlDataUpdate",
       "kind": "function",
       "owner_module": "config",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function checkYamlUpdate(pagesUrl: string, tagPrefix: string, entries: Array<JsYamlClientSchemaEntry>, enabled: boolean, bundledYamlDir?: string | undefined | null): Promise<JsYamlUpdateStatus>",
-      "arity": 5
+      "signature": "export declare function checkYamlDataUpdate(enabled: boolean, installationRoot?: string | undefined | null): Promise<JsYamlUpdateStatus>",
+      "arity": 2
     },
     {
       "export": "clearAllMetrics",
@@ -3648,6 +3656,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function reverseUserSettingsMigrationPlan(plan: JsUserSettingsMigrationPlan): JsUserSettingsMigrationPlan",
       "arity": 1
+    },
+    {
+      "export": "rollbackYamlDataUpdate",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function rollbackYamlDataUpdate(): Promise<Array<JsYamlRollbackTargetOutcome>>",
+      "arity": 0
     },
     {
       "export": "rollbackYamlUpdate",

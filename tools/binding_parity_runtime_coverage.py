@@ -3,13 +3,13 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from parity_artifact_io import stable_id_hash, write_json  # noqa: F401
 
 VALID_CLASSIFICATIONS = {
     "runtime_verified",
@@ -53,11 +53,6 @@ def _lookup_maps(
     return contract_lookup, identifier_lookup
 
 
-def _stable_id_hash(values: list[str]) -> str:
-    joined = "\n".join(sorted(values))
-    return hashlib.sha256(joined.encode("utf-8")).hexdigest()
-
-
 def _selector_matches(selector: dict[str, Any], contract_row: dict[str, Any]) -> bool:
     key_map = {
         "ownerModule": "owner_module",
@@ -87,7 +82,7 @@ def expand_contract_selectors(
         matched_ids = [row["id"] for row in matched_rows]
         expected_count = entry.get("contractCount")
         expected_hash = entry.get("contractIdsHash")
-        actual_hash = _stable_id_hash(matched_ids)
+        actual_hash = stable_id_hash(matched_ids)
 
         if expected_count != len(matched_ids) or expected_hash != actual_hash:
             mismatches.append(
@@ -362,7 +357,3 @@ def render_coverage_summary_markdown(summary_payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def write_json(path: Path, payload: dict[str, Any]) -> None:
-    """Write JSON with stable formatting."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")

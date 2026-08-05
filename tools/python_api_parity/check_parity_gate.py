@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-import shutil
 from typing import Any
 import sys
 
@@ -16,6 +15,12 @@ from binding_parity_runtime_coverage import (
     build_coverage_summary,
     load_json_file,
     render_coverage_summary_markdown,
+)
+
+from parity_artifact_io import (
+    artifacts_match,
+    preserve_baseline_generated_at_all,
+    sync_baseline_artifacts,
 )
 
 from generate_baseline import (
@@ -128,64 +133,6 @@ def render_tier1_gate_markdown(diff_report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def artifacts_match(expected: Path, actual: Path) -> bool:
-    """Return whether two artifact files have identical content."""
-    if not expected.exists() or not actual.exists():
-        return False
-    if expected.suffix == ".json":
-        expected_payload = json.loads(expected.read_text(encoding="utf-8"))
-        actual_payload = json.loads(actual.read_text(encoding="utf-8"))
-        return payloads_match_ignoring_generated_at(expected_payload, actual_payload)
-
-    expected_lines = [
-        line
-        for line in expected.read_text(encoding="utf-8").splitlines()
-        if not line.startswith("- Generated:")
-    ]
-    actual_lines = [
-        line
-        for line in actual.read_text(encoding="utf-8").splitlines()
-        if not line.startswith("- Generated:")
-    ]
-    return expected_lines == actual_lines
-
-
-def payloads_match_ignoring_generated_at(
-    expected_payload: dict[str, Any], actual_payload: dict[str, Any]
-) -> bool:
-    """Return whether two JSON artifact payloads differ only by timestamp."""
-    expected = dict(expected_payload)
-    actual = dict(actual_payload)
-    expected.pop("generated_at_utc", None)
-    actual.pop("generated_at_utc", None)
-    return expected == actual
-
-
-def preserve_baseline_generated_at(
-    baseline_path: Path, generated_payload: dict[str, Any]
-) -> None:
-    """Reuse the baseline timestamp when regenerated content is unchanged."""
-    if not baseline_path.exists():
-        return
-
-    baseline_payload = json.loads(baseline_path.read_text(encoding="utf-8"))
-    if not payloads_match_ignoring_generated_at(baseline_payload, generated_payload):
-        return
-
-    generated_at = baseline_payload.get("generated_at_utc")
-    if isinstance(generated_at, str):
-        generated_payload["generated_at_utc"] = generated_at
-
-
-def sync_baseline_artifacts(
-    output_dir: Path, baseline_output_dir: Path, artifact_names: tuple[str, ...]
-) -> None:
-    """Copy generated artifacts into the checked-in baseline directory."""
-    baseline_output_dir.mkdir(parents=True, exist_ok=True)
-    for name in artifact_names:
-        shutil.copyfile(output_dir / name, baseline_output_dir / name)
-
-
 def main() -> int:
     """CLI entrypoint."""
     parser = argparse.ArgumentParser(
@@ -259,11 +206,20 @@ def main() -> int:
         },
     )
 
-    preserve_baseline_generated_at(
-        baseline_output_dir / "parity_diff_report.json", diff_report
-    )
-    preserve_baseline_generated_at(
-        baseline_output_dir / "runtime_coverage_summary.json", coverage_summary
+    # Carry the committed timestamps forward on any artifact whose substance is
+    # unchanged, so a no-op rerun writes byte-identical files instead of a
+    # timestamp-only diff. Covers the surface manifests too -- they were left
+    # out when this was first added, and churned on every run as a result. The
+    # two markdown reports follow for free: their "- Generated:" header renders
+    # from the corresponding JSON payload rather than calling the clock again.
+    preserve_baseline_generated_at_all(
+        baseline_output_dir,
+        {
+            "rust_api_surface.json": rust_manifest,
+            "python_api_surface.json": python_manifest,
+            "parity_diff_report.json": diff_report,
+            "runtime_coverage_summary.json": coverage_summary,
+        },
     )
 
     write_json(output_dir / "rust_api_surface.json", rust_manifest)

@@ -1568,25 +1568,26 @@ export declare function analyzePapyrusLog(logPath: string): JsPapyrusStats
 export declare function applyUserSettingsMigration(classicRoot: string, approvedBaseRevision: string, approvedProposedContent: Buffer): JsUserSettingsMigrationApplyResult
 
 /**
- * Fetch + download + atomically install the files the user approved at
- * check time.
+ * Fetch + download + atomically install the first-party YAML Data files the
+ * user approved at check time.
  *
- * This is the reviewed-decision form of apply. `request.enabled` mirrors the
- * `Update Check` settings toggle, and `request.approved` carries the exact
- * release/file identity the user confirmed from a prior `checkYamlUpdate`
- * call. If the publisher has rotated the manifest to a newer tag or replaced
- * an approved asset in place, the call throws a `decision stale` error
- * instead of silently installing the new bytes.
+ * This is the reviewed-decision form of apply. `enabled` mirrors the
+ * `Update Check` settings toggle, and `approved` carries the exact
+ * release/file identity the user confirmed from a prior
+ * `checkYamlDataUpdate` call. If the publisher has rotated the manifest to a
+ * newer tag or replaced an approved asset in place, the call throws a
+ * `decision stale` error instead of silently installing the new bytes.
  *
  * Returns per-file outcomes — a mixed batch is a valid success (the
  * successful subset is installed).
  *
- * @param request Structured apply request. See `JsYamlApplyRequest` and
- *                `JsApprovedUpdate` for the required fields.
+ * @param enabled           Mirrors the `Update Check` settings toggle.
+ * @param approved          Release/file identity reviewed at check time.
+ * @param installationRoot  See `checkYamlDataUpdate`.
  * @throws when the whole batch fails, when the update check is disabled,
  *         or when the decision is stale.
  */
-export declare function applyYamlUpdate(request: JsYamlApplyRequest): Promise<JsYamlUpdateReport>
+export declare function applyYamlDataUpdateWithDecision(enabled: boolean, approved: JsApprovedUpdate, installationRoot?: string | undefined | null): Promise<JsYamlUpdateReport>
 
 /** Extended cache TTL for batch log scanning (1800 seconds / 30 minutes). */
 export const BATCH_CACHE_TTL: number
@@ -1749,31 +1750,33 @@ export declare function checkWritePermissions(path: string): void
 export declare function checkXsePlugins(pluginsPath: string, gameVersion: string): string
 
 /**
- * Check for a YAML data update.
+ * Check the first-party YAML Data Update Channel.
  *
- * Drives the Pages-first manifest fetch with anonymous API fallback, then
- * classifies the manifest against `entries`. When `enabled` is `false`,
- * returns `{ tag: "disabled" }` immediately without any HTTP call.
+ * Rust owns the channel URL, the `yaml-data-v` tag namespace, and the accepted
+ * schema ranges. The installed schema versions and exact-byte digests come
+ * from config-owned Installed YAML Data inspection, so this check and a
+ * runtime `loadInstalledYamlData` agree about which bytes are installed.
  *
- * @param pagesUrl   Absolute HTTPS URL of the Pages manifest (normally
- *                   `https://<owner>.github.io/<repo>/yaml-data/manifest-latest.json`).
- * @param tagPrefix  Release-tag prefix for the anonymous API fallback
- *                   (e.g. `"yaml-data-v"`).
- * @param entries    Per-file accepted-range + currently-installed schema
- *                   the client knows about.
- * @param enabled    `false` → short-circuit with `tag: "disabled"`.
- * @param bundledYamlDir  Install-tree directory containing the bundled
- *                        shippable YAML files (`CLASSIC Data/databases`).
- *                        Node callers should pass the package-local path
- *                        (for example `path.join(__dirname, "CLASSIC Data", "databases")`)
- *                        so clean installs whose bundled bytes already
- *                        match the manifest are classified as `upToDate`.
- *                        `null` / omitted falls back to probing
- *                        `current_exe()`, which yields the wrong path under
- *                        `node.exe` / `bun.exe`.
- * @throws on network failure that even the fallback can't recover from.
+ * There is deliberately no variant that accepts caller-supplied schema
+ * entries: an adapter able to declare its own accepted ranges could classify
+ * — and then install — under a policy `classic-config-core` does not own.
+ *
+ * When `enabled` is `false`, returns `{ tag: "disabled" }` immediately without
+ * any HTTP call.
+ *
+ * @param enabled           `false` → short-circuit with `tag: "disabled"`.
+ * @param installationRoot  CLASSIC installation root used for Installed YAML
+ *                          Data inspection. Node callers should pass the
+ *                          package-local root (for example `__dirname`) so
+ *                          clean installs whose bundled bytes already match
+ *                          the manifest are classified as `upToDate`. `null` /
+ *                          omitted falls back to probing `current_exe()`,
+ *                          which yields the wrong path under `node.exe` /
+ *                          `bun.exe`.
+ * @throws on network failure that even the fallback can't recover from, or
+ *         when the installation root cannot be resolved or inspected.
  */
-export declare function checkYamlUpdate(pagesUrl: string, tagPrefix: string, entries: Array<JsYamlClientSchemaEntry>, enabled: boolean, bundledYamlDir?: string | undefined | null): Promise<JsYamlUpdateStatus>
+export declare function checkYamlDataUpdate(enabled: boolean, installationRoot?: string | undefined | null): Promise<JsYamlUpdateStatus>
 
 /** Clear all recorded performance metrics. */
 export declare function clearAllMetrics(): void
@@ -5263,6 +5266,25 @@ export interface JsYamlRollbackOutcome {
 }
 
 /**
+ * One entry in the `rollbackYamlDataUpdate` result vector.
+ *
+ * `fileName` is the *requested* first-party target, which is always present
+ * even when the rollback failed before core could report a name. `outcome`
+ * carries core's own result for the successful cases, so its `fileName` may
+ * restate the requested name. A non-null `errorMessage` marks the target as
+ * failed; in that case `outcome.rolledBack` is `false` and callers should
+ * prefer `errorMessage` over the outcome fields.
+ */
+export interface JsYamlRollbackTargetOutcome {
+  /** The first-party target that was requested, in Rust-expanded order. */
+  fileName: string
+  /** Core's rollback result for this target. */
+  outcome: JsYamlRollbackOutcome
+  /** Failure reason, or `null` when this target succeeded. */
+  errorMessage?: string
+}
+
+/**
  * YAML file source identifier.
  *
  * Provides paths and display names for the various YAML configuration files
@@ -5742,6 +5764,16 @@ export interface ResourceInfo {
  * authorize persistence. The operation performs no filesystem access.
  */
 export declare function reverseUserSettingsMigrationPlan(plan: JsUserSettingsMigrationPlan): JsUserSettingsMigrationPlan
+
+/**
+ * Roll back every current first-party shippable YAML Data file.
+ *
+ * Rust expands the first-party target list, so callers never name individual
+ * files. The returned vector preserves target order and carries the requested
+ * file name beside each outcome, letting a frontend identify failed targets
+ * without duplicating the file list.
+ */
+export declare function rollbackYamlDataUpdate(): Promise<Array<JsYamlRollbackTargetOutcome>>
 
 /**
  * Swap the cached YAML file with its `.prev` sibling (if any).

@@ -15,22 +15,35 @@
 //! ### DTOs
 //! - `JsGithubRelease` — GitHub release information (tag, name, body, assets, etc.)
 //! - `JsGithubAsset` — Downloadable file attached to a release.
-//! - `JsYamlClientSchemaEntry` — Input entry for `checkYamlUpdate`/`applyYamlUpdate`.
+//! - `JsYamlClientSchemaEntry` — Schema entry DTO. Retained as a type-surface
+//!   shape only; no current entry point accepts caller-supplied entries.
 //! - `JsApprovedUpdate` — Reviewed release/file decision passed into apply.
-//! - `JsYamlApplyRequest` — Structured apply request object.
+//! - `JsYamlApplyRequest` — Structured apply request object. Retained as a
+//!   type-surface shape only; see `JsYamlClientSchemaEntry`.
 //! - `JsYamlUpdateFile` — One file inside a YAML manifest (compatible or incompatible).
 //! - `JsYamlUpdateStatus` — Discriminated status DTO for the YAML update check path.
 //! - `JsYamlUpdateFileOutcome` — Per-file install outcome.
 //! - `JsYamlUpdateReport` — Aggregate install report.
 //! - `JsYamlRollbackOutcome` — Rollback result.
+//! - `JsYamlRollbackTargetOutcome` — Per-target rollback result for the
+//!   first-party bulk rollback path.
 //!
 //! ### Free Functions
 //! - `hasUpdate(currentVersion, latestVersion)` — Quick semver comparison (no client needed).
 //! - `getLatestRelease(owner, repo)` — One-shot latest release fetch.
 //! - `checkForUpdates(owner, repo, currentVersion)` — Convenience: fetch + compare.
-//! - `checkYamlUpdate(pagesUrl, tagPrefix, entries, enabled)` — YAML manifest check.
-//! - `applyYamlUpdate(request)` — Fetch + download + install the approved set.
-//! - `rollbackYamlUpdate(fileName)` — Swap cache entry with its `.prev` sibling.
+//! - `checkYamlDataUpdate(enabled, installationRoot?)` — First-party YAML Data check.
+//! - `applyYamlDataUpdateWithDecision(enabled, approved, installationRoot?)` —
+//!   Fetch + download + install the approved set.
+//! - `rollbackYamlDataUpdate()` — Roll back every first-party target.
+//! - `rollbackYamlUpdate(fileName)` — Swap one cache entry with its `.prev` sibling.
+//!
+//! The YAML Data functions own the channel URL, the `yaml-data-v` tag
+//! namespace, and the accepted schema ranges in Rust, so callers never supply
+//! channel coordinates or schema entries. There is deliberately no generic
+//! `checkYamlUpdate` / `applyYamlUpdate` variant on this surface — see
+//! [`check_yaml_data_update`] for why an adapter must not declare its own
+//! accepted ranges.
 
 use crate::runtime::spawn_result;
 use classic_settings_core::{SchemaCompat, SchemaVersion};
@@ -543,6 +556,39 @@ pub struct JsYamlRollbackOutcome {
     pub file_name: String,
 }
 
+/// One entry in the `rollbackYamlDataUpdate` result vector.
+///
+/// `fileName` is the *requested* first-party target, which is always present
+/// even when the rollback failed before core could report a name. `outcome`
+/// carries core's own result for the successful cases, so its `fileName` may
+/// restate the requested name. A non-null `errorMessage` marks the target as
+/// failed; in that case `outcome.rolledBack` is `false` and callers should
+/// prefer `errorMessage` over the outcome fields.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsYamlRollbackTargetOutcome {
+    /// The first-party target that was requested, in Rust-expanded order.
+    pub file_name: String,
+    /// Core's rollback result for this target.
+    pub outcome: JsYamlRollbackOutcome,
+    /// Failure reason, or `null` when this target succeeded.
+    pub error_message: Option<String>,
+}
+
+/// Convert a core rollback outcome into its JS DTO.
+fn core_rollback_to_js(outcome: &core::RollbackOutcome) -> JsYamlRollbackOutcome {
+    match outcome {
+        core::RollbackOutcome::RolledBack { file_name } => JsYamlRollbackOutcome {
+            rolled_back: true,
+            file_name: file_name.clone(),
+        },
+        core::RollbackOutcome::NoPreviousVersion { file_name } => JsYamlRollbackOutcome {
+            rolled_back: false,
+            file_name: file_name.clone(),
+        },
+    }
+}
+
 fn js_entries_to_core(entries: &[JsYamlClientSchemaEntry]) -> core::ClientSchemaSet {
     let mut set = core::ClientSchemaSet::new();
     for entry in entries {
@@ -684,7 +730,7 @@ pub async fn check_yaml_data_update(
     let config = build_yaml_update_config(enabled, installation_root);
     let handle = classic_shared_core::get_runtime().handle().clone();
     let status = handle
-        .spawn(async move { core::check_yaml_data_update(&client, config).await })
+        .spawn(async move { core::yaml_update::check_yaml_data_update(&client, config).await })
         .await
         .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
         .map_err(to_napi_err)?;
@@ -726,7 +772,8 @@ pub async fn apply_yaml_data_update_with_decision(
     let handle = classic_shared_core::get_runtime().handle().clone();
     let report = handle
         .spawn(async move {
-            core::apply_yaml_data_update_with_decision(&client, config, &approved).await
+            core::yaml_update::apply_yaml_data_update_with_decision(&client, config, &approved)
+                .await
         })
         .await
         .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
@@ -747,30 +794,32 @@ pub async fn apply_yaml_data_update_with_decision(
 pub async fn rollback_yaml_data_update() -> napi::Result<Vec<JsYamlRollbackTargetOutcome>> {
     let handle = classic_shared_core::get_runtime().handle().clone();
     let outcomes = handle
-        .spawn(async move { core::rollback_yaml_data_update().await })
+        .spawn(async move { core::yaml_update::rollback_yaml_data_update().await })
         .await
         .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?;
-    outcomes
+    Ok(outcomes
         .into_iter()
-        .map(|(file_name, outcome)| {
-            outcome
-                .map(|outcome| JsYamlRollbackTargetOutcome {
+        .map(|(file_name, outcome)| match outcome {
+            Ok(outcome) => JsYamlRollbackTargetOutcome {
+                file_name,
+                outcome: core_rollback_to_js(&outcome),
+                error_message: None,
+            },
+            // A per-target failure is data, not a rejection: rolling back two
+            // files must report both results even when only one succeeded.
+            Err(error) => JsYamlRollbackTargetOutcome {
+                // No core outcome exists for a failed target, so restate the
+                // requested name and let `errorMessage` carry the failure.
+                // `rolledBack: false` is accurate either way.
+                outcome: JsYamlRollbackOutcome {
+                    rolled_back: false,
                     file_name: file_name.clone(),
-                    outcome: core_rollback_to_js(&outcome),
-                    error_message: None,
-                })
-                .or_else(|error| {
-                    // A per-target failure is data, not a rejection: rolling
-                    // back two files must report both results even when only
-                    // one succeeded.
-                    Ok(JsYamlRollbackTargetOutcome {
-                        file_name,
-                        outcome: JsYamlRollbackOutcome::Failed,
-                        error_message: Some(error.to_string()),
-                    })
-                })
+                },
+                file_name,
+                error_message: Some(error.to_string()),
+            },
         })
-        .collect()
+        .collect())
 }
 
 // ============================================================================
@@ -968,16 +1017,7 @@ pub async fn check_app_notification(
 #[napi]
 pub fn rollback_yaml_update(file_name: String) -> napi::Result<JsYamlRollbackOutcome> {
     let outcome = core::rollback_yaml_update(&file_name).map_err(to_napi_err)?;
-    Ok(match outcome {
-        core::RollbackOutcome::RolledBack { file_name } => JsYamlRollbackOutcome {
-            rolled_back: true,
-            file_name,
-        },
-        core::RollbackOutcome::NoPreviousVersion { file_name } => JsYamlRollbackOutcome {
-            rolled_back: false,
-            file_name,
-        },
-    })
+    Ok(core_rollback_to_js(&outcome))
 }
 
 #[cfg(test)]

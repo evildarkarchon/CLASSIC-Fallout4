@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-04T10:37:43.718616+00:00",
+  "generated_at_utc": "2026-08-05T00:38:34.473130+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -18,7 +18,8 @@
       "classic-update-core",
       "classic-xse-core",
       "classic-database-core",
-      "classic-scangame-core"
+      "classic-scangame-core",
+      "classic-resource-core"
     ],
     "source_files": [
       "business-logic/classic-scanlog-core/src/lib.rs",
@@ -37,7 +38,8 @@
       "business-logic/classic-update-core/src/lib.rs",
       "business-logic/classic-xse-core/src/lib.rs",
       "business-logic/classic-database-core/src/lib.rs",
-      "business-logic/classic-scangame-core/src/lib.rs"
+      "business-logic/classic-scangame-core/src/lib.rs",
+      "business-logic/classic-resource-core/src/lib.rs"
     ]
   },
   "symbols": [
@@ -6809,6 +6811,152 @@
       "source_file": "business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{clear_all, get, is_registered, register, unregister};",
       "source_expr": "registry::unregister",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PathError",
+      "kind": "reexport",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub use classic_path_core::{PathError, PathResult};",
+      "source_expr": "classic_path_core::PathError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PathResult",
+      "kind": "reexport",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub use classic_path_core::{PathError, PathResult};",
+      "source_expr": "classic_path_core::PathResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ResourceError",
+      "kind": "enum",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub enum ResourceError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ResourceInfo",
+      "kind": "struct",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub struct ResourceInfo",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ResourceResult",
+      "kind": "type",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub type ResourceResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ResourceType",
+      "kind": "enum",
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub enum ResourceType",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "as_str",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub fn as_str(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "count_resources_by_type",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub fn count_resources_by_type(root: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "detect_resource_type",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub fn detect_resource_type(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "enumerate_resources",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub fn enumerate_resources(\n    root: &Path,\n    filter_type: Option<ResourceType>,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "extensions",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub fn extensions(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_supported_resource",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub fn is_supported_resource(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub fn new(path: PathBuf)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_resource",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub fn validate_resource(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_size",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub fn with_size(path: PathBuf, size: u64)",
       "tier": "tier1"
     },
     {

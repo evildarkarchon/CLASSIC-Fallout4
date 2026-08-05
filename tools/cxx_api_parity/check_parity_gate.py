@@ -15,18 +15,24 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
 import sys
 from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from generate_baseline import (  # noqa: E402
     generate_diff_report,
     parse_cxx_bridge_surface,
     render_diff_markdown,
     write_json,
+)
+
+from parity_artifact_io import (
+    artifacts_match,
+    preserve_baseline_generated_at,
+    sync_baseline_artifacts,
 )
 
 
@@ -96,47 +102,6 @@ def render_cxx_gate_markdown(diff_report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def artifacts_match(expected: Path, actual: Path) -> bool:
-    """True iff both files exist and have identical content.
-
-    JSON: pop generated_at_utc before comparing.
-    Markdown: skip '- Generated:' lines before comparing.
-    """
-    if not expected.exists() or not actual.exists():
-        return False
-    if expected.suffix == ".json":
-        expected_payload = json.loads(expected.read_text(encoding="utf-8"))
-        actual_payload = json.loads(actual.read_text(encoding="utf-8"))
-        expected_payload.pop("generated_at_utc", None)
-        actual_payload.pop("generated_at_utc", None)
-        return expected_payload == actual_payload
-    expected_lines = [
-        l
-        for l in expected.read_text(encoding="utf-8").splitlines()
-        if not l.startswith("- Generated:")
-    ]
-    actual_lines = [
-        l
-        for l in actual.read_text(encoding="utf-8").splitlines()
-        if not l.startswith("- Generated:")
-    ]
-    return expected_lines == actual_lines
-
-
-def sync_baseline_artifacts(
-    output_dir: Path,
-    baseline_output_dir: Path,
-    artifact_names: tuple[str, ...],
-) -> None:
-    """Copy generated artifacts into the checked-in baseline directory."""
-    baseline_output_dir.mkdir(parents=True, exist_ok=True)
-    for name in artifact_names:
-        src = output_dir / name
-        if not src.exists():
-            continue
-        shutil.copyfile(src, baseline_output_dir / name)
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run the CXX bridge parity gate.")
     parser.add_argument(
@@ -186,6 +151,16 @@ def main() -> int:
     # Fresh surface scan
     current_surface = parse_cxx_bridge_surface(repo_root)
     diff_report = generate_diff_report(contract, current_surface)
+
+    # Carry the committed timestamp forward when the bridge surface is
+    # unchanged, so `--update-baseline` copies a byte-identical file into the
+    # tracked baseline instead of a timestamp-only diff. rust_api_surface.json
+    # is the only cxx artifact that needs this: the diff report carries no
+    # timestamp, both markdown renderers deliberately omit the "- Generated:"
+    # header, and parity_contract.json is mirrored from the committed copy.
+    preserve_baseline_generated_at(
+        baseline_output_dir / "rust_api_surface.json", current_surface
+    )
 
     # Write ephemeral artifacts
     write_json(output_dir / "rust_api_surface.json", current_surface)

@@ -11,6 +11,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 GENERATE_BASELINE_PATH = (
     REPO_ROOT / "tools" / "python_api_parity" / "generate_baseline.py"
 )
+# expand_pub_use_statement moved here when the Rust surface parser was
+# de-duplicated out of the per-binding generators; the Node and Python gates
+# now share one copy.
+PARITY_RUST_SURFACE_PATH = REPO_ROOT / "tools" / "parity_rust_surface.py"
 
 
 def load_generate_baseline_module():
@@ -174,7 +178,7 @@ def test_generate_diff_report_flags_missing_contract_python_export_identifier() 
 
 
 def test_expand_pub_use_statement_does_not_reannotate_alias_name() -> None:
-    module_ast = ast.parse(GENERATE_BASELINE_PATH.read_text(encoding="utf-8"))
+    module_ast = ast.parse(PARITY_RUST_SURFACE_PATH.read_text(encoding="utf-8"))
 
     expand_function = next(
         node

@@ -74,6 +74,29 @@ Workflow:
 3. Run the gate again to confirm zero drift
 4. Commit the updated baseline in the same change
 
+### Baseline Artifacts Are Byte-Stable
+
+Regenerating or refreshing a baseline when nothing has actually changed produces **no diff at all**. The generators and gates carry the committed `generated_at_utc` forward whenever the regenerated payload matches the committed one, so an unchanged surface never rewrites the tracked files. The `- Generated:` markdown headers follow automatically, because they render from the corresponding JSON payload.
+
+Two consequences for reviewers:
+
+- An empty `git status` after a refresh means "no drift", not "the refresh did not run".
+- A timestamp change in a baseline artifact is a real signal: it marks when that surface last actually changed.
+
+The shared implementation is `tools/parity_artifact_io.py`; the byte-stability property is locked by `tools/test_parity_artifact_io.py` plus a `test_baseline_timestamp_stability.py` in each of the three `tools/*_api_parity/tests/` suites.
+
+### Shared Gate Tooling
+
+Three modules under `tools/` are shared by the per-binding gates. Change them with the understanding that all three gates consume them:
+
+| Module | Owns |
+|---|---|
+| `parity_rust_surface.py` | Parsing the public Rust surface — crate source collection, `pub use` expansion, symbol extraction |
+| `parity_artifact_io.py` | Reading, comparing, and writing artifacts — `write_json`, `stable_id_hash`, `sync_baseline_artifacts`, timestamp preservation |
+| `binding_parity_runtime_coverage.py` | Runtime coverage summaries |
+
+The Node and Python gates previously carried independent copies of the Rust parser, which let them disagree about which Rust exports exist while both reported success. They now share one parser and differ only in their **crate list** — `RUST_TARGET_CRATES` / `RUST_OWNER_BY_CRATE` stay per-gate and are passed into `parse_rust_surface()` at call time. When you add a `-core` crate that a binding depends on, add it to that binding's crate list; a crate missing from the list is invisible to that gate, and any contract row naming one of its symbols will be rejected as "not in the parsed Rust surface".
+
 ---
 
 ## How To Add a New Public Rust API
