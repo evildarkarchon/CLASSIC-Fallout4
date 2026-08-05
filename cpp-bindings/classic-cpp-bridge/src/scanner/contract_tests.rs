@@ -1384,6 +1384,24 @@ fn every_scan_run_run_owned_enum_projects_its_core_display_label() {
 }
 
 #[test]
+/// The scanner-local provenance mirror projects the configuration Display Label.
+///
+/// `InstalledYamlDataProvenance` is not a twin — the run contract reuses the
+/// configuration type outright rather than declaring its own. What is
+/// scanner-local is only the *CXX mirror*, because `#[cxx::bridge]` namespaces
+/// its shared enums per module, so `classic::config::installed_yaml_data_provenance_label`
+/// cannot accept the value a scan-run result carries. Node and Python have no
+/// such split and needed no second entry point; this one exists so a C++
+/// frontend resolves all seven scan-run labels the same way rather than
+/// hand-mapping one mirror onto another.
+fn the_scanner_provenance_mirror_projects_its_core_display_label() {
+    assert_cxx_labels_match_the_core(
+        map_installed_yaml_data_provenance,
+        scan_run_installed_yaml_data_provenance_label,
+    );
+}
+
+#[test]
 /// A fabricated CXX enum value yields nothing rather than an invented label.
 fn an_out_of_range_scan_run_cxx_enum_value_yields_an_empty_display_label() {
     // CXX shared enums are open at the FFI boundary: C++ can hand back any
@@ -1423,6 +1441,12 @@ fn an_out_of_range_scan_run_cxx_enum_value_yields_an_empty_display_label() {
     );
     assert_eq!(
         scan_run_local_ignore_reset_failure_stage_label(ffi::ScanRunLocalIgnoreResetFailureStage {
+            repr: u8::MAX
+        }),
+        ""
+    );
+    assert_eq!(
+        scan_run_installed_yaml_data_provenance_label(ffi::ScanRunInstalledYamlDataProvenance {
             repr: u8::MAX
         }),
         ""

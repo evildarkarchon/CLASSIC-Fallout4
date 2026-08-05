@@ -299,11 +299,12 @@ FCX control, or direct report writer.
 
 ### Scan-run Display Labels
 
-Six free functions project the human-facing Display Label for the run contract's
-enums, so a C++ frontend renders one without writing a `switch`:
+Seven free functions project the human-facing Display Label for the run
+contract's enums, so a C++ frontend renders one without writing a `switch`:
 
 - `scan_run_installed_yaml_data_diagnostic_kind_label(ScanRunInstalledYamlDataDiagnosticKind) -> String`
 - `scan_run_local_ignore_yaml_data_state_label(ScanRunLocalIgnoreYamlDataState) -> String`
+- `scan_run_installed_yaml_data_provenance_label(ScanRunInstalledYamlDataProvenance) -> String`
 - `scan_run_log_disposition_label(ScanRunContractLogDisposition) -> String`
 - `scan_run_log_failure_stage_label(ScanRunContractLogFailureStage) -> String`
 - `scan_run_infrastructure_error_stage_label(ScanRunContractInfrastructureErrorStage) -> String`
@@ -315,6 +316,17 @@ configuration enums they mirror, so these labels are the same strings
 `local_ignore_yaml_data_state_label` return. The one exception is
 `RecoveryRequired`, which the run contract owns itself because a paused run has
 no configuration counterpart.
+
+The third is neither run-owned nor a twin. The run contract reuses the
+configuration crate's provenance type outright; only the *CXX mirror* is
+scanner-local, because cxx namespaces its shared enums per bridge module. So
+`classic::config::installed_yaml_data_provenance_label` returns the same prose
+but cannot accept the value a scan-run result carries. This entry point exists
+purely to close that gap, and it is a C++-only obligation: the Node surface
+reuses one provenance enum across both modules and the Python surface publishes
+a token, so neither needed a second projection. Without it a C++ frontend would
+map one mirror onto the other by hand, which is a second variant mapping able to
+disagree with the forward one.
 
 The next three sit on enums the run crate owns outright — there is no
 configuration function returning the same prose. They are the ones that let the

@@ -179,6 +179,9 @@ if(Catch2_FOUND)
         tests/test_progress.cpp
         tests/test_cli_args.cpp
         tests/test_app_update_wiring.cpp
+        # Reads CLI sources as text rather than linking them, so it belongs here
+        # even though the code it audits lives in the bridge-linked target.
+        tests/test_display_label_audit.cpp
         # Source files under test (bridge-free only)
         src/thread_pool.cpp
         src/progress.cpp

@@ -989,7 +989,10 @@ TEST_CASE("CLI Reset To Default resumes with durable backup metadata", "[cli][sc
     const auto lines = message_text(present_cli_scan_run_execution(outcome.execution, 1.0).messages);
     REQUIRE(line_index(lines, "Local Ignore: reset to default") < lines.size());
     REQUIRE(line_index(lines, "Local Ignore backup:") < lines.size());
-    REQUIRE(line_index(lines, "local ignore reset") < lines.size());
+    // `Local Ignore reset`, not `local ignore reset`: the diagnostic kind's
+    // Display Label capitalizes the domain term, and the CLI now renders the
+    // configuration crate's wording rather than its own.
+    REQUIRE(line_index(lines, "Local Ignore reset") < lines.size());
 }
 
 TEST_CASE("CLI cancellation at the recovery prompt mutates nothing", "[cli][scan-run][local-ignore]") {

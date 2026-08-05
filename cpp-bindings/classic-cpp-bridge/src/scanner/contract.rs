@@ -946,6 +946,27 @@ pub(crate) fn scan_run_installed_yaml_data_diagnostic_kind_label(
     display_label(kind, map_installed_yaml_data_diagnostic_kind).to_string()
 }
 
+/// Return the human-facing Display Label for one selected-file provenance.
+///
+/// Same seam reasoning as [`scan_run_installed_yaml_data_diagnostic_kind_label`],
+/// but this enum is neither run-owned nor a twin: the run contract reuses
+/// `classic_config_core::InstalledYamlDataProvenance` outright. Only the *CXX
+/// mirror* is scanner-local, because `#[cxx::bridge]` namespaces its shared
+/// enums per module — so [`crate::config::installed_yaml_data_provenance_label`]
+/// cannot accept the value a scan-run result actually carries.
+///
+/// That makes this entry point a C++-only obligation. The Node surface reuses
+/// one provenance enum across both modules and the Python surface publishes a
+/// token, so neither needed a second projection. Without this, a C++ frontend
+/// would have to map one mirror onto the other by hand, which is a second
+/// variant mapping able to disagree with the forward one — exactly what
+/// [`display_label`] exists to avoid.
+pub(crate) fn scan_run_installed_yaml_data_provenance_label(
+    provenance: ffi::ScanRunInstalledYamlDataProvenance,
+) -> String {
+    display_label(provenance, map_installed_yaml_data_provenance).to_string()
+}
+
 /// Return the human-facing Display Label for one scan-run Local Ignore state.
 ///
 /// Same reasoning as [`scan_run_installed_yaml_data_diagnostic_kind_label`].

@@ -277,8 +277,13 @@ TEST_CASE("CLI scan presentation acknowledges generated Local Ignore metadata an
     REQUIRE(lines[0] == "Installed YAML Data:");
     REQUIRE(lines[1].find("Main: bundled schema 2.0") != std::string::npos);
     REQUIRE(lines[2].find("Game: previous schema 1.0") != std::string::npos);
-    REQUIRE(lines[3].find("Local Ignore: generated") != std::string::npos);
-    REQUIRE(lines[4].find("local ignore generated") != std::string::npos);
+    // Both are canonical Display Labels the configuration crate settled, reached
+    // through the bridge rather than a CLI table. `generated from selected Main
+    // defaults` replaces the bare `generated` this frontend used to print, and
+    // `Local Ignore generated` carries the glossary capitalization of a domain
+    // term that no transform of the `local_ignore_generated` token could infer.
+    REQUIRE(lines[3].find("Local Ignore: generated from selected Main defaults") != std::string::npos);
+    REQUIRE(lines[4].find("Local Ignore generated") != std::string::npos);
     REQUIRE(lines[4].find("CLASSIC Ignore.yaml") != std::string::npos);
 }
 

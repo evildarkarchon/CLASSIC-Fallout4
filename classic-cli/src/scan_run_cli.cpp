@@ -46,124 +46,23 @@ std::string plural(std::size_t count, std::string singular, std::string plural_v
     return count == 1 ? std::move(singular) : std::move(plural_value);
 }
 
-/// Returns the stable user-facing label for every terminal per-log disposition.
-std::string log_disposition_name(scanner::ScanRunContractLogDisposition disposition) {
-    switch (disposition) {
-    case scanner::ScanRunContractLogDisposition::Succeeded:
-        return "succeeded";
-    case scanner::ScanRunContractLogDisposition::Failed:
-        return "failed";
-    case scanner::ScanRunContractLogDisposition::CancelledBeforeStart:
-        return "cancelled before start";
-    }
-    return "unknown disposition";
-}
-
-/// Returns the stable user-facing label for every structured per-log failure stage.
-std::string log_failure_stage_name(scanner::ScanRunContractLogFailureStage stage) {
-    switch (stage) {
-    case scanner::ScanRunContractLogFailureStage::Analysis:
-        return "analysis";
-    case scanner::ScanRunContractLogFailureStage::ReportWrite:
-        return "report write";
-    case scanner::ScanRunContractLogFailureStage::UnsolvedLogsFinalization:
-        return "Unsolved Logs finalization";
-    }
-    return "unknown stage";
-}
-
-/// Returns the stable user-facing label for every run-wide infrastructure stage.
-std::string infrastructure_stage_name(scanner::ScanRunContractInfrastructureErrorStage stage) {
-    switch (stage) {
-    case scanner::ScanRunContractInfrastructureErrorStage::RequestValidation:
-        return "request validation";
-    case scanner::ScanRunContractInfrastructureErrorStage::Discovery:
-        return "discovery";
-    case scanner::ScanRunContractInfrastructureErrorStage::Intake:
-        return "intake";
-    case scanner::ScanRunContractInfrastructureErrorStage::FormIdDatabaseAccess:
-        return "FormID database access";
-    case scanner::ScanRunContractInfrastructureErrorStage::Initialization:
-        return "initialization";
-    case scanner::ScanRunContractInfrastructureErrorStage::InternalInvariant:
-        return "internal invariant validation";
-    }
-    return "unknown stage";
-}
-
-/// Returns the stable user-facing label for every durable Local Ignore reset publication stage.
-std::string local_ignore_reset_failure_stage_name(scanner::ScanRunLocalIgnoreResetFailureStage stage) {
-    switch (stage) {
-    case scanner::ScanRunLocalIgnoreResetFailureStage::Create:
-        return "create";
-    case scanner::ScanRunLocalIgnoreResetFailureStage::Write:
-        return "write";
-    case scanner::ScanRunLocalIgnoreResetFailureStage::Flush:
-        return "flush";
-    case scanner::ScanRunLocalIgnoreResetFailureStage::Sync:
-        return "sync";
-    case scanner::ScanRunLocalIgnoreResetFailureStage::Publish:
-        return "publish";
-    }
-    return "unknown stage";
-}
-
-/// Returns the stable user-facing label for every selected YAML Data provenance.
-std::string installed_yaml_data_provenance_name(scanner::ScanRunInstalledYamlDataProvenance provenance) {
-    switch (provenance) {
-    case scanner::ScanRunInstalledYamlDataProvenance::Updated:
-        return "updated";
-    case scanner::ScanRunInstalledYamlDataProvenance::Previous:
-        return "previous";
-    case scanner::ScanRunInstalledYamlDataProvenance::Bundled:
-        return "bundled";
-    }
-    return "unknown provenance";
-}
-
-/// Returns the stable user-facing label for every Local Ignore snapshot state.
-std::string local_ignore_state_name(scanner::ScanRunLocalIgnoreYamlDataState state) {
-    switch (state) {
-    case scanner::ScanRunLocalIgnoreYamlDataState::Existing:
-        return "existing";
-    case scanner::ScanRunLocalIgnoreYamlDataState::Generated:
-        return "generated";
-    case scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired:
-        return "recovery required";
-    case scanner::ScanRunLocalIgnoreYamlDataState::ProceedWithoutIgnore:
-        return "proceed without Ignore";
-    case scanner::ScanRunLocalIgnoreYamlDataState::ResetToDefault:
-        return "reset to default";
-    }
-    return "unknown state";
-}
-
-/// Returns the stable user-facing label for every Installed YAML Data diagnostic kind.
-std::string installed_yaml_data_diagnostic_name(scanner::ScanRunInstalledYamlDataDiagnosticKind kind) {
-    switch (kind) {
-    case scanner::ScanRunInstalledYamlDataDiagnosticKind::CacheUnavailable:
-        return "cache unavailable";
-    case scanner::ScanRunInstalledYamlDataDiagnosticKind::Missing:
-        return "missing";
-    case scanner::ScanRunInstalledYamlDataDiagnosticKind::Read:
-        return "read";
-    case scanner::ScanRunInstalledYamlDataDiagnosticKind::InvalidUtf8:
-        return "invalid UTF-8";
-    case scanner::ScanRunInstalledYamlDataDiagnosticKind::Parse:
-        return "parse";
-    case scanner::ScanRunInstalledYamlDataDiagnosticKind::InvalidSchema:
-        return "invalid schema";
-    case scanner::ScanRunInstalledYamlDataDiagnosticKind::IncompatibleSchema:
-        return "incompatible schema";
-    case scanner::ScanRunInstalledYamlDataDiagnosticKind::InvalidRoleData:
-        return "invalid role data";
-    case scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated:
-        return "local ignore generated";
-    case scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreReset:
-        return "local ignore reset";
-    }
-    return "unknown diagnostic";
-}
+// Display Labels are read from the Rust core through the bridge rather than
+// written here. Seven `switch` tables used to live at this spot, one per
+// rendered enum; they were the CLI's private copy of a vocabulary the GUI and
+// the TUI each also kept, and the copies had already drifted apart. The bridge
+// entry points below are the single definition site, so a wording fix reaches
+// all three frontends at once and no frontend can disagree with another.
+//
+// Every one returns an empty string for an enum value the forward projection
+// cannot produce, which is why the `unknown disposition` and `unknown stage`
+// fallbacks the deleted tables carried are gone rather than reimplemented.
+// Losing them is the intended trade: the empty string is unreachable for any
+// value the bridge itself built, and a placeholder spelled here would be one
+// more piece of vocabulary owned by the adapter. The bridge asserts the
+// fallback stays unreachable per variant in `scanner/contract_tests.rs`.
+//
+// `tests/test_display_label_audit.cpp` is what stops a table growing back. It
+// reads this file as text, so it catches shapes the compiler cannot object to.
 
 /// Appends exact run-selected YAML Data metadata and structured diagnostics when present.
 void append_installed_yaml_data_messages(const scanner::ScanRunContractRunResult& result,
@@ -176,17 +75,20 @@ void append_installed_yaml_data_messages(const scanner::ScanRunContractRunResult
     messages.push_back({false, "Installed YAML Data:"});
     messages.push_back(
         {false, fmt::format("  Main: {} schema {} ({} bytes, sha256 {})",
-                            installed_yaml_data_provenance_name(installed.main.provenance),
+                            to_std_string(scanner::scan_run_installed_yaml_data_provenance_label(
+                                installed.main.provenance)),
                             to_std_string(installed.main.schema_version), installed.main.byte_len,
                             to_std_string(installed.main.sha256))});
     messages.push_back(
         {false, fmt::format("  Game: {} schema {} ({} bytes, sha256 {})",
-                            installed_yaml_data_provenance_name(installed.game_file.provenance),
+                            to_std_string(scanner::scan_run_installed_yaml_data_provenance_label(
+                                installed.game_file.provenance)),
                             to_std_string(installed.game_file.schema_version), installed.game_file.byte_len,
                             to_std_string(installed.game_file.sha256))});
     messages.push_back(
         {false, fmt::format("  Local Ignore: {} ({} bytes, sha256 {})",
-                            local_ignore_state_name(installed.local_ignore_state),
+                            to_std_string(scanner::scan_run_local_ignore_yaml_data_state_label(
+                                installed.local_ignore_state)),
                             installed.local_ignore_identity.byte_len,
                             to_std_string(installed.local_ignore_identity.sha256))});
     if (installed.has_local_ignore_reset) {
@@ -198,7 +100,8 @@ void append_installed_yaml_data_messages(const scanner::ScanRunContractRunResult
     }
     for (const auto& diagnostic : installed.diagnostics) {
         std::string line = fmt::format("  YAML Data diagnostic [{}]: {}",
-                                       installed_yaml_data_diagnostic_name(diagnostic.kind),
+                                       to_std_string(scanner::scan_run_installed_yaml_data_diagnostic_kind_label(
+                                           diagnostic.kind)),
                                        to_std_string(diagnostic.message));
         if (diagnostic.has_path) {
             line += fmt::format(" (path: {})", to_std_string(diagnostic.path));
@@ -217,7 +120,9 @@ void append_resume_error_details(const scanner::ScanRunContractResumeError& erro
         messages.push_back({true, fmt::format("  Path: {}", to_std_string(error.path))});
     }
     if (error.has_stage) {
-        messages.push_back({true, fmt::format("  Stage: {}", local_ignore_reset_failure_stage_name(error.stage))});
+        messages.push_back(
+            {true, fmt::format("  Stage: {}",
+                               to_std_string(scanner::scan_run_local_ignore_reset_failure_stage_label(error.stage)))});
     }
     if (error.has_expected_identity) {
         messages.push_back({true, fmt::format("  Expected identity: sha256 {} ({} bytes)",
@@ -284,12 +189,13 @@ void append_setup_messages(const scanner::ScanRunContractRunResult& result, std:
 /// Formats one typed terminal log result without discarding structured failures.
 std::string describe_log_result(const scanner::ScanRunContractLogResult& log) {
     std::string line = fmt::format("  {}. {} - {}", log.discovery_index + 1, to_std_string(log.crash_log),
-                                   log_disposition_name(log.disposition));
+                                   to_std_string(scanner::scan_run_log_disposition_label(log.disposition)));
     if (log.has_autoscan_report) {
         line += fmt::format(" (report: {})", to_std_string(log.autoscan_report));
     }
     for (const auto& failure : log.failures) {
-        line += fmt::format(" [{}: {}]", log_failure_stage_name(failure.stage), to_std_string(failure.message));
+        line += fmt::format(" [{}: {}]", to_std_string(scanner::scan_run_log_failure_stage_label(failure.stage)),
+                            to_std_string(failure.message));
     }
     if (log.has_message && log.failures.empty()) {
         line += fmt::format(" ({})", to_std_string(log.message));
@@ -452,7 +358,8 @@ std::vector<CliScanRunMessage> describe_cli_scan_run_event(const scanner::ScanRu
     case scanner::ScanRunContractEventKind::LogFinished:
         messages.push_back({event.disposition == scanner::ScanRunContractLogDisposition::Failed,
                             fmt::format("Finished {}/{}: {} - {}", event.discovery_index + 1, event.total,
-                                        to_std_string(event.crash_log), log_disposition_name(event.disposition))});
+                                        to_std_string(event.crash_log),
+                                        to_std_string(scanner::scan_run_log_disposition_label(event.disposition)))});
         break;
     case scanner::ScanRunContractEventKind::LogQueued:
     case scanner::ScanRunContractEventKind::LogPhase:
@@ -468,7 +375,8 @@ CliScanRunPresentation present_cli_scan_run_execution(const scanner::ScanRunCont
         presentation.exit_code = 2;
         std::string message =
             fmt::format("Fatal: Crash Log Scan Run failed during {}: {}",
-                        infrastructure_stage_name(execution.error.stage), to_std_string(execution.error.message));
+                        to_std_string(scanner::scan_run_infrastructure_error_stage_label(execution.error.stage)),
+                        to_std_string(execution.error.message));
         if (execution.error.has_path) {
             message += fmt::format(" (path: {})", to_std_string(execution.error.path));
         }

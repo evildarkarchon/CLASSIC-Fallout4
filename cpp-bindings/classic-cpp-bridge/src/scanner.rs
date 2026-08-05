@@ -31,8 +31,9 @@ pub(crate) use contract::{
     scan_run_contract_execution_has_continuation, scan_run_contract_execution_take_continuation,
     scan_run_contract_execution_take_result, scan_run_infrastructure_error_stage_label,
     scan_run_installed_yaml_data_diagnostic_kind_label,
-    scan_run_local_ignore_reset_failure_stage_label, scan_run_local_ignore_yaml_data_state_label,
-    scan_run_log_disposition_label, scan_run_log_failure_stage_label, scan_run_request_standard,
+    scan_run_installed_yaml_data_provenance_label, scan_run_local_ignore_reset_failure_stage_label,
+    scan_run_local_ignore_yaml_data_state_label, scan_run_log_disposition_label,
+    scan_run_log_failure_stage_label, scan_run_request_standard,
     scan_run_request_standard_with_fcx, scan_run_request_targeted,
     scan_run_request_targeted_with_fcx, scan_run_unsolved_logs_leave_in_place,
     scan_run_unsolved_logs_move_to_configured_or_default, scan_run_unsolved_logs_move_to_custom,
@@ -1151,6 +1152,15 @@ mod ffi {
         /// out-of-range enum value yields an empty string.
         fn scan_run_installed_yaml_data_diagnostic_kind_label(
             kind: ScanRunInstalledYamlDataDiagnosticKind,
+        ) -> String;
+        /// Human-facing Display Label for one selected-file candidate provenance.
+        ///
+        /// Duplicates `classic::config::installed_yaml_data_provenance_label`
+        /// only in prose: the two accept different C++ types, because cxx
+        /// namespaces its shared enums per bridge module and a scan-run result
+        /// carries the scanner-local mirror. Same stability caveat as above.
+        fn scan_run_installed_yaml_data_provenance_label(
+            provenance: ScanRunInstalledYamlDataProvenance,
         ) -> String;
         /// Human-facing Display Label for one scan-run Local Ignore state.
         /// Same stability caveat as above.

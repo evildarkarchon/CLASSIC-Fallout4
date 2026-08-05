@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-05T12:36:38Z",
+  "generated_at_utc": "2026-08-05T23:23:07Z",
   "schema_version": 1,
   "entries": [
     {
@@ -7063,6 +7063,23 @@
           {
             "name": "kind",
             "type": "ScanRunInstalledYamlDataDiagnosticKind"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "dd0f5440c631a842",
+      "rustSymbol": "scan_run_installed_yaml_data_provenance_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "provenance",
+            "type": "ScanRunInstalledYamlDataProvenance"
           }
         ],
         "returnType": "String"
