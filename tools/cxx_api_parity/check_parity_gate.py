@@ -162,6 +162,35 @@ def main() -> int:
         baseline_output_dir / "rust_api_surface.json", current_surface
     )
 
+    accepted_summary: dict[str, Any] | None = None
+    baseline_contract = contract
+
+    # `--update-baseline` is documented as the way to accept an intentional bridge change, so
+    # it has to move the contract itself. It used to mirror the committed contract straight
+    # back, which meant it could never accept an added, removed, or modified item: the contract
+    # returned unchanged and the very next run reported the same drift. The flag only refreshed
+    # the reports, and the two-step `generate_baseline.py --write-baseline` bootstrap was the
+    # only path that actually worked.
+    #
+    # `schema_version` is carried forward rather than restamped, because a schema migration is a
+    # deliberate change to this tool and not something a baseline refresh should perform
+    # silently. Key order matches the committed file so an unchanged surface round-trips
+    # byte-identically.
+    if args.update_baseline:
+        accepted_summary = diff_report["summary"]
+        baseline_contract = {
+            "generated_at_utc": current_surface["generated_at_utc"],
+            "schema_version": contract.get("schema_version", 1),
+            "entries": current_surface["entries"],
+        }
+        preserve_baseline_generated_at(contract_path, baseline_contract)
+        # Recomputed against the contract this run is about to commit, not the one it replaced.
+        # The committed reports have to describe the state they are committed alongside, or the
+        # next plain run recomputes a clean diff, compares it to a report still describing the
+        # accepted drift, and calls the freshly refreshed baseline stale. What actually changed
+        # is reported on stdout below and stays readable in `git diff` of the contract.
+        diff_report = generate_diff_report(baseline_contract, current_surface)
+
     # Write ephemeral artifacts
     write_json(output_dir / "rust_api_surface.json", current_surface)
     write_json(output_dir / "cxx_diff_report.json", diff_report)
@@ -173,10 +202,7 @@ def main() -> int:
         render_cxx_gate_markdown(diff_report) + "\n",
         encoding="utf-8",
     )
-    # Copy the current contract into output_dir so sync_baseline_artifacts()
-    # can mirror it back during --update-baseline. When the gate runs in
-    # normal mode this is still the committed contract (no-op copy).
-    write_json(output_dir / "parity_contract.json", contract)
+    write_json(output_dir / "parity_contract.json", baseline_contract)
 
     if args.update_baseline:
         sync_baseline_artifacts(output_dir, baseline_output_dir, TRACKED_ARTIFACT_NAMES)
@@ -187,6 +213,21 @@ def main() -> int:
         + summary["missing_from_contract"]
         + summary["signature_mismatch"]
     )
+
+    if accepted_summary is not None:
+        accepted_count = (
+            accepted_summary["missing_from_current"]
+            + accepted_summary["missing_from_contract"]
+            + accepted_summary["signature_mismatch"]
+        )
+        if accepted_count:
+            print(
+                "CXX parity baseline refreshed, accepting "
+                f"{accepted_summary['missing_from_current']} removed, "
+                f"{accepted_summary['missing_from_contract']} added, and "
+                f"{accepted_summary['signature_mismatch']} modified bridge item(s). "
+                "Review the contract diff before committing."
+            )
 
     print("CXX parity gate artifacts generated:")
     for name in (

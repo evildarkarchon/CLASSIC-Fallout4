@@ -362,6 +362,17 @@ pub(crate) fn render_installed_yaml_data_header() -> DisplayLine {
 /// `schema_version` is borrowed as a `Display` rather than named as `SchemaVersion`, so
 /// rendering a version does not pull this crate's dependency graph out to the settings crate
 /// that owns the type.
+///
+/// # Why the line opens on fixed prose
+///
+/// `Selected` leads so the role's Display Label never lands line-initially. That label is
+/// asymmetric by design — `Main` names a glossary domain term while `game` is the ordinary
+/// adjective in "selected-game YAML Data" — and its owning crate keeps the lowercase form
+/// deliberately, because the same label reads correctly mid-sentence in
+/// `no usable Installed YAML Data source for game`. Opening a line with it produced
+/// `game YAML Data: bundled …` beside `Main YAML Data: bundled …`, which reads as a
+/// capitalization bug rather than as the distinction it is. The fix belongs here, in the
+/// sentence, rather than in a label that is correct everywhere it was designed to appear.
 pub(crate) fn render_yaml_data_file(
     role: InstalledYamlDataRole,
     provenance: InstalledYamlDataProvenance,
@@ -371,6 +382,7 @@ pub(crate) fn render_yaml_data_file(
     DisplayLine::new(
         Info,
         vec![
+            Text("Selected"),
             Label(role.label()),
             Text("YAML Data:"),
             Label(provenance.label()),

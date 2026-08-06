@@ -223,6 +223,58 @@ class TestDriftDetection:
             "drift" in result.stderr.lower() or "missing_from_contract" in result.stderr
         )
 
+    def test_update_baseline_accepts_an_intentional_bridge_change(self, tmp_path: Path):
+        """The documented one-step refresh actually accepts an added, removed, or changed item.
+
+        `--update-baseline` used to mirror the committed contract straight back, so the
+        contract never moved and the very next run reported the same drift. The flag only
+        refreshed the reports, while the contributor guide documented it as the way to accept
+        an intentional bridge change; the two-step bootstrap was the only path that worked.
+        """
+        mutations = {
+            "added": _SIMPLE_BRIDGE.replace(
+                "fn synth_count(items: u32) -> u32;",
+                "fn synth_count(items: u32) -> u32;\n        fn synth_new_fn() -> bool;",
+            ),
+            "removed": _SIMPLE_BRIDGE.replace(
+                "        fn synth_count(items: u32) -> u32;\n", ""
+            ),
+            "changed": _SIMPLE_BRIDGE.replace("count: u32,", "total: u32,"),
+        }
+        for label, mutated in mutations.items():
+            synth_repo = _bootstrap_synthetic_gate(
+                tmp_path / label, {"synth.rs": _SIMPLE_BRIDGE}
+            )
+            synth_file = synth_repo / "cpp-bindings/classic-cpp-bridge/src/synth.rs"
+            synth_file.write_text(mutated, encoding="utf-8")
+
+            # The change is real drift until it is accepted.
+            assert _run_gate(synth_repo).returncode == 1, f"{label} was not detected"
+
+            accept = subprocess.run(
+                [
+                    sys.executable,
+                    str(GATE_SCRIPT),
+                    "--repo-root",
+                    str(synth_repo),
+                    "--update-baseline",
+                ],
+                capture_output=True,
+                text=True,
+                stdin=subprocess.DEVNULL,
+            )
+            assert accept.returncode == 0, (
+                f"{label}: --update-baseline should accept the change. "
+                f"stdout:\n{accept.stdout}\nstderr:\n{accept.stderr}"
+            )
+
+            # One refresh is enough: the next plain run is clean, with nothing left stale.
+            settled = _run_gate(synth_repo)
+            assert settled.returncode == 0, (
+                f"{label}: gate still reports drift after one refresh. "
+                f"stdout:\n{settled.stdout}\nstderr:\n{settled.stderr}"
+            )
+
     def test_gate_fails_on_removed_function(self, tmp_path: Path):
         """CXXG-03: removing a fn -> gate exits 1 with missing_from_current drift."""
         synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})

@@ -124,6 +124,54 @@ class TestParseEnums:
         )
 
 
+class TestCommentsAreNotContract:
+    def test_prose_mentioning_enum_or_struct_never_becomes_a_row(self, tmp_path: Path):
+        """A doc comment that names `enum X` or `struct Y` is prose, not a bridge item.
+
+        The name scan is a keyword regex over raw text, so before comments were stripped it
+        enumerated anything a comment merely mentioned. Three such phantoms reached the
+        committed baseline -- `definitions` twice, from a comment reading "cannot share enum
+        definitions", and `mirroring`. Harmless until somebody reworded the sentence, at which
+        point a bridge that had not changed reported contract drift.
+        """
+        crate = tmp_path / "bridge"
+        (crate / "src").mkdir(parents=True)
+        (crate / "build.rs").write_text(
+            'fn main() { cxx_build::bridges(["src/prose_ffi.rs"]).compile("x"); }\n',
+            encoding="utf-8",
+        )
+        (crate / "src/prose_ffi.rs").write_text(
+            '#[cxx::bridge(namespace = "x")]\n'
+            "mod ffi {\n"
+            "    /// CXX bridge modules cannot share enum definitions, so this scanner-local\n"
+            "    /// type mirrors the core one. See struct mirroring for the wider pattern.\n"
+            "    #[derive(Debug)]\n"
+            "    enum RealKind {\n"
+            "        First = 0,\n"
+            "        Second = 1,\n"
+            "    }\n"
+            "\n"
+            "    /* A block comment naming struct Ghost and enum Spectre. */\n"
+            "    struct RealDto {\n"
+            "        value: String,\n"
+            "    }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+
+        payload = parse_cxx_bridge_surface(tmp_path, "bridge")
+        symbols = {row["rustSymbol"] for row in payload["entries"]}
+
+        assert symbols == {"RealKind", "RealDto"}
+        rows = _rows_by_symbol(payload)
+        # The real items keep their full contract, so comment stripping cannot be passing by
+        # simply discarding everything around them.
+        assert rows[("prose_ffi", "enum", "RealKind")]["variants"] == ["First", "Second"]
+        assert rows[("prose_ffi", "struct", "RealDto")]["fields"] == [
+            {"name": "value", "type": "String"}
+        ]
+
+
 class TestParseOpaqueTypes:
     def test_parse_opaque_types(self, fixture_dir: Path, tmp_path: Path):
         """CXXG-01: parser extracts opaque types (type Foo;) from extern Rust."""

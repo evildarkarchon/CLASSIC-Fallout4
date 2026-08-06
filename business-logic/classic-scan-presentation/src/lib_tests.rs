@@ -756,6 +756,9 @@ fn installed_yaml_data_pins_a_selected_file_line() {
         DisplayLine {
             severity: Info,
             segments: vec![
+                // `Selected` leads so the role label is never line-initial. See
+                // `role_labels_are_never_line_initial` for why that matters.
+                Text("Selected"),
                 Label("Main"),
                 Text("YAML Data:"),
                 Label("bundled"),
@@ -1231,6 +1234,36 @@ fn fixed_prose_never_carries_a_placeholder() {
                 "fixed prose {prose:?} carries a placeholder character"
             );
         }
+    }
+}
+
+/// Verifies the selected-file line never opens on the role's Display Label.
+///
+/// `InstalledYamlDataRole`'s label is asymmetric on purpose: `Main` names a glossary domain
+/// term and `game` is the ordinary adjective in "selected-game YAML Data". That is correct
+/// where the label was designed to appear — mid-sentence, as in
+/// `no usable Installed YAML Data source for game` — and wrong at the start of a line, where
+/// `game YAML Data: bundled …` sitting under `Main YAML Data: bundled …` reads as a
+/// capitalization bug rather than as the distinction it is.
+///
+/// Deliberately narrow. A general "no line opens on a lowercase label" rule would be wrong:
+/// the per-event progress lines open on lowercase participles by design, so that a frontend
+/// which upper-cases a line-initial word applies one rule to all four rather than
+/// compensating for two shapes.
+#[test]
+fn a_selected_file_line_never_opens_on_its_role_label() {
+    for role in [InstalledYamlDataRole::Main, InstalledYamlDataRole::Game] {
+        let line = render_yaml_data_file(
+            role,
+            InstalledYamlDataProvenance::Bundled,
+            "9.0",
+            &YamlDataContentIdentity::from_bytes(b"bytes"),
+        );
+        assert_eq!(
+            line.segments.first(),
+            Some(&Text("Selected")),
+            "the {role:?} line opens on something other than fixed prose"
+        );
     }
 }
 

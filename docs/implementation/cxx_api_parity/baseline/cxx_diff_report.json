@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 644,
-    "current_total": 644,
-    "matched": 644,
+    "contract_total": 641,
+    "current_total": 641,
+    "matched": 641,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -115,14 +115,6 @@
     {
       "id": "30c322625eae2fc6",
       "rustSymbol": "LocalIgnoreYamlDataState",
-      "kind": "enum",
-      "bridgeModule": "config",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "0f22e0568d44d623",
-      "rustSymbol": "definitions",
       "kind": "enum",
       "bridgeModule": "config",
       "status": "matched",
@@ -2105,14 +2097,6 @@
       "reason": "-"
     },
     {
-      "id": "d3107ca39007d3a7",
-      "rustSymbol": "mirroring",
-      "kind": "struct",
-      "bridgeModule": "path",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
       "id": "1e32a6af317a1a05",
       "rustSymbol": "perf_clear_metrics",
       "kind": "function",
@@ -2763,14 +2747,6 @@
     {
       "id": "1ad54c3b19d79960",
       "rustSymbol": "ScanRunLocalIgnoreYamlDataState",
-      "kind": "enum",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "1341fc11b331a2a8",
-      "rustSymbol": "definitions",
       "kind": "enum",
       "bridgeModule": "scanner",
       "status": "matched",

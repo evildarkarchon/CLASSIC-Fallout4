@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-06T08:43:48Z",
+  "generated_at_utc": "2026-08-06T09:22:48Z",
   "schema_version": 1,
   "entries": [
     {
@@ -197,20 +197,6 @@
         "Generated",
         "ProceedWithoutIgnore",
         "ResetToDefault"
-      ]
-    },
-    {
-      "id": "0f22e0568d44d623",
-      "rustSymbol": "definitions",
-      "kind": "enum",
-      "bridgeModule": "config",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
-      "blockOrigin": "Rust",
-      "variants": [
-        "Fallout4",
-        "Fallout4VR",
-        "Skyrim",
-        "Starfield"
       ]
     },
     {
@@ -4909,40 +4895,6 @@
       ]
     },
     {
-      "id": "d3107ca39007d3a7",
-      "rustSymbol": "mirroring",
-      "kind": "struct",
-      "bridgeModule": "path",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/path.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "ini_name",
-          "type": "String"
-        },
-        {
-          "name": "exists",
-          "type": "bool"
-        },
-        {
-          "name": "is_valid",
-          "type": "bool"
-        },
-        {
-          "name": "message",
-          "type": "String"
-        },
-        {
-          "name": "issue_or_empty",
-          "type": "String"
-        },
-        {
-          "name": "has_issue",
-          "type": "bool"
-        }
-      ]
-    },
-    {
       "id": "1e32a6af317a1a05",
       "rustSymbol": "perf_clear_metrics",
       "kind": "function",
@@ -6378,20 +6330,6 @@
         "RecoveryRequired",
         "ProceedWithoutIgnore",
         "ResetToDefault"
-      ]
-    },
-    {
-      "id": "1341fc11b331a2a8",
-      "rustSymbol": "definitions",
-      "kind": "enum",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "variants": [
-        "Fallout4",
-        "Fallout4VR",
-        "Skyrim",
-        "Starfield"
       ]
     },
     {

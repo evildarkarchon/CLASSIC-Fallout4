@@ -850,7 +850,7 @@ mod ffi {
     /// attribute, or a widget. A plain, pipeable frontend may map it onto nothing more
     /// than a choice of output stream.
     ///
-    /// One CXX bridge module cannot share a type with another, so this scanner-local twin
+    /// CXX bridge modules cannot share enum definitions, so this scanner-local type
     /// exhaustively mirrors `classic_scan_presentation::DisplaySeverity`.
     #[repr(u8)]
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -880,9 +880,9 @@ mod ffi {
 
     /// One typed piece of a Crash Log Scan Run display line.
     ///
-    /// CXX cannot express a payload-carrying Rust enum, so the six-variant segment crosses
-    /// flattened: a kind tag plus one field per payload shape, with the fields the kind
-    /// does not use left empty. Read only the field `kind` selects.
+    /// CXX cannot express a Rust enum carrying payloads, so the six-variant segment crosses
+    /// flattened: a kind tag plus one field per payload shape, with the fields the kind does
+    /// not use left empty. Read only the field `kind` selects.
     struct ScanRunDisplaySegment {
         kind: ScanRunDisplaySegmentKind,
         /// Payload for `Text`, `Label`, `Name`, and `Emphasis`. For `Count` this is the

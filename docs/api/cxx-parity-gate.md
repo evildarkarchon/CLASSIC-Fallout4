@@ -74,16 +74,27 @@ git add docs/implementation/cxx_api_parity/baseline/
 git commit -m "Docs: refresh CXX parity baseline"
 ```
 
-`--update-baseline` copies the fresh generated artifacts into the committed
-baseline directory and re-runs the comparison. A follow-up plain run should
-then exit `0`.
+`--update-baseline` rewrites `parity_contract.json` from the current bridge
+source, regenerates every committed artifact to match, and exits `0`, printing
+a one-line summary of how many items it accepted as added, removed, or
+modified. A follow-up plain run then also exits `0`.
+
+The committed diff report describes the state it was committed alongside, so
+after a refresh it reads as clean rather than as a record of what was accepted
+— it has to, or the next plain run would compare a clean recomputation against
+a report describing drift and call the fresh baseline stale. **`git diff` of
+`parity_contract.json` is the record of what changed**; read it before staging.
 
 **Never use `--update-baseline` to mask unintentional drift.** If you did not
-mean to add or remove a bridge item, fix the source, not the baseline. The
-diff report at
-[`docs/implementation/cxx_api_parity/baseline/cxx_diff_report.md`](../implementation/cxx_api_parity/baseline/cxx_diff_report.md)
-is the human-readable summary of what changed — inspect it before staging
-the refresh.
+mean to add or remove a bridge item, fix the source, not the baseline. Run the
+gate without the flag first: it exits `1` and reports exactly which rows are
+missing, added, or signature-mismatched.
+
+> Historical note: before this behaviour was fixed, `--update-baseline`
+> mirrored the committed contract straight back, so it could not accept any
+> contract change at all — it refreshed only the reports, and the two-step
+> bootstrap below was the only workflow that actually worked. If you are
+> reading an older branch, use the bootstrap.
 
 ---
 

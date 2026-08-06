@@ -326,6 +326,19 @@ def _parse_ffi_body(
     # Strip attribute lines so `enum` / `struct` name regex isn't contaminated (Pitfall 5).
     ffi_clean = _ATTR_LINE_RE.sub("", ffi_body)
 
+    # Strip comments for the same reason. The name scan below is a keyword regex over raw
+    # text, so prose that merely *mentions* `enum Foo` or `struct Bar` -- which doc comments
+    # explaining the bridge's own shape routinely do -- was being enumerated as a bridge item.
+    # Three such phantoms sat in the committed baseline: `definitions` twice, from "cannot
+    # share enum definitions", and `mirroring`. They were harmless as long as nobody edited
+    # the sentence that produced them, and actively misleading the moment somebody did, since
+    # a reworded comment surfaced as contract drift on a bridge that had not changed.
+    #
+    # Extern blocks are deliberately parsed from the ORIGINAL `ffi_body` below and strip their
+    # own comments, so this affects only the struct/enum scan, whose offsets all live inside
+    # `ffi_clean`.
+    ffi_clean = _strip_comments(ffi_clean)
+
     # --- Structs (top-level in ffi body, NOT inside extern blocks) ---
     for name, body_start, body_end in _find_top_level_blocks(ffi_clean, "struct"):
         body = ffi_clean[body_start:body_end]
