@@ -15,7 +15,15 @@ ScanRunLocalIgnoreRecoveryChoice promptLocalIgnoreRecoveryChoice(QWidget* parent
     QMessageBox prompt(parent);
     prompt.setIcon(QMessageBox::Warning);
     prompt.setWindowTitle(QStringLiteral("Local Ignore Recovery Required"));
+    // Auto-detected rather than forced, so a plain-text message keeps its line breaks; a rendered run
+    // opens on a `<span>` and is read as rich text on its own. The interaction flags are the
+    // load-bearing half: the style's defaults allow neither selection nor link activation on some
+    // platforms, and a paused run's message carries the paths this decision is about as `file:`
+    // anchors. Without these the user is asked to choose between repairing and ignoring a file they
+    // cannot open.
+    prompt.setTextFormat(Qt::AutoText);
     prompt.setText(message);
+    prompt.setTextInteractionFlags(Qt::TextBrowserInteraction);
     prompt.setInformativeText(
         resetAvailable
             ? QStringLiteral(

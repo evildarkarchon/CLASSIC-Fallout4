@@ -82,10 +82,11 @@ for (const auto& log : result.logs) {
 The projection retains:
 
 - `discoveryIndex`
-- `Succeeded`, `Failed`, or `CancelledBeforeStart` disposition
+- `Succeeded`, `Failed`, or `CancelledBeforeStart` disposition, as booleans that select control flow and feed counts
 - Crash Log and optional Autoscan Report paths
-- every structured analysis, report-write, and Unsolved Logs finalization failure
 - optional message and movement state
+
+Structured failures are deliberately **not** projected into strings. Rust renders one display line per failure beneath the log's own outcome line, so a `<stage>: <message>` list built here would be the same sentence written twice in two places able to disagree. The failures themselves are unchanged on `ScanRunContractLogResult` for any consumer that wants them typed.
 
 No `QStringList` lookup, fallback-path recovery, `qMin` clamp, or completion-order correlation remains in the active worker.
 
@@ -96,8 +97,9 @@ No `QStringList` lookup, fallback-path recovery, `qMin` clamp, or completion-ord
 After terminal projection, `ScanWorker` iterates `terminal.logs` in discovery order.
 
 - `CancelledBeforeStart` entries are skipped because they represent accepted work that Rust never admitted.
-- failures are logged with all projected structured failure messages
 - admitted succeeded or failed entries emit `logScanned(discoveryIndex, succeeded, crashLog)`
+
+Nothing is described in this loop any more. `ScanWorker` logs the whole rendered run once, before it iterates — every fact its per-log warnings used to carry (the Crash Log path, the outcome, the Autoscan Report, movement to Unsolved Logs, and each failure's stage and message) is a line in that block, stated once by Rust. What survives here is the signal, which carries data rather than words.
 
 Therefore `ScanController::scanLogScanned(...)` notifications are discovery ordered for admitted outcomes, not completion ordered. There can be gaps in emitted indices when cancellation leaves accepted logs unstarted.
 
@@ -186,9 +188,11 @@ Qt owns none of the discovery, completion-order reconciliation, durable finaliza
 
 - terminal logs retain discovery order and discovery indices
 - succeeded, failed, and cancelled-before-start dispositions remain distinct
-- analysis, report-write, and Unsolved Logs finalization failures all survive presentation
 - aggregate counts, report paths, messages, and movement state are preserved
 - Targeted rejection paths stay paired with their Rust-provided reasons
+- display lines reach the presentation in Rust's order, segments concatenate in Rust's order within a line, a count prints Rust's noun in both grammatical numbers, a `Path` renders as an actionable `file:` anchor, and each severity maps to a distinct colour of this frontend's own
+
+That last group is renderer conformance and deliberately says nothing about wording. Every fixture uses words no run would produce, because `classic-scan-presentation` pins the wording once and per-frontend golden suites were rejected on #170: they would assert the same sentence four times and give one rewording four chances to disagree.
 
 [`test_scan_progress_model.cpp`](../../classic-gui/tests/test_scan_progress_model.cpp) verifies the separate event-order domain: state is keyed by discovery index, interleaved logs advance independently, and late lower-rank events cannot regress visible progress.
 

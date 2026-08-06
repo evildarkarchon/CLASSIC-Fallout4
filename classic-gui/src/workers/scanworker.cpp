@@ -19,45 +19,21 @@ namespace {
 
 namespace scanner = classic::scanner;
 
+/// Produces the one-row progress text for one observed lifecycle event.
+///
+/// The words come from Rust, already rendered on the observer callback before the event crossed the
+/// bridge — there is no later opportunity, because this process receives a projected copy and never
+/// holds the Rust event. What stays this frontend's is the shape: the progress row is a single
+/// `QProgressBar` format string, so a discovery that also states a rejection is joined onto one line
+/// rather than shown as two.
 QString eventStatus(const scanner::ScanRunContractEvent& event)
 {
-    using EventKind = scanner::ScanRunContractEventKind;
-    const QString path = classic::toQString(event.crash_log);
-    switch (event.kind) {
-    case EventKind::DiscoveryCompleted:
-        return QStringLiteral("Found %1 crash log%2")
-            .arg(event.discovery.accepted_logs.size())
-            .arg(event.discovery.accepted_logs.size() == 1 ? "" : "s");
-    case EventKind::EffectiveConcurrencySelected:
-        return QStringLiteral("Scanning with %1 concurrent scan%2")
-            .arg(event.effective_concurrency)
-            .arg(event.effective_concurrency == 1 ? "" : "s");
-    case EventKind::LogQueued:
-        return QStringLiteral("Queued: %1").arg(path);
-    case EventKind::LogStarted:
-        return QStringLiteral("Scanning: %1").arg(path);
-    case EventKind::LogPhase: {
-        QString phase;
-        switch (event.phase) {
-        case scanner::ScanRunContractProgressPhase::Setup:
-            phase = QStringLiteral("setup");
-            break;
-        case scanner::ScanRunContractProgressPhase::Parse:
-            phase = QStringLiteral("parse");
-            break;
-        case scanner::ScanRunContractProgressPhase::Analyze:
-            phase = QStringLiteral("analysis");
-            break;
-        case scanner::ScanRunContractProgressPhase::Finalize:
-            phase = QStringLiteral("finalization");
-            break;
-        }
-        return QStringLiteral("%1: %2").arg(phase, path);
+    QStringList rendered;
+    rendered.reserve(static_cast<qsizetype>(event.display_lines.size()));
+    for (const auto& line : classic::gui::presentScanRunDisplayLines(event.display_lines)) {
+        rendered.append(classic::gui::renderScanRunDisplayLineAsPlainText(line));
     }
-    case EventKind::LogFinished:
-        return QStringLiteral("Finished: %1").arg(path);
-    }
-    return path;
+    return rendered.join(QStringLiteral(" - "));
 }
 
 QStringList terminalReportDirectories(const classic::gui::ScanRunTerminalPresentation& terminal)
@@ -189,9 +165,15 @@ void ScanWorker::doScan(const QString& installationRoot, const classic::gui::Cra
                 return;
             }
 
+            // The prompt is handed the whole rendered run rather than the run message alone. Rust
+            // exposes the Installed YAML Data block — the facts this decision is about — only as
+            // part of the rendered run, and picking that block back out by position would be a
+            // structural assumption about a sequence that carries no structure. The native CLI and
+            // the TUI made the same call for the same reason. The prompt's own wording, its buttons,
+            // and the descriptions beside them are untouched and land with the gated recovery phase.
             auto continuation = scanner::scan_run_contract_execution_take_continuation(*operation);
             const auto choice = m_localIgnoreRecoveryPrompt(
-                terminal.message, classic::gui::offersLocalIgnoreResetToDefault(terminal));
+                terminal.richText, classic::gui::offersLocalIgnoreResetToDefault(terminal));
             auto decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
             switch (choice) {
             case classic::gui::ScanRunLocalIgnoreRecoveryChoice::ProceedWithoutIgnore:
@@ -216,6 +198,13 @@ void ScanWorker::doScan(const QString& installationRoot, const classic::gui::Cra
             terminal = classic::gui::presentScanRunExecution(resumedExecution);
         }
 
+        // One log entry for the whole run, in the words the run itself used. This replaces the
+        // per-log warnings this worker used to compose: every fact they carried — the Crash Log
+        // path, its outcome, the Autoscan Report, movement to Unsolved Logs, and each structured
+        // failure's stage and message — is a line in the rendered run, stated once by Rust rather
+        // than twice in two frontends able to disagree. The FCX setup projection still follows,
+        // because the presentation crate deliberately does not render it.
+        qInfo().noquote() << terminal.message;
         if (!terminal.setupDetails.isEmpty()) {
             qInfo().noquote() << terminal.setupDetails;
         }
@@ -228,25 +217,21 @@ void ScanWorker::doScan(const QString& installationRoot, const classic::gui::Cra
             emit reportDirectoriesResolved(reportDirectories);
         }
 
-        // The contract supplies terminal outcomes in discovery order even when execution events interleave.
+        // The contract supplies terminal outcomes in discovery order even when execution events
+        // interleave. Nothing is described here any more — the rendered run above already said what
+        // happened to each Crash Log. What survives is the signal, which carries data rather than
+        // words: a discovery index, a success flag, and the path the results view keys on.
         for (const auto& log : terminal.logs) {
             if (log.cancelledBeforeStart) {
                 continue;
             }
-            if (!log.failures.isEmpty()) {
-                qWarning().noquote() << QStringLiteral("Crash Log Scan failed for %1: %2")
-                                            .arg(log.crashLog, log.failures.join(QStringLiteral("; ")));
-            } else if (log.failed && !log.message.isEmpty()) {
-                qWarning().noquote()
-                    << QStringLiteral("Crash Log Scan failed for %1: %2").arg(log.crashLog, log.message);
-            }
-            if (log.movedToUnsolvedLogs) {
-                qInfo().noquote()
-                    << QStringLiteral("Moved failed Crash Log artifacts to Unsolved Logs: %1").arg(log.crashLog);
-            }
             emit logScanned(log.discoveryIndex, log.succeeded, log.crashLog);
         }
 
+        // The three terminal signals that carry prose carry the rendered run as rich text, because
+        // every one of them ends in a `QMessageBox` — a widget that can style a severity and open a
+        // path the run just wrote. The window reduces it to one plain line for the progress row,
+        // which is the only surface here that cannot hold more.
         switch (terminal.kind) {
         case TerminalKind::Completed:
             emit progress(100.0F, QStringLiteral("Complete"));
@@ -256,14 +241,14 @@ void ScanWorker::doScan(const QString& installationRoot, const classic::gui::Cra
             break;
         case TerminalKind::CancelledBeforeDiscovery:
         case TerminalKind::Cancelled:
-            emit cancelled(terminal.message);
+            emit cancelled(terminal.richText);
             break;
         case TerminalKind::NoCrashLogsFound:
-            emit noLogsFound(terminal.message);
+            emit noLogsFound(terminal.richText);
             break;
         case TerminalKind::SetupFailed:
         case TerminalKind::InfrastructureError:
-            emit error(terminal.message);
+            emit error(terminal.richText);
             break;
         case TerminalKind::LocalIgnoreRecoveryRequired:
             emit error(QStringLiteral("Crash Log Scan recovery returned an unexpected second recovery request."));

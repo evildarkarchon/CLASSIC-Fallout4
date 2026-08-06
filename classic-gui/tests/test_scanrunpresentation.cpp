@@ -1,10 +1,13 @@
+#include <QSet>
 #include <QTemporaryDir>
 #include <QtTest/QtTest>
 
+#include "core/rust_qt_bridge.h"
 #include "workers/scanrunpresentation.h"
 
 #include <array>
 #include <cstddef>
+#include <initializer_list>
 #include <utility>
 
 namespace {
@@ -30,6 +33,55 @@ classic::scanner::ScanRunContractLogResult logResult(std::size_t discoveryIndex,
     result.crash_log = crashLog;
     result.disposition = disposition;
     return result;
+}
+
+// Renderer-conformance fixtures below deliberately use words no Crash Log Scan Run would ever
+// produce. Wording is pinned once, in `classic-scan-presentation`, and per-frontend golden suites
+// were rejected on #170 precisely because they would assert the same sentence four times and give
+// one rewording four chances to disagree. What this frontend must prove is narrower: that it did
+// not reword, reorder, or re-derive what it was handed.
+
+/// Creates one flattened display segment, filling only the field its kind selects.
+classic::scanner::ScanRunDisplaySegment segment(classic::scanner::ScanRunDisplaySegmentKind kind, const char* text,
+                                                 const char* path = "", quint64 count = 0)
+{
+    classic::scanner::ScanRunDisplaySegment created{};
+    created.kind = kind;
+    created.text = text;
+    created.path = path;
+    created.count = count;
+    return created;
+}
+
+/// Creates one Qt-owned display line from bridge segments, through the real projection.
+///
+/// Built through `presentScanRunDisplayLines` rather than by filling the Qt struct directly, so the
+/// flattening the bridge applies is exercised by every case below rather than assumed.
+classic::gui::ScanRunDisplayLinePresentation presentedLine(
+    classic::scanner::ScanRunDisplaySeverity severity,
+    std::initializer_list<classic::scanner::ScanRunDisplaySegment> segments)
+{
+    rust::Vec<classic::scanner::ScanRunDisplayLine> lines;
+    classic::scanner::ScanRunDisplayLine line{};
+    line.severity = severity;
+    for (const auto& created : segments) {
+        line.segments.push_back(created);
+    }
+    lines.push_back(std::move(line));
+    return classic::gui::presentScanRunDisplayLines(lines).first();
+}
+
+/// Appends one rendered line to an execution envelope's mirrored Display Content.
+void appendDisplayLine(classic::scanner::ScanRunContractExecutionResult& execution,
+                       classic::scanner::ScanRunDisplaySeverity severity,
+                       std::initializer_list<classic::scanner::ScanRunDisplaySegment> segments)
+{
+    classic::scanner::ScanRunDisplayLine line{};
+    line.severity = severity;
+    for (const auto& created : segments) {
+        line.segments.push_back(created);
+    }
+    execution.display_lines.push_back(std::move(line));
 }
 
 } // namespace
@@ -64,27 +116,34 @@ private slots:
     void reset_resume_error_preserves_operational_context();
     void infrastructure_error_preserves_typed_stage_message_and_path();
     void invalid_execution_envelope_is_presented_as_an_infrastructure_error();
-    // Exhaustive Display Label coverage, added with #167 when the GUI stopped owning the wording.
+    // Renderer conformance, added with #178 when the GUI stopped composing sentences about a run.
     //
-    // These pin every variant of every enum the GUI renders a label for, against the canonical
-    // strings the Rust core owns. Quoting them as literals here is deliberate and is the one place
-    // in this frontend where that is right: it is how a wording a ticket settled gets pinned across
-    // the binding boundary, so a core-side reword has to be a decision rather than an accident.
+    // These assert the four things an adapter can get wrong about Display Content it did not write:
+    // that segments concatenate in Rust's order, that a count prints Rust's noun rather than one
+    // re-derived here, that a path is typed as a path and so becomes actionable, and that severity
+    // reaches this frontend's own styling. None of them restates a sentence, because
+    // `classic-scan-presentation` pins every sentence once and per-frontend golden suites were
+    // rejected on #170 for reintroducing the drift they were meant to catch.
+    void display_line_segments_concatenate_in_the_order_rust_supplied();
+    void a_count_prints_the_noun_rust_resolved_rather_than_re_deciding_it();
+    void a_path_segment_renders_as_selectable_actionable_text();
+    void every_severity_maps_to_this_frontends_own_styling();
+    void rendered_lines_reach_the_terminal_presentation_in_rust_order();
+
+    // Display Label coverage for the two enums this frontend still labels itself.
     //
-    // They exist because the measurement on #167 found the GUI shipping six stale labels with the
-    // entire Qt suite green over all six. The only labels any test named were ones the CLI, the
-    // GUI, and the TUI already agreed about, so the assertions were structurally incapable of
-    // catching the drift they were nearest to.
+    // Both are labelled *outside* a display line, by the one-row YAML Data status suffix that has no
+    // room for a rendered block. Quoting the canonical strings as literals here is deliberate and is
+    // the one place in this frontend where that is right: it is how a wording a ticket settled gets
+    // pinned across the binding boundary, so a core-side reword has to be a decision rather than an
+    // accident.
     //
-    // Per-log failure stage is absent from this block because
-    // `terminal_logs_preserve_discovery_order_and_structured_dispositions` already compares all
-    // three of its labels in one exact QStringList, and per-log disposition is absent because the
-    // GUI renders no label for it — see the decision recorded at `presentLog`.
+    // The three sibling blocks that pinned infrastructure stages, reset failure stages, and
+    // diagnostic kinds are gone, not relaxed. Those labels now reach the user inside a `Label`
+    // segment on a line Rust wrote, so pinning them here would assert the presentation crate's
+    // wording a second time — exactly the four-copies-of-one-sentence problem #170 exists to remove.
     void every_local_ignore_state_renders_its_canonical_display_label();
     void every_installed_yaml_data_provenance_renders_its_canonical_display_label();
-    void every_installed_yaml_data_diagnostic_kind_renders_its_canonical_display_label();
-    void every_infrastructure_error_stage_renders_its_canonical_display_label();
-    void every_local_ignore_reset_failure_stage_renders_its_canonical_display_label();
 };
 
 void ScanRunPresentationTests::targeted_rejections_preserve_paired_paths_and_reasons()
@@ -232,22 +291,46 @@ void ScanRunPresentationTests::fallback_and_recovery_diagnostics_become_one_run_
     installed.localIgnoreReset.backupIdentity.sha256 = QStringLiteral("malformed-hash");
     installed.localIgnoreReset.backupIdentity.byteLength = 30;
 
+    // The body of the warning is the run's own rendered lines. It carries the whole run rather than
+    // the Installed YAML Data block alone because Rust exposes that block only as part of the
+    // rendered run, and selecting it back out by position would be a structural assumption about a
+    // sequence that deliberately carries no structure.
+    using Kind = classic::scanner::ScanRunDisplaySegmentKind;
+    // One rendered line per diagnostic above, in the shape Rust renders them: the kind's Display
+    // Label, then the message as an Emphasis payload. The messages match the typed diagnostics
+    // exactly, which is how the three that must not be restated are recognised.
+    for (const auto* message : {"updated Main schema 9.0 is newer than this client supports",
+                                "generated missing Local Ignore YAML Data",
+                                "existing Local Ignore YAML Data could not be parsed",
+                                "reset malformed Local Ignore from retained defaults"}) {
+        installed.runDisplayLines.append(presentedLine(classic::scanner::ScanRunDisplaySeverity::Warning,
+                                                       {segment(Kind::Label, "unreal diagnostic kind"),
+                                                        segment(Kind::Text, "-"), segment(Kind::Emphasis, message)}));
+    }
+    installed.runDisplayLines.append(
+        presentedLine(classic::scanner::ScanRunDisplaySeverity::Info,
+                      {segment(Kind::Text, "unreal backup lead"),
+                       segment(Kind::Path, "", "C:/CLASSIC/CLASSIC Backup/CLASSIC Ignore.yaml")}));
+
     const QString warning = classic::gui::formatInstalledYamlDataWarning(installed);
 
     QVERIFY(!warning.isEmpty());
-    QVERIFY(warning.contains(QStringLiteral("incompatible schema")));
+    // The section header is Display Layout and stays this frontend's.
+    QVERIFY(warning.contains(QStringLiteral("CLASSIC could not use some of its installed YAML Data")));
     QVERIFY(warning.contains(QStringLiteral("updated Main schema 9.0 is newer than this client supports")));
-    QVERIFY(warning.contains(QStringLiteral("Main")));
-    QVERIFY(warning.contains(QStringLiteral("C:/CLASSIC/cache/CLASSIC Main.yaml")));
-    // The durable backup location is the one fact a user needs to recover their prior edits.
-    QVERIFY(warning.contains(QStringLiteral("C:/CLASSIC/CLASSIC Backup/CLASSIC Ignore.yaml")));
-    QVERIFY(warning.contains(QStringLiteral("malformed-hash")));
+    // The durable backup location is the one fact a user needs to recover their prior edits, and it
+    // arrives as a path segment, so it is reachable rather than merely readable.
+    QVERIFY(warning.contains(QStringLiteral("file:///C:/CLASSIC/CLASSIC%20Backup/CLASSIC%20Ignore.yaml")));
     QVERIFY2(!warning.contains(QStringLiteral("generated missing Local Ignore YAML Data")),
              "expected-success generation must not be reported as a warning");
     QVERIFY2(!warning.contains(QStringLiteral("could not be parsed")),
              "a Local Ignore problem the user already answered must not be restated");
     QVERIFY2(!warning.contains(QStringLiteral("reset malformed Local Ignore from retained defaults")),
-             "the reset diagnostic is superseded by the durable backup paragraph");
+             "the reset diagnostic is superseded by the backup and replacement lines beside it");
+
+    // A run whose lines never arrived says nothing rather than showing an empty dialog.
+    installed.runDisplayLines.clear();
+    QVERIFY(classic::gui::formatInstalledYamlDataWarning(installed).isEmpty());
 }
 
 void ScanRunPresentationTests::answered_recovery_does_not_restate_the_local_ignore_problem()
@@ -263,11 +346,15 @@ void ScanRunPresentationTests::answered_recovery_does_not_restate_the_local_igno
     answeredParse.hasPath = true;
     answeredParse.path = QStringLiteral("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml");
     proceeded.diagnostics.append(answeredParse);
+    using Kind = classic::scanner::ScanRunDisplaySegmentKind;
+    proceeded.runDisplayLines.append(presentedLine(classic::scanner::ScanRunDisplaySeverity::Warning,
+                                                   {segment(Kind::Text, "unreal rendered run")}));
 
     QVERIFY(classic::gui::formatInstalledYamlDataWarning(proceeded).isEmpty());
 
     // A Main or game selection problem is unrelated to the answered question and still warns, which
-    // is what the missing role distinguishes.
+    // is what the missing role distinguishes. What changed with #178 is only the body: the decision
+    // to interrupt is still made from the typed diagnostics here, and the words are the run's.
     classic::gui::ScanRunInstalledYamlDataDiagnosticPresentation selectionFallback{};
     selectionFallback.kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind::InvalidRoleData;
     selectionFallback.message = QStringLiteral("updated game YAML Data failed role validation");
@@ -276,8 +363,7 @@ void ScanRunPresentationTests::answered_recovery_does_not_restate_the_local_igno
     proceeded.diagnostics.append(selectionFallback);
 
     const QString warning = classic::gui::formatInstalledYamlDataWarning(proceeded);
-    QVERIFY(warning.contains(QStringLiteral("updated game YAML Data failed role validation")));
-    QVERIFY(!warning.contains(QStringLiteral("could not be parsed")));
+    QVERIFY(warning.contains(QStringLiteral("unreal rendered run")));
 }
 
 void ScanRunPresentationTests::expected_local_ignore_generation_produces_no_run_level_warning()
@@ -291,6 +377,11 @@ void ScanRunPresentationTests::expected_local_ignore_generation_produces_no_run_
     generated.hasPath = true;
     generated.path = QStringLiteral("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml");
     installed.diagnostics.append(generated);
+    // Rendered lines are supplied throughout so each empty result below is the policy declining to
+    // interrupt, not a run that happened to have nothing to say.
+    using Kind = classic::scanner::ScanRunDisplaySegmentKind;
+    installed.runDisplayLines.append(presentedLine(classic::scanner::ScanRunDisplaySeverity::Info,
+                                                   {segment(Kind::Text, "unreal rendered run")}));
 
     // A clean first run is an expected successful path, so it must never interrupt the user.
     QVERIFY(classic::gui::formatInstalledYamlDataWarning(installed).isEmpty());
@@ -306,6 +397,7 @@ void ScanRunPresentationTests::expected_local_ignore_generation_produces_no_run_
     malformed.kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind::Parse;
     malformed.message = QStringLiteral("Local Ignore YAML Data is malformed");
     awaitingChoice.diagnostics.append(malformed);
+    awaitingChoice.runDisplayLines = installed.runDisplayLines;
     QVERIFY(classic::gui::formatInstalledYamlDataWarning(awaitingChoice).isEmpty());
 }
 
@@ -342,16 +434,13 @@ void ScanRunPresentationTests::terminal_logs_preserve_discovery_order_and_struct
     failed.has_message = true;
     failed.message = "durable finalization had errors";
     failed.moved_to_unsolved_logs = true;
-    for (const auto& [stage, message] : {
-             std::pair{classic::scanner::ScanRunContractLogFailureStage::Analysis, "analysis failed"},
-             std::pair{classic::scanner::ScanRunContractLogFailureStage::ReportWrite, "report write failed"},
-             std::pair{classic::scanner::ScanRunContractLogFailureStage::UnsolvedLogsFinalization, "movement failed"},
-         }) {
-        classic::scanner::ScanRunContractLogFailure failure{};
-        failure.stage = stage;
-        failure.message = message;
-        failed.failures.push_back(std::move(failure));
-    }
+    // Structured failures are carried on the DTO but deliberately not projected into GUI strings any
+    // more: Rust renders one display line per failure beneath the log's outcome, so a
+    // `<stage>: <message>` list here would be that sentence written a second time.
+    classic::scanner::ScanRunContractLogFailure failure{};
+    failure.stage = classic::scanner::ScanRunContractLogFailureStage::Analysis;
+    failure.message = "analysis failed";
+    failed.failures.push_back(std::move(failure));
     execution.result.logs.push_back(std::move(failed));
     execution.result.logs.push_back(
         logResult(2, "C:/logs/third.log", classic::scanner::ScanRunContractLogDisposition::CancelledBeforeStart));
@@ -373,10 +462,6 @@ void ScanRunPresentationTests::terminal_logs_preserve_discovery_order_and_struct
     QVERIFY(presentation.logs[1].failed);
     QVERIFY(presentation.logs[1].movedToUnsolvedLogs);
     QCOMPARE(presentation.logs[1].message, QStringLiteral("durable finalization had errors"));
-    QCOMPARE(
-        presentation.logs[1].failures,
-        QStringList({QStringLiteral("analysis: analysis failed"), QStringLiteral("report write: report write failed"),
-                     QStringLiteral("Unsolved Logs finalization: movement failed")}));
 
     QCOMPARE(presentation.logs[2].discoveryIndex, 2);
     QVERIFY(presentation.logs[2].cancelledBeforeStart);
@@ -386,18 +471,19 @@ void ScanRunPresentationTests::terminal_logs_preserve_discovery_order_and_struct
 
 void ScanRunPresentationTests::expected_lifecycle_statuses_remain_distinct_from_infrastructure_errors()
 {
+    // Each expected lifecycle status still selects exactly one GUI-facing terminal kind, and that
+    // kind is what decides which lifecycle signal the worker emits. The prose these cases used to
+    // assert is gone from this frontend: what the run says arrives already written, and is pinned
+    // once in `classic-scan-presentation`.
     auto noLogs = executionWithStatus(classic::scanner::ScanRunContractStatus::NoCrashLogsFound);
     noLogs.result.has_discovery = true;
     noLogs.result.discovery.searched_locations.push_back("C:/searched/Crash Logs");
-    const auto noLogsPresentation = classic::gui::presentScanRunExecution(noLogs);
-    QCOMPARE(noLogsPresentation.kind, classic::gui::ScanRunTerminalKind::NoCrashLogsFound);
-    QVERIFY(noLogsPresentation.message.contains(QStringLiteral("No crash logs found")));
-    QVERIFY(noLogsPresentation.message.contains(QStringLiteral("C:/searched/Crash Logs")));
+    QCOMPARE(classic::gui::presentScanRunExecution(noLogs).kind, classic::gui::ScanRunTerminalKind::NoCrashLogsFound);
 
-    const auto beforeDiscovery = classic::gui::presentScanRunExecution(
-        executionWithStatus(classic::scanner::ScanRunContractStatus::CancelledBeforeDiscovery));
-    QCOMPARE(beforeDiscovery.kind, classic::gui::ScanRunTerminalKind::CancelledBeforeDiscovery);
-    QVERIFY(beforeDiscovery.message.contains(QStringLiteral("before discovery")));
+    QCOMPARE(classic::gui::presentScanRunExecution(
+                 executionWithStatus(classic::scanner::ScanRunContractStatus::CancelledBeforeDiscovery))
+                 .kind,
+             classic::gui::ScanRunTerminalKind::CancelledBeforeDiscovery);
 
     auto cancelled = executionWithStatus(classic::scanner::ScanRunContractStatus::Cancelled);
     cancelled.result.total = 5;
@@ -409,8 +495,6 @@ void ScanRunPresentationTests::expected_lifecycle_statuses_remain_distinct_from_
     QCOMPARE(cancelledPresentation.total, 5);
     QCOMPARE(cancelledPresentation.succeeded + cancelledPresentation.failed, 3);
     QCOMPARE(cancelledPresentation.cancelled, 2);
-    QVERIFY(cancelledPresentation.message.contains(QStringLiteral("3 completed")));
-    QVERIFY(cancelledPresentation.message.contains(QStringLiteral("2 not started")));
 }
 
 void ScanRunPresentationTests::local_ignore_recovery_required_remains_distinct()
@@ -425,7 +509,6 @@ void ScanRunPresentationTests::local_ignore_recovery_required_remains_distinct()
     const auto presentation = classic::gui::presentScanRunExecution(execution);
 
     QCOMPARE(presentation.kind, classic::gui::ScanRunTerminalKind::LocalIgnoreRecoveryRequired);
-    QCOMPARE(presentation.message, QStringLiteral("Local Ignore recovery is required"));
     QVERIFY(presentation.hasInstalledYamlData);
     QCOMPARE(presentation.installedYamlData.localIgnoreState,
              classic::scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired);
@@ -507,8 +590,19 @@ void ScanRunPresentationTests::setup_failure_presents_checks_updates_configurati
     const auto presentation = classic::gui::presentScanRunExecution(execution);
 
     QCOMPARE(presentation.kind, classic::gui::ScanRunTerminalKind::SetupFailed);
+    // The FCX Mode setup projection is still this frontend's, because its four types have not
+    // adopted the shared vocabulary and the presentation crate deliberately does not render it. It
+    // is grouped in after the rendered lines rather than spliced into them. `FCX setup failed` — the
+    // run's own message — is absent from this list on purpose: that sentence is Rust's now.
+    //
+    // Asserted through `richText`, which is where the projection is grouped in, and separately
+    // through `setupDetails`, which is what the worker logs. `message` deliberately carries neither,
+    // so the log cannot print the block twice.
+    QCOMPARE(presentation.richText, presentation.setupDetails.toHtmlEscaped().replace(QLatin1Char('\n'),
+                                                                                      QStringLiteral("<br>")));
+    QVERIFY(presentation.message.isEmpty());
     for (const QString& expected :
-         {QStringLiteral("FCX setup failed"), QStringLiteral("Review the setup details"),
+         {QStringLiteral("Review the setup details"),
           QStringLiteral("Rendered setup report"), QStringLiteral("game_executable"),
           QStringLiteral("Executable was not found"), QStringLiteral("Expected Fallout4.exe"),
           QStringLiteral("documents"), QStringLiteral("C:/Users/Test/Documents/My Games/Fallout4"),
@@ -516,26 +610,36 @@ void ScanRunPresentationTests::setup_failure_presents_checks_updates_configurati
           QStringLiteral("bEnableSomething"), QStringLiteral("The setting should be enabled"),
           QStringLiteral("current: 0"), QStringLiteral("recommended: 1"),
           QStringLiteral("Select the correct game root"), QStringLiteral("Setup could not continue")}) {
-        QVERIFY2(presentation.message.contains(expected),
+        QVERIFY2(presentation.setupDetails.contains(expected),
                  qPrintable(QStringLiteral("Setup presentation omitted: %1").arg(expected)));
     }
 }
 
 void ScanRunPresentationTests::infrastructure_error_preserves_typed_stage_message_and_path()
 {
+    // Two things are asserted and they are deliberately different in kind. The terminal kind and the
+    // typed stage are the machine-facing surface a consumer matches on, and they stay exactly where
+    // they were. The words are Rust's, so they are checked for arriving intact and in order rather
+    // than for saying anything in particular.
     classic::scanner::ScanRunContractExecutionResult execution{};
     execution.has_error = true;
     execution.error.stage = classic::scanner::ScanRunContractInfrastructureErrorStage::FormIdDatabaseAccess;
     execution.error.message = "database could not be opened";
     execution.error.has_path = true;
     execution.error.path = "C:/CLASSIC/databases/formids.db";
+    using Kind = classic::scanner::ScanRunDisplaySegmentKind;
+    appendDisplayLine(execution, classic::scanner::ScanRunDisplaySeverity::Failure,
+                      {segment(Kind::Text, "unreal headline"), segment(Kind::Label, "unreal stage")});
+    appendDisplayLine(execution, classic::scanner::ScanRunDisplaySeverity::Info,
+                      {segment(Kind::Text, "unreal lead"), segment(Kind::Path, "", "C:/CLASSIC/databases/formids.db")});
 
     const auto presentation = classic::gui::presentScanRunExecution(execution);
 
     QCOMPARE(presentation.kind, classic::gui::ScanRunTerminalKind::InfrastructureError);
+    QCOMPARE(presentation.displayLines.size(), 2);
     QCOMPARE(presentation.message,
-             QStringLiteral("Crash Log Scan Run failed during FormID database access: database could not be opened "
-                            "(path: C:/CLASSIC/databases/formids.db)"));
+             QStringLiteral("unreal headline unreal stage\nunreal lead C:/CLASSIC/databases/formids.db"));
+    QVERIFY(presentation.richText.contains(QStringLiteral("file:///C:/CLASSIC/databases/formids.db")));
 }
 
 void ScanRunPresentationTests::every_local_ignore_state_renders_its_canonical_display_label()
@@ -573,115 +677,148 @@ void ScanRunPresentationTests::every_installed_yaml_data_provenance_renders_its_
     }
 }
 
-void ScanRunPresentationTests::every_installed_yaml_data_diagnostic_kind_renders_its_canonical_display_label()
+void ScanRunPresentationTests::display_line_segments_concatenate_in_the_order_rust_supplied()
 {
-    // Six of these ten moved: four gained the noun that says the label describes a failure rather
-    // than a status, and two gained the glossary capitalization of Local Ignore as a domain term.
-    // Asserted through formatInstalledYamlDataDiagnostic rather than the accessor, so the rendered
-    // `<label>: <message>` frame the user actually reads is what is pinned.
-    using Kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind;
-    const std::array<std::pair<Kind, QString>, 10> expected{{
-        {Kind::CacheUnavailable, QStringLiteral("update cache unavailable")},
-        {Kind::Missing, QStringLiteral("missing candidate")},
-        {Kind::Read, QStringLiteral("read failure")},
-        {Kind::InvalidUtf8, QStringLiteral("invalid UTF-8")},
-        {Kind::Parse, QStringLiteral("parse failure")},
-        {Kind::InvalidSchema, QStringLiteral("invalid schema")},
-        {Kind::IncompatibleSchema, QStringLiteral("incompatible schema")},
-        {Kind::InvalidRoleData, QStringLiteral("invalid role data")},
-        {Kind::LocalIgnoreGenerated, QStringLiteral("Local Ignore generated")},
-        {Kind::LocalIgnoreReset, QStringLiteral("Local Ignore reset")},
-    }};
+    // Ordering is the one thing an adapter is forbidden to touch inside a line. The fixture puts
+    // every kind in an order no real line uses, so a renderer that grouped by kind, sorted, or
+    // dropped a kind it did not recognise would produce a different string.
+    using Kind = classic::scanner::ScanRunDisplaySegmentKind;
+    const auto line = presentedLine(classic::scanner::ScanRunDisplaySeverity::Info,
+                                    {segment(Kind::Emphasis, "zulu"), segment(Kind::Count, "widgets", "", 4),
+                                     segment(Kind::Path, "", "C:/alpha/beta.log"), segment(Kind::Label, "yankee"),
+                                     segment(Kind::Name, "xray"), segment(Kind::Text, "whiskey")});
 
-    for (const auto& [kind, label] : expected) {
-        classic::gui::ScanRunInstalledYamlDataDiagnosticPresentation diagnostic{};
-        diagnostic.kind = kind;
-        diagnostic.message = QStringLiteral("diagnostic detail");
-        QCOMPARE(classic::gui::formatInstalledYamlDataDiagnostic(diagnostic),
-                 QStringLiteral("%1: diagnostic detail").arg(label));
+    QCOMPARE(classic::gui::renderScanRunDisplayLineAsPlainText(line),
+             QStringLiteral("zulu 4 widgets C:/alpha/beta.log yankee xray whiskey"));
+
+    // The rich-text shape carries the same six payloads in the same six positions; only the markup
+    // around them is this frontend's.
+    const QString rich = classic::gui::renderScanRunDisplayLineAsRichText(line);
+    qsizetype cursor = 0;
+    for (const QString& payload : {QStringLiteral("zulu"), QStringLiteral("widgets"), QStringLiteral("beta.log"),
+                                   QStringLiteral("yankee"), QStringLiteral("xray"), QStringLiteral("whiskey")}) {
+        const qsizetype found = rich.indexOf(payload, cursor);
+        QVERIFY2(found >= 0, qPrintable(QStringLiteral("rich text dropped %1").arg(payload)));
+        cursor = found + payload.size();
     }
 }
 
-void ScanRunPresentationTests::every_infrastructure_error_stage_renders_its_canonical_display_label()
+void ScanRunPresentationTests::a_count_prints_the_noun_rust_resolved_rather_than_re_deciding_it()
 {
-    // None of these six moved, but only FormIdDatabaseAccess had an assertion before #167. The
-    // other five reach the user through the same fatal banner and were unpinned.
-    using Stage = classic::scanner::ScanRunContractInfrastructureErrorStage;
-    const std::array<std::pair<Stage, QString>, 6> expected{{
-        {Stage::RequestValidation, QStringLiteral("request validation")},
-        {Stage::Discovery, QStringLiteral("discovery")},
-        {Stage::Intake, QStringLiteral("intake")},
-        {Stage::FormIdDatabaseAccess, QStringLiteral("FormID database access")},
-        {Stage::Initialization, QStringLiteral("initialization")},
-        {Stage::InternalInvariant, QStringLiteral("internal invariant validation")},
-    }};
+    // A count crosses the bridge as a value plus the noun Rust already agreed with it, so this
+    // frontend has nothing to decide. Both grammatical numbers are asserted, and the singular case
+    // is the one that matters: a renderer that appended its own "s" would read "1 logs" here, which
+    // is the exact bug the typed count exists to make unrepresentable.
+    using Kind = classic::scanner::ScanRunDisplaySegmentKind;
+    const auto singular =
+        presentedLine(classic::scanner::ScanRunDisplaySeverity::Info, {segment(Kind::Count, "sprocket", "", 1)});
+    const auto plural =
+        presentedLine(classic::scanner::ScanRunDisplaySeverity::Info, {segment(Kind::Count, "sprockets", "", 12)});
 
-    for (const auto& [stage, label] : expected) {
-        classic::scanner::ScanRunContractExecutionResult execution{};
-        execution.has_error = true;
-        execution.error.stage = stage;
-        execution.error.message = "run could not continue";
-
-        const auto presentation = classic::gui::presentScanRunExecution(execution);
-
-        QCOMPARE(presentation.kind, classic::gui::ScanRunTerminalKind::InfrastructureError);
-        QCOMPARE(presentation.message,
-                 QStringLiteral("Crash Log Scan Run failed during %1: run could not continue").arg(label));
-    }
+    QCOMPARE(classic::gui::renderScanRunDisplayLineAsPlainText(singular), QStringLiteral("1 sprocket"));
+    QCOMPARE(classic::gui::renderScanRunDisplayLineAsPlainText(plural), QStringLiteral("12 sprockets"));
+    // The value is emphasised and the noun is not, which is styling; neither word changes.
+    // Escaped rather than a raw string literal: moc's preprocessor cannot parse `R"(...)"` inside a
+    // `QStringLiteral`, and it reads this file to find the test class.
+    QCOMPARE(classic::gui::renderScanRunDisplayLineAsRichText(plural),
+             QStringLiteral("<span style=\"color:#e0e0e0;\"><b>12</b> sprockets</span>"));
 }
 
-void ScanRunPresentationTests::every_local_ignore_reset_failure_stage_renders_its_canonical_display_label()
+void ScanRunPresentationTests::a_path_segment_renders_as_selectable_actionable_text()
 {
-    // None of these five moved either — they delegate to the shared durable publication stage
-    // vocabulary, which deliberately keeps each label equal to its token. Pinned because only
-    // Publish had an assertion, and because delegation means a reword in the publication crate now
-    // reaches this banner.
-    using Stage = classic::scanner::ScanRunLocalIgnoreResetFailureStage;
-    const std::array<std::pair<Stage, QString>, 5> expected{{
-        {Stage::Create, QStringLiteral("create")},
-        {Stage::Write, QStringLiteral("write")},
-        {Stage::Flush, QStringLiteral("flush")},
-        {Stage::Sync, QStringLiteral("sync")},
-        {Stage::Publish, QStringLiteral("publish")},
-    }};
+    // The point of typing a path as a path rather than as text: this frontend can make it openable
+    // without re-deciding any of the words around it. The label stays the whole path, because a
+    // shortened one is not a path a user can copy anywhere else.
+    using Kind = classic::scanner::ScanRunDisplaySegmentKind;
+    const auto line = presentedLine(classic::scanner::ScanRunDisplaySeverity::Success,
+                                    {segment(Kind::Text, "unreal report lead"),
+                                     segment(Kind::Path, "", "C:/CLASSIC/Crash Logs/crash-AUTOSCAN.md")});
 
-    for (const auto& [stage, label] : expected) {
-        classic::scanner::ScanRunContractExecutionResult execution{};
-        execution.has_resume_error = true;
-        execution.resume_error.kind =
-            classic::scanner::ScanRunContractResumeErrorKind::LocalIgnoreResetReplacementFailure;
-        execution.resume_error.code = "local_ignore_reset_replacement_failure";
-        execution.resume_error.message = "reset could not complete";
-        execution.resume_error.has_stage = true;
-        execution.resume_error.stage = stage;
+    const QString rich = classic::gui::renderScanRunDisplayLineAsRichText(line);
+    QVERIFY(rich.contains(QStringLiteral("href=\"file:///C:/CLASSIC/Crash%20Logs/crash-AUTOSCAN.md\"")));
+    QVERIFY(rich.contains(QStringLiteral(">C:/CLASSIC/Crash Logs/crash-AUTOSCAN.md</a>")));
+    // Plain text stays a bare path, because that is what reaches log files and one-row surfaces.
+    QCOMPARE(classic::gui::renderScanRunDisplayLineAsPlainText(line),
+             QStringLiteral("unreal report lead C:/CLASSIC/Crash Logs/crash-AUTOSCAN.md"));
+}
 
-        const auto presentation = classic::gui::presentScanRunExecution(execution);
-
-        QCOMPARE(presentation.message,
-                 QStringLiteral("Crash Log Scan recovery failed (local_ignore_reset_replacement_failure): "
-                                "reset could not complete\nStage: %1")
-                     .arg(label));
+void ScanRunPresentationTests::every_severity_maps_to_this_frontends_own_styling()
+{
+    // The Rust core names no colour — it says only how gravely a line should read. Five distinct
+    // colours are asserted rather than five particular ones, because which hue means "failure" is
+    // this frontend's to change; what would be a bug is two severities becoming indistinguishable.
+    using Severity = classic::scanner::ScanRunDisplaySeverity;
+    QSet<QString> colors;
+    for (const auto severity :
+         {Severity::Info, Severity::Notice, Severity::Warning, Severity::Failure, Severity::Success}) {
+        const QString color = classic::gui::scanRunSeverityColor(severity);
+        QVERIFY2(color.startsWith(QLatin1Char('#')), qPrintable(color));
+        colors.insert(color);
     }
+    QCOMPARE(colors.size(), 5);
+
+    using Kind = classic::scanner::ScanRunDisplaySegmentKind;
+    const auto failure =
+        presentedLine(Severity::Failure, {segment(Kind::Text, "unreal failure line")});
+    QVERIFY(classic::gui::renderScanRunDisplayLineAsRichText(failure).contains(
+        classic::gui::scanRunSeverityColor(Severity::Failure)));
+}
+
+void ScanRunPresentationTests::rendered_lines_reach_the_terminal_presentation_in_rust_order()
+{
+    // Line order is the adapter's to change, but only deliberately. This asserts the default is to
+    // change nothing: the envelope's lines arrive in the presentation in the order the bridge
+    // supplied them, and the plain and rich shapes are the same sequence twice.
+    using Kind = classic::scanner::ScanRunDisplaySegmentKind;
+    auto execution = executionWithStatus(classic::scanner::ScanRunContractStatus::Completed);
+    appendDisplayLine(execution, classic::scanner::ScanRunDisplaySeverity::Success,
+                      {segment(Kind::Text, "unreal first")});
+    appendDisplayLine(execution, classic::scanner::ScanRunDisplaySeverity::Info,
+                      {segment(Kind::Text, "unreal second")});
+    appendDisplayLine(execution, classic::scanner::ScanRunDisplaySeverity::Notice,
+                      {segment(Kind::Text, "unreal third")});
+
+    const auto presentation = classic::gui::presentScanRunExecution(execution);
+
+    QCOMPARE(presentation.kind, classic::gui::ScanRunTerminalKind::Completed);
+    QCOMPARE(presentation.displayLines.size(), 3);
+    QCOMPARE(presentation.displayLines[0].severity, classic::scanner::ScanRunDisplaySeverity::Success);
+    QCOMPARE(presentation.displayLines[2].severity, classic::scanner::ScanRunDisplaySeverity::Notice);
+    QCOMPARE(presentation.message, QStringLiteral("unreal first\nunreal second\nunreal third"));
+    QVERIFY(presentation.richText.indexOf(QStringLiteral("unreal first")) <
+            presentation.richText.indexOf(QStringLiteral("unreal third")));
 }
 
 void ScanRunPresentationTests::consumed_resume_error_preserves_typed_context()
 {
+    // The stable resume error code is the point of this case. The rendered sentences deliberately
+    // omit it — a code is machine-facing identity, not prose — so it has to survive on the DTO, or
+    // a consumer that matches on it would have nothing left to match.
     classic::scanner::ScanRunContractExecutionResult execution{};
     execution.has_resume_error = true;
     execution.resume_error.kind = classic::scanner::ScanRunContractResumeErrorKind::ContinuationConsumed;
     execution.resume_error.code = "scan_run_continuation_consumed";
     execution.resume_error.message = "Crash Log Scan Run continuation was already consumed";
+    using Kind = classic::scanner::ScanRunDisplaySegmentKind;
+    appendDisplayLine(execution, classic::scanner::ScanRunDisplaySeverity::Failure,
+                      {segment(Kind::Text, "unreal recovery headline")});
 
     const auto presentation = classic::gui::presentScanRunExecution(execution);
 
     QCOMPARE(presentation.kind, classic::gui::ScanRunTerminalKind::InfrastructureError);
-    QCOMPARE(presentation.message,
-             QStringLiteral("Crash Log Scan recovery failed (scan_run_continuation_consumed): "
-                            "Crash Log Scan Run continuation was already consumed"));
+    QCOMPARE(presentation.message, QStringLiteral("unreal recovery headline"));
+    QVERIFY2(!presentation.message.contains(QStringLiteral("scan_run_continuation_consumed")),
+             "a Vocabulary Token must not reach a sentence a person reads");
+    QCOMPARE(classic::toQString(execution.resume_error.code), QStringLiteral("scan_run_continuation_consumed"));
 }
 
 void ScanRunPresentationTests::reset_resume_error_preserves_operational_context()
 {
+    // Every optional field a reset failure can carry stays on the envelope for a consumer, and the
+    // rendered lines describe them for a person. Both halves matter: the durability receipt in
+    // particular is how a user learns their Local Ignore file was already rewritten and which bytes
+    // were preserved, and dropping either half would make this frontend less informative than the
+    // native CLI on the one outcome where that matters most.
     classic::scanner::ScanRunContractExecutionResult execution{};
     execution.has_resume_error = true;
     execution.resume_error.kind =
@@ -700,18 +837,24 @@ void ScanRunPresentationTests::reset_resume_error_preserves_operational_context(
     execution.resume_error.actual_identity.byte_len = 32;
     execution.resume_error.has_backup_path = true;
     execution.resume_error.backup_path = "C:/CLASSIC/CLASSIC Backup/CLASSIC Ignore.backup.yaml";
+    using Kind = classic::scanner::ScanRunDisplaySegmentKind;
+    appendDisplayLine(execution, classic::scanner::ScanRunDisplaySeverity::Failure,
+                      {segment(Kind::Text, "unreal reset headline")});
+    appendDisplayLine(execution, classic::scanner::ScanRunDisplaySeverity::Info,
+                      {segment(Kind::Text, "unreal backup lead"),
+                       segment(Kind::Path, "", "C:/CLASSIC/CLASSIC Backup/CLASSIC Ignore.backup.yaml")});
 
     const auto presentation = classic::gui::presentScanRunExecution(execution);
 
     QCOMPARE(presentation.kind, classic::gui::ScanRunTerminalKind::InfrastructureError);
-    QCOMPARE(presentation.message,
-             QStringLiteral("Crash Log Scan recovery failed (local_ignore_reset_replacement_failure): "
-                            "could not publish retained defaults\n"
-                            "Path: C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml\n"
-                            "Stage: publish\n"
-                            "Expected identity: sha256 expected-hash, 31 bytes\n"
-                            "Actual identity: sha256 actual-hash, 32 bytes\n"
-                            "Verified backup: C:/CLASSIC/CLASSIC Backup/CLASSIC Ignore.backup.yaml"));
+    QCOMPARE(presentation.message, QStringLiteral("unreal reset headline\n"
+                                                  "unreal backup lead C:/CLASSIC/CLASSIC Backup/CLASSIC "
+                                                  "Ignore.backup.yaml"));
+    QVERIFY(execution.resume_error.has_stage);
+    QCOMPARE(execution.resume_error.stage, classic::scanner::ScanRunLocalIgnoreResetFailureStage::Publish);
+    QVERIFY(execution.resume_error.has_expected_identity);
+    QVERIFY(execution.resume_error.has_actual_identity);
+    QVERIFY(execution.resume_error.has_backup_path);
 }
 
 void ScanRunPresentationTests::invalid_execution_envelope_is_presented_as_an_infrastructure_error()

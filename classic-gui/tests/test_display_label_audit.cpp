@@ -187,29 +187,59 @@ constexpr auto AUDITED_SOURCES = std::to_array<std::string_view>({
 struct RenderedEnum {
     std::string_view typeName;
     std::string_view labelAccessor;
-    /// Whether this frontend actually renders the label today.
+    /// Whether this frontend still calls the accessor.
     ///
-    /// Only `ScanRunContractLogDisposition` is `false`, and that is a recorded
-    /// decision rather than an omission — see the comment on the positive test.
-    bool renderedByTheGui;
+    /// True for exactly the two enums the GUI labels *outside* a display line:
+    /// `installedYamlDataStatusSuffix` compresses the YAML Data selection into
+    /// one progress-bar format string, which has no room for the rendered
+    /// Installed YAML Data block. Everywhere else the label now arrives inside a
+    /// `Label` segment, and calling the accessor again would be re-deriving a
+    /// word the run already said.
+    bool labelledOutsideADisplayLine;
+    /// Whether the rendering source still handles this type at all.
+    ///
+    /// False once the GUI stopped touching the enum entirely — its infrastructure
+    /// stage, reset failure stage, and per-log failure stage all reach the user
+    /// only inside rendered lines now, so the type is spelled nowhere in this
+    /// frontend. Where it is still true, the type is named and the "is it still
+    /// spelled" guard below applies.
+    bool handledByTheRenderingSource;
 };
 
 /// Every domain enum whose Display Label the Rust core owns and the bridge exposes.
 ///
 /// A table here producing a string is by definition a second copy of a
 /// vocabulary that already has a home, which is why all seven are audited
-/// negatively even though the GUI renders six.
+/// negatively however the frontend treats them.
 constexpr auto RENDERED_ENUMS = std::to_array<RenderedEnum>({
-    {"ScanRunContractLogFailureStage", "scanner::scan_run_log_failure_stage_label", true},
-    {"ScanRunContractInfrastructureErrorStage", "scanner::scan_run_infrastructure_error_stage_label", true},
-    {"ScanRunLocalIgnoreResetFailureStage", "scanner::scan_run_local_ignore_reset_failure_stage_label", true},
-    {"ScanRunInstalledYamlDataProvenance", "scanner::scan_run_installed_yaml_data_provenance_label", true},
-    {"ScanRunLocalIgnoreYamlDataState", "scanner::scan_run_local_ignore_yaml_data_state_label", true},
-    {"ScanRunInstalledYamlDataDiagnosticKind", "scanner::scan_run_installed_yaml_data_diagnostic_kind_label", true},
-    {"ScanRunContractLogDisposition", "scanner::scan_run_log_disposition_label", false},
+    {"ScanRunContractLogFailureStage", "scanner::scan_run_log_failure_stage_label", false, false},
+    {"ScanRunContractInfrastructureErrorStage", "scanner::scan_run_infrastructure_error_stage_label", false, false},
+    {"ScanRunLocalIgnoreResetFailureStage", "scanner::scan_run_local_ignore_reset_failure_stage_label", false, false},
+    {"ScanRunInstalledYamlDataProvenance", "scanner::scan_run_installed_yaml_data_provenance_label", true, true},
+    {"ScanRunLocalIgnoreYamlDataState", "scanner::scan_run_local_ignore_yaml_data_state_label", true, true},
+    {"ScanRunInstalledYamlDataDiagnosticKind", "scanner::scan_run_installed_yaml_data_diagnostic_kind_label", false,
+     true},
+    {"ScanRunContractLogDisposition", "scanner::scan_run_log_disposition_label", false, true},
 });
 
-/// The one GUI file that renders scan-run Display Labels.
+/// Every segment kind the bridge can hand this frontend.
+///
+/// The rich-text renderer must read all six. A kind it fails to handle is not a
+/// compile error — the flattened DTO carries the same three payload fields
+/// whatever the tag says — so an unhandled `Path` would silently render as empty
+/// text and an unhandled `Count` would print its noun without its value.
+constexpr auto DISPLAY_SEGMENT_KINDS =
+    std::to_array<std::string_view>({"Text", "Label", "Count", "Path", "Name", "Emphasis"});
+
+/// Every severity the bridge can hand this frontend.
+///
+/// Severity is where Display Content stops and Display Layout starts: the Rust
+/// core says how gravely a line should read and names no colour, so a severity
+/// this frontend never reads is one whose gravity a user never sees.
+constexpr auto DISPLAY_SEVERITIES =
+    std::to_array<std::string_view>({"Info", "Notice", "Warning", "Failure", "Success"});
+
+/// The one GUI file that renders scan-run Display Content.
 constexpr std::string_view LABEL_RENDERING_SOURCE = "src/workers/scanrunpresentation.cpp";
 
 /// True for a character C++ allows inside an identifier.
@@ -438,9 +468,9 @@ std::size_t findBodyEnd(const std::string& source, std::size_t bodyStart)
 /// usable: a function that merely takes a diagnostic kind and formats a wider
 /// message is not a naming table and should not be counted. Note that this is a
 /// narrower exemption than it sounds — it excludes nothing in this file today.
-/// `formatInstalledYamlDataDiagnostic` returns `QString` and would not survive
-/// the return-type filter; what actually spares it is that no audited type is
-/// named in its signature, only in its body.
+/// `formatInstalledYamlDataWarning` returns `QString` and would not survive the
+/// return-type filter; what actually spares it is that no audited type is named
+/// in its signature, only in its body.
 ///
 /// **Known limits.** Two shapes still escape all three detectors, and are
 /// recorded here rather than papered over. A table keyed by index —
@@ -574,56 +604,106 @@ void DisplayLabelAuditTests::no_gui_source_turns_an_audited_enum_into_a_string_l
 
 void DisplayLabelAuditTests::every_rendered_gui_display_label_comes_from_a_bridge_accessor()
 {
-    // The negative audit above proves no table was written. This proves the
-    // labels are still rendered at all: without it, deleting a call site would
-    // read as compliance rather than as a frontend that stopped saying what
-    // happened. It checks the call appears, not that it is reached — the
-    // behavioral half of that lives in test_scanrunpresentation.cpp.
+    // This test inverted when the GUI started rendering core-owned display lines.
     //
-    // Per-log disposition is excluded on purpose, decided on #167. The GUI has
-    // no disposition line to label: `presentLog` maps the three variants onto
-    // booleans that select control flow and feed counts, so requiring the
-    // accessor here would force a results-view column into existence to justify
-    // it. The enum stays in the negative audit above, so the guard still holds
-    // if that column is ever added.
+    // It used to assert that six bridge label accessors were *called*, because
+    // calling them was how a Display Label reached the user without this
+    // frontend inventing one. Five of those call sites are gone now, and their
+    // absence is the point: an infrastructure stage, a reset failure stage, a
+    // per-log failure stage, and an Installed YAML Data diagnostic kind all
+    // arrive inside a `Label` segment on a line Rust already wrote. Calling the
+    // accessor again would re-derive a word the run just said, which the adapter
+    // contract forbids in as many words.
+    //
+    // Two calls survive and are still required. `installedYamlDataStatusSuffix`
+    // in `mainwindow.cpp` compresses the YAML Data selection into a single
+    // progress-bar format string; there is no rendered line small enough to go
+    // there, so labelling the enum directly is exactly the case the accessors
+    // remain correct for.
+    //
+    // Per-log disposition was already excluded before this change, decided on
+    // #167, and stays excluded for the same reason: `presentLog` maps the three
+    // variants onto booleans that select control flow and feed counts.
+    //
+    // The accessors themselves are untouched on the bridge. They remain the
+    // right surface for labelling a domain enum outside a display line, which is
+    // why two of them are still in use here.
     const QString path =
         QString::fromUtf8(LABEL_RENDERING_SOURCE.data(), static_cast<qsizetype>(LABEL_RENDERING_SOURCE.size()));
-    std::string source;
-    QVERIFY2(readSource(path, source), qPrintable(QStringLiteral("Unable to read %1").arg(path)));
+    std::string renderingSource;
+    QVERIFY2(readSource(path, renderingSource), qPrintable(QStringLiteral("Unable to read %1").arg(path)));
 
-    QStringList missing;
+    QStringList offenders;
     for (const auto& rendered : RENDERED_ENUMS) {
         const QString typeName =
             QString::fromUtf8(rendered.typeName.data(), static_cast<qsizetype>(rendered.typeName.size()));
+        const QString accessor =
+            QString::fromUtf8(rendered.labelAccessor.data(), static_cast<qsizetype>(rendered.labelAccessor.size()));
 
-        // Every audited type is checked to still be spelled somewhere in this
-        // file, including the disposition the GUI renders no label for — it
-        // appears as `using Disposition = ...`. This closes the one way the
-        // negative audit could go quiet without anyone noticing: `RENDERED_ENUMS`
-        // holds strings, never the types, so a bridge-side rename would leave
-        // all three detectors matching nothing forever. The rename itself breaks
-        // the GUI build, but the fix for that build break would not touch this
-        // file, and a green audit afterwards would mean only that it had stopped
-        // looking.
-        if (source.find(rendered.typeName) == std::string::npos) {
-            missing.append(QStringLiteral("%1 is named nowhere in %2, so the audit's detectors for it match nothing; "
-                                          "if the bridge renamed it, rename it in RENDERED_ENUMS too")
-                               .arg(typeName, path));
+        // A type the rendering source still handles is checked to still be
+        // spelled there. This closes the one way the negative audit could go
+        // quiet without anyone noticing: `RENDERED_ENUMS` holds strings, never
+        // the types, so a bridge-side rename would leave all three detectors
+        // matching nothing forever. The rename itself breaks the GUI build, but
+        // the fix for that build break would not touch this file, and a green
+        // audit afterwards would mean only that it had stopped looking.
+        if (rendered.handledByTheRenderingSource && renderingSource.find(rendered.typeName) == std::string::npos) {
+            offenders.append(QStringLiteral("%1 is named nowhere in %2, so the audit's detectors for it match nothing; "
+                                            "if the bridge renamed it, rename it in RENDERED_ENUMS too")
+                                 .arg(typeName, path));
             continue;
         }
 
-        if (!rendered.renderedByTheGui) {
+        if (rendered.labelledOutsideADisplayLine) {
+            if (renderingSource.find(rendered.labelAccessor) == std::string::npos) {
+                offenders.append(QStringLiteral("%1 is not called from %2, so %3 has no Display Label to render on the "
+                                                "one-row surface that cannot hold a rendered line")
+                                     .arg(accessor, path, typeName));
+            }
             continue;
         }
-        if (source.find(rendered.labelAccessor) != std::string::npos) {
-            continue;
+
+        // Swept across every audited source rather than the rendering one alone,
+        // because a re-derived label is just as wrong in the window or the worker
+        // as it is here.
+        for (const auto& relativePath : AUDITED_SOURCES) {
+            const QString auditedPath =
+                QString::fromUtf8(relativePath.data(), static_cast<qsizetype>(relativePath.size()));
+            std::string source;
+            QVERIFY2(readSource(auditedPath, source), qPrintable(QStringLiteral("Unable to read %1").arg(auditedPath)));
+            if (source.find(rendered.labelAccessor) == std::string::npos) {
+                continue;
+            }
+            offenders.append(QStringLiteral("%1 is called from %2, but %3 is already labelled inside the display line "
+                                            "that carries it; render that line instead of looking the label up again")
+                                 .arg(accessor, auditedPath, typeName));
         }
-        missing.append(QStringLiteral("%1 is not called from %2, so %3 has no Display Label to render")
-                           .arg(QString::fromUtf8(rendered.labelAccessor.data(),
-                                                  static_cast<qsizetype>(rendered.labelAccessor.size())),
-                                path, typeName));
     }
-    QVERIFY2(missing.isEmpty(), qPrintable(missing.join(QStringLiteral("\n"))));
+
+    // The positive half, moved down one level: the renderer must read every
+    // segment kind and every severity. A `Label` it fails to handle is a Display
+    // Label that reaches nobody, an unhandled `Path` renders as empty text
+    // because the flattened DTO leaves `text` empty for that kind, an unhandled
+    // `Count` prints a noun with no value, and an unread severity is a gravity
+    // the user never sees.
+    for (const auto& kind : DISPLAY_SEGMENT_KINDS) {
+        const std::string qualified = "ScanRunDisplaySegmentKind::" + std::string(kind);
+        if (renderingSource.find(qualified) == std::string::npos) {
+            offenders.append(QStringLiteral("%1 never reads %2, so a segment of that kind would be rendered as "
+                                            "something else or not at all")
+                                 .arg(path, QString::fromStdString(qualified)));
+        }
+    }
+    for (const auto& severity : DISPLAY_SEVERITIES) {
+        const std::string qualified = "ScanRunDisplaySeverity::" + std::string(severity);
+        if (renderingSource.find(qualified) == std::string::npos) {
+            offenders.append(
+                QStringLiteral("%1 never reads %2, so a line of that severity would read with someone else's gravity")
+                    .arg(path, QString::fromStdString(qualified)));
+        }
+    }
+
+    QVERIFY2(offenders.isEmpty(), qPrintable(offenders.join(QStringLiteral("\n"))));
 }
 
 void DisplayLabelAuditTests::the_audit_covers_every_gui_source_file()

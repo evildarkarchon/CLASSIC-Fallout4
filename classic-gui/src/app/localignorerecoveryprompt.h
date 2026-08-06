@@ -22,6 +22,12 @@ namespace classic::gui {
 /// button is omitted rather than disabled: a greyed-out button invites a user to hunt for the
 /// setting that would enable it, and there is none.
 ///
+/// `message` is the paused run rendered as rich text by `renderScanRunDisplayLinesAsRichText`, so it
+/// carries the run's severity colouring and its paths as `file:` anchors. The dialog sets
+/// `Qt::TextBrowserInteraction` for that reason: without it the anchors render as inert text and the
+/// user cannot reach the files the decision is about. Plain text still works — `Qt::AutoText` leaves
+/// it alone — which is what the behavior tests pass.
+///
 /// `parent` may be null, which is what the behavior tests use. This call blocks on a nested event
 /// loop, so it must run on the GUI thread while the worker thread holds the continuation.
 ScanRunLocalIgnoreRecoveryChoice promptLocalIgnoreRecoveryChoice(QWidget* parent, const QString& message,

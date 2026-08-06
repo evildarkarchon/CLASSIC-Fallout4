@@ -8,7 +8,7 @@ into an ordered sequence of display lines. Each frontend decides only **how it l
 [`../adr/0007-rust-owns-crash-log-scan-run-display-content.md`](../adr/0007-rust-owns-crash-log-scan-run-display-content.md)
 records the decision and supersedes the ADR-0002 clause that assigned presentation to adapters.
 
-## Status: the TUI and the native CLI render from it
+## Status: the TUI, the native CLI, and the Qt GUI render from it
 
 `classic-tui` is the first consumer and depends on this crate directly, with no binding seam in the
 way — which is why it went first: it proves the six-segment model before any DTO or parity baseline
@@ -23,11 +23,18 @@ That flattening is documented under "Display Content on the envelope" in
 are now frozen by a committed parity baseline: adding one costs a baseline regeneration on each of
 the three binding surfaces.
 
-The CLI is also the frontend that shows what "Rust names no colour" buys. It maps severity onto a
-choice of output stream and nothing else, so shared wording reaches a pipeable log without a single
-escape sequence — while the TUI maps the same severities onto a palette.
+`classic-gui` is the third, and reuses the same bridge DTOs the CLI does — the Qt phase added no
+bridge surface, so no parity baseline moved. It renders each line into rich text: a severity becomes
+a colour, a `Count` emphasises its value beside Rust's noun, and a `Path` becomes an actionable
+`file:` anchor, which is the whole reason a path is typed as a path rather than as text. See
+[`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md).
 
-Still to migrate, in order: the Qt GUI, then the Node and Python surfaces and the Python CLI. See
+The three native frontends between them show what "Rust names no colour" buys. The CLI maps severity
+onto a choice of output stream and nothing else, so shared wording reaches a pipeable log without a
+single escape sequence; the TUI maps the same severities onto a terminal palette; the GUI maps them
+onto hex colours from its dark theme and turns the paths into links. All three print the same words.
+
+Still to migrate: the Node and Python surfaces and the Python CLI. See
 [`../implementation/scan_run_presentation_consolidation.md`](../implementation/scan_run_presentation_consolidation.md).
 
 ## Public surface
@@ -183,11 +190,11 @@ treatments are the split they claim to be. It does not restate a single sentence
 
 ## Binding surface
 
-None today. When the render phase reaches the bindings, Display Content is rendered **before** it
-crosses a seam and travels as mirrored data, because a `RunResult` cannot be held across one. A
-segment flattens to a kind tag plus a text field, a path field, and a count field, with unused fields
-empty; for a count, the text field carries the core-resolved noun. See the implementation brief for
-the per-surface DTO shapes.
+The C++ bridge only, today. Display Content is rendered **before** it crosses a seam and travels as
+mirrored data, because a `RunResult` cannot be held across one. A segment flattens to a kind tag plus
+a text field, a path field, and a count field, with unused fields empty; for a count, the text field
+carries the core-resolved noun. Both C++ frontends consume that one flattening. See the
+implementation brief for the Node and Python DTO shapes still to come.
 
 ## Testing
 
