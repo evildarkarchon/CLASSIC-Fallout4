@@ -817,6 +817,28 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
                 "result": _scan_run_result_summary(result),
             },
         )
+    if terminal_status == "local_ignore_recovery_required":
+        # Terminal for this CLI. The run paused before analysing any log and returned a one-shot
+        # continuation that only an interactive caller can answer; `scan logs` never resumes it.
+        # Falling through to the success path below reported "0 succeeded, 0 failed" and exit 0,
+        # which is indistinguishable from a healthy scan of an empty directory even though the real
+        # cause was a malformed CLASSIC Ignore.yaml the caller was never told about.
+        message = str(
+            getattr(result, "message", None)
+            or "Local Ignore YAML Data is malformed and requires a recovery decision "
+            "(reset to default, or proceed without ignore) before crash logs can be scanned"
+        )
+        return failure(
+            "scan logs",
+            message,
+            int(ExitCode.PRODUCT_FAILURE),
+            error={"classification": "scan-run-terminal", "status": terminal_status, "message": message},
+            data={
+                "events": events,
+                "observerError": observer_error,
+                "result": _scan_run_result_summary(result),
+            },
+        )
     if terminal_status in {"cancelled_before_discovery", "cancelled"}:
         message = str(getattr(result, "message", None) or "Crash Log Scan Run was cancelled")
         return failure(

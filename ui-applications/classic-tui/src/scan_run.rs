@@ -85,6 +85,12 @@ pub(crate) struct LocalIgnoreRecoveryPrompt {
     pub(crate) retained_logs: usize,
     /// Structured Installed YAML Data lines presented alongside the choice.
     pub(crate) diagnostics: Vec<String>,
+    /// Whether Reset To Default is a choice this run can actually satisfy.
+    ///
+    /// False when the selected Main YAML retained no usable `default_ignorefile`. The contract
+    /// projects this so the overlay can omit an option that would consume the one-shot
+    /// continuation and fail, leaving the user with no scan and no second attempt.
+    pub(crate) reset_available: bool,
 }
 
 impl LocalIgnoreRecoveryPrompt {
@@ -112,8 +118,20 @@ impl LocalIgnoreRecoveryPrompt {
         ));
         lines.push(String::new());
         lines.push(PROCEED_WITHOUT_IGNORE_CHOICE.to_string());
-        lines.push(RESET_TO_DEFAULT_CHOICE.to_string());
+        // Omitted rather than shown-and-disabled: this overlay is plain text with no affordance for
+        // an inert entry, and listing a key that does nothing reads as a bug.
+        if self.reset_available {
+            lines.push(RESET_TO_DEFAULT_CHOICE.to_string());
+        }
         lines.push(CANCEL_RECOVERY_CHOICE.to_string());
+        if !self.reset_available {
+            lines.push(String::new());
+            lines.push(
+                "Reset To Default is unavailable: the selected Main YAML Data retains no usable \
+                 default Local Ignore to publish."
+                    .to_string(),
+            );
+        }
         if !self.diagnostics.is_empty() {
             lines.push(String::new());
             lines.extend(self.diagnostics.iter().cloned());
@@ -141,6 +159,14 @@ pub(crate) fn describe_local_ignore_recovery(result: &RunResult) -> LocalIgnoreR
             .as_ref()
             .map_or(result.total, |discovery| discovery.accepted_logs.len()),
         diagnostics,
+        // Absent Installed YAML Data means the contract told us nothing about reset availability,
+        // which a recovery-required result never does in practice. Keep offering the choice in that
+        // case rather than hiding it: an unknown answer must not silently remove an option that may
+        // well work, and offering is exactly the behaviour that shipped before this fact existed.
+        reset_available: result
+            .installed_yaml_data
+            .as_ref()
+            .is_none_or(|installed| installed.local_ignore_reset_available),
     }
 }
 

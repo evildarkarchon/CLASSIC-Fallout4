@@ -105,6 +105,5 @@ pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     Ok(())
 }
 
-#[cfg(test)]
-#[path = "named_record_finding_analyzer_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "named_record_finding_analyzer_tests.rs"] mod tests;

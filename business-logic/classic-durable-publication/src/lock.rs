@@ -153,6 +153,5 @@ pub struct PublicationLock {
     _file: File,
 }
 
-#[cfg(test)]
-#[path = "lock_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "lock_tests.rs"] mod tests;

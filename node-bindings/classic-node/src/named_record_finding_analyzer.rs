@@ -115,6 +115,5 @@ fn result_to_js(result: CoreAnalysisResult) -> JsNamedRecordFindingAnalysisResul
     }
 }
 
-#[cfg(test)]
-#[path = "named_record_finding_analyzer_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "named_record_finding_analyzer_tests.rs"] mod tests;

@@ -550,9 +550,7 @@ fn no_scan_run_display_label_reaches_javascript_empty() {
 /// parameter: repeating the loop four times would be four chances to paste the
 /// wrong core enum beside the right resolver, which is the class of mistake a
 /// test cannot catch about itself.
-fn assert_token_labels_match_the_core<T: Vocabulary>(
-    label_of: fn(String) -> napi::Result<String>,
-) {
+fn assert_token_labels_match_the_core<T: Vocabulary>(label_of: fn(String) -> napi::Result<String>) {
     for variant in T::VARIANTS.iter().copied() {
         let label = label_of(variant.as_str().to_string())
             .expect("a token this surface publishes must resolve");

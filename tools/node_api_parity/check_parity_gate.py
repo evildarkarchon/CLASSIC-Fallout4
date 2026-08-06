@@ -129,6 +129,21 @@ def validate_contract_surface(
                     f"Row '{row_id}' is unmapped but has no nodeExport; an "
                     f"unmapped row must still name the binding surface it tracks."
                 )
+            # Unmapped means "no verified *Rust* counterpart", not "unchecked".
+            # The row still names a Node export, and that export is exactly the
+            # binding surface this gate exists to protect, so it must still be
+            # present in index.d.ts. Skipping this check let a renamed or
+            # deleted export hide inside the tier1_unmapped total instead of
+            # being reported as drift.
+            elif node_export not in node_exports:
+                diagnostics.append(
+                    f"Row '{row_id}' is unmapped but its nodeExport "
+                    f"'{node_export}' is not in the node surface (index.d.ts). "
+                    f"An unmapped row still tracks a real binding surface: "
+                    f"either restore the export, update the row to the new "
+                    f"name, or delete the row if the export is intentionally "
+                    f"gone."
+                )
             continue
 
         # H1 fail-closed: missing rustSymbol.

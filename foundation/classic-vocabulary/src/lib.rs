@@ -149,6 +149,5 @@ where
         .map_or("", Vocabulary::label)
 }
 
-#[cfg(test)]
-#[path = "lib_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "lib_tests.rs"] mod tests;

@@ -92,7 +92,13 @@ performance_baselines/*.json
 *.zip
 *.7z
 Archive/
+# `Archive/` is matched case-insensitively on Windows and macOS checkouts, so it also swallows the
+# lowercase `archive/` documentation directories. Their existing files are tracked and therefore
+# unaffected — ignore rules do not apply to files already in the index — but any *newly added* file
+# under them is silently skipped by `git add`. That is how `docs/archive/README.md` came to exist on
+# disk while the `docs/README.md` links to it pointed at nothing in a fresh clone.
 !conductor/archive/
+!docs/archive/
 Release/
 compile.py
 /package-lock.json

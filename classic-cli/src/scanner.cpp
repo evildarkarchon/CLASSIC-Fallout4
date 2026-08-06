@@ -6,7 +6,10 @@
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
+#include <io.h>
 #include <windows.h>
+#else
+#include <unistd.h>
 #endif
 
 #include "rust/cxx.h"
@@ -29,6 +32,19 @@
 #include <utility>
 
 namespace fs = std::filesystem;
+
+/// Returns whether standard input is attached to an interactive terminal.
+///
+/// Used to decide whether asking the user a blocking question is legitimate. A redirected or
+/// inherited stdin that never closes would otherwise leave a scripted run parked in `std::getline`
+/// forever, with an interactive menu printed into whatever consumes the CLI's stdout.
+static bool stdin_is_interactive() {
+#ifdef _WIN32
+    return _isatty(_fileno(stdin)) != 0;
+#else
+    return isatty(fileno(stdin)) != 0;
+#endif
+}
 
 // ── Data root discovery ────────────────────────────────────────────
 
@@ -206,8 +222,16 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
 
     // Local Ignore recovery is an expected interactive choice, not a failure. The prompt clears any
     // live progress frame first so the question is not overwritten by the next render.
-    const CliLocalIgnoreRecoveryPrompt recovery_prompt =
-        [&observer, &cancellation](const std::vector<CliScanRunMessage>& details) {
+    //
+    // Installed only when stdin is a terminal. `execute_cli_scan_run` treats an empty prompt as the
+    // non-interactive path and returns the typed recovery-required envelope instead of asking, which
+    // is the right answer for a scripted run: `read_cli_local_ignore_recovery_choice` cancels
+    // cleanly on EOF, but a non-TTY stdin that stays open (a CI wrapper, a service manager, a pipe
+    // whose writer is idle) has no EOF to give and the run would block indefinitely on a question
+    // no one can see.
+    CliLocalIgnoreRecoveryPrompt recovery_prompt;
+    if (stdin_is_interactive()) {
+        recovery_prompt = [&observer, &cancellation](const std::vector<CliScanRunMessage>& details) {
             observer.finish();
             fmt::print("\n");
             for (const auto& message : details) {
@@ -215,6 +239,7 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
             }
             return read_cli_local_ignore_recovery_choice(std::cin, std::cout, cancellation);
         };
+    }
 
     const auto outcome = execute_cli_scan_run(*request, cancellation, &observer, recovery_prompt);
     observer.finish();

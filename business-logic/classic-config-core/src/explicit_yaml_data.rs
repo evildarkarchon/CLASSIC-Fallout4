@@ -907,6 +907,5 @@ pub(crate) fn validate_ignore(
     }
 }
 
-#[cfg(test)]
-#[path = "explicit_yaml_data_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "explicit_yaml_data_tests.rs"] mod tests;

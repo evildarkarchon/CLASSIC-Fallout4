@@ -1744,6 +1744,5 @@ fn classic_user_settings(module: &Bound<'_, PyModule>) -> PyResult<()> {
     Ok(())
 }
 
-#[cfg(test)]
-#[path = "lib_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "lib_tests.rs"] mod tests;

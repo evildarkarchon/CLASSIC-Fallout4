@@ -587,8 +587,24 @@ def generate_diff_report(
         # "missing_rust" (nothing is claimed to be missing). It gets its own
         # status so the total stays visible and can be driven down.
         if rust_symbol is None and mapping.get("unmappedReason"):
-            status = "unmapped"
-            reason = mapping["unmappedReason"]
+            # "Unmapped" claims only that no verified *Rust* counterpart is
+            # known; the row still names a Python export, and that export is
+            # the binding surface this baseline exists to protect. Checking the
+            # .pyi surface first keeps a renamed or deleted export from hiding
+            # inside the unmapped total, which the `elif` chain below would
+            # otherwise let it do by short-circuiting past the `py_item` test.
+            if python_export_path is None:
+                status = "missing_python"
+                reason = (
+                    "Tier-1 mapping is missing a Python export identifier "
+                    "(`pythonExportPath` or legacy `pythonExport`)."
+                )
+            elif py_item is None:
+                status = "missing_python"
+                reason = f"Python export '{python_module}.{python_export_path}' not found in target .pyi surfaces."
+            else:
+                status = "unmapped"
+                reason = mapping["unmappedReason"]
         elif rust_item is None:
             status = "missing_rust"
             reason = f"Rust symbol '{rust_symbol}' not found in target crate exports."

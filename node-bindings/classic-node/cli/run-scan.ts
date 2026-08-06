@@ -362,6 +362,39 @@ export async function runCli(
 			return { exitCode: summary.exitCode, fatal: setupMessage };
 		}
 
+		// Terminal for this CLI. The run paused before analysing anything and handed back a
+		// one-shot continuation that only an interactive caller can answer; this command never
+		// resumes it. Falling through to the generic summary below reported a clean exit 0 with
+		// "0 logs" — indistinguishable from a healthy scan of an empty folder — while the real
+		// cause was a malformed CLASSIC Ignore.yaml that nothing had told the user about.
+		if (scanResult.status === "local_ignore_recovery_required") {
+			const recoveryMessage = scanResult.message ??
+				"Local Ignore YAML Data is malformed and requires a recovery decision " +
+					"(reset to default, or proceed without ignore) before crash logs can be scanned.";
+			const summary: JsonSummary = {
+				mode: "scan",
+				exitCode: 1,
+				game: options.game,
+				gameVersion: normalizedGameVersion,
+				dataRoot: paths.root,
+				dataDir: paths.data,
+				logsFound: scanResult.total,
+				reportsWritten: 0,
+				reportFailures: 0,
+				scanErrors: 0,
+				durationSeconds: (performance.now() - startedAt) / 1000,
+				installedYamlData: scanResult.installedYamlData,
+				message: recoveryMessage,
+			};
+
+			if (options.json) {
+				emitJson(summary);
+			} else {
+				console.error(recoveryMessage);
+			}
+			return { exitCode: summary.exitCode, fatal: recoveryMessage };
+		}
+
 		if (scanResult.status === "no_crash_logs_found") {
 			const noLogsMessage = scanResult.message ??
 				(scanPath

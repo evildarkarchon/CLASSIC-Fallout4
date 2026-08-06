@@ -212,6 +212,5 @@ pub fn assert_twin_vocabulary_conformance<Twin, Source>(
     }
 }
 
-#[cfg(test)]
-#[path = "conformance_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "conformance_tests.rs"] mod tests;

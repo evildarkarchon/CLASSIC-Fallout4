@@ -158,6 +158,5 @@ fn analysis_failure(message: impl Into<String>) -> AnalyzerError {
     )
 }
 
-#[cfg(test)]
-#[path = "named_record_finding_analyzer_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "named_record_finding_analyzer_tests.rs"] mod tests;

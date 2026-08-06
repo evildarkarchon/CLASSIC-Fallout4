@@ -387,6 +387,12 @@ pub struct JsInstalledYamlDataRunData {
     pub local_ignore_identity: JsYamlDataContentIdentity,
     /// Structured fallback, validation, and generation diagnostics.
     pub diagnostics: Vec<JsScanRunInstalledYamlDataDiagnostic>,
+    /// Whether Reset To Default can succeed while recovery is required.
+    ///
+    /// Only meaningful when `localIgnoreState` is `RecoveryRequired`. A recovery plan whose
+    /// selected Main YAML has no usable `default_ignorefile` can only satisfy Proceed Without
+    /// Ignore; offering Reset anyway spends the one-shot continuation on a certain failure.
+    pub local_ignore_reset_available: bool,
     /// Durable reset metadata populated only after successful Reset To Default resume.
     pub local_ignore_reset: Option<JsScanRunLocalIgnoreResetRunData>,
 }
@@ -800,6 +806,7 @@ fn installed_yaml_data_run_to_js(
             .iter()
             .map(installed_yaml_data_run_diagnostic_to_js)
             .collect(),
+        local_ignore_reset_available: value.local_ignore_reset_available,
         local_ignore_reset: value
             .local_ignore_reset
             .map(local_ignore_reset_run_data_to_js),
@@ -1005,7 +1012,10 @@ pub fn scan_run_infrastructure_error_stage_label(token: String) -> napi::Result<
 /// token.
 #[napi]
 pub fn scan_run_local_ignore_reset_failure_stage_label(token: String) -> napi::Result<String> {
-    scan_run_label_for_token::<contract::LocalIgnoreResetFailureStage>(&token, "reset failure stage")
+    scan_run_label_for_token::<contract::LocalIgnoreResetFailureStage>(
+        &token,
+        "reset failure stage",
+    )
 }
 
 /// Pure metadata projected before allocating a JavaScript reset error.

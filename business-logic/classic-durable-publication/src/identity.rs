@@ -95,6 +95,5 @@ impl ContentIdentity {
     }
 }
 
-#[cfg(test)]
-#[path = "identity_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "identity_tests.rs"] mod tests;

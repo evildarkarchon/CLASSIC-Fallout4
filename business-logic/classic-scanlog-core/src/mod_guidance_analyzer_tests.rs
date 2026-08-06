@@ -368,6 +368,56 @@ fn conflict_matching_preserves_longest_non_overlapping_token_semantics() {
 }
 
 #[test]
+/// A DLL-only conflict pair matches on XSE module evidence, with no plugin involved.
+///
+/// The shipped `Upscaling.dll` / `FSR3_AA.dll` rule is the real case: neither side ever appears in
+/// the plugin map, because the plugin parser admits only `.esp`/`.esm`/`.esl`. Matching conflicts
+/// against plugins alone made that authored rule permanently unreachable.
+fn conflict_matching_consults_xse_modules_for_plugin_less_dll_pairs() {
+    let entries = vec![ModConflictEntry {
+        mod_a: "upscaling.dll".to_string(),
+        mod_b: "fsr3_aa.dll".to_string(),
+        name_a: "Upscaling".to_string(),
+        name_b: "FSR 3 Antialiasing".to_string(),
+        description: "The mods are redundant with each other".to_string(),
+        fix: None,
+        link: None,
+    }];
+    let analyzer = ModGuidanceAnalyzer::new(entries, Vec::new(), Vec::new(), Vec::new()).unwrap();
+    let input = ModGuidanceAnalysisInput {
+        xse_modules: HashSet::from(["Upscaling.dll".to_string(), "FSR3_AA.dll".to_string()]),
+        ..ModGuidanceAnalysisInput::default()
+    };
+
+    let result = analyzer.analyze(input).unwrap();
+
+    assert_eq!(result.conflicts.len(), 1, "got {:?}", result.conflicts);
+}
+
+#[test]
+/// One half of a DLL pair is not a conflict; both tokens are still required.
+fn conflict_matching_requires_both_xse_module_tokens() {
+    let entries = vec![ModConflictEntry {
+        mod_a: "upscaling.dll".to_string(),
+        mod_b: "fsr3_aa.dll".to_string(),
+        name_a: "Upscaling".to_string(),
+        name_b: "FSR 3 Antialiasing".to_string(),
+        description: "The mods are redundant with each other".to_string(),
+        fix: None,
+        link: None,
+    }];
+    let analyzer = ModGuidanceAnalyzer::new(entries, Vec::new(), Vec::new(), Vec::new()).unwrap();
+    let input = ModGuidanceAnalysisInput {
+        xse_modules: HashSet::from(["Upscaling.dll".to_string()]),
+        ..ModGuidanceAnalysisInput::default()
+    };
+
+    let result = analyzer.analyze(input).unwrap();
+
+    assert!(result.conflicts.is_empty());
+}
+
+#[test]
 fn conflict_analysis_preserves_absent_optional_fix() {
     let mut entry = conflict();
     entry.fix = None;

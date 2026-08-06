@@ -13,9 +13,14 @@ name: Benchmarks
 on:
   push:
     branches: [main]
+  # `main` stays in this list even though day-to-day work targets
+  # `classic-next`: the comment above documents "Run Benchmarks" as a required
+  # check for `main`, and GitHub never starts a workflow for a PR whose base
+  # branch is absent here. Dropping `main` would leave that required check
+  # permanently pending on every release PR into `main`.
   pull_request:
     types: [ready_for_review]
-    branches: [classic-next]
+    branches: [main, classic-next]
 
 # Prevent parallel runs for the same PR
 concurrency:

@@ -10,9 +10,14 @@ CliArgs parse_args(int argc, char* argv[]) {
 
     CLI::App app{"CLASSIC - Crash Log Auto Scanner & Setup Integrity Checker"};
 
-    auto* game_option = app.add_option("--game", args.game, "Game to scan (Fallout4, Skyrim)")
+    // Only Fallout 4 is offered here. `CLASSIC Data/databases/` ships no
+    // `CLASSIC Skyrim.yaml`, and config core's game -> data-role mapping answers
+    // `UnsupportedGame` for Skyrim and Starfield, so advertising Skyrim let the CLI
+    // accept a mode that could only fail later during Installed YAML Data intake.
+    // Reject it at parse time instead, where the message is actionable.
+    auto* game_option = app.add_option("--game", args.game, "Game to scan (Fallout4)")
                             ->default_val("Fallout4")
-                            ->check(CLI::IsMember({"Fallout4", "Skyrim"}));
+                            ->check(CLI::IsMember({"Fallout4"}));
 
     auto* game_version_option =
         app.add_option("--game-version", args.game_version,

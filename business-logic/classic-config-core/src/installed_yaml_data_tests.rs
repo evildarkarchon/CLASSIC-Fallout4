@@ -145,12 +145,21 @@ impl LocalIgnoreFileSystem for PublicationFailureLocalIgnoreFileSystem {
 }
 
 /// Filesystem seam that permits the initial missing read but rejects the authoritative reread.
+///
+/// Counts reads of the canonical path only. Between those two reads the loader also probes the
+/// legacy root-level `CLASSIC Ignore.yaml`, and that probe has to reach the real filesystem so it
+/// can answer `NotFound`; a bare global counter would inject the failure into the probe instead and
+/// stop testing the reread at all.
 struct RereadFailureLocalIgnoreFileSystem {
+    canonical_path: PathBuf,
     read_count: AtomicUsize,
 }
 
 impl LocalIgnoreFileSystem for RereadFailureLocalIgnoreFileSystem {
     fn read(&self, path: &Path) -> io::Result<Vec<u8>> {
+        if path != self.canonical_path {
+            return std::fs::read(path);
+        }
         if self.read_count.fetch_add(1, Ordering::SeqCst) == 0 {
             std::fs::read(path)
         } else {
@@ -598,6 +607,7 @@ fn authoritative_reread_failure_returns_error_after_complete_publication() {
         .join("CLASSIC Data")
         .join("CLASSIC Ignore.yaml");
     let local_ignore_io = RereadFailureLocalIgnoreFileSystem {
+        canonical_path: ignore_path.clone(),
         read_count: AtomicUsize::new(0),
     };
 
@@ -744,6 +754,65 @@ fn installed_loading_returns_ready_snapshot_with_valid_existing_local_ignore() {
     assert_eq!(
         std::fs::read(ignore_path).expect("existing Local Ignore should remain readable"),
         IGNORE_YAML.as_bytes()
+    );
+}
+
+#[test]
+/// An upgrading install keeps the exclusions it already had at the pre-`CLASSIC Data/` location.
+///
+/// The regression this pins is silent: generating defaults at the new path instead of adopting the
+/// old file leaves the user's `CLASSIC Ignore.yaml` intact one directory up while quietly changing
+/// every scan result, with nothing to attribute the change to.
+fn legacy_root_level_local_ignore_is_adopted_instead_of_generating_defaults() {
+    let installation = tempdir().expect("installation root should be created");
+    let cache_root = tempdir().expect("cache root should be created");
+    write_bundled_install(installation.path());
+    let legacy_path = installation.path().join("CLASSIC Ignore.yaml");
+    std::fs::write(&legacy_path, IGNORE_YAML).expect("legacy Local Ignore should be written");
+    let canonical_path = installation
+        .path()
+        .join("CLASSIC Data")
+        .join("CLASSIC Ignore.yaml");
+
+    let outcome = load_installed_yaml_data_with_env(
+        InstalledYamlDataLoadRequest {
+            installation_root: installation.path().to_path_buf(),
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        },
+        isolated_cache_env(cache_root.path()),
+    )
+    .expect("an installation with only a legacy Local Ignore should load");
+    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome else {
+        panic!("an adopted legacy Local Ignore should return Ready");
+    };
+
+    assert_eq!(
+        snapshot.yaml_data().ignore_list,
+        ["ExistingUserEntry.dll"],
+        "the user's own exclusions must survive the layout move"
+    );
+    assert_eq!(
+        snapshot.local_ignore_state(),
+        LocalIgnoreYamlDataState::Existing,
+        "adopted user content is not generated defaults, and must not be reported as such"
+    );
+    assert_eq!(
+        std::fs::read(&canonical_path).expect("canonical Local Ignore should be published"),
+        IGNORE_YAML.as_bytes()
+    );
+    assert_eq!(
+        std::fs::read(&legacy_path).expect("legacy Local Ignore should remain readable"),
+        IGNORE_YAML.as_bytes(),
+        "adoption copies rather than moves, so a downgrade still finds the original"
+    );
+    assert!(
+        snapshot.diagnostics().iter().any(|diagnostic| {
+            diagnostic.kind == InstalledYamlDataDiagnosticKind::LocalIgnoreGenerated
+                && diagnostic.message.contains("legacy root-level")
+        }),
+        "adoption must be attributable in diagnostics, got {:?}",
+        snapshot.diagnostics()
     );
 }
 

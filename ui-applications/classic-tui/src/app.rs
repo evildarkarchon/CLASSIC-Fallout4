@@ -706,6 +706,17 @@ impl App {
     }
 
     /// Accepts one explicit Rust-defined Local Ignore recovery decision and resumes the paused run.
+    /// Returns whether the pending recovery can actually satisfy Reset To Default.
+    ///
+    /// False with no pending recovery at all, which is the safe answer for a key handler: there is
+    /// nothing to accept.
+    #[must_use]
+    pub fn local_ignore_reset_available(&self) -> bool {
+        self.pending_local_ignore_recovery
+            .as_ref()
+            .is_some_and(|pending| pending.prompt.reset_available)
+    }
+
     pub fn accept_local_ignore_recovery(&mut self, decision: LocalIgnoreRecoveryDecision) {
         self.resume_local_ignore_recovery(RecoveryAnswer::Accept(decision));
     }

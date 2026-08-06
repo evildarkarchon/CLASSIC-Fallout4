@@ -64,6 +64,5 @@ pub(crate) fn from_js_token<T: Vocabulary>(token: &str) -> Option<T> {
         .find(|variant| js_token(variant.as_str()) == token)
 }
 
-#[cfg(test)]
-#[path = "vocabulary_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "vocabulary_tests.rs"] mod tests;

@@ -1079,7 +1079,20 @@ fn cancellation_racing_after_reset_begins_returns_cancelled_after_durable_reset(
         expected.post_critical_cancellation_status
     );
     assert_eq!(cancelled.cancelled, logs.len());
-    assert!(cancelled.installed_yaml_data.is_none());
+    // The reset transaction completed before cancellation was observed, so its receipt travels with
+    // the cancelled result. Dropping it reported a bare cancellation for a run that had already
+    // replaced the user's Local Ignore, leaving the backup path — the only route back to the
+    // original bytes — unreported.
+    let installed = cancelled
+        .installed_yaml_data
+        .as_ref()
+        .expect("a completed reset must be reported even when cancellation wins");
+    let reset = installed
+        .local_ignore_reset
+        .as_ref()
+        .expect("the cancelled result must carry the durable reset receipt");
+    assert_eq!(reset.local_ignore_path, ignore_path);
+    assert!(reset.backup_path.exists());
     assert!(cancelled.effective_concurrency.is_none());
     assert_eq!(
         std::fs::read_to_string(&ignore_path).expect("reset Local Ignore should be readable"),
@@ -3049,11 +3062,7 @@ fn local_ignore_reset_failure_stage_delegates_to_the_durable_publication_stage()
     // claim untrue. The closure adapts a total mapping to the partial one the
     // helper takes, for the same reason as the diagnostic kind below.
     assert_twin_vocabulary_conformance(
-        |stage| {
-            Some(contract::local_ignore_reset_failure_stage_to_source(
-                stage,
-            ))
-        },
+        |stage| Some(contract::local_ignore_reset_failure_stage_to_source(stage)),
         &[],
     );
 }

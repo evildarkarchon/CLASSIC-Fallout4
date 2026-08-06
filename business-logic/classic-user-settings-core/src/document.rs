@@ -909,6 +909,5 @@ fn is_recognized_nested_document(document: &Yaml) -> bool {
         .any(|key| matches!(&document[key], Yaml::Hash(_)))
 }
 
-#[cfg(test)]
-#[path = "document_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "document_tests.rs"] mod tests;

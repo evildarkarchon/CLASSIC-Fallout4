@@ -772,6 +772,7 @@ fn empty_installed_yaml_data_dto() -> ffi::ScanRunInstalledYamlDataRunDataDto {
             byte_len: 0,
         },
         diagnostics: Vec::new(),
+        local_ignore_reset_available: false,
         has_local_ignore_reset: false,
         local_ignore_reset: empty_local_ignore_reset_run_data_dto(),
     }
@@ -873,6 +874,7 @@ fn installed_yaml_data_to_dto(
             .into_iter()
             .map(installed_yaml_data_diagnostic_to_dto)
             .collect(),
+        local_ignore_reset_available: value.local_ignore_reset_available,
         has_local_ignore_reset,
         local_ignore_reset,
     }

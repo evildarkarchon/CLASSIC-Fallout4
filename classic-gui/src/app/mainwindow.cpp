@@ -1716,13 +1716,35 @@ void MainWindow::onBackupError(const QString& error)
 
 void MainWindow::onOpenBackupsFolder()
 {
-    // The backup folder is "CLASSIC Backups" under the game root.
-    // If the game root is not set, try the data root as fallback.
+    // Two different backup roots exist, and they are not spellings of one thing:
+    //
+    //   <game root>/CLASSIC Backups/<game>   - game-file backups (XSE etc.), written by the
+    //                                          bridge's BackupManager helpers in path.rs.
+    //   <installation>/CLASSIC Backup/       - YAML Data backups, written by the Rust core:
+    //                                          the Local Ignore reset receipt lives under
+    //                                          YAML Data/Local Ignore, alongside User Settings
+    //                                          migrations and the legacy TUI state import.
+    //
+    // This action historically opened the first and unconditionally mkpath'd it. After a
+    // "Back Up & Reset" recovery that meant the user was shown a freshly created, empty, unrelated
+    // folder rather than the backup they had just been promised — with nothing to explain the
+    // mismatch. Prefer whichever root actually exists, so the button lands on real content, and
+    // only create a directory when neither does.
+    const QString gameBackups = m_backupController->gameRoot().isEmpty()
+                                    ? QString()
+                                    : m_backupController->gameRoot() + QStringLiteral("/CLASSIC Backups");
+    const QString yamlDataBackups =
+        m_dataRoot.isEmpty() ? QString() : m_dataRoot + QStringLiteral("/CLASSIC Backup");
+
     QString backupDir;
-    if (!m_backupController->gameRoot().isEmpty()) {
-        backupDir = m_backupController->gameRoot() + QStringLiteral("/CLASSIC Backups");
-    } else if (!m_dataRoot.isEmpty()) {
-        backupDir = m_dataRoot + QStringLiteral("/CLASSIC Backups");
+    if (!gameBackups.isEmpty() && QDir(gameBackups).exists()) {
+        backupDir = gameBackups;
+    } else if (!yamlDataBackups.isEmpty() && QDir(yamlDataBackups).exists()) {
+        backupDir = yamlDataBackups;
+    } else if (!gameBackups.isEmpty()) {
+        backupDir = gameBackups;
+    } else {
+        backupDir = yamlDataBackups;
     }
 
     if (backupDir.isEmpty()) {

@@ -825,10 +825,15 @@ impl CrashLogScanRunContinuation {
         };
 
         if reset_completed && cancellation.is_cancelled() {
-            return Ok(project_engine_result(
-                EngineRunResult::cancelled_after_discovery(prepared.discovery),
-                None,
-            ));
+            // Cancellation won the race, but the reset transaction had already completed: the
+            // malformed `CLASSIC Ignore.yaml` is replaced on disk and its byte-exact backup exists.
+            // Carry the reset receipt into the cancelled result so frontends can still tell the
+            // user what changed and where the backup went. Reporting a bare cancellation here read
+            // as "nothing happened", which is the opposite of the truth and leaves the backup path
+            // — the only pointer back to the user's original bytes — unreported.
+            let mut cancelled = EngineRunResult::cancelled_after_discovery(prepared.discovery);
+            cancelled.installed_yaml_data = Some(installed_yaml_data);
+            return Ok(project_engine_result(cancelled, None));
         }
 
         let mut effective_concurrency = None;
@@ -1397,6 +1402,19 @@ pub struct InstalledYamlDataRunData {
     pub local_ignore_identity: YamlDataContentIdentity,
     /// Structured fallback, validation, and generation diagnostics.
     pub diagnostics: Vec<InstalledYamlDataRunDiagnostic>,
+    /// Whether Reset To Default can succeed for this run's recovery decision.
+    ///
+    /// Meaningful only while `local_ignore_state` is
+    /// [`LocalIgnoreRunState::RecoveryRequired`]; `false` in every other state, where no
+    /// recovery decision is pending.
+    ///
+    /// Config Core deliberately builds a recovery plan even when the selected Main YAML has a
+    /// missing, malformed, or unusable `CLASSIC_Info.default_ignorefile`, because Proceed Without
+    /// Ignore still works without defaults. Reset To Default does not. Without this fact projected
+    /// here, every frontend offered both choices unconditionally, and picking Reset consumed the
+    /// one-shot continuation only to fail — leaving the user with no scan, no repair, and no
+    /// second attempt.
+    pub local_ignore_reset_available: bool,
     /// Durable reset metadata, present only after successful Reset To Default resume.
     pub local_ignore_reset: Option<LocalIgnoreResetRunData>,
 }
@@ -1429,6 +1447,8 @@ impl InstalledYamlDataRunData {
             local_ignore_state,
             local_ignore_identity: snapshot.local_ignore_identity().clone(),
             diagnostics,
+            // No recovery decision is pending on a selected snapshot, so there is nothing to offer.
+            local_ignore_reset_available: false,
             local_ignore_reset: None,
         })
     }
@@ -1442,6 +1462,9 @@ impl InstalledYamlDataRunData {
             local_ignore_state: LocalIgnoreRunState::RecoveryRequired,
             local_ignore_identity: plan.malformed_local_ignore_identity().clone(),
             diagnostics: Self::map_diagnostics(plan.diagnostics())?,
+            // `None` here is Config Core's way of saying the plan has no retained defaults to
+            // publish, which is exactly when Reset To Default cannot succeed.
+            local_ignore_reset_available: plan.default_local_ignore_identity().is_some(),
             local_ignore_reset: None,
         })
     }

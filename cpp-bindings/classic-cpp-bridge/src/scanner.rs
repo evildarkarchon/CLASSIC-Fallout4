@@ -824,6 +824,13 @@ mod ffi {
         local_ignore_state: ScanRunLocalIgnoreYamlDataState,
         local_ignore_identity: ScanRunYamlDataContentIdentityDto,
         diagnostics: Vec<ScanRunInstalledYamlDataDiagnosticDto>,
+        /// Whether Reset To Default can succeed while recovery is required.
+        ///
+        /// Only meaningful when `local_ignore_state` is `RecoveryRequired`. A recovery plan
+        /// built from a Main YAML with no usable `default_ignorefile` can only satisfy Proceed
+        /// Without Ignore, and a frontend that offers Reset anyway burns the one-shot
+        /// continuation on a guaranteed failure.
+        local_ignore_reset_available: bool,
         has_local_ignore_reset: bool,
         local_ignore_reset: ScanRunLocalIgnoreResetRunDataDto,
     }
@@ -1169,17 +1176,13 @@ mod ffi {
         ) -> String;
         /// Human-facing Display Label for one terminal per-log disposition.
         /// Same stability caveat as above.
-        fn scan_run_log_disposition_label(
-            disposition: ScanRunContractLogDisposition,
-        ) -> String;
+        fn scan_run_log_disposition_label(disposition: ScanRunContractLogDisposition) -> String;
         /// Human-facing Display Label for one per-log failure stage.
         ///
         /// `UnsolvedLogsFinalization` keeps the glossary capitalization of the
         /// domain term in `Unsolved Logs finalization`. Same stability caveat as
         /// above.
-        fn scan_run_log_failure_stage_label(
-            stage: ScanRunContractLogFailureStage,
-        ) -> String;
+        fn scan_run_log_failure_stage_label(stage: ScanRunContractLogFailureStage) -> String;
         /// Human-facing Display Label for one run-wide infrastructure stage.
         ///
         /// `FormIdDatabaseAccess` reads as `FormID database access` and

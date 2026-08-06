@@ -109,6 +109,47 @@ impl<'a> VerifiedBackup<'a> {
     }
 }
 
+/// A backup that was published to a unique path and proven byte-exact.
+///
+/// Carries the backup's *own* durability outcome alongside its identity. The
+/// reread that produced `identity` proves the bytes are visible now; it says
+/// nothing about whether the backup's namespace entry survives a crash. Those
+/// are different guarantees, and a caller about to destroy the only other copy
+/// of the data is exactly the caller that needs to tell them apart.
+///
+/// `#[must_use]` for the same reason as [`Publication`]: it carries a
+/// durability outcome that must be handled rather than dropped by omission.
+#[must_use]
+#[derive(Debug)]
+pub struct PublishedBackup {
+    identity: ContentIdentity,
+    durability: Durability,
+}
+
+impl PublishedBackup {
+    /// Return the identity calculated from the reread bytes.
+    #[must_use]
+    pub const fn identity(&self) -> &ContentIdentity {
+        &self.identity
+    }
+
+    /// Return whether the backup's namespace entry reached the barrier.
+    #[must_use]
+    pub const fn durability(&self) -> &Durability {
+        &self.durability
+    }
+
+    /// Consume this result and return the backup's durability outcome.
+    pub fn into_durability(self) -> Durability {
+        self.durability
+    }
+
+    /// Consume this result and return the reread identity, naming the discard.
+    pub fn into_identity_ignoring_durability(self) -> ContentIdentity {
+        self.identity
+    }
+}
+
 /// A replacement that was preceded by a verified backup.
 ///
 /// `#[must_use]` for the same reason as [`Publication`]: it carries the
@@ -116,7 +157,7 @@ impl<'a> VerifiedBackup<'a> {
 #[must_use]
 #[derive(Debug)]
 pub struct VerifiedBackupPublication {
-    backup_identity: ContentIdentity,
+    backup: PublishedBackup,
     replacement: Publication,
 }
 
@@ -124,7 +165,18 @@ impl VerifiedBackupPublication {
     /// Return the identity of the backup that was reread and byte-compared.
     #[must_use]
     pub const fn backup_identity(&self) -> &ContentIdentity {
-        &self.backup_identity
+        self.backup.identity()
+    }
+
+    /// Return the backup's own durability outcome.
+    ///
+    /// Distinct from `replacement().durability()`. A `Durability::Unknown` here
+    /// means the replacement succeeded but the backup entry protecting the
+    /// original bytes is not proven to survive a crash — the one combination a
+    /// caller cannot infer from the replacement outcome alone.
+    #[must_use]
+    pub const fn backup_durability(&self) -> &Durability {
+        self.backup.durability()
     }
 
     /// Return the replacement publication at the target path.
@@ -367,10 +419,10 @@ pub fn publish_with_verified_backup(
 ) -> Result<VerifiedBackupPublication, PublicationError> {
     let _lock = lock.acquire(target)?;
 
-    let backup_identity = publish_verified_backup_locked(backup)?;
+    let backup = publish_verified_backup_locked(backup)?;
     let replacement = publish_locked(target, bytes, PublicationMode::Replace)?;
     Ok(VerifiedBackupPublication {
-        backup_identity,
+        backup,
         replacement,
     })
 }
@@ -385,9 +437,12 @@ pub fn publish_with_verified_backup(
 /// decide, after the backup exists, whether replacing is still the right thing
 /// to do.
 ///
-/// The returned [`ContentIdentity`] is calculated from the *reread* bytes
-/// rather than from `backup.original()`, so it attests what is actually on
-/// disk.
+/// The returned [`PublishedBackup`] carries a [`ContentIdentity`] calculated
+/// from the *reread* bytes rather than from `backup.original()`, so it attests
+/// what is actually on disk, plus the backup's own [`Durability`]. The reread
+/// and the durability outcome answer different questions — "are the right bytes
+/// there now?" versus "does the entry survive a crash?" — and a caller that is
+/// about to replace the only other copy needs both.
 ///
 /// # Concurrency
 ///
@@ -408,7 +463,7 @@ pub fn publish_with_verified_backup(
 /// replacement is ever attempted by this operation.
 pub fn publish_verified_backup(
     backup: VerifiedBackup<'_>,
-) -> Result<ContentIdentity, PublicationError> {
+) -> Result<PublishedBackup, PublicationError> {
     publish_verified_backup_locked(backup)
 }
 
@@ -560,15 +615,17 @@ fn rotate_rollback_generation(target: &Path) -> Result<bool, PublicationError> {
 /// Publish and verify a backup with any caller lock already held.
 fn publish_verified_backup_locked(
     backup: VerifiedBackup<'_>,
-) -> Result<ContentIdentity, PublicationError> {
-    // The backup's own durability outcome is deliberately not surfaced: the
-    // reread below is a stronger statement about the backup than a directory
-    // synchronization would be, and backup durability policy belongs to the
-    // caller that chose the backup location. Named rather than dropped, which
-    // is the same discipline this crate asks of its callers.
-    let _backup_durability =
-        publish_locked(backup.path(), backup.original(), PublicationMode::Unique)?
-            .into_durability();
+) -> Result<PublishedBackup, PublicationError> {
+    // The backup's durability outcome is returned rather than discarded. The
+    // reread below is a stronger statement about the *bytes* than a directory
+    // synchronization is, but it is not a statement about the backup's
+    // namespace entry at all: on Unix a failed parent-directory sync leaves the
+    // entry unproven, and that matters most precisely here, where the caller is
+    // about to replace the only other copy of the data. Backup durability
+    // policy still belongs to the caller that chose the backup location — this
+    // crate reports the fact and decides nothing.
+    let durability = publish_locked(backup.path(), backup.original(), PublicationMode::Unique)?
+        .into_durability();
 
     #[cfg(test)]
     fault::tamper_published_backup(backup.path());
@@ -585,7 +642,10 @@ fn publish_verified_backup_locked(
             actual: ContentIdentity::from_bytes(&reread),
         });
     }
-    Ok(ContentIdentity::from_bytes(&reread))
+    Ok(PublishedBackup {
+        identity: ContentIdentity::from_bytes(&reread),
+        durability,
+    })
 }
 
 /// Run the staging-and-publish sequence with any lock already held.
@@ -681,10 +741,52 @@ fn publish_staged_path(
     match mode {
         PublicationMode::Replace => std::fs::rename(staged_path, target),
         // `move_atomic` refuses to clobber and reports AlreadyExists.
-        PublicationMode::Unique => atomicwrites::move_atomic(staged_path, target),
+        PublicationMode::Unique => publish_unique_unix(staged_path, target),
     }
     .map_err(|source| PublicationError::stage_failure(PublicationStage::Publish, target, source))?;
     Ok(published_durability(Some(&directory)))
+}
+
+/// No-clobber publish that does not require hard-link support.
+///
+/// `atomicwrites::move_atomic` reserves the target by hard-linking the staging file and then
+/// unlinking the source, except on Linux and Android where it can use
+/// `renameat2(RENAME_NOREPLACE)`. Filesystems that offer neither — many FAT/exFAT removable
+/// volumes, SMB and NFS mounts, and ZFS, where `RENAME_NOREPLACE` answers `EINVAL` and the crate
+/// then disables it permanently — fail the whole publication. That is how a Local Ignore living on
+/// such a volume became impossible to generate *or* back up, aborting the scan over a filesystem
+/// capability the operation never actually needed.
+///
+/// The fallback keeps the one guarantee `Unique` mode owes: `create_new` reserves the name
+/// atomically against a concurrent creator, so a loser still sees `AlreadyExists`. It then copies
+/// the staging bytes in and synchronizes the new file, so the published bytes reach the same
+/// barrier the staging file already did. What it gives up is atomic *visibility* of the completed
+/// file — a crash mid-copy can leave a short file behind. Both callers of this mode already reread
+/// and byte-compare what they published, so a torn copy is detected rather than trusted.
+#[cfg(unix)]
+fn publish_unique_unix(staged_path: &Path, target: &Path) -> std::io::Result<()> {
+    match atomicwrites::move_atomic(staged_path, target) {
+        Ok(()) => return Ok(()),
+        // The contract's own no-clobber answer. Retrying would race a real conflict into success.
+        Err(source) if source.kind() == std::io::ErrorKind::AlreadyExists => return Err(source),
+        // Any other failure may or may not be the hard-link limitation; the error taxonomy varies
+        // by filesystem (EPERM, EOPNOTSUPP, EMLINK, EXDEV). Rather than guess, try the portable
+        // path — if the real problem was permissions or a missing directory, the retry reports it.
+        Err(_) => {}
+    }
+
+    let bytes = std::fs::read(staged_path)?;
+    let mut published = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(target)?;
+    published.write_all(&bytes)?;
+    published.sync_all()?;
+    drop(published);
+    // Best-effort. The publication has already succeeded, so a staging file that outlives it is a
+    // cleanup concern for the caller's staging lifecycle, not a reason to report failure.
+    let _ = std::fs::remove_file(staged_path);
+    Ok(())
 }
 
 /// Use a write-through move on platforms without directory synchronization.
@@ -728,69 +830,11 @@ fn published_durability(directory: Option<&File>) -> Durability {
     }
 }
 
-/// Deliberately unpublished fault injection, reachable only under `cfg(test)`.
-///
-/// Two of this module's outcomes have no portable filesystem condition that
-/// provokes them on demand:
-///
-/// - A directory synchronization failure. `fsync` on a directory handle does
-///   not fail to order, yet the uncertain outcome is the one thing about this
-///   module every caller must handle.
-/// - A published backup whose bytes on disk differ from what was written. That
-///   is precisely a filesystem or device that lied about a completed write —
-///   the condition the reread exists to catch, and one no cooperating
-///   filesystem will reproduce.
-///
-/// These hooks are not exposed on the crate's interface. A caller that wants
-/// to test its own stage mapping should use a fake at its own seam rather than
-/// reach for anything here.
-#[cfg(test)]
-pub(crate) mod fault {
-    use std::cell::{Cell, RefCell};
-    use std::path::Path;
+// Test-only fault injection lives in a sibling file so this production module
+// keeps no test bodies, fixtures, or helpers inline. See `publication_fault.rs`
+// for why these two outcomes need injection at all.
+#[rustfmt::skip]
+#[cfg(test)] #[path = "publication_fault.rs"] mod fault;
 
-    thread_local! {
-        static FAIL_DIRECTORY_SYNC: Cell<bool> = const { Cell::new(false) };
-        static TAMPER_BACKUP_WITH: RefCell<Option<Vec<u8>>> = const { RefCell::new(None) };
-    }
-
-    /// Return whether the current thread should report an uncertain barrier.
-    pub(crate) fn directory_sync_should_fail() -> bool {
-        FAIL_DIRECTORY_SYNC.with(Cell::get)
-    }
-
-    /// Force durability uncertainty on this thread until the guard drops.
-    pub(crate) fn fail_directory_sync() -> FaultGuard {
-        FAIL_DIRECTORY_SYNC.with(|flag| flag.set(true));
-        FaultGuard
-    }
-
-    /// Overwrite a just-published backup so its reread cannot match.
-    pub(crate) fn tamper_published_backup(path: &Path) {
-        TAMPER_BACKUP_WITH.with(|bytes| {
-            if let Some(bytes) = bytes.borrow().as_deref() {
-                std::fs::write(path, bytes).expect("tampering with a published backup");
-            }
-        });
-    }
-
-    /// Make every published backup on this thread reread as `bytes`.
-    pub(crate) fn corrupt_published_backups(bytes: &[u8]) -> FaultGuard {
-        TAMPER_BACKUP_WITH.with(|slot| *slot.borrow_mut() = Some(bytes.to_vec()));
-        FaultGuard
-    }
-
-    /// Restores normal behavior for every fault on this thread when dropped.
-    pub(crate) struct FaultGuard;
-
-    impl Drop for FaultGuard {
-        fn drop(&mut self) {
-            FAIL_DIRECTORY_SYNC.with(|flag| flag.set(false));
-            TAMPER_BACKUP_WITH.with(|slot| *slot.borrow_mut() = None);
-        }
-    }
-}
-
-#[cfg(test)]
-#[path = "publication_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "publication_tests.rs"] mod tests;

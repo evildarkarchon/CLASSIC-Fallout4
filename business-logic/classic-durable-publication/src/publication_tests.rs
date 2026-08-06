@@ -512,13 +512,17 @@ fn a_standalone_verified_backup_publishes_and_attests_the_bytes_on_disk() {
     let fixture = Fixture::new();
     let backup_path = fixture.path("target.yaml.bak");
 
-    let identity = publish_verified_backup(VerifiedBackup::new(&backup_path, b"the original"))
+    let published = publish_verified_backup(VerifiedBackup::new(&backup_path, b"the original"))
         .expect("standalone verified backup");
 
     assert_eq!(fixture.read("target.yaml.bak"), b"the original");
     assert_eq!(
-        &identity,
+        published.identity(),
         &crate::ContentIdentity::from_bytes(b"the original")
+    );
+    assert!(
+        published.durability().is_durable(),
+        "a cooperating filesystem reaches the barrier, and the caller must be able to see that"
     );
     assert!(staging_artifacts(fixture.root()).is_empty());
 }
@@ -529,7 +533,7 @@ fn a_standalone_verified_backup_replaces_nothing() {
     let target = fixture.seed("target.yaml", b"the original");
     let backup_path = fixture.path("target.yaml.bak");
 
-    let _identity = publish_verified_backup(VerifiedBackup::new(&backup_path, b"the original"))
+    let _published = publish_verified_backup(VerifiedBackup::new(&backup_path, b"the original"))
         .expect("standalone verified backup");
 
     assert_eq!(
@@ -601,7 +605,7 @@ fn splitting_the_sequence_yields_the_same_bytes_as_the_combined_operation() {
 
     // What a caller with a policy check in the middle does: verify the backup,
     // decide, then replace. The observable result must match the welded form.
-    let backup_identity =
+    let published_backup =
         publish_verified_backup(VerifiedBackup::new(&backup_path, b"the original"))
             .expect("standalone verified backup");
     let replacement = publish(&target, b"the replacement", &LockPolicy::none())
@@ -610,7 +614,7 @@ fn splitting_the_sequence_yields_the_same_bytes_as_the_combined_operation() {
     assert_eq!(fixture.read("target.yaml.bak"), b"the original");
     assert_eq!(fixture.read("target.yaml"), b"the replacement");
     assert_eq!(
-        &backup_identity,
+        published_backup.identity(),
         &crate::ContentIdentity::from_bytes(b"the original")
     );
     assert_eq!(

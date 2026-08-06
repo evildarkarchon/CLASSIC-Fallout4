@@ -652,6 +652,7 @@ class ScanRunInstalledYamlDataRunData:
     ]
     local_ignore_identity: ScanRunYamlDataContentIdentity
     diagnostics: list[ScanRunInstalledYamlDataDiagnostic]
+    local_ignore_reset_available: bool
     local_ignore_reset: ScanRunLocalIgnoreResetRunData | None
 
 class ScanRunLocalIgnoreResetRunData:

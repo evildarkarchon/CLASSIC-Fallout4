@@ -1,7 +1,7 @@
 use super::{
-    CANCEL_RECOVERY_CHOICE, PROCEED_WITHOUT_IGNORE_CHOICE, RESET_TO_DEFAULT_CHOICE, ScanRunIntent,
-    build_request, describe_local_ignore_recovery, format_event, format_result,
-    format_resume_error,
+    CANCEL_RECOVERY_CHOICE, LocalIgnoreRecoveryPrompt, PROCEED_WITHOUT_IGNORE_CHOICE,
+    RESET_TO_DEFAULT_CHOICE, ScanRunIntent, build_request, describe_local_ignore_recovery,
+    format_event, format_result, format_resume_error,
 };
 use classic_config_core::YamlDataContentIdentity;
 use classic_scanlog_core::scan_run::contract::{
@@ -391,6 +391,34 @@ fn recovery_prompt_offers_both_decisions_and_a_non_mutating_cancel() {
     assert!(text.contains("left exactly as it is"));
     assert!(text.contains("back up your malformed file byte-exactly"));
     assert!(text.contains("Local Ignore is not modified"));
+}
+
+/// Verifies an unavailable Reset To Default is omitted from the overlay and explained.
+///
+/// Constructed directly rather than through `describe_local_ignore_recovery`, because
+/// `InspectedYamlDataFile` exposes no public constructor and a paused-run fixture therefore cannot
+/// carry Installed YAML Data. The presentation rule is what changed, so that is what is pinned.
+#[test]
+fn recovery_prompt_omits_reset_when_the_contract_says_it_cannot_succeed() {
+    let prompt = LocalIgnoreRecoveryPrompt {
+        message: "Local Ignore recovery is required".to_string(),
+        retained_logs: 2,
+        diagnostics: Vec::new(),
+        reset_available: false,
+    };
+
+    let text = prompt.overlay_text();
+
+    assert!(text.contains(PROCEED_WITHOUT_IGNORE_CHOICE));
+    assert!(text.contains(CANCEL_RECOVERY_CHOICE));
+    assert!(
+        !text.contains(RESET_TO_DEFAULT_CHOICE),
+        "an impossible choice must not be advertised, got:\n{text}"
+    );
+    assert!(
+        text.contains("Reset To Default is unavailable"),
+        "the omission must be explained rather than left as a silent gap, got:\n{text}"
+    );
 }
 
 /// Verifies a paused run without a Rust message still explains why a decision is needed.

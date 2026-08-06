@@ -43,8 +43,16 @@ impl App {
                     KeyCode::Char('p') | KeyCode::Char('P') => self.accept_local_ignore_recovery(
                         LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
                     ),
-                    KeyCode::Char('r') | KeyCode::Char('R') => self
-                        .accept_local_ignore_recovery(LocalIgnoreRecoveryDecision::ResetToDefault),
+                    // Ignored outright when the contract says this run has no defaults to publish.
+                    // The overlay omits the choice in that case, and an unlisted key must not be
+                    // able to spend the one-shot continuation on a decision that cannot succeed.
+                    KeyCode::Char('r') | KeyCode::Char('R')
+                        if self.local_ignore_reset_available() =>
+                    {
+                        self.accept_local_ignore_recovery(
+                            LocalIgnoreRecoveryDecision::ResetToDefault,
+                        );
+                    }
                     KeyCode::Esc | KeyCode::Char('c') | KeyCode::Char('C') => {
                         self.cancel_local_ignore_recovery();
                     }

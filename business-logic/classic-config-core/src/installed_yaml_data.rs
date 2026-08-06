@@ -103,7 +103,11 @@ pub enum InstalledYamlDataDiagnosticKind {
     IncompatibleSchema,
     /// A candidate or Local Ignore document failed role-specific semantic validation.
     InvalidRoleData,
-    /// Missing Local Ignore YAML Data was generated from selected Main defaults.
+    /// Missing canonical Local Ignore YAML Data was created.
+    ///
+    /// Covers both provenances, distinguished by the diagnostic's message: newly
+    /// generated from selected Main defaults, or adopted from a pre-`CLASSIC Data/`
+    /// root-level `CLASSIC Ignore.yaml` left by an older install.
     LocalIgnoreGenerated,
     /// Malformed Local Ignore YAML Data was reset from retained selected-Main defaults.
     LocalIgnoreReset,
@@ -385,6 +389,42 @@ impl LocalIgnoreFileSystem for SystemLocalIgnoreFileSystem {
         match atomicwrites::move_atomic(staged_path, path) {
             Ok(()) => Ok(true),
             Err(source) if source.kind() == std::io::ErrorKind::AlreadyExists => Ok(false),
+            // On Unix the Windows reasoning above does not hold: `move_atomic` reserves the target
+            // by hard-linking unless it can use `renameat2(RENAME_NOREPLACE)`, which is
+            // Linux/Android only and is disabled permanently once a filesystem answers `EINVAL`
+            // (ZFS does). On a volume without hard links that made generating a missing Local
+            // Ignore fail outright and abort the scan, over a capability the operation never
+            // needed. Fall back to reserving the name with `create_new`, which keeps the only
+            // guarantee this method owes — a concurrent creator still loses and gets `Ok(false)`.
+            //
+            // Mirrors `classic-durable-publication`'s `publish_unique_unix`; see that function for
+            // the full rationale and for what atomic visibility this trades away. The two are not
+            // shared because that one is internal to the publication sequence, which stages, syncs,
+            // and rereads around it, while this seam only owes a no-clobber move.
+            #[cfg(unix)]
+            Err(_) => {
+                use std::io::Write as _;
+
+                let bytes = std::fs::read(staged_path)?;
+                let mut published = match std::fs::OpenOptions::new()
+                    .write(true)
+                    .create_new(true)
+                    .open(path)
+                {
+                    Ok(file) => file,
+                    Err(source) if source.kind() == std::io::ErrorKind::AlreadyExists => {
+                        return Ok(false);
+                    }
+                    Err(source) => return Err(source),
+                };
+                published.write_all(&bytes)?;
+                published.sync_all()?;
+                // Best-effort: publication already succeeded, and a surviving staging file is the
+                // caller's staging lifecycle to clean up rather than a publication failure.
+                let _ = std::fs::remove_file(staged_path);
+                Ok(true)
+            }
+            #[cfg(not(unix))]
             Err(source) => Err(source),
         }
     }
@@ -465,9 +505,8 @@ fn project_publication_error(
     }
 }
 
-#[cfg(test)]
-#[path = "installed_yaml_data_reset_fault.rs"]
-mod reset_fault;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "installed_yaml_data_reset_fault.rs"] mod reset_fault;
 
 /// Immutable parsed Installed YAML Data backed by the exact selected file bytes.
 pub struct InstalledYamlDataSnapshot {
@@ -983,13 +1022,34 @@ impl LocalIgnoreRecoveryPlan {
         // the conflict check, this backup, the recheck below, and the replacement — which is
         // wider than any single publication call could lock. A second lock would only add a file
         // beside the user's editable data for a window this one already covers.
-        durable_publication::publish_verified_backup(durable_publication::VerifiedBackup::new(
-            &backup_path,
-            &expected_bytes,
-        ))
+        let published_backup = durable_publication::publish_verified_backup(
+            durable_publication::VerifiedBackup::new(&backup_path, &expected_bytes),
+        )
         .map_err(|error| {
             project_publication_error(LocalIgnoreResetPublicationKind::Backup, &backup_path, error)
         })?;
+        // Require the backup to be *durable*, not merely readable, before replacing the canonical
+        // file. The module's reread proves the right bytes are visible now; it says nothing about
+        // whether the backup's directory entry survives a crash. Continuing on an unproven entry
+        // would replace the only other copy of the user's malformed file while the thing meant to
+        // protect it might not come back — the exact loss this whole sequence exists to prevent.
+        //
+        // Reported as a Backup-stage `Sync` publication failure rather than a new error kind: it
+        // is a backup that did not reach the durability barrier, which is what that stage already
+        // means, and reusing it keeps the frozen reset stage vocabulary and every binding's stable
+        // codes unchanged. The canonical Local Ignore is untouched on this path.
+        if let durable_publication::Durability::Unknown(source) = published_backup.into_durability()
+        {
+            return Err(project_publication_error(
+                LocalIgnoreResetPublicationKind::Backup,
+                &backup_path,
+                durable_publication::PublicationError::Stage {
+                    stage: durable_publication::PublicationStage::Sync,
+                    path: backup_path.clone(),
+                    source,
+                },
+            ));
+        }
         // The module proved the bytes on disk equal `expected_bytes`, so hashing the retained
         // copy attests the backup exactly as rehashing the reread bytes did before.
         let backup_identity = YamlDataContentIdentity::from_bytes(&expected_bytes);
@@ -1388,15 +1448,40 @@ where
         .installation_root
         .join("CLASSIC Data")
         .join("CLASSIC Ignore.yaml");
+    // Installs that predate the `CLASSIC Data/` layout keep their user-owned Local Ignore at the
+    // installation root, which is where the retired path-backed intake read it and where the old
+    // GUI created it. Adopting it here is not a nicety: without this probe an upgrading user's
+    // custom exclusions silently stop affecting scans while the file they wrote sits intact one
+    // directory up, and the only visible symptom is that results changed.
+    let legacy_ignore_path = request.installation_root.join("CLASSIC Ignore.yaml");
     let (ignore_bytes, local_ignore_state) = match local_ignore_io.read(&ignore_path) {
         Ok(bytes) => (bytes, LocalIgnoreYamlDataState::Existing),
         Err(source) if source.kind() == std::io::ErrorKind::NotFound => {
-            let defaults = validated_local_ignore_defaults(&selected, &ignore_path)?;
-            let generated = publish_local_ignore_if_absent(
-                local_ignore_io,
-                &ignore_path,
-                defaults.content.as_bytes(),
-            )?;
+            // Prefer the legacy file's bytes over freshly generated defaults, and copy rather than
+            // move: the canonical path becomes authoritative from here on, but leaving the original
+            // in place keeps a downgrade to an older CLASSIC working and never destroys user data
+            // as a side effect of a read. Everything downstream — reset, backup-directory
+            // derivation, recovery — keeps operating on the canonical path, so no other code has to
+            // learn that two layouts exist.
+            let adopted_legacy = match local_ignore_io.read(&legacy_ignore_path) {
+                Ok(bytes) => Some(bytes),
+                Err(source) if source.kind() == std::io::ErrorKind::NotFound => None,
+                Err(source) => {
+                    return Err(InstalledYamlDataLoadError::LocalIgnoreRead {
+                        path: legacy_ignore_path,
+                        source,
+                    });
+                }
+            };
+            let (seed_bytes, seeded_from_legacy) = match adopted_legacy {
+                Some(bytes) => (bytes, true),
+                None => {
+                    let defaults = validated_local_ignore_defaults(&selected, &ignore_path)?;
+                    (defaults.content.as_bytes().to_vec(), false)
+                }
+            };
+            let generated =
+                publish_local_ignore_if_absent(local_ignore_io, &ignore_path, &seed_bytes)?;
             let bytes = local_ignore_io.read(&ignore_path).map_err(|source| {
                 InstalledYamlDataLoadError::LocalIgnoreRead {
                     path: ignore_path.clone(),
@@ -1409,12 +1494,32 @@ where
                     candidate: None,
                     path: Some(ignore_path.clone()),
                     kind: InstalledYamlDataDiagnosticKind::LocalIgnoreGenerated,
-                    message: format!(
-                        "generated missing Local Ignore YAML Data from selected Main defaults at {}",
-                        ignore_path.display()
-                    ),
+                    // Same diagnostic kind for both provenances, distinguished by message. The kind
+                    // vocabulary is mirrored by the CXX FFI enum, the Node string union, and the
+                    // Python tokens, so a new variant would be a four-surface contract change to
+                    // report a difference no frontend branches on. The message carries the fact a
+                    // reader actually needs: which file the canonical copy came from.
+                    message: if seeded_from_legacy {
+                        format!(
+                            "adopted existing Local Ignore YAML Data from the legacy root-level {} into {}",
+                            legacy_ignore_path.display(),
+                            ignore_path.display()
+                        )
+                    } else {
+                        format!(
+                            "generated missing Local Ignore YAML Data from selected Main defaults at {}",
+                            ignore_path.display()
+                        )
+                    },
                 });
-                (bytes, LocalIgnoreYamlDataState::Generated)
+                // Adopted user content is not "generated": it is the user's own existing Local
+                // Ignore, and reporting it as generated would tell frontends the scan is running
+                // on defaults when it is running on the user's exclusions.
+                if seeded_from_legacy {
+                    (bytes, LocalIgnoreYamlDataState::Existing)
+                } else {
+                    (bytes, LocalIgnoreYamlDataState::Generated)
+                }
             } else {
                 (bytes, LocalIgnoreYamlDataState::Existing)
             }
@@ -2035,6 +2140,5 @@ fn candidate_diagnostic(
     }
 }
 
-#[cfg(test)]
-#[path = "installed_yaml_data_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "installed_yaml_data_tests.rs"] mod tests;

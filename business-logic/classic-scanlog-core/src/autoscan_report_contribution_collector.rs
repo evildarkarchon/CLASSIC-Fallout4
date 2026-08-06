@@ -261,6 +261,5 @@ fn detected_gpu(system_segment_lines: &[String]) -> Option<String> {
     (manufacturer != "Unknown").then(|| manufacturer.to_lowercase())
 }
 
-#[cfg(test)]
-#[path = "autoscan_report_contribution_collector_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "autoscan_report_contribution_collector_tests.rs"] mod tests;

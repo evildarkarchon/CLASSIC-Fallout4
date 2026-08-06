@@ -1110,6 +1110,5 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     Ok(())
 }
 
-#[cfg(test)]
-#[path = "installed_yaml_data_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "installed_yaml_data_tests.rs"] mod tests;

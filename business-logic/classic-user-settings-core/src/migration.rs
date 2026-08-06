@@ -835,6 +835,5 @@ fn relative_path(location: SourceLocation) -> &'static str {
     }
 }
 
-#[cfg(test)]
-#[path = "migration_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "migration_tests.rs"] mod tests;

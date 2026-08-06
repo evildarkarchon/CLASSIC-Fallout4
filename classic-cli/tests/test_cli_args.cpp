@@ -53,16 +53,21 @@ TEST_CASE("CliArgs game selection", "[cli_args]") {
         REQUIRE(args.game_was_explicit);
     }
 
-    SECTION("Skyrim") {
-        ArgvBuilder ab({"classic-cli", "--game", "Skyrim"});
+    SECTION("default is Fallout4 and not explicit") {
+        ArgvBuilder ab({"classic-cli"});
         CliArgs args = parse_args(ab.argc(), ab.argv());
-        REQUIRE(args.game == "Skyrim");
-        REQUIRE(args.game_was_explicit);
+        REQUIRE(args.game == "Fallout4");
+        REQUIRE_FALSE(args.game_was_explicit);
     }
 
     // NOTE: Invalid --game values cause CLI11 to call std::exit(),
     // so we can't test rejection here. That's covered by the
     // PowerShell integration test (Test 7).
+    //
+    // `Skyrim` is one of those rejected values now. It used to be accepted
+    // here, but `CLASSIC Data/databases/` ships no `CLASSIC Skyrim.yaml` and
+    // config core answers `UnsupportedGame` for Skyrim, so accepting it only
+    // deferred a guaranteed failure to Installed YAML Data intake.
 }
 
 TEST_CASE("CliArgs boolean flags", "[cli_args]") {
@@ -146,11 +151,11 @@ TEST_CASE("CliArgs scan-path and max-concurrent", "[cli_args]") {
 }
 
 TEST_CASE("CliArgs combined flags", "[cli_args]") {
-    ArgvBuilder ab({"classic-cli", "--game", "Skyrim", "--game-version", "VR", "--fcx-mode", "--scan-path",
+    ArgvBuilder ab({"classic-cli", "--game", "Fallout4", "--game-version", "VR", "--fcx-mode", "--scan-path",
                     "/tmp/crashes", "--max-concurrent", "4"});
     CliArgs args = parse_args(ab.argc(), ab.argv());
 
-    REQUIRE(args.game == "Skyrim");
+    REQUIRE(args.game == "Fallout4");
     REQUIRE(args.game_version == "VR");
     REQUIRE(args.fcx_mode == true);
     REQUIRE(args.scan_path == "/tmp/crashes");

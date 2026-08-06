@@ -360,6 +360,19 @@ ScanRunTerminalPresentation presentScanRunExecution(const classic::scanner::Scan
             context.append(
                 QStringLiteral("Verified backup: %1").arg(classic::toQString(execution.resume_error.backup_path)));
         }
+        // Reported even though the resume failed, and for the same reason the CLI reports it: a
+        // durability receipt means the reset already reached a safe durable state, so the malformed
+        // Local Ignore has *already* been replaced. Without these three identities the user sees a
+        // bare "recovery failed" and has no way to know their file was rewritten or which bytes were
+        // preserved. The shared contract populates them; dropping them here made the GUI strictly
+        // less informative than the CLI on the one outcome where that matters most.
+        if (execution.resume_error.has_durability_receipt) {
+            context.append(QStringLiteral("Durable reset receipt: malformed sha256 %1, backup sha256 %2, "
+                                          "replacement sha256 %3")
+                               .arg(classic::toQString(execution.resume_error.malformed_identity.sha256),
+                                    classic::toQString(execution.resume_error.backup_identity.sha256),
+                                    classic::toQString(execution.resume_error.replacement_identity.sha256)));
+        }
         if (!context.isEmpty()) {
             presentation.message.append(QStringLiteral("\n") + context.join('\n'));
         }

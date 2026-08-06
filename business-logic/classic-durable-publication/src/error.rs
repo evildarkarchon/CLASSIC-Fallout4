@@ -254,6 +254,5 @@ impl PublicationError {
     }
 }
 
-#[cfg(test)]
-#[path = "error_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "error_tests.rs"] mod tests;

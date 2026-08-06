@@ -317,6 +317,10 @@ def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPat
     ("status", "expected_exit_code"),
     [
         ("setup_failed", 1),
+        # A paused run hands back a continuation this CLI never resumes. Without an explicit
+        # branch it fell through to the success path and reported "0 succeeded, 0 failed" with
+        # exit 0 — indistinguishable from a healthy scan of an empty directory.
+        ("local_ignore_recovery_required", 1),
         ("cancelled_before_discovery", 4),
         ("cancelled", 4),
     ],

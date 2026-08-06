@@ -3851,6 +3851,14 @@ export interface JsInstalledYamlDataRunData {
   localIgnoreIdentity: JsYamlDataContentIdentity
   /** Structured fallback, validation, and generation diagnostics. */
   diagnostics: Array<JsScanRunInstalledYamlDataDiagnostic>
+  /**
+   * Whether Reset To Default can succeed while recovery is required.
+   *
+   * Only meaningful when `localIgnoreState` is `RecoveryRequired`. A recovery plan whose
+   * selected Main YAML has no usable `default_ignorefile` can only satisfy Proceed Without
+   * Ignore; offering Reset anyway spends the one-shot continuation on a certain failure.
+   */
+  localIgnoreResetAvailable: boolean
   /** Durable reset metadata populated only after successful Reset To Default resume. */
   localIgnoreReset?: JsScanRunLocalIgnoreResetRunData
 }

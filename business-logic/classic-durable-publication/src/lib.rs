@@ -113,7 +113,7 @@ pub use error::{PublicationError, PublicationStage};
 pub use identity::ContentIdentity;
 pub use lock::{LockPolicy, PublicationLock};
 pub use publication::{
-    Durability, Install, Publication, StagedPublication, VerifiedBackup, VerifiedBackupPublication,
-    install_verified, publish, publish_verified_backup, publish_with_verified_backup,
-    rollback_generation_path, stage,
+    Durability, Install, Publication, PublishedBackup, StagedPublication, VerifiedBackup,
+    VerifiedBackupPublication, install_verified, publish, publish_verified_backup,
+    publish_with_verified_backup, rollback_generation_path, stage,
 };

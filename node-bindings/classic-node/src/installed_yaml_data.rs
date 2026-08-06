@@ -1096,6 +1096,5 @@ fn base_inspection_error(env: Env, code: &str, message: String) -> napi::Error {
     napi::Error::from(JsError::from(napi::Error::new(code, message)).into_unknown(env))
 }
 
-#[cfg(test)]
-#[path = "installed_yaml_data_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "installed_yaml_data_tests.rs"] mod tests;

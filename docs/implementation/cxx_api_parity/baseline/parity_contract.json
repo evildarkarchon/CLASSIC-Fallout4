@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-05T23:23:07Z",
+  "generated_at_utc": "2026-08-06T01:44:21Z",
   "schema_version": 1,
   "entries": [
     {
@@ -9333,6 +9333,10 @@
         {
           "name": "diagnostics",
           "type": "Vec<ScanRunInstalledYamlDataDiagnosticDto>"
+        },
+        {
+          "name": "local_ignore_reset_available",
+          "type": "bool"
         },
         {
           "name": "has_local_ignore_reset",

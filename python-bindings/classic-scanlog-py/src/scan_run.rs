@@ -761,6 +761,13 @@ pub struct PyScanRunInstalledYamlDataRunData {
     /// Structured fallback, validation, and generation diagnostics.
     #[pyo3(get)]
     diagnostics: Vec<PyScanRunInstalledYamlDataDiagnostic>,
+    /// Whether Reset To Default can succeed while recovery is required.
+    ///
+    /// Only meaningful when `local_ignore_state` is `"recovery_required"`. A recovery plan whose
+    /// selected Main YAML has no usable `default_ignorefile` can only satisfy Proceed Without
+    /// Ignore; offering Reset anyway spends the one-shot continuation on a certain failure.
+    #[pyo3(get)]
+    local_ignore_reset_available: bool,
     /// Durable reset metadata populated only after successful Reset To Default resume.
     #[pyo3(get)]
     local_ignore_reset: Option<PyScanRunLocalIgnoreResetRunData>,
@@ -1349,11 +1356,13 @@ fn scan_run_label_for_token<T: Vocabulary>(
     token: &str,
     vocabulary: &str,
 ) -> PyResult<&'static str> {
-    from_token::<T>(token).map(Vocabulary::label).ok_or_else(|| {
-        PyValueError::new_err(format!(
-            "unknown Crash Log Scan Run {vocabulary} token `{token}`"
-        ))
-    })
+    from_token::<T>(token)
+        .map(Vocabulary::label)
+        .ok_or_else(|| {
+            PyValueError::new_err(format!(
+                "unknown Crash Log Scan Run {vocabulary} token `{token}`"
+            ))
+        })
 }
 
 /// Returns the human-facing Display Label for one terminal log disposition token.
@@ -1486,6 +1495,7 @@ fn installed_yaml_data_to_py(
             .into_iter()
             .map(installed_yaml_data_diagnostic_to_py)
             .collect(),
+        local_ignore_reset_available: value.local_ignore_reset_available,
         local_ignore_reset: value.local_ignore_reset.map(|reset| {
             PyScanRunLocalIgnoreResetRunData {
                 local_ignore_path: reset.local_ignore_path,
@@ -1740,7 +1750,9 @@ fn scan_run_reset_error_to_py(py: Python<'_>, error: contract::ResumeError) -> P
                 .setattr("code", code)
                 .and_then(|()| value.setattr("kind", code))
                 .and_then(|()| value.setattr("path", failure.path))
-                .and_then(|()| value.setattr("stage", failure.stage.map(reset_failure_stage_to_string)))
+                .and_then(|()| {
+                    value.setattr("stage", failure.stage.map(reset_failure_stage_to_string))
+                })
                 .expect("scan-run reset backup exceptions must accept contract attributes");
             py_error
         }
@@ -1751,7 +1763,9 @@ fn scan_run_reset_error_to_py(py: Python<'_>, error: contract::ResumeError) -> P
                 .setattr("code", code)
                 .and_then(|()| value.setattr("kind", code))
                 .and_then(|()| value.setattr("path", failure.path))
-                .and_then(|()| value.setattr("stage", failure.stage.map(reset_failure_stage_to_string)))
+                .and_then(|()| {
+                    value.setattr("stage", failure.stage.map(reset_failure_stage_to_string))
+                })
                 .expect("scan-run reset replacement exceptions must accept contract attributes");
             py_error
         }

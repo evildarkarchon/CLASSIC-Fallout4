@@ -1676,6 +1676,5 @@ fn source_location_from_token(token: &str) -> napi::Result<SourceLocation, Strin
 // revision token is not casing-transformed: `missing`, `unavailable`, and
 // `sha256:<hex>` are already single-word or content-derived.
 
-#[cfg(test)]
-#[path = "user_settings_tests.rs"]
-mod tests;
+#[rustfmt::skip]
+#[cfg(test)] #[path = "user_settings_tests.rs"] mod tests;

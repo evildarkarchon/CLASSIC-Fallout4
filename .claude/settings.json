@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "C:/Users/evild/AppData/Local/Python/pythoncore-3.14-64/Scripts/graphify.EXE hook-guard search"
+            "command": "graphify hook-guard search"
           }
         ]
       },
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "C:/Users/evild/AppData/Local/Python/pythoncore-3.14-64/Scripts/graphify.EXE hook-guard read"
+            "command": "graphify hook-guard read"
           }
         ]
       }
