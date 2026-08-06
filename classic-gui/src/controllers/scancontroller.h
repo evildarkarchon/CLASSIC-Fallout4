@@ -33,9 +33,10 @@ public:
     /// Builds the prompt handed to a ScanWorker so a paused recovery is decided on the GUI thread.
     ///
     /// The returned callable is invoked on the worker thread while Rust still holds the single-use
-    /// continuation. It marshals only the message across, blocks until the GUI thread answers, and
-    /// returns a typed decision; no continuation or discovery state crosses the boundary. Every
-    /// failure to reach a live controller resolves to `Cancel`, which mutates nothing.
+    /// continuation. It marshals only the message and the run's reset availability across, blocks
+    /// until the GUI thread answers, and returns a typed decision; no continuation or discovery
+    /// state crosses the boundary. Every failure to reach a live controller resolves to `Cancel`,
+    /// which mutates nothing.
     [[nodiscard]] classic::gui::ScanRunLocalIgnoreRecoveryPrompt makeLocalIgnoreRecoveryPrompt();
 
 signals:
@@ -63,8 +64,11 @@ private slots:
 
 private:
     /// Runs the configured recovery prompt on the controller's GUI thread, defaulting safely to cancellation.
+    ///
+    /// `resetAvailable` is passed through untouched: the controller marshals the run's answer, it
+    /// does not decide it.
     [[nodiscard]] classic::gui::ScanRunLocalIgnoreRecoveryChoice
-    requestLocalIgnoreRecoveryChoice(const QString& message) const;
+    requestLocalIgnoreRecoveryChoice(const QString& message, bool resetAvailable) const;
 
     bool m_scanning = false;
     SignalHub* m_signalHub = nullptr;

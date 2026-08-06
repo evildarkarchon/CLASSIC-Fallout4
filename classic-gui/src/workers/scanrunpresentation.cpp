@@ -171,6 +171,7 @@ ScanRunInstalledYamlDataPresentation presentInstalledYamlData(
     presentation.localIgnoreState = installed.local_ignore_state;
     presentation.localIgnoreIdentity.sha256 = classic::toQString(installed.local_ignore_identity.sha256);
     presentation.localIgnoreIdentity.byteLength = installed.local_ignore_identity.byte_len;
+    presentation.localIgnoreResetAvailable = installed.local_ignore_reset_available;
     presentation.hasLocalIgnoreReset = installed.has_local_ignore_reset;
     if (installed.has_local_ignore_reset) {
         const auto& reset = installed.local_ignore_reset;
@@ -200,6 +201,11 @@ ScanRunInstalledYamlDataPresentation presentInstalledYamlData(
 }
 
 } // namespace
+
+bool offersLocalIgnoreResetToDefault(const ScanRunTerminalPresentation& terminal)
+{
+    return !terminal.hasInstalledYamlData || terminal.installedYamlData.localIgnoreResetAvailable;
+}
 
 QString localIgnoreStateLabel(classic::scanner::ScanRunLocalIgnoreYamlDataState state)
 {

@@ -174,7 +174,8 @@ Terminal mapping:
 - `Cancelled` emits `cancelled(...)` with completed and not-started counts
 - `NoCrashLogsFound` emits the dedicated `noLogsFound(...)` signal with searched locations when available; the controller relays `scanNoLogsFound(...)`, and MainWindow restores idle state without presenting an error dialog
 - `SetupFailed` emits `error(...)` with structured setup details
-- `LocalIgnoreRecoveryRequired` calls `promptLocalIgnoreRecoveryChoice(...)`, a warning prompt with Back Up & Reset To Default, Continue Without Ignore, and Cancel choices; the first two resume the retained run, while cancellation is recorded before a non-mutating placeholder decision so Rust returns the ordinary cancelled lifecycle without touching Local Ignore. Cancel is both the default and the escape button, so Return, Escape, and closing the window are all non-destructive
+- `LocalIgnoreRecoveryRequired` calls `promptLocalIgnoreRecoveryChoice(parent, message, resetAvailable)`, a warning prompt with Back Up & Reset To Default, Continue Without Ignore, and Cancel choices; the first two resume the retained run, while cancellation is recorded before a non-mutating placeholder decision so Rust returns the ordinary cancelled lifecycle without touching Local Ignore. Cancel is both the default and the escape button, so Return, Escape, and closing the window are all non-destructive
+  - `resetAvailable` comes from `ScanRunInstalledYamlDataPresentation::localIgnoreResetAvailable`, projected from the bridge's `local_ignore_reset_available`. When it is false the reset button is not created, because `resume` claims the single-use continuation before validating the decision and then fails with a typed reset error: nothing on disk changes, but the run cannot be retried without starting over. `ScanWorker` treats absent Installed YAML Data as available, since a run that reported nothing has not reported a denial
 - typed continuation replay and Local Ignore reset conflict/backup/replacement errors emit `error(...)` with their stable code, message, and applicable path
 - a typed infrastructure error emits `error(...)` with its stage, message, and optional path
 
@@ -183,7 +184,7 @@ Cancellation after discovery does not interrupt admitted work. Rust finishes dur
 The presentation layer projects:
 
 - the run-scoped FCX setup status, message, rendered report, checks, proposed path updates, complete configuration-issue severity/file/section/setting/current/recommended/description data, actions, and fatal errors
-- optional Installed YAML Data presence plus selected Main/game role, provenance, schema, SHA-256 and byte length; `Existing`, `Generated`, `RecoveryRequired`, or `ProceedWithoutIgnore` Local Ignore state and exact identity; and diagnostic role/candidate/path/kind/message context
+- optional Installed YAML Data presence plus selected Main/game role, provenance, schema, SHA-256 and byte length; `Existing`, `Generated`, `RecoveryRequired`, or `ProceedWithoutIgnore` Local Ignore state and exact identity; whether Reset To Default can succeed for this run; and diagnostic role/candidate/path/kind/message context
 - per-log `Succeeded`, `Failed`, and `CancelledBeforeStart` dispositions
 - all applicable `Analysis`, `ReportWrite`, and `UnsolvedLogsFinalization` failures
 - Autoscan Report paths and movement state

@@ -265,12 +265,16 @@ std::string normalize_console_answer(const std::string& answer) {
 ///
 /// Only the two Rust-owned decisions have affirmative spellings. Every other answer is rejected
 /// rather than defaulted, because a mistyped answer must never mutate Local Ignore YAML Data.
-bool match_recovery_choice(std::string_view answer, CliLocalIgnoreRecoveryChoice& choice) {
+///
+/// `reset_available` false removes the reset spellings from the accepted set entirely. The menu
+/// does not print the option in that case, so accepting the letter anyway would honor a decision
+/// the run was never offered — and spend its one-shot continuation on a failure.
+bool match_recovery_choice(std::string_view answer, bool reset_available, CliLocalIgnoreRecoveryChoice& choice) {
     if (answer == "p" || answer == "proceed") {
         choice = CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore;
         return true;
     }
-    if (answer == "r" || answer == "reset") {
+    if (reset_available && (answer == "r" || answer == "reset")) {
         choice = CliLocalIgnoreRecoveryChoice::ResetToDefault;
         return true;
     }
@@ -543,24 +547,33 @@ const scanner::ScanRunCancellation& CliScanRunCancellation::token() const noexce
     return impl_->token();
 }
 
-std::vector<CliScanRunMessage> describe_cli_local_ignore_recovery(const scanner::ScanRunContractRunResult& result) {
-    std::vector<CliScanRunMessage> messages;
-    messages.push_back({false, result.has_message
-                                   ? to_std_string(result.message)
-                                   : "Local Ignore recovery is required before scanning can continue."});
-    append_installed_yaml_data_messages(result, messages);
+CliLocalIgnoreRecoveryPresentation describe_cli_local_ignore_recovery(
+    const scanner::ScanRunContractRunResult& result) {
+    CliLocalIgnoreRecoveryPresentation recovery;
+    recovery.details.push_back({false, result.has_message
+                                           ? to_std_string(result.message)
+                                           : "Local Ignore recovery is required before scanning can continue."});
+    append_installed_yaml_data_messages(result, recovery.details);
     if (result.has_discovery) {
         // The retained discovery set is the reason recovery is a choice rather than a restart:
         // whichever decision the user makes resumes these exact Crash Logs.
         const auto accepted = result.discovery.accepted_logs.size();
-        messages.push_back({false, fmt::format("  Retained discovery: {} {} will be scanned once you decide.",
-                                               accepted, plural(accepted, "crash log", "crash logs"))});
+        recovery.details.push_back({false, fmt::format("  Retained discovery: {} {} will be scanned once you decide.",
+                                                       accepted, plural(accepted, "crash log", "crash logs"))});
     }
-    return messages;
+    // Absent Installed YAML Data means the run said nothing about reset availability, which a
+    // recovery-required result never does in practice. Keep offering the decision in that case: an
+    // unknown answer must not silently withdraw an option that may well work, and offering is
+    // exactly the behavior that shipped before this fact existed. The TUI reads the same fact the
+    // same way in `describe_local_ignore_recovery`.
+    recovery.reset_available =
+        !result.has_installed_yaml_data || result.installed_yaml_data.local_ignore_reset_available;
+    return recovery;
 }
 
 CliLocalIgnoreRecoveryChoice read_cli_local_ignore_recovery_choice(std::istream& input, std::ostream& output,
-                                                                   const CliScanRunCancellation& cancellation) {
+                                                                   const CliScanRunCancellation& cancellation,
+                                                                   bool reset_available) {
     // Ctrl+C observed before the question is asked already decided the run; never offer a
     // destructive default to a user who is on their way out.
     if (scanner::scan_run_cancellation_is_cancelled(cancellation.token())) {
@@ -569,13 +582,32 @@ CliLocalIgnoreRecoveryChoice read_cli_local_ignore_recovery_choice(std::istream&
 
     output << "Choose how to continue:\n"
            << "  [P] Proceed without Ignore - scan now with no ignore entries; the malformed file is left "
-              "unchanged\n"
-           << "  [R] Reset to default       - back up the malformed file byte-exactly, then restore selected "
-              "Main defaults\n"
-           << "  [C] Cancel                 - stop this scan without changing any file\n";
+              "unchanged\n";
+    if (reset_available) {
+        output << "  [R] Reset to default       - back up the malformed file byte-exactly, then restore selected "
+                  "Main defaults\n";
+    }
+    output << "  [C] Cancel                 - stop this scan without changing any file\n";
+    if (!reset_available) {
+        // Omitted rather than listed-and-refused: a bracketed letter the prompt will not accept
+        // reads as a bug. Saying why it is gone keeps the omission from reading as a missing
+        // feature instead of a decision this run cannot honor.
+        //
+        // Worded identically to the TUI's overlay and the Qt dialog rather than freshly phrased
+        // here. Core will own this sentence once the presentation crate lands; until then, three
+        // copies that already agree are one wording to move, not three to reconcile.
+        output << "Reset To Default is unavailable: the selected Main YAML Data retains no usable default "
+                  "Local Ignore to publish.\n";
+    }
+
+    // The offered letters and the retry hint are derived from the same fact that gated the menu, so
+    // the question can never advertise an answer the menu withheld.
+    const std::string_view offered_letters = reset_available ? "[P/R/C]" : "[P/C]";
+    const std::string_view retry_hint =
+        reset_available ? "Unrecognized answer. Enter P, R, or C.\n" : "Unrecognized answer. Enter P or C.\n";
 
     for (int attempt = 0; attempt < CLI_LOCAL_IGNORE_RECOVERY_PROMPT_ATTEMPTS; ++attempt) {
-        output << "Local Ignore recovery [P/R/C]: " << std::flush;
+        output << "Local Ignore recovery " << offered_letters << ": " << std::flush;
         std::string answer;
         if (!std::getline(input, answer)) {
             // End of input is not an answer. Treat it as dismissal so redirected or closed stdin
@@ -588,10 +620,10 @@ CliLocalIgnoreRecoveryChoice read_cli_local_ignore_recovery_choice(std::istream&
         }
 
         CliLocalIgnoreRecoveryChoice choice = CliLocalIgnoreRecoveryChoice::Cancel;
-        if (match_recovery_choice(normalize_console_answer(answer), choice)) {
+        if (match_recovery_choice(normalize_console_answer(answer), reset_available, choice)) {
             return choice;
         }
-        output << "Unrecognized answer. Enter P, R, or C.\n";
+        output << retry_hint;
     }
 
     output << "No usable answer after " << CLI_LOCAL_IGNORE_RECOVERY_PROMPT_ATTEMPTS

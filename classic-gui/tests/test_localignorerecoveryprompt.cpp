@@ -42,7 +42,8 @@ QAbstractButton* buttonContaining(QMessageBox* box, const QString& label)
 constexpr int PROMPT_POLL_ATTEMPTS = 400;
 
 classic::gui::ScanRunLocalIgnoreRecoveryChoice drivePrompt(const std::function<void(QMessageBox*)>& act,
-                                                            bool* dialogAppeared = nullptr)
+                                                            bool* dialogAppeared = nullptr,
+                                                            bool resetAvailable = true)
 {
     // The timer lives on this stack frame, which outlives the nested exec() loop below, so the
     // captured reference to `act` can never dangle.
@@ -69,7 +70,7 @@ classic::gui::ScanRunLocalIgnoreRecoveryChoice drivePrompt(const std::function<v
     poll.start();
 
     return classic::gui::promptLocalIgnoreRecoveryChoice(
-        nullptr, QStringLiteral("Local Ignore YAML Data is malformed."));
+        nullptr, QStringLiteral("Local Ignore YAML Data is malformed."), resetAvailable);
 }
 
 } // namespace
@@ -85,6 +86,10 @@ private slots:
     void each_button_returns_its_typed_choice();
     /// Verifies no keystroke or window close can authorize a destructive reset.
     void dismissing_the_prompt_never_selects_a_destructive_default();
+    /// Verifies a reset the run cannot honor is never presented as a clickable option.
+    void unavailable_reset_is_not_offered();
+    /// Verifies withholding the reset leaves the decisions that can succeed intact.
+    void unavailable_reset_leaves_the_remaining_decisions_working();
 };
 
 void LocalIgnoreRecoveryPromptTests::prompt_offers_both_decisions_and_a_non_mutating_cancel()
@@ -153,6 +158,60 @@ void LocalIgnoreRecoveryPromptTests::dismissing_the_prompt_never_selects_a_destr
 
     // Return activates the default button, which is deliberately Cancel rather than a reset.
     QCOMPARE(drivePrompt([](QMessageBox* box) { QTest::keyClick(box, Qt::Key_Return); }),
+             classic::gui::ScanRunLocalIgnoreRecoveryChoice::Cancel);
+}
+
+void LocalIgnoreRecoveryPromptTests::unavailable_reset_is_not_offered()
+{
+    // A run that reports Reset To Default cannot succeed still spends its single-use continuation on
+    // the attempt, so one misplaced click would end the scan with no results and nothing to resume.
+    // The button is absent rather than disabled: there is no setting a user could go and change.
+    QStringList offered;
+    bool dialogAppeared = false;
+    const auto choice = drivePrompt(
+        [&offered](QMessageBox* box) {
+            for (QAbstractButton* button : box->buttons()) {
+                offered.append(button->text().remove(QLatin1Char('&')));
+            }
+            QVERIFY2(box->informativeText().contains(QStringLiteral("unavailable")),
+                     "the absent reset must be explained rather than silently missing");
+            box->close();
+        },
+        &dialogAppeared, false);
+
+    QVERIFY2(dialogAppeared, "the recovery prompt never presented a dialog");
+    QVERIFY2(offered.filter(QStringLiteral("Reset to Default")).isEmpty(),
+             "Reset To Default must not be offered when the run reported it cannot succeed");
+    QCOMPARE(offered.size(), 2);
+    QVERIFY2(offered.filter(QStringLiteral("Continue Without Ignore")).size() == 1,
+             "Proceed Without Ignore must still be offered");
+    QVERIFY2(offered.filter(QStringLiteral("Cancel")).size() == 1, "Cancel must still be offered");
+    // Closing a dialog with no reset button must not read as a reset. QMessageBox::clickedButton()
+    // returns null here, which is the same value a withheld reset button would have.
+    QCOMPARE(choice, classic::gui::ScanRunLocalIgnoreRecoveryChoice::Cancel);
+}
+
+void LocalIgnoreRecoveryPromptTests::unavailable_reset_leaves_the_remaining_decisions_working()
+{
+    bool clicked = false;
+    const auto proceed = drivePrompt(
+        [&clicked](QMessageBox* box) {
+            QAbstractButton* button = buttonContaining(box, QStringLiteral("Continue Without Ignore"));
+            if (button == nullptr) {
+                box->close();
+                return;
+            }
+            clicked = true;
+            button->click();
+        },
+        nullptr, false);
+    QVERIFY2(clicked, "Continue Without Ignore was not present in the prompt");
+    QCOMPARE(proceed, classic::gui::ScanRunLocalIgnoreRecoveryChoice::ProceedWithoutIgnore);
+
+    // Abandoning the prompt behaves exactly as it does when the reset is available.
+    QCOMPARE(drivePrompt([](QMessageBox* box) { QTest::keyClick(box, Qt::Key_Escape); }, nullptr, false),
+             classic::gui::ScanRunLocalIgnoreRecoveryChoice::Cancel);
+    QCOMPARE(drivePrompt([](QMessageBox* box) { QTest::keyClick(box, Qt::Key_Return); }, nullptr, false),
              classic::gui::ScanRunLocalIgnoreRecoveryChoice::Cancel);
 }
 

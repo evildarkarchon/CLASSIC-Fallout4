@@ -311,10 +311,11 @@ public:
     explicit RecordingRecoveryPrompt(CliLocalIgnoreRecoveryChoice choice) noexcept
         : choice_(choice) {}
 
-    /// Retains the offered recovery lines and answers with the configured choice.
-    CliLocalIgnoreRecoveryChoice operator()(const std::vector<CliScanRunMessage>& details) {
+    /// Retains the offered recovery presentation and answers with the configured choice.
+    CliLocalIgnoreRecoveryChoice operator()(const CliLocalIgnoreRecoveryPresentation& recovery) {
         invocations_ += 1;
-        details_ = message_text(details);
+        details_ = message_text(recovery.details);
+        reset_available_ = recovery.reset_available;
         return choice_;
     }
 
@@ -324,10 +325,14 @@ public:
     /// Returns the recovery facts presented with the most recent question.
     [[nodiscard]] const std::vector<std::string>& details() const noexcept { return details_; }
 
+    /// Returns whether the most recent question offered Reset To Default.
+    [[nodiscard]] bool reset_available() const noexcept { return reset_available_; }
+
 private:
     CliLocalIgnoreRecoveryChoice choice_;
     std::size_t invocations_ = 0;
     std::vector<std::string> details_;
+    bool reset_available_ = false;
 };
 
 } // namespace
@@ -930,8 +935,8 @@ TEST_CASE("CLI Proceed Without Ignore resumes the retained discovery once", "[cl
     RecordingRecoveryPrompt prompt(CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore);
     CliScanRunCancellation cancellation(false);
     const auto outcome = execute_cli_scan_run(*request, cancellation, nullptr,
-                                              [&prompt](const std::vector<CliScanRunMessage>& details) {
-                                                  return prompt(details);
+                                              [&prompt](const CliLocalIgnoreRecoveryPresentation& recovery) {
+                                                  return prompt(recovery);
                                               });
 
     REQUIRE(prompt.invocations() == 1);
@@ -972,11 +977,14 @@ TEST_CASE("CLI Reset To Default resumes with durable backup metadata", "[cli][sc
     RecordingRecoveryPrompt prompt(CliLocalIgnoreRecoveryChoice::ResetToDefault);
     CliScanRunCancellation cancellation(false);
     const auto outcome = execute_cli_scan_run(*request, cancellation, nullptr,
-                                              [&prompt](const std::vector<CliScanRunMessage>& details) {
-                                                  return prompt(details);
+                                              [&prompt](const CliLocalIgnoreRecoveryPresentation& recovery) {
+                                                  return prompt(recovery);
                                               });
 
     REQUIRE(prompt.invocations() == 1);
+    // End-to-end proof that availability survives the bridge rather than defaulting: this fixture's
+    // Main YAML Data does retain a usable default, and the reset below is what proves it was true.
+    REQUIRE(prompt.reset_available());
     REQUIRE(outcome.execution.has_result);
     REQUIRE(outcome.execution.result.status == scanner::ScanRunContractStatus::Completed);
     const auto& installed = outcome.execution.result.installed_yaml_data;
@@ -1008,8 +1016,8 @@ TEST_CASE("CLI cancellation at the recovery prompt mutates nothing", "[cli][scan
     RecordingRecoveryPrompt prompt(CliLocalIgnoreRecoveryChoice::Cancel);
     CliScanRunCancellation cancellation(false);
     const auto outcome = execute_cli_scan_run(*request, cancellation, nullptr,
-                                              [&prompt](const std::vector<CliScanRunMessage>& details) {
-                                                  return prompt(details);
+                                              [&prompt](const CliLocalIgnoreRecoveryPresentation& recovery) {
+                                                  return prompt(recovery);
                                               });
 
     REQUIRE(prompt.invocations() == 1);
@@ -1038,7 +1046,8 @@ TEST_CASE("CLI surfaces a typed reset conflict raised while the user decided", "
 
     CliScanRunCancellation cancellation(false);
     const auto outcome =
-        execute_cli_scan_run(*request, cancellation, nullptr, [&ignore_path](const std::vector<CliScanRunMessage>&) {
+        execute_cli_scan_run(*request, cancellation, nullptr,
+                             [&ignore_path](const CliLocalIgnoreRecoveryPresentation&) {
             // The malformed file is repaired externally while the question is on screen.
             std::ofstream changed(ignore_path, std::ios::binary | std::ios::trunc);
             changed << "CLASSIC_Ignore_Fallout4: []\n";

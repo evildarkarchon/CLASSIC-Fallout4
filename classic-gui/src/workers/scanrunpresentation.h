@@ -30,8 +30,12 @@ enum class ScanRunLocalIgnoreRecoveryChoice {
 };
 
 /// GUI-thread prompt used by ScanWorker while Rust retains the single-use recovery continuation.
+///
+/// `resetAvailable` is the run's own answer to whether Reset To Default can succeed. It is a
+/// parameter rather than something the dialog looks up so the fact arrives with the question,
+/// which is what stops a prompt from offering a decision that would burn the continuation.
 using ScanRunLocalIgnoreRecoveryPrompt =
-    std::function<ScanRunLocalIgnoreRecoveryChoice(const QString& message)>;
+    std::function<ScanRunLocalIgnoreRecoveryChoice(const QString& message, bool resetAvailable)>;
 
 /// Presentation-ready projection of one discovery-ordered per-log outcome.
 struct ScanRunLogPresentation {
@@ -93,6 +97,14 @@ struct ScanRunInstalledYamlDataPresentation {
         classic::scanner::ScanRunLocalIgnoreYamlDataState::Existing;
     ScanRunYamlDataContentIdentityPresentation localIgnoreIdentity;
     QVector<ScanRunInstalledYamlDataDiagnosticPresentation> diagnostics;
+    /// Whether Reset To Default is a decision the paused run can actually satisfy.
+    ///
+    /// False when the selected Main YAML Data retained no usable default Local Ignore to publish.
+    /// Offering the decision anyway spends the single-use continuation on a typed failure, so the
+    /// user is left with no scan, no repair, and no second attempt without starting over. Defaults
+    /// to false to mirror the bridge DTO; a caller deciding whether to offer the decision reads
+    /// `hasInstalledYamlData` first, because silence from the run is not a denial.
+    bool localIgnoreResetAvailable = false;
     bool hasLocalIgnoreReset = false;
     ScanRunLocalIgnoreResetPresentation localIgnoreReset;
 };
@@ -110,6 +122,20 @@ struct ScanRunTerminalPresentation {
     bool hasInstalledYamlData = false;
     ScanRunInstalledYamlDataPresentation installedYamlData;
 };
+
+/// Returns whether a paused run's Reset To Default decision may be offered to the user.
+///
+/// Absent Installed YAML Data means the run reported nothing about reset availability, which a
+/// recovery-required result never does in practice. Silence is not a denial: withdrawing the
+/// decision on an unknown answer would remove an option that may well work, and would regress the
+/// behavior that shipped before this fact existed. The native CLI and the TUI resolve the same
+/// ambiguity the same way.
+///
+/// Every GUI caller goes through this rather than reading `localIgnoreResetAvailable` directly.
+/// That field defaults to false to mirror the bridge DTO, so a site that read it without checking
+/// `hasInstalledYamlData` would silently withhold a decision that works — the mirror image of the
+/// bug this whole change exists to fix.
+bool offersLocalIgnoreResetToDefault(const ScanRunTerminalPresentation& terminal);
 
 /// Returns the core Display Label for one scan-run Local Ignore YAML Data state.
 ///

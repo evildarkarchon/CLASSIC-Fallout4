@@ -213,16 +213,22 @@ Condition 4 is the real risk and is why the phase is separated. The CLI blocks o
 
 ### Confirmed Reset To Default Availability Gap
 
-This phase carries a latent bug fix, verified against the tree rather than assumed. `local_ignore_reset_available` tells a frontend whether Reset To Default can succeed at all. **Only the TUI honours it.** Both C++ frontends offer the decision unconditionally:
+**Status: the user-facing half shipped ahead of this phase.** `local_ignore_reset_available` tells a frontend whether Reset To Default can succeed at all. It was originally honoured only by the TUI, while both C++ frontends offered the decision unconditionally:
 
-- `classic-cli/src/scan_run_cli.cpp:573-574` prints `[R] Reset to default` with no branch, and `read_cli_local_ignore_recovery_choice` cannot gate it even in principle — its parameters are a stream pair and a cancellation token, with no result argument. The identifier `local_ignore_reset_available` appears **zero times** anywhere under `classic-cli/`.
-- `classic-gui/src/app/localignorerecoveryprompt.cpp:22` adds the reset button unconditionally, and `ScanRunInstalledYamlDataPresentation` at `classic-gui/src/workers/scanrunpresentation.h:89-98` mirrors every neighbouring DTO field and omits exactly this one. Zero occurrences under `classic-gui/` either.
+- `classic-cli/src/scan_run_cli.cpp` printed `[R] Reset to default` with no branch, and `read_cli_local_ignore_recovery_choice` could not gate it even in principle — its parameters were a stream pair and a cancellation token, with no result argument. The identifier appeared **zero times** anywhere under `classic-cli/`.
+- `classic-gui/src/app/localignorerecoveryprompt.cpp` added the reset button unconditionally, and `ScanRunInstalledYamlDataPresentation` mirrored every neighbouring DTO field and omitted exactly this one. Zero occurrences under `classic-gui/` either.
 
 The CXX, Node, and Python DTOs all carry the field correctly — `cpp-bindings/classic-cpp-bridge/src/scanner.rs:833` even documents the hazard in place. The frontends simply never read it.
 
 Core fails safely: `resume` does not check the flag, so it claims the one-shot continuation first and then returns a typed `ResumeError::LocalIgnoreResetBackupFailure`. Nothing on disk is touched. But the continuation is spent, so the user gets no scan, no repair, and no second attempt without re-running from scratch — precisely the outcome the bridge's own doc comment warns about.
 
-Adapter Mapping Rule 6 closes this by construction: `RecoveryDecisionDescription::available` travels with the decision, so a frontend cannot offer an unavailable one without ignoring data placed directly in its hands. The CLI needs the availability fact threaded into its prompt input; the GUI needs the field added to `ScanRunInstalledYamlDataPresentation` and a parameter on `promptLocalIgnoreRecoveryChoice`. The TUI's existing shape is the model for both.
+Because that is a recoverability bug a user hits today, the frontend half was shipped early rather than waiting for the render phase to land. Both C++ frontends now read the fact:
+
+- The CLI's prompt seam carries `CliLocalIgnoreRecoveryPresentation { details, reset_available }`, and `read_cli_local_ignore_recovery_choice` takes the availability as an argument. When it is false the `[R]` line is not printed, the bracketed letters narrow to `[P/C]`, and `r`/`reset` are rejected like any other unrecognized word.
+- `ScanRunInstalledYamlDataPresentation` gained `localIgnoreResetAvailable`, `ScanRunLocalIgnoreRecoveryPrompt` and `promptLocalIgnoreRecoveryChoice` gained a `resetAvailable` parameter, and the reset button is not created when it is false.
+- All three frontends resolve absent Installed YAML Data as *available*: a run that reported nothing has not reported a denial, and withdrawing an option on silence would regress the behaviour that shipped before the fact existed.
+
+Adapter Mapping Rule 6 still supersedes this when the render phase lands: `RecoveryDecisionDescription::available` travels with the decision, so a frontend cannot offer an unavailable one without ignoring data placed directly in its hands. At that point the parameters described above are replaced by the bridged prompt rather than removed piecemeal.
 
 ## Implementation Order
 
@@ -249,7 +255,7 @@ Display Content wording is pinned **once**, at the `classic-scan-presentation` r
 - `classic-gui/tests/test_display_label_audit.cpp` and `classic-cli/tests/test_display_label_audit.cpp` — same deny-list detector.
 - A new display-label audit for `classic-py-cli`, which has none today. Its absence is why the raw-token bug survived.
 - One thin segment-renderer test per frontend — not golden wording. It asserts that segments concatenate in order, that a `Count` prints core's resolved noun rather than a re-derived one, and that a `RecoveryDecisionDescription` marked unavailable is withheld.
-- One test per frontend asserting that Reset To Default is **not** offered when `available` is false. `classic-cli/tests/test_scanner.cpp:359` currently pins the opposite — it asserts `[R] Reset to default` appears unconditionally — and must be split into an available case and an unavailable case.
+- One test per frontend asserting that Reset To Default is **not** offered when `available` is false. Already done for the TUI, the native CLI, and the Qt GUI, when the frontend half shipped early — the CLI test that pinned the opposite was split into an available case and an unavailable case, and the Qt dialog gained a withheld-button case. When the render phase lands these re-point from the hand-threaded availability flag onto `RecoveryDecisionDescription::available` rather than being written from scratch. `classic-py-cli` still needs its case.
 
 ## Docs To Update
 

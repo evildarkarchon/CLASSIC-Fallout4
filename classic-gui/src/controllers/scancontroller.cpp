@@ -27,32 +27,32 @@ void ScanController::setLocalIgnoreRecoveryPrompt(classic::gui::ScanRunLocalIgno
 }
 
 classic::gui::ScanRunLocalIgnoreRecoveryChoice
-ScanController::requestLocalIgnoreRecoveryChoice(const QString& message) const
+ScanController::requestLocalIgnoreRecoveryChoice(const QString& message, bool resetAvailable) const
 {
     if (!m_localIgnoreRecoveryPrompt) {
         return classic::gui::ScanRunLocalIgnoreRecoveryChoice::Cancel;
     }
-    return m_localIgnoreRecoveryPrompt(message);
+    return m_localIgnoreRecoveryPrompt(message, resetAvailable);
 }
 
 classic::gui::ScanRunLocalIgnoreRecoveryPrompt ScanController::makeLocalIgnoreRecoveryPrompt()
 {
-    return [controller = QPointer<ScanController>(this)](const QString& message) {
+    return [controller = QPointer<ScanController>(this)](const QString& message, bool resetAvailable) {
         using Choice = classic::gui::ScanRunLocalIgnoreRecoveryChoice;
         if (!controller) {
             return Choice::Cancel;
         }
         if (QThread::currentThread() == controller->thread()) {
-            return controller->requestLocalIgnoreRecoveryChoice(message);
+            return controller->requestLocalIgnoreRecoveryChoice(message, resetAvailable);
         }
 
         Choice choice = Choice::Cancel;
         // Keep the Rust continuation and observer on the worker stack while the GUI owns the modal prompt.
         const bool invoked = QMetaObject::invokeMethod(
             controller.data(),
-            [controller, message, &choice]() {
+            [controller, message, resetAvailable, &choice]() {
                 if (controller) {
-                    choice = controller->requestLocalIgnoreRecoveryChoice(message);
+                    choice = controller->requestLocalIgnoreRecoveryChoice(message, resetAvailable);
                 }
             },
             Qt::BlockingQueuedConnection);

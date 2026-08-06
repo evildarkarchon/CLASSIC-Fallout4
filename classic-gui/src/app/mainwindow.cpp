@@ -293,8 +293,8 @@ void MainWindow::initializeControllers()
     m_signalHub = &SignalHub::instance();
     m_threadManager = new ThreadManager(this);
     m_scanController = new ScanController(m_signalHub, m_threadManager, this);
-    m_scanController->setLocalIgnoreRecoveryPrompt([this](const QString& message) {
-        return classic::gui::promptLocalIgnoreRecoveryChoice(this, message);
+    m_scanController->setLocalIgnoreRecoveryPrompt([this](const QString& message, bool resetAvailable) {
+        return classic::gui::promptLocalIgnoreRecoveryChoice(this, message, resetAvailable);
     });
     m_gameFilesController = new GameFilesController(m_signalHub, m_threadManager, this);
     m_backupController = new BackupController(QString(), m_signalHub, this);

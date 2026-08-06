@@ -190,7 +190,8 @@ void ScanWorker::doScan(const QString& installationRoot, const classic::gui::Cra
             }
 
             auto continuation = scanner::scan_run_contract_execution_take_continuation(*operation);
-            const auto choice = m_localIgnoreRecoveryPrompt(terminal.message);
+            const auto choice = m_localIgnoreRecoveryPrompt(
+                terminal.message, classic::gui::offersLocalIgnoreResetToDefault(terminal));
             auto decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
             switch (choice) {
             case classic::gui::ScanRunLocalIgnoreRecoveryChoice::ProceedWithoutIgnore:

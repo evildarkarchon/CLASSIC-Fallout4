@@ -231,13 +231,13 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
     // no one can see.
     CliLocalIgnoreRecoveryPrompt recovery_prompt;
     if (stdin_is_interactive()) {
-        recovery_prompt = [&observer, &cancellation](const std::vector<CliScanRunMessage>& details) {
+        recovery_prompt = [&observer, &cancellation](const CliLocalIgnoreRecoveryPresentation& recovery) {
             observer.finish();
             fmt::print("\n");
-            for (const auto& message : details) {
+            for (const auto& message : recovery.details) {
                 print_cli_scan_message(message);
             }
-            return read_cli_local_ignore_recovery_choice(std::cin, std::cout, cancellation);
+            return read_cli_local_ignore_recovery_choice(std::cin, std::cout, cancellation, recovery.reset_available);
         };
     }
 

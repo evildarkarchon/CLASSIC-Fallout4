@@ -77,21 +77,38 @@ enum class CliLocalIgnoreRecoveryChoice {
     Cancel,
 };
 
+/// Run-level facts the native CLI presents before it asks for an explicit recovery decision.
+///
+/// `reset_available` travels with the diagnostics rather than beside them so a prompt cannot offer
+/// Reset To Default without having been handed the fact that decides whether it can succeed. The
+/// TUI's `LocalIgnoreRecoveryPrompt` has the same shape for the same reason.
+struct CliLocalIgnoreRecoveryPresentation {
+    /// Lines explaining why recovery is required, in the order they should be printed.
+    std::vector<CliScanRunMessage> details;
+    /// Whether Reset To Default is a decision this run can actually satisfy.
+    ///
+    /// False when the selected Main YAML Data retained no usable default Local Ignore to publish.
+    /// Offering it anyway spends the one-shot continuation on a typed failure, leaving the user
+    /// with no scan, no repair, and no second attempt without re-running from scratch.
+    bool reset_available = true;
+};
+
 /// Console decision seam invoked while Rust still retains the single-use recovery continuation.
 ///
-/// The callback receives the run-level recovery diagnostics and owns presenting them, so tests can
+/// The callback receives the run-level recovery presentation and owns printing it, so tests can
 /// assert the offered facts without driving a real terminal.
 using CliLocalIgnoreRecoveryPrompt =
-    std::function<CliLocalIgnoreRecoveryChoice(const std::vector<CliScanRunMessage>& recovery_details)>;
+    std::function<CliLocalIgnoreRecoveryChoice(const CliLocalIgnoreRecoveryPresentation& recovery)>;
 
 /// Number of malformed console answers tolerated before the prompt gives up and cancels.
 inline constexpr int CLI_LOCAL_IGNORE_RECOVERY_PROMPT_ATTEMPTS = 3;
 
-/// Builds the run-level lines explaining why Local Ignore recovery is required.
+/// Builds the run-level presentation explaining why Local Ignore recovery is required.
 ///
 /// The lines carry retained Installed YAML Data facts and structured diagnostics only; they never
-/// reach an Autoscan Report.
-std::vector<CliScanRunMessage> describe_cli_local_ignore_recovery(
+/// reach an Autoscan Report. `reset_available` is read straight from the retained Installed YAML
+/// Data, so the CLI applies no policy of its own beyond what the run reported.
+CliLocalIgnoreRecoveryPresentation describe_cli_local_ignore_recovery(
     const classic::scanner::ScanRunContractRunResult& result);
 
 /// Reads one explicit recovery choice from an interactive console stream pair.
@@ -100,12 +117,18 @@ std::vector<CliScanRunMessage> describe_cli_local_ignore_recovery(
 /// `Cancel` on end-of-input or after `CLI_LOCAL_IGNORE_RECOVERY_PROMPT_ATTEMPTS` unusable answers.
 /// No input path can ever select `ResetToDefault` implicitly.
 ///
+/// When `reset_available` is false the reset option is neither printed nor accepted: `r` and
+/// `reset` are rejected exactly like any other unrecognized word, and the bracketed letters narrow
+/// to `[P/C]`. An option the run has already reported it cannot honor is not an option, and
+/// choosing it would spend the single-use continuation on a guaranteed failure.
+///
 /// Responsiveness caveat: cancellation is re-checked only after the console read returns, so Ctrl+C
 /// pressed while the read is still blocked is honored when the read completes rather than
 /// immediately. That affects only how quickly the question closes; the answer is discarded either
 /// way, so a late Ctrl+C can never authorize a reset.
 CliLocalIgnoreRecoveryChoice read_cli_local_ignore_recovery_choice(std::istream& input, std::ostream& output,
-                                                                   const CliScanRunCancellation& cancellation);
+                                                                   const CliScanRunCancellation& cancellation,
+                                                                   bool reset_available);
 
 /// Terminal envelope after any Local Ignore recovery decision has been applied.
 struct CliScanRunExecutionOutcome {

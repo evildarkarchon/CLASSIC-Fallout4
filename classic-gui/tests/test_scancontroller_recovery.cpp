@@ -58,7 +58,7 @@ void ScanControllerRecoveryTests::missing_prompt_resolves_to_cancel()
 
     const auto prompt = controller.makeLocalIgnoreRecoveryPrompt();
 
-    QCOMPARE(prompt(QStringLiteral("malformed")), Choice::Cancel);
+    QCOMPARE(prompt(QStringLiteral("malformed"), true), Choice::Cancel);
 }
 
 void ScanControllerRecoveryTests::configured_prompt_returns_each_typed_decision_data()
@@ -78,16 +78,21 @@ void ScanControllerRecoveryTests::configured_prompt_returns_each_typed_decision(
     ScanController controller(nullptr, nullptr);
 
     QString seenMessage;
-    controller.setLocalIgnoreRecoveryPrompt([&seenMessage, choiceValue](const QString& message) {
-        seenMessage = message;
-        return static_cast<Choice>(choiceValue);
-    });
+    bool seenResetAvailable = true;
+    controller.setLocalIgnoreRecoveryPrompt(
+        [&seenMessage, &seenResetAvailable, choiceValue](const QString& message, bool resetAvailable) {
+            seenMessage = message;
+            seenResetAvailable = resetAvailable;
+            return static_cast<Choice>(choiceValue);
+        });
 
     const auto prompt = controller.makeLocalIgnoreRecoveryPrompt();
-    const auto choice = prompt(QStringLiteral("Local Ignore YAML Data is malformed."));
+    const auto choice = prompt(QStringLiteral("Local Ignore YAML Data is malformed."), false);
 
     QCOMPARE(static_cast<int>(choice), choiceValue);
     QCOMPARE(seenMessage, QStringLiteral("Local Ignore YAML Data is malformed."));
+    // The controller marshals the run's answer; it must not substitute one of its own.
+    QCOMPARE(seenResetAvailable, false);
 }
 
 void ScanControllerRecoveryTests::worker_thread_request_is_answered_on_the_gui_thread()
@@ -97,8 +102,10 @@ void ScanControllerRecoveryTests::worker_thread_request_is_answered_on_the_gui_t
     ScanController controller(nullptr, nullptr);
 
     QThread* promptThread = nullptr;
-    controller.setLocalIgnoreRecoveryPrompt([&promptThread](const QString&) {
+    bool seenResetAvailable = true;
+    controller.setLocalIgnoreRecoveryPrompt([&promptThread, &seenResetAvailable](const QString&, bool resetAvailable) {
         promptThread = QThread::currentThread();
+        seenResetAvailable = resetAvailable;
         return Choice::ResetToDefault;
     });
 
@@ -106,13 +113,17 @@ void ScanControllerRecoveryTests::worker_thread_request_is_answered_on_the_gui_t
     QThread* callerThread = nullptr;
     const Choice choice = runOffGuiThread([&prompt, &callerThread]() {
         callerThread = QThread::currentThread();
-        return prompt(QStringLiteral("malformed"));
+        return prompt(QStringLiteral("malformed"), false);
     });
 
     QCOMPARE(choice, Choice::ResetToDefault);
     QVERIFY2(callerThread != nullptr && callerThread != QThread::currentThread(),
              "the prompt must have been requested from a worker thread");
     QCOMPARE(promptThread, QThread::currentThread());
+    // Availability is captured by value into the queued lambda, so it has to survive the hop to the
+    // GUI thread intact. A frontend that offered the decision here would be offering it on a run
+    // that already reported it cannot succeed.
+    QCOMPARE(seenResetAvailable, false);
 }
 
 void ScanControllerRecoveryTests::destroyed_controller_resolves_to_cancel()
@@ -120,13 +131,13 @@ void ScanControllerRecoveryTests::destroyed_controller_resolves_to_cancel()
     classic::gui::ScanRunLocalIgnoreRecoveryPrompt prompt;
     {
         ScanController controller(nullptr, nullptr);
-        controller.setLocalIgnoreRecoveryPrompt([](const QString&) { return Choice::ResetToDefault; });
+        controller.setLocalIgnoreRecoveryPrompt([](const QString&, bool) { return Choice::ResetToDefault; });
         prompt = controller.makeLocalIgnoreRecoveryPrompt();
     }
 
     // The QPointer capture goes null with the controller, so a late worker request cannot reach a
     // dangling object and cannot answer with the destructive decision the prompt used to return.
-    QCOMPARE(prompt(QStringLiteral("malformed")), Choice::Cancel);
+    QCOMPARE(prompt(QStringLiteral("malformed"), true), Choice::Cancel);
 }
 
 QTEST_MAIN(ScanControllerRecoveryTests)

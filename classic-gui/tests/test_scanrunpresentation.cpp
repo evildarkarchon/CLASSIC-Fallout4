@@ -44,6 +44,10 @@ private slots:
     void expected_lifecycle_statuses_remain_distinct_from_infrastructure_errors();
     /// Verifies Local Ignore recovery remains expected result data with its own terminal kind.
     void local_ignore_recovery_required_remains_distinct();
+    /// Verifies the run's Reset To Default availability survives the projection into Qt-owned data.
+    void local_ignore_reset_availability_is_projected_data();
+    /// Verifies the offer rule honours an explicit denial and treats an absent report as available.
+    void local_ignore_reset_is_offered_unless_the_run_denied_it();
     void setup_failure_presents_checks_updates_configuration_issues_actions_and_fatal_errors();
     void installed_yaml_data_presence_preserves_generated_ignore_metadata_and_diagnostics();
     /// Verifies successful reset metadata remains typed and Qt-owned for later interaction work.
@@ -425,6 +429,43 @@ void ScanRunPresentationTests::local_ignore_recovery_required_remains_distinct()
     QVERIFY(presentation.hasInstalledYamlData);
     QCOMPARE(presentation.installedYamlData.localIgnoreState,
              classic::scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired);
+}
+
+void ScanRunPresentationTests::local_ignore_reset_availability_is_projected_data()
+{
+    // The projection dropped this one field while mirroring every neighbouring one, which is how
+    // both C++ frontends came to offer a decision the run had already said could not succeed. Both
+    // directions are pinned so a projection that hard-codes either value fails here.
+    for (const bool available : {true, false}) {
+        auto execution = executionWithStatus(classic::scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
+        execution.result.has_installed_yaml_data = true;
+        execution.result.installed_yaml_data.local_ignore_state =
+            classic::scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired;
+        execution.result.installed_yaml_data.local_ignore_reset_available = available;
+
+        const auto presentation = classic::gui::presentScanRunExecution(execution);
+
+        QVERIFY(presentation.hasInstalledYamlData);
+        QCOMPARE(presentation.installedYamlData.localIgnoreResetAvailable, available);
+    }
+}
+
+void ScanRunPresentationTests::local_ignore_reset_is_offered_unless_the_run_denied_it()
+{
+    classic::gui::ScanRunTerminalPresentation terminal{};
+    terminal.kind = classic::gui::ScanRunTerminalKind::LocalIgnoreRecoveryRequired;
+
+    // Silence is not a denial. `localIgnoreResetAvailable` defaults to false to mirror the bridge
+    // DTO, so reading it without the presence check would withhold a decision that works.
+    terminal.hasInstalledYamlData = false;
+    QVERIFY(classic::gui::offersLocalIgnoreResetToDefault(terminal));
+
+    terminal.hasInstalledYamlData = true;
+    terminal.installedYamlData.localIgnoreResetAvailable = true;
+    QVERIFY(classic::gui::offersLocalIgnoreResetToDefault(terminal));
+
+    terminal.installedYamlData.localIgnoreResetAvailable = false;
+    QVERIFY(!classic::gui::offersLocalIgnoreResetToDefault(terminal));
 }
 
 void ScanRunPresentationTests::setup_failure_presents_checks_updates_configuration_issues_actions_and_fatal_errors()
