@@ -953,13 +953,19 @@ TEST_CASE("CLI Proceed Without Ignore resumes the retained discovery once", "[cl
 
     const auto& logs = outcome.execution.result.logs;
     REQUIRE(logs.size() == fixture::TARGETED_ACCEPTED.size());
+    // Anchored on each log's own path rather than on a section header, because the header the CLI
+    // used to print above these lines is gone: the per-log outcomes now arrive inside the block Rust
+    // renders, and there is no structure in a flat sequence for the CLI to caption a sub-range of.
+    // What still has to hold is the ordering, which is what this ever tested.
     const auto lines = message_text(present_cli_scan_run_execution(outcome.execution, 1.0).messages);
-    std::size_t previous = line_index(lines, "Results (discovery order):");
-    REQUIRE(previous < lines.size());
+    std::size_t previous = 0;
     for (std::size_t index = 0; index < logs.size(); ++index) {
         REQUIRE(logs[index].discovery_index == index);
         const auto position = line_index(lines, fs::path(std::string(logs[index].crash_log)).filename().string());
-        REQUIRE(position > previous);
+        REQUIRE(position < lines.size());
+        if (index > 0) {
+            REQUIRE(position > previous);
+        }
         previous = position;
     }
 }
@@ -994,13 +1000,13 @@ TEST_CASE("CLI Reset To Default resumes with durable backup metadata", "[cli][sc
             fixture::MALFORMED_LOCAL_IGNORE);
     REQUIRE(read_file_bytes(ignore_path) != fixture::MALFORMED_LOCAL_IGNORE);
 
+    // Anchored on the reset's own durable facts rather than on the sentences around them: the
+    // backup path and the two content identities are data the DTO carries, so this keeps testing
+    // that the receipt reached the user without pinning wording the presentation crate already pins.
     const auto lines = message_text(present_cli_scan_run_execution(outcome.execution, 1.0).messages);
-    REQUIRE(line_index(lines, "Local Ignore: reset to default") < lines.size());
-    REQUIRE(line_index(lines, "Local Ignore backup:") < lines.size());
-    // `Local Ignore reset`, not `local ignore reset`: the diagnostic kind's
-    // Display Label capitalizes the domain term, and the CLI now renders the
-    // configuration crate's wording rather than its own.
-    REQUIRE(line_index(lines, "Local Ignore reset") < lines.size());
+    REQUIRE(line_index(lines, std::string(installed.local_ignore_reset.backup_path)) < lines.size());
+    REQUIRE(line_index(lines, std::string(installed.local_ignore_reset.backup_identity.sha256)) < lines.size());
+    REQUIRE(line_index(lines, std::string(installed.local_ignore_reset.replacement_identity.sha256)) < lines.size());
 }
 
 TEST_CASE("CLI cancellation at the recovery prompt mutates nothing", "[cli][scan-run][local-ignore]") {
@@ -1063,8 +1069,15 @@ TEST_CASE("CLI surfaces a typed reset conflict raised while the user decided", "
     const auto presentation = present_cli_scan_run_execution(outcome.execution, 1.0);
     const auto lines = message_text(presentation.messages);
     REQUIRE(presentation.exit_code == 2);
-    REQUIRE(line_index(lines, "Crash Log Scan recovery failed") == 0);
-    REQUIRE(line_index(lines, "Expected identity: sha256") < lines.size());
-    REQUIRE(line_index(lines, "Actual identity: sha256") < lines.size());
+    // Anchored on the two content identities rather than on the prose around them. Those are data
+    // the DTO carries, so this stays a test that the conflict's actionable facts reached the user
+    // even after a rewording — and the wording itself is pinned once, in the presentation crate,
+    // rather than a second time here.
+    REQUIRE_FALSE(lines.empty());
+    REQUIRE(line_index(lines, std::string(outcome.execution.resume_error.expected_identity.sha256)) < lines.size());
+    REQUIRE(line_index(lines, std::string(outcome.execution.resume_error.actual_identity.sha256)) < lines.size());
+    for (const auto& message : presentation.messages) {
+        REQUIRE(message.error);
+    }
     REQUIRE(read_file_bytes(ignore_path) == "CLASSIC_Ignore_Fallout4: []\n");
 }

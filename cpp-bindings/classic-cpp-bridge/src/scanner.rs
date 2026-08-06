@@ -844,6 +844,68 @@ mod ffi {
         replacement_identity: ScanRunYamlDataContentIdentityDto,
     }
 
+    /// How gravely one Crash Log Scan Run display line should read.
+    ///
+    /// Adapters map this onto their own styling. Rust never names a colour, a text
+    /// attribute, or a widget. A plain, pipeable frontend may map it onto nothing more
+    /// than a choice of output stream.
+    ///
+    /// One CXX bridge module cannot share a type with another, so this scanner-local twin
+    /// exhaustively mirrors `classic_scan_presentation::DisplaySeverity`.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunDisplaySeverity {
+        Info = 0,
+        Notice = 1,
+        Warning = 2,
+        Failure = 3,
+        Success = 4,
+    }
+
+    /// Which payload field of a `ScanRunDisplaySegment` carries its value.
+    ///
+    /// Mirrors the variant set of `classic_scan_presentation::DisplaySegment`. The
+    /// taxonomy is fixed at six kinds for its first version: each addition touches three
+    /// binding parity baselines, so growth must be a deliberate decision.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunDisplaySegmentKind {
+        Text = 0,
+        Label = 1,
+        Count = 2,
+        Path = 3,
+        Name = 4,
+        Emphasis = 5,
+    }
+
+    /// One typed piece of a Crash Log Scan Run display line.
+    ///
+    /// CXX cannot express a payload-carrying Rust enum, so the six-variant segment crosses
+    /// flattened: a kind tag plus one field per payload shape, with the fields the kind
+    /// does not use left empty. Read only the field `kind` selects.
+    struct ScanRunDisplaySegment {
+        kind: ScanRunDisplaySegmentKind,
+        /// Payload for `Text`, `Label`, `Name`, and `Emphasis`. For `Count` this is the
+        /// noun Rust already resolved to agree with `count`, so no adapter re-decides
+        /// pluralization and no user reads "1 logs". Empty for `Path`.
+        text: String,
+        /// Payload for `Path`, whole and untruncated. Truncation is the adapter's
+        /// choice. Empty otherwise.
+        path: String,
+        /// Payload for `Count`. Zero otherwise.
+        count: u64,
+    }
+
+    /// One line of Crash Log Scan Run Display Content.
+    ///
+    /// An adapter concatenates `segments` in order and never reorders within a line. It
+    /// may reorder, group, or omit whole lines. It must not re-derive a Display Label
+    /// already carried in a `Label` segment, and must not re-decide a `Count`'s noun.
+    struct ScanRunDisplayLine {
+        severity: ScanRunDisplaySeverity,
+        segments: Vec<ScanRunDisplaySegment>,
+    }
+
     /// Complete terminal result from the final Crash Log Scan Run contract.
     struct ScanRunContractRunResult {
         status: ScanRunContractStatus,
@@ -894,6 +956,10 @@ mod ffi {
     }
 
     /// Exactly one of `result`, `error`, or `resume_error`, identified by presence flags.
+    ///
+    /// Both `scan_run_contract_execute` and `scan_run_continuation_resume` return this
+    /// one envelope, so a single `display_lines` field covers the initial run and the
+    /// continuation resume alike.
     struct ScanRunContractExecutionResult {
         has_result: bool,
         result: ScanRunContractRunResult,
@@ -901,6 +967,17 @@ mod ffi {
         error: ScanRunContractInfrastructureError,
         has_resume_error: bool,
         resume_error: ScanRunContractResumeError,
+        /// What this run says, in Rust's words, for whichever payload the presence flags
+        /// select above.
+        ///
+        /// Rendered while the Rust run result was still live, because C++ receives a
+        /// projected copy and cannot render from the Rust value later. An adapter states
+        /// the run from these lines rather than composing sentences of its own; the
+        /// fields above stay the machine-facing surface a consumer matches on.
+        ///
+        /// Empty when no payload is present, which is what a moved-from envelope leaves
+        /// behind.
+        display_lines: Vec<ScanRunDisplayLine>,
     }
 
     /// One serialized lifecycle event from the final contract.
@@ -916,6 +993,17 @@ mod ffi {
         total: usize,
         phase: ScanRunContractProgressPhase,
         disposition: ScanRunContractLogDisposition,
+        /// What this event says, in Rust's words.
+        ///
+        /// Populated inline in the observer adapter before the event reaches C++, so an
+        /// adapter that shows progress states it in the same words every other frontend
+        /// does. One event can produce more than one line — a discovery that rejected
+        /// some of its targeted inputs states the rejection separately.
+        ///
+        /// Unlike the fields above, this is never defaulted by `kind`: every event kind
+        /// renders. An adapter that shows only some kinds omits whole lines, which the
+        /// adapter contract allows.
+        display_lines: Vec<ScanRunDisplayLine>,
     }
 
     /// Papyrus log statistics transferred across the FFI boundary.

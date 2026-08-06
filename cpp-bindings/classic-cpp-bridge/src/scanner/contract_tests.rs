@@ -1452,3 +1452,381 @@ fn an_out_of_range_scan_run_cxx_enum_value_yields_an_empty_display_label() {
         ""
     );
 }
+
+// --- Display Content flattening --------------------------------------------------------
+//
+// These do not pin wording. Wording is pinned once, in `classic-scan-presentation`, and
+// asserting it again here would mean one rewording produced two diffs and two chances to
+// disagree. What these prove is narrower: that a typed segment reaches C++ with its payload
+// in the field its kind selects, that the fields the kind does not select stay empty, and
+// that a count's noun is the one Rust already agreed with the value.
+
+/// Builds a line carrying one segment of every kind, in taxonomy order.
+///
+/// `Name` is included even though no render path emits one yet: the taxonomy is fixed for
+/// this version, so the flattening for a kind that arrives later is settled now rather than
+/// bolted on then.
+fn every_segment_kind() -> DisplayLine {
+    DisplayLine {
+        severity: DisplaySeverity::Warning,
+        segments: vec![
+            DisplaySegment::Text("fixed prose"),
+            DisplaySegment::Label("a display label"),
+            DisplaySegment::Count {
+                value: 1,
+                noun: "log",
+            },
+            DisplaySegment::Path(PathBuf::from("crash-é.log")),
+            DisplaySegment::Name("a domain name".to_string()),
+            DisplaySegment::Emphasis("set apart".to_string()),
+        ],
+    }
+}
+
+#[test]
+/// Every segment kind crosses with its payload in the field the tag selects.
+fn each_display_segment_kind_flattens_into_exactly_its_own_fields() {
+    let lines = display_lines_to_dto(&[every_segment_kind()]);
+    assert_eq!(lines.len(), 1);
+    let line = &lines[0];
+    assert_eq!(line.severity, ffi::ScanRunDisplaySeverity::Warning);
+    assert_eq!(line.segments.len(), 6, "segments must not be dropped");
+
+    let expected = [
+        (
+            ffi::ScanRunDisplaySegmentKind::Text,
+            "fixed prose",
+            "",
+            0_u64,
+        ),
+        (
+            ffi::ScanRunDisplaySegmentKind::Label,
+            "a display label",
+            "",
+            0,
+        ),
+        // The noun rides in `text` because CXX has no payload-carrying enum to put it in.
+        (ffi::ScanRunDisplaySegmentKind::Count, "log", "", 1),
+        (ffi::ScanRunDisplaySegmentKind::Path, "", "crash-é.log", 0),
+        (
+            ffi::ScanRunDisplaySegmentKind::Name,
+            "a domain name",
+            "",
+            0,
+        ),
+        (
+            ffi::ScanRunDisplaySegmentKind::Emphasis,
+            "set apart",
+            "",
+            0,
+        ),
+    ];
+    for (index, (kind, text, path, count)) in expected.into_iter().enumerate() {
+        let segment = &line.segments[index];
+        assert_eq!(segment.kind, kind, "segment {index} changed kind");
+        assert_eq!(segment.text, text, "segment {index} text");
+        assert_eq!(segment.path, path, "segment {index} path");
+        assert_eq!(segment.count, count, "segment {index} count");
+    }
+}
+
+#[test]
+/// Segments keep the order Rust put them in, so a frontend can concatenate blindly.
+fn display_segments_cross_in_reading_order() {
+    let lines = display_lines_to_dto(&[every_segment_kind()]);
+    let kinds: Vec<_> = lines[0]
+        .segments
+        .iter()
+        .map(|segment| segment.kind)
+        .collect();
+    assert_eq!(
+        kinds,
+        vec![
+            ffi::ScanRunDisplaySegmentKind::Text,
+            ffi::ScanRunDisplaySegmentKind::Label,
+            ffi::ScanRunDisplaySegmentKind::Count,
+            ffi::ScanRunDisplaySegmentKind::Path,
+            ffi::ScanRunDisplaySegmentKind::Name,
+            ffi::ScanRunDisplaySegmentKind::Emphasis,
+        ]
+    );
+}
+
+#[test]
+/// A count crosses with the noun Rust resolved, not one the adapter could re-derive.
+fn a_count_crosses_with_the_noun_that_agrees_with_its_value() {
+    let one = DisplayLine {
+        severity: DisplaySeverity::Info,
+        segments: vec![DisplaySegment::Count {
+            value: 1,
+            noun: "log",
+        }],
+    };
+    let many = DisplayLine {
+        severity: DisplaySeverity::Info,
+        segments: vec![DisplaySegment::Count {
+            value: 0,
+            noun: "logs",
+        }],
+    };
+    let lines = display_lines_to_dto(&[one, many]);
+    assert_eq!(lines[0].segments[0].count, 1);
+    assert_eq!(lines[0].segments[0].text, "log");
+    assert_eq!(lines[1].segments[0].count, 0);
+    assert_eq!(lines[1].segments[0].text, "logs");
+}
+
+#[test]
+/// Every severity has a distinct CXX twin, so no line arrives more or less grave.
+fn every_display_severity_maps_to_its_own_cxx_twin() {
+    for (core, expected) in [
+        (DisplaySeverity::Info, ffi::ScanRunDisplaySeverity::Info),
+        (DisplaySeverity::Notice, ffi::ScanRunDisplaySeverity::Notice),
+        (
+            DisplaySeverity::Warning,
+            ffi::ScanRunDisplaySeverity::Warning,
+        ),
+        (
+            DisplaySeverity::Failure,
+            ffi::ScanRunDisplaySeverity::Failure,
+        ),
+        (
+            DisplaySeverity::Success,
+            ffi::ScanRunDisplaySeverity::Success,
+        ),
+    ] {
+        let lines = display_lines_to_dto(&[DisplayLine {
+            severity: core,
+            segments: Vec::new(),
+        }]);
+        assert_eq!(lines[0].severity, expected);
+    }
+}
+
+#[test]
+/// Every event kind reaches C++ already carrying what Rust says about it.
+fn every_event_crosses_with_the_lines_core_rendered_for_it() {
+    let log = contract::LogEvent {
+        discovery_index: 0,
+        crash_log: PathBuf::from("one.log"),
+        completed: 0,
+        total: 2,
+    };
+    let events = [
+        contract::Event::DiscoveryCompleted(CrashLogScanDiscoveryResult {
+            source: CrashLogScanDiscoverySource::Targeted,
+            accepted_logs: vec![PathBuf::from("one.log")],
+            rejected_inputs: vec![classic_scanlog_core::CrashLogScanRejectedInput {
+                path: PathBuf::from("rejected.log"),
+                reason: "unsupported".to_string(),
+            }],
+            searched_locations: Vec::new(),
+        }),
+        contract::Event::EffectiveConcurrencySelected {
+            effective_concurrency: 3,
+        },
+        contract::Event::LogQueued(log.clone()),
+        contract::Event::LogStarted(log.clone()),
+        contract::Event::LogPhase {
+            log: log.clone(),
+            phase: ScanProgressPhase::Analyze,
+        },
+        contract::Event::LogFinished {
+            log: log.clone(),
+            disposition: contract::LogDisposition::Succeeded,
+        },
+    ];
+
+    for event in events {
+        let expected = display_lines_to_dto(&render_event(&event));
+        let dto = event_to_dto(event);
+        assert!(
+            !dto.display_lines.is_empty(),
+            "an event reached C++ with nothing to say"
+        );
+        assert_display_lines_match(&dto.display_lines, &expected);
+    }
+}
+
+#[test]
+/// A discovery that refused inputs states the refusal on its own line.
+///
+/// This is the one event that renders more than one line, so it is what proves the field is
+/// a sequence rather than a single sentence in disguise.
+fn a_discovery_with_rejections_crosses_as_more_than_one_line() {
+    let event = contract::Event::DiscoveryCompleted(CrashLogScanDiscoveryResult {
+        source: CrashLogScanDiscoverySource::Targeted,
+        accepted_logs: vec![PathBuf::from("one.log")],
+        rejected_inputs: vec![classic_scanlog_core::CrashLogScanRejectedInput {
+            path: PathBuf::from("rejected.log"),
+            reason: "unsupported".to_string(),
+        }],
+        searched_locations: Vec::new(),
+    });
+    assert!(event_to_dto(event).display_lines.len() > 1);
+}
+
+#[test]
+/// A terminal result crosses with the lines Rust rendered for it.
+fn a_run_result_envelope_carries_the_lines_core_rendered() {
+    let build = || contract::RunResult {
+        status: CrashLogScanRunStatus::Completed,
+        discovery: None,
+        setup: None,
+        installed_yaml_data: None,
+        effective_concurrency: Some(2),
+        message: Some("completed".to_string()),
+        total: 1,
+        succeeded: 1,
+        failed: 0,
+        cancelled: 0,
+        logs: Vec::new(),
+        continuation: None,
+    };
+    let expected = display_lines_to_dto(&render_run_result(&build()));
+    let envelope = success_execution_result_dto(build());
+
+    assert!(envelope.has_result);
+    assert_display_lines_match(&envelope.display_lines, &expected);
+}
+
+#[test]
+/// An infrastructure failure crosses with the lines Rust rendered for it.
+fn an_infrastructure_error_envelope_carries_the_lines_core_rendered() {
+    let build = || contract::InfrastructureError {
+        stage: contract::InfrastructureErrorStage::FormIdDatabaseAccess,
+        message: "database unavailable".to_string(),
+        path: Some(PathBuf::from("database.db")),
+    };
+    let expected = display_lines_to_dto(&render_infrastructure_error(&build()));
+    let envelope = infrastructure_execution_result_dto(build());
+
+    assert!(envelope.has_error);
+    assert_display_lines_match(&envelope.display_lines, &expected);
+}
+
+/// Builds one resume failure of every kind, so no variant reaches C++ untested.
+///
+/// `Infrastructure` is deliberately absent: `execution_from_resume_result` routes it into the
+/// infrastructure arm rather than the resume arm, and
+/// [`an_infrastructure_error_envelope_carries_the_lines_core_rendered`] covers that path.
+fn every_resume_failure() -> Vec<contract::ResumeError> {
+    let identity = classic_config_core::YamlDataContentIdentity::from_bytes(b"malformed");
+    vec![
+        contract::ResumeError::ContinuationConsumed,
+        contract::ResumeError::LocalIgnoreResetConflict(contract::LocalIgnoreResetConflictError {
+            expected_identity: identity.clone(),
+            actual_identity: Some(classic_config_core::YamlDataContentIdentity::from_bytes(
+                b"changed",
+            )),
+            backup_path: Some(PathBuf::from("C:/CLASSIC/backups/local-ignore.bak")),
+        }),
+        contract::ResumeError::LocalIgnoreResetBackupFailure(contract::LocalIgnoreResetFailure {
+            path: PathBuf::from("C:/backup"),
+            stage: None,
+            message: "backup failed".to_string(),
+        }),
+        contract::ResumeError::LocalIgnoreResetReplacementFailure(
+            contract::LocalIgnoreResetFailure {
+                path: PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml"),
+                stage: Some(contract::LocalIgnoreResetFailureStage::Publish),
+                message: "replacement failed".to_string(),
+            },
+        ),
+        contract::ResumeError::LocalIgnoreResetDurabilityUnknown(Box::new(
+            contract::LocalIgnoreResetDurabilityUnknownError {
+                path: PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml"),
+                backup_path: PathBuf::from("C:/CLASSIC/backups/local-ignore.bak"),
+                malformed_identity: identity.clone(),
+                backup_identity: identity.clone(),
+                replacement_identity: classic_config_core::YamlDataContentIdentity::from_bytes(
+                    b"defaults",
+                ),
+                message: "replacement visible; durability unknown".to_string(),
+            },
+        )),
+    ]
+}
+
+#[test]
+/// Every resume failure crosses with the lines Rust rendered for it, and keeps its stable code.
+///
+/// The code stays on the DTO because it is machine-facing identity a consumer matches on; it
+/// stays out of the rendered lines because a sentence is not where a code belongs.
+///
+/// Every variant, not just the simplest, because each carries different retained facts — a
+/// conflict's two identities, a failure's publication stage, a durability receipt's three
+/// hashes — and a frontend that renders nothing but these lines has no second route to them.
+fn every_resume_error_envelope_carries_the_lines_core_rendered_without_the_code() {
+    for error in every_resume_failure() {
+        let code = error.kind().as_str();
+        let expected = display_lines_to_dto(&render_resume_error(&error));
+        let execution = execution_from_resume_result(Err(error));
+
+        assert!(execution.result.has_resume_error, "{code} lost its payload");
+        assert_eq!(execution.result.resume_error.code, code);
+        assert!(
+            !execution.result.display_lines.is_empty(),
+            "{code} reached C++ with nothing to say"
+        );
+        assert_display_lines_match(&execution.result.display_lines, &expected);
+        for line in &execution.result.display_lines {
+            for segment in &line.segments {
+                assert_ne!(
+                    segment.text, code,
+                    "the stable resume error code reached a sentence"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+/// A moved-from envelope says nothing, rather than repeating what was already taken.
+fn an_emptied_execution_envelope_carries_no_display_lines() {
+    assert!(empty_execution_result_dto().display_lines.is_empty());
+}
+
+/// Asserts two flattened line sequences are the same line for line and segment for segment.
+///
+/// Written out rather than derived, because the CXX shared structs implement no equality.
+fn assert_display_lines_match(
+    actual: &[ffi::ScanRunDisplayLine],
+    expected: &[ffi::ScanRunDisplayLine],
+) {
+    assert_eq!(actual.len(), expected.len(), "line count changed");
+    for (index, (actual_line, expected_line)) in actual.iter().zip(expected).enumerate() {
+        assert_eq!(
+            actual_line.severity, expected_line.severity,
+            "line {index} lost the severity core gave it"
+        );
+        assert_eq!(
+            actual_line.segments.len(),
+            expected_line.segments.len(),
+            "line {index} changed segment count"
+        );
+        for (position, (actual_segment, expected_segment)) in actual_line
+            .segments
+            .iter()
+            .zip(&expected_line.segments)
+            .enumerate()
+        {
+            assert_eq!(
+                actual_segment.kind, expected_segment.kind,
+                "line {index} segment {position} kind"
+            );
+            assert_eq!(
+                actual_segment.text, expected_segment.text,
+                "line {index} segment {position} text"
+            );
+            assert_eq!(
+                actual_segment.path, expected_segment.path,
+                "line {index} segment {position} path"
+            );
+            assert_eq!(
+                actual_segment.count, expected_segment.count,
+                "line {index} segment {position} count"
+            );
+        }
+    }
+}

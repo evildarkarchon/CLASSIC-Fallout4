@@ -174,13 +174,34 @@ pub struct ScanRunDisplayLine {
 }
 ```
 
-`scan_run_contract_execute` and the continuation resume entry point gain a `display_lines: Vec<ScanRunDisplayLine>` field on their result DTO. The observer event DTO gains the same field, populated inline in `ObserverBridge::on_event` before the event reaches C++. The seven existing `scan_run_*_label` entry points stay; they remain the correct surface for labelling an enum outside a display line.
+**Landed.** `scan_run_contract_execute` and the continuation resume entry point gain a `display_lines: Vec<ScanRunDisplayLine>` field on their result DTO. The observer event DTO gains the same field, populated inline in `CxxObserverAdapter::on_event` before the event reaches C++. The seven existing `scan_run_*_label` entry points stay; they remain the correct surface for labelling an enum outside a display line.
 
-The recovery prompt crosses as `ScanRunRecoveryPrompt { lines, decisions }` with `ScanRunRecoveryDecisionDescription { decision, label, description, available }`.
+Three details differ from the sketch above, each for a reason worth recording:
+
+- **One field, not two.** `scan_run_contract_execute` and `scan_run_continuation_resume` both return the same `ScanRunContractExecutionResult`, so a single `display_lines` on that envelope covers the initial run and the resume alike. It is populated for all three payloads — result, infrastructure error, and resume error — and describes whichever the presence flags select. Putting it on each payload struct instead would have meant four fields saying the same thing, and four baseline rows rather than two.
+- **The rendered resume failure drops the code, which stays on the DTO.** `render_resume_error` deliberately omits the stable code, and `resume_error.code` still carries it. That is the boundary the brief asks for, made visible: prose for a person, a token for a consumer.
+- **The parity parser scrapes `enum <word>` out of doc comments.** The committed baseline already carries a phantom `definitions` row from an existing comment reading "cannot share enum definitions". New comments in `scanner.rs` are worded to avoid that shape rather than growing more phantoms; fixing the parser is a separate change that would churn the baseline broadly. Note also that `--update-baseline` mirrors artifacts but never regenerates `parity_contract.json`, so accepting *new* entries needs `generate_baseline.py --write-baseline` followed by one `--update-baseline` reconciliation.
+
+The recovery prompt crosses as `ScanRunRecoveryPrompt { lines, decisions }` with `ScanRunRecoveryDecisionDescription { decision, label, description, available }`. Not yet built: it lands with the gated recovery phase.
 
 ### CLI
 
-`classic-cli/src/scan_run_cli.cpp` drops its own sentence construction and renders `display_lines`. `present_cli_scan_run_execution` becomes a line renderer plus the CLI's own section ordering. `describe_cli_local_ignore_recovery` is replaced by the bridged prompt; `read_cli_local_ignore_recovery_choice` keeps its input loop, attempt limit, EOF handling, and `[P/R/C]` letters, and gains a filter so an unavailable decision is neither printed nor accepted. `CliLocalIgnoreRecoveryChoice::Cancel` maps to the new `abandon` entry point instead of the local cancel-then-resume sequence.
+**Landed.** `classic-cli/src/scan_run_cli.cpp` dropped its own sentence construction for results, the two failure envelopes, per-log outcomes, the Installed YAML Data block, and per-event progress lines, and renders `display_lines` instead. `present_cli_scan_run_execution` is now a line renderer plus the CLI's own section ordering.
+
+What the CLI kept, all of it Display Layout: section ordering, the exit codes, which event kinds earn a durable console line, and which stream a line is routed to. Its output stays plain and pipeable — the per-segment styling is deliberately the empty choice for every kind, emphasis included.
+
+Details worth recording:
+
+- **Event rendering migrated too**, though the ticket's acceptance list named only results, errors, resume errors, and the Installed YAML Data block. Leaving `describe_cli_scan_run_event` composing its own sentences would have left exactly the drift this work removes, in a frontend whose event DTO now carries the rendered lines. `LogQueued` and `LogPhase` are omitted whole rather than reworded, because the progress display already covers them.
+- **Two failure envelopes route every line to stderr** rather than by severity. Rust marks a failure's detail lines `Info`, since they are neutral facts about the failure; routing them by severity would split one diagnostic across two streams, so redirecting stdout would separate "failed during discovery" from the path it failed on. Within a run result, lines route by severity: `Warning` and `Failure` to stderr, `Info`/`Notice`/`Success` to stdout. The cut falls at `Warning` rather than `Failure` because a run paused awaiting a Local Ignore decision carries that severity and has always reached the user on stderr; putting only `Failure` there moved it to stdout, which the first review caught.
+- **A failure envelope that says nothing still says something.** Both failure renderers always produce a headline, so an empty rendered block is unreachable through the bridge — but it is guarded, because the alternative is exiting 2 in silence, which reads to a user as the process dying rather than as a run that failed. Like the missing-envelope line beside it, that sentence reports a broken bridge promise rather than anything a run said, so it stays the CLI's to write.
+- **The recovery prompt now shows the whole rendered run**, including the outcome summary, where it used to show the run message plus the Installed YAML Data block. This matches the call the TUI made and for the same reason — Rust exposes that block only through `render_run_result`, and picking it back out by position would be a structural assumption about a sequence that carries no structure. It is also a known rough edge: an outcome summary reading "0 logs succeeded" before the user has decided anything is noise. It resolves properly in the gated recovery phase, when core supplies a purpose-built `RecoveryPrompt` instead.
+- **The completed summary lost three lines.** Scanned, errors, and cancelled counts are stated by Rust now. What remains is `Reports`, `Unsolved`, `Duration`, and `Speed` — the two aggregates over per-log outcomes and the two facts derived from a clock the contract does not carry.
+- **Section headers that could no longer be positioned are gone.** `Results (discovery order):` used to caption the per-log block; those lines now arrive inside a flat rendered sequence that carries no structure, so captioning a sub-range would mean guessing an index. The FCX setup projection still leads, and `Scan Complete` still heads the CLI-owned totals.
+- **`describe_cli_local_ignore_recovery` takes the execution envelope** rather than the run result, because the rendered lines travel on the envelope. It presents all of them and no longer restates why the run paused — the same call the TUI made in 6ca55427f, for the same reason. Its retained-discovery sentence is still the CLI's, and is the one remaining caller of the local `plural` helper, exactly as in the TUI.
+- **`read_cli_local_ignore_recovery_choice` is untouched.** Its input loop, attempt limit, EOF handling, `[P/R/C]` letters, and availability filter all wait for the gated recovery phase, as does the `abandon` mapping for `CliLocalIgnoreRecoveryChoice::Cancel`.
+
+`classic-cli/tests/test_display_label_audit.cpp` inverted its positive half. The CLI calls none of the seven bridge label accessors any more, because every label it prints arrives inside a `Label` segment; their *absence* is now asserted, and the positive half moved down a level to "the renderer reads every segment kind". The wording assertions in `test_scanner.cpp` became renderer conformance over fabricated lines, and the two end-to-end assertions in `test_scan_run_contract.cpp` that pinned CLI prose were re-anchored on content identities and paths the DTO carries.
 
 ### GUI
 
@@ -251,7 +272,7 @@ Adapter Mapping Rule 6 still supersedes this when the render phase lands: `Recov
 2. **`Vocabulary` adoption** for `CrashLogScanRunStatus`, `ScanProgressPhase`, `LocalIgnoreRecoveryDecision`, and `InstalledYamlDataRole`. Tokens unchanged.
 3. **`classic-scan-presentation` crate** with `render_run_result`, `render_event`, and the two error renderers, plus unit tests. **Landed.**
 4. **TUI migration.** Direct Rust dependency, no FFI, fastest feedback; proves the segment model before any DTO exists. **Landed.**
-5. **Bridge DTOs and CLI migration.** The CLI is the simplest C++ consumer and shakes the DTO out before GUI threading is involved.
+5. **Bridge DTOs and CLI migration.** The CLI is the simplest C++ consumer and shakes the DTO out before GUI threading is involved. **Landed.**
 6. **GUI migration.**
 7. **Node and Python surfaces**, then `classic-py-cli` migration. Last, because the segment taxonomy is only stable now and the baselines regenerate once.
 8. **`CrashLogScanRunContinuation::abandon`** and the three call-site replacements.

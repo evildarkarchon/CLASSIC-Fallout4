@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 640,
-    "current_total": 640,
-    "matched": 640,
+    "contract_total": 644,
+    "current_total": 644,
+    "matched": 644,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -2697,6 +2697,22 @@
       "reason": "-"
     },
     {
+      "id": "4f8ff71acf6e2763",
+      "rustSymbol": "ScanRunDisplaySegmentKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "2a505bf704804de4",
+      "rustSymbol": "ScanRunDisplaySeverity",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "17a9ae976a21c5f7",
       "rustSymbol": "ScanRunGameId",
       "kind": "enum",
@@ -3763,6 +3779,22 @@
     {
       "id": "a7294d8a252b0b2e",
       "rustSymbol": "ScanRunContractSetupResult",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "95a8829b439c6f88",
+      "rustSymbol": "ScanRunDisplayLine",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "96859cdfda9f3705",
+      "rustSymbol": "ScanRunDisplaySegment",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",

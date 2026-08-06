@@ -69,6 +69,26 @@ ignored.
 Progress phases are `Setup`, `Parse`, `Analyze`, and `Finalize`. Finished
 dispositions are `Succeeded`, `Failed`, and `CancelledBeforeStart`.
 
+`display_lines` is the one field the tag does not select: every event kind
+renders, so it is always populated. It carries what this event *says*, in Rust's
+words, already rendered inline on the observer callback before the event crossed
+the bridge — there is no later opportunity, because the C++ observer receives a
+projected copy and never holds the Rust event.
+
+A single event can produce more than one line. A `DiscoveryCompleted` that
+refused some of its targeted inputs states the refusal separately, so a consumer
+can style or suppress it without losing the acceptance count.
+
+An observer that shows only some event kinds omits whole lines, which the adapter
+contract allows; rewording the ones it keeps is what it may not do. `classic-cli`
+omits `LogQueued` and `LogPhase` for exactly this reason — its progress display
+already covers both.
+
+The line and segment shape, the six segment kinds, and the rules a consumer must
+follow are documented once, under "Display Content on the envelope" in
+[`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoints.md).
+The same `ScanRunDisplayLine` type is used here.
+
 `discovery_index` refers to the accepted-log sequence emitted by
 `DiscoveryCompleted`. It is not necessarily the original Targeted input index:
 directories may expand, duplicates may collapse, and unsupported inputs may be

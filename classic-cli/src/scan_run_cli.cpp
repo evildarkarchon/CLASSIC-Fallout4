@@ -42,108 +42,100 @@ std::string to_std_string(const rust::String& value) {
     return std::string(value.data(), value.size());
 }
 
+/// Chooses a noun form for the one sentence this frontend still writes.
+///
+/// Exactly one caller remains: the Local Ignore recovery prompt's retained-discovery line. That
+/// prompt's prose is still the CLI's because the recovery renderer lands with the gated recovery
+/// phase, not with this one. Every other count the CLI prints is now a `Count` segment whose noun
+/// Rust already agreed with its value. The TUI kept its own copy on the same terms.
 std::string plural(std::size_t count, std::string singular, std::string plural_value) {
     return count == 1 ? std::move(singular) : std::move(plural_value);
 }
 
-// Display Labels are read from the Rust core through the bridge rather than
-// written here. Seven `switch` tables used to live at this spot, one per
-// rendered enum; they were the CLI's private copy of a vocabulary the GUI and
-// the TUI each also kept, and the copies had already drifted apart. The bridge
-// entry points below are the single definition site, so a wording fix reaches
-// all three frontends at once and no frontend can disagree with another.
+// What a Crash Log Scan Run says is decided in Rust, by `classic-scan-presentation`, and reaches
+// this file already rendered into display lines on the execution envelope and on every observed
+// event. This file used to compose those sentences itself, next to a GUI and a TUI composing their
+// own, which is why the same run read differently depending on which frontend a user opened.
 //
-// Every one returns an empty string for an enum value the forward projection
-// cannot produce, which is why the `unknown disposition` and `unknown stage`
-// fallbacks the deleted tables carried are gone rather than reimplemented.
-// Losing them is the intended trade: the empty string is unreachable for any
-// value the bridge itself built, and a placeholder spelled here would be one
-// more piece of vocabulary owned by the adapter. The bridge asserts the
-// fallback stays unreachable per variant in `scanner/contract_tests.rs`.
+// What survives here is Display Layout, and only that: which section comes first, which event kinds
+// earn a durable line, which stream a line is routed to, the exit code, and the run-level totals
+// this process measured and Rust never saw. None of it changes a word.
 //
-// `tests/test_display_label_audit.cpp` is what stops a table growing back. It
-// reads this file as text, so it catches shapes the compiler cannot object to.
+// Display Labels are no longer read through the seven `scan_run_*_label` bridge entry points either.
+// Those entry points remain the correct surface for labelling a domain enum *outside* a display
+// line, and the GUI still uses them; this frontend simply no longer renders any enum that way, since
+// every label it prints now arrives inside a `Label` segment. Re-deriving one would risk disagreeing
+// with the sentence built around it.
+//
+// `tests/test_display_label_audit.cpp` is what stops local vocabulary growing back. It reads this
+// file as text, so it catches shapes the compiler cannot object to.
 
-/// Appends exact run-selected YAML Data metadata and structured diagnostics when present.
-void append_installed_yaml_data_messages(const scanner::ScanRunContractRunResult& result,
-                                         std::vector<CliScanRunMessage>& messages) {
-    if (!result.has_installed_yaml_data) {
-        return;
-    }
+/// Which output stream a block of rendered display lines is routed to.
+enum class CliLineRouting {
+    /// Route each line by the severity Rust gave it.
+    ///
+    /// `Warning` and `Failure` go to stderr; `Info`, `Notice`, and `Success` go to stdout. The cut
+    /// falls there because stderr is where this frontend has always put what needs the user's
+    /// attention — a failed log, a setup failure, a run paused awaiting a Local Ignore decision —
+    /// while stdout carries the run's ordinary narrative. Rust names the severity; which stream
+    /// that means is this frontend's choice, and no wording changes either way.
+    BySeverity,
+    /// Route every line to stderr, whatever its severity.
+    ///
+    /// Used for the two failure envelopes, whose detail lines are neutral facts about a failure
+    /// rather than failures themselves. Routing them by severity would split one diagnostic across
+    /// two streams, so redirecting stdout would separate "failed during discovery" from the path it
+    /// failed on.
+    AllToStderr,
+};
 
-    const auto& installed = result.installed_yaml_data;
-    messages.push_back({false, "Installed YAML Data:"});
-    messages.push_back(
-        {false, fmt::format("  Main: {} schema {} ({} bytes, sha256 {})",
-                            to_std_string(scanner::scan_run_installed_yaml_data_provenance_label(
-                                installed.main.provenance)),
-                            to_std_string(installed.main.schema_version), installed.main.byte_len,
-                            to_std_string(installed.main.sha256))});
-    messages.push_back(
-        {false, fmt::format("  Game: {} schema {} ({} bytes, sha256 {})",
-                            to_std_string(scanner::scan_run_installed_yaml_data_provenance_label(
-                                installed.game_file.provenance)),
-                            to_std_string(installed.game_file.schema_version), installed.game_file.byte_len,
-                            to_std_string(installed.game_file.sha256))});
-    messages.push_back(
-        {false, fmt::format("  Local Ignore: {} ({} bytes, sha256 {})",
-                            to_std_string(scanner::scan_run_local_ignore_yaml_data_state_label(
-                                installed.local_ignore_state)),
-                            installed.local_ignore_identity.byte_len,
-                            to_std_string(installed.local_ignore_identity.sha256))});
-    if (installed.has_local_ignore_reset) {
-        messages.push_back(
-            {false, fmt::format("  Local Ignore backup: {} ({} bytes, sha256 {})",
-                                to_std_string(installed.local_ignore_reset.backup_path),
-                                installed.local_ignore_reset.backup_identity.byte_len,
-                                to_std_string(installed.local_ignore_reset.backup_identity.sha256))});
+/// Returns whether one observed event is worth a durable console line.
+///
+/// This is the whole of the CLI's remaining say over live progress. Rust renders every event
+/// kind; queued and phase events are dropped here because the progress display already conveys
+/// both, and a line per phase per log would bury the discovery and outcome lines around them.
+/// Omitting whole lines is what an adapter may do — rewording the ones it keeps is not.
+bool event_earns_a_durable_line(scanner::ScanRunContractEventKind kind) {
+    switch (kind) {
+    case scanner::ScanRunContractEventKind::LogQueued:
+    case scanner::ScanRunContractEventKind::LogPhase:
+        return false;
+    case scanner::ScanRunContractEventKind::DiscoveryCompleted:
+    case scanner::ScanRunContractEventKind::EffectiveConcurrencySelected:
+    case scanner::ScanRunContractEventKind::LogStarted:
+    case scanner::ScanRunContractEventKind::LogFinished:
+        break;
     }
-    for (const auto& diagnostic : installed.diagnostics) {
-        std::string line = fmt::format("  YAML Data diagnostic [{}]: {}",
-                                       to_std_string(scanner::scan_run_installed_yaml_data_diagnostic_kind_label(
-                                           diagnostic.kind)),
-                                       to_std_string(diagnostic.message));
-        if (diagnostic.has_path) {
-            line += fmt::format(" (path: {})", to_std_string(diagnostic.path));
-        }
-        messages.push_back({false, std::move(line)});
-    }
+    return true;
 }
 
-/// Appends every retained fact that makes one typed recovery-resume failure actionable.
+/// Returns whether a line of this severity belongs on stderr.
+bool severity_reaches_stderr(scanner::ScanRunDisplaySeverity severity) {
+    switch (severity) {
+    case scanner::ScanRunDisplaySeverity::Warning:
+    case scanner::ScanRunDisplaySeverity::Failure:
+        return true;
+    case scanner::ScanRunDisplaySeverity::Info:
+    case scanner::ScanRunDisplaySeverity::Notice:
+    case scanner::ScanRunDisplaySeverity::Success:
+        break;
+    }
+    return false;
+}
+
+/// Appends one rendered block, preserving Rust's line order.
 ///
-/// A durability receipt is reported even though the resume failed: the reset reached a safe durable
-/// state, so the user must know the malformed file was already replaced and where its backup lives.
-void append_resume_error_details(const scanner::ScanRunContractResumeError& error,
-                                 std::vector<CliScanRunMessage>& messages) {
-    if (error.has_path) {
-        messages.push_back({true, fmt::format("  Path: {}", to_std_string(error.path))});
+/// Returns whether anything was appended, so a caller reporting a failure can tell a described
+/// failure apart from one that crossed the bridge with nothing to say.
+bool append_display_lines(const rust::Vec<scanner::ScanRunDisplayLine>& lines,
+                          std::vector<CliScanRunMessage>& messages,
+                          CliLineRouting routing = CliLineRouting::BySeverity) {
+    for (const auto& line : lines) {
+        const bool to_stderr =
+            routing == CliLineRouting::AllToStderr || severity_reaches_stderr(line.severity);
+        messages.push_back({to_stderr, render_cli_display_line(line)});
     }
-    if (error.has_stage) {
-        messages.push_back(
-            {true, fmt::format("  Stage: {}",
-                               to_std_string(scanner::scan_run_local_ignore_reset_failure_stage_label(error.stage)))});
-    }
-    if (error.has_expected_identity) {
-        messages.push_back({true, fmt::format("  Expected identity: sha256 {} ({} bytes)",
-                                              to_std_string(error.expected_identity.sha256),
-                                              error.expected_identity.byte_len)});
-    }
-    if (error.has_actual_identity) {
-        messages.push_back({true, fmt::format("  Actual identity: sha256 {} ({} bytes)",
-                                              to_std_string(error.actual_identity.sha256),
-                                              error.actual_identity.byte_len)});
-    }
-    if (error.has_backup_path) {
-        messages.push_back({true, fmt::format("  Verified backup: {}", to_std_string(error.backup_path))});
-    }
-    if (error.has_durability_receipt) {
-        messages.push_back({true, fmt::format("  Durable reset receipt: malformed sha256 {}, backup sha256 {}, "
-                                              "replacement sha256 {}",
-                                              to_std_string(error.malformed_identity.sha256),
-                                              to_std_string(error.backup_identity.sha256),
-                                              to_std_string(error.replacement_identity.sha256))});
-    }
+    return !lines.empty();
 }
 
 /// Appends all present run-scoped FCX setup facts, diagnostics, and actions.
@@ -183,39 +175,6 @@ void append_setup_messages(const scanner::ScanRunContractRunResult& result, std:
     }
     for (const auto& error : result.setup.fatal_errors) {
         messages.push_back({true, fmt::format("  Setup error: {}", to_std_string(error))});
-    }
-}
-
-/// Formats one typed terminal log result without discarding structured failures.
-std::string describe_log_result(const scanner::ScanRunContractLogResult& log) {
-    std::string line = fmt::format("  {}. {} - {}", log.discovery_index + 1, to_std_string(log.crash_log),
-                                   to_std_string(scanner::scan_run_log_disposition_label(log.disposition)));
-    if (log.has_autoscan_report) {
-        line += fmt::format(" (report: {})", to_std_string(log.autoscan_report));
-    }
-    for (const auto& failure : log.failures) {
-        line += fmt::format(" [{}: {}]", to_std_string(scanner::scan_run_log_failure_stage_label(failure.stage)),
-                            to_std_string(failure.message));
-    }
-    if (log.has_message && log.failures.empty()) {
-        line += fmt::format(" ({})", to_std_string(log.message));
-    }
-    if (log.moved_to_unsolved_logs) {
-        line += " (moved to Unsolved Logs)";
-    }
-    return line;
-}
-
-/// Appends terminal per-log messages in the Rust-provided discovery order.
-void append_log_messages(const scanner::ScanRunContractRunResult& result, std::vector<CliScanRunMessage>& messages) {
-    if (result.logs.empty()) {
-        return;
-    }
-
-    messages.push_back({false, "Results (discovery order):"});
-    for (const auto& log : result.logs) {
-        messages.push_back(
-            {log.disposition == scanner::ScanRunContractLogDisposition::Failed, describe_log_result(log)});
     }
 }
 
@@ -299,7 +258,41 @@ scanner::ScanRunSetupContextDto make_setup_context(const PreparedScanUserSetting
     return setup;
 }
 
+/// Renders one segment as plain text, reading only the field its kind selects.
+///
+/// The bridge flattens Rust's six-variant segment into a kind tag plus a text, a path, and a count
+/// field, so every branch here is a read rather than a decision. The one branch that composes,
+/// `Count`, prints the value beside the noun Rust already resolved to agree with it — it never
+/// re-decides that noun, which is what stops a CLI user ever reading "1 logs".
+std::string render_cli_display_segment(const scanner::ScanRunDisplaySegment& segment) {
+    switch (segment.kind) {
+    case scanner::ScanRunDisplaySegmentKind::Count:
+        return fmt::format("{} {}", segment.count, to_std_string(segment.text));
+    case scanner::ScanRunDisplaySegmentKind::Path:
+        // Whole and untruncated. Truncating is a choice this frontend declines to make: its output
+        // is meant to be piped, and a shortened path is not one a later command can open.
+        return to_std_string(segment.path);
+    case scanner::ScanRunDisplaySegmentKind::Text:
+    case scanner::ScanRunDisplaySegmentKind::Label:
+    case scanner::ScanRunDisplaySegmentKind::Name:
+    case scanner::ScanRunDisplaySegmentKind::Emphasis:
+        break;
+    }
+    return to_std_string(segment.text);
+}
+
 } // namespace
+
+std::string render_cli_display_line(const scanner::ScanRunDisplayLine& line) {
+    std::string rendered;
+    for (const auto& segment : line.segments) {
+        if (!rendered.empty()) {
+            rendered += ' ';
+        }
+        rendered += render_cli_display_segment(segment);
+    }
+    return rendered;
+}
 
 rust::Box<scanner::ScanRunRequest> build_cli_scan_run_request(const CliArgs& args,
                                                               const PreparedScanUserSettings& settings,
@@ -333,41 +326,8 @@ rust::Box<scanner::ScanRunRequest> build_cli_scan_run_request(const CliArgs& arg
 
 std::vector<CliScanRunMessage> describe_cli_scan_run_event(const scanner::ScanRunContractEvent& event) {
     std::vector<CliScanRunMessage> messages;
-    switch (event.kind) {
-    case scanner::ScanRunContractEventKind::DiscoveryCompleted: {
-        const auto accepted = event.discovery.accepted_logs.size();
-        if (accepted > 0) {
-            messages.push_back(
-                {false, fmt::format("Found {} {}", accepted, plural(accepted, "crash log", "crash logs"))});
-        }
-        const auto rejected = event.discovery.rejected_inputs.size();
-        if (rejected > 0) {
-            messages.push_back({false, fmt::format("Rejected {} {}:", rejected,
-                                                   plural(rejected, "targeted input", "targeted inputs"))});
-            for (const auto& input : event.discovery.rejected_inputs) {
-                messages.push_back(
-                    {false, fmt::format("  {} ({})", to_std_string(input.path), to_std_string(input.reason))});
-            }
-        }
-        break;
-    }
-    case scanner::ScanRunContractEventKind::EffectiveConcurrencySelected:
-        messages.push_back({false, fmt::format("Scanning with {} concurrent {}", event.effective_concurrency,
-                                               plural(event.effective_concurrency, "scan", "scans"))});
-        break;
-    case scanner::ScanRunContractEventKind::LogStarted:
-        messages.push_back({false, fmt::format("Scanning {}/{}: {}", event.discovery_index + 1, event.total,
-                                               to_std_string(event.crash_log))});
-        break;
-    case scanner::ScanRunContractEventKind::LogFinished:
-        messages.push_back({event.disposition == scanner::ScanRunContractLogDisposition::Failed,
-                            fmt::format("Finished {}/{}: {} - {}", event.discovery_index + 1, event.total,
-                                        to_std_string(event.crash_log),
-                                        to_std_string(scanner::scan_run_log_disposition_label(event.disposition)))});
-        break;
-    case scanner::ScanRunContractEventKind::LogQueued:
-    case scanner::ScanRunContractEventKind::LogPhase:
-        break;
+    if (event_earns_a_durable_line(event.kind)) {
+        append_display_lines(event.display_lines, messages);
     }
     return messages;
 }
@@ -375,79 +335,77 @@ std::vector<CliScanRunMessage> describe_cli_scan_run_event(const scanner::ScanRu
 CliScanRunPresentation present_cli_scan_run_execution(const scanner::ScanRunContractExecutionResult& execution,
                                                       double duration_seconds) {
     CliScanRunPresentation presentation{};
-    if (execution.has_error) {
+    if (execution.has_error || execution.has_resume_error) {
+        // One exit code for both, because both mean the same thing to a caller: the run produced no
+        // usable terminal result. Which of the two it was is in the words Rust rendered, and the
+        // machine-facing distinction stays on `error` and `resume_error` for a consumer that wants
+        // it — including `resume_error.code`, which the rendered sentence deliberately omits.
         presentation.exit_code = 2;
-        std::string message =
-            fmt::format("Fatal: Crash Log Scan Run failed during {}: {}",
-                        to_std_string(scanner::scan_run_infrastructure_error_stage_label(execution.error.stage)),
-                        to_std_string(execution.error.message));
-        if (execution.error.has_path) {
-            message += fmt::format(" (path: {})", to_std_string(execution.error.path));
+        if (!append_display_lines(execution.display_lines, presentation.messages,
+                                  CliLineRouting::AllToStderr)) {
+            // Unreachable through the bridge: both failure renderers always produce at least a
+            // headline. Guarded anyway because the alternative is exiting 2 in silence, which
+            // reads to a user as the process dying rather than as a run that failed. Like the
+            // missing-envelope line below, this reports a broken bridge promise rather than
+            // anything a run said, so it is the CLI's own sentence to write.
+            presentation.messages.push_back(
+                {true, "Fatal: Crash Log Scan Run failed without describing the failure."});
         }
-        presentation.messages.push_back({true, std::move(message)});
-        return presentation;
-    }
-    if (execution.has_resume_error) {
-        presentation.exit_code = 2;
-        presentation.messages.push_back(
-            {true, fmt::format("Fatal: Crash Log Scan recovery failed ({}): {}",
-                               to_std_string(execution.resume_error.code),
-                               to_std_string(execution.resume_error.message))});
-        append_resume_error_details(execution.resume_error, presentation.messages);
         return presentation;
     }
     if (!execution.has_result) {
+        // Not a run outcome and so not something Rust rendered: the bridge promises exactly one of
+        // three payloads, and this is the CLI reporting that promise broken. It stays composed here
+        // because there is no run to describe.
         presentation.exit_code = 2;
         presentation.messages.push_back(
             {true, "Fatal: Crash Log Scan Run returned neither a result nor an infrastructure error."});
         return presentation;
     }
 
+    // Section ordering, and only section ordering, is decided below. The FCX Mode setup projection
+    // is still composed locally, because its check state, check kind, issue severity, and update
+    // kind belong to a subsystem that has not adopted the shared vocabulary and so is not rendered
+    // by Rust yet. It leads for a run that reached a real outcome, where it reports on the
+    // installation rather than on the run; it follows for a setup failure, where the outcome is the
+    // headline and the setup detail explains it. Both orderings predate this change and are kept.
+    // Everything Rust does render is emitted in Rust's order, unsplit.
     const auto& result = execution.result;
     switch (result.status) {
     case scanner::ScanRunContractStatus::NoCrashLogsFound:
-        presentation.messages.push_back(
-            {false, result.has_message ? to_std_string(result.message) : "No crash logs found."});
-        if (result.has_discovery) {
-            for (const auto& location : result.discovery.searched_locations) {
-                presentation.messages.push_back({false, fmt::format("  Searched: {}", to_std_string(location))});
-            }
-        }
+        append_display_lines(execution.display_lines, presentation.messages);
         return presentation;
     case scanner::ScanRunContractStatus::SetupFailed:
         presentation.exit_code = 1;
-        presentation.messages.push_back(
-            {true, result.has_message ? to_std_string(result.message) : "Crash Log Scan setup failed."});
+        append_display_lines(execution.display_lines, presentation.messages);
         append_setup_messages(result, presentation.messages);
         return presentation;
     case scanner::ScanRunContractStatus::CancelledBeforeDiscovery:
         presentation.exit_code = 130;
-        presentation.messages.push_back({false, "Scan cancelled safely before discovery completed."});
+        append_display_lines(execution.display_lines, presentation.messages);
         return presentation;
     case scanner::ScanRunContractStatus::Cancelled:
         presentation.exit_code = 130;
         append_setup_messages(result, presentation.messages);
-        append_installed_yaml_data_messages(result, presentation.messages);
-        append_log_messages(result, presentation.messages);
-        presentation.messages.push_back({false, fmt::format("Scan cancelled safely: {} completed, {} not started.",
-                                                            result.succeeded + result.failed, result.cancelled)});
+        append_display_lines(execution.display_lines, presentation.messages);
         return presentation;
     case scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired:
         presentation.exit_code = 1;
         append_setup_messages(result, presentation.messages);
-        append_installed_yaml_data_messages(result, presentation.messages);
-        presentation.messages.push_back(
-            {true, result.has_message ? to_std_string(result.message)
-                                      : "Local Ignore recovery is required before scanning can continue."});
+        append_display_lines(execution.display_lines, presentation.messages);
         return presentation;
     case scanner::ScanRunContractStatus::Completed:
         break;
     }
 
     append_setup_messages(result, presentation.messages);
-    append_installed_yaml_data_messages(result, presentation.messages);
-    append_log_messages(result, presentation.messages);
+    append_display_lines(execution.display_lines, presentation.messages);
 
+    // The four totals below are the only run-level facts this process holds that Rust never saw:
+    // two aggregates over the per-log outcomes, and two derived from a clock the contract does not
+    // carry. Everything Rust does report — what was scanned, what failed, what never started — is
+    // already stated above, so restating it here would be this frontend inventing a second account
+    // of the same run.
     std::size_t reports_written = 0;
     std::size_t moved_to_unsolved_logs = 0;
     for (const auto& log : result.logs) {
@@ -456,15 +414,6 @@ CliScanRunPresentation present_cli_scan_run_execution(const scanner::ScanRunCont
     }
 
     presentation.messages.push_back({false, "Scan Complete"});
-    presentation.messages.push_back(
-        {false, fmt::format("  Scanned: {} {}", result.total, plural(result.total, "log", "logs"))});
-    if (result.failed > 0) {
-        presentation.messages.push_back(
-            {true, fmt::format("  Errors: {} {}", result.failed, plural(result.failed, "log", "logs"))});
-    }
-    if (result.cancelled > 0) {
-        presentation.messages.push_back({false, fmt::format("  Cancelled: {} not started", result.cancelled)});
-    }
     presentation.messages.push_back({false, fmt::format("  Reports: {} written", reports_written)});
     if (moved_to_unsolved_logs > 0) {
         presentation.messages.push_back({false, fmt::format("  Unsolved: {} moved", moved_to_unsolved_logs)});
@@ -548,12 +497,13 @@ const scanner::ScanRunCancellation& CliScanRunCancellation::token() const noexce
 }
 
 CliLocalIgnoreRecoveryPresentation describe_cli_local_ignore_recovery(
-    const scanner::ScanRunContractRunResult& result) {
+    const scanner::ScanRunContractExecutionResult& execution) {
+    const auto& result = execution.result;
     CliLocalIgnoreRecoveryPresentation recovery;
-    recovery.details.push_back({false, result.has_message
-                                           ? to_std_string(result.message)
-                                           : "Local Ignore recovery is required before scanning can continue."});
-    append_installed_yaml_data_messages(result, recovery.details);
+    // The rendered run opens with why it paused and carries the Installed YAML Data block that says
+    // what is wrong, so the CLI no longer restates either. It used to lead with the run message; now
+    // that message is one of the lines below.
+    append_display_lines(execution.display_lines, recovery.details);
     if (result.has_discovery) {
         // The retained discovery set is the reason recovery is a choice rather than a restart:
         // whichever decision the user makes resumes these exact Crash Logs.
@@ -661,7 +611,7 @@ CliScanRunExecutionOutcome execute_cli_scan_run(const scanner::ScanRunRequest& r
     // The continuation must be taken before the prompt runs so a decision can never observe a
     // half-owned operation, and so a prompt that throws cannot leave the run resumable.
     auto continuation = scanner::scan_run_contract_execution_take_continuation(*operation);
-    const auto choice = prompt(describe_cli_local_ignore_recovery(outcome.execution.result));
+    const auto choice = prompt(describe_cli_local_ignore_recovery(outcome.execution));
 
     auto decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
     switch (choice) {

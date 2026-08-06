@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-06T01:44:21Z",
+  "generated_at_utc": "2026-08-06T08:43:48Z",
   "schema_version": 1,
   "entries": [
     {
@@ -6249,6 +6249,37 @@
       ]
     },
     {
+      "id": "4f8ff71acf6e2763",
+      "rustSymbol": "ScanRunDisplaySegmentKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Text",
+        "Label",
+        "Count",
+        "Path",
+        "Name",
+        "Emphasis"
+      ]
+    },
+    {
+      "id": "2a505bf704804de4",
+      "rustSymbol": "ScanRunDisplaySeverity",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Info",
+        "Notice",
+        "Warning",
+        "Failure",
+        "Success"
+      ]
+    },
+    {
       "id": "17a9ae976a21c5f7",
       "rustSymbol": "ScanRunGameId",
       "kind": "enum",
@@ -8871,6 +8902,10 @@
         {
           "name": "disposition",
           "type": "ScanRunContractLogDisposition"
+        },
+        {
+          "name": "display_lines",
+          "type": "Vec<ScanRunDisplayLine>"
         }
       ]
     },
@@ -8905,6 +8940,10 @@
         {
           "name": "resume_error",
           "type": "ScanRunContractResumeError"
+        },
+        {
+          "name": "display_lines",
+          "type": "Vec<ScanRunDisplayLine>"
         }
       ]
     },
@@ -9231,6 +9270,50 @@
         {
           "name": "fatal_errors",
           "type": "Vec<String>"
+        }
+      ]
+    },
+    {
+      "id": "95a8829b439c6f88",
+      "rustSymbol": "ScanRunDisplayLine",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "severity",
+          "type": "ScanRunDisplaySeverity"
+        },
+        {
+          "name": "segments",
+          "type": "Vec<ScanRunDisplaySegment>"
+        }
+      ]
+    },
+    {
+      "id": "96859cdfda9f3705",
+      "rustSymbol": "ScanRunDisplaySegment",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "kind",
+          "type": "ScanRunDisplaySegmentKind"
+        },
+        {
+          "name": "text",
+          "type": "String"
+        },
+        {
+          "name": "path",
+          "type": "String"
+        },
+        {
+          "name": "count",
+          "type": "u64"
         }
       ]
     },

@@ -3,6 +3,10 @@ use classic_config_core::{
     InspectedYamlDataFile, InstalledYamlDataProvenance, InstalledYamlDataRole,
     YamlDataContentIdentity,
 };
+use classic_scan_presentation::{
+    DisplayLine, DisplaySegment, DisplaySeverity, render_event, render_infrastructure_error,
+    render_resume_error, render_run_result,
+};
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
     ConfigIssue as CoreFcxConfigIssue, CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource,
@@ -257,6 +261,10 @@ fn execution_from_initial_result(
     result: Result<contract::RunResult, contract::InfrastructureError>,
 ) -> ScanRunContractExecution {
     match result {
+        // The continuation is taken out of the result before the result is projected, and
+        // therefore before it is rendered. That ordering is now load-bearing rather than
+        // incidental: `render_run_result` borrows the result, so moving the continuation
+        // out afterwards would borrow across the move and not compile.
         Ok(mut result) => ScanRunContractExecution {
             continuation: result
                 .continuation
@@ -285,6 +293,11 @@ fn execution_from_resume_result(
             has_error: false,
             error: empty_infrastructure_error_dto(),
             has_resume_error: true,
+            // Rendered before `resume_error_to_dto` consumes the error. The rendered lines
+            // deliberately omit the stable resume error code that `code` still carries: the
+            // code is machine-facing identity for a consumer to match on, and a sentence is
+            // not where it belongs.
+            display_lines: display_lines_to_dto(&render_resume_error(&error)),
             resume_error: resume_error_to_dto(error),
         },
     };
@@ -297,6 +310,9 @@ fn execution_from_resume_result(
 fn success_execution_result_dto(
     result: contract::RunResult,
 ) -> ffi::ScanRunContractExecutionResult {
+    // Rendered from the borrowed result before `run_result_to_dto` consumes it. The
+    // caller has already taken the continuation out, which is what makes the borrow legal.
+    let display_lines = display_lines_to_dto(&render_run_result(&result));
     ffi::ScanRunContractExecutionResult {
         has_result: true,
         result: run_result_to_dto(result),
@@ -304,12 +320,14 @@ fn success_execution_result_dto(
         error: empty_infrastructure_error_dto(),
         has_resume_error: false,
         resume_error: empty_resume_error_dto(),
+        display_lines,
     }
 }
 
 fn infrastructure_execution_result_dto(
     error: contract::InfrastructureError,
 ) -> ffi::ScanRunContractExecutionResult {
+    let display_lines = display_lines_to_dto(&render_infrastructure_error(&error));
     ffi::ScanRunContractExecutionResult {
         has_result: false,
         result: empty_run_result_dto(),
@@ -317,6 +335,79 @@ fn infrastructure_execution_result_dto(
         error: infrastructure_error_to_dto(error),
         has_resume_error: false,
         resume_error: empty_resume_error_dto(),
+        display_lines,
+    }
+}
+
+/// Flattens rendered Display Content into the CXX mirror types.
+///
+/// `cxx` cannot express a Rust enum carrying payloads, so each segment crosses as a kind
+/// tag plus one field per payload shape. Fields the kind does not use stay empty rather
+/// than carrying a sentinel, because an empty string is what a C++ consumer already reads
+/// as "not present" everywhere else in this bridge.
+fn display_lines_to_dto(lines: &[DisplayLine]) -> Vec<ffi::ScanRunDisplayLine> {
+    lines
+        .iter()
+        .map(|line| ffi::ScanRunDisplayLine {
+            severity: map_display_severity(line.severity),
+            segments: line.segments.iter().map(display_segment_to_dto).collect(),
+        })
+        .collect()
+}
+
+/// Flattens one typed segment, filling exactly the fields its kind selects.
+fn display_segment_to_dto(segment: &DisplaySegment) -> ffi::ScanRunDisplaySegment {
+    let mut dto = ffi::ScanRunDisplaySegment {
+        kind: ffi::ScanRunDisplaySegmentKind::Text,
+        text: String::new(),
+        path: String::new(),
+        count: 0,
+    };
+    match segment {
+        DisplaySegment::Text(text) => {
+            // Assigned rather than left to the initializer's default, so reordering the fields
+            // above cannot silently relabel a `Text` segment as some other kind.
+            dto.kind = ffi::ScanRunDisplaySegmentKind::Text;
+            dto.text = (*text).to_string();
+        }
+        DisplaySegment::Label(label) => {
+            dto.kind = ffi::ScanRunDisplaySegmentKind::Label;
+            dto.text = (*label).to_string();
+        }
+        DisplaySegment::Count { value, noun } => {
+            dto.kind = ffi::ScanRunDisplaySegmentKind::Count;
+            // The noun rides in `text` already agreeing with `value`. An adapter prints the
+            // two side by side; it never re-decides the form.
+            dto.text = (*noun).to_string();
+            dto.count = *value;
+        }
+        DisplaySegment::Path(path) => {
+            dto.kind = ffi::ScanRunDisplaySegmentKind::Path;
+            dto.path = path.to_string_lossy().into_owned();
+        }
+        DisplaySegment::Name(name) => {
+            dto.kind = ffi::ScanRunDisplaySegmentKind::Name;
+            dto.text = name.clone();
+        }
+        DisplaySegment::Emphasis(value) => {
+            dto.kind = ffi::ScanRunDisplaySegmentKind::Emphasis;
+            dto.text = value.clone();
+        }
+    }
+    dto
+}
+
+/// Maps how gravely a line should read onto its scanner-local CXX twin.
+///
+/// Exhaustive rather than numeric: the two enumerations agree on discriminants today, but a
+/// `match` is what makes them keep agreeing when either one gains a variant.
+fn map_display_severity(value: DisplaySeverity) -> ffi::ScanRunDisplaySeverity {
+    match value {
+        DisplaySeverity::Info => ffi::ScanRunDisplaySeverity::Info,
+        DisplaySeverity::Notice => ffi::ScanRunDisplaySeverity::Notice,
+        DisplaySeverity::Warning => ffi::ScanRunDisplaySeverity::Warning,
+        DisplaySeverity::Failure => ffi::ScanRunDisplaySeverity::Failure,
+        DisplaySeverity::Success => ffi::ScanRunDisplaySeverity::Success,
     }
 }
 
@@ -681,6 +772,8 @@ fn empty_execution_result_dto() -> ffi::ScanRunContractExecutionResult {
         error: empty_infrastructure_error_dto(),
         has_resume_error: false,
         resume_error: empty_resume_error_dto(),
+        // No payload is present, so there is nothing for this envelope to say.
+        display_lines: Vec::new(),
     }
 }
 
@@ -699,7 +792,19 @@ fn path_to_string(path: PathBuf) -> String {
 }
 
 /// Maps every tagged lifecycle event; consumers ignore defaulted fields unrelated to the tag.
+///
+/// Display Content is rendered here, inline on the observer path, before the event reaches
+/// C++. There is no later opportunity: the C++ observer receives a projected copy and never
+/// holds the Rust event.
 fn event_to_dto(value: contract::Event) -> ffi::ScanRunContractEvent {
+    let display_lines = display_lines_to_dto(&render_event(&value));
+    let mut event = tagged_event_to_dto(value);
+    event.display_lines = display_lines;
+    event
+}
+
+/// Fills the tag-selected fields of one lifecycle event, leaving the rest defaulted.
+fn tagged_event_to_dto(value: contract::Event) -> ffi::ScanRunContractEvent {
     match value {
         contract::Event::DiscoveryCompleted(discovery) => {
             let mut event = empty_event_dto(ffi::ScanRunContractEventKind::DiscoveryCompleted);
@@ -744,6 +849,9 @@ fn empty_event_dto(kind: ffi::ScanRunContractEventKind) -> ffi::ScanRunContractE
         total: 0,
         phase: ffi::ScanRunContractProgressPhase::Setup,
         disposition: ffi::ScanRunContractLogDisposition::Succeeded,
+        // Filled by `event_to_dto` once the event has been rendered; the tag-filling
+        // helpers below never populate it.
+        display_lines: Vec::new(),
     }
 }
 

@@ -8,14 +8,26 @@ into an ordered sequence of display lines. Each frontend decides only **how it l
 [`../adr/0007-rust-owns-crash-log-scan-run-display-content.md`](../adr/0007-rust-owns-crash-log-scan-run-display-content.md)
 records the decision and supersedes the ADR-0002 clause that assigned presentation to adapters.
 
-## Status: the TUI renders from it
+## Status: the TUI and the native CLI render from it
 
 `classic-tui` is the first consumer and depends on this crate directly, with no binding seam in the
 way — which is why it went first: it proves the six-segment model before any DTO or parity baseline
 exists, at which point changing the taxonomy would cost three baseline regenerations.
 
-Still to migrate, in order: the bridge and native CLI, then the Qt GUI, then the Node and Python
-surfaces and the Python CLI. See
+`classic-cli` is the second, and the first across a binding seam. It never holds a `RunResult`, so
+`classic-cpp-bridge` renders while the Rust value is live and carries the lines across as mirrored
+data on the execution envelope and on every observed event. `cxx` cannot express a payload-carrying
+Rust enum, so each segment crosses flattened as a kind tag plus a text, a path, and a count field.
+That flattening is documented under "Display Content on the envelope" in
+[`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoints.md), and the six kinds
+are now frozen by a committed parity baseline: adding one costs a baseline regeneration on each of
+the three binding surfaces.
+
+The CLI is also the frontend that shows what "Rust names no colour" buys. It maps severity onto a
+choice of output stream and nothing else, so shared wording reaches a pipeable log without a single
+escape sequence — while the TUI maps the same severities onto a palette.
+
+Still to migrate, in order: the Qt GUI, then the Node and Python surfaces and the Python CLI. See
 [`../implementation/scan_run_presentation_consolidation.md`](../implementation/scan_run_presentation_consolidation.md).
 
 ## Public surface

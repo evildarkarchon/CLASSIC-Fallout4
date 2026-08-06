@@ -303,17 +303,38 @@ TEST_CASE("No CLI source turns an audited enum into a string literal", "[display
     }
 }
 
-TEST_CASE("Every CLI Display Label comes from a bridge accessor", "[display-label][audit]") {
+TEST_CASE("Every CLI Display Label arrives inside a rendered display line", "[display-label][audit]") {
     // The negative audit above proves no table was written. This proves the
     // labels are still rendered at all: without it, deleting a call site would
     // read as compliance rather than as a frontend that stopped saying what
-    // happened. It checks the call appears, not that it is reached — the
-    // behavioral half of that lives in test_scanner.cpp.
+    // happened.
+    //
+    // What it checks changed when this frontend stopped composing sentences.
+    // Every Display Label the CLI prints now arrives inside a `Label` segment of
+    // a Rust-rendered display line, so it calls none of the seven bridge
+    // accessors any more. Their absence is asserted rather than merely
+    // tolerated: re-deriving a label that a segment already carries is how a
+    // frontend ends up disagreeing with the sentence built around it.
+    //
+    // The accessors themselves stay. They remain the correct surface for
+    // labelling a domain enum *outside* a display line, and the Qt GUI still
+    // renders that way until its own migration lands.
     const std::string source = read_source("src/scan_run_cli.cpp");
     for (const auto& rendered : RENDERED_ENUMS) {
-        INFO(rendered.label_accessor << " is not called from src/scan_run_cli.cpp, so "
-                                     << rendered.type_name << " has no Display Label to render");
-        CHECK(source.find(rendered.label_accessor) != std::string::npos);
+        INFO(rendered.label_accessor << " is called from src/scan_run_cli.cpp, but " << rendered.type_name
+                                     << " is already labelled inside the display line that carries it");
+        CHECK(source.find(rendered.label_accessor) == std::string::npos);
+    }
+
+    // The positive half, moved down one level: the renderer must read every
+    // segment kind, because a `Label` it fails to handle is a Display Label that
+    // crossed the bridge and was then silently dropped. Checking all six rather
+    // than just `Label` costs nothing and catches the same mistake for a path or
+    // a count.
+    for (const auto& kind : {"Text", "Label", "Count", "Path", "Name", "Emphasis"}) {
+        INFO("src/scan_run_cli.cpp never reads ScanRunDisplaySegmentKind::"
+             << kind << ", so a segment of that kind would be rendered as something else or not at all");
+        CHECK(source.find(std::string("ScanRunDisplaySegmentKind::") + kind) != std::string::npos);
     }
 }
 

@@ -17,6 +17,18 @@ struct CliScanRunMessage {
     std::string text;
 };
 
+/// Flattens one Rust-rendered display line into plain CLI text.
+///
+/// Segments are concatenated in the order Rust put them in, separated by single spaces, with no
+/// styling of any kind: a `Path` prints whole, a `Count` prints its value followed by the noun Rust
+/// already agreed with that value, and a `Label` prints as handed over. Shared wording must not push
+/// terminal styling into a user's logs, so this frontend's per-segment "styling" is the empty
+/// choice.
+///
+/// Exposed for the renderer-conformance test, which asserts ordering and the count's noun without
+/// re-pinning wording that `classic-scan-presentation` already pins once.
+std::string render_cli_display_line(const classic::scanner::ScanRunDisplayLine& line);
+
 /// Terminal native CLI presentation for one Crash Log Scan Run execution envelope.
 struct CliScanRunPresentation {
     int exit_code = 0;
@@ -34,8 +46,11 @@ rust::Box<classic::scanner::ScanRunRequest> build_cli_scan_run_request(const Cli
 
 /// Produces user-facing lines for one serialized Crash Log Scan Run lifecycle event.
 ///
-/// The caller may render progress independently; returned lines contain only facts that are
-/// meaningful to a CLI user, including discovery, Targeted rejections, and effective concurrency.
+/// The words come from Rust, already rendered on the observer callback before the event crossed the
+/// bridge. What stays the CLI's own choice is which event kinds are worth a durable console line at
+/// all: `LogQueued` and `LogPhase` are omitted because the progress display already covers them and
+/// a line per phase per log would bury everything else. Omitting whole lines is what an adapter is
+/// allowed to do; rewording the ones it keeps is not.
 std::vector<CliScanRunMessage> describe_cli_scan_run_event(const classic::scanner::ScanRunContractEvent& event);
 
 /// Produces the terminal CLI result, error diagnostics, and process exit code.
@@ -108,8 +123,14 @@ inline constexpr int CLI_LOCAL_IGNORE_RECOVERY_PROMPT_ATTEMPTS = 3;
 /// The lines carry retained Installed YAML Data facts and structured diagnostics only; they never
 /// reach an Autoscan Report. `reset_available` is read straight from the retained Installed YAML
 /// Data, so the CLI applies no policy of its own beyond what the run reported.
+///
+/// This takes the whole execution envelope rather than the run result, because the rendered display
+/// lines travel on the envelope. It presents all of them rather than trying to pick the Installed
+/// YAML Data block back out: Rust exposes that block only as part of the rendered run, so selecting
+/// it by position would be a structural assumption about a sequence that carries no structure. Every
+/// surrounding line describes the very run the user is being asked to decide about.
 CliLocalIgnoreRecoveryPresentation describe_cli_local_ignore_recovery(
-    const classic::scanner::ScanRunContractRunResult& result);
+    const classic::scanner::ScanRunContractExecutionResult& execution);
 
 /// Reads one explicit recovery choice from an interactive console stream pair.
 ///

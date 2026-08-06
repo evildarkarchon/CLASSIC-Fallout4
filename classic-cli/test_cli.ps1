@@ -388,12 +388,16 @@ if (Should-RunScenario "single-scan") {
             Test-Pass "single-scan-exit-code"
         }
 
+        # Matched on the count and its noun rather than on the verb in front of them. Rust owns the
+        # sentence that reports discovery, so pinning its opening word here would make one rewording
+        # break this harness for no behavioural reason. What the harness is actually checking is that
+        # the discovered count reached the console.
         $expectedCount = 2
-        if ($r.Output -match "Found $expectedCount crash logs") {
+        if ($r.Output -match "\b$expectedCount crash logs\b") {
             Test-Pass "single-scan-found-count"
         }
         else {
-            Test-Fail "single-scan-found-count" "Output does not contain 'Found $expectedCount crash logs'"
+            Test-Fail "single-scan-found-count" "Output does not report $expectedCount crash logs"
         }
 
         $autoscans = Get-ChildItem -Path $tmpDir -Filter "*-AUTOSCAN.md" -ErrorAction SilentlyContinue
@@ -435,12 +439,14 @@ if (Should-RunScenario "multi-scan") {
             Test-Pass "multi-scan-exit-code"
         }
 
+        # Matched on the count and its noun rather than on the verb, for the same reason as the
+        # single-scan case above: Rust owns that sentence now.
         $expectedFoundCount = $TestLogs.Count + 1
-        if ($r.Output -match "Found $expectedFoundCount crash logs") {
+        if ($r.Output -match "\b$expectedFoundCount crash logs\b") {
             Test-Pass "multi-scan-found-count"
         }
         else {
-            Test-Fail "multi-scan-found-count" "Output does not contain 'Found $expectedFoundCount crash logs'"
+            Test-Fail "multi-scan-found-count" "Output does not report $expectedFoundCount crash logs"
         }
 
         $autoscans = Get-ChildItem -Path $tmpDir -Filter "*-AUTOSCAN.md" -ErrorAction SilentlyContinue

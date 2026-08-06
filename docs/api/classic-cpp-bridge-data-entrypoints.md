@@ -464,6 +464,57 @@ Paths use the repository's established lossy UTF-8 CXX string conversion.
 Optional output fields use explicit presence flags so absence is not conflated
 with an empty string or zero.
 
+### Display Content on the envelope
+
+The envelope also carries `display_lines`: what the run *says*, in Rust's words,
+for whichever payload the presence flags select. Both `scan_run_contract_execute`
+and `scan_run_continuation_resume` return this same envelope type, so one field
+covers the initial run and the continuation resume alike, and it is populated for
+a result, an infrastructure error, and a resume error equally. A moved-from
+envelope leaves it empty, as it does every other field.
+
+Rendering happens on the Rust side while the run value is still live, because
+C++ receives a projected copy and cannot render from the Rust value later. The
+continuation is taken out of the result before the result is rendered; that
+ordering is load-bearing, not incidental, since the render entry point borrows.
+
+`display_lines` is human-facing and is not a surface to match on. The typed
+fields beside it stay the machine-facing contract — including
+`resume_error.code`, which the rendered sentence deliberately omits because a
+stable error code is identity rather than prose.
+
+Each `ScanRunDisplayLine` carries a `ScanRunDisplaySeverity` — `Info`, `Notice`,
+`Warning`, `Failure`, or `Success` — and an ordered list of segments. Rust names
+no colour, no text attribute, and no widget; a frontend maps severity onto its
+own styling, or onto nothing.
+
+CXX cannot express a payload-carrying Rust enum, so each `ScanRunDisplaySegment`
+crosses flattened as a `ScanRunDisplaySegmentKind` tag plus three payload fields,
+with the fields the kind does not use left empty:
+
+| `kind` | `text` | `path` | `count` |
+|---|---|---|---|
+| `Text` | fixed Rust-owned prose | empty | 0 |
+| `Label` | a Display Label | empty | 0 |
+| `Count` | the noun, already agreeing with `count` | empty | the value |
+| `Path` | empty | the path, whole | 0 |
+| `Name` | a domain entity name | empty | 0 |
+| `Emphasis` | a value set apart from the prose | empty | 0 |
+
+The taxonomy is fixed at six kinds for its first version, because each addition
+touches three binding parity baselines.
+
+A consuming frontend concatenates a line's segments in order and never reorders
+within a line. It may reorder, group, or omit whole lines. It must not call a
+`scan_run_*_label` entry point for anything already carried in a `Label` segment,
+and must not re-decide a `Count`'s noun — print `count`, then `text`. The seven
+label entry points remain correct for labelling a domain enum *outside* a display
+line.
+
+`classic-cli` consumes these today. See
+[`classic-scan-presentation.md`](classic-scan-presentation.md) for the Rust
+owner of this content.
+
 ---
 
 ## Small Scan And Papyrus Utilities

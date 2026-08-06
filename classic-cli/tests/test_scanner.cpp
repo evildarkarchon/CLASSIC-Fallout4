@@ -5,6 +5,7 @@
 #include "scan_run_cli.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <istream>
 #include <sstream>
 #include <streambuf>
@@ -48,6 +49,57 @@ scanner::ScanRunContractLogResult log_result(std::size_t index, std::string path
     result.crash_log = std::move(path);
     result.disposition = disposition;
     return result;
+}
+
+// Display Content is decided in Rust and pinned exactly once, by
+// `business-logic/classic-scan-presentation/src/lib_tests.rs`. Asserting the same wording again here
+// would mean one rewording produced two diffs and two chances to disagree, which is the drift this
+// work removes. The fixtures below therefore carry deliberately unreal words: what they prove is
+// that the CLI prints what it was handed, in the order it was handed it, and nothing more.
+
+scanner::ScanRunDisplaySegment segment(scanner::ScanRunDisplaySegmentKind kind, std::string text) {
+    scanner::ScanRunDisplaySegment value{};
+    value.kind = kind;
+    value.text = std::move(text);
+    return value;
+}
+
+scanner::ScanRunDisplaySegment path_segment(std::string path) {
+    scanner::ScanRunDisplaySegment value{};
+    value.kind = scanner::ScanRunDisplaySegmentKind::Path;
+    value.path = std::move(path);
+    return value;
+}
+
+/// Builds a count segment the way the bridge does: the noun rides in `text`, already resolved.
+scanner::ScanRunDisplaySegment count_segment(std::uint64_t count, std::string noun) {
+    scanner::ScanRunDisplaySegment value{};
+    value.kind = scanner::ScanRunDisplaySegmentKind::Count;
+    value.text = std::move(noun);
+    value.count = count;
+    return value;
+}
+
+scanner::ScanRunDisplayLine display_line(scanner::ScanRunDisplaySeverity severity,
+                                         std::vector<scanner::ScanRunDisplaySegment> segments) {
+    scanner::ScanRunDisplayLine line{};
+    line.severity = severity;
+    for (auto& value : segments) {
+        line.segments.push_back(std::move(value));
+    }
+    return line;
+}
+
+/// Builds a one-segment informational line, which is all most fixtures need.
+scanner::ScanRunDisplayLine text_line(std::string text) {
+    return display_line(scanner::ScanRunDisplaySeverity::Info,
+                        {segment(scanner::ScanRunDisplaySegmentKind::Text, std::move(text))});
+}
+
+void push_lines(rust::Vec<scanner::ScanRunDisplayLine>& target, std::vector<scanner::ScanRunDisplayLine> lines) {
+    for (auto& line : lines) {
+        target.push_back(std::move(line));
+    }
 }
 
 /// Serves console input one character at a time and cancels as the answer's newline is consumed.
@@ -149,60 +201,130 @@ TEST_CASE("CLI scan request builder maps every supported game to the scanner-loc
     REQUIRE_THROWS_AS(build_cli_scan_run_request(args, invalid, ".", "."), std::invalid_argument);
 }
 
-TEST_CASE("CLI scan presentation explains a no-logs terminal result", "[scanner][scan-run]") {
+TEST_CASE("CLI display line rendering concatenates Rust's segments in order", "[scanner][scan-run][render]") {
+    const auto line = display_line(scanner::ScanRunDisplaySeverity::Info,
+                                   {segment(scanner::ScanRunDisplaySegmentKind::Text, "fixed prose"),
+                                    segment(scanner::ScanRunDisplaySegmentKind::Label, "a display label"),
+                                    count_segment(3, "widgets"),
+                                    path_segment("C:/one two/three.log"),
+                                    segment(scanner::ScanRunDisplaySegmentKind::Name, "a domain name"),
+                                    segment(scanner::ScanRunDisplaySegmentKind::Emphasis, "set apart")});
+
+    REQUIRE(render_cli_display_line(line) ==
+            "fixed prose a display label 3 widgets C:/one two/three.log a domain name set apart");
+}
+
+TEST_CASE("CLI display line rendering prints the noun Rust resolved for a count",
+          "[scanner][scan-run][render]") {
+    // The singular case is the one that matters: a frontend re-deriving the form from the value
+    // would have to agree with Rust by luck. Reading the noun Rust sent cannot disagree, so a
+    // deliberately mismatched pair still round-trips exactly.
+    REQUIRE(render_cli_display_line(display_line(scanner::ScanRunDisplaySeverity::Info,
+                                                 {count_segment(1, "log")})) == "1 log");
+    REQUIRE(render_cli_display_line(display_line(scanner::ScanRunDisplaySeverity::Info,
+                                                 {count_segment(0, "logs")})) == "0 logs");
+    REQUIRE(render_cli_display_line(display_line(scanner::ScanRunDisplaySeverity::Info,
+                                                 {count_segment(7, "crash log")})) == "7 crash log");
+}
+
+TEST_CASE("CLI display line rendering keeps a path whole", "[scanner][scan-run][render]") {
+    // Truncating would make the path useless to the command a user pipes this output into.
+    const auto rendered = render_cli_display_line(
+        display_line(scanner::ScanRunDisplaySeverity::Info,
+                     {segment(scanner::ScanRunDisplaySegmentKind::Text, "Report:"),
+                      path_segment("C:/CLASSIC/Crash Logs/crash-2026-08-06-AUTOSCAN.md")}));
+
+    REQUIRE(rendered == "Report: C:/CLASSIC/Crash Logs/crash-2026-08-06-AUTOSCAN.md");
+}
+
+TEST_CASE("CLI display line rendering introduces no terminal styling", "[scanner][scan-run][render]") {
+    // Shared wording must not push escape sequences into a user's logs, so the CLI's per-segment
+    // styling is deliberately the empty choice for every kind, emphasis included.
+    const auto rendered =
+        render_cli_display_line(display_line(scanner::ScanRunDisplaySeverity::Failure,
+                                             {segment(scanner::ScanRunDisplaySegmentKind::Emphasis, "loud")}));
+
+    REQUIRE(rendered == "loud");
+}
+
+TEST_CASE("CLI scan presentation states a terminal result in Rust's words and order",
+          "[scanner][scan-run][render]") {
     auto execution = execution_with_result(scanner::ScanRunContractStatus::NoCrashLogsFound);
-    execution.result.has_discovery = true;
-    execution.result.discovery.searched_locations.push_back("C:/Crash Logs");
+    push_lines(execution.display_lines,
+               {text_line("first"), text_line("second"), text_line("third")});
 
     const auto presentation = present_cli_scan_run_execution(execution, 0.25);
     const auto lines = message_text(presentation.messages);
 
     REQUIRE(presentation.exit_code == 0);
-    REQUIRE(lines == std::vector<std::string>{"No crash logs found.", "  Searched: C:/Crash Logs"});
+    REQUIRE(lines == std::vector<std::string>{"first", "second", "third"});
 }
 
-TEST_CASE("CLI scan discovery reports Targeted rejections", "[scanner][scan-run]") {
+TEST_CASE("CLI scan presentation routes a line by the severity Rust gave it", "[scanner][scan-run][render]") {
+    auto execution = execution_with_result(scanner::ScanRunContractStatus::Completed);
+    push_lines(execution.display_lines,
+               {display_line(scanner::ScanRunDisplaySeverity::Info,
+                             {segment(scanner::ScanRunDisplaySegmentKind::Text, "neutral")}),
+                display_line(scanner::ScanRunDisplaySeverity::Notice,
+                             {segment(scanner::ScanRunDisplaySegmentKind::Text, "worth noticing")}),
+                display_line(scanner::ScanRunDisplaySeverity::Warning,
+                             {segment(scanner::ScanRunDisplaySegmentKind::Text, "incomplete")}),
+                display_line(scanner::ScanRunDisplaySeverity::Failure,
+                             {segment(scanner::ScanRunDisplaySegmentKind::Text, "broken")}),
+                display_line(scanner::ScanRunDisplaySeverity::Success,
+                             {segment(scanner::ScanRunDisplaySegmentKind::Text, "done")})});
+
+    const auto presentation = present_cli_scan_run_execution(execution, 1.0);
+
+    // stderr carries what needs attention; stdout carries the run's ordinary narrative.
+    REQUIRE_FALSE(presentation.messages[0].error); // Info
+    REQUIRE_FALSE(presentation.messages[1].error); // Notice
+    REQUIRE(presentation.messages[2].error);       // Warning
+    REQUIRE(presentation.messages[3].error);       // Failure
+    REQUIRE_FALSE(presentation.messages[4].error); // Success
+}
+
+TEST_CASE("CLI scan events are stated in Rust's words", "[scanner][scan-run][render]") {
+    for (const auto kind : {scanner::ScanRunContractEventKind::DiscoveryCompleted,
+                            scanner::ScanRunContractEventKind::EffectiveConcurrencySelected,
+                            scanner::ScanRunContractEventKind::LogStarted,
+                            scanner::ScanRunContractEventKind::LogFinished}) {
+        scanner::ScanRunContractEvent event{};
+        event.kind = kind;
+        push_lines(event.display_lines, {text_line("what happened"), text_line("and a second thing")});
+
+        REQUIRE(message_text(describe_cli_scan_run_event(event)) ==
+                std::vector<std::string>{"what happened", "and a second thing"});
+    }
+}
+
+TEST_CASE("CLI scan events omit whole lines rather than rewording them", "[scanner][scan-run][render]") {
+    // Queued and phase events are rendered by Rust like every other event; this frontend declines to
+    // print them because the progress display already covers them. Omitting is what an adapter may
+    // do, and it is the only thing this frontend does to them.
+    for (const auto kind :
+         {scanner::ScanRunContractEventKind::LogQueued, scanner::ScanRunContractEventKind::LogPhase}) {
+        scanner::ScanRunContractEvent event{};
+        event.kind = kind;
+        push_lines(event.display_lines, {text_line("would have been printed")});
+
+        REQUIRE(describe_cli_scan_run_event(event).empty());
+    }
+}
+
+TEST_CASE("CLI scan events route a failed outcome to stderr", "[scanner][scan-run][render]") {
     scanner::ScanRunContractEvent event{};
-    event.kind = scanner::ScanRunContractEventKind::DiscoveryCompleted;
-    event.discovery.source = scanner::ScanRunContractDiscoverySource::Targeted;
-    event.discovery.accepted_logs.push_back("C:/accepted.log");
-    scanner::ScanRunContractRejectedInput rejected{};
-    rejected.path = "C:/notes.txt";
-    rejected.reason = "unsupported file type";
-    event.discovery.rejected_inputs.push_back(std::move(rejected));
+    event.kind = scanner::ScanRunContractEventKind::LogFinished;
+    push_lines(event.display_lines,
+               {display_line(scanner::ScanRunDisplaySeverity::Failure,
+                             {segment(scanner::ScanRunDisplaySegmentKind::Label, "failed"),
+                              path_segment("C:/two.log")})});
 
-    const auto lines = message_text(describe_cli_scan_run_event(event));
+    const auto messages = describe_cli_scan_run_event(event);
 
-    REQUIRE(lines == std::vector<std::string>{
-                         "Found 1 crash log",
-                         "Rejected 1 targeted input:",
-                         "  C:/notes.txt (unsupported file type)",
-                     });
-}
-
-TEST_CASE("CLI scan events report Rust-selected concurrency and live progress", "[scanner][scan-run]") {
-    scanner::ScanRunContractEvent concurrency{};
-    concurrency.kind = scanner::ScanRunContractEventKind::EffectiveConcurrencySelected;
-    concurrency.effective_concurrency = 2;
-
-    scanner::ScanRunContractEvent started{};
-    started.kind = scanner::ScanRunContractEventKind::LogStarted;
-    started.discovery_index = 1;
-    started.total = 3;
-    started.crash_log = "C:/two.log";
-
-    scanner::ScanRunContractEvent finished{};
-    finished.kind = scanner::ScanRunContractEventKind::LogFinished;
-    finished.discovery_index = 1;
-    finished.total = 3;
-    finished.crash_log = "C:/two.log";
-    finished.disposition = scanner::ScanRunContractLogDisposition::Failed;
-
-    REQUIRE(message_text(describe_cli_scan_run_event(concurrency)) ==
-            std::vector<std::string>{"Scanning with 2 concurrent scans"});
-    REQUIRE(message_text(describe_cli_scan_run_event(started)) == std::vector<std::string>{"Scanning 2/3: C:/two.log"});
-    REQUIRE(message_text(describe_cli_scan_run_event(finished)) ==
-            std::vector<std::string>{"Finished 2/3: C:/two.log - failed"});
+    REQUIRE(messages.size() == 1);
+    REQUIRE(messages[0].error);
+    REQUIRE(messages[0].text == "failed C:/two.log");
 }
 
 TEST_CASE("CLI scan cancellation is actionable and has a distinct terminal result", "[scanner][scan-run]") {
@@ -214,15 +336,20 @@ TEST_CASE("CLI scan cancellation is actionable and has a distinct terminal resul
     execution.result.total = 3;
     execution.result.succeeded = 1;
     execution.result.cancelled = 2;
+    push_lines(execution.display_lines, {text_line("the run stopped early")});
 
     const auto presentation = present_cli_scan_run_execution(execution, 0.5);
 
     REQUIRE(presentation.exit_code == 130);
-    REQUIRE(message_text(presentation.messages).back() == "Scan cancelled safely: 1 completed, 2 not started.");
+    REQUIRE(message_text(presentation.messages).back() == "the run stopped early");
 }
 
 TEST_CASE("CLI scan presentation explains FCX setup outcomes", "[scanner][scan-run]") {
+    // The FCX Mode setup projection is still composed by this frontend. Its check state, check kind,
+    // issue severity, and update kind belong to a subsystem that has not adopted the shared
+    // vocabulary, so Rust renders no lines for it and there is nothing here to replace yet.
     auto execution = execution_with_result(scanner::ScanRunContractStatus::SetupFailed);
+    push_lines(execution.display_lines, {text_line("the run could not start")});
     execution.result.has_setup = true;
     execution.result.setup.status = "action_required";
     execution.result.setup.has_message = true;
@@ -239,7 +366,7 @@ TEST_CASE("CLI scan presentation explains FCX setup outcomes", "[scanner][scan-r
     const auto lines = message_text(presentation.messages);
 
     REQUIRE(presentation.exit_code == 1);
-    REQUIRE(lines[0] == "Crash Log Scan setup failed.");
+    REQUIRE(lines[0] == "the run could not start");
     REQUIRE(lines[1] == "FCX setup: action_required");
     REQUIRE(lines[2] == "  Select the Fallout 4 installation.");
     REQUIRE(lines[3] == "  [missing] game_executable: Fallout4.exe was not found");
@@ -247,91 +374,74 @@ TEST_CASE("CLI scan presentation explains FCX setup outcomes", "[scanner][scan-r
     REQUIRE(lines[5] == "  Action: Configure the game path and retry.");
 }
 
-TEST_CASE("CLI scan presentation acknowledges generated Local Ignore metadata and diagnostics",
+TEST_CASE("CLI scan presentation leads a completed run with the setup projection it still owns",
           "[scanner][scan-run]") {
     auto execution = execution_with_result(scanner::ScanRunContractStatus::Completed);
-    execution.result.has_installed_yaml_data = true;
-    auto& installed = execution.result.installed_yaml_data;
-    installed.main.role = scanner::ScanRunInstalledYamlDataRole::Main;
-    installed.main.provenance = scanner::ScanRunInstalledYamlDataProvenance::Bundled;
-    installed.main.schema_version = "2.0";
-    installed.main.sha256 = "main-hash";
-    installed.main.byte_len = 64;
-    installed.game_file.role = scanner::ScanRunInstalledYamlDataRole::Game;
-    installed.game_file.provenance = scanner::ScanRunInstalledYamlDataProvenance::Previous;
-    installed.game_file.schema_version = "1.0";
-    installed.game_file.sha256 = "game-hash";
-    installed.game_file.byte_len = 48;
-    installed.local_ignore_state = scanner::ScanRunLocalIgnoreYamlDataState::Generated;
-    installed.local_ignore_identity.sha256 = "ignore-hash";
-    installed.local_ignore_identity.byte_len = 32;
-    scanner::ScanRunInstalledYamlDataDiagnosticDto diagnostic{};
-    diagnostic.kind = scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated;
-    diagnostic.has_path = true;
-    diagnostic.path = "C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml";
-    diagnostic.message = "generated missing Local Ignore YAML Data";
-    installed.diagnostics.push_back(std::move(diagnostic));
+    execution.result.has_setup = true;
+    execution.result.setup.status = "ok";
+    push_lines(execution.display_lines, {text_line("what the run says")});
 
     const auto lines = message_text(present_cli_scan_run_execution(execution, 1.0).messages);
 
-    REQUIRE(lines[0] == "Installed YAML Data:");
-    REQUIRE(lines[1].find("Main: bundled schema 2.0") != std::string::npos);
-    REQUIRE(lines[2].find("Game: previous schema 1.0") != std::string::npos);
-    // Both are canonical Display Labels the configuration crate settled, reached
-    // through the bridge rather than a CLI table. `generated from selected Main
-    // defaults` replaces the bare `generated` this frontend used to print, and
-    // `Local Ignore generated` carries the glossary capitalization of a domain
-    // term that no transform of the `local_ignore_generated` token could infer.
-    REQUIRE(lines[3].find("Local Ignore: generated from selected Main defaults") != std::string::npos);
-    REQUIRE(lines[4].find("Local Ignore generated") != std::string::npos);
-    REQUIRE(lines[4].find("CLASSIC Ignore.yaml") != std::string::npos);
+    REQUIRE(lines[0] == "FCX setup: ok");
+    REQUIRE(lines[1] == "what the run says");
 }
 
 TEST_CASE("CLI scan presentation keeps Local Ignore recovery distinct from setup and infrastructure failures",
           "[scanner][scan-run]") {
     auto execution = execution_with_result(scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
-    execution.result.has_message = true;
-    execution.result.message = "Local Ignore recovery is required";
-    execution.result.has_installed_yaml_data = true;
-    execution.result.installed_yaml_data.local_ignore_state =
-        scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired;
+    push_lines(execution.display_lines,
+               {display_line(scanner::ScanRunDisplaySeverity::Warning,
+                             {segment(scanner::ScanRunDisplaySegmentKind::Text, "a decision is needed")})});
 
     const auto presentation = present_cli_scan_run_execution(execution, 0.5);
 
+    // Exit 1 rather than 2: a run awaiting a decision is a status, not an infrastructure failure.
     REQUIRE(presentation.exit_code == 1);
+    REQUIRE(presentation.messages.back().text == "a decision is needed");
+    // A run that stopped to ask a question has always reached the user on stderr, and Rust marks
+    // that status `Warning` — which is exactly why the severity cut for this frontend puts
+    // `Warning` there rather than only `Failure`.
     REQUIRE(presentation.messages.back().error);
-    REQUIRE(presentation.messages.back().text == "Local Ignore recovery is required");
+}
+
+TEST_CASE("CLI scan presentation never exits on a failure it could not describe", "[scanner][scan-run][render]") {
+    // Unreachable through the bridge, since both failure renderers always produce a headline. The
+    // point is that exit 2 is never silent: a process that dies wordlessly reads as a crash rather
+    // than as a run that failed.
+    scanner::ScanRunContractExecutionResult execution{};
+    execution.has_error = true;
+
+    const auto presentation = present_cli_scan_run_execution(execution, 0.5);
+
+    REQUIRE(presentation.exit_code == 2);
+    REQUIRE(presentation.messages.size() == 1);
+    REQUIRE(presentation.messages[0].error);
+    REQUIRE_FALSE(presentation.messages[0].text.empty());
 }
 
 TEST_CASE("CLI Local Ignore recovery description offers retained discovery and diagnostics",
           "[scanner][scan-run][local-ignore]") {
     auto execution = execution_with_result(scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
-    execution.result.has_message = true;
-    execution.result.message = "Local Ignore YAML Data is malformed";
+    // The rendered run already opens with why it paused and carries the Installed YAML Data block,
+    // so the description presents all of it rather than picking a sub-block back out by position.
+    push_lines(execution.display_lines,
+               {text_line("why the run paused"), text_line("what is wrong with the file")});
     execution.result.has_discovery = true;
     execution.result.discovery.accepted_logs.push_back("C:/one.log");
     execution.result.discovery.accepted_logs.push_back("C:/two.log");
     execution.result.has_installed_yaml_data = true;
-    auto& installed = execution.result.installed_yaml_data;
-    installed.local_ignore_state = scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired;
-    installed.local_ignore_reset_available = false;
-    installed.local_ignore_identity.sha256 = "malformed-hash";
-    installed.local_ignore_identity.byte_len = 12;
-    scanner::ScanRunInstalledYamlDataDiagnosticDto diagnostic{};
-    diagnostic.kind = scanner::ScanRunInstalledYamlDataDiagnosticKind::Parse;
-    diagnostic.has_path = true;
-    diagnostic.path = "C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml";
-    diagnostic.message = "mapping values are not allowed here";
-    installed.diagnostics.push_back(std::move(diagnostic));
+    execution.result.installed_yaml_data.local_ignore_state =
+        scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired;
+    execution.result.installed_yaml_data.local_ignore_reset_available = false;
 
-    const auto recovery = describe_cli_local_ignore_recovery(execution.result);
+    const auto recovery = describe_cli_local_ignore_recovery(execution);
     const auto lines = message_text(recovery.details);
 
-    REQUIRE(lines[0] == "Local Ignore YAML Data is malformed");
-    REQUIRE(lines[1] == "Installed YAML Data:");
-    REQUIRE(lines[4].find("Local Ignore: recovery required") != std::string::npos);
-    REQUIRE(lines[5].find("mapping values are not allowed here") != std::string::npos);
-    REQUIRE(lines[5].find("CLASSIC Ignore.yaml") != std::string::npos);
+    REQUIRE(lines[0] == "why the run paused");
+    REQUIRE(lines[1] == "what is wrong with the file");
+    // Still the CLI's own sentence: the recovery prompt renderer lands with the gated recovery
+    // phase, not with this change. It is the only count this frontend still pluralizes.
     REQUIRE(lines.back() == "  Retained discovery: 2 crash logs will be scanned once you decide.");
     // This fixture's retained Installed YAML Data reports no usable default, so the description
     // must carry that through rather than leaving the prompt to assume the decision can succeed.
@@ -345,7 +455,7 @@ TEST_CASE("CLI Local Ignore recovery description offers reset only when the run 
         execution.result.has_installed_yaml_data = true;
         execution.result.installed_yaml_data.local_ignore_reset_available = true;
 
-        REQUIRE(describe_cli_local_ignore_recovery(execution.result).reset_available);
+        REQUIRE(describe_cli_local_ignore_recovery(execution).reset_available);
     }
 
     SECTION("absent Installed YAML Data keeps offering the decision") {
@@ -356,7 +466,7 @@ TEST_CASE("CLI Local Ignore recovery description offers reset only when the run 
         auto execution = execution_with_result(scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
         execution.result.has_installed_yaml_data = false;
 
-        REQUIRE(describe_cli_local_ignore_recovery(execution.result).reset_available);
+        REQUIRE(describe_cli_local_ignore_recovery(execution).reset_available);
     }
 }
 
@@ -496,29 +606,33 @@ TEST_CASE("CLI Local Ignore recovery prompt never infers Reset To Default", "[sc
     }
 }
 
-TEST_CASE("CLI scan presentation preserves consumed continuation replay details", "[scanner][scan-run]") {
+TEST_CASE("CLI scan presentation states a resume failure in Rust's words and keeps its code machine-facing",
+          "[scanner][scan-run][render]") {
     scanner::ScanRunContractExecutionResult execution{};
     execution.has_resume_error = true;
     execution.resume_error.kind = scanner::ScanRunContractResumeErrorKind::ContinuationConsumed;
     execution.resume_error.code = "scan_run_continuation_consumed";
     execution.resume_error.message = "Crash Log Scan Run continuation was already consumed";
+    push_lines(execution.display_lines,
+               {text_line("this decision was already applied"), text_line("start again to retry")});
 
     const auto presentation = present_cli_scan_run_execution(execution, 0.5);
+    const auto lines = message_text(presentation.messages);
 
     REQUIRE(presentation.exit_code == 2);
-    REQUIRE(presentation.messages.size() == 1);
-    REQUIRE(presentation.messages[0].error);
-    REQUIRE(presentation.messages[0].text ==
-            "Fatal: Crash Log Scan recovery failed (scan_run_continuation_consumed): Crash Log Scan Run continuation "
-            "was already consumed");
+    REQUIRE(lines == std::vector<std::string>{"this decision was already applied", "start again to retry"});
+    // The stable code stays on the DTO for a consumer that matches on it, and stays out of the
+    // prose a person reads. Printing it was how a machine identifier used to reach a sentence.
+    for (const auto& line : lines) {
+        REQUIRE(line.find("scan_run_continuation_consumed") == std::string::npos);
+    }
 }
 
 TEST_CASE("CLI recovery invariant diagnostics outrank the terminal envelope",
           "[scanner][scan-run][local-ignore]") {
     CliScanRunExecutionOutcome outcome{};
     outcome.execution = execution_with_result(scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
-    outcome.execution.result.has_message = true;
-    outcome.execution.result.message = "Local Ignore recovery is required";
+    push_lines(outcome.execution.display_lines, {text_line("a decision is needed")});
     outcome.recovery_diagnostics.push_back(
         {true, "Fatal: Crash Log Scan Run requested Local Ignore recovery without retaining its continuation."});
 
@@ -526,11 +640,13 @@ TEST_CASE("CLI recovery invariant diagnostics outrank the terminal envelope",
     const auto lines = message_text(presentation.messages);
 
     // A recovery the CLI could not honor is an infrastructure failure, not a status worth exit 1.
+    // The diagnostic stays composed here because it reports a broken bridge promise rather than
+    // anything a run said, so there is no Rust-rendered line for it to replace.
     REQUIRE(presentation.exit_code == 2);
     REQUIRE(lines[0] ==
             "Fatal: Crash Log Scan Run requested Local Ignore recovery without retaining its continuation.");
     REQUIRE(presentation.messages[0].error);
-    REQUIRE(lines.back() == "Local Ignore recovery is required");
+    REQUIRE(lines.back() == "a decision is needed");
 }
 
 TEST_CASE("CLI outcome presentation is unchanged without recovery diagnostics",
@@ -548,101 +664,89 @@ TEST_CASE("CLI outcome presentation is unchanged without recovery diagnostics",
     REQUIRE(message_text(via_outcome.messages) == message_text(direct.messages));
 }
 
-TEST_CASE("CLI scan presentation makes typed reset failures actionable", "[scanner][scan-run][local-ignore]") {
+TEST_CASE("CLI scan presentation keeps one failure diagnostic on one stream",
+          "[scanner][scan-run][local-ignore][render]") {
+    // The detail lines of a failure are neutral facts about it, so Rust marks most of them Info.
+    // Routing them by severity would put "failed during discovery" on stderr and the path it failed
+    // on into stdout, and redirecting stdout would separate the two.
     scanner::ScanRunContractExecutionResult execution{};
     execution.has_resume_error = true;
     execution.resume_error.kind = scanner::ScanRunContractResumeErrorKind::LocalIgnoreResetConflict;
     execution.resume_error.code = "scan_run_local_ignore_reset_conflict";
-    execution.resume_error.message = "Local Ignore YAML Data changed while the decision was pending";
-    execution.resume_error.has_path = true;
-    execution.resume_error.path = "C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml";
-    execution.resume_error.has_expected_identity = true;
-    execution.resume_error.expected_identity.sha256 = "expected-hash";
-    execution.resume_error.expected_identity.byte_len = 12;
-    execution.resume_error.has_actual_identity = true;
-    execution.resume_error.actual_identity.sha256 = "actual-hash";
-    execution.resume_error.actual_identity.byte_len = 30;
+    push_lines(execution.display_lines,
+               {display_line(scanner::ScanRunDisplaySeverity::Failure,
+                             {segment(scanner::ScanRunDisplaySegmentKind::Text, "the reset conflicted")}),
+                display_line(scanner::ScanRunDisplaySeverity::Info,
+                             {segment(scanner::ScanRunDisplaySegmentKind::Text, "Expected sha256"),
+                              segment(scanner::ScanRunDisplaySegmentKind::Emphasis, "expected-hash")}),
+                display_line(scanner::ScanRunDisplaySeverity::Notice,
+                             {segment(scanner::ScanRunDisplaySegmentKind::Text, "nothing was replaced")})});
 
     const auto presentation = present_cli_scan_run_execution(execution, 0.5);
-    const auto lines = message_text(presentation.messages);
 
     REQUIRE(presentation.exit_code == 2);
-    REQUIRE(lines[1] == "  Path: C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml");
-    REQUIRE(lines[2] == "  Expected identity: sha256 expected-hash (12 bytes)");
-    REQUIRE(lines[3] == "  Actual identity: sha256 actual-hash (30 bytes)");
+    REQUIRE(message_text(presentation.messages) ==
+            std::vector<std::string>{"the reset conflicted", "Expected sha256 expected-hash",
+                                     "nothing was replaced"});
     for (const auto& message : presentation.messages) {
         REQUIRE(message.error);
     }
 }
 
-TEST_CASE("CLI scan presentation reports a durable reset that outlived its failed resume",
-          "[scanner][scan-run][local-ignore]") {
-    scanner::ScanRunContractExecutionResult execution{};
-    execution.has_resume_error = true;
-    execution.resume_error.kind = scanner::ScanRunContractResumeErrorKind::LocalIgnoreResetDurabilityUnknown;
-    execution.resume_error.code = "scan_run_local_ignore_reset_durability_unknown";
-    execution.resume_error.message = "Local Ignore reset durability could not be confirmed";
-    execution.resume_error.has_stage = true;
-    execution.resume_error.stage = scanner::ScanRunLocalIgnoreResetFailureStage::Sync;
-    execution.resume_error.has_backup_path = true;
-    execution.resume_error.backup_path = "C:/CLASSIC/CLASSIC Backup/YAML Data/Local Ignore/ignore.yaml";
-    execution.resume_error.has_durability_receipt = true;
-    execution.resume_error.malformed_identity.sha256 = "malformed-hash";
-    execution.resume_error.backup_identity.sha256 = "backup-hash";
-    execution.resume_error.replacement_identity.sha256 = "replacement-hash";
+TEST_CASE("CLI scan presentation never reorders the lines Rust rendered", "[scanner][scan-run][render]") {
+    // An adapter may reorder, group, or omit whole lines; this one keeps Rust's order for the block
+    // it renders, so per-log outcomes still arrive in discovery order without the CLI sorting them.
+    auto execution = execution_with_result(scanner::ScanRunContractStatus::Completed);
+    execution.result.total = 3;
+    execution.result.succeeded = 3;
+    push_lines(execution.display_lines,
+               {text_line("z-first.log"), text_line("a-second.log"), text_line("m-third.log")});
 
-    const auto lines = message_text(present_cli_scan_run_execution(execution, 0.5).messages);
+    const auto lines = message_text(present_cli_scan_run_execution(execution, 1.0).messages);
 
-    REQUIRE(lines[1] == "  Stage: sync");
-    REQUIRE(lines[2] == "  Verified backup: C:/CLASSIC/CLASSIC Backup/YAML Data/Local Ignore/ignore.yaml");
-    REQUIRE(lines[3] == "  Durable reset receipt: malformed sha256 malformed-hash, backup sha256 backup-hash, "
-                        "replacement sha256 replacement-hash");
+    REQUIRE(lines[0] == "z-first.log");
+    REQUIRE(lines[1] == "a-second.log");
+    REQUIRE(lines[2] == "m-third.log");
 }
 
-TEST_CASE("CLI scan presentation distinguishes mixed per-log outcomes", "[scanner][scan-run]") {
-    auto execution = execution_with_result(scanner::ScanRunContractStatus::Cancelled);
-    execution.result.total = 3;
-    execution.result.succeeded = 1;
-    execution.result.failed = 1;
-    execution.result.cancelled = 1;
+TEST_CASE("CLI completed summary reports only what this process measured", "[scanner][scan-run]") {
+    // Scanned, failed, and not-started totals are stated by Rust in the lines above. What remains
+    // here is the two aggregates over per-log outcomes and the two facts derived from a clock the
+    // contract does not carry, so the CLI is not writing a second account of the same run.
+    auto execution = execution_with_result(scanner::ScanRunContractStatus::Completed);
+    execution.result.total = 2;
+    execution.result.succeeded = 2;
 
-    auto succeeded = log_result(0, "C:/one.log", scanner::ScanRunContractLogDisposition::Succeeded);
-    succeeded.has_autoscan_report = true;
-    succeeded.autoscan_report = "C:/one-AUTOSCAN.md";
-    execution.result.logs.push_back(std::move(succeeded));
-
-    auto failed = log_result(1, "C:/two.log", scanner::ScanRunContractLogDisposition::Failed);
-    scanner::ScanRunContractLogFailure failure{};
-    failure.stage = scanner::ScanRunContractLogFailureStage::ReportWrite;
-    failure.message = "access denied";
-    failed.failures.push_back(std::move(failure));
-    execution.result.logs.push_back(std::move(failed));
-
-    execution.result.logs.push_back(
-        log_result(2, "C:/three.log", scanner::ScanRunContractLogDisposition::CancelledBeforeStart));
+    auto reported = log_result(0, "C:/one.log", scanner::ScanRunContractLogDisposition::Succeeded);
+    reported.has_autoscan_report = true;
+    reported.autoscan_report = "C:/one-AUTOSCAN.md";
+    reported.moved_to_unsolved_logs = true;
+    execution.result.logs.push_back(std::move(reported));
+    execution.result.logs.push_back(log_result(1, "C:/two.log", scanner::ScanRunContractLogDisposition::Succeeded));
 
     const auto presentation = present_cli_scan_run_execution(execution, 2.0);
     const auto lines = message_text(presentation.messages);
 
-    REQUIRE(presentation.exit_code == 130);
-    REQUIRE(lines[1] == "  1. C:/one.log - succeeded (report: C:/one-AUTOSCAN.md)");
-    REQUIRE(lines[2] == "  2. C:/two.log - failed [report write: access denied]");
-    REQUIRE(lines[3] == "  3. C:/three.log - cancelled before start");
-    REQUIRE(lines.back() == "Scan cancelled safely: 2 completed, 1 not started.");
+    REQUIRE(presentation.exit_code == 0);
+    REQUIRE(lines == std::vector<std::string>{"Scan Complete", "  Reports: 1 written", "  Unsolved: 1 moved",
+                                              "  Duration: 2.00s", "  Speed: 1.0 logs/sec"});
 }
 
-TEST_CASE("CLI scan summaries retain the Rust-provided discovery order", "[scanner][scan-run]") {
-    auto execution = execution_with_result(scanner::ScanRunContractStatus::Completed);
-    execution.result.total = 3;
-    execution.result.succeeded = 3;
-    execution.result.logs.push_back(log_result(0, "C:/z-first.log", scanner::ScanRunContractLogDisposition::Succeeded));
-    execution.result.logs.push_back(
-        log_result(1, "C:/a-second.log", scanner::ScanRunContractLogDisposition::Succeeded));
-    execution.result.logs.push_back(log_result(2, "C:/m-third.log", scanner::ScanRunContractLogDisposition::Succeeded));
+TEST_CASE("A real Crash Log Scan Run reaches the CLI already carrying what it says",
+          "[scanner][scan-run][render]") {
+    // The fixtures above hand-build envelopes, which is what lets them assert rendering without
+    // pinning wording. This one runs the real contract, so it is what proves the display lines are
+    // actually populated on the way across rather than merely rendered correctly once present.
+    const CliArgs args{};
+    const auto request = build_cli_scan_run_request(args, minimal_settings(), ".", ".");
+    const auto cancellation = scanner::scan_run_cancellation_new();
+    scanner::scan_run_cancellation_cancel(*cancellation);
 
-    const auto lines = message_text(present_cli_scan_run_execution(execution, 1.0).messages);
+    const auto execution = execute_result(*request, *cancellation, nullptr);
 
-    REQUIRE(lines[1].find("z-first.log") != std::string::npos);
-    REQUIRE(lines[2].find("a-second.log") != std::string::npos);
-    REQUIRE(lines[3].find("m-third.log") != std::string::npos);
+    REQUIRE(execution.has_result);
+    REQUIRE_FALSE(execution.display_lines.empty());
+    const auto presentation = present_cli_scan_run_execution(execution, 0.1);
+    REQUIRE_FALSE(presentation.messages.empty());
+    REQUIRE_FALSE(presentation.messages[0].text.empty());
 }
