@@ -367,3 +367,4 @@ opencode.json
 !sample_logs/**
 graphify-out/
 Architecture*.html
+.mcp.json
