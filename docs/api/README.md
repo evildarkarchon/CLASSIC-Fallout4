@@ -46,6 +46,7 @@ Use this directory in this order:
 31. [`binding-contract-refresh-note.md`](binding-contract-refresh-note.md) - when Node `index.d.ts` and Python `.pyi` contract artifacts should refresh separately versus together
 32. [`binding-compliance-suite.md`](binding-compliance-suite.md) - canonical umbrella binding gate that maps policy requirements to executable checks and gap reporting
 33. [`classic-scanlog-core.md`](classic-scanlog-core.md) - crash-log analysis built on top of loaded config data and optional DB lookups
+33a. [`classic-scan-presentation.md`](classic-scan-presentation.md) - unpublished Crash Log Scan Run Display Content owner: the render functions that turn a run result, event, or failure into typed display lines, so every frontend states the same run the same way
 34. [`binding-parity-policy.md`](binding-parity-policy.md) - one-tier binding parity policy, gate ownership, and new-API contributor workflow
 35. [`error-contract.md`](error-contract.md) - per-binding error shape conventions for C++ (CXX), Node (NAPI-RS), and Python (PyO3)
 
@@ -91,6 +92,7 @@ That order matches the current repo-root layering across `foundation/`, `busines
 - `binding-contract-refresh-note.md` explains the current maintainer expectation for refreshing C++ baseline, Node `index.d.ts`, and Python `.pyi` contract artifacts separately or in the same change
 - `binding-compliance-suite.md` documents the canonical binding compliance command, execution profiles, structured reports, and staged known-gap handling
 - `classic-scanlog-core` consumes config data, crashgen rules, and optional DB lookups while treating OG/VR selection as a Version Registry-backed config-building concern
+- `classic-scan-presentation` sits directly on top of `classic-scanlog-core` and `classic-vocabulary` with a strictly one-way edge, and owns Crash Log Scan Run Display Content: which display lines a run produces, what each states, and which Display Labels, counts, paths, and names each carries. Where `classic-vocabulary` single-sources what one variant is *called*, this crate single-sources the *sentences* built around those names. It is deliberately not a module inside `classic-scanlog-core`, whose `scan_run` and `scan_run::contract` already form a cycle that presentation would deepen. It has no binding surface today; when the render phase reaches the bindings, display lines cross as mirrored data rendered before the seam, because a Crash Log Scan Run Result cannot be held across one
 - `binding-parity-policy.md` states the one-tier parity policy, gate ownership, and the step-by-step workflow for adding a new public Rust API across all three bindings
 - `error-contract.md` documents the intentionally different error shapes used by each binding surface (C++ empty-string sentinels, Node error codes, Python typed exceptions) with concrete source examples
 

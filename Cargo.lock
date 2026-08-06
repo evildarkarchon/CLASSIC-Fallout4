@@ -1016,6 +1016,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "classic-scan-presentation"
+version = "9.1.0"
+dependencies = [
+ "classic-config-core",
+ "classic-scanlog-core",
+ "classic-vocabulary",
+]
+
+[[package]]
 name = "classic-scangame-core"
 version = "9.1.0"
 dependencies = [
