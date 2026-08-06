@@ -37,6 +37,18 @@ choose `LocalIgnoreRecoveryDecision::ProceedWithoutIgnore` or
 `continuation.resume(decision, cancellation, observer).await` consumes the
 retained work once and returns `Result<RunResult, ResumeError>`.
 
+A caller that wants to back out instead of deciding calls
+`continuation.abandon(cancellation, observer).await`. It requests cancellation
+on the supplied control and then claims the continuation with a decision the
+run never acts on, so no recovery is applied, nothing on disk is touched, and
+the caller receives the ordinary post-discovery `Cancelled` result described
+under [Cancellation contract](#cancellation-contract). `LocalIgnoreRecoveryDecision`
+deliberately has no abandonment variant — adding one reshapes a type crossing
+five binding surfaces — so `abandon` is the single shared implementation of a
+sequence every frontend would otherwise write for itself. It shares `resume`'s
+one-shot claim: whichever of the two runs first spends the continuation, and
+every later `abandon` or `resume` returns `ResumeError::ContinuationConsumed`.
+
 There is no public prepared-run, orchestration, batch-lifecycle, direct
 Autoscan Report writer, concurrency-policy helper, or process-global FCX
 control. Callers that need a complete scan must not assemble those stages
@@ -87,7 +99,9 @@ Cancellation is cooperative at Rust-owned safe seams:
   and no discovery result
 - once discovery completes, the complete discovery result is retained
 - cancellation already requested before recovery resume consumes the
-  continuation and returns the normal post-discovery `Cancelled` result
+  continuation and returns the normal post-discovery `Cancelled` result;
+  `CrashLogScanRunContinuation::abandon` is that behaviour named, requesting
+  cancellation itself and leaving the control cancelled afterwards
 - queued logs do not start after cancellation is observed
 - an admitted log finishes analysis, report persistence, and applicable
   Unsolved Logs finalization before its terminal outcome is published
@@ -490,6 +504,12 @@ request, cancellation, observer, result, and error contract. The CLI, GUI, TUI,
 and binding-local CLIs construct requests and present Rust-owned facts; they do
 not perform discovery, select concurrency, reset FCX state, write reports, or
 move failed logs around the call.
+
+`CrashLogScanRunContinuation::abandon` is Rust-only for now. The TUI depends on
+this crate directly and calls it; the CXX, Node, and Python surfaces still carry
+only `resume`, and the native CLI and Qt GUI still write the cancel-then-resume
+sequence themselves. Exposing `abandon` across those surfaces and adopting it in
+both native frontends is tracked separately.
 
 The Focused Semantic Analyzer cutover was deliberately breaking across Rust, CXX, Node,
 and Python. Retired report primitives and fragment-producing methods have no

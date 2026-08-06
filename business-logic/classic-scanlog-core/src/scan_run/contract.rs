@@ -905,6 +905,52 @@ impl CrashLogScanRunContinuation {
 
         Ok(project_engine_result(engine_result, effective_concurrency))
     }
+
+    /// Abandons this paused Crash Log Scan Run without performing any recovery.
+    ///
+    /// Requests cancellation on `cancellation`, then claims the continuation with a decision the
+    /// run never acts on. [`Self::resume`] inspects cancellation immediately after the one-shot
+    /// claim and before the retained recovery plan is consumed, so neither Proceed Without Ignore
+    /// nor Reset To Default is ever applied: no backup is taken, nothing is published, and the
+    /// malformed Local Ignore file is left exactly as it was. The caller receives the ordinary
+    /// post-discovery [`RunStatus::Cancelled`] result, and the continuation is spent, so any later
+    /// `abandon` or [`Self::resume`] reports [`ResumeError::ContinuationConsumed`].
+    ///
+    /// [`LocalIgnoreRecoveryDecision`] deliberately carries no abandonment variant — adding one
+    /// reshapes a type crossing five binding surfaces — so this operation encapsulates the
+    /// cancel-then-resume-with-a-placeholder sequence that the native CLI, the Qt GUI, and the TUI
+    /// each wrote for themselves. The placeholder is `ProceedWithoutIgnore` rather than
+    /// `ResetToDefault` purely defensively: the decision is unreachable, and if that ever stopped
+    /// being true, the non-durable variant is the one that cannot touch the user's files.
+    ///
+    /// `cancellation` is the run's own monotonic control and stays cancelled afterwards. That is
+    /// intended: abandoning the run *is* cancelling it, and every hand-written copy of this
+    /// sequence already cancelled the same control before resuming. The request is made *before*
+    /// the claim is attempted, so a call that goes on to report a consumed continuation has still
+    /// cancelled the control. That is inert for the intended use — the control belongs to the run
+    /// this continuation came from, and that run has already finished — but a caller that reuses
+    /// one control across runs would be cancelling the wrong one, which it would be doing at
+    /// [`Self::resume`] too.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ResumeError::ContinuationConsumed`] when this continuation was already claimed by
+    /// an earlier `abandon` or [`Self::resume`], sequentially or concurrently. The recovery-plan
+    /// and infrastructure failures [`Self::resume`] can report are unreachable here, because
+    /// cancellation short-circuits ahead of every stage that produces them.
+    pub async fn abandon(
+        &self,
+        cancellation: &Cancellation,
+        observer: Option<&mut dyn Observer>,
+    ) -> Result<RunResult, ResumeError> {
+        cancellation.cancel();
+        self.resume(
+            LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            cancellation,
+            observer,
+        )
+        .await
+    }
 }
 
 /// One log-scoped lifecycle event payload.

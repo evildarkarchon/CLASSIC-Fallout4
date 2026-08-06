@@ -140,13 +140,15 @@ pub struct PendingLocalIgnoreRecovery {
 
 /// How the user answered a Local Ignore recovery question.
 ///
-/// Rust defines only two decisions, so dismissal is not one of them; it is modelled here because
-/// the TUI has to express it, and a named alternative reads better at the call site than a bool.
+/// [`LocalIgnoreRecoveryDecision`] still has only two variants, so dismissal is not one of them; it
+/// is modelled here because the TUI has to express it, and a named alternative reads better at the
+/// call site than a bool. It maps onto a Rust-owned operation rather than a decision:
+/// [`CrashLogScanRunContinuation::abandon`].
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum RecoveryAnswer {
     /// Apply one explicit Rust-defined decision to the retained run.
     Accept(LocalIgnoreRecoveryDecision),
-    /// Dismiss the question, cancelling before the retained recovery plan can be consumed.
+    /// Dismiss the question, abandoning the paused run without consuming its recovery plan.
     Dismiss,
 }
 
@@ -759,10 +761,9 @@ impl App {
 
     /// Dismisses the recovery question without mutating Local Ignore or analyzing any Crash Log.
     ///
-    /// Rust defines only two decisions, so dismissal is expressed by cancelling first and then
-    /// resuming with the non-destructive placeholder. `resume` observes cancellation after it
-    /// claims the continuation but before it consumes the recovery plan, so no backup,
-    /// replacement, or analysis can happen and the run returns its ordinary cancelled result.
+    /// Delegates to [`CrashLogScanRunContinuation::abandon`], which owns the cancel-then-claim
+    /// sequence this frontend used to write for itself: no backup, replacement, or analysis can
+    /// happen, and the run returns its ordinary cancelled result.
     pub fn cancel_local_ignore_recovery(&mut self) {
         self.resume_local_ignore_recovery(RecoveryAnswer::Dismiss);
     }
@@ -770,8 +771,8 @@ impl App {
     /// Consumes the retained continuation exactly once through the shared Rust runtime.
     ///
     /// `answer` selects between applying a Rust-defined decision and dismissing the question;
-    /// [`RecoveryAnswer::Dismiss`] cancels first and then resumes with the non-destructive
-    /// placeholder decision, because Rust exposes no "cancel" decision of its own.
+    /// [`RecoveryAnswer::Dismiss`] routes to [`CrashLogScanRunContinuation::abandon`], because Rust
+    /// exposes abandonment as an operation rather than as a third decision variant.
     ///
     /// Taking the pending state first means a second key press finds nothing to resume, which
     /// matches the continuation's own single-use contract instead of relying on the overlay
@@ -785,14 +786,6 @@ impl App {
             cancellation,
             prompt,
         } = pending;
-
-        let decision = match answer {
-            RecoveryAnswer::Accept(decision) => decision,
-            RecoveryAnswer::Dismiss => {
-                cancellation.cancel();
-                LocalIgnoreRecoveryDecision::ProceedWithoutIgnore
-            }
-        };
 
         self.active_overlay = None;
         self.scan_in_progress = true;
@@ -817,9 +810,21 @@ impl App {
                     delivery_cancellation.cancel();
                 }
             };
-            let result = continuation
-                .resume(decision, &cancellation, Some(&mut observer))
-                .await;
+            let result = match answer {
+                RecoveryAnswer::Accept(decision) => {
+                    continuation
+                        .resume(decision, &cancellation, Some(&mut observer))
+                        .await
+                }
+                // Rust owns the whole dismissal sequence: `abandon` cancels this run's control and
+                // then claims the continuation with a decision the run never acts on. The TUI no
+                // longer picks that placeholder, so it cannot drift from what the other frontends do.
+                RecoveryAnswer::Dismiss => {
+                    continuation
+                        .abandon(&cancellation, Some(&mut observer))
+                        .await
+                }
+            };
             let _ = tx.send(AsyncMessage::ScanResumeFinished(Box::new(result)));
         });
     }

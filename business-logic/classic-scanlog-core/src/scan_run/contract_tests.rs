@@ -1165,6 +1165,28 @@ fn proceed_without_ignore_continuation_rejects_every_replay() {
     });
 }
 
+/// Asserts the ordinary post-discovery cancelled shape.
+///
+/// Complete discovery is retained, every accepted log counts as cancelled, and no intake or
+/// concurrency facts are present because neither stage was reached. Shared by the two paths that
+/// produce this shape from a paused run — a pre-cancelled `resume` and `abandon` — so the contract
+/// they are both required to honour is written down once and cannot drift between them.
+fn assert_cancelled_after_discovery(result: &contract::RunResult, logs: &[PathBuf]) {
+    assert_eq!(result.status, contract::RunStatus::Cancelled);
+    assert_eq!(result.cancelled, logs.len());
+    assert_eq!(
+        result
+            .discovery
+            .as_ref()
+            .expect("cancelled-after-discovery should retain discovery")
+            .accepted_logs,
+        logs
+    );
+    assert!(result.installed_yaml_data.is_none());
+    assert!(result.effective_concurrency.is_none());
+    assert!(result.continuation.is_none());
+}
+
 /// Pre-resume cancellation consumes the continuation before recovery or analysis can begin.
 #[test]
 fn cancellation_before_recovery_resume_returns_normal_cancelled_after_discovery_result() {
@@ -1187,18 +1209,7 @@ fn cancellation_before_recovery_resume_returns_normal_cancelled_after_discovery_
         ))
         .expect("pre-resume cancellation should remain expected result data");
 
-    assert_eq!(cancelled.status, contract::RunStatus::Cancelled);
-    assert_eq!(cancelled.cancelled, logs.len());
-    assert_eq!(
-        cancelled
-            .discovery
-            .as_ref()
-            .expect("cancelled-after-discovery should retain discovery")
-            .accepted_logs,
-        logs
-    );
-    assert!(cancelled.installed_yaml_data.is_none());
-    assert!(cancelled.effective_concurrency.is_none());
+    assert_cancelled_after_discovery(&cancelled, &logs);
     assert!(events.is_empty());
     assert!(
         logs.iter()
@@ -1216,6 +1227,146 @@ fn cancellation_before_recovery_resume_returns_normal_cancelled_after_discovery_
         ))
         .expect_err("cancelled resume should still consume the continuation");
     assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
+}
+
+/// Snapshots every file below `root` as a sorted path-to-bytes map.
+///
+/// Abandonment claims to touch nothing on disk, and the two things it could plausibly touch — an
+/// Autoscan Report and the Local Ignore backup directory — sit in different subtrees. Comparing
+/// whole trees proves the claim generally, instead of naming only the paths that exist today.
+fn snapshot_tree(root: &std::path::Path) -> std::collections::BTreeMap<PathBuf, Vec<u8>> {
+    let mut files = std::collections::BTreeMap::new();
+    let mut pending = vec![root.to_path_buf()];
+    while let Some(directory) = pending.pop() {
+        for entry in std::fs::read_dir(&directory).expect("fixture tree should stay readable") {
+            let path = entry.expect("fixture entry should be readable").path();
+            if path.is_dir() {
+                pending.push(path);
+            } else {
+                let bytes = std::fs::read(&path).expect("fixture file should be readable");
+                files.insert(path, bytes);
+            }
+        }
+    }
+    files
+}
+
+/// Asserts nothing below the fixture root was created, deleted, or rewritten.
+///
+/// Paths are compared before bytes, so a stray Autoscan Report or Local Ignore backup fails as a
+/// readable path diff rather than as a wall of file contents.
+fn assert_tree_unchanged(
+    before: &std::collections::BTreeMap<PathBuf, Vec<u8>>,
+    after: &std::collections::BTreeMap<PathBuf, Vec<u8>>,
+) {
+    assert_eq!(
+        after.keys().collect::<Vec<_>>(),
+        before.keys().collect::<Vec<_>>(),
+        "abandonment created or removed files"
+    );
+    for (path, bytes) in before {
+        assert_eq!(
+            after.get(path),
+            Some(bytes),
+            "{} was rewritten",
+            path.display()
+        );
+    }
+}
+
+/// Abandoning a paused run yields the ordinary cancelled result and writes nothing at all.
+#[test]
+fn abandoning_a_paused_run_returns_the_cancelled_result_and_touches_nothing() {
+    let (temp, logs, ignore_path, malformed_ignore, mut initial) =
+        paused_recovery_fixture(&["crash-continuation-abandoned.log"]);
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry a continuation");
+    let cancellation = contract::Cancellation::new();
+    let before = snapshot_tree(temp.path());
+    let mut events = Vec::new();
+    let mut observer = |event| events.push(event);
+
+    let abandoned = get_runtime()
+        .block_on(continuation.abandon(&cancellation, Some(&mut observer)))
+        .expect("abandonment should remain expected result data");
+
+    assert_cancelled_after_discovery(&abandoned, &logs);
+    assert!(events.is_empty());
+    // Abandonment cancels the run's own monotonic control, so a frontend that shares it observes
+    // the same cancelled run every other cancellation path produces.
+    assert!(cancellation.is_cancelled());
+    // The tree comparison is the general claim; the two assertions after it name the specific
+    // hazards a reader cares about — the user's malformed bytes, and analysis never starting.
+    assert_tree_unchanged(&before, &snapshot_tree(temp.path()));
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("malformed Local Ignore should remain readable"),
+        malformed_ignore
+    );
+    assert!(
+        logs.iter()
+            .all(|log| !crate::report::autoscan_report_path(log).exists())
+    );
+
+    let replay = get_runtime()
+        .block_on(continuation.abandon(&contract::Cancellation::new(), None))
+        .expect_err("abandonment should still consume the continuation");
+    assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
+}
+
+/// Abandonment claims the continuation once, so concurrent and later attempts are all rejected.
+#[test]
+fn abandonment_consumes_the_continuation_exactly_once() {
+    let (temp, _logs, ignore_path, malformed_ignore, mut initial) =
+        paused_recovery_fixture(&["crash-continuation-abandon-replay.log"]);
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry a continuation");
+    let before = snapshot_tree(temp.path());
+
+    get_runtime().block_on(async {
+        let first_cancellation = contract::Cancellation::new();
+        let second_cancellation = contract::Cancellation::new();
+        let (first, second) = tokio::join!(
+            continuation.abandon(&first_cancellation, None),
+            continuation.abandon(&second_cancellation, None)
+        );
+        assert_eq!(usize::from(first.is_ok()) + usize::from(second.is_ok()), 1);
+        let error = first
+            .err()
+            .or_else(|| second.err())
+            .expect("one racing abandonment should fail");
+        assert_eq!(error, contract::ResumeError::ContinuationConsumed);
+        assert_eq!(error.kind().as_str(), "scan_run_continuation_consumed");
+
+        let replayed_abandon = continuation
+            .abandon(&contract::Cancellation::new(), None)
+            .await
+            .expect_err("every later abandonment should reject replay");
+        assert_eq!(
+            replayed_abandon,
+            contract::ResumeError::ContinuationConsumed
+        );
+        // The spent claim also closes the resume seam, and Reset To Default is the one decision
+        // that could have written to disk had the claim survived.
+        let replayed_resume = continuation
+            .resume(
+                contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+                &contract::Cancellation::new(),
+                None,
+            )
+            .await
+            .expect_err("a resume after abandonment should reject replay too");
+        assert_eq!(replayed_resume, contract::ResumeError::ContinuationConsumed);
+    });
+
+    assert_tree_unchanged(&before, &snapshot_tree(temp.path()));
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("malformed Local Ignore should remain readable"),
+        malformed_ignore
+    );
 }
 
 #[test]

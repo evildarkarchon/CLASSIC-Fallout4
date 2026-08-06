@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-06T06:25:03.261545+00:00",
+  "generated_at_utc": "2026-08-06T10:01:51.837020+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -11778,6 +11778,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/segment_key.rs",
       "source_decl": "pub const XSE_MODULES",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "abandon",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub async fn abandon(\n        &self,\n        cancellation: &Cancellation,\n        observer: Option<&mut dyn Observer>,\n    )",
       "tier": "tier1"
     },
     {
