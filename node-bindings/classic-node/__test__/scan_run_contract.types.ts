@@ -3,10 +3,13 @@ import {
 	ScanRunUnsolvedLogs,
 	scanRunExecute,
 	JsGameId,
+	JsScanRunDisplaySegmentKind,
+	JsScanRunDisplaySeverity,
 	JsScanRunInstalledYamlDataDiagnosticKind,
 	JsScanRunLocalIgnoreRecoveryDecision,
 	JsScanRunLocalIgnoreState,
 	type JsScanRunConfiguration,
+	type JsScanRunDisplayLine,
 	type JsScanRunEvent,
 	type JsScanRunSetupContext,
 } from "../index.js";
@@ -44,9 +47,35 @@ const eventKind:
 	| "log_finished" = event.kind;
 void eventKind;
 
+// Display Content is a sibling of the tagged payload, not part of it, so it is
+// present on every event kind rather than narrowed away by the discriminant.
+const eventDisplayLines: JsScanRunDisplayLine[] = event.displayLines;
+void eventDisplayLines;
+
+// A segment is read through its kind tag: the flattening is the C++ bridge's, so
+// the fields the kind does not select are empty strings rather than absent, and
+// TypeScript types them as required.
+declare const segment: JsScanRunDisplayLine["segments"][number];
+const segmentKind: JsScanRunDisplaySegmentKind = segment.kind;
+const segmentText: string = segment.text;
+const segmentPath: string = segment.path;
+const segmentCount: number = segment.count;
+void segmentKind;
+void segmentText;
+void segmentPath;
+void segmentCount;
+const severity: JsScanRunDisplaySeverity = JsScanRunDisplaySeverity.Warning;
+void severity;
+const countKind: JsScanRunDisplaySegmentKind = JsScanRunDisplaySegmentKind.Count;
+void countKind;
+
 type Execution = Awaited<ReturnType<typeof scanRunExecute>>;
 declare const execution: Execution;
 if ("result" in execution) {
+	// Both envelopes carry what the run says. A consumer that only reports the
+	// outcome never has to compose a sentence, whichever way the run went.
+	const successLines: JsScanRunDisplayLine[] = execution.displayLines;
+	void successLines;
 	execution.result.status;
 	execution.result.installedYamlData?.main.sha256;
 	execution.result.installedYamlData?.gameFile.provenance;
@@ -62,6 +91,8 @@ if ("result" in execution) {
 	execution.error;
 } else {
 	execution.error.stage;
+	const failureLines: JsScanRunDisplayLine[] = execution.displayLines;
+	void failureLines;
 	// @ts-expect-error A failed envelope cannot also contain a terminal run result.
 	execution.result;
 }

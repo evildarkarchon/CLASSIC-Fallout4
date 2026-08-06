@@ -8,7 +8,7 @@ into an ordered sequence of display lines. Each frontend decides only **how it l
 [`../adr/0007-rust-owns-crash-log-scan-run-display-content.md`](../adr/0007-rust-owns-crash-log-scan-run-display-content.md)
 records the decision and supersedes the ADR-0002 clause that assigned presentation to adapters.
 
-## Status: the TUI, the native CLI, and the Qt GUI render from it
+## Status: the TUI, the native CLI, and the Qt GUI render from it; the Node binding carries it
 
 `classic-tui` is the first consumer and depends on this crate directly, with no binding seam in the
 way — which is why it went first: it proves the six-segment model before any DTO or parity baseline
@@ -34,7 +34,13 @@ onto a choice of output stream and nothing else, so shared wording reaches a pip
 single escape sequence; the TUI maps the same severities onto a terminal palette; the GUI maps them
 onto hex colours from its dark theme and turns the paths into links. All three print the same words.
 
-Still to migrate: the Node and Python surfaces and the Python CLI. See
+`classic-node` is the first surface that carries the lines without rendering anything itself. It has
+no frontend to be: it mirrors the same flattening onto napi objects and hands them to whatever a
+consumer builds. That is why it reuses the bridge's shape rather than inventing a Node-idiomatic one
+with optional payloads — a consumer reading two bindings would otherwise read the same segment two
+ways. See [`node-python-contract-map.md`](node-python-contract-map.md).
+
+Still to migrate: the Python surface and the Python CLI. See
 [`../implementation/scan_run_presentation_consolidation.md`](../implementation/scan_run_presentation_consolidation.md).
 
 ## Public surface
@@ -190,11 +196,22 @@ treatments are the split they claim to be. It does not restate a single sentence
 
 ## Binding surface
 
-The C++ bridge only, today. Display Content is rendered **before** it crosses a seam and travels as
-mirrored data, because a `RunResult` cannot be held across one. A segment flattens to a kind tag plus
-a text field, a path field, and a count field, with unused fields empty; for a count, the text field
-carries the core-resolved noun. Both C++ frontends consume that one flattening. See the
-implementation brief for the Node and Python DTO shapes still to come.
+The C++ bridge and the Node binding, today. Display Content is rendered **before** it crosses a seam
+and travels as mirrored data, because a `RunResult` cannot be held across one. A segment flattens to
+a kind tag plus a text field, a path field, and a count field, with unused fields empty; for a count,
+the text field carries the core-resolved noun. Both C++ frontends and the Node binding consume that
+one flattening. See the implementation brief for the Python DTO shape still to come.
+
+Where the two seams differ is only in where the field can sit. The bridge has one execution envelope
+with presence flags, so a single `display_lines` on it covers the run result, the infrastructure
+error, and the resume error. Node resolves two envelopes instead — a success and a failure — and
+rejects a resume error rather than returning it, so the same coverage costs three `displayLines`
+fields: one on each envelope and one on the rejected error object beside its stable `code`. Events
+carry it identically on both.
+
+One Node-only detail worth knowing: a `Count`'s value widens from `u64` to `i64` and saturates,
+because JavaScript has no `u64`. Nothing counts anywhere near that far, and the alternative — a
+silently wrapped negative quantity — would read as nonsense rather than as an obvious ceiling.
 
 ## Testing
 

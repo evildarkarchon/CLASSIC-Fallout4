@@ -244,7 +244,24 @@ Severity reaches two surfaces. Both scan-run overlays style each line through `t
 
 ### Node
 
-`node-bindings/classic-node/src/scan_run.rs` mirrors `DisplayLine` and `DisplaySegment` as napi objects with the same flattening as the bridge, following the existing `event_to_js` pattern, and applies the crate's documented identifier casing. `index.d.ts` is refreshed and the parity baseline regenerated.
+**Landed.** `node-bindings/classic-node/src/scan_run.rs` mirrors `DisplayLine` and `DisplaySegment` as napi objects with the same flattening as the bridge, following the existing `event_to_js` pattern, and applies the crate's documented identifier casing. `index.d.ts` is refreshed and the parity baseline regenerated.
+
+This is the first surface with no frontend of its own. It renders nothing and styles nothing; it carries the lines and hands them to whatever a consumer builds. That is what made the flattening decision easy — reusing the bridge's shape unchanged, empty fields and all, rather than an idiomatic one with optional payloads, because a consumer reading two bindings would otherwise read the same segment two ways.
+
+Details worth recording:
+
+- **Three fields, not one.** The bridge has one execution envelope with presence flags, so a single `display_lines` covers all three payloads. Node resolves two envelopes — `JsScanRunSuccess` and `JsScanRunFailure` — and *rejects* a resume error rather than returning it, so the same coverage costs `displayLines` on each envelope plus one on the rejected error object. The envelope pair is shared by `scanRunExecute` and `scanRunResume`, which is what keeps the initial run and the continuation resume on one field each rather than four.
+- **The rejected resume carries lines too**, though the ticket's acceptance list named only the two results and the event. The bridge renders resume errors, and leaving them out would have left a Node consumer composing its own sentence for a reset conflict — the exact drift this work removes — in the one place where the wording matters most. It is purely additive: `code`, `kind`, `stage`, and the identities beside it are untouched.
+- **The replay rejection was routed through the shared builder.** `ScanRunResumeTaskOutput::ContinuationConsumed` used to construct its own code and message by hand. Both strings were already byte-identical to `ResumeErrorKind::as_str` and `ResumeError`'s `Display`, so the pair recorded the agreement instead of checking it — and it is what would have left that one rejection without lines. It now goes through `scan_run_resume_error_to_napi` like every other resume failure, gaining `kind` and `displayLines` and changing neither the code nor the message. A test pins both as literals, since deriving them from the same core call the projection makes would prove nothing. `kind` duplicates `code` and was not asked for; it comes free with the shared builder and is recorded in `docs/api/error-contract.md` rather than special-cased away.
+
+- **`displayLines` is required on two objects a consumer could previously build.** `JsScanRunEvent` and `JsScanRunFailure` are plain `#[napi(object)]`, so napi needs the nested display types readable from JavaScript too — which is why those are bidirectional rather than output-only. The consequence is a contract change rather than a pure addition: an object literal that used to satisfy either type no longer does. Harmless, because no entry point on this surface accepts either as an argument; both are only ever resolved out of a run. Narrowing the two parents to `object_from_js = false` instead would have been the larger change.
+- **The two hand-written `ts_arg_type` observer unions had to move with the struct.** They narrow `JsScanRunEvent` to the payloads each `kind` actually carries, which the flat all-optional struct cannot express — and they are a second copy of that shape that no compiler checks against the Rust. `bun run build:cli` caught the disagreement, which is the strongest argument for keeping `test:types` and the CLI build in the local loop.
+- **A `Count` widens to `i64` and saturates**, because JavaScript has no `u64` — the same treatment a log result's `processingTimeUs` already gets. Unreachable in practice; a wrapped negative count would read as a nonsense quantity rather than as an obvious ceiling.
+- **`JsScanRunDisplayLine` and `JsScanRunDisplaySegment` are bidirectional** `#[napi(object)]` rather than output-only, because `JsScanRunEvent` and `JsScanRunFailure` are both constructible from JavaScript today. Narrowing either of those instead would have withdrawn a shape consumers can already build.
+
+Tests are split the way the surface is. `src/scan_run_tests.rs` pins the flattening — every kind fills exactly its own fields, segments keep their order, every severity has a distinct twin, a count carries the noun Rust agreed with — plus one test per carrier that its lines are the ones the renderer produced. The Bun and Node suites prove the same facts across a real run, and add the one thing a unit test cannot: that every Autoscan Report the run wrote arrives as a whole `Path` segment. No test restates a sentence; wording stays pinned once in `classic-scan-presentation`.
+
+Only `node_api_surface.json` moved in the baseline. No Tier-1 row changed, because the parity contract maps Tier-1 *core* crates to Node exports and `classic-scan-presentation` is not one of them.
 
 ### Python
 
@@ -289,8 +306,8 @@ Adapter Mapping Rule 6 still supersedes this when the render phase lands: `Recov
 3. **`classic-scan-presentation` crate** with `render_run_result`, `render_event`, and the two error renderers, plus unit tests. **Landed.**
 4. **TUI migration.** Direct Rust dependency, no FFI, fastest feedback; proves the segment model before any DTO exists. **Landed.**
 5. **Bridge DTOs and CLI migration.** The CLI is the simplest C++ consumer and shakes the DTO out before GUI threading is involved. **Landed.**
-6. **GUI migration.**
-7. **Node and Python surfaces**, then `classic-py-cli` migration. Last, because the segment taxonomy is only stable now and the baselines regenerate once.
+6. **GUI migration.** **Landed.**
+7. **Node and Python surfaces**, then `classic-py-cli` migration. Last, because the segment taxonomy is only stable now and the baselines regenerate once. **Node landed**; Python and `classic-py-cli` remain.
 8. **`CrashLogScanRunContinuation::abandon`** and the three call-site replacements.
 9. **Recovery prompt**, gated as above.
 

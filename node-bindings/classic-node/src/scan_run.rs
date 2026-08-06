@@ -15,6 +15,10 @@ use crate::installed_yaml_data::{
 };
 use crate::scanlog::JsFcxConfigIssue;
 use crate::shared::{JsGameId, js_to_core_game_id};
+use classic_scan_presentation::{
+    DisplayLine, DisplaySegment, DisplaySeverity, render_event, render_infrastructure_error,
+    render_resume_error, render_run_result,
+};
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanFacts,
@@ -407,6 +411,109 @@ pub struct JsScanRunLocalIgnoreResetRunData {
     pub replacement_identity: JsYamlDataContentIdentity,
 }
 
+/// How gravely one Crash Log Scan Run display line should read.
+///
+/// A consumer maps this onto its own styling. Rust never names a colour, a text
+/// attribute, or a widget — a plain, pipeable frontend may map every severity
+/// onto nothing at all and still be correct.
+///
+/// Mirrors `classic_scan_presentation::DisplaySeverity` exhaustively.
+// `Debug` and `PartialEq` exist for the flattening tests, which compare a
+// projected severity against the twin it should have produced. Same reason
+// `JsScanRunLocalIgnoreState` carries `PartialEq`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[napi(string_enum)]
+pub enum JsScanRunDisplaySeverity {
+    /// Neutral fact about the run.
+    Info,
+    /// Worth noticing, but nothing failed.
+    Notice,
+    /// Something is wrong or incomplete and may need attention.
+    Warning,
+    /// Something failed.
+    Failure,
+    /// Something completed as intended.
+    Success,
+}
+
+/// Which payload field of a [`JsScanRunDisplaySegment`] carries its value.
+///
+/// Mirrors the variant set of `classic_scan_presentation::DisplaySegment`. The
+/// taxonomy is fixed at six kinds for its first version: each addition touches
+/// three binding parity baselines, so growth must be a deliberate decision.
+// See `JsScanRunDisplaySeverity` for why the comparison derives are here.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[napi(string_enum)]
+pub enum JsScanRunDisplaySegmentKind {
+    /// Fixed Rust-owned prose, carried in `text`.
+    Text,
+    /// A Display Label, carried in `text`.
+    Label,
+    /// A quantity in `count` beside the noun Rust resolved for it in `text`.
+    Count,
+    /// A filesystem path, carried in `path`.
+    Path,
+    /// The name of a domain entity that is not a path, carried in `text`.
+    Name,
+    /// A value set apart from the prose around it, carried in `text`.
+    Emphasis,
+}
+
+/// One typed piece of a Crash Log Scan Run display line.
+///
+/// The six-variant Rust segment crosses flattened: a kind tag plus one field per
+/// payload shape, with the fields the kind does not use left empty. Read only the
+/// field `kind` selects.
+///
+/// The flattening is the C++ bridge's, field for field, rather than a
+/// Node-idiomatic shape with optional payloads. One flattening across every
+/// binding is what lets a wording fix reach all of them without three separate
+/// readings of the same segment, and it is what the parity baselines pin.
+//
+// Bidirectional rather than output-only, because napi requires a nested type to be
+// readable from JavaScript when its parent is, and `JsScanRunEvent` and
+// `JsScanRunFailure` both are. The alternative — narrowing those two to
+// output-only — is the larger change to an existing surface.
+//
+// Note the consequence, since it is a contract change rather than a pure addition:
+// `displayLines` is required, so a JavaScript object literal that used to satisfy
+// `JsScanRunEvent` or `JsScanRunFailure` no longer does. Harmless in practice —
+// no entry point on this surface accepts either type as an argument; both are only
+// ever resolved out of a scan run — but it is why neither was narrowed instead.
+#[napi(object)]
+pub struct JsScanRunDisplaySegment {
+    /// Selects which of the fields below carries this segment's payload.
+    pub kind: JsScanRunDisplaySegmentKind,
+    /// Payload for `Text`, `Label`, `Name`, and `Emphasis`. For `Count` this is
+    /// the noun Rust already resolved to agree with `count`, so no consumer
+    /// re-decides pluralization and no user reads "1 logs". Empty for `Path`.
+    pub text: String,
+    /// Payload for `Path`, whole and untruncated. Truncation is the consumer's
+    /// choice. Empty otherwise.
+    pub path: String,
+    /// Payload for `Count`. Zero otherwise.
+    ///
+    /// Widened to `i64` for the same reason a log result's processing time is:
+    /// JavaScript has no `u64`, and this surface saturates rather than wrapping.
+    pub count: i64,
+}
+
+/// One line of Crash Log Scan Run Display Content.
+///
+/// A consumer concatenates `segments` in order and never reorders within a line.
+/// It may reorder, group, or omit whole lines. It must not re-derive a Display
+/// Label already carried in a `Label` segment, and must not re-decide a
+/// `Count`'s noun.
+//
+// Bidirectional for the same reason as `JsScanRunDisplaySegment` above.
+#[napi(object)]
+pub struct JsScanRunDisplayLine {
+    /// How gravely this line should read.
+    pub severity: JsScanRunDisplaySeverity,
+    /// The line's content, in reading order.
+    pub segments: Vec<JsScanRunDisplaySegment>,
+}
+
 /// Complete terminal Crash Log Scan Run result.
 #[napi(object, object_from_js = false)]
 pub struct JsScanRunResult {
@@ -463,6 +570,18 @@ pub struct JsScanRunEvent {
     pub phase: Option<String>,
     #[napi(ts_type = "'succeeded' | 'failed' | 'cancelled_before_start'")]
     pub disposition: Option<String>,
+    /// What this event says, in Rust's words.
+    ///
+    /// Rendered inline in the observer adapter before the event reaches
+    /// JavaScript, so a consumer that shows progress states it in the same words
+    /// every other frontend does. One event can produce more than one line — a
+    /// discovery that rejected some of its targeted inputs states the rejection
+    /// separately.
+    ///
+    /// Unlike the optional fields above, this is never defaulted by `kind`: every
+    /// event kind renders. A consumer that shows only some kinds omits whole
+    /// lines, which the adapter contract allows.
+    pub display_lines: Vec<JsScanRunDisplayLine>,
 }
 
 /// Successful final operation envelope with adapter-only observation failure data.
@@ -470,6 +589,16 @@ pub struct JsScanRunEvent {
 pub struct JsScanRunSuccess {
     pub result: JsScanRunResult,
     pub observer_error: Option<String>,
+    /// What this run says, in Rust's words.
+    ///
+    /// Rendered while the Rust run result was still live, because JavaScript
+    /// receives a projected copy and cannot render from the Rust value later. A
+    /// consumer states the run from these lines rather than composing sentences
+    /// of its own; `result` stays the machine-facing surface it matches on.
+    ///
+    /// `scanRunExecute` and `scanRunResume` resolve the same envelope, so this
+    /// one field covers the initial run and the continuation resume alike.
+    pub display_lines: Vec<JsScanRunDisplayLine>,
 }
 
 /// Failed final operation envelope with adapter-only observation failure data.
@@ -477,6 +606,13 @@ pub struct JsScanRunSuccess {
 pub struct JsScanRunFailure {
     pub error: JsScanRunInfrastructureError,
     pub observer_error: Option<String>,
+    /// What this failure says, in Rust's words.
+    ///
+    /// The stage reads as its Display Label here, never as the Vocabulary Token
+    /// `error.stage` still publishes. That split is the point: a user should not
+    /// have to know that `formid_database_access` means "FormID database access",
+    /// and a consumer should never match on the sentence.
+    pub display_lines: Vec<JsScanRunDisplayLine>,
 }
 
 /// Internal task output retained until conversion on the JavaScript thread.
@@ -530,14 +666,10 @@ impl Task for ScanRunTask {
             .clone();
 
         Ok(match result {
-            Ok(result) => ScanRunTaskOutput::Success(Box::new(JsScanRunSuccess {
-                result: run_result_to_js(result),
-                observer_error,
-            })),
-            Err(error) => ScanRunTaskOutput::Failure(JsScanRunFailure {
-                error: infrastructure_error_to_js(error),
-                observer_error,
-            }),
+            Ok(result) => {
+                ScanRunTaskOutput::Success(Box::new(success_envelope(result, observer_error)))
+            }
+            Err(error) => ScanRunTaskOutput::Failure(failure_envelope(error, observer_error)),
         })
     }
 
@@ -560,8 +692,12 @@ impl Task for ScanRunTask {
 pub fn scan_run_execute(
     request: &ScanRunRequest,
     cancellation: &ScanRunCancellation,
+    // Narrows `JsScanRunEvent` to the payloads each `kind` actually carries, which
+    // the flat all-optional struct cannot express. Every member repeats
+    // `displayLines` because it is the one field no `kind` defaults away — an
+    // event that renders nothing does not exist.
     #[napi(
-        ts_arg_type = "(event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void"
+        ts_arg_type = "(event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void"
     )]
     observer: Option<Function<'_, FnArgs<(JsScanRunEvent,)>, UnknownReturnValue>>,
     cancel_on_observer_error: Option<bool>,
@@ -635,15 +771,11 @@ impl Task for ScanRunResumeTask {
             .clone();
 
         Ok(match result {
-            Ok(result) => ScanRunResumeTaskOutput::Success(Box::new(JsScanRunSuccess {
-                result: run_result_to_js(result),
-                observer_error,
-            })),
+            Ok(result) => {
+                ScanRunResumeTaskOutput::Success(Box::new(success_envelope(result, observer_error)))
+            }
             Err(contract::ResumeError::Infrastructure(error)) => {
-                ScanRunResumeTaskOutput::Failure(JsScanRunFailure {
-                    error: infrastructure_error_to_js(error),
-                    observer_error,
-                })
+                ScanRunResumeTaskOutput::Failure(failure_envelope(error, observer_error))
             }
             Err(contract::ResumeError::ContinuationConsumed) => {
                 ScanRunResumeTaskOutput::ContinuationConsumed
@@ -657,12 +789,15 @@ impl Task for ScanRunResumeTask {
         match output {
             ScanRunResumeTaskOutput::Success(result) => Ok(Either::A(*result)),
             ScanRunResumeTaskOutput::Failure(error) => Ok(Either::B(error)),
-            ScanRunResumeTaskOutput::ContinuationConsumed => Err(napi::Error::from(
-                JsError::from(napi::Error::new(
-                    "scan_run_continuation_consumed",
-                    "Crash Log Scan Run continuation was already consumed",
-                ))
-                .into_unknown(env),
+            // Routed through the shared rejection builder rather than rebuilding
+            // the code and message by hand. The pair written here was already
+            // byte-identical to `ResumeErrorKind::as_str` and `ResumeError`'s
+            // `Display`, so it recorded the agreement instead of checking it —
+            // and it is what kept this one rejection from carrying the rendered
+            // lines every other one now does.
+            ScanRunResumeTaskOutput::ContinuationConsumed => Err(scan_run_resume_error_to_napi(
+                env,
+                contract::ResumeError::ContinuationConsumed,
             )),
             ScanRunResumeTaskOutput::LocalIgnoreResetError(error) => {
                 Err(scan_run_resume_error_to_napi(env, error))
@@ -682,8 +817,10 @@ pub fn scan_run_resume(
     continuation: &ScanRunContinuation,
     decision: JsScanRunLocalIgnoreRecoveryDecision,
     cancellation: &ScanRunCancellation,
+    // Same narrowing as `scan_run_execute`, minus `discovery_completed`: a resumed
+    // run replays the discovery it already made rather than observing it again.
     #[napi(
-        ts_arg_type = "(event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void"
+        ts_arg_type = "(event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void"
     )]
     observer: Option<Function<'_, FnArgs<(JsScanRunEvent,)>, UnknownReturnValue>>,
     cancel_on_observer_error: Option<bool>,
@@ -1039,10 +1176,12 @@ enum ScanRunResumeErrorMetadata {
     },
 }
 
-/// Stable code, message, and optional metadata for one rejected continuation resume.
+/// Stable code, message, rendered lines, and optional metadata for one rejected
+/// continuation resume.
 struct ScanRunResumeErrorProjection {
     code: &'static str,
     message: String,
+    display_lines: Vec<JsScanRunDisplayLine>,
     metadata: ScanRunResumeErrorMetadata,
 }
 
@@ -1050,6 +1189,11 @@ struct ScanRunResumeErrorProjection {
 fn project_scan_run_resume_error(error: contract::ResumeError) -> ScanRunResumeErrorProjection {
     let code = error.kind().as_str();
     let message = error.to_string();
+    // Rendered from the borrowed error before the match below consumes it. The
+    // rendered lines deliberately omit the stable resume error code that `code`
+    // still carries: the code is machine-facing identity for a consumer to match
+    // on, and a sentence is not where it belongs.
+    let display_lines = display_lines_to_js(&render_resume_error(&error));
     let metadata = match error {
         contract::ResumeError::LocalIgnoreResetConflict(conflict) => {
             ScanRunResumeErrorMetadata::Conflict {
@@ -1088,6 +1232,7 @@ fn project_scan_run_resume_error(error: contract::ResumeError) -> ScanRunResumeE
     ScanRunResumeErrorProjection {
         code,
         message,
+        display_lines,
         metadata,
     }
 }
@@ -1106,6 +1251,18 @@ fn scan_run_resume_error_to_napi(env: Env, error: contract::ResumeError) -> napi
         );
     };
     if object.set_named_property("kind", projection.code).is_err() {
+        return napi::Error::from(
+            JsError::from(napi::Error::new(projection.code, projection.message)).into_unknown(env),
+        );
+    }
+    // Purely additive. `code`, `kind`, `stage`, and the identities below stay the
+    // machine-facing surface a consumer matches on; these lines are the
+    // human-facing half, in the same words every other frontend says them in. A
+    // consumer that only reports the failure now has a sentence it did not write.
+    if object
+        .set_named_property("displayLines", projection.display_lines)
+        .is_err()
+    {
         return napi::Error::from(
             JsError::from(napi::Error::new(projection.code, projection.message)).into_unknown(env),
         );
@@ -1337,6 +1494,115 @@ fn run_result_to_js(value: contract::RunResult) -> JsScanRunResult {
     }
 }
 
+/// Builds the resolved success envelope, rendering the run before projecting it.
+///
+/// The order is load-bearing. `run_result_to_js` consumes the result — including
+/// moving its one-shot continuation into the opaque carrier — so the render has
+/// to happen while the Rust value is still borrowable. Rendering afterwards would
+/// have nothing left to render, and writing it that way does not compile.
+///
+/// `scanRunExecute` and `scanRunResume` both resolve this envelope, which is why
+/// one builder serves the initial run and the continuation resume alike.
+fn success_envelope(
+    result: contract::RunResult,
+    observer_error: Option<String>,
+) -> JsScanRunSuccess {
+    let display_lines = display_lines_to_js(&render_run_result(&result));
+    JsScanRunSuccess {
+        result: run_result_to_js(result),
+        observer_error,
+        display_lines,
+    }
+}
+
+/// Builds the resolved failure envelope, rendering the failure before projecting it.
+fn failure_envelope(
+    error: contract::InfrastructureError,
+    observer_error: Option<String>,
+) -> JsScanRunFailure {
+    let display_lines = display_lines_to_js(&render_infrastructure_error(&error));
+    JsScanRunFailure {
+        error: infrastructure_error_to_js(error),
+        observer_error,
+        display_lines,
+    }
+}
+
+/// Flattens rendered Display Content into the JavaScript mirror types.
+///
+/// The flattening is the C++ bridge's, unchanged: each segment crosses as a kind
+/// tag plus one field per payload shape, and the fields the kind does not use
+/// stay empty rather than absent. Making them optional here would be more
+/// idiomatic JavaScript and worse parity — a consumer reading two bindings would
+/// read the same segment two ways, and the taxonomy is frozen precisely so that
+/// cannot happen.
+fn display_lines_to_js(lines: &[DisplayLine]) -> Vec<JsScanRunDisplayLine> {
+    lines
+        .iter()
+        .map(|line| JsScanRunDisplayLine {
+            severity: map_display_severity(line.severity),
+            segments: line.segments.iter().map(display_segment_to_js).collect(),
+        })
+        .collect()
+}
+
+/// Flattens one typed segment, filling exactly the fields its kind selects.
+fn display_segment_to_js(segment: &DisplaySegment) -> JsScanRunDisplaySegment {
+    let mut projected = JsScanRunDisplaySegment {
+        kind: JsScanRunDisplaySegmentKind::Text,
+        text: String::new(),
+        path: String::new(),
+        count: 0,
+    };
+    match segment {
+        DisplaySegment::Text(text) => {
+            // Assigned rather than left to the initializer's default, so reordering
+            // the fields above cannot silently relabel a `Text` segment as some
+            // other kind.
+            projected.kind = JsScanRunDisplaySegmentKind::Text;
+            projected.text = (*text).to_string();
+        }
+        DisplaySegment::Label(label) => {
+            projected.kind = JsScanRunDisplaySegmentKind::Label;
+            projected.text = (*label).to_string();
+        }
+        DisplaySegment::Count { value, noun } => {
+            projected.kind = JsScanRunDisplaySegmentKind::Count;
+            // The noun rides in `text` already agreeing with `count`. A consumer
+            // prints the two side by side; it never re-decides the form.
+            projected.text = (*noun).to_string();
+            projected.count = u64_to_i64(*value);
+        }
+        DisplaySegment::Path(path) => {
+            projected.kind = JsScanRunDisplaySegmentKind::Path;
+            projected.path = path.to_string_lossy().into_owned();
+        }
+        DisplaySegment::Name(name) => {
+            projected.kind = JsScanRunDisplaySegmentKind::Name;
+            projected.text = name.clone();
+        }
+        DisplaySegment::Emphasis(value) => {
+            projected.kind = JsScanRunDisplaySegmentKind::Emphasis;
+            projected.text = value.clone();
+        }
+    }
+    projected
+}
+
+/// Maps how gravely a line should read onto its JavaScript twin.
+///
+/// Exhaustive rather than numeric: the two enumerations agree today, but a
+/// `match` is what makes them keep agreeing when either one gains a variant.
+const fn map_display_severity(value: DisplaySeverity) -> JsScanRunDisplaySeverity {
+    match value {
+        DisplaySeverity::Info => JsScanRunDisplaySeverity::Info,
+        DisplaySeverity::Notice => JsScanRunDisplaySeverity::Notice,
+        DisplaySeverity::Warning => JsScanRunDisplaySeverity::Warning,
+        DisplaySeverity::Failure => JsScanRunDisplaySeverity::Failure,
+        DisplaySeverity::Success => JsScanRunDisplaySeverity::Success,
+    }
+}
+
 /// Maps every typed run-wide error field, including its optional path.
 fn infrastructure_error_to_js(
     value: contract::InfrastructureError,
@@ -1376,8 +1642,23 @@ fn log_event_to_js(value: contract::LogEvent) -> JsScanRunLogEvent {
     }
 }
 
-/// Maps every event variant into one stable tagged JavaScript shape.
+/// Maps one lifecycle event, rendering its Display Content on the way through.
+///
+/// Rendering happens here, inline on the observer path, before the event reaches
+/// JavaScript. There is no later opportunity: the JavaScript observer receives a
+/// projected copy and never holds the Rust event.
 fn event_to_js(value: contract::Event) -> JsScanRunEvent {
+    let display_lines = display_lines_to_js(&render_event(&value));
+    let mut event = tagged_event_to_js(value);
+    event.display_lines = display_lines;
+    event
+}
+
+/// Maps every event variant into one stable tagged JavaScript shape.
+///
+/// Leaves `display_lines` empty; [`event_to_js`] fills it once the borrowed event
+/// has been rendered.
+fn tagged_event_to_js(value: contract::Event) -> JsScanRunEvent {
     match value {
         contract::Event::DiscoveryCompleted(discovery) => JsScanRunEvent {
             kind: "discovery_completed".to_string(),
@@ -1386,6 +1667,7 @@ fn event_to_js(value: contract::Event) -> JsScanRunEvent {
             log: None,
             phase: None,
             disposition: None,
+            display_lines: Vec::new(),
         },
         contract::Event::EffectiveConcurrencySelected {
             effective_concurrency,
@@ -1396,6 +1678,7 @@ fn event_to_js(value: contract::Event) -> JsScanRunEvent {
             log: None,
             phase: None,
             disposition: None,
+            display_lines: Vec::new(),
         },
         contract::Event::LogQueued(log) => JsScanRunEvent {
             kind: "log_queued".to_string(),
@@ -1404,6 +1687,7 @@ fn event_to_js(value: contract::Event) -> JsScanRunEvent {
             log: Some(log_event_to_js(log)),
             phase: None,
             disposition: None,
+            display_lines: Vec::new(),
         },
         contract::Event::LogStarted(log) => JsScanRunEvent {
             kind: "log_started".to_string(),
@@ -1412,6 +1696,7 @@ fn event_to_js(value: contract::Event) -> JsScanRunEvent {
             log: Some(log_event_to_js(log)),
             phase: None,
             disposition: None,
+            display_lines: Vec::new(),
         },
         contract::Event::LogPhase { log, phase } => JsScanRunEvent {
             kind: "log_phase".to_string(),
@@ -1420,6 +1705,7 @@ fn event_to_js(value: contract::Event) -> JsScanRunEvent {
             log: Some(log_event_to_js(log)),
             phase: Some(phase_to_string(phase)),
             disposition: None,
+            display_lines: Vec::new(),
         },
         contract::Event::LogFinished { log, disposition } => JsScanRunEvent {
             kind: "log_finished".to_string(),
@@ -1428,6 +1714,7 @@ fn event_to_js(value: contract::Event) -> JsScanRunEvent {
             log: Some(log_event_to_js(log)),
             phase: None,
             disposition: Some(disposition.as_str().to_string()),
+            display_lines: Vec::new(),
         },
     }
 }

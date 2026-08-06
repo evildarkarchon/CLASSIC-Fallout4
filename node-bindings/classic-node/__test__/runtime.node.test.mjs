@@ -474,6 +474,7 @@ if (activeTier1Owners.has("scanlog")) {
 
     try {
       const standardEvents = [];
+      const eventDisplayLineCounts = [];
       const standardRequest = classic.ScanRunRequest.standard(
         configuration,
         { baseDirectory: join(workspace, "incoming") },
@@ -484,6 +485,7 @@ if (activeTier1Owners.has("scanlog")) {
         new classic.ScanRunCancellation(),
         (event) => {
           standardEvents.push(event.kind);
+          eventDisplayLineCounts.push(event.displayLines.length);
         },
       );
 
@@ -504,6 +506,33 @@ if (activeTier1Owners.has("scanlog")) {
       assert.equal(discoveredLogPath.endsWith("crash-2026-03-06-12-00-00.log"), true);
       assert.equal(standardEvents.includes("discovery_completed"), true);
       assert.equal(standardEvents.includes("effective_concurrency_selected"), true);
+
+      // Display Content reaches the Node runtime as well as Bun. Kept to the
+      // shape rather than the wording: the sentences are pinned once in Rust,
+      // and restating one here would be a second copy of it. What matters under
+      // this runtime is that the lines arrive at all and that a segment's kind
+      // still selects which field to read.
+      assert.equal(standardExecution.displayLines.length > 0, true);
+      assert.equal(
+        eventDisplayLineCounts.every((count) => count > 0),
+        true,
+        "every observed event states something",
+      );
+      const standardSegments = standardExecution.displayLines.flatMap(
+        (line) => line.segments,
+      );
+      for (const segment of standardSegments) {
+        if (segment.kind === "Path") {
+          assert.equal(segment.text, "");
+          assert.equal(segment.count, 0);
+        } else if (segment.kind === "Count") {
+          assert.equal(segment.path, "");
+          assert.notEqual(segment.text, "");
+        } else {
+          assert.equal(segment.path, "");
+          assert.equal(segment.count, 0);
+        }
+      }
 
       const missingPath = join(workspace, "missing-crash.log");
       const targetedRequest = classic.ScanRunRequest.targeted(

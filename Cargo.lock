@@ -895,6 +895,7 @@ dependencies = [
  "classic-perf-core",
  "classic-registry-core",
  "classic-resource-core",
+ "classic-scan-presentation",
  "classic-scangame-core",
  "classic-scanlog-core",
  "classic-settings-core",
