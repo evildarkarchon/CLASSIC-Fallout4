@@ -151,8 +151,19 @@ it does not re-export. `classic-tui` carries the same dependency for the same re
 line's segments into one string, keeps the whole path in the scrollable overlay and shortens it to a
 filename in the one-row status line, groups the FCX Mode setup projection in after the rendered
 lines, and hands the severity through to `theme::severity_color`. It composes no sentence about a
-run, calls `Vocabulary::label()` nowhere, and keeps a `plural` helper for one caller only — the
-Local Ignore recovery prompt, whose renderer lands with the gated recovery phase.
+run and keeps a `plural` helper for one caller only — the Local Ignore recovery prompt, whose
+renderer lands with the gated recovery phase.
+
+Its handling of severity on the shared status row is worth copying. That row is written from around
+sixty places, most of them nothing to do with a scan run and carrying no severity, so the TUI stores
+the severity paired with the exact text it applied to and drops it the moment anything else writes
+there. A frontend with a similar shared status area gets the same problem, and pairing solves it
+without asking every unrelated write site to clear a flag.
+
+Its `classic-vocabulary` edge moved to `[dev-dependencies]`, which is the clearest single signal
+that the migration worked: no non-test code in that crate calls `label()` any more, because every
+label it shows now arrives inside a `DisplaySegment::Label`. The tests still call it, to prove the
+label rather than the token is what a user reads.
 
 Its conformance test is deliberately thin: that presented lines carry core's lines in core's order
 with neither words nor severities changed, that a count prints core's noun, and that the two path

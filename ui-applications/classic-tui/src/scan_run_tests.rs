@@ -348,12 +348,15 @@ fn an_event_renders_cores_lines_in_cores_order() {
         2,
         "this fixture must exercise the two-line shape"
     );
-    let status = format_event(&event).status;
+    // Compared case-insensitively rather than by slicing the first character off, because the
+    // status row is sentence-cased and a byte slice would panic the day that character is not
+    // one byte wide.
+    let status = format_event(&event).status.to_lowercase();
     let accepted = status
-        .find(&expected_text(&rendered[0])[1..])
+        .find(&expected_text(&rendered[0]).to_lowercase())
         .expect("the acceptance line must reach the status row");
     let rejected = status
-        .find(&expected_text(&rendered[1]))
+        .find(&expected_text(&rendered[1]).to_lowercase())
         .expect("the rejection line must reach the status row");
     assert!(
         accepted < rejected,
@@ -639,10 +642,14 @@ fn per_log_lines_stay_in_discovery_order() {
 
 /// Verifies every scan progress phase reaches the user as its core Display Label.
 ///
-/// Exhaustive over `VARIANTS` and derived from the core rather than from a literal table, so a pass
-/// means agreement with the owning crate instead of a matching restatement of it. The negative half
-/// asserts the Vocabulary Token is absent: a progress line reading `analyze crash-01.log` would be
-/// an identifier standing in for prose.
+/// Exhaustive rather than sampled, for the reason the single-phase case above is not enough: that
+/// case pins `Analyze` alone, so the four participles this frontend used to keep in a table of its
+/// own could have been replaced by three wrong words and one right one without the suite noticing.
+///
+/// Derived from the core rather than from a literal table, so a pass means agreement with the
+/// owning crate instead of a matching restatement of it. The negative half asserts the Vocabulary
+/// Token is absent: a progress line reading `analyze crash-01.log` would be an identifier standing
+/// in for prose.
 #[test]
 fn every_scan_progress_phase_renders_its_display_label() {
     for phase in <ScanProgressPhase as Vocabulary>::VARIANTS.iter().copied() {
@@ -799,7 +806,10 @@ fn recovery_prompt_offers_both_decisions_and_a_non_mutating_cancel() {
     let text = join_presented(&prompt.overlay_lines());
 
     assert_eq!(prompt.retained_logs, 2);
-    assert_eq!(prompt.message, "Local Ignore recovery is required");
+    assert_eq!(
+        prompt.message.as_deref(),
+        Some("Local Ignore recovery is required")
+    );
     assert!(text.contains("Local Ignore recovery is required"));
     assert!(text.contains("Retained discovery: 2 crash logs will be scanned once you decide."));
     assert!(text.contains(PROCEED_WITHOUT_IGNORE_CHOICE));
@@ -832,7 +842,7 @@ fn recovery_prompt_carries_the_run_as_core_describes_it() {
 #[test]
 fn recovery_prompt_omits_reset_when_the_contract_says_it_cannot_succeed() {
     let prompt = LocalIgnoreRecoveryPrompt {
-        message: "Local Ignore recovery is required".to_string(),
+        message: Some("Local Ignore recovery is required".to_string()),
         retained_logs: 2,
         run_detail: Vec::new(),
         reset_available: false,
@@ -853,13 +863,54 @@ fn recovery_prompt_omits_reset_when_the_contract_says_it_cannot_succeed() {
 }
 
 /// Verifies a paused run without a Rust message still explains why a decision is needed.
+///
+/// It used to explain it with a sentence written here. That sentence is gone, because core's own
+/// status line says the same thing two lines further down the same overlay and the two were free to
+/// disagree. What replaces it is not silence: the status row falls through to core's rendered
+/// status, and the overlay still opens on it.
 #[test]
-fn recovery_prompt_falls_back_to_an_explicit_default_explanation() {
-    let prompt = describe_local_ignore_recovery(&paused_recovery_result(None));
+fn recovery_prompt_explains_a_paused_run_that_carried_no_message() {
+    let result = paused_recovery_result(None);
+    let prompt = describe_local_ignore_recovery(&result);
 
+    assert_eq!(prompt.message, None);
+    let status = prompt.status_line();
+    assert!(
+        status.contains(CrashLogScanRunStatus::LocalIgnoreRecoveryRequired.label()),
+        "the status row must still name why the run paused: {status}"
+    );
+    // And the overlay says it too, from core's run detail rather than from a headline written here.
+    let text = join_presented(&prompt.overlay_lines());
+    assert!(
+        text.contains(CrashLogScanRunStatus::LocalIgnoreRecoveryRequired.label()),
+        "the overlay must still name why the run paused: {text}"
+    );
+}
+
+/// Verifies the overlay states the pause once rather than three times over.
+///
+/// The overlay title already names it, and core's run detail states it twice more — as the status
+/// line and as `Message:`. A fourth copy written here is what was removed, so what this pins is the
+/// absence: the body opens on the retained-discovery line, not on a restatement.
+#[test]
+fn recovery_prompt_does_not_restate_the_run_message_above_the_choices() {
+    let result = paused_recovery_result(Some("Local Ignore recovery is required"));
+    let prompt = describe_local_ignore_recovery(&result);
+    let lines = prompt.overlay_lines();
+
+    assert!(
+        lines[0].text.starts_with("Retained discovery:"),
+        "the body must open on the retained-discovery line: {}",
+        lines[0].text
+    );
+    let before_choices = lines
+        .iter()
+        .take_while(|line| !line.text.starts_with(PROCEED_WITHOUT_IGNORE_CHOICE))
+        .filter(|line| line.text.contains("Local Ignore recovery is required"))
+        .count();
     assert_eq!(
-        prompt.message,
-        "Local Ignore recovery is required before scanning can continue"
+        before_choices, 0,
+        "the run message must not be restated above the choices"
     );
 }
 

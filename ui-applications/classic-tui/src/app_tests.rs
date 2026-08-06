@@ -309,7 +309,22 @@ fn recovery_resume_failure_is_retained_as_actionable_status() {
         "the stable code must not reach the status line: {}",
         app.scan_status
     );
-    assert!(!app.scan_status.is_empty());
+    // What replaces it is core's own headline, derived here rather than restated: the run must
+    // still tell the user what went wrong, or dropping the code would have cost information.
+    let rendered =
+        classic_scan_presentation::render_resume_error(&ResumeError::ContinuationConsumed);
+    let headline = rendered
+        .first()
+        .expect("a resume failure always renders a headline");
+    let classic_scan_presentation::DisplaySegment::Text(headline) = headline.segments[0] else {
+        panic!("the headline opens on fixed core prose");
+    };
+    assert_eq!(app.scan_status, headline);
+    assert_eq!(
+        app.scan_status_severity(),
+        Some(classic_scan_presentation::DisplaySeverity::Failure),
+        "a failed recovery must be able to stand out through colour"
+    );
     assert!(matches!(
         app.last_scan_run,
         Some(LastScanRun::RecoveryFailed(

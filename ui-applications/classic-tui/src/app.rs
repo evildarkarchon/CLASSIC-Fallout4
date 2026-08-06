@@ -3,6 +3,7 @@ use std::time::{Duration, Instant};
 
 use classic_file_io_core::BackupType;
 use classic_path_core::validate_custom_scan_path;
+use classic_scan_presentation::DisplaySeverity;
 use classic_scanlog_core::scan_run::contract::{
     self as scan_run_contract, Cancellation, Configuration, CrashLogScanRunContinuation,
     Event as ScanRunEvent, InfrastructureError, LocalIgnoreRecoveryDecision, Options, ResumeError,
@@ -351,6 +352,15 @@ pub struct App {
     pub scan_in_progress: bool,
     pub scan_progress: f64,
     pub scan_status: String,
+    /// The severity core gave the status row, paired with the exact text it applied to.
+    ///
+    /// Paired rather than stored alone because `scan_status` is written from around sixty places,
+    /// and all but a handful — backup outcomes, clipboard results, settings migrations — have
+    /// nothing to do with a Crash Log Scan Run and no severity to offer. Keeping the text beside
+    /// the severity means any of those writes silently invalidates it, so a failed run's red cannot
+    /// bleed onto the unrelated message that replaced it. The invariant holds by construction
+    /// instead of by sixty call sites remembering to clear a flag.
+    scan_status_severity: Option<(String, DisplaySeverity)>,
     pub scan_summary_scroll: u16,
     /// Scroll offset for the recovery overlay, so long diagnostics stay reachable on any terminal.
     pub local_ignore_recovery_scroll: u16,
@@ -467,6 +477,8 @@ impl App {
             scan_in_progress: false,
             scan_progress: 0.0,
             scan_status: initial_status,
+            // The startup status is this frontend's own, so it carries no core severity.
+            scan_status_severity: None,
             scan_summary_scroll: 0,
             local_ignore_recovery_scroll: 0,
             status_clear_at: None,
@@ -551,7 +563,7 @@ impl App {
             AsyncMessage::ScanEvent(event) => {
                 let presentation = format_event(&event);
                 self.scan_progress = self.scan_progress.max(presentation.percent);
-                self.scan_status = presentation.status;
+                self.set_scan_status(presentation.status, presentation.severity);
             }
             AsyncMessage::ScanFinished(outcome) => {
                 self.scan_in_progress = false;
@@ -569,7 +581,7 @@ impl App {
                         self.scan_cancellation = None;
                         let presentation = format_error(&error);
                         self.scan_progress = presentation.percent;
-                        self.scan_status = presentation.status;
+                        self.set_scan_status(presentation.status, presentation.severity);
                         self.status_clear_at =
                             Some(Instant::now() + Duration::from_secs(STATUS_CLEAR_SECONDS));
                         self.last_scan_run = Some(LastScanRun::Failed(error));
@@ -592,7 +604,7 @@ impl App {
                     Err(error) => {
                         let presentation = format_resume_error(&error);
                         self.scan_progress = presentation.percent;
-                        self.scan_status = presentation.status;
+                        self.set_scan_status(presentation.status, presentation.severity);
                         // Typed recovery failures stay actionable; they never silently expire.
                         self.status_clear_at = None;
                         self.last_scan_run = Some(LastScanRun::RecoveryFailed(error));
@@ -650,7 +662,7 @@ impl App {
         drop(result.continuation.take());
         let presentation = format_result(&result);
         self.scan_progress = presentation.percent;
-        self.scan_status = presentation.status;
+        self.set_scan_status(presentation.status, presentation.severity);
         let should_switch_to_results = completed_with_scanned_logs(&result);
         self.status_clear_at = Some(Instant::now() + Duration::from_secs(STATUS_CLEAR_SECONDS));
         if self
@@ -720,7 +732,10 @@ impl App {
             return;
         }
 
-        self.scan_status = prompt.message;
+        // A paused run is a question rather than a failure, which is the severity core gives the
+        // status itself; it is named here because the prompt is this frontend's until the recovery
+        // prompt renderer lands.
+        self.set_scan_status(prompt.status_line(), DisplaySeverity::Warning);
         // No auto-clear: the question stays visible until the user answers it.
         self.status_clear_at = None;
         self.active_overlay = Some(Overlay::LocalIgnoreRecovery);
@@ -1305,6 +1320,24 @@ impl App {
             .map(PathBuf::from)
             .collect();
         (managed_game, databases)
+    }
+
+    /// Sets the status row from a core-rendered presentation, keeping its severity beside it.
+    fn set_scan_status(&mut self, status: String, severity: DisplaySeverity) {
+        self.scan_status_severity = Some((status.clone(), severity));
+        self.scan_status = status;
+    }
+
+    /// Returns the severity core gave the status row, if a Crash Log Scan Run is what wrote it.
+    ///
+    /// `None` once anything else has written `scan_status`, which is the whole point of storing the
+    /// text alongside: an unrelated message inherits no colour from the run before it.
+    #[must_use]
+    pub fn scan_status_severity(&self) -> Option<DisplaySeverity> {
+        self.scan_status_severity
+            .as_ref()
+            .filter(|(text, _)| *text == self.scan_status)
+            .map(|(_, severity)| *severity)
     }
 
     /// Returns the retained terminal scan presentation shown by the Last Scan overlay.

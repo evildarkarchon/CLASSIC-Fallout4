@@ -21,10 +21,6 @@ classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
 # seam, so it renders the display lines core produces rather than composing its own sentences about
 # a run. It is the first frontend to depend on it, which is why it proves the segment model.
 classic-scan-presentation = { path = "../../business-logic/classic-scan-presentation" }
-# Brings `Vocabulary` into scope. `src/` no longer calls `label()` at all — every Display Label the
-# TUI shows now arrives inside a `DisplaySegment::Label` — but the scan-run sibling tests still walk
-# `VARIANTS` and compare `as_str()` against `label()` to prove no Vocabulary Token reaches the user.
-classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
 # The final scan-run contract exposes Installed YAML Data provenance from config core without
 # re-exporting it, so naming those types directly still requires the dependency. Presentation no
 # longer does; the scan-run sibling tests do, to build the fixtures the contract consumes.
@@ -51,6 +47,12 @@ rfd = "0.15"
 
 [dev-dependencies]
 tempfile = { workspace = true }
+# A dev dependency rather than a runtime one, which is the shape of what this frontend became: no
+# code under `src/` calls `label()` any more, because every Display Label the TUI shows now arrives
+# inside a `DisplaySegment::Label` from `classic-scan-presentation`. The tests still need the trait
+# — they walk `VARIANTS` and compare `as_str()` against `label()` to prove no Vocabulary Token
+# reaches the user — and that is the only thing left holding the edge.
+classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
 
 [lints.rust]
 deprecated = "deny"

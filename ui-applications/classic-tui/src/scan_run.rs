@@ -10,9 +10,11 @@
 //!
 //! 1. A line's segments are concatenated in core's order and never reordered within the line.
 //! 2. Whole lines may be reordered, grouped, or omitted — and [`format_result`] does group.
-//! 3. A Display Label already carried in a segment is never re-derived. `src/` calls
-//!    `Vocabulary::label()` nowhere at all now, because every label the TUI shows arrives inside a
-//!    [`DisplaySegment::Label`].
+//! 3. A Display Label already carried in a segment is never re-derived. No non-test code in this
+//!    crate calls `Vocabulary::label()` at all now, because every label the TUI shows arrives
+//!    inside a [`DisplaySegment::Label`] — which is why `classic-vocabulary` became a dev
+//!    dependency. The tests still call it, to prove the label rather than the token is what
+//!    reaches the user.
 //! 4. A [`DisplaySegment::Count`] prints its value and then core's noun, which already agrees with
 //!    that value. This frontend's `plural` helper survives only for the Local Ignore recovery
 //!    prompt, whose renderer lands with the gated recovery phase.
@@ -59,11 +61,12 @@ pub struct PresentedLine {
 impl PresentedLine {
     /// Builds a line the TUI owns outright, at the neutral severity.
     ///
-    /// Two things still produce these, and both are deliberate rather than leftover. The FCX Mode
+    /// Three kinds of line reach this, and none of them is leftover Display Content. The FCX Mode
     /// setup projection is out of scope for the presentation crate — its check state, check kind,
     /// issue severity, and update kind have not adopted the shared vocabulary, so rendering it
     /// there would mean inventing prose for machine identifiers. The Local Ignore recovery prompt's
     /// choices are out of scope too, until the prompt renderer lands with the gated recovery phase.
+    /// Blank spacers are pure Display Layout and say nothing at all.
     fn local(text: String) -> Self {
         Self {
             severity: DisplaySeverity::Info,
@@ -158,6 +161,18 @@ fn present_headline(lines: &[DisplayLine]) -> String {
         .unwrap_or_default()
 }
 
+/// Returns how gravely the status row should read for a rendered surface.
+///
+/// The first line's severity, because the first line is the one stating the outcome — the same line
+/// [`present_headline`] takes its words from, and the one [`present_status`] leads with. Taking the
+/// gravest severity across all lines instead would let a run that completed successfully read as a
+/// failure because one of its many detail lines mentioned one.
+fn present_severity(lines: &[DisplayLine]) -> DisplaySeverity {
+    lines
+        .first()
+        .map_or(DisplaySeverity::Info, |line| line.severity)
+}
+
 /// Typed scan intent projected by the TUI before execution.
 pub(crate) enum ScanRunIntent {
     /// Normal discovery with the Standard-only Unsolved Logs policy.
@@ -213,8 +228,13 @@ pub(crate) const CANCEL_RECOVERY_CHOICE: &str = "[Esc] or [C] Cancel - stop this
 /// non-cloneable application state, so presentation can never duplicate, persist, or replay it.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct LocalIgnoreRecoveryPrompt {
-    /// Rust-owned run message explaining why the run paused.
-    pub(crate) message: String,
+    /// The Rust-owned run message explaining why the run paused, when the run supplied one.
+    ///
+    /// `None` when it did not, and the headline is then omitted rather than replaced with a
+    /// sentence this frontend wrote. [`Self::run_detail`] always opens on the status Display Label,
+    /// so nothing is left unexplained — and a locally invented fallback would have contradicted
+    /// core's own wording two lines further down the same overlay.
+    pub(crate) message: Option<String>,
     /// Crash Logs already discovered, which the retained continuation will scan once decided.
     pub(crate) retained_logs: usize,
     /// The paused run as core describes it, including the Installed YAML Data block.
@@ -243,6 +263,18 @@ impl LocalIgnoreRecoveryPrompt {
         )
     }
 
+    /// Returns the one-row status line a paused run shows while the question is open.
+    ///
+    /// The run's own message when it supplied one, and core's rendered status line otherwise. Both
+    /// are core-owned prose; the only thing decided here is which of the two to show, which is a
+    /// question about one narrow row rather than about what the run says.
+    pub(crate) fn status_line(&self) -> String {
+        self.message
+            .clone()
+            .or_else(|| self.run_detail.first().map(|line| line.text.clone()))
+            .unwrap_or_default()
+    }
+
     /// Renders the complete overlay body, including the expected outcome of every offered decision.
     ///
     /// The three choices are placed above the run detail on purpose. Every line here wraps, and
@@ -250,17 +282,17 @@ impl LocalIgnoreRecoveryPrompt {
     /// bottom of the overlay. Supporting detail may sit below the fold; an option the user cannot
     /// see is not an option they were offered.
     ///
+    /// The body opens on the retained-discovery line rather than on a headline restating why the
+    /// run paused. Three things were saying that at once: the overlay's own title, and then core's
+    /// status line and its `Message:` line, adjacent to each other in [`Self::run_detail`]. Two of
+    /// those are core's and one is the window chrome, so the one worth dropping was the copy this
+    /// frontend was making.
+    ///
     /// The choices themselves are still written here. The Local Ignore recovery prompt renderer
     /// lands with the gated recovery phase, so until it exists there is nothing in core to render
     /// them from — which is also why `plural` still has one caller.
     pub(crate) fn overlay_lines(&self) -> Vec<PresentedLine> {
-        let mut lines = vec![
-            PresentedLine {
-                // A paused run is a question, not a failure; warning severity is what says so.
-                severity: DisplaySeverity::Warning,
-                text: self.message.clone(),
-            },
-            PresentedLine::local(String::new()),
+        let mut lines = Vec::from([
             PresentedLine::local(format!(
                 "Retained discovery: {} crash {} will be scanned once you decide.",
                 self.retained_logs,
@@ -268,7 +300,7 @@ impl LocalIgnoreRecoveryPrompt {
             )),
             PresentedLine::local(String::new()),
             PresentedLine::local(PROCEED_WITHOUT_IGNORE_CHOICE.to_string()),
-        ];
+        ]);
         // Omitted rather than shown-and-disabled: this overlay is plain text with no affordance for
         // an inert entry, and listing a key that does nothing reads as a bug.
         if self.reset_available {
@@ -308,9 +340,7 @@ pub(crate) fn join_presented(lines: &[PresentedLine]) -> String {
 pub(crate) fn describe_local_ignore_recovery(result: &RunResult) -> LocalIgnoreRecoveryPrompt {
     LocalIgnoreRecoveryPrompt {
         run_detail: present_lines(&render_run_result(result)),
-        message: result.message.clone().unwrap_or_else(|| {
-            "Local Ignore recovery is required before scanning can continue".to_string()
-        }),
+        message: result.message.clone(),
         retained_logs: result
             .discovery
             .as_ref()
@@ -332,6 +362,8 @@ pub(crate) struct EventPresentation {
     pub(crate) percent: f64,
     /// Concise lifecycle description for the TUI status line.
     pub(crate) status: String,
+    /// How gravely the status line reads, taken from core's first rendered line.
+    pub(crate) severity: DisplaySeverity,
 }
 
 /// Formats every stable final-contract event for the TUI progress display.
@@ -340,22 +372,27 @@ pub(crate) struct EventPresentation {
 /// and by how much, and whether the resulting percentage leads the status line at all. A discovery
 /// or a concurrency selection reports no progress, so neither carries a percentage.
 pub(crate) fn format_event(event: &Event) -> EventPresentation {
-    let status = present_status(&render_event(event));
+    let lines = render_event(event);
+    let status = present_status(&lines);
+    let severity = present_severity(&lines);
 
     match event {
         Event::DiscoveryCompleted(_) | Event::EffectiveConcurrencySelected { .. } => {
             EventPresentation {
                 percent: 0.0,
                 status,
+                severity,
             }
         }
-        Event::LogQueued(log) => log_progress(log, 0.0, status),
-        Event::LogStarted(log) => log_progress(log, STARTED_CONTRIBUTION, status),
+        Event::LogQueued(log) => log_progress(log, 0.0, status, severity),
+        Event::LogStarted(log) => log_progress(log, STARTED_CONTRIBUTION, status, severity),
         // Only the gauge weighting is decided here. The words come from the core crate that owns
         // the phase, so this frontend cannot drift from the CLI and the GUI about what a phase is
         // called — the phase reaches the line as a Display Label inside a segment.
-        Event::LogPhase { log, phase } => log_progress(log, phase_contribution(*phase), status),
-        Event::LogFinished { log, .. } => log_progress(log, 0.0, status),
+        Event::LogPhase { log, phase } => {
+            log_progress(log, phase_contribution(*phase), status, severity)
+        }
+        Event::LogFinished { log, .. } => log_progress(log, 0.0, status, severity),
     }
 }
 
@@ -373,7 +410,12 @@ const fn phase_contribution(phase: ScanProgressPhase) -> f64 {
 }
 
 /// Prefixes a log-scoped status line with the aggregate progress its event implies.
-fn log_progress(log: &LogEvent, in_flight_contribution: f64, status: String) -> EventPresentation {
+fn log_progress(
+    log: &LogEvent,
+    in_flight_contribution: f64,
+    status: String,
+    severity: DisplaySeverity,
+) -> EventPresentation {
     let percent = if log.total == 0 {
         0.0
     } else {
@@ -383,6 +425,7 @@ fn log_progress(log: &LogEvent, in_flight_contribution: f64, status: String) -> 
     EventPresentation {
         percent,
         status: format!("{percent:.0}% - {status}"),
+        severity,
     }
 }
 
@@ -423,6 +466,8 @@ pub(crate) struct TerminalPresentation {
     pub(crate) percent: f64,
     /// Concise status-line summary.
     pub(crate) status: String,
+    /// How gravely the status line reads, taken from core's first rendered line.
+    pub(crate) severity: DisplaySeverity,
     /// The run as core describes it, flattened for the scrollable overlay.
     pub(crate) details: Vec<PresentedLine>,
 }
@@ -447,6 +492,7 @@ pub(crate) fn format_result(result: &RunResult) -> TerminalPresentation {
         (completed as f64 / result.total as f64) * 100.0
     };
     let status = present_headline(&lines);
+    let severity = present_severity(&lines);
 
     let mut details = present_lines(&lines);
     if let Some(setup) = result.setup.as_ref() {
@@ -458,6 +504,7 @@ pub(crate) fn format_result(result: &RunResult) -> TerminalPresentation {
     TerminalPresentation {
         percent,
         status,
+        severity,
         details,
     }
 }
@@ -490,6 +537,7 @@ fn present_error(lines: &[DisplayLine]) -> TerminalPresentation {
     TerminalPresentation {
         percent: 0.0,
         status: present_headline(lines),
+        severity: present_severity(lines),
         details: present_lines(lines),
     }
 }

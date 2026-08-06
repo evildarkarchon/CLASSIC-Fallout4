@@ -149,8 +149,14 @@ impl App {
             self.scan_status.clone()
         };
 
+        // A Crash Log Scan Run colours this row by the severity core gave its line; anything else
+        // that wrote here — a backup outcome, a clipboard result — has no severity and stays
+        // neutral. That is what lets a failed run stand out without its wording changing.
+        let status_colour = self
+            .scan_status_severity()
+            .map_or(theme::TEXT_PRIMARY, theme::severity_color);
         frame.render_widget(
-            Paragraph::new(status_text).style(Style::default().fg(theme::TEXT_PRIMARY)),
+            Paragraph::new(status_text).style(Style::default().fg(status_colour)),
             status_text_area,
         );
 
