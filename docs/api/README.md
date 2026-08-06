@@ -46,7 +46,7 @@ Use this directory in this order:
 31. [`binding-contract-refresh-note.md`](binding-contract-refresh-note.md) - when Node `index.d.ts` and Python `.pyi` contract artifacts should refresh separately versus together
 32. [`binding-compliance-suite.md`](binding-compliance-suite.md) - canonical umbrella binding gate that maps policy requirements to executable checks and gap reporting
 33. [`classic-scanlog-core.md`](classic-scanlog-core.md) - crash-log analysis built on top of loaded config data and optional DB lookups
-33a. [`classic-scan-presentation.md`](classic-scan-presentation.md) - unpublished Crash Log Scan Run Display Content owner: the render functions that turn a run result, event, or failure into typed display lines, so every frontend states the same run the same way
+33a. [`classic-scan-presentation.md`](classic-scan-presentation.md) - unpublished Crash Log Scan Run Display Content owner: the render functions that turn a run result, event, or failure into typed display lines, so every frontend states the same run the same way. Consumed by `classic-tui` today; the other frontends follow
 34. [`binding-parity-policy.md`](binding-parity-policy.md) - one-tier binding parity policy, gate ownership, and new-API contributor workflow
 35. [`error-contract.md`](error-contract.md) - per-binding error shape conventions for C++ (CXX), Node (NAPI-RS), and Python (PyO3)
 

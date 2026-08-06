@@ -8,11 +8,14 @@ into an ordered sequence of display lines. Each frontend decides only **how it l
 [`../adr/0007-rust-owns-crash-log-scan-run-display-content.md`](../adr/0007-rust-owns-crash-log-scan-run-display-content.md)
 records the decision and supersedes the ADR-0002 clause that assigned presentation to adapters.
 
-## Status: no consumer yet
+## Status: the TUI renders from it
 
-Nothing renders from this crate today, and that is deliberate. The wording ships pinned first so the
-frontends that follow have something fixed to render. The migration order — TUI, then the bridge and
-native CLI, then the Qt GUI, then the Node and Python surfaces and the Python CLI — is in
+`classic-tui` is the first consumer and depends on this crate directly, with no binding seam in the
+way — which is why it went first: it proves the six-segment model before any DTO or parity baseline
+exists, at which point changing the taxonomy would cost three baseline regenerations.
+
+Still to migrate, in order: the bridge and native CLI, then the Qt GUI, then the Node and Python
+surfaces and the Python CLI. See
 [`../implementation/scan_run_presentation_consolidation.md`](../implementation/scan_run_presentation_consolidation.md).
 
 ## Public surface
@@ -141,6 +144,19 @@ crate makes the one-way edge something Cargo enforces rather than something a re
 
 The `classic-config-core` edge exists because the scan-run contract exposes Installed YAML Data types
 it does not re-export. `classic-tui` carries the same dependency for the same reason.
+
+## What an adapter looks like
+
+`classic-tui` is the worked example. `ui-applications/classic-tui/src/scan_run.rs` concatenates each
+line's segments into one string, keeps the whole path in the scrollable overlay and shortens it to a
+filename in the one-row status line, groups the FCX Mode setup projection in after the rendered
+lines, and hands the severity through to `theme::severity_color`. It composes no sentence about a
+run, calls `Vocabulary::label()` nowhere, and keeps a `plural` helper for one caller only — the
+Local Ignore recovery prompt, whose renderer lands with the gated recovery phase.
+
+Its conformance test is deliberately thin: that presented lines carry core's lines in core's order
+with neither words nor severities changed, that a count prints core's noun, and that the two path
+treatments are the split they claim to be. It does not restate a single sentence pinned here.
 
 ## Binding surface
 

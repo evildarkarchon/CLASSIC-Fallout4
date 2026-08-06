@@ -116,13 +116,18 @@ fn read_source(relative_path: &str) -> String {
 /// Vocabulary *Token* through `Display`, which is an identifier in a sentence rather than a second
 /// vocabulary — and now renders its Display Label like the other six.
 ///
-/// The last two arrived with the scan-run vocabulary adoption. `ScanProgressPhase` did carry a
+/// The next two arrived with the scan-run vocabulary adoption. `ScanProgressPhase` did carry a
 /// table — the four participles the progress line shows — which now resolves through `label()`
 /// with the same words. `InstalledYamlDataRole` is named nowhere in `src/`, so it is here purely
 /// so that the first frontend code to render a role cannot start by writing a table.
 ///
-/// The two adopters that are *not* here are named in [`DEFERRED_ENUMS`] with their reasons.
-const AUDITED_ENUMS: [&str; 9] = [
+/// `CrashLogScanRunStatus` joined them when this frontend adopted `classic-scan-presentation`. It
+/// was held back while `format_result` composed the six outcomes into count-bearing sentences of
+/// its own and the detail block printed `Run status: <token>`; both are gone, and the status now
+/// reaches the user as one Display Label inside a segment core owns.
+///
+/// The adopter that is *not* here is named in [`DEFERRED_ENUMS`] with its reason.
+const AUDITED_ENUMS: [&str; 10] = [
     "InstalledYamlDataProvenance",
     "LocalIgnoreRunState",
     "InstalledYamlDataRunDiagnosticKind",
@@ -132,25 +137,15 @@ const AUDITED_ENUMS: [&str; 9] = [
     "InfrastructureErrorStage",
     "ScanProgressPhase",
     "InstalledYamlDataRole",
+    "CrashLogScanRunStatus",
 ];
 
-/// The Vocabulary adopters this frontend cannot be audited for yet, and why.
+/// The Vocabulary adopter this frontend cannot be audited for yet, and why.
 ///
-/// Both are covered by the same naming contract as the nine above and both now
-/// carry a Display Label, so leaving them out is a statement about this *audit*
-/// rather than about the enums. Neither can be added without a false failure
-/// today:
+/// It is covered by the same naming contract as the ten above and it carries a
+/// Display Label, so leaving it out is a statement about this *audit* rather
+/// than about the enum. It cannot be added without a false failure today:
 ///
-/// - `CrashLogScanRunStatus` is rendered at two sites in `scan_run.rs`, and
-///   neither can move yet. `format_result` composes it into count-bearing
-///   sentences — `Scanned 5 logs (2 errors, 1 cancelled)` — which are Display
-///   Content that no label can express on its own; they move to the presentation
-///   crate, not to a `label()` call. The detail block below it prints
-///   `Run status: <token>`, which *is* the identifier-in-prose shape this audit
-///   exists to catch, and it now has a Display Label to switch to. It is held
-///   back only because switching it is a visible wording change, and this
-///   adoption ships none. Both are the same one line of work for whoever lands
-///   the presentation crate.
 /// - `LocalIgnoreRecoveryDecision` has no table in this frontend at all. Every
 ///   match on it selects control flow. It trips only [`arm_body_end`]'s
 ///   over-read, where a final arm with no successor runs to the end of the
@@ -158,10 +153,10 @@ const AUDITED_ENUMS: [&str; 9] = [
 ///   false-positive bias documented on that function.
 ///
 /// Listed rather than merely absent so the omission is data the meta-test below
-/// can check, instead of a comment that rots. A contributor moving either name
+/// can check, instead of a comment that rots. A contributor moving the name
 /// into `AUDITED_ENUMS` deletes it from here, and the meta-test is what tells
 /// them both lists have to change together.
-const DEFERRED_ENUMS: [&str; 2] = ["CrashLogScanRunStatus", "LocalIgnoreRecoveryDecision"];
+const DEFERRED_ENUMS: [&str; 1] = ["LocalIgnoreRecoveryDecision"];
 
 /// The four enums that adopted the Vocabulary naming contract alongside this audit.
 ///

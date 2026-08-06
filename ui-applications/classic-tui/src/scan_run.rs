@@ -1,27 +1,39 @@
-//! TUI projection and presentation for the final Crash Log Scan Run contract.
+//! TUI projection and Display Layout for the final Crash Log Scan Run contract.
 //!
-//! Every human-facing name for a domain enum rendered here is the core Display Label, obtained
-//! through [`classic_vocabulary::Vocabulary::label`]. This module keeps no naming table of its own:
-//! the CLI, the GUI, and the TUI each used to hold a copy of this vocabulary, and the copies
-//! diverged silently because each was independently exhaustive and every compiler was satisfied.
-//! `tests/shared_runtime_audit.rs` fails the build if a table reappears here.
+//! *What* a Crash Log Scan Run says is decided by [`classic_scan_presentation`], which turns a run
+//! result, a run event, an infrastructure failure, or a resume failure into an ordered sequence of
+//! display lines. This module decides only *how* the TUI shows them: which lines to group where,
+//! how far to truncate a path, where a percentage goes, and — through [`crate::theme`] — what
+//! colour a severity takes. It composes no sentence about a run of its own.
+//!
+//! The rules it must follow are the crate's, not this frontend's:
+//!
+//! 1. A line's segments are concatenated in core's order and never reordered within the line.
+//! 2. Whole lines may be reordered, grouped, or omitted — and [`format_result`] does group.
+//! 3. A Display Label already carried in a segment is never re-derived. `src/` calls
+//!    `Vocabulary::label()` nowhere at all now, because every label the TUI shows arrives inside a
+//!    [`DisplaySegment::Label`].
+//! 4. A [`DisplaySegment::Count`] prints its value and then core's noun, which already agrees with
+//!    that value. This frontend's `plural` helper survives only for the Local Ignore recovery
+//!    prompt, whose renderer lands with the gated recovery phase.
+//!
+//! `tests/shared_runtime_audit.rs` fails the build if a naming table reappears here.
 
 #[cfg(test)]
 #[path = "scan_run_tests.rs"]
 mod tests;
 
+use classic_scan_presentation::{
+    DisplayLine, DisplaySegment, DisplaySeverity, render_event, render_infrastructure_error,
+    render_resume_error, render_run_result,
+};
 use classic_scanlog_core::scan_run::contract::{
-    Configuration, Event, InfrastructureError, InstalledYamlDataRunData,
-    InstalledYamlDataRunDiagnostic, LogEvent, Request, ResumeError, RunResult,
+    Configuration, Event, InfrastructureError, LogEvent, Request, ResumeError, RunResult,
 };
 use classic_scanlog_core::{
-    CrashLogScanRunStatus, CrashLogScanSetupContext, ScanProgressPhase, StandardCrashLogScanSource,
+    CrashLogScanSetupContext, ScanProgressPhase, StandardCrashLogScanSource,
     StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
 };
-// Every user-facing name for a domain enum comes from the core crate that owns the enum. The TUI
-// keeps no naming table of its own, so none of those enums needs to be named here at all — the
-// trait alone is what `label()` resolves through.
-use classic_vocabulary::Vocabulary;
 
 // Coarse weights make in-flight lifecycle events visibly advance the gauge without pretending
 // that the phases are equal-cost; App keeps the resulting aggregate monotonic across concurrent logs.
@@ -30,6 +42,121 @@ const SETUP_CONTRIBUTION: f64 = 0.15;
 const PARSE_CONTRIBUTION: f64 = 0.40;
 const ANALYZE_CONTRIBUTION: f64 = 0.82;
 const FINALIZE_CONTRIBUTION: f64 = 0.95;
+
+/// One core display line, flattened into the text this frontend will draw.
+///
+/// The severity travels alongside the text rather than being resolved to a colour here, so the
+/// palette stays in [`crate::theme`] and a test can assert what a line *is* without asserting how
+/// it looks.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PresentedLine {
+    /// How gravely core says this line reads.
+    pub severity: DisplaySeverity,
+    /// The line's segments, concatenated in core's order.
+    pub text: String,
+}
+
+impl PresentedLine {
+    /// Builds a line the TUI owns outright, at the neutral severity.
+    ///
+    /// Two things still produce these, and both are deliberate rather than leftover. The FCX Mode
+    /// setup projection is out of scope for the presentation crate — its check state, check kind,
+    /// issue severity, and update kind have not adopted the shared vocabulary, so rendering it
+    /// there would mean inventing prose for machine identifiers. The Local Ignore recovery prompt's
+    /// choices are out of scope too, until the prompt renderer lands with the gated recovery phase.
+    fn local(text: String) -> Self {
+        Self {
+            severity: DisplaySeverity::Info,
+            text,
+        }
+    }
+}
+
+/// How much of a path a flattened line keeps.
+#[derive(Clone, Copy)]
+enum PathDetail {
+    /// The whole path. Used in the scrollable overlay, which wraps and can afford it — and which is
+    /// where a user looks for the Autoscan Report a run actually wrote.
+    Full,
+    /// The final component alone. Used in the single-row status line, where one absolute path
+    /// pushes the ordinal, the total, and the outcome off the end of the row.
+    FileName,
+}
+
+/// Concatenates one display line's segments, in core's order, into drawable text.
+///
+/// Truncation is Display Layout, which is the only reason `detail` exists: core deliberately hands
+/// over the whole path so a frontend that wants to link to a report has one, and shortening it for
+/// a narrow row is this frontend's decision to make. Nothing else about the line is this frontend's
+/// to decide — segments keep their order, a label keeps its words, and a count keeps the noun core
+/// already agreed with its value.
+fn flatten_line(line: &DisplayLine, detail: PathDetail) -> String {
+    line.segments
+        .iter()
+        .map(|segment| segment_text(segment, detail))
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+/// Renders one segment's payload.
+fn segment_text(segment: &DisplaySegment, detail: PathDetail) -> String {
+    match segment {
+        DisplaySegment::Text(text) | DisplaySegment::Label(text) => (*text).to_string(),
+        // Value then noun, never a re-derived form: `noun` already agrees with `value`, and the
+        // pluralization helper this frontend used to keep is what that agreement replaced.
+        DisplaySegment::Count { value, noun } => format!("{value} {noun}"),
+        DisplaySegment::Path(path) => match detail {
+            PathDetail::Full => path.display().to_string(),
+            PathDetail::FileName => path
+                .file_name()
+                .map(|name| name.to_string_lossy().into_owned())
+                // A path with no final component is a root or an empty path. Neither reaches a
+                // scan-run line in practice, and naming the state beats drawing nothing.
+                .unwrap_or_else(|| "unknown".to_string()),
+        },
+        DisplaySegment::Name(name) | DisplaySegment::Emphasis(name) => name.clone(),
+    }
+}
+
+/// Flattens rendered lines for the scrollable overlay, keeping every line and every path whole.
+fn present_lines(lines: &[DisplayLine]) -> Vec<PresentedLine> {
+    lines
+        .iter()
+        .map(|line| PresentedLine {
+            severity: line.severity,
+            text: flatten_line(line, PathDetail::Full),
+        })
+        .collect()
+}
+
+/// Collapses every rendered line onto the single sentence-cased row the status line shows.
+///
+/// Grouping lines onto one row is Display Layout, and it is the right call for a run *event*: an
+/// event renders to at most two short lines — a discovery that rejected some of its targeted
+/// inputs states the rejection separately — and both are live progress facts with nowhere else to
+/// appear. Their order stays core's.
+fn present_status(lines: &[DisplayLine]) -> String {
+    let joined = lines
+        .iter()
+        .map(|line| flatten_line(line, PathDetail::FileName))
+        .collect::<Vec<_>>()
+        .join(" - ");
+    sentence_case(&joined)
+}
+
+/// Takes the sentence-cased first rendered line as the status row.
+///
+/// Used where the remaining lines have somewhere better to be. A run result and a failure both
+/// open on the line that states the outcome and can run to a dozen supporting lines behind it —
+/// identity digests, searched locations, a per-log tally — which belong in the scrollable overlay
+/// rather than crushed into one row. Omitting whole lines from one surface is Display Layout; every
+/// one of them is still shown by [`present_lines`].
+fn present_headline(lines: &[DisplayLine]) -> String {
+    lines
+        .first()
+        .map(|line| sentence_case(&flatten_line(line, PathDetail::FileName)))
+        .unwrap_or_default()
+}
 
 /// Typed scan intent projected by the TUI before execution.
 pub(crate) enum ScanRunIntent {
@@ -90,8 +217,14 @@ pub(crate) struct LocalIgnoreRecoveryPrompt {
     pub(crate) message: String,
     /// Crash Logs already discovered, which the retained continuation will scan once decided.
     pub(crate) retained_logs: usize,
-    /// Structured Installed YAML Data lines presented alongside the choice.
-    pub(crate) diagnostics: Vec<String>,
+    /// The paused run as core describes it, including the Installed YAML Data block.
+    ///
+    /// This is the whole rendered run result rather than the Installed YAML Data lines alone.
+    /// Core exposes that block only through `render_run_result`, and picking it back out by
+    /// position would be a structural assumption about a flat sequence that carries no structure —
+    /// exactly the guess this consolidation exists to remove. Showing the surrounding facts is no
+    /// loss: every one of them describes the run the user is being asked to decide about.
+    pub(crate) run_detail: Vec<PresentedLine>,
     /// Whether Reset To Default is a choice this run can actually satisfy.
     ///
     /// False when the selected Main YAML retained no usable `default_ignorefile`. The contract
@@ -112,39 +245,60 @@ impl LocalIgnoreRecoveryPrompt {
 
     /// Renders the complete overlay body, including the expected outcome of every offered decision.
     ///
-    /// The three choices are placed above the Installed YAML Data diagnostics on purpose. Every
-    /// line here wraps, and identity digests plus a parser message run long enough to push the
-    /// last choice past the bottom of the overlay. Supporting detail may sit below the fold; an
-    /// option the user cannot see is not an option they were offered.
-    pub(crate) fn overlay_text(&self) -> String {
-        let mut lines = vec![self.message.clone(), String::new()];
-        lines.push(format!(
-            "Retained discovery: {} crash {} will be scanned once you decide.",
-            self.retained_logs,
-            plural(self.retained_logs, "log", "logs")
-        ));
-        lines.push(String::new());
-        lines.push(PROCEED_WITHOUT_IGNORE_CHOICE.to_string());
+    /// The three choices are placed above the run detail on purpose. Every line here wraps, and
+    /// identity digests plus a parser message run long enough to push the last choice past the
+    /// bottom of the overlay. Supporting detail may sit below the fold; an option the user cannot
+    /// see is not an option they were offered.
+    ///
+    /// The choices themselves are still written here. The Local Ignore recovery prompt renderer
+    /// lands with the gated recovery phase, so until it exists there is nothing in core to render
+    /// them from — which is also why `plural` still has one caller.
+    pub(crate) fn overlay_lines(&self) -> Vec<PresentedLine> {
+        let mut lines = vec![
+            PresentedLine {
+                // A paused run is a question, not a failure; warning severity is what says so.
+                severity: DisplaySeverity::Warning,
+                text: self.message.clone(),
+            },
+            PresentedLine::local(String::new()),
+            PresentedLine::local(format!(
+                "Retained discovery: {} crash {} will be scanned once you decide.",
+                self.retained_logs,
+                plural(self.retained_logs, "log", "logs")
+            )),
+            PresentedLine::local(String::new()),
+            PresentedLine::local(PROCEED_WITHOUT_IGNORE_CHOICE.to_string()),
+        ];
         // Omitted rather than shown-and-disabled: this overlay is plain text with no affordance for
         // an inert entry, and listing a key that does nothing reads as a bug.
         if self.reset_available {
-            lines.push(RESET_TO_DEFAULT_CHOICE.to_string());
+            lines.push(PresentedLine::local(RESET_TO_DEFAULT_CHOICE.to_string()));
         }
-        lines.push(CANCEL_RECOVERY_CHOICE.to_string());
+        lines.push(PresentedLine::local(CANCEL_RECOVERY_CHOICE.to_string()));
         if !self.reset_available {
-            lines.push(String::new());
-            lines.push(
-                "Reset To Default is unavailable: the selected Main YAML Data retains no usable \
-                 default Local Ignore to publish."
+            lines.push(PresentedLine::local(String::new()));
+            lines.push(PresentedLine {
+                severity: DisplaySeverity::Notice,
+                text: "Reset To Default is unavailable: the selected Main YAML Data retains no \
+                       usable default Local Ignore to publish."
                     .to_string(),
-            );
+            });
         }
-        if !self.diagnostics.is_empty() {
-            lines.push(String::new());
-            lines.extend(self.diagnostics.iter().cloned());
+        if !self.run_detail.is_empty() {
+            lines.push(PresentedLine::local(String::new()));
+            lines.extend(self.run_detail.iter().cloned());
         }
-        lines.join("\n")
+        lines
     }
+}
+
+/// Joins presented lines into one plain-text block, dropping the severities.
+pub(crate) fn join_presented(lines: &[PresentedLine]) -> String {
+    lines
+        .iter()
+        .map(|line| line.text.as_str())
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 /// Projects the Rust-owned paused-run facts the TUI shows before asking for an explicit decision.
@@ -152,12 +306,8 @@ impl LocalIgnoreRecoveryPrompt {
 /// Every fact comes from the retained result; the TUI adds no policy and never inspects the
 /// malformed file itself.
 pub(crate) fn describe_local_ignore_recovery(result: &RunResult) -> LocalIgnoreRecoveryPrompt {
-    let mut diagnostics = Vec::new();
-    if let Some(installed) = result.installed_yaml_data.as_ref() {
-        append_installed_yaml_data_details(installed, &mut diagnostics);
-    }
-
     LocalIgnoreRecoveryPrompt {
+        run_detail: present_lines(&render_run_result(result)),
         message: result.message.clone().unwrap_or_else(|| {
             "Local Ignore recovery is required before scanning can continue".to_string()
         }),
@@ -165,7 +315,6 @@ pub(crate) fn describe_local_ignore_recovery(result: &RunResult) -> LocalIgnoreR
             .discovery
             .as_ref()
             .map_or(result.total, |discovery| discovery.accepted_logs.len()),
-        diagnostics,
         // Absent Installed YAML Data means the contract told us nothing about reset availability,
         // which a recovery-required result never does in practice. Keep offering the choice in that
         // case rather than hiding it: an unknown answer must not silently remove an option that may
@@ -186,82 +335,63 @@ pub(crate) struct EventPresentation {
 }
 
 /// Formats every stable final-contract event for the TUI progress display.
+///
+/// The words are core's. What is decided here is the gauge: which lifecycle step advances the bar
+/// and by how much, and whether the resulting percentage leads the status line at all. A discovery
+/// or a concurrency selection reports no progress, so neither carries a percentage.
 pub(crate) fn format_event(event: &Event) -> EventPresentation {
+    let status = present_status(&render_event(event));
+
     match event {
-        Event::DiscoveryCompleted(discovery) => {
-            let accepted = discovery.accepted_logs.len();
-            let rejected = discovery.rejected_inputs.len();
-            let mut status = format!(
-                "Discovered {accepted} crash {}",
-                plural(accepted, "log", "logs")
-            );
-            if rejected > 0 {
-                status.push_str(&format!(
-                    " ({rejected} targeted {} rejected)",
-                    plural(rejected, "input", "inputs")
-                ));
-            }
+        Event::DiscoveryCompleted(_) | Event::EffectiveConcurrencySelected { .. } => {
             EventPresentation {
                 percent: 0.0,
                 status,
             }
         }
-        Event::EffectiveConcurrencySelected {
-            effective_concurrency,
-        } => EventPresentation {
-            percent: 0.0,
-            status: format!(
-                "Selected {effective_concurrency} concurrent {}",
-                plural(*effective_concurrency, "scan", "scans")
-            ),
-        },
-        Event::LogQueued(log) => format_log_event(log, "Queued", 0.0),
-        Event::LogStarted(log) => format_log_event(log, "Scanning", STARTED_CONTRIBUTION),
-        Event::LogPhase { log, phase } => {
-            // Only the gauge weighting is decided here. The words come from the core
-            // crate that owns the phase, so this frontend cannot drift from the CLI
-            // and the GUI about what a phase is called.
-            let contribution = match phase {
-                ScanProgressPhase::Setup => SETUP_CONTRIBUTION,
-                ScanProgressPhase::Parse => PARSE_CONTRIBUTION,
-                ScanProgressPhase::Analyze => ANALYZE_CONTRIBUTION,
-                ScanProgressPhase::Finalize => FINALIZE_CONTRIBUTION,
-            };
-            format_log_event(log, &sentence_case(phase.label()), contribution)
-        }
-        Event::LogFinished { log, disposition } => {
-            format_log_event(log, &sentence_case(disposition.label()), 0.0)
-        }
+        Event::LogQueued(log) => log_progress(log, 0.0, status),
+        Event::LogStarted(log) => log_progress(log, STARTED_CONTRIBUTION, status),
+        // Only the gauge weighting is decided here. The words come from the core crate that owns
+        // the phase, so this frontend cannot drift from the CLI and the GUI about what a phase is
+        // called — the phase reaches the line as a Display Label inside a segment.
+        Event::LogPhase { log, phase } => log_progress(log, phase_contribution(*phase), status),
+        Event::LogFinished { log, .. } => log_progress(log, 0.0, status),
     }
 }
 
-/// Formats the shared path, ordinal, and aggregate progress carried by log events.
-fn format_log_event(
-    log: &LogEvent,
-    action: &str,
-    in_flight_contribution: f64,
-) -> EventPresentation {
+/// Returns the share of one Crash Log's work that reaching `phase` represents.
+///
+/// Coarse and deliberately unequal: the phases are not equal-cost, and a gauge that pretended
+/// otherwise would stall visibly through analysis.
+const fn phase_contribution(phase: ScanProgressPhase) -> f64 {
+    match phase {
+        ScanProgressPhase::Setup => SETUP_CONTRIBUTION,
+        ScanProgressPhase::Parse => PARSE_CONTRIBUTION,
+        ScanProgressPhase::Analyze => ANALYZE_CONTRIBUTION,
+        ScanProgressPhase::Finalize => FINALIZE_CONTRIBUTION,
+    }
+}
+
+/// Prefixes a log-scoped status line with the aggregate progress its event implies.
+fn log_progress(log: &LogEvent, in_flight_contribution: f64, status: String) -> EventPresentation {
     let percent = if log.total == 0 {
         0.0
     } else {
         ((log.completed as f64 + in_flight_contribution) / log.total as f64) * 100.0
     };
-    let filename = log
-        .crash_log
-        .file_name()
-        .map(|name| name.to_string_lossy())
-        .unwrap_or_else(|| "unknown".into());
 
     EventPresentation {
         percent,
-        status: format!(
-            "{percent:.0}% - {action} {filename} ({} of {})",
-            log.discovery_index + 1,
-            log.total
-        ),
+        status: format!("{percent:.0}% - {status}"),
     }
 }
 
+/// Chooses a noun's singular or plural form.
+///
+/// One caller remains: the Local Ignore recovery overlay, whose prompt renderer lands with the
+/// gated recovery phase. Every other count the TUI prints now arrives as a
+/// [`DisplaySegment::Count`] whose noun core already agreed with its value, which is what retires
+/// the copy of this helper each frontend used to keep.
 const fn plural<'a>(count: usize, singular: &'a str, plural: &'a str) -> &'a str {
     if count == 1 { singular } else { plural }
 }
@@ -293,303 +423,74 @@ pub(crate) struct TerminalPresentation {
     pub(crate) percent: f64,
     /// Concise status-line summary.
     pub(crate) status: String,
-    /// Multi-line discovery, setup, concurrency, and outcome presentation.
-    pub(crate) details: String,
+    /// The run as core describes it, flattened for the scrollable overlay.
+    pub(crate) details: Vec<PresentedLine>,
 }
 
-/// Presents every expected terminal status and all retained final-contract outcomes.
+/// Presents a terminal Crash Log Scan Run Result from core's display lines.
+///
+/// The status line is the first rendered line, which is the one stating how the run as a whole
+/// ended. Reading it by position is safe here in a way that picking a section out of the middle
+/// would not be: core documents the terminal status as the line the run result opens with, and
+/// every branch of that renderer emits it first.
+///
+/// The FCX Mode setup projection is grouped in **after** the rendered lines rather than at the
+/// position it used to hold. Regrouping whole lines is Display Layout and explicitly allowed;
+/// splicing into the middle of core's sequence is not something a flat list of lines supports, and
+/// guessing an index would be the structural assumption this consolidation removes.
 pub(crate) fn format_result(result: &RunResult) -> TerminalPresentation {
+    let lines = render_run_result(result);
     let completed = result.succeeded + result.failed;
     let percent = if result.total == 0 {
         0.0
     } else {
         (completed as f64 / result.total as f64) * 100.0
     };
-    let status = match result.status {
-        CrashLogScanRunStatus::Completed if result.failed > 0 || result.cancelled > 0 => format!(
-            "Scanned {} logs ({} errors, {} cancelled)",
-            result.total, result.failed, result.cancelled
-        ),
-        CrashLogScanRunStatus::Completed => format!(
-            "Scanned {} {}",
-            result.total,
-            plural(result.total, "log", "logs")
-        ),
-        CrashLogScanRunStatus::NoCrashLogsFound => result
-            .message
-            .clone()
-            .unwrap_or_else(|| "No crash logs found".to_string()),
-        CrashLogScanRunStatus::SetupFailed => result
-            .message
-            .clone()
-            .unwrap_or_else(|| "Crash Log Scan setup failed".to_string()),
-        CrashLogScanRunStatus::LocalIgnoreRecoveryRequired => {
-            result.message.clone().unwrap_or_else(|| {
-                "Local Ignore recovery is required before scanning can continue".to_string()
-            })
-        }
-        CrashLogScanRunStatus::CancelledBeforeDiscovery => {
-            "Scan cancelled safely before discovery completed".to_string()
-        }
-        CrashLogScanRunStatus::Cancelled => format!(
-            "Cancelled ({completed} of {} logs completed; {} not started)",
-            result.total, result.cancelled
-        ),
-    };
+    let status = present_headline(&lines);
 
-    let mut lines = vec![format!("Run status: {}", result.status.as_str())];
-    if let Some(message) = result.message.as_deref() {
-        lines.push(format!("Message: {message}"));
-    }
-    if let Some(discovery) = result.discovery.as_ref() {
-        lines.push(format!(
-            "Discovery: {}; {} accepted; {} rejected; {} searched",
-            discovery.source.as_str(),
-            discovery.accepted_logs.len(),
-            discovery.rejected_inputs.len(),
-            discovery.searched_locations.len()
-        ));
-        for rejection in &discovery.rejected_inputs {
-            lines.push(format!(
-                "Rejected: {} ({})",
-                rejection.path.display(),
-                rejection.reason
-            ));
-        }
-        for location in &discovery.searched_locations {
-            lines.push(format!("Searched: {}", location.display()));
-        }
-    }
-    if let Some(effective_concurrency) = result.effective_concurrency {
-        lines.push(format!("Effective concurrency: {effective_concurrency}"));
-    }
+    let mut details = present_lines(&lines);
     if let Some(setup) = result.setup.as_ref() {
-        append_setup_details(setup, &mut lines);
-    }
-    if let Some(installed) = result.installed_yaml_data.as_ref() {
-        append_installed_yaml_data_details(installed, &mut lines);
-    }
-
-    lines.push(format!(
-        "Outcomes: {} succeeded; {} failed; {} cancelled before start",
-        result.succeeded, result.failed, result.cancelled
-    ));
-    for log in &result.logs {
-        let filename = log
-            .crash_log
-            .file_name()
-            .map(|name| name.to_string_lossy())
-            .unwrap_or_else(|| "unknown".into());
-        let disposition = log.disposition.label();
-        let mut line = format!("{}. {filename} - {disposition}", log.discovery_index + 1);
-        if let Some(report) = log.autoscan_report.as_ref() {
-            line.push_str(&format!("; report: {}", report.display()));
-        }
-        if log.moved_to_unsolved_logs {
-            line.push_str("; moved to Unsolved Logs");
-        }
-        lines.push(line);
-        for failure in &log.failures {
-            lines.push(format!("   {}: {}", failure.stage.label(), failure.message));
-        }
-        if log.failures.is_empty()
-            && let Some(message) = log.message.as_deref()
-        {
-            lines.push(format!("   {message}"));
-        }
+        let mut setup_lines = Vec::new();
+        append_setup_details(setup, &mut setup_lines);
+        details.extend(setup_lines.into_iter().map(PresentedLine::local));
     }
 
     TerminalPresentation {
         percent,
         status,
-        details: lines.join("\n"),
+        details,
     }
 }
 
 /// Presents a run-wide infrastructure error consistently in the status line and overlay.
 ///
-/// The stage reads as its Display Label rather than its Vocabulary Token, which is the wording the
-/// CLI and the GUI already print. Three stages differ between the two forms — `request validation`,
-/// `FormID database access`, and `internal invariant validation` — and the token spellings this
-/// replaces (`formid_database_access` and the rest) were an identifier leaking into a sentence.
+/// The stage reaches the user as a Display Label because core puts one in the line, not because
+/// this frontend asks for one. That is the whole difference: the token spellings this used to
+/// print — `formid_database_access` and the rest — were an identifier leaking into a sentence, and
+/// there is no longer a sentence here to leak into.
 pub(crate) fn format_error(error: &InfrastructureError) -> TerminalPresentation {
-    let status_path = error
-        .path
-        .as_ref()
-        .map(|path| format!(" (path: {})", path.display()))
-        .unwrap_or_default();
-    let detail_path = error
-        .path
-        .as_ref()
-        .map(|path| format!("\nPath: {}", path.display()))
-        .unwrap_or_default();
-
-    TerminalPresentation {
-        percent: 0.0,
-        status: format!(
-            "Crash Log Scan Run failed during {}: {}{}",
-            error.stage.label(),
-            error.message,
-            status_path
-        ),
-        details: format!(
-            "Crash Log Scan Run failed during {}\n{}{}",
-            error.stage.label(),
-            error.message,
-            detail_path
-        ),
-    }
-}
-
-/// Appends the complete run-level Installed YAML Data projection to terminal detail lines.
-///
-/// These are operational diagnostics only. Nothing here contributes to Autoscan Report content,
-/// which stays byte-identical for equivalent accepted data.
-fn append_installed_yaml_data_details(data: &InstalledYamlDataRunData, lines: &mut Vec<String>) {
-    lines.push("Installed YAML Data:".to_string());
-    lines.push(format!(
-        "  Main: {} schema {} (sha256 {}, {} bytes)",
-        data.main.provenance().label(),
-        data.main.schema_version(),
-        data.main.identity().sha256_hex(),
-        data.main.identity().byte_len()
-    ));
-    lines.push(format!(
-        "  Game: {} schema {} (sha256 {}, {} bytes)",
-        data.game_file.provenance().label(),
-        data.game_file.schema_version(),
-        data.game_file.identity().sha256_hex(),
-        data.game_file.identity().byte_len()
-    ));
-    lines.push(format!(
-        "  Local Ignore: {} (sha256 {}, {} bytes)",
-        data.local_ignore_state.label(),
-        data.local_ignore_identity.sha256_hex(),
-        data.local_ignore_identity.byte_len()
-    ));
-    if let Some(reset) = data.local_ignore_reset.as_ref() {
-        lines.push(format!(
-            "  Local Ignore backup: {} (sha256 {}, {} bytes)",
-            reset.backup_path.display(),
-            reset.backup_identity.sha256_hex(),
-            reset.backup_identity.byte_len()
-        ));
-        lines.push(format!(
-            "  Local Ignore replacement: {} (sha256 {})",
-            reset.local_ignore_path.display(),
-            reset.replacement_identity.sha256_hex()
-        ));
-    }
-    for diagnostic in &data.diagnostics {
-        lines.push(format!(
-            "  {}",
-            format_installed_yaml_data_diagnostic(diagnostic)
-        ));
-    }
-}
-
-/// Formats one structured selection, validation, generation, or reset diagnostic.
-fn format_installed_yaml_data_diagnostic(diagnostic: &InstalledYamlDataRunDiagnostic) -> String {
-    let mut context = Vec::new();
-    if let Some(role) = diagnostic.role() {
-        context.push(format!("{role}"));
-    }
-    if let Some(candidate) = diagnostic.candidate() {
-        context.push(candidate.label().to_string());
-    }
-    if let Some(path) = diagnostic.path() {
-        context.push(path.display().to_string());
-    }
-
-    let mut line = format!("{}: {}", diagnostic.kind().label(), diagnostic.message());
-    if !context.is_empty() {
-        line.push_str(&format!(" [{}]", context.join(", ")));
-    }
-    line
+    present_error(&render_infrastructure_error(error))
 }
 
 /// Presents a typed continuation-resume failure without collapsing its actionable context.
 ///
-/// Replay, reset conflict, backup failure, replacement failure, and durability uncertainty stay
-/// distinguishable by their stable code so a user can tell "nothing changed" from "act now".
+/// The stable resume error code is deliberately absent from the prose. It is a machine-facing
+/// identifier and belongs in structured output; core distinguishes replay, reset conflict, backup
+/// failure, replacement failure, and durability uncertainty by what a user acts on instead.
 pub(crate) fn format_resume_error(error: &ResumeError) -> TerminalPresentation {
-    let code = error.kind().as_str();
-    let message = error.to_string();
-    let mut lines = vec![
-        format!("Crash Log Scan recovery failed ({code})"),
-        message.clone(),
-    ];
+    present_error(&render_resume_error(error))
+}
 
-    match error {
-        ResumeError::ContinuationConsumed => {
-            lines.push(
-                "This recovery decision was already applied. Start the scan again to retry."
-                    .to_string(),
-            );
-        }
-        ResumeError::LocalIgnoreResetConflict(conflict) => {
-            lines.push(format!(
-                "Expected identity: sha256 {}",
-                conflict.expected_identity.sha256_hex()
-            ));
-            match conflict.actual_identity.as_ref() {
-                Some(actual) => {
-                    lines.push(format!("Actual identity: sha256 {}", actual.sha256_hex()));
-                }
-                // An absent current identity means another actor removed the file while the user
-                // was deciding, which is still a refusal to overwrite rather than a failed write.
-                None => lines.push(
-                    "Actual identity: the malformed file was removed while you decided".to_string(),
-                ),
-            }
-            if let Some(backup) = conflict.backup_path.as_ref() {
-                lines.push(format!("Verified backup: {}", backup.display()));
-            }
-            lines.push("Your Local Ignore file was not replaced.".to_string());
-        }
-        ResumeError::LocalIgnoreResetBackupFailure(failure)
-        | ResumeError::LocalIgnoreResetReplacementFailure(failure) => {
-            lines.push(format!("Path: {}", failure.path.display()));
-            if let Some(stage) = failure.stage {
-                lines.push(format!("Stage: {}", stage.label()));
-            }
-        }
-        ResumeError::LocalIgnoreResetDurabilityUnknown(failure) => {
-            // The replacement is already visible and the backup is verified, so this reports a
-            // recovery receipt rather than telling the user that nothing happened.
-            lines.push(format!("Path: {}", failure.path.display()));
-            lines.push(format!(
-                "Verified backup: {}",
-                failure.backup_path.display()
-            ));
-            lines.push(format!(
-                "Malformed identity: sha256 {}",
-                failure.malformed_identity.sha256_hex()
-            ));
-            lines.push(format!(
-                "Backup identity: sha256 {}",
-                failure.backup_identity.sha256_hex()
-            ));
-            lines.push(format!(
-                "Replacement identity: sha256 {}",
-                failure.replacement_identity.sha256_hex()
-            ));
-        }
-        ResumeError::Infrastructure(infrastructure) => {
-            // `message` above is the contract's own `Display`, which for this variant renders
-            // `<token>: <message>`. That string is the error's stable rendering and stays as the
-            // contract composes it; this line is presentation, so it reads as prose.
-            lines.push(format!("Stage: {}", infrastructure.stage.label()));
-            if let Some(path) = infrastructure.path.as_ref() {
-                lines.push(format!("Path: {}", path.display()));
-            }
-        }
-    }
-
+/// Shares the failure-presentation shape between the two error renderers.
+///
+/// The gauge is zeroed rather than left mid-run: a failure has no completed-work fraction to
+/// report, and a bar frozen at the last percentage it happened to reach would read as progress the
+/// run is still making.
+fn present_error(lines: &[DisplayLine]) -> TerminalPresentation {
     TerminalPresentation {
         percent: 0.0,
-        status: format!("Crash Log Scan recovery failed ({code}): {message}"),
-        details: lines.join("\n"),
+        status: present_headline(lines),
+        details: present_lines(lines),
     }
 }
 

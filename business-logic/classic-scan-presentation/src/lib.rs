@@ -47,10 +47,12 @@
 //! intends to break. Being a separate crate makes the one-way edge something Cargo enforces
 //! rather than something a reviewer has to notice.
 //!
-//! # No consumer yet
+//! # Consumers
 //!
-//! Nothing renders from this crate today. That is intentional: the wording ships pinned
-//! first, so the frontends that follow have something fixed to render.
+//! `classic-tui` renders from this crate. It depends on it directly, with no binding seam in
+//! the way, which is why it migrated first: it proves the segment model before any DTO or
+//! parity baseline exists. The bridge and native CLI, the Qt GUI, and the Node and Python
+//! surfaces follow.
 
 mod display;
 mod render;

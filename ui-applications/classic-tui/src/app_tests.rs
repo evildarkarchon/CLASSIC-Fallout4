@@ -211,7 +211,16 @@ fn scan_complete_with_errors_updates_status_message() {
         continuation: None,
     }))));
 
-    assert_eq!(app.scan_status, "Scanned 3 logs (1 errors, 0 cancelled)");
+    // Derived from the core Display Label rather than restated: the sentence is core's now, and a
+    // literal here would be the fourth copy of it this consolidation exists to delete. Compared
+    // case-insensitively because the status line is sentence-cased, which is this frontend's rule.
+    assert!(
+        app.scan_status.to_lowercase().contains(
+            &classic_vocabulary::Vocabulary::label(CrashLogScanRunStatus::Completed).to_lowercase()
+        ),
+        "unexpected status: {}",
+        app.scan_status
+    );
     assert_eq!(app.scan_progress, 100.0);
     assert!(app.last_scan_run.is_some());
     assert!(app.status_clear_at.is_some());
@@ -292,20 +301,26 @@ fn recovery_resume_failure_is_retained_as_actionable_status() {
     assert!(!app.scan_in_progress);
     assert!(app.scan_cancellation.is_none());
     assert!(app.status_clear_at.is_none());
+    // The stable resume error code is deliberately gone from the prose. It is a machine-facing
+    // identifier that belongs in structured output, and printing it here was the identifier-in-a-
+    // sentence shape the display-label audits exist to catch.
     assert!(
-        app.scan_status.contains("scan_run_continuation_consumed"),
-        "unexpected status: {}",
+        !app.scan_status.contains("scan_run_continuation_consumed"),
+        "the stable code must not reach the status line: {}",
         app.scan_status
     );
+    assert!(!app.scan_status.is_empty());
     assert!(matches!(
         app.last_scan_run,
         Some(LastScanRun::RecoveryFailed(
             ResumeError::ContinuationConsumed
         ))
     ));
-    assert!(
-        app.scan_run_summary_text()
-            .contains("This recovery decision was already applied")
+    // The typed failure is retained, so the overlay renders from it rather than from stored text.
+    assert_eq!(
+        app.scan_run_summary_text().lines().next(),
+        Some(app.scan_status.as_str()),
+        "the overlay and the status line must open on the same core line"
     );
 }
 
@@ -357,7 +372,17 @@ fn scan_run_event_updates_progress_from_the_final_contract() {
     app.handle_async_message(AsyncMessage::ScanEvent(event));
 
     assert_eq!(app.scan_progress, 50.0);
-    assert_eq!(app.scan_status, "50% - Succeeded crash-02.log (2 of 4)");
+    // The percentage prefix and the shortened path are this frontend's; the disposition is core's.
+    assert!(app.scan_status.starts_with("50% - "));
+    assert!(app.scan_status.contains("crash-02.log"));
+    assert!(!app.scan_status.contains("Crash Logs/crash-02.log"));
+    assert!(
+        app.scan_status.to_lowercase().contains(
+            &classic_vocabulary::Vocabulary::label(LogDisposition::Succeeded).to_lowercase()
+        ),
+        "unexpected status: {}",
+        app.scan_status
+    );
 }
 
 #[test]

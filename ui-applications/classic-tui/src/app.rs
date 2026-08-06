@@ -30,8 +30,9 @@ mod update_workflow;
 
 use crate::results_markdown::MarkdownLink;
 use crate::scan_run::{
-    LocalIgnoreRecoveryPrompt, ScanRunIntent, build_request, describe_local_ignore_recovery,
-    format_error, format_event, format_result, format_resume_error,
+    LocalIgnoreRecoveryPrompt, PresentedLine, ScanRunIntent, build_request,
+    describe_local_ignore_recovery, format_error, format_event, format_result, format_resume_error,
+    join_presented,
 };
 use crate::state::{classic_root, legacy_tui_state_file_path};
 use crate::tabs::articles_tab::{ARTICLE_LINKS, ArticlesClickAreas};
@@ -47,6 +48,24 @@ pub const BACKUP_TYPES: [BackupType; 4] = [
     BackupType::Vulkan,
     BackupType::ENB,
 ];
+
+/// Returns whether a run stopped to ask for a Local Ignore recovery decision rather than finishing.
+///
+/// A named predicate rather than an inline comparison for two reasons. It reads as the question the
+/// two call sites are actually asking, and it keeps the only `CrashLogScanRunStatus::` in `app.rs`
+/// inside a `bool`-returning function — which is what the shared runtime audit needs in order to
+/// tell a control-flow match from a naming table without parsing Rust.
+fn awaits_local_ignore_recovery(result: &RunResult) -> bool {
+    result.status == classic_scanlog_core::CrashLogScanRunStatus::LocalIgnoreRecoveryRequired
+}
+
+/// Returns whether a run finished normally with at least one Crash Log to show for it.
+///
+/// The Results tab is worth switching to only when there is something in it, so a completed run
+/// that discovered nothing does not pull the user away from what they were doing.
+fn completed_with_scanned_logs(result: &RunResult) -> bool {
+    result.status == classic_scanlog_core::CrashLogScanRunStatus::Completed && result.total > 0
+}
 
 fn open_url_default(url: &str) -> Result<(), String> {
     open::that(url).map_err(|error| error.to_string())
@@ -539,10 +558,7 @@ impl App {
                 match *outcome {
                     // Local Ignore recovery is an expected pause, not a finished run: keep the
                     // cancellation control alive so the retained continuation resumes under it.
-                    Ok(result)
-                        if result.status
-                            == classic_scanlog_core::CrashLogScanRunStatus::LocalIgnoreRecoveryRequired =>
-                    {
+                    Ok(result) if awaits_local_ignore_recovery(&result) => {
                         self.begin_local_ignore_recovery(result);
                     }
                     Ok(result) => {
@@ -564,10 +580,7 @@ impl App {
                 self.scan_in_progress = false;
                 self.scan_cancellation = None;
                 match *outcome {
-                    Ok(result)
-                        if result.status
-                            == classic_scanlog_core::CrashLogScanRunStatus::LocalIgnoreRecoveryRequired =>
-                    {
+                    Ok(result) if awaits_local_ignore_recovery(&result) => {
                         // Resume reuses the retained plan exactly once, so a second recovery
                         // request is an adapter invariant to report rather than a loop to enter.
                         self.report_recovery_invariant(
@@ -628,13 +641,17 @@ impl App {
     /// Applies one meaningful terminal run result to retained TUI presentation state.
     ///
     /// Shared by an initial run and a resumed one so both present identical Rust-owned facts.
-    fn apply_terminal_run_result(&mut self, result: RunResult) {
+    fn apply_terminal_run_result(&mut self, mut result: RunResult) {
+        // The continuation comes out before anything renders. A terminal result carries none in
+        // practice, but the ordering is the presentation crate's documented contract rather than a
+        // property of this call site: rendering borrows the result, so a later `take()` would
+        // borrow it across the move. Dropping it also keeps the retained `LastScanRun` free of a
+        // resumable handle no terminal outcome will ever claim.
+        drop(result.continuation.take());
         let presentation = format_result(&result);
         self.scan_progress = presentation.percent;
         self.scan_status = presentation.status;
-        let should_switch_to_results = result.status
-            == classic_scanlog_core::CrashLogScanRunStatus::Completed
-            && result.total > 0;
+        let should_switch_to_results = completed_with_scanned_logs(&result);
         self.status_clear_at = Some(Instant::now() + Duration::from_secs(STATUS_CLEAR_SECONDS));
         if self
             .settings
@@ -665,8 +682,12 @@ impl App {
     /// The continuation is moved out of the result before anything is shown, so the retained run
     /// is owned by exactly one place and the summary overlay keeps the rest of the typed result.
     fn begin_local_ignore_recovery(&mut self, mut result: RunResult) {
+        // Taken before the prompt is described, not after: describing the run renders it, rendering
+        // borrows the result, and the presentation crate makes that ordering a contract precisely
+        // so no adapter discovers it as a borrow error later.
+        let retained = result.continuation.take();
         let prompt = describe_local_ignore_recovery(&result);
-        let Some(continuation) = result.continuation.take() else {
+        let Some(continuation) = retained else {
             // Reported rather than guessed at: without a retained continuation the run cannot be
             // resumed, and deciding on the user's behalf is exactly what this contract forbids.
             self.scan_cancellation = None;
@@ -789,11 +810,22 @@ impl App {
     }
 
     /// Returns the recovery overlay body, including the expected outcome of every offered decision.
-    pub fn local_ignore_recovery_text(&self) -> String {
+    pub fn local_ignore_recovery_lines(&self) -> Vec<PresentedLine> {
         self.pending_local_ignore_recovery.as_ref().map_or_else(
-            || "No Crash Log Scan Run is awaiting a Local Ignore recovery decision.".to_string(),
-            |pending| pending.prompt.overlay_text(),
+            || {
+                vec![PresentedLine {
+                    severity: classic_scan_presentation::DisplaySeverity::Info,
+                    text: "No Crash Log Scan Run is awaiting a Local Ignore recovery decision."
+                        .to_string(),
+                }]
+            },
+            |pending| pending.prompt.overlay_lines(),
         )
+    }
+
+    /// Returns [`Self::local_ignore_recovery_lines`] as plain text, for callers that draw no styling.
+    pub fn local_ignore_recovery_text(&self) -> String {
+        join_presented(&self.local_ignore_recovery_lines())
     }
 
     /// Validates the editable path fields and commits them as one canonical settings update.
@@ -1276,13 +1308,26 @@ impl App {
     }
 
     /// Returns the retained terminal scan presentation shown by the Last Scan overlay.
-    pub fn scan_run_summary_text(&self) -> String {
+    ///
+    /// Rendered on demand from the retained typed result rather than stored as text, so the overlay
+    /// always reflects what core says about that run today. The result's continuation was already
+    /// taken out before it was retained, so nothing here can be borrowing across a move.
+    pub fn scan_run_summary_lines(&self) -> Vec<PresentedLine> {
         match self.last_scan_run.as_ref() {
             Some(LastScanRun::Run(result)) => format_result(result).details,
             Some(LastScanRun::Failed(error)) => format_error(error).details,
             Some(LastScanRun::RecoveryFailed(error)) => format_resume_error(error).details,
-            None => "No Crash Log Scan Run has completed yet.".to_string(),
+            // Not a statement about a run, so there is nothing for core to own here.
+            None => vec![PresentedLine {
+                severity: classic_scan_presentation::DisplaySeverity::Info,
+                text: "No Crash Log Scan Run has completed yet.".to_string(),
+            }],
         }
+    }
+
+    /// Returns [`Self::scan_run_summary_lines`] as plain text, for callers that draw no styling.
+    pub fn scan_run_summary_text(&self) -> String {
+        join_presented(&self.scan_run_summary_lines())
     }
 
     fn open_article(&mut self, index: usize) {

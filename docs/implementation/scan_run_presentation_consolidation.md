@@ -188,7 +188,17 @@ The recovery prompt crosses as `ScanRunRecoveryPrompt { lines, decisions }` with
 
 ### TUI
 
-`ui-applications/classic-tui/src/scan_run.rs` keeps `sentence_case` and its progress-weight constants — both are Display Layout — and drops `format_result`, `format_error`, `format_resume_error`, `append_installed_yaml_data_details`, and `append_setup_details` in favour of rendering display lines. It depends on `classic-scan-presentation` directly, with no FFI. `app.rs` keeps `PendingLocalIgnoreRecovery` and its overlay; `event.rs` keeps its key map, including Enter left deliberately unbound so no keypress implicitly authorizes a durable reset, and now gates keys on `RecoveryDecisionDescription::available` rather than on a hand-read flag.
+**Landed.** `ui-applications/classic-tui/src/scan_run.rs` keeps `sentence_case` and its progress-weight constants — both are Display Layout — and dropped its own composition of the run result, the two error shapes, and the Installed YAML Data block in favour of rendering display lines. It depends on `classic-scan-presentation` directly, with no FFI.
+
+Three details differ from the original sketch, each for a reason worth recording:
+
+- **`append_setup_details` stays.** The FCX Mode setup projection is out of scope until its four types adopt `Vocabulary`, so the crate does not render it. The TUI keeps its `Display`-based projection and groups those lines in *after* the rendered ones. Regrouping whole lines is Display Layout; splicing into the middle of a flat sequence would mean guessing an index.
+- **The recovery overlay carries the whole rendered run result.** Core exposes the Installed YAML Data block only through `render_run_result`, and picking that block back out by position would be a structural assumption about a sequence that carries no structure. Every surrounding line describes the run the user is being asked to decide about, so showing them is no loss.
+- **`plural` survives with exactly one caller.** The Local Ignore recovery prompt's own prose is still the TUI's, because the prompt renderer lands with the gated recovery phase. Every other count the TUI prints is now a `Count` segment whose noun core already agreed with its value.
+
+`app.rs` keeps `PendingLocalIgnoreRecovery` and its overlay, and now takes the continuation out of a result *before* rendering it at both sites. `event.rs` keeps its key map, including Enter left deliberately unbound so no keypress implicitly authorizes a durable reset; gating keys on `RecoveryDecisionDescription::available` rather than on the hand-read `reset_available` flag waits for the gated recovery phase, since that type does not exist yet.
+
+`tests/shared_runtime_audit.rs` moved `CrashLogScanRunStatus` from `DEFERRED_ENUMS` into `AUDITED_ENUMS`, which is the change its deferral note was waiting for. `app.rs`'s two status comparisons became named `bool`-returning predicates so the audit's deliberate `arm_body_end` over-read cannot read a control-flow match as a naming table.
 
 ## Node And Python Bindings
 
@@ -236,8 +246,8 @@ Adapter Mapping Rule 6 still supersedes this when the render phase lands: `Recov
 
 1. **`classic-py-cli` raw token fix.** Independent, shipped separately, ahead of everything else.
 2. **`Vocabulary` adoption** for `CrashLogScanRunStatus`, `ScanProgressPhase`, `LocalIgnoreRecoveryDecision`, and `InstalledYamlDataRole`. Tokens unchanged.
-3. **`classic-scan-presentation` crate** with `render_run_result`, `render_event`, and the two error renderers, plus unit tests. No consumer yet.
-4. **TUI migration.** Direct Rust dependency, no FFI, fastest feedback; proves the segment model before any DTO exists.
+3. **`classic-scan-presentation` crate** with `render_run_result`, `render_event`, and the two error renderers, plus unit tests. **Landed.**
+4. **TUI migration.** Direct Rust dependency, no FFI, fastest feedback; proves the segment model before any DTO exists. **Landed.**
 5. **Bridge DTOs and CLI migration.** The CLI is the simplest C++ consumer and shakes the DTO out before GUI threading is involved.
 6. **GUI migration.**
 7. **Node and Python surfaces**, then `classic-py-cli` migration. Last, because the segment taxonomy is only stable now and the baselines regenerate once.
@@ -255,7 +265,11 @@ Display Content wording is pinned **once**, at the `classic-scan-presentation` r
 - Vocabulary conformance via `assert_vocabulary_conformance` for each newly adopted enum, plus a test that each new label differs from its token where the forms differ, matching `every_infrastructure_stage_renders_its_display_label`.
 - `ui-applications/classic-tui/tests/shared_runtime_audit.rs` — extend `AUDITED_ENUMS` with the four new adopters, and add a sentence-template detector over a deny-list of domain phrases owned by the presentation crate. Scope it to that deny-list; a general "no format strings" rule would drown in false positives.
 
-  Step 2 could only add two of the four. `ScanProgressPhase` and `InstalledYamlDataRole` are audited; `CrashLogScanRunStatus` and `LocalIgnoreRecoveryDecision` sit in a `DEFERRED_ENUMS` constant beside them with their reasons, held there by a meta-test that asserts every adopter is either audited or explicitly deferred. **The TUI migration in step 4 is what clears that list**, and nothing fails until someone does it — the deferral does not expire on its own. Moving `CrashLogScanRunStatus` across needs `format_result`'s count-bearing sentences rendered from display segments *and* the `Run status: <token>` detail line switched to its Display Label. `LocalIgnoreRecoveryDecision` needs no frontend change at all; it is deferred only because `arm_body_end`'s over-read reports a false positive on control-flow matches, so it can move as soon as that bound is tightened or the affected match is restructured.
+  Step 2 could only add two of the four. Step 4 added the third: `CrashLogScanRunStatus` moved out of `DEFERRED_ENUMS` once `format_result` stopped composing its count-bearing sentences and the `Run status: <token>` detail line disappeared with the rest of the local composition. Moving it also required restructuring the two status comparisons left in `app.rs` into named `bool`-returning predicates, because `arm_body_end`'s deliberate over-read otherwise reads a control-flow match arm as a table.
+
+  `LocalIgnoreRecoveryDecision` is the one still deferred, for the same over-read and with no frontend change of its own outstanding. It can move as soon as that bound is tightened or its match is restructured the same way.
+
+  The sentence-template detector is still outstanding and belongs with the remaining frontends: a deny-list scoped to phrases the presentation crate owns is only enforceable once every frontend has stopped writing them.
 - `classic-gui/tests/test_display_label_audit.cpp` and `classic-cli/tests/test_display_label_audit.cpp` — same deny-list detector.
 - A new display-label audit for `classic-py-cli`, which has none today. Its absence is why the raw-token bug survived.
 - One thin segment-renderer test per frontend — not golden wording. It asserts that segments concatenate in order, that a `Count` prints core's resolved noun rather than a re-derived one, and that a `RecoveryDecisionDescription` marked unavailable is withheld.

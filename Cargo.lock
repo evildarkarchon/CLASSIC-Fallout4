@@ -1232,6 +1232,7 @@ dependencies = [
  "classic-config-core",
  "classic-file-io-core",
  "classic-path-core",
+ "classic-scan-presentation",
  "classic-scangame-core",
  "classic-scanlog-core",
  "classic-shared-core",
