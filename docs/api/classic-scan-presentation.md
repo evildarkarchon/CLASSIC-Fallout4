@@ -40,7 +40,15 @@ consumer builds. That is why it reuses the bridge's shape rather than inventing 
 with optional payloads — a consumer reading two bindings would otherwise read the same segment two
 ways. See [`node-python-contract-map.md`](node-python-contract-map.md).
 
-Still to migrate: the Python surface and the Python CLI. See
+The demo CLI shipped with that binding, `node-bindings/classic-node/cli/run-scan.ts`, is the fourth
+renderer and the worked example of a consumer written against the binding rather than against Rust.
+It renders identically to `classic-cli` — segments joined by single spaces, no styling, no
+capitalization rule, paths whole, severity spent entirely on the choice of output stream — which is
+what a Node frontend gets for free by reading the lines instead of writing its own.
+
+Still to migrate: the Python surface and the Python CLI.
+
+See
 [`../implementation/scan_run_presentation_consolidation.md`](../implementation/scan_run_presentation_consolidation.md).
 
 ## Public surface

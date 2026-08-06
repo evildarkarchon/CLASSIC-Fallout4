@@ -263,6 +263,21 @@ Tests are split the way the surface is. `src/scan_run_tests.rs` pins the flatten
 
 Only `node_api_surface.json` moved in the baseline. No Tier-1 row changed, because the parity contract maps Tier-1 *core* crates to Node exports and `classic-scan-presentation` is not one of them.
 
+#### The Node demo CLI
+
+**Landed.** `node-bindings/classic-node/cli/run-scan.ts` is a frontend on the binding rather than part of it, so it is not named anywhere in the sequencing above. It was migrated in the same change anyway, because leaving it would have left a live copy of `plural(count, "log", "logs")` sitting directly on a surface that had just started carrying Rust's already-resolved nouns — the drift shape this brief exists to remove, one import away from the thing that removes it.
+
+It renders exactly as the native C++ CLI does: segments concatenated in reading order with single spaces, no styling, no capitalization rule, paths whole. Severity reaches no further than a choice of output stream, with the cut at `Warning` for the same reason the native CLI puts it there — a run paused awaiting a Local Ignore decision carries that severity and belongs on stderr.
+
+- **The infrastructure failure was printing a Vocabulary Token as prose.** `${execution.error.stage}: ${execution.error.message}` told a user the run failed during `formid_database_access`. This is the same bug #170's problem statement records against `classic-py-cli`, surviving in a second frontend; it is fixed the same way, and `error.stage` still carries the token for anything matching on it.
+- **Three invented fallback sentences are gone**, one per terminal branch: a setup-failure headline, a two-clause explanation of what Local Ignore recovery means, and a no-logs line that named the directories from `process.cwd()` and the configured scan path rather than from the ones discovery actually searched.
+- **The completed summary lost `Scanned` and `Errors`**, exactly as the native CLI's did, and keeps `Reports`, `Failed`, `Duration`, and `Speed` — the two aggregates over per-log outcomes the contract does not tally and the two facts derived from a clock it does not carry. `formatPluralizedCount` survives with one caller, the report-failure tally, which is the same shape the TUI and native CLI both ended at.
+- **Which event kinds earn a console line is unchanged.** Discovery and effective concurrency still print; the rest still do not. Omitting whole lines is what an adapter may do, and it is now the only thing this frontend does to them.
+- **JSON mode is untouched in shape.** Display Content does not enter the payload. Where `message` previously fell back to a CLI-written sentence it now takes the run's leading rendered line, so that field is core's words in every branch rather than in some of them.
+- **`const enum` imports cost no runtime require.** The two display enums are inlined by `tsc` and the import erased, which matters because this command resolves the binding at run time through `loadClassicNode` — `dist/cli/` sits at a different depth than the source it was compiled from.
+
+Its wording assertions were re-anchored on paths and exit codes the payload carries, matching the call the native CLI's end-to-end tests made. Renderer conformance moved down a level into three tests over fabricated lines, so no sentence is restated. Two assertions were added for the drift itself: the summary must not print `Scanned:` or `Errors:` again.
+
 ### Python
 
 `python-bindings/classic-scanlog-py/src/scan_run.rs` exposes `DisplayLine` and `DisplaySegment` as pyo3 classes alongside the existing result and event DTOs, with `.pyi` stubs and a regenerated parity baseline. `classic-py-cli` then renders display lines instead of building its own sentences.

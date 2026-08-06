@@ -1467,8 +1467,8 @@
           {
             "path": "classic-cli/tests/test_scanner.cpp",
             "contains": [
-              "CLI scan events report Rust-selected concurrency and live progress",
-              "CLI scan summaries retain the Rust-provided discovery order"
+              "CLI scan events are stated in Rust's words",
+              "CLI scan presentation never reorders the lines Rust rendered"
             ]
           }
         ],
@@ -1490,8 +1490,8 @@
           {
             "path": "ui-applications/classic-tui/src/scan_run_tests.rs",
             "contains": [
-              "event_formatter_covers_the_complete_final_contract_stream",
-              "terminal_presentation_lists_mixed_outcomes_in_discovery_order"
+              "an_event_renders_cores_lines_in_cores_order",
+              "per_log_lines_stay_in_discovery_order"
             ]
           }
         ]
