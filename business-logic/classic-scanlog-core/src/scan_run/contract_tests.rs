@@ -1120,49 +1120,92 @@ fn cancellation_racing_after_reset_begins_returns_cancelled_after_durable_reset(
     );
 }
 
+/// Races two one-shot claims on real threads and returns both outcomes in completion-agnostic order.
+///
+/// These tests previously used `tokio::join!`, which polls both futures on one task. The claim
+/// inside `resume` is a synchronous `take()` under a mutex with nothing awaited before it, so
+/// joined futures always resolve in poll order and the mutex is never contended — nothing about
+/// concurrent access was exercised at all. Two OS threads released together by a barrier put the
+/// claim under genuine parallel entry.
+///
+/// The barrier is also what makes the arrangement self-verifying: `Barrier::wait` with two parties
+/// cannot return until both threads have arrived, so a run that finishes at all is a run in which
+/// both threads were live and about to claim. If the two ever stopped overlapping, this would hang
+/// rather than quietly pass.
+///
+/// What that proves is bounded, and worth stating so nobody reads more into it. `Option::take`
+/// under a `Mutex` makes two winners unreachable for any lock discipline that compiles, so this is
+/// not a test that a non-atomic claim would fail. It is a test that under real parallel entry the
+/// contract still holds end to end: exactly one caller wins, the loser gets the typed consumed
+/// error rather than a wrong-typed or infrastructure one, and neither thread deadlocks or panics.
+///
+/// `claim` is a plain `fn` rather than a closure so each caller can supply its own operation —
+/// `abandon`, or `resume` with a chosen decision — without this helper having to name the borrowing
+/// future those methods return.
+fn race_two_claims(
+    continuation: &Arc<contract::CrashLogScanRunContinuation>,
+    claim: fn(
+        Arc<contract::CrashLogScanRunContinuation>,
+        contract::Cancellation,
+    ) -> Result<contract::RunResult, contract::ResumeError>,
+) -> [Result<contract::RunResult, contract::ResumeError>; 2] {
+    let barrier = Arc::new(Barrier::new(2));
+    let racers = [Arc::clone(continuation), Arc::clone(continuation)].map(|continuation| {
+        let barrier = Arc::clone(&barrier);
+        std::thread::spawn(move || {
+            // Every per-thread setup cost is paid before the barrier, so both threads leave it
+            // with nothing left to do but claim.
+            let cancellation = contract::Cancellation::new();
+            barrier.wait();
+            claim(continuation, cancellation)
+        })
+    });
+    racers.map(|racer| racer.join().expect("racing claim thread should not panic"))
+}
+
+/// Asserts exactly one of two racing claims won and the loser reported a consumed continuation.
+fn assert_exactly_one_claim_won(outcomes: [Result<contract::RunResult, contract::ResumeError>; 2]) {
+    let [first, second] = outcomes;
+    assert_eq!(usize::from(first.is_ok()) + usize::from(second.is_ok()), 1);
+    let error = first
+        .err()
+        .or_else(|| second.err())
+        .expect("one racing claim should fail");
+    assert_eq!(error, contract::ResumeError::ContinuationConsumed);
+    assert_eq!(error.kind().as_str(), "scan_run_continuation_consumed");
+}
+
 /// Sequential and concurrent replay both return the same typed consumed-continuation failure.
 #[test]
 fn proceed_without_ignore_continuation_rejects_every_replay() {
     let (_temp, _logs, _ignore_path, _malformed_ignore, mut initial) =
         paused_recovery_fixture(&["crash-continuation-replay.log"]);
-    let continuation = initial
-        .continuation
-        .take()
-        .expect("recovery-required result should carry a continuation");
+    let continuation = Arc::new(
+        initial
+            .continuation
+            .take()
+            .expect("recovery-required result should carry a continuation"),
+    );
 
-    get_runtime().block_on(async {
-        let first_cancellation = contract::Cancellation::new();
-        let second_cancellation = contract::Cancellation::new();
-        let (first, second) = tokio::join!(
-            continuation.resume(
+    assert_exactly_one_claim_won(race_two_claims(
+        &continuation,
+        |continuation, cancellation| {
+            get_runtime().block_on(continuation.resume(
                 contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-                &first_cancellation,
+                &cancellation,
                 None,
-            ),
-            continuation.resume(
-                contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-                &second_cancellation,
-                None,
-            )
-        );
-        assert_eq!(usize::from(first.is_ok()) + usize::from(second.is_ok()), 1);
-        let error = first
-            .err()
-            .or_else(|| second.err())
-            .expect("one racing resume should fail");
-        assert_eq!(error, contract::ResumeError::ContinuationConsumed);
-        assert_eq!(error.kind().as_str(), "scan_run_continuation_consumed");
+            ))
+        },
+    ));
 
-        let replay = continuation
-            .resume(
-                contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-                &contract::Cancellation::new(),
-                None,
-            )
-            .await
-            .expect_err("every later resume should reject replay");
-        assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
-    });
+    let replay = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect_err("every later resume should reject replay");
+    assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
 }
 
 /// Asserts the ordinary post-discovery cancelled shape.
@@ -1320,27 +1363,22 @@ fn abandoning_a_paused_run_returns_the_cancelled_result_and_touches_nothing() {
 fn abandonment_consumes_the_continuation_exactly_once() {
     let (temp, _logs, ignore_path, malformed_ignore, mut initial) =
         paused_recovery_fixture(&["crash-continuation-abandon-replay.log"]);
-    let continuation = initial
-        .continuation
-        .take()
-        .expect("recovery-required result should carry a continuation");
+    let continuation = Arc::new(
+        initial
+            .continuation
+            .take()
+            .expect("recovery-required result should carry a continuation"),
+    );
     let before = snapshot_tree(temp.path());
 
-    get_runtime().block_on(async {
-        let first_cancellation = contract::Cancellation::new();
-        let second_cancellation = contract::Cancellation::new();
-        let (first, second) = tokio::join!(
-            continuation.abandon(&first_cancellation, None),
-            continuation.abandon(&second_cancellation, None)
-        );
-        assert_eq!(usize::from(first.is_ok()) + usize::from(second.is_ok()), 1);
-        let error = first
-            .err()
-            .or_else(|| second.err())
-            .expect("one racing abandonment should fail");
-        assert_eq!(error, contract::ResumeError::ContinuationConsumed);
-        assert_eq!(error.kind().as_str(), "scan_run_continuation_consumed");
+    assert_exactly_one_claim_won(race_two_claims(
+        &continuation,
+        |continuation, cancellation| {
+            get_runtime().block_on(continuation.abandon(&cancellation, None))
+        },
+    ));
 
+    get_runtime().block_on(async {
         let replayed_abandon = continuation
             .abandon(&contract::Cancellation::new(), None)
             .await
