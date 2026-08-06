@@ -329,11 +329,12 @@ map one mirror onto the other by hand, which is a second variant mapping able to
 disagree with the forward one.
 
 The next three sit on enums the run crate owns outright — there is no
-configuration function returning the same prose. They are the ones that let the
-CLI and the GUI delete a `switch` each: both already render exactly these
-strings, including `Unsolved Logs finalization`, `FormID database access`, and
-`internal invariant validation`, whose capitalization no transform of the token
-could have produced.
+configuration function returning the same prose. They already rendered exactly
+these strings in both C++ frontends, including `Unsolved Logs finalization`,
+`FormID database access`, and `internal invariant validation`, whose
+capitalization no transform of the token could have produced. The CLI deleted a
+`switch` for each; the GUI deleted two, because it never named the disposition
+at all — see the consumption note below.
 
 The last is also a twin, of the workspace's shared durable-publication stage
 vocabulary. Its five labels equal their tokens by that vocabulary's deliberate
@@ -346,6 +347,17 @@ rather than a DTO field so a Qt view can style variant and label as independent
 table columns; presentation only and reworded freely between releases, so branch
 on the enum and never on the string; an out-of-range value returns an empty
 string rather than an invented label.
+
+Both C++ frontends now consume these. `classic-cli/src/scan_run_cli.cpp` calls
+all seven; `classic-gui/src/workers/scanrunpresentation.cpp` calls six. The GUI
+omits `scan_run_log_disposition_label` on purpose rather than by oversight: it
+renders no disposition line, mapping the three variants onto booleans that
+select control flow and feed counts, so there is no string for a label to fill.
+The entry point stays exported because it is what makes a future results-view
+disposition column cheap, and because a frontend resolving six of seven labels
+one way and the seventh by hand is the asymmetry these entry points exist to
+prevent. Each frontend's `tests/test_display_label_audit.cpp` enforces the split
+it actually uses.
 
 ### Tagged request construction
 

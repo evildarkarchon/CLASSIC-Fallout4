@@ -10,59 +10,61 @@
 #include <utility>
 
 namespace classic::gui {
+
+// Display Labels are read from the Rust core through the bridge rather than
+// written here. Six `switch` tables used to live in this file, one per rendered
+// enum; they were the GUI's private copy of a vocabulary the CLI and the TUI
+// each also kept, and the copies had already drifted apart. Six of this
+// frontend's variant wordings were stale against the canonical form, and the
+// entire Qt suite stayed green over them, because nothing asserted a label the
+// three frontends disagreed about. The bridge entry points called below are the
+// single definition site, so a wording fix reaches all three frontends at once.
+//
+// What is left is delegation, not naming: each accessor below holds no string of
+// its own and exists only to convert `rust::String` into `QString` once instead
+// of at every call site. The three declared in the header keep their names
+// because `mainwindow.cpp` imports them; the three file-local ones were renamed
+// from `...Name` to `...Label` because #159 records Display Label as a glossary
+// term and lists "name" among the words to avoid — "name" reads as both "the
+// frozen identifier" and "what we call it", which is the blur that let these
+// tables drift in the first place.
+//
+// Every accessor returns an empty string for an enum value the forward
+// projection cannot produce, which is why the `unknown stage` and `unknown`
+// fallbacks the deleted tables carried are gone rather than reimplemented. The
+// empty string is unreachable for any value the bridge itself built, and a
+// placeholder spelled here would be one more piece of vocabulary owned by the
+// adapter. The bridge asserts the fallback stays unreachable per variant in
+// `cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs`.
+//
+// Per-log disposition is deliberately absent. The GUI has no disposition line to
+// label: `presentLog` below maps the three variants onto booleans that select
+// control flow and feed counts, so there is no rendered string a Display Label
+// would fill. `tests/test_display_label_audit.cpp` still audits the enum
+// negatively, so a contributor who later adds a disposition column cannot fill
+// it with a table.
+//
+// That audit is what stops any of these growing back. It reads this file as
+// text, so it catches shapes the compiler cannot object to.
+
 namespace {
 
-QString failureStageName(classic::scanner::ScanRunContractLogFailureStage stage)
+/// Returns the core Display Label for one structured per-log failure stage.
+QString failureStageLabel(classic::scanner::ScanRunContractLogFailureStage stage)
 {
-    using Stage = classic::scanner::ScanRunContractLogFailureStage;
-    switch (stage) {
-    case Stage::Analysis:
-        return QStringLiteral("analysis");
-    case Stage::ReportWrite:
-        return QStringLiteral("report write");
-    case Stage::UnsolvedLogsFinalization:
-        return QStringLiteral("Unsolved Logs finalization");
-    }
-    return QStringLiteral("unknown stage");
+    return classic::toQString(classic::scanner::scan_run_log_failure_stage_label(stage));
 }
 
-QString infrastructureStageName(classic::scanner::ScanRunContractInfrastructureErrorStage stage)
+/// Returns the core Display Label for one run-wide infrastructure failure stage.
+QString infrastructureStageLabel(classic::scanner::ScanRunContractInfrastructureErrorStage stage)
 {
-    using Stage = classic::scanner::ScanRunContractInfrastructureErrorStage;
-    switch (stage) {
-    case Stage::RequestValidation:
-        return QStringLiteral("request validation");
-    case Stage::Discovery:
-        return QStringLiteral("discovery");
-    case Stage::Intake:
-        return QStringLiteral("intake");
-    case Stage::FormIdDatabaseAccess:
-        return QStringLiteral("FormID database access");
-    case Stage::Initialization:
-        return QStringLiteral("initialization");
-    case Stage::InternalInvariant:
-        return QStringLiteral("internal invariant validation");
-    }
-    return QStringLiteral("unknown stage");
+    return classic::toQString(classic::scanner::scan_run_infrastructure_error_stage_label(stage));
 }
 
-/// Returns the stable user-facing name for a Local Ignore reset publication stage.
-QString resetFailureStageName(classic::scanner::ScanRunLocalIgnoreResetFailureStage stage)
+/// Returns the core Display Label for one durable Local Ignore reset publication stage.
+QString resetFailureStageLabel(classic::scanner::ScanRunLocalIgnoreResetFailureStage stage)
 {
-    using Stage = classic::scanner::ScanRunLocalIgnoreResetFailureStage;
-    switch (stage) {
-    case Stage::Create:
-        return QStringLiteral("create");
-    case Stage::Write:
-        return QStringLiteral("write");
-    case Stage::Flush:
-        return QStringLiteral("flush");
-    case Stage::Sync:
-        return QStringLiteral("sync");
-    case Stage::Publish:
-        return QStringLiteral("publish");
-    }
-    return QStringLiteral("unknown stage");
+    return classic::toQString(classic::scanner::scan_run_local_ignore_reset_failure_stage_label(stage));
 }
 
 QString setupDetails(const classic::scanner::ScanRunContractRunResult& result)
@@ -119,6 +121,13 @@ ScanRunLogPresentation presentLog(const classic::scanner::ScanRunContractLogResu
     presentation.message = log.has_message ? classic::toQString(log.message) : QString{};
     presentation.movedToUnsolvedLogs = log.moved_to_unsolved_logs;
 
+    // Booleans rather than a Display Label, decided on #167 and kept deliberately. The bridge does
+    // expose `scan_run_log_disposition_label`, and the CLI renders it — but every GUI consumer of
+    // this field reads it as control flow or as a count, not as prose: `cancelledBeforeStart`
+    // selects whether the log is reported at all, `failed` selects between two warning shapes,
+    // `succeeded` crosses a signal as a bool, and the aggregate reaches the user as three integers.
+    // There is no line here for a label to fill, so adding one would mean inventing a results-view
+    // column, which is the frontend presentation module #159 scopes out rather than this ticket.
     using Disposition = classic::scanner::ScanRunContractLogDisposition;
     switch (log.disposition) {
     case Disposition::Succeeded:
@@ -134,7 +143,7 @@ ScanRunLogPresentation presentLog(const classic::scanner::ScanRunContractLogResu
 
     for (const auto& failure : log.failures) {
         presentation.failures.append(
-            QStringLiteral("%1: %2").arg(failureStageName(failure.stage), classic::toQString(failure.message)));
+            QStringLiteral("%1: %2").arg(failureStageLabel(failure.stage), classic::toQString(failure.message)));
     }
     return presentation;
 }
@@ -194,62 +203,17 @@ ScanRunInstalledYamlDataPresentation presentInstalledYamlData(
 
 QString localIgnoreStateLabel(classic::scanner::ScanRunLocalIgnoreYamlDataState state)
 {
-    using State = classic::scanner::ScanRunLocalIgnoreYamlDataState;
-    switch (state) {
-    case State::Existing:
-        return QStringLiteral("existing");
-    case State::Generated:
-        return QStringLiteral("generated");
-    case State::RecoveryRequired:
-        return QStringLiteral("recovery required");
-    case State::ProceedWithoutIgnore:
-        return QStringLiteral("proceed without Ignore");
-    case State::ResetToDefault:
-        return QStringLiteral("reset to default");
-    }
-    return QStringLiteral("unknown");
+    return classic::toQString(classic::scanner::scan_run_local_ignore_yaml_data_state_label(state));
 }
 
 QString installedYamlDataProvenanceLabel(classic::scanner::ScanRunInstalledYamlDataProvenance provenance)
 {
-    using Provenance = classic::scanner::ScanRunInstalledYamlDataProvenance;
-    switch (provenance) {
-    case Provenance::Updated:
-        return QStringLiteral("updated");
-    case Provenance::Previous:
-        return QStringLiteral("previous");
-    case Provenance::Bundled:
-        return QStringLiteral("bundled");
-    }
-    return QStringLiteral("unknown");
+    return classic::toQString(classic::scanner::scan_run_installed_yaml_data_provenance_label(provenance));
 }
 
 QString installedYamlDataDiagnosticKindLabel(classic::scanner::ScanRunInstalledYamlDataDiagnosticKind kind)
 {
-    using Kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind;
-    switch (kind) {
-    case Kind::CacheUnavailable:
-        return QStringLiteral("cache unavailable");
-    case Kind::Missing:
-        return QStringLiteral("missing");
-    case Kind::Read:
-        return QStringLiteral("read");
-    case Kind::InvalidUtf8:
-        return QStringLiteral("invalid UTF-8");
-    case Kind::Parse:
-        return QStringLiteral("parse");
-    case Kind::InvalidSchema:
-        return QStringLiteral("invalid schema");
-    case Kind::IncompatibleSchema:
-        return QStringLiteral("incompatible schema");
-    case Kind::InvalidRoleData:
-        return QStringLiteral("invalid role data");
-    case Kind::LocalIgnoreGenerated:
-        return QStringLiteral("local ignore generated");
-    case Kind::LocalIgnoreReset:
-        return QStringLiteral("local ignore reset");
-    }
-    return QStringLiteral("unknown");
+    return classic::toQString(classic::scanner::scan_run_installed_yaml_data_diagnostic_kind_label(kind));
 }
 
 QString formatInstalledYamlDataDiagnostic(const ScanRunInstalledYamlDataDiagnosticPresentation& diagnostic)
@@ -361,7 +325,7 @@ ScanRunTerminalPresentation presentScanRunExecution(const classic::scanner::Scan
         presentation.kind = ScanRunTerminalKind::InfrastructureError;
         presentation.message =
             QStringLiteral("Crash Log Scan Run failed during %1: %2")
-                .arg(infrastructureStageName(execution.error.stage), classic::toQString(execution.error.message));
+                .arg(infrastructureStageLabel(execution.error.stage), classic::toQString(execution.error.message));
         if (execution.error.has_path) {
             presentation.message.append(QStringLiteral(" (path: %1)").arg(classic::toQString(execution.error.path)));
         }
@@ -379,7 +343,7 @@ ScanRunTerminalPresentation presentScanRunExecution(const classic::scanner::Scan
             context.append(QStringLiteral("Path: %1").arg(classic::toQString(execution.resume_error.path)));
         }
         if (execution.resume_error.has_stage) {
-            context.append(QStringLiteral("Stage: %1").arg(resetFailureStageName(execution.resume_error.stage)));
+            context.append(QStringLiteral("Stage: %1").arg(resetFailureStageLabel(execution.resume_error.stage)));
         }
         if (execution.resume_error.has_expected_identity) {
             context.append(

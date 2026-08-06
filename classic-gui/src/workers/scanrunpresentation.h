@@ -111,13 +111,21 @@ struct ScanRunTerminalPresentation {
     ScanRunInstalledYamlDataPresentation installedYamlData;
 };
 
-/// Returns the stable GUI label for the #146 scan-run Local Ignore state inventory.
+/// Returns the core Display Label for one scan-run Local Ignore YAML Data state.
+///
+/// The wording belongs to the Rust core and is fetched through the bridge, so the CLI, the GUI, and
+/// the TUI cannot describe the same outcome differently. Presentation only — branch on the enum, and
+/// never on this string, because a Display Label may be reworded between releases.
 QString localIgnoreStateLabel(classic::scanner::ScanRunLocalIgnoreYamlDataState state);
 
-/// Returns the stable GUI label for every selected YAML Data provenance.
+/// Returns the core Display Label for one selected YAML Data provenance.
+///
+/// Same contract as localIgnoreStateLabel: core-owned prose, safe to reword, never parsed.
 QString installedYamlDataProvenanceLabel(classic::scanner::ScanRunInstalledYamlDataProvenance provenance);
 
-/// Returns the stable GUI label for the #146 scan-run Installed YAML Data diagnostic inventory.
+/// Returns the core Display Label for one scan-run Installed YAML Data diagnostic kind.
+///
+/// Same contract as localIgnoreStateLabel: core-owned prose, safe to reword, never parsed.
 QString installedYamlDataDiagnosticKindLabel(classic::scanner::ScanRunInstalledYamlDataDiagnosticKind kind);
 
 /// Formats one structured diagnostic as `<kind>: <message> [<role>, <candidate>, <path>]`.

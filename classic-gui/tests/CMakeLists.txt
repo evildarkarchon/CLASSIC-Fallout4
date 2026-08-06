@@ -258,6 +258,13 @@ add_classic_gui_qt_test(classic-gui-test-yaml-update-bridge
 )
 link_classic_gui_rust_bridge(classic-gui-test-yaml-update-bridge)
 
+# Vocabulary Display Label source audit. Reads GUI sources as text rather than
+# linking them, so it needs neither the Rust bridge nor the widget libraries
+# even though the code it audits is bridge-linked.
+add_classic_gui_qt_test(classic-gui-test-display-label-audit
+    test_display_label_audit.cpp
+)
+
 # yaml-update-delivery Section 12 wiring — source-inspection tests that
 # verify SettingsDialog and classic-cli consume the bridge correctly (button
 # wiring, Update Check setting forwarding, confirm-before-apply ordering).

@@ -3,6 +3,7 @@
 
 #include "workers/scanrunpresentation.h"
 
+#include <array>
 #include <cstddef>
 #include <utility>
 
@@ -59,6 +60,27 @@ private slots:
     void reset_resume_error_preserves_operational_context();
     void infrastructure_error_preserves_typed_stage_message_and_path();
     void invalid_execution_envelope_is_presented_as_an_infrastructure_error();
+    // Exhaustive Display Label coverage, added with #167 when the GUI stopped owning the wording.
+    //
+    // These pin every variant of every enum the GUI renders a label for, against the canonical
+    // strings the Rust core owns. Quoting them as literals here is deliberate and is the one place
+    // in this frontend where that is right: it is how a wording a ticket settled gets pinned across
+    // the binding boundary, so a core-side reword has to be a decision rather than an accident.
+    //
+    // They exist because the measurement on #167 found the GUI shipping six stale labels with the
+    // entire Qt suite green over all six. The only labels any test named were ones the CLI, the
+    // GUI, and the TUI already agreed about, so the assertions were structurally incapable of
+    // catching the drift they were nearest to.
+    //
+    // Per-log failure stage is absent from this block because
+    // `terminal_logs_preserve_discovery_order_and_structured_dispositions` already compares all
+    // three of its labels in one exact QStringList, and per-log disposition is absent because the
+    // GUI renders no label for it — see the decision recorded at `presentLog`.
+    void every_local_ignore_state_renders_its_canonical_display_label();
+    void every_installed_yaml_data_provenance_renders_its_canonical_display_label();
+    void every_installed_yaml_data_diagnostic_kind_renders_its_canonical_display_label();
+    void every_infrastructure_error_stage_renders_its_canonical_display_label();
+    void every_local_ignore_reset_failure_stage_renders_its_canonical_display_label();
 };
 
 void ScanRunPresentationTests::targeted_rejections_preserve_paired_paths_and_reasons()
@@ -473,6 +495,132 @@ void ScanRunPresentationTests::infrastructure_error_preserves_typed_stage_messag
     QCOMPARE(presentation.message,
              QStringLiteral("Crash Log Scan Run failed during FormID database access: database could not be opened "
                             "(path: C:/CLASSIC/databases/formids.db)"));
+}
+
+void ScanRunPresentationTests::every_local_ignore_state_renders_its_canonical_display_label()
+{
+    // Generated and ProceedWithoutIgnore are the two that moved. Both were terse GUI-local
+    // inventions that said less than the TUI's wording for the same state.
+    using State = classic::scanner::ScanRunLocalIgnoreYamlDataState;
+    const std::array<std::pair<State, QString>, 5> expected{{
+        {State::Existing, QStringLiteral("existing")},
+        {State::Generated, QStringLiteral("generated from selected Main defaults")},
+        {State::RecoveryRequired, QStringLiteral("recovery required")},
+        {State::ProceedWithoutIgnore, QStringLiteral("proceeded without ignore entries")},
+        {State::ResetToDefault, QStringLiteral("reset to default")},
+    }};
+
+    for (const auto& [state, label] : expected) {
+        QCOMPARE(classic::gui::localIgnoreStateLabel(state), label);
+    }
+}
+
+void ScanRunPresentationTests::every_installed_yaml_data_provenance_renders_its_canonical_display_label()
+{
+    // The one enum in this set whose wording never diverged across the three frontends. Pinned
+    // anyway: it had no string assertion at all before #167, only typed-enum comparisons, so a core
+    // reword would have reached the results view unobserved.
+    using Provenance = classic::scanner::ScanRunInstalledYamlDataProvenance;
+    const std::array<std::pair<Provenance, QString>, 3> expected{{
+        {Provenance::Updated, QStringLiteral("updated")},
+        {Provenance::Previous, QStringLiteral("previous")},
+        {Provenance::Bundled, QStringLiteral("bundled")},
+    }};
+
+    for (const auto& [provenance, label] : expected) {
+        QCOMPARE(classic::gui::installedYamlDataProvenanceLabel(provenance), label);
+    }
+}
+
+void ScanRunPresentationTests::every_installed_yaml_data_diagnostic_kind_renders_its_canonical_display_label()
+{
+    // Six of these ten moved: four gained the noun that says the label describes a failure rather
+    // than a status, and two gained the glossary capitalization of Local Ignore as a domain term.
+    // Asserted through formatInstalledYamlDataDiagnostic rather than the accessor, so the rendered
+    // `<label>: <message>` frame the user actually reads is what is pinned.
+    using Kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind;
+    const std::array<std::pair<Kind, QString>, 10> expected{{
+        {Kind::CacheUnavailable, QStringLiteral("update cache unavailable")},
+        {Kind::Missing, QStringLiteral("missing candidate")},
+        {Kind::Read, QStringLiteral("read failure")},
+        {Kind::InvalidUtf8, QStringLiteral("invalid UTF-8")},
+        {Kind::Parse, QStringLiteral("parse failure")},
+        {Kind::InvalidSchema, QStringLiteral("invalid schema")},
+        {Kind::IncompatibleSchema, QStringLiteral("incompatible schema")},
+        {Kind::InvalidRoleData, QStringLiteral("invalid role data")},
+        {Kind::LocalIgnoreGenerated, QStringLiteral("Local Ignore generated")},
+        {Kind::LocalIgnoreReset, QStringLiteral("Local Ignore reset")},
+    }};
+
+    for (const auto& [kind, label] : expected) {
+        classic::gui::ScanRunInstalledYamlDataDiagnosticPresentation diagnostic{};
+        diagnostic.kind = kind;
+        diagnostic.message = QStringLiteral("diagnostic detail");
+        QCOMPARE(classic::gui::formatInstalledYamlDataDiagnostic(diagnostic),
+                 QStringLiteral("%1: diagnostic detail").arg(label));
+    }
+}
+
+void ScanRunPresentationTests::every_infrastructure_error_stage_renders_its_canonical_display_label()
+{
+    // None of these six moved, but only FormIdDatabaseAccess had an assertion before #167. The
+    // other five reach the user through the same fatal banner and were unpinned.
+    using Stage = classic::scanner::ScanRunContractInfrastructureErrorStage;
+    const std::array<std::pair<Stage, QString>, 6> expected{{
+        {Stage::RequestValidation, QStringLiteral("request validation")},
+        {Stage::Discovery, QStringLiteral("discovery")},
+        {Stage::Intake, QStringLiteral("intake")},
+        {Stage::FormIdDatabaseAccess, QStringLiteral("FormID database access")},
+        {Stage::Initialization, QStringLiteral("initialization")},
+        {Stage::InternalInvariant, QStringLiteral("internal invariant validation")},
+    }};
+
+    for (const auto& [stage, label] : expected) {
+        classic::scanner::ScanRunContractExecutionResult execution{};
+        execution.has_error = true;
+        execution.error.stage = stage;
+        execution.error.message = "run could not continue";
+
+        const auto presentation = classic::gui::presentScanRunExecution(execution);
+
+        QCOMPARE(presentation.kind, classic::gui::ScanRunTerminalKind::InfrastructureError);
+        QCOMPARE(presentation.message,
+                 QStringLiteral("Crash Log Scan Run failed during %1: run could not continue").arg(label));
+    }
+}
+
+void ScanRunPresentationTests::every_local_ignore_reset_failure_stage_renders_its_canonical_display_label()
+{
+    // None of these five moved either — they delegate to the shared durable publication stage
+    // vocabulary, which deliberately keeps each label equal to its token. Pinned because only
+    // Publish had an assertion, and because delegation means a reword in the publication crate now
+    // reaches this banner.
+    using Stage = classic::scanner::ScanRunLocalIgnoreResetFailureStage;
+    const std::array<std::pair<Stage, QString>, 5> expected{{
+        {Stage::Create, QStringLiteral("create")},
+        {Stage::Write, QStringLiteral("write")},
+        {Stage::Flush, QStringLiteral("flush")},
+        {Stage::Sync, QStringLiteral("sync")},
+        {Stage::Publish, QStringLiteral("publish")},
+    }};
+
+    for (const auto& [stage, label] : expected) {
+        classic::scanner::ScanRunContractExecutionResult execution{};
+        execution.has_resume_error = true;
+        execution.resume_error.kind =
+            classic::scanner::ScanRunContractResumeErrorKind::LocalIgnoreResetReplacementFailure;
+        execution.resume_error.code = "local_ignore_reset_replacement_failure";
+        execution.resume_error.message = "reset could not complete";
+        execution.resume_error.has_stage = true;
+        execution.resume_error.stage = stage;
+
+        const auto presentation = classic::gui::presentScanRunExecution(execution);
+
+        QCOMPARE(presentation.message,
+                 QStringLiteral("Crash Log Scan recovery failed (local_ignore_reset_replacement_failure): "
+                                "reset could not complete\nStage: %1")
+                     .arg(label));
+    }
 }
 
 void ScanRunPresentationTests::consumed_resume_error_preserves_typed_context()
