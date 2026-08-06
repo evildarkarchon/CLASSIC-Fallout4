@@ -3,16 +3,16 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
-  applyYamlUpdate,
-  // Yaml-update orchestrator
-  checkYamlUpdate,
+  applyYamlDataUpdateWithDecision,
+  // First-party YAML Data Update Channel
+  checkYamlDataUpdate,
+  rollbackYamlDataUpdate,
   rollbackYamlUpdate,
   type JsApprovedUpdate,
-  type JsYamlApplyRequest,
   // Input / output DTOs
-  type JsYamlClientSchemaEntry,
   type JsYamlUpdateStatus,
   type JsYamlRollbackOutcome,
+  type JsYamlRollbackTargetOutcome,
 } from "../index.js";
 
 /**
@@ -23,29 +23,25 @@ import {
  * they prove the NAPI entry points are reachable, correctly typed, and do
  * not perform network I/O in the short-circuit / unknown-file paths.
  *
+ * The binding intentionally exposes no generic `checkYamlUpdate` /
+ * `applyYamlUpdate` variant taking caller-supplied channel coordinates and
+ * schema entries: an adapter able to declare its own accepted ranges could
+ * classify — and then install — under a policy `classic-config-core` does not
+ * own. Rust therefore owns the Pages URL, the `yaml-data-v` tag namespace, and
+ * the accepted schema ranges, and these tests drive the first-party API only.
+ *
  * Full happy-path (fetch + download + install) coverage lives in the
  * classic-update-core integration tests (mockito-driven) rather than here,
- * because the download URL allowlist refuses non-github.com hosts.
+ * because the download URL allowlist refuses non-github.com hosts and the
+ * first-party entry points do not accept a mock Pages endpoint.
  */
 
-const MAIN_ENTRY: JsYamlClientSchemaEntry = {
-  name: "CLASSIC Main.yaml",
-  acceptedMajor: 1,
-  acceptedMinimumMinor: 0,
-  hasInstalled: false,
-  installedMajor: 0,
-  installedMinor: 0,
-};
-
 describe("yaml-update NAPI surface", () => {
-  test("checkYamlUpdate short-circuits to 'disabled' when enabled=false", async () => {
-    // The Pages URL is deliberately unroutable (127.0.0.1:1). If the
-    // Disabled short-circuit regresses, this test would hang on connect
-    // or come back with tag !== 'disabled'.
-    const status: JsYamlUpdateStatus = await checkYamlUpdate(
-      "http://127.0.0.1:1/manifest-latest.json",
-      "yaml-data-v",
-      [MAIN_ENTRY],
+  test("checkYamlDataUpdate short-circuits to 'disabled' when enabled=false", async () => {
+    // Core returns Disabled before resolving the installation root or opening
+    // any socket. If that short-circuit regresses, this test would hit the
+    // network (or throw on root resolution) instead of returning 'disabled'.
+    const status: JsYamlUpdateStatus = await checkYamlDataUpdate(
       /*enabled*/ false,
     );
     expect(status.tag).toBe("disabled");
@@ -54,47 +50,75 @@ describe("yaml-update NAPI surface", () => {
     expect(status.unknownReason).toBe("");
   });
 
-  test("checkYamlUpdate accepts bundledYamlDir override", async () => {
+  test("checkYamlDataUpdate accepts installationRoot override", async () => {
     // Regression for Codex adversarial review finding: Node hosts run
     // inside `node.exe` / `bun.exe`, so the bridge's `current_exe()`
-    // fallback cannot locate the bundled YAML root. The NAPI surface
-    // MUST accept an explicit `bundledYamlDir` so clean installs whose
+    // fallback cannot locate the installed YAML root. The NAPI surface
+    // MUST accept an explicit `installationRoot` so clean installs whose
     // package-local bytes match the manifest are classified as `upToDate`
     // instead of false-positive `updateAvailable`.
     //
     // This spec only asserts the binding accepts the optional arg
     // without a runtime type error. End-to-end classification behavior
-    // is covered by the mockito-driven Rust integration test
-    // `check_yaml_update_uses_explicit_bundled_dir_for_clean_install`
-    // in `business-logic/classic-update-core/tests/yaml_update_tests.rs`.
-    const status: JsYamlUpdateStatus = await checkYamlUpdate(
-      "http://127.0.0.1:1/manifest-latest.json",
-      "yaml-data-v",
-      [MAIN_ENTRY],
+    // is covered by the mockito-driven Rust integration tests in
+    // `business-logic/classic-update-core/tests/yaml_update_tests.rs`.
+    const status: JsYamlUpdateStatus = await checkYamlDataUpdate(
       /*enabled*/ false,
       "/nonexistent/path",
     );
     expect(status.tag).toBe("disabled");
   });
 
-  test("applyYamlUpdate accepts a structured request object", async () => {
+  test("applyYamlDataUpdateWithDecision refuses when the update check is disabled", async () => {
     const approved: JsApprovedUpdate = {
       releaseTag: "yaml-data-v-test",
       fileNames: ["CLASSIC Main.yaml"],
       fileSha256: ["deadbeef"],
     };
-    const request: JsYamlApplyRequest = {
-      pagesUrl: "http://127.0.0.1:1/manifest-latest.json",
-      tagPrefix: "yaml-data-v",
-      entries: [MAIN_ENTRY],
-      enabled: false,
-      approved,
-      bundledYamlDir: "/nonexistent/path",
-    };
 
-    await expect(applyYamlUpdate(request)).rejects.toThrow(
-      /update check.*disabled/i,
-    );
+    await expect(
+      applyYamlDataUpdateWithDecision(
+        /*enabled*/ false,
+        approved,
+        "/nonexistent/path",
+      ),
+    ).rejects.toThrow(/update check is disabled/i);
+  });
+
+  test("rollbackYamlDataUpdate reports one outcome per first-party target", async () => {
+    const root = mkdtempSync(join(tmpdir(), "classic-node-yaml-data-rollback-"));
+    const originalLocalAppData = process.env.LOCALAPPDATA;
+
+    try {
+      // An empty cache root means no target has a `.prev` sibling, so every
+      // target should come back as a non-error `rolledBack: false`.
+      process.env.LOCALAPPDATA = root;
+
+      const outcomes: JsYamlRollbackTargetOutcome[] =
+        await rollbackYamlDataUpdate();
+
+      // Rust expands the target list, so the caller never names files; the
+      // list is derived from shippable schema metadata and is never empty.
+      expect(outcomes.length).toBeGreaterThan(0);
+
+      for (const target of outcomes) {
+        expect(typeof target.fileName).toBe("string");
+        expect(target.fileName.length).toBeGreaterThan(0);
+        expect(target.outcome).toHaveProperty("rolledBack");
+        expect(target.outcome).toHaveProperty("fileName");
+        expect(target.outcome.rolledBack).toBe(false);
+        // A per-target failure is reported as data, not a rejection. With an
+        // empty cache root there is nothing to fail on, so errorMessage is
+        // absent for every target.
+        expect(target.errorMessage ?? null).toBeNull();
+      }
+    } finally {
+      if (originalLocalAppData === undefined) {
+        delete process.env.LOCALAPPDATA;
+      } else {
+        process.env.LOCALAPPDATA = originalLocalAppData;
+      }
+    }
   });
 
   test("rollbackYamlUpdate returns rolledBack=false for unknown file", () => {

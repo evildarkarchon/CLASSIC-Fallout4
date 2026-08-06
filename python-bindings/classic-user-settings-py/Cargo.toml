@@ -14,6 +14,11 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 classic-user-settings-core = { path = "../../business-logic/classic-user-settings-core" }
 classic-shared-py = { path = "../../foundation/classic-shared-py" }
+
+# Workspace-internal Vocabulary naming contract: brings the `Vocabulary` trait
+# into scope so this adapter can project core-owned tokens rather than keep its
+# own table of them. It adds no Python surface.
+classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
 pyo3 = { workspace = true, features = ["extension-module"] }
 
 [lints.rust]

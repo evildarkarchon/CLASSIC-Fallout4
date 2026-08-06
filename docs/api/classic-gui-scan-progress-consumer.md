@@ -7,6 +7,7 @@ Contributor-facing documentation for how the active Qt frontend consumes the fin
 - [`classic-gui/src/workers/scanprogressmodel.cpp`](../../classic-gui/src/workers/scanprogressmodel.cpp)
 - [`classic-gui/src/workers/scanrunpresentation.cpp`](../../classic-gui/src/workers/scanrunpresentation.cpp)
 - [`classic-gui/src/controllers/scancontroller.cpp`](../../classic-gui/src/controllers/scancontroller.cpp)
+- [`classic-gui/src/app/localignorerecoveryprompt.cpp`](../../classic-gui/src/app/localignorerecoveryprompt.cpp)
 - [`classic-gui/src/app/mainwindow.cpp`](../../classic-gui/src/app/mainwindow.cpp)
 
 This page documents the active `ScanRunObserver` path, which is the GUI's only Crash Log Scan Run execution contract.
@@ -42,13 +43,20 @@ For the CXX observer contract, see [`classic-cpp-bridge-scan-progress-callback.m
 - FCX requests use the corresponding `_with_fcx` constructor and must carry `ScanRunSetupContextDto`
 - a positive configured concurrency becomes an explicit value; a non-positive GUI setting omits it and selects Rust's adaptive policy
 
-The worker then calls exactly one operation:
+The worker starts exactly one operation and moves out its result envelope:
 
 ```cpp
-scan_run_contract_execute(*request, *m_cancellation, &observer)
+auto operation = scan_run_contract_execute(*request, *m_cancellation, &observer);
+auto execution = scan_run_contract_execution_take_result(*operation);
 ```
 
 Rust owns discovery, Targeted rejection policy, effective-concurrency selection, scheduling, FCX setup evaluation, Autoscan Report persistence, Unsolved Logs finalization, cancellation admission seams, aggregate counts, and terminal ordering. Qt supplies facts and presents the resulting contract; it does not repeat those decisions.
+
+If that envelope reports `LocalIgnoreRecoveryRequired`, the operation still owns an opaque single-use continuation. `ScanWorker` publishes the retained malformed-file metadata, takes the continuation, and synchronously asks `MainWindow` for one explicit choice through `ScanController`. `ScanController::makeLocalIgnoreRecoveryPrompt()` builds that handoff: the returned callable runs on the worker thread, marshals only the message across a `Qt::BlockingQueuedConnection`, and returns a typed decision. The operation, continuation, cancellation control, and original observer remain live on the worker stack throughout, and every path that cannot reach a live controller resolves to `Cancel`. The worker then calls `scan_run_continuation_resume(...)`, takes the resumed envelope, and presents it through the same terminal path.
+
+The worker takes the continuation *before* it asks. That ordering means a prompt that throws drops the continuation instead of leaving the run resumable with an answer the user never gave, and it matches `execute_cli_scan_run(...)` in the native CLI.
+
+Two adapter invariants are reported rather than guessed at: a recovery status with no retained continuation, and a configured-prompt-less worker. Both emit `error(...)` instead of choosing on the user's behalf, so a non-interactive `ScanWorker` can never make an implicit destructive choice.
 
 ---
 
@@ -154,7 +162,10 @@ For each log, only an event at the same or a later rank may replace stored state
 
 ## Terminal Presentation And Cancellation
 
-After `scan_run_contract_execute(...)` returns, `presentScanRunExecution(...)` maps the typed execution envelope into `ScanRunTerminalPresentation` without flattening distinct lifecycle states.
+After `scan_run_contract_execute(...)` returns an opaque operation and the
+worker moves its result through `scan_run_contract_execution_take_result(...)`,
+`presentScanRunExecution(...)` maps the typed envelope into
+`ScanRunTerminalPresentation` without flattening distinct lifecycle states.
 
 Terminal mapping:
 
@@ -163,6 +174,8 @@ Terminal mapping:
 - `Cancelled` emits `cancelled(...)` with completed and not-started counts
 - `NoCrashLogsFound` emits the dedicated `noLogsFound(...)` signal with searched locations when available; the controller relays `scanNoLogsFound(...)`, and MainWindow restores idle state without presenting an error dialog
 - `SetupFailed` emits `error(...)` with structured setup details
+- `LocalIgnoreRecoveryRequired` calls `promptLocalIgnoreRecoveryChoice(...)`, a warning prompt with Back Up & Reset To Default, Continue Without Ignore, and Cancel choices; the first two resume the retained run, while cancellation is recorded before a non-mutating placeholder decision so Rust returns the ordinary cancelled lifecycle without touching Local Ignore. Cancel is both the default and the escape button, so Return, Escape, and closing the window are all non-destructive
+- typed continuation replay and Local Ignore reset conflict/backup/replacement errors emit `error(...)` with their stable code, message, and applicable path
 - a typed infrastructure error emits `error(...)` with its stage, message, and optional path
 
 Cancellation after discovery does not interrupt admitted work. Rust finishes durable report/movement handling for admitted logs, prevents later admissions at safe seams, and returns non-started accepted logs as `CancelledBeforeStart`. The worker skips those entries when emitting `logScanned(...)`.
@@ -170,6 +183,7 @@ Cancellation after discovery does not interrupt admitted work. Rust finishes dur
 The presentation layer projects:
 
 - the run-scoped FCX setup status, message, rendered report, checks, proposed path updates, complete configuration-issue severity/file/section/setting/current/recommended/description data, actions, and fatal errors
+- optional Installed YAML Data presence plus selected Main/game role, provenance, schema, SHA-256 and byte length; `Existing`, `Generated`, `RecoveryRequired`, or `ProceedWithoutIgnore` Local Ignore state and exact identity; and diagnostic role/candidate/path/kind/message context
 - per-log `Succeeded`, `Failed`, and `CancelledBeforeStart` dispositions
 - all applicable `Analysis`, `ReportWrite`, and `UnsolvedLogsFinalization` failures
 - Autoscan Report paths and movement state
@@ -177,19 +191,64 @@ The presentation layer projects:
 
 For completed or cancelled work, report directories are also derived from terminal Autoscan Report paths and emitted through `reportDirectoriesResolved(...)` when non-empty.
 
+When intake metadata is present, `ScanWorker` emits the Qt-owned snapshot through
+`installedYamlDataResolved(...)` before terminal lifecycle signals can destroy
+the worker. `ScanController` relays it as `scanInstalledYamlDataResolved(...)`;
+MainWindow clears stale state at scan start, retains the complete snapshot past
+worker lifetime, logs exact identities and diagnostics, and includes selected
+provenance/schema and Local Ignore state in terminal status. Recovery first
+publishes the malformed-file identity, then successful continuation publishes
+the final `ProceedWithoutIgnore` or `ResetToDefault` snapshot and durable reset
+metadata before its terminal lifecycle signal.
+
+`formatInstalledYamlDataWarning(...)` then aggregates that snapshot into at most
+one run-level warning, which `MainWindow::onScanInstalledYamlDataResolved(...)`
+hands to `onScanWarning(...)` — the same presentation Targeted discovery
+rejections reach through `ScanController::scanWarning`. The projection is
+deliberately selective:
+
+- degraded selection diagnostics (cache unavailable, missing, read, invalid
+  UTF-8, parse, invalid/incompatible schema, invalid role data) are reported
+  with their role, candidate provenance, and path
+- a durable Local Ignore reset is reported with its byte-exact backup location
+  and identity, because that is the only way a user recovers the replaced edits
+- `LocalIgnoreGenerated` is excluded: generating an absent Local Ignore file from
+  the selected Main defaults is an expected successful path, so a clean first run
+  never interrupts the user
+- the pre-decision `RecoveryRequired` snapshot is excluded, because the choice
+  dialog is that snapshot's presentation; warning there would double-report the
+  problem and interrupt the user before they can answer
+- once the run state is `ProceedWithoutIgnore` or `ResetToDefault`, Local Ignore
+  diagnostics are excluded as well. Rust attributes a role to Main and game
+  selection diagnostics but not to Local Ignore ones, so the absent role is what
+  separates the two. Both decisions leave the original diagnostic in the resumed
+  snapshot — `ProceedWithoutIgnore` leaves the malformed file in place entirely —
+  and re-reporting it would warn about a question the user just answered. A reset
+  still warns, because its durable backup location is information the dialog
+  could not have given
+
+These diagnostics are run-level only. Nothing in this path contributes to
+Autoscan Report content.
+
 ---
 
 ## What Current Tests Assert
 
-[`test_scanrequestbuilder.cpp`](../../classic-gui/tests/test_scanrequestbuilder.cpp) behavior-tests the tagged constructor boundary: empty Targeted input creates Standard discovery, while Targeted input creates Targeted discovery with structured rejections and cannot express Standard movement.
+[`test_scanrequestbuilder.cpp`](../../classic-gui/tests/test_scanrequestbuilder.cpp) behavior-tests the tagged constructor boundary: one installation root and typed game cross the request seam, empty Targeted input creates Standard discovery, while Targeted input creates Targeted discovery with structured rejections and cannot express Standard movement.
 
 [`test_scan_progress_model.cpp`](../../classic-gui/tests/test_scan_progress_model.cpp) uses `ScanRunContractEvent` directly. It verifies discovery/concurrency initialization, monotonic serialized lifecycle progress, interleaved per-log advancement, late-phase suppression, and full work contribution for a failed `LogFinished` event.
 
-[`test_scanrunpresentation.cpp`](../../classic-gui/tests/test_scanrunpresentation.cpp) verifies paired Targeted rejections, report-directory de-duplication, discovery-ordered typed dispositions and failure stages, every expected lifecycle status, complete FCX setup presentation including configuration-issue current/recommended values, infrastructure-stage/path preservation, and invalid-envelope handling.
+[`test_scanrunpresentation.cpp`](../../classic-gui/tests/test_scanrunpresentation.cpp) verifies paired Targeted rejections, report-directory de-duplication, discovery-ordered typed dispositions and failure stages, every expected lifecycle status including Local Ignore Recovery Required, complete FCX setup presentation including configuration-issue current/recommended values, Installed YAML Data presence/identity/generated-Ignore diagnostics, consumed-resume and structured reset/infrastructure error preservation, and invalid-envelope handling. It additionally pins the canonical Display Label for **every** variant of the five enums the presentation layer renders one for — Local Ignore state, Installed YAML Data provenance and diagnostic kind, infrastructure error stage, and Local Ignore reset failure stage. Quoting those strings as literals is deliberate: it is how a wording the Rust core settled is held across the binding boundary, so a core-side reword surfaces as a decision rather than as silently changed GUI output.
 
-[`test_scanworker_cancellation.cpp`](../../classic-gui/tests/test_scanworker_cancellation.cpp) verifies monotonic/idempotent cancellation and that cancellation requested before execution reaches Rust's `CancelledBeforeDiscovery` lifecycle rather than a generic error.
+[`test_display_label_audit.cpp`](../../classic-gui/tests/test_display_label_audit.cpp) is the structural half of the same guarantee. It reads `classic-gui/src/` as text and asserts that no GUI source turns an audited enum into a string literal, counting occurrences rather than naming functions so a table written into an already-audited file is caught without anyone extending the test. It also asserts that the six rendered labels are still fetched from their bridge accessors, and carries a meta-test that fails when its own hand-written file list falls behind `src/`. Per-log disposition is audited negatively but not positively: the GUI renders no label for it, by the decision recorded at `presentLog`.
 
-Narrow source-wiring checks remain for MainWindow/controller presentation handoffs; the behavior tests above own lifecycle assertions.
+[`test_scanworker_cancellation.cpp`](../../classic-gui/tests/test_scanworker_cancellation.cpp) verifies monotonic/idempotent cancellation, that cancellation requested before execution reaches Rust's `CancelledBeforeDiscovery` lifecycle rather than a generic error, that a completed shared-fixture run publishes typed Installed YAML Data with exact identities, and all three malformed Local Ignore choices. Reset preserves malformed bytes in a verified backup and finishes the same scan, Proceed Without Ignore finishes without changing the file, and Cancel emits the ordinary cancelled lifecycle without backup or mutation. It also pins the two adapter invariants: a worker with no configured prompt, and a prompt that throws, both fail the run with the malformed file and the backup directory untouched.
+
+[`test_scancontroller_recovery.cpp`](../../classic-gui/tests/test_scancontroller_recovery.cpp) exercises `makeLocalIgnoreRecoveryPrompt()` across a real worker thread: an unconfigured controller answers `Cancel`, each configured decision round-trips with its message, a worker-thread request is answered on the controller's thread while the caller blocks, and a destroyed controller degrades to `Cancel` rather than replaying its old answer.
+
+[`test_localignorerecoveryprompt.cpp`](../../classic-gui/tests/test_localignorerecoveryprompt.cpp) drives the real modal dialog. It asserts that exactly the three choices are offered, that each button returns its typed decision, and that closing the window, Escape, and Return all resolve to `Cancel` so no keystroke can authorize a durable reset.
+
+[`test_scan_settings_wiring.cpp`](../../classic-gui/tests/test_scan_settings_wiring.cpp) pins the worker publication, controller relay, and MainWindow retention/user-visible status wiring by source inspection. It no longer inspects the recovery flow: the three behavior tests above own that ground at runtime.
 
 ---
 

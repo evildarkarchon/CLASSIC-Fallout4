@@ -9,6 +9,7 @@ use crate::default_settings::{
 };
 use crate::{DocumentClassification, Revision, SourceLocation, UserSettings};
 use classic_settings_core::{Yaml, YamlOperations, parse_yaml_content};
+use classic_vocabulary::Vocabulary;
 use sha2::{Digest, Sha256};
 use std::fmt;
 
@@ -81,6 +82,45 @@ pub enum MigrationChangeKind {
     AliasCanonicalization,
     /// Replace a supported scalar spelling with its canonical spelling.
     KnownValueCanonicalization,
+}
+
+impl Vocabulary for MigrationChangeKind {
+    const VARIANTS: &'static [Self] = &[
+        Self::LocationTransition,
+        Self::SchemaVersionTransition,
+        Self::FieldTransition,
+        Self::AliasCanonicalization,
+        Self::KnownValueCanonicalization,
+    ];
+
+    /// These tokens are frozen. They are the exact strings the C++ and Python
+    /// surfaces already published, and the strings the Node surface publishes
+    /// after its documented camelCase transform, so respelling one here breaks
+    /// every binding consumer at once.
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::LocationTransition => "location_transition",
+            Self::SchemaVersionTransition => "schema_version_transition",
+            Self::FieldTransition => "field_transition",
+            Self::AliasCanonicalization => "alias_canonicalization",
+            Self::KnownValueCanonicalization => "known_value_canonicalization",
+        }
+    }
+
+    /// These labels are prose and may be reworded. No frontend renders a
+    /// migration review row's category today, which is exactly why this enum
+    /// is the tracer for the contract: the labels cost nothing to get wrong
+    /// yet still have to exist, so the contract is proven without any
+    /// presentation change riding along.
+    fn label(self) -> &'static str {
+        match self {
+            Self::LocationTransition => "Document location transition",
+            Self::SchemaVersionTransition => "Schema version transition",
+            Self::FieldTransition => "Field transition",
+            Self::AliasCanonicalization => "Key alias canonicalization",
+            Self::KnownValueCanonicalization => "Known value canonicalization",
+        }
+    }
 }
 
 /// One ordered, reversible change in a User Settings migration plan.
@@ -794,3 +834,6 @@ fn relative_path(location: SourceLocation) -> &'static str {
         SourceLocation::Missing => "",
     }
 }
+
+#[rustfmt::skip]
+#[cfg(test)] #[path = "migration_tests.rs"] mod tests;

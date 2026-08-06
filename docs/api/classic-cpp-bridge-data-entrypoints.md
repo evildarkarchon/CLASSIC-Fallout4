@@ -60,10 +60,49 @@ not reopen settings during execution.
 
 ## `classic::config`
 
-`yaml_data_load(yaml_dir_root, yaml_dir_data, game, game_version)` loads the
-runtime YAML Data model used by focused C++ consumers. Scalar/vector getters
-return narrowed values or CXX DTOs rather than exposing the complete Rust
-model.
+There is **no positional directory-pair loader**. A `YamlData` handle is only
+reachable by consuming a snapshot — `installed_yaml_data_snapshot_yaml_data(...)`
+for the authoritative runtime path or `explicit_yaml_data_snapshot_yaml_data(...)`
+for deterministic caller-selected files — so C++ cannot select Installed YAML
+Data outside the Rust-owned policy. Its scalar/vector getters return narrowed
+values or CXX DTOs rather than exposing the complete Rust model.
+
+Tooling callers use the typed explicit-file flow:
+
+1. `explicit_yaml_data_load(ExplicitYamlDataPathsDto, ExplicitYamlDataGameId, selected_version)` reads exactly the supplied Main, game, and Local Ignore files.
+2. `explicit_yaml_data_load_status(...)` returns either a ready state or a typed `ExplicitYamlDataLoadErrorDto` with error kind, optional YAML role, optional path, and message.
+3. `explicit_yaml_data_load_take_snapshot(...)` consumes a ready load, after which `explicit_yaml_data_snapshot_game(...)` preserves the requested typed game, the role and identity getters expose the selected role plus exact retained SHA-256 and byte lengths, and `explicit_yaml_data_snapshot_yaml_data(...)` clones the parsed `YamlData` view.
+
+Fallout 4 VR selects the shared Fallout 4 data role. The explicit flow never consults installed cache or bundled candidates and never generates, repairs, backs up, or falls back from a selected file.
+
+First-party update tooling uses the separate Installed YAML Data inspection flow:
+
+1. `installed_yaml_data_inspect(installation_root, ExplicitYamlDataGameId)` starts config-owned independent selection for Main and the registered game file, reusing the bridge's shared typed YAML Data game identity.
+2. `installed_yaml_data_inspection_status(...)` returns ready state or `InstalledYamlDataInspectionErrorDto`, preserving typed unsupported-game / no-usable-source failures, the failed role, and structured candidate diagnostics.
+3. `installed_yaml_data_inspection_take(...)` consumes a ready operation; the inspection getters return requested game, shared game-data role, each selected file's provenance/schema/exact SHA-256 and byte length, and all non-terminal fallback diagnostics.
+
+Inspection is read-only: it does not create the update cache, promote a `.prev` sibling, mutate a rejected candidate, or read or modify Local Ignore YAML Data.
+
+Runtime callers use the Installed YAML Data load flow for valid, missing, or malformed Local Ignore YAML Data:
+
+1. `installed_yaml_data_load(installation_root, ExplicitYamlDataGameId, selected_game_version)` delegates Main/game selection, existing Local Ignore validation, and missing Local Ignore generation to config core.
+2. `installed_yaml_data_load_status(...)` uses exactly one of `has_snapshot`, `has_recovery_plan`, or `has_error` to report Ready, Local Ignore Recovery Required, or fatal failure. Fatal `InstalledYamlDataLoadErrorDto` roles cover Main/game `NoUsableSource`, Local Ignore read/creation failures, and default validation when a missing Local Ignore must be generated; the DTO also preserves the optional path, structured no-usable-source diagnostics, and core message.
+3. `installed_yaml_data_load_take_snapshot(...)` consumes Ready. Snapshot getters expose parsed `YamlData`, simplify-log removal entries retained from selected Main, requested game and registered role, Main/game provenance/schema/exact-byte identity, Local Ignore state/identity, and structured diagnostics.
+4. `installed_yaml_data_load_take_recovery_plan(...)` consumes Recovery Required into an opaque Rust-owned `LocalIgnoreRecoveryPlan`. Its getters expose retained Main/game metadata, malformed identity, malformed path, selected-game-version mode, and diagnostics without raw bytes or YAML documents. `local_ignore_recovery_plan_has_default_local_ignore_identity(...)` reports whether selected-Main defaults were usable; callers inspect it before the identity getter because CXX projects an unavailable optional identity as an empty DTO.
+5. `local_ignore_recovery_plan_proceed_without_ignore(...)` consumes that plan and returns the retained snapshot with `LocalIgnoreYamlDataState::ProceedWithoutIgnore` and an empty ignore list for this operation. It performs no selection or filesystem operation, so the malformed file remains authoritative and a later load requires recovery again.
+6. `local_ignore_recovery_plan_reset_to_default(...)` consumes the plan into a `LocalIgnoreResetOperation`. `local_ignore_reset_status(...)` distinguishes reset, conflict, and typed operational error before consumption. Reset-result getters expose canonical/backup paths, malformed/backup/replacement identities, structured diagnostics, and the retained `ResetToDefault` snapshot; conflict getters expose expected/current identities and an optional already verified backup path. `LocalIgnoreResetErrorDto` retains every core error kind plus optional `Create`, `Write`, `Flush`, `Sync`, or `Publish` stage. The bridge owns none of the conflict, backup, or atomic-replacement policy.
+
+The adapter owns no source-selection, validation, generation, recovery, repair, or fallback policy. Existing Local Ignore bytes are never replaced implicitly; the bridge exposes neither raw bytes nor parsed YAML documents.
+
+Three free functions project the human-facing Display Label for the enums above, so a C++ frontend renders one without writing a `switch`:
+
+- `installed_yaml_data_provenance_label(InstalledYamlDataProvenance) -> String`
+- `installed_yaml_data_diagnostic_kind_label(InstalledYamlDataDiagnosticKind) -> String`
+- `local_ignore_yaml_data_state_label(LocalIgnoreYamlDataState) -> String`
+
+The label is a separate entry point rather than a DTO field because a Qt view is not line-oriented: it wants the variant and its label in independently styled table columns. `classic-config-core` owns both names under the [Vocabulary naming contract](classic-vocabulary.md), so these labels are identical to the ones the Node and Python surfaces publish.
+
+Labels are presentation only and are reworded freely between releases — branch on the enum, never on the string. Because CXX shared enums are open at the FFI boundary, an out-of-range value returns an empty string rather than an invented label; no value this bridge produces can reach that path.
 
 The namespace also exposes selected cache controls and generic config helpers.
 These are data-access APIs; they are not partial Crash Log Scan Run entry
@@ -109,11 +148,34 @@ The database namespace projects a deliberately small subset of
 - inspect availability and the selected game table
 - perform one lookup or a fixed-size batch lookup
 - clear cache entries and close the pool
+- construct an opaque owned strict FormID Value Lookup from a disabled adapter,
+  fully owned in-memory replies, one SQLite path, or an existing shared `DbPool`
+- perform strict single and positional batch lookups with explicit typed outcome
+  and error envelopes
 
-The bridge narrows misses and several failures into empty strings and does not
-expose tuning, rebalance, or detailed statistics. Complete scan runs receive
-configured FormID paths through `ScanRunConfigurationDto`; C++ does not attach
-a pool to an external scan orchestrator.
+The legacy `db_pool_get_entry*` and `db_pool_get_entries_batch*` helpers remain
+fail-soft for compatibility: they narrow misses and several failures into empty
+strings, empty vectors, or `found: false`. The additive
+`FormIdValueLookup` handle is the strict path. Its successful outcomes preserve
+`Disabled`, `Missing`, and `Found` as separate enum values, while failures carry
+`FormIdValueLookupErrorCode::MalformedResult` or
+`FormIdValueLookupErrorCode::OperationalFailure` (the CXX projections of the
+core `malformed_result` and `operational_failure` codes), a message, and optional
+FormID/plugin context.
+
+SQLite constructor failures remain attached to the opaque handle and are read
+through `formid_value_lookup_construction_result(...)`; they are not flattened
+into CXX exception text. In-memory construction copies all scripted replies into
+Rust-owned storage and introduces no callback. Batch requests use owned key DTOs
+and return one outcome per input in input order, or one typed whole-batch error
+with no partial outcomes. SQLite construction, single lookup, and batch lookup
+all block through the process-wide shared Tokio runtime helper; the bridge does
+not create another runtime.
+
+The namespace does not expose tuning, rebalance, or detailed statistics.
+Complete scan runs receive configured FormID paths through
+`ScanRunConfigurationDto`; C++ does not attach a pool to an external scan
+orchestrator.
 
 ---
 
@@ -126,11 +188,14 @@ Native CLI and GUI callers use the first-party YAML Data operations:
 - `yaml_data_rollback_update()`
 
 Rust owns the Pages URL, `yaml-data-v*` channel, shippable-file inventory,
-schema compatibility, installed-file enrichment, and rollback targets. The
-bridge passes the accepted update policy and reviewed update identity through
-typed DTOs. Lower-level `yaml_check_update`, `yaml_apply_update`, and
-`yaml_rollback_update` operations remain for tests and unusual hosts that
-intentionally supply their own channel coordinates.
+schema compatibility, config-inspected installed identity, and rollback targets.
+For first-party check/apply calls, Rust also discovers the installation root
+from the union of executable, CWD, parent, and `install` layouts supported by
+the native frontends. The bridge passes the accepted update policy
+and reviewed update identity through typed DTOs. Lower-level
+`yaml_check_update`, `yaml_apply_update`, and `yaml_rollback_update` operations
+remain for tests and unusual hosts that intentionally supply their own channel
+coordinates.
 
 Binary compatibility and app-notification helpers are independent of Crash Log
 Scan Runs. See [`yaml-update-delivery.md`](yaml-update-delivery.md) and
@@ -174,7 +239,12 @@ from owned conflict, frequent-crash, solution, and important-mod DTOs. The
 construction result reports invalid rules or matcher state before the handle is
 used. `mod_guidance_analyze(...)` accepts owned plugin/load-order, optional GPU,
 and XSE-module facts and returns typed match state plus authored guidance in
-four semantic collections. The DTOs contain no report headings, group order,
+four semantic collections. Conflict configuration and result DTOs use
+`has_fix` plus `fix`, just as optional links use an explicit presence flag; an
+absent fix is never synthesized. The legacy parallel-vector YAML accessor keeps
+`yaml_data_mods_conf_fixes(...)` source-compatible by returning an empty-string
+sentinel for absence, with `yaml_data_mods_conf_has_fixes(...)` providing the
+lossless presence vector. The DTOs contain no report headings, group order,
 icons, separators, markdown, or rendered lines; construction and execution
 failures retain `AnalyzerKind::ModGuidance` and the shared stable analyzer error
 code.
@@ -188,19 +258,106 @@ means analysis completed without evidence; an absent result is reserved for an
 error envelope. No Plugin Evidence DTO contains report prose or markdown, and
 failures retain `AnalyzerKind::PluginEvidence` plus the shared stable error code.
 
+`named_record_finding_analyzer_new(...)` validates owned target/ignore patterns,
+compiles matcher state, and returns the same immutable-handle construction
+envelope. `named_record_finding_analyze(...)` accepts owned Crash Log lines and
+returns distinct `NamedRecordFindingDto` values with exact occurrence counts.
+A present result with an empty `findings` vector means analysis completed with
+no matches. The bridge projects no headings, sorting policy, prose, or markdown;
+failures retain `AnalyzerKind::NamedRecordFinding` and the shared stable code.
+
+The `formid_finding_analyzer_*_new(...)` constructors create the aggregate
+FormID Finding handle over disabled lookup, owned in-memory replies, or one
+SQLite adapter. Construction and analysis run through the process-wide shared
+runtime. `formid_finding_analyze(...)` accepts owned Crash Log lines and
+plugin/prefix records, then returns canonical identifiers, checked occurrence
+counts, explicit plugin/value presence flags, and a typed lookup status.
+Unresolved identifiers remain in the result; lookup misses are successful data,
+while malformed replies and operational failures use the shared analyzer
+envelope. No DTO exposes caches, database internals, matcher inputs, report
+prose, or markdown.
+
 ### Complete-run entry point
 
-The only public complete-run operation is:
+The only public complete-run flow starts through an opaque operation:
 
 ```cpp
-scan_run_contract_execute(request, cancellation, observer)
-    -> ScanRunContractExecutionResult
+auto operation = scan_run_contract_execute(request, cancellation, observer);
+auto execution = scan_run_contract_execution_take_result(*operation);
 ```
 
 It forwards to `classic_scanlog_core::scan_run::contract::execute(...)` on the
-repository shared Tokio runtime. The bridge has no public orchestration object,
-single-log analysis executor, batch lifecycle, prepared-run executor,
-resettable scan token, process-global FCX control, or direct report writer.
+repository shared Tokio runtime. An expected malformed Local Ignore result may
+leave an opaque continuation beside the moved result. Call
+`scan_run_contract_execution_has_continuation(...)`, move it once with
+`scan_run_contract_execution_take_continuation(...)`, and resume it through
+`scan_run_continuation_resume(...)` with either `ProceedWithoutIgnore` or
+`ResetToDefault`. The bridge has
+no public orchestration object, single-log analysis executor, batch lifecycle,
+reconstructable prepared-run executor, resettable scan token, process-global
+FCX control, or direct report writer.
+
+### Scan-run Display Labels
+
+Seven free functions project the human-facing Display Label for the run
+contract's enums, so a C++ frontend renders one without writing a `switch`:
+
+- `scan_run_installed_yaml_data_diagnostic_kind_label(ScanRunInstalledYamlDataDiagnosticKind) -> String`
+- `scan_run_local_ignore_yaml_data_state_label(ScanRunLocalIgnoreYamlDataState) -> String`
+- `scan_run_installed_yaml_data_provenance_label(ScanRunInstalledYamlDataProvenance) -> String`
+- `scan_run_log_disposition_label(ScanRunContractLogDisposition) -> String`
+- `scan_run_log_failure_stage_label(ScanRunContractLogFailureStage) -> String`
+- `scan_run_infrastructure_error_stage_label(ScanRunContractInfrastructureErrorStage) -> String`
+- `scan_run_local_ignore_reset_failure_stage_label(ScanRunLocalIgnoreResetFailureStage) -> String`
+
+The first two sit on contract-stability twins that delegate their naming to the
+configuration enums they mirror, so these labels are the same strings
+`installed_yaml_data_diagnostic_kind_label` and
+`local_ignore_yaml_data_state_label` return. The one exception is
+`RecoveryRequired`, which the run contract owns itself because a paused run has
+no configuration counterpart.
+
+The third is neither run-owned nor a twin. The run contract reuses the
+configuration crate's provenance type outright; only the *CXX mirror* is
+scanner-local, because cxx namespaces its shared enums per bridge module. So
+`classic::config::installed_yaml_data_provenance_label` returns the same prose
+but cannot accept the value a scan-run result carries. This entry point exists
+purely to close that gap, and it is a C++-only obligation: the Node surface
+reuses one provenance enum across both modules and the Python surface publishes
+a token, so neither needed a second projection. Without it a C++ frontend would
+map one mirror onto the other by hand, which is a second variant mapping able to
+disagree with the forward one.
+
+The next three sit on enums the run crate owns outright — there is no
+configuration function returning the same prose. They already rendered exactly
+these strings in both C++ frontends, including `Unsolved Logs finalization`,
+`FormID database access`, and `internal invariant validation`, whose
+capitalization no transform of the token could have produced. The CLI deleted a
+`switch` for each; the GUI deleted two, because it never named the disposition
+at all — see the consumption note below.
+
+The last is also a twin, of the workspace's shared durable-publication stage
+vocabulary. Its five labels equal their tokens by that vocabulary's deliberate
+choice — they name ordinary steps rather than domain terms — so this entry point
+buys uniformity rather than new prose. It exists so a frontend can resolve every
+scan-run label the same way instead of knowing which enums happen to need one.
+
+Same conventions as the `classic::config` labels above: a separate entry point
+rather than a DTO field so a Qt view can style variant and label as independent
+table columns; presentation only and reworded freely between releases, so branch
+on the enum and never on the string; an out-of-range value returns an empty
+string rather than an invented label.
+
+Both C++ frontends now consume these. `classic-cli/src/scan_run_cli.cpp` calls
+all seven; `classic-gui/src/workers/scanrunpresentation.cpp` calls six. The GUI
+omits `scan_run_log_disposition_label` on purpose rather than by oversight: it
+renders no disposition line, mapping the three variants onto booleans that
+select control flow and feed counts, so there is no string for a label to fill.
+The entry point stays exported because it is what makes a future results-view
+disposition column cheap, and because a frontend resolving six of seven labels
+one way and the seventh by hand is the asymmetry these entry points exist to
+prevent. Each frontend's `tests/test_display_label_audit.cpp` enforces the split
+it actually uses.
 
 ### Tagged request construction
 
@@ -215,11 +372,14 @@ constructs exactly the valid request matrix:
 Targeted constructors accept no movement policy. FCX constructors require a
 `ScanRunSetupContextDto`, keeping setup facts scoped to one run.
 
-`ScanRunConfigurationDto` contains YAML roots, game/version, non-FCX analysis
-options, configured FormID database paths, an optional configured Unsolved Logs
-destination, and optional explicit concurrency. CXX optionals use `has_*` plus
-the corresponding value. Absent concurrency selects adaptively; present zero
-reaches Rust as a typed `RequestValidation` infrastructure error.
+`ScanRunConfigurationDto` contains one `installation_root`, a typed `GameId`,
+the selected game-version mode, non-FCX analysis options, configured FormID
+database paths, an optional configured Unsolved Logs destination, and optional
+explicit concurrency. Rust derives installed YAML Data paths and performs the
+one snapshot load; C++ does not supply separate YAML directories or parse the
+game token. CXX optionals use `has_*` plus the corresponding value. Absent
+concurrency selects adaptively; present zero reaches Rust as a typed
+`RequestValidation` infrastructure error.
 
 Standard movement uses one opaque value returned by:
 
@@ -256,13 +416,22 @@ for the complete event and ordering contract.
 
 ### Result and error envelope
 
-Exactly one of `ScanRunContractExecutionResult.has_result` and `has_error` is
-true.
+The opaque operation owns one `ScanRunContractExecutionResult`; callers move it
+out with `scan_run_contract_execution_take_result(...)`. Exactly one of
+`has_result`, `has_error`, and `has_resume_error` is true for a populated
+envelope. Initial expected recovery remains result data. Replay of a consumed
+continuation and reset conflict/backup/replacement failures or durability
+uncertainty set `has_resume_error` with stable kinds and codes; the reset
+variants also retain expected/current identities, optional verified backup
+path, applicable path/publication stage, or the complete durability recovery
+receipt. Failures reached by otherwise valid resumed execution
+continue to use the typed infrastructure envelope.
 
 The result retains:
 
 - typed lifecycle status
 - optional complete discovery and FCX setup results
+- optional Installed YAML Data metadata when intake was reached
 - optional Rust-selected effective concurrency
 - aggregate counts
 - per-log outcomes in discovery order
@@ -271,9 +440,25 @@ Each log retains its typed disposition, every applicable `Analysis`,
 `ReportWrite`, and `UnsolvedLogsFinalization` failure, optional report path,
 movement state, timing, and analysis counts.
 
-The error retains one of the six stable infrastructure stages, its message, and
-an optional relevant path. Expected no-logs, setup, cancellation, and per-log
-failure states remain result data.
+Installed YAML Data metadata contains the selected Main/game role,
+provenance, schema and exact-byte identity; Local Ignore state and identity;
+and structured role/candidate/path/kind/message diagnostics. The DTO uses
+`has_installed_yaml_data` for intake presence. The bridge maps only Rust-owned
+facts; diagnostics never become Autoscan Report text. The run inventory covers
+`Existing`, `Generated`, `RecoveryRequired`, `ProceedWithoutIgnore`, and
+`ResetToDefault`. A
+recovery result retains the malformed identity and structured diagnostic while
+its process-local, non-cloneable continuation owns prepared intake and the exact
+selected snapshot. Resume does not rediscover inputs or reselect YAML Data.
+Successful reset resume projects the durable backup metadata and
+`LocalIgnoreReset` diagnostic. Pre-reset cancellation performs no filesystem
+work; cancellation after the reset transaction begins is observed only after
+the durable backup and replacement complete and returns normal cancelled result
+data without analysis.
+
+The infrastructure error retains one of the six stable stages, its message, and
+an optional relevant path. Expected no-logs, setup, Local Ignore recovery,
+cancellation, and per-log failure states remain result data.
 
 Paths use the repository's established lossy UTF-8 CXX string conversion.
 Optional output fields use explicit presence flags so absence is not conflated

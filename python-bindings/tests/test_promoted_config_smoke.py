@@ -121,16 +121,46 @@ def test_yaml_data_from_yaml_content_fixture() -> None:
     assert isinstance(data.game_mods_solu, list)  # ModSolutionEntry list (SOLU)
     assert isinstance(data.suspect_error_rules, list)  # SuspectErrorRule list
     assert isinstance(data.suspect_stack_rules, list)  # SuspectStackRule list
+
+
+def test_yaml_data_mod_conflict_fix_is_optional() -> None:
+    """Missing Mods_CONF remediation remains absent in the Python projection."""
+    game_yaml = PARITY_GAME_YAML.replace(
+        "Mods_CONF: []",
+        "\n".join(
+            (
+                "Mods_CONF:",
+                "  - mod_a: Upscaling.dll",
+                "    mod_b: FSR3_AA.dll",
+                "    name_a: Upscaling",
+                "    name_b: FSR 3 Antialiasing",
+                "    description: The mods are redundant with each other.",
+            )
+        ),
+    )
+
+    data = classic_config.YamlData.from_yaml_content(
+        PARITY_MAIN_YAML,
+        game_yaml,
+        PARITY_IGNORE_YAML,
+        "Fallout4",
+        "auto",
+    )
+
+    assert data.game_mods_conf[0]["fix"] is None
     # __repr__ dunder
     assert "YamlData(" in repr(data)
 
 
-def test_yaml_data_init_signature_exercised() -> None:
-    """YamlData.__init__ — the real-file constructor on a tmp dir (should fail cleanly)."""
-    # We don't have real YAML files under a tmp path, so this exercises the error path.
-    # Any raised exception (RustConfigParseError or RustConfigIOError) is acceptable;
-    # what matters is that the constructor was called (covers the __init__ contract row).
-    with pytest.raises((classic_config.RustConfigError, classic_config.RustConfigIOError, classic_config.RustConfigParseError)):
+def test_yaml_data_has_no_positional_directory_constructor() -> None:
+    """YamlData cannot be built from a directory list."""
+    # The positional two/three-directory constructor was removed with the
+    # Installed YAML Data cutover: selection policy is owned by Rust, so a
+    # Python caller must go through load_installed_yaml_data (installed policy)
+    # or load_explicit_yaml_data (deterministic caller-selected files). Direct
+    # instantiation must fail rather than silently accept paths CLASSIC would
+    # then read under a policy it does not own.
+    with pytest.raises(TypeError):
         classic_config.YamlData(["/nonexistent/yaml/dir"], "Fallout4", "auto")
 
 
@@ -175,14 +205,13 @@ def test_yaml_data_structured_mod_solu_with_real_rules() -> None:
 # =============================================================================
 
 
-def test_create_yamldata_factory_function() -> None:
-    """create_yamldata — free function factory wrapper for PyYamlData::new.
+def test_create_yamldata_factory_is_removed() -> None:
+    """create_yamldata is gone along with the positional constructor it wrapped.
 
-    Like YamlData.__init__, we exercise the error path on a fake directory since
-    the point is to cover the function call contract row.
+    It was only a functional-style alias for ``YamlData(yaml_dirs, ...)``, so it
+    carried the same bypass of Rust-owned Installed YAML Data selection.
     """
-    with pytest.raises((classic_config.RustConfigError, classic_config.RustConfigIOError, classic_config.RustConfigParseError)):
-        classic_config.create_yamldata(["/nonexistent/yaml/dir"], "Fallout4", "auto")
+    assert not hasattr(classic_config, "create_yamldata")
 
 
 def test_get_and_set_application_dir_roundtrip(tmp_path: Path) -> None:

@@ -6,18 +6,21 @@
 //!
 //! ## Complete Usage Example
 //!
+//! `YamlData` is never constructed from a directory list. Obtain it from an
+//! Installed YAML Data Snapshot (the authoritative runtime path, which applies
+//! selection, compatibility, and Local Ignore policy) or, for tests and
+//! tooling, from a deterministic explicit-file load.
+//!
 //! ```python
 //! from classic_core import config
 //! from pathlib import Path
 //!
-//! # Load all configuration from YAML files
-//! yaml_dirs = [
-//!     Path("YAML/Main"),
-//!     Path("YAML/Games"),
-//!     Path("YAML/Ignore"),
-//! ]
-//!
-//! yamldata = config.YamlData(yaml_dirs, "Fallout4", False)
+//! outcome = config.load_installed_yaml_data(
+//!     installation_root=Path("C:/Games/CLASSIC"),
+//!     game=config.ExplicitYamlDataGame.FALLOUT4,
+//!     selected_game_version="auto",
+//! )
+//! yamldata = outcome.snapshot.yaml_data
 //!
 //! # Access game configuration
 //! print(f"Game: {yamldata.crashgen_name}")
@@ -43,8 +46,16 @@
 //! print(f"CLASSIC Version: {yamldata.classic_version}")
 //! print(f"Date: {yamldata.classic_version_date}")
 //!
-//! # Functional API (alternative to class instantiation)
-//! yamldata2 = config.create_yamldata(yaml_dirs, "Skyrim", False)
+//! # Deterministic explicit-file load for tests and tooling. Never consults
+//! # installation layout, the update cache, or Local Ignore recovery.
+//! snapshot = config.load_explicit_yaml_data(
+//!     main_path=Path("fixtures/CLASSIC Main.yaml"),
+//!     game_path=Path("fixtures/CLASSIC Fallout4.yaml"),
+//!     ignore_path=Path("fixtures/CLASSIC Ignore.yaml"),
+//!     game=config.ExplicitYamlDataGame.FALLOUT4,
+//!     selected_game_version="auto",
+//! )
+//! yamldata2 = snapshot.yaml_data
 //! ```
 //!
 //! ## Performance Characteristics
@@ -64,8 +75,13 @@
 //! from threading import Thread
 //! from pathlib import Path
 //!
-//! # Load configuration once
-//! yamldata = config.YamlData([Path("YAML/Main")], "Fallout4", False)
+//! # Select configuration once, then share the snapshot's YAML Data.
+//! outcome = config.load_installed_yaml_data(
+//!     installation_root=Path("C:/Games/CLASSIC"),
+//!     game=config.ExplicitYamlDataGame.FALLOUT4,
+//!     selected_game_version="auto",
+//! )
+//! yamldata = outcome.snapshot.yaml_data
 //!
 //! def worker(thread_id):
 //!     # Safe to access from multiple threads
@@ -81,6 +97,8 @@
 
 /// Shared PyO3 parsers for crashgen settings rule dictionaries.
 pub mod crashgen_rules;
+mod explicit_yaml_data;
+mod installed_yaml_data;
 mod main_yaml_version;
 
 use classic_config_core::{
@@ -378,35 +396,30 @@ impl PyYamlSource {
 /// Python wrapper for YamlDataCore
 ///
 /// This is a thin adapter that:
-/// 1. Calls YamlDataCore::load_from_yaml_files (business logic)
-/// 2. Converts Rust types (Vec, HashMap) to Python types (PyList, PyDict)
-/// 3. Exposes fields as Python properties
+/// 1. Converts Rust types (Vec, HashMap) to Python types (PyList, PyDict)
+/// 2. Exposes fields as Python properties
+///
+/// It is intentionally **not** directly constructible from Python. Every
+/// instance originates in Rust-owned selection — an Installed YAML Data
+/// Snapshot (`load_installed_yaml_data`) or a deterministic explicit-file load
+/// (`load_explicit_yaml_data`) — so a Python caller cannot assemble YAML Data
+/// under a policy `classic-config-core` does not own. `from_yaml_content`
+/// remains available for content-string tests; it reads no paths at all.
 #[pyclass(name = "YamlData")]
 pub struct PyYamlData {
     /// The inner pure Rust data structure
     inner: YamlDataCore,
 }
 
+impl PyYamlData {
+    /// Wraps a cloned core configuration for another in-crate binding projection.
+    pub(crate) fn _from_core(inner: YamlDataCore) -> Self {
+        Self { inner }
+    }
+}
+
 #[pymethods]
 impl PyYamlData {
-    #[new]
-    #[pyo3(signature = (yaml_dirs, game, game_version))]
-    fn new(
-        py: Python<'_>,
-        yaml_dirs: Vec<PathBuf>,
-        game: String,
-        game_version: String,
-    ) -> PyResult<Self> {
-        // Call pure Rust core using shared runtime, releasing GIL during blocking I/O
-        let core = without_gil_block_on(py, || async {
-            YamlDataCore::load_from_yaml_files(yaml_dirs, game, game_version).await
-        })
-        .map_err(PyConfigError)
-        .map_pyerr()?;
-
-        Ok(Self { inner: core })
-    }
-
     /// Create YamlData from YAML content strings (for testing without file I/O).
     ///
     /// This constructor is useful for unit tests and integration tests where you want
@@ -751,21 +764,6 @@ impl PyYamlData {
     }
 }
 
-/// Python API function to create YamlData
-///
-/// This is a convenience function for Python code that wants to
-/// use a functional style instead of instantiating the class.
-#[pyfunction]
-#[pyo3(signature = (yaml_dirs, game, game_version))]
-pub fn create_yamldata(
-    py: Python<'_>,
-    yaml_dirs: Vec<PathBuf>,
-    game: String,
-    game_version: String,
-) -> PyResult<PyYamlData> {
-    PyYamlData::new(py, yaml_dirs, game, game_version)
-}
-
 /// Persist optional runtime paths to an explicit Game Local YAML document.
 ///
 /// ``None`` leaves the corresponding key unchanged. The operation delegates all
@@ -831,7 +829,6 @@ fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     m.add_class::<PyYamlData>()?;
     m.add_class::<PyYamlSource>()?;
-    m.add_function(wrap_pyfunction!(create_yamldata, m)?)?;
     m.add_function(wrap_pyfunction!(persist_game_local_paths, m)?)?;
     m.add_function(wrap_pyfunction!(clear_yaml_cache, m)?)?;
     m.add_function(wrap_pyfunction!(set_application_dir, m)?)?;
@@ -848,6 +845,8 @@ fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // schema-incompat, missing-key, empty-value, and non-string-value
     // failures.
     main_yaml_version::register(m)?;
+    explicit_yaml_data::register(m)?;
+    installed_yaml_data::register(m)?;
 
     Ok(())
 }
@@ -859,7 +858,6 @@ pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     m.add_class::<PyYamlData>()?;
     m.add_class::<PyYamlSource>()?;
-    m.add_function(wrap_pyfunction!(create_yamldata, m)?)?;
     m.add_function(wrap_pyfunction!(persist_game_local_paths, m)?)?;
     m.add_function(wrap_pyfunction!(clear_yaml_cache, m)?)?;
     m.add_function(wrap_pyfunction!(set_application_dir, m)?)?;
@@ -870,6 +868,8 @@ pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // See the matching comment in the `classic_config` pymodule above.
     main_yaml_version::register(m)?;
+    explicit_yaml_data::register(m)?;
+    installed_yaml_data::register(m)?;
 
     Ok(())
 }

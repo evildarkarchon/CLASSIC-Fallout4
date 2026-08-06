@@ -12,7 +12,7 @@ Game_Info:
 # Per-crashgen configuration for settings validation.
 # Each entry declares:
 #   display_section: bracket header used by this crashgen (for display only)
-#   ignore_keys:     settings keys to skip in check_disabled_settings()
+#   ignore_keys:     settings keys excluded from Disabled Setting Notice analysis
 #   checks:          named checks to run for this crashgen
 # The "default" entry applies to any crashgen not explicitly listed.
 # Adding a new crashgen or assigning an existing named check requires only a YAML change.
@@ -523,7 +523,10 @@ Crashlog_Stack_Check:
     main_error_required_any: []
     main_error_optional_any: [Scaleform::Gfx::Value::ObjectInterface]
     stack_contains_any:
-      [InstalledContentPanelBackground_mc, BackgroundAndBracketsInstalledContentTopic_mc]
+      [
+        InstalledContentPanelBackground_mc,
+        BackgroundAndBracketsInstalledContentTopic_mc,
+      ]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
 
@@ -677,7 +680,12 @@ Crashlog_Stack_Check:
     main_error_required_any: []
     main_error_optional_any: ["248B26A"]
     stack_contains_any:
-      [MovementAgentPathFollowerVirtual, PathingStreamSaveGame, BGSProcedurePatrolExecState, CustomActorPackageData]
+      [
+        MovementAgentPathFollowerVirtual,
+        PathingStreamSaveGame,
+        BGSProcedurePatrolExecState,
+        CustomActorPackageData,
+      ]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
 
@@ -761,7 +769,8 @@ Crashlog_Stack_Check:
     name: Nvidia Reflex Crash
     severity: 4
     main_error_required_any: []
-    main_error_optional_any: ["3A0000", "AD0000", "8E0000", NVIDIA_Reflex, Buffout4]
+    main_error_optional_any:
+      ["3A0000", "AD0000", "8E0000", NVIDIA_Reflex, Buffout4]
     stack_contains_any: [NVIDIA_Reflex.dll]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
@@ -780,7 +789,13 @@ Crashlog_Stack_Check:
     severity: 5
     main_error_required_any: []
     main_error_optional_any: ["00CD99B", amdvlk64]
-    stack_contains_any: [amdvlk64.dll, dxvk::DXGIAdapter, dxvk::DXGIFactory, VirtualLinearAllocatorWithNode]
+    stack_contains_any:
+      [
+        amdvlk64.dll,
+        dxvk::DXGIAdapter,
+        dxvk::DXGIFactory,
+        VirtualLinearAllocatorWithNode,
+      ]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
 
@@ -841,7 +856,13 @@ Crashlog_Stack_Check:
     main_error_required_any: []
     main_error_optional_any: ["1FCC07E"]
     stack_contains_any:
-      [BSAnimationGraphManager, hkbVariableBindingSet, hkbHandIkControlsModifier, hkbBehaviorGraph, hkbModifierList]
+      [
+        BSAnimationGraphManager,
+        hkbVariableBindingSet,
+        hkbHandIkControlsModifier,
+        hkbBehaviorGraph,
+        hkbModifierList,
+      ]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
 
@@ -850,7 +871,8 @@ Crashlog_Stack_Check:
     severity: 5
     main_error_required_any: []
     main_error_optional_any: ["1B938F0"]
-    stack_contains_any: [AnimTextData\\AnimationFileData, AnimationFileLookupSingletonHelper]
+    stack_contains_any:
+      [AnimTextData\\AnimationFileData, AnimationFileLookupSingletonHelper]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
 
@@ -869,7 +891,13 @@ Crashlog_Stack_Check:
     main_error_required_any: []
     main_error_optional_any: ["0B2C44B"]
     stack_contains_any:
-      [TESObjectARMO, TESObjectWEAP, BGSMod::Attachment, BGSMod::Template, BGSMod::Template::Item]
+      [
+        TESObjectARMO,
+        TESObjectWEAP,
+        BGSMod::Attachment,
+        BGSMod::Template,
+        BGSMod::Template::Item,
+      ]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
 
@@ -878,7 +906,8 @@ Crashlog_Stack_Check:
     severity: 1
     main_error_required_any: []
     main_error_optional_any: ["0CDAD30"]
-    stack_contains_any: [BGSSaveLoadManager, BGSSaveLoadThread, BGSSaveFormBuffer]
+    stack_contains_any:
+      [BGSSaveLoadManager, BGSSaveLoadThread, BGSSaveFormBuffer]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
 
@@ -887,7 +916,14 @@ Crashlog_Stack_Check:
     severity: 1
     main_error_required_any: []
     main_error_optional_any: []
-    stack_contains_any: [ButtonEvent, MenuControls, MenuOpenCloseHandler, PlayerControls, DXGISwapChain]
+    stack_contains_any:
+      [
+        ButtonEvent,
+        MenuControls,
+        MenuOpenCloseHandler,
+        PlayerControls,
+        DXGISwapChain,
+      ]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
 
@@ -896,7 +932,8 @@ Crashlog_Stack_Check:
     severity: 1
     main_error_required_any: []
     main_error_optional_any: ["01F498D", "03F89A3"]
-    stack_contains_any: [StartWorkshop, IsWithinBuildableArea, PlayerControls, DXGISwapChain]
+    stack_contains_any:
+      [StartWorkshop, IsWithinBuildableArea, PlayerControls, DXGISwapChain]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
 
@@ -914,7 +951,8 @@ Crashlog_Stack_Check:
     severity: 1
     main_error_required_any: []
     main_error_optional_any: []
-    stack_contains_any: [BGSProcedurePatrol, BGSProcedurePatrolExecState, PatrolActorPackageData]
+    stack_contains_any:
+      [BGSProcedurePatrol, BGSProcedurePatrolExecState, PatrolActorPackageData]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
 
@@ -923,7 +961,13 @@ Crashlog_Stack_Check:
     severity: 1
     main_error_required_any: []
     main_error_optional_any: []
-    stack_contains_any: [BSPackedCombined, BGSCombinedCellGeometryDB, BGSStaticCollection, TESObjectCELL]
+    stack_contains_any:
+      [
+        BSPackedCombined,
+        BGSCombinedCellGeometryDB,
+        BGSStaticCollection,
+        TESObjectCELL,
+      ]
     exclude_if_stack_contains_any: []
     stack_contains_at_least: []
 
@@ -1009,8 +1053,8 @@ Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
         - DamageThresholdFramework
     name: Damage Threshold Framework
     description: |
-          - Can cause crashes in combat on some occasions due to how damage calculations are done.
-          -----
+      - Can cause crashes in combat on some occasions due to how damage calculations are done.
+      -----
 
   - id: endless-warfare
     criteria:
@@ -1018,8 +1062,8 @@ Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
         - Endless Warfare
     name: Endless Warfare
     description: |
-          - Some enemy spawn points could be bugged or crash the game due to scripts or pathfinding.
-          -----
+      - Some enemy spawn points could be bugged or crash the game due to scripts or pathfinding.
+      -----
 
   - id: extreme-particles-overhaul
     criteria:
@@ -1027,9 +1071,9 @@ Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
         - EPO.esp
     name: Extreme Particles Overhaul
     description: |
-          - Can cause particle effects related crashes, consider switching to Burst Impact Blast FX.
-            Burst Impact Blast FX: https://www.nexusmods.com/fallout4/mods/57789?tab=files
-          -----
+      - Can cause particle effects related crashes, consider switching to Burst Impact Blast FX.
+        Burst Impact Blast FX: https://www.nexusmods.com/fallout4/mods/57789?tab=files
+      -----
 
   - id: fallout-sakhalin
     criteria:
@@ -1037,8 +1081,8 @@ Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
         - SakhalinWasteland
     name: Fallout Sakhalin
     description: |
-          - Breaks the precombine system all across Far Harbor which will randomly crash your game.
-          -----
+      - Breaks the precombine system all across Far Harbor which will randomly crash your game.
+      -----
 
   - id: hud76-hud-replacer
     criteria:
@@ -1046,8 +1090,8 @@ Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
         - 76HUD
     name: HUD76 Hud Replacer
     description: |
-          - Can sometimes cause interface and pip-boy related bugs, glitches and crashes.
-          -----
+      - Can sometimes cause interface and pip-boy related bugs, glitches and crashes.
+      -----
 
   - id: ncr-renegade-armor
     criteria:
@@ -1055,8 +1099,8 @@ Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
         - NCRenegade
     name: NCR Renegade Armor
     description: |
-          - Broken outfit mesh that crashes the game in 3rd person or when NPCs wearing it are hit.
-          -----
+      - Broken outfit mesh that crashes the game in 3rd person or when NPCs wearing it are hit.
+      -----
 
   - id: respawnable-legendary-bosses
     criteria:
@@ -1064,8 +1108,8 @@ Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
         - Respawnable Legendary Bosses
     name: Respawnable Legendary Bosses
     description: |
-          - Can sometimes cause Deathclaw / Behemoth boulder projectile crashes for unknown reasons.
-          -----
+      - Can sometimes cause Deathclaw / Behemoth boulder projectile crashes for unknown reasons.
+      -----
 
   - id: scrap-everything
     criteria:
@@ -1073,8 +1117,8 @@ Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
         - Scrap Everything
     name: Scrap Everything (Core Or Ultimate)
     description: |
-          - Weird crashes and issues due to multiple unknown problems. This mod must be always last in your load order.
-          -----
+      - Weird crashes and issues due to multiple unknown problems. This mod must be always last in your load order.
+      -----
 
   - id: shade-girl-leather-outfits
     criteria:
@@ -1082,8 +1126,8 @@ Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
         - Shade Girl Leather Outfits
     name: Shade Girl Leather Outfits
     description: |
-          - Outfits can crash the game while browsing the armor workbench or upon starting a new game due to bad meshes.
-          -----
+      - Outfits can crash the game while browsing the armor workbench or upon starting a new game due to bad meshes.
+      -----
 
   - id: spring-cleaning
     criteria:
@@ -1091,8 +1135,8 @@ Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
         - SpringCleaning
     name: Spring Cleaning
     description: |
-          - Abandoned and severely outdated mod that breaks precombines and could potentially even break your save file.
-          -----
+      - Abandoned and severely outdated mod that breaks precombines and could potentially even break your save file.
+      -----
 
   - id: stalker-texture-overhaul
     criteria:
@@ -1100,8 +1144,8 @@ Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
         - (STO) NO
     name: Stalker Texture Overhaul
     description: |
-          - Doesn't work due to incorrect folder structure and has a corrupted dds file that causes Create2DTexture crashes.
-          -----
+      - Doesn't work due to incorrect folder structure and has a corrupted dds file that causes Create2DTexture crashes.
+      -----
 
   - id: tactical-tablet
     criteria:
@@ -1109,8 +1153,8 @@ Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
         - TacticalTablet
     name: Tactical Tablet
     description: |
-          - Can cause flickering with certain scopes or crashes while browsing workbenches, most commonly with ECO.
-          -----
+      - Can cause flickering with certain scopes or crashes while browsing workbenches, most commonly with ECO.
+      -----
 
   - id: true-nights
     criteria:
@@ -1118,8 +1162,8 @@ Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
         - True Nights v03
     name: True Nights
     description: |
-          - Has an invalid Image Space Adapter (IMAD) Record that will corrupt your save memory and has to be manually fixed.
-          -----
+      - Has an invalid Image Space Adapter (IMAD) Record that will corrupt your save memory and has to be manually fixed.
+      -----
 
   - id: weapons-framework-beta
     criteria:
@@ -1127,9 +1171,9 @@ Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
         - WeaponsFramework
     name: Weapons Framework Beta
     description: |
-          - Will randomly cause crashes when used with Tactical Reload and possibly other weapon or combat related mods.
-            Visit Important Patches List article for possible solutions: https://www.nexusmods.com/fallout4/articles/3769
-          -----
+      - Will randomly cause crashes when used with Tactical Reload and possibly other weapon or combat related mods.
+        Visit Important Patches List article for possible solutions: https://www.nexusmods.com/fallout4/articles/3769
+      -----
 
   - id: war-of-the-commonwealth
     criteria:
@@ -1137,8 +1181,8 @@ Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
         - WOTC
     name: War Of The Commonwealth
     description: |
-          - Seems responsible for consistent crashes with specific spawn points or random ones during settlement attacks.
-          -----
+      - Seems responsible for consistent crashes with specific spawn points or random ones during settlement attacks.
+      -----
 
   - id: modern-firearms-new-calibers-patch
     criteria:
@@ -1146,8 +1190,8 @@ Mods_FREQ: # 1) MODS THAT CAN CAUSE FREQUENT CRASHES
         - NewCalibers_Modern
     name: Modern Firearms - New Calibers Patch
     description: |
-          - New Calibers Patch for this mod is outdated and can frequently crash the game. Check if there is a newer patch.
-          -----
+      - New Calibers Patch for this mod is outdated and can frequently crash the game. Check if there is a newer patch.
+      -----
 
 Mods_CONF: # 2) MODS THAT CONFLICT WITH OTHER MODS
   - mod_a: betterpowerarmor
@@ -1323,6 +1367,12 @@ Mods_CONF: # 2) MODS THAT CONFLICT WITH OTHER MODS
     fix: "You can download a compatibility patch."
     link: https://www.nexusmods.com/fallout4/mods/84930
 
+  - mod_a: Upscaling.dll
+    mod_b: FSR3_AA.dll
+    name_a: Upscaling
+    name_b: FSR 3 Antialiasing
+    description: "The mods are redundant with each other, Upscaling has access to DLAA for Nvidia GPUs."
+
 Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
   - id: dlc-ultra-high-resolution
     criteria:
@@ -1342,12 +1392,12 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - AAF.esm
     name: Advanced Animation Framework
     description: |
-          - Latest AAF version only available on Moddingham | AAF Tech Support: https://discord.gg/gWZuhMC
-            Latest AAF Link (register / login to download): https://www.moddingham.com/viewtopic.php?t=2
-          -----
-          - Looks Menu versions 1.6.20 & 1.6.19 can frequently break adult mod related (erection) morphs.
-            If you notice AAF related problems, remove latest version of Looks Menu and switch to 1.6.18.
-          -----
+      - Latest AAF version only available on Moddingham | AAF Tech Support: https://discord.gg/gWZuhMC
+        Latest AAF Link (register / login to download): https://www.moddingham.com/viewtopic.php?t=2
+      -----
+      - Looks Menu versions 1.6.20 & 1.6.19 can frequently break adult mod related (erection) morphs.
+        If you notice AAF related problems, remove latest version of Looks Menu and switch to 1.6.18.
+      -----
 
   - id: anime-race-nanako
     criteria:
@@ -1355,10 +1405,10 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - AnimeRace_Nanako
     name: Anime Race Nanako Chan
     description: |
-          - Make sure you have the Skeleton Fixes installed for this mod.
-            Read the fixes description carefully for installation info.
-            Skeleton Fixes: https://www.nexusmods.com/fallout4/mods/56101
-          -----
+      - Make sure you have the Skeleton Fixes installed for this mod.
+        Read the fixes description carefully for installation info.
+        Skeleton Fixes: https://www.nexusmods.com/fallout4/mods/56101
+      -----
 
   - id: armor-keywords
     criteria:
@@ -1366,10 +1416,10 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - ArmorKeywords
     name: Armor And Weapons Keywords
     description: |
-          - If you don't rely on AWKCR, consider switching to Equipment and Crafting Overhaul
-            Better Alternative: https://www.nexusmods.com/fallout4/mods/67679?tab=files
-            Patches to remove AWKCR: https://www.nexusmods.com/fallout4/mods/40752?tab=files
-          -----
+      - If you don't rely on AWKCR, consider switching to Equipment and Crafting Overhaul
+        Better Alternative: https://www.nexusmods.com/fallout4/mods/67679?tab=files
+        Patches to remove AWKCR: https://www.nexusmods.com/fallout4/mods/40752?tab=files
+      -----
 
   - id: bt-interiors-project
     criteria:
@@ -1377,9 +1427,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - BTInteriors_Project
     name: Beantown Interiors
     description: |
-          - Usually causes fps drops, stuttering, crashing and culling issues in multiple locations.
-            Patch Link: https://www.nexusmods.com/fallout4/mods/53894?tab=files
-          -----
+      - Usually causes fps drops, stuttering, crashing and culling issues in multiple locations.
+        Patch Link: https://www.nexusmods.com/fallout4/mods/53894?tab=files
+      -----
 
   - id: combat-zone-restored
     criteria:
@@ -1387,9 +1437,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - CombatZoneRestored
     name: Combat Zone Restored
     description: |
-          - Contains few small issues and NPCs usually have trouble navigating the interior space.
-            Patch Link: https://www.nexusmods.com/fallout4/mods/59329?tab=files
-          -----
+      - Contains few small issues and NPCs usually have trouble navigating the interior space.
+        Patch Link: https://www.nexusmods.com/fallout4/mods/59329?tab=files
+      -----
 
   - id: ca-n-esm
     criteria:
@@ -1397,10 +1447,10 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - CaN.esm
     name: Crimes Against Nature
     description: |
-          - Make sure you have the Skeleton Fixes installed for this mod.
-            Read the fixes description carefully for installation info.
-            Skeleton Fixes: https://www.nexusmods.com/fallout4/mods/56101
-          -----
+      - Make sure you have the Skeleton Fixes installed for this mod.
+        Read the fixes description carefully for installation info.
+        Skeleton Fixes: https://www.nexusmods.com/fallout4/mods/56101
+      -----
 
   - id: d-e-c-a-y
     criteria:
@@ -1408,9 +1458,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - D.E.C.A.Y
     name: Decay Better Ghouls
     description: |
-          - You have to install DECAY Redux patch to prevent its audio files from crashing the game.
-            Patch Link: https://www.nexusmods.com/fallout4/mods/59025?tab=files
-          -----
+      - You have to install DECAY Redux patch to prevent its audio files from crashing the game.
+        Patch Link: https://www.nexusmods.com/fallout4/mods/59025?tab=files
+      -----
 
   - id: everyones-best-friend
     criteria:
@@ -1418,12 +1468,12 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - EveryonesBestFriend
     name: Everyone's Best Friend
     description: |
-          - An improved alternative with better compatibility is available:
-            Simple Everyone's Best Friend: https://www.nexusmods.com/fallout4/mods/92314
-            If you wish to keep the original, it needs a compatibility patch to forward changes made by the Unofficial Patch.
-            Patch Link: https://drive.google.com/file/d/1JJvrnaxmui22P1X44V2VTkifjmfahtLM
-            If you have Horizon installed or don't use UFO4P, this patch is not needed.
-          -----
+      - An improved alternative with better compatibility is available:
+        Simple Everyone's Best Friend: https://www.nexusmods.com/fallout4/mods/92314
+        If you wish to keep the original, it needs a compatibility patch to forward changes made by the Unofficial Patch.
+        Patch Link: https://drive.google.com/file/d/1JJvrnaxmui22P1X44V2VTkifjmfahtLM
+        If you have Horizon installed or don't use UFO4P, this patch is not needed.
+      -----
 
   - id: fall-souls
     criteria:
@@ -1431,9 +1481,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - FallSouls
     name: Fallsouls Unpaused Game Menus
     description: |
-          - Occasionally breaks the Quests menu, can cause crashes while changing MCM settings.
-            Advised Fix: Toggle PipboyMenu in FallSouls MCM settings or completely reinstall the mod.
-          -----
+      - Occasionally breaks the Quests menu, can cause crashes while changing MCM settings.
+        Advised Fix: Toggle PipboyMenu in FallSouls MCM settings or completely reinstall the mod.
+      -----
 
   - id: m8r-item-tags
     criteria:
@@ -1441,11 +1491,11 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - M8r_Item_Tags
     name: Fallui Item Sorter (OLD)
     description: |
-          - This is an outdated item tagging / sorting patch that can cause crashes or conflicts in all kinds of situations.
-            I strongly recommend to instead generate your own sorting patch and place it last in your load order.
-            That way, you won't experience any conflicts / crashes and even modded items will be sorted.
-            Generate Sorting Patch With This: https://www.nexusmods.com/fallout4/mods/48826?tab=files
-          -----
+      - This is an outdated item tagging / sorting patch that can cause crashes or conflicts in all kinds of situations.
+        I strongly recommend to instead generate your own sorting patch and place it last in your load order.
+        That way, you won't experience any conflicts / crashes and even modded items will be sorted.
+        Generate Sorting Patch With This: https://www.nexusmods.com/fallout4/mods/48826?tab=files
+      -----
 
   - id: fo4-fi-fps-fix
     criteria:
@@ -1453,9 +1503,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - Fo4FI_FPS_fix
     name: FO4FI FPS Fix
     description: |
-          - This mod is severely outdated and will cause crashes even with compatibility patches.
-            Better Alternative: https://www.nexusmods.com/fallout4/mods/46403?tab=files
-          -----
+      - This mod is severely outdated and will cause crashes even with compatibility patches.
+        Better Alternative: https://www.nexusmods.com/fallout4/mods/46403?tab=files
+      -----
 
   - id: bostonfpsfix
     criteria:
@@ -1463,10 +1513,10 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - bostonfpsfix
     name: Boston FPS Fix
     description: |
-          - This mod is severely outdated. Either install the PRP patch or switch to PRP entirely.
-            Patch Link: https://www.nexusmods.com/fallout4/mods/59021?tab=files
-            Better Alternative: https://www.nexusmods.com/fallout4/mods/46403?tab=files
-          -----
+      - This mod is severely outdated. Either install the PRP patch or switch to PRP entirely.
+        Patch Link: https://www.nexusmods.com/fallout4/mods/59021?tab=files
+        Better Alternative: https://www.nexusmods.com/fallout4/mods/46403?tab=files
+      -----
 
   - id: functional-displays
     criteria:
@@ -1474,9 +1524,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - FunctionalDisplays
     name: Functional Displays
     description: |
-          - Frequently causes object model (nif) related crashes and this needs to be manually corrected.
-            Advised Fix: Open its Meshes folder and delete everything inside EXCEPT for the Functional Displays folder.
-          -----
+      - Frequently causes object model (nif) related crashes and this needs to be manually corrected.
+        Advised Fix: Open its Meshes folder and delete everything inside EXCEPT for the Functional Displays folder.
+      -----
 
   - id: skeleton-player
     criteria:
@@ -1484,9 +1534,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - skeleton*player
     name: Gender Specific Skeletons (Male/Female)
     description: |
-          - High chance to cause a crash when starting a new game. Switch to Discrete Female Skeleton instead.
-            Better Alternative: https://www.nexusmods.com/fallout4/mods/56115?tab=files
-          -----
+      - High chance to cause a crash when starting a new game. Switch to Discrete Female Skeleton instead.
+        Better Alternative: https://www.nexusmods.com/fallout4/mods/56115?tab=files
+      -----
 
   - id: give-me-that-bottle
     criteria:
@@ -1494,9 +1544,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - Give Me That Bottle
     name: Give Me That Bottle
     description: |
-          - Can rarely cause crashes in the Pip-Boy inventory menu. Switch to Fill'em Up Again instead.
-            Better Alternative: https://www.nexusmods.com/fallout4/mods/12674?tab=files
-          -----
+      - Can rarely cause crashes in the Pip-Boy inventory menu. Switch to Fill'em Up Again instead.
+        Better Alternative: https://www.nexusmods.com/fallout4/mods/12674?tab=files
+      -----
 
   - id: caps-widget
     criteria:
@@ -1504,10 +1554,10 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - CapsWidget
     name: HUD Caps
     description: |
-          - Often breaks the Save / Quicksave function due to poor script implementation.
-            Advised Fix: Download fixed pex file and place it into HUDCaps/Scripts folder.
-            Fix Link: https://drive.google.com/file/d/1egmtKVR7mSbjRgo106UbXv_ySKBg5az2
-          -----
+      - Often breaks the Save / Quicksave function due to poor script implementation.
+        Advised Fix: Download fixed pex file and place it into HUDCaps/Scripts folder.
+        Fix Link: https://drive.google.com/file/d/1egmtKVR7mSbjRgo106UbXv_ySKBg5az2
+      -----
 
   - id: homemaker
     criteria:
@@ -1515,10 +1565,10 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - Homemaker
     name: Homemaker
     description: |
-          - Causes a crash while scrolling over Military / BoS fences in the Settlement Menu.
-            Advised Fix: Make sure you are using at least version 1.73 of this mod.
-            Alternate Fix: https://www.nexusmods.com/fallout4/mods/41434?tab=files
-          -----
+      - Causes a crash while scrolling over Military / BoS fences in the Settlement Menu.
+        Advised Fix: Make sure you are using at least version 1.73 of this mod.
+        Alternate Fix: https://www.nexusmods.com/fallout4/mods/41434?tab=files
+      -----
 
   - id: legendary-modification
     criteria:
@@ -1526,9 +1576,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - LegendaryModification
     name: Legendary Modification
     description: |
-          - Old mod plagued with all kinds of bugs and crashes, can conflict with some modded weapons.
-            Better Alternative: https://www.nexusmods.com/fallout4/mods/67679?tab=files
-          -----
+      - Old mod plagued with all kinds of bugs and crashes, can conflict with some modded weapons.
+        Better Alternative: https://www.nexusmods.com/fallout4/mods/67679?tab=files
+      -----
 
   - id: looks-menu-customization-compendium
     criteria:
@@ -1536,9 +1586,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - LooksMenu Customization Compendium
     name: Looks Menu Customization Compendium
     description: |
-          - If you are getting broken hair colors, install this mod and make sure it loads after LMCC.
-            Mod Link: https://www.nexusmods.com/fallout4/mods/18287?tab=files
-          -----
+      - If you are getting broken hair colors, install this mod and make sure it loads after LMCC.
+        Mod Link: https://www.nexusmods.com/fallout4/mods/18287?tab=files
+      -----
 
   - id: militarized-minutemen
     criteria:
@@ -1546,9 +1596,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - MilitarizedMinutemen
     name: Militarized Minutemen
     description: |
-          - Can occasionally crash the game due to a broken mesh on some minutemen outfits.
-            Patch Link: https://www.nexusmods.com/fallout4/mods/32369?tab=files
-          -----
+      - Can occasionally crash the game due to a broken mesh on some minutemen outfits.
+        Patch Link: https://www.nexusmods.com/fallout4/mods/32369?tab=files
+      -----
 
   - id: more-uniques
     criteria:
@@ -1556,9 +1606,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - MoreUniques
     name: More Unique Weapons Expansion
     description: |
-          - Causes crashes due to broken precombines and compatibility issues with other weapon mods.
-            Patch Link: https://www.nexusmods.com/fallout4/mods/54848?tab=files
-          -----
+      - Causes crashes due to broken precombines and compatibility issues with other weapon mods.
+        Patch Link: https://www.nexusmods.com/fallout4/mods/54848?tab=files
+      -----
 
   - id: nac
     criteria:
@@ -1566,9 +1616,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - NAC
     name: Natural And Atmospheric Commonwealth
     description: |
-          - If you notice weird looking skin tones with either NAC or NACX, install this patch.
-            Patch Link: https://www.nexusmods.com/fallout4/mods/57052?tab=files
-          -----
+      - If you notice weird looking skin tones with either NAC or NACX, install this patch.
+        Patch Link: https://www.nexusmods.com/fallout4/mods/57052?tab=files
+      -----
 
   - id: northland-diggers-new
     criteria:
@@ -1576,9 +1626,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - Northland Diggers New
     name: Northland Diggers Resources
     description: |
-          - Contains various bugs and issues that can cause crashes or negatively affect other mods.
-            Fix Link: https://www.nexusmods.com/fallout4/mods/53395?tab=files
-          -----
+      - Contains various bugs and issues that can cause crashes or negatively affect other mods.
+        Fix Link: https://www.nexusmods.com/fallout4/mods/53395?tab=files
+      -----
 
   - id: project-zeta
     criteria:
@@ -1586,9 +1636,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - Project Zeta
     name: Project Zeta
     description: |
-          - Invasion quests seem overly buggy or trigger too frequently, minor sound issues.
-            Fix Link: https://www.nexusmods.com/fallout4/mods/65166?tab=files
-          -----
+      - Invasion quests seem overly buggy or trigger too frequently, minor sound issues.
+        Fix Link: https://www.nexusmods.com/fallout4/mods/65166?tab=files
+      -----
 
   - id: raider-overhaul
     criteria:
@@ -1596,9 +1646,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - RaiderOverhaul
     name: Raider Overhaul
     description: |
-          - Old mod that requires several patches to function as intended. Use ONE Version instead.
-            Updated ONE Version: https://www.nexusmods.com/fallout4/mods/51658?tab=files
-          -----
+      - Old mod that requires several patches to function as intended. Use ONE Version instead.
+        Updated ONE Version: https://www.nexusmods.com/fallout4/mods/51658?tab=files
+      -----
 
   - id: rusty-face-fix
     criteria:
@@ -1606,10 +1656,10 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - Rusty Face Fix
     name: Rusty Face Fix
     description: |
-          - Make sure you have the latest 2.0 version installed or try the REDUX Version instead.
-            Original Rusty Face Fix: https://www.nexusmods.com/fallout4/mods/31028?tab=files
-            Alternative REDUX Version: https://www.nexusmods.com/fallout4/mods/64270?tab=files
-          -----
+      - Make sure you have the latest 2.0 version installed or try the REDUX Version instead.
+        Original Rusty Face Fix: https://www.nexusmods.com/fallout4/mods/31028?tab=files
+        Alternative REDUX Version: https://www.nexusmods.com/fallout4/mods/64270?tab=files
+      -----
 
   - id: sots
     criteria:
@@ -1617,9 +1667,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - SOTS
     name: South Of The Sea
     description: |
-          - Very unstable mod that consistently and frequently causes strange problems and crashes.
-            Updated Version: https://www.nexusmods.com/fallout4/mods/63152?tab=files
-          -----
+      - Very unstable mod that consistently and frequently causes strange problems and crashes.
+        Updated Version: https://www.nexusmods.com/fallout4/mods/63152?tab=files
+      -----
 
   - id: start-me-up
     criteria:
@@ -1627,9 +1677,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - StartMeUp
     name: Start Me Up
     description: |
-          - Abandoned mod that can cause infinite loading and other problems. Switch to REDUX Version instead.
-            Updated REDUX Version: https://www.nexusmods.com/fallout4/mods/56984?tab=files
-          -----
+      - Abandoned mod that can cause infinite loading and other problems. Switch to REDUX Version instead.
+        Updated REDUX Version: https://www.nexusmods.com/fallout4/mods/56984?tab=files
+      -----
 
   - id: super-mutant-redux
     criteria:
@@ -1637,9 +1687,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - SuperMutantRedux
     name: Super Mutant Redux
     description: |
-          - Causes crashes at specific locations or with certain Super Mutant enemies and items.
-            Patch Link: https://www.nexusmods.com/fallout4/mods/51353?tab=files
-          -----
+      - Causes crashes at specific locations or with certain Super Mutant enemies and items.
+        Patch Link: https://www.nexusmods.com/fallout4/mods/51353?tab=files
+      -----
 
   - id: tacticalreload
     criteria:
@@ -1647,9 +1697,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - tacticalreload
     name: Tactical Reload
     description: |
-          - Can cause weapon and combat related crashes. TR Expansion For ECO is highly recommended.
-            TR Expansion For ECO Link: https://www.nexusmods.com/fallout4/mods/67716?tab=files
-          -----
+      - Can cause weapon and combat related crashes. TR Expansion For ECO is highly recommended.
+        TR Expansion For ECO Link: https://www.nexusmods.com/fallout4/mods/67716?tab=files
+      -----
 
   - id: creatures-and-monsters
     criteria:
@@ -1657,9 +1707,9 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - Creatures and Monsters
     name: Unique NPCs Creatures And Monsters
     description: |
-          - Causes crashes and breaks precombines at specific locations, some creature spawns are too frequent.
-            Patch Link: https://www.nexusmods.com/fallout4/mods/48637?tab=files
-          -----
+      - Causes crashes and breaks precombines at specific locations, some creature spawns are too frequent.
+        Patch Link: https://www.nexusmods.com/fallout4/mods/48637?tab=files
+      -----
 
   - id: vault4
     criteria:
@@ -1667,6 +1717,6 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
         - Vault4
     name: Fourville (Vault 4)
     description: |
-          - Has various visual issues and quest glitches.
-            Patch Link: https://www.nexusmods.com/fallout4/mods/61080?tab=files
-          -----
+      - Has various visual issues and quest glitches.
+        Patch Link: https://www.nexusmods.com/fallout4/mods/61080?tab=files
+      -----

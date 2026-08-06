@@ -23,6 +23,7 @@ Use this crate when you need to:
 
 - resolve standard CLASSIC YAML file locations
 - load the three-file CLASSIC YAML dataset into a single Rust struct
+- load three explicitly identified YAML Data files deterministically for tests and tooling
 - apply version-registry-backed metadata fallbacks while building config data
 - hand configuration data to higher layers such as scanlog orchestration or bindings
 - load generic Main, Game, Game Local, Ignore, Test, and Cache YAML sources
@@ -63,11 +64,81 @@ Bulk YAML dataset loader for scanlog/business logic.
 - `resolve_registry_version_info()` - version-registry lookup helper
 - `format_registry_game_version()` - formatting helper for registry versions
 
+### `explicit_yaml_data`
+
+Typed, mutation-free loading for caller-selected Main, game, and Local Ignore YAML Data files.
+
+- `ExplicitYamlDataRequest` - the three exact paths, typed game identity, and existing game-version mode
+- `ExplicitYamlDataSnapshot` - immutable parsed YAML Data backed by the exact retained source bytes
+- `YamlDataContentIdentity` - SHA-256 and byte length derived from one retained file
+- `GameDataRole` - the registered YAML Data role selected from `GameId`
+- `ExplicitYamlDataRole` - Main, game, or Local Ignore error attribution
+- `ExplicitYamlDataLoadError` - typed unsupported-game, read, decoding, parse, and role-validation failures
+- `load_explicit_yaml_data()` - async entry point for the deterministic explicit-file operation
+
+### `installed_yaml_data`
+
+Config-owned selection and immutable loading of Installed YAML Data.
+
+- `InstalledYamlDataInspectionRequest` - one installation root plus typed game identity
+- `InstalledYamlDataInspection` / `InspectedYamlDataFile` - independently selected Main/game provenance, schema, and exact-byte identity
+- `InstalledYamlDataDiagnostic` / `InstalledYamlDataDiagnosticKind` - structured cache, rejected-candidate, and Local Ignore generation/recovery attribution
+- `InstalledYamlDataInspectionError` - typed unsupported-game or no-usable-source terminal failure
+- `inspect_installed_yaml_data()` - production inspection entry point used by first-party update freshness
+- `inspect_installed_yaml_data_with_env()` - deterministic Rust tooling seam for cache-environment injection
+- `InstalledYamlDataLoadRequest` - one installation root, typed game identity, and separate game-version mode
+- `InstalledYamlDataLoadOutcome::{Ready, LocalIgnoreRecoveryRequired}` - separates usable snapshots and expected malformed-Local-Ignore decisions from fatal failures
+- `InstalledYamlDataSnapshot` - parsed Main/game data plus existing, generated, or operation-scoped-empty Local Ignore behavior backed by retained exact bytes
+- `LocalIgnoreRecoveryPlan` - immutable retained selection/default/malformed-file proposal with a consuming, mutation-free `proceed_without_ignore()` decision
+- `LocalIgnoreYamlDataState::{Existing, Generated, ProceedWithoutIgnore, ResetToDefault}` - distinguishes preserved user content, successful initialization, operation-scoped empty ignores, and accepted reset state
+- `InstalledYamlDataLoadError` - typed fatal selection, I/O, default, publication, and parsed-data failures
+- `load_installed_yaml_data()` - production installed snapshot entry point
+- `load_installed_yaml_data_with_env()` - deterministic Rust test/tooling seam for cache-environment injection
+
+### Vocabulary Tokens and Display Labels
+
+`InstalledYamlDataProvenance`, `InstalledYamlDataDiagnosticKind`, and `LocalIgnoreYamlDataState` implement the [Vocabulary naming contract](classic-vocabulary.md), so this crate owns both names for every variant: the frozen Vocabulary Token from `as_str()` and the reworkable Display Label from `label()`.
+
+| Enum | Vocabulary Tokens |
+| --- | --- |
+| `InstalledYamlDataProvenance` | `updated`, `previous`, `bundled` |
+| `InstalledYamlDataDiagnosticKind` | `cache_unavailable`, `missing`, `read`, `invalid_utf8`, `parse`, `invalid_schema`, `incompatible_schema`, `invalid_role_data`, `local_ignore_generated`, `local_ignore_reset` |
+| `LocalIgnoreYamlDataState` | `existing`, `generated`, `proceed_without_ignore`, `reset_to_default` |
+
+`invalid_utf8` is the published spelling, not the `invalid_utf_8` a mechanical snake_case of the variant name would produce. The core adopted the strings the bindings already shipped rather than deriving them, because these tokens are parsed by consumers.
+
+These are the first adopters whose Display Labels cross a binding seam. All three surfaces expose a label projection alongside the variant they already published:
+
+| Surface | Projection |
+| --- | --- |
+| CXX | `installed_yaml_data_provenance_label`, `installed_yaml_data_diagnostic_kind_label`, `local_ignore_yaml_data_state_label` — take the frozen FFI mirror enum, return `String` |
+| Node | the same three names in camelCase, taking the `string_enum` value |
+| Python | the same three names, taking the published snake_case token and raising `ValueError` for anything else |
+
+The label is separate from the variant rather than folded into a DTO string because a Qt frontend is not line-oriented: it renders the two in independently styled table columns.
+
+Five variants settle a wording divergence. The CLI and GUI printed a terse form and the TUI printed a descriptive one; the descriptive form is canonical, because a frontend renders the label as a bare prefix before a message and `parse: <message>` does not tell a user it describes a failure while `parse failure: <message>` does.
+
+| Variant | Display Label |
+| --- | --- |
+| `LocalIgnoreYamlDataState::Generated` | `generated from selected Main defaults` |
+| `InstalledYamlDataDiagnosticKind::Parse` | `parse failure` |
+| `InstalledYamlDataDiagnosticKind::Read` | `read failure` |
+| `InstalledYamlDataDiagnosticKind::Missing` | `missing candidate` |
+| `InstalledYamlDataDiagnosticKind::CacheUnavailable` | `update cache unavailable` |
+
+`LocalIgnoreGenerated` and `LocalIgnoreReset` additionally carry glossary capitalization — `Local Ignore generated` and `Local Ignore reset`. No mechanical transform of a token could produce that capitalization, which is the reason the two forms are written out separately rather than one derived from the other.
+
+`LocalIgnoreYamlDataState::ProceedWithoutIgnore` diverges too (`proceed without Ignore` on the C++ frontends, `proceeded without ignore entries` on the TUI) but is absent from the table above. The standing rule settles it — the descriptive form wins — and the TUI string is adopted verbatim rather than improved in passing, because the same wording is what the Crash Log Scan Run twin will later delegate to.
+
+Changing a token is breaking for every binding consumer; rewording a label is not. Frontends do not consume these labels yet — that lands per frontend later — and the labels never appear in the persisted Autoscan Report, only in frontend output.
+
 ### Re-exports from `lib.rs`
 
 - `get_runtime` from [`classic-shared-core`](../../foundation/classic-shared-core)
 - `clear_global_yaml_cache` from [`classic-settings-core`](../../business-logic/classic-settings-core) (historical note: that owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
 - crashgen rule-model and Crashgen Expectation Parser types/functions from `crashgen_rules` and `crashgen_expectation_parser`
+- Installed YAML Data request/result/snapshot/provenance/diagnostic/error types and loading/inspection functions from `installed_yaml_data`
 
 `clear_global_yaml_cache` is re-exported mainly for tests and cache-sensitive consumers.
 
@@ -109,6 +180,127 @@ The writer creates parent directories when needed, merges an existing multi-docu
 
 Binding adapters expose the same operation as CXX `save_local_yaml_paths(...)`, Node `persistGameLocalPaths(...) -> Promise<void>`, and Python `persist_game_local_paths(...) -> None`. Each adapter only converts optional path values and delegates document behavior to the Rust writer.
 
+## Explicit YAML Data Loading
+
+`load_explicit_yaml_data(request) -> Result<ExplicitYamlDataSnapshot, ExplicitYamlDataLoadError>` is the typed tooling and test seam for loading exactly three caller-selected files. It is deliberately separate from Installed YAML Data selection: the caller supplies each complete file identity rather than an installation root or positional directory vector.
+
+`ExplicitYamlDataRequest` contains:
+
+| Field | Meaning |
+|---|---|
+| `main_path: PathBuf` | exact Main YAML Data file |
+| `game_path: PathBuf` | exact game YAML Data file |
+| `ignore_path: PathBuf` | exact Local Ignore YAML Data file |
+| `game: GameId` | typed game identity used to select a registered YAML Data role |
+| `selected_game_version: String` | existing Version Registry selection mode; it affects metadata fallback, not file selection |
+
+The current registered `GameDataRole` is `Fallout4`. Both `GameId::Fallout4` and `GameId::Fallout4VR` select that shared role, so they use `Fallout4`-keyed data such as `CLASSIC_Ignore_Fallout4`. `GameId::Skyrim` and `GameId::Starfield` have no registered YAML Data role in this client and return `ExplicitYamlDataLoadError::UnsupportedGame` before any requested path is read.
+
+### Snapshot And Content Identity
+
+`ExplicitYamlDataSnapshot` privately retains the exact bytes read for all three roles and exposes:
+
+- `yaml_data() -> &YamlDataCore` - the combined model parsed and built from those retained bytes
+- `game() -> GameId` - the caller's typed game identity
+- `game_data_role() -> GameDataRole` - the registered role used for keyed parsing and validation
+- `main_identity()`, `game_identity()`, and `ignore_identity()` - identities of the retained role bytes
+
+Each `YamlDataContentIdentity` reports `sha256_hex()` and `byte_len()`; `from_bytes()` calculates the same canonical identity for already-owned exact bytes, including recovery-receipt projection. The loader reads each requested path once, then derives UTF-8 decoding, merged YAML, role validation, model construction, SHA-256, and byte length from the resulting owned bytes. Replacing or deleting a source path after loading therefore cannot change either the snapshot's parsed data or its identities.
+
+The snapshot does not expose raw YAML documents or its retained byte buffers as general-purpose APIs. Consumers receive the typed `YamlDataCore` view and content identities rather than a path-backed live view.
+
+### Explicit Role Validation
+
+All three files must be valid UTF-8 YAML streams that satisfy the repository's multi-document merge rules. Main and game are shippable roles, so the loader extracts `schema_version` and checks it against config-owned `client_schemas::MAIN_YAML` or `client_schemas::GAME_FALLOUT4_YAML`; callers cannot supply a compatibility range.
+
+After schema compatibility succeeds, the implemented semantic checks are:
+
+- Main requires a `CLASSIC_Info` mapping whose non-empty string `version` satisfies the schema-2 release-SemVer shape: optional leading `v`/`V`, no `CLASSIC ` display prefix, prerelease suffix, or build metadata. Present `version_date`, Fallout 4 autoscan text, and `catch_log_records` values must retain the scalar or string-list shapes consumed by the typed model.
+- Game requires a `Game_Info` mapping with a non-empty string `Main_Root_Name`; after normalization to lowercase ASCII alphanumeric characters, that value must equal `fallout4` and identify the registered Fallout 4 data role. Every consumed scalar, string-list, `Mods_CONF`, `Mods_CORE`, `Mods_FREQ`, `Mods_SOLU`, `Crashlog_Error_Check`, `Crashlog_Stack_Check`, and `Crashgen_Registry` value is validated before model construction, including nested criteria, count rules, registry metadata, and settings-rule diagnostics, so malformed entries cannot be silently discarded or defaulted by the general production parser. `Mods_CONF[].fix` is optional; omission becomes `None`, while a present value must be a non-empty string.
+- Local Ignore requires `CLASSIC_Ignore_Fallout4` to be a sequence containing only strings. An empty sequence is valid; a missing key, scalar, mapping, null, or sequence containing a non-string is malformed.
+
+The remaining keys are interpreted by `YamlDataCore` according to the schema and fallback rules below. Optional fields remain optional, but any consumed field that is present must have the strict shape and semantics expected by the typed model.
+
+### No Installed Policy Or Mutation
+
+Explicit loading performs no source selection beyond the three supplied paths. It never:
+
+- resolves an installation layout, bundled-data directory, platform cache, or `YamlSource`
+- consults or promotes a `.prev` cache sibling
+- retries with a bundled, cached, or alternate file
+- creates a missing Local Ignore file
+- generates, repairs, resets, replaces, or backs up any selected file
+- deletes or rewrites a rejected file
+
+A missing or rejected explicit file is returned as a typed failure for that exact role and path. Installed selection, recovery, and fallback policy must not be reconstructed around this operation.
+
+### `ExplicitYamlDataLoadError`
+
+| Variant | Meaning |
+|---|---|
+| `UnsupportedGame { game }` | the typed game has no registered YAML Data role; no paths are read |
+| `Read { role, path, source }` | the exact role path could not be read |
+| `InvalidUtf8 { role, path, source }` | retained bytes are not valid UTF-8 |
+| `Parse { role, path, message }` | the UTF-8 content is not a valid mergeable YAML stream |
+| `InvalidRoleData { role, path, reason }` | parsed YAML fails schema compatibility or semantic role validation |
+
+`ExplicitYamlDataRole::{Main, Game, LocalIgnore}` keeps file-specific failures attributable without parsing messages. `reason` and `message` are human-readable diagnostic details; callers should branch on the typed variant and role.
+
+## Installed YAML Data Inspection
+
+`inspect_installed_yaml_data(InstalledYamlDataInspectionRequest { installation_root, game })` is the side-effect-limited Installed YAML Data seam used by the first-party update channel. It inspects only update-eligible Main and selected-game YAML Data; it never reads, creates, repairs, or validates Local Ignore YAML Data.
+
+Main and game select independently. For each role, config core tries the canonical per-user updated candidate first. A `.prev` sibling participates only when the canonical path is absent, and inspection reads it without promotion. A present canonical candidate that fails UTF-8, parsing, config-owned schema compatibility, or strict role validation is preserved, reported as a structured diagnostic, and followed by bundled fallback; it never causes `.prev` selection. If no usable candidate remains, `InstalledYamlDataInspectionError::NoUsableSource` identifies the failed role and retains the diagnostics. `UnsupportedGame` is returned before path or cache resolution; Fallout 4 VR maps to the shared Fallout 4 role.
+
+Each `InspectedYamlDataFile` exposes its `InstalledYamlDataRole`, `InstalledYamlDataProvenance::{Updated, Previous, Bundled}`, compatible `SchemaVersion`, and `YamlDataContentIdentity`. Candidate bytes are read once, then UTF-8 decoding, YAML parsing, semantic validation, schema extraction, SHA-256, and byte length all use that same owned buffer. `InstalledYamlDataDiagnostic` supplies optional role/candidate/path attribution, a typed `InstalledYamlDataDiagnosticKind`, and an actionable message. Cache-root resolution failure is a structured `CacheUnavailable` diagnostic and leaves bundled data eligible.
+
+`inspect_installed_yaml_data_with_env` is the deterministic Rust test/tooling form. Its environment callback controls cache-root resolution without process-environment mutation; bundled paths still derive only from the explicit installation root.
+
+## Installed YAML Data Loading
+
+`load_installed_yaml_data(InstalledYamlDataLoadRequest { installation_root, game, selected_game_version })` loads an immutable runtime snapshot and initializes missing user-owned `CLASSIC Data/CLASSIC Ignore.yaml` when necessary. `game` selects the registered YAML Data role; the separate `selected_game_version` string retains its existing Version Registry metadata interpretation and does not affect file selection.
+
+Main and game use the same private selector as [`inspect_installed_yaml_data`](#installed-yaml-data-inspection), including independent updated/previous/bundled precedence, config-owned compatibility, strict role validation, and structured fallback diagnostics. The selected bytes and parsed YAML documents are retained privately. Existing Local Ignore is read and retained byte-for-byte; valid content is used directly, while malformed content becomes expected recovery result data and is never rewritten automatically.
+
+When Local Ignore is absent, config core extracts `CLASSIC_Info.default_ignorefile` from the already retained selected Main document. The scalar must be a non-empty string whose embedded YAML parses and satisfies the selected Local Ignore role contract; this validation finishes before any staging file is created. Config core then writes and syncs a same-directory temporary file and atomically publishes the complete bytes with no-clobber semantics. If another caller wins the publication race, its canonical file is preserved. Every caller rereads `CLASSIC Ignore.yaml` after the publish attempt, so parsing, identity, and the returned snapshot use the authoritative winner rather than a losing caller's default.
+
+The successful publisher returns `LocalIgnoreYamlDataState::Generated` and appends a path-attributed `InstalledYamlDataDiagnosticKind::LocalIgnoreGenerated` diagnostic. Its role and candidate are absent because Local Ignore is not an update-eligible Main/game candidate. A concurrent loser returns `Existing` for the winner it reread and does not claim generation.
+
+A valid installation returns `InstalledYamlDataLoadOutcome::Ready(InstalledYamlDataSnapshot)`. The snapshot exposes:
+
+- the parsed `YamlDataCore` and requested typed game;
+- the registered shared game-data role;
+- Main and game provenance, schema versions, SHA-256 identities, and byte lengths through `main()` and `game_file()`;
+- simplify-log removal entries parsed from the retained selected Main bytes through `simplify_remove_list()`;
+- `LocalIgnoreYamlDataState::{Existing, Generated}` plus the exact authoritative Local Ignore SHA-256 identity and byte length (reset results additionally use `ResetToDefault`);
+- structured cache, rejected-candidate, and Local Ignore generation/reset diagnostics.
+
+Raw retained bytes and parsed YAML documents are not public APIs, and the snapshot's custom `Debug` output includes metadata only. Replacing any selected path after loading cannot change the snapshot's parsed data or identities.
+
+`LocalIgnoreRecoveryPlan::snapshot_for_scan_preparation()` is a hidden,
+workspace-only borrow used by `classic-scanlog-core`. It lets scan intake be
+prepared before a user decision while leaving the consuming recovery plan
+available for the later one-shot scan continuation. Binding callers do not use
+this seam, and it does not expose raw retained documents.
+
+If retained Local Ignore bytes are invalid UTF-8, malformed YAML, or invalid for the selected game-data role, loading instead returns `InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(LocalIgnoreRecoveryPlan)`. The immutable plan retains the selected Main/game bytes and metadata, selected game-version mode, selected-Main default state, malformed path and exact-byte identity, and all selection plus malformed-content diagnostics. Valid defaults expose an identity; invalid or unavailable defaults remain explicitly unavailable for a future reset decision but never block the non-mutating Proceed Without Ignore path. Its custom `Debug` output exposes metadata only.
+
+`LocalIgnoreRecoveryPlan::proceed_without_ignore()` consumes the plan and returns the already prepared snapshot without selection, rereads, generation, backup, or writes. The snapshot uses `LocalIgnoreYamlDataState::ProceedWithoutIgnore`, exposes the malformed installed identity for attribution, and supplies an empty `ignore_list` only to that in-memory operation. Main and game still come from the retained selection even if their paths changed while the caller decided. Because the malformed file is unchanged, a later installed load returns recovery required again.
+
+`LocalIgnoreRecoveryPlan::reset_to_default()` is the consuming, synchronous reset decision and the explicit non-interruptible critical section used by later scan cancellation coordination. It acquires the config-owned installation-root `.classic-local-ignore-reset.lock`, rereads and byte-compares the canonical file with the malformed bytes retained by the plan, and returns `LocalIgnoreResetOutcome::Conflict` with expected/current identities when the file or its containing directory changed or disappeared. Conflict before backup publishes no backup or replacement. The zero-byte lock file is intentionally retained so concurrent processes never race lock-file deletion.
+
+For an unchanged file, reset publishes the malformed bytes at a uniquely owned `CLASSIC Backup/YAML Data/Local Ignore/CLASSIC Ignore.yaml.<sha256>.<unique>.bak` path. It synchronizes the complete staging file, uses a no-clobber durable final-name move (`fsync`-backed directory publication on Unix and write-through move on Windows), and rereads the owned backup for byte-exact verification; pre-existing regular files, symlinks, and directories are never reused as proof. It then stages and synchronizes the defaults retained from the selected Main snapshot, rechecks the canonical bytes immediately beside the publication boundary, and durably replaces the canonical path through rename plus directory `fsync` on Unix or a write-through replace move on Windows, without creating `.prev` rollback state. A late conflict retains the verified backup and returns its path. `LocalIgnoreResetResult` returns the reset-ready retained snapshot, canonical and backup paths, malformed/backup/replacement identities, `LocalIgnoreYamlDataState::ResetToDefault`, and an `InstalledYamlDataDiagnosticKind::LocalIgnoreReset` diagnostic. No Main, game, or default path is reselected or reopened.
+
+`LocalIgnoreResetError` distinguishes unavailable retained defaults, lock/read/backup-directory failures, backup verification, and backup or replacement publication. Publication failures carry `LocalIgnoreResetPublicationStage::{Create, Write, Flush, Sync, Publish}` and occur before canonical replacement, so the malformed original remains authoritative while the verified backup may already exist. `ReplacementDurabilityUnknown` is a separate post-rename outcome: complete retained defaults are visible at the canonical path, but the Unix parent-directory durability barrier failed. It carries the canonical and verified-backup paths plus malformed, backup, and replacement identities so callers can recover without treating the operation as either a safe failure or a durable success.
+
+`LocalIgnoreResetPublicationStage` is this crate's published *name* for the workspace's single stage vocabulary, [`classic_durable_publication::PublicationStage`](classic-durable-publication.md). This crate carries no stage definition of its own. Every variant, terminal `Publish` included, is spelled exactly as it always was, so the frozen CXX FFI enum, the Node string enum, the Python `"create"`/`"write"`/`"flush"`/`"sync"`/`"publish"` tokens, and the Crash Log Scan Run contract's re-projection onto `LocalIgnoreResetFailureStage` are all unchanged. The other caller of that vocabulary, `classic-user-settings-core`, names the same terminal stage `Replace`; the agreement here is therefore a fact about these two enums rather than a rule about callers, and a test pins it.
+
+Aliasing rather than redeclaring does widen what this type offers by the shared type's own inherent API: `Hash`, `as_str()`, and `Display`. **`Display` and `Debug` do not render alike** — `as_str()`/`Display` produce the lowercase `"publish"` used for tokens, while `Debug` produces `Publish`. `LocalIgnoreResetError`'s messages interpolate `{stage:?}`, so they still read `at Publish`; a test pins that spelling precisely because a `{stage}` typo would now silently lowercase a published message rather than failing to compile. The Python binding keeps its own lowercase token match rather than calling `as_str()`, so no binding derives its output from the widened surface.
+
+`InstalledYamlDataLoadError::UnsupportedGame` is returned before cache or installation file access. `NoUsableSource { role, diagnostics }` identifies a required Main or game role after every allowed candidate is exhausted. Unrecoverable Local Ignore reads remain `LocalIgnoreRead`; malformed content is not a fatal error. `LocalIgnoreDefaultInvalid` rejects an unusable selected-Main template only when a missing Local Ignore must be generated; it does not replace a recovery-required outcome for an existing malformed file. `LocalIgnoreCreate` reports staging or no-clobber publication failure, and `InvalidSelectedData` covers an invalid final projection into `YamlDataCore`. No failure publishes a partial snapshot.
+
+`load_installed_yaml_data_with_env` injects only cache-environment lookup for isolated tests and tooling. It never consults the developer's process cache when the caller supplies an isolated environment callback; bundled and Local Ignore paths always derive from the request's one installation root.
+
 ## `YamlDataCore`
 
 `YamlDataCore` is the main bulk-loaded configuration struct used by analysis-oriented code.
@@ -130,20 +322,23 @@ Representative field groups:
 
 Important methods:
 
-- `load_from_yaml_files(yaml_dirs, game, selected_game_version) -> Result<YamlDataCore, ConfigError>`
 - `from_yaml_content(main_content, game_content, ignore_content, game, selected_game_version) -> Result<YamlDataCore, ConfigError>`
 - `get_crashgen_name(&self) -> &str`
 - `get_crashgen_ignore(&self) -> &[String]`
 - `get_game_root_name(&self) -> &str`
 
-Two accepted directory layouts for `load_from_yaml_files()`:
+`YamlDataCore` owns the parsed shape of YAML Data; it does not decide which
+files to read. There is no constructor that takes a directory list. Every
+instance originates in one of the two owning operations above:
 
-- preferred 2-dir API: `[root_dir, data_dir]`
-  - expects `CLASSIC Ignore.yaml` under `root_dir`
-  - expects `databases/CLASSIC Main.yaml` and `databases/CLASSIC {game}.yaml` under `data_dir`; Fallout 4 VR uses the Fallout 4 filename and keyed data identity
-- legacy 3-dir API: `[main_dir, game_dir, ignore_dir]`
+- `load_installed_yaml_data(request)` — the authoritative runtime path. It
+  takes one installation root plus a typed `GameId` and applies compatibility,
+  validation, fallback, Local Ignore generation, and recovery policy.
+- `load_explicit_yaml_data(request)` — the mutation-free tooling and test path.
+  It takes three complete file identities and applies no installation policy.
 
-If `yaml_dirs` has any other length, the function returns `ConfigError::InvalidInput`.
+`from_yaml_content` remains for content-string tests. It reads no paths, so it
+cannot reach installation layout, the update cache, or Local Ignore recovery.
 
 ## `CrashgenEntryRaw`
 
@@ -181,6 +376,16 @@ These helpers bridge the config layer to [`classic-version-registry-core`](../..
 
 ## Loading And Processing Flow
 
+### Explicit YAML Data flow
+
+1. Validate that the request's `GameId` has a registered `GameDataRole`; unsupported games fail before file I/O.
+2. Read the exact Main, game, and Local Ignore paths once each, concurrently on the shared Tokio runtime.
+3. Retain each byte buffer and derive its SHA-256 and byte length.
+4. Decode and merge each YAML stream from its retained bytes.
+5. Enforce config-owned Main/game schema compatibility and semantic validation for all three roles.
+6. Build one `YamlDataCore` from the validated documents using the registered data key and caller-supplied game-version mode.
+7. Return an immutable snapshot that owns the parsed model, registered role, retained bytes, and their identities.
+
 ## Game Local persistence flow
 
 1. A caller supplies an explicit Game Local YAML path and either or both runtime path updates.
@@ -212,7 +417,11 @@ One subtle rule from the implementation: explicit values already present in `Gam
 
 ## Error Handling Model
 
-The crate uses two error styles, depending on API family.
+The crate uses distinct error styles depending on API family.
+
+### Explicit YAML Data
+
+`load_explicit_yaml_data()` returns `ExplicitYamlDataLoadError`. It preserves the typed game or file role and exact requested path wherever applicable, and it separates filesystem, UTF-8, YAML parsing, and role-validation failures. Model-construction errors originate in consumed Game data and are therefore returned as Game-role validation failures rather than as an unattributed category. The loader does not hide a failed explicit source behind fallback.
 
 ## `YamlSource`
 
@@ -239,7 +448,7 @@ Malformed optional substructures inside `Crashgen_Registry` are usually not fata
 
 This crate performs async file I/O and assumes the shared CLASSIC Tokio runtime model.
 
-- The crate exposes async APIs such as `YamlSource::load()` and `YamlDataCore::load_from_yaml_files()`.
+- The crate exposes async APIs such as `YamlSource::load()` and `load_explicit_yaml_data()`. Installed selection (`load_installed_yaml_data`, `inspect_installed_yaml_data`) is synchronous by design so its Local Ignore critical section cannot be interleaved.
 - `lib.rs` re-exports `get_runtime` from [`classic-shared-core`](../../foundation/classic-shared-core).
 - The crate-level docs explicitly say it should use the shared global runtime rather than creating its own runtime.
 - FFI/binding layers in this repo call these async APIs via `get_runtime().block_on(...)` rather than constructing separate runtimes.
@@ -253,7 +462,7 @@ That shared-runtime rule matters for contributors: if you extend this crate, kee
 - [`classic-shared-core`](../../foundation/classic-shared-core) - shared Tokio runtime via `get_runtime`
 - [`classic-settings-core`](../../business-logic/classic-settings-core) - YAML extraction helpers, mtime-aware file cache, and settings-cache management (historical note: this owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - version metadata and fallback resolution
-- [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - converts `YamlDataCore` and `CrashgenEntryRaw` into analysis configuration, and uses the crashgen rule model (below) inside `SettingsValidator`
+- [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - converts `YamlDataCore` and `CrashgenEntryRaw` into analysis configuration, and evaluates the crashgen rule model through `CrashgenSettingsAnalyzer`
 - [`classic-node`](../../node-bindings/classic-node) - wraps this crate for JavaScript/TypeScript
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - wraps `YamlDataCore` for C++ via the shared runtime
 
@@ -263,27 +472,56 @@ In practice, `classic-config-core` is the data-loading layer between raw YAML fi
 
 ## Usage Examples
 
-### Load the three-file YAML dataset
-
-This example matches the preferred 2-directory API used in tests and bindings.
+### Load three exact tooling files
 
 ```rust
-use classic_config_core::YamlDataCore;
+use classic_config_core::{ExplicitYamlDataRequest, load_explicit_yaml_data};
+use classic_shared_core::GameId;
 use std::path::PathBuf;
 
-# async fn example() -> Result<(), classic_config_core::ConfigError> {
-let yaml_dirs = vec![
-    PathBuf::from("C:/CLASSIC"),
-    PathBuf::from("C:/CLASSIC/CLASSIC Data"),
-];
-
-let yaml = YamlDataCore::load_from_yaml_files(
-    yaml_dirs,
-    "Fallout4".to_string(),
-    "auto".to_string(),
-)
+# async fn example() -> Result<(), classic_config_core::ExplicitYamlDataLoadError> {
+let snapshot = load_explicit_yaml_data(ExplicitYamlDataRequest {
+    main_path: PathBuf::from("fixtures/CLASSIC Main.yaml"),
+    game_path: PathBuf::from("fixtures/CLASSIC Fallout4.yaml"),
+    ignore_path: PathBuf::from("fixtures/CLASSIC Ignore.yaml"),
+    game: GameId::Fallout4VR,
+    selected_game_version: "VR".to_string(),
+})
 .await?;
 
+assert_eq!(snapshot.yaml_data().classic_version, "9.1.0");
+println!("Main SHA-256: {}", snapshot.main_identity().sha256_hex());
+# Ok(())
+# }
+```
+
+The paths may use arbitrary fixture or tooling filenames. Their basenames and directories do not participate in role selection; the request fields declare each role, and the document content must validate for that role.
+
+### Load the three-file YAML dataset from an installation
+
+Runtime callers name one installation root and a typed game. There is no
+positional directory-vector entry point: layout resolution, candidate
+selection, and Local Ignore policy all belong to this operation.
+
+```rust
+use classic_config_core::{InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, load_installed_yaml_data};
+use classic_shared_core::GameId;
+use std::path::PathBuf;
+
+# fn example() -> Result<(), classic_config_core::InstalledYamlDataLoadError> {
+let outcome = load_installed_yaml_data(InstalledYamlDataLoadRequest {
+    installation_root: PathBuf::from("C:/CLASSIC"),
+    game: GameId::Fallout4,
+    selected_game_version: "auto".to_string(),
+})?;
+
+let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome else {
+    // Malformed Local Ignore is an expected outcome, not an error: the caller
+    // must choose Proceed Without Ignore or Reset To Default.
+    return Ok(());
+};
+
+let yaml = snapshot.yaml_data();
 println!("CLASSIC version: {}", yaml.classic_version);
 println!("Crashgen: {}", yaml.get_crashgen_name());
 println!("Game root name: {}", yaml.get_game_root_name());
@@ -291,13 +529,17 @@ println!("Game root name: {}", yaml.get_game_root_name());
 # }
 ```
 
-Expected file layout for that call:
+Layout resolved from that installation root:
 
 ```text
-C:/CLASSIC/CLASSIC Ignore.yaml
+C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml
 C:/CLASSIC/CLASSIC Data/databases/CLASSIC Main.yaml
 C:/CLASSIC/CLASSIC Data/databases/CLASSIC Fallout4.yaml
 ```
+
+Fallout 4 VR selects the shared `CLASSIC Fallout4.yaml` game file. An
+unregistered game returns a typed unsupported-game error rather than
+constructing a filename from an arbitrary string.
 
 ## Contributor Notes And Known Limits
 
@@ -308,7 +550,8 @@ C:/CLASSIC/CLASSIC Data/databases/CLASSIC Fallout4.yaml
 If you extend the crate, update this document when you change:
 
 - exported types or re-exports
-- accepted directory layout rules
+- explicit request, snapshot, identity, role-validation, or mutation-free behavior
+- the installation layout `load_installed_yaml_data` resolves
 - fallback precedence between YAML and version registry data
 - runtime assumptions
 - behavior that bindings depend on
@@ -629,21 +872,43 @@ shippable YAML files:
 
 - `MAIN_YAML` — accepted range for `CLASSIC Main.yaml`
 - `GAME_FALLOUT4_YAML` — accepted range for `CLASSIC Fallout4.yaml`
-- `shippable_schema_entries()` — returns `ShippableSchemaEntry { file, accepted }`
-  for the current first-party shippable set, pairing each `ShippableFile` with
-  its governing `SchemaCompat`
+- `shippable_schema_entries()` — returns `ShippableSchemaEntry { file_name, accepted }`
+  for the current first-party shippable set, pairing each canonical file name
+  with its governing `SchemaCompat`
+
+The entry carries a **file name only**, never a resolvable bundled or cache
+path. Selection is owned by `installed_yaml_data`, so handing update callers a
+path here would let them reopen an Installed YAML Data candidate under their
+own policy.
 
 `classic-update-core` consumes `shippable_schema_entries()` for the first-party
 YAML Data Update Channel so native callers do not duplicate the file list or
 schema ranges. If a new first-party shippable YAML file is added, update this
 metadata and the schema drift guard together.
 
+### The shippable selection module is private
+
+`classic-config-core::shippable` is `pub(crate)`. Its cache-then-bundled
+candidate loader, the file-identity type, and the caller-supplied compatibility
+argument are all crate-internal, because a caller able to pair an arbitrary
+file with an arbitrary `SchemaCompat` would be selecting Installed YAML Data
+under a policy config core does not own. Only two things escape:
+
+- `YamlLoadError` and `CandidateRejection` — diagnostics. They describe what
+  selection rejected and cannot select anything themselves.
+- the `load_main_yaml_version*` family below — a typed, policy-free operation
+  that builds its own file identity and applies `client_schemas::MAIN_YAML`
+  internally.
+
+The binding compliance suite's `forbiddenExports` audit asserts the private
+names never reappear on the crate's public surface.
+
 ## Schema-gated `CLASSIC Main.yaml` version reader
 
 The `shippable` module exports a narrow startup-path reader,
-`load_main_yaml_version`, that loads `CLASSIC Main.yaml` via
-`shippable::load_shippable_yaml` (so both the per-user YAML cache and the
-bundled install-tree copy are candidates) and returns the trimmed
+`load_main_yaml_version`, that loads `CLASSIC Main.yaml` through the private
+shippable selection path (so both the per-user YAML cache and the bundled
+install-tree copy are candidates) and returns the trimmed
 `CLASSIC_Info.version` value. It enforces `client_schemas::MAIN_YAML`, which
 means a stale `schema_version: 1.x` payload still carrying the legacy
 `CLASSIC v…` decoration is rejected at this boundary instead of flowing
@@ -668,7 +933,7 @@ Entry points:
 
 Error type: `MainYamlVersionError` (`#[non_exhaustive]`). Variants:
 
-- `Load(YamlLoadError)` — the generic shippable-loader rejection. Covers
+- `Load(YamlLoadError)` — the shippable-selection rejection. Covers
   file missing, YAML parse failure, missing / malformed `schema_version`,
   and incompatible-schema cases via the per-candidate
   `CandidateRejection.reason` strings.

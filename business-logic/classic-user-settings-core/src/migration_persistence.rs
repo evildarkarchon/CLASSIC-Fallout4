@@ -471,6 +471,11 @@ fn hex_digest(bytes: &[u8]) -> String {
 }
 
 /// Maps the shared publisher's stable commit-stage code into one migration operation stage.
+///
+/// The `commit_temp_cleanup_failed` arm is retained but no longer reachable: staging cleanup
+/// moved into `classic-durable-publication`, which removes its own artifact best-effort and never
+/// reports a separate cleanup failure. The arm stays so the published projection table is still
+/// complete if that ever changes again.
 fn map_publication_error(
     operation: &'static str,
     error: &crate::UserSettingsCommitError,

@@ -4,6 +4,10 @@
 //! the complete scan lifecycle in `classic-scanlog-core`.
 
 use crate::fcx_handler::PyConfigIssue;
+use classic_config_core::{
+    InspectedYamlDataFile, InstalledYamlDataProvenance, InstalledYamlDataRole,
+    YamlDataContentIdentity,
+};
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanFacts,
@@ -12,17 +16,51 @@ use classic_scanlog_core::{
 };
 use classic_shared::without_gil_block_on;
 use classic_shared_core::GameId;
-use pyo3::exceptions::PyValueError;
+use classic_vocabulary::{Vocabulary, from_token};
+use pyo3::create_exception;
+use pyo3::exceptions::{PyRuntimeError, PyTypeError, PyValueError};
 use pyo3::prelude::*;
+use pyo3::types::PyModule;
 use std::path::PathBuf;
+use std::sync::Arc;
+
+create_exception!(
+    classic_scanlog,
+    ScanRunContinuationConsumedError,
+    PyRuntimeError,
+    "A Crash Log Scan Run continuation was already consumed."
+);
+create_exception!(
+    classic_scanlog,
+    ScanRunLocalIgnoreResetConflictError,
+    PyRuntimeError,
+    "Local Ignore reset conflicted with current canonical state."
+);
+create_exception!(
+    classic_scanlog,
+    ScanRunLocalIgnoreResetBackupError,
+    PyRuntimeError,
+    "Local Ignore reset failed before replacement could safely begin."
+);
+create_exception!(
+    classic_scanlog,
+    ScanRunLocalIgnoreResetReplacementError,
+    PyRuntimeError,
+    "Local Ignore reset failed while publishing retained defaults."
+);
+create_exception!(
+    classic_scanlog,
+    ScanRunLocalIgnoreResetDurabilityUnknownError,
+    PyRuntimeError,
+    "Local Ignore reset replacement is visible but durability is unconfirmed."
+);
 
 /// Explicit configuration shared by Standard and Targeted requests.
 #[pyclass(name = "ScanRunConfiguration", from_py_object)]
 #[derive(Clone)]
 pub struct PyScanRunConfiguration {
-    yaml_dir_root: String,
-    yaml_dir_data: String,
-    game: String,
+    installation_root: String,
+    game: classic_shared_core::GameId,
     game_version: String,
     show_formid_values: bool,
     simplify_logs: bool,
@@ -34,32 +72,63 @@ pub struct PyScanRunConfiguration {
 #[pymethods]
 impl PyScanRunConfiguration {
     /// Creates explicit scan facts without reopening User Settings.
+    ///
+    /// `game` must be one of the typed values exported by `classic_shared.GameId`.
+    ///
+    /// # Errors
+    ///
+    /// Returns `TypeError` for another Python type, `ValueError` for an unrecognized typed value,
+    /// or the underlying import error when `classic_shared` is unavailable.
     #[new]
-    #[pyo3(signature = (yaml_dir_root, yaml_dir_data, game, game_version, show_formid_values, simplify_logs, formid_database_paths, unsolved_logs_destination=None, max_concurrent=None))]
+    #[pyo3(signature = (installation_root, game, game_version, show_formid_values, simplify_logs, formid_database_paths, unsolved_logs_destination=None, max_concurrent=None))]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        yaml_dir_root: String,
-        yaml_dir_data: String,
-        game: String,
+        installation_root: String,
+        game: &Bound<'_, PyAny>,
         game_version: String,
         show_formid_values: bool,
         simplify_logs: bool,
         formid_database_paths: Vec<String>,
         unsolved_logs_destination: Option<String>,
         max_concurrent: Option<usize>,
-    ) -> Self {
-        Self {
-            yaml_dir_root,
-            yaml_dir_data,
-            game,
+    ) -> PyResult<Self> {
+        Ok(Self {
+            installation_root,
+            game: typed_game_id_to_core(game)?,
             game_version,
             show_formid_values,
             simplify_logs,
             formid_database_paths,
             unsolved_logs_destination,
             max_concurrent,
+        })
+    }
+}
+
+/// Converts an authentic `classic_shared.GameId` without reparsing its display text.
+fn typed_game_id_to_core(game: &Bound<'_, PyAny>) -> PyResult<GameId> {
+    let shared = PyModule::import(game.py(), "classic_shared")?;
+    let game_id_type = shared.getattr("GameId")?;
+    if !game.is_instance(&game_id_type)? {
+        return Err(PyTypeError::new_err(
+            "game must be an instance of classic_shared.GameId",
+        ));
+    }
+
+    for (attribute, core) in [
+        ("Fallout4", GameId::Fallout4),
+        ("Fallout4VR", GameId::Fallout4VR),
+        ("Skyrim", GameId::Skyrim),
+        ("Starfield", GameId::Starfield),
+    ] {
+        if game.eq(game_id_type.getattr(attribute)?)? {
+            return Ok(core);
         }
     }
+
+    Err(PyValueError::new_err(
+        "game is not a recognized classic_shared.GameId value",
+    ))
 }
 
 /// Standard discovery inputs for one scan run.
@@ -612,13 +681,144 @@ impl PyScanRunLogResult {
     }
 }
 
-/// Complete terminal Crash Log Scan Run result.
-#[pyclass(name = "ScanRunResult", from_py_object)]
+/// Exact-byte identity retained for one Installed YAML Data file in this scan run.
+#[pyclass(name = "ScanRunYamlDataContentIdentity", frozen, skip_from_py_object)]
 #[derive(Clone)]
+pub struct PyScanRunYamlDataContentIdentity {
+    /// Lowercase hexadecimal SHA-256 digest of the retained bytes.
+    #[pyo3(get)]
+    sha256: String,
+    /// Number of retained bytes represented by this identity.
+    #[pyo3(get)]
+    byte_len: u64,
+}
+
+/// Selected metadata for one update-eligible Main or game YAML Data file.
+#[pyclass(name = "ScanRunInspectedYamlDataFile", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunInspectedYamlDataFile {
+    /// `main` or `game` role token.
+    #[pyo3(get)]
+    role: String,
+    /// `updated`, `previous`, or `bundled` source token.
+    #[pyo3(get)]
+    provenance: String,
+    /// Breaking-change component of the compatible schema version.
+    #[pyo3(get)]
+    schema_major: u32,
+    /// Additive-change component of the compatible schema version.
+    #[pyo3(get)]
+    schema_minor: u32,
+    /// Lowercase hexadecimal SHA-256 digest of the selected exact bytes.
+    #[pyo3(get)]
+    sha256: String,
+    /// Length of the selected exact bytes.
+    #[pyo3(get)]
+    byte_length: u64,
+}
+
+/// One structured selection, fallback, validation, or generation diagnostic.
+#[pyclass(
+    name = "ScanRunInstalledYamlDataDiagnostic",
+    frozen,
+    skip_from_py_object
+)]
+#[derive(Clone)]
+pub struct PyScanRunInstalledYamlDataDiagnostic {
+    /// Affected update-eligible role token when applicable.
+    #[pyo3(get)]
+    role: Option<String>,
+    /// Candidate provenance token when an installed candidate was involved.
+    #[pyo3(get)]
+    candidate: Option<String>,
+    /// Affected path when the diagnostic is path-attributable.
+    #[pyo3(get)]
+    path: Option<PathBuf>,
+    /// Stable snake-case diagnostic category.
+    #[pyo3(get)]
+    kind: String,
+    /// Actionable human-readable explanation.
+    #[pyo3(get)]
+    message: String,
+}
+
+/// Installed YAML Data metadata retained from one immutable scan-run snapshot.
+#[pyclass(name = "ScanRunInstalledYamlDataRunData", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunInstalledYamlDataRunData {
+    /// Selected Main file schema, identity, and provenance.
+    #[pyo3(get)]
+    main: PyScanRunInspectedYamlDataFile,
+    /// Selected game file schema, identity, and provenance.
+    #[pyo3(get)]
+    game_file: PyScanRunInspectedYamlDataFile,
+    /// Stable token describing how Local Ignore entered the snapshot.
+    #[pyo3(get)]
+    local_ignore_state: String,
+    /// Identity derived from the exact retained Local Ignore bytes.
+    #[pyo3(get)]
+    local_ignore_identity: PyScanRunYamlDataContentIdentity,
+    /// Structured fallback, validation, and generation diagnostics.
+    #[pyo3(get)]
+    diagnostics: Vec<PyScanRunInstalledYamlDataDiagnostic>,
+    /// Whether Reset To Default can succeed while recovery is required.
+    ///
+    /// Only meaningful when `local_ignore_state` is `"recovery_required"`. A recovery plan whose
+    /// selected Main YAML has no usable `default_ignorefile` can only satisfy Proceed Without
+    /// Ignore; offering Reset anyway spends the one-shot continuation on a certain failure.
+    #[pyo3(get)]
+    local_ignore_reset_available: bool,
+    /// Durable reset metadata populated only after successful Reset To Default resume.
+    #[pyo3(get)]
+    local_ignore_reset: Option<PyScanRunLocalIgnoreResetRunData>,
+}
+
+/// Durable backup and replacement metadata from successful Reset To Default resume.
+#[pyclass(name = "ScanRunLocalIgnoreResetRunData", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunLocalIgnoreResetRunData {
+    #[pyo3(get)]
+    local_ignore_path: PathBuf,
+    #[pyo3(get)]
+    backup_path: PathBuf,
+    #[pyo3(get)]
+    malformed_identity: PyScanRunYamlDataContentIdentity,
+    #[pyo3(get)]
+    backup_identity: PyScanRunYamlDataContentIdentity,
+    #[pyo3(get)]
+    replacement_identity: PyScanRunYamlDataContentIdentity,
+}
+
+/// Explicit Local Ignore recovery decisions owned by Rust scan coordination.
+#[pyclass(
+    name = "ScanRunLocalIgnoreRecoveryDecision",
+    eq,
+    eq_int,
+    frozen,
+    from_py_object
+)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PyScanRunLocalIgnoreRecoveryDecision {
+    /// Resume with an empty ignore list scoped only to the retained run.
+    ProceedWithoutIgnore = 0,
+    /// Durably reset malformed Local Ignore, then resume the retained run.
+    ResetToDefault = 1,
+}
+
+/// Opaque process-local carrier for one paused Crash Log Scan Run.
+#[pyclass(name = "ScanRunContinuation", frozen, skip_from_py_object)]
+pub struct PyScanRunContinuation {
+    inner: Arc<contract::CrashLogScanRunContinuation>,
+}
+
+/// Complete terminal Crash Log Scan Run result.
+#[pyclass(name = "ScanRunResult", skip_from_py_object)]
 pub struct PyScanRunResult {
     status: String,
     discovery: Option<PyScanRunDiscoveryResult>,
     setup: Option<PyScanRunSetupResult>,
+    installed_yaml_data: Option<PyScanRunInstalledYamlDataRunData>,
+    continuation: Option<Py<PyScanRunContinuation>>,
     effective_concurrency: Option<usize>,
     message: Option<String>,
     total: usize,
@@ -646,6 +846,20 @@ impl PyScanRunResult {
     #[getter]
     pub fn setup(&self) -> Option<PyScanRunSetupResult> {
         self.setup.clone()
+    }
+
+    /// Returns Installed YAML Data metadata when intake selected a snapshot.
+    #[getter]
+    pub fn installed_yaml_data(&self) -> Option<PyScanRunInstalledYamlDataRunData> {
+        self.installed_yaml_data.clone()
+    }
+
+    /// Returns the opaque one-shot continuation for Local Ignore Recovery Required.
+    #[getter]
+    pub fn continuation(&self, py: Python<'_>) -> Option<Py<PyScanRunContinuation>> {
+        self.continuation
+            .as_ref()
+            .map(|continuation| continuation.clone_ref(py))
     }
 
     /// Returns Rust-selected concurrency once scheduling was reached.
@@ -810,10 +1024,9 @@ impl PyScanRunEvent {
 }
 
 /// Final operation envelope with independent adapter observation failure data.
-#[pyclass(name = "ScanRunExecution", from_py_object)]
-#[derive(Clone)]
+#[pyclass(name = "ScanRunExecution", skip_from_py_object)]
 pub struct PyScanRunExecution {
-    result: Option<PyScanRunResult>,
+    result: Option<Py<PyScanRunResult>>,
     error: Option<PyScanRunInfrastructureError>,
     observer_error: Option<String>,
 }
@@ -822,8 +1035,8 @@ pub struct PyScanRunExecution {
 impl PyScanRunExecution {
     /// Returns a terminal result when core execution succeeded.
     #[getter]
-    pub fn result(&self) -> Option<PyScanRunResult> {
-        self.result.clone()
+    pub fn result(&self, py: Python<'_>) -> Option<Py<PyScanRunResult>> {
+        self.result.as_ref().map(|result| result.clone_ref(py))
     }
 
     /// Returns a typed infrastructure failure when no result could be produced.
@@ -841,15 +1054,9 @@ impl PyScanRunExecution {
 
 /// Converts explicit Python configuration into the final core contract.
 fn configuration_to_core(value: &PyScanRunConfiguration) -> PyResult<contract::Configuration> {
-    let game = value
-        .game
-        .parse::<GameId>()
-        .map_err(|error| PyValueError::new_err(error.to_string()))?;
-
     Ok(contract::Configuration {
-        yaml_dir_root: required_path(value.yaml_dir_root.clone(), "yaml_dir_root")?,
-        yaml_dir_data: required_path(value.yaml_dir_data.clone(), "yaml_dir_data")?,
-        game,
+        installation_root: required_path(value.installation_root.clone(), "installation_root")?,
+        game: value.game,
         game_version: value.game_version.clone(),
         options: contract::Options::new(value.show_formid_values, value.simplify_logs),
         scan_facts: CrashLogScanFacts {
@@ -974,22 +1181,42 @@ fn setup_to_py(value: CrashLogScanSetupResult) -> PyScanRunSetupResult {
     }
 }
 
-fn disposition_to_string(value: contract::LogDisposition) -> String {
-    match value {
-        contract::LogDisposition::Succeeded => "succeeded",
-        contract::LogDisposition::Failed => "failed",
-        contract::LogDisposition::CancelledBeforeStart => "cancelled_before_start",
-    }
-    .to_string()
+/// Returns the stable Python token for one terminal per-log disposition.
+///
+/// Delegates rather than restating. The three strings this replaced were
+/// correct, and that is the problem the delegation solves: a correct copy is
+/// indistinguishable from a drifted one until someone edits the other side.
+/// Unlike the twins below, the core enum owns these tokens outright — this
+/// surface was simply the second place they were written down.
+fn disposition_to_string(value: contract::LogDisposition) -> &'static str {
+    value.as_str()
 }
 
-fn log_failure_stage_to_string(value: contract::LogFailureStage) -> String {
-    match value {
-        contract::LogFailureStage::Analysis => "analysis",
-        contract::LogFailureStage::ReportWrite => "report_write",
-        contract::LogFailureStage::UnsolvedLogsFinalization => "unsolved_logs_finalization",
-    }
-    .to_string()
+/// Returns the stable Python token for one per-log failure stage.
+///
+/// Delegates for the same reason as [`disposition_to_string`].
+fn log_failure_stage_to_string(value: contract::LogFailureStage) -> &'static str {
+    value.as_str()
+}
+
+/// Returns the stable Python token for one run-wide infrastructure failure stage.
+///
+/// Delegates for the same reason as [`disposition_to_string`]. This one was not
+/// even a named function before — the six strings were inlined into
+/// [`infrastructure_error_to_py`], which is how a duplicate table hides from a
+/// reviewer scanning for them.
+fn infrastructure_error_stage_to_string(value: contract::InfrastructureErrorStage) -> &'static str {
+    value.as_str()
+}
+
+/// Returns the stable Python token for one Local Ignore reset publication stage.
+///
+/// Named rather than left as an inline `stage.as_str()` on two exception paths.
+/// The delegation was already correct there, but an unnamed projection is not
+/// something a test can hold onto, and it sat beside four tables that were *not*
+/// delegating — which is how the odd one out went unnoticed.
+fn reset_failure_stage_to_string(value: contract::LocalIgnoreResetFailureStage) -> &'static str {
+    value.as_str()
 }
 
 /// Maps one complete terminal log result without collapsing structured failures.
@@ -998,12 +1225,12 @@ fn log_result_to_py(value: contract::LogResult) -> PyScanRunLogResult {
         discovery_index: value.discovery_index,
         crash_log: path_to_string(value.crash_log),
         autoscan_report: value.autoscan_report.map(path_to_string),
-        disposition: disposition_to_string(value.disposition),
+        disposition: disposition_to_string(value.disposition).to_string(),
         failures: value
             .failures
             .into_iter()
             .map(|failure| PyScanRunLogFailure {
-                stage: log_failure_stage_to_string(failure.stage),
+                stage: log_failure_stage_to_string(failure.stage).to_string(),
                 message: failure.message,
             })
             .collect(),
@@ -1017,47 +1244,310 @@ fn log_result_to_py(value: contract::LogResult) -> PyScanRunLogResult {
     }
 }
 
-fn run_status_to_string(value: CrashLogScanRunStatus) -> String {
-    match value {
-        CrashLogScanRunStatus::Completed => "completed",
-        CrashLogScanRunStatus::NoCrashLogsFound => "no_crash_logs_found",
-        CrashLogScanRunStatus::SetupFailed => "setup_failed",
-        CrashLogScanRunStatus::CancelledBeforeDiscovery => "cancelled_before_discovery",
-        CrashLogScanRunStatus::Cancelled => "cancelled",
-    }
-    .to_string()
+/// Returns the stable Python token for one run-wide lifecycle status.
+///
+/// Delegates for the same reason as [`disposition_to_string`]. The run status
+/// does not implement the Vocabulary naming contract — no frontend renders a
+/// Display Label for it — but the core has always owned an inherent token
+/// method, and this surface was writing the same six strings out beside it.
+fn run_status_to_string(value: CrashLogScanRunStatus) -> &'static str {
+    value.as_str()
 }
 
-/// Maps the complete terminal result including Rust-selected concurrency.
-fn run_result_to_py(value: contract::RunResult) -> PyScanRunResult {
-    PyScanRunResult {
-        status: run_status_to_string(value.status),
-        discovery: value.discovery.map(discovery_to_py),
-        setup: value.setup.map(setup_to_py),
-        effective_concurrency: value.effective_concurrency,
-        message: value.message,
-        total: value.total,
-        succeeded: value.succeeded,
-        failed: value.failed,
-        cancelled: value.cancelled,
-        logs: value.logs.into_iter().map(log_result_to_py).collect(),
+/// Returns the stable Python token for one selected Installed YAML Data role.
+const fn installed_yaml_data_role_to_string(value: InstalledYamlDataRole) -> &'static str {
+    match value {
+        InstalledYamlDataRole::Main => "main",
+        InstalledYamlDataRole::Game => "game",
     }
+}
+
+/// Returns the stable Python token for one selected candidate provenance.
+///
+/// This is the *configuration* enum, not a scan-run twin of it, so the run
+/// surface projects the token `classic-config-core` owns instead of restating
+/// it. Before this delegation the same three strings were written out here and
+/// in `classic-config-py`, which meant one Python surface could drift from the
+/// other while both stayed internally exhaustive.
+fn installed_yaml_data_provenance_to_string(value: InstalledYamlDataProvenance) -> &'static str {
+    value.as_str()
+}
+
+/// Returns the stable Python token for every valid-or-generated diagnostic kind.
+///
+/// Delegates rather than restating. The ten strings this replaced were correct,
+/// and that is the problem the delegation solves: a correct copy is
+/// indistinguishable from a drifted one until someone edits the other side.
+fn installed_yaml_data_diagnostic_kind_to_string(
+    value: contract::InstalledYamlDataRunDiagnosticKind,
+) -> &'static str {
+    value.as_str()
+}
+
+/// Returns the stable Python token for every scan-run Local Ignore state.
+///
+/// Delegates for the same reason as
+/// [`installed_yaml_data_diagnostic_kind_to_string`]. The core enum is itself a
+/// contract-stability twin that delegates four of its five tokens onward to the
+/// configuration crate, so this surface now publishes the same strings
+/// `classic_config` does without either surface being told what they are.
+fn local_ignore_state_to_string(value: contract::LocalIgnoreRunState) -> &'static str {
+    value.as_str()
+}
+
+/// Returns the human-facing Display Label for one scan-run diagnostic kind token.
+///
+/// The token is what this surface publishes on
+/// `ScanRunInstalledYamlDataDiagnostic.kind`; this resolves it to the prose a
+/// frontend renders, so `parse` reads as `parse failure` rather than as a
+/// status. The wording is the configuration crate's, because the core enum
+/// behind these tokens is a contract-stability twin that delegates both naming
+/// forms there — this returns exactly what
+/// `classic_config.installed_yaml_data_diagnostic_kind_label` does.
+///
+/// Labels are presentation only and may be reworded between releases, so
+/// callers must not parse or compare them — compare the token.
+///
+/// # Errors
+///
+/// Raises `ValueError` when `token` is not a published diagnostic kind token.
+#[pyfunction]
+pub fn scan_run_installed_yaml_data_diagnostic_kind_label(token: &str) -> PyResult<&'static str> {
+    from_token::<contract::InstalledYamlDataRunDiagnosticKind>(token)
+        .map(Vocabulary::label)
+        .ok_or_else(|| {
+            PyValueError::new_err(format!(
+                "unknown Crash Log Scan Run Installed YAML Data diagnostic kind token `{token}`"
+            ))
+        })
+}
+
+/// Returns the human-facing Display Label for one scan-run Local Ignore state token.
+///
+/// The token is what this surface publishes on
+/// `ScanRunInstalledYamlDataRunData.local_ignore_state`. Four of the five
+/// labels are the configuration crate's; `recovery_required` is the one the run
+/// contract owns itself, since a paused run has no configuration counterpart.
+///
+/// Same stability caveat as
+/// [`scan_run_installed_yaml_data_diagnostic_kind_label`].
+///
+/// # Errors
+///
+/// Raises `ValueError` when `token` is not a published Local Ignore state token.
+#[pyfunction]
+pub fn scan_run_local_ignore_yaml_data_state_label(token: &str) -> PyResult<&'static str> {
+    from_token::<contract::LocalIgnoreRunState>(token)
+        .map(Vocabulary::label)
+        .ok_or_else(|| {
+            PyValueError::new_err(format!(
+                "unknown Crash Log Scan Run Local Ignore state token `{token}`"
+            ))
+        })
+}
+
+/// Resolves the Display Label for one published Vocabulary Token, or raises.
+///
+/// Extracted because the four resolvers below differ only in their type
+/// parameter and the noun in their message. Raising rather than returning `""`
+/// is the shared decision: an empty label would surface as a blank cell in a
+/// frontend with nothing to diagnose it by.
+fn scan_run_label_for_token<T: Vocabulary>(
+    token: &str,
+    vocabulary: &str,
+) -> PyResult<&'static str> {
+    from_token::<T>(token)
+        .map(Vocabulary::label)
+        .ok_or_else(|| {
+            PyValueError::new_err(format!(
+                "unknown Crash Log Scan Run {vocabulary} token `{token}`"
+            ))
+        })
+}
+
+/// Returns the human-facing Display Label for one terminal log disposition token.
+///
+/// The token is what this surface publishes on `ScanRunLogResult.disposition`
+/// and on a `log_finished` event. Unlike the two twins above, the wording is the
+/// run crate's own — this enum has no counterpart to delegate to, so there is no
+/// `classic_config` function returning the same prose.
+///
+/// Labels are presentation only and may be reworded between releases, so
+/// callers must not parse or compare them — compare the token.
+///
+/// # Errors
+///
+/// Raises `ValueError` when `token` is not a published disposition token.
+#[pyfunction]
+pub fn scan_run_log_disposition_label(token: &str) -> PyResult<&'static str> {
+    scan_run_label_for_token::<contract::LogDisposition>(token, "disposition")
+}
+
+/// Returns the human-facing Display Label for one per-log failure stage token.
+///
+/// The token is what this surface publishes on `ScanRunLogFailure.stage`.
+/// `unsolved_logs_finalization` resolves to `Unsolved Logs finalization`,
+/// keeping the glossary capitalization of the domain term — which is exactly
+/// what no mechanical transform of the token could have produced.
+///
+/// Same stability caveat as [`scan_run_log_disposition_label`].
+///
+/// # Errors
+///
+/// Raises `ValueError` when `token` is not a published failure stage token.
+#[pyfunction]
+pub fn scan_run_log_failure_stage_label(token: &str) -> PyResult<&'static str> {
+    scan_run_label_for_token::<contract::LogFailureStage>(token, "log failure stage")
+}
+
+/// Returns the human-facing Display Label for one infrastructure stage token.
+///
+/// The token is what this surface publishes on
+/// `ScanRunInfrastructureError.stage`. `formid_database_access` resolves to
+/// `FormID database access` and `internal_invariant` to `internal invariant
+/// validation`.
+///
+/// Same stability caveat as [`scan_run_log_disposition_label`].
+///
+/// # Errors
+///
+/// Raises `ValueError` when `token` is not a published infrastructure stage
+/// token.
+#[pyfunction]
+pub fn scan_run_infrastructure_error_stage_label(token: &str) -> PyResult<&'static str> {
+    scan_run_label_for_token::<contract::InfrastructureErrorStage>(token, "infrastructure stage")
+}
+
+/// Returns the human-facing Display Label for one reset failure stage token.
+///
+/// The token is what this surface publishes on the `stage` attribute of a Local
+/// Ignore reset backup or replacement error. These five labels deliberately
+/// equal their tokens: the core enum is a twin of the workspace's shared durable
+/// publication stage vocabulary, which names ordinary steps rather than domain
+/// terms. The entry point exists anyway so a caller can resolve every scan-run
+/// token the same way, rather than having to know which vocabularies happen to
+/// need it.
+///
+/// Same stability caveat as [`scan_run_log_disposition_label`].
+///
+/// # Errors
+///
+/// Raises `ValueError` when `token` is not a published reset failure stage
+/// token.
+#[pyfunction]
+pub fn scan_run_local_ignore_reset_failure_stage_label(token: &str) -> PyResult<&'static str> {
+    scan_run_label_for_token::<contract::LocalIgnoreResetFailureStage>(token, "reset failure stage")
+}
+
+/// Projects selected file metadata with the same shape as `classic_config`.
+fn installed_yaml_data_file_to_py(value: InspectedYamlDataFile) -> PyScanRunInspectedYamlDataFile {
+    let schema = value.schema_version();
+    PyScanRunInspectedYamlDataFile {
+        role: installed_yaml_data_role_to_string(value.role()).to_string(),
+        provenance: installed_yaml_data_provenance_to_string(value.provenance()).to_string(),
+        schema_major: schema.major,
+        schema_minor: schema.minor,
+        sha256: value.identity().sha256_hex(),
+        byte_length: value.identity().byte_len(),
+    }
+}
+
+/// Projects an exact-byte identity with the same shape as `classic_config`.
+fn installed_yaml_data_identity_to_py(
+    value: YamlDataContentIdentity,
+) -> PyScanRunYamlDataContentIdentity {
+    PyScanRunYamlDataContentIdentity {
+        sha256: value.sha256_hex(),
+        byte_len: value.byte_len(),
+    }
+}
+
+/// Projects one diagnostic without collapsing optional attribution fields.
+fn installed_yaml_data_diagnostic_to_py(
+    value: contract::InstalledYamlDataRunDiagnostic,
+) -> PyScanRunInstalledYamlDataDiagnostic {
+    PyScanRunInstalledYamlDataDiagnostic {
+        role: value
+            .role()
+            .map(installed_yaml_data_role_to_string)
+            .map(str::to_string),
+        candidate: value
+            .candidate()
+            .map(installed_yaml_data_provenance_to_string)
+            .map(str::to_string),
+        path: value.path().map(PathBuf::from),
+        kind: installed_yaml_data_diagnostic_kind_to_string(value.kind()).to_string(),
+        message: value.message().to_string(),
+    }
+}
+
+/// Projects run-scoped Installed YAML Data metadata exhaustively.
+fn installed_yaml_data_to_py(
+    value: contract::InstalledYamlDataRunData,
+) -> PyScanRunInstalledYamlDataRunData {
+    PyScanRunInstalledYamlDataRunData {
+        main: installed_yaml_data_file_to_py(value.main),
+        game_file: installed_yaml_data_file_to_py(value.game_file),
+        local_ignore_state: local_ignore_state_to_string(value.local_ignore_state).to_string(),
+        local_ignore_identity: installed_yaml_data_identity_to_py(value.local_ignore_identity),
+        diagnostics: value
+            .diagnostics
+            .into_iter()
+            .map(installed_yaml_data_diagnostic_to_py)
+            .collect(),
+        local_ignore_reset_available: value.local_ignore_reset_available,
+        local_ignore_reset: value.local_ignore_reset.map(|reset| {
+            PyScanRunLocalIgnoreResetRunData {
+                local_ignore_path: reset.local_ignore_path,
+                backup_path: reset.backup_path,
+                malformed_identity: installed_yaml_data_identity_to_py(reset.malformed_identity),
+                backup_identity: installed_yaml_data_identity_to_py(reset.backup_identity),
+                replacement_identity: installed_yaml_data_identity_to_py(
+                    reset.replacement_identity,
+                ),
+            }
+        }),
+    }
+}
+
+/// Maps the complete terminal result while preserving one opaque continuation object.
+fn run_result_to_py(py: Python<'_>, value: contract::RunResult) -> PyResult<Py<PyScanRunResult>> {
+    let continuation = value
+        .continuation
+        .map(|continuation| {
+            Py::new(
+                py,
+                PyScanRunContinuation {
+                    inner: Arc::new(continuation),
+                },
+            )
+        })
+        .transpose()?;
+    Py::new(
+        py,
+        PyScanRunResult {
+            status: run_status_to_string(value.status).to_string(),
+            discovery: value.discovery.map(discovery_to_py),
+            setup: value.setup.map(setup_to_py),
+            installed_yaml_data: value.installed_yaml_data.map(installed_yaml_data_to_py),
+            continuation,
+            effective_concurrency: value.effective_concurrency,
+            message: value.message,
+            total: value.total,
+            succeeded: value.succeeded,
+            failed: value.failed,
+            cancelled: value.cancelled,
+            logs: value.logs.into_iter().map(log_result_to_py).collect(),
+        },
+    )
 }
 
 /// Maps every typed run-wide error field, including its optional path.
 fn infrastructure_error_to_py(
     value: contract::InfrastructureError,
 ) -> PyScanRunInfrastructureError {
-    let stage = match value.stage {
-        contract::InfrastructureErrorStage::RequestValidation => "request_validation",
-        contract::InfrastructureErrorStage::Discovery => "discovery",
-        contract::InfrastructureErrorStage::Intake => "intake",
-        contract::InfrastructureErrorStage::FormIdDatabaseAccess => "formid_database_access",
-        contract::InfrastructureErrorStage::Initialization => "initialization",
-        contract::InfrastructureErrorStage::InternalInvariant => "internal_invariant",
-    };
     PyScanRunInfrastructureError {
-        stage: stage.to_string(),
+        stage: infrastructure_error_stage_to_string(value.stage).to_string(),
         message: value.message,
         path: value.path.map(path_to_string),
     }
@@ -1133,7 +1623,7 @@ fn event_to_py(value: contract::Event) -> PyScanRunEvent {
             effective_concurrency: None,
             log: Some(log_event_to_py(log)),
             phase: None,
-            disposition: Some(disposition_to_string(disposition)),
+            disposition: Some(disposition_to_string(disposition).to_string()),
         },
     }
 }
@@ -1212,7 +1702,7 @@ pub fn scan_run_execute(
     let (result, observer_error) = result;
     Ok(match result {
         Ok(result) => PyScanRunExecution {
-            result: Some(run_result_to_py(result)),
+            result: Some(run_result_to_py(py, result)?),
             error: None,
             observer_error,
         },
@@ -1222,6 +1712,170 @@ pub fn scan_run_execute(
             observer_error,
         },
     })
+}
+
+/// Converts scan-run reset outcomes into stable Python exception subclasses and metadata.
+fn scan_run_reset_error_to_py(py: Python<'_>, error: contract::ResumeError) -> PyErr {
+    let code = error.kind().as_str();
+    let message = error.to_string();
+    match error {
+        contract::ResumeError::LocalIgnoreResetConflict(conflict) => {
+            let py_error = ScanRunLocalIgnoreResetConflictError::new_err(message);
+            let value = py_error.value(py);
+            value
+                .setattr("code", code)
+                .and_then(|()| value.setattr("kind", code))
+                .and_then(|()| {
+                    value.setattr(
+                        "expected_identity",
+                        installed_yaml_data_identity_to_py(conflict.expected_identity),
+                    )
+                })
+                .and_then(|()| {
+                    value.setattr(
+                        "actual_identity",
+                        conflict
+                            .actual_identity
+                            .map(installed_yaml_data_identity_to_py),
+                    )
+                })
+                .and_then(|()| value.setattr("backup_path", conflict.backup_path))
+                .expect("scan-run reset conflict exceptions must accept contract attributes");
+            py_error
+        }
+        contract::ResumeError::LocalIgnoreResetBackupFailure(failure) => {
+            let py_error = ScanRunLocalIgnoreResetBackupError::new_err(message);
+            let value = py_error.value(py);
+            value
+                .setattr("code", code)
+                .and_then(|()| value.setattr("kind", code))
+                .and_then(|()| value.setattr("path", failure.path))
+                .and_then(|()| {
+                    value.setattr("stage", failure.stage.map(reset_failure_stage_to_string))
+                })
+                .expect("scan-run reset backup exceptions must accept contract attributes");
+            py_error
+        }
+        contract::ResumeError::LocalIgnoreResetReplacementFailure(failure) => {
+            let py_error = ScanRunLocalIgnoreResetReplacementError::new_err(message);
+            let value = py_error.value(py);
+            value
+                .setattr("code", code)
+                .and_then(|()| value.setattr("kind", code))
+                .and_then(|()| value.setattr("path", failure.path))
+                .and_then(|()| {
+                    value.setattr("stage", failure.stage.map(reset_failure_stage_to_string))
+                })
+                .expect("scan-run reset replacement exceptions must accept contract attributes");
+            py_error
+        }
+        contract::ResumeError::LocalIgnoreResetDurabilityUnknown(receipt) => {
+            let receipt = *receipt;
+            let py_error = ScanRunLocalIgnoreResetDurabilityUnknownError::new_err(message);
+            let value = py_error.value(py);
+            value
+                .setattr("code", code)
+                .and_then(|()| value.setattr("kind", code))
+                .and_then(|()| value.setattr("path", receipt.path))
+                .and_then(|()| value.setattr("backup_path", receipt.backup_path))
+                .and_then(|()| {
+                    value.setattr(
+                        "malformed_identity",
+                        installed_yaml_data_identity_to_py(receipt.malformed_identity),
+                    )
+                })
+                .and_then(|()| {
+                    value.setattr(
+                        "backup_identity",
+                        installed_yaml_data_identity_to_py(receipt.backup_identity),
+                    )
+                })
+                .and_then(|()| {
+                    value.setattr(
+                        "replacement_identity",
+                        installed_yaml_data_identity_to_py(receipt.replacement_identity),
+                    )
+                })
+                .expect("scan-run durability exceptions must accept recovery receipt attributes");
+            py_error
+        }
+        contract::ResumeError::ContinuationConsumed | contract::ResumeError::Infrastructure(_) => {
+            unreachable!("non-reset resume errors are handled before reset exception projection")
+        }
+    }
+}
+
+/// Resumes one retained Crash Log Scan Run through an explicit Rust-owned recovery decision.
+///
+/// The GIL is released while the shared runtime executes. Sequential or concurrent replay raises
+/// [`ScanRunContinuationConsumedError`] with code `scan_run_continuation_consumed`. Reset conflict,
+/// backup failure, replacement failure, and replacement durability uncertainty raise dedicated
+/// typed exceptions with applicable identity, path, stage, and recovery-receipt metadata. Resumed
+/// infrastructure failures retain the same execution envelope as [`scan_run_execute`].
+#[pyfunction]
+#[pyo3(signature = (continuation, decision, cancellation, observer=None, cancel_on_observer_error=false))]
+pub fn scan_run_resume(
+    py: Python<'_>,
+    continuation: PyRef<'_, PyScanRunContinuation>,
+    decision: PyScanRunLocalIgnoreRecoveryDecision,
+    cancellation: PyRef<'_, PyScanRunCancellation>,
+    observer: Option<Py<PyAny>>,
+    cancel_on_observer_error: bool,
+) -> PyResult<PyScanRunExecution> {
+    let continuation = Arc::clone(&continuation.inner);
+    let cancellation = cancellation.inner.clone();
+    let decision = match decision {
+        PyScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+        }
+        PyScanRunLocalIgnoreRecoveryDecision::ResetToDefault => {
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault
+        }
+    };
+    let (result, observer_error) = without_gil_block_on(py, || async move {
+        let mut observer = observer.map(|callback| PyObserverAdapter {
+            callback,
+            cancellation: cancellation.clone(),
+            cancel_on_error: cancel_on_observer_error,
+            delivery_error: None,
+            delivery_failed: false,
+        });
+        let result = continuation
+            .resume(
+                decision,
+                &cancellation,
+                observer
+                    .as_mut()
+                    .map(|adapter| adapter as &mut dyn contract::Observer),
+            )
+            .await;
+        let observer_error = observer.and_then(|adapter| adapter.delivery_error);
+        (result, observer_error)
+    });
+
+    match result {
+        Ok(result) => Ok(PyScanRunExecution {
+            result: Some(run_result_to_py(py, result)?),
+            error: None,
+            observer_error,
+        }),
+        Err(contract::ResumeError::Infrastructure(error)) => Ok(PyScanRunExecution {
+            result: None,
+            error: Some(infrastructure_error_to_py(error)),
+            observer_error,
+        }),
+        Err(contract::ResumeError::ContinuationConsumed) => {
+            let py_error = PyErr::new::<ScanRunContinuationConsumedError, _>(
+                "Crash Log Scan Run continuation was already consumed",
+            );
+            // The typed exception remains authoritative if Python rejects optional metadata.
+            let _ = py_error
+                .value(py)
+                .setattr("code", "scan_run_continuation_consumed");
+            Err(py_error)
+        }
+        Err(error) => Err(scan_run_reset_error_to_py(py, error)),
+    }
 }
 
 // Keep the repository's required sibling-test declaration intact under rustfmt.

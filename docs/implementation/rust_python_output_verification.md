@@ -152,7 +152,7 @@ The Rust scanlog implementation:
 - `test_rust_python_identical.py` - Component comparison tests (Parser verified identical)
 - `test_factory_integration.py` - Factory integration verification (3/4 passed)
 - `test_rust_scanlog_works.py` - Rust acceleration verification (4/5 components active)
-- `docs/rust_scanlog_verification.md` - Architecture verification
+- `docs/archive/rust_scanlog_verification.md` - Architecture verification (archived historical record)
 
 **Verified By**: Automated testing + manual inspection
 **Reference**: Pure Python implementation (always correct)

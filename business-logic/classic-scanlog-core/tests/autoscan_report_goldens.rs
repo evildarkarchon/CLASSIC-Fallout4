@@ -169,8 +169,7 @@ async fn assert_golden_case(case: &GoldenCase) {
 
     let crash_log = temp.path().join(&case.crash_log);
     let configuration = contract::Configuration {
-        yaml_dir_root: temp.path().to_path_buf(),
-        yaml_dir_data: temp.path().join("CLASSIC Data"),
+        installation_root: temp.path().to_path_buf(),
         game: GameId::Fallout4,
         game_version: case.game_version.clone(),
         options: contract::Options::new(case.show_formid_values, false),
@@ -250,7 +249,20 @@ async fn assert_golden_case(case: &GoldenCase) {
 }
 
 #[test]
+#[serial_test::serial]
 fn complete_scan_runs_persist_byte_exact_autoscan_report_goldens() {
+    let cache_root = tempdir().expect("isolated cache root should be created");
+    temp_env::with_vars(
+        [
+            ("LOCALAPPDATA", Some(cache_root.path())),
+            ("XDG_CACHE_HOME", Some(cache_root.path())),
+        ],
+        complete_scan_runs_persist_byte_exact_autoscan_report_goldens_with_isolated_cache,
+    );
+}
+
+/// Executes every byte-exact case after its process cache environment is isolated.
+fn complete_scan_runs_persist_byte_exact_autoscan_report_goldens_with_isolated_cache() {
     get_runtime().block_on(async {
         for case in manifest().cases {
             assert_golden_case(&case).await;

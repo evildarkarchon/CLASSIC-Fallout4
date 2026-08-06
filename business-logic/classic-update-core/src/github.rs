@@ -5,8 +5,8 @@
 //! User-facing update checks SHOULD go through
 //! [`crate::notification::check_app_notification`] (the manifest-driven,
 //! Pages-first, rate-limit-resilient path). This module is retained for
-//! diagnostic tooling and a gradual binding migration (see design decision
-//! D-08 in `openspec/changes/app-update-manifest-notification/design.md`).
+//! diagnostic tooling and a gradual binding migration (see
+//! `docs/api/app-update-notification-delivery.md`).
 //! [`GithubClient::get_latest_release`] is annotated `#[deprecated]` to
 //! flag accidental new use sites — existing in-tree callers keep working
 //! until their owning crate migrates to the notification API.

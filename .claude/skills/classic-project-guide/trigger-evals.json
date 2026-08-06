@@ -1,0 +1,74 @@
+[
+  {
+    "query": "Can you remind me how this repo wants `classic-gui/` built and tested on Windows? I already have Qt installed, but I forgot the wrapper script and the repo-approved way to run the tests.",
+    "should_trigger": true
+  },
+  {
+    "query": "I changed the C++ bridge and touched code in `classic-cli/`. What's the repo-approved way to run the native tests afterward, and what parity gate applies to the bridge surface now?",
+    "should_trigger": true
+  },
+  {
+    "query": "`ci-typescript.yml` started failing after a Node binding change. Map out what this repo considers part of the Node parity surface, which files are supposed to stay fresh, and what local commands mirror CI.",
+    "should_trigger": true
+  },
+  {
+    "query": "I'm changing a Rust API that is surfaced in the Python bindings. Walk me through the Python parity checklist so I don't miss tracked artifacts or validation commands.",
+    "should_trigger": true
+  },
+  {
+    "query": "I need a Windows release-candidate build for both the CLI and GUI. What are the recommended PowerShell commands in this repo for build, install, package, and clean rebuild?",
+    "should_trigger": true
+  },
+  {
+    "query": "I'm changing `CLASSIC Data/databases/CLASSIC Fallout4.yaml` and `client-schema-ranges.yaml`. What local validation commands and release workflow rules apply before this goes up for review?",
+    "should_trigger": true
+  },
+  {
+    "query": "I'm updating `CLASSIC Data/app-notification.yaml`. Which validator, dry-run, docs, and tag namespace checks apply?",
+    "should_trigger": true
+  },
+  {
+    "query": "I'm on a Linux cloud box and only want to validate the Rust side of CLASSIC. Which native pieces are Windows-focused, and what subset checks make sense when the full workspace is not portable?",
+    "should_trigger": true
+  },
+  {
+    "query": "Please fix this parsing bug in `business-logic/classic-scanlog-core/src/lib.rs` and add focused unit tests. You don't need to explain the repo layout first; just make the code change.",
+    "should_trigger": false
+  },
+  {
+    "query": "We found a feature that's only present in the historical `ClassicLib-rs/` tree. Help me decide where the live implementation should go.",
+    "should_trigger": false
+  },
+  {
+    "query": "Before I add another async service, check whether this repo already has a single-runtime rule for Tokio and point me to the right architectural layer for runtime-related code.",
+    "should_trigger": false
+  },
+  {
+    "query": "I'm planning a new scanlog capability that the CLI needs now but the GUI and bindings may reuse later. Should it start in `classic-cli/` or in a Rust core crate?",
+    "should_trigger": false
+  },
+  {
+    "query": "Review the UI in `classic-gui/` and make the preferences dialog feel more polished and readable on small screens.",
+    "should_trigger": false
+  },
+  {
+    "query": "A Rust test is failing in `business-logic/classic-settings-core`, and I want you to use a systematic debugging process to find the root cause before changing anything.",
+    "should_trigger": false
+  },
+  {
+    "query": "Run `cargo clippy` at the repo root and clean up the warnings you find. This is just a normal Rust cleanup pass.",
+    "should_trigger": false
+  },
+  {
+    "query": "Add Google-style docstrings to a Python helper module and leave the runtime behavior alone.",
+    "should_trigger": false
+  },
+  {
+    "query": "Help me write a GitHub Actions workflow for another Rust repository that runs `cargo fmt`, `cargo clippy`, and tests on Ubuntu and macOS.",
+    "should_trigger": false
+  },
+  {
+    "query": "Refactor the Node binding code in `node-bindings/classic-node/src/` to reduce duplication, but don't spend time recapping repo policy unless it directly affects the code change.",
+    "should_trigger": false
+  }
+]

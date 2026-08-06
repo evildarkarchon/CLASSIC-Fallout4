@@ -4,8 +4,8 @@ This guide covers the current PyO3 patterns used by CLASSIC's maintained Python 
 
 ## Current model
 
-- Python bindings live in `ClassicLib-rs/python-bindings/*-py` and `ClassicLib-rs/foundation/classic-shared-py`.
-- Shared business logic lives in pure Rust crates under `ClassicLib-rs/business-logic/*-core` and `ClassicLib-rs/foundation/*`.
+- Python bindings live in `python-bindings/*-py` and `foundation/classic-shared-py`.
+- Shared business logic lives in pure Rust crates under `business-logic/*-core` and `foundation/*`.
 - The active Python surface is split into importable modules such as `classic_config`, `classic_scanlog`, `classic_version_registry`, and `classic_shared`.
 - There is no maintained monolithic `classic_core` facade in the current repo layout.
 
@@ -52,15 +52,16 @@ fn classic_example(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
 ## Build and install workflow
 
-Use the Python bindings virtual environment at `ClassicLib-rs/python-bindings/.venv`.
+Use the Python bindings virtual environment at `python-bindings/.venv`.
 
 ### Recommended full rebuild
 
 From the repo root:
 
 ```powershell
-uv venv ClassicLib-rs/python-bindings/.venv
-uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
+# python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
+# --inexact is load-bearing: it keeps uv from pruning maturin-built classic-*-py wheels.
+uv sync --project python-bindings --inexact
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
 ```
 
@@ -79,20 +80,20 @@ For binding-surface changes, run:
 
 ```powershell
 python tools/python_api_parity/check_parity_gate.py --repo-root .
-python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
+python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
 ```
 
 ## Troubleshooting
 
 ### `ModuleNotFoundError`
 
-- Make sure you are using `ClassicLib-rs/python-bindings/.venv`.
+- Make sure you are using `python-bindings/.venv`.
 - Rebuild and reinstall the required wheel with `rebuild_rust.ps1`.
 - Verify imports directly, for example:
 
 ```powershell
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -c "import classic_config, classic_scanlog, classic_version_registry; print(classic_config.__version__)"
+uv run --python python-bindings/.venv/Scripts/python.exe python -c "import classic_config, classic_scanlog, classic_version_registry; print(classic_config.__version__)"
 ```
 
 ### Stale extension module

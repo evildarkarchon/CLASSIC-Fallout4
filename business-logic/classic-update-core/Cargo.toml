@@ -33,6 +33,7 @@ reqwest = { workspace = true, features = ["json"] }
 # Serialization for GitHub API
 serde = { workspace = true }
 serde_json = { workspace = true }
+sha2 = { workspace = true }
 
 # Error handling
 anyhow = { workspace = true }

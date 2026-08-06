@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import sys
 from pathlib import Path
 
 
@@ -19,6 +20,20 @@ PYTHON_RUNTIME_REGISTRY = (
 
 
 def load_tool_module():
+    """Import the shared coverage tool from its path under ``tools/``.
+
+    ``tools/`` is a flat directory of sibling modules rather than a package, so
+    ``binding_parity_runtime_coverage`` imports ``parity_artifact_io`` by bare
+    name. Loading by file path does not put the tool's own directory on
+    ``sys.path``, so that sibling import raises ``ModuleNotFoundError`` unless
+    the directory is arranged here first. Every other consumer honours the same
+    contract explicitly -- ``tools/python_api_parity/check_parity_gate.py``
+    appends ``tools/``, and ``tools/test_parity_artifact_io.py`` inserts it.
+    """
+    tools_dir = str(TOOL_PATH.parent)
+    if tools_dir not in sys.path:
+        sys.path.insert(0, tools_dir)
+
     spec = importlib.util.spec_from_file_location(
         "binding_parity_runtime_coverage", TOOL_PATH
     )

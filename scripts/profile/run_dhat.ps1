@@ -79,7 +79,8 @@ Write-Host ""
 # Resolve script and project paths
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectRoot = (Get-Item "$scriptDir/../..").FullName
-$rustDir = Join-Path $projectRoot "ClassicLib-rs"
+# The Cargo workspace root is the repo root; there is no separate Rust subdirectory.
+$rustDir = $projectRoot
 
 # Setup output directory
 $timestamp = Get-Date -Format "yyyy-MM-dd-HHmmss"

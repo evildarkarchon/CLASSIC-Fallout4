@@ -7,6 +7,7 @@ use crate::{FrontendState, GameSetupSettings};
 use classic_settings_core::{
     SchemaVersion, Yaml, YamlSchemaError, extract_schema_version, parse_yaml_content,
 };
+use classic_vocabulary::Vocabulary;
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 
@@ -69,6 +70,133 @@ pub enum PreferenceOrigin {
     DegradedFallback,
 }
 
+impl Vocabulary for SourceLocation {
+    const VARIANTS: &'static [Self] = &[Self::Canonical, Self::Legacy, Self::Missing];
+
+    /// These tokens are frozen. They are the exact strings all three binding
+    /// surfaces already published — the Node spellings are single words, so its
+    /// casing transform is an identity here — and the CXX and Node reversal
+    /// paths parse them back out of a caller-supplied plan.
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Canonical => "canonical",
+            Self::Legacy => "legacy",
+            Self::Missing => "missing",
+        }
+    }
+
+    /// Prose, freely rewordable. `CLASSIC Data` keeps its capitalization
+    /// because it is the literal on-disk directory name from
+    /// `CLASSIC Data/CLASSIC Settings.yaml`, not a concept a sentence-cased
+    /// label could stand in for.
+    fn label(self) -> &'static str {
+        match self {
+            Self::Canonical => "Canonical User Settings location",
+            Self::Legacy => "Previous CLASSIC Data location",
+            Self::Missing => "No User Settings document",
+        }
+    }
+}
+
+impl Vocabulary for DocumentClassification {
+    const VARIANTS: &'static [Self] = &[
+        Self::Current,
+        Self::Unversioned,
+        Self::Older,
+        Self::NewerCompatible,
+        Self::FutureMajor,
+        Self::LegacyFlat,
+        Self::Malformed,
+        Self::Missing,
+    ];
+
+    /// These tokens are frozen. The four multi-word spellings are the ones the
+    /// Node surface publishes as `newerCompatible`, `futureMajor`, and
+    /// `legacyFlat` after its documented casing transform; respelling one here
+    /// changes all three binding contracts at once.
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Current => "current",
+            Self::Unversioned => "unversioned",
+            Self::Older => "older",
+            Self::NewerCompatible => "newer_compatible",
+            Self::FutureMajor => "future_major",
+            Self::LegacyFlat => "legacy_flat",
+            Self::Malformed => "malformed",
+            Self::Missing => "missing",
+        }
+    }
+
+    /// Prose, freely rewordable. `ClassicConfig` is the literal legacy type
+    /// name that shape serialized from, so it is reproduced rather than
+    /// paraphrased — a contributor reading the label needs to recognize the
+    /// document they are looking at.
+    fn label(self) -> &'static str {
+        match self {
+            Self::Current => "Current schema",
+            Self::Unversioned => "Unversioned document",
+            Self::Older => "Older schema version",
+            Self::NewerCompatible => "Newer compatible schema",
+            Self::FutureMajor => "Incompatible future schema major",
+            Self::LegacyFlat => "Legacy flat ClassicConfig shape",
+            Self::Malformed => "Malformed document",
+            Self::Missing => "Missing document",
+        }
+    }
+}
+
+impl Vocabulary for CommitEligibility {
+    const VARIANTS: &'static [Self] = &[
+        Self::Eligible,
+        Self::RequiresMigration,
+        Self::BlockedUntrusted,
+    ];
+
+    /// These tokens are frozen. The Node surface publishes the last two as
+    /// `requiresMigration` and `blockedUntrusted` after its casing transform.
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Eligible => "eligible",
+            Self::RequiresMigration => "requires_migration",
+            Self::BlockedUntrusted => "blocked_untrusted",
+        }
+    }
+
+    /// Prose, freely rewordable.
+    fn label(self) -> &'static str {
+        match self {
+            Self::Eligible => "Eligible to commit",
+            Self::RequiresMigration => "Requires migration before commit",
+            Self::BlockedUntrusted => "Blocked by an untrusted source",
+        }
+    }
+}
+
+impl Vocabulary for PreferenceOrigin {
+    const VARIANTS: &'static [Self] = &[Self::Document, Self::Default, Self::DegradedFallback];
+
+    /// These tokens are frozen. The Node surface publishes the last as
+    /// `degradedFallback` after its casing transform.
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Document => "document",
+            Self::Default => "default",
+            Self::DegradedFallback => "degraded_fallback",
+        }
+    }
+
+    /// Prose, freely rewordable. "Published default" rather than "default"
+    /// because the value came from the Rust-owned published defaults rather
+    /// than from any language's notion of a zero value.
+    fn label(self) -> &'static str {
+        match self {
+            Self::Document => "Read from the document",
+            Self::Default => "Published default",
+            Self::DegradedFallback => "Degraded fallback",
+        }
+    }
+}
+
 /// Content identity captured when the User Settings view was opened.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Revision {
@@ -78,6 +206,70 @@ pub enum Revision {
     Unavailable,
     /// SHA-256 of the exact source bytes.
     ContentSha256([u8; 32]),
+}
+
+impl Revision {
+    /// Prefix distinguishing a content-digest token from the two sentinels.
+    const CONTENT_SHA256_PREFIX: &'static str = "sha256:";
+    /// Hex characters in a SHA-256 digest, i.e. two per digest byte.
+    const CONTENT_SHA256_HEX_LEN: usize = 64;
+
+    /// Formats this revision as its stable cross-language token.
+    ///
+    /// The result is `missing`, `unavailable`, or `sha256:` followed by the
+    /// lowercase hex encoding of the digest. This is a frozen wire format: the
+    /// C++, Node, and Python surfaces all publish exactly this string, so a
+    /// change here changes all three revision contracts at once.
+    ///
+    /// [`Revision::from_token`] is the exact inverse — every value this method
+    /// produces parses back to an equal revision.
+    ///
+    /// Unlike the finite domain enums, `Revision` carries a data variant, so it
+    /// deliberately sits outside the `Vocabulary` naming contract and owns this
+    /// inherent pair instead.
+    pub fn token(&self) -> String {
+        match self {
+            Self::Missing => "missing".to_string(),
+            Self::Unavailable => "unavailable".to_string(),
+            Self::ContentSha256(digest) => {
+                let mut token =
+                    String::with_capacity(Self::CONTENT_SHA256_PREFIX.len() + digest.len() * 2);
+                token.push_str(Self::CONTENT_SHA256_PREFIX);
+                for byte in digest {
+                    use std::fmt::Write as _;
+                    write!(&mut token, "{byte:02x}").expect("writing to a String cannot fail");
+                }
+                token
+            }
+        }
+    }
+
+    /// Parses a revision token produced by [`Revision::token`].
+    ///
+    /// Returns `None` for anything that is not one of the two sentinels or a
+    /// `sha256:` prefix followed by exactly 64 hex digits. Hex parsing is
+    /// case-insensitive, matching the per-binding copies this replaced.
+    ///
+    /// Every binding reaches this with a caller-supplied string, so the
+    /// non-ASCII guard is load-bearing: without it, a 64-*byte* encoded segment
+    /// built from multi-byte characters would slice through a character
+    /// boundary and panic across the FFI boundary instead of being rejected.
+    pub fn from_token(token: &str) -> Option<Self> {
+        match token {
+            "missing" => return Some(Self::Missing),
+            "unavailable" => return Some(Self::Unavailable),
+            _ => {}
+        }
+        let encoded = token.strip_prefix(Self::CONTENT_SHA256_PREFIX)?;
+        if encoded.len() != Self::CONTENT_SHA256_HEX_LEN || !encoded.is_ascii() {
+            return None;
+        }
+        let mut digest = [0_u8; 32];
+        for (index, byte) in digest.iter_mut().enumerate() {
+            *byte = u8::from_str_radix(&encoded[index * 2..index * 2 + 2], 16).ok()?;
+        }
+        Some(Self::ContentSha256(digest))
+    }
 }
 
 /// Machine-readable diagnostic produced while opening User Settings.
@@ -716,3 +908,6 @@ fn is_recognized_nested_document(document: &Yaml) -> bool {
         .into_iter()
         .any(|key| matches!(&document[key], Yaml::Hash(_)))
 }
+
+#[rustfmt::skip]
+#[cfg(test)] #[path = "document_tests.rs"] mod tests;

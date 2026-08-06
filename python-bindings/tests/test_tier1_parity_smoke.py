@@ -177,7 +177,7 @@ def _run_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
     assert status == classic_scanlog.CrashgenVersionStatus.OUTDATED
 
     assert hasattr(parser, "parse_segments") is False
-    assert hasattr(classic_scanlog.ParallelReportProcessor, "process_batch") is False
+    assert hasattr(classic_scanlog, "ParallelReportProcessor") is False
 
     sections = parser.parse_all_sections(log_lines)
     assert isinstance(sections, dict)
@@ -395,37 +395,20 @@ def test_parse_segments_parallel_deprecation_warning() -> None:
     ]
 
 
-def test_generate_suspect_section_deprecation_warning() -> None:
-    """generate_suspect_section matches header plus footer outputs."""
+def test_obsolete_report_fragment_surface_is_not_exported() -> None:
+    """Presentation-only report assembly helpers are not Python contracts."""
     import classic_scanlog
 
-    report_gen = classic_scanlog.ReportGenerator()
-    header_lines = report_gen.generate_suspect_section_header().to_list()
-    empty_footer_lines = report_gen.generate_suspect_found_footer(False).to_list()
-    found_footer_lines = report_gen.generate_suspect_found_footer(True).to_list()
+    obsolete_exports = (
+        "StringPool",
+        "ReportFragment",
+        "ReportComposer",
+        "ReportGenerator",
+        "ParallelReportProcessor",
+        "SettingsValidator",
+    )
 
-    with pytest.warns(
-        DeprecationWarning, match="generate_suspect_section is deprecated"
-    ):
-        empty_fragment = report_gen.generate_suspect_section([])
-
-    with pytest.warns(
-        DeprecationWarning, match="generate_suspect_section is deprecated"
-    ):
-        found_fragment = report_gen.generate_suspect_section(["SomeSuspect"])
-
-    assert empty_fragment.to_list() == header_lines + empty_footer_lines
-    assert found_fragment.to_list() == header_lines + found_footer_lines
-    assert empty_fragment.to_list() == [
-        "### Checking for Known Crash Messages, Errors and Suspects\n\n",
-        "* **NO SUSPECTS DETECTED** *\n\n",
-        "---\n\n",
-    ]
-    assert found_fragment.to_list() == [
-        "### Checking for Known Crash Messages, Errors and Suspects\n\n",
-        "* **ONE OR MORE SUSPECTS DETECTED! CHECK LOG ABOVE FOR MORE INFORMATION!** *\n\n",
-        "---\n\n",
-    ]
+    assert not [name for name in obsolete_exports if hasattr(classic_scanlog, name)]
 
 
 @pytest.mark.parametrize("case_id", get_runtime_coverage_case_ids(THIS_SUITE))

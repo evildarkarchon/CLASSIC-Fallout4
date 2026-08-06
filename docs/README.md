@@ -12,7 +12,6 @@ This documentation set reflects the current **C++ + Rust** product architecture.
 - **C++ bridge (active):** [`cpp-bindings/classic-cpp-bridge/`](../cpp-bindings/classic-cpp-bridge)
 - **Maintained integration bindings:** [`python-bindings/`](../python-bindings) and [`node-bindings/classic-node/`](../node-bindings/classic-node)
 - **Rust TUI app (active):** [`ui-applications/classic-tui/`](../ui-applications/classic-tui)
-- **Deprecated Python runtime entrypoints/orchestration (archival):** [`deprecated/`](../deprecated)
 
 For policy-level guidance, see [`AGENTS.md`](../AGENTS.md).
 For old-to-new workspace translations, see the [Workspace Migration Matrix](workspace-migration-matrix.md).
@@ -27,6 +26,7 @@ For old-to-new workspace translations, see the [Workspace Migration Matrix](work
 - [`development/RUST_INTEGRATION_GUIDE.md`](development/RUST_INTEGRATION_GUIDE.md) — Rust integration surfaces (C++, Node, Python bindings)
 - [`testing/TESTING_GUIDE_INDEX.md`](testing/TESTING_GUIDE_INDEX.md) — local/CI testing matrix and commands
 - [`RUST_DOCUMENTATION_INDEX.md`](RUST_DOCUMENTATION_INDEX.md) — Rust-focused index for active workspace docs
+- [`archive/README.md`](archive/README.md) — historical records only; never live guidance
 
 ---
 
@@ -106,7 +106,7 @@ uv run --project python-bindings python -m pytest python-bindings/tests -q
 
 1. Treat C++ frontends + Rust core as the default contributor path.
 2. Treat [`python-bindings/`](../python-bindings) and [`node-bindings/classic-node/`](../node-bindings/classic-node) as maintained integration surfaces where applicable.
-3. Treat Python runtime entrypoints and orchestration under [`deprecated/`](../deprecated) as archival unless a task explicitly targets migration or legacy support.
+3. Treat everything under [`archive/`](archive/README.md) as historical record, not live guidance. Do not follow its commands or paths.
 
 > Migration note: if you encounter older `ClassicLib-rs/...` instructions, translate them through the [Workspace Migration Matrix](workspace-migration-matrix.md) instead of treating them as live workspace guidance.
 

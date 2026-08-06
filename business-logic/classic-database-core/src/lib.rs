@@ -12,8 +12,13 @@
 //! - FormID-specific operations
 //! - Multiple database file support
 
+mod formid_value_lookup;
 mod pool_sqlx;
 
+pub use formid_value_lookup::{
+    FormIdValueLookup, FormIdValueLookupEntry, FormIdValueLookupError,
+    FormIdValueLookupInMemoryReply, FormIdValueLookupOutcome,
+};
 pub use pool_sqlx::{
     BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS,
     DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY,

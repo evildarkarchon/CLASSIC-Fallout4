@@ -48,8 +48,8 @@ pub struct ModConflictGuidance {
     pub name_b: String,
     /// Authored explanation of the conflict.
     pub description: String,
-    /// Authored remediation guidance.
-    pub fix: String,
+    /// Optional authored remediation guidance.
+    pub fix: Option<String>,
     /// Optional authored external reference.
     pub link: Option<String>,
 }
@@ -195,10 +195,19 @@ impl ModGuidanceAnalyzer {
             .chain(xse_modules.iter().map(String::as_str))
             .collect::<Vec<_>>()
             .join(" ");
+        // XSE modules participate in conflict matching, not just the important-mod
+        // haystack. Some conflicting pairs ship as plugin-less DLLs (Upscaling.dll vs
+        // FSR3_AA.dll), and the plugin parser only admits `.esp`/`.esm`/`.esl` names, so
+        // a DLL-only pair could never match against `plugins` alone and its rule was
+        // silently dead. Matching stays per-name rather than reusing the joined
+        // `important_haystack`: a joined string lets a token straddle two names.
         let conflict_tokens = matched_token_identities(
             self.configuration.conflict_matcher.as_ref(),
             &self.configuration.conflict_tokens,
-            plugins.iter().map(|(name, _)| name.as_str()),
+            plugins
+                .iter()
+                .map(|(name, _)| name.as_str())
+                .chain(xse_modules.iter().map(String::as_str)),
         );
 
         Ok(ModGuidanceAnalysisResult {
@@ -229,8 +238,9 @@ fn compile_conflicts(
             validate_required(&entry.name_a, "conflict name_a")?;
             validate_required(&entry.name_b, "conflict name_b")?;
             validate_required(&entry.description, "conflict description")?;
-            validate_required(&entry.fix, "conflict fix")?;
-
+            if let Some(fix) = &entry.fix {
+                validate_required(fix, "conflict fix")?;
+            }
             let mod_a_token = entry.mod_a.to_lowercase();
             let mod_b_token = entry.mod_b.to_lowercase();
             tokens.extend([mod_a_token.clone(), mod_b_token.clone()]);

@@ -7,9 +7,20 @@
 #include "classic_cxx_bridge/scanner.h"
 
 #include <cstddef>
+#include <stdexcept>
 #include <string>
 
 namespace {
+
+/// Executes an opaque bridge operation and moves out its typed terminal envelope.
+classic::scanner::ScanRunContractExecutionResult executeResult(
+    const classic::scanner::ScanRunRequest& request,
+    const classic::scanner::ScanRunCancellation& cancellation,
+    const classic::scanner::ScanRunObserver* observer)
+{
+    auto operation = classic::scanner::scan_run_contract_execute(request, cancellation, observer);
+    return classic::scanner::scan_run_contract_execution_take_result(*operation);
+}
 
 /// Creates representative accepted GUI settings for tagged request behavior tests.
 classic::gui::CrashLogScanLaunchSettings makeSettings()
@@ -61,15 +72,14 @@ private:
 };
 
 /// Builds and executes one request without an observer so terminal discovery data can be asserted.
-classic::scanner::ScanRunContractExecutionResult execute(const QString& yamlRoot, const QString& yamlData,
-                                                         const QString& baseDirectory,
+classic::scanner::ScanRunContractExecutionResult execute(const QString& installationRoot, const QString& baseDirectory,
                                                          const classic::gui::CrashLogScanLaunchSettings& settings,
                                                          const QStringList& targetedInputs)
 {
     const auto request =
-        classic::gui::buildScanRunRequest(yamlRoot, yamlData, baseDirectory, settings, {}, targetedInputs);
+        classic::gui::buildScanRunRequest(installationRoot, baseDirectory, settings, {}, targetedInputs);
     const auto cancellation = classic::scanner::scan_run_cancellation_new();
-    return classic::scanner::scan_run_contract_execute(*request, *cancellation, nullptr);
+    return executeResult(*request, *cancellation, nullptr);
 }
 
 } // namespace
@@ -80,6 +90,7 @@ class ScanRequestBuilderTests : public QObject {
 private slots:
     void no_targeted_inputs_constructs_a_tagged_standard_request();
     void targeted_inputs_construct_a_tagged_targeted_request_with_structured_rejections();
+    void every_supported_game_maps_to_the_scanner_local_typed_identity();
 };
 
 void ScanRequestBuilderTests::no_targeted_inputs_constructs_a_tagged_standard_request()
@@ -87,11 +98,10 @@ void ScanRequestBuilderTests::no_targeted_inputs_constructs_a_tagged_standard_re
     QTemporaryDir root;
     QVERIFY(root.isValid());
 
-    const auto request = classic::gui::buildScanRunRequest(root.path(), root.filePath(QStringLiteral("CLASSIC Data")),
-                                                           root.path(), makeSettings(), {}, {});
+    const auto request = classic::gui::buildScanRunRequest(root.path(), root.path(), makeSettings(), {}, {});
     const auto cancellation = classic::scanner::scan_run_cancellation_new();
     const DiscoveryCancellingObserver observer(*cancellation);
-    const auto execution = classic::scanner::scan_run_contract_execute(*request, *cancellation, &observer);
+    const auto execution = executeResult(*request, *cancellation, &observer);
 
     QVERIFY2(execution.has_result, "Standard discovery should produce an expected lifecycle result");
     QVERIFY(!execution.has_error);
@@ -114,8 +124,7 @@ void ScanRequestBuilderTests::targeted_inputs_construct_a_tagged_targeted_reques
     settings.moveUnsolvedLogs = true;
     settings.unsolvedLogsDestination = root.filePath(QStringLiteral("Unsolved Logs"));
 
-    const auto execution =
-        execute(root.path(), root.filePath(QStringLiteral("CLASSIC Data")), root.path(), settings, {missingInput});
+    const auto execution = execute(root.path(), root.path(), settings, {missingInput});
 
     QVERIFY2(execution.has_result, "Rejected Targeted inputs are discovery data, not a run-wide failure");
     QVERIFY(!execution.has_error);
@@ -127,6 +136,28 @@ void ScanRequestBuilderTests::targeted_inputs_construct_a_tagged_targeted_reques
     QCOMPARE(QString::fromStdString(std::string(execution.result.discovery.rejected_inputs[0].path)), missingInput);
     QVERIFY2(!execution.result.discovery.rejected_inputs[0].reason.empty(),
              "Rust discovery must retain the reason for every rejected Targeted input");
+}
+
+void ScanRequestBuilderTests::every_supported_game_maps_to_the_scanner_local_typed_identity()
+{
+    QTemporaryDir root;
+    QVERIFY(root.isValid());
+    for (const QString& game : {QStringLiteral("Fallout4"), QStringLiteral("Fallout4VR"), QStringLiteral("Skyrim"),
+                                QStringLiteral("Starfield")}) {
+        auto settings = makeSettings();
+        settings.game = game;
+        const auto request = classic::gui::buildScanRunRequest(root.path(), root.path(), settings, {}, {});
+        const auto cancellation = classic::scanner::scan_run_cancellation_new();
+        classic::scanner::scan_run_cancellation_cancel(*cancellation);
+        const auto execution = executeResult(*request, *cancellation, nullptr);
+        QVERIFY(execution.has_result);
+        QCOMPARE(execution.result.status, classic::scanner::ScanRunContractStatus::CancelledBeforeDiscovery);
+    }
+
+    auto invalid = makeSettings();
+    invalid.game = QStringLiteral("UnknownGame");
+    QVERIFY_EXCEPTION_THROWN(classic::gui::buildScanRunRequest(root.path(), root.path(), invalid, {}, {}),
+                             std::invalid_argument);
 }
 
 QTEST_MAIN(ScanRequestBuilderTests)

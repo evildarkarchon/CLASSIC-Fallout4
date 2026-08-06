@@ -56,6 +56,17 @@ Shared file-I/O error model.
 - `FileIOError` - typed error enum used by most crate APIs
 - `error::Result<T>` - module-local alias for `Result<T, FileIOError>`
 
+### `atomic_install`
+
+YAML Data Update Channel install, rollback, and self-heal over a `<target>.prev` rollback generation.
+
+- `install_atomic` - digest-verified install of an already-downloaded file, preserving the replaced copy as `<target>.prev`
+- `rollback` - swap `<target>` with `<target>.prev`, or promote `.prev` when the target is missing
+- `self_heal` - strict subset of `rollback` that only promotes `.prev` when the target is missing; the shape every-read callers must use
+- `InstallOutcome`, `RollbackOutcome`, `SelfHealOutcome` - the returned outcomes
+
+The durability sequence underneath `install_atomic` is not implemented here. It comes from [`classic-durable-publication`](classic-durable-publication.md)'s `install_verified`, which owns the digest verification, the staged-file synchronization, the `.prev` rotation, and the install lock. This module keeps what only it can know: that the staged file lives in the target's own directory, and how a neutral publication failure maps onto `FileIOError`. `rollback` and `self_heal` publish nothing, but take the same lock through the same module so they cannot interleave with an install.
+
 ### `encoding`
 
 Text decoding support.
@@ -519,6 +530,7 @@ Contributor rule: keep runtime ownership outside this crate. If you add new asyn
 Important direct dependencies:
 
 - [`classic-operation-context`](../../foundation/classic-operation-context) - unpublished task-local cancellation scope used by crash-log discovery loops
+- [`classic-durable-publication`](classic-durable-publication.md) - unpublished **Durable Publication** module that owns the `atomic_install` durability sequence, the `.prev` rollback generation, and the one cross-process install lock
 - `tokio` and `futures` - async file operations and bounded batch concurrency
 - `memmap2` - large-file memory-mapped reads
 - `quick_cache`, `dashmap`, `parking_lot`, and `lru` - caching and shared-state primitives

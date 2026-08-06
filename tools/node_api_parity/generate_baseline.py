@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import operator
 import re
@@ -21,6 +20,13 @@ from binding_parity_runtime_coverage import (
     load_json_file,
     render_coverage_summary_markdown,
 )
+from parity_artifact_io import (
+    preserve_baseline_generated_at_all,
+    stable_id_hash,
+    write_json,
+)
+from parity_rust_surface import build_lookup
+from parity_rust_surface import parse_rust_surface as _parse_rust_surface_shared
 
 RUST_TARGET_CRATES: dict[str, str] = {
     # Phase 1 original 10 crates (verified pre-state 2026-04-08).
@@ -45,6 +51,13 @@ RUST_TARGET_CRATES: dict[str, str] = {
     "classic-xse-core": "business-logic/classic-xse-core/src/lib.rs",
     "classic-database-core": "business-logic/classic-database-core/src/lib.rs",
     "classic-scangame-core": "business-logic/classic-scangame-core/src/lib.rs",
+    # classic-resource-core was missing from this list while the Python gate
+    # scanned it, so the Node gate could not see the Rust surface of a crate
+    # that node-bindings/classic-node depends on directly and wraps in
+    # src/resource.rs. Any contract row naming a resource-core symbol would
+    # have been rejected by validate_contract_surface() as "not in the parsed
+    # Rust surface", misreported as a missing `pub use`.
+    "classic-resource-core": "business-logic/classic-resource-core/src/lib.rs",
 }
 
 # Phase 4 Plan 1 A5: distinct owner labels matching Phase 3 — do NOT collapse
@@ -72,6 +85,8 @@ RUST_OWNER_BY_CRATE: dict[str, str] = {
     "classic-xse-core": "xse",
     "classic-database-core": "database",
     "classic-scangame-core": "scangame",
+    # Matches the Python gate's owner label for the same crate.
+    "classic-resource-core": "resource",
 }
 
 # Squad assignments mirror Phase 3's two-squad shape. The squad label is not
@@ -100,6 +115,7 @@ SQUAD_BY_OWNER: dict[str, str] = {
     "xse": "Squad B (version-registry/aux)",
     "database": "Squad B (version-registry/aux)",
     "scangame": "Squad B (version-registry/aux)",
+    "resource": "Squad B (version-registry/aux)",
 }
 
 NODE_PHASE3_SYMBOL_ROUTE: dict[str, dict[str, str]] = {
@@ -176,12 +192,6 @@ NODE_PHASE3_SYMBOL_ROUTE: dict[str, dict[str, str]] = {
 }
 
 
-def _stable_id_hash(values: list[str]) -> str:
-    """Return a stable hash for a list of contract IDs."""
-    joined = "\n".join(sorted(values))
-    return hashlib.sha256(joined.encode("utf-8")).hexdigest()
-
-
 def normalize_phase3_node_contract(contract: dict[str, Any]) -> dict[str, Any]:
     """Reparent retired constants proxy rows to surviving owners."""
     retired_owner = "const" + "ants"
@@ -245,7 +255,7 @@ def normalize_phase3_node_runtime_registry(
             continue
         entry["ownerModule"] = owner
         entry["contractCount"] = len(grouped_ids[owner])
-        entry["contractIdsHash"] = _stable_id_hash(grouped_ids[owner])
+        entry["contractIdsHash"] = stable_id_hash(grouped_ids[owner])
 
     runtime_registry["entries"] = entries
     return runtime_registry
@@ -295,216 +305,24 @@ def count_top_level_params(params: str) -> int:
     return len([item for item in items if item])
 
 
-def normalize_whitespace(value: str) -> str:
-    """Collapse consecutive whitespace to a single space."""
-    return re.sub(r"\s+", " ", value).strip()
-
-
-def expand_pub_use_statement(body: str) -> list[tuple[str, str]]:
-    """Expand a Rust `pub use` statement into exported symbols and source paths."""
-    statement = normalize_whitespace(body).rstrip(";")
-    if not statement:
-        return []
-
-    expanded: list[tuple[str, str]] = []
-
-    def split_parts(chunk: str) -> list[str]:
-        return [part.strip() for part in chunk.split(",") if part.strip()]
-
-    if "{" in statement and "}" in statement:
-        prefix, remainder = statement.split("{", 1)
-        inner = remainder.rsplit("}", 1)[0]
-        prefix = prefix.strip()
-        prefix = prefix.removesuffix("::")
-        for part in split_parts(inner):
-            alias_name_inner: str | None = None
-            symbol_expr = part
-            if " as " in part:
-                symbol_expr, alias_name_inner = [
-                    piece.strip() for piece in part.split(" as ", 1)
-                ]
-
-            if symbol_expr == "self":
-                source_path = prefix
-                export_name = alias_name_inner or prefix.split("::")[-1]
-            else:
-                source_path = f"{prefix}::{symbol_expr}" if prefix else symbol_expr
-                export_name = alias_name_inner or symbol_expr.split("::")[-1]
-
-            expanded.append((export_name, source_path))
-        return expanded
-
-    for part in split_parts(statement):
-        alias_name_outer: str | None = None
-        symbol_expr = part
-        if " as " in part:
-            symbol_expr, alias_name_outer = [
-                piece.strip() for piece in part.split(" as ", 1)
-            ]
-        export_name = alias_name_outer or symbol_expr.split("::")[-1]
-        expanded.append((export_name, symbol_expr))
-
-    return expanded
-
-
-def _collect_crate_sources(repo_root: Path, lib_rs_rel: str) -> list[tuple[str, str]]:
-    """Return ordered [(rel_path, content), ...] for lib.rs and child modules.
-
-    Rust resolves ``mod child;`` differently depending on the declaring source:
-    ``lib.rs``/``mod.rs`` search beside the file, while a file module such as
-    ``yaml_ops.rs`` searches below ``yaml_ops/``. The parity scanner mirrors
-    that source layout so nested facades keep their public inherent methods in
-    the generated Rust surface.
-    """
-    lib_path = repo_root / lib_rs_rel
-
-    def module_search_dir(source_path: Path) -> Path:
-        if source_path.name in {"lib.rs", "main.rs", "mod.rs"}:
-            return source_path.parent
-        return source_path.with_suffix("")
-
-    def resolve_module_path(source_path: Path, mod_name: str) -> Path | None:
-        base_dir = module_search_dir(source_path)
-        candidate_file = base_dir / f"{mod_name}.rs"
-        candidate_mod = base_dir / mod_name / "mod.rs"
-        if candidate_file.exists():
-            return candidate_file
-        if candidate_mod.exists():
-            return candidate_mod
-        return None
-
-    sources: list[tuple[str, str]] = []
-    seen: set[Path] = set()
-
-    def visit(source_path: Path) -> None:
-        try:
-            resolved = source_path.resolve()
-        except OSError:
-            return
-        if resolved in seen:
-            return
-
-        try:
-            content = source_path.read_text(encoding="utf-8")
-        except OSError:
-            return
-
-        seen.add(resolved)
-        rel_path = str(source_path.relative_to(repo_root)).replace("\\", "/")
-        sources.append((rel_path, content))
-
-        # Restricted modules are implementation details; public re-exports
-        # must be discovered through an unrestricted facade instead.
-        for match in re.finditer(
-            r"(?m)^\s*(?:pub\s+)?mod\s+([A-Za-z0-9_]+)\s*;", content
-        ):
-            child_path = resolve_module_path(source_path, match.group(1))
-            if child_path is not None:
-                visit(child_path)
-
-    visit(lib_path)
-    return sources
-
-
-def _extract_rust_symbols(
-    entries: list[dict[str, Any]],
-    content: str,
-    source_rel: str,
-    crate_name: str,
-    owner_module: str,
-) -> None:
-    for match in re.finditer(r"(?m)^\s*pub\s+mod\s+([A-Za-z0-9_]+)\s*;", content):
-        symbol = match.group(1)
-        entries.append(
-            {
-                "symbol": symbol,
-                "kind": "module",
-                "crate": crate_name,
-                "owner_module": owner_module,
-                "source_file": source_rel,
-                "source_decl": match.group(0).strip(),
-                "tier": "tier1",
-            }
-        )
-
-    for match in re.finditer(
-        r"^\s*pub\s+fn\s+([A-Za-z0-9_]+)\s*\((.*?)\)",
-        content,
-        flags=re.MULTILINE | re.DOTALL,
-    ):
-        symbol = match.group(1)
-        arity = count_top_level_params(match.group(2))
-        entries.append(
-            {
-                "symbol": symbol,
-                "kind": "function",
-                "arity": arity,
-                "crate": crate_name,
-                "owner_module": owner_module,
-                "source_file": source_rel,
-                "source_decl": match.group(0).strip(),
-                "tier": "tier1",
-            }
-        )
-
-    for match in re.finditer(
-        r"(?m)^\s*pub\s+(struct|enum|type|trait|const|static)\s+([A-Za-z0-9_]+)",
-        content,
-    ):
-        kind = match.group(1)
-        symbol = match.group(2)
-        entries.append(
-            {
-                "symbol": symbol,
-                "kind": kind,
-                "crate": crate_name,
-                "owner_module": owner_module,
-                "source_file": source_rel,
-                "source_decl": match.group(0).strip(),
-                "tier": "tier1",
-            }
-        )
-
-    for match in re.finditer(
-        r"pub\s+use\s+([^;]+);", content, flags=re.MULTILINE | re.DOTALL
-    ):
-        use_body = match.group(1)
-        for symbol, source_expr in expand_pub_use_statement(use_body):
-            entries.append(
-                {
-                    "symbol": symbol,
-                    "kind": "reexport",
-                    "crate": crate_name,
-                    "owner_module": owner_module,
-                    "source_file": source_rel,
-                    "source_decl": f"pub use {normalize_whitespace(use_body)};",
-                    "source_expr": source_expr,
-                    "tier": "tier1",
-                }
-            )
-
-
 def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[str, Any]:
-    """Extract Rust public API symbols from target crate `lib.rs` + child modules."""
-    entries: list[dict[str, Any]] = []
+    """Extract Rust public API symbols from target crate `lib.rs` + child modules.
 
-    for crate_name, rel_path in RUST_TARGET_CRATES.items():
-        owner_module = RUST_OWNER_BY_CRATE[crate_name]
-        for source_rel, content in _collect_crate_sources(repo_root, rel_path):
-            _extract_rust_symbols(
-                entries, content, source_rel, crate_name, owner_module
-            )
+    Thin wrapper over the shared parser in ``tools/parity_rust_surface.py``.
+    The module-level crate dictionaries are read here, at call time, rather
+    than captured at import -- several tests monkeypatch
+    ``RUST_TARGET_CRATES`` / ``RUST_OWNER_BY_CRATE`` on this module and expect
+    the substitution to take effect.
 
-    entries.sort(key=operator.itemgetter("crate", "symbol", "kind"))
-    return {
-        "generated_at_utc": datetime.now(UTC).isoformat(),
-        "scope": {
-            "target_crates": list(RUST_TARGET_CRATES.keys()),
-            "source_files": list(RUST_TARGET_CRATES.values()),
-        },
-        "symbols": entries,
-    }
-
+    ``tier1_rust_symbols`` is accepted for call-signature compatibility with
+    existing callers and tests; the parser records every public symbol it finds
+    and tier assignment happens downstream in the diff report.
+    """
+    return _parse_rust_surface_shared(
+        repo_root,
+        target_crates=RUST_TARGET_CRATES,
+        owner_by_crate=RUST_OWNER_BY_CRATE,
+    )
 
 def infer_node_owner(name: str, tier1_owner_map: dict[str, str]) -> str:
     """Infer owner module for a Node export."""
@@ -625,18 +443,6 @@ def _effective_rust_symbol(rust_symbol: Any) -> str:
     return rust_symbol
 
 
-def build_lookup(
-    items: list[dict[str, Any]], key_field: str
-) -> dict[str, dict[str, Any]]:
-    """Build a name lookup dictionary from manifest entries."""
-    lookup: dict[str, dict[str, Any]] = {}
-    for item in items:
-        key = item[key_field]
-        if key not in lookup:
-            lookup[key] = item
-    return lookup
-
-
 def generate_diff_report(
     contract: dict[str, Any],
     rust_manifest: dict[str, Any],
@@ -680,7 +486,15 @@ def generate_diff_report(
         status = "matched"
         reason = ""
 
-        if rust_item is None:
+        # A row that explicitly declares no verified Rust counterpart is
+        # tracked debt, not drift. It is neither "matched" (nothing was
+        # verified) nor "missing_rust" (nothing is claimed to be missing) --
+        # counting it as either would misstate the gate. It gets its own status
+        # so the total is visible and can be driven down deliberately.
+        if rust_symbol is None and mapping.get("unmappedReason"):
+            status = "unmapped"
+            reason = mapping["unmappedReason"]
+        elif rust_item is None:
             status = "missing_rust"
             reason = f"Rust symbol '{effective_rust_symbol}' not found in target crate exports."
         elif is_proxy:
@@ -715,7 +529,10 @@ def generate_diff_report(
             contract_row["reason"] = reason
         contract_results.append(contract_row)
 
-        if status != "matched":
+        # `unmapped` rows are reported via their own summary counter rather
+        # than as gaps: a gap means "these two surfaces disagree", and an
+        # unmapped row makes no claim to disagree with.
+        if status not in {"matched", "unmapped"}:
             gaps.append(
                 {
                     "gap_type": f"tier1_{status}",
@@ -744,6 +561,9 @@ def generate_diff_report(
         "tier1_missing_rust": status_counts.get("missing_rust", 0),
         "tier1_missing_node": status_counts.get("missing_node", 0),
         "tier1_signature_mismatch": status_counts.get("signature_mismatch", 0),
+        # Exports tracked by the contract with no verified Rust counterpart.
+        # Not drift -- outstanding mapping debt, to be driven toward zero.
+        "tier1_unmapped": status_counts.get("unmapped", 0),
         "total_gaps": len(gaps),
         "tier1_gap_total": sum(1 for gap in gaps if gap["tier"] == "tier1"),
     }
@@ -866,14 +686,6 @@ def render_handoff_markdown(diff_report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def write_json(path: Path, payload: dict[str, Any]) -> None:
-    """Write JSON with stable formatting."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8"
-    )
-
-
 def main() -> int:
     """CLI entrypoint."""
     parser = argparse.ArgumentParser(
@@ -947,6 +759,22 @@ def main() -> int:
             "contract": args.contract,
             "runtime_registry": args.runtime_registry,
             "index_dts": args.index_dts,
+        },
+    )
+
+    # --output-dir defaults to the tracked baseline directory, so these writes
+    # land straight in git. Carry each committed timestamp forward when only the
+    # clock would have changed, keeping a no-op regeneration byte-identical.
+    # handoff_map.md and parity_diff_report.md follow from diff_report, and
+    # runtime_coverage_summary.md from coverage_summary, so preserving the JSON
+    # payloads stabilizes every markdown artifact too.
+    preserve_baseline_generated_at_all(
+        output_dir,
+        {
+            "rust_api_surface.json": rust_manifest,
+            "node_api_surface.json": node_manifest,
+            "parity_diff_report.json": diff_report,
+            "runtime_coverage_summary.json": coverage_summary,
         },
     )
 

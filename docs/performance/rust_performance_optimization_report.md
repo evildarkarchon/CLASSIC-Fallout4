@@ -1,7 +1,7 @@
 # CLASSIC Rust Performance Optimization Report
 
 **Generated:** 2025-10-17
-**Codebase Version:** classiclib-rs branch
+**Codebase Version:** historical `classiclib-rs` branch (pre repo-root workspace migration)
 **Analyzer:** Claude Sonnet 4.5 (Performance Optimization Expert)
 
 ---

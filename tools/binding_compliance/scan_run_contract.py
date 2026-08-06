@@ -411,6 +411,117 @@ def _validate_failure_fixtures(manifest: dict[str, Any], variants: set[str]) -> 
         )
 
 
+def _validate_reset_fixture_contract(
+    repo_root: Path,
+    manifest: dict[str, Any],
+) -> None:
+    """Require the shared Reset To Default fixture corpus to remain repository-owned."""
+
+    relative_root = manifest.get("fixtureRoot")
+    if not isinstance(relative_root, str) or not relative_root:
+        raise ManifestValidationError("fixtureRoot must be a non-empty string")
+    root = repo_root.resolve()
+    fixture_root = (root / relative_root).resolve()
+    if not fixture_root.is_relative_to(root):
+        raise ManifestValidationError("fixtureRoot must remain within the repository")
+    if not fixture_root.is_dir():
+        raise ManifestValidationError(
+            f"fixtureRoot directory is missing: {relative_root}"
+        )
+    fixtures = manifest.get("fixtures")
+    if not isinstance(fixtures, dict):
+        raise ManifestValidationError("fixtures must be an object")
+    installed_yaml_data = fixtures.get("installedYamlData")
+    if not isinstance(installed_yaml_data, dict):
+        raise ManifestValidationError(
+            "fixtures.installedYamlData must be an object"
+        )
+    reset_outcomes = installed_yaml_data.get("resetOutcomes")
+    if not isinstance(reset_outcomes, dict):
+        raise ManifestValidationError(
+            "fixtures.installedYamlData.resetOutcomes must be an object"
+        )
+    expected_codes = {
+        "conflictCode": "local_ignore_reset_conflict",
+        "backupFailureCode": "local_ignore_reset_backup_failure",
+        "replacementFailureCode": "local_ignore_reset_replacement_failure",
+        "durabilityUnknownCode": "local_ignore_reset_durability_unknown",
+        "consumedCode": "scan_run_continuation_consumed",
+    }
+    for field, expected in expected_codes.items():
+        if reset_outcomes.get(field) != expected:
+            raise ManifestValidationError(
+                "fixtures.installedYamlData.resetOutcomes."
+                f"{field} must be {expected!r}"
+            )
+    expected_reset = installed_yaml_data.get("expectedResetToDefault")
+    if not isinstance(expected_reset, dict):
+        raise ManifestValidationError(
+            "fixtures.installedYamlData.expectedResetToDefault must be an object"
+        )
+    if expected_reset.get("localIgnoreState") != "reset_to_default":
+        raise ManifestValidationError(
+            "fixtures.installedYamlData.expectedResetToDefault.localIgnoreState "
+            "must be 'reset_to_default'"
+        )
+    diagnostic_kinds = set(
+        _require_string_list(
+            expected_reset.get("diagnosticKinds"),
+            "fixtures.installedYamlData.expectedResetToDefault.diagnosticKinds",
+        )
+    )
+    required_diagnostics = {"parse", "local_ignore_reset"}
+    if diagnostic_kinds != required_diagnostics:
+        raise ManifestValidationError(
+            "fixtures.installedYamlData.expectedResetToDefault.diagnosticKinds "
+            f"must be {sorted(required_diagnostics)}"
+        )
+    recovery_required = installed_yaml_data.get("expectedRecoveryRequired")
+    if not isinstance(recovery_required, dict):
+        raise ManifestValidationError(
+            "fixtures.installedYamlData.expectedRecoveryRequired must be an object"
+        )
+    for field in ("mainProvenance", "gameProvenance"):
+        retained = recovery_required.get(field)
+        if not isinstance(retained, str) or expected_reset.get(field) != retained:
+            raise ManifestValidationError(
+                "fixtures.installedYamlData.expectedResetToDefault."
+                f"{field} must retain expectedRecoveryRequired.{field}"
+            )
+    expected_outcomes: dict[str, object] = {
+        "backupMustEqualMalformedBytes": True,
+        "reportMustEqualExistingBytes": True,
+        "preResetCancellationMutates": False,
+        "postCriticalCancellationStatus": "cancelled",
+    }
+    for field, expected in expected_outcomes.items():
+        if reset_outcomes.get(field) != expected:
+            raise ManifestValidationError(
+                "fixtures.installedYamlData.resetOutcomes."
+                f"{field} must be {expected!r}"
+            )
+    scenarios = manifest.get("scenarios")
+    if not isinstance(scenarios, dict):
+        raise ManifestValidationError("scenarios must be an object")
+    reset_scenario = scenarios.get("reset_to_default_continuation")
+    if not isinstance(reset_scenario, dict):
+        raise ManifestValidationError(
+            "scenarios.reset_to_default_continuation must be an object"
+        )
+    reset_owners = set(
+        _require_string_list(
+            reset_scenario.get("requiredOwners"),
+            "scenarios.reset_to_default_continuation.requiredOwners",
+        )
+    )
+    required_owners = {"rust", "cxx", "node", "python"}
+    if reset_owners != required_owners:
+        raise ManifestValidationError(
+            "scenarios.reset_to_default_continuation.requiredOwners "
+            f"must be {sorted(required_owners)}"
+        )
+
+
 def validate_manifest(repo_root: Path, manifest: dict[str, Any]) -> None:
     """Validate fixtures, Rust inventory, adapter acknowledgements, and evidence."""
 
@@ -461,6 +572,7 @@ def validate_manifest(repo_root: Path, manifest: dict[str, Any]) -> None:
         raise ManifestValidationError(
             f"Shared fixture files are missing: {', '.join(missing_fixtures)}"
         )
+    _validate_reset_fixture_contract(repo_root, manifest)
     _validate_failure_fixtures(manifest, variants)
     _validate_scenarios(repo_root, manifest)
     forbidden_exports = manifest.get("forbiddenExports")

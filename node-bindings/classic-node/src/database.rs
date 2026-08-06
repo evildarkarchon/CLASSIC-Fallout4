@@ -33,11 +33,17 @@ use classic_database_core::{
     DEFAULT_CACHE_CLEANUP_INTERVAL_SECS as CORE_DEFAULT_CACHE_CLEANUP_INTERVAL_SECS,
     DEFAULT_CACHE_CLEANUP_OP_THRESHOLD as CORE_DEFAULT_CACHE_CLEANUP_OP_THRESHOLD,
     DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY as CORE_DEFAULT_QUERY_CACHE_CAPACITY,
-    DatabasePool, MAX_CACHE_TTL_SECS,
+    DatabasePool, FormIdValueLookup as CoreFormIdValueLookup, FormIdValueLookupEntry,
+    FormIdValueLookupError, FormIdValueLookupInMemoryReply, FormIdValueLookupOutcome,
+    MAX_CACHE_TTL_SECS,
 };
-use napi::bindgen_prelude::*;
+use napi::bindgen_prelude::{JsObjectValue, ToNapiValue, *};
+use napi::{Env, JsError, JsValue, Status, Task};
 use std::collections::HashMap;
+use std::convert::Infallible;
+use std::future::Future;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::Duration;
 
 /// Convert any Display error to a napi::Error
@@ -171,6 +177,49 @@ pub struct JsBatchEntry {
     pub plugin: String,
     /// The database entry text (undefined if not found)
     pub entry: Option<String>,
+}
+
+/// One owned reply used to configure a deterministic in-memory FormID lookup.
+///
+/// Omit both optional fields for a successful miss. Set `value` for a hit
+/// (including a blank value when testing malformed adapter data), or set
+/// `operationalFailure` for a deterministic hard failure.
+#[derive(Clone)]
+#[napi(object)]
+pub struct JsFormIdValueLookupEntry {
+    /// The FormID suffix to match.
+    pub formid: String,
+    /// The plugin name to match case-insensitively.
+    pub plugin: String,
+    /// Successful owned value, or `undefined` for a configured miss.
+    pub value: Option<String>,
+    /// Deterministic operational failure detail.
+    pub operational_failure: Option<String>,
+}
+
+/// Stable semantic category returned by a successful strict lookup.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[napi(string_enum)]
+pub enum JsFormIdValueLookupOutcomeKind {
+    /// Lookup was explicitly disabled.
+    #[napi(value = "disabled")]
+    Disabled,
+    /// Lookup completed successfully without a value.
+    #[napi(value = "missing")]
+    Missing,
+    /// Lookup completed successfully with an owned value.
+    #[napi(value = "found")]
+    Found,
+}
+
+/// Owned semantic result of one strict FormID lookup.
+#[derive(Clone)]
+#[napi(object)]
+pub struct JsFormIdValueLookupOutcome {
+    /// Stable success category.
+    pub kind: JsFormIdValueLookupOutcomeKind,
+    /// Owned value for `found`; `undefined` for `disabled` and `missing`.
+    pub value: Option<String>,
 }
 
 // ============================================================================
@@ -567,4 +616,402 @@ impl JsDatabasePool {
         )
         .await
     }
+}
+
+// ============================================================================
+// 5. Strict FormID Value Lookup Class
+// ============================================================================
+
+/// Opaque owned facade for strict callback-free FormID Value Lookup adapters.
+///
+/// Construct instances through `disabled`, `inMemory`, `sqlite`, or
+/// `fromSharedPool`. Successful operations keep disabled, missing, and found
+/// outcomes distinct; malformed adapter data and operational failures reject
+/// with stable error metadata.
+#[napi]
+pub struct JsFormIdValueLookup {
+    inner: CoreFormIdValueLookup,
+}
+
+impl JsFormIdValueLookup {
+    /// Clones the opaque core facade for another thin in-crate adapter.
+    pub(crate) fn core_clone(&self) -> CoreFormIdValueLookup {
+        self.inner.clone()
+    }
+}
+
+#[napi]
+impl JsFormIdValueLookup {
+    /// Creates a lookup that explicitly performs no value resolution.
+    #[napi(factory)]
+    pub fn disabled() -> Self {
+        Self {
+            inner: CoreFormIdValueLookup::disabled(),
+        }
+    }
+
+    /// Creates a deterministic lookup from fully owned entries.
+    ///
+    /// Each entry must set at most one of `value` and `operationalFailure`.
+    /// Omitting both configures a successful miss for that key.
+    ///
+    /// @param entries - Owned deterministic replies keyed by FormID and plugin.
+    #[napi(factory)]
+    pub fn in_memory(entries: Vec<JsFormIdValueLookupEntry>) -> Result<Self> {
+        let entries = entries
+            .into_iter()
+            .map(formid_lookup_entry_to_core)
+            .collect::<Result<Vec<_>>>()?;
+        Ok(Self {
+            inner: CoreFormIdValueLookup::in_memory(entries),
+        })
+    }
+
+    /// Opens one owned SQLite lookup adapter on the shared CLASSIC runtime.
+    ///
+    /// @param databasePath - Existing SQLite database file.
+    /// @param gameTable - Game table name such as `Fallout4`.
+    /// @throws an error with stable `code`, `formid`, `plugin`, and `message`
+    /// metadata when adapter initialization fails.
+    #[napi(factory)]
+    pub fn sqlite(database_path: String, game_table: String) -> napi::Result<Self, String> {
+        let result = classic_shared_core::get_runtime()
+            .block_on(spawn_result(
+                async move {
+                    Ok::<_, Infallible>(
+                        CoreFormIdValueLookup::sqlite(PathBuf::from(database_path), game_table)
+                            .await,
+                    )
+                },
+                |error| to_napi_err(format!("Runtime error: {error}")),
+                |never| match never {},
+            ))
+            .map_err(|error| {
+                napi::Error::new(
+                    "operational_failure".to_string(),
+                    format!(
+                        "FormID Value Lookup runtime dispatch failed: {}",
+                        error.reason
+                    ),
+                )
+            })?;
+        let inner = result.map_err(|error| {
+            napi::Error::new(error.code().to_string(), error.message().to_string())
+        })?;
+        Ok(Self { inner })
+    }
+
+    /// Creates an adapter over an existing shared database pool.
+    ///
+    /// The facade retains a clone of the pool's shared state, so no callback or
+    /// additional runtime crosses the JavaScript boundary.
+    ///
+    /// @param pool - Existing Node database pool to share.
+    #[napi(factory)]
+    pub fn from_shared_pool(pool: &JsDatabasePool) -> Self {
+        Self {
+            inner: CoreFormIdValueLookup::shared_pool(Arc::new(pool.inner.clone())),
+        }
+    }
+
+    /// Looks up one FormID/plugin pair on the shared CLASSIC runtime.
+    ///
+    /// @param formid - FormID suffix to resolve.
+    /// @param plugin - Plugin name, matched case-insensitively.
+    /// @throws an error with stable `code`, `formid`, `plugin`, and `message`
+    /// metadata for malformed results and operational failures.
+    #[napi(ts_return_type = "Promise<JsFormIdValueLookupOutcome>")]
+    pub fn lookup(
+        &self,
+        formid: String,
+        plugin: String,
+    ) -> Result<AsyncTask<FormIdValueLookupTask>> {
+        Ok(AsyncTask::new(FormIdValueLookupTask {
+            inner: self.inner.clone(),
+            formid,
+            plugin,
+        }))
+    }
+
+    /// Looks up an owned batch with one positional outcome per input pair.
+    ///
+    /// Any malformed reply or operational failure rejects the whole operation,
+    /// so a partial batch cannot be mistaken for a completed result.
+    ///
+    /// @param pairs - Array of exact `[formid, plugin]` pairs.
+    /// @throws an error with stable `code`, `formid`, `plugin`, and `message`
+    /// metadata for malformed results and operational failures.
+    #[napi(ts_return_type = "Promise<JsFormIdValueLookupOutcome[]>")]
+    pub fn lookup_batch(
+        &self,
+        pairs: Vec<Vec<String>>,
+    ) -> Result<AsyncTask<FormIdValueLookupBatchTask>> {
+        let pairs = parse_formid_lookup_pairs(pairs)?;
+        Ok(AsyncTask::new(FormIdValueLookupBatchTask {
+            inner: self.inner.clone(),
+            pairs,
+        }))
+    }
+}
+
+/// Internal success-or-domain-failure result retained until JavaScript-thread resolution.
+pub enum FormIdValueLookupTaskOutput<T> {
+    /// Successful core operation.
+    Success(T),
+    /// Typed domain or runtime failure awaiting Node error projection.
+    Failure(FormIdValueLookupTaskFailure),
+}
+
+/// Internal strict failure retained until JavaScript-thread resolution.
+pub enum FormIdValueLookupTaskFailure {
+    /// Failure produced by the core lookup adapter.
+    Core(FormIdValueLookupError),
+    /// Failure dispatching work through the shared runtime.
+    Runtime {
+        /// Human-readable runtime failure detail.
+        message: String,
+        /// FormID context when one lookup key was available.
+        formid: Option<String>,
+        /// Plugin context when one lookup key was available.
+        plugin: Option<String>,
+    },
+}
+
+/// Background task for one strict FormID Value Lookup operation.
+pub struct FormIdValueLookupTask {
+    inner: CoreFormIdValueLookup,
+    formid: String,
+    plugin: String,
+}
+
+impl Task for FormIdValueLookupTask {
+    type Output = FormIdValueLookupTaskOutput<JsFormIdValueLookupOutcome>;
+    type JsValue = JsFormIdValueLookupOutcome;
+
+    /// Dispatches one lookup onto the process-wide Tokio runtime.
+    fn compute(&mut self) -> Result<Self::Output> {
+        let inner = self.inner.clone();
+        let formid = self.formid.clone();
+        let plugin = self.plugin.clone();
+        let error_formid = formid.clone();
+        let error_plugin = plugin.clone();
+        Ok(
+            match run_formid_lookup_future(async move { inner.lookup(&formid, &plugin).await }) {
+                Ok(Ok(outcome)) => {
+                    FormIdValueLookupTaskOutput::Success(formid_lookup_outcome_to_js(outcome))
+                }
+                Ok(Err(error)) => {
+                    FormIdValueLookupTaskOutput::Failure(FormIdValueLookupTaskFailure::Core(error))
+                }
+                Err(error) => {
+                    FormIdValueLookupTaskOutput::Failure(FormIdValueLookupTaskFailure::Runtime {
+                        message: format!(
+                            "FormID Value Lookup runtime dispatch failed: {}",
+                            error.reason
+                        ),
+                        formid: Some(error_formid),
+                        plugin: Some(error_plugin),
+                    })
+                }
+            },
+        )
+    }
+
+    /// Resolves the outcome or rejects with complete typed lookup error metadata.
+    fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
+        match output {
+            FormIdValueLookupTaskOutput::Success(outcome) => Ok(outcome),
+            FormIdValueLookupTaskOutput::Failure(error) => {
+                Err(formid_lookup_task_failure_to_napi(env, error))
+            }
+        }
+    }
+}
+
+/// Background task for one positional strict FormID lookup batch.
+pub struct FormIdValueLookupBatchTask {
+    inner: CoreFormIdValueLookup,
+    pairs: Vec<(String, String)>,
+}
+
+impl Task for FormIdValueLookupBatchTask {
+    type Output = FormIdValueLookupTaskOutput<Vec<JsFormIdValueLookupOutcome>>;
+    type JsValue = Vec<JsFormIdValueLookupOutcome>;
+
+    /// Dispatches one positional batch onto the process-wide Tokio runtime.
+    fn compute(&mut self) -> Result<Self::Output> {
+        let inner = self.inner.clone();
+        let pairs = self.pairs.clone();
+        let error_key = pairs.first().cloned();
+        Ok(
+            match run_formid_lookup_future(async move { inner.lookup_batch(pairs).await }) {
+                Ok(Ok(outcomes)) => FormIdValueLookupTaskOutput::Success(
+                    outcomes
+                        .into_iter()
+                        .map(formid_lookup_outcome_to_js)
+                        .collect(),
+                ),
+                Ok(Err(error)) => {
+                    FormIdValueLookupTaskOutput::Failure(FormIdValueLookupTaskFailure::Core(error))
+                }
+                Err(error) => {
+                    FormIdValueLookupTaskOutput::Failure(FormIdValueLookupTaskFailure::Runtime {
+                        message: format!(
+                            "FormID Value Lookup runtime dispatch failed: {}",
+                            error.reason
+                        ),
+                        formid: error_key.as_ref().map(|key| key.0.clone()),
+                        plugin: error_key.map(|key| key.1),
+                    })
+                }
+            },
+        )
+    }
+
+    /// Resolves the outcomes or rejects with complete typed lookup error metadata.
+    fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
+        match output {
+            FormIdValueLookupTaskOutput::Success(outcomes) => Ok(outcomes),
+            FormIdValueLookupTaskOutput::Failure(error) => {
+                Err(formid_lookup_task_failure_to_napi(env, error))
+            }
+        }
+    }
+}
+
+/// Runs one lookup future through the standard shared-runtime spawn adapter.
+fn run_formid_lookup_future<F, T>(
+    future: F,
+) -> Result<std::result::Result<T, FormIdValueLookupError>>
+where
+    F: Future<Output = std::result::Result<T, FormIdValueLookupError>> + Send + 'static,
+    T: Send + 'static,
+{
+    classic_shared_core::get_runtime().block_on(spawn_result(
+        async move { Ok::<_, Infallible>(future.await) },
+        |error| to_napi_err(format!("Runtime error: {error}")),
+        |never| match never {},
+    ))
+}
+
+/// Converts one owned Node fixture entry into the core callback-free reply.
+fn formid_lookup_entry_to_core(entry: JsFormIdValueLookupEntry) -> Result<FormIdValueLookupEntry> {
+    let reply = match (entry.value, entry.operational_failure) {
+        (Some(_), Some(_)) => {
+            return Err(napi::Error::new(
+                Status::InvalidArg,
+                format!(
+                    "FormID Value Lookup entry {}:{} cannot set both value and operationalFailure",
+                    entry.formid, entry.plugin
+                ),
+            ));
+        }
+        (value, None) => FormIdValueLookupInMemoryReply::Value(value),
+        (None, Some(message)) => FormIdValueLookupInMemoryReply::OperationalFailure(message),
+    };
+    Ok(FormIdValueLookupEntry::new(
+        entry.formid,
+        entry.plugin,
+        reply,
+    ))
+}
+
+/// Validates and owns JavaScript lookup pairs before asynchronous dispatch.
+fn parse_formid_lookup_pairs(pairs: Vec<Vec<String>>) -> Result<Vec<(String, String)>> {
+    pairs
+        .into_iter()
+        .map(|pair| match pair.as_slice() {
+            [formid, plugin] => Ok((formid.clone(), plugin.clone())),
+            _ => Err(napi::Error::new(
+                Status::InvalidArg,
+                "Each pair must be an array of exactly [formid, plugin]".to_string(),
+            )),
+        })
+        .collect()
+}
+
+/// Converts one core success value into the stable owned Node outcome shape.
+fn formid_lookup_outcome_to_js(outcome: FormIdValueLookupOutcome) -> JsFormIdValueLookupOutcome {
+    match outcome {
+        FormIdValueLookupOutcome::Disabled => JsFormIdValueLookupOutcome {
+            kind: JsFormIdValueLookupOutcomeKind::Disabled,
+            value: None,
+        },
+        FormIdValueLookupOutcome::Missing => JsFormIdValueLookupOutcome {
+            kind: JsFormIdValueLookupOutcomeKind::Missing,
+            value: None,
+        },
+        FormIdValueLookupOutcome::Found(value) => JsFormIdValueLookupOutcome {
+            kind: JsFormIdValueLookupOutcomeKind::Found,
+            value: Some(value),
+        },
+    }
+}
+
+/// Preserves stable core lookup error metadata on the rejected JavaScript error.
+fn formid_lookup_error_to_napi(env: Env, error: FormIdValueLookupError) -> napi::Error {
+    formid_lookup_error_fields_to_napi(
+        env,
+        error.code().to_string(),
+        error.message().to_string(),
+        error.formid().map(str::to_string),
+        error.plugin().map(str::to_string),
+    )
+}
+
+/// Projects either core or runtime failures through the same strict Node contract.
+fn formid_lookup_task_failure_to_napi(
+    env: Env,
+    failure: FormIdValueLookupTaskFailure,
+) -> napi::Error {
+    match failure {
+        FormIdValueLookupTaskFailure::Core(error) => formid_lookup_error_to_napi(env, error),
+        FormIdValueLookupTaskFailure::Runtime {
+            message,
+            formid,
+            plugin,
+        } => formid_lookup_error_fields_to_napi(
+            env,
+            "operational_failure".to_string(),
+            message,
+            formid,
+            plugin,
+        ),
+    }
+}
+
+/// Attaches the stable strict error fields to one rejected JavaScript error.
+fn formid_lookup_error_fields_to_napi(
+    env: Env,
+    code: String,
+    message: String,
+    formid: Option<String>,
+    plugin: Option<String>,
+) -> napi::Error {
+    let raw_error =
+        JsError::from(napi::Error::new(code.clone(), message.clone())).into_unknown(env);
+
+    let Ok(mut object) = raw_error.coerce_to_object() else {
+        return base_formid_lookup_error(env, code, message);
+    };
+    if let Some(formid) = formid
+        && object.set_named_property("formid", formid).is_err()
+    {
+        return base_formid_lookup_error(env, code, message);
+    }
+    if let Some(plugin) = plugin
+        && object.set_named_property("plugin", plugin).is_err()
+    {
+        return base_formid_lookup_error(env, code, message);
+    }
+
+    object
+        .into_unknown(&env)
+        .map(napi::Error::from)
+        .unwrap_or_else(|_| base_formid_lookup_error(env, code, message))
+}
+
+/// Rebuilds the ordinary code/message error when custom fields cannot be attached.
+fn base_formid_lookup_error(env: Env, code: String, message: String) -> napi::Error {
+    napi::Error::from(JsError::from(napi::Error::new(code, message)).into_unknown(env))
 }

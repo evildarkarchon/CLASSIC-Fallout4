@@ -557,6 +557,11 @@ fn content_revision(bytes: &[u8]) -> Revision {
 }
 
 /// Retains the exact durable-publication stage in the import error vocabulary.
+///
+/// This and the three mappers below keep their `commit_temp_cleanup_failed` arm even though it is
+/// no longer reachable: staging cleanup moved into `classic-durable-publication`, which removes
+/// its own artifact best-effort and never reports a separate cleanup failure. The arms stay so
+/// the published projection table remains complete if that ever changes again.
 fn map_backup_publication_error(
     error: crate::UserSettingsCommitError,
 ) -> LegacyTuiStateImportError {

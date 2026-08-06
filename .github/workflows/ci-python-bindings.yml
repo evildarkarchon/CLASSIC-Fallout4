@@ -2,9 +2,9 @@ name: CI - Python Bindings
 
 on:
   push:
-    branches: [main, classic-next, dev, classic-9.1]
+    branches: [classic-next]
   pull_request:
-    branches: [main, classic-next, dev, classic-9.1]
+    branches: [classic-next]
 
 env:
   RUST_BACKTRACE: 1

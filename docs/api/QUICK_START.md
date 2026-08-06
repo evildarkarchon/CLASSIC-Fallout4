@@ -124,7 +124,7 @@ bun run test:node
 ## 8) Scope boundary: maintained vs deprecated Python
 
 - Maintained Python scope: bindings under [`python-bindings/`](../../python-bindings)
-- Deprecated runtime scope: Python entrypoints/orchestration under [`deprecated/`](../../deprecated)
+- Retired pure-Python runtime: removed from the repo; docs preserved under [`docs/archive/python-era/`](../archive/python-era)
 
 Do not treat legacy Python runtime paths as the default contributor flow unless the task is explicitly migration/legacy support.
 

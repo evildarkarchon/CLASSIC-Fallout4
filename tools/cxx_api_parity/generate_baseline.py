@@ -29,23 +29,17 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import json
 import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+
+from parity_artifact_io import preserve_baseline_generated_at, write_json
+
 # ---- JSON helper (mirrors tools/python_api_parity/generate_baseline.write_json) ----
-
-
-def write_json(path: Path, payload: dict[str, Any]) -> None:
-    """Write JSON with stable formatting: indent=2, sort_keys=False, trailing newline."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, indent=2, sort_keys=False) + "\n",
-        encoding="utf-8",
-    )
 
 
 # ---- build.rs parser (D-07) ----
@@ -667,6 +661,12 @@ def main() -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     surface = parse_cxx_bridge_surface(repo_root)
+    # Carry the committed timestamp forward when the bridge surface is
+    # unchanged, so a no-op rerun leaves the tracked baseline byte-identical.
+    # Applied before the scratch write as well, so both copies agree.
+    preserve_baseline_generated_at(
+        baseline_output_dir / "rust_api_surface.json", surface
+    )
     write_json(output_dir / "rust_api_surface.json", surface)
 
     if args.write_baseline:
@@ -677,6 +677,13 @@ def main() -> int:
             "schema_version": 1,
             "entries": surface["entries"],
         }
+        # Preserve against the contract's own committed copy rather than relying
+        # on the surface's timestamp above: the two files are written from the
+        # same run here, but their committed timestamps can legitimately differ
+        # because check_parity_gate.py refreshes them on separate cadences.
+        preserve_baseline_generated_at(
+            baseline_output_dir / "parity_contract.json", contract
+        )
         baseline_output_dir.mkdir(parents=True, exist_ok=True)
         write_json(baseline_output_dir / "parity_contract.json", contract)
         write_json(baseline_output_dir / "rust_api_surface.json", surface)

@@ -13,6 +13,7 @@
 #include <QSet>
 
 #include <exception>
+#include <utility>
 
 namespace {
 
@@ -137,8 +138,14 @@ private:
 } // namespace
 
 ScanWorker::ScanWorker(QObject* parent)
+    : ScanWorker({}, parent)
+{
+}
+
+ScanWorker::ScanWorker(classic::gui::ScanRunLocalIgnoreRecoveryPrompt localIgnoreRecoveryPrompt, QObject* parent)
     : QObject(parent)
     , m_cancellation(scanner::scan_run_cancellation_new())
+    , m_localIgnoreRecoveryPrompt(std::move(localIgnoreRecoveryPrompt))
 {
 }
 
@@ -148,25 +155,72 @@ void ScanWorker::requestCancel()
     scanner::scan_run_cancellation_cancel(*m_cancellation);
 }
 
-void ScanWorker::doScan(const QString& yamlRoot, const QString& yamlData,
-                        const classic::gui::CrashLogScanLaunchSettings& settings, const QString& baseDirectory,
-                        const QString& setupXseLogPath, const QStringList& targetedInputs)
+void ScanWorker::doScan(const QString& installationRoot, const classic::gui::CrashLogScanLaunchSettings& settings,
+                        const QString& baseDirectory, const QString& setupXseLogPath, const QStringList& targetedInputs)
 {
     qDebug() << "ScanWorker: starting" << (targetedInputs.isEmpty() ? "standard" : "targeted") << "scan run";
 
     try {
-        auto request = classic::gui::buildScanRunRequest(yamlRoot, yamlData, baseDirectory, settings, setupXseLogPath,
+        auto request = classic::gui::buildScanRunRequest(installationRoot, baseDirectory, settings, setupXseLogPath,
                                                          targetedInputs);
         GuiScanRunObserver observer(*this, *m_cancellation);
-        const auto execution = scanner::scan_run_contract_execute(*request, *m_cancellation, &observer);
+        auto operation = scanner::scan_run_contract_execute(*request, *m_cancellation, &observer);
+        const auto execution = scanner::scan_run_contract_execution_take_result(*operation);
         if (observer.deliveryFailed()) {
             emit error(QStringLiteral("Crash Log Scan progress delivery failed; the run was cancelled safely."));
             return;
         }
 
-        const auto terminal = classic::gui::presentScanRunExecution(execution);
+        auto terminal = classic::gui::presentScanRunExecution(execution);
+        using TerminalKind = classic::gui::ScanRunTerminalKind;
+        if (terminal.kind == TerminalKind::LocalIgnoreRecoveryRequired) {
+            if (terminal.hasInstalledYamlData) {
+                // Publish the retained malformed-file identity before the modal GUI decision.
+                emit installedYamlDataResolved(terminal.installedYamlData);
+            }
+            if (!scanner::scan_run_contract_execution_has_continuation(*operation)) {
+                emit error(QStringLiteral(
+                    "Crash Log Scan Run requested Local Ignore recovery without retaining its continuation."));
+                return;
+            }
+            if (!m_localIgnoreRecoveryPrompt) {
+                emit error(terminal.message +
+                           QStringLiteral("\nNo Local Ignore recovery prompt is configured for this scan."));
+                return;
+            }
+
+            auto continuation = scanner::scan_run_contract_execution_take_continuation(*operation);
+            const auto choice = m_localIgnoreRecoveryPrompt(terminal.message);
+            auto decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
+            switch (choice) {
+            case classic::gui::ScanRunLocalIgnoreRecoveryChoice::ProceedWithoutIgnore:
+                break;
+            case classic::gui::ScanRunLocalIgnoreRecoveryChoice::ResetToDefault:
+                decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault;
+                break;
+            case classic::gui::ScanRunLocalIgnoreRecoveryChoice::Cancel:
+                // Rust observes cancellation before the placeholder decision, so dismissal cannot mutate Local Ignore.
+                scanner::scan_run_cancellation_cancel(*m_cancellation);
+                break;
+            }
+
+            auto resumedOperation =
+                scanner::scan_run_continuation_resume(*continuation, decision, *m_cancellation, &observer);
+            const auto resumedExecution =
+                scanner::scan_run_contract_execution_take_result(*resumedOperation);
+            if (observer.deliveryFailed()) {
+                emit error(QStringLiteral("Crash Log Scan progress delivery failed; the run was cancelled safely."));
+                return;
+            }
+            terminal = classic::gui::presentScanRunExecution(resumedExecution);
+        }
+
         if (!terminal.setupDetails.isEmpty()) {
             qInfo().noquote() << terminal.setupDetails;
+        }
+        if (terminal.hasInstalledYamlData) {
+            // Publish the Qt-owned copy before terminal signals allow the worker thread to be torn down.
+            emit installedYamlDataResolved(terminal.installedYamlData);
         }
         const QStringList reportDirectories = terminalReportDirectories(terminal);
         if (!reportDirectories.isEmpty()) {
@@ -192,7 +246,6 @@ void ScanWorker::doScan(const QString& yamlRoot, const QString& yamlData,
             emit logScanned(log.discoveryIndex, log.succeeded, log.crashLog);
         }
 
-        using TerminalKind = classic::gui::ScanRunTerminalKind;
         switch (terminal.kind) {
         case TerminalKind::Completed:
             emit progress(100.0F, QStringLiteral("Complete"));
@@ -210,6 +263,9 @@ void ScanWorker::doScan(const QString& yamlRoot, const QString& yamlData,
         case TerminalKind::SetupFailed:
         case TerminalKind::InfrastructureError:
             emit error(terminal.message);
+            break;
+        case TerminalKind::LocalIgnoreRecoveryRequired:
+            emit error(QStringLiteral("Crash Log Scan recovery returned an unexpected second recovery request."));
             break;
         }
     } catch (const rust::Error& error) {

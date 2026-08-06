@@ -1,6 +1,6 @@
 # `classic-config-core` YAML Schema Contract
 
-Runtime-facing schema reference for [`classic-config-core`](../../business-logic/classic-config-core). This page is the source of truth for the non-User-Settings YAML shapes consumed by `YamlDataCore` and Game Local persistence.
+Runtime-facing schema reference for [`classic-config-core`](../../business-logic/classic-config-core). This page is the source of truth for the non-User-Settings YAML shapes consumed by explicit YAML Data loading, `YamlDataCore`, and Game Local persistence.
 
 Reference: [`classic-config-core.md`](classic-config-core.md).
 
@@ -10,6 +10,7 @@ Reference: [`classic-config-core.md`](classic-config-core.md).
 
 - User Settings discovery and path policy belongs exclusively to [`classic-user-settings-core`](classic-user-settings-core.md).
 - Fallout 4 and Fallout 4 VR share the `Fallout4` YAML data identity. `Fallout4VR` therefore resolves to `CLASSIC Data/databases/CLASSIC Fallout4.yaml` and shared keys such as `CLASSIC_Ignore_Fallout4`; its executable, documents, and version-selection identities remain VR-specific.
+- `load_explicit_yaml_data` does not use generic source or cache path policy. Its three request fields are the complete Main, game, and Local Ignore file identities for that operation.
 - `YamlSource::Cache` and cache helpers use the `CLASSIC` base directory, not `CLASSIC-Fallout4`:
   - preferred: `dirs::config_dir()/CLASSIC/cache.yaml`
   - compatibility fallback when no user config dir is available: `<application-dir>/CLASSIC/cache.yaml`
@@ -17,7 +18,7 @@ Reference: [`classic-config-core.md`](classic-config-core.md).
 
 ## Multi-Document Merge Semantics
 
-- `YamlDataCore` and Game Local loading parse the full YAML stream first, then merge it into one document.
+- Explicit YAML Data, `YamlDataCore`, and Game Local loading parse the full YAML stream first, then merge it into one document.
 - Every document in the stream must be a mapping. Any sequence, scalar, or null document is rejected.
 - Nested mappings merge recursively.
 - Sequences are replaced wholesale by the later document.
@@ -51,6 +52,75 @@ paths:
 items:
   - second
 ```
+
+---
+
+## Explicit YAML Data Role Contract
+
+`classic_config_core::load_explicit_yaml_data` accepts an `ExplicitYamlDataRequest` whose `main_path`, `game_path`, and `ignore_path` identify exactly one file for each role. The operation reads each path once, retains those bytes, and derives parsing, validation, the combined `YamlDataCore`, SHA-256, and byte length from the retained copies. The resulting `ExplicitYamlDataSnapshot` remains stable if the paths later change.
+
+Every explicit role must be valid UTF-8 and satisfy the multi-document merge rules above. Validation then applies the following role contract:
+
+| Role | Schema gate | Required semantic shape |
+|---|---|---|
+| Main | root `schema_version` must satisfy `client_schemas::MAIN_YAML` | `CLASSIC_Info` is a mapping and `CLASSIC_Info.version` is a non-empty string satisfying the [bare release-SemVer contract](#classic_infoversion-bare-semver-contract) |
+| Game | root `schema_version` must satisfy `client_schemas::GAME_FALLOUT4_YAML` | `Game_Info` is a mapping and `Game_Info.Main_Root_Name` is a non-empty string that normalizes to `fallout4` when only lowercase ASCII alphanumeric characters are retained |
+| Local Ignore | no shippable schema header | `CLASSIC_Ignore_Fallout4` is a sequence and every entry is a string; the sequence may be empty |
+
+Main and game compatibility ranges are owned by config core. An explicit caller cannot provide a different range or cause an incompatible file to fall back to another source.
+
+### Typed Game And Shared Fallout 4 Role
+
+`ExplicitYamlDataRequest.game` is `classic_shared_core::GameId`, not a filename fragment. `GameId::Fallout4` and `GameId::Fallout4VR` both map to `GameDataRole::Fallout4`; both therefore validate the selected game document as Fallout 4 YAML Data and read the `CLASSIC_Ignore_Fallout4` key. The request's separate `selected_game_version` still controls Version Registry metadata selection, so VR runtime/version semantics remain distinct from the shared YAML Data role.
+
+`GameId::Skyrim` and `GameId::Starfield` are not registered YAML Data roles in this client. Explicit loading returns `ExplicitYamlDataLoadError::UnsupportedGame` before reading any supplied path; it never constructs an arbitrary game filename.
+
+### Valid Empty And Malformed Local Ignore
+
+This is a valid empty Local Ignore document:
+
+```yaml
+CLASSIC_Ignore_Fallout4: []
+```
+
+It produces an empty `YamlDataCore::ignore_list`. These documents are malformed for the Local Ignore role and return `InvalidRoleData`:
+
+```yaml
+# Missing required key.
+unrelated: []
+```
+
+```yaml
+# Required key has the wrong shape.
+CLASSIC_Ignore_Fallout4: not-a-sequence
+```
+
+```yaml
+# Sequence entries must all be strings.
+CLASSIC_Ignore_Fallout4:
+  - valid-entry
+  - 42
+```
+
+Missing, null, mapping, and mixed-type values are not treated as an empty ignore list.
+
+### Exact-Byte Identity And No Mutation
+
+`ExplicitYamlDataSnapshot::{main_identity, game_identity, ignore_identity}` each return a `YamlDataContentIdentity` with the lowercase SHA-256 and byte length of the exact retained source bytes. Identity is not computed from reserialized YAML, merged document structure, a later path read, or a settings cache.
+
+Explicit loading has no installed-source behavior. It does not resolve or consult the YAML update cache, inspect or promote `.prev`, select bundled data, fall back, generate a missing Local Ignore document, repair/reset a malformed document, create a backup, or write/delete any file. Missing, unreadable, incompatible, or semantically invalid caller-selected content fails with an error attributed to its exact `ExplicitYamlDataRole` and path.
+
+### Installed Snapshot And Malformed Local Ignore Recovery
+
+`classic_config_core::load_installed_yaml_data` accepts one installation root, typed `GameId`, and the separate existing game-version mode. Main and game are independently selected through config-owned installed policy, while Local Ignore is read from `CLASSIC Data/CLASSIC Ignore.yaml` under that root and validated against the same Local Ignore role contract above.
+
+If Local Ignore is absent, the exact retained selected Main document must contain a non-empty string at `CLASSIC_Info.default_ignorefile`. Its embedded YAML is parsed and strictly validated against the selected Local Ignore role before any staging file is created. Complete bytes are staged and synced in the destination directory, then atomically published without overwriting an existing or concurrently created file. Every caller rereads the canonical destination, making the concurrent winner authoritative; defaults are never reopened from a later version of the installed Main path.
+
+On `InstalledYamlDataLoadOutcome::Ready`, `InstalledYamlDataSnapshot` privately owns the exact bytes selected for all three roles. Its public surface exposes parsed `YamlDataCore`, Main/game provenance and compatible schema versions, exact SHA-256/byte-length identities for all three files, `LocalIgnoreYamlDataState::{Existing, Generated}`, and structured selection/generation diagnostics. It does not expose raw YAML documents or byte buffers. Existing valid Local Ignore bytes are never replaced during ordinary loading, and later path changes cannot alter the snapshot.
+
+An existing Local Ignore document that is invalid UTF-8, syntactically malformed, or invalid for the selected game role returns `InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired`. Its opaque `LocalIgnoreRecoveryPlan` retains the exact selected Main/game snapshot, selected-Main default state, malformed path and identity, selected game-version mode, and diagnostics without exposing raw documents. Valid defaults expose an identity; invalid or unavailable defaults are retained as unavailable for a future reset decision and do not block Proceed Without Ignore. `proceed_without_ignore()` consumes that plan and returns the retained snapshot with `LocalIgnoreYamlDataState::ProceedWithoutIgnore` and an empty operation-scoped `ignore_list`. It performs no filesystem operation, so every installed file remains byte-identical and the next load encounters the same malformed document again.
+
+`reset_to_default()` consumes the same plan without reselecting installed data. It conflict-checks the canonical bytes, durably publishes and rereads a byte-exact backup at a uniquely owned identity-bearing path, then stages and atomically replaces the canonical file with the retained default text. Success returns `LocalIgnoreYamlDataState::ResetToDefault`, reset/backup identities and paths, plus a `LocalIgnoreReset` diagnostic. Conflict is typed and never overwrites changed or removed state; pre-publication backup/verification/replacement failures leave the malformed original authoritative and never publish partial default content. A distinct `ReplacementDurabilityUnknown` error means complete retained defaults are visible but Unix parent-directory durability could not be confirmed; its verified-backup and three content identities form a recovery receipt. Reset is synchronous and non-interruptible after entry so a scan coordinator can check cancellation before the call and again only after a confirmed durable transaction returns.
 
 ---
 
@@ -88,9 +158,9 @@ Game Local readers and `persist_game_local_paths` use only these keys in `CLASSI
 
 Under `schema_version: "2.0"` and later, `CLASSIC_Info.version` stores a bare SemVer string of the form `<MAJOR>.<MINOR>.<PATCH>` with an optional leading `v` or `V` (e.g., `v9.1.0`, `9.1.0`). SemVer prerelease suffixes (`-beta.N`, `-rc.N`, `-alpha`, etc.) and build metadata (`+build.N`) are forbidden in this field and are rejected by `load_main_yaml_version` / `validate_release_semver_shape` in `classic-config-core`. The value SHALL NOT contain display-only decoration such as the `CLASSIC ` product-name prefix. Consumers that need the decorated form (e.g., the scanlog report header `**AUTOSCAN REPORT GENERATED BY CLASSIC v9.1.0**`) prepend the product-name prefix at format time; consumers that need bare SemVer (Qt `setApplicationVersion`, CMake `PROJECT_VERSION` guard, update-check comparisons) consume it directly without stripping.
 
-Prerelease status for a given published version is signaled through the sibling `CLASSIC_Info.is_prerelease` boolean together with the monotonic `CLASSIC_Info.version_date` (`YY.MM.DD`), not by annotating the version string — the maintainer workflow is `set_version.ps1 -Version "X.Y.Z" -IsPrerelease $true -Date "YY.MM.DD"`, and the `publish-yaml-data` workflow mirrors the same boolean through `gh release --prerelease=true/false`. See the "Prerelease status is signaled via `is_prerelease` + `version_date`" requirement in [`openspec/specs/yaml-app-version-field/spec.md`](../../openspec/specs/yaml-app-version-field/spec.md).
+Prerelease status for a given published version is signaled through the sibling `CLASSIC_Info.is_prerelease` boolean together with the monotonic `CLASSIC_Info.version_date` (`YY.MM.DD`), not by annotating the version string — the maintainer workflow is `set_version.ps1 -Version "X.Y.Z" -IsPrerelease $true -Date "YY.MM.DD"`, and the `publish-yaml-data` workflow mirrors the same boolean through `gh release --prerelease=true/false`. This page is the normative contract for that behavior.
 
-Under legacy `schema_version: "1.x"` the value was decorated (`CLASSIC v9.1.0`); the `MAIN_YAML` [`SchemaCompat`](classic-config-core.md) constant rejects 1.x files in current clients. Full contract: [`openspec/specs/yaml-app-version-field/spec.md`](../../openspec/specs/yaml-app-version-field/spec.md).
+Under legacy `schema_version: "1.x"` the value was decorated (`CLASSIC v9.1.0`); the `MAIN_YAML` [`SchemaCompat`](classic-config-core.md) constant rejects 1.x files in current clients.
 
 ### Game YAML
 
@@ -206,8 +276,10 @@ Accepted placement values are:
 | `name_a` | string | yes | human-readable display name for mod A |
 | `name_b` | string | yes | human-readable display name for mod B |
 | `description` | string | yes | why the conflict matters |
-| `fix` | string | yes | what the user should do |
+| `fix` | string | no | optional remediation guidance; when present, it must be non-empty |
 | `link` | string | no | optional URL for patch or alternative |
+
+Omitting `fix` means the conflict has no separately authored remediation line; consumers preserve that absence instead of inventing an empty string or fallback prose. A present blank, null, or non-string `fix` is malformed at strict Explicit and Installed YAML Data boundaries.
 
 Deduplication: at parse time each pair is canonicalized to `(min(mod_a, mod_b), max(mod_a, mod_b))` using case-insensitive comparison. If a duplicate canonical pair is found, it is skipped with a warning log.
 
@@ -283,5 +355,5 @@ Deduplication: at parse time each pair is canonicalized to `(min(mod_a, mod_b), 
 
 ## Contributor Notes
 
-- If you add or remove consumed keys in `YamlDataCore` or Game Local persistence, update this page in the same change.
+- If you add or remove consumed keys in explicit role validation, `YamlDataCore`, or Game Local persistence, update this page in the same change.
 - If a binding or frontend depends on a new default, note that here even if the Rust API itself does not change.

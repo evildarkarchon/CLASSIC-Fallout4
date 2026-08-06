@@ -28,8 +28,7 @@
 //!   `v9.1.0`). Consumers that previously stripped the prefix read the
 //!   value directly; the one consumer that needed the decorated form
 //!   (scanlog report header) now prepends `CLASSIC ` at format time. See
-//!   `openspec/changes/yaml-version-drop-classic-prefix/` for the full
-//!   contract.
+//!   `docs/api/classic-config-core-yaml-schema.md` for the full contract.
 //! - **MAIN_YAML 2.0 → 2.1 (2026-07)** — `CLASSIC_Settings.Unsolved Logs
 //!   Destination` was added as an optional default setting. Current clients
 //!   still accept 2.0 because the key is not required to parse or scan.
@@ -49,31 +48,40 @@ pub const MAIN_YAML: SchemaCompat = SchemaCompat::new(2, 0);
 /// `CLASSIC Data/databases/CLASSIC <Game>.yaml`).
 pub const GAME_FALLOUT4_YAML: SchemaCompat = SchemaCompat::new(1, 0);
 
-/// One canonical shippable YAML file plus the schema range this client accepts.
+/// One canonical shippable YAML file name plus the schema range this client
+/// accepts for it.
 ///
 /// This is the metadata shape consumed by first-party YAML Data update checks:
 /// the update channel needs the same file names and compatibility ranges that
 /// runtime YAML loading uses, without native callers duplicating either value.
+///
+/// The entry carries only the canonical **file name**, never a resolvable
+/// bundled or cache path. Selection is owned by
+/// [`crate::installed_yaml_data`]; handing update callers a path here would let
+/// them reopen an Installed YAML Data candidate under their own policy, which
+/// is precisely what the unified selection contract forbids.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ShippableSchemaEntry {
-    /// File descriptor used by the shippable YAML loader.
-    pub file: ShippableFile,
-    /// Schema range accepted by this client for `file`.
+    /// Canonical file name as it appears in the install tree and in the
+    /// per-user YAML cache directory (e.g. `CLASSIC Main.yaml`).
+    pub file_name: String,
+    /// Schema range accepted by this client for `file_name`.
     pub accepted: SchemaCompat,
 }
 
-/// Returns the authoritative first-party shippable YAML files and schema ranges.
+/// Returns the authoritative first-party shippable YAML file names and schema
+/// ranges.
 ///
 /// The order is stable for diagnostics and rollback summaries, but callers
-/// should still treat the returned entries as a set keyed by `file.file_name`.
+/// should still treat the returned entries as a set keyed by `file_name`.
 pub fn shippable_schema_entries() -> Vec<ShippableSchemaEntry> {
     vec![
         ShippableSchemaEntry {
-            file: ShippableFile::main(),
+            file_name: ShippableFile::main().file_name,
             accepted: MAIN_YAML,
         },
         ShippableSchemaEntry {
-            file: ShippableFile::game("Fallout4"),
+            file_name: ShippableFile::game("Fallout4").file_name,
             accepted: GAME_FALLOUT4_YAML,
         },
     ]

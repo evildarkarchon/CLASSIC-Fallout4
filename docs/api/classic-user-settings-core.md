@@ -60,6 +60,34 @@ Open reads bytes directly and never uses `Path::exists()`, so permission failure
 
 Retaining exact bytes keeps unknown root and nested mappings, sequences, nulls, booleans, numbers, strings, and untouched invalid known values available to later User Settings Update commits. Semantic preservation does not promise to retain comments, quoting style, or whitespace after a future explicit commit.
 
+### Revision token
+
+`Revision` owns its own adapter-facing string form as an inherent pair:
+
+- `Revision::token()` — `missing`, `unavailable`, or `sha256:` followed by the lowercase hex digest
+- `Revision::from_token(token)` — the exact inverse, returning `None` for anything else
+
+Every revision string published by the CXX, Node, and Python surfaces is this token verbatim, and every caller-supplied base revision they accept is parsed by this function. The format is frozen: changing it changes all three binding contracts at once.
+
+`Revision` is deliberately outside the `Vocabulary` naming contract that the finite User Settings enums implement. It carries a content-digest data variant, so it has no finite variant list and its token is built at runtime rather than being a static string.
+
+Parsing is case-insensitive over the hex digits and rejects any non-ASCII encoded segment, so a caller-supplied string can never split a character boundary at a binding seam.
+
+### Vocabulary Tokens for the document enums
+
+`SourceLocation`, `DocumentClassification`, `CommitEligibility`, and `PreferenceOrigin` implement the [Vocabulary naming contract](classic-vocabulary.md) alongside `MigrationChangeKind`, so this crate owns both names for every variant: the frozen Vocabulary Token from `as_str()` and the reworkable Display Label from `label()`.
+
+| Enum | Vocabulary Tokens |
+| --- | --- |
+| `SourceLocation` | `canonical`, `legacy`, `missing` |
+| `DocumentClassification` | `current`, `unversioned`, `older`, `newer_compatible`, `future_major`, `legacy_flat`, `malformed`, `missing` |
+| `CommitEligibility` | `eligible`, `requires_migration`, `blocked_untrusted` |
+| `PreferenceOrigin` | `document`, `default`, `degraded_fallback` |
+
+All three bindings project these rather than keeping their own tables. The CXX and Python surfaces publish the canonical snake_case spelling unchanged; the Node surface applies only its documented camelCase transform, so `degraded_fallback` reaches JavaScript as `degradedFallback` and `newer_compatible` as `newerCompatible`. The reverse-parse paths that reconstruct a review-only migration plan from a caller-supplied source-location token derive their accepted inputs from the same variant list, so the forward and reverse directions cannot disagree.
+
+Changing a token is breaking for every binding consumer; rewording a label is not. No frontend renders these Display Labels yet, so none of them crosses a binding seam — they exist because the contract requires every variant to have one, which is what stops a new variant from shipping with nothing to render.
+
 ## Document classifications and trust
 
 The current schema is `1.0`.
@@ -172,11 +200,13 @@ Required plans target `<CLASSIC root>/CLASSIC Settings.yaml`. Unversioned and fl
 
 Stable migration-planning diagnostics are `unsupported_schema_version_gap`, `future_major_schema_read_only`, `migration_source_untrusted`, `migration_source_unavailable`, and `migration_plan_failed`.
 
+`MigrationChangeKind` implements the [Vocabulary naming contract](classic-vocabulary.md), so this crate owns both names for every change category: the frozen Vocabulary Token from `as_str()` and the reworkable Display Label from `label()`. The tokens are `location_transition`, `schema_version_transition`, `field_transition`, `alias_canonicalization`, and `known_value_canonicalization`; all three bindings project them rather than keeping their own tables, with the Node surface applying only its documented camelCase transform. Changing a token is breaking for every binding consumer; rewording a label is not.
+
 ## Apply, verified backup, and restore
 
 `UserSettingsMigrationPlan::apply(classic_root)` is the only core operation that begins a migration. It holds the same persistent `CLASSIC Settings.yaml.commit.lock` used by accepted User Settings Updates, reopens the selected source, and compares both its exact-byte revision and location before creating any backup. A stale plan returns `UserSettingsMigrationApplyOutcome::Conflict { expected_revision, actual_revision }`; it creates no backup and performs no publication.
 
-For a matching plan, apply publishes the exact original bytes to a content-addressed file under `<CLASSIC root>/CLASSIC Backup/User Settings/Migrations/`, durably flushes it, and rereads it byte-for-byte. Only then does it atomically publish the approved proposed bytes at the canonical destination. Success is reported only after `UserSettings::open` returns the expected destination location, exact bytes, and SHA-256 revision. A post-publication verification failure restores the last accepted source before returning an error.
+For a matching plan, apply durably publishes the exact original bytes to a content-addressed file under `<CLASSIC root>/CLASSIC Backup/User Settings/Migrations/` and rereads it byte-for-byte. Only then does it atomically publish the approved proposed bytes at the canonical destination. Backup paths are content-addressed and therefore stable across invocations rather than unique per publication: republishing the same original bytes reuses the same backup file as an ordinary replacement. Success is reported only after `UserSettings::open` returns the expected destination location, exact bytes, and SHA-256 revision. A post-publication verification failure restores the last accepted source before returning an error.
 
 `UserSettingsMigrationApplyOutcome::Applied` carries an opaque `UserSettingsMigrationReceipt`. Its getters report the concrete source, destination, and backup paths; source and target version/location endpoints; verified backup revision; and reopened published revision. The receipt is bound to the CLASSIC root that produced those paths and is the only restore credential.
 
@@ -193,6 +223,8 @@ Operational apply/restore failures return `UserSettingsMigrationError { code, me
 - `migration_restore_backup_read_failed` / `migration_restore_backup_verify_failed`
 - `migration_restore_{create,write,flush,sync,replace,cleanup}_failed`
 - `migration_restore_remove_destination_failed`, `migration_restore_reopen_verify_failed`, `migration_restore_rollback_failed`, and `migration_restore_rollback_verify_failed`
+
+The `*_cleanup_failed` members of those families derive from `commit_temp_cleanup_failed` and, like it, remain published but are no longer emitted: staging cleanup moved into [Durable Publication](classic-durable-publication.md), which removes its own artifact best-effort and reports no separate cleanup failure. The `*_replace_failed` members are unaffected — they map the shared module's terminal `Publish` stage, which keeps this crate's `Replace` name.
 
 Backup, publication, verification, or restore interruption leaves the last accepted active document intact. A successfully created backup may remain after a later publication failure because it is a valid recovery artifact, not temporary state.
 
@@ -213,9 +245,13 @@ Validation is all-or-nothing. The implementation checks every requested field in
 
 `AcceptedUserSettingsUpdate::commit(classic_root)` holds an exclusive cross-process lock on the persistent `CLASSIC Settings.yaml.commit.lock` sibling, reopens the latest canonical document, and compares its exact-byte SHA-256 `Revision` with the preview revision before doing any patch or publication work. A mismatch returns `UserSettingsCommitOutcome::Conflict { expected_revision, actual_revision }` and leaves the newer document unchanged. A matching revision patches only the accepted canonical fields and returns `Committed { revision }`; rejected previews never produce an accepted artifact and therefore cannot call this operation.
 
-Publication serializes the freshly reopened and semantically preserved YAML tree into a randomized same-directory temporary file, writes and flushes it, calls `sync_all()`, and atomically replaces the canonical path. On write/flush/sync/replace failure it explicitly closes and attempts to remove the temporary file; a removal failure returns `commit_temp_cleanup_failed` with the primary failure retained as context and may leave the artifact for external cleanup. The lock file is intentionally retained so deleting it cannot race another process opening the same coordination path. Directory metadata synchronization is best-effort where the platform exposes it. Comments, quoting, whitespace, and mapping order may change, but unknown structures, compatibility aliases, and untouched invalid known values remain semantically intact.
+Publication serializes the freshly reopened and semantically preserved YAML tree and hands the complete bytes to [Durable Publication](classic-durable-publication.md), which stages them in the canonical path's own directory, writes, flushes, synchronizes, and atomically publishes. A failure at any of those steps leaves the canonical path holding its prior content and removes the staging artifact; the shared module does not report a separate cleanup failure, so `commit_temp_cleanup_failed` remains part of the published vocabulary but is no longer emitted. The lock file is intentionally retained so deleting it cannot race another process opening the same coordination path. Directory metadata synchronization is performed where the platform exposes it; its outcome is deliberately not surfaced on this operation (see the durability note below). Comments, quoting, whitespace, and mapping order may change, but unknown structures, compatibility aliases, and untouched invalid known values remain semantically intact.
 
-Operational failures return `UserSettingsCommitError { code, message }`. Stable publication codes are `commit_lock_open_failed`, `commit_lock_failed`, `commit_source_unavailable`, `commit_parse_failed`, `commit_patch_failed`, `commit_serialize_failed`, `commit_temp_create_failed`, `commit_temp_write_failed`, `commit_temp_flush_failed`, `commit_temp_sync_failed`, `commit_replace_failed`, and `commit_temp_cleanup_failed`. A cleanup failure message retains the primary stage failure as context.
+This crate carries no stage enum of its own: it uses [`classic_durable_publication::PublicationStage`](classic-durable-publication.md) directly and keeps only the projection from a stage onto the error code it publishes for that stage. That projection is the part it cannot share, because the shared vocabulary's terminal stage is `Publish` while the code published for it is `commit_replace_failed`. Every code below is preserved unchanged, including `commit_replace_failed` and the per-operation `*_replace_failed` codes derived from it; a test pins the terminal row on its own so it cannot be assumed symmetric with the other four.
+
+Durable Publication always reports whether the published namespace entry reached the platform's durability barrier. This operation discards that outcome, because surfacing it would add new stable codes across the C++, Node, and Python surfaces. The signal was equally discarded before the module was adopted; it is now discarded in a named expression rather than by omitting a check.
+
+Operational failures return `UserSettingsCommitError { code, message }`. Stable publication codes are `commit_lock_open_failed`, `commit_lock_failed`, `commit_source_unavailable`, `commit_parse_failed`, `commit_patch_failed`, `commit_serialize_failed`, `commit_temp_create_failed`, `commit_temp_write_failed`, `commit_temp_flush_failed`, `commit_temp_sync_failed`, `commit_replace_failed`, and `commit_temp_cleanup_failed`.
 
 Preview-specific rejection codes include `invalid_enum_update_source`, `invalid_enum_game_version`, `invalid_range_gui_geometry_width`, `invalid_range_gui_geometry_height`, the `invalid_path_*` codes for every optional setup path, `invalid_value_formid_databases`, `invalid_path_unsolved_logs_destination`, `invalid_path_custom_scan_input`, `invalid_range_max_concurrent_scans`, `update_base_requires_bootstrap`, `bootstrap_base_not_missing`, and `update_base_not_commit_eligible`. The CXX adapter also returns `invalid_enum_gui_window` when a caller supplies an unknown stable tab token.
 

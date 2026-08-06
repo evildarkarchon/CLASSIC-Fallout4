@@ -200,8 +200,8 @@ for (key, value) in dict.iter() {
 
 ## Testing Patterns
 
-Unit tests live in a sibling `<stem>_tests.rs` file, not inline. See
-`openspec/specs/rust-test-module-layout/spec.md` for the workspace-wide rule.
+Unit tests live in a sibling `<stem>_tests.rs` file, not inline. See rule 11 in
+[`AGENTS.md`](../../AGENTS.md) for the workspace-wide rule.
 
 In `src/lib.rs` (or any parent source file), declare the sibling module:
 
@@ -294,7 +294,7 @@ print(f"Version: {classic_scanlog.__version__}")
 
 ### Profile Rust code
 ```bash
-cargo build --release --manifest-path ClassicLib-rs/Cargo.toml
+cargo build --release
 perf record target/release/deps/<crate-or-binary>
 perf report
 ```
@@ -303,5 +303,5 @@ perf report
 
 - [PyO3 0.27 Migration Guide](PyO3-0.27-migration.md) - Detailed migration documentation
 - [PyO3 Documentation](https://pyo3.rs/v0.27.0/) - Official PyO3 documentation
-- [Rust Usage Guide](usage_guide.md) - Using Rust components in CLASSIC
+- [Rust Usage Guide](rust_usage_guide.md) - Using Rust components in CLASSIC
 - [Development with Rust](development_with_rust.md) - Development workflow

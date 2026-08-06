@@ -1,7 +1,11 @@
 export const CLI_MAIN_YAML = `
+schema_version: "2.0"
 CLASSIC_Info:
   version: "9.0.0"
   version_date: "2026-02-25"
+  default_ignorefile: |
+    CLASSIC_Ignore_Fallout4:
+      - "IgnoreItem1"
 CLASSIC_Interface:
   autoscan_text_Fallout4: "Autoscan Fallout 4"
 catch_log_records:
@@ -9,6 +13,7 @@ catch_log_records:
 `;
 
 export const CLI_GAME_YAML = `
+schema_version: "1.0"
 Game_Info:
   XSE_Acronym: "F4SE"
   GameVersion: "1.10.163"

@@ -4,8 +4,8 @@ This guide describes the current Rust-backed Python binding workflow for CLASSIC
 
 ## Current state
 
-- Rust business logic lives in `ClassicLib-rs/business-logic/*-core`.
-- Python bindings live in `ClassicLib-rs/python-bindings/*-py` plus `ClassicLib-rs/foundation/classic-shared-py`.
+- Rust business logic lives in `business-logic/*-core`.
+- Python bindings live in `python-bindings/*-py` plus `foundation/classic-shared-py`.
 - Active imports are split modules such as `classic_config`, `classic_scanlog`, `classic_version_registry`, and `classic_shared`.
 - The current maintained workflow does not use a monolithic `classic_core` module.
 
@@ -14,21 +14,22 @@ This guide describes the current Rust-backed Python binding workflow for CLASSIC
 Create and use the bindings-local virtual environment:
 
 ```powershell
-uv venv ClassicLib-rs/python-bindings/.venv
-uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
+# python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
+# --inexact is load-bearing: it keeps uv from pruning maturin-built classic-*-py wheels.
+uv sync --project python-bindings --inexact
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
 ```
 
 Verify imports:
 
 ```powershell
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -c "import classic_config, classic_scanlog, classic_version_registry; print(classic_scanlog.__version__)"
+uv run --python python-bindings/.venv/Scripts/python.exe python -c "import classic_config, classic_scanlog, classic_version_registry; print(classic_scanlog.__version__)"
 ```
 
 Run the maintained Python binding smoke tests:
 
 ```powershell
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
+uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
 ```
 
 ## Common issues
@@ -36,14 +37,14 @@ uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m
 ### `ModuleNotFoundError`
 
 Cause:
-- The bindings were not built and installed into `ClassicLib-rs/python-bindings/.venv`.
+- The bindings were not built and installed into `python-bindings/.venv`.
 - The wrong Python interpreter is being used.
 
 Fix:
 
 ```powershell
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -c "import classic_config"
+uv run --python python-bindings/.venv/Scripts/python.exe python -c "import classic_config"
 ```
 
 ### Changes are not reflected after rebuild
@@ -67,7 +68,7 @@ Fix:
 
 ```powershell
 python tools/python_api_parity/check_parity_gate.py --repo-root .
-python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 ```
 
 ### Wrong environment selected
@@ -75,10 +76,10 @@ python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contrac
 Check which interpreter you are using:
 
 ```powershell
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -c "import sys; print(sys.executable)"
+uv run --python python-bindings/.venv/Scripts/python.exe python -c "import sys; print(sys.executable)"
 ```
 
-That path should resolve inside `ClassicLib-rs/python-bindings/.venv`.
+That path should resolve inside `python-bindings/.venv`.
 
 ## Recommended validation set
 
@@ -86,7 +87,7 @@ When Python binding APIs change, run:
 
 ```powershell
 python tools/python_api_parity/check_parity_gate.py --repo-root .
-python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
+uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
 ```

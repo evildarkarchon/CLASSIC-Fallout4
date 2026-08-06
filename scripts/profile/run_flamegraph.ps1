@@ -101,11 +101,11 @@ param(
     [int]$Duration
 )
 
-# Ensure we're in the project root or can find the rust directory
+# The Cargo workspace root is the repo root. Resolve it from the script
+# location first, then fall back to CWD for out-of-tree invocations.
 $rustDir = $null
 $searchPaths = @(
-    (Join-Path $PSScriptRoot "../../ClassicLib-rs"),
-    (Join-Path (Get-Location) "ClassicLib-rs"),
+    (Join-Path $PSScriptRoot "../.."),
     (Get-Location)
 )
 
@@ -118,7 +118,7 @@ foreach ($path in $searchPaths) {
 }
 
 if (-not $rustDir) {
-    Write-Error "Could not find ClassicLib-rs/ directory with Cargo.toml. Run this script from the project root."
+    Write-Error "Could not find the workspace Cargo.toml. Run this script from the repository root."
     exit 1
 }
 

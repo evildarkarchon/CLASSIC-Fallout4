@@ -66,7 +66,7 @@ function writeWorkspaceDataRoot(workspace: string): string {
 		"utf8",
 	);
 	writeFileSync(
-		join(workspace, "CLASSIC Ignore.yaml"),
+		join(classicDataDir, "CLASSIC Ignore.yaml"),
 		CLI_IGNORE_YAML,
 		"utf8",
 	);
@@ -219,6 +219,16 @@ describe("classic-node CLI", () => {
 			reportsWritten: 0,
 			reportFailures: 1,
 			scanErrors: 0,
+			installedYamlData: {
+				main: { role: "Main" },
+				gameFile: { role: "Game" },
+				localIgnoreState: "Existing",
+				localIgnoreIdentity: {
+					sha256: expect.any(String),
+					byteLen: expect.any(Number),
+				},
+				diagnostics: expect.any(Array),
+			},
 		});
 	});
 

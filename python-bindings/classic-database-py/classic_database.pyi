@@ -58,6 +58,57 @@ def get_default_query_cache_capacity() -> int: ...
 def get_default_cache_cleanup_threshold() -> int: ...
 def get_default_cache_cleanup_interval() -> int: ...
 
+class FormIdValueLookupError(Exception):
+    """Strict lookup failure with stable machine-readable context."""
+
+    code: str
+    formid: str | None
+    plugin: str | None
+    message: str
+
+class FormIdValueLookupEntry:
+    """One owned deterministic reply for the in-memory lookup adapter."""
+
+    formid: str
+    plugin: str
+    value: str | None
+    operational_failure: str | None
+
+    def __init__(
+        self,
+        formid: str,
+        plugin: str,
+        value: str | None = None,
+        operational_failure: str | None = None,
+    ) -> None: ...
+
+class FormIdValueLookupOutcome:
+    """One successful semantic lookup outcome."""
+
+    kind: str
+    value: str | None
+
+class FormIdValueLookup:
+    """Opaque callback-free facade over disabled, memory, SQLite, and shared-pool adapters."""
+
+    @staticmethod
+    def disabled() -> FormIdValueLookup: ...
+
+    @staticmethod
+    def in_memory(entries: list[FormIdValueLookupEntry]) -> FormIdValueLookup: ...
+
+    @staticmethod
+    async def sqlite(database_path: str, game_table: str) -> FormIdValueLookup: ...
+
+    @staticmethod
+    def from_shared_pool(pool: DatabasePool) -> FormIdValueLookup: ...
+
+    async def lookup(self, formid: str, plugin: str) -> FormIdValueLookupOutcome: ...
+
+    async def lookup_batch(
+        self, pairs: list[tuple[str, str]]
+    ) -> list[FormIdValueLookupOutcome]: ...
+
 class DatabasePool:
     """High-performance async database pool with TTL caching.
 

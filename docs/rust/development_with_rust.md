@@ -4,16 +4,16 @@ This guide summarizes the current Rust development workflow for CLASSIC.
 
 ## Workspace overview
 
-The active Rust workspace is `ClassicLib-rs/`.
+The active Cargo workspace is rooted at the repository root.
 
 Key areas:
 
-- `ClassicLib-rs/foundation/` - shared runtime and support crates
-- `ClassicLib-rs/business-logic/` - product logic in `*-core` crates
-- `ClassicLib-rs/python-bindings/` - PyO3 binding crates
-- `ClassicLib-rs/node-bindings/` - Node bindings
-- `ClassicLib-rs/cpp-bindings/` - C++ bridge crates
-- `ClassicLib-rs/ui-applications/` - Rust-hosted UI/TUI applications
+- `foundation/` - shared runtime and support crates
+- `business-logic/` - product logic in `*-core` crates
+- `python-bindings/` - PyO3 binding crates
+- `node-bindings/` - Node bindings
+- `cpp-bindings/` - C++ bridge crates
+- `ui-applications/` - Rust-hosted UI/TUI applications
 
 The Windows-native frontends live at the repo root in `classic-cli/` and `classic-gui/`.
 
@@ -36,15 +36,15 @@ rustup component add rustfmt clippy
 From the repo root:
 
 ```powershell
-cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml
-cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
+cargo fmt --all
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace
 ```
 
 Use crate-scoped tests while iterating, for example:
 
 ```powershell
-cargo test -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml
+cargo test -p classic-scanlog-core
 ```
 
 ## Python binding workflow
@@ -52,22 +52,23 @@ cargo test -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml
 Use a bindings-local virtual environment:
 
 ```powershell
-uv venv ClassicLib-rs/python-bindings/.venv
-uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
+# python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
+# --inexact is load-bearing: it keeps uv from pruning maturin-built classic-*-py wheels.
+uv sync --project python-bindings --inexact
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
+uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
 ```
 
 For binding-surface changes, also run:
 
 ```powershell
 python tools/python_api_parity/check_parity_gate.py --repo-root .
-python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 ```
 
 ## Node binding workflow
 
-From `ClassicLib-rs/node-bindings/classic-node`:
+From `node-bindings/classic-node`:
 
 ```powershell
 bun run build:debug

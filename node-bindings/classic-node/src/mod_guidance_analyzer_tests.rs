@@ -7,7 +7,7 @@ fn conflict() -> JsModConflictRule {
         name_a: "Alpha Mod".to_string(),
         name_b: "Beta Mod".to_string(),
         description: "Authored conflict description".to_string(),
-        fix: "Install the compatibility patch".to_string(),
+        fix: Some("Install the compatibility patch".to_string()),
         link: Some("https://example.invalid/patch".to_string()),
     }
 }
@@ -101,7 +101,10 @@ fn owned_projection_preserves_all_authored_fields_and_match_states() {
         result.conflicts[0].description,
         "Authored conflict description"
     );
-    assert_eq!(result.conflicts[0].fix, "Install the compatibility patch");
+    assert_eq!(
+        result.conflicts[0].fix.as_deref(),
+        Some("Install the compatibility patch")
+    );
     assert_eq!(
         result.conflicts[0].link.as_deref(),
         Some("https://example.invalid/patch")
@@ -130,6 +133,33 @@ fn owned_projection_preserves_all_authored_fields_and_match_states() {
         result.important_mods[2].gpu_mismatch_warning.as_deref(),
         Some("Authored mismatch warning")
     );
+}
+
+#[test]
+fn optional_conflict_fix_projects_as_absent() {
+    let mut conflict = conflict();
+    conflict.fix = None;
+    let analyzer = build_analyzer(vec![conflict], Vec::new(), Vec::new(), Vec::new()).unwrap();
+
+    let result = analyzer
+        .analyze_owned(JsModGuidanceAnalysisInput {
+            plugins: vec![
+                JsModGuidancePlugin {
+                    name: "Alpha.esp".to_string(),
+                    id: "01".to_string(),
+                },
+                JsModGuidancePlugin {
+                    name: "Beta.esp".to_string(),
+                    id: "02".to_string(),
+                },
+            ],
+            user_gpu: None,
+            xse_modules: Vec::new(),
+        })
+        .unwrap();
+
+    assert_eq!(result.conflicts.len(), 1);
+    assert_eq!(result.conflicts[0].fix, None);
 }
 
 #[test]

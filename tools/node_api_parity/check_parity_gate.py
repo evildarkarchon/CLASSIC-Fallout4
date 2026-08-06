@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-import shutil
 from typing import Any
 import sys
 
@@ -16,6 +15,12 @@ from binding_parity_runtime_coverage import (
     build_coverage_summary,
     load_json_file,
     render_coverage_summary_markdown,
+)
+
+from parity_artifact_io import (
+    artifacts_match,
+    preserve_baseline_generated_at_all,
+    sync_baseline_artifacts,
 )
 
 from generate_baseline import (
@@ -82,6 +87,19 @@ def validate_contract_surface(
     rust_symbols: set[str] = {
         item["symbol"] for item in rust_manifest.get("symbols", [])
     }
+    # Symbols whose ONLY appearance in the Rust surface is as a module. A name
+    # that is both a module and a type elsewhere stays acceptable, since the
+    # row may legitimately mean the type.
+    # `kind` is read defensively: a manifest entry without one carries no
+    # evidence that the symbol is a module, so it must not be flagged.
+    rust_symbol_kinds: dict[str, set[str]] = {}
+    for item in rust_manifest.get("symbols", []):
+        kind = item.get("kind")
+        if kind is not None:
+            rust_symbol_kinds.setdefault(item["symbol"], set()).add(kind)
+    rust_module_only_symbols: set[str] = {
+        symbol for symbol, kinds in rust_symbol_kinds.items() if kinds == {"module"}
+    }
     node_exports: set[str] = {
         item["export"] for item in node_manifest.get("exports", [])
     }
@@ -100,9 +118,41 @@ def validate_contract_surface(
             )
             continue
 
+        # A row may declare that no verified Rust counterpart is known, but
+        # only explicitly. `rustSymbol: null` plus an `unmappedReason` records
+        # the export as tracked-but-unmapped debt; it is counted in the diff
+        # report's tier1_unmapped total rather than being silently treated as a
+        # match. Without a reason a null rustSymbol is still a malformed row.
+        if rust_symbol is None and mapping.get("unmappedReason"):
+            if node_export is None:
+                diagnostics.append(
+                    f"Row '{row_id}' is unmapped but has no nodeExport; an "
+                    f"unmapped row must still name the binding surface it tracks."
+                )
+            # Unmapped means "no verified *Rust* counterpart", not "unchecked".
+            # The row still names a Node export, and that export is exactly the
+            # binding surface this gate exists to protect, so it must still be
+            # present in index.d.ts. Skipping this check let a renamed or
+            # deleted export hide inside the tier1_unmapped total instead of
+            # being reported as drift.
+            elif node_export not in node_exports:
+                diagnostics.append(
+                    f"Row '{row_id}' is unmapped but its nodeExport "
+                    f"'{node_export}' is not in the node surface (index.d.ts). "
+                    f"An unmapped row still tracks a real binding surface: "
+                    f"either restore the export, update the row to the new "
+                    f"name, or delete the row if the export is intentionally "
+                    f"gone."
+                )
+            continue
+
         # H1 fail-closed: missing rustSymbol.
         if rust_symbol is None:
-            diagnostics.append(f"Row '{row_id}' missing rustSymbol.")
+            diagnostics.append(
+                f"Row '{row_id}' missing rustSymbol. If this export genuinely "
+                f"has no verified Rust counterpart, set rustSymbol to null and "
+                f"add an 'unmappedReason' explaining why."
+            )
             continue
 
         # Round 2 Fix 1.1: non-string rustSymbol (list, dict, int, ...).
@@ -162,6 +212,29 @@ def validate_contract_surface(
                 f"Row '{row_id}' rustSymbol '{effective_rust_symbol}' not in "
                 f"rust surface. Add 'pub use <sub_module>::"
                 f"{effective_rust_symbol};' to {rust_crate}/lib.rs."
+            )
+
+        # A Node export may not claim a Rust *module* as its counterpart. The
+        # existence check above is satisfied by any symbol of any kind, which is
+        # how placeholder rows accumulated: 82 unrelated exports once all named
+        # the module `path_core` and the gate still reported 100% matched.
+        # Matching a module says nothing about the export, so it is rejected.
+        #
+        # @rust proxy rows are exempt: they have no nodeExport and exist
+        # precisely to record that a Rust module has no binding counterpart.
+        if (
+            not is_proxy
+            and effective_rust_symbol
+            and effective_rust_symbol in rust_module_only_symbols
+        ):
+            diagnostics.append(
+                f"Row '{row_id}' maps nodeExport '{node_export}' to "
+                f"'{effective_rust_symbol}', which is a Rust module rather than "
+                f"a function, type, or re-export. A module match does not verify "
+                f"anything about the export. Map it to the specific core symbol "
+                f"the NAPI wrapper uses (see "
+                f"tools/node_api_parity/resolve_node_rust_symbols.py), or set "
+                f"rustSymbol to null with an 'unmappedReason'."
             )
 
         # Positive: Node-side lookup (skipped for @rust proxy rows).
@@ -225,39 +298,6 @@ def render_tier1_gate_markdown(diff_report: dict[str, Any]) -> str:
         )
     lines.append("")
     return "\n".join(lines)
-
-
-def artifacts_match(expected: Path, actual: Path) -> bool:
-    """Return whether two artifact files have identical content."""
-    if not expected.exists() or not actual.exists():
-        return False
-    if expected.suffix == ".json":
-        expected_payload = json.loads(expected.read_text(encoding="utf-8"))
-        actual_payload = json.loads(actual.read_text(encoding="utf-8"))
-        expected_payload.pop("generated_at_utc", None)
-        actual_payload.pop("generated_at_utc", None)
-        return expected_payload == actual_payload
-
-    expected_lines = [
-        line
-        for line in expected.read_text(encoding="utf-8").splitlines()
-        if not line.startswith("- Generated:")
-    ]
-    actual_lines = [
-        line
-        for line in actual.read_text(encoding="utf-8").splitlines()
-        if not line.startswith("- Generated:")
-    ]
-    return expected_lines == actual_lines
-
-
-def sync_baseline_artifacts(
-    output_dir: Path, baseline_output_dir: Path, artifact_names: tuple[str, ...]
-) -> None:
-    """Copy generated artifacts into the checked-in baseline directory."""
-    baseline_output_dir.mkdir(parents=True, exist_ok=True)
-    for name in artifact_names:
-        shutil.copyfile(output_dir / name, baseline_output_dir / name)
 
 
 def main() -> int:
@@ -369,6 +409,21 @@ def main() -> int:
             "contract": args.contract,
             "runtime_registry": args.runtime_registry,
             "index_dts": args.index_dts,
+        },
+    )
+
+    # Carry the committed timestamps forward on any artifact whose substance is
+    # unchanged, so `--update-baseline` copies byte-identical files into the
+    # tracked baseline instead of a timestamp-only diff. The markdown reports
+    # follow for free: their "- Generated:" header renders from the
+    # corresponding JSON payload rather than calling the clock again.
+    preserve_baseline_generated_at_all(
+        baseline_output_dir,
+        {
+            "rust_api_surface.json": rust_manifest,
+            "node_api_surface.json": node_manifest,
+            "parity_diff_report.json": diff_report,
+            "runtime_coverage_summary.json": coverage_summary,
         },
     )
 

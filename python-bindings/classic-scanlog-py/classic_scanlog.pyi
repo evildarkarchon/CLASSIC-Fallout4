@@ -6,11 +6,13 @@ This standalone module provides high-performance crash log analysis with:
 - Plugin and record detection (30-40x speedup)
 - Aggregate semantic Mod Guidance analysis
 - Independent batch analysis helpers
-- Report generation (75x speedup)
 """
 
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any, Literal
+
+from classic_shared import GameId
 
 __version__: str
 
@@ -119,130 +121,6 @@ class FormIDAnalyzer:
 
         Returns:
             Tuple of (cache_entries, cache_size_bytes)
-
-        """
-
-class FormIDAnalyzerCore:
-    """Core FormID analysis functionality with optimizations.
-
-    Provides high-performance FormID extraction, validation, and matching
-    with zero-copy optimizations and plugin caching for repeated operations.
-    """
-
-    def __init__(
-        self,
-        show_formid_values: bool = False,
-        crashgen_name: str = "",
-    ) -> None:
-        """Create FormID analyzer core.
-
-        Args:
-            show_formid_values: Whether to show FormID values in output
-            crashgen_name: Name of the crash generator (e.g., "Buffout 4")
-
-        """
-
-    def extract_formids(self, segment_callstack: list[str]) -> list[str]:
-        """Extract FormIDs from callstack segment.
-
-        Standard extraction method that processes a callstack segment
-        and returns all found FormIDs.
-
-        Args:
-            segment_callstack: List of callstack lines to search
-
-        Returns:
-            List of FormID strings found in the segment
-
-        """
-
-    def extract_formids_nocopy(self, segment_callstack: list[str]) -> list[str]:
-        """Extract FormIDs using zero-copy optimization.
-
-        Optimized extraction that avoids unnecessary data copies by
-        directly processing Python list strings.
-
-        Args:
-            segment_callstack: List of callstack lines to search
-
-        Returns:
-            List of FormID strings found in the segment
-
-        """
-
-    def cache_plugins(self, cache_key: str, plugins: dict[str, str]) -> None:
-        """Cache plugin mappings for efficient repeated use.
-
-        Stores plugin data on the Rust side to avoid repeated conversions
-        from Python dictionaries. Use a stable cache_key to identify the
-        plugin set.
-
-        Args:
-            cache_key: Unique identifier for this plugin set (e.g., MD5 hash)
-            plugins: Dictionary mapping plugin names to paths/details
-
-        """
-
-    def process_formids_cached(self, formids: list[str], cache_key: str) -> list[str]:
-        """Process FormIDs using cached plugin mappings.
-
-        Uses previously cached plugins for efficient FormID matching and
-        report generation without Python/Rust boundary overhead.
-
-        Args:
-            formids: List of FormID strings to process
-            cache_key: Cache key from previous cache_plugins() call
-
-        Returns:
-            List of formatted report lines for the FormID matches
-
-        """
-
-    def formid_match(self, formids: list[str], plugins: dict[str, str]) -> list[str]:
-        """Match FormIDs against plugins and return formatted report lines.
-
-        This function correlates extracted FormIDs with plugin load order IDs from
-        the crash log, generating a report section with plugin associations and counts.
-
-        Args:
-            formids: FormID strings extracted from callstack (e.g., "Form ID: 12345678")
-            plugins: Mapping of plugin names to their load order IDs
-
-        Returns:
-            A list of formatted report lines ready for inclusion in the analysis report.
-
-        """
-
-    def is_valid_formid(self, formid: str) -> bool:
-        """Check if FormID string is valid.
-
-        Args:
-            formid: FormID string to validate
-
-        Returns:
-            True if valid hex FormID
-
-        """
-
-    def parse_formid(self, formid: str) -> int | None:
-        """Parse FormID string to integer.
-
-        Args:
-            formid: FormID string (hex format)
-
-        Returns:
-            Parsed FormID integer or None if invalid
-
-        """
-
-    def extract_plugin_index(self, formid: str) -> int | None:
-        """Extract plugin index from FormID.
-
-        Args:
-            formid: FormID string
-
-        Returns:
-            Plugin index (0-255) or None if invalid
 
         """
 
@@ -533,34 +411,12 @@ class RecordScanner:
     pattern matching algorithms.
     """
 
-    def __init__(
-        self, target_records: list[str], ignore_records: list[str], crashgen_name: str
-    ) -> None:
+    def __init__(self, target_records: list[str], ignore_records: list[str]) -> None:
         """Create record scanner.
 
         Args:
             target_records: List of target record names to scan for
             ignore_records: List of record names to ignore during scanning
-            crashgen_name: Name of the crash generator (e.g., "Buffout4", "Crash Logger")
-
-        """
-
-    def scan_named_records(
-        self, segment_callstack: list[str]
-    ) -> tuple[list[str], list[str]]:
-        """Scan named records from callstack segment.
-
-        Scans the callstack segment for configured named records and returns
-        both the formatted report lines and the list of matched record names.
-
-        Args:
-            segment_callstack: List of callstack lines to scan
-
-        Returns:
-            Tuple containing:
-                - List of formatted report lines
-                - List of matched record names
-
         """
 
     def extract_records(self, segment_callstack: list[str]) -> list[str]:
@@ -587,16 +443,23 @@ class ScanRunConfiguration:
 
     def __init__(
         self,
-        yaml_dir_root: str,
-        yaml_dir_data: str,
-        game: str,
+        installation_root: str,
+        game: GameId,
         game_version: str,
         show_formid_values: bool,
         simplify_logs: bool,
         formid_database_paths: list[str],
         unsolved_logs_destination: str | None = None,
         max_concurrent: int | None = None,
-    ) -> None: ...
+    ) -> None:
+        """Create scan facts with a typed ``classic_shared.GameId``.
+
+        Raises:
+            TypeError: If ``game`` is not a shared typed game identifier.
+            ValueError: If ``game`` is an unrecognized typed identifier value.
+            ImportError: If ``classic_shared`` cannot be imported.
+
+        """
 
 class ScanRunStandardSource:
     """Explicit Standard discovery inputs."""
@@ -739,6 +602,130 @@ class ScanRunLogResult:
     plugin_count: int
     suspect_count: int
 
+class ScanRunYamlDataContentIdentity:
+    """Exact-byte identity retained for one Installed YAML Data file."""
+
+    sha256: str
+    byte_len: int
+
+class ScanRunInspectedYamlDataFile:
+    """Selected metadata for one update-eligible Main or game file."""
+
+    role: Literal["main", "game"]
+    provenance: Literal["updated", "previous", "bundled"]
+    schema_major: int
+    schema_minor: int
+    sha256: str
+    byte_length: int
+
+class ScanRunInstalledYamlDataDiagnostic:
+    """One structured selection, fallback, validation, or generation diagnostic."""
+
+    role: Literal["main", "game"] | None
+    candidate: Literal["updated", "previous", "bundled"] | None
+    path: Path | None
+    kind: Literal[
+        "cache_unavailable",
+        "missing",
+        "read",
+        "invalid_utf8",
+        "parse",
+        "invalid_schema",
+        "incompatible_schema",
+        "invalid_role_data",
+        "local_ignore_generated",
+        "local_ignore_reset",
+    ]
+    message: str
+
+class ScanRunInstalledYamlDataRunData:
+    """Installed YAML Data metadata retained from one immutable run snapshot."""
+
+    main: ScanRunInspectedYamlDataFile
+    game_file: ScanRunInspectedYamlDataFile
+    local_ignore_state: Literal[
+        "existing",
+        "generated",
+        "recovery_required",
+        "proceed_without_ignore",
+        "reset_to_default",
+    ]
+    local_ignore_identity: ScanRunYamlDataContentIdentity
+    diagnostics: list[ScanRunInstalledYamlDataDiagnostic]
+    local_ignore_reset_available: bool
+    local_ignore_reset: ScanRunLocalIgnoreResetRunData | None
+
+class ScanRunLocalIgnoreResetRunData:
+    """Durable metadata from successful Reset To Default resume."""
+
+    local_ignore_path: Path
+    backup_path: Path
+    malformed_identity: ScanRunYamlDataContentIdentity
+    backup_identity: ScanRunYamlDataContentIdentity
+    replacement_identity: ScanRunYamlDataContentIdentity
+
+class ScanRunLocalIgnoreRecoveryDecision:
+    """Explicit Rust-owned choice for resuming Local Ignore recovery."""
+
+    ProceedWithoutIgnore: ScanRunLocalIgnoreRecoveryDecision
+    ResetToDefault: ScanRunLocalIgnoreRecoveryDecision
+
+class ScanRunContinuation:
+    """Opaque process-local carrier for one paused Crash Log Scan Run."""
+
+class ScanRunContinuationConsumedError(RuntimeError):
+    """Raised when a recovery continuation is consumed more than once."""
+
+    code: Literal["scan_run_continuation_consumed"]
+
+class ScanRunLocalIgnoreResetConflictError(RuntimeError):
+    """Raised when Local Ignore changed while the caller was deciding."""
+
+    code: Literal["local_ignore_reset_conflict"]
+    kind: Literal["local_ignore_reset_conflict"]
+    expected_identity: ScanRunYamlDataContentIdentity
+    actual_identity: ScanRunYamlDataContentIdentity | None
+    backup_path: Path | None
+
+class ScanRunLocalIgnoreResetBackupError(RuntimeError):
+    """Raised when reset fails before replacement can safely begin."""
+
+    code: Literal["local_ignore_reset_backup_failure"]
+    kind: Literal["local_ignore_reset_backup_failure"]
+    path: Path
+    stage: Literal[
+        "create",
+        "write",
+        "flush",
+        "sync",
+        "publish",
+    ] | None
+
+class ScanRunLocalIgnoreResetReplacementError(RuntimeError):
+    """Raised when reset fails while publishing retained defaults."""
+
+    code: Literal["local_ignore_reset_replacement_failure"]
+    kind: Literal["local_ignore_reset_replacement_failure"]
+    path: Path
+    stage: Literal[
+        "create",
+        "write",
+        "flush",
+        "sync",
+        "publish",
+    ] | None
+
+class ScanRunLocalIgnoreResetDurabilityUnknownError(RuntimeError):
+    """Raised when defaults are visible but canonical replacement durability is unconfirmed."""
+
+    code: Literal["local_ignore_reset_durability_unknown"]
+    kind: Literal["local_ignore_reset_durability_unknown"]
+    path: Path
+    backup_path: Path
+    malformed_identity: ScanRunYamlDataContentIdentity
+    backup_identity: ScanRunYamlDataContentIdentity
+    replacement_identity: ScanRunYamlDataContentIdentity
+
 class ScanRunResult:
     """Complete terminal Crash Log Scan Run result."""
 
@@ -746,11 +733,14 @@ class ScanRunResult:
         "completed",
         "no_crash_logs_found",
         "setup_failed",
+        "local_ignore_recovery_required",
         "cancelled_before_discovery",
         "cancelled",
     ]
     discovery: ScanRunDiscoveryResult | None
     setup: ScanRunSetupResult | None
+    installed_yaml_data: ScanRunInstalledYamlDataRunData | None
+    continuation: ScanRunContinuation | None
     effective_concurrency: int | None
     message: str | None
     total: int
@@ -813,363 +803,126 @@ def scan_run_execute(
 ) -> ScanRunExecution:
     """Execute one final-contract Crash Log Scan Run."""
 
+def scan_run_resume(
+    continuation: ScanRunContinuation,
+    decision: ScanRunLocalIgnoreRecoveryDecision,
+    cancellation: ScanRunCancellation,
+    observer: Callable[[ScanRunEvent], None] | None = None,
+    cancel_on_observer_error: bool = False,
+) -> ScanRunExecution:
+    """Resume retained work without repeating discovery or YAML Data selection."""
 
-# =============================================================================
-# Report Generation
-# =============================================================================
+def scan_run_installed_yaml_data_diagnostic_kind_label(token: str) -> str:
+    """Return the human-facing Display Label for one diagnostic-kind token.
 
-class StringPool:
-    """Shared string pool for report generation.
+    ``token`` is what this module publishes on
+    :attr:`ScanRunInstalledYamlDataDiagnostic.kind`. The label reads as a
+    failure where the outcome is one, so ``parse`` resolves to ``parse
+    failure``. It is the same string
+    :func:`classic_config.installed_yaml_data_diagnostic_kind_label` returns,
+    because the run contract's enum delegates its naming to the configuration
+    crate's.
 
-    Reduces memory usage by deduplicating common strings across reports.
+    Labels are presentation only and may be reworded between releases, so do
+    not parse or compare them -- compare the token.
+
+    Args:
+        token: A published diagnostic-kind token.
+
+    Raises:
+        ValueError: ``token`` is not a published diagnostic-kind token.
     """
 
-    def __init__(self) -> None:
-        """Create string pool."""
+def scan_run_local_ignore_yaml_data_state_label(token: str) -> str:
+    """Return the human-facing Display Label for one Local Ignore state token.
 
-    def intern(self, text: str) -> str:
-        """Intern a string.
+    ``token`` is what this module publishes on
+    :attr:`ScanRunInstalledYamlDataRunData.local_ignore_state`. Four of the five
+    labels are the configuration crate's; ``recovery_required`` is the one the
+    run contract owns itself, since a paused run has no configuration
+    counterpart.
 
-        Args:
-            text: String to intern
+    Args:
+        token: A published Local Ignore state token.
 
-        Returns:
-            Interned string reference (may be same object for duplicates)
-
-        """
-
-    def intern_batch(self, strings: list[str]) -> list[str]:
-        """Intern multiple strings in parallel.
-
-        Args:
-            strings: List of strings to intern
-
-        Returns:
-            List of interned strings
-
-        """
-
-    def get_stats(self) -> tuple[int, int, int, int]:
-        """Get pool statistics.
-
-        Returns:
-            Tuple of (total_strings, unique_strings, memory_saved, current_size)
-
-        """
-
-    def clear(self) -> None:
-        """Clear the string pool."""
-
-class ReportFragment:
-    """A fragment of a report.
-
-    Represents a section of the final report with priority for ordering.
+    Raises:
+        ValueError: ``token`` is not a published Local Ignore state token.
     """
 
-    def __init__(self, lines: list[str] | None = None) -> None:
-        """Create report fragment.
+def scan_run_log_disposition_label(token: str) -> str:
+    """Return the human-facing Display Label for one log disposition token.
 
-        Args:
-            lines: Optional list of lines to initialize the fragment with
+    ``token`` is what this module publishes on
+    :attr:`ScanRunLogResult.disposition` and on a ``log_finished`` event. Unlike
+    the two above, the wording is the run crate's own -- this enum has no
+    configuration counterpart, so there is no :mod:`classic_config` function
+    returning the same prose.
 
-        """
+    Labels are presentation only and may be reworded between releases, so do
+    not parse or compare them -- compare the token.
 
-    @staticmethod
-    def empty() -> ReportFragment:
-        """Create an empty report fragment.
+    Args:
+        token: A published disposition token.
 
-        Returns:
-            Empty ReportFragment instance
-
-        """
-
-    @staticmethod
-    def from_lines(lines: list[str]) -> ReportFragment:
-        """Create a report fragment from a list of lines.
-
-        Args:
-            lines: List of string lines for the fragment
-
-        Returns:
-            ReportFragment initialized with the given lines
-
-        """
-
-    def with_header(self, header_lines: list[str]) -> ReportFragment:
-        """Add a header to this fragment.
-
-        Args:
-            header_lines: List of header lines to prepend
-
-        Returns:
-            New ReportFragment with header added
-
-        """
-
-    def combine(self, other: ReportFragment) -> ReportFragment:
-        """Combine two fragments.
-
-        Args:
-            other: Another ReportFragment to combine with this one
-
-        Returns:
-            New ReportFragment containing both fragments
-
-        """
-
-    def to_list(self) -> list[str]:
-        """Convert to a list of strings.
-
-        Returns:
-            List of string lines in the fragment
-
-        """
-
-    def len(self) -> int:
-        """Get the number of lines.
-
-        Returns:
-            Number of lines in the fragment
-
-        """
-
-    def is_empty(self) -> bool:
-        """Check if empty.
-
-        Returns:
-            True if fragment has no lines
-
-        """
-
-class ReportComposer:
-    """Composes report fragments into final report.
-
-    Manages fragment ordering, deduplication, and final composition.
+    Raises:
+        ValueError: ``token`` is not a published disposition token.
     """
 
-    def __init__(self) -> None:
-        """Create report composer."""
+def scan_run_log_failure_stage_label(token: str) -> str:
+    """Return the human-facing Display Label for one log failure stage token.
 
-    def add(self, fragment: ReportFragment) -> None:
-        """Add a report fragment.
+    ``token`` is what this module publishes on :attr:`ScanRunLogFailure.stage`.
+    ``unsolved_logs_finalization`` resolves to ``Unsolved Logs finalization``,
+    keeping the glossary capitalization of the domain term -- which is exactly
+    what no mechanical transform of the token could have produced.
 
-        Args:
-            fragment: Fragment to add to composition
+    Same stability caveat as :func:`scan_run_log_disposition_label`.
 
-        """
+    Args:
+        token: A published failure stage token.
 
-    def add_many(self, fragments: list[ReportFragment]) -> None:
-        """Add multiple fragments at once.
-
-        Args:
-            fragments: List of fragments to add
-
-        """
-
-    def compose(self) -> list[str]:
-        """Compose final report.
-
-        Sorts fragments by priority and composes into final report.
-
-        Returns:
-            Report lines (markdown format)
-
-        """
-
-    def compose_optimized(self) -> list[str]:
-        """Compose final report with optimization.
-
-        Uses optimized composition algorithm for better performance.
-
-        Returns:
-            Report lines (markdown format)
-
-        """
-
-    def build_string(self) -> str:
-        """Build as a single string.
-
-        Returns:
-            Complete report as a single string
-
-        """
-
-    def fragment_count(self) -> int:
-        """Get number of fragments.
-
-        Returns:
-            Number of fragments currently in the composer
-
-        """
-
-    def pool_stats(self) -> tuple[int, int, int, int]:
-        """Get string pool statistics.
-
-        Returns:
-            Tuple of (pool_size, lookups, hits, insertions):
-                - pool_size: Number of unique interned strings
-                - lookups: Total number of intern attempts
-                - hits: Number of cache hits (string already in pool)
-                - insertions: Number of new strings added to pool
-
-        """
-
-class ReportGenerator:
-    """High-performance report generation (75x speedup).
-
-    Generates markdown-formatted crash analysis reports with all
-    relevant information organized by section. Output is identical
-    to Python's ReportGeneratorFragments.
+    Raises:
+        ValueError: ``token`` is not a published failure stage token.
     """
 
-    def __init__(self) -> None:
-        """Create report generator with default configuration."""
+def scan_run_infrastructure_error_stage_label(token: str) -> str:
+    """Return the human-facing Display Label for one infrastructure stage token.
 
-    @staticmethod
-    def with_config(classic_version: str, crashgen_name: str) -> ReportGenerator:
-        """Create report generator with custom configuration.
+    ``token`` is what this module publishes on
+    :attr:`ScanRunInfrastructureError.stage`. ``formid_database_access``
+    resolves to ``FormID database access`` and ``internal_invariant`` to
+    ``internal invariant validation``.
 
-        Args:
-            classic_version: CLASSIC version string (e.g., "CLASSIC v8.0.0")
-            crashgen_name: Crash generator name (e.g., "Buffout 4")
+    Same stability caveat as :func:`scan_run_log_disposition_label`.
 
-        Returns:
-            Configured ReportGenerator instance
+    Args:
+        token: A published infrastructure stage token.
 
-        """
-
-    def generate_header(self, crashlog_filename: str) -> ReportFragment:
-        """Generate header fragment.
-
-        Args:
-            crashlog_filename: Name of the crash log file
-
-        Returns:
-            ReportFragment containing the header section
-
-        """
-
-    def generate_error_section(
-        self, main_error: str, crashgen_version: str, is_outdated: bool
-    ) -> ReportFragment:
-        """Generate error section.
-
-        Args:
-            main_error: Main error message from crash log
-            crashgen_version: Version of crash generator detected
-            is_outdated: Whether the crashgen version is outdated
-
-        Returns:
-            ReportFragment containing the error section
-
-        """
-
-    def generate_suspect_section_header(self) -> ReportFragment:
-        """Generate suspect section header.
-
-        Returns:
-            ReportFragment containing the suspect section header
-
-        """
-
-    def generate_suspect_found_footer(self, found_suspect: bool) -> ReportFragment:
-        """Generate suspect found footer.
-
-        Args:
-            found_suspect: Whether any suspects were detected
-
-        Returns:
-            ReportFragment containing the footer message
-
-        """
-
-    def generate_settings_section_header(self) -> ReportFragment:
-        """Generate settings section header.
-
-        Returns:
-            ReportFragment containing the settings section header
-
-        """
-
-    def generate_mod_check_header(self, check_type: str) -> ReportFragment:
-        """Generate mod check header.
-
-        Args:
-            check_type: Description of what mods are being checked
-
-        Returns:
-            ReportFragment containing the mod check header
-
-        """
-
-    def generate_plugin_suspect_header(self) -> ReportFragment:
-        """Generate plugin suspect header.
-
-        Returns:
-            ReportFragment containing the plugin suspect header
-
-        """
-
-    def generate_formid_section_header(self) -> ReportFragment:
-        """Generate FormID section header.
-
-        Returns:
-            ReportFragment containing the FormID section header
-
-        """
-
-    def generate_record_section_header(self) -> ReportFragment:
-        """Generate record section header.
-
-        Returns:
-            ReportFragment containing the record section header
-
-        """
-
-    def generate_footer(self) -> ReportFragment:
-        """Generate report footer.
-
-        Returns:
-            ReportFragment containing the report footer
-
-        """
-
-    def generate_suspect_section(self, found_suspects: list[str]) -> ReportFragment:
-        """Generate suspect section (legacy method for backward compatibility).
-
-        .. deprecated::
-            Use :meth:`generate_suspect_section_header` and
-            :meth:`generate_suspect_found_footer` instead.
-
-        Args:
-            found_suspects: List of suspect lines to include
-
-        Returns:
-            ReportFragment containing the suspect section
-
-        """
-
-class ParallelReportProcessor:
-    """Parallel report processing.
-
-    Processes multiple analysis results into reports in parallel,
-    utilizing all available CPU cores.
+    Raises:
+        ValueError: ``token`` is not a published infrastructure stage token.
     """
 
-    def __init__(self) -> None:
-        """Create parallel processor."""
+def scan_run_local_ignore_reset_failure_stage_label(token: str) -> str:
+    """Return the human-facing Display Label for one reset failure stage token.
 
-    @staticmethod
-    def combine_fragments(fragments: list[ReportFragment]) -> ReportFragment:
-        """Combine multiple report fragments in parallel.
+    ``token`` is what this module publishes on the ``stage`` attribute of
+    :class:`ScanRunLocalIgnoreResetBackupError` and
+    :class:`ScanRunLocalIgnoreResetReplacementError`. These five labels
+    deliberately equal their tokens: the core enum mirrors the workspace's
+    shared durable-publication stage vocabulary, which names ordinary steps
+    rather than domain terms. The function exists anyway so a caller can resolve
+    every scan-run token the same way, rather than having to know which
+    vocabularies happen to need it.
 
-        Args:
-            fragments: List of ReportFragment instances to combine
+    Same stability caveat as :func:`scan_run_log_disposition_label`.
 
-        Returns:
-            Single combined ReportFragment
+    Args:
+        token: A published reset failure stage token.
 
-        """
+    Raises:
+        ValueError: ``token`` is not a published reset failure stage token.
+    """
+
 
 # =============================================================================
 # Standalone Functions
@@ -1352,7 +1105,7 @@ class ModGuidanceConflictRule:
         name_a: str,
         name_b: str,
         description: str,
-        fix: str,
+        fix: str | None = None,
         link: str | None = None,
     ) -> None: ...
     @property
@@ -1366,7 +1119,7 @@ class ModGuidanceConflictRule:
     @property
     def description(self) -> str: ...
     @property
-    def fix(self) -> str: ...
+    def fix(self) -> str | None: ...
     @property
     def link(self) -> str | None: ...
 
@@ -1446,7 +1199,7 @@ class ModConflictGuidance:
     @property
     def description(self) -> str: ...
     @property
-    def fix(self) -> str: ...
+    def fix(self) -> str | None: ...
     @property
     def link(self) -> str | None: ...
 
@@ -1637,6 +1390,108 @@ class PluginEvidenceAnalyzer:
     def analyze(self, input: PluginEvidenceAnalysisInput) -> PluginEvidenceAnalysisResult:
         """Run aggregate semantic analysis without producing report lines."""
 
+class FormIDFindingLookupReplyKind:
+    """Callback-free deterministic lookup reply category."""
+
+    Missing: FormIDFindingLookupReplyKind
+    Found: FormIDFindingLookupReplyKind
+    OperationalFailure: FormIDFindingLookupReplyKind
+
+class FormIDFindingLookupEntry:
+    """Immutable owned deterministic FormID lookup reply."""
+
+    def __init__(
+        self,
+        formid: str,
+        plugin: str,
+        reply_kind: FormIDFindingLookupReplyKind,
+        value: str | None = None,
+        error_message: str | None = None,
+    ) -> None: ...
+
+class FormIDPlugin:
+    """Immutable plugin identity and load-order prefix."""
+
+    def __init__(self, name: str, prefix: str) -> None: ...
+
+class FormIDFindingAnalysisInput:
+    """Immutable owned input for one aggregate FormID Finding call."""
+
+    def __init__(self, crash_lines: list[str], plugins: list[FormIDPlugin]) -> None: ...
+
+class FormIDValueLookupStatus:
+    """Semantic state of optional FormID Value Lookup."""
+
+    NotApplicable: FormIDValueLookupStatus
+    Disabled: FormIDValueLookupStatus
+    Missing: FormIDValueLookupStatus
+    Found: FormIDValueLookupStatus
+
+class FormIDFinding:
+    """Immutable distinct FormID Finding including unresolved identifiers."""
+
+    @property
+    def identifier(self) -> str: ...
+    @property
+    def occurrences(self) -> int: ...
+    @property
+    def plugin(self) -> str | None: ...
+    @property
+    def value_lookup_status(self) -> FormIDValueLookupStatus: ...
+    @property
+    def value(self) -> str | None: ...
+
+class FormIDFindingAnalysisResult:
+    """Completed semantic analysis, including explicit empty success."""
+
+    @property
+    def findings(self) -> list[FormIDFinding]: ...
+
+class FormIDFindingAnalyzer:
+    """Immutable aggregate FormID Finding analyzer."""
+
+    def __init__(self) -> None: ...
+    @staticmethod
+    def in_memory(entries: list[FormIDFindingLookupEntry]) -> FormIDFindingAnalyzer: ...
+    @staticmethod
+    def sqlite(database_path: str, game_table: str) -> FormIDFindingAnalyzer: ...
+    @property
+    def kind(self) -> AnalyzerKind: ...
+    def analyze(self, input: FormIDFindingAnalysisInput) -> FormIDFindingAnalysisResult:
+        """Run async Rust analysis on the shared runtime while releasing the GIL."""
+
+class NamedRecordFindingAnalysisInput:
+    """Immutable owned input for one aggregate Named Record Finding analysis call."""
+
+    def __init__(self, crash_lines: list[str]) -> None: ...
+
+class NamedRecordFinding:
+    """Immutable distinct named record and exact occurrence count."""
+
+    @property
+    def record(self) -> str: ...
+    @property
+    def occurrences(self) -> int: ...
+
+class NamedRecordFindingAnalysisResult:
+    """Completed analysis; an empty list explicitly means no findings."""
+
+    @property
+    def findings(self) -> list[NamedRecordFinding]: ...
+
+class NamedRecordFindingAnalyzer:
+    """Immutable analyzer with validated, compiled Named Record Finding configuration."""
+
+    def __init__(
+        self, target_records: list[str], ignored_records: list[str]
+    ) -> None: ...
+    @property
+    def kind(self) -> AnalyzerKind: ...
+    def analyze(
+        self, input: NamedRecordFindingAnalysisInput
+    ) -> NamedRecordFindingAnalysisResult:
+        """Run aggregate semantic analysis without producing report lines."""
+
 class CrashgenExpectationOutcome:
     """Immutable semantic result from one YAML-backed expectation."""
 
@@ -1699,45 +1554,6 @@ class CrashgenSettingsAnalyzer:
 
     def analyze(self, input: CrashgenSettingsAnalysisInput) -> CrashgenSettingsAnalysisResult:
         """Run aggregate semantic analysis without producing report lines."""
-
-class SettingsValidator:
-    """Settings validation for Crashgen Expectations.
-
-    Evaluates YAML-backed ``settings_rules`` and appends universal disabled-setting notices.
-    """
-
-    def __init__(self, crashgen_name: str, crashgen_entry: dict[str, Any]) -> None:
-        """Create settings validator.
-
-        Args:
-            crashgen_name: Name of crash generator (e.g., "Buffout 4")
-            crashgen_entry: Registry entry with display_section/ignore_keys/settings_rules.
-                ``checks`` is accepted as deprecated inert metadata.
-
-        """
-
-    def scan_all_settings(
-        self,
-        crashgen: dict[str, dict[str, str]],
-        xsemodules: set[str],
-        crashgen_version: tuple[int, int, int] | None = None,
-        config_layout: str | None = None,
-    ) -> list[list[str]]:
-        """Run Crashgen Expectation evaluation and Disabled Setting Notices."""
-
-    def check_disabled_settings(self, crashgen: dict[str, dict[str, str]]) -> list[str]:
-        """Scan for disabled crash generator settings.
-
-        Checks for settings that have been explicitly disabled and are not ignored
-        by the resolved Crashgen registry entry.
-
-        Args:
-            crashgen: Crashgen settings grouped by section, with all values as strings
-
-        Returns:
-            List of report lines for disabled settings issues
-
-        """
 
 # =============================================================================
 # GPU Detection (Phase 2)
@@ -1883,14 +1699,6 @@ class ConfigIssue:
     @property
     def severity(self) -> str:
         """Issue severity level ('error', 'warning', 'info')."""
-
-    def format_report(self) -> str:
-        """Format issue as human-readable report section.
-
-        Returns:
-            Formatted markdown string describing the issue
-
-        """
 
 # =============================================================================
 # Test Classes

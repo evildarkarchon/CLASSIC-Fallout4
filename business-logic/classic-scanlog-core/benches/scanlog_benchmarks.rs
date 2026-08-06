@@ -30,10 +30,12 @@ mod common;
 mod db_fixtures;
 
 use classic_config_core::CoreModEntry;
-use classic_database_core::DatabasePool;
+use classic_database_core::{DatabasePool, FormIdValueLookup};
 use classic_scanlog_core::{
-    FormIDAnalyzerCore, LogParser, PatternMatcher, PluginAnalyzer, RecordScanner, contains_plugin,
-    contains_record, detect_plugins_batch, scan_records_batch,
+    FormIDFindingAnalysisInput, FormIDFindingAnalyzer, FormIDPlugin, LogParser,
+    NamedRecordFindingAnalysisInput, NamedRecordFindingAnalyzer, PatternMatcher, PluginAnalyzer,
+    RecordScanner, contains_plugin, contains_record, detect_plugins_batch, extract_formids_batch,
+    scan_records_batch,
 };
 use classic_shared_core::get_runtime;
 use indexmap::IndexMap;
@@ -262,10 +264,7 @@ fn formid_extraction_benchmarks(c: &mut Criterion) {
             BenchmarkId::new("extract_formids", name),
             &callstack_lines,
             |b, lines| {
-                let analyzer = FormIDAnalyzerCore::new(None, false, "Buffout 4".to_string())
-                    .expect("analyzer creation should succeed");
-
-                b.iter(|| analyzer.extract_formids(lines.clone()));
+                b.iter(|| extract_formids_batch(vec![lines.clone()]));
             },
         );
     }
@@ -307,15 +306,17 @@ fn formid_resolution_db_benchmarks(c: &mut Criterion) {
         .block_on(pool.initialize(vec![fixture.db_paths[0].clone()]))
         .expect("database fixture initialization should succeed");
 
-    let analyzer = FormIDAnalyzerCore::new(
-        Some(pool.clone()),
-        true, // show_formid_values=true to force DB-backed value resolution path
-        "Buffout 4".to_string(),
-    )
-    .expect("analyzer creation should succeed");
+    let analyzer = FormIDFindingAnalyzer::new(FormIdValueLookup::shared_pool(pool.clone()));
 
     let crashlog_plugins: IndexMap<String, String> =
         fixture.plugin_prefix_pairs().into_iter().collect();
+    let plugins = crashlog_plugins
+        .iter()
+        .map(|(name, prefix)| FormIDPlugin {
+            name: name.clone(),
+            prefix: prefix.clone(),
+        })
+        .collect::<Vec<_>>();
 
     for (scenario_id, formid_count) in [
         ("cold_small_32", 32usize),
@@ -331,11 +332,13 @@ fn formid_resolution_db_benchmarks(c: &mut Criterion) {
             |b, lines| {
                 b.iter(|| {
                     pool.clear_cache(false);
-                    let formids = analyzer.extract_formids(lines.clone());
-                    let report_lines = runtime
-                        .block_on(analyzer.formid_match(formids, &crashlog_plugins))
+                    let result = runtime
+                        .block_on(analyzer.analyze(FormIDFindingAnalysisInput {
+                            crash_lines: lines.clone(),
+                            plugins: plugins.clone(),
+                        }))
                         .expect("formid resolution should succeed");
-                    black_box(report_lines.len())
+                    black_box(result.findings.len())
                 });
             },
         );
@@ -343,9 +346,11 @@ fn formid_resolution_db_benchmarks(c: &mut Criterion) {
 
     // Warm-cache run that exercises the same resolution path without cache clearing.
     let warm_lines = fixture.formid_callstack_lines(128);
-    let warm_formids = analyzer.extract_formids(warm_lines.clone());
     runtime
-        .block_on(analyzer.formid_match(warm_formids, &crashlog_plugins))
+        .block_on(analyzer.analyze(FormIDFindingAnalysisInput {
+            crash_lines: warm_lines.clone(),
+            plugins: plugins.clone(),
+        }))
         .expect("warm cache priming should succeed");
 
     group.bench_with_input(
@@ -353,11 +358,13 @@ fn formid_resolution_db_benchmarks(c: &mut Criterion) {
         &warm_lines,
         |b, lines| {
             b.iter(|| {
-                let formids = analyzer.extract_formids(lines.clone());
-                let report_lines = runtime
-                    .block_on(analyzer.formid_match(formids, &crashlog_plugins))
+                let result = runtime
+                    .block_on(analyzer.analyze(FormIDFindingAnalysisInput {
+                        crash_lines: lines.clone(),
+                        plugins: plugins.clone(),
+                    }))
                     .expect("formid resolution should succeed");
-                black_box(report_lines.len())
+                black_box(result.findings.len())
             });
         },
     );
@@ -500,16 +507,20 @@ fn record_scanning_benchmarks(c: &mut Criterion) {
             },
         );
 
-        // Benchmark record scanner with full config
+        // Benchmark semantic Named Record Finding analysis with compiled configuration.
         group.bench_with_input(
-            BenchmarkId::new("record_scanner_scan", name),
+            BenchmarkId::new("named_record_finding_analyzer", name),
             content,
             |b, content| {
-                let scanner =
-                    RecordScanner::new(record_types.clone(), vec![], "Buffout 4".to_string());
+                let analyzer =
+                    NamedRecordFindingAnalyzer::new(record_types.clone(), Vec::new()).unwrap();
 
                 let lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
-                b.iter(|| scanner.scan_named_records(&lines));
+                b.iter(|| {
+                    analyzer.analyze(NamedRecordFindingAnalysisInput {
+                        crash_lines: lines.clone(),
+                    })
+                });
             },
         );
     }
@@ -558,9 +569,6 @@ fn full_pipeline_benchmarks(c: &mut Criterion) {
                 let patterns = create_error_patterns();
                 let pattern_matcher =
                     PatternMatcher::new(patterns).expect("matcher creation should succeed");
-                let formid_analyzer = FormIDAnalyzerCore::new(None, false, "Buffout 4".to_string())
-                    .expect("analyzer creation should succeed");
-
                 b.iter(|| {
                     let lines = log_to_lines(content);
 
@@ -575,7 +583,7 @@ fn full_pipeline_benchmarks(c: &mut Criterion) {
 
                     // FormID extraction
                     let callstack_lines = extract_callstack_lines(content);
-                    let _formids = formid_analyzer.extract_formids(callstack_lines);
+                    let _formids = extract_formids_batch(vec![callstack_lines]);
                 });
             },
         );
@@ -609,15 +617,13 @@ fn parser_creation_benchmarks(c: &mut Criterion) {
 
     // FormID analyzer creation
     group.bench_function("formid_analyzer_creation", |b| {
-        b.iter(|| {
-            FormIDAnalyzerCore::new(None, false, "Buffout 4".to_string()).expect("should succeed")
-        });
+        b.iter(|| FormIDFindingAnalyzer::new(FormIdValueLookup::disabled()));
     });
 
     // Record scanner creation
     group.bench_function("record_scanner_creation", |b| {
         let record_types = create_record_types();
-        b.iter(|| RecordScanner::new(record_types.clone(), vec![], "Buffout 4".to_string()));
+        b.iter(|| RecordScanner::new(record_types.clone(), vec![]));
     });
 
     // Pattern matcher creation with 15 patterns

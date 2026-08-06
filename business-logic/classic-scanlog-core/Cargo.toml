@@ -29,6 +29,12 @@ classic-database-core = { path = "../classic-database-core" }
 classic-settings-core = { path = "../classic-settings-core" }
 classic-version-registry-core = { path = "../classic-version-registry-core" }
 
+# Workspace-internal Vocabulary naming contract: the Crash Log Scan Run
+# contract's two twin enums implement it by delegating to the configuration
+# enums they mirror, so the run contract keeps its own types without keeping a
+# second copy of their strings.
+classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
+
 # Parsing and pattern matching
 regex = { workspace = true }
 memchr = { workspace = true }
@@ -56,7 +62,6 @@ rustc-hash = { workspace = true }  # Optimization 1.2: Fast hasher for FormID co
 xxhash-rust = { workspace = true } # Optimization 4.1: Fast hashing for cache keys
 
 # String optimization
-string_cache = { workspace = true }
 smartstring = { workspace = true }
 
 # Error handling
@@ -78,6 +83,7 @@ tempfile = { workspace = true }
 criterion = { version = "0.6.0", features = ["html_reports"] }
 sqlx = { workspace = true }
 serial_test = "3.2"
+temp-env = "0.3.6"
 
 [[bench]]
 name = "scanlog_benchmarks"

@@ -6,9 +6,15 @@
 #include <windows.h>
 #endif
 
+#include <algorithm>
 #include <atomic>
+#include <cctype>
 #include <chrono>
 #include <fmt/format.h>
+#include <istream>
+#include <ostream>
+#include <stdexcept>
+#include <string_view>
 #include <thread>
 #include <utility>
 
@@ -40,49 +46,104 @@ std::string plural(std::size_t count, std::string singular, std::string plural_v
     return count == 1 ? std::move(singular) : std::move(plural_value);
 }
 
-/// Returns the stable user-facing label for every terminal per-log disposition.
-std::string log_disposition_name(scanner::ScanRunContractLogDisposition disposition) {
-    switch (disposition) {
-    case scanner::ScanRunContractLogDisposition::Succeeded:
-        return "succeeded";
-    case scanner::ScanRunContractLogDisposition::Failed:
-        return "failed";
-    case scanner::ScanRunContractLogDisposition::CancelledBeforeStart:
-        return "cancelled before start";
+// Display Labels are read from the Rust core through the bridge rather than
+// written here. Seven `switch` tables used to live at this spot, one per
+// rendered enum; they were the CLI's private copy of a vocabulary the GUI and
+// the TUI each also kept, and the copies had already drifted apart. The bridge
+// entry points below are the single definition site, so a wording fix reaches
+// all three frontends at once and no frontend can disagree with another.
+//
+// Every one returns an empty string for an enum value the forward projection
+// cannot produce, which is why the `unknown disposition` and `unknown stage`
+// fallbacks the deleted tables carried are gone rather than reimplemented.
+// Losing them is the intended trade: the empty string is unreachable for any
+// value the bridge itself built, and a placeholder spelled here would be one
+// more piece of vocabulary owned by the adapter. The bridge asserts the
+// fallback stays unreachable per variant in `scanner/contract_tests.rs`.
+//
+// `tests/test_display_label_audit.cpp` is what stops a table growing back. It
+// reads this file as text, so it catches shapes the compiler cannot object to.
+
+/// Appends exact run-selected YAML Data metadata and structured diagnostics when present.
+void append_installed_yaml_data_messages(const scanner::ScanRunContractRunResult& result,
+                                         std::vector<CliScanRunMessage>& messages) {
+    if (!result.has_installed_yaml_data) {
+        return;
     }
-    return "unknown disposition";
+
+    const auto& installed = result.installed_yaml_data;
+    messages.push_back({false, "Installed YAML Data:"});
+    messages.push_back(
+        {false, fmt::format("  Main: {} schema {} ({} bytes, sha256 {})",
+                            to_std_string(scanner::scan_run_installed_yaml_data_provenance_label(
+                                installed.main.provenance)),
+                            to_std_string(installed.main.schema_version), installed.main.byte_len,
+                            to_std_string(installed.main.sha256))});
+    messages.push_back(
+        {false, fmt::format("  Game: {} schema {} ({} bytes, sha256 {})",
+                            to_std_string(scanner::scan_run_installed_yaml_data_provenance_label(
+                                installed.game_file.provenance)),
+                            to_std_string(installed.game_file.schema_version), installed.game_file.byte_len,
+                            to_std_string(installed.game_file.sha256))});
+    messages.push_back(
+        {false, fmt::format("  Local Ignore: {} ({} bytes, sha256 {})",
+                            to_std_string(scanner::scan_run_local_ignore_yaml_data_state_label(
+                                installed.local_ignore_state)),
+                            installed.local_ignore_identity.byte_len,
+                            to_std_string(installed.local_ignore_identity.sha256))});
+    if (installed.has_local_ignore_reset) {
+        messages.push_back(
+            {false, fmt::format("  Local Ignore backup: {} ({} bytes, sha256 {})",
+                                to_std_string(installed.local_ignore_reset.backup_path),
+                                installed.local_ignore_reset.backup_identity.byte_len,
+                                to_std_string(installed.local_ignore_reset.backup_identity.sha256))});
+    }
+    for (const auto& diagnostic : installed.diagnostics) {
+        std::string line = fmt::format("  YAML Data diagnostic [{}]: {}",
+                                       to_std_string(scanner::scan_run_installed_yaml_data_diagnostic_kind_label(
+                                           diagnostic.kind)),
+                                       to_std_string(diagnostic.message));
+        if (diagnostic.has_path) {
+            line += fmt::format(" (path: {})", to_std_string(diagnostic.path));
+        }
+        messages.push_back({false, std::move(line)});
+    }
 }
 
-/// Returns the stable user-facing label for every structured per-log failure stage.
-std::string log_failure_stage_name(scanner::ScanRunContractLogFailureStage stage) {
-    switch (stage) {
-    case scanner::ScanRunContractLogFailureStage::Analysis:
-        return "analysis";
-    case scanner::ScanRunContractLogFailureStage::ReportWrite:
-        return "report write";
-    case scanner::ScanRunContractLogFailureStage::UnsolvedLogsFinalization:
-        return "Unsolved Logs finalization";
+/// Appends every retained fact that makes one typed recovery-resume failure actionable.
+///
+/// A durability receipt is reported even though the resume failed: the reset reached a safe durable
+/// state, so the user must know the malformed file was already replaced and where its backup lives.
+void append_resume_error_details(const scanner::ScanRunContractResumeError& error,
+                                 std::vector<CliScanRunMessage>& messages) {
+    if (error.has_path) {
+        messages.push_back({true, fmt::format("  Path: {}", to_std_string(error.path))});
     }
-    return "unknown stage";
-}
-
-/// Returns the stable user-facing label for every run-wide infrastructure stage.
-std::string infrastructure_stage_name(scanner::ScanRunContractInfrastructureErrorStage stage) {
-    switch (stage) {
-    case scanner::ScanRunContractInfrastructureErrorStage::RequestValidation:
-        return "request validation";
-    case scanner::ScanRunContractInfrastructureErrorStage::Discovery:
-        return "discovery";
-    case scanner::ScanRunContractInfrastructureErrorStage::Intake:
-        return "intake";
-    case scanner::ScanRunContractInfrastructureErrorStage::FormIdDatabaseAccess:
-        return "FormID database access";
-    case scanner::ScanRunContractInfrastructureErrorStage::Initialization:
-        return "initialization";
-    case scanner::ScanRunContractInfrastructureErrorStage::InternalInvariant:
-        return "internal invariant validation";
+    if (error.has_stage) {
+        messages.push_back(
+            {true, fmt::format("  Stage: {}",
+                               to_std_string(scanner::scan_run_local_ignore_reset_failure_stage_label(error.stage)))});
     }
-    return "unknown stage";
+    if (error.has_expected_identity) {
+        messages.push_back({true, fmt::format("  Expected identity: sha256 {} ({} bytes)",
+                                              to_std_string(error.expected_identity.sha256),
+                                              error.expected_identity.byte_len)});
+    }
+    if (error.has_actual_identity) {
+        messages.push_back({true, fmt::format("  Actual identity: sha256 {} ({} bytes)",
+                                              to_std_string(error.actual_identity.sha256),
+                                              error.actual_identity.byte_len)});
+    }
+    if (error.has_backup_path) {
+        messages.push_back({true, fmt::format("  Verified backup: {}", to_std_string(error.backup_path))});
+    }
+    if (error.has_durability_receipt) {
+        messages.push_back({true, fmt::format("  Durable reset receipt: malformed sha256 {}, backup sha256 {}, "
+                                              "replacement sha256 {}",
+                                              to_std_string(error.malformed_identity.sha256),
+                                              to_std_string(error.backup_identity.sha256),
+                                              to_std_string(error.replacement_identity.sha256))});
+    }
 }
 
 /// Appends all present run-scoped FCX setup facts, diagnostics, and actions.
@@ -128,12 +189,13 @@ void append_setup_messages(const scanner::ScanRunContractRunResult& result, std:
 /// Formats one typed terminal log result without discarding structured failures.
 std::string describe_log_result(const scanner::ScanRunContractLogResult& log) {
     std::string line = fmt::format("  {}. {} - {}", log.discovery_index + 1, to_std_string(log.crash_log),
-                                   log_disposition_name(log.disposition));
+                                   to_std_string(scanner::scan_run_log_disposition_label(log.disposition)));
     if (log.has_autoscan_report) {
         line += fmt::format(" (report: {})", to_std_string(log.autoscan_report));
     }
     for (const auto& failure : log.failures) {
-        line += fmt::format(" [{}: {}]", log_failure_stage_name(failure.stage), to_std_string(failure.message));
+        line += fmt::format(" [{}: {}]", to_std_string(scanner::scan_run_log_failure_stage_label(failure.stage)),
+                            to_std_string(failure.message));
     }
     if (log.has_message && log.failures.empty()) {
         line += fmt::format(" ({})", to_std_string(log.message));
@@ -159,12 +221,20 @@ void append_log_messages(const scanner::ScanRunContractRunResult& result, std::v
 
 /// Projects typed User Settings into the shared final-contract configuration DTO.
 scanner::ScanRunConfigurationDto make_configuration(const PreparedScanUserSettings& settings,
-                                                    const std::string& yaml_dir_root,
-                                                    const std::string& yaml_dir_data) {
+                                                     const std::string& installation_root) {
     scanner::ScanRunConfigurationDto configuration{};
-    configuration.yaml_dir_root = yaml_dir_root;
-    configuration.yaml_dir_data = yaml_dir_data;
-    configuration.game = settings.game;
+    configuration.installation_root = installation_root;
+    if (settings.game == "Fallout4") {
+        configuration.game = scanner::ScanRunGameId::Fallout4;
+    } else if (settings.game == "Fallout4VR") {
+        configuration.game = scanner::ScanRunGameId::Fallout4VR;
+    } else if (settings.game == "Skyrim") {
+        configuration.game = scanner::ScanRunGameId::Skyrim;
+    } else if (settings.game == "Starfield") {
+        configuration.game = scanner::ScanRunGameId::Starfield;
+    } else {
+        throw std::invalid_argument(fmt::format("unsupported Crash Log Scan game: {}", settings.game));
+    }
     configuration.game_version = settings.game_version;
     configuration.show_formid_values = settings.show_formid_values;
     configuration.simplify_logs = settings.simplify_logs;
@@ -176,6 +246,39 @@ scanner::ScanRunConfigurationDto make_configuration(const PreparedScanUserSettin
     configuration.has_max_concurrent = settings.max_concurrent > 0;
     configuration.max_concurrent = settings.max_concurrent;
     return configuration;
+}
+
+/// Trims surrounding whitespace and lowercases one console answer for choice matching.
+std::string normalize_console_answer(const std::string& answer) {
+    const auto first = answer.find_first_not_of(" \t\r\n");
+    if (first == std::string::npos) {
+        return {};
+    }
+    const auto last = answer.find_last_not_of(" \t\r\n");
+    std::string normalized = answer.substr(first, last - first + 1);
+    std::transform(normalized.begin(), normalized.end(), normalized.begin(),
+                   [](unsigned char character) { return static_cast<char>(std::tolower(character)); });
+    return normalized;
+}
+
+/// Maps one normalized console answer onto an explicit choice, or nothing when unusable.
+///
+/// Only the two Rust-owned decisions have affirmative spellings. Every other answer is rejected
+/// rather than defaulted, because a mistyped answer must never mutate Local Ignore YAML Data.
+bool match_recovery_choice(std::string_view answer, CliLocalIgnoreRecoveryChoice& choice) {
+    if (answer == "p" || answer == "proceed") {
+        choice = CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore;
+        return true;
+    }
+    if (answer == "r" || answer == "reset") {
+        choice = CliLocalIgnoreRecoveryChoice::ResetToDefault;
+        return true;
+    }
+    if (answer == "c" || answer == "cancel") {
+        choice = CliLocalIgnoreRecoveryChoice::Cancel;
+        return true;
+    }
+    return false;
 }
 
 /// Projects optional typed setup paths into explicit presence/value pairs for FCX requests.
@@ -196,10 +299,9 @@ scanner::ScanRunSetupContextDto make_setup_context(const PreparedScanUserSetting
 
 rust::Box<scanner::ScanRunRequest> build_cli_scan_run_request(const CliArgs& args,
                                                               const PreparedScanUserSettings& settings,
-                                                              const std::string& yaml_dir_root,
-                                                              const std::string& yaml_dir_data,
+                                                              const std::string& installation_root,
                                                               const std::string& base_directory) {
-    const auto configuration = make_configuration(settings, yaml_dir_root, yaml_dir_data);
+    const auto configuration = make_configuration(settings, installation_root);
     const auto setup = make_setup_context(settings);
 
     if (!args.input_paths.empty()) {
@@ -256,7 +358,8 @@ std::vector<CliScanRunMessage> describe_cli_scan_run_event(const scanner::ScanRu
     case scanner::ScanRunContractEventKind::LogFinished:
         messages.push_back({event.disposition == scanner::ScanRunContractLogDisposition::Failed,
                             fmt::format("Finished {}/{}: {} - {}", event.discovery_index + 1, event.total,
-                                        to_std_string(event.crash_log), log_disposition_name(event.disposition))});
+                                        to_std_string(event.crash_log),
+                                        to_std_string(scanner::scan_run_log_disposition_label(event.disposition)))});
         break;
     case scanner::ScanRunContractEventKind::LogQueued:
     case scanner::ScanRunContractEventKind::LogPhase:
@@ -272,11 +375,21 @@ CliScanRunPresentation present_cli_scan_run_execution(const scanner::ScanRunCont
         presentation.exit_code = 2;
         std::string message =
             fmt::format("Fatal: Crash Log Scan Run failed during {}: {}",
-                        infrastructure_stage_name(execution.error.stage), to_std_string(execution.error.message));
+                        to_std_string(scanner::scan_run_infrastructure_error_stage_label(execution.error.stage)),
+                        to_std_string(execution.error.message));
         if (execution.error.has_path) {
             message += fmt::format(" (path: {})", to_std_string(execution.error.path));
         }
         presentation.messages.push_back({true, std::move(message)});
+        return presentation;
+    }
+    if (execution.has_resume_error) {
+        presentation.exit_code = 2;
+        presentation.messages.push_back(
+            {true, fmt::format("Fatal: Crash Log Scan recovery failed ({}): {}",
+                               to_std_string(execution.resume_error.code),
+                               to_std_string(execution.resume_error.message))});
+        append_resume_error_details(execution.resume_error, presentation.messages);
         return presentation;
     }
     if (!execution.has_result) {
@@ -310,15 +423,25 @@ CliScanRunPresentation present_cli_scan_run_execution(const scanner::ScanRunCont
     case scanner::ScanRunContractStatus::Cancelled:
         presentation.exit_code = 130;
         append_setup_messages(result, presentation.messages);
+        append_installed_yaml_data_messages(result, presentation.messages);
         append_log_messages(result, presentation.messages);
         presentation.messages.push_back({false, fmt::format("Scan cancelled safely: {} completed, {} not started.",
                                                             result.succeeded + result.failed, result.cancelled)});
+        return presentation;
+    case scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired:
+        presentation.exit_code = 1;
+        append_setup_messages(result, presentation.messages);
+        append_installed_yaml_data_messages(result, presentation.messages);
+        presentation.messages.push_back(
+            {true, result.has_message ? to_std_string(result.message)
+                                      : "Local Ignore recovery is required before scanning can continue."});
         return presentation;
     case scanner::ScanRunContractStatus::Completed:
         break;
     }
 
     append_setup_messages(result, presentation.messages);
+    append_installed_yaml_data_messages(result, presentation.messages);
     append_log_messages(result, presentation.messages);
 
     std::size_t reports_written = 0;
@@ -418,4 +541,133 @@ void CliScanRunCancellation::request() {
 
 const scanner::ScanRunCancellation& CliScanRunCancellation::token() const noexcept {
     return impl_->token();
+}
+
+std::vector<CliScanRunMessage> describe_cli_local_ignore_recovery(const scanner::ScanRunContractRunResult& result) {
+    std::vector<CliScanRunMessage> messages;
+    messages.push_back({false, result.has_message
+                                   ? to_std_string(result.message)
+                                   : "Local Ignore recovery is required before scanning can continue."});
+    append_installed_yaml_data_messages(result, messages);
+    if (result.has_discovery) {
+        // The retained discovery set is the reason recovery is a choice rather than a restart:
+        // whichever decision the user makes resumes these exact Crash Logs.
+        const auto accepted = result.discovery.accepted_logs.size();
+        messages.push_back({false, fmt::format("  Retained discovery: {} {} will be scanned once you decide.",
+                                               accepted, plural(accepted, "crash log", "crash logs"))});
+    }
+    return messages;
+}
+
+CliLocalIgnoreRecoveryChoice read_cli_local_ignore_recovery_choice(std::istream& input, std::ostream& output,
+                                                                   const CliScanRunCancellation& cancellation) {
+    // Ctrl+C observed before the question is asked already decided the run; never offer a
+    // destructive default to a user who is on their way out.
+    if (scanner::scan_run_cancellation_is_cancelled(cancellation.token())) {
+        return CliLocalIgnoreRecoveryChoice::Cancel;
+    }
+
+    output << "Choose how to continue:\n"
+           << "  [P] Proceed without Ignore - scan now with no ignore entries; the malformed file is left "
+              "unchanged\n"
+           << "  [R] Reset to default       - back up the malformed file byte-exactly, then restore selected "
+              "Main defaults\n"
+           << "  [C] Cancel                 - stop this scan without changing any file\n";
+
+    for (int attempt = 0; attempt < CLI_LOCAL_IGNORE_RECOVERY_PROMPT_ATTEMPTS; ++attempt) {
+        output << "Local Ignore recovery [P/R/C]: " << std::flush;
+        std::string answer;
+        if (!std::getline(input, answer)) {
+            // End of input is not an answer. Treat it as dismissal so redirected or closed stdin
+            // cannot silently authorize a reset.
+            output << "\nNo answer was available; cancelling without changing Local Ignore YAML Data.\n";
+            return CliLocalIgnoreRecoveryChoice::Cancel;
+        }
+        if (scanner::scan_run_cancellation_is_cancelled(cancellation.token())) {
+            return CliLocalIgnoreRecoveryChoice::Cancel;
+        }
+
+        CliLocalIgnoreRecoveryChoice choice = CliLocalIgnoreRecoveryChoice::Cancel;
+        if (match_recovery_choice(normalize_console_answer(answer), choice)) {
+            return choice;
+        }
+        output << "Unrecognized answer. Enter P, R, or C.\n";
+    }
+
+    output << "No usable answer after " << CLI_LOCAL_IGNORE_RECOVERY_PROMPT_ATTEMPTS
+           << " attempts; cancelling without changing Local Ignore YAML Data.\n";
+    return CliLocalIgnoreRecoveryChoice::Cancel;
+}
+
+CliScanRunExecutionOutcome execute_cli_scan_run(const scanner::ScanRunRequest& request,
+                                                CliScanRunCancellation& cancellation,
+                                                const scanner::ScanRunObserver* observer,
+                                                const CliLocalIgnoreRecoveryPrompt& prompt) {
+    CliScanRunExecutionOutcome outcome{};
+    auto operation = scanner::scan_run_contract_execute(request, cancellation.token(), observer);
+    const bool has_continuation = scanner::scan_run_contract_execution_has_continuation(*operation);
+    outcome.execution = scanner::scan_run_contract_execution_take_result(*operation);
+
+    const bool recovery_required =
+        outcome.execution.has_result &&
+        outcome.execution.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired;
+    if (!recovery_required) {
+        return outcome;
+    }
+    if (!has_continuation) {
+        // Rust always retains a continuation with this status, so its absence is a broken contract
+        // rather than a user decision. Say so instead of presenting an unanswerable question.
+        outcome.recovery_diagnostics.push_back(
+            {true, "Fatal: Crash Log Scan Run requested Local Ignore recovery without retaining its continuation."});
+        return outcome;
+    }
+    if (!prompt) {
+        // Expected for a non-interactive invocation: report the typed outcome and make no choice.
+        return outcome;
+    }
+
+    // The continuation must be taken before the prompt runs so a decision can never observe a
+    // half-owned operation, and so a prompt that throws cannot leave the run resumable.
+    auto continuation = scanner::scan_run_contract_execution_take_continuation(*operation);
+    const auto choice = prompt(describe_cli_local_ignore_recovery(outcome.execution.result));
+
+    auto decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
+    switch (choice) {
+    case CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore:
+        break;
+    case CliLocalIgnoreRecoveryChoice::ResetToDefault:
+        decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault;
+        break;
+    case CliLocalIgnoreRecoveryChoice::Cancel:
+        // Rust observes cancellation before any recovery mutation, so the non-destructive
+        // placeholder decision below can never back up, replace, or analyze anything.
+        cancellation.request();
+        break;
+    }
+
+    auto resumed = scanner::scan_run_continuation_resume(*continuation, decision, cancellation.token(), observer);
+    outcome.execution = scanner::scan_run_contract_execution_take_result(*resumed);
+    outcome.local_ignore_continuation_consumed = true;
+
+    if (outcome.execution.has_result &&
+        outcome.execution.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired) {
+        // The continuation is single-use, so a resumed run can never ask again. Refuse to present a
+        // second question the CLI has no continuation left to answer.
+        outcome.recovery_diagnostics.push_back(
+            {true, "Fatal: Crash Log Scan recovery returned an unexpected second recovery request."});
+    }
+    return outcome;
+}
+
+CliScanRunPresentation present_cli_scan_run_outcome(const CliScanRunExecutionOutcome& outcome,
+                                                    double duration_seconds) {
+    auto presentation = present_cli_scan_run_execution(outcome.execution, duration_seconds);
+    if (outcome.recovery_diagnostics.empty()) {
+        return presentation;
+    }
+
+    presentation.messages.insert(presentation.messages.begin(), outcome.recovery_diagnostics.begin(),
+                                 outcome.recovery_diagnostics.end());
+    presentation.exit_code = 2;
+    return presentation;
 }

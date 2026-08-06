@@ -16,7 +16,7 @@ fn conflict() -> ModConflictEntry {
         name_a: "Alpha Mod".to_string(),
         name_b: "Beta Mod".to_string(),
         description: "Authored conflict description".to_string(),
-        fix: "Install the authored compatibility patch".to_string(),
+        fix: Some("Install the authored compatibility patch".to_string()),
         link: Some("https://example.invalid/patch".to_string()),
     }
 }
@@ -111,8 +111,8 @@ fn aggregate_analysis_preserves_authored_guidance_and_match_state() {
         "Authored conflict description"
     );
     assert_eq!(
-        result.conflicts[0].fix,
-        "Install the authored compatibility patch"
+        result.conflicts[0].fix.as_deref(),
+        Some("Install the authored compatibility patch")
     );
     assert_eq!(
         result.conflicts[0].link.as_deref(),
@@ -340,7 +340,7 @@ fn conflict_matching_preserves_longest_non_overlapping_token_semantics() {
             name_a: "Foo".to_string(),
             name_b: "Bar".to_string(),
             description: "Short-token conflict".to_string(),
-            fix: "Do not report this conflict".to_string(),
+            fix: Some("Do not report this conflict".to_string()),
             link: None,
         },
         ModConflictEntry {
@@ -349,7 +349,7 @@ fn conflict_matching_preserves_longest_non_overlapping_token_semantics() {
             name_a: "Foobar".to_string(),
             name_b: "Never".to_string(),
             description: "Longest token reserves the overlap".to_string(),
-            fix: "No conflict because Never is absent".to_string(),
+            fix: Some("No conflict because Never is absent".to_string()),
             link: None,
         },
     ];
@@ -365,4 +365,82 @@ fn conflict_matching_preserves_longest_non_overlapping_token_semantics() {
     let result = analyzer.analyze(input).unwrap();
 
     assert!(result.conflicts.is_empty());
+}
+
+#[test]
+/// A DLL-only conflict pair matches on XSE module evidence, with no plugin involved.
+///
+/// The shipped `Upscaling.dll` / `FSR3_AA.dll` rule is the real case: neither side ever appears in
+/// the plugin map, because the plugin parser admits only `.esp`/`.esm`/`.esl`. Matching conflicts
+/// against plugins alone made that authored rule permanently unreachable.
+fn conflict_matching_consults_xse_modules_for_plugin_less_dll_pairs() {
+    let entries = vec![ModConflictEntry {
+        mod_a: "upscaling.dll".to_string(),
+        mod_b: "fsr3_aa.dll".to_string(),
+        name_a: "Upscaling".to_string(),
+        name_b: "FSR 3 Antialiasing".to_string(),
+        description: "The mods are redundant with each other".to_string(),
+        fix: None,
+        link: None,
+    }];
+    let analyzer = ModGuidanceAnalyzer::new(entries, Vec::new(), Vec::new(), Vec::new()).unwrap();
+    let input = ModGuidanceAnalysisInput {
+        xse_modules: HashSet::from(["Upscaling.dll".to_string(), "FSR3_AA.dll".to_string()]),
+        ..ModGuidanceAnalysisInput::default()
+    };
+
+    let result = analyzer.analyze(input).unwrap();
+
+    assert_eq!(result.conflicts.len(), 1, "got {:?}", result.conflicts);
+}
+
+#[test]
+/// One half of a DLL pair is not a conflict; both tokens are still required.
+fn conflict_matching_requires_both_xse_module_tokens() {
+    let entries = vec![ModConflictEntry {
+        mod_a: "upscaling.dll".to_string(),
+        mod_b: "fsr3_aa.dll".to_string(),
+        name_a: "Upscaling".to_string(),
+        name_b: "FSR 3 Antialiasing".to_string(),
+        description: "The mods are redundant with each other".to_string(),
+        fix: None,
+        link: None,
+    }];
+    let analyzer = ModGuidanceAnalyzer::new(entries, Vec::new(), Vec::new(), Vec::new()).unwrap();
+    let input = ModGuidanceAnalysisInput {
+        xse_modules: HashSet::from(["Upscaling.dll".to_string()]),
+        ..ModGuidanceAnalysisInput::default()
+    };
+
+    let result = analyzer.analyze(input).unwrap();
+
+    assert!(result.conflicts.is_empty());
+}
+
+#[test]
+fn conflict_analysis_preserves_absent_optional_fix() {
+    let mut entry = conflict();
+    entry.fix = None;
+    let analyzer =
+        ModGuidanceAnalyzer::new(vec![entry], Vec::new(), Vec::new(), Vec::new()).unwrap();
+
+    let result = analyzer.analyze(populated_input()).unwrap();
+
+    assert_eq!(result.conflicts.len(), 1);
+    assert_eq!(result.conflicts[0].fix, None);
+}
+
+#[test]
+fn conflict_analysis_rejects_blank_present_fix() {
+    let mut entry = conflict();
+    entry.fix = Some("   ".to_string());
+
+    let error = ModGuidanceAnalyzer::new(vec![entry], Vec::new(), Vec::new(), Vec::new())
+        .expect_err("a present fix must retain non-empty authored guidance");
+
+    assert_eq!(error.code(), AnalyzerErrorCode::InvalidConfiguration);
+    assert_eq!(
+        error.message(),
+        "Mod Guidance conflict fix must not be empty"
+    );
 }

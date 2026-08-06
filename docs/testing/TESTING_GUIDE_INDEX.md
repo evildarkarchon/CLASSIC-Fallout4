@@ -94,21 +94,14 @@ uv run --project python-bindings python -m pytest python-bindings/tests -q
 - Maintained integration bindings:
   - [`node-bindings/classic-node/`](../../node-bindings/classic-node)
   - [`python-bindings/`](../../python-bindings)
-- Deprecated runtime entrypoints/orchestration:
-  - [`deprecated/`](../../deprecated)
-
-Do not assume Python runtime/orchestration tests under `deprecated/` are part of the default contributor test flow unless the task explicitly targets migration/legacy support.
+The pure-Python runtime and its pytest suite have been removed from the repo. Their documentation is preserved under [`docs/archive/python-era/`](../archive/python-era) as historical record only — it is not part of any contributor test flow.
 
 ---
 
 ## 5) Related testing docs
 
 - [`docs/testing/rust_testing_guide.md`](rust_testing_guide.md)
-- [`docs/testing/TEST_STRUCTURE.md`](TEST_STRUCTURE.md)
-- [`docs/testing/test_pollution_guide.md`](test_pollution_guide.md)
-- [`docs/testing/testing_async_bridge.md`](testing_async_bridge.md) *(legacy Python-runtime context)*
-- [`docs/testing/testing_global_registry.md`](testing_global_registry.md) *(legacy Python-runtime context)*
-- [`docs/testing/testing_yaml_cache.md`](testing_yaml_cache.md) *(legacy Python-runtime context)*
+- [`docs/archive/python-era/`](../archive/python-era) — test-structure, pollution, fixture, async-bridge, global-registry, and YAML-cache guides for the retired pure-Python suite. Historical record only.
 
 ---
 

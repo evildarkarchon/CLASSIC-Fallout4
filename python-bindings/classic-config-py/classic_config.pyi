@@ -9,10 +9,15 @@ Architecture:
     - classic-config-py: Python bindings (this module - PyO3 adapters)
 
 Usage:
-    from classic_config import YamlData, create_yamldata
+    from classic_config import ExplicitYamlDataGame, load_installed_yaml_data
 
-    # Create YamlData instance
-    yaml_data = create_yamldata()
+    # Select Installed YAML Data, then read the parsed view off the snapshot.
+    outcome = load_installed_yaml_data(
+        installation_root="C:/Games/CLASSIC",
+        game=ExplicitYamlDataGame.FALLOUT4,
+        selected_game_version="auto",
+    )
+    yaml_data = outcome.snapshot.yaml_data
 
     # Access configuration properties
     game_version = yaml_data.game_version
@@ -20,9 +25,8 @@ Usage:
     records = yaml_data.game_ignore_records
 """
 
-from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 __version__: str
 
@@ -30,43 +34,26 @@ class YamlData:
     """Python wrapper for YamlDataCore.
 
     This is a thin adapter that:
-    1. Calls YamlDataCore::load_from_yaml_files (business logic in classic-config-core)
-    2. Converts Rust types (Vec, HashMap) to Python types (PyList, PyDict)
-    3. Exposes fields as Python properties
+    1. Converts Rust types (Vec, HashMap) to Python types (PyList, PyDict)
+    2. Exposes fields as Python properties
 
     The YamlData class provides access to all CLASSIC configuration loaded from
     YAML files including game settings, mod lists, ignore lists, and version information.
 
-    All properties are read-only and loaded during initialization. Configuration is
-    cached and shared across instances for performance.
+    It has **no public constructor**. Instances are produced by Rust-owned
+    selection and reached through a snapshot:
+
+    - :func:`load_installed_yaml_data` — the authoritative runtime path, which
+      applies compatibility, fallback, and Local Ignore policy.
+    - :func:`load_explicit_yaml_data` — deterministic caller-selected files for
+      tests and tooling; never consults installation layout or the update cache.
+
+    :meth:`from_yaml_content` remains available for content-string tests; it
+    reads no paths at all.
+
+    All properties are read-only. Configuration is fixed for the lifetime of the
+    snapshot that produced it.
     """
-
-    def __init__(
-        self, yaml_dirs: Sequence[str | Path], game: str, game_version: str
-    ) -> None:
-        """Create a new YamlData instance by loading all YAML configuration files.
-
-        Args:
-            yaml_dirs: List of directories containing YAML configuration files.
-                      Accepts both string paths and pathlib.Path objects.
-            game: Game name (e.g., "Fallout4", "Skyrim")
-            game_version: Selected mode
-                ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR")
-
-        Raises:
-            FileNotFoundError: If required YAML files are missing
-            ValueError: If YAML data is malformed or invalid
-
-        Example:
-            >>> from pathlib import Path
-            >>> # Using Path objects
-            >>> yaml_data = YamlData([Path("YAML/Main")], "Fallout4", "auto")
-            >>> # Using strings
-            >>> yaml_data = YamlData(["YAML/Main"], "Fallout4", "auto")
-            >>> # Mixed
-            >>> yaml_data = YamlData([Path("YAML/Main"), "YAML/Local"], "Fallout4", "auto")
-
-        """
 
     @staticmethod
     def from_yaml_content(
@@ -241,7 +228,8 @@ class YamlData:
 
         Returns:
             List of mod conflict entry dicts with keys:
-                mod_a, mod_b, name_a, name_b, description, fix, link (optional)
+                mod_a, mod_b, name_a, name_b, description, fix, link.
+                The fix and link values may be None.
 
         """
 
@@ -344,35 +332,402 @@ def clear_yaml_cache() -> None:
     Forces the next YamlData initialization to reload from disk.
     """
 
-def create_yamldata(
-    yaml_dirs: Sequence[str | Path], game: str, game_version: str
-) -> YamlData:
-    """Create via factory create a YamlData instance.
+class ExplicitYamlDataGame:
+    """Typed game identity for deterministic explicit YAML Data loading."""
 
-    This is a convenience function that creates and returns a new YamlData instance.
-    Equivalent to calling YamlData() directly.
+    FALLOUT4: ExplicitYamlDataGame
+    FALLOUT4_VR: ExplicitYamlDataGame
+    SKYRIM: ExplicitYamlDataGame
+    STARFIELD: ExplicitYamlDataGame
 
-    Args:
-        yaml_dirs: List of directories containing YAML configuration files.
-                  Accepts both string paths and pathlib.Path objects.
-        game: Game name (e.g., "Fallout4", "Skyrim")
-        game_version: Selected mode ("auto", "Original", "NextGen", "VR")
+    def __str__(self) -> str: ...
+    def __repr__(self) -> str: ...
+    def __hash__(self) -> int: ...
+    def __eq__(self, other: object) -> bool: ...
 
-    Returns:
-        Configured YamlData instance with all YAML data loaded
+class ExplicitYamlDataPaths:
+    """Exact caller-selected Main, game, and Local Ignore files."""
+
+    def __init__(
+        self,
+        main_path: str | Path,
+        game_path: str | Path,
+        ignore_path: str | Path,
+    ) -> None: ...
+
+    @property
+    def main_path(self) -> Path: ...
+    @property
+    def game_path(self) -> Path: ...
+    @property
+    def ignore_path(self) -> Path: ...
+
+class YamlDataContentIdentity:
+    """SHA-256 and byte length derived from exact retained file bytes."""
+
+    @property
+    def sha256(self) -> str: ...
+    @property
+    def byte_len(self) -> int: ...
+
+class ExplicitYamlDataSnapshot:
+    """Immutable deterministic YAML Data snapshot with exact identities."""
+
+    @property
+    def game(self) -> ExplicitYamlDataGame: ...
+    @property
+    def game_data_role(self) -> str: ...
+    @property
+    def yaml_data(self) -> YamlData: ...
+    @property
+    def main_identity(self) -> YamlDataContentIdentity: ...
+    @property
+    def game_identity(self) -> YamlDataContentIdentity: ...
+    @property
+    def ignore_identity(self) -> YamlDataContentIdentity: ...
+
+class ExplicitYamlDataLoadError(Exception):
+    """Base class for deterministic explicit YAML Data load failures."""
+
+    code: str
+    yaml_role: str | None
+    path: str | None
+
+class ExplicitYamlDataUnsupportedGameError(ExplicitYamlDataLoadError): ...
+class ExplicitYamlDataReadError(ExplicitYamlDataLoadError): ...
+class ExplicitYamlDataInvalidUtf8Error(ExplicitYamlDataLoadError): ...
+class ExplicitYamlDataParseError(ExplicitYamlDataLoadError): ...
+class ExplicitYamlDataInvalidRoleDataError(ExplicitYamlDataLoadError): ...
+
+def load_explicit_yaml_data(
+    paths: ExplicitYamlDataPaths,
+    game: ExplicitYamlDataGame,
+    selected_game_version: str,
+) -> ExplicitYamlDataSnapshot:
+    """Load only the exact supplied files without cache or mutation policy."""
+
+class InstalledYamlDataDiagnostic:
+    """One structured selection, rejection, or Local Ignore generation diagnostic."""
+
+    @property
+    def role(self) -> Literal["main", "game"] | None: ...
+    @property
+    def candidate(self) -> Literal["updated", "previous", "bundled"] | None: ...
+    @property
+    def path(self) -> Path | None: ...
+    @property
+    def kind(self) -> Literal[
+        "cache_unavailable",
+        "missing",
+        "read",
+        "invalid_utf8",
+        "parse",
+        "invalid_schema",
+        "incompatible_schema",
+        "invalid_role_data",
+        "local_ignore_generated",
+        "local_ignore_reset",
+    ]: ...
+    @property
+    def message(self) -> str: ...
+
+class InspectedYamlDataFile:
+    """Selected facts for one update-eligible Main or game file."""
+
+    @property
+    def role(self) -> Literal["main", "game"]: ...
+    @property
+    def provenance(self) -> Literal["updated", "previous", "bundled"]: ...
+    @property
+    def schema_major(self) -> int: ...
+    @property
+    def schema_minor(self) -> int: ...
+    @property
+    def sha256(self) -> str: ...
+    @property
+    def byte_length(self) -> int: ...
+
+class InstalledYamlDataInspection:
+    """Immutable selected Main/game facts and retained fallback diagnostics."""
+
+    @property
+    def game(self) -> ExplicitYamlDataGame: ...
+    @property
+    def game_data_role(self) -> Literal["Fallout4"]: ...
+    @property
+    def main(self) -> InspectedYamlDataFile: ...
+    @property
+    def game_file(self) -> InspectedYamlDataFile: ...
+    @property
+    def diagnostics(self) -> list[InstalledYamlDataDiagnostic]: ...
+
+class InstalledYamlDataSnapshot:
+    """Immutable Ready snapshot loaded from one CLASSIC installation root."""
+
+    @property
+    def game(self) -> ExplicitYamlDataGame: ...
+    @property
+    def game_data_role(self) -> Literal["Fallout4"]: ...
+    @property
+    def yaml_data(self) -> YamlData: ...
+    @property
+    def simplify_remove_list(self) -> list[str]: ...
+    @property
+    def main(self) -> InspectedYamlDataFile: ...
+    @property
+    def game_file(self) -> InspectedYamlDataFile: ...
+    @property
+    def local_ignore_state(
+        self,
+    ) -> Literal[
+        "existing", "generated", "proceed_without_ignore", "reset_to_default"
+    ]: ...
+    @property
+    def local_ignore_identity(self) -> YamlDataContentIdentity: ...
+    @property
+    def diagnostics(self) -> list[InstalledYamlDataDiagnostic]: ...
+
+class InstalledYamlDataLoadOutcome:
+    """Typed Ready outcome containing one immutable Installed YAML Data snapshot."""
+
+    @property
+    def status(self) -> Literal["ready"]: ...
+    @property
+    def snapshot(self) -> InstalledYamlDataSnapshot: ...
+
+class LocalIgnoreResetOutcome:
+    """Typed successful reset with durable metadata and its retained snapshot."""
+
+    @property
+    def status(self) -> Literal["reset"]: ...
+    @property
+    def snapshot(self) -> InstalledYamlDataSnapshot: ...
+    @property
+    def local_ignore_path(self) -> Path: ...
+    @property
+    def backup_path(self) -> Path: ...
+    @property
+    def malformed_local_ignore_identity(self) -> YamlDataContentIdentity: ...
+    @property
+    def backup_identity(self) -> YamlDataContentIdentity: ...
+    @property
+    def replacement_identity(self) -> YamlDataContentIdentity: ...
+    @property
+    def diagnostics(self) -> list[InstalledYamlDataDiagnostic]: ...
+
+class LocalIgnoreResetConflictOutcome:
+    """Typed conflict returned when approved malformed bytes changed or disappeared."""
+
+    @property
+    def status(self) -> Literal["conflict"]: ...
+    @property
+    def expected_identity(self) -> YamlDataContentIdentity: ...
+    @property
+    def actual_identity(self) -> YamlDataContentIdentity | None: ...
+    @property
+    def backup_path(self) -> Path | None: ...
+
+class LocalIgnoreRecoveryPlan:
+    """Opaque, read-only recovery proposal that owns one consumable Rust plan.
+
+    Every property and decision method raises ``RuntimeError`` after the plan
+    has been consumed by an earlier proceed or reset attempt.
+    """
+
+    @property
+    def game(self) -> ExplicitYamlDataGame: ...
+    @property
+    def game_data_role(self) -> Literal["Fallout4"]: ...
+    @property
+    def main(self) -> InspectedYamlDataFile: ...
+    @property
+    def game_file(self) -> InspectedYamlDataFile: ...
+    @property
+    def local_ignore_path(self) -> Path: ...
+    @property
+    def malformed_local_ignore_identity(self) -> YamlDataContentIdentity: ...
+    @property
+    def default_local_ignore_identity(self) -> YamlDataContentIdentity | None: ...
+    @property
+    def selected_game_version(self) -> str: ...
+    @property
+    def diagnostics(self) -> list[InstalledYamlDataDiagnostic]: ...
+
+    def proceed_without_ignore(self) -> InstalledYamlDataSnapshot:
+        """Consume the plan and return its retained snapshot with no ignore entries.
+
+        Raises:
+            RuntimeError: This plan was already consumed by an earlier proceed decision.
+        """
+
+    def reset_to_default(
+        self,
+    ) -> LocalIgnoreResetOutcome | LocalIgnoreResetConflictOutcome:
+        """Consume the plan and run the synchronous reset without holding the GIL.
+
+        Returns a typed success or conflict outcome. The durable reset is
+        non-interruptible after entry and uses only state retained by this plan.
+
+        Raises:
+            RuntimeError: This plan was already consumed by an earlier decision.
+            LocalIgnoreResetError: The accepted reset could not complete safely.
+        """
+
+class InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome:
+    """Typed expected outcome containing one Local Ignore recovery plan."""
+
+    @property
+    def status(self) -> Literal["local_ignore_recovery_required"]: ...
+    @property
+    def recovery_plan(self) -> LocalIgnoreRecoveryPlan: ...
+
+class LocalIgnoreResetError(Exception):
+    """Base class for operational Local Ignore reset failures."""
+
+    code: Literal[
+        "defaults_unavailable",
+        "lock",
+        "read",
+        "backup_directory",
+        "backup_publication",
+        "backup_verification",
+        "replacement_publication",
+        "replacement_durability_unknown",
+    ]
+    path: str
+    stage: Literal[
+        "create",
+        "write",
+        "flush",
+        "sync",
+        "publish",
+    ] | None
+    reason: str
+
+class LocalIgnoreResetDefaultsUnavailableError(LocalIgnoreResetError): ...
+class LocalIgnoreResetLockError(LocalIgnoreResetError): ...
+class LocalIgnoreResetReadError(LocalIgnoreResetError): ...
+class LocalIgnoreResetBackupDirectoryError(LocalIgnoreResetError): ...
+class LocalIgnoreResetBackupPublicationError(LocalIgnoreResetError): ...
+class LocalIgnoreResetBackupVerificationError(LocalIgnoreResetError): ...
+class LocalIgnoreResetReplacementPublicationError(LocalIgnoreResetError): ...
+class LocalIgnoreResetReplacementDurabilityUnknownError(LocalIgnoreResetError):
+    """Raised when defaults are visible but canonical replacement durability is unconfirmed."""
+
+    code: Literal["replacement_durability_unknown"]
+    backup_path: str
+    malformed_identity: YamlDataContentIdentity
+    backup_identity: YamlDataContentIdentity
+    replacement_identity: YamlDataContentIdentity
+
+class InstalledYamlDataInspectionError(Exception):
+    """Base class for Installed YAML Data inspection failures."""
+
+    code: str
+    yaml_role: str | None
+    diagnostics: list[InstalledYamlDataDiagnostic]
+
+class InstalledYamlDataUnsupportedGameError(InstalledYamlDataInspectionError): ...
+class InstalledYamlDataNoUsableSourceError(InstalledYamlDataInspectionError): ...
+
+class InstalledYamlDataLoadError(Exception):
+    """Base class for fatal Installed YAML Data load failures."""
+
+    code: str
+    yaml_role: Literal["main", "game", "local_ignore"] | None
+    path: str | None
+    diagnostics: list[InstalledYamlDataDiagnostic]
+
+class InstalledYamlDataLoadUnsupportedGameError(InstalledYamlDataLoadError): ...
+class InstalledYamlDataLoadNoUsableSourceError(InstalledYamlDataLoadError): ...
+class InstalledYamlDataLoadLocalIgnoreReadError(InstalledYamlDataLoadError): ...
+class InstalledYamlDataLoadLocalIgnoreDefaultInvalidError(
+    InstalledYamlDataLoadError
+): ...
+class InstalledYamlDataLoadLocalIgnoreCreateError(InstalledYamlDataLoadError): ...
+class InstalledYamlDataLoadInvalidSelectedDataError(InstalledYamlDataLoadError): ...
+
+def inspect_installed_yaml_data(
+    installation_root: str | Path,
+    game: ExplicitYamlDataGame,
+) -> InstalledYamlDataInspection:
+    """Inspect installed Main/game data without reading or modifying Local Ignore.
+
+    Returns independently selected Main/game metadata plus non-terminal diagnostics.
 
     Raises:
-        IOError: If required YAML files are missing
-        ValueError: If YAML data is malformed or invalid
+        InstalledYamlDataUnsupportedGameError: The typed game has no registered data role.
+        InstalledYamlDataNoUsableSourceError: Updated and bundled candidates were
+            exhausted for either required role. Its ``diagnostics`` attribute retains
+            the structured rejection trail.
+    """
 
-    Example:
-        >>> from classic_config import create_yamldata
-        >>> from pathlib import Path
-        >>> # Now this won't cause type errors:
-        >>> yaml_data = create_yamldata([Path("YAML/Main")], "Fallout4", "auto")
-        >>> print(yaml_data.classic_version)
-        '8.0.0'
+def load_installed_yaml_data(
+    installation_root: str | Path,
+    game: ExplicitYamlDataGame,
+    selected_game_version: str,
+) -> (
+    InstalledYamlDataLoadOutcome
+    | InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome
+):
+    """Load a Ready immutable snapshot or a Local Ignore recovery proposal.
 
+    Main and game are independently selected by Rust core. The returned snapshot owns
+    the exact selected bytes and remains stable if any selected path later changes.
+    Existing Local Ignore data is preserved; a missing file is initialized atomically
+    from the selected Main snapshot's strictly validated defaults. Malformed existing
+    Local Ignore returns a recovery-required outcome instead of raising or changing disk.
+
+    Raises:
+        InstalledYamlDataLoadUnsupportedGameError: The game has no registered data role.
+        InstalledYamlDataLoadNoUsableSourceError: No usable Main or game source exists.
+        InstalledYamlDataLoadLocalIgnoreReadError: Local Ignore cannot be read.
+        InstalledYamlDataLoadLocalIgnoreDefaultInvalidError: Selected Main defaults
+            cannot safely initialize Local Ignore.
+        InstalledYamlDataLoadLocalIgnoreCreateError: Missing Local Ignore cannot be
+            atomically created.
+        InstalledYamlDataLoadInvalidSelectedDataError: Selected documents cannot form
+            the parsed YAML Data view.
+    """
+
+def installed_yaml_data_provenance_label(token: str) -> str:
+    """Return the human-facing Display Label for one candidate-provenance token.
+
+    ``token`` is what this module publishes on
+    :attr:`InspectedYamlDataFile.provenance` and
+    :attr:`InstalledYamlDataDiagnostic.candidate`. Labels are presentation only
+    and may be reworded between releases, so do not parse or compare them --
+    compare the token.
+
+    Args:
+        token: A published provenance token.
+
+    Raises:
+        ValueError: ``token`` is not a published provenance token.
+    """
+
+def installed_yaml_data_diagnostic_kind_label(token: str) -> str:
+    """Return the human-facing Display Label for one diagnostic-kind token.
+
+    Frontends print this label as a bare prefix before the diagnostic message,
+    so four of the ten read as failures rather than statuses: ``"parse"``
+    resolves to ``"parse failure"``.
+
+    Args:
+        token: A published diagnostic-kind token.
+
+    Raises:
+        ValueError: ``token`` is not a published diagnostic-kind token.
+    """
+
+def local_ignore_yaml_data_state_label(token: str) -> str:
+    """Return the human-facing Display Label for one Local Ignore state token.
+
+    Args:
+        token: A published Local Ignore state token.
+
+    Raises:
+        ValueError: ``token`` is not a published Local Ignore state token.
     """
 
 def persist_game_local_paths(

@@ -5,12 +5,13 @@
 //! database settings into a payload ready for `OrchestratorCore`.
 
 use crate::AnalysisConfig;
-use crate::error::{Result, ScanLogError};
+use crate::error::Result;
 use crate::orchestrator::build_analysis_config_from_yaml;
 use crate::scan_sidecar_settings::{self, ScanSidecarSettings};
-use classic_config_core::YamlDataCore;
+use classic_config_core::{InstalledYamlDataSnapshot, YamlDataCore};
 use classic_database_core::{BATCH_CACHE_TTL_SECS, DatabasePool};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::time::Duration;
 
 /// Cache profile used by short native CLI/GUI scan sessions.
@@ -154,6 +155,8 @@ pub struct ScanReadyAnalysis {
     pub(crate) paths: Option<CrashLogScanIntakePaths>,
     /// Persistent Unsolved Logs Destination, when configured.
     pub(crate) unsolved_logs_destination: Option<PathBuf>,
+    /// Retained installed bytes whose parsed data backs this run's analysis configuration.
+    pub(crate) _installed_yaml_data_snapshot: Option<Arc<InstalledYamlDataSnapshot>>,
 }
 
 impl ScanReadyAnalysis {
@@ -163,6 +166,7 @@ impl ScanReadyAnalysis {
         cache_profile: ShortScanCacheProfile,
         paths: Option<CrashLogScanIntakePaths>,
         unsolved_logs_destination: Option<PathBuf>,
+        installed_yaml_data_snapshot: Option<Arc<InstalledYamlDataSnapshot>>,
     ) -> Self {
         Self {
             analysis_config,
@@ -170,6 +174,7 @@ impl ScanReadyAnalysis {
             cache_profile,
             paths,
             unsolved_logs_destination,
+            _installed_yaml_data_snapshot: installed_yaml_data_snapshot,
         }
     }
 
@@ -212,11 +217,32 @@ impl ScanReadyAnalysis {
     pub fn should_initialize_formid_database(&self) -> bool {
         self.formid_readiness.is_enabled() && !self.formid_readiness.database_paths().is_empty()
     }
+
+    /// Applies and retains the owned Installed YAML Data snapshot selected by recovery.
+    ///
+    /// Recovery preparation uses the plan's operation-scoped empty Ignore snapshot. Reset To
+    /// Default changes only that retained Ignore payload, so refresh the already prepared
+    /// analysis configuration from the accepted snapshot without reopening any selected path.
+    pub(crate) fn apply_recovered_installed_yaml_data_snapshot(
+        &mut self,
+        snapshot: Arc<InstalledYamlDataSnapshot>,
+    ) {
+        self.analysis_config.ignore_list = snapshot.yaml_data().ignore_list.clone();
+        self._installed_yaml_data_snapshot = Some(snapshot);
+    }
 }
 
+/// Where a prepared scan's `YamlDataCore` comes from.
+///
+/// There is deliberately no path-backed variant. Intake never resolves an
+/// installation layout or reopens a bundled YAML path itself: selection is
+/// owned by `classic_config_core::load_installed_yaml_data`, and intake only
+/// ever receives an already-selected snapshot (or, for adapters and tests,
+/// already-parsed in-memory data).
 enum YamlDataSource<'a> {
-    PathBacked,
     InMemory(&'a YamlDataCore),
+    InstalledSnapshot(Arc<InstalledYamlDataSnapshot>),
+    InstalledSnapshotBorrowed(&'a InstalledYamlDataSnapshot),
 }
 
 /// Prepares an existing Crash Log scan for analysis.
@@ -230,29 +256,6 @@ pub struct CrashLogScanIntake<'a> {
 }
 
 impl<'a> CrashLogScanIntake<'a> {
-    /// Creates intake for YAML Data loaded from the standard path-backed layout.
-    ///
-    /// The returned intake loads `YamlDataCore` from `yaml_dir_root` and
-    /// `yaml_dir_data`, then loads simplify-log rules from YAML Data. FormID and
-    /// Unsolved Logs settings must be supplied through [`Self::with_scan_facts`].
-    #[must_use]
-    pub fn from_yaml_paths(
-        yaml_dir_root: impl Into<PathBuf>,
-        yaml_dir_data: impl Into<PathBuf>,
-        game: impl Into<String>,
-        selected_game_version: impl Into<String>,
-        options: CrashLogScanOptions,
-    ) -> Self {
-        Self {
-            game: game.into(),
-            selected_game_version: selected_game_version.into(),
-            options,
-            paths: Some(CrashLogScanIntakePaths::new(yaml_dir_root, yaml_dir_data)),
-            scan_facts: CrashLogScanFacts::default(),
-            yaml_source: YamlDataSource::PathBacked,
-        }
-    }
-
     /// Creates intake from already-loaded in-memory YAML Data.
     ///
     /// Supplying `paths` lets in-memory tests or adapters load the same
@@ -276,6 +279,58 @@ impl<'a> CrashLogScanIntake<'a> {
         }
     }
 
+    /// Creates intake from one immutable Installed YAML Data Snapshot.
+    ///
+    /// The snapshot remains owned by the prepared run so selected bytes cannot be replaced by
+    /// concurrent installation changes. Only non-YAML sidecar paths are derived from the one
+    /// installation root.
+    #[must_use]
+    pub fn from_installed_yaml_data(
+        snapshot: Arc<InstalledYamlDataSnapshot>,
+        installation_root: impl Into<PathBuf>,
+        selected_game_version: impl Into<String>,
+        options: CrashLogScanOptions,
+    ) -> Self {
+        let installation_root = installation_root.into();
+        let game = snapshot.game().as_str().to_string();
+        Self {
+            game,
+            selected_game_version: selected_game_version.into(),
+            options,
+            paths: Some(CrashLogScanIntakePaths::new(
+                installation_root.clone(),
+                installation_root.join("CLASSIC Data"),
+            )),
+            scan_facts: CrashLogScanFacts::default(),
+            yaml_source: YamlDataSource::InstalledSnapshot(snapshot),
+        }
+    }
+
+    /// Creates workspace-owned intake by borrowing a recovery plan's retained snapshot.
+    ///
+    /// The prepared result does not outlive the borrow through parsed references. The scan-run
+    /// continuation attaches the owned snapshot after its one-shot recovery decision is consumed.
+    pub(crate) fn from_recovery_snapshot(
+        snapshot: &'a InstalledYamlDataSnapshot,
+        installation_root: impl Into<PathBuf>,
+        selected_game_version: impl Into<String>,
+        options: CrashLogScanOptions,
+    ) -> Self {
+        let installation_root = installation_root.into();
+        let game = snapshot.game().as_str().to_string();
+        Self {
+            game,
+            selected_game_version: selected_game_version.into(),
+            options,
+            paths: Some(CrashLogScanIntakePaths::new(
+                installation_root.clone(),
+                installation_root.join("CLASSIC Data"),
+            )),
+            scan_facts: CrashLogScanFacts::default(),
+            yaml_source: YamlDataSource::InstalledSnapshotBorrowed(snapshot),
+        }
+    }
+
     /// Supplies typed scan facts already projected by the caller's User Settings adapter.
     ///
     /// These values replace all scan-intake interpretation of User Settings files.
@@ -293,42 +348,38 @@ impl<'a> CrashLogScanIntake<'a> {
     ///
     /// # Errors
     ///
-    /// Returns `ScanLogError::ConfigError` when path-backed YAML Data fails to
-    /// load or parse through `classic-config-core`, or
-    /// `ScanLogError::InvalidInput` when the typed Unsolved Logs Destination is
-    /// relative.
+    /// Returns `ScanLogError::InvalidInput` when the typed Unsolved Logs
+    /// Destination is relative, and propagates sidecar settings failures.
+    ///
+    /// This operation performs no Installed YAML Data selection: every YAML
+    /// source it accepts is already selected and parsed, so there is no
+    /// load-or-parse failure left for it to report.
     pub async fn prepare(&self) -> Result<ScanReadyAnalysis> {
-        let loaded_yaml = match self.yaml_source {
-            YamlDataSource::PathBacked => {
-                let paths = self.paths.as_ref().ok_or_else(|| {
-                    ScanLogError::Internal(
-                        "path-backed Crash Log Scan Intake missing path roots".to_string(),
-                    )
-                })?;
-                let yaml_dirs = vec![paths.yaml_dir_root.clone(), paths.yaml_dir_data.clone()];
-                Some(
-                    YamlDataCore::load_from_yaml_files(
-                        yaml_dirs,
-                        self.game.clone(),
-                        self.selected_game_version.clone(),
-                    )
-                    .await
-                    .map_err(|error| ScanLogError::ConfigError(error.to_string()))?,
-                )
+        let yaml = match &self.yaml_source {
+            YamlDataSource::InMemory(yaml) => *yaml,
+            YamlDataSource::InstalledSnapshot(snapshot) => snapshot.yaml_data(),
+            YamlDataSource::InstalledSnapshotBorrowed(snapshot) => snapshot.yaml_data(),
+        };
+
+        let sidecar_settings = match (&self.yaml_source, self.paths.as_ref()) {
+            (YamlDataSource::InstalledSnapshot(snapshot), Some(paths)) => {
+                ScanSidecarSettings::from_installed_snapshot(
+                    paths,
+                    &self.game,
+                    &self.scan_facts,
+                    snapshot.simplify_remove_list(),
+                )?
             }
-            YamlDataSource::InMemory(_) => None,
-        };
-
-        let yaml = match self.yaml_source {
-            YamlDataSource::PathBacked => loaded_yaml.as_ref().ok_or_else(|| {
-                ScanLogError::Internal("path-backed YAML Data was not loaded".to_string())
-            })?,
-            YamlDataSource::InMemory(yaml) => yaml,
-        };
-
-        let sidecar_settings = match self.paths.as_ref() {
-            Some(paths) => ScanSidecarSettings::load(paths, &self.game, &self.scan_facts)?,
-            None => ScanSidecarSettings::from_scan_facts(&self.scan_facts)?,
+            (YamlDataSource::InstalledSnapshotBorrowed(snapshot), Some(paths)) => {
+                ScanSidecarSettings::from_installed_snapshot(
+                    paths,
+                    &self.game,
+                    &self.scan_facts,
+                    snapshot.simplify_remove_list(),
+                )?
+            }
+            (_, Some(paths)) => ScanSidecarSettings::load(paths, &self.game, &self.scan_facts)?,
+            (_, None) => ScanSidecarSettings::from_scan_facts(&self.scan_facts)?,
         };
         let ScanSidecarSettings {
             remove_list,
@@ -356,6 +407,10 @@ impl<'a> CrashLogScanIntake<'a> {
             SHORT_SCAN_CACHE_PROFILE,
             self.paths.clone(),
             unsolved_logs_destination,
+            match &self.yaml_source {
+                YamlDataSource::InstalledSnapshot(snapshot) => Some(Arc::clone(snapshot)),
+                YamlDataSource::InMemory(_) | YamlDataSource::InstalledSnapshotBorrowed(_) => None,
+            },
         ))
     }
 }

@@ -220,8 +220,9 @@ class YamlClientSchemaEntry:
     Callers build one entry per shippable file (e.g. ``CLASSIC Main.yaml``)
     carrying (a) the accepted MAJOR.MINOR range the client binary is built
     to parse, and optionally (b) the currently-installed MAJOR.MINOR on
-    disk. When ``has_installed`` is ``False``, the orchestrator treats every
-    compatible manifest entry as "newer".
+    disk. When ``has_installed`` is ``False``, the generic updater attempts
+    cache/bundled fallback discovery before treating a compatible manifest
+    entry as newer.
 
     Attributes:
         name: Canonical file name (e.g. ``"CLASSIC Main.yaml"``).

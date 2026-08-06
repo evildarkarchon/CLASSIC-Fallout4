@@ -5,6 +5,7 @@
 #include <limits>
 #include <QApplication>
 #include <QCoreApplication>
+#include <QDebug>
 #include <QDir>
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
@@ -46,6 +47,7 @@
 #include "widgets/markdownviewer.h"
 #include "widgets/reportlistwidget.h"
 #include "widgets/reportmetadatawidget.h"
+#include "app/localignorerecoveryprompt.h"
 #include "workers/papyrusworker.h"
 #include "workers/updateworker.h"
 
@@ -75,6 +77,11 @@ QString format_elapsed_seconds(const QElapsedTimer& timer)
     const qint64 elapsedMs = timer.isValid() ? timer.elapsed() : 0;
     return QString::number(static_cast<double>(elapsedMs) / 1000.0, 'f', 1);
 }
+
+// The Installed YAML Data label helpers live in `workers/scanrunpresentation.h` so the run-level
+// warning text and this window's log/status text cannot drift apart.
+using classic::gui::installedYamlDataProvenanceLabel;
+using classic::gui::localIgnoreStateLabel;
 
 /// Resolve an existing Fallout 4 script-extender log to use as a setup detection hint.
 /// The selected version controls preference, while checking both names keeps auto-detected VR installs working.
@@ -109,87 +116,9 @@ void logUpdateCheckFailure(const QString& errorMessage)
     classic::message::log_warning(message);
 }
 
-QString ignoreFilePath(const QString& dataRoot)
-{
-    return dataRoot + QStringLiteral("/CLASSIC Ignore.yaml");
-}
-
 QString localYamlFilePath(const QString& dataDir, const QString& game)
 {
     return dataDir + QStringLiteral("/CLASSIC %1 Local.yaml").arg(game);
-}
-
-bool ensureIgnoreFileExists(const QString& dataRoot, const QString& dataDir, QString* errorOut)
-{
-    if (dataRoot.isEmpty()) {
-        if (errorOut) {
-            *errorOut = QStringLiteral("CLASSIC root directory path is empty.");
-        }
-        return false;
-    }
-    if (dataDir.isEmpty()) {
-        if (errorOut) {
-            *errorOut = QStringLiteral("CLASSIC Data directory path is empty.");
-        }
-        return false;
-    }
-
-    const QString ignorePath = ignoreFilePath(dataRoot);
-    if (QFile::exists(ignorePath)) {
-        return true;
-    }
-
-    const QString mainYamlPath = dataDir + QStringLiteral("/databases/CLASSIC Main.yaml");
-    if (!QFile::exists(mainYamlPath)) {
-        if (errorOut) {
-            *errorOut = QStringLiteral("Missing template file: ") + mainYamlPath;
-        }
-        return false;
-    }
-
-    try {
-        auto mainOps = classic::settings::yaml_ops_new();
-        classic::settings::yaml_ops_load_file(*mainOps, std::string(mainYamlPath.toUtf8().constData()));
-
-        auto defaultIgnore = classic::settings::yaml_ops_get_string(*mainOps, "CLASSIC_Info.default_ignorefile", "");
-        if (defaultIgnore.empty()) {
-            if (errorOut) {
-                *errorOut = QStringLiteral("CLASSIC_Info.default_ignorefile is missing in CLASSIC Main.yaml.");
-            }
-            return false;
-        }
-
-        QFile outFile(ignorePath);
-        if (!outFile.open(QFile::WriteOnly | QFile::Text | QFile::Truncate)) {
-            if (errorOut) {
-                *errorOut = QStringLiteral("Cannot create file: ") + ignorePath + QStringLiteral(" (") +
-                            outFile.errorString() + QStringLiteral(")");
-            }
-            return false;
-        }
-
-        const auto content = classic::toQString(defaultIgnore).toUtf8();
-        if (outFile.write(content) == -1) {
-            if (errorOut) {
-                *errorOut = QStringLiteral("Failed writing file: ") + ignorePath + QStringLiteral(" (") +
-                            outFile.errorString() + QStringLiteral(")");
-            }
-            return false;
-        }
-
-        return true;
-
-    } catch (const std::exception& e) {
-        if (errorOut) {
-            *errorOut = QStringLiteral("Ignore template parse failed: ") + QString::fromUtf8(e.what());
-        }
-        return false;
-    } catch (...) {
-        if (errorOut) {
-            *errorOut = QStringLiteral("Unknown error creating default ignore file.");
-        }
-        return false;
-    }
 }
 
 bool saveLocalYamlPaths(const QString& dataDir, const QString& game, const QString& gamePath, const QString& docsPath,
@@ -364,6 +293,9 @@ void MainWindow::initializeControllers()
     m_signalHub = &SignalHub::instance();
     m_threadManager = new ThreadManager(this);
     m_scanController = new ScanController(m_signalHub, m_threadManager, this);
+    m_scanController->setLocalIgnoreRecoveryPrompt([this](const QString& message) {
+        return classic::gui::promptLocalIgnoreRecoveryChoice(this, message);
+    });
     m_gameFilesController = new GameFilesController(m_signalHub, m_threadManager, this);
     m_backupController = new BackupController(QString(), m_signalHub, this);
     m_resultsController =
@@ -788,6 +720,8 @@ void MainWindow::connectSignals()
     connect(m_scanController, &ScanController::scanWarning, this, &MainWindow::onScanWarning);
     connect(m_scanController, &ScanController::scanReportDirectoriesResolved, this,
             &MainWindow::onScanReportDirectoriesResolved);
+    connect(m_scanController, &ScanController::scanInstalledYamlDataResolved, this,
+            &MainWindow::onScanInstalledYamlDataResolved);
 
     // Settings button
     connect(m_btnSettings, &QPushButton::clicked, this, &MainWindow::onShowSettings);
@@ -900,11 +834,6 @@ void MainWindow::loadSettings()
         setup = classic::gui::GameSetupUserSettings::open(m_dataRoot);
     }
     presentDegradedUserSettings(this, setup);
-
-    QString bootstrapError;
-    if (!ensureIgnoreFileExists(m_dataRoot, m_dataDir, &bootstrapError)) {
-        setStatusMessage(QStringLiteral("Ignore file bootstrap failed: ") + bootstrapError);
-    }
 
     try {
         m_guiSettings = classic::gui::GuiUserSettings::open(m_dataRoot);
@@ -1418,13 +1347,6 @@ void MainWindow::onScanCrashLogs()
         return;
     }
 
-    QString bootstrapError;
-    if (!ensureIgnoreFileExists(m_dataRoot, m_dataDir, &bootstrapError)) {
-        QMessageBox::warning(this, QStringLiteral("Error"),
-                             QStringLiteral("Failed to initialize CLASSIC Ignore.yaml:\n") + bootstrapError);
-        return;
-    }
-
     auto launchSettings = m_guiSettings.scanLaunchSettings(m_guiSettings.gameSetup.managedGame);
     QString setupGameRoot;
     QString setupDocsPath;
@@ -1456,11 +1378,13 @@ void MainWindow::onScanCrashLogs()
     m_crashScanLogsCompleted = 0;
     m_crashScanInProgress = true;
     m_lastScanReportDirs.clear();
+    m_hasLastInstalledYamlData = false;
+    m_lastInstalledYamlData = {};
     m_crashScanTimer.start();
     setStatusMessage(QStringLiteral("Scanning crash logs... 0 logs scanned | elapsed %1s")
                          .arg(format_elapsed_seconds(m_crashScanTimer)));
 
-    m_scanController->startScan(m_dataRoot, m_dataDir, launchSettings, setupXseLogPath, m_targetedInputPaths);
+    m_scanController->startScan(m_dataRoot, launchSettings, setupXseLogPath, m_targetedInputPaths);
 }
 
 void MainWindow::onScanGameFiles()
@@ -1590,7 +1514,8 @@ void MainWindow::onScanCompleted(int total, int success, int errors)
                          .arg(total)
                          .arg(format_elapsed_seconds(m_crashScanTimer))
                          .arg(success)
-                         .arg(errors));
+                         .arg(errors) +
+                     installedYamlDataStatusSuffix());
 
     // Auto-switch to Results tab is handled by ResultsController::onScanCompleted()
 }
@@ -1603,7 +1528,8 @@ void MainWindow::onScanCancelled(const QString& message)
     m_progressBar->setValue(0);
     m_crashScanInProgress = false;
     initResultsReportDir();
-    setStatusMessage(QStringLiteral("%1 (%2s)").arg(message).arg(format_elapsed_seconds(m_crashScanTimer)));
+    setStatusMessage(QStringLiteral("%1 (%2s)").arg(message).arg(format_elapsed_seconds(m_crashScanTimer)) +
+                     installedYamlDataStatusSuffix());
 }
 
 void MainWindow::onScanNoLogsFound(const QString& message)
@@ -1614,7 +1540,7 @@ void MainWindow::onScanNoLogsFound(const QString& message)
     m_progressBar->setValue(0);
     m_crashScanInProgress = false;
     initResultsReportDir();
-    setStatusMessage(message);
+    setStatusMessage(message + installedYamlDataStatusSuffix());
 }
 
 void MainWindow::onScanError(const QString& message)
@@ -1626,7 +1552,8 @@ void MainWindow::onScanError(const QString& message)
     m_crashScanInProgress = false;
     initResultsReportDir();
     setStatusMessage(
-        QStringLiteral("Scan failed after %1s: %2").arg(format_elapsed_seconds(m_crashScanTimer)).arg(message));
+        QStringLiteral("Scan failed after %1s: %2").arg(format_elapsed_seconds(m_crashScanTimer)).arg(message) +
+        installedYamlDataStatusSuffix());
 
     QMessageBox::critical(this, QStringLiteral("Scan Error"), message);
 }
@@ -1640,6 +1567,59 @@ void MainWindow::onScanReportDirectoriesResolved(const QStringList& reportDirs)
 {
     m_lastScanReportDirs = reportDirs;
     initResultsReportDir();
+}
+
+void MainWindow::onScanInstalledYamlDataResolved(
+    const classic::gui::ScanRunInstalledYamlDataPresentation& installedYamlData)
+{
+    m_lastInstalledYamlData = installedYamlData;
+    m_hasLastInstalledYamlData = true;
+
+    qInfo().noquote() << QStringLiteral(
+                             "Installed YAML Data: Main %1 schema %2 (%3 bytes, sha256 %4); "
+                             "Game %5 schema %6 (%7 bytes, sha256 %8); Local Ignore %9 (%10 bytes, sha256 %11)")
+                             .arg(installedYamlDataProvenanceLabel(installedYamlData.main.provenance))
+                             .arg(installedYamlData.main.schemaVersion)
+                             .arg(installedYamlData.main.byteLength)
+                             .arg(installedYamlData.main.sha256)
+                             .arg(installedYamlDataProvenanceLabel(installedYamlData.gameFile.provenance))
+                             .arg(installedYamlData.gameFile.schemaVersion)
+                             .arg(installedYamlData.gameFile.byteLength)
+                             .arg(installedYamlData.gameFile.sha256)
+                             .arg(localIgnoreStateLabel(installedYamlData.localIgnoreState))
+                             .arg(installedYamlData.localIgnoreIdentity.byteLength)
+                             .arg(installedYamlData.localIgnoreIdentity.sha256);
+    if (installedYamlData.hasLocalIgnoreReset) {
+        qInfo().noquote() << QStringLiteral("Local Ignore reset backup: %1 (%2 bytes, sha256 %3)")
+                                 .arg(installedYamlData.localIgnoreReset.backupPath)
+                                 .arg(installedYamlData.localIgnoreReset.backupIdentity.byteLength)
+                                 .arg(installedYamlData.localIgnoreReset.backupIdentity.sha256);
+    }
+    for (const auto& diagnostic : installedYamlData.diagnostics) {
+        // The log and the run-level warning share one projection so their wording cannot drift.
+        qInfo().noquote() << QStringLiteral("Installed YAML Data diagnostic — %1")
+                                 .arg(classic::gui::formatInstalledYamlDataDiagnostic(diagnostic));
+    }
+
+    // Degraded selection and durable Local Ignore recovery are run-level facts the user should see
+    // once, not per Crash Log. They never reach Autoscan Report content.
+    const QString warning = classic::gui::formatInstalledYamlDataWarning(installedYamlData);
+    if (!warning.isEmpty()) {
+        onScanWarning(warning);
+    }
+}
+
+QString MainWindow::installedYamlDataStatusSuffix() const
+{
+    if (!m_hasLastInstalledYamlData) {
+        return {};
+    }
+    return QStringLiteral(" | YAML Data: Main %1 schema %2, Game %3 schema %4, Local Ignore %5")
+        .arg(installedYamlDataProvenanceLabel(m_lastInstalledYamlData.main.provenance),
+             m_lastInstalledYamlData.main.schemaVersion,
+             installedYamlDataProvenanceLabel(m_lastInstalledYamlData.gameFile.provenance),
+             m_lastInstalledYamlData.gameFile.schemaVersion,
+             localIgnoreStateLabel(m_lastInstalledYamlData.localIgnoreState));
 }
 
 void MainWindow::onShowSettings()
@@ -1736,13 +1716,35 @@ void MainWindow::onBackupError(const QString& error)
 
 void MainWindow::onOpenBackupsFolder()
 {
-    // The backup folder is "CLASSIC Backups" under the game root.
-    // If the game root is not set, try the data root as fallback.
+    // Two different backup roots exist, and they are not spellings of one thing:
+    //
+    //   <game root>/CLASSIC Backups/<game>   - game-file backups (XSE etc.), written by the
+    //                                          bridge's BackupManager helpers in path.rs.
+    //   <installation>/CLASSIC Backup/       - YAML Data backups, written by the Rust core:
+    //                                          the Local Ignore reset receipt lives under
+    //                                          YAML Data/Local Ignore, alongside User Settings
+    //                                          migrations and the legacy TUI state import.
+    //
+    // This action historically opened the first and unconditionally mkpath'd it. After a
+    // "Back Up & Reset" recovery that meant the user was shown a freshly created, empty, unrelated
+    // folder rather than the backup they had just been promised — with nothing to explain the
+    // mismatch. Prefer whichever root actually exists, so the button lands on real content, and
+    // only create a directory when neither does.
+    const QString gameBackups = m_backupController->gameRoot().isEmpty()
+                                    ? QString()
+                                    : m_backupController->gameRoot() + QStringLiteral("/CLASSIC Backups");
+    const QString yamlDataBackups =
+        m_dataRoot.isEmpty() ? QString() : m_dataRoot + QStringLiteral("/CLASSIC Backup");
+
     QString backupDir;
-    if (!m_backupController->gameRoot().isEmpty()) {
-        backupDir = m_backupController->gameRoot() + QStringLiteral("/CLASSIC Backups");
-    } else if (!m_dataRoot.isEmpty()) {
-        backupDir = m_dataRoot + QStringLiteral("/CLASSIC Backups");
+    if (!gameBackups.isEmpty() && QDir(gameBackups).exists()) {
+        backupDir = gameBackups;
+    } else if (!yamlDataBackups.isEmpty() && QDir(yamlDataBackups).exists()) {
+        backupDir = yamlDataBackups;
+    } else if (!gameBackups.isEmpty()) {
+        backupDir = gameBackups;
+    } else {
+        backupDir = yamlDataBackups;
     }
 
     if (backupDir.isEmpty()) {

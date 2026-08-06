@@ -1,0 +1,40 @@
+[package]
+name = "classic-durable-publication"
+version = "9.1.0"
+edition = "2024"
+rust-version = "1.96.0"
+publish = false
+authors = ["CLASSIC Development Team"]
+description = "Workspace-internal Durable Publication for CLASSIC"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+crate-type = ["rlib"] # Pure Rust library ONLY - no PyO3
+
+[dependencies]
+# Workspace-internal Vocabulary naming contract. `PublicationStage` is the
+# workspace's single stage vocabulary, so it owns both naming forms here and
+# every caller that mirrors it as its own type delegates rather than restating
+# the strings. Like this crate, `classic-vocabulary` has no binding surface.
+classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
+
+# Content identity for published and verified bytes.
+sha2 = { workspace = true }
+
+# Same-directory staging files whose `keep` clears the Windows temporary
+# attribute before a write-through move.
+tempfile = { workspace = true }
+
+# Platform-specific final move. `move_atomic` refuses to clobber; on Windows
+# `replace_atomic` is a write-through replacement.
+atomicwrites = "0.4.4"
+
+# Error handling
+thiserror = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

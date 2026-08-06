@@ -40,6 +40,10 @@ pub enum AnalyzerErrorCode {
     InvalidConfiguration,
     /// The supplied configuration version is not supported by this build.
     UnsupportedConfigurationVersion,
+    /// An analyzer dependency returned malformed semantic data.
+    MalformedResult,
+    /// An analyzer dependency could not complete its operation.
+    OperationalFailure,
 }
 
 impl AnalyzerErrorCode {
@@ -48,6 +52,8 @@ impl AnalyzerErrorCode {
         match self {
             Self::InvalidConfiguration => "invalid_configuration",
             Self::UnsupportedConfigurationVersion => "unsupported_configuration_version",
+            Self::MalformedResult => "malformed_result",
+            Self::OperationalFailure => "operational_failure",
         }
     }
 }
@@ -88,6 +94,16 @@ impl AnalyzerError {
     /// Returns the human-readable diagnostic message.
     pub fn message(&self) -> &str {
         &self.message
+    }
+
+    /// Formats the stable analyzer identity, code, and diagnostic for internal error envelopes.
+    pub(crate) fn formatted_message(&self) -> String {
+        format!(
+            "{} [{}]: {}",
+            self.analyzer.as_str(),
+            self.code.as_str(),
+            self.message
+        )
     }
 }
 

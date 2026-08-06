@@ -297,8 +297,12 @@ void YamlUpdateWiringTests::settings_dialog_serializes_yaml_update_actions()
     const QString finishedBody = functionBody(QStringLiteral("void SettingsDialog::onYamlRollbackFinished"));
     QVERIFY2(finishedBody.contains(QStringLiteral("m_btnCheckYamlUpdates->setEnabled(true)")),
              "Rollback completion must restore Check");
-    QVERIFY2(finishedBody.contains(QStringLiteral("m_btnApplyYamlUpdates->setEnabled(hasReviewedDecision)")),
-             "Rollback completion must restore Apply only when a reviewed decision remains valid");
+    QVERIFY2(finishedBody.contains(QStringLiteral("m_approvedReleaseTag.clear()")) &&
+                 finishedBody.contains(QStringLiteral("m_approvedFileNames.clear()")) &&
+                 finishedBody.contains(QStringLiteral("m_approvedFileSha256.clear()")),
+             "Rollback completion must invalidate the reviewed decision because the installed state changed");
+    QVERIFY2(finishedBody.contains(QStringLiteral("m_btnApplyYamlUpdates->setEnabled(false)")),
+             "Rollback completion must keep Apply disabled until a fresh Check reviews the new installed state");
     QVERIFY2(finishedBody.contains(QStringLiteral("m_btnRollbackYamlUpdates->setEnabled(true)")),
              "Rollback completion must restore Rollback");
 }

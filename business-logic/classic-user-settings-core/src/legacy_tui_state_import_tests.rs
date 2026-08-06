@@ -1,7 +1,32 @@
 use super::*;
 use crate::UserSettingsCommitError;
-use crate::commit::PublicationStage;
+use crate::commit::{CommitPublicationStage, PublicationStage};
 use std::cell::Cell;
+
+/// Pure fake that returns one publication stage failure and touches no files.
+///
+/// Import's first publication is its backup, so failing on the first call is what exercises the
+/// backup-stage projection. The staging sequence this used to interleave with now lives in
+/// `classic-durable-publication`, leaving nothing in this crate to inject into.
+struct StageFailurePublisher {
+    stage: PublicationStage,
+}
+
+impl StageFailurePublisher {
+    /// Builds a publisher that always fails at `stage`.
+    const fn new(stage: PublicationStage) -> Self {
+        Self { stage }
+    }
+}
+
+impl Publisher for StageFailurePublisher {
+    /// Returns the stage's stable failure and performs no filesystem work at all.
+    fn publish(&self, _target: &Path, _bytes: &[u8]) -> Result<(), UserSettingsCommitError> {
+        Err(self
+            .stage
+            .failure(format!("injected {:?} failure", self.stage)))
+    }
+}
 
 /// Durable publisher that performs one external edit immediately after backup publication.
 struct EditAfterBackup {
@@ -141,7 +166,7 @@ fn backup_publication_errors_retain_the_failed_durability_stage() {
     let error = import_with_publisher(
         root.path(),
         &legacy_path,
-        &SystemPublisher::failing_at(PublicationStage::Create),
+        &StageFailurePublisher::new(PublicationStage::Create),
     )
     .unwrap_err();
 

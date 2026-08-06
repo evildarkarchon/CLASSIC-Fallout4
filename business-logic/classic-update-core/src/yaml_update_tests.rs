@@ -1,6 +1,40 @@
 use super::*;
 
 #[test]
+fn first_party_installation_root_uses_cwd_when_executable_is_not_beside_data() {
+    let executable_layout = tempfile::tempdir().expect("executable layout should be created");
+    let cwd_layout = tempfile::tempdir().expect("CWD layout should be created");
+    std::fs::create_dir(cwd_layout.path().join("CLASSIC Data"))
+        .expect("CWD CLASSIC Data should be created");
+
+    let resolved =
+        resolve_native_installation_root(Some(executable_layout.path()), Some(cwd_layout.path()));
+
+    assert_eq!(resolved.as_deref(), Some(cwd_layout.path()));
+}
+
+#[test]
+fn first_party_installation_root_supports_native_parent_and_install_layouts() {
+    let parent_layout = tempfile::tempdir().expect("parent layout should be created");
+    let executable_dir = parent_layout.path().join("bin");
+    std::fs::create_dir_all(&executable_dir).expect("executable directory should be created");
+    std::fs::create_dir(parent_layout.path().join("CLASSIC Data"))
+        .expect("parent CLASSIC Data should be created");
+
+    let resolved_parent = resolve_native_installation_root(Some(&executable_dir), None);
+    assert_eq!(resolved_parent.as_deref(), Some(parent_layout.path()));
+
+    std::fs::remove_dir(parent_layout.path().join("CLASSIC Data"))
+        .expect("parent CLASSIC Data should be removed");
+    let install_root = parent_layout.path().join("install");
+    std::fs::create_dir_all(install_root.join("CLASSIC Data"))
+        .expect("install CLASSIC Data should be created");
+
+    let resolved_install = resolve_native_installation_root(Some(&executable_dir), None);
+    assert_eq!(resolved_install.as_deref(), Some(install_root.as_path()));
+}
+
+#[test]
 fn parse_yaml_data_tag_base_date() {
     assert_eq!(
         parse_yaml_data_tag("yaml-data-v2026.04.17", "yaml-data-v"),
@@ -276,180 +310,63 @@ fn ensure_path_in_cache_rejects_sibling() {
     assert!(ensure_path_in_cache(&cache, &sibling).is_err());
 }
 
+/// Entries without installed metadata use compatible cache bytes before an
+/// older bundled copy, preventing repeat downloads after an applied update.
 #[test]
-fn resolve_installed_from_path_returns_none_for_missing() {
-    let tmp = tempfile::TempDir::new().unwrap();
-    assert!(resolve_installed_from_path(tmp.path(), "CLASSIC Main.yaml").is_none());
+fn enrich_installed_prefers_cache_over_bundled_fallback() {
+    let cache = tempfile::tempdir().expect("isolated cache should be created");
+    let bundled = tempfile::tempdir().expect("isolated bundle should be created");
+    let cache_path = cache.path().join("CLASSIC Main.yaml");
+    std::fs::write(&cache_path, "schema_version: \"1.2\"\ncache: current\n")
+        .expect("cache fixture should be written");
+    std::fs::write(
+        bundled.path().join("CLASSIC Main.yaml"),
+        "schema_version: \"1.0\"\nbundled: stale\n",
+    )
+    .expect("bundled fixture should be written");
+    let cache_sha256 = classic_file_io_core::FileHasher::hash_file(&cache_path)
+        .expect("cache fixture should be hashable");
+    let mut current = ClientSchemaSet::new();
+    current.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
+
+    let enriched = enrich_installed(&current, Some(cache.path()), Some(bundled.path()));
+    let entry = enriched
+        .get("CLASSIC Main.yaml")
+        .expect("registered entry should remain present");
+
+    assert_eq!(entry.installed, Some(SchemaVersion::new(1, 2)));
+    assert_eq!(
+        entry.installed_sha256.as_deref(),
+        Some(cache_sha256.as_str())
+    );
 }
 
+/// A caller-provided digest remains authoritative even when no installed
+/// schema version accompanies it and fallback files are available.
 #[test]
-fn resolve_installed_from_path_returns_none_for_invalid_name() {
-    let tmp = tempfile::TempDir::new().unwrap();
-    // Even if the traversal resolved to a readable file, the validator
-    // must refuse before any fs::read attempt.
-    assert!(resolve_installed_from_path(tmp.path(), "../x").is_none());
-}
-
-#[test]
-fn resolve_installed_from_path_reads_schema_version() {
-    let tmp = tempfile::TempDir::new().unwrap();
-    let path = tmp.path().join("CLASSIC Main.yaml");
-    std::fs::write(&path, "schema_version: \"1.2\"\nother: yes\n").unwrap();
-
-    let (v, sha) = resolve_installed_from_path(tmp.path(), "CLASSIC Main.yaml").unwrap();
-    assert_eq!(v, SchemaVersion::new(1, 2));
-    // The sha half is what drives content-freshness in classify_manifest;
-    // guard the contract here so a refactor that forgets to populate it
-    // regresses back to "same-schema data releases are invisible".
-    assert_eq!(sha.len(), 64, "sha256 half must be 64 hex chars");
-    assert!(sha.chars().all(|c| c.is_ascii_hexdigit()));
-}
-
-#[test]
-fn resolve_installed_from_path_returns_none_for_missing_header() {
-    let tmp = tempfile::TempDir::new().unwrap();
-    let path = tmp.path().join("CLASSIC Main.yaml");
-    std::fs::write(&path, "game: Fallout4\n").unwrap();
-
-    // Missing `schema_version` header => treat as "unknown installed".
-    assert!(resolve_installed_from_path(tmp.path(), "CLASSIC Main.yaml").is_none());
-}
-
-#[test]
-fn enrich_installed_preserves_explicit_value() {
-    let tmp = tempfile::TempDir::new().unwrap();
-    // Even though nothing is on disk, an explicit installed value
-    // must be passed through untouched.
-    let mut set = ClientSchemaSet::new();
-    set.insert(
+fn enrich_installed_preserves_explicit_digest_without_version() {
+    let bundled = tempfile::tempdir().expect("isolated bundle should be created");
+    std::fs::write(
+        bundled.path().join("CLASSIC Main.yaml"),
+        "schema_version: \"1.0\"\nbundled: data\n",
+    )
+    .expect("bundled fixture should be written");
+    let explicit_sha256 = "a".repeat(64);
+    let mut current = ClientSchemaSet::new();
+    current.insert_with_sha256(
         "CLASSIC Main.yaml",
         SchemaCompat::new(1, 0),
-        Some(SchemaVersion::new(1, 5)),
+        None,
+        Some(explicit_sha256.clone()),
     );
-    let enriched = enrich_installed(&set, Some(tmp.path()), Some(tmp.path()));
-    let entry = enriched.get("CLASSIC Main.yaml").unwrap();
-    assert_eq!(entry.installed, Some(SchemaVersion::new(1, 5)));
-}
 
-#[test]
-fn enrich_installed_fills_from_cache_when_none() {
-    let cache_tmp = tempfile::TempDir::new().unwrap();
-    let bundled_tmp = tempfile::TempDir::new().unwrap();
-    std::fs::write(
-        cache_tmp.path().join("CLASSIC Main.yaml"),
-        "schema_version: \"1.3\"\n",
-    )
-    .unwrap();
-    // Bundled carries a distinct (older) version so a missed cache-read
-    // would be visible in the output.
-    std::fs::write(
-        bundled_tmp.path().join("CLASSIC Main.yaml"),
-        "schema_version: \"1.0\"\n",
-    )
-    .unwrap();
+    let enriched = enrich_installed(&current, None, Some(bundled.path()));
+    let entry = enriched
+        .get("CLASSIC Main.yaml")
+        .expect("registered entry should remain present");
 
-    let mut set = ClientSchemaSet::new();
-    set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
-
-    let enriched = enrich_installed(&set, Some(cache_tmp.path()), Some(bundled_tmp.path()));
-    let entry = enriched.get("CLASSIC Main.yaml").unwrap();
-    assert_eq!(
-        entry.installed,
-        Some(SchemaVersion::new(1, 3)),
-        "cache takes precedence over bundled when both are present"
-    );
-}
-
-#[test]
-fn enrich_installed_falls_back_to_bundled_when_cache_missing() {
-    // Regression for the Codex adversarial review finding:
-    // a clean install (no cache yet) used to fall through to
-    // `installed == None`, which classified every compatible manifest
-    // entry as "available" and would have triggered pointless downloads
-    // whose `.prev` would rotate out already-current bytes. Bundled must
-    // now be consulted when cache is absent.
-    let cache_tmp = tempfile::TempDir::new().unwrap();
-    let bundled_tmp = tempfile::TempDir::new().unwrap();
-    std::fs::write(
-        bundled_tmp.path().join("CLASSIC Main.yaml"),
-        "schema_version: \"1.0\"\n",
-    )
-    .unwrap();
-
-    let mut set = ClientSchemaSet::new();
-    set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
-
-    let enriched = enrich_installed(&set, Some(cache_tmp.path()), Some(bundled_tmp.path()));
-    let entry = enriched.get("CLASSIC Main.yaml").unwrap();
-    assert_eq!(entry.installed, Some(SchemaVersion::new(1, 0)));
-}
-
-#[test]
-fn enrich_installed_without_cache_reads_bundled_only() {
-    // `cache_dir: None` is the `ensure_yaml_cache_dir()` failure branch
-    // in `check_yaml_update`. Bundled must still be consulted so clean
-    // installs running on a host where the cache dir is unavailable do
-    // not re-download matching bundled data.
-    let bundled_tmp = tempfile::TempDir::new().unwrap();
-    std::fs::write(
-        bundled_tmp.path().join("CLASSIC Main.yaml"),
-        "schema_version: \"1.2\"\n",
-    )
-    .unwrap();
-
-    let mut set = ClientSchemaSet::new();
-    set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
-
-    let enriched = enrich_installed(&set, None, Some(bundled_tmp.path()));
-    let entry = enriched.get("CLASSIC Main.yaml").unwrap();
-    assert_eq!(entry.installed, Some(SchemaVersion::new(1, 2)));
-}
-
-#[test]
-fn enrich_installed_clean_install_classified_as_up_to_date() {
-    // End-to-end companion for `enrich_installed_falls_back_to_bundled_when_cache_missing`:
-    // prove that a clean install whose bundled copy matches the
-    // manifest's advertised *content* is classified as `UpToDate` rather
-    // than `UpdateAvailable`. This is the observable guarantee the
-    // bundled fallback must provide to the native frontends.
-    //
-    // The manifest's `sha256` must equal the bundled file's real sha,
-    // because content identity is the freshness signal (see the
-    // `classify_manifest` rustdoc). A placeholder sha would make this
-    // test assert the *opposite* of what finding #1 fixed.
-    let cache_tmp = tempfile::TempDir::new().unwrap();
-    let bundled_tmp = tempfile::TempDir::new().unwrap();
-    let bundled_path = bundled_tmp.path().join("CLASSIC Main.yaml");
-    std::fs::write(&bundled_path, "schema_version: \"1.0\"\n").unwrap();
-    let bundled_sha = FileHasher::hash_file(&bundled_path).unwrap();
-
-    let mut set = ClientSchemaSet::new();
-    set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
-
-    let enriched = enrich_installed(&set, Some(cache_tmp.path()), Some(bundled_tmp.path()));
-    let manifest = YamlManifest {
-        manifest_version: 1,
-        release_tag: "yaml-data-v2026.04.17".into(),
-        published_at: "2026-04-17T00:00:00Z".into(),
-        files: vec![YamlManifestFile {
-            name: "CLASSIC Main.yaml".into(),
-            schema_version: "1.0".into(),
-            sha256: bundled_sha,
-            size_bytes: 0,
-            min_client_schema: None,
-            max_client_schema: None,
-            download_url: "https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/download/yaml-data-v2026.04.17/CLASSIC%20Main.yaml".into(),
-        }],
-        signatures: Vec::new(),
-    };
-
-    let status = classify_manifest(manifest, &enriched).unwrap();
-    match status {
-        YamlUpdateStatus::UpToDate { .. } => {}
-        other => panic!(
-            "clean install with bundled at the advertised content must be UpToDate, got {other:?}"
-        ),
-    }
+    assert_eq!(entry.installed, None);
+    assert_eq!(entry.installed_sha256, Some(explicit_sha256));
 }
 
 #[test]
@@ -589,78 +506,6 @@ fn client_schema_bounds_reject_inverted_interval() {
     );
 }
 
-/// Regression for Codex adversarial review finding: "Installed-version
-/// detection uses a relative bundled path, so clean installs can be
-/// misreported as needing an update". The helper must never return a
-/// relative path — it either resolves from the exe directory (absolute)
-/// or returns `None`, never a bare `"CLASSIC Data/databases"` that would
-/// be joined against whatever cwd the process happened to inherit.
-#[test]
-fn resolve_bundled_yaml_dir_never_returns_a_relative_path() {
-    match resolve_bundled_yaml_dir() {
-        None => {
-            // Acceptable: `current_exe()` can fail in exotic environments.
-            // The `enrich_installed` path treats `None` as "skip bundled
-            // lookup", which is what we want on such hosts.
-        }
-        Some(p) => assert!(
-            p.is_absolute(),
-            "resolved bundled dir must be absolute (derived from current_exe), got: {}",
-            p.display()
-        ),
-    }
-}
-
-/// Regression for Codex adversarial review finding: with both sources
-/// unavailable, `enrich_installed` must leave `installed == None` rather
-/// than probing any relative fallback. Previously `bundled_dir` was
-/// `&Path` and always resolved to the cwd-relative `CLASSIC Data/databases`.
-#[test]
-fn enrich_installed_without_any_source_leaves_installed_none() {
-    let mut set = ClientSchemaSet::new();
-    set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
-
-    let enriched = enrich_installed(&set, None, None);
-    let entry = enriched.get("CLASSIC Main.yaml").unwrap();
-    assert!(
-        entry.installed.is_none(),
-        "no cache and no bundled source must leave installed as None instead of probing cwd"
-    );
-}
-
-/// Regression for Codex adversarial review finding: a downgraded client
-/// whose cache still holds an incompatible higher-MAJOR file must NOT
-/// record that version as `installed` — the runtime loader refuses the
-/// cache copy and actually serves the bundled lower version, so an
-/// enrichment that mirrors the cache bytes would classify a compatible
-/// manifest as "not newer" and suppress a real update.
-#[test]
-fn enrich_installed_skips_incompatible_cache_and_uses_bundled() {
-    let cache_tmp = tempfile::TempDir::new().unwrap();
-    let bundled_tmp = tempfile::TempDir::new().unwrap();
-    std::fs::write(
-        cache_tmp.path().join("CLASSIC Main.yaml"),
-        "schema_version: \"2.0\"\n",
-    )
-    .unwrap();
-    std::fs::write(
-        bundled_tmp.path().join("CLASSIC Main.yaml"),
-        "schema_version: \"1.0\"\n",
-    )
-    .unwrap();
-
-    let mut set = ClientSchemaSet::new();
-    set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
-
-    let enriched = enrich_installed(&set, Some(cache_tmp.path()), Some(bundled_tmp.path()));
-    let entry = enriched.get("CLASSIC Main.yaml").unwrap();
-    assert_eq!(
-        entry.installed,
-        Some(SchemaVersion::new(1, 0)),
-        "incompatible cache must be skipped so bundled reports as installed"
-    );
-}
-
 // ---------------------------------------------------------------------------
 // approved_file_sha_map validation
 // ---------------------------------------------------------------------------
@@ -739,121 +584,6 @@ fn approved_file_sha_map_accepts_uppercase_hex() {
     assert_eq!(map.get("CLASSIC Main.yaml"), Some(&"A".repeat(64).as_str()));
 }
 
-/// End-to-end guard: the "incompatible cache + compatible bundled"
-/// scenario plus a compatible `1.1` manifest entry must classify as
-/// `UpdateAvailable` — because the runtime is really serving `1.0` from
-/// bundled. Before the fix the cached `2.0` would masquerade as
-/// `installed`, suppressing the update.
-#[test]
-fn enrich_installed_incompatible_cache_does_not_suppress_real_update() {
-    let cache_tmp = tempfile::TempDir::new().unwrap();
-    let bundled_tmp = tempfile::TempDir::new().unwrap();
-    std::fs::write(
-        cache_tmp.path().join("CLASSIC Main.yaml"),
-        "schema_version: \"2.0\"\n",
-    )
-    .unwrap();
-    std::fs::write(
-        bundled_tmp.path().join("CLASSIC Main.yaml"),
-        "schema_version: \"1.0\"\n",
-    )
-    .unwrap();
-
-    let mut set = ClientSchemaSet::new();
-    set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
-
-    let enriched = enrich_installed(&set, Some(cache_tmp.path()), Some(bundled_tmp.path()));
-    let manifest = YamlManifest {
-        manifest_version: 1,
-        release_tag: "yaml-data-v2026.04.18".into(),
-        published_at: "2026-04-18T00:00:00Z".into(),
-        files: vec![YamlManifestFile {
-            name: "CLASSIC Main.yaml".into(),
-            schema_version: "1.1".into(),
-            sha256: "a".repeat(64),
-            size_bytes: 0,
-            min_client_schema: None,
-            max_client_schema: None,
-            download_url: "https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/download/yaml-data-v2026.04.18/CLASSIC%20Main.yaml".into(),
-        }],
-        signatures: Vec::new(),
-    };
-
-    let status = classify_manifest(manifest, &enriched).unwrap();
-    match status {
-        YamlUpdateStatus::UpdateAvailable {
-            compatible_files, ..
-        } => {
-            assert_eq!(compatible_files.len(), 1);
-            assert_eq!(compatible_files[0].schema_version, "1.1");
-        }
-        other => panic!(
-            "compatible 1.1 manifest vs bundled 1.0 + incompatible cached 2.0 must be UpdateAvailable, got {other:?}"
-        ),
-    }
-}
-
-/// `resolve_cache_installed` must follow the self_heal rule: when the
-/// canonical cache file is missing, read `.prev` (what the runtime
-/// loader would promote on the next startup).
-#[test]
-fn resolve_cache_installed_reads_prev_when_canonical_missing() {
-    let cache_tmp = tempfile::TempDir::new().unwrap();
-    std::fs::write(
-        cache_tmp.path().join("CLASSIC Main.yaml.prev"),
-        "schema_version: \"1.0\"\n",
-    )
-    .unwrap();
-
-    let compat = SchemaCompat::new(1, 0);
-    let (v, sha) = resolve_cache_installed(cache_tmp.path(), "CLASSIC Main.yaml", &compat).unwrap();
-    assert_eq!(v, SchemaVersion::new(1, 0));
-    assert_eq!(sha.len(), 64);
-}
-
-/// When canonical cache file exists, `.prev` must be ignored even if it
-/// would otherwise be compatible — the runtime's self_heal is a strict
-/// no-op when canonical is present, and this helper must match.
-#[test]
-fn resolve_cache_installed_ignores_prev_when_canonical_present() {
-    let cache_tmp = tempfile::TempDir::new().unwrap();
-    std::fs::write(
-        cache_tmp.path().join("CLASSIC Main.yaml"),
-        "schema_version: \"1.2\"\n",
-    )
-    .unwrap();
-    std::fs::write(
-        cache_tmp.path().join("CLASSIC Main.yaml.prev"),
-        "schema_version: \"1.0\"\n",
-    )
-    .unwrap();
-
-    let compat = SchemaCompat::new(1, 0);
-    let (v, _sha) =
-        resolve_cache_installed(cache_tmp.path(), "CLASSIC Main.yaml", &compat).unwrap();
-    assert_eq!(
-        v,
-        SchemaVersion::new(1, 2),
-        "canonical must win over `.prev` when present"
-    );
-}
-
-/// When canonical cache is missing and `.prev` is itself incompatible,
-/// the helper must return `None` (not the incompatible version) so the
-/// caller falls through to bundled.
-#[test]
-fn resolve_cache_installed_skips_incompatible_prev() {
-    let cache_tmp = tempfile::TempDir::new().unwrap();
-    std::fs::write(
-        cache_tmp.path().join("CLASSIC Main.yaml.prev"),
-        "schema_version: \"2.0\"\n",
-    )
-    .unwrap();
-
-    let compat = SchemaCompat::new(1, 0);
-    assert!(resolve_cache_installed(cache_tmp.path(), "CLASSIC Main.yaml", &compat).is_none());
-}
-
 /// Regression for Codex adversarial review finding: update detection must
 /// be keyed to actual data freshness, not to `schema_version`. A release
 /// that ships new crash suspects / mod conflicts / FormID fixes keeps the
@@ -863,16 +593,13 @@ fn resolve_cache_installed_skips_incompatible_prev() {
 /// release.
 #[test]
 fn classify_detects_same_schema_content_churn_as_update_available() {
-    let cache_tmp = tempfile::TempDir::new().unwrap();
-    std::fs::write(
-        cache_tmp.path().join("CLASSIC Main.yaml"),
-        "schema_version: \"1.0\"\nsuspects:\n  - old_entry\n",
-    )
-    .unwrap();
-
     let mut set = ClientSchemaSet::new();
-    set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
-    let enriched = enrich_installed(&set, Some(cache_tmp.path()), None);
+    set.insert_with_sha256(
+        "CLASSIC Main.yaml",
+        SchemaCompat::new(1, 0),
+        Some(SchemaVersion::new(1, 0)),
+        Some("a".repeat(64)),
+    );
 
     // Manifest advertises the *same* schema_version 1.0 but a different
     // sha256 — i.e. a content-only data release. Prior to the content
@@ -895,7 +622,7 @@ fn classify_detects_same_schema_content_churn_as_update_available() {
         signatures: Vec::new(),
     };
 
-    let status = classify_manifest(manifest, &enriched).unwrap();
+    let status = classify_manifest(manifest, &set).unwrap();
     match status {
         YamlUpdateStatus::UpdateAvailable {
             compatible_files, ..
@@ -916,15 +643,14 @@ fn classify_detects_same_schema_content_churn_as_update_available() {
 /// schema_version is only the fallback when we have no sha to compare.
 #[test]
 fn classify_treats_matching_sha_as_up_to_date_even_when_schema_bumped() {
-    let cache_tmp = tempfile::TempDir::new().unwrap();
-    let installed_path = cache_tmp.path().join("CLASSIC Main.yaml");
-    let installed_body = "schema_version: \"1.0\"\n";
-    std::fs::write(&installed_path, installed_body).unwrap();
-    let installed_sha = FileHasher::hash_file(&installed_path).unwrap();
-
+    let installed_sha = "a".repeat(64);
     let mut set = ClientSchemaSet::new();
-    set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
-    let enriched = enrich_installed(&set, Some(cache_tmp.path()), None);
+    set.insert_with_sha256(
+        "CLASSIC Main.yaml",
+        SchemaCompat::new(1, 0),
+        Some(SchemaVersion::new(1, 0)),
+        Some(installed_sha.clone()),
+    );
 
     // Manifest declares a higher schema_version AND the same content sha
     // — this is the "publisher bumped the declared schema but the bytes
@@ -947,7 +673,7 @@ fn classify_treats_matching_sha_as_up_to_date_even_when_schema_bumped() {
         signatures: Vec::new(),
     };
 
-    let status = classify_manifest(manifest, &enriched).unwrap();
+    let status = classify_manifest(manifest, &set).unwrap();
     assert!(
         matches!(status, YamlUpdateStatus::UpToDate { .. }),
         "identical sha256 must short-circuit to UpToDate regardless of schema bump"
@@ -992,35 +718,89 @@ fn yaml_data_tag_prefix_matches_publish_namespace() {
 }
 
 #[test]
-fn yaml_data_client_schema_set_uses_config_metadata() {
-    let set = yaml_data_client_schema_set();
-
-    let main = set.get("CLASSIC Main.yaml").unwrap();
-    assert_eq!(
-        main.accepted,
-        classic_config_core::client_schemas::MAIN_YAML
-    );
-    assert!(main.installed.is_none());
-    assert!(main.installed_sha256.is_none());
-
-    let fallout4 = set.get("CLASSIC Fallout4.yaml").unwrap();
-    assert_eq!(
-        fallout4.accepted,
-        classic_config_core::client_schemas::GAME_FALLOUT4_YAML
-    );
-    assert!(fallout4.installed.is_none());
-    assert!(fallout4.installed_sha256.is_none());
-
-    assert_eq!(set.len(), 2);
-}
-
-#[test]
 fn yaml_data_rollback_targets_follow_config_metadata() {
+    let targets = yaml_data_rollback_targets();
     assert_eq!(
-        yaml_data_rollback_targets(),
+        targets,
         vec![
             "CLASSIC Main.yaml".to_string(),
             "CLASSIC Fallout4.yaml".to_string()
         ]
     );
+    assert!(
+        !targets.iter().any(|target| target.contains("Ignore")),
+        "Local Ignore YAML Data must never participate in update rollback"
+    );
+}
+
+#[test]
+fn local_ignore_remains_unclassifiable_even_when_a_generic_caller_registers_it() {
+    let file = YamlManifestFile {
+        name: "classic ignore.yaml".to_string(),
+        schema_version: "1.0".to_string(),
+        sha256: "a".repeat(64),
+        size_bytes: 1,
+        min_client_schema: None,
+        max_client_schema: None,
+        download_url: "https://github.com/owner/repo/releases/download/tag/classic%20ignore.yaml"
+            .to_string(),
+    };
+    let manifest = YamlManifest {
+        manifest_version: 1,
+        release_tag: "yaml-data-v2026.07.18".to_string(),
+        published_at: "2026-07-18T12:00:00Z".to_string(),
+        files: vec![file],
+        signatures: Vec::new(),
+    };
+    let mut current = ClientSchemaSet::new();
+    current.insert("classic ignore.yaml", SchemaCompat::new(1, 0), None);
+
+    let status = classify_manifest(manifest, &current).expect("classification should complete");
+    let YamlUpdateStatus::UpToDate {
+        incompatible_files, ..
+    } = status
+    else {
+        panic!("Local Ignore must never classify as update-eligible");
+    };
+    assert_eq!(incompatible_files.len(), 1);
+    assert!(incompatible_files[0].reason.contains("user-owned"));
+}
+
+#[tokio::test]
+async fn local_ignore_is_refused_before_install_network_or_disk_work() {
+    let cache = tempfile::tempdir().expect("isolated cache should be created");
+    let client = GithubClient::with_base_url("owner", "repo", "http://localhost", None)
+        .expect("test client should be created");
+    let entry = YamlManifestFile {
+        name: "CLASSIC Ignore.yaml".to_string(),
+        schema_version: "1.0".to_string(),
+        sha256: "a".repeat(64),
+        size_bytes: 1,
+        min_client_schema: None,
+        max_client_schema: None,
+        download_url: "https://github.com/owner/repo/releases/download/tag/CLASSIC%20Ignore.yaml"
+            .to_string(),
+    };
+
+    let failure = install_one(&client, &entry, cache.path(), "tag")
+        .await
+        .expect_err("Local Ignore installation must be refused");
+    assert!(matches!(
+        failure,
+        FileInstallOutcome::Failed { reason, .. } if reason.contains("user-owned")
+    ));
+    assert!(
+        std::fs::read_dir(cache.path())
+            .expect("cache should remain readable")
+            .next()
+            .is_none(),
+        "refusal must happen before creating an install artifact"
+    );
+}
+
+#[test]
+fn local_ignore_is_refused_before_rollback_cache_resolution() {
+    let error = rollback_yaml_update("ClAsSiC IgNoRe.YaMl")
+        .expect_err("Local Ignore rollback must be refused case-insensitively");
+    assert!(error.to_string().contains("user-owned"));
 }

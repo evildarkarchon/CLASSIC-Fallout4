@@ -8,17 +8,17 @@ This guide describes how Rust integrates into the current CLASSIC codebase, wher
 
 - Native C++ CLI: [`classic-cli/`](../../classic-cli)
 - Native C++ GUI: [`classic-gui/`](../../classic-gui)
-- Rust core/business logic: [`ClassicLib-rs/`](../../ClassicLib-rs)
-- C++ ↔ Rust bridge crate: [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge)
+- Rust core/business logic: [`business-logic/`](../../business-logic) and [`foundation/`](../../foundation)
+- C++ ↔ Rust bridge crate: [`cpp-bindings/classic-cpp-bridge/`](../../cpp-bindings/classic-cpp-bridge)
 
 ### Maintained binding surfaces
 
-- Node bindings (NAPI-RS): [`ClassicLib-rs/node-bindings/`](../../ClassicLib-rs/node-bindings)
-- Python bindings (PyO3): [`ClassicLib-rs/python-bindings/`](../../ClassicLib-rs/python-bindings)
+- Node bindings (NAPI-RS): [`node-bindings/`](../../node-bindings)
+- Python bindings (PyO3): [`python-bindings/`](../../python-bindings)
 
 ### Deprecated runtime scope
 
-Legacy Python runtime entrypoints/orchestration are archived in [`deprecated/`](../../deprecated) and are not the default contributor/runtime path.
+The legacy Python runtime and orchestration layer has been removed from the repo; its documentation is preserved under [`docs/archive/python-era/`](../archive/python-era).
 
 ---
 
@@ -26,19 +26,19 @@ Legacy Python runtime entrypoints/orchestration are archived in [`deprecated/`](
 
 ### Layer 1: Foundation
 
-- Path: [`ClassicLib-rs/foundation/`](../../ClassicLib-rs/foundation)
+- Path: [`foundation/`](../../foundation)
 - Purpose: shared runtime, common utilities, shared error/infra primitives
 
 ### Layer 2: Business logic (`*-core` crates)
 
-- Path: [`ClassicLib-rs/business-logic/`](../../ClassicLib-rs/business-logic)
+- Path: [`business-logic/`](../../business-logic)
 - Purpose: pure Rust domain logic; no PyO3 coupling in core crates
 
 ### Layer 3: Bindings/adapters
 
-- C++ bridge: [`ClassicLib-rs/cpp-bindings/classic-cpp-bridge/`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge)
-- Node adapters: [`ClassicLib-rs/node-bindings/`](../../ClassicLib-rs/node-bindings)
-- Python adapters: [`ClassicLib-rs/python-bindings/`](../../ClassicLib-rs/python-bindings)
+- C++ bridge: [`cpp-bindings/classic-cpp-bridge/`](../../cpp-bindings/classic-cpp-bridge)
+- Node adapters: [`node-bindings/`](../../node-bindings)
+- Python adapters: [`python-bindings/`](../../python-bindings)
 
 ---
 
@@ -53,11 +53,11 @@ Legacy Python runtime entrypoints/orchestration are archived in [`deprecated/`](
    - Keep binding-layer concerns in binding crates.
 
 3. **Native apps consume bridge APIs, not ad-hoc FFI**
-   - Route C++ integration through [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge).
+   - Route C++ integration through [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
 4. **Python scope distinction**
-   - Maintained: PyO3 bindings in [`ClassicLib-rs/python-bindings/`](../../ClassicLib-rs/python-bindings)
-   - Deprecated: Python app runtime entrypoints/orchestration in [`deprecated/`](../../deprecated)
+   - Maintained: PyO3 bindings in [`python-bindings/`](../../python-bindings)
+   - Removed: the Python app runtime entrypoints/orchestration (docs under [`docs/archive/python-era/`](../archive/python-era))
 
 ---
 
@@ -76,20 +76,20 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
 ### Rust build/test/lint
 
 ```powershell
-cargo build --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo build --workspace --release --manifest-path ClassicLib-rs/Cargo.toml
+cargo build --workspace
+cargo build --workspace --release
 
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
+cargo test --workspace
+cargo test --workspace -- --nocapture
 
-cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
-cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
 ### Node parity/runtime checks (when relevant)
 
 ```powershell
-# From ClassicLib-rs/node-bindings/classic-node
+# From node-bindings/classic-node
 bun install
 bun run build
 bun run parity:gate:local
@@ -100,12 +100,13 @@ bun run test:node
 ### Python parity/runtime checks (when relevant)
 
 ```powershell
-uv venv ClassicLib-rs/python-bindings/.venv
-uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
+# python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
+# --inexact is load-bearing: it keeps uv from pruning maturin-built classic-*-py wheels.
+uv sync --project python-bindings --inexact
 python tools/python_api_parity/check_parity_gate.py --repo-root .
-python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
+uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
 ```
 
 ---
@@ -132,22 +133,22 @@ When changing build/test instructions in docs, ensure this guide remains consist
 
 ### B) Rust core change
 
-1. Modify crates in [`ClassicLib-rs/business-logic/`](../../ClassicLib-rs/business-logic)
+1. Modify crates in [`business-logic/`](../../business-logic)
 2. Run Rust format/lint/tests
 3. Rebuild C++ frontend if bridge-exposed behavior changed
 
 ### C) Bridge/API surface change
 
-1. Update Rust core + [`classic-cpp-bridge`](../../ClassicLib-rs/cpp-bindings/classic-cpp-bridge)
+1. Update Rust core + [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge)
 2. Update C++ call sites as needed
 3. Run C++ and Rust checks
-4. If Node-facing APIs changed, run parity/test commands in [`classic-node`](../../ClassicLib-rs/node-bindings/classic-node)
+4. If Node-facing APIs changed, run parity/test commands in [`classic-node`](../../node-bindings/classic-node)
 
 ### D) Python binding maintenance (not runtime orchestration)
 
-1. Update crates under [`ClassicLib-rs/python-bindings/`](../../ClassicLib-rs/python-bindings)
+1. Update crates under [`python-bindings/`](../../python-bindings)
 2. Validate against relevant Rust crates/tests
-3. Keep scope limited to maintained bindings unless explicitly working on migration support for [`deprecated/`](../../deprecated)
+3. Keep scope limited to the maintained bindings
 
 ---
 

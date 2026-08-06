@@ -39,7 +39,14 @@ Those concerns live in related crates such as [`classic-scanlog-core`](../../bus
 
 ## API Map
 
-This crate does not expose modules directly. `lib.rs` re-exports the public surface from the internal `pool_sqlx` module.
+This crate does not expose modules directly. `lib.rs` re-exports the public surface from the internal `formid_value_lookup` and `pool_sqlx` modules.
+
+## Strict owned lookup API
+
+- `FormIdValueLookup` - opaque cloneable facade over disabled, deterministic in-memory, owned SQLite, and existing shared-pool adapters
+- `FormIdValueLookupOutcome` - successful `Disabled`, `Missing`, or `Found(String)` semantic outcome
+- `FormIdValueLookupError` - typed `malformed_result` or `operational_failure` with optional lookup-key context
+- `FormIdValueLookupEntry` / `FormIdValueLookupInMemoryReply` - owned callback-free deterministic adapter input
 
 ## Core pool API
 
@@ -59,6 +66,19 @@ This crate does not expose modules directly. `lib.rs` re-exports the public surf
 ---
 
 ## Public API Surface
+
+## `FormIdValueLookup`
+
+`FormIdValueLookup` is the strict public interface for callers that must not conflate absence with failure. Adapter selection stays private behind one immutable, cloneable handle:
+
+- `disabled()` records that lookup was intentionally not performed
+- `in_memory(entries)` owns deterministic hit, miss, malformed-value, and operational-failure replies without accepting callbacks
+- `sqlite(database_path, game_table)` asynchronously opens one owned SQLite adapter and rejects a missing path instead of constructing an empty pool
+- `shared_pool(Arc<DatabasePool>)` reuses the existing shared pool, cache, and connection allocation
+
+`lookup(formid, plugin)` returns one `FormIdValueLookupOutcome`. `lookup_batch(pairs)` preserves input order and returns one outcome per pair. Both methods reject blank values as `malformed_result`; SQL execution and row-decoding problems are `operational_failure`. Batch failure is all-or-error, so partial rows are never presented as a completed lookup.
+
+All facade inputs and outputs are owned. The CXX, Node, and Python adapters expose opaque handles and typed data rather than foreign callbacks.
 
 ## `DatabasePool`
 
@@ -116,7 +136,7 @@ Variants:
 Contributor notes:
 
 - `DatabasePool` production code mainly surfaces `OpenError` and `SqlxError`
-- `QueryError` exists publicly, but in current source it is mostly constructed in test helpers rather than the main pool implementation
+- `QueryError` is used by strict facade queries when sqlx cannot execute a single or batch statement
 - `InvalidTableIdentifier` is returned by `get_entry()` and `get_entries_batch()` when the resolved table name is not a safe unquoted SQLite identifier; it is the only variant that is a deliberate injection-prevention rejection rather than an I/O or driver failure
 - missing database files during `initialize()` do not currently raise `NotFound`; they are skipped
 
@@ -224,7 +244,7 @@ Tests use a composite primary key on `(formid, plugin)`, which matches the query
 
 ## Error Handling Model
 
-Most APIs use `Result<_, DatabaseError>`, but the crate is intentionally fail-soft in several places.
+Most pool APIs use `Result<_, DatabaseError>`, but the legacy `DatabasePool` methods are intentionally fail-soft in several places. `FormIdValueLookup` is the strict alternative when absence and failure must remain observably different.
 
 ## Hard errors
 
@@ -247,15 +267,19 @@ These behaviors are visible in production source today:
 
 That model is useful for scan workflows, but contributors should be careful not to assume that `Ok(...)` means every configured database was healthy.
 
+## Strict facade behavior
+
+`FormIdValueLookup` does not inherit the pool's log-and-continue query policy. Its private strict pool seams ignore databases for other supported games when at least one initialized database exposes the active game table, return `operational_failure` when none does, and return the first SQL execution or row-decoding failure from a matching database. A successful no-row result from at least one matching database is `FormIdValueLookupOutcome::Missing`; it is never used to encode a failure. Blank in-memory or SQLite values are rejected separately with `malformed_result`.
+
 ---
 
 ## Async, Runtime, And Concurrency Notes
 
 This crate exposes async APIs but does not create its own runtime.
 
-- async entry points include `initialize()`, `get_entry()`, `get_entries_batch()`, `rebalance_connections()`, `close()`, and `optimize()`
+- async entry points include `FormIdValueLookup::sqlite()`, `lookup()`, `lookup_batch()`, `initialize()`, `get_entry()`, `get_entries_batch()`, `rebalance_connections()`, `close()`, and `optimize()`
 - production code uses `sqlx` async pools and queries directly; it does not call `spawn_blocking()` for database work
-- runtime ownership is expected to stay in higher layers, consistent with the shared-runtime rule in [`AGENTS.md`](../../AGENTS.md)
+- runtime ownership stays in higher layers, consistent with the shared-runtime rule in [`AGENTS.md`](../../AGENTS.md); no lookup adapter or binding creates another Tokio runtime
 
 Concurrency and performance notes visible in source:
 

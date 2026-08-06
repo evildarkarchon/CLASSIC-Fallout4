@@ -3,6 +3,8 @@ use crossterm::event::{
 };
 use ratatui::layout::Position;
 
+use classic_scanlog_core::scan_run::contract::LocalIgnoreRecoveryDecision;
+
 use crate::app::{App, Overlay, TabIndex};
 use crate::tabs::main_tab::MainFocus;
 
@@ -33,6 +35,46 @@ impl App {
                     KeyCode::Esc => self.close_overlay(),
                     KeyCode::Char('m') | KeyCode::Char('M') => self.apply_user_settings_migration(),
                     KeyCode::Char('i') | KeyCode::Char('I') => self.import_legacy_tui_state(),
+                    _ => {}
+                },
+                // Cancel is the only dismissal, and no key implies a decision the user did not
+                // make: Enter is deliberately not bound, so nothing can authorize a durable reset.
+                Overlay::LocalIgnoreRecovery => match key.code {
+                    KeyCode::Char('p') | KeyCode::Char('P') => self.accept_local_ignore_recovery(
+                        LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                    ),
+                    // Ignored outright when the contract says this run has no defaults to publish.
+                    // The overlay omits the choice in that case, and an unlisted key must not be
+                    // able to spend the one-shot continuation on a decision that cannot succeed.
+                    KeyCode::Char('r') | KeyCode::Char('R')
+                        if self.local_ignore_reset_available() =>
+                    {
+                        self.accept_local_ignore_recovery(
+                            LocalIgnoreRecoveryDecision::ResetToDefault,
+                        );
+                    }
+                    KeyCode::Esc | KeyCode::Char('c') | KeyCode::Char('C') => {
+                        self.cancel_local_ignore_recovery();
+                    }
+                    // Diagnostics sit below the choices and can outrun the overlay height, so they
+                    // stay reachable without ever moving a decision out of view.
+                    KeyCode::Up => {
+                        self.local_ignore_recovery_scroll =
+                            self.local_ignore_recovery_scroll.saturating_sub(1);
+                    }
+                    KeyCode::Down => {
+                        self.local_ignore_recovery_scroll =
+                            self.local_ignore_recovery_scroll.saturating_add(1);
+                    }
+                    KeyCode::PageUp => {
+                        self.local_ignore_recovery_scroll =
+                            self.local_ignore_recovery_scroll.saturating_sub(10);
+                    }
+                    KeyCode::PageDown => {
+                        self.local_ignore_recovery_scroll =
+                            self.local_ignore_recovery_scroll.saturating_add(10);
+                    }
+                    KeyCode::Home => self.local_ignore_recovery_scroll = 0,
                     _ => {}
                 },
                 Overlay::ScanSummary => match key.code {

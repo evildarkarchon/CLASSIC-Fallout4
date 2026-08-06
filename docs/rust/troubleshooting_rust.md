@@ -4,9 +4,9 @@ This guide covers the current troubleshooting workflow for CLASSIC's maintained 
 
 ## Current state
 
-- The active Rust workspace is `ClassicLib-rs/`.
+- The active Cargo workspace is rooted at the repository root.
 - Maintained Python bindings are split modules such as `classic_config`, `classic_scanlog`, `classic_version_registry`, and `classic_shared`.
-- Use `ClassicLib-rs/python-bindings/.venv` for Python binding validation.
+- Use `python-bindings/.venv` for Python binding validation.
 - Do not expect a maintained `classic_core` facade or a `classic-rust/` workspace directory.
 
 ## Quick diagnosis
@@ -14,13 +14,13 @@ This guide covers the current troubleshooting workflow for CLASSIC's maintained 
 ### 1. Check the Python interpreter
 
 ```powershell
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -c "import sys; print(sys.executable)"
+uv run --python python-bindings/.venv/Scripts/python.exe python -c "import sys; print(sys.executable)"
 ```
 
 ### 2. Verify required modules import
 
 ```powershell
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -c "import classic_config, classic_scanlog, classic_version_registry; print(classic_scanlog.__version__)"
+uv run --python python-bindings/.venv/Scripts/python.exe python -c "import classic_config, classic_scanlog, classic_version_registry; print(classic_scanlog.__version__)"
 ```
 
 ### 3. Rebuild the maintained Python bindings
@@ -39,8 +39,9 @@ Symptoms:
 Fix:
 
 ```powershell
-uv venv ClassicLib-rs/python-bindings/.venv
-uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
+# python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
+# --inexact is load-bearing: it keeps uv from pruning maturin-built classic-*-py wheels.
+uv sync --project python-bindings --inexact
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
 ```
 
@@ -66,8 +67,8 @@ Fix:
 
 ```powershell
 python tools/python_api_parity/check_parity_gate.py --repo-root .
-python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
+python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
 ```
 
 ### Rust core changes break Node or C++ consumers
@@ -76,7 +77,7 @@ If a Rust API is binding-facing, verify the other maintained consumers too:
 
 ```powershell
 # Node
-# run from ClassicLib-rs/node-bindings/classic-node
+# run from node-bindings/classic-node
 bun run parity:gate:local
 bun run test:bun
 bun run test:node
@@ -98,15 +99,15 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
 ### Rust core
 
 ```powershell
-cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
+cargo fmt --all
+cargo test --workspace
 ```
 
 ### Python bindings
 
 ```powershell
 python tools/python_api_parity/check_parity_gate.py --repo-root .
-python ClassicLib-rs/validate_stubs.py --rust-dir ClassicLib-rs --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out ClassicLib-rs/python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
+python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
+uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
 ```

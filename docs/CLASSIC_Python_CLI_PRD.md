@@ -214,7 +214,7 @@ The implemented flag name is `--tracebacks` to make Python-boundary behavior exp
 
 | Command | Purpose |
 | --- | --- |
-| `classic-py scan logs` | Run fail-soft crash-log scanning through `classic_scanlog` and report per-log failures in structured output. |
+| `classic-py scan logs` | Run fail-soft crash-log scanning through `classic_scanlog` and report the complete terminal run result, including Installed YAML Data metadata and per-log failures, in structured output. |
 | `classic-py scan game` | Run game setup checks through `classic_scangame` and related bindings. |
 | `classic-py config inspect` | Open and summarize typed User Settings at an explicit CLASSIC root through `classic_user_settings`. |
 | `classic-py config main-version` | Read the schema-gated main YAML version through the binding contract. |
@@ -314,6 +314,8 @@ Reports should include command lines, profile, environment summary, scenario res
 Commands must not silently return success after failing to load a required binding.
 
 `classic-py scan logs` intentionally follows the scanlog binding's fail-soft batch contract: malformed, missing, or otherwise failed logs appear in the JSON summary as per-log failures, but a completed batch still exits `0`. Automation that wants strict CI behavior should inspect the structured failure count rather than relying on the process status.
+
+The JSON envelope's `data.result` field is a structured projection of the final `ScanRunResult`, not a Python object representation. It preserves discovery/setup optionals, aggregate counts, complete per-log results, and optional `installedYamlData` metadata for the immutable run snapshot: selected Main/game provenance and identity, Local Ignore state and identity, and structured selection or generation diagnostics. Terminal setup and cancellation failures retain the same structured result under `data.result`.
 
 ---
 

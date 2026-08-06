@@ -23,14 +23,14 @@ node-bindings/classic-node
 
 ## Rules
 
-- Keep business logic in `ClassicLib-rs/business-logic/*-core`.
+- Keep business logic in `business-logic/*-core`.
 - Keep Python, Node, and C++ layers thin.
 - Preserve the shared Tokio runtime provided by Rust core facilities.
 - Avoid duplicating the same logic across bindings.
 
 ## Key current-state notes
 
-- The active Rust workspace root is `ClassicLib-rs/`.
+- The active Rust workspace root is the repository root.
 - There is no maintained `classic_core` facade.
 - There is no active `classic-rust/` workspace directory.
 - Public API changes may require matching updates in Python, Node, C++, and `docs/api/`.

@@ -21,6 +21,11 @@ classic-settings-core = { path = "../../business-logic/classic-settings-core" }
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-shared-py = { path = "../../foundation/classic-shared-py" }
 
+# Workspace-internal Vocabulary naming contract: brings the `Vocabulary` trait
+# into scope so this adapter can project core-owned tokens and Display Labels
+# rather than keep its own table of them. It adds no Python surface.
+classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
+
 # Python bindings
 anyhow = { workspace = true }
 pyo3 = { workspace = true, features = ["extension-module"] }

@@ -3,6 +3,7 @@
 #include "core/rust_qt_bridge.h"
 
 #include <cstddef>
+#include <stdexcept>
 
 namespace classic::gui {
 namespace {
@@ -18,18 +19,35 @@ rust::Vec<rust::String> toRustStrings(const QStringList& values)
     return converted;
 }
 
+/// Converts revision-approved User Settings game text into the scanner-local typed identity.
+classic::scanner::ScanRunGameId toScanRunGameId(const QString& game)
+{
+    if (game == QStringLiteral("Fallout4")) {
+        return classic::scanner::ScanRunGameId::Fallout4;
+    }
+    if (game == QStringLiteral("Fallout4VR")) {
+        return classic::scanner::ScanRunGameId::Fallout4VR;
+    }
+    if (game == QStringLiteral("Skyrim")) {
+        return classic::scanner::ScanRunGameId::Skyrim;
+    }
+    if (game == QStringLiteral("Starfield")) {
+        return classic::scanner::ScanRunGameId::Starfield;
+    }
+    throw std::invalid_argument(QStringLiteral("unsupported Crash Log Scan game: %1").arg(game).toStdString());
+}
+
 } // namespace
 
-rust::Box<classic::scanner::ScanRunRequest> buildScanRunRequest(const QString& yamlRoot, const QString& yamlData,
+rust::Box<classic::scanner::ScanRunRequest> buildScanRunRequest(const QString& installationRoot,
                                                                 const QString& baseDirectory,
                                                                 const CrashLogScanLaunchSettings& settings,
                                                                 const QString& setupXseLogPath,
                                                                 const QStringList& targetedInputs)
 {
     classic::scanner::ScanRunConfigurationDto configuration{};
-    configuration.yaml_dir_root = classic::toRustString(yamlRoot);
-    configuration.yaml_dir_data = classic::toRustString(yamlData);
-    configuration.game = classic::toRustString(settings.game);
+    configuration.installation_root = classic::toRustString(installationRoot);
+    configuration.game = toScanRunGameId(settings.game);
     configuration.game_version = classic::toRustString(settings.gameVersion);
     configuration.show_formid_values = settings.formIdValueLookup;
     configuration.simplify_logs = settings.simplifyLogs;
@@ -58,7 +76,7 @@ rust::Box<classic::scanner::ScanRunRequest> buildScanRunRequest(const QString& y
     }
 
     classic::scanner::ScanRunStandardSourceDto source{};
-    source.base_directory = classic::toRustString(baseDirectory.isEmpty() ? yamlRoot : baseDirectory);
+    source.base_directory = classic::toRustString(baseDirectory.isEmpty() ? installationRoot : baseDirectory);
     source.has_custom_scan_directory = !settings.customScanDirectory.trimmed().isEmpty();
     source.custom_scan_directory = classic::toRustString(settings.customScanDirectory);
     source.has_configured_documents_root = !settings.setupDocumentsRoot.trimmed().isEmpty();

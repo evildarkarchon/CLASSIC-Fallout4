@@ -25,6 +25,17 @@ classic-version-registry-core = { path = "../classic-version-registry-core" }
 classic-path-core = { path = "../classic-path-core" }
 classic-file-io-core = { path = "../classic-file-io-core" }
 
+# Durable Publication (staging, verified backup, atomic publish) for the
+# Local Ignore reset critical section. Backup location, conflict policy, and
+# the reset lock stay here; only the durability sequence lives there.
+classic-durable-publication = { path = "../classic-durable-publication" }
+
+# Workspace-internal Vocabulary naming contract: this crate owns the frozen
+# Vocabulary Tokens and the Display Labels for its own Installed YAML Data and
+# Local Ignore enums, so that the three bindings project them instead of each
+# keeping a table.
+classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
+
 # Async runtime (for JoinSet and file I/O)
 tokio = { workspace = true, features = ["full"] }
 
@@ -35,7 +46,11 @@ yaml-rust2 = { workspace = true }
 indexmap = { workspace = true }
 
 serde_json = { workspace = true }
+sha2 = { workspace = true }
 dirs = { workspace = true }
+tempfile = { workspace = true }
+fs4 = { version = "0.12", features = ["sync"] }
+atomicwrites = "0.4.4"
 
 # Error handling
 thiserror = { workspace = true }
@@ -45,7 +60,6 @@ anyhow = { workspace = true }
 log = { workspace = true }
 
 [dev-dependencies]
-tempfile = { workspace = true }
 serial_test = "3.2"
 
 [lints.rust]

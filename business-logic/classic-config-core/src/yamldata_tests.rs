@@ -1,6 +1,4 @@
 use super::*;
-use std::path::PathBuf;
-use tempfile::tempdir;
 
 // ============================================================
 // Test Data Fixtures
@@ -364,6 +362,7 @@ fn test_from_yaml_content_extracts_mod_databases() {
     assert_eq!(config.game_mods_conf.len(), 1);
     assert_eq!(config.game_mods_conf[0].mod_a, "modA");
     assert_eq!(config.game_mods_conf[0].description, "Config for ModA");
+    assert_eq!(config.game_mods_conf[0].fix.as_deref(), Some("Remove one."));
 
     assert_eq!(config.game_mods_core.len(), 3);
     assert_eq!(config.game_mods_core[0].detect, "ModB");
@@ -1001,224 +1000,43 @@ Crashgen_Registry:
 }
 
 // ============================================================
-// Async File Loading Tests
+// Per-role document assignment
+//
+// These cases previously drove `YamlDataCore::load_from_yaml_files`, the
+// positional two/three-directory loader removed with the Installed YAML Data
+// cutover. What they actually assert is that each of the three YAML documents
+// lands in the right `YamlDataCore` fields, which is
+// `build_from_yaml_documents` behavior — so they now run through the retained
+// content constructor. The file-facing halves (missing-file attribution, no
+// fallback or self-heal, VR file-role selection) live at the retained
+// explicit-file seam in `explicit_yaml_data_tests.rs`.
 // ============================================================
 
-#[tokio::test]
-async fn test_load_from_yaml_files_success() {
-    let temp_dir = tempdir().unwrap();
-
-    // Create directory structure
-    let databases_dir = temp_dir.path().join("databases");
-    std::fs::create_dir_all(&databases_dir).unwrap();
-
-    // Write test files
-    let main_path = databases_dir.join("CLASSIC Main.yaml");
-    let game_path = databases_dir.join("CLASSIC Fallout4.yaml");
-    let ignore_path = temp_dir.path().join("CLASSIC Ignore.yaml");
-
-    std::fs::write(&main_path, minimal_main_yaml()).unwrap();
-    std::fs::write(&game_path, minimal_game_yaml()).unwrap();
-    std::fs::write(&ignore_path, minimal_ignore_yaml()).unwrap();
-
-    // Use the 2-element API (root_dir, data_dir)
-    let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
-
-    let result =
-        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "auto".to_string())
-            .await;
-
-    assert!(result.is_ok(), "Load failed: {:?}", result.err());
-    let config = result.unwrap();
-    assert_eq!(config.classic_version, "7.31.0");
-    assert_eq!(config.xse_acronym, "F4SE");
-}
-
-#[tokio::test]
-async fn test_load_from_yaml_files_with_three_dirs() {
-    let temp_dir = tempdir().unwrap();
-
-    // Create separate directories for each YAML file
-    let main_dir = temp_dir.path().join("main");
-    let game_dir = temp_dir.path().join("game");
-    let ignore_dir = temp_dir.path().join("ignore");
-
-    std::fs::create_dir_all(&main_dir).unwrap();
-    std::fs::create_dir_all(&game_dir).unwrap();
-    std::fs::create_dir_all(&ignore_dir).unwrap();
-
-    // Write test files
-    std::fs::write(main_dir.join("CLASSIC Main.yaml"), minimal_main_yaml()).unwrap();
-    std::fs::write(game_dir.join("CLASSIC Fallout4.yaml"), minimal_game_yaml()).unwrap();
-    std::fs::write(
-        ignore_dir.join("CLASSIC Ignore.yaml"),
-        minimal_ignore_yaml(),
-    )
-    .unwrap();
-
-    // Use the 3-element API
-    let yaml_dirs = vec![main_dir, game_dir, ignore_dir];
-
-    let result =
-        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "auto".to_string())
-            .await;
-
-    assert!(result.is_ok(), "Load failed: {:?}", result.err());
-    let config = result.unwrap();
-    assert_eq!(config.classic_version, "7.31.0");
-}
-
-#[tokio::test]
-async fn fallout4_vr_loads_the_shared_fallout4_file_and_keyed_data() {
-    let temp_dir = tempdir().unwrap();
-    let databases_dir = temp_dir.path().join("databases");
-    std::fs::create_dir_all(&databases_dir).unwrap();
-
-    std::fs::write(databases_dir.join("CLASSIC Main.yaml"), minimal_main_yaml()).unwrap();
-    std::fs::write(
-        databases_dir.join("CLASSIC Fallout4.yaml"),
+#[test]
+fn fallout4_vr_keys_shared_fallout4_data_and_fills_registry_metadata() {
+    let config = YamlDataCore::from_yaml_content(
+        minimal_main_yaml(),
         minimal_game_yaml_main_root_only(),
-    )
-    .unwrap();
-    std::fs::write(
-        temp_dir.path().join("CLASSIC Ignore.yaml"),
         minimal_ignore_yaml(),
+        "Fallout4VR".to_string(),
+        "VR".to_string(),
     )
     .unwrap();
 
-    let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
-    let config =
-        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4VR".to_string(), "VR".to_string())
-            .await
-            .unwrap();
-
+    // VR reads the shared `CLASSIC Fallout4.yaml` interface text and the
+    // `CLASSIC_Ignore_Fallout4` key rather than a VR-specific variant...
     assert_eq!(config.autoscan_text, "Autoscan Fallout 4");
     assert_eq!(config.ignore_list, vec!["IgnoreItem1", "IgnoreItem2"]);
+    // ...while VR-specific facts still come from the Version Registry, because
+    // the game file here declares only `Main_Root_Name`.
     assert_eq!(config.xse_acronym, "F4SEVR");
     assert_eq!(config.game_version, "1.2.72");
 }
 
-#[tokio::test]
-async fn test_load_from_yaml_files_invalid_dir_count() {
-    // Provide only 1 directory (invalid)
-    let yaml_dirs = vec![PathBuf::from("/some/path")];
-
-    let result =
-        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "auto".to_string())
-            .await;
-
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert!(matches!(err, ConfigError::InvalidInput(_)));
-}
-
-#[tokio::test]
-async fn test_load_from_yaml_files_invalid_four_dirs() {
-    // Provide 4 directories (also invalid)
-    let yaml_dirs = vec![
-        PathBuf::from("/a"),
-        PathBuf::from("/b"),
-        PathBuf::from("/c"),
-        PathBuf::from("/d"),
-    ];
-
-    let result =
-        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "auto".to_string())
-            .await;
-
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert!(matches!(err, ConfigError::InvalidInput(_)));
-}
-
-#[tokio::test]
-async fn test_load_from_yaml_files_missing_main_file() {
-    let temp_dir = tempdir().unwrap();
-    let databases_dir = temp_dir.path().join("databases");
-    std::fs::create_dir_all(&databases_dir).unwrap();
-
-    // Only write game and ignore files, not main
-    std::fs::write(
-        databases_dir.join("CLASSIC Fallout4.yaml"),
-        minimal_game_yaml(),
-    )
-    .unwrap();
-    std::fs::write(
-        temp_dir.path().join("CLASSIC Ignore.yaml"),
-        minimal_ignore_yaml(),
-    )
-    .unwrap();
-
-    let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
-
-    let result =
-        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "auto".to_string())
-            .await;
-
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert!(matches!(err, ConfigError::IOError { .. }));
-}
-
-#[tokio::test]
-async fn test_load_from_yaml_files_missing_game_file() {
-    let temp_dir = tempdir().unwrap();
-    let databases_dir = temp_dir.path().join("databases");
-    std::fs::create_dir_all(&databases_dir).unwrap();
-
-    // Write main and ignore, but not game
-    std::fs::write(databases_dir.join("CLASSIC Main.yaml"), minimal_main_yaml()).unwrap();
-    std::fs::write(
-        temp_dir.path().join("CLASSIC Ignore.yaml"),
-        minimal_ignore_yaml(),
-    )
-    .unwrap();
-
-    let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
-
-    let result =
-        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "auto".to_string())
-            .await;
-
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert!(matches!(err, ConfigError::IOError { .. }));
-}
-
-#[tokio::test]
-async fn test_load_from_yaml_files_missing_ignore_file() {
-    let temp_dir = tempdir().unwrap();
-    let databases_dir = temp_dir.path().join("databases");
-    std::fs::create_dir_all(&databases_dir).unwrap();
-
-    // Write main and game, but not ignore
-    std::fs::write(databases_dir.join("CLASSIC Main.yaml"), minimal_main_yaml()).unwrap();
-    std::fs::write(
-        databases_dir.join("CLASSIC Fallout4.yaml"),
-        minimal_game_yaml(),
-    )
-    .unwrap();
-
-    let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
-
-    let result =
-        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "auto".to_string())
-            .await;
-
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    assert!(matches!(err, ConfigError::IOError { .. }));
-}
-
-#[tokio::test]
-async fn test_load_from_yaml_files_parallel_preserves_order() {
-    // This test verifies that tokio::join! preserves order
-    // (unlike JoinSet which returns in completion order)
-    let temp_dir = tempdir().unwrap();
-    let databases_dir = temp_dir.path().join("databases");
-    std::fs::create_dir_all(&databases_dir).unwrap();
-
-    // Create files with distinct content
+#[test]
+fn each_document_populates_only_its_own_fields() {
+    // Distinct sentinel values per role prove no document's data bleeds into
+    // another's fields during the merge.
     let main_yaml = r#"
 CLASSIC_Info:
   version: "MAIN_VERSION"
@@ -1232,54 +1050,36 @@ CLASSIC_Ignore_TestGame:
   - "IGNORE_ITEM"
 "#;
 
-    std::fs::write(databases_dir.join("CLASSIC Main.yaml"), main_yaml).unwrap();
-    std::fs::write(databases_dir.join("CLASSIC TestGame.yaml"), game_yaml).unwrap();
-    std::fs::write(temp_dir.path().join("CLASSIC Ignore.yaml"), ignore_yaml).unwrap();
+    let config = YamlDataCore::from_yaml_content(
+        main_yaml,
+        game_yaml,
+        ignore_yaml,
+        "TestGame".to_string(),
+        "auto".to_string(),
+    )
+    .unwrap();
 
-    let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
-
-    let result =
-        YamlDataCore::load_from_yaml_files(yaml_dirs, "TestGame".to_string(), "auto".to_string())
-            .await;
-
-    assert!(result.is_ok());
-    let config = result.unwrap();
-
-    // Verify that values from each file are correctly assigned
     assert_eq!(config.classic_version, "MAIN_VERSION");
     assert_eq!(config.xse_acronym, "GAME_XSE");
     assert_eq!(config.ignore_list, vec!["IGNORE_ITEM"]);
 }
 
-#[tokio::test]
-async fn test_load_from_yaml_files_game_info_loading() {
-    let temp_dir = tempdir().unwrap();
-    let databases_dir = temp_dir.path().join("databases");
-    std::fs::create_dir_all(&databases_dir).unwrap();
-
-    std::fs::write(databases_dir.join("CLASSIC Main.yaml"), minimal_main_yaml()).unwrap();
-    std::fs::write(
-        databases_dir.join("CLASSIC Fallout4.yaml"),
+#[test]
+fn game_info_fields_populate_from_the_game_document() {
+    let config = YamlDataCore::from_yaml_content(
+        minimal_main_yaml(),
         minimal_game_yaml(),
-    )
-    .unwrap();
-    std::fs::write(
-        temp_dir.path().join("CLASSIC Ignore.yaml"),
         minimal_ignore_yaml(),
+        "Fallout4".to_string(),
+        "auto".to_string(),
     )
     .unwrap();
 
-    let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
-
-    let result =
-        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), "auto".to_string())
-            .await;
-
-    assert!(result.is_ok());
-    let config = result.unwrap();
     // Game_Info fields should be populated
+
     assert_eq!(config.crashgen_name, "crash-og");
     assert_eq!(config.game_root_name, "Fallout4");
+    assert_eq!(config.xse_acronym, "F4SE");
 }
 
 // ============================================================

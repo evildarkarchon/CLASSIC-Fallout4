@@ -5,6 +5,8 @@
 
 #include "classic_cxx_bridge/scanner.h"
 
+#include <functional>
+#include <iosfwd>
 #include <memory>
 #include <string>
 #include <vector>
@@ -27,8 +29,7 @@ struct CliScanRunPresentation {
 /// carries only the explicit candidate paths, so it cannot express Unsolved Logs movement.
 rust::Box<classic::scanner::ScanRunRequest> build_cli_scan_run_request(const CliArgs& args,
                                                                        const PreparedScanUserSettings& settings,
-                                                                       const std::string& yaml_dir_root,
-                                                                       const std::string& yaml_dir_data,
+                                                                       const std::string& installation_root,
                                                                        const std::string& base_directory);
 
 /// Produces user-facing lines for one serialized Crash Log Scan Run lifecycle event.
@@ -65,3 +66,73 @@ private:
     class Impl;
     std::unique_ptr<Impl> impl_;
 };
+
+/// Explicit native CLI response to a malformed Local Ignore file found by an active scan run.
+///
+/// `Cancel` is a presentation-only outcome. Rust owns exactly two recovery decisions, so the CLI
+/// expresses dismissal by requesting cancellation before it resumes the retained continuation.
+enum class CliLocalIgnoreRecoveryChoice {
+    ProceedWithoutIgnore,
+    ResetToDefault,
+    Cancel,
+};
+
+/// Console decision seam invoked while Rust still retains the single-use recovery continuation.
+///
+/// The callback receives the run-level recovery diagnostics and owns presenting them, so tests can
+/// assert the offered facts without driving a real terminal.
+using CliLocalIgnoreRecoveryPrompt =
+    std::function<CliLocalIgnoreRecoveryChoice(const std::vector<CliScanRunMessage>& recovery_details)>;
+
+/// Number of malformed console answers tolerated before the prompt gives up and cancels.
+inline constexpr int CLI_LOCAL_IGNORE_RECOVERY_PROMPT_ATTEMPTS = 3;
+
+/// Builds the run-level lines explaining why Local Ignore recovery is required.
+///
+/// The lines carry retained Installed YAML Data facts and structured diagnostics only; they never
+/// reach an Autoscan Report.
+std::vector<CliScanRunMessage> describe_cli_local_ignore_recovery(
+    const classic::scanner::ScanRunContractRunResult& result);
+
+/// Reads one explicit recovery choice from an interactive console stream pair.
+///
+/// Returns `Cancel` without consuming input when `cancellation` was already requested, and returns
+/// `Cancel` on end-of-input or after `CLI_LOCAL_IGNORE_RECOVERY_PROMPT_ATTEMPTS` unusable answers.
+/// No input path can ever select `ResetToDefault` implicitly.
+///
+/// Responsiveness caveat: cancellation is re-checked only after the console read returns, so Ctrl+C
+/// pressed while the read is still blocked is honored when the read completes rather than
+/// immediately. That affects only how quickly the question closes; the answer is discarded either
+/// way, so a late Ctrl+C can never authorize a reset.
+CliLocalIgnoreRecoveryChoice read_cli_local_ignore_recovery_choice(std::istream& input, std::ostream& output,
+                                                                   const CliScanRunCancellation& cancellation);
+
+/// Terminal envelope after any Local Ignore recovery decision has been applied.
+struct CliScanRunExecutionOutcome {
+    classic::scanner::ScanRunContractExecutionResult execution;
+    /// True when the retained single-use continuation was consumed by one explicit answer.
+    ///
+    /// Cancel counts: it is an explicit answer that consumes the continuation with a
+    /// non-destructive decision after cancellation has already been requested.
+    bool local_ignore_continuation_consumed = false;
+    /// Actionable lines for a recovery invariant the CLI could not honor. Empty in every normal run.
+    std::vector<CliScanRunMessage> recovery_diagnostics;
+};
+
+/// Executes one Crash Log Scan Run and resolves Local Ignore recovery through `prompt`.
+///
+/// A `Local Ignore Recovery Required` result is an expected outcome, not a failure: the retained
+/// continuation is consumed exactly once with the chosen decision and resumes the same discovery.
+/// When no prompt is supplied, or the run did not retain a continuation, the initial recovery
+/// envelope is returned unchanged so non-interactive callers never make an implicit choice.
+CliScanRunExecutionOutcome execute_cli_scan_run(const classic::scanner::ScanRunRequest& request,
+                                                CliScanRunCancellation& cancellation,
+                                                const classic::scanner::ScanRunObserver* observer,
+                                                const CliLocalIgnoreRecoveryPrompt& prompt);
+
+/// Produces the terminal CLI presentation for one resolved scan-run outcome.
+///
+/// Recovery invariant diagnostics are reported ahead of the terminal envelope and force the
+/// infrastructure exit code, because a recovery the CLI could not honor is never a usable result.
+CliScanRunPresentation present_cli_scan_run_outcome(const CliScanRunExecutionOutcome& outcome,
+                                                    double duration_seconds);

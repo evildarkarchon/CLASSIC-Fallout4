@@ -29,8 +29,9 @@ Performance optimization in CLASSIC follows a systematic four-step process:
 
 ```bash
 # Ensure Python bindings environment is ready
-uv venv ClassicLib-rs/python-bindings/.venv
-uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
+# python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
+# --inexact is load-bearing: it keeps uv from pruning maturin-built classic-*-py wheels.
+uv sync --project python-bindings --inexact
 
 # Build Rust extensions used by the maintained Python smoke/parity workflow
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
@@ -59,7 +60,7 @@ Generate CPU flamegraphs for Rust benchmarks or applications:
 .\scripts\profile\run_flamegraph.ps1 -Bench -BenchFilter "parse_yaml"
 
 # Profile specific crate
-.\scripts\profile\run_flamegraph.ps1 -Crate classic-yaml-core -Open
+.\scripts\profile\run_flamegraph.ps1 -Crate classic-settings-core -Open
 ```
 
 Output: `target/profiling/flamegraphs/flamegraph-{timestamp}.svg`
@@ -92,13 +93,13 @@ Profile heap allocations in Rust code:
 
 ```powershell
 # Profile tests
-.\scripts\profile\run_dhat.ps1 -Crate classic-yaml-core -Test
+.\scripts\profile\run_dhat.ps1 -Crate classic-settings-core -Test
 
 # Profile specific test
 .\scripts\profile\run_dhat.ps1 -Crate classic-settings-core -Test -TestFilter "test_load"
 
 # Profile benchmarks
-.\scripts\profile\run_dhat.ps1 -Crate classic-yaml-core -Bench
+.\scripts\profile\run_dhat.ps1 -Crate classic-settings-core -Bench
 ```
 
 Output: `target/profiling/dhat/dhat-heap-{timestamp}.json`
@@ -142,7 +143,7 @@ All benchmarks support two modes controlled by the `BENCH_MODE` environment vari
 .\scripts\bench\run_benchmarks.ps1 -Suite rust-db-baseline -Mode quick
 
 # Run specific crate benchmarks
-.\scripts\bench\run_benchmarks.ps1 -Crate classic-yaml-core
+.\scripts\bench\run_benchmarks.ps1 -Crate classic-settings-core
 
 # Filter to specific benchmark
 .\scripts\bench\run_benchmarks.ps1 -Filter "parse_yaml"
@@ -161,7 +162,7 @@ All benchmarks support two modes controlled by the `BENCH_MODE` environment vari
 .\scripts\bench\run_benchmarks.ps1 -Suite rust-db-baseline -Mode thorough -Filter "db_|scanlog_formid_resolution" -SaveBaseline -BaselineName "db-baseline-main"
 ```
 
-Baseline location: `ClassicLib-rs/target/criterion/{baseline-name}/`
+Baseline location: `target/criterion/{baseline-name}/`
 
 ### GIL Benchmarks
 
@@ -283,5 +284,5 @@ Pull requests automatically run benchmarks and compare against the `main` baseli
 - [Cache Patterns](./cache_patterns.md) - Caching strategies in CLASSIC
 - [GIL Audit Guide](./gil_audit.md) - GIL release decisions for PyO3
 - [PyO3 Integration Patterns](./pyo3_integration_patterns.md) - Rust-Python binding patterns
-- [CI/CD Guide](./ci_cd_guide.md) - Automated testing and benchmarking
+- CI and platform notes - see the `CI And Platform Notes` section of `.agents/skills/classic-project-guide/references/repo-guide.md` (the former `ci_cd_guide.md` is archived at [`docs/archive/ci_cd_guide.md`](../archive/ci_cd_guide.md) and describes a retired single-workflow pipeline)
 - [Rust Acceleration Guide](./rust_acceleration_guide.md) - Rust performance patterns

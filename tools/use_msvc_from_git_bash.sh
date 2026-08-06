@@ -5,7 +5,7 @@
 #
 # Usage:
 #   source tools/use_msvc_from_git_bash.sh
-#   tools/use_msvc_from_git_bash.sh -- cargo test -p classic-config-core --manifest-path ClassicLib-rs/Cargo.toml
+#   tools/use_msvc_from_git_bash.sh -- cargo test -p classic-config-core
 
 classic_use_msvc_from_git_bash() {
   local arch="amd64"
@@ -42,7 +42,7 @@ Loads the Visual Studio Dev Shell environment into Git Bash and sets
 
 Examples:
   source tools/use_msvc_from_git_bash.sh
-  tools/use_msvc_from_git_bash.sh -- cargo test -p classic-config-core --manifest-path ClassicLib-rs/Cargo.toml
+  tools/use_msvc_from_git_bash.sh -- cargo test -p classic-config-core
 EOF
         return 0
         ;;

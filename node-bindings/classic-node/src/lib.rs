@@ -23,13 +23,20 @@ extern crate napi_derive;
 mod crash_suspect_analyzer;
 mod crashgen_rules;
 mod crashgen_settings_analyzer;
+mod formid_finding_analyzer;
+mod installed_yaml_data;
 mod logging_contract;
 mod message;
 mod mod_guidance_analyzer;
+mod named_record_finding_analyzer;
 mod plugin_evidence_analyzer;
 mod runtime;
 mod shared;
 mod version;
+// The camelCase projection of the core-owned Vocabulary Tokens. Shared across
+// modules so that this surface has exactly one casing rule rather than one per
+// enum.
+mod vocabulary;
 
 // Wave 2: Complete Existing Modules
 mod scan_run;
@@ -38,6 +45,7 @@ mod scanlog;
 // Wave 3: File I/O & Data
 mod config;
 mod database;
+mod explicit_yaml_data;
 mod fileio;
 mod settings;
 mod user_settings;

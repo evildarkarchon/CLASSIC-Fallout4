@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import {
   JsDatabasePool,
+  JsFormIdValueLookup,
   getDefaultCacheTtl,
   getBatchCacheTtl,
   getMaxCacheTtl,
@@ -14,6 +15,57 @@ import {
   DEFAULT_CACHE_CLEANUP_THRESHOLD,
   DEFAULT_CACHE_CLEANUP_INTERVAL,
 } from "../index.js";
+
+type FormIdLookupError = Error & {
+  code: string;
+  formid?: string;
+  plugin?: string;
+};
+
+/** Stable typed fields a rejected strict FormID Value Lookup must expose. */
+type ExpectedLookupRejection = {
+  code: string;
+  /** Omit to assert the error carries no FormID, as construction failures do. */
+  formid?: string;
+  /** Omit to assert the error carries no plugin, as construction failures do. */
+  plugin?: string;
+  messageContains: string;
+};
+
+/**
+ * Asserts a strict FormID Value Lookup call rejects with the expected typed error.
+ *
+ * The try/catch captures the call itself, not just its promise: the `sqlite`
+ * factory rejects synchronously rather than returning a rejected promise, so a
+ * promise-only form would let that error escape. The sentinel for an unexpected
+ * success then lives outside the catch, so it surfaces as itself instead of
+ * failing indirectly via a missing `code`.
+ *
+ * @param call Thunk invoking the lookup under test; may throw sync or async.
+ * @param expected Typed error fields; omitted formid/plugin assert absence.
+ */
+async function expectLookupRejects(
+  call: () => Promise<unknown>,
+  expected: ExpectedLookupRejection,
+): Promise<void> {
+  let rejection: FormIdLookupError | null = null;
+  try {
+    await call();
+  } catch (error) {
+    rejection = error as FormIdLookupError;
+  }
+
+  if (rejection === null) {
+    throw new Error(
+      `strict lookup unexpectedly succeeded; expected ${expected.code}`,
+    );
+  }
+
+  expect(rejection.code).toBe(expected.code);
+  expect(rejection.formid).toBe(expected.formid);
+  expect(rejection.plugin).toBe(expected.plugin);
+  expect(rejection.message).toContain(expected.messageContains);
+}
 
 // ============================================================================
 // Cache TTL Constants
@@ -103,6 +155,110 @@ describe("DatabasePool construction", () => {
   test("cache is empty on construction", () => {
     const pool = new JsDatabasePool("Fallout4");
     expect(pool.cacheSize()).toBe(0);
+  });
+});
+
+// ============================================================================
+// Strict FormID Value Lookup
+// ============================================================================
+
+describe("FormID Value Lookup", () => {
+  test("disabled lookup returns an explicit disabled outcome", async () => {
+    const lookup = JsFormIdValueLookup.disabled();
+
+    expect(await lookup.lookup("00012345", "Fallout4.esm")).toEqual({
+      kind: "disabled",
+    });
+  });
+
+  test("in-memory lookup keeps hits, misses, and positional batches distinct", async () => {
+    const lookup = JsFormIdValueLookup.inMemory([
+      {
+        formid: "00012345",
+        plugin: "Fallout4.esm",
+        value: "Laser Musket",
+      },
+    ]);
+
+    expect(await lookup.lookup("00012345", "fallout4.ESM")).toEqual({
+      kind: "found",
+      value: "Laser Musket",
+    });
+    expect(await lookup.lookup("00FFFFFF", "Missing.esp")).toEqual({
+      kind: "missing",
+    });
+    expect(
+      await lookup.lookupBatch([
+        ["00FFFFFF", "Missing.esp"],
+        ["00012345", "Fallout4.esm"],
+      ]),
+    ).toEqual([
+      { kind: "missing" },
+      { kind: "found", value: "Laser Musket" },
+    ]);
+  });
+
+  test("malformed results reject with stable lookup fields", async () => {
+    const lookup = JsFormIdValueLookup.inMemory([
+      {
+        formid: "00012345",
+        plugin: "Fallout4.esm",
+        value: "  \t ",
+      },
+    ]);
+
+    await expectLookupRejects(() => lookup.lookup("00012345", "Fallout4.esm"), {
+      code: "malformed_result",
+      formid: "00012345",
+      plugin: "Fallout4.esm",
+      messageContains: "blank value",
+    });
+  });
+
+  test("operational failures reject without becoming misses", async () => {
+    const lookup = JsFormIdValueLookup.inMemory([
+      {
+        formid: "00012345",
+        plugin: "Fallout4.esm",
+        operationalFailure: "fixture offline",
+      },
+    ]);
+
+    await expectLookupRejects(() => lookup.lookup("00012345", "Fallout4.esm"), {
+      code: "operational_failure",
+      formid: "00012345",
+      plugin: "Fallout4.esm",
+      messageContains: "fixture offline",
+    });
+  });
+
+  test("shared-pool and SQLite factories preserve operational semantics", async () => {
+    // An uninitialized pool exposes no database carrying the active game table.
+    // Strict lookup treats that empty filtered set as an invalid adapter/schema
+    // configuration rather than a successful miss, so the lookup must reject.
+    const pool = new JsDatabasePool("Fallout4");
+    const shared = JsFormIdValueLookup.fromSharedPool(pool);
+    await expectLookupRejects(() => shared.lookup("00012345", "Fallout4.esm"), {
+      code: "operational_failure",
+      formid: "00012345",
+      plugin: "Fallout4.esm",
+      messageContains:
+        'no initialized database exposes active game table "Fallout4"',
+    });
+
+    // Construction fails before any pair is in play, so this error carries
+    // neither a FormID nor a plugin.
+    await expectLookupRejects(
+      () =>
+        JsFormIdValueLookup.sqlite(
+          "Z:\\nonexistent\\path\\formids.db",
+          "Fallout4",
+        ),
+      {
+        code: "operational_failure",
+        messageContains: "database file not found",
+      },
+    );
   });
 });
 

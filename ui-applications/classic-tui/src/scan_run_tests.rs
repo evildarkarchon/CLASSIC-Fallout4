@@ -1,7 +1,14 @@
-use super::{ScanRunIntent, build_request, format_event, format_result};
+use super::{
+    CANCEL_RECOVERY_CHOICE, LocalIgnoreRecoveryPrompt, PROCEED_WITHOUT_IGNORE_CHOICE,
+    RESET_TO_DEFAULT_CHOICE, ScanRunIntent, build_request, describe_local_ignore_recovery,
+    format_event, format_result, format_resume_error,
+};
+use classic_config_core::YamlDataContentIdentity;
 use classic_scanlog_core::scan_run::contract::{
-    Configuration, Event, LogDisposition, LogEvent, LogFailure, LogFailureStage, LogResult,
-    Options, Request, RunResult,
+    Configuration, Event, InfrastructureError, InfrastructureErrorStage,
+    LocalIgnoreResetConflictError, LocalIgnoreResetDurabilityUnknownError, LocalIgnoreResetFailure,
+    LocalIgnoreResetFailureStage, LogDisposition, LogEvent, LogFailure, LogFailureStage, LogResult,
+    Options, Request, ResumeError, RunResult,
 };
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanFacts,
@@ -18,8 +25,7 @@ const VALID_CRASH_LOG: &str =
 
 fn configuration() -> Configuration {
     Configuration {
-        yaml_dir_root: PathBuf::from("C:/CLASSIC"),
-        yaml_dir_data: PathBuf::from("C:/CLASSIC/CLASSIC Data"),
+        installation_root: PathBuf::from("C:/CLASSIC"),
         game: GameId::Fallout4,
         game_version: "Regular".to_string(),
         options: Options::new(true, false),
@@ -28,14 +34,15 @@ fn configuration() -> Configuration {
     }
 }
 
+/// Builds an executable request configuration from the tracked scan-run YAML corpus.
 fn executable_configuration(max_concurrent: usize) -> Configuration {
-    let repository_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
+    let fixture_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/fixtures/crash_log_scan_run")
         .canonicalize()
-        .expect("repository root should resolve");
+        .expect("scan-run fixture root should resolve");
+
     Configuration {
-        yaml_dir_root: repository_root.clone(),
-        yaml_dir_data: repository_root.join("CLASSIC Data"),
+        installation_root: fixture_root,
         game: GameId::Fallout4,
         game_version: "Original".to_string(),
         options: Options::new(false, false),
@@ -211,6 +218,7 @@ fn terminal_presentation_distinguishes_cancellation_around_discovery_and_admissi
         status: CrashLogScanRunStatus::CancelledBeforeDiscovery,
         discovery: None,
         setup: None,
+        installed_yaml_data: None,
         effective_concurrency: None,
         message: None,
         total: 0,
@@ -218,6 +226,7 @@ fn terminal_presentation_distinguishes_cancellation_around_discovery_and_admissi
         failed: 0,
         cancelled: 0,
         logs: Vec::new(),
+        continuation: None,
     };
 
     let before_presentation = format_result(&before);
@@ -253,6 +262,7 @@ fn terminal_presentation_distinguishes_cancellation_around_discovery_and_admissi
             message: None,
             rendered_report: String::new(),
         }),
+        installed_yaml_data: None,
         effective_concurrency: Some(1),
         message: None,
         total: 2,
@@ -260,6 +270,7 @@ fn terminal_presentation_distinguishes_cancellation_around_discovery_and_admissi
         failed: 0,
         cancelled: 1,
         logs: vec![admitted, not_started],
+        continuation: None,
     };
 
     let after_presentation = format_result(&after);
@@ -296,6 +307,301 @@ fn terminal_presentation_distinguishes_cancellation_around_discovery_and_admissi
     );
 }
 
+/// Verifies Local Ignore recovery remains a distinct expected TUI terminal status.
+#[test]
+fn terminal_presentation_distinguishes_local_ignore_recovery() {
+    let result = RunResult {
+        status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
+        discovery: Some(CrashLogScanDiscoveryResult {
+            source: CrashLogScanDiscoverySource::Targeted,
+            accepted_logs: vec![PathBuf::from("C:/Selected/crash-one.log")],
+            rejected_inputs: Vec::new(),
+            searched_locations: vec![PathBuf::from("C:/Selected")],
+        }),
+        setup: None,
+        installed_yaml_data: None,
+        continuation: None,
+        effective_concurrency: None,
+        message: Some("Local Ignore recovery is required".to_string()),
+        total: 1,
+        succeeded: 0,
+        failed: 0,
+        cancelled: 0,
+        logs: Vec::new(),
+    };
+
+    let presentation = format_result(&result);
+
+    assert_eq!(presentation.percent, 0.0);
+    assert_eq!(presentation.status, "Local Ignore recovery is required");
+    assert!(
+        presentation
+            .details
+            .contains("Run status: local_ignore_recovery_required")
+    );
+    assert!(
+        presentation
+            .details
+            .contains("Discovery: targeted; 1 accepted")
+    );
+}
+
+/// Builds a paused-run projection carrying retained discovery but no fabricated continuation.
+fn paused_recovery_result(message: Option<&str>) -> RunResult {
+    RunResult {
+        status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
+        discovery: Some(CrashLogScanDiscoveryResult {
+            source: CrashLogScanDiscoverySource::Standard,
+            accepted_logs: vec![
+                PathBuf::from("C:/Crash Logs/crash-one.log"),
+                PathBuf::from("C:/Crash Logs/crash-two.log"),
+            ],
+            rejected_inputs: Vec::new(),
+            searched_locations: vec![PathBuf::from("C:/Crash Logs")],
+        }),
+        setup: None,
+        installed_yaml_data: None,
+        continuation: None,
+        effective_concurrency: None,
+        message: message.map(str::to_string),
+        total: 2,
+        succeeded: 0,
+        failed: 0,
+        cancelled: 0,
+        logs: Vec::new(),
+    }
+}
+
+/// Verifies the recovery overlay offers both Rust-defined decisions and a non-mutating cancel.
+#[test]
+fn recovery_prompt_offers_both_decisions_and_a_non_mutating_cancel() {
+    let result = paused_recovery_result(Some("Local Ignore recovery is required"));
+
+    let prompt = describe_local_ignore_recovery(&result);
+    let text = prompt.overlay_text();
+
+    assert_eq!(prompt.retained_logs, 2);
+    assert_eq!(prompt.message, "Local Ignore recovery is required");
+    assert!(text.contains("Local Ignore recovery is required"));
+    assert!(text.contains("Retained discovery: 2 crash logs will be scanned once you decide."));
+    assert!(text.contains(PROCEED_WITHOUT_IGNORE_CHOICE));
+    assert!(text.contains(RESET_TO_DEFAULT_CHOICE));
+    assert!(text.contains(CANCEL_RECOVERY_CHOICE));
+    // Each choice must state its expected outcome, not merely advertise a key.
+    assert!(text.contains("left exactly as it is"));
+    assert!(text.contains("back up your malformed file byte-exactly"));
+    assert!(text.contains("Local Ignore is not modified"));
+}
+
+/// Verifies an unavailable Reset To Default is omitted from the overlay and explained.
+///
+/// Constructed directly rather than through `describe_local_ignore_recovery`, because
+/// `InspectedYamlDataFile` exposes no public constructor and a paused-run fixture therefore cannot
+/// carry Installed YAML Data. The presentation rule is what changed, so that is what is pinned.
+#[test]
+fn recovery_prompt_omits_reset_when_the_contract_says_it_cannot_succeed() {
+    let prompt = LocalIgnoreRecoveryPrompt {
+        message: "Local Ignore recovery is required".to_string(),
+        retained_logs: 2,
+        diagnostics: Vec::new(),
+        reset_available: false,
+    };
+
+    let text = prompt.overlay_text();
+
+    assert!(text.contains(PROCEED_WITHOUT_IGNORE_CHOICE));
+    assert!(text.contains(CANCEL_RECOVERY_CHOICE));
+    assert!(
+        !text.contains(RESET_TO_DEFAULT_CHOICE),
+        "an impossible choice must not be advertised, got:\n{text}"
+    );
+    assert!(
+        text.contains("Reset To Default is unavailable"),
+        "the omission must be explained rather than left as a silent gap, got:\n{text}"
+    );
+}
+
+/// Verifies a paused run without a Rust message still explains why a decision is needed.
+#[test]
+fn recovery_prompt_falls_back_to_an_explicit_default_explanation() {
+    let prompt = describe_local_ignore_recovery(&paused_recovery_result(None));
+
+    assert_eq!(
+        prompt.message,
+        "Local Ignore recovery is required before scanning can continue"
+    );
+    assert!(prompt.diagnostics.is_empty());
+}
+
+/// Verifies replay is presented with its own stable code rather than as a reset failure.
+#[test]
+fn resume_presentation_keeps_consumed_replay_distinct() {
+    let presentation = format_resume_error(&ResumeError::ContinuationConsumed);
+
+    assert_eq!(presentation.percent, 0.0);
+    assert!(
+        presentation
+            .status
+            .contains("Crash Log Scan recovery failed (scan_run_continuation_consumed)")
+    );
+    assert!(
+        presentation
+            .details
+            .contains("This recovery decision was already applied")
+    );
+}
+
+/// Verifies a reset conflict keeps both identities and states that nothing was replaced.
+#[test]
+fn resume_presentation_preserves_typed_reset_conflict_context() {
+    let expected = YamlDataContentIdentity::from_bytes(b"malformed");
+    let actual = YamlDataContentIdentity::from_bytes(b"repaired while deciding");
+    let presentation = format_resume_error(&ResumeError::LocalIgnoreResetConflict(
+        LocalIgnoreResetConflictError {
+            expected_identity: expected.clone(),
+            actual_identity: Some(actual.clone()),
+            backup_path: Some(PathBuf::from(
+                "C:/CLASSIC/CLASSIC Backup/CLASSIC Ignore.yaml",
+            )),
+        },
+    ));
+
+    assert!(
+        presentation
+            .status
+            .contains("Crash Log Scan recovery failed (local_ignore_reset_conflict)")
+    );
+    assert!(presentation.details.contains(&format!(
+        "Expected identity: sha256 {}",
+        expected.sha256_hex()
+    )));
+    assert!(
+        presentation
+            .details
+            .contains(&format!("Actual identity: sha256 {}", actual.sha256_hex()))
+    );
+    assert!(
+        presentation
+            .details
+            .contains("Verified backup: C:/CLASSIC/CLASSIC Backup/CLASSIC Ignore.yaml")
+    );
+    assert!(
+        presentation
+            .details
+            .contains("Your Local Ignore file was not replaced.")
+    );
+}
+
+/// Verifies a conflict raised by removal is reported as a refusal, not a missing identity.
+#[test]
+fn resume_presentation_explains_a_removed_malformed_file() {
+    let presentation = format_resume_error(&ResumeError::LocalIgnoreResetConflict(
+        LocalIgnoreResetConflictError {
+            expected_identity: YamlDataContentIdentity::from_bytes(b"malformed"),
+            actual_identity: None,
+            backup_path: None,
+        },
+    ));
+
+    assert!(
+        presentation
+            .details
+            .contains("the malformed file was removed while you decided")
+    );
+}
+
+/// Verifies operational reset failures surface their path and publication stage.
+#[test]
+fn resume_presentation_makes_typed_reset_failures_actionable() {
+    let backup = format_resume_error(&ResumeError::LocalIgnoreResetBackupFailure(
+        LocalIgnoreResetFailure {
+            path: PathBuf::from("C:/CLASSIC/CLASSIC Backup"),
+            stage: None,
+            message: "backup directory could not be created".to_string(),
+        },
+    ));
+    let replacement = format_resume_error(&ResumeError::LocalIgnoreResetReplacementFailure(
+        LocalIgnoreResetFailure {
+            path: PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml"),
+            stage: Some(LocalIgnoreResetFailureStage::Publish),
+            message: "staged replacement could not be published".to_string(),
+        },
+    ));
+
+    assert!(
+        backup
+            .status
+            .contains("Crash Log Scan recovery failed (local_ignore_reset_backup_failure)")
+    );
+    assert!(backup.details.contains("Path: C:/CLASSIC/CLASSIC Backup"));
+    assert!(!backup.details.contains("Stage:"));
+    assert!(
+        replacement
+            .status
+            .contains("Crash Log Scan recovery failed (local_ignore_reset_replacement_failure)")
+    );
+    assert!(replacement.details.contains("Stage: publish"));
+}
+
+/// Verifies durability uncertainty reports a recovery receipt instead of a plain failure.
+#[test]
+fn resume_presentation_reports_a_durability_recovery_receipt() {
+    let malformed = YamlDataContentIdentity::from_bytes(b"malformed");
+    let backup = YamlDataContentIdentity::from_bytes(b"malformed");
+    let replacement = YamlDataContentIdentity::from_bytes(b"defaults");
+    let presentation = format_resume_error(&ResumeError::LocalIgnoreResetDurabilityUnknown(
+        Box::new(LocalIgnoreResetDurabilityUnknownError {
+            path: PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml"),
+            backup_path: PathBuf::from("C:/CLASSIC/CLASSIC Backup/CLASSIC Ignore.yaml"),
+            malformed_identity: malformed.clone(),
+            backup_identity: backup.clone(),
+            replacement_identity: replacement.clone(),
+            message: "directory durability could not be confirmed".to_string(),
+        }),
+    ));
+
+    assert!(
+        presentation
+            .status
+            .contains("Crash Log Scan recovery failed (local_ignore_reset_durability_unknown)")
+    );
+    assert!(
+        presentation
+            .details
+            .contains("Verified backup: C:/CLASSIC/CLASSIC Backup/CLASSIC Ignore.yaml")
+    );
+    assert!(presentation.details.contains(&format!(
+        "Malformed identity: sha256 {}",
+        malformed.sha256_hex()
+    )));
+    assert!(
+        presentation
+            .details
+            .contains(&format!("Backup identity: sha256 {}", backup.sha256_hex()))
+    );
+    assert!(presentation.details.contains(&format!(
+        "Replacement identity: sha256 {}",
+        replacement.sha256_hex()
+    )));
+}
+
+/// Verifies a post-resume infrastructure failure keeps its stage and path.
+#[test]
+fn resume_presentation_preserves_infrastructure_stage_and_path() {
+    let presentation = format_resume_error(&ResumeError::Infrastructure(InfrastructureError {
+        stage: InfrastructureErrorStage::Intake,
+        message: "intake could not be prepared".to_string(),
+        path: Some(PathBuf::from("C:/CLASSIC/CLASSIC Data")),
+    }));
+
+    assert!(presentation.details.contains("Stage: intake"));
+    assert!(
+        presentation
+            .details
+            .contains("Path: C:/CLASSIC/CLASSIC Data")
+    );
+}
+
 #[test]
 fn terminal_presentation_lists_mixed_outcomes_in_discovery_order() {
     let succeeded = log_result(0, "first.log", LogDisposition::Succeeded);
@@ -327,6 +633,7 @@ fn terminal_presentation_lists_mixed_outcomes_in_discovery_order() {
             searched_locations: vec![PathBuf::from("C:/Selected")],
         }),
         setup: None,
+        installed_yaml_data: None,
         effective_concurrency: Some(2),
         message: None,
         total: 3,
@@ -334,6 +641,7 @@ fn terminal_presentation_lists_mixed_outcomes_in_discovery_order() {
         failed: 1,
         cancelled: 1,
         logs: vec![succeeded, failed, cancelled],
+        continuation: None,
     };
 
     let presentation = format_result(&result);

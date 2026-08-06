@@ -217,6 +217,29 @@ add_classic_gui_qt_test(classic-gui-test-scan-request-builder
 )
 link_classic_gui_rust_bridge(classic-gui-test-scan-request-builder)
 
+# Local Ignore recovery dialog behavior. Drives the real modal prompt so the offered choices, the
+# non-destructive default, and every dismissal path are asserted at runtime rather than by grepping
+# mainwindow.cpp for button labels.
+add_classic_gui_qt_test(classic-gui-test-local-ignore-recovery-prompt
+    test_localignorerecoveryprompt.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/localignorerecoveryprompt.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanrunpresentation.cpp
+)
+link_classic_gui_rust_bridge(classic-gui-test-local-ignore-recovery-prompt)
+
+# ScanController's GUI-thread handoff for a paused recovery, exercised across a real worker thread.
+add_classic_gui_qt_test(classic-gui-test-scancontroller-recovery
+    test_scancontroller_recovery.cpp
+    ${CMAKE_SOURCE_DIR}/src/controllers/scancontroller.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/signalhub.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/threadmanager.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanworker.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanrequestbuilder.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanprogressmodel.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanrunpresentation.cpp
+)
+link_classic_gui_rust_bridge(classic-gui-test-scancontroller-recovery)
+
 add_classic_gui_qt_test(classic-gui-test-scanworker-cancellation
     test_scanworker_cancellation.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanworker.cpp
@@ -234,6 +257,13 @@ add_classic_gui_qt_test(classic-gui-test-yaml-update-bridge
     test_yaml_update_bridge.cpp
 )
 link_classic_gui_rust_bridge(classic-gui-test-yaml-update-bridge)
+
+# Vocabulary Display Label source audit. Reads GUI sources as text rather than
+# linking them, so it needs neither the Rust bridge nor the widget libraries
+# even though the code it audits is bridge-linked.
+add_classic_gui_qt_test(classic-gui-test-display-label-audit
+    test_display_label_audit.cpp
+)
 
 # yaml-update-delivery Section 12 wiring — source-inspection tests that
 # verify SettingsDialog and classic-cli consume the bridge correctly (button

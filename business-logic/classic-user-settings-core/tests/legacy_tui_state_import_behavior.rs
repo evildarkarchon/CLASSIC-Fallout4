@@ -153,6 +153,42 @@ fn explicit_import_bootstraps_missing_settings_from_published_defaults() {
 }
 
 #[test]
+fn repeating_an_import_republishes_the_same_content_addressed_legacy_backup() {
+    // The legacy source is never renamed or deleted, so an import can be repeated. Its backup path
+    // is derived from a digest of the source bytes and is therefore deliberately stable rather than
+    // unique per publication: the second import republishes onto a path that already holds
+    // byte-identical content. That must remain an ordinary replacement rather than a conflict.
+    let root = tempfile::tempdir().expect("create CLASSIC root");
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    std::fs::write(
+        &settings_path,
+        br#"schema_version: "1.0"
+CLASSIC_Settings:
+  Update Check: true
+"#,
+    )
+    .expect("write current User Settings");
+    let legacy_path = root.path().join("state.json");
+    let legacy_bytes = br#"{"active_tab":2,"results_panel_width":44,"sort_ascending":true}"#;
+    std::fs::write(&legacy_path, legacy_bytes).expect("write legacy TUI state");
+
+    let LegacyTuiStateImportOutcome::Applied(first) =
+        import_legacy_tui_state(root.path(), &legacy_path).expect("first import")
+    else {
+        panic!("an unchanged current base and valid legacy source must apply");
+    };
+    let LegacyTuiStateImportOutcome::Applied(second) =
+        import_legacy_tui_state(root.path(), &legacy_path).expect("second import")
+    else {
+        panic!("repeating an import of the same dormant source must apply again");
+    };
+
+    assert_eq!(second.backup_path(), first.backup_path());
+    assert_eq!(std::fs::read(second.backup_path()).unwrap(), legacy_bytes);
+    assert_eq!(std::fs::read(&legacy_path).unwrap(), legacy_bytes);
+}
+
+#[test]
 fn absent_legacy_source_is_a_noop_outcome() {
     let root = tempfile::tempdir().expect("create CLASSIC root");
 

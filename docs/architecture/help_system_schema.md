@@ -300,7 +300,7 @@ The help system detects current context:
    - Populate with initial help topics
 
 2. **Rust Helper Module**
-   - `ClassicLib-rs/ui-applications/classic-ui-shared/src/help.rs`
+   - Help schema consumers now live in the C++ frontends (`classic-cli/`, `classic-gui/`); the former `classic-ui-shared` crate no longer exists.
    - Load and parse YAML
    - Lookup help topics by category/ID
    - Format content for display

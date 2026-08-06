@@ -1,13 +1,28 @@
 # Autoscan Report Assembly Refactor Brief
 
+> **Status: superseded.** Do not implement or restore the line-bearing
+> interfaces, compatibility facades, or sequencing described below. The final
+> supported architecture is recorded in
+> [`ADR-0005`](../adr/0005-semantic-autoscan-report-contributions.md), the
+> current public contract is in
+> [`classic-scanlog-core.md`](../api/classic-scanlog-core.md), and exact output
+> compatibility is enforced by the immutable
+> [`autoscan_report_goldens`](../../tests/fixtures/autoscan_report_goldens/README.md)
+> corpus. The remaining body is retained only as historical implementation
+> context.
+
 This brief captures the accepted design from the entry #2 grilling session for `architecture-review-20260630-205128.html`: move Autoscan Report ordering and rendering into a deep Rust module.
 
-Use this as an implementation brief for an agent. Canonical domain language is in [`CONTEXT.md`](../../CONTEXT.md). The data-owned placement decision is recorded in [`docs/adr/0003-autoscan-report-placement-yaml-data.md`](../adr/0003-autoscan-report-placement-yaml-data.md).
+Canonical domain language is in [`CONTEXT.md`](../../CONTEXT.md). The data-owned placement decision is recorded in [`docs/adr/0003-autoscan-report-placement-yaml-data.md`](../adr/0003-autoscan-report-placement-yaml-data.md).
 
 > Historical status: the `lines` payloads below describe the temporary first
 > assembly slice. Crash Suspect, Mod Guidance, and Plugin Evidence have since
 > moved to typed semantic payloads; the current contract is documented in
 > [`docs/api/classic-scanlog-core.md`](../api/classic-scanlog-core.md).
+> The final contract cutover also removed the public `ReportFragment`,
+> `ReportComposer`, `ReportGenerator`, `StringPool`, `SettingsValidator`, and
+> Python-only `ParallelReportProcessor` compatibility surfaces. They remain
+> below only where they explain the historical implementation sequence.
 
 ## Target
 
@@ -63,11 +78,11 @@ pub(crate) struct AutoscanReportFacts {
 pub(crate) enum AutoscanReportContribution {
     CrashgenExpectation(CrashgenExpectationContribution),
     DisabledSettingNotice { setting_name: String, crashgen_name: String },
-    CrashSuspectFinding { lines: Vec<String> },
-    ModGuidance { group: ModGuidanceGroup, lines: Vec<String> },
-    PluginEvidence { lines: Vec<String> },
+    CrashSuspectFinding { finding: CrashSuspectFinding },
+    ModGuidance { result: ModGuidanceAnalysisResult },
+    PluginEvidence { result: PluginEvidenceAnalysisResult },
     FormIdFinding { lines: Vec<String> },
-    NamedRecordFinding { lines: Vec<String> },
+    NamedRecordFinding { result: NamedRecordFindingAnalysisResult },
 }
 
 pub(crate) struct CrashgenExpectationContribution {
@@ -96,10 +111,10 @@ Implementation notes:
 ## Contribution Rules
 
 - Crashgen Expectation Outcomes and Disabled Setting Notices should become structured contributions in the first slice.
-- Crash suspect, Mod Guidance, Plugin Evidence, FormID Finding, and Named Record Finding payloads can temporarily carry existing report-facing body lines to preserve behavior.
-- Mod Guidance should carry a semantic group so assembly renders current subheaders.
-- Plugin Evidence, FormID Finding, and Named Record Finding should carry body lines only; assembly renders their section headers.
-- Crash Suspect Finding should carry body lines only; assembly always renders the crash-suspect section and the existing no-suspect footer when there are no findings.
+- Crash Suspect, Mod Guidance, Plugin Evidence, and Named Record Finding payloads now carry typed semantic results; FormID Finding remains the temporary report-facing body-line payload.
+- Mod Guidance carries semantic match state and authored guidance; assembly owns groups and subheaders.
+- Plugin Evidence and Named Record Finding carry identity/count records; assembly owns sorting, prose, markdown, and completed-empty rendering.
+- Crash Suspect Finding carries one typed finding; assembly always renders the crash-suspect section and the existing no-suspect footer when there are no findings.
 - Preserve within-category ordering exactly. Crashgen Expectation outcomes render in evaluator order. Settings-placement outcomes render before Disabled Setting Notices. Same-kind body-line contributions preserve input order.
 
 Canonical report section order for tests:

@@ -54,7 +54,7 @@ Important contributor takeaway:
 
 ## What Crash Log Scan Intake Reads At Scan Startup Today
 
-Native CLI scan startup opens `CrashLogScanSettingsDto`, selects the flattened rows for the effective game, and sends them through `ScanRunConfigurationDto.formid_database_paths` into a tagged final-contract request. Native GUI settings load opens one `GuiSettingsSnapshotDto`; at scan startup its Qt adapter creates an immutable `CrashLogScanLaunchSettings` from that accepted revision, selecting the effective game's FormID rows. The C++ bridge creates `CrashLogScanFacts`, and the Rust-owned Crash Log Scan Run attaches those facts to `CrashLogScanIntake::from_yaml_paths(...).prepare()`.
+Native CLI scan startup opens `CrashLogScanSettingsDto`, selects the flattened rows for the effective game, and sends them through `ScanRunConfigurationDto.formid_database_paths` into a tagged final-contract request. Native GUI settings load opens one `GuiSettingsSnapshotDto`; at scan startup its Qt adapter creates an immutable `CrashLogScanLaunchSettings` from that accepted revision, selecting the effective game's FormID rows. The C++ bridge creates `CrashLogScanFacts`, and the Rust-owned Crash Log Scan Run attaches those facts to `CrashLogScanIntake::from_installed_yaml_data(...).prepare()`. Intake receives the immutable snapshot selected once from the request's installation root and typed game and does not reopen selected Main, game, or Local Ignore paths.
 
 Current path assembly order is:
 

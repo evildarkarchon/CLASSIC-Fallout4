@@ -1,0 +1,840 @@
+//! The staging-and-publish sequence and the two operations built on it.
+
+use std::fs::{File, OpenOptions};
+use std::io::Write as _;
+use std::path::{Path, PathBuf};
+
+use tempfile::NamedTempFile;
+
+use crate::error::{PublicationError, PublicationStage};
+use crate::identity::ContentIdentity;
+use crate::lock::LockPolicy;
+
+/// Whether the published namespace entry reached the durability barrier.
+///
+/// On Unix these are genuinely separate events: `rename` makes complete bytes
+/// visible, and a later directory synchronization is what makes the *entry*
+/// survive a crash. The second can fail on its own, after the first has
+/// already succeeded, which is why uncertainty is a value rather than an
+/// error. This module never decides whether that uncertainty matters.
+#[derive(Debug)]
+pub enum Durability {
+    /// The bytes and their namespace entry reached the durability barrier.
+    Durable,
+    /// Complete bytes are visible, but namespace durability is unconfirmed.
+    Unknown(std::io::Error),
+}
+
+impl Durability {
+    /// Return whether the namespace entry is known to be durable.
+    #[must_use]
+    pub const fn is_durable(&self) -> bool {
+        matches!(self, Self::Durable)
+    }
+
+    /// Return the failure that left namespace durability unconfirmed.
+    #[must_use]
+    pub const fn unknown_source(&self) -> Option<&std::io::Error> {
+        match self {
+            Self::Durable => None,
+            Self::Unknown(source) => Some(source),
+        }
+    }
+}
+
+/// A completed durable publication.
+///
+/// Marked `#[must_use]` because the durability outcome it carries is the one
+/// thing a caller can accidentally drop. Discarding it should be a written
+/// decision, not an omission.
+#[must_use]
+#[derive(Debug)]
+pub struct Publication {
+    identity: ContentIdentity,
+    durability: Durability,
+}
+
+impl Publication {
+    /// Return the identity of the bytes now visible at the target path.
+    #[must_use]
+    pub const fn identity(&self) -> &ContentIdentity {
+        &self.identity
+    }
+
+    /// Return whether the namespace entry reached the durability barrier.
+    #[must_use]
+    pub const fn durability(&self) -> &Durability {
+        &self.durability
+    }
+
+    /// Consume the publication and return only its durability outcome.
+    ///
+    /// Callers that deliberately discard durability uncertainty should do so
+    /// through this method, so the discard is a named expression rather than
+    /// an omitted error check.
+    #[must_use]
+    pub fn into_durability(self) -> Durability {
+        self.durability
+    }
+}
+
+/// The byte-exact backup that must exist before a target is replaced.
+///
+/// The caller owns backup *location*; this crate only owns the ordering that
+/// makes the backup trustworthy. `original` is the caller's retained copy of
+/// the bytes currently at the target, which the reread backup must match.
+#[derive(Debug, Clone, Copy)]
+pub struct VerifiedBackup<'a> {
+    path: &'a Path,
+    original: &'a [u8],
+}
+
+impl<'a> VerifiedBackup<'a> {
+    /// Describe a backup of `original` to be published at `path`.
+    #[must_use]
+    pub const fn new(path: &'a Path, original: &'a [u8]) -> Self {
+        Self { path, original }
+    }
+
+    /// Return the path the backup is published to.
+    #[must_use]
+    pub const fn path(&self) -> &'a Path {
+        self.path
+    }
+
+    /// Return the retained original bytes the backup must match.
+    #[must_use]
+    pub const fn original(&self) -> &'a [u8] {
+        self.original
+    }
+}
+
+/// A backup that was published to a unique path and proven byte-exact.
+///
+/// Carries the backup's *own* durability outcome alongside its identity. The
+/// reread that produced `identity` proves the bytes are visible now; it says
+/// nothing about whether the backup's namespace entry survives a crash. Those
+/// are different guarantees, and a caller about to destroy the only other copy
+/// of the data is exactly the caller that needs to tell them apart.
+///
+/// `#[must_use]` for the same reason as [`Publication`]: it carries a
+/// durability outcome that must be handled rather than dropped by omission.
+#[must_use]
+#[derive(Debug)]
+pub struct PublishedBackup {
+    identity: ContentIdentity,
+    durability: Durability,
+}
+
+impl PublishedBackup {
+    /// Return the identity calculated from the reread bytes.
+    #[must_use]
+    pub const fn identity(&self) -> &ContentIdentity {
+        &self.identity
+    }
+
+    /// Return whether the backup's namespace entry reached the barrier.
+    #[must_use]
+    pub const fn durability(&self) -> &Durability {
+        &self.durability
+    }
+
+    /// Consume this result and return the backup's durability outcome.
+    pub fn into_durability(self) -> Durability {
+        self.durability
+    }
+
+    /// Consume this result and return the reread identity, naming the discard.
+    pub fn into_identity_ignoring_durability(self) -> ContentIdentity {
+        self.identity
+    }
+}
+
+/// A replacement that was preceded by a verified backup.
+///
+/// `#[must_use]` for the same reason as [`Publication`]: it carries the
+/// replacement's durability outcome.
+#[must_use]
+#[derive(Debug)]
+pub struct VerifiedBackupPublication {
+    backup: PublishedBackup,
+    replacement: Publication,
+}
+
+impl VerifiedBackupPublication {
+    /// Return the identity of the backup that was reread and byte-compared.
+    #[must_use]
+    pub const fn backup_identity(&self) -> &ContentIdentity {
+        self.backup.identity()
+    }
+
+    /// Return the backup's own durability outcome.
+    ///
+    /// Distinct from `replacement().durability()`. A `Durability::Unknown` here
+    /// means the replacement succeeded but the backup entry protecting the
+    /// original bytes is not proven to survive a crash — the one combination a
+    /// caller cannot infer from the replacement outcome alone.
+    #[must_use]
+    pub const fn backup_durability(&self) -> &Durability {
+        self.backup.durability()
+    }
+
+    /// Return the replacement publication at the target path.
+    ///
+    /// `Publication` is itself `#[must_use]`, so no attribute is needed here.
+    pub const fn replacement(&self) -> &Publication {
+        &self.replacement
+    }
+
+    /// Consume this result and return the replacement publication.
+    pub fn into_replacement(self) -> Publication {
+        self.replacement
+    }
+}
+
+/// A completed verified install, with its rollback generation accounted for.
+///
+/// `#[must_use]` for the same reason as [`Publication`]: it carries the
+/// replacement's durability outcome, which is the one thing a caller can
+/// accidentally drop.
+#[must_use]
+#[derive(Debug)]
+pub struct Install {
+    identity: ContentIdentity,
+    created_rollback_generation: bool,
+    durability: Durability,
+}
+
+impl Install {
+    /// Return the verified identity of the bytes now visible at the target.
+    ///
+    /// This is calculated from the staged bytes that were actually installed,
+    /// not from the caller's expected digest, so it attests what is on disk.
+    #[must_use]
+    pub const fn identity(&self) -> &ContentIdentity {
+        &self.identity
+    }
+
+    /// Return whether a rollback generation was created by this install.
+    ///
+    /// `false` means the target did not previously exist, so there is nothing
+    /// to roll back to — not that the rollback generation was skipped.
+    #[must_use]
+    pub const fn created_rollback_generation(&self) -> bool {
+        self.created_rollback_generation
+    }
+
+    /// Return whether the namespace entry reached the durability barrier.
+    #[must_use]
+    pub const fn durability(&self) -> &Durability {
+        &self.durability
+    }
+
+    /// Consume the install and return only its durability outcome.
+    ///
+    /// Callers that deliberately discard durability uncertainty should do so
+    /// through this method, so the discard is a named expression rather than
+    /// an omitted error check.
+    #[must_use]
+    pub fn into_durability(self) -> Durability {
+        self.durability
+    }
+}
+
+/// Whether a publication may replace an existing entry at its final path.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum PublicationMode {
+    /// Replace whatever currently occupies the final path.
+    Replace,
+    /// Publish to a path that must not already exist.
+    Unique,
+}
+
+/// Prefix for the same-directory staging file.
+///
+/// The leading dot keeps the staging artifact out of the way on Unix listings
+/// during the brief window it exists.
+const STAGING_PREFIX: &str = ".classic-durable-publication-";
+
+/// Suffix for the same-directory staging file.
+const STAGING_SUFFIX: &str = ".tmp";
+
+/// Suffix naming the single rollback generation kept beside an install target.
+///
+/// This literal is deliberately the *only* place `.prev` appears in this
+/// crate, and it is reachable from [`install_verified`] alone. Rollback
+/// generations are YAML Data Update Channel policy, not a general durability
+/// feature, and keeping them out of [`publish`] and
+/// [`publish_with_verified_backup`] is how ADR-0006's prohibition on creating
+/// that state for Local Ignore YAML Data holds structurally rather than by
+/// convention: the operation that path uses simply cannot produce one.
+const ROLLBACK_GENERATION_SUFFIX: &str = ".prev";
+
+/// Durably publish complete bytes at `target`, replacing whatever is there.
+///
+/// The bytes are staged in `target`'s own directory, written, flushed, and
+/// synchronized before any part of them becomes visible at `target`, so a
+/// crash cannot leave partial content behind.
+///
+/// # Concurrency
+///
+/// `lock` decides whether this call takes an exclusive cross-process lock. The
+/// lock, when requested, is held for the entire staging-and-publish sequence
+/// and released when this function returns. With [`LockPolicy::none`] this
+/// call takes no lock and a concurrent writer may win the final publish; the
+/// bytes visible at `target` are still complete either way.
+///
+/// # Errors
+///
+/// Returns [`PublicationError::LockOpen`] or [`PublicationError::LockAcquire`]
+/// when a requested lock cannot be taken, and [`PublicationError::Stage`] when
+/// any step of the sequence fails. In every error case `target` retains its
+/// prior content.
+///
+/// Note that a failed *durability* barrier is not an error: it is reported as
+/// [`Durability::Unknown`] on the returned [`Publication`].
+pub fn publish(
+    target: &Path,
+    bytes: &[u8],
+    lock: &LockPolicy,
+) -> Result<Publication, PublicationError> {
+    let _lock = lock.acquire(target)?;
+    publish_locked(target, bytes, PublicationMode::Replace)
+}
+
+/// Complete bytes staged and synchronized beside a target, not yet visible.
+///
+/// Holding one of these means every fallible part of a publication except the
+/// final move has already succeeded: the bytes are written and at the
+/// platform's durability barrier, and [`Self::publish`] is the single remaining
+/// step. Nothing is visible at the target until that call.
+///
+/// `#[must_use]` because dropping this discards work rather than performing it.
+/// Dropping is safe — the staging file is removed — but it is never what a
+/// caller means.
+#[must_use = "a staged publication is only visible once it is published"]
+#[derive(Debug)]
+pub struct StagedPublication<'a> {
+    staged: NamedTempFile,
+    target: &'a Path,
+    identity: ContentIdentity,
+}
+
+impl<'a> StagedPublication<'a> {
+    /// Return the target these bytes will become visible at.
+    #[must_use]
+    pub const fn target(&self) -> &'a Path {
+        self.target
+    }
+
+    /// Return the identity of the bytes waiting to be published.
+    #[must_use]
+    pub const fn identity(&self) -> &ContentIdentity {
+        &self.identity
+    }
+
+    /// Move the synchronized staging file onto the target, replacing it.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`PublicationError::Stage`] with a [`PublicationStage::Publish`]
+    /// stage when the move fails; the target retains its prior content and the
+    /// staging file is removed best-effort.
+    pub fn publish(self) -> Result<Publication, PublicationError> {
+        let durability = publish_staged(self.staged, self.target, PublicationMode::Replace)?;
+        Ok(Publication {
+            identity: self.identity,
+            durability,
+        })
+    }
+}
+
+/// Stage complete bytes beside `target` without making them visible.
+///
+/// This is [`publish`] stopped one step short, for the caller that must run a
+/// check of its own in the narrowest possible window before the final move.
+/// `classic-config-core`'s Local Ignore reset is that caller: it rereads the
+/// canonical bytes and byte-compares them against what the user approved, and
+/// the value of that check is inversely proportional to how much work sits
+/// between it and the move. Staging first collapses that gap to the move alone.
+///
+/// # Concurrency
+///
+/// Takes no lock, for the same reason [`publish_verified_backup`] does not: a
+/// lock scoped to staging alone would release before the move it exists to
+/// guard. A caller splitting the sequence holds its own lock across both.
+///
+/// # Errors
+///
+/// Returns [`PublicationError::Stage`] when any of the create, write, flush, or
+/// sync steps fails. Nothing has been made visible at `target` in any case.
+pub fn stage<'a>(
+    target: &'a Path,
+    bytes: &[u8],
+) -> Result<StagedPublication<'a>, PublicationError> {
+    Ok(StagedPublication {
+        staged: stage_bytes(target, bytes)?,
+        target,
+        identity: ContentIdentity::from_bytes(bytes),
+    })
+}
+
+/// Publish a verified backup, then replace `target` only if the backup holds.
+///
+/// The ordering is the point of this operation:
+///
+/// 1. Publish `backup.original()` to `backup.path()`, which must not exist.
+/// 2. Reread those bytes *from disk* and byte-compare them against the
+///    retained original.
+/// 3. Abort without touching `target` if they differ.
+/// 4. Only then publish `bytes` at `target`.
+///
+/// Step 2 is a reread rather than a trust of step 1 because a backup that
+/// silently failed to write is indistinguishable from a good one until it is
+/// read back. Aborting at step 3 is what prevents an accepted recovery from
+/// destroying the only copy of a user's data.
+///
+/// # Concurrency
+///
+/// `lock` is acquired on `target` — not on the backup path — and is held
+/// across all four steps, so the backup cannot be verified against one target
+/// state and then applied to another. Backup paths are expected to be unique
+/// per publication, which is why the backup publish refuses to clobber.
+///
+/// # Errors
+///
+/// Returns [`PublicationError::LockOpen`] or [`PublicationError::LockAcquire`]
+/// when a requested lock cannot be taken; [`PublicationError::Stage`] when the
+/// backup or the replacement fails to stage or publish (a backup path that
+/// already exists surfaces here with an
+/// [`std::io::ErrorKind::AlreadyExists`] source);
+/// [`PublicationError::BackupUnreadable`] when the reread fails; and
+/// [`PublicationError::BackupMismatch`] when the reread bytes differ. In every
+/// error case `target` retains its prior content.
+pub fn publish_with_verified_backup(
+    target: &Path,
+    bytes: &[u8],
+    backup: VerifiedBackup<'_>,
+    lock: &LockPolicy,
+) -> Result<VerifiedBackupPublication, PublicationError> {
+    let _lock = lock.acquire(target)?;
+
+    let backup = publish_verified_backup_locked(backup)?;
+    let replacement = publish_locked(target, bytes, PublicationMode::Replace)?;
+    Ok(VerifiedBackupPublication {
+        backup,
+        replacement,
+    })
+}
+
+/// Publish a backup and prove it byte-exact, without replacing anything.
+///
+/// This is the first half of [`publish_with_verified_backup`], exposed on its
+/// own for the caller whose conflict policy has to run *between* the
+/// verification and the replacement. Splitting it here keeps the ordering that
+/// makes a backup trustworthy — unique publish, reread from disk, byte-compare,
+/// abort on mismatch — inside this module, while leaving the caller free to
+/// decide, after the backup exists, whether replacing is still the right thing
+/// to do.
+///
+/// The returned [`PublishedBackup`] carries a [`ContentIdentity`] calculated
+/// from the *reread* bytes rather than from `backup.original()`, so it attests
+/// what is actually on disk, plus the backup's own [`Durability`]. The reread
+/// and the durability outcome answer different questions — "are the right bytes
+/// there now?" versus "does the entry survive a crash?" — and a caller that is
+/// about to replace the only other copy needs both.
+///
+/// # Concurrency
+///
+/// This operation takes no lock of its own, because a lock scoped to it alone
+/// would be worthless: it would release before the caller's replacement, which
+/// is exactly the window the lock exists to close. A caller that splits the
+/// sequence this way must hold its own lock across this call, its policy check,
+/// and the subsequent [`publish`]. Callers with nothing to do in between should
+/// use [`publish_with_verified_backup`], which locks all four steps together.
+///
+/// # Errors
+///
+/// Returns [`PublicationError::Stage`] when the backup fails to stage or
+/// publish — a backup path that already exists surfaces here with an
+/// [`std::io::ErrorKind::AlreadyExists`] source;
+/// [`PublicationError::BackupUnreadable`] when the reread fails; and
+/// [`PublicationError::BackupMismatch`] when the reread bytes differ. No
+/// replacement is ever attempted by this operation.
+pub fn publish_verified_backup(
+    backup: VerifiedBackup<'_>,
+) -> Result<PublishedBackup, PublicationError> {
+    publish_verified_backup_locked(backup)
+}
+
+/// Return the rollback generation path this crate keeps beside `target`.
+///
+/// Exposed so the operations that *consume* a rollback generation — rolling
+/// one back, or promoting one after an interrupted install — agree with
+/// [`install_verified`] by construction rather than by both spelling `.prev`.
+/// Only one generation is ever kept; there is no chain to walk.
+#[must_use]
+pub fn rollback_generation_path(target: &Path) -> PathBuf {
+    let mut path = target.as_os_str().to_os_string();
+    path.push(ROLLBACK_GENERATION_SUFFIX);
+    PathBuf::from(path)
+}
+
+/// Verify an already-staged file's digest, then install it over `target`.
+///
+/// This is the digest-verifying, rollback-generation-keeping operation. Unlike
+/// [`publish`], the caller has already produced the bytes on disk — a
+/// downloaded asset, typically — so this adopts `staged` where it lies instead
+/// of writing it. That makes the caller responsible for one precondition this
+/// crate cannot check for it: `staged` must sit in `target`'s own directory,
+/// or the final move is not same-volume and therefore not atomic.
+///
+/// The sequence is:
+///
+/// 1. Calculate `staged`'s digest and compare it against `expected_sha256`,
+///    ignoring case.
+/// 2. Delete `staged` and abort if they differ, leaving `target` and any
+///    existing rollback generation exactly as they were.
+/// 3. Synchronize `staged` to the durability barrier. A caller that wrote it
+///    through an async writer has typically only drained user-space buffers,
+///    and without this step a crash after the move can leave the canonical
+///    path holding truncated bytes — a state self-heal cannot recover from,
+///    because the target exists.
+/// 4. Move an existing `target` aside to its rollback generation path,
+///    replacing any older generation.
+/// 5. Move `staged` onto `target`.
+///
+/// # Concurrency
+///
+/// `lock` decides whether this call takes an exclusive cross-process lock. The
+/// lock is taken before verification and held across the whole sequence, so
+/// two installs racing on one target cannot interleave their moves and leave
+/// the rollback generation pointing at a partially-installed state. Operations
+/// that move the same files without publishing — rollback and self-heal — must
+/// take the same lock through [`crate::LockPolicy::acquire`].
+///
+/// # Errors
+///
+/// Returns [`PublicationError::LockOpen`] or [`PublicationError::LockAcquire`]
+/// when a requested lock cannot be taken;
+/// [`PublicationError::StagedUnreadable`] when `staged` cannot be read for
+/// verification; [`PublicationError::DigestMismatch`] when its bytes do not
+/// match, in which case `staged` has been deleted; and
+/// [`PublicationError::Stage`] when synchronization or either move fails.
+///
+/// A failure at step 5 leaves `target` absent with its previous content in the
+/// rollback generation. That is a recoverable state by design — it is exactly
+/// what self-heal promotes — and it is why the rollback generation is written
+/// before the target is replaced rather than after.
+pub fn install_verified(
+    target: &Path,
+    staged: &Path,
+    expected_sha256: &str,
+    lock: &LockPolicy,
+) -> Result<Install, PublicationError> {
+    let _lock = lock.acquire(target)?;
+
+    let identity = verify_staged_digest(staged, expected_sha256)?;
+    sync_staged_file(staged)?;
+    let created_rollback_generation = rotate_rollback_generation(target)?;
+    // Deliberately not `publish_staged`: that helper removes the staging file
+    // when the move fails, which is right for a staging file this crate
+    // created and wrong for one the caller owns. A caller whose move failed
+    // still has its verified bytes and can retry.
+    let durability = publish_staged_path(staged, target, PublicationMode::Replace)?;
+
+    Ok(Install {
+        identity,
+        created_rollback_generation,
+        durability,
+    })
+}
+
+/// Calculate a staged file's identity and reject it if the digest differs.
+fn verify_staged_digest(
+    staged: &Path,
+    expected_sha256: &str,
+) -> Result<ContentIdentity, PublicationError> {
+    let unreadable = |source: std::io::Error| PublicationError::StagedUnreadable {
+        path: staged.to_path_buf(),
+        source,
+    };
+    let file = File::open(staged).map_err(unreadable)?;
+    let identity = ContentIdentity::from_reader(file).map_err(unreadable)?;
+
+    if !identity.matches_sha256_hex(expected_sha256) {
+        // Remove the rejected bytes before reporting. Leaving them would put a
+        // file that failed integrity verification in the same directory as the
+        // target, under a name the caller chose for a payload it trusted.
+        let _ = std::fs::remove_file(staged);
+        return Err(PublicationError::DigestMismatch {
+            path: staged.to_path_buf(),
+            expected: expected_sha256.to_string(),
+            actual: identity,
+        });
+    }
+    Ok(identity)
+}
+
+/// Push a caller-written staged file to the platform's durability barrier.
+fn sync_staged_file(staged: &Path) -> Result<(), PublicationError> {
+    let sync_failure = |source: std::io::Error| {
+        PublicationError::stage_failure(PublicationStage::Sync, staged, source)
+    };
+    // Windows enforces GENERIC_WRITE on FlushFileBuffers, so the handle has to
+    // be reopened for write even though nothing is written through it. The
+    // handle is dropped at the end of this function, before the move.
+    let file = OpenOptions::new()
+        .write(true)
+        .open(staged)
+        .map_err(sync_failure)?;
+    file.sync_all().map_err(sync_failure)
+}
+
+/// Move an existing target aside, replacing any older rollback generation.
+///
+/// Returns whether a generation was created — `false` means there was no
+/// target to preserve.
+fn rotate_rollback_generation(target: &Path) -> Result<bool, PublicationError> {
+    if !target.exists() {
+        return Ok(false);
+    }
+    let previous = rollback_generation_path(target);
+    let rotation_failure = |source: std::io::Error| {
+        PublicationError::stage_failure(PublicationStage::Publish, &previous, source)
+    };
+    // Exactly one generation is kept, so an older one is discarded rather than
+    // chained. Multiple rollback generations are explicitly out of scope.
+    if previous.exists() {
+        std::fs::remove_file(&previous).map_err(rotation_failure)?;
+    }
+    std::fs::rename(target, &previous).map_err(rotation_failure)?;
+    Ok(true)
+}
+
+/// Publish and verify a backup with any caller lock already held.
+fn publish_verified_backup_locked(
+    backup: VerifiedBackup<'_>,
+) -> Result<PublishedBackup, PublicationError> {
+    // The backup's durability outcome is returned rather than discarded. The
+    // reread below is a stronger statement about the *bytes* than a directory
+    // synchronization is, but it is not a statement about the backup's
+    // namespace entry at all: on Unix a failed parent-directory sync leaves the
+    // entry unproven, and that matters most precisely here, where the caller is
+    // about to replace the only other copy of the data. Backup durability
+    // policy still belongs to the caller that chose the backup location — this
+    // crate reports the fact and decides nothing.
+    let durability = publish_locked(backup.path(), backup.original(), PublicationMode::Unique)?
+        .into_durability();
+
+    #[cfg(test)]
+    fault::tamper_published_backup(backup.path());
+
+    let reread =
+        std::fs::read(backup.path()).map_err(|source| PublicationError::BackupUnreadable {
+            path: backup.path().to_path_buf(),
+            source,
+        })?;
+    if reread != backup.original() {
+        return Err(PublicationError::BackupMismatch {
+            path: backup.path().to_path_buf(),
+            expected: ContentIdentity::from_bytes(backup.original()),
+            actual: ContentIdentity::from_bytes(&reread),
+        });
+    }
+    Ok(PublishedBackup {
+        identity: ContentIdentity::from_bytes(&reread),
+        durability,
+    })
+}
+
+/// Run the staging-and-publish sequence with any lock already held.
+fn publish_locked(
+    target: &Path,
+    bytes: &[u8],
+    mode: PublicationMode,
+) -> Result<Publication, PublicationError> {
+    let staged = stage_bytes(target, bytes)?;
+    let durability = publish_staged(staged, target, mode)?;
+    Ok(Publication {
+        identity: ContentIdentity::from_bytes(bytes),
+        durability,
+    })
+}
+
+/// Write, flush, and synchronize a same-directory staging file.
+///
+/// Staging in the target's *own* directory is what makes the final move a
+/// same-volume operation, which is the precondition for it being atomic.
+fn stage_bytes(target: &Path, bytes: &[u8]) -> Result<NamedTempFile, PublicationError> {
+    let parent = target.parent().ok_or_else(|| {
+        PublicationError::stage_failure(
+            PublicationStage::Create,
+            target,
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "publication path has no parent directory",
+            ),
+        )
+    })?;
+    let mut staged = tempfile::Builder::new()
+        .prefix(STAGING_PREFIX)
+        .suffix(STAGING_SUFFIX)
+        .tempfile_in(parent)
+        .map_err(|source| {
+            PublicationError::stage_failure(PublicationStage::Create, target, source)
+        })?;
+    staged.write_all(bytes).map_err(|source| {
+        PublicationError::stage_failure(PublicationStage::Write, target, source)
+    })?;
+    staged.flush().map_err(|source| {
+        PublicationError::stage_failure(PublicationStage::Flush, target, source)
+    })?;
+    staged.as_file().sync_all().map_err(|source| {
+        PublicationError::stage_failure(PublicationStage::Sync, target, source)
+    })?;
+    Ok(staged)
+}
+
+/// Move a fully synchronized staging file onto its final path.
+fn publish_staged(
+    staged: NamedTempFile,
+    target: &Path,
+    mode: PublicationMode,
+) -> Result<Durability, PublicationError> {
+    // `keep` is load-bearing on Windows, not merely an ownership transfer: it
+    // clears the staged file's FILE_ATTRIBUTE_TEMPORARY. A file that still
+    // carries that attribute may never be written back by the cache manager,
+    // which would defeat the write-through move performed below. Do not
+    // replace this with a plain rename of `staged.path()`.
+    let (staged_file, staged_path) = staged.keep().map_err(|failure| {
+        PublicationError::stage_failure(PublicationStage::Publish, target, failure.error)
+    })?;
+    drop(staged_file);
+
+    match publish_staged_path(&staged_path, target, mode) {
+        Ok(durability) => Ok(durability),
+        Err(error) => {
+            // The staging path is caller-owned from `keep` onward, and a
+            // failure here means the move never consumed it. `NamedTempFile`
+            // can no longer clean it up, so remove it best-effort; a leftover
+            // staging artifact must not mask the real failure.
+            let _ = std::fs::remove_file(&staged_path);
+            Err(error)
+        }
+    }
+}
+
+/// Rename onto the final path, then report Unix namespace durability.
+#[cfg(unix)]
+fn publish_staged_path(
+    staged_path: &Path,
+    target: &Path,
+    mode: PublicationMode,
+) -> Result<Durability, PublicationError> {
+    let parent = target.parent().unwrap_or_else(|| Path::new("."));
+    // Open the parent before the move so the post-publish synchronization uses
+    // a handle that was valid at publish time.
+    let directory = File::open(parent).map_err(|source| {
+        PublicationError::stage_failure(PublicationStage::Publish, target, source)
+    })?;
+    match mode {
+        PublicationMode::Replace => std::fs::rename(staged_path, target),
+        // `move_atomic` refuses to clobber and reports AlreadyExists.
+        PublicationMode::Unique => publish_unique_unix(staged_path, target),
+    }
+    .map_err(|source| PublicationError::stage_failure(PublicationStage::Publish, target, source))?;
+    Ok(published_durability(Some(&directory)))
+}
+
+/// No-clobber publish that does not require hard-link support.
+///
+/// `atomicwrites::move_atomic` reserves the target by hard-linking the staging file and then
+/// unlinking the source, except on Linux and Android where it can use
+/// `renameat2(RENAME_NOREPLACE)`. Filesystems that offer neither — many FAT/exFAT removable
+/// volumes, SMB and NFS mounts, and ZFS, where `RENAME_NOREPLACE` answers `EINVAL` and the crate
+/// then disables it permanently — fail the whole publication. That is how a Local Ignore living on
+/// such a volume became impossible to generate *or* back up, aborting the scan over a filesystem
+/// capability the operation never actually needed.
+///
+/// The fallback keeps the one guarantee `Unique` mode owes: `create_new` reserves the name
+/// atomically against a concurrent creator, so a loser still sees `AlreadyExists`. It then copies
+/// the staging bytes in and synchronizes the new file, so the published bytes reach the same
+/// barrier the staging file already did. What it gives up is atomic *visibility* of the completed
+/// file — a crash mid-copy can leave a short file behind. Both callers of this mode already reread
+/// and byte-compare what they published, so a torn copy is detected rather than trusted.
+#[cfg(unix)]
+fn publish_unique_unix(staged_path: &Path, target: &Path) -> std::io::Result<()> {
+    match atomicwrites::move_atomic(staged_path, target) {
+        Ok(()) => return Ok(()),
+        // The contract's own no-clobber answer. Retrying would race a real conflict into success.
+        Err(source) if source.kind() == std::io::ErrorKind::AlreadyExists => return Err(source),
+        // Any other failure may or may not be the hard-link limitation; the error taxonomy varies
+        // by filesystem (EPERM, EOPNOTSUPP, EMLINK, EXDEV). Rather than guess, try the portable
+        // path — if the real problem was permissions or a missing directory, the retry reports it.
+        Err(_) => {}
+    }
+
+    let bytes = std::fs::read(staged_path)?;
+    let mut published = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(target)?;
+    published.write_all(&bytes)?;
+    published.sync_all()?;
+    drop(published);
+    // Best-effort. The publication has already succeeded, so a staging file that outlives it is a
+    // cleanup concern for the caller's staging lifecycle, not a reason to report failure.
+    let _ = std::fs::remove_file(staged_path);
+    Ok(())
+}
+
+/// Use a write-through move on platforms without directory synchronization.
+#[cfg(not(unix))]
+fn publish_staged_path(
+    staged_path: &Path,
+    target: &Path,
+    mode: PublicationMode,
+) -> Result<Durability, PublicationError> {
+    match mode {
+        // MoveFileEx with MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH.
+        PublicationMode::Replace => atomicwrites::replace_atomic(staged_path, target),
+        // The same call without MOVEFILE_REPLACE_EXISTING.
+        PublicationMode::Unique => atomicwrites::move_atomic(staged_path, target),
+    }
+    .map_err(|source| PublicationError::stage_failure(PublicationStage::Publish, target, source))?;
+    Ok(published_durability(None))
+}
+
+/// Report namespace durability once complete bytes are already visible.
+///
+/// A failure here is returned as data, never as an error: reporting it as a
+/// failure would falsely imply the previous content survived.
+fn published_durability(directory: Option<&File>) -> Durability {
+    #[cfg(test)]
+    if fault::directory_sync_should_fail() {
+        return Durability::Unknown(std::io::Error::new(
+            std::io::ErrorKind::PermissionDenied,
+            "injected publication directory synchronization failure",
+        ));
+    }
+    match directory {
+        Some(directory) => match directory.sync_all() {
+            Ok(()) => Durability::Durable,
+            Err(source) => Durability::Unknown(source),
+        },
+        // Windows journals same-directory replacement metadata and std exposes
+        // no directory synchronization handle, so a completed write-through
+        // move is already at the durability barrier.
+        None => Durability::Durable,
+    }
+}
+
+// Test-only fault injection lives in a sibling file so this production module
+// keeps no test bodies, fixtures, or helpers inline. See `publication_fault.rs`
+// for why these two outcomes need injection at all.
+#[rustfmt::skip]
+#[cfg(test)] #[path = "publication_fault.rs"] mod fault;
+
+#[rustfmt::skip]
+#[cfg(test)] #[path = "publication_tests.rs"] mod tests;

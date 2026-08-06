@@ -120,6 +120,7 @@ fn valid_mod_guidance_configuration() -> ffi::ModGuidanceAnalyzerConfigurationDt
                 name_a: "Alpha Mod".to_string(),
                 name_b: "Beta Mod".to_string(),
                 description: "These mods conflict".to_string(),
+                has_fix: true,
                 fix: "Install the compatibility patch".to_string(),
                 has_link: true,
                 link: "https://example.com/patch".to_string(),
@@ -130,7 +131,8 @@ fn valid_mod_guidance_configuration() -> ffi::ModGuidanceAnalyzerConfigurationDt
                 name_a: "Gamma Mod".to_string(),
                 name_b: "Delta Mod".to_string(),
                 description: "These mods also conflict".to_string(),
-                fix: "Remove one mod".to_string(),
+                has_fix: false,
+                fix: "ignored".to_string(),
                 has_link: false,
                 link: "ignored".to_string(),
             },
@@ -276,9 +278,12 @@ fn mod_guidance_analysis_projects_all_families_and_optional_presence() {
     let linked_conflict = &execution.result.conflicts[0];
     assert_eq!(linked_conflict.state, ffi::ModGuidanceMatchState::Matched);
     assert_eq!(linked_conflict.name_a, "Alpha Mod");
+    assert!(linked_conflict.has_fix);
     assert_eq!(linked_conflict.fix, "Install the compatibility patch");
     assert!(linked_conflict.has_link);
     assert_eq!(linked_conflict.link, "https://example.com/patch");
+    assert!(!execution.result.conflicts[1].has_fix);
+    assert!(execution.result.conflicts[1].fix.is_empty());
     assert!(!execution.result.conflicts[1].has_link);
     assert!(execution.result.conflicts[1].link.is_empty());
 
@@ -487,6 +492,75 @@ fn plugin_evidence_handle_is_safe_for_concurrent_owned_calls() {
 }
 
 #[test]
+fn named_record_finding_projects_owned_typed_counts_and_explicit_empty_success() {
+    let analyzer =
+        named_record_finding_analyzer_new(ffi::NamedRecordFindingAnalyzerConfigurationDto {
+            target_records: vec!["ActorBase".to_string()],
+            ignored_records: vec!["System".to_string()],
+        });
+    let construction = named_record_finding_analyzer_construction_result(&analyzer);
+    let populated = named_record_finding_analyze(
+        &analyzer,
+        ffi::NamedRecordFindingAnalysisInputDto {
+            crash_lines: vec![
+                "ActorBase_Player".to_string(),
+                "ActorBase_System".to_string(),
+                "ActorBase_Player".to_string(),
+            ],
+        },
+    );
+    let empty = named_record_finding_analyze(
+        &analyzer,
+        ffi::NamedRecordFindingAnalysisInputDto {
+            crash_lines: vec!["unrelated".to_string()],
+        },
+    );
+
+    assert!(construction.has_analyzer);
+    assert!(!construction.has_error);
+    assert!(populated.has_result);
+    assert!(!populated.has_error);
+    assert_eq!(populated.result.findings.len(), 1);
+    assert_eq!(populated.result.findings[0].record, "ActorBase_Player");
+    assert_eq!(populated.result.findings[0].occurrences, 2);
+    assert!(empty.has_result);
+    assert!(empty.result.findings.is_empty());
+}
+
+#[test]
+fn named_record_finding_invalid_configuration_uses_shared_typed_error_envelope() {
+    let analyzer =
+        named_record_finding_analyzer_new(ffi::NamedRecordFindingAnalyzerConfigurationDto {
+            target_records: vec![" ".to_string()],
+            ignored_records: Vec::new(),
+        });
+    let construction = named_record_finding_analyzer_construction_result(&analyzer);
+    let execution = named_record_finding_analyze(
+        &analyzer,
+        ffi::NamedRecordFindingAnalysisInputDto {
+            crash_lines: Vec::new(),
+        },
+    );
+
+    assert!(!construction.has_analyzer);
+    assert!(construction.has_error);
+    assert_eq!(
+        construction.error.analyzer_kind,
+        ffi::AnalyzerKind::NamedRecordFinding
+    );
+    assert_eq!(
+        construction.error.code,
+        ffi::AnalyzerErrorCode::InvalidConfiguration
+    );
+    assert!(!execution.has_result);
+    assert!(execution.has_error);
+    assert_eq!(
+        execution.error.analyzer_kind,
+        ffi::AnalyzerKind::NamedRecordFinding
+    );
+}
+
+#[test]
 fn construction_status_exposes_a_valid_immutable_handle() {
     let analyzer = crashgen_settings_analyzer_new(valid_configuration());
 
@@ -674,4 +748,82 @@ fn one_immutable_handle_is_safe_for_concurrent_owned_calls() {
         assert_eq!(execution.result.expectation_outcomes.len(), 2);
         assert_eq!(execution.result.disabled_setting_notices.len(), 2);
     }
+}
+
+#[test]
+fn formid_finding_cxx_projects_owned_optional_values_and_unresolved_identifiers() {
+    let analyzer = formid_finding_analyzer_in_memory_new(vec![ffi::FormIDFindingLookupEntryDto {
+        formid: "123456".to_string(),
+        plugin: "Found.esp".to_string(),
+        reply_kind: ffi::FormIDFindingLookupReplyKind::Found,
+        value: "Resolved value".to_string(),
+        error_message: String::new(),
+    }]);
+    let construction = formid_finding_analyzer_construction_result(&analyzer);
+    let execution = formid_finding_analyze(
+        &analyzer,
+        ffi::FormIDFindingAnalysisInputDto {
+            crash_lines: vec![
+                "Form ID: 0x01123456".to_string(),
+                "Form ID: 0x02ABCDEF".to_string(),
+            ],
+            plugins: vec![ffi::FormIDPluginDto {
+                name: "Found.esp".to_string(),
+                prefix: "01".to_string(),
+            }],
+        },
+    );
+
+    assert!(construction.has_analyzer);
+    assert!(execution.has_result, "{}", execution.error.message);
+    assert_eq!(execution.result.findings.len(), 2);
+    let found = &execution.result.findings[0];
+    assert!(found.has_plugin);
+    assert_eq!(found.plugin, "Found.esp");
+    assert_eq!(
+        found.value_lookup_status,
+        ffi::FormIDValueLookupStatus::Found
+    );
+    assert!(found.has_value);
+    assert_eq!(found.value, "Resolved value");
+    let unresolved = &execution.result.findings[1];
+    assert!(!unresolved.has_plugin);
+    assert_eq!(
+        unresolved.value_lookup_status,
+        ffi::FormIDValueLookupStatus::NotApplicable
+    );
+    assert!(!unresolved.has_value);
+}
+
+#[test]
+fn formid_finding_cxx_preserves_lookup_failure_as_shared_error() {
+    let analyzer = formid_finding_analyzer_in_memory_new(vec![ffi::FormIDFindingLookupEntryDto {
+        formid: "123456".to_string(),
+        plugin: "Broken.esp".to_string(),
+        reply_kind: ffi::FormIDFindingLookupReplyKind::OperationalFailure,
+        value: String::new(),
+        error_message: "fixture offline".to_string(),
+    }]);
+    let execution = formid_finding_analyze(
+        &analyzer,
+        ffi::FormIDFindingAnalysisInputDto {
+            crash_lines: vec!["Form ID: 0x01123456".to_string()],
+            plugins: vec![ffi::FormIDPluginDto {
+                name: "Broken.esp".to_string(),
+                prefix: "01".to_string(),
+            }],
+        },
+    );
+
+    assert!(!execution.has_result);
+    assert!(execution.has_error);
+    assert_eq!(
+        execution.error.analyzer_kind,
+        ffi::AnalyzerKind::FormIdFinding
+    );
+    assert_eq!(
+        execution.error.code,
+        ffi::AnalyzerErrorCode::OperationalFailure
+    );
+    assert!(execution.error.message.contains("fixture offline"));
 }

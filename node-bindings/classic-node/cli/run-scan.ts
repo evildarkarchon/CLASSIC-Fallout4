@@ -1,11 +1,16 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
-import type { JsScanRunEvent } from "../index.js";
+import type {
+	JsGameId,
+	JsScanRunConfiguration,
+	JsScanRunEvent,
+} from "../index.js";
 import type {
 	CliOptions,
 	CliPaths,
 	CliResult,
 	JsonSummary,
+	SupportedGame,
 } from "./types";
 
 type ClassicNodeModule = typeof import("../index.js");
@@ -44,13 +49,6 @@ function findDataRoot(
 	throw new Error(
 		`Unable to resolve CLASSIC Data from ${currentWorkingDirectory} or ${packageRoot}`,
 	);
-}
-
-function readRequiredFile(path: string, label: string): string {
-	if (!existsSync(path)) {
-		throw new Error(`${label} not found at ${path}`);
-	}
-	return readFileSync(path, "utf8");
 }
 
 function toCliGameVersion(shortName: string): string | undefined {
@@ -110,16 +108,15 @@ export function normalizeSupportedGameVersion(
 	return normalized;
 }
 
-function validateScanData(paths: CliPaths, options: CliOptions): void {
-	const mainYamlPath = join(paths.data, "databases", "CLASSIC Main.yaml");
-	const gameYamlPath = join(
-		paths.data,
-		"databases",
-		`CLASSIC ${options.game}.yaml`,
-	);
-
-	readRequiredFile(mainYamlPath, "CLASSIC Main.yaml");
-	readRequiredFile(gameYamlPath, `CLASSIC ${options.game}.yaml`);
+/** Maps the CLI's supported-game vocabulary onto the binding's typed game enum. */
+function toJsGameId(
+	classicNode: ClassicNodeModule,
+	game: SupportedGame,
+): JsGameId {
+	switch (game) {
+		case "Fallout4":
+			return classicNode.JsGameId.Fallout4;
+	}
 }
 
 function countOrZero(count: number | undefined): number {
@@ -227,7 +224,6 @@ export async function runCli(
 		}
 
 		const paths = findDataRoot(process.cwd(), cliDir);
-		validateScanData(paths, options);
 		const userSettings = classicNode.openUserSettings(paths.root);
 		const scanSettings = userSettings.crashLogScanSettings;
 		const normalizedGameVersion = normalizeSupportedGameVersion(
@@ -265,10 +261,9 @@ export async function runCli(
 
 		const configuredConcurrency =
 			requestedConcurrency > 0 ? requestedConcurrency : undefined;
-		const configuration = {
-			yamlDirRoot: paths.root,
-			yamlDirData: paths.data,
-			game: options.game,
+		const configuration: JsScanRunConfiguration = {
+			installationRoot: paths.root,
+			game: toJsGameId(classicNode, options.game),
 			gameVersion: normalizedGameVersion,
 			showFormidValues: showFidValues,
 			simplifyLogs,
@@ -355,6 +350,7 @@ export async function runCli(
 				reportFailures: 0,
 				scanErrors: 0,
 				durationSeconds: (performance.now() - startedAt) / 1000,
+				installedYamlData: scanResult.installedYamlData,
 				message: setupMessage,
 			};
 
@@ -364,6 +360,39 @@ export async function runCli(
 				console.error(setupMessage);
 			}
 			return { exitCode: summary.exitCode, fatal: setupMessage };
+		}
+
+		// Terminal for this CLI. The run paused before analysing anything and handed back a
+		// one-shot continuation that only an interactive caller can answer; this command never
+		// resumes it. Falling through to the generic summary below reported a clean exit 0 with
+		// "0 logs" — indistinguishable from a healthy scan of an empty folder — while the real
+		// cause was a malformed CLASSIC Ignore.yaml that nothing had told the user about.
+		if (scanResult.status === "local_ignore_recovery_required") {
+			const recoveryMessage = scanResult.message ??
+				"Local Ignore YAML Data is malformed and requires a recovery decision " +
+					"(reset to default, or proceed without ignore) before crash logs can be scanned.";
+			const summary: JsonSummary = {
+				mode: "scan",
+				exitCode: 1,
+				game: options.game,
+				gameVersion: normalizedGameVersion,
+				dataRoot: paths.root,
+				dataDir: paths.data,
+				logsFound: scanResult.total,
+				reportsWritten: 0,
+				reportFailures: 0,
+				scanErrors: 0,
+				durationSeconds: (performance.now() - startedAt) / 1000,
+				installedYamlData: scanResult.installedYamlData,
+				message: recoveryMessage,
+			};
+
+			if (options.json) {
+				emitJson(summary);
+			} else {
+				console.error(recoveryMessage);
+			}
+			return { exitCode: summary.exitCode, fatal: recoveryMessage };
 		}
 
 		if (scanResult.status === "no_crash_logs_found") {
@@ -421,6 +450,7 @@ export async function runCli(
 			reportFailures,
 			scanErrors,
 			durationSeconds,
+			installedYamlData: scanResult.installedYamlData,
 		};
 
 		if (options.json) {

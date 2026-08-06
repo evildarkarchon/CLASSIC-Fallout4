@@ -13,8 +13,9 @@ fn crashgen_entry_adapter_ignores_deprecated_checks_and_collects_ignore_keys() {
             vec!["memory_management", "unknown_check", "looksmenu"],
         )?;
 
-        let parsed = crashgen_entry_from_py(entry.as_any());
+        let (parsed, diagnostics) = crashgen_entry_from_py_strict(entry.as_any())?;
 
+        assert!(diagnostics.is_empty());
         assert_eq!(parsed.display_section, "[Memory]");
         assert_eq!(
             parsed.ignore_keys,

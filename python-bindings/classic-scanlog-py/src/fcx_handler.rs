@@ -79,11 +79,6 @@ impl PyConfigIssue {
         self.inner.severity.clone()
     }
 
-    /// Formats the issue as a human-readable report fragment.
-    pub fn format_report(&self) -> String {
-        self.inner.format_report()
-    }
-
     /// Returns a compact diagnostic representation.
     pub fn __repr__(&self) -> String {
         format!(

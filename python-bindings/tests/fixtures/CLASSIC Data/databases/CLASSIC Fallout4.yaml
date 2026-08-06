@@ -1,3 +1,4 @@
+schema_version: "1.0"
 Game_Info:
   XSE_Acronym: "F4SE"
   GameVersion: "1.11.191"

@@ -6,7 +6,10 @@
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
+#include <io.h>
 #include <windows.h>
+#else
+#include <unistd.h>
 #endif
 
 #include "rust/cxx.h"
@@ -23,22 +26,34 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fmt/core.h>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
 
 namespace fs = std::filesystem;
 
+/// Returns whether standard input is attached to an interactive terminal.
+///
+/// Used to decide whether asking the user a blocking question is legitimate. A redirected or
+/// inherited stdin that never closes would otherwise leave a scripted run parked in `std::getline`
+/// forever, with an interactive menu printed into whatever consumes the CLI's stdout.
+static bool stdin_is_interactive() {
+#ifdef _WIN32
+    return _isatty(_fileno(stdin)) != 0;
+#else
+    return isatty(fileno(stdin)) != 0;
+#endif
+}
+
 // ── Data root discovery ────────────────────────────────────────────
 
 struct DataDirs {
     std::string root;
-    std::string data;
 };
 
-/// Find the root directory containing "CLASSIC Data/" and derive both
-/// yaml_dir_root (the parent) and yaml_dir_data (the CLASSIC Data subdir).
-/// Mirrors classic-gui/src/scan.rs: find_data_root() + load_analysis_config().
+/// Find the installation root containing "CLASSIC Data/".
+/// Mirrors the CLASSIC Data candidate search performed by MainWindow::findDataRoot().
 static DataDirs find_data_root() {
     std::error_code ec;
     fs::path exe_path = fs::current_path(ec); // fallback, overridden below
@@ -51,7 +66,7 @@ static DataDirs find_data_root() {
         fs::path ep(buf);
         exe_path = ep.parent_path();
         if (fs::is_directory(exe_path / "CLASSIC Data", ec)) {
-            return DataDirs{exe_path.string(), (exe_path / "CLASSIC Data").string()};
+            return DataDirs{exe_path.string()};
         }
     }
 #endif
@@ -59,16 +74,16 @@ static DataDirs find_data_root() {
     // Check: Current working directory for "CLASSIC Data/" (development / distribution)
     auto cwd = fs::current_path(ec);
     if (fs::is_directory(cwd / "CLASSIC Data", ec)) {
-        return DataDirs{cwd.string(), (cwd / "CLASSIC Data").string()};
+        return DataDirs{cwd.string()};
     }
 
     // Check: Exe directory for "CLASSIC Data/" (running from build dir)
     if (fs::is_directory(exe_path / "CLASSIC Data", ec)) {
-        return DataDirs{exe_path.string(), (exe_path / "CLASSIC Data").string()};
+        return DataDirs{exe_path.string()};
     }
 
     // Fallback: use cwd anyway (will fail at config load with a clear error)
-    return DataDirs{cwd.string(), cwd.string()};
+    return DataDirs{cwd.string()};
 }
 
 // ── Filename extraction helper ─────────────────────────────────────
@@ -201,10 +216,32 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
 
     std::error_code ec;
     const std::string base_dir = fs::current_path(ec).string();
-    const auto request = build_cli_scan_run_request(args, *prepared, dirs.root, dirs.data, base_dir);
+    const auto request = build_cli_scan_run_request(args, *prepared, dirs.root, base_dir);
     CliScanRunCancellation cancellation;
     CliScanRunObserver observer(prepared->game, cancellation);
-    const auto execution = classic::scanner::scan_run_contract_execute(*request, cancellation.token(), &observer);
+
+    // Local Ignore recovery is an expected interactive choice, not a failure. The prompt clears any
+    // live progress frame first so the question is not overwritten by the next render.
+    //
+    // Installed only when stdin is a terminal. `execute_cli_scan_run` treats an empty prompt as the
+    // non-interactive path and returns the typed recovery-required envelope instead of asking, which
+    // is the right answer for a scripted run: `read_cli_local_ignore_recovery_choice` cancels
+    // cleanly on EOF, but a non-TTY stdin that stays open (a CI wrapper, a service manager, a pipe
+    // whose writer is idle) has no EOF to give and the run would block indefinitely on a question
+    // no one can see.
+    CliLocalIgnoreRecoveryPrompt recovery_prompt;
+    if (stdin_is_interactive()) {
+        recovery_prompt = [&observer, &cancellation](const std::vector<CliScanRunMessage>& details) {
+            observer.finish();
+            fmt::print("\n");
+            for (const auto& message : details) {
+                print_cli_scan_message(message);
+            }
+            return read_cli_local_ignore_recovery_choice(std::cin, std::cout, cancellation);
+        };
+    }
+
+    const auto outcome = execute_cli_scan_run(*request, cancellation, &observer, recovery_prompt);
     observer.finish();
 
     if (observer.delivery_failed()) {
@@ -213,7 +250,7 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
 
     const auto total_end = std::chrono::steady_clock::now();
     const double duration = std::chrono::duration<double>(total_end - total_start).count();
-    const auto presentation = present_cli_scan_run_execution(execution, duration);
+    const auto presentation = present_cli_scan_run_outcome(outcome, duration);
     fmt::print("\n");
     for (const auto& message : presentation.messages) {
         print_cli_scan_message(message);
@@ -245,7 +282,7 @@ int run_scan(const CliArgs& args) {
     // Find data root
     auto dirs = find_data_root();
     fmt::print("Data root: {}\n", dirs.root);
-    fmt::print("Data dir:  {}\n\n", dirs.data);
+    fmt::print("\n");
 
     // Run the scan pipeline (all rust::Box<T> objects live inside this scope)
     int exit_code;
@@ -253,6 +290,9 @@ int run_scan(const CliArgs& args) {
         exit_code = run_scan_pipeline(args, dirs, total_start);
     } catch (const rust::Error& e) {
         fmt::print(stderr, "Fatal: {}\n", std::string(e.what()));
+        exit_code = 2;
+    } catch (const std::exception& e) {
+        fmt::print(stderr, "Fatal: {}\n", e.what());
         exit_code = 2;
     }
 

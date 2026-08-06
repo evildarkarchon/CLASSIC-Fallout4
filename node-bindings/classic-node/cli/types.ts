@@ -1,3 +1,5 @@
+import type { JsInstalledYamlDataRunData } from "../index.js";
+
 export const SUPPORTED_GAMES = ["Fallout4"] as const;
 
 export type SupportedGame = (typeof SUPPORTED_GAMES)[number];
@@ -36,6 +38,7 @@ export type JsonSummary = {
   reportFailures?: number;
   scanErrors?: number;
   durationSeconds?: number;
+  installedYamlData?: JsInstalledYamlDataRunData;
   version?: string;
   message?: string;
 };

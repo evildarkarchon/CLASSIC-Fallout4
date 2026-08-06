@@ -45,21 +45,21 @@ provides:
 
 ### Method 1: Download Pre-built Binary (Recommended)
 
-1. Download `ClassicLib-rs/ui-applications/classic-tui.exe` from the [releases page](https://github.com/evildarkarchon/CLASSIC-Fallout4/releases)
+1. Download `ui-applications/classic-tui.exe` from the [releases page](https://github.com/evildarkarchon/CLASSIC-Fallout4/releases)
 2. Place in a directory of your choice
 3. (Optional) Add to PATH for system-wide access
 
 ### Method 2: Install via Cargo
 
 ```bash
-cargo install --git https://github.com/evildarkarchon/CLASSIC-Fallout4 ClassicLib-rs/ui-applications/classic-tui
+cargo install --git https://github.com/evildarkarchon/CLASSIC-Fallout4 ui-applications/classic-tui
 ```
 
 ### Verification
 
 ```bash
-ClassicLib-rs/ui-applications/classic-tui --version
-# Output: ClassicLib-rs/ui-applications/classic-tui 0.1.0
+ui-applications/classic-tui --version
+# Output: ui-applications/classic-tui 0.1.0
 ```
 
 ---
@@ -69,7 +69,7 @@ ClassicLib-rs/ui-applications/classic-tui --version
 ### Launch TUI
 
 ```bash
-ClassicLib-rs/ui-applications/classic-tui
+ui-applications/classic-tui
 ```
 
 ### First-Time Setup
@@ -183,6 +183,22 @@ ClassicLib-rs/ui-applications/classic-tui
 | `Space` | Toggle checkbox   |
 | `Enter` | Confirm and save  |
 | `Esc`   | Cancel and return |
+
+### Local Ignore Recovery
+
+Shown when your `CLASSIC Ignore.yaml` cannot be parsed. The scan pauses with its discovered Crash
+Logs retained; answering resumes that same scan rather than starting a new one.
+
+| Key                       | Action                                                                                     |
+|---------------------------|--------------------------------------------------------------------------------------------|
+| `P`                       | Proceed Without Ignore — scan with an empty ignore list; your file is left unchanged         |
+| `R`                       | Reset To Default — back up your file byte-exactly, then replace it with the CLASSIC defaults |
+| `Esc` / `C`               | Cancel — stop the scan; nothing is analyzed and your file is not modified                    |
+| `↑` `↓` `Page Up/Down`    | Scroll the Installed YAML Data diagnostics below the choices                                 |
+| `Home`                    | Scroll back to the top                                                                       |
+
+`Enter` is deliberately unbound here, so no reflex key press can authorize replacing your file.
+CLASSIC never picks a recovery for you.
 
 ---
 
@@ -357,7 +373,7 @@ Top suspects:
 2. **Set 256-color mode:**
    ```bash
    export TERM=xterm-256color
-   ClassicLib-rs/ui-applications/classic-tui
+   ui-applications/classic-tui
    ```
 
 3. **Try different terminal:**
@@ -546,7 +562,7 @@ printf '\e[8;40;120t'
 
 ```bash
 # Enable compression
-ssh -C user@host ClassicLib-rs/ui-applications/classic-tui
+ssh -C user@host ui-applications/classic-tui
 
 # Use multiplexing
 ssh -o ControlMaster=auto -o ControlPath=/tmp/ssh-%r@%h:%p user@host
@@ -565,7 +581,7 @@ ssh -o ControlMaster=auto -o ControlPath=/tmp/ssh-%r@%h:%p user@host
 tmux new -s classic
 
 # Launch CLASSIC
-ClassicLib-rs/ui-applications/classic-tui
+ui-applications/classic-tui
 
 # Detach: Ctrl+B, D
 # Reattach: tmux attach -t classic
@@ -578,7 +594,7 @@ ClassicLib-rs/ui-applications/classic-tui
 screen -S classic
 
 # Launch CLASSIC
-ClassicLib-rs/ui-applications/classic-tui
+ui-applications/classic-tui
 
 # Detach: Ctrl+A, D
 # Reattach: screen -r classic
@@ -591,7 +607,7 @@ Not needed! CLASSIC TUI works over plain SSH without X11.
 ```bash
 # Just SSH normally
 ssh user@server
-ClassicLib-rs/ui-applications/classic-tui  # Works great!
+ui-applications/classic-tui  # Works great!
 ```
 
 ### Automation
@@ -609,7 +625,7 @@ CLASSIC_Settings:
   MODS Folder Path: "/path/to/mods"
 EOF
 
-ClassicLib-rs/ui-applications/classic-tui
+ui-applications/classic-tui
 ```
 
 ---

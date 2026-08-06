@@ -1,6 +1,9 @@
+schema_version: "2.0"
 CLASSIC_Info:
   version: "9.1.0"
   version_date: "2026-07-15"
+  default_ignorefile: |
+    CLASSIC_Ignore_Fallout4: []
 CLASSIC_Interface:
   autoscan_text_Fallout4: "Autoscan Fallout 4"
 catch_log_records:

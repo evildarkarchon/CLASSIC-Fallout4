@@ -1,10 +1,15 @@
 //! Pure Rust YamlData business logic
 //!
-//! This module provides configuration loading without any PyO3 dependencies.
-//! Achieves 15-30x faster configuration loading by:
+//! This module owns the parsed shape of CLASSIC YAML Data — it does **not**
+//! decide which files to read. Selecting Installed YAML Data (installed-update
+//! vs bundled candidates, compatibility gating, Local Ignore generation and
+//! recovery) belongs to [`crate::installed_yaml_data`]; deterministic
+//! caller-selected files belong to [`crate::explicit_yaml_data`]. Both hand
+//! their already-read documents to `YamlDataCore::build_from_yaml_documents`.
+//!
+//! Achieves 15-30x faster configuration parsing than the former Python path by:
 //! 1. Using yaml-rust2 for parsing (vs ruamel.yaml)
-//! 2. Parallel loading of multiple YAML files with Tokio
-//! 3. Efficient memory representation
+//! 2. Efficient memory representation
 
 use crate::CrashgenSettingsRules;
 use crate::crashgen_registry_yaml::parse_crashgen_registry;
@@ -14,7 +19,6 @@ use classic_version_registry_core::{
     GameVersion as RegistryGameVersion, VersionInfo, get_version_registry,
 };
 use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
 use yaml_rust2::Yaml;
 
 use crate::game_data::canonical_game_data_name;
@@ -38,8 +42,8 @@ pub struct ModConflictEntry {
     pub name_b: String,
     /// Why the conflict matters
     pub description: String,
-    /// What the user should do
-    pub fix: String,
+    /// Optional authored remediation guidance
+    pub fix: Option<String>,
     /// Optional URL for patch or alternative
     pub link: Option<String>,
 }
@@ -165,7 +169,7 @@ pub struct SuspectStackRule {
 pub struct CrashgenEntryRaw {
     /// Bracket header used by this crashgen (e.g., `"[Compatibility]"`), for display only.
     pub display_section: String,
-    /// Settings keys to skip in `check_disabled_settings()`.
+    /// Settings keys excluded from Disabled Setting Notice analysis.
     pub ignore_keys: Vec<String>,
     /// String names of named checks (e.g., `"achievements"`, `"memory_management"`).
     pub checks: Vec<String>,
@@ -207,27 +211,25 @@ fn parse_mods_conf(game_data: &Yaml) -> Vec<ModConflictEntry> {
                 .map(|s| s.trim().to_string())
         };
 
-        let (mod_a, mod_b, name_a, name_b, description, fix) = match (
+        let (mod_a, mod_b, name_a, name_b, description) = match (
             get_str("mod_a"),
             get_str("mod_b"),
             get_str("name_a"),
             get_str("name_b"),
             get_str("description"),
-            get_str("fix"),
         ) {
-            (Some(a), Some(b), Some(na), Some(nb), Some(desc), Some(fx)) => {
-                (a, b, na, nb, desc, fx)
-            }
+            (Some(a), Some(b), Some(na), Some(nb), Some(desc)) => (a, b, na, nb, desc),
             _ => {
                 log::debug!(
-                    "Skipping Mods_CONF[{}]: missing required field(s) (mod_a, mod_b, name_a, name_b, description, fix)",
+                    "Skipping Mods_CONF[{}]: missing required field(s) (mod_a, mod_b, name_a, name_b, description)",
                     index
                 );
                 continue;
             }
         };
 
-        let link = get_str("link");
+        let fix = get_str("fix").filter(|value| !value.is_empty());
+        let link = get_str("link").filter(|value| !value.is_empty());
 
         let canonical = {
             let a_lower = mod_a.to_lowercase();
@@ -855,7 +857,7 @@ fn map_settings_error(
     }
 }
 
-fn parse_and_merge_yaml_content(
+pub(crate) fn parse_and_merge_yaml_content(
     source_label: &str,
     empty_label: &str,
     content: &str,
@@ -1037,7 +1039,7 @@ impl YamlDataCore {
         &self.game_root_name
     }
 
-    fn build_from_yaml_documents(
+    pub(crate) fn build_from_yaml_documents(
         main_data: &Yaml,
         game_data: &Yaml,
         ignore_data: &Yaml,
@@ -1166,99 +1168,6 @@ impl YamlDataCore {
         {
             self.crashgen_ignore = ignore;
         }
-    }
-
-    /// Load all configuration from YAML files in parallel (pure Rust)
-    ///
-    /// # Arguments
-    /// * `yaml_dirs` - Vector of directories containing YAML files (main, game, ignore)
-    /// * `game` - Game identifier (e.g., "Fallout4", "Skyrim")
-    /// * `selected_game_version` - Selected game version mode
-    ///   ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR")
-    ///
-    /// # Returns
-    /// * `Ok(YamlDataCore)` - Successfully loaded configuration
-    /// * `Err(ConfigError)` - Failed to load or parse configuration
-    ///
-    /// # Performance
-    /// This function loads multiple YAML files in parallel using Tokio,
-    /// achieving 15-30x speedup over sequential Python loading.
-    pub async fn load_from_yaml_files(
-        yaml_dirs: Vec<PathBuf>,
-        game: String,
-        selected_game_version: String,
-    ) -> Result<Self, ConfigError> {
-        let data_game = canonical_game_data_name(&game);
-
-        // Resolve paths based on input size
-        let (main_yaml, game_yaml, ignore_yaml) = if yaml_dirs.len() == 2 {
-            // Correct API: [root_dir, data_dir]
-            let root_dir = &yaml_dirs[0];
-            let data_dir = &yaml_dirs[1];
-
-            (
-                data_dir.join("databases").join("CLASSIC Main.yaml"),
-                data_dir
-                    .join("databases")
-                    .join(format!("CLASSIC {data_game}.yaml")),
-                root_dir.join("CLASSIC Ignore.yaml"),
-            )
-        } else if yaml_dirs.len() == 3 {
-            // Legacy/Hack API: [main_dir, game_dir, ignore_dir]
-            (
-                yaml_dirs[0].join("CLASSIC Main.yaml"),
-                yaml_dirs[1].join(format!("CLASSIC {data_game}.yaml")),
-                yaml_dirs[2].join("CLASSIC Ignore.yaml"),
-            )
-        } else {
-            return Err(ConfigError::InvalidInput(
-                "yaml_dirs must contain either 2 directories (root, data) or 3 directories (main, game, ignore)".to_string(),
-            ));
-        };
-
-        // Verify files exist before loading
-        for path in [&main_yaml, &game_yaml, &ignore_yaml] {
-            if !path.exists() {
-                return Err(ConfigError::IOError {
-                    context: format!("YAML file not found: {}", path.display()),
-                    source: std::io::Error::new(std::io::ErrorKind::NotFound, "File not found"),
-                });
-            }
-        }
-
-        // Load all YAML files in parallel using Tokio
-        // Use tokio::join! to preserve order (unlike JoinSet which returns in completion order)
-        let (main_result, game_result, ignore_result) = tokio::join!(
-            tokio::fs::read_to_string(&main_yaml),
-            tokio::fs::read_to_string(&game_yaml),
-            tokio::fs::read_to_string(&ignore_yaml)
-        );
-
-        let main_content = main_result.map_err(|e| ConfigError::IOError {
-            context: "Failed to read main YAML".to_string(),
-            source: e,
-        })?;
-        let game_content = game_result.map_err(|e| ConfigError::IOError {
-            context: "Failed to read game YAML".to_string(),
-            source: e,
-        })?;
-        let ignore_content = ignore_result.map_err(|e| ConfigError::IOError {
-            context: "Failed to read ignore YAML".to_string(),
-            source: e,
-        })?;
-
-        let main_data = parse_and_merge_yaml_content("main YAML", "Main YAML", &main_content)?;
-        let game_data = parse_and_merge_yaml_content("game YAML", "Game YAML", &game_content)?;
-        let ignore_data =
-            parse_and_merge_yaml_content("ignore YAML", "Ignore YAML", &ignore_content)?;
-
-        Self::build_from_yaml_documents(
-            &main_data,
-            &game_data,
-            &ignore_data,
-            &game,
-            &selected_game_version,
-        )
     }
 
     /// Create YamlData from YAML content strings (for testing without file I/O).

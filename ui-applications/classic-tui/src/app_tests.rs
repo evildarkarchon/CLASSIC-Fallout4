@@ -1,8 +1,11 @@
-use super::{App, AsyncMessage, TabIndex};
+use super::{App, AsyncMessage, LastScanRun, Overlay, TabIndex};
 use crate::widgets::path_input::PathValidationState;
-use classic_scanlog_core::CrashLogScanRunStatus;
 use classic_scanlog_core::scan_run::contract::{
-    Cancellation, Event as ScanRunEvent, LogDisposition, LogEvent, RunResult,
+    Cancellation, Event as ScanRunEvent, LocalIgnoreRecoveryDecision, LogDisposition, LogEvent,
+    ResumeError, RunResult,
+};
+use classic_scanlog_core::{
+    CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanRunStatus,
 };
 use std::path::PathBuf;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -193,10 +196,11 @@ CLASSIC_Settings:
 #[test]
 fn scan_complete_with_errors_updates_status_message() {
     let mut app = App::new_for_testing();
-    app.handle_async_message(AsyncMessage::ScanFinished(Ok(RunResult {
+    app.handle_async_message(AsyncMessage::ScanFinished(Box::new(Ok(RunResult {
         status: CrashLogScanRunStatus::Completed,
         discovery: None,
         setup: None,
+        installed_yaml_data: None,
         effective_concurrency: Some(2),
         message: None,
         total: 3,
@@ -204,12 +208,137 @@ fn scan_complete_with_errors_updates_status_message() {
         failed: 1,
         cancelled: 0,
         logs: Vec::new(),
-    })));
+        continuation: None,
+    }))));
 
     assert_eq!(app.scan_status, "Scanned 3 logs (1 errors, 0 cancelled)");
     assert_eq!(app.scan_progress, 100.0);
     assert!(app.last_scan_run.is_some());
     assert!(app.status_clear_at.is_some());
+}
+
+/// Builds a paused-run projection whose continuation this test intentionally cannot fabricate.
+fn paused_recovery_result() -> RunResult {
+    RunResult {
+        status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
+        discovery: Some(CrashLogScanDiscoveryResult {
+            source: CrashLogScanDiscoverySource::Standard,
+            accepted_logs: vec![PathBuf::from("Crash Logs/crash-01.log")],
+            rejected_inputs: Vec::new(),
+            searched_locations: vec![PathBuf::from("Crash Logs")],
+        }),
+        setup: None,
+        installed_yaml_data: None,
+        continuation: None,
+        effective_concurrency: None,
+        message: Some("Local Ignore recovery is required".to_string()),
+        total: 1,
+        succeeded: 0,
+        failed: 0,
+        cancelled: 0,
+        logs: Vec::new(),
+    }
+}
+
+/// Verifies the TUI reports a missing continuation instead of deciding on the user's behalf.
+#[test]
+fn recovery_without_a_retained_continuation_reports_the_adapter_invariant() {
+    let mut app = App::new_for_testing();
+    app.scan_cancellation = Some(Cancellation::new());
+
+    app.handle_async_message(AsyncMessage::ScanFinished(Box::new(Ok(
+        paused_recovery_result(),
+    ))));
+
+    assert!(app.pending_local_ignore_recovery.is_none());
+    assert_eq!(app.active_overlay, None);
+    assert!(
+        app.scan_status
+            .contains("without retaining its continuation"),
+        "unexpected status: {}",
+        app.scan_status
+    );
+    // An unanswerable invariant must not expire quietly into a "Ready" status line.
+    assert!(app.status_clear_at.is_none());
+    assert!(matches!(app.last_scan_run, Some(LastScanRun::Run(_))));
+}
+
+/// Verifies decisions are inert when no run is paused, so a stray key press cannot resume twice.
+#[test]
+fn recovery_decisions_are_inert_without_a_pending_continuation() {
+    let mut app = App::new_for_testing();
+    let baseline = app.scan_status.clone();
+
+    app.accept_local_ignore_recovery(LocalIgnoreRecoveryDecision::ResetToDefault);
+    app.accept_local_ignore_recovery(LocalIgnoreRecoveryDecision::ProceedWithoutIgnore);
+    app.cancel_local_ignore_recovery();
+
+    assert!(!app.scan_in_progress);
+    assert_eq!(app.scan_status, baseline);
+    assert!(app.last_scan_run.is_none());
+}
+
+/// Verifies a typed resume failure is retained, presented, and never auto-cleared.
+#[test]
+fn recovery_resume_failure_is_retained_as_actionable_status() {
+    let mut app = App::new_for_testing();
+    app.scan_in_progress = true;
+    app.scan_cancellation = Some(Cancellation::new());
+
+    app.handle_async_message(AsyncMessage::ScanResumeFinished(Box::new(Err(
+        ResumeError::ContinuationConsumed,
+    ))));
+
+    assert!(!app.scan_in_progress);
+    assert!(app.scan_cancellation.is_none());
+    assert!(app.status_clear_at.is_none());
+    assert!(
+        app.scan_status.contains("scan_run_continuation_consumed"),
+        "unexpected status: {}",
+        app.scan_status
+    );
+    assert!(matches!(
+        app.last_scan_run,
+        Some(LastScanRun::RecoveryFailed(
+            ResumeError::ContinuationConsumed
+        ))
+    ));
+    assert!(
+        app.scan_run_summary_text()
+            .contains("This recovery decision was already applied")
+    );
+}
+
+/// Verifies a second recovery request after resume is reported rather than looped into.
+#[test]
+fn a_second_recovery_request_after_resume_is_reported_as_an_invariant() {
+    let mut app = App::new_for_testing();
+
+    app.handle_async_message(AsyncMessage::ScanResumeFinished(Box::new(Ok(
+        paused_recovery_result(),
+    ))));
+
+    assert!(app.pending_local_ignore_recovery.is_none());
+    assert_eq!(app.active_overlay, None);
+    assert!(
+        app.scan_status
+            .contains("unexpected second recovery request"),
+        "unexpected status: {}",
+        app.scan_status
+    );
+    assert!(app.status_clear_at.is_none());
+}
+
+/// Verifies the recovery overlay body is only offered while a run is actually paused.
+#[test]
+fn recovery_overlay_text_is_absent_without_a_paused_run() {
+    let app = App::new_for_testing();
+
+    assert_eq!(
+        app.local_ignore_recovery_text(),
+        "No Crash Log Scan Run is awaiting a Local Ignore recovery decision."
+    );
+    assert_ne!(app.active_overlay, Some(Overlay::LocalIgnoreRecovery));
 }
 
 #[test]
@@ -275,10 +404,11 @@ fn scan_complete_switches_to_results_when_enabled() {
     );
     app.active_tab = TabIndex::MainOptions;
 
-    app.handle_async_message(AsyncMessage::ScanFinished(Ok(RunResult {
+    app.handle_async_message(AsyncMessage::ScanFinished(Box::new(Ok(RunResult {
         status: CrashLogScanRunStatus::Completed,
         discovery: None,
         setup: None,
+        installed_yaml_data: None,
         effective_concurrency: Some(1),
         message: None,
         total: 1,
@@ -286,7 +416,8 @@ fn scan_complete_switches_to_results_when_enabled() {
         failed: 0,
         cancelled: 0,
         logs: Vec::new(),
-    })));
+        continuation: None,
+    }))));
 
     assert!(matches!(app.active_tab, TabIndex::Results));
 }

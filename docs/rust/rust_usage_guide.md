@@ -4,11 +4,11 @@ This guide describes the current maintained Rust surfaces in CLASSIC.
 
 ## Current model
 
-- Core product logic lives in `ClassicLib-rs/business-logic/*-core`.
-- Shared runtime/support crates live in `ClassicLib-rs/foundation/`.
-- Python bindings live in `ClassicLib-rs/python-bindings/*-py`.
-- Node bindings live in `ClassicLib-rs/node-bindings/classic-node`.
-- C++ consumers use `ClassicLib-rs/cpp-bindings/classic-cpp-bridge`.
+- Core product logic lives in `business-logic/*-core`.
+- Shared runtime/support crates live in `foundation/`.
+- Python bindings live in `python-bindings/*-py`.
+- Node bindings live in `node-bindings/classic-node`.
+- C++ consumers use `cpp-bindings/classic-cpp-bridge`.
 
 There is no maintained monolithic `classic_core` facade and no active `classic-rust/` workspace directory.
 
@@ -17,23 +17,24 @@ There is no maintained monolithic `classic_core` facade and no active `classic-r
 ### Rust-only development
 
 ```powershell
-cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml
-cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
-cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
+cargo fmt --all
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace
 ```
 
 ### Python bindings
 
 ```powershell
-uv venv ClassicLib-rs/python-bindings/.venv
-uv pip install --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe -r ClassicLib-rs/python-bindings/requirements-ci.txt
+# python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
+# --inexact is load-bearing: it keeps uv from pruning maturin-built classic-*-py wheels.
+uv sync --project python-bindings --inexact
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python classic_shared classic_config classic_scanlog classic_version_registry
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -m pytest ClassicLib-rs/python-bindings/tests -q
+uv run --python python-bindings/.venv/Scripts/python.exe python -m pytest python-bindings/tests -q
 ```
 
 ### Node bindings
 
-From `ClassicLib-rs/node-bindings/classic-node`:
+From `node-bindings/classic-node`:
 
 ```powershell
 bun run build:debug
@@ -52,7 +53,7 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
 ## How to verify the maintained Python modules
 
 ```powershell
-uv run --python ClassicLib-rs/python-bindings/.venv/Scripts/python.exe python -c "import classic_config, classic_scanlog, classic_version_registry; print(classic_scanlog.__version__)"
+uv run --python python-bindings/.venv/Scripts/python.exe python -c "import classic_config, classic_scanlog, classic_version_registry; print(classic_scanlog.__version__)"
 ```
 
 ## Practical guidance

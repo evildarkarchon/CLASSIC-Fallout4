@@ -27,6 +27,11 @@ classic-config-py = { path = "../classic-config-py" }
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-shared-py = { path = "../../foundation/classic-shared-py" }
 
+# Workspace-internal Vocabulary naming contract: brings the `Vocabulary` trait
+# into scope so the run surface can project the configuration crate's own
+# provenance token rather than restate it. It adds no Python surface.
+classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
+
 # Database operations (for FormID analyzer)
 classic-database-core = { path = "../../business-logic/classic-database-core" }
 

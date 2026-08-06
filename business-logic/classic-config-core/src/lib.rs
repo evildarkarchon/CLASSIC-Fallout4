@@ -14,9 +14,14 @@ pub mod client_schemas;
 pub mod crashgen_expectation_parser;
 pub(crate) mod crashgen_registry_yaml;
 pub mod crashgen_rules;
+pub mod explicit_yaml_data;
 pub(crate) mod game_data;
 pub mod game_local;
-pub mod shippable;
+pub mod installed_yaml_data;
+// Private: shippable selection is implementation machinery owned by
+// `installed_yaml_data`. Its public diagnostics and the version reader for
+// `CLASSIC Main.yaml` are re-exported below.
+pub(crate) mod shippable;
 pub mod yaml_source;
 pub mod yamldata;
 
@@ -24,12 +29,32 @@ pub use crashgen_expectation_parser::{
     CrashgenExpectationParseDiagnostic, CrashgenExpectationParseResult, parse_crashgen_expectations,
 };
 pub use crashgen_rules::*;
+pub use explicit_yaml_data::{
+    ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole,
+    ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data,
+};
 
 pub use game_local::persist_game_local_paths;
+pub use installed_yaml_data::{
+    InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind,
+    InstalledYamlDataInspection, InstalledYamlDataInspectionError,
+    InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome,
+    InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole,
+    InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict,
+    LocalIgnoreResetDurabilityReceipt, LocalIgnoreResetError, LocalIgnoreResetOutcome,
+    LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState,
+    inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data,
+    load_installed_yaml_data_with_env,
+};
+// Only diagnostics and the typed version reader escape `shippable`. Its
+// low-level selection entry points, and the file-identity and
+// compatibility-range types a caller would need to drive them, are all
+// crate-private, so no consumer can select Installed YAML Data outside
+// `installed_yaml_data`'s policy. The compliance suite's `forbiddenExports`
+// audit asserts those names never reappear on this surface.
 pub use shippable::{
-    CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile,
-    YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir,
-    load_main_yaml_version_with_env, load_shippable_yaml, load_shippable_yaml_with_env,
+    CandidateRejection, MainYamlVersionError, YamlLoadError, load_main_yaml_version,
+    load_main_yaml_version_with_bundled_dir, load_main_yaml_version_with_env,
 };
 pub use yaml_source::YamlSource;
 pub use yamldata::{

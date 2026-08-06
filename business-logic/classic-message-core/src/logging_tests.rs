@@ -2,6 +2,13 @@ use super::*;
 use serial_test::serial;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+/// The one message [`CountingLogger`] tallies.
+///
+/// A sentinel rather than a target, because every `Logger` method logs with
+/// `target: self.name` — the same `"CLASSIC"` this test would filter on — so the
+/// target cannot tell this test's record apart from a sibling's.
+const COUNTED_MESSAGE: &str = "counted by the pre-existing global logger";
+
 struct CountingLogger;
 
 static COUNTING_LOGGER: CountingLogger = CountingLogger;
@@ -13,7 +20,14 @@ impl log::Log for CountingLogger {
     }
 
     fn log(&self, record: &log::Record<'_>) {
-        if self.enabled(record.metadata()) {
+        // Counting every record would make this a running tally of whatever the
+        // whole test binary logs, not of what the test below emitted.
+        // `log::set_logger` installs process-wide and `init` deliberately keeps
+        // the existing logger, so from the moment this logger is installed it
+        // receives every sibling test's output too — and those siblings run
+        // concurrently, on other threads. Matching one sentinel keeps the count
+        // owned by the test that produces it.
+        if self.enabled(record.metadata()) && record.args().to_string() == COUNTED_MESSAGE {
             LOGGED_MESSAGES.fetch_add(1, Ordering::SeqCst);
         }
     }
@@ -145,6 +159,13 @@ fn test_startup_contract_helpers_compile() {
 }
 
 #[test]
+// `#[serial]` orders this against other `#[serial]` tests only, and it is the
+// only one in this module — so it buys nothing here and must not be mistaken
+// for protection. What makes the count below sound is the sentinel in
+// `CountingLogger::log`, not this attribute. Kept so that a future test which
+// also installs a global logger is ordered against this one, since
+// `log::set_logger` succeeds at most once per process and the `expect` below
+// would otherwise fail depending on which test ran first.
 #[serial]
 fn test_init_is_opt_in_idempotent_and_does_not_replace_existing_logger() {
     let _logger = Logger::new();
@@ -156,7 +177,10 @@ fn test_init_is_opt_in_idempotent_and_does_not_replace_existing_logger() {
     init();
     init_with_filter("trace");
 
+    // Read before emitting rather than assuming zero: this logger stays
+    // installed for the rest of the process, so the assertion is about the
+    // delta this call causes, not about an absolute total.
     let before = LOGGED_MESSAGES.load(Ordering::SeqCst);
-    log::info!(target: Logger::LOGGER_NAME, "counted by existing logger");
+    log::info!(target: Logger::LOGGER_NAME, "{}", COUNTED_MESSAGE);
     assert_eq!(LOGGED_MESSAGES.load(Ordering::SeqCst), before + 1);
 }
