@@ -17,8 +17,13 @@ crossterm = "0.28"
 
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
+# Brings `Vocabulary` into scope so presentation can call `label()` on the core enums it renders.
+# The TUI links the core crates directly and never crosses a binding seam, so it reads Display
+# Labels from the owning crate rather than through a projection.
+classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
 # The final scan-run contract exposes Installed YAML Data provenance from config core without
-# re-exporting it, so presenting selection diagnostics requires naming those types directly.
+# re-exporting it, so naming those types directly still requires the dependency. Presentation no
+# longer does; the scan-run sibling tests do, to build the fixtures the contract consumes.
 classic-config-core = { path = "../../business-logic/classic-config-core" }
 classic-user-settings-core = { path = "../../business-logic/classic-user-settings-core" }
 classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }

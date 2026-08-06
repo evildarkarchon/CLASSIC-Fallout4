@@ -595,8 +595,12 @@ fn reset_to_default_resumes_with_a_durable_byte_exact_backup() {
         details.contains("Local Ignore backup:"),
         "run details: {details}"
     );
+    // `Local Ignore reset`, not `local ignore reset`: the diagnostic kind's Display Label carries
+    // the glossary capitalization of a domain term, which is the wording the CLI and the GUI
+    // already assert. The TUI held the lower-cased copy, which is the drift adopting the core
+    // vocabulary removes.
     assert!(
-        details.contains("local ignore reset"),
+        details.contains("Local Ignore reset"),
         "run details: {details}"
     );
 
@@ -614,7 +618,7 @@ fn reset_to_default_resumes_with_a_durable_byte_exact_backup() {
             report.display()
         );
         assert!(
-            !text.contains("local ignore reset"),
+            !text.contains("Local Ignore reset"),
             "Autoscan Report {} must not carry recovery diagnostics",
             report.display()
         );

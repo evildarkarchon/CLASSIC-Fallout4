@@ -1228,6 +1228,7 @@ dependencies = [
  "classic-shared-core",
  "classic-update-core",
  "classic-user-settings-core",
+ "classic-vocabulary",
  "color-eyre",
  "crossterm 0.28.1",
  "directories",

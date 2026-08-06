@@ -1,20 +1,27 @@
 //! TUI projection and presentation for the final Crash Log Scan Run contract.
+//!
+//! Every human-facing name for a domain enum rendered here is the core Display Label, obtained
+//! through [`classic_vocabulary::Vocabulary::label`]. This module keeps no naming table of its own:
+//! the CLI, the GUI, and the TUI each used to hold a copy of this vocabulary, and the copies
+//! diverged silently because each was independently exhaustive and every compiler was satisfied.
+//! `tests/shared_runtime_audit.rs` fails the build if a table reappears here.
 
 #[cfg(test)]
 #[path = "scan_run_tests.rs"]
 mod tests;
 
-use classic_config_core::InstalledYamlDataProvenance;
 use classic_scanlog_core::scan_run::contract::{
     Configuration, Event, InfrastructureError, InstalledYamlDataRunData,
-    InstalledYamlDataRunDiagnostic, InstalledYamlDataRunDiagnosticKind,
-    LocalIgnoreResetFailureStage, LocalIgnoreRunState, LogDisposition, LogEvent, LogFailureStage,
-    Request, ResumeError, RunResult,
+    InstalledYamlDataRunDiagnostic, LogEvent, Request, ResumeError, RunResult,
 };
 use classic_scanlog_core::{
     CrashLogScanRunStatus, CrashLogScanSetupContext, ScanProgressPhase, StandardCrashLogScanSource,
     StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
 };
+// Every user-facing name for a domain enum comes from the core crate that owns the enum. The TUI
+// keeps no naming table of its own, so none of those enums needs to be named here at all — the
+// trait alone is what `label()` resolves through.
+use classic_vocabulary::Vocabulary;
 
 // Coarse weights make in-flight lifecycle events visibly advance the gauge without pretending
 // that the phases are equal-cost; App keeps the resulting aggregate monotonic across concurrent logs.
@@ -220,7 +227,7 @@ pub(crate) fn format_event(event: &Event) -> EventPresentation {
             format_log_event(log, action, contribution)
         }
         Event::LogFinished { log, disposition } => {
-            format_log_event(log, disposition_presentation(*disposition).event, 0.0)
+            format_log_event(log, &sentence_case(disposition.label()), 0.0)
         }
     }
 }
@@ -254,6 +261,23 @@ fn format_log_event(
 
 const fn plural<'a>(count: usize, singular: &'a str, plural: &'a str) -> &'a str {
     if count == 1 { singular } else { plural }
+}
+
+/// Returns `label` with its first character upper-cased.
+///
+/// A disposition appears twice in this frontend: sentence-initial in the status line, and
+/// mid-sentence in the terminal detail list. Only the second form matches the core Display Label,
+/// and the status line has always shown the capitalized one. Deriving that form here keeps the
+/// vocabulary single-sourced — this owns a capitalization rule, not a second copy of the words —
+/// where a second table would be free to disagree with the first about what happened.
+///
+/// A label already opening on a capitalized domain term passes through unchanged.
+fn sentence_case(label: &str) -> String {
+    let mut characters = label.chars();
+    match characters.next() {
+        Some(first) => first.to_uppercase().collect::<String>() + characters.as_str(),
+        None => String::new(),
+    }
 }
 
 /// Durable terminal text and gauge state derived without discarding the typed result.
@@ -349,7 +373,7 @@ pub(crate) fn format_result(result: &RunResult) -> TerminalPresentation {
             .file_name()
             .map(|name| name.to_string_lossy())
             .unwrap_or_else(|| "unknown".into());
-        let disposition = disposition_presentation(log.disposition).terminal;
+        let disposition = log.disposition.label();
         let mut line = format!("{}. {filename} - {disposition}", log.discovery_index + 1);
         if let Some(report) = log.autoscan_report.as_ref() {
             line.push_str(&format!("; report: {}", report.display()));
@@ -359,12 +383,7 @@ pub(crate) fn format_result(result: &RunResult) -> TerminalPresentation {
         }
         lines.push(line);
         for failure in &log.failures {
-            let stage = match failure.stage {
-                LogFailureStage::Analysis => "analysis",
-                LogFailureStage::ReportWrite => "report write",
-                LogFailureStage::UnsolvedLogsFinalization => "Unsolved Logs finalization",
-            };
-            lines.push(format!("   {stage}: {}", failure.message));
+            lines.push(format!("   {}: {}", failure.stage.label(), failure.message));
         }
         if log.failures.is_empty()
             && let Some(message) = log.message.as_deref()
@@ -414,21 +433,21 @@ fn append_installed_yaml_data_details(data: &InstalledYamlDataRunData, lines: &m
     lines.push("Installed YAML Data:".to_string());
     lines.push(format!(
         "  Main: {} schema {} (sha256 {}, {} bytes)",
-        provenance_label(data.main.provenance()),
+        data.main.provenance().label(),
         data.main.schema_version(),
         data.main.identity().sha256_hex(),
         data.main.identity().byte_len()
     ));
     lines.push(format!(
         "  Game: {} schema {} (sha256 {}, {} bytes)",
-        provenance_label(data.game_file.provenance()),
+        data.game_file.provenance().label(),
         data.game_file.schema_version(),
         data.game_file.identity().sha256_hex(),
         data.game_file.identity().byte_len()
     ));
     lines.push(format!(
         "  Local Ignore: {} (sha256 {}, {} bytes)",
-        local_ignore_state_label(data.local_ignore_state),
+        data.local_ignore_state.label(),
         data.local_ignore_identity.sha256_hex(),
         data.local_ignore_identity.byte_len()
     ));
@@ -460,68 +479,17 @@ fn format_installed_yaml_data_diagnostic(diagnostic: &InstalledYamlDataRunDiagno
         context.push(format!("{role}"));
     }
     if let Some(candidate) = diagnostic.candidate() {
-        context.push(provenance_label(candidate).to_string());
+        context.push(candidate.label().to_string());
     }
     if let Some(path) = diagnostic.path() {
         context.push(path.display().to_string());
     }
 
-    let mut line = format!(
-        "{}: {}",
-        diagnostic_kind_label(diagnostic.kind()),
-        diagnostic.message()
-    );
+    let mut line = format!("{}: {}", diagnostic.kind().label(), diagnostic.message());
     if !context.is_empty() {
         line.push_str(&format!(" [{}]", context.join(", ")));
     }
     line
-}
-
-/// Returns the user-facing label for one selected candidate's provenance.
-const fn provenance_label(provenance: InstalledYamlDataProvenance) -> &'static str {
-    match provenance {
-        InstalledYamlDataProvenance::Updated => "updated",
-        InstalledYamlDataProvenance::Previous => "previous",
-        InstalledYamlDataProvenance::Bundled => "bundled",
-    }
-}
-
-/// Returns the user-facing label for how Local Ignore YAML Data entered the run.
-const fn local_ignore_state_label(state: LocalIgnoreRunState) -> &'static str {
-    match state {
-        LocalIgnoreRunState::Existing => "existing",
-        LocalIgnoreRunState::Generated => "generated from selected Main defaults",
-        LocalIgnoreRunState::RecoveryRequired => "recovery required",
-        LocalIgnoreRunState::ProceedWithoutIgnore => "proceeded without ignore entries",
-        LocalIgnoreRunState::ResetToDefault => "reset to default",
-    }
-}
-
-/// Returns the user-facing label for one stable diagnostic category.
-const fn diagnostic_kind_label(kind: InstalledYamlDataRunDiagnosticKind) -> &'static str {
-    match kind {
-        InstalledYamlDataRunDiagnosticKind::CacheUnavailable => "update cache unavailable",
-        InstalledYamlDataRunDiagnosticKind::Missing => "missing candidate",
-        InstalledYamlDataRunDiagnosticKind::Read => "read failure",
-        InstalledYamlDataRunDiagnosticKind::InvalidUtf8 => "invalid UTF-8",
-        InstalledYamlDataRunDiagnosticKind::Parse => "parse failure",
-        InstalledYamlDataRunDiagnosticKind::InvalidSchema => "invalid schema",
-        InstalledYamlDataRunDiagnosticKind::IncompatibleSchema => "incompatible schema",
-        InstalledYamlDataRunDiagnosticKind::InvalidRoleData => "invalid role data",
-        InstalledYamlDataRunDiagnosticKind::LocalIgnoreGenerated => "local ignore generated",
-        InstalledYamlDataRunDiagnosticKind::LocalIgnoreReset => "local ignore reset",
-    }
-}
-
-/// Returns the user-facing label for a durable-publication stage in a reset failure.
-const fn reset_failure_stage_label(stage: LocalIgnoreResetFailureStage) -> &'static str {
-    match stage {
-        LocalIgnoreResetFailureStage::Create => "create",
-        LocalIgnoreResetFailureStage::Write => "write",
-        LocalIgnoreResetFailureStage::Flush => "flush",
-        LocalIgnoreResetFailureStage::Sync => "sync",
-        LocalIgnoreResetFailureStage::Publish => "publish",
-    }
 }
 
 /// Presents a typed continuation-resume failure without collapsing its actionable context.
@@ -567,7 +535,7 @@ pub(crate) fn format_resume_error(error: &ResumeError) -> TerminalPresentation {
         | ResumeError::LocalIgnoreResetReplacementFailure(failure) => {
             lines.push(format!("Path: {}", failure.path.display()));
             if let Some(stage) = failure.stage {
-                lines.push(format!("Stage: {}", reset_failure_stage_label(stage)));
+                lines.push(format!("Stage: {}", stage.label()));
             }
         }
         ResumeError::LocalIgnoreResetDurabilityUnknown(failure) => {
@@ -603,29 +571,6 @@ pub(crate) fn format_resume_error(error: &ResumeError) -> TerminalPresentation {
         percent: 0.0,
         status: format!("Crash Log Scan recovery failed ({code}): {message}"),
         details: lines.join("\n"),
-    }
-}
-
-struct DispositionPresentation {
-    event: &'static str,
-    terminal: &'static str,
-}
-
-/// Returns both capitalization forms from one exhaustive disposition mapping.
-const fn disposition_presentation(disposition: LogDisposition) -> DispositionPresentation {
-    match disposition {
-        LogDisposition::Succeeded => DispositionPresentation {
-            event: "Succeeded",
-            terminal: "succeeded",
-        },
-        LogDisposition::Failed => DispositionPresentation {
-            event: "Failed",
-            terminal: "failed",
-        },
-        LogDisposition::CancelledBeforeStart => DispositionPresentation {
-            event: "Cancelled before start",
-            terminal: "cancelled before start",
-        },
     }
 }
 
