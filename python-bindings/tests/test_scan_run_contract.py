@@ -644,6 +644,112 @@ def test_shared_local_ignore_recovery_continuation_retains_snapshot_and_rejects_
             classic_scanlog.ScanRunCancellation(),
         )
     assert replay.value.code == "scan_run_continuation_consumed"
+    assert replay.value.kind == replay.value.code
+    # The replay rejection now says something a person can read, and says it without
+    # the code. Before it went through the shared builder it was the one rejection on
+    # this surface with nothing to show a user but its identifier.
+    assert replay.value.display_lines
+    assert all(
+        segment.text != replay.value.code
+        for line in replay.value.display_lines
+        for segment in line.segments
+    )
+
+
+def test_a_real_run_publishes_display_content_on_every_carrier(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A real run carries Rust's words on its envelope and on every observed event.
+
+    Nothing here restates a sentence -- wording is pinned once, in
+    `classic-scan-presentation`. What only a real run can prove is asserted instead:
+    that the flattening invariant holds across whatever segments an actual scan
+    emits, and that every Autoscan Report the run wrote arrives as a whole ``path``
+    segment rather than as text spliced into a sentence.
+    """
+
+    import classic_scanlog
+
+    fixture = SHARED_SCAN_RUN_MANIFEST["fixtures"]["standard"]
+    _copy_shared_scan_run_data_root(tmp_path)
+    _write_shared_scan_run_logs(tmp_path, fixture["logs"])
+    documents_root = tmp_path / "Documents"
+    documents_root.mkdir()
+    monkeypatch.chdir(tmp_path)
+    request = classic_scanlog.ScanRunRequest.standard(
+        _configuration(
+            classic_scanlog,
+            tmp_path,
+            max_concurrent=fixture["maxConcurrent"],
+        ),
+        classic_scanlog.ScanRunStandardSource(
+            base_directory=str(tmp_path),
+            configured_documents_root=str(documents_root),
+        ),
+        classic_scanlog.ScanRunUnsolvedLogs.leave_in_place(),
+    )
+    events: list[object] = []
+
+    execution = classic_scanlog.scan_run_execute(
+        request,
+        classic_scanlog.ScanRunCancellation(),
+        events.append,
+    )
+    result = execution.result
+
+    assert execution.display_lines
+    assert all(
+        isinstance(line, classic_scanlog.ScanRunDisplayLine)
+        for line in execution.display_lines
+    )
+    assert all(
+        line.severity in {"info", "notice", "warning", "failure", "success"}
+        for line in execution.display_lines
+    )
+    segments = [
+        segment for line in execution.display_lines for segment in line.segments
+    ]
+    assert segments
+    for segment in segments:
+        assert isinstance(segment, classic_scanlog.ScanRunDisplaySegment)
+        # Each kind fills exactly the fields it selects; every other field stays
+        # empty rather than absent. This is the C++ bridge's flattening, unchanged.
+        if segment.kind == "count":
+            assert segment.text and not segment.path
+        elif segment.kind == "path":
+            assert segment.path and not segment.text and segment.count == 0
+        else:
+            assert segment.kind in {"text", "label", "name", "emphasis"}
+            assert not segment.path and segment.count == 0
+
+    # The fact a unit test cannot reach: a report path survives the seam whole,
+    # which is the entire reason a path is typed as a path rather than as text.
+    reported_paths = {
+        segment.path for segment in segments if segment.kind == "path"
+    }
+    assert reported_paths.issuperset(
+        {str(log.autoscan_report) for log in result.logs}
+    )
+
+    # Every observed event says something, and no Vocabulary Token the event
+    # publishes reaches a rendered line as prose.
+    assert events
+    for event in events:
+        assert event.display_lines
+        texts = {
+            segment.text for line in event.display_lines for segment in line.segments
+        }
+        # `kind` is an event-shape tag; no line states it.
+        assert event.kind not in texts
+        if event.disposition is not None:
+            # A token whose Display Label happens to read the same is not drift --
+            # `succeeded` is spelled identically in both forms. What must never
+            # appear is a token the vocabulary spells differently in prose, which
+            # is the shape the raw-token bug took.
+            label = classic_scanlog.scan_run_log_disposition_label(event.disposition)
+            if label != event.disposition:
+                assert event.disposition not in texts
 
 
 def test_reset_to_default_returns_durable_metadata_and_unchanged_shared_report(

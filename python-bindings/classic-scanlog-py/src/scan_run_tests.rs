@@ -3,6 +3,10 @@ use std::path::PathBuf;
 use classic_config_core::{
     InstalledYamlDataProvenance, InstalledYamlDataRole, YamlDataContentIdentity,
 };
+use classic_scan_presentation::{
+    DisplayLine, DisplaySegment, DisplaySeverity, render_event, render_infrastructure_error,
+    render_resume_error, render_run_result,
+};
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanRejectedInput,
@@ -10,12 +14,14 @@ use classic_scanlog_core::{
     CrashLogScanSetupResult, ScanProgressPhase,
 };
 use classic_vocabulary::Vocabulary;
+use pyo3::Py;
 use pyo3::PyResult;
 use pyo3::Python;
 use pyo3::types::PyAnyMethods;
 
 use super::{
-    PyScanRunConfiguration, configuration_to_core, disposition_to_string, event_to_py,
+    PyScanRunConfiguration, configuration_to_core, display_lines_to_py, display_segment_to_py,
+    display_severity_to_string, disposition_to_string, event_to_py,
     infrastructure_error_stage_to_string, infrastructure_error_to_py,
     installed_yaml_data_diagnostic_kind_to_string, installed_yaml_data_provenance_to_string,
     installed_yaml_data_role_to_string, local_ignore_state_to_string, log_failure_stage_to_string,
@@ -23,7 +29,7 @@ use super::{
     run_status_to_string, scan_run_infrastructure_error_stage_label,
     scan_run_installed_yaml_data_diagnostic_kind_label,
     scan_run_local_ignore_reset_failure_stage_label, scan_run_local_ignore_yaml_data_state_label,
-    scan_run_log_disposition_label, scan_run_log_failure_stage_label, scan_run_reset_error_to_py,
+    scan_run_log_disposition_label, scan_run_log_failure_stage_label, scan_run_resume_error_to_py,
     setup_to_py, ScanRunLocalIgnoreResetDurabilityUnknownError,
     ScanRunLocalIgnoreResetReplacementError,
 };
@@ -233,7 +239,7 @@ fn replacement_failure_maps_shared_outcome_to_typed_python_exception() {
     Python::initialize();
     Python::attach(|py| {
         let path = PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml");
-        let error = scan_run_reset_error_to_py(
+        let error = scan_run_resume_error_to_py(
             py,
             contract::ResumeError::LocalIgnoreResetReplacementFailure(
                 contract::LocalIgnoreResetFailure {
@@ -286,7 +292,7 @@ fn durability_unknown_maps_shared_outcome_to_typed_python_exception() {
         let malformed_identity = YamlDataContentIdentity::from_bytes(b"malformed");
         let backup_identity = malformed_identity.clone();
         let replacement_identity = YamlDataContentIdentity::from_bytes(b"defaults");
-        let error = scan_run_reset_error_to_py(
+        let error = scan_run_resume_error_to_py(
             py,
             contract::ResumeError::LocalIgnoreResetDurabilityUnknown(
                 Box::new(contract::LocalIgnoreResetDurabilityUnknownError {
@@ -748,6 +754,288 @@ fn glossary_capitalization_survives_the_python_boundary() {
             .expect("a published token must resolve"),
         "FormID database access"
     );
+}
+
+// --- Display Content ------------------------------------------------------
+//
+// These tests pin the *flattening*, never a sentence. Wording is pinned once, in
+// `classic-scan-presentation`; restating a sentence here would be a second copy
+// of it, which is the drift this whole effort removes. What this surface owes is
+// narrower: that every segment kind fills exactly its own fields, that order
+// survives, that every severity crosses distinctly, and that each carrier hands
+// over the lines the renderer actually produced.
+
+/// Returns one fabricated line carrying every segment kind, in a fixed order.
+///
+/// Fabricated rather than rendered because no single real run emits all six
+/// kinds in one line — and because the flattening is what is under test here,
+/// not which segments a given run happens to produce.
+fn every_segment_kind() -> DisplayLine {
+    DisplayLine {
+        severity: DisplaySeverity::Notice,
+        segments: vec![
+            DisplaySegment::Text("scanned"),
+            DisplaySegment::Label("discovery"),
+            DisplaySegment::Count {
+                value: 3,
+                noun: "logs",
+            },
+            DisplaySegment::Path(PathBuf::from("logs/crash.log")),
+            DisplaySegment::Name("Buffout 4".to_string()),
+            DisplaySegment::Emphasis("parse failure".to_string()),
+        ],
+    }
+}
+
+#[test]
+/// Every segment kind fills exactly the fields its kind selects, and no others.
+fn every_display_segment_kind_fills_exactly_its_own_fields() {
+    let segments: Vec<_> = every_segment_kind()
+        .segments
+        .iter()
+        .map(display_segment_to_py)
+        .collect();
+
+    let observed: Vec<(&str, &str, &str, u64)> = segments
+        .iter()
+        .map(|segment| {
+            (
+                segment.kind.as_str(),
+                segment.text.as_str(),
+                segment.path.as_str(),
+                segment.count,
+            )
+        })
+        .collect();
+
+    assert_eq!(
+        observed,
+        vec![
+            ("text", "scanned", "", 0),
+            ("label", "discovery", "", 0),
+            // A count rides in two fields at once: the quantity in `count` and the
+            // noun Rust already agreed with it in `text`.
+            ("count", "logs", "", 3),
+            ("path", "", "logs/crash.log", 0),
+            ("name", "Buffout 4", "", 0),
+            ("emphasis", "parse failure", "", 0),
+        ],
+    );
+}
+
+#[test]
+/// Segments cross in reading order, and a line keeps its severity.
+fn display_segments_cross_the_boundary_in_reading_order() {
+    let line = every_segment_kind();
+    let crossed = display_lines_to_py(std::slice::from_ref(&line));
+
+    assert_eq!(crossed.len(), 1);
+    assert_eq!(crossed[0].severity, "notice");
+    assert_eq!(
+        crossed[0]
+            .segments
+            .iter()
+            .map(|segment| segment.kind.as_str())
+            .collect::<Vec<_>>(),
+        ["text", "label", "count", "path", "name", "emphasis"],
+    );
+}
+
+#[test]
+/// Every severity crosses as its own token; none collapses onto another.
+fn every_display_severity_crosses_as_a_distinct_token() {
+    let severities = [
+        DisplaySeverity::Info,
+        DisplaySeverity::Notice,
+        DisplaySeverity::Warning,
+        DisplaySeverity::Failure,
+        DisplaySeverity::Success,
+    ];
+    let tokens: Vec<&str> = severities
+        .iter()
+        .copied()
+        .map(display_severity_to_string)
+        .collect();
+
+    assert_eq!(
+        tokens,
+        ["info", "notice", "warning", "failure", "success"],
+        "each severity must publish its own token",
+    );
+}
+
+#[test]
+/// A count crosses with the noun Rust resolved, in both grammatical numbers.
+///
+/// The value and the noun travel as separate fields precisely so no consumer can
+/// re-decide the form. Pinning both numbers is what proves this surface carries
+/// what it was handed rather than deriving a plural of its own.
+fn a_count_crosses_with_the_noun_rust_agreed_with() {
+    let singular = display_segment_to_py(&DisplaySegment::Count {
+        value: 1,
+        noun: "log",
+    });
+    let plural = display_segment_to_py(&DisplaySegment::Count {
+        value: 2,
+        noun: "logs",
+    });
+
+    assert_eq!((singular.count, singular.text.as_str()), (1, "log"));
+    assert_eq!((plural.count, plural.text.as_str()), (2, "logs"));
+}
+
+#[test]
+/// An observed event carries the lines the renderer produced, in its order.
+fn an_event_carries_the_lines_the_renderer_produced() {
+    let event = contract::Event::LogFinished {
+        log: log_event(),
+        disposition: contract::LogDisposition::Failed,
+    };
+    let expected = display_lines_to_py(&render_event(&event));
+    let mapped = event_to_py(event);
+
+    assert!(!expected.is_empty(), "a finished log must say something");
+    assert_eq!(
+        mapped
+            .display_lines
+            .iter()
+            .map(|line| (line.severity.clone(), line.segments.len()))
+            .collect::<Vec<_>>(),
+        expected
+            .iter()
+            .map(|line| (line.severity.clone(), line.segments.len()))
+            .collect::<Vec<_>>(),
+    );
+}
+
+#[test]
+/// A completed run's envelope carries the lines rendered from that run.
+fn an_execution_carries_the_lines_rendered_from_its_run() {
+    Python::initialize();
+    Python::attach(|py| {
+        let facts = || contract::RunResult {
+            status: CrashLogScanRunStatus::Completed,
+            discovery: Some(discovery()),
+            setup: None,
+            installed_yaml_data: None,
+            continuation: None,
+            effective_concurrency: Some(2),
+            message: None,
+            total: 1,
+            succeeded: 1,
+            failed: 0,
+            cancelled: 0,
+            logs: Vec::new(),
+        };
+        let expected = display_lines_to_py(&render_run_result(&facts()));
+        let execution = super::success_execution(py, facts(), None).expect("envelope should build");
+
+        assert!(!expected.is_empty(), "a completed run must say something");
+        assert_eq!(execution.display_lines.len(), expected.len());
+        assert_eq!(
+            execution.display_lines[0].segments[0].kind,
+            expected[0].segments[0].kind,
+        );
+    });
+}
+
+#[test]
+/// An infrastructure failure states its stage in prose and keeps its token.
+///
+/// The token assertion is the point: the rendered lines are for a person and the
+/// `stage` field is for a consumer matching on it, and this surface must publish
+/// both rather than choosing between them.
+fn an_infrastructure_failure_carries_lines_beside_its_frozen_token() {
+    let facts = || contract::InfrastructureError {
+        stage: contract::InfrastructureErrorStage::FormIdDatabaseAccess,
+        message: "database is locked".to_string(),
+        path: None,
+    };
+    let expected = display_lines_to_py(&render_infrastructure_error(&facts()));
+    let execution = super::failure_execution(facts(), None);
+
+    assert!(!expected.is_empty(), "a failure must say something");
+    assert_eq!(execution.display_lines.len(), expected.len());
+    assert_eq!(
+        execution
+            .error
+            .as_ref()
+            .expect("a failure envelope carries its typed error")
+            .stage,
+        "formid_database_access",
+    );
+    assert!(
+        !execution.display_lines.iter().any(|line| {
+            line.segments
+                .iter()
+                .any(|segment| segment.text == "formid_database_access")
+        }),
+        "a Vocabulary Token must never reach a rendered line as prose",
+    );
+}
+
+#[test]
+/// Every resume failure reaches Python with lines beside its stable code.
+fn every_resume_failure_carries_lines_beside_its_stable_code() {
+    Python::initialize();
+    Python::attach(|py| {
+        for error in [
+            contract::ResumeError::ContinuationConsumed,
+            contract::ResumeError::LocalIgnoreResetBackupFailure(contract::LocalIgnoreResetFailure {
+                path: PathBuf::from("CLASSIC Ignore.yaml"),
+                stage: Some(contract::LocalIgnoreResetFailureStage::Write),
+                message: "disk is full".to_string(),
+            }),
+        ] {
+            let code = error.kind().as_str();
+            let rendered = display_lines_to_py(&render_resume_error(&error));
+            let py_error = super::scan_run_resume_error_to_py(py, error);
+            let value = py_error.value(py);
+
+            let lines: Vec<Py<super::PyScanRunDisplayLine>> = value
+                .getattr("display_lines")
+                .expect("every resume failure publishes display lines")
+                .extract()
+                .expect("display lines extract as their own class");
+            assert_eq!(lines.len(), rendered.len());
+            assert!(!rendered.is_empty(), "a resume failure must say something");
+            assert_eq!(
+                value
+                    .getattr("code")
+                    .expect("every resume failure publishes its code")
+                    .extract::<String>()
+                    .expect("a code is a string"),
+                code,
+            );
+        }
+    });
+}
+
+#[test]
+/// The replay rejection keeps the exact code and message it published before.
+///
+/// Quoted as literals rather than derived from the same core call the projection
+/// makes: deriving them would prove only that the surface agrees with itself.
+fn the_replay_rejection_keeps_its_published_code_and_message() {
+    Python::initialize();
+    Python::attach(|py| {
+        let py_error =
+            super::scan_run_resume_error_to_py(py, contract::ResumeError::ContinuationConsumed);
+        let value = py_error.value(py);
+
+        assert_eq!(
+            value
+                .getattr("code")
+                .expect("the replay rejection publishes its code")
+                .extract::<String>()
+                .expect("a code is a string"),
+            "scan_run_continuation_consumed",
+        );
+        assert_eq!(
+            value.to_string(),
+            "Crash Log Scan Run continuation was already consumed",
+        );
+    });
 }
 
 #[test]

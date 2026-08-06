@@ -141,17 +141,18 @@ pub use plugin_evidence_analyzer::{
 pub use record_scanner::{PyRecordScanner, contains_record, scan_records_batch};
 pub use scan_run::{
     PyScanRunCancellation, PyScanRunConfiguration, PyScanRunContinuation, PyScanRunDiscoveryResult,
-    PyScanRunEvent, PyScanRunExecution, PyScanRunInfrastructureError,
-    PyScanRunInspectedYamlDataFile, PyScanRunInstalledYamlDataDiagnostic,
-    PyScanRunInstalledYamlDataRunData, PyScanRunLocalIgnoreRecoveryDecision,
-    PyScanRunLocalIgnoreResetRunData, PyScanRunLogEvent, PyScanRunLogFailure, PyScanRunLogResult,
-    PyScanRunRejectedInput, PyScanRunRequest, PyScanRunResult, PyScanRunSetupCheck,
-    PyScanRunSetupContext, PyScanRunSetupPathUpdate, PyScanRunSetupResult, PyScanRunStandardSource,
-    PyScanRunTargetedSource, PyScanRunUnsolvedLogs, PyScanRunYamlDataContentIdentity,
-    ScanRunContinuationConsumedError, ScanRunLocalIgnoreResetBackupError,
-    ScanRunLocalIgnoreResetConflictError, ScanRunLocalIgnoreResetDurabilityUnknownError,
-    ScanRunLocalIgnoreResetReplacementError, scan_run_execute,
-    scan_run_infrastructure_error_stage_label, scan_run_installed_yaml_data_diagnostic_kind_label,
+    PyScanRunDisplayLine, PyScanRunDisplaySegment, PyScanRunEvent, PyScanRunExecution,
+    PyScanRunInfrastructureError, PyScanRunInspectedYamlDataFile,
+    PyScanRunInstalledYamlDataDiagnostic, PyScanRunInstalledYamlDataRunData,
+    PyScanRunLocalIgnoreRecoveryDecision, PyScanRunLocalIgnoreResetRunData, PyScanRunLogEvent,
+    PyScanRunLogFailure, PyScanRunLogResult, PyScanRunRejectedInput, PyScanRunRequest,
+    PyScanRunResult, PyScanRunSetupCheck, PyScanRunSetupContext, PyScanRunSetupPathUpdate,
+    PyScanRunSetupResult, PyScanRunStandardSource, PyScanRunTargetedSource, PyScanRunUnsolvedLogs,
+    PyScanRunYamlDataContentIdentity, ScanRunContinuationConsumedError,
+    ScanRunLocalIgnoreResetBackupError, ScanRunLocalIgnoreResetConflictError,
+    ScanRunLocalIgnoreResetDurabilityUnknownError, ScanRunLocalIgnoreResetReplacementError,
+    scan_run_execute, scan_run_infrastructure_error_stage_label,
+    scan_run_installed_yaml_data_diagnostic_kind_label,
     scan_run_local_ignore_reset_failure_stage_label, scan_run_local_ignore_yaml_data_state_label,
     scan_run_log_disposition_label, scan_run_log_failure_stage_label, scan_run_resume,
 };
@@ -217,6 +218,8 @@ fn register_scan_run_exports(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyScanRunResult>()?;
     m.add_class::<PyScanRunInfrastructureError>()?;
     m.add_class::<PyScanRunLogEvent>()?;
+    m.add_class::<PyScanRunDisplaySegment>()?;
+    m.add_class::<PyScanRunDisplayLine>()?;
     m.add_class::<PyScanRunEvent>()?;
     m.add_class::<PyScanRunExecution>()?;
     m.add_function(wrap_pyfunction!(scan_run_execute, m)?)?;

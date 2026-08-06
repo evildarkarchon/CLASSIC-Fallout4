@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-05T12:39:09.261090+00:00",
+  "generated_at_utc": "2026-08-06T23:01:40.127181+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -6971,6 +6971,26 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "class ScanRunDiscoveryResult:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunDisplayLine",
+      "export_path": "ScanRunDisplayLine",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunDisplayLine:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunDisplaySegment",
+      "export_path": "ScanRunDisplaySegment",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunDisplaySegment:"
     },
     {
       "module": "classic_scanlog",

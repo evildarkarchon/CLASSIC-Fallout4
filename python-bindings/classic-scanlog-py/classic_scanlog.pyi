@@ -674,9 +674,16 @@ class ScanRunContinuation:
     """Opaque process-local carrier for one paused Crash Log Scan Run."""
 
 class ScanRunContinuationConsumedError(RuntimeError):
-    """Raised when a recovery continuation is consumed more than once."""
+    """Raised when a recovery continuation is consumed more than once.
+
+    ``kind`` duplicates ``code``; both are the frozen Vocabulary Token. Match
+    on either and read ``display_lines`` for what to show a person -- the
+    rendered lines deliberately omit the code.
+    """
 
     code: Literal["scan_run_continuation_consumed"]
+    kind: Literal["scan_run_continuation_consumed"]
+    display_lines: list[ScanRunDisplayLine]
 
 class ScanRunLocalIgnoreResetConflictError(RuntimeError):
     """Raised when Local Ignore changed while the caller was deciding."""
@@ -686,6 +693,7 @@ class ScanRunLocalIgnoreResetConflictError(RuntimeError):
     expected_identity: ScanRunYamlDataContentIdentity
     actual_identity: ScanRunYamlDataContentIdentity | None
     backup_path: Path | None
+    display_lines: list[ScanRunDisplayLine]
 
 class ScanRunLocalIgnoreResetBackupError(RuntimeError):
     """Raised when reset fails before replacement can safely begin."""
@@ -700,6 +708,7 @@ class ScanRunLocalIgnoreResetBackupError(RuntimeError):
         "sync",
         "publish",
     ] | None
+    display_lines: list[ScanRunDisplayLine]
 
 class ScanRunLocalIgnoreResetReplacementError(RuntimeError):
     """Raised when reset fails while publishing retained defaults."""
@@ -714,6 +723,7 @@ class ScanRunLocalIgnoreResetReplacementError(RuntimeError):
         "sync",
         "publish",
     ] | None
+    display_lines: list[ScanRunDisplayLine]
 
 class ScanRunLocalIgnoreResetDurabilityUnknownError(RuntimeError):
     """Raised when defaults are visible but canonical replacement durability is unconfirmed."""
@@ -725,6 +735,7 @@ class ScanRunLocalIgnoreResetDurabilityUnknownError(RuntimeError):
     malformed_identity: ScanRunYamlDataContentIdentity
     backup_identity: ScanRunYamlDataContentIdentity
     replacement_identity: ScanRunYamlDataContentIdentity
+    display_lines: list[ScanRunDisplayLine]
 
 class ScanRunResult:
     """Complete terminal Crash Log Scan Run result."""
@@ -763,6 +774,34 @@ class ScanRunInfrastructureError:
     message: str
     path: str | None
 
+class ScanRunDisplaySegment:
+    """One typed piece of a Crash Log Scan Run display line.
+
+    The six-variant Rust segment crosses flattened: a ``kind`` tag plus one
+    field per payload shape, with the fields the kind does not select left
+    empty. Read only the field ``kind`` names.
+
+    The flattening is the C++ bridge's, field for field, so a consumer reading
+    two bindings reads the same segment the same way.
+    """
+
+    kind: Literal["text", "label", "count", "path", "name", "emphasis"]
+    text: str
+    path: str
+    count: int
+
+class ScanRunDisplayLine:
+    """One line of Crash Log Scan Run Display Content.
+
+    Concatenate ``segments`` in order and never reorder within a line; whole
+    lines may be reordered, grouped, or omitted. Never re-derive a Display
+    Label already carried in a ``label`` segment, and never re-decide a
+    ``count`` segment's noun -- print ``count`` then ``text``.
+    """
+
+    severity: Literal["info", "notice", "warning", "failure", "success"]
+    segments: list[ScanRunDisplaySegment]
+
 class ScanRunLogEvent:
     """Common facts for one log-scoped observer event."""
 
@@ -787,6 +826,7 @@ class ScanRunEvent:
     log: ScanRunLogEvent | None
     phase: Literal["setup", "parse", "analyze", "finalize"] | None
     disposition: Literal["succeeded", "failed", "cancelled_before_start"] | None
+    display_lines: list[ScanRunDisplayLine]
 
 class ScanRunExecution:
     """Final operation envelope with adapter-only observer failure data."""
@@ -794,6 +834,7 @@ class ScanRunExecution:
     result: ScanRunResult | None
     error: ScanRunInfrastructureError | None
     observer_error: str | None
+    display_lines: list[ScanRunDisplayLine]
 
 def scan_run_execute(
     request: ScanRunRequest,

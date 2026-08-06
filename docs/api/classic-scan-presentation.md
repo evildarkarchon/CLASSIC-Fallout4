@@ -8,7 +8,7 @@ into an ordered sequence of display lines. Each frontend decides only **how it l
 [`../adr/0007-rust-owns-crash-log-scan-run-display-content.md`](../adr/0007-rust-owns-crash-log-scan-run-display-content.md)
 records the decision and supersedes the ADR-0002 clause that assigned presentation to adapters.
 
-## Status: the TUI, the native CLI, and the Qt GUI render from it; the Node binding carries it
+## Status: every frontend renders from it; both bindings carry it
 
 `classic-tui` is the first consumer and depends on this crate directly, with no binding seam in the
 way — which is why it went first: it proves the six-segment model before any DTO or parity baseline
@@ -46,7 +46,22 @@ It renders identically to `classic-cli` — segments joined by single spaces, no
 capitalization rule, paths whole, severity spent entirely on the choice of output stream — which is
 what a Node frontend gets for free by reading the lines instead of writing its own.
 
-Still to migrate: the Python surface and the Python CLI.
+`classic-scanlog-py` is the second carrying binding and the last surface to adopt the model. It
+mirrors the same flattening onto pyo3 classes, differing from Node only where the shape of the
+surface differs: Python has one execution envelope with `result` and `error` presence, so a single
+`display_lines` covers both payloads the way the bridge's does, and its five resume rejections are
+exceptions, so each carries the field beside its stable `code`.
+
+`classic-py-cli` is the fifth renderer, and the frontend that fell behind. It is where the
+raw-token bug this whole effort begins from survived after the same bug had been fixed in the TUI:
+it told a user a run `failed during formid_database_access`. It renders as the native CLI and the
+Node demo CLI do, and it gained the display-label audit it had never had — the direct reason that
+drift survived here — so it is covered by the same enforcement as the other three from now on.
+
+The Python CLI is also the one frontend that spends severity on nothing. It writes one stream of
+plain lines through an output envelope every command shares, so routing by severity would change
+that shared contract rather than this run's presentation. Mapping every severity onto plain text is
+explicitly correct, and the severity stays on the line for the day that frontend grows a use for it.
 
 See
 [`../implementation/scan_run_presentation_consolidation.md`](../implementation/scan_run_presentation_consolidation.md).
@@ -204,22 +219,34 @@ treatments are the split they claim to be. It does not restate a single sentence
 
 ## Binding surface
 
-The C++ bridge and the Node binding, today. Display Content is rendered **before** it crosses a seam
-and travels as mirrored data, because a `RunResult` cannot be held across one. A segment flattens to
-a kind tag plus a text field, a path field, and a count field, with unused fields empty; for a count,
-the text field carries the core-resolved noun. Both C++ frontends and the Node binding consume that
-one flattening. See the implementation brief for the Python DTO shape still to come.
+All three: the C++ bridge, the Node binding, and the Python binding. Display Content is rendered
+**before** it crosses a seam and travels as mirrored data, because a `RunResult` cannot be held
+across one. A segment flattens to a kind tag plus a text field, a path field, and a count field, with
+unused fields empty; for a count, the text field carries the core-resolved noun. All three seams
+consume that one flattening, which is what lets a wording fix reach every consumer without three
+separate readings of the same segment.
 
-Where the two seams differ is only in where the field can sit. The bridge has one execution envelope
-with presence flags, so a single `display_lines` on it covers the run result, the infrastructure
-error, and the resume error. Node resolves two envelopes instead — a success and a failure — and
-rejects a resume error rather than returning it, so the same coverage costs three `displayLines`
-fields: one on each envelope and one on the rejected error object beside its stable `code`. Events
-carry it identically on both.
+Where the seams differ is only in where the field can sit and how each language spells the two tags.
 
-One Node-only detail worth knowing: a `Count`'s value widens from `u64` to `i64` and saturates,
-because JavaScript has no `u64`. Nothing counts anywhere near that far, and the alternative — a
-silently wrapped negative quantity — would read as nonsense rather than as an obvious ceiling.
+- **The bridge** has one execution envelope with presence flags, so a single `display_lines` on it
+  covers the run result, the infrastructure error, and the resume error.
+- **Node** resolves two envelopes instead — a success and a failure — and rejects a resume error
+  rather than returning it, so the same coverage costs three `displayLines` fields: one on each
+  envelope and one on the rejected error object beside its stable `code`.
+- **Python** has one envelope like the bridge, so one `display_lines` covers `result` and `error`
+  alike, plus one on each of the five resume exceptions.
+
+Events carry it identically on all three.
+
+Two per-seam details worth knowing:
+
+- **Node widens a `Count` to `i64` and saturates**, because JavaScript has no `u64`. Nothing counts
+  anywhere near that far, and the alternative — a silently wrapped negative quantity — would read as
+  nonsense rather than as an obvious ceiling. Python keeps the `u64`.
+- **The severity and the segment kind are spelled per language.** The bridge uses C++ enums, Node
+  uses PascalCase `string_enum` values, and Python uses snake_case token strings, because a
+  snake_case token is what every other tag on that surface already is — a run status, an event kind,
+  a log disposition. Parity is the flattening beneath the tag, not the tag's spelling.
 
 ## Testing
 

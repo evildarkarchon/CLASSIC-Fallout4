@@ -280,13 +280,48 @@ Its wording assertions were re-anchored on paths and exit codes the payload carr
 
 ### Python
 
-`python-bindings/classic-scanlog-py/src/scan_run.rs` exposes `DisplayLine` and `DisplaySegment` as pyo3 classes alongside the existing result and event DTOs, with `.pyi` stubs and a regenerated parity baseline. `classic-py-cli` then renders display lines instead of building its own sentences.
+**Landed.** `python-bindings/classic-scanlog-py/src/scan_run.rs` exposes `ScanRunDisplayLine` and `ScanRunDisplaySegment` as frozen pyo3 classes with the same flattening as the bridge, `classic_scanlog.pyi` declares them, and the parity baseline regenerated. `classic-py-cli` renders those lines and gained the display-label audit it had never had.
+
+Details worth recording:
+
+- **One field, not three.** Python's `ScanRunExecution` has `result` and `error` presence flags like the bridge's single envelope, and `scan_run_execute` and `scan_run_resume` return the same type, so one `display_lines` covers the initial run, the continuation resume, and both payloads. Node needs three only because it resolves two envelopes and rejects a resume.
+- **The tags are snake_case token strings, not pyo3 enums.** Every other tag this surface publishes on an output — a run `status`, an event `kind`, a log `disposition`, a scan `phase`, a Local Ignore state — is a snake_case token string; the one pyo3 enum on the surface, `ScanRunLocalIgnoreRecoveryDecision`, is an *input*. Making severity and segment kind the surface's only PascalCase output tags would have bought nothing: parity is the flattening beneath the tag, and all three seams already spell the tag in their own language.
+- **`path` is a `str`, not a `pathlib.Path`.** Every other kind must leave the field empty, and an empty `Path` is `Path('.')` — a wrong value rather than an absent one. A `str` has a genuine empty form, which is what "unused fields empty" needs to be expressible at all.
+- **The resume exceptions carry lines too**, though the ticket's acceptance list named only the run result, the resume result, and the event. The bridge renders resume errors, and leaving them out would have left a Python consumer composing its own sentence for a reset conflict — the exact drift this work removes, in the one place where the wording matters most. Purely additive: `code`, `path`, `stage`, and the identities beside them are untouched.
+- **The replay rejection was routed through the shared builder**, exactly as on Node and for the same reason. `scan_run_reset_error_to_py` became `scan_run_resume_error_to_py` and gained the `ContinuationConsumed` arm the entry point used to construct by hand. Both hand-written strings were already byte-identical to `ResumeErrorKind::as_str` and `ResumeError`'s `Display`, so the pair recorded the agreement instead of checking it — and it is what would have left that one rejection with nothing to say. It gains `kind` and `display_lines`, changing neither the code nor the message; a test pins both as literals.
+- **The classes are output-only** (`frozen, skip_from_py_object`), unlike Node's, which had to become bidirectional because napi requires a nested type to be readable from JavaScript when its parent is. pyo3 imposes no such constraint, so no consumer-constructible shape was widened.
+
+Only `python_api_surface.json` moved in the baseline, mirroring the Node phase exactly. No Tier-1 row changed, because the parity contract maps Tier-1 core crates to Python modules and `classic-scan-presentation` is not one of them.
+
+#### `classic-py-cli`
+
+**Landed.** `python-bindings/classic-py-cli/src/classic_py_cli/display.py` is a new renderer module, and `scan_logs` in `commands.py` presents its lines instead of composing sentences.
+
+It renders as the native C++ CLI and the Node demo CLI do: segments concatenated in reading order with single spaces, no styling, no capitalization rule, paths whole.
+
+- **The raw-token bug is gone at its origin.** `f"Crash Log Scan Run failed during {stage_label}: {message}"` is what told a user a run failed during `formid_database_access` — the sentence #170's problem statement records against this frontend. `error.stage` still carries the token for anything matching on it.
+- **Four invented sentences went with it**, one per terminal branch: a setup-failure headline, a two-clause explanation of what Local Ignore recovery means, a cancellation line, and the completed summary's `N succeeded, N failed`. The four branches collapsed into `_UNSUCCESSFUL_TERMINAL_EXIT_CODES`, a status-to-exit-code table: the exit codes are this frontend's and are unchanged, and the prose beside them no longer exists here.
+- **`_infrastructure_error_stage_label` is deleted**, and with it this CLI's only call into the six label accessors. Every label it prints now arrives inside a `label` segment. Its absence is what the new audit asserts, the same inversion the native CLI and the Qt GUI made.
+- **The Installed YAML Data block appears for the first time.** This frontend never showed one; it arrives inside `render_run_result`'s flat sequence and is printed with everything else.
+- **Severity reaches no surface.** `classic-py-cli` writes one stream of plain lines through `output.render_result`, shared by every command and read structurally by the compliance harness, so routing by severity would change that shared contract rather than this run's presentation. Mapping every severity onto plain text is explicitly correct; the severity stays on the line for the day this frontend grows a use for it.
+- **JSON mode is untouched in shape.** Display Content does not enter the payload, and the events collected there keep their token-only projection. Where `error.message` previously fell back to a sentence written here it now takes the run's leading rendered line, so that field is Rust's words in every branch rather than in some of them.
+- **One sentence stays this CLI's to write.** `_UNRENDERED_RUN` reports a binding that handed back a run and said nothing about it. Every render entry point opens on a line stating the outcome, so it is unreachable through a real binding — but it describes a broken binding promise rather than anything a run said, and the alternative is a silent failure, which reads to a user as the process dying.
+
+`python-bindings/tests/test_classic_py_cli_display_label_audit.py` is the audit this frontend never had. It ports the TUI's coverage test and the C++ audits' inverted accessor-absence assertion, and adds two detectors the earlier three could not express until every frontend had stopped writing sentences: an AST check that no token-bearing value is joined to prose — the exact shape the bug took, and one a literal scan cannot catch because the token appears only at run time — and a deny-list of the domain phrases the presentation crate now owns.
+
+Three details of that audit are worth copying if the other three frontends adopt the deny-list half:
+
+- **It covers all four ways Python builds a string** — f-string, `+`, `%`, and `.format()`. Checking only the f-string would pin the form the bug happened to take rather than the thing that must not happen, and would pass a contributor who reached for `+`.
+- **Its coverage test walks recursively.** A top-level glob would let a whole future subpackage escape the audit — the exact failure that test exists to prevent, in the one shape it would not see.
+- **Each detector is run against the drift it exists to catch.** An audit whose detector never fires reads as coverage while providing none.
+
+Comments and docstrings are excluded from the literal scans, for the reason the CXX parity gate's name scan was fixed: a comment describing the drift is not the drift.
 
 ## Local Ignore Recovery Phase
 
 This phase does not start until all four conditions hold:
 
-1. The render phase has landed in the TUI, CLI, GUI, and `classic-py-cli`.
+1. The render phase has landed in the TUI, CLI, GUI, and `classic-py-cli`. **Satisfied.**
 2. Golden tests pass for every locked item in the subset table.
 3. All three parity gates are green against regenerated baselines.
 4. A non-blocking GUI recovery prompt path is demonstrated. **Satisfied** — see `docs/implementation/qt_recovery_prompt_nonblocking_spike.md`.
@@ -322,7 +357,7 @@ Adapter Mapping Rule 6 still supersedes this when the render phase lands: `Recov
 4. **TUI migration.** Direct Rust dependency, no FFI, fastest feedback; proves the segment model before any DTO exists. **Landed.**
 5. **Bridge DTOs and CLI migration.** The CLI is the simplest C++ consumer and shakes the DTO out before GUI threading is involved. **Landed.**
 6. **GUI migration.** **Landed.**
-7. **Node and Python surfaces**, then `classic-py-cli` migration. Last, because the segment taxonomy is only stable now and the baselines regenerate once. **Node landed**; Python and `classic-py-cli` remain.
+7. **Node and Python surfaces**, then `classic-py-cli` migration. Last, because the segment taxonomy is only stable now and the baselines regenerate once. **Landed.** The taxonomy held: six kinds, unchanged, across all three baselines.
 8. **`CrashLogScanRunContinuation::abandon`** and the three call-site replacements.
 9. **Recovery prompt**, gated as above.
 
@@ -343,9 +378,9 @@ Display Content wording is pinned **once**, at the `classic-scan-presentation` r
 
   The sentence-template detector is still outstanding and belongs with the remaining frontends: a deny-list scoped to phrases the presentation crate owns is only enforceable once every frontend has stopped writing them.
 - `classic-gui/tests/test_display_label_audit.cpp` and `classic-cli/tests/test_display_label_audit.cpp` — same deny-list detector.
-- A new display-label audit for `classic-py-cli`, which has none today. Its absence is why the raw-token bug survived.
+- A new display-label audit for `classic-py-cli`, which has none today. Its absence is why the raw-token bug survived. **Landed** at `python-bindings/tests/test_classic_py_cli_display_label_audit.py`. It also carries the first working sentence-template detector, plus an AST detector for a token interpolated into prose — the shape the bug actually took, which no literal scan can see. The TUI, native CLI, and Qt GUI audits are still owed the deny-list half; it is enforceable now that every frontend has stopped writing those phrases.
 - One thin segment-renderer test per frontend — not golden wording. It asserts that segments concatenate in order, that a `Count` prints core's resolved noun rather than a re-derived one, and that a `RecoveryDecisionDescription` marked unavailable is withheld.
-- One test per frontend asserting that Reset To Default is **not** offered when `available` is false. Already done for the TUI, the native CLI, and the Qt GUI, when the frontend half shipped early — the CLI test that pinned the opposite was split into an available case and an unavailable case, and the Qt dialog gained a withheld-button case. When the render phase lands these re-point from the hand-threaded availability flag onto `RecoveryDecisionDescription::available` rather than being written from scratch. `classic-py-cli` still needs its case.
+- One test per frontend asserting that Reset To Default is **not** offered when `available` is false. Already done for the TUI, the native CLI, and the Qt GUI, when the frontend half shipped early — the CLI test that pinned the opposite was split into an available case and an unavailable case, and the Qt dialog gained a withheld-button case. When the render phase lands these re-point from the hand-threaded availability flag onto `RecoveryDecisionDescription::available` rather than being written from scratch. `classic-py-cli` needs no such case and never will in its current shape: it treats `local_ignore_recovery_required` as terminal and never resumes, so it offers no recovery decision to withhold. If it ever grows one, it inherits the same rule.
 
 ## Docs To Update
 

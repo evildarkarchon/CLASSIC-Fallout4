@@ -1140,6 +1140,7 @@ dependencies = [
  "classic-config-py",
  "classic-database-core",
  "classic-registry-core",
+ "classic-scan-presentation",
  "classic-scangame-core",
  "classic-scanlog-core",
  "classic-shared-core",

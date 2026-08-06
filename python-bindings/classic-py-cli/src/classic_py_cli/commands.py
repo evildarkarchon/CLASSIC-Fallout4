@@ -13,6 +13,7 @@ from typing import Any, Protocol
 
 from .binding_loader import list_bindings, require_binding
 from .context import CommandContext
+from .display import render_display_lines
 from .exit_codes import ExitCode, worst_exit_code
 from .output import CommandResult, binding_exception, failure, success
 from .scenarios import Scenario, all_scenarios, get_scenario, scenarios_for_profile
@@ -619,29 +620,59 @@ def _scan_run_result_summary(result: object) -> dict[str, Any]:
     }
 
 
-def _infrastructure_error_stage_label(module: object, token: str) -> str:
-    """Render an Infrastructure Error Stage Vocabulary Token as its core Display Label.
+# Reported when the binding hands back a run but says nothing about it. Every render
+# entry point in `classic-scan-presentation` opens on a line stating the outcome, so
+# this is unreachable through a real binding -- but it describes a broken binding
+# promise rather than anything a run said, which is why it stays this CLI's sentence to
+# write. The alternative is a silent failure, which reads to a user as the process
+# dying rather than as a run that failed.
+_UNRENDERED_RUN = "classic_scanlog published no Display Content for this Crash Log Scan Run"
+
+# Terminal statuses this CLI reports as unsuccessful, and the exit status each earns.
+# Exit codes are Display Layout and stay this frontend's; the prose beside them is not,
+# and no longer appears here at all.
+#
+# `local_ignore_recovery_required` is terminal for this CLI. The run paused before
+# analysing any log and returned a one-shot continuation that only an interactive caller
+# can answer; `scan logs` never resumes it. Falling through to the success path reported
+# "0 succeeded, 0 failed" and exit 0, which is indistinguishable from a healthy scan of
+# an empty directory even though the real cause was a malformed CLASSIC Ignore.yaml the
+# caller was never told about.
+_UNSUCCESSFUL_TERMINAL_EXIT_CODES = {
+    "setup_failed": int(ExitCode.PRODUCT_FAILURE),
+    "local_ignore_recovery_required": int(ExitCode.PRODUCT_FAILURE),
+    "cancelled_before_discovery": int(ExitCode.INTERRUPTED),
+    "cancelled": int(ExitCode.INTERRUPTED),
+}
+
+
+def _scan_run_display_lines(carrier: object) -> list[str]:
+    """Render what Rust said about this run, from whichever carrier holds it.
 
     Args:
-        module: The loaded ``classic_scanlog`` binding module.
-        token: The frozen Vocabulary Token carried by the binding's error object.
+        carrier: A ``ScanRunExecution``, or any object publishing the same
+            ``display_lines`` sequence.
 
     Returns:
-        The core-owned Display Label, or ``token`` unchanged when it cannot be resolved.
+        One plain string per Rust-owned display line, in Rust's order. Empty when
+        the loaded binding publishes no Display Content at all, which
+        :data:`_UNRENDERED_RUN` then reports.
 
-    This runs on the failure-reporting path, so it must never raise: masking the caller's
-    real scan failure behind a labelling error would be strictly worse than showing the
-    raw token. Both the missing-entry-point and unknown-token cases therefore degrade to
-    the token rather than propagating.
+    Read through ``getattr`` for the same reason every other field on this envelope
+    is: the binding is resolved at run time, so this CLI can be pointed at a build
+    older than itself.
     """
 
-    label = getattr(module, "scan_run_infrastructure_error_stage_label", None)
-    if label is None:
-        return token
-    try:
-        return str(label(token))
-    except Exception:  # noqa: BLE001 - an unresolvable token must not mask the scan failure.
-        return token
+    lines = getattr(carrier, "display_lines", None)
+    if not lines:
+        return []
+    return render_display_lines(lines)
+
+
+def _scan_run_summary(display_lines: list[str]) -> str:
+    """Return the leading line Rust wrote, or a report that the binding wrote none."""
+
+    return display_lines[0] if display_lines else _UNRENDERED_RUN
 
 
 def _scan_report_text(result: object) -> str:
@@ -809,23 +840,30 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         return binding_exception("scan logs", "classic_scanlog", exc)
     infrastructure_error = getattr(execution, "error", None)
     observer_error = getattr(execution, "observer_error", None)
+    # One field covers both payloads, describing whichever of `result` and `error` the
+    # envelope carries -- the same shape the C++ bridge's execution envelope has.
+    display_lines = _scan_run_display_lines(execution)
     if infrastructure_error is not None:
         stage = str(getattr(infrastructure_error, "stage", "internal_invariant"))
         message = str(getattr(infrastructure_error, "message", infrastructure_error))
         path = getattr(infrastructure_error, "path", None)
-        # Prose gets the core Display Label; the structured payload keeps the frozen
-        # Vocabulary Token, because machine consumers match on the token and it must not
-        # move when a label is reworded.
-        stage_label = _infrastructure_error_stage_label(module, stage)
+        # The prose is Rust's, and states the stage as its Display Label inside a
+        # rendered line. The structured payload keeps the frozen Vocabulary Token,
+        # because machine consumers match on the token and it must not move when a
+        # label is reworded. This is where "failed during formid_database_access"
+        # used to reach a user as a sentence.
         return failure(
             "scan logs",
-            f"Crash Log Scan Run failed during {stage_label}: {message}",
+            _scan_run_summary(display_lines),
             int(ExitCode.PRODUCT_FAILURE),
             error={"classification": "scan-run-infrastructure", "stage": stage, "message": message, "path": path},
             data={"events": events, "observerError": observer_error},
+            text_lines=display_lines,
         )
     result = getattr(execution, "result", None)
     if result is None:
+        # A broken binding promise, not something a run said, so this sentence is
+        # this CLI's to write.
         return failure(
             "scan logs",
             "classic_scanlog returned neither a result nor an infrastructure error",
@@ -833,53 +871,24 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
             data={"events": events, "observerError": observer_error},
         )
     terminal_status = str(result.status)
-    if terminal_status == "setup_failed":
-        message = str(getattr(result, "message", None) or "Crash Log Scan setup failed")
+    unsuccessful_exit_code = _UNSUCCESSFUL_TERMINAL_EXIT_CODES.get(terminal_status)
+    if unsuccessful_exit_code is not None:
+        # `message` is core's own run-level field, kept in the structured payload as
+        # it was. Where it is absent this now falls back to the run's leading rendered
+        # line rather than to a sentence written here, so the field is Rust's words in
+        # every branch rather than in some of them.
+        message = str(getattr(result, "message", None) or _scan_run_summary(display_lines))
         return failure(
             "scan logs",
-            message,
-            int(ExitCode.PRODUCT_FAILURE),
+            _scan_run_summary(display_lines),
+            unsuccessful_exit_code,
             error={"classification": "scan-run-terminal", "status": terminal_status, "message": message},
             data={
                 "events": events,
                 "observerError": observer_error,
                 "result": _scan_run_result_summary(result),
             },
-        )
-    if terminal_status == "local_ignore_recovery_required":
-        # Terminal for this CLI. The run paused before analysing any log and returned a one-shot
-        # continuation that only an interactive caller can answer; `scan logs` never resumes it.
-        # Falling through to the success path below reported "0 succeeded, 0 failed" and exit 0,
-        # which is indistinguishable from a healthy scan of an empty directory even though the real
-        # cause was a malformed CLASSIC Ignore.yaml the caller was never told about.
-        message = str(
-            getattr(result, "message", None)
-            or "Local Ignore YAML Data is malformed and requires a recovery decision "
-            "(reset to default, or proceed without ignore) before crash logs can be scanned"
-        )
-        return failure(
-            "scan logs",
-            message,
-            int(ExitCode.PRODUCT_FAILURE),
-            error={"classification": "scan-run-terminal", "status": terminal_status, "message": message},
-            data={
-                "events": events,
-                "observerError": observer_error,
-                "result": _scan_run_result_summary(result),
-            },
-        )
-    if terminal_status in {"cancelled_before_discovery", "cancelled"}:
-        message = str(getattr(result, "message", None) or "Crash Log Scan Run was cancelled")
-        return failure(
-            "scan logs",
-            message,
-            int(ExitCode.INTERRUPTED),
-            error={"classification": "scan-run-terminal", "status": terminal_status, "message": message},
-            data={
-                "events": events,
-                "observerError": observer_error,
-                "result": _scan_run_result_summary(result),
-            },
+            text_lines=display_lines,
         )
     results = list(result.logs)
     failures = [_scan_failure_summary(item) for item in results if not _scan_result_success(item)]
@@ -887,7 +896,7 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
     successful_logs = len(results) - len(failures)
     return success(
         "scan logs",
-        f"Scanlog binding completed: {successful_logs} succeeded, {len(failures)} failed",
+        _scan_run_summary(display_lines),
         {
             "scanPath": str(scan_path),
             "installationRoot": str(installation_root),
@@ -903,6 +912,7 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
             "observerError": observer_error,
             "result": _scan_run_result_summary(result),
         },
+        text_lines=display_lines,
     )
 
 
