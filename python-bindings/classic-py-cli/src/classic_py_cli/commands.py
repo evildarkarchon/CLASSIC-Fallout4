@@ -619,6 +619,31 @@ def _scan_run_result_summary(result: object) -> dict[str, Any]:
     }
 
 
+def _infrastructure_error_stage_label(module: object, token: str) -> str:
+    """Render an Infrastructure Error Stage Vocabulary Token as its core Display Label.
+
+    Args:
+        module: The loaded ``classic_scanlog`` binding module.
+        token: The frozen Vocabulary Token carried by the binding's error object.
+
+    Returns:
+        The core-owned Display Label, or ``token`` unchanged when it cannot be resolved.
+
+    This runs on the failure-reporting path, so it must never raise: masking the caller's
+    real scan failure behind a labelling error would be strictly worse than showing the
+    raw token. Both the missing-entry-point and unknown-token cases therefore degrade to
+    the token rather than propagating.
+    """
+
+    label = getattr(module, "scan_run_infrastructure_error_stage_label", None)
+    if label is None:
+        return token
+    try:
+        return str(label(token))
+    except Exception:  # noqa: BLE001 - an unresolvable token must not mask the scan failure.
+        return token
+
+
 def _scan_report_text(result: object) -> str:
     """Return report text from a scanlog result-like object."""
 
@@ -788,9 +813,13 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         stage = str(getattr(infrastructure_error, "stage", "internal_invariant"))
         message = str(getattr(infrastructure_error, "message", infrastructure_error))
         path = getattr(infrastructure_error, "path", None)
+        # Prose gets the core Display Label; the structured payload keeps the frozen
+        # Vocabulary Token, because machine consumers match on the token and it must not
+        # move when a label is reworded.
+        stage_label = _infrastructure_error_stage_label(module, stage)
         return failure(
             "scan logs",
-            f"Crash Log Scan Run failed during {stage}: {message}",
+            f"Crash Log Scan Run failed during {stage_label}: {message}",
             int(ExitCode.PRODUCT_FAILURE),
             error={"classification": "scan-run-infrastructure", "stage": stage, "message": message, "path": path},
             data={"events": events, "observerError": observer_error},
