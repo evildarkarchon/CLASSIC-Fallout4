@@ -22,11 +22,19 @@
 //!   one, a hand-written list silently stops checking whatever lands next, which is exactly where a
 //!   naming table is most likely to appear.
 //!
-//! `include_str!` needs literal paths, so neither list can be globbed at compile time. The
-//! meta-tests close that gap by reading the directory at run time instead:
+//! Both lists are written by hand even though the directory could be globbed. That is the trade the
+//! CLI port documents: a declared list is reviewable in a diff and lets a failure name the offending
+//! file, and the meta-tests are what stop it falling behind the directory.
 //! `the_audit_covers_every_declared_workflow_module` fails when `app.rs` declares a workflow module
 //! the dispatch list omits, and `the_audit_covers_every_tui_source_file` fails when any file under
 //! `src/` is missing from the audited list.
+//!
+//! Sources are read at run time rather than through `include_str!`, matching what both C++ ports
+//! already do with `ifstream`. A compile-time include is only refreshed when cargo decides the file
+//! changed, and cargo decides that by timestamp — so any tool that writes a source with a timestamp
+//! older than the last build (a backup restore, an archive extraction, a checkout that preserves
+//! mtimes) leaves this asserting over bytes that are no longer on disk, and passing. An audit whose
+//! subject is the working tree should read the working tree.
 //!
 //! Sibling `*_tests.rs` modules are deliberately outside the audited set. They legitimately quote
 //! settled Display Labels as literals — that is how a wording a ticket decided gets pinned — and
@@ -43,78 +51,70 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-const APP_RS: &str = include_str!("../src/app.rs");
-const BACKUP_WORKFLOW_RS: &str = include_str!("../src/app/backup_workflow.rs");
-const RESULTS_WORKFLOW_RS: &str = include_str!("../src/app/results_workflow.rs");
-const UPDATE_WORKFLOW_RS: &str = include_str!("../src/app/update_workflow.rs");
-const EVENT_RS: &str = include_str!("../src/event.rs");
-const LIB_RS: &str = include_str!("../src/lib.rs");
-const MAIN_RS: &str = include_str!("../src/main.rs");
-const RESULTS_MARKDOWN_RS: &str = include_str!("../src/results_markdown.rs");
-const SCAN_RUN_RS: &str = include_str!("../src/scan_run.rs");
-const STATE_RS: &str = include_str!("../src/state.rs");
-const ARTICLES_TAB_RS: &str = include_str!("../src/tabs/articles_tab.rs");
-const BACKUP_TAB_RS: &str = include_str!("../src/tabs/backup_tab.rs");
-const MAIN_TAB_RS: &str = include_str!("../src/tabs/main_tab.rs");
-const TABS_MOD_RS: &str = include_str!("../src/tabs/mod.rs");
-const RESULTS_TAB_RS: &str = include_str!("../src/tabs/results_tab.rs");
-const THEME_RS: &str = include_str!("../src/theme.rs");
-const UI_RS: &str = include_str!("../src/ui.rs");
-const WIDGETS_MOD_RS: &str = include_str!("../src/widgets/mod.rs");
-const PATH_INPUT_RS: &str = include_str!("../src/widgets/path_input.rs");
-
-/// Returns every TUI source file allowed to dispatch background work.
+/// Every TUI source file allowed to dispatch background work.
 ///
-/// A strict subset of [`audited_sources`]: dispatching is a property of the workflow modules and
+/// A strict subset of [`AUDITED_SOURCES`]: dispatching is a property of the workflow modules and
 /// the two entry points, while a naming table can appear anywhere a string reaches the screen.
-fn dispatching_sources() -> [(&'static str, &'static str); 6] {
-    [
-        ("app.rs", APP_RS),
-        ("app/backup_workflow.rs", BACKUP_WORKFLOW_RS),
-        ("app/results_workflow.rs", RESULTS_WORKFLOW_RS),
-        ("app/update_workflow.rs", UPDATE_WORKFLOW_RS),
-        ("event.rs", EVENT_RS),
-        ("main.rs", MAIN_RS),
-    ]
-}
+const DISPATCHING_SOURCES: [&str; 6] = [
+    "app.rs",
+    "app/backup_workflow.rs",
+    "app/results_workflow.rs",
+    "app/update_workflow.rs",
+    "event.rs",
+    "main.rs",
+];
 
-/// Returns every non-test TUI source file, which is the set audited for naming tables.
+/// Every non-test TUI source file, which is the set audited for naming tables.
 ///
 /// Deliberately the whole of `src/` rather than only the modules carrying scan-run presentation
 /// today. A contributor who writes a naming table is unlikely to consult this list first, and the
 /// files that render a scan run are exactly the ones most likely to grow — restricting the set to
 /// the current renderers would leave the next one unaudited from the day it lands.
-fn audited_sources() -> [(&'static str, &'static str); 19] {
-    [
-        ("app.rs", APP_RS),
-        ("app/backup_workflow.rs", BACKUP_WORKFLOW_RS),
-        ("app/results_workflow.rs", RESULTS_WORKFLOW_RS),
-        ("app/update_workflow.rs", UPDATE_WORKFLOW_RS),
-        ("event.rs", EVENT_RS),
-        ("lib.rs", LIB_RS),
-        ("main.rs", MAIN_RS),
-        ("results_markdown.rs", RESULTS_MARKDOWN_RS),
-        ("scan_run.rs", SCAN_RUN_RS),
-        ("state.rs", STATE_RS),
-        ("tabs/articles_tab.rs", ARTICLES_TAB_RS),
-        ("tabs/backup_tab.rs", BACKUP_TAB_RS),
-        ("tabs/main_tab.rs", MAIN_TAB_RS),
-        ("tabs/mod.rs", TABS_MOD_RS),
-        ("tabs/results_tab.rs", RESULTS_TAB_RS),
-        ("theme.rs", THEME_RS),
-        ("ui.rs", UI_RS),
-        ("widgets/mod.rs", WIDGETS_MOD_RS),
-        ("widgets/path_input.rs", PATH_INPUT_RS),
-    ]
+const AUDITED_SOURCES: [&str; 19] = [
+    "app.rs",
+    "app/backup_workflow.rs",
+    "app/results_workflow.rs",
+    "app/update_workflow.rs",
+    "event.rs",
+    "lib.rs",
+    "main.rs",
+    "results_markdown.rs",
+    "scan_run.rs",
+    "state.rs",
+    "tabs/articles_tab.rs",
+    "tabs/backup_tab.rs",
+    "tabs/main_tab.rs",
+    "tabs/mod.rs",
+    "tabs/results_tab.rs",
+    "theme.rs",
+    "ui.rs",
+    "widgets/mod.rs",
+    "widgets/path_input.rs",
+];
+
+/// Returns `classic-tui/src/`, the root every listed path is written relative to.
+fn source_root() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("src")
+}
+
+/// Reads one listed source file whole, as it exists on disk right now.
+///
+/// Panicking on an unreadable path is the point: it is what replaces the compile-time existence
+/// check `include_str!` used to give, so a listed file that was renamed or deleted still fails
+/// loudly instead of dropping out of the audited set unnoticed.
+fn read_source(relative_path: &str) -> String {
+    let path = source_root().join(relative_path);
+    fs::read_to_string(&path)
+        .unwrap_or_else(|error| panic!("{} should be readable: {error}", path.display()))
 }
 
 /// Every domain enum the TUI presents, each owned by a core crate that supplies both its names.
 ///
 /// The first four are the tables this frontend used to carry. `LogDisposition` and
 /// `LogFailureStage` are here because the TUI rendered their prose too, from copies the parent
-/// inventory did not count. `InfrastructureErrorStage` never had a table — the TUI renders its
-/// Vocabulary *Token* through `Display` — and is listed anyway, so the day someone reaches for
-/// prose they reach for `label()` rather than for a fifth table.
+/// inventory did not count. `InfrastructureErrorStage` never had a table at all — it rendered the
+/// Vocabulary *Token* through `Display`, which is an identifier in a sentence rather than a second
+/// vocabulary — and now renders its Display Label like the other six.
 const AUDITED_ENUMS: [&str; 7] = [
     "InstalledYamlDataProvenance",
     "LocalIgnoreRunState",
@@ -127,7 +127,8 @@ const AUDITED_ENUMS: [&str; 7] = [
 
 #[test]
 fn the_tui_never_constructs_its_own_async_runtime() {
-    for (name, source) in dispatching_sources() {
+    for name in DISPATCHING_SOURCES {
+        let source = read_source(name);
         for forbidden in [
             "Runtime::new",
             "runtime::Builder",
@@ -145,7 +146,8 @@ fn the_tui_never_constructs_its_own_async_runtime() {
 
 #[test]
 fn every_tui_spawn_targets_the_shared_runtime() {
-    for (name, source) in dispatching_sources() {
+    for name in DISPATCHING_SOURCES {
+        let source = read_source(name);
         let spawns = source.matches(".spawn(").count();
         let shared_spawns = source.matches("get_runtime().spawn(").count();
         assert_eq!(
@@ -157,8 +159,8 @@ fn every_tui_spawn_targets_the_shared_runtime() {
 
 #[test]
 fn the_audit_covers_every_declared_workflow_module() {
-    let audited = dispatching_sources();
-    for line in APP_RS.lines() {
+    let app_rs = read_source("app.rs");
+    for line in app_rs.lines() {
         let Some(module) = line
             .trim()
             .strip_prefix("mod ")
@@ -173,21 +175,22 @@ fn the_audit_covers_every_declared_workflow_module() {
         }
         let expected = format!("app/{module}.rs");
         assert!(
-            audited.iter().any(|(name, _)| *name == expected),
+            DISPATCHING_SOURCES.contains(&expected.as_str()),
             "app.rs declares `mod {module};` but `{expected}` is not audited here; add it to \
-             dispatching_sources() so its background work stays on the shared runtime"
+             DISPATCHING_SOURCES so its background work stays on the shared runtime"
         );
     }
 }
 
 #[test]
 fn local_ignore_recovery_resume_is_dispatched_like_every_other_workflow() {
+    let app_rs = read_source("app.rs");
     assert!(
-        APP_RS.contains("fn resume_local_ignore_recovery"),
+        app_rs.contains("fn resume_local_ignore_recovery"),
         "the recovery resume seam should stay a named function in app.rs"
     );
     assert!(
-        APP_RS.contains("get_runtime().spawn("),
+        app_rs.contains("get_runtime().spawn("),
         "app.rs should dispatch its background work through the shared runtime"
     );
 }
@@ -195,9 +198,10 @@ fn local_ignore_recovery_resume_is_dispatched_like_every_other_workflow() {
 #[test]
 fn no_tui_source_turns_an_audited_enum_into_a_string_literal() {
     let mut offenders = Vec::new();
-    for (name, source) in audited_sources() {
+    for name in AUDITED_SOURCES {
+        let source = read_source(name);
         for enum_name in AUDITED_ENUMS {
-            let tables = count_naming_tables(source, enum_name);
+            let tables = count_naming_tables(&source, enum_name);
             if tables > 0 {
                 offenders.push(format!(
                     "{name} turns {enum_name} into {tables} string literal(s)"
@@ -270,14 +274,14 @@ fn names_for(source: &str, enum_name: &str) -> Vec<String> {
 
 #[test]
 fn the_audit_covers_every_tui_source_file() {
-    // The stale-list guard for the naming-table audit. `audited_sources` is written by hand because
-    // `include_str!` cannot be globbed, so without this a new file under `src/` would be unaudited
-    // from the day it lands — and new code is where a naming table is likeliest to appear.
-    let audited: BTreeSet<&str> = audited_sources().iter().map(|(name, _)| *name).collect();
+    // The stale-list guard for the naming-table audit. `AUDITED_SOURCES` is written by hand, so
+    // without this a new file under `src/` would be unaudited from the day it lands — and new code
+    // is where a naming table is likeliest to appear.
+    let audited: BTreeSet<&str> = AUDITED_SOURCES.into_iter().collect();
 
-    let source_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+    let root = source_root();
     let mut present = Vec::new();
-    collect_rust_sources(&source_root, &source_root, &mut present);
+    collect_rust_sources(&root, &root, &mut present);
 
     let mut unaudited: Vec<String> = present
         .into_iter()

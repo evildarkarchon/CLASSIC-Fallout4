@@ -1,7 +1,7 @@
 use super::{
     CANCEL_RECOVERY_CHOICE, LocalIgnoreRecoveryPrompt, PROCEED_WITHOUT_IGNORE_CHOICE,
     RESET_TO_DEFAULT_CHOICE, ScanRunIntent, build_request, describe_local_ignore_recovery,
-    format_event, format_result, format_resume_error,
+    format_error, format_event, format_result, format_resume_error,
 };
 use classic_config_core::YamlDataContentIdentity;
 use classic_scanlog_core::scan_run::contract::{
@@ -18,6 +18,7 @@ use classic_scanlog_core::{
 };
 use classic_shared_core::GameId;
 use classic_shared_core::get_runtime;
+use classic_vocabulary::Vocabulary;
 use std::path::PathBuf;
 
 const VALID_CRASH_LOG: &str =
@@ -600,6 +601,62 @@ fn resume_presentation_preserves_infrastructure_stage_and_path() {
             .details
             .contains("Path: C:/CLASSIC/CLASSIC Data")
     );
+}
+
+/// Verifies every infrastructure stage reaches the user as prose rather than as its identifier.
+///
+/// Exhaustive over `VARIANTS` and derived from the core rather than from a literal table, so a pass
+/// means agreement with the owning crate instead of a matching restatement of it. The negative half
+/// is what carries the weight: for the three stages whose two forms differ it asserts the Vocabulary
+/// Token is *absent*, because a frontend printing `formid_database_access` mid-sentence is leaking
+/// an identifier into a message meant to be read.
+///
+/// `resume_presentation_preserves_infrastructure_stage_and_path` above is why this exists rather
+/// than being assumed. It pins `Intake`, whose token and label are the same word, so it stayed green
+/// for as long as this frontend rendered tokens — structurally unable to notice the drift nearest
+/// to it.
+#[test]
+fn every_infrastructure_stage_renders_its_display_label() {
+    for stage in <InfrastructureErrorStage as Vocabulary>::VARIANTS
+        .iter()
+        .copied()
+    {
+        let presentation = format_error(&InfrastructureError {
+            stage,
+            message: "the run could not continue".to_string(),
+            path: None,
+        });
+
+        let label = stage.label();
+        assert!(
+            presentation
+                .status
+                .contains(&format!("failed during {label}")),
+            "the status line for {stage:?} should name the Display Label: {}",
+            presentation.status
+        );
+        assert!(
+            presentation
+                .details
+                .contains(&format!("failed during {label}")),
+            "the overlay for {stage:?} should name the Display Label: {}",
+            presentation.details
+        );
+
+        let token = Vocabulary::as_str(stage);
+        if token != label {
+            assert!(
+                !presentation.status.contains(token),
+                "the status line for {stage:?} still carries the token `{token}`: {}",
+                presentation.status
+            );
+            assert!(
+                !presentation.details.contains(token),
+                "the overlay for {stage:?} still carries the token `{token}`: {}",
+                presentation.details
+            );
+        }
+    }
 }
 
 #[test]

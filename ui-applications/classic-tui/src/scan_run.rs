@@ -400,6 +400,11 @@ pub(crate) fn format_result(result: &RunResult) -> TerminalPresentation {
 }
 
 /// Presents a run-wide infrastructure error consistently in the status line and overlay.
+///
+/// The stage reads as its Display Label rather than its Vocabulary Token, which is the wording the
+/// CLI and the GUI already print. Three stages differ between the two forms — `request validation`,
+/// `FormID database access`, and `internal invariant validation` — and the token spellings this
+/// replaces (`formid_database_access` and the rest) were an identifier leaking into a sentence.
 pub(crate) fn format_error(error: &InfrastructureError) -> TerminalPresentation {
     let status_path = error
         .path
@@ -416,11 +421,15 @@ pub(crate) fn format_error(error: &InfrastructureError) -> TerminalPresentation 
         percent: 0.0,
         status: format!(
             "Crash Log Scan Run failed during {}: {}{}",
-            error.stage, error.message, status_path
+            error.stage.label(),
+            error.message,
+            status_path
         ),
         details: format!(
             "Crash Log Scan Run failed during {}\n{}{}",
-            error.stage, error.message, detail_path
+            error.stage.label(),
+            error.message,
+            detail_path
         ),
     }
 }
@@ -560,7 +569,10 @@ pub(crate) fn format_resume_error(error: &ResumeError) -> TerminalPresentation {
             ));
         }
         ResumeError::Infrastructure(infrastructure) => {
-            lines.push(format!("Stage: {}", infrastructure.stage));
+            // `message` above is the contract's own `Display`, which for this variant renders
+            // `<token>: <message>`. That string is the error's stable rendering and stays as the
+            // contract composes it; this line is presentation, so it reads as prose.
+            lines.push(format!("Stage: {}", infrastructure.stage.label()));
             if let Some(path) = infrastructure.path.as_ref() {
                 lines.push(format!("Path: {}", path.display()));
             }

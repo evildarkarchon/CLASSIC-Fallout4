@@ -204,8 +204,9 @@ counterpart anywhere else in the workspace returning the same strings.
 
 None of these three settles a wording conflict: the CLI, the GUI, and the TUI
 already render exactly these phrases, so adopting them changes no shipped
-output. The one gap they close is the TUI's infrastructure stage, which renders
-the *token* today and now has prose to adopt.
+output. The one gap they closed is the TUI's infrastructure stage, which
+rendered the *token* — the frontend now renders these labels, converging on what
+the other two already printed.
 
 The right-hand column is what makes labels worth their own form. `Unsolved Logs`
 and `FormID` are domain terms carrying glossary capitalization, and
