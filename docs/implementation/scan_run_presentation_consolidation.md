@@ -240,13 +240,15 @@ Adapter Mapping Rule 6 closes this by construction: `RecoveryDecisionDescription
 
 Rust unit tests live in sibling `_tests.rs` files declared with `#[cfg(test)] #[path = "<name>_tests.rs"] mod tests;`, never inline.
 
+Display Content wording is pinned **once**, at the `classic-scan-presentation` render functions — the only new seam this brief introduces. Per-frontend golden suites are deliberately not used: they would assert the same wording four times, so one rewording would produce four diffs and four chances to disagree, which is the drift this brief exists to remove. What a frontend must prove instead is narrower and belongs at the audit seam that already exists: that it did not reword what core handed it.
+
 - `business-logic/classic-scan-presentation/src/lib_tests.rs` — one test per locked item, asserting exact segment sequences; a test that no `DisplaySegment::Text` payload contains a placeholder character; a test that every `Count` noun matches its value's grammatical number.
 - `business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs` — `abandon` yields the ordinary cancelled result, consumes the continuation exactly once, and leaves the filesystem untouched; replay yields `ResumeError::ContinuationConsumed`.
 - Vocabulary conformance via `assert_vocabulary_conformance` for each newly adopted enum, plus a test that each new label differs from its token where the forms differ, matching `every_infrastructure_stage_renders_its_display_label`.
 - `ui-applications/classic-tui/tests/shared_runtime_audit.rs` — extend `AUDITED_ENUMS` with the four new adopters, and add a sentence-template detector over a deny-list of domain phrases owned by the presentation crate. Scope it to that deny-list; a general "no format strings" rule would drown in false positives.
 - `classic-gui/tests/test_display_label_audit.cpp` and `classic-cli/tests/test_display_label_audit.cpp` — same deny-list detector.
 - A new display-label audit for `classic-py-cli`, which has none today. Its absence is why the raw-token bug survived.
-- Golden-file tests per frontend for the locked subset.
+- One thin segment-renderer test per frontend — not golden wording. It asserts that segments concatenate in order, that a `Count` prints core's resolved noun rather than a re-derived one, and that a `RecoveryDecisionDescription` marked unavailable is withheld.
 - One test per frontend asserting that Reset To Default is **not** offered when `available` is false. `classic-cli/tests/test_scanner.cpp:359` currently pins the opposite — it asserts `[R] Reset to default` appears unconditionally — and must be split into an available case and an unavailable case.
 
 ## Docs To Update
