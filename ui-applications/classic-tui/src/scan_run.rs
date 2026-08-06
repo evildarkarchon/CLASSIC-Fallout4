@@ -218,13 +218,16 @@ pub(crate) fn format_event(event: &Event) -> EventPresentation {
         Event::LogQueued(log) => format_log_event(log, "Queued", 0.0),
         Event::LogStarted(log) => format_log_event(log, "Scanning", STARTED_CONTRIBUTION),
         Event::LogPhase { log, phase } => {
-            let (action, contribution) = match phase {
-                ScanProgressPhase::Setup => ("Preparing", SETUP_CONTRIBUTION),
-                ScanProgressPhase::Parse => ("Parsing", PARSE_CONTRIBUTION),
-                ScanProgressPhase::Analyze => ("Analyzing", ANALYZE_CONTRIBUTION),
-                ScanProgressPhase::Finalize => ("Finalizing", FINALIZE_CONTRIBUTION),
+            // Only the gauge weighting is decided here. The words come from the core
+            // crate that owns the phase, so this frontend cannot drift from the CLI
+            // and the GUI about what a phase is called.
+            let contribution = match phase {
+                ScanProgressPhase::Setup => SETUP_CONTRIBUTION,
+                ScanProgressPhase::Parse => PARSE_CONTRIBUTION,
+                ScanProgressPhase::Analyze => ANALYZE_CONTRIBUTION,
+                ScanProgressPhase::Finalize => FINALIZE_CONTRIBUTION,
             };
-            format_log_event(log, action, contribution)
+            format_log_event(log, &sentence_case(phase.label()), contribution)
         }
         Event::LogFinished { log, disposition } => {
             format_log_event(log, &sentence_case(disposition.label()), 0.0)
@@ -270,6 +273,10 @@ const fn plural<'a>(count: usize, singular: &'a str, plural: &'a str) -> &'a str
 /// and the status line has always shown the capitalized one. Deriving that form here keeps the
 /// vocabulary single-sourced — this owns a capitalization rule, not a second copy of the words —
 /// where a second table would be free to disagree with the first about what happened.
+///
+/// A scan progress phase reaches the status line the same way and for the same reason, which is
+/// why the core labels it in the lower-case participle rather than pre-capitalizing it: the
+/// capitalization is this frontend's sentence position, not part of the phase's name.
 ///
 /// A label already opening on a capitalized domain term passes through unchanged.
 fn sentence_case(label: &str) -> String {

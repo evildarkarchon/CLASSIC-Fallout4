@@ -90,23 +90,21 @@ fn configuration_conversion_treats_blank_destination_as_absent() {
 
 #[test]
 fn maps_every_stable_enum_identifier() {
-    // The run status has no `VARIANTS` to iterate - it does not implement the
-    // Vocabulary contract, because no frontend renders a Display Label for it -
-    // so the variant list stays written out here. The expected string does not:
-    // it is the core's own token rather than a second spelling of it, which is
-    // the half of this check that can actually fail.
-    let statuses = [
-        CrashLogScanRunStatus::Completed,
-        CrashLogScanRunStatus::NoCrashLogsFound,
-        CrashLogScanRunStatus::SetupFailed,
-        CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
-        CrashLogScanRunStatus::CancelledBeforeDiscovery,
-        CrashLogScanRunStatus::Cancelled,
-    ];
-    assert_eq!(
-        statuses.map(run_status_to_string),
-        statuses.map(CrashLogScanRunStatus::as_str),
-    );
+    // Derived from `VARIANTS` like everything below it. The expected string was
+    // already the core's own token rather than a second spelling of it; the
+    // variant list used to be written out here because the run status had no
+    // `VARIANTS` to iterate, and adopting the Vocabulary contract is what let
+    // that hardcoded array go.
+    for variant in <CrashLogScanRunStatus as Vocabulary>::VARIANTS
+        .iter()
+        .copied()
+    {
+        assert_eq!(
+            run_status_to_string(variant),
+            variant.as_str(),
+            "the run surface must publish the core's own token",
+        );
+    }
 
     // Derived from `VARIANTS` for the same reason as the twins further down,
     // and the reason applies even though these two enums are not twins: the
@@ -144,22 +142,28 @@ fn maps_every_stable_enum_identifier() {
         );
     }
 
-    let phases = [
-        ScanProgressPhase::Setup,
-        ScanProgressPhase::Parse,
-        ScanProgressPhase::Analyze,
-        ScanProgressPhase::Finalize,
-    ];
-    assert_eq!(
-        phases.map(phase_to_string),
-        ["setup", "parse", "analyze", "finalize"].map(str::to_string),
-    );
+    // These two were the arrays the note below warns about, comparing this file's
+    // copy of the vocabulary against itself. Both enums have adopted the contract,
+    // so the expectation now comes from the core and the literal spellings are
+    // pinned once, in the crate that owns them.
+    for variant in <ScanProgressPhase as Vocabulary>::VARIANTS.iter().copied() {
+        assert_eq!(
+            phase_to_string(variant),
+            variant.as_str(),
+            "the run surface must publish the core's own token",
+        );
+    }
 
-    assert_eq!(
-        [InstalledYamlDataRole::Main, InstalledYamlDataRole::Game]
-            .map(installed_yaml_data_role_to_string),
-        ["main", "game"],
-    );
+    for variant in <InstalledYamlDataRole as Vocabulary>::VARIANTS
+        .iter()
+        .copied()
+    {
+        assert_eq!(
+            installed_yaml_data_role_to_string(variant),
+            variant.as_str(),
+            "the run surface must publish the core's own token",
+        );
+    }
     // Derived from the core, not restated. A hand-written array here would pass
     // just as happily against a surface that had already drifted, because it
     // would only be comparing this file's copy of the vocabulary against

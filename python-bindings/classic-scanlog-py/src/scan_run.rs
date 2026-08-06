@@ -1246,20 +1246,26 @@ fn log_result_to_py(value: contract::LogResult) -> PyScanRunLogResult {
 
 /// Returns the stable Python token for one run-wide lifecycle status.
 ///
-/// Delegates for the same reason as [`disposition_to_string`]. The run status
-/// does not implement the Vocabulary naming contract — no frontend renders a
-/// Display Label for it — but the core has always owned an inherent token
-/// method, and this surface was writing the same six strings out beside it.
+/// Delegates for the same reason as [`disposition_to_string`]: the core owns the
+/// six strings this surface was writing out beside it. The run status now
+/// implements the Vocabulary naming contract too, so this resolves the trait
+/// method rather than the inherent one it used to — the same six bytes either
+/// way, which is what made the adoption a prefactor.
 fn run_status_to_string(value: CrashLogScanRunStatus) -> &'static str {
     value.as_str()
 }
 
 /// Returns the stable Python token for one selected Installed YAML Data role.
-const fn installed_yaml_data_role_to_string(value: InstalledYamlDataRole) -> &'static str {
-    match value {
-        InstalledYamlDataRole::Main => "main",
-        InstalledYamlDataRole::Game => "game",
-    }
+///
+/// Delegates rather than restating. This surface and `classic-config-py` each
+/// wrote out the same two strings, which meant one Python surface could drift
+/// from the other while both stayed internally exhaustive — the same hazard the
+/// provenance delegation below closed.
+///
+/// Note that the role's `Display` renders its *Display Label*, which capitalizes
+/// `Main`. This is the token, so it does not.
+fn installed_yaml_data_role_to_string(value: InstalledYamlDataRole) -> &'static str {
+    value.as_str()
 }
 
 /// Returns the stable Python token for one selected candidate provenance.
@@ -1553,14 +1559,15 @@ fn infrastructure_error_to_py(
     }
 }
 
+/// Returns the stable Python token for one coarse-grained scan progress phase.
+///
+/// Delegates rather than restating: the phase adopted the Vocabulary naming
+/// contract with the four strings this table already published, so the copy that
+/// stood here — byte-identical to the Node surface's own copy, and to the core's
+/// — was one of two that could have drifted apart without either failing to
+/// compile.
 fn phase_to_string(value: ScanProgressPhase) -> String {
-    match value {
-        ScanProgressPhase::Setup => "setup",
-        ScanProgressPhase::Parse => "parse",
-        ScanProgressPhase::Analyze => "analyze",
-        ScanProgressPhase::Finalize => "finalize",
-    }
-    .to_string()
+    value.as_str().to_string()
 }
 
 fn log_event_to_py(value: contract::LogEvent) -> PyScanRunLogEvent {

@@ -1,7 +1,7 @@
 use super::{
     CANCEL_RECOVERY_CHOICE, LocalIgnoreRecoveryPrompt, PROCEED_WITHOUT_IGNORE_CHOICE,
     RESET_TO_DEFAULT_CHOICE, ScanRunIntent, build_request, describe_local_ignore_recovery,
-    format_error, format_event, format_result, format_resume_error,
+    format_error, format_event, format_result, format_resume_error, sentence_case,
 };
 use classic_config_core::YamlDataContentIdentity;
 use classic_scanlog_core::scan_run::contract::{
@@ -192,6 +192,52 @@ fn event_formatter_covers_the_complete_final_contract_stream() {
         let presentation = format_event(&event);
         assert_eq!(presentation.percent, expected_percent);
         assert_eq!(presentation.status, expected_status);
+    }
+}
+
+/// Verifies every scan progress phase reaches the user as its core Display Label.
+///
+/// The same shape as `every_infrastructure_stage_renders_its_display_label` below, and it exists
+/// for the same reason the case above is not enough: that case pins `Analyze` alone, so the four
+/// participles this frontend used to keep in a table of its own could have been replaced by three
+/// wrong words and one right one without the suite noticing.
+///
+/// Exhaustive over `VARIANTS` and derived from the core rather than from a literal table, so a
+/// pass means agreement with the owning crate instead of a matching restatement of it. The
+/// negative half asserts the Vocabulary Token is absent: a progress line reading
+/// `analyze crash-01.log` would be an identifier standing in for prose.
+#[test]
+fn every_scan_progress_phase_renders_its_display_label() {
+    for phase in <ScanProgressPhase as Vocabulary>::VARIANTS.iter().copied() {
+        let presentation = format_event(&Event::LogPhase {
+            log: LogEvent {
+                discovery_index: 0,
+                crash_log: PathBuf::from("C:/Crash Logs/crash-01.log"),
+                completed: 0,
+                total: 2,
+            },
+            phase,
+        });
+
+        // Sentence-initial in the status line, which is this frontend's capitalization rule
+        // rather than part of the phase's name - the same derivation a disposition gets.
+        //
+        // Calling `sentence_case` rather than reimplementing it keeps the capitalization rule
+        // single-sourced for the same reason the words themselves are: a second copy here could
+        // agree with the first today and disagree after either is edited. The words are still
+        // derived from the core, so the only thing this shares with the code under test is the
+        // rule that is genuinely this frontend's to own.
+        let expected = sentence_case(phase.label());
+        assert!(
+            presentation.status.contains(&expected),
+            "the status line for {phase:?} should name the Display Label: {}",
+            presentation.status
+        );
+        assert!(
+            !presentation.status.contains(Vocabulary::as_str(phase)),
+            "the status line for {phase:?} still carries its Vocabulary Token: {}",
+            presentation.status
+        );
     }
 }
 

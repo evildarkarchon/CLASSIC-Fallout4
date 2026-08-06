@@ -404,18 +404,56 @@ pub enum LocalIgnoreRecoveryDecision {
     ResetToDefault,
 }
 
-impl LocalIgnoreRecoveryDecision {
-    /// Returns the stable adapter-facing decision identifier.
-    #[must_use]
-    pub const fn as_str(self) -> &'static str {
+impl Vocabulary for LocalIgnoreRecoveryDecision {
+    const VARIANTS: &'static [Self] = &[Self::ProceedWithoutIgnore, Self::ResetToDefault];
+
+    /// These tokens are frozen and are the exact strings the inherent `as_str`
+    /// this trait method replaced already published.
+    ///
+    /// This is deliberately *not* a delegating twin of `LocalIgnoreYamlDataState`,
+    /// which spells two of its own tokens identically. The two enums answer
+    /// different questions — one is a caller's choice, the other is a stored
+    /// file's condition — and a shared spelling is not a shared concept.
+    fn as_str(self) -> &'static str {
         match self {
             Self::ProceedWithoutIgnore => "proceed_without_ignore",
             Self::ResetToDefault => "reset_to_default",
         }
     }
+
+    /// Title Case here rather than the sentence case most labels in this contract
+    /// use, because these two name the decisions themselves, as the glossary does
+    /// where it defines a Local Ignore Reset Result in terms of *accepting Reset
+    /// To Default*.
+    ///
+    /// All three interactive frontends already say roughly this and none of them
+    /// agree: the TUI writes `Proceed Without Ignore` and `Reset To Default`, the
+    /// native CLI writes `Proceed without Ignore` and `Reset to default`, and the
+    /// Qt GUI writes `Continue Without Ignore` and `Back Up && Reset to Default`
+    /// — which does not use the word *Proceed* at all. Following the glossary
+    /// rather than any one frontend is what makes this a decision instead of a
+    /// vote.
+    fn label(self) -> &'static str {
+        match self {
+            Self::ProceedWithoutIgnore => "Proceed Without Ignore",
+            Self::ResetToDefault => "Reset To Default",
+        }
+    }
 }
 
 /// Stable categories returned when continuation resume cannot complete normally.
+///
+/// Deliberately outside the Vocabulary naming contract, and the only enum in this
+/// contract that is. Every neighbour here carries both a Vocabulary Token and a
+/// Display Label; this one carries a token alone because a resume error kind is a
+/// stable error *code* rather than a name for something a person reads. Giving it
+/// a label would invite a frontend to render `scan_run_continuation_consumed`
+/// where a sentence belongs. What a person should read when a resume fails is
+/// Display Content composed from the whole error - its kind, its stage, and its
+/// path - not a name for the kind on its own.
+///
+/// Keeping the inherent `as_str` rather than adopting the trait method is part of
+/// the same decision: there is no `label` to pair it with.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ResumeErrorKind {
     /// The opaque continuation was already claimed by an earlier resume attempt.

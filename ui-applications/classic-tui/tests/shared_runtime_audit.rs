@@ -115,7 +115,14 @@ fn read_source(relative_path: &str) -> String {
 /// inventory did not count. `InfrastructureErrorStage` never had a table at all — it rendered the
 /// Vocabulary *Token* through `Display`, which is an identifier in a sentence rather than a second
 /// vocabulary — and now renders its Display Label like the other six.
-const AUDITED_ENUMS: [&str; 7] = [
+///
+/// The last two arrived with the scan-run vocabulary adoption. `ScanProgressPhase` did carry a
+/// table — the four participles the progress line shows — which now resolves through `label()`
+/// with the same words. `InstalledYamlDataRole` is named nowhere in `src/`, so it is here purely
+/// so that the first frontend code to render a role cannot start by writing a table.
+///
+/// The two adopters that are *not* here are named in [`DEFERRED_ENUMS`] with their reasons.
+const AUDITED_ENUMS: [&str; 9] = [
     "InstalledYamlDataProvenance",
     "LocalIgnoreRunState",
     "InstalledYamlDataRunDiagnosticKind",
@@ -123,7 +130,77 @@ const AUDITED_ENUMS: [&str; 7] = [
     "LogDisposition",
     "LogFailureStage",
     "InfrastructureErrorStage",
+    "ScanProgressPhase",
+    "InstalledYamlDataRole",
 ];
+
+/// The Vocabulary adopters this frontend cannot be audited for yet, and why.
+///
+/// Both are covered by the same naming contract as the nine above and both now
+/// carry a Display Label, so leaving them out is a statement about this *audit*
+/// rather than about the enums. Neither can be added without a false failure
+/// today:
+///
+/// - `CrashLogScanRunStatus` is rendered at two sites in `scan_run.rs`, and
+///   neither can move yet. `format_result` composes it into count-bearing
+///   sentences — `Scanned 5 logs (2 errors, 1 cancelled)` — which are Display
+///   Content that no label can express on its own; they move to the presentation
+///   crate, not to a `label()` call. The detail block below it prints
+///   `Run status: <token>`, which *is* the identifier-in-prose shape this audit
+///   exists to catch, and it now has a Display Label to switch to. It is held
+///   back only because switching it is a visible wording change, and this
+///   adoption ships none. Both are the same one line of work for whoever lands
+///   the presentation crate.
+/// - `LocalIgnoreRecoveryDecision` has no table in this frontend at all. Every
+///   match on it selects control flow. It trips only [`arm_body_end`]'s
+///   over-read, where a final arm with no successor runs to the end of the
+///   enclosing item and swallows an unrelated literal — the deliberate
+///   false-positive bias documented on that function.
+///
+/// Listed rather than merely absent so the omission is data the meta-test below
+/// can check, instead of a comment that rots. A contributor moving either name
+/// into `AUDITED_ENUMS` deletes it from here, and the meta-test is what tells
+/// them both lists have to change together.
+const DEFERRED_ENUMS: [&str; 2] = ["CrashLogScanRunStatus", "LocalIgnoreRecoveryDecision"];
+
+/// The four enums that adopted the Vocabulary naming contract alongside this audit.
+///
+/// Fixed at the four this frontend was asked to account for, so that "audited or
+/// deferred" stays a claim about a known set rather than a tautology over
+/// whatever the two lists happen to contain.
+const NEWLY_ADOPTED_ENUMS: [&str; 4] = [
+    "CrashLogScanRunStatus",
+    "ScanProgressPhase",
+    "LocalIgnoreRecoveryDecision",
+    "InstalledYamlDataRole",
+];
+
+#[test]
+fn every_newly_adopted_enum_is_either_audited_or_explicitly_deferred() {
+    // The stale-list guard for the enum lists, playing the role the recursive
+    // directory listing plays for the source lists. Without it, an adopter could
+    // be dropped from `AUDITED_ENUMS` and read as never having been in scope.
+    for name in NEWLY_ADOPTED_ENUMS {
+        assert!(
+            AUDITED_ENUMS.contains(&name) || DEFERRED_ENUMS.contains(&name),
+            "{name} adopted the Vocabulary naming contract but is neither audited \
+             nor listed in DEFERRED_ENUMS with a reason"
+        );
+    }
+
+    // Both at once would be a contributor who moved a name across and forgot to
+    // delete it, leaving a deferral note for something already enforced.
+    for name in DEFERRED_ENUMS {
+        assert!(
+            !AUDITED_ENUMS.contains(&name),
+            "{name} is audited now; delete it from DEFERRED_ENUMS and its reason"
+        );
+        assert!(
+            NEWLY_ADOPTED_ENUMS.contains(&name),
+            "{name} is deferred but is not one of the adopters this audit tracks"
+        );
+    }
+}
 
 #[test]
 fn the_tui_never_constructs_its_own_async_runtime() {

@@ -18,7 +18,7 @@ use crate::shared::{JsGameId, js_to_core_game_id};
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanFacts,
-    CrashLogScanRunStatus, CrashLogScanSetupContext, CrashLogScanSetupResult, ScanProgressPhase,
+    CrashLogScanSetupContext, CrashLogScanSetupResult, ScanProgressPhase,
     StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
 };
 use classic_vocabulary::{Vocabulary, display_label, from_token};
@@ -1315,15 +1315,12 @@ fn log_result_to_js(value: contract::LogResult) -> JsScanRunLogResult {
 /// Maps the complete terminal result including Rust-selected concurrency.
 fn run_result_to_js(value: contract::RunResult) -> JsScanRunResult {
     JsScanRunResult {
-        status: match value.status {
-            CrashLogScanRunStatus::Completed => "completed",
-            CrashLogScanRunStatus::NoCrashLogsFound => "no_crash_logs_found",
-            CrashLogScanRunStatus::SetupFailed => "setup_failed",
-            CrashLogScanRunStatus::LocalIgnoreRecoveryRequired => "local_ignore_recovery_required",
-            CrashLogScanRunStatus::CancelledBeforeDiscovery => "cancelled_before_discovery",
-            CrashLogScanRunStatus::Cancelled => "cancelled",
-        }
-        .to_string(),
+        // Delegated rather than restated, like the per-log disposition and failure
+        // stage below. The core token is published unchanged rather than through
+        // `js_token`, because this surface's scan-run tokens are snake_case: the
+        // `ts_type` on `JsScanRunResult::status` and `index.d.ts` both spell them
+        // out, and camelizing one here would rename a value consumers match on.
+        status: value.status.as_str().to_string(),
         discovery: value.discovery.map(discovery_to_js),
         setup: value.setup.map(setup_to_js),
         installed_yaml_data: value.installed_yaml_data.map(installed_yaml_data_run_to_js),
@@ -1359,14 +1356,15 @@ fn infrastructure_error_to_js(
     }
 }
 
+/// Returns the published token for one coarse-grained scan progress phase.
+///
+/// Delegates rather than restating: the phase adopted the Vocabulary naming
+/// contract with the four strings this table already published, and the copy that
+/// stood here was byte-identical to the Python surface's own copy and to the
+/// core's — three exhaustive matches, none of which would have failed to compile
+/// if one had drifted.
 fn phase_to_string(value: ScanProgressPhase) -> String {
-    match value {
-        ScanProgressPhase::Setup => "setup",
-        ScanProgressPhase::Parse => "parse",
-        ScanProgressPhase::Analyze => "analyze",
-        ScanProgressPhase::Finalize => "finalize",
-    }
-    .to_string()
+    value.as_str().to_string()
 }
 
 fn log_event_to_js(value: contract::LogEvent) -> JsScanRunLogEvent {

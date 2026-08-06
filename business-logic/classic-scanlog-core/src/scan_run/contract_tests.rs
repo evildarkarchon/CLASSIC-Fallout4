@@ -3165,3 +3165,67 @@ fn the_two_halves_of_each_near_identity_mapping_are_inverses() {
         );
     }
 }
+
+#[test]
+/// The Local Ignore recovery decision satisfies the contract in its own right.
+fn local_ignore_recovery_decision_satisfies_the_vocabulary_contract() {
+    // Deliberately the plain assertion rather than the twin one, even though
+    // `LocalIgnoreYamlDataState` spells two of its tokens identically. A shared
+    // spelling is not a shared concept: this enum is a caller's choice, that one
+    // is a stored file's condition, and their labels are free to diverge - as
+    // they do, `Reset To Default` against `reset to default`.
+    assert_vocabulary_conformance::<contract::LocalIgnoreRecoveryDecision>();
+}
+
+#[test]
+fn every_local_ignore_recovery_decision_variant_is_listed_for_iteration() {
+    // The same backstop the enums above carry. The glossary calls a third
+    // variant out as deliberately absent, so this count is also what a
+    // contributor tempted to add an abandonment decision lands on first.
+    assert_eq!(contract::LocalIgnoreRecoveryDecision::VARIANTS.len(), 2);
+}
+
+#[test]
+fn every_local_ignore_recovery_decision_label_stays_distinct_from_its_token() {
+    // The per-variant shape of `every_infrastructure_stage_renders_its_display
+    // _label`, exhaustive over `VARIANTS` rather than over a literal table.
+    //
+    // Both forms differ for both variants here, so unlike the config enums there
+    // is no legitimate equality to pin - a label equal to its token would mean a
+    // frontend offering `reset_to_default` as a menu entry, which is the exact
+    // leak this contract exists to prevent. The underscore check is the second
+    // half of the same claim: a Display Label never carries token punctuation.
+    for decision in contract::LocalIgnoreRecoveryDecision::VARIANTS
+        .iter()
+        .copied()
+    {
+        let token = Vocabulary::as_str(decision);
+        let label = decision.label();
+        assert_ne!(
+            label, token,
+            "the Display Label for {decision:?} is still its Vocabulary Token"
+        );
+        assert!(
+            !label.contains('_'),
+            "Display Label `{label}` looks like a Vocabulary Token"
+        );
+    }
+}
+
+#[test]
+fn the_recovery_decision_labels_are_the_glossary_spelling() {
+    // The wording decision this contract is the arbiter of, pinned exactly
+    // because it is a settled decision rather than free prose. Three frontends
+    // spell these three different ways today - `Proceed without Ignore` in the
+    // native CLI, `Continue Without Ignore` in the Qt GUI, `Proceed Without
+    // Ignore` in the TUI - and the glossary's own `accepting Reset To Default`
+    // is what breaks the tie.
+    assert_eq!(
+        contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore.label(),
+        "Proceed Without Ignore"
+    );
+    assert_eq!(
+        contract::LocalIgnoreRecoveryDecision::ResetToDefault.label(),
+        "Reset To Default"
+    );
+}

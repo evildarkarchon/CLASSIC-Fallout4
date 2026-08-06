@@ -5,10 +5,11 @@ use classic_scanlog_core::scan_run::contract::{
     LogFailureStage, LogResult, RunResult,
 };
 use classic_scanlog_core::{CrashLogScanRejectedInput, CrashLogScanRunStatus};
-// Imported here rather than in `scan_run.rs`: the module itself only projects
-// labels through `crate::vocabulary::display_label`, so the trait is in scope
-// only where these tests read `label()` off a core variant to derive their
-// expectation from.
+// Imported here as well as in `scan_run.rs`, which needs it since the run status
+// and progress phase adopted the naming contract and their projections delegate
+// to `as_str()`. These tests need it for the other direction: reading `label()`
+// or `VARIANTS` off a core variant to derive an expectation rather than restate
+// one.
 use classic_vocabulary::Vocabulary;
 
 const SHARED_SCAN_RUN_MANIFEST: &str = include_str!(concat!(
@@ -297,18 +298,16 @@ fn event_mapping_covers_every_variant_and_phase() {
 
 #[test]
 fn terminal_mapping_preserves_every_status_failure_and_optional_path() {
-    // The variant list stays written out - the run status does not implement
-    // the Vocabulary contract, so there is no `VARIANTS` to iterate - but the
-    // expected string is the core's own token rather than a second spelling of
-    // it. That is the half of the check that can actually fail.
-    for status in [
-        CrashLogScanRunStatus::Completed,
-        CrashLogScanRunStatus::NoCrashLogsFound,
-        CrashLogScanRunStatus::SetupFailed,
-        CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
-        CrashLogScanRunStatus::CancelledBeforeDiscovery,
-        CrashLogScanRunStatus::Cancelled,
-    ] {
+    // Both halves now derive from the core. The expected string was already the
+    // core's own token rather than a second spelling of it; the variant list used
+    // to be written out here because the run status had no `VARIANTS` to iterate,
+    // and adopting the Vocabulary contract is what let that hardcoded array go.
+    // A status added later is covered from the day it lands rather than when
+    // someone remembers this file.
+    for status in <CrashLogScanRunStatus as Vocabulary>::VARIANTS
+        .iter()
+        .copied()
+    {
         let mapped = run_result_to_js(RunResult {
             status,
             discovery: None,
