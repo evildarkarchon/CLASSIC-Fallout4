@@ -207,9 +207,11 @@ This phase does not start until all four conditions hold:
 1. The render phase has landed in the TUI, CLI, GUI, and `classic-py-cli`.
 2. Golden tests pass for every locked item in the subset table.
 3. All three parity gates are green against regenerated baselines.
-4. A non-blocking GUI recovery prompt path is demonstrated.
+4. A non-blocking GUI recovery prompt path is demonstrated. **Satisfied** — see `docs/implementation/qt_recovery_prompt_nonblocking_spike.md`.
 
-Condition 4 is the real risk and is why the phase is separated. The CLI blocks on `std::getline` and the TUI owns its render loop, but `ScanWorker` runs its prompt as an injected callable that must not block the Qt event loop. If the shared prompt cannot be driven without blocking, that is a design finding that should stop this phase rather than surface mid-implementation.
+Condition 4 was the real risk and is why the phase is separated. The CLI blocks on `std::getline` and the TUI owns its render loop, but `ScanWorker` runs its prompt as an injected callable that must not block the Qt event loop. If the shared prompt could not be driven without blocking, that would have been a design finding that stopped this phase rather than surfacing mid-implementation.
+
+It can. The GUI thread never stops servicing its event queue while the prompt is open: `Qt::BlockingQueuedConnection` parks the *worker* thread, and `QMessageBox::exec()` runs a *nested* loop on the GUI thread rather than suspending it. The spike pins this at `classic-gui/tests/test_recoverypromptnonblocking.cpp`. It also fixes five constraints the shared prompt must satisfy — the call stays synchronous and value-returning, its payload stays copyable and carries no continuation or `rust::Box`, rendering happens on the worker thread before the hop, the answer stays a plain enum, and the same-thread short-circuit in `makeLocalIgnoreRecoveryPrompt` must survive because `BlockingQueuedConnection` self-deadlocks without it. The prompt shape proposed above satisfies all five; the finding document has the reasoning.
 
 ### Confirmed Reset To Default Availability Gap
 

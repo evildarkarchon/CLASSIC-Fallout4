@@ -240,6 +240,23 @@ add_classic_gui_qt_test(classic-gui-test-scancontroller-recovery
 )
 link_classic_gui_rust_bridge(classic-gui-test-scancontroller-recovery)
 
+# Non-blocking evidence for the paused-recovery prompt. The two cases above each cover one half of
+# the seam -- the real dialog on the GUI thread, and the worker-thread marshalling with a stub -- so
+# neither can show that the GUI thread keeps servicing its own event queue while the real modal is
+# up. This joins them and measures the loop with timers, queued calls, and repaints.
+add_classic_gui_qt_test(classic-gui-test-recovery-prompt-nonblocking
+    test_recoverypromptnonblocking.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/localignorerecoveryprompt.cpp
+    ${CMAKE_SOURCE_DIR}/src/controllers/scancontroller.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/signalhub.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/threadmanager.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanworker.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanrequestbuilder.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanprogressmodel.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanrunpresentation.cpp
+)
+link_classic_gui_rust_bridge(classic-gui-test-recovery-prompt-nonblocking)
+
 add_classic_gui_qt_test(classic-gui-test-scanworker-cancellation
     test_scanworker_cancellation.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanworker.cpp
