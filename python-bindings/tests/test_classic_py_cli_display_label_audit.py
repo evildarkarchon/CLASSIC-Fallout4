@@ -23,7 +23,9 @@ could not express until every frontend had stopped writing sentences:
 1. A token must not be interpolated into prose. This is the exact shape the bug
    took here -- ``f"...failed during {stage_label}: {message}"`` -- and the shape
    a literal scan cannot catch, because the token only appears at run time.
-2. A domain phrase the presentation crate owns must not be written here.
+2. A domain phrase the presentation crate owns must not be written here. The
+   deny-list behind that check is shared with the other three audits, so a
+   phrase is added once rather than four times.
 3. No label accessor is called; every label arrives inside a `label` segment.
 4. No plural noun is re-derived for a count; Rust resolves the noun.
 5. Every source file in the package is audited, so a new module cannot escape.
@@ -89,19 +91,45 @@ TOKEN_BEARING_NAMES = frozenset(
 TOKEN_BEARING_SUFFIXES = ("_disposition", "_kind", "_label", "_stage", "_status", "_token")
 
 # Sentences about a Crash Log Scan Run that `classic-scan-presentation` now owns.
-# Each was written in this file's own package before this migration; they are
-# listed so writing one again fails rather than quietly reintroducing the drift.
 #
-# Deliberately phrases, not whole sentences: a reworded copy is still a copy.
-PRESENTATION_OWNED_PHRASES = (
-    "Crash Log Scan Run failed during",
-    "Crash Log Scan Run was cancelled",
-    "Crash Log Scan setup failed",
-    "Scanlog binding completed",
-    "requires a recovery decision",
-    "reset to default, or proceed without ignore",
-    "succeeded,",
+# Read from a shared file rather than written out here, because all four frontend
+# audits enforce the same list. Four inline copies would reintroduce, in the test
+# layer, the very drift the presentation crate exists to delete: a contributor
+# adding core-owned prose would have to remember four lists, and forgetting one
+# would silently unenforce the phrase in that frontend.
+CORE_OWNED_PHRASES_FILE = (
+    REPO_ROOT / "business-logic" / "classic-scan-presentation" / "core-owned-phrases.txt"
 )
+
+
+def _load_core_owned_phrases() -> tuple[str, ...]:
+    """Return every phrase in the shared deny-list, in file order.
+
+    Blank lines and `#` comments are skipped and each phrase is stripped, so the
+    file stays readable and its line endings do not matter.
+    """
+
+    lines = CORE_OWNED_PHRASES_FILE.read_text(encoding="utf-8").splitlines()
+    return tuple(
+        stripped
+        for stripped in (line.strip() for line in lines)
+        if stripped and not stripped.startswith("#")
+    )
+
+
+# Phrases this frontend enforces that the shared list cannot carry yet.
+#
+# `succeeded,` is owned by `classic-scan-presentation` (`render_outcome_summary`),
+# and this audit forbade it before the shared file existed. It cannot move into
+# that file while the Qt GUI still composes its own transient status-bar summary
+# from the scan worker's `finished` signal, because the shared list is enforced by
+# every frontend at once and the GUI would fail on a migration that has not
+# happened. Dropping it instead would silently weaken this frontend to make the
+# consolidation look tidier, so it stays here, named, until the shared list can
+# take it.
+LOCALLY_ENFORCED_PHRASES = ("succeeded,",)
+
+PRESENTATION_OWNED_PHRASES = _load_core_owned_phrases() + LOCALLY_ENFORCED_PHRASES
 
 # The label entry points `classic_scanlog` publishes. They stay correct for a
 # surface that labels a domain enum *outside* a display line -- this CLI has no
@@ -412,6 +440,41 @@ def test_the_plural_detector_catches_both_shapes_the_helper_took() -> None:
     assert _plural_violations(
         "correct.py", 'rendered = f"{segment.count} {segment.text}"\n'
     ) == []
+
+
+def test_the_shared_deny_list_is_readable_and_not_empty() -> None:
+    """A truncated deny-list would make the phrase detector pass vacuously.
+
+    The phrase test loops over the deny-list, so a short list asserts almost
+    nothing while still reporting green -- the "reads as coverage while providing
+    none" failure the rest of this file is built to avoid. The three native audits
+    carry the same guard against the same shared file.
+
+    A *missing* file is not checked here, because it cannot reach this point:
+    `PRESENTATION_OWNED_PHRASES` is built at import, so an unreadable file fails
+    the whole module at collection, which is louder than any assertion.
+    """
+
+    shared = _load_core_owned_phrases()
+    assert len(shared) >= 10
+    assert "Crash Log Scan Run failed during" in shared
+
+    # Every phrase in the *shared* file must be multi-word. This audit does not
+    # need that -- it extracts literals from the AST -- but the three native
+    # audits search comment-stripped source instead, where a single-word entry
+    # could match an identifier. The shared file has to satisfy its strictest
+    # consumer, and asserting it here means the file is checked wherever it is
+    # read rather than only where the constraint bites.
+    for phrase in shared:
+        assert " " in phrase, (
+            f"{phrase!r} is a single word; a shared deny-list entry must be a phrase, or the "
+            "native audits cannot tell prose from an identifier."
+        )
+
+    # The local supplement is deliberately exempt from that rule: `succeeded,` is
+    # a bare fragment, which is part of why it cannot move to the shared file yet.
+    assert LOCALLY_ENFORCED_PHRASES, "the supplement must not be emptied without moving its phrases"
+    assert all(phrase == phrase.strip() for phrase in PRESENTATION_OWNED_PHRASES)
 
 
 def test_the_phrase_detector_reads_literals_rather_than_comments() -> None:

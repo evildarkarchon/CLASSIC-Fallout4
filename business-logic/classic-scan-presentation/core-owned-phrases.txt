@@ -1,0 +1,106 @@
+# Phrases about a Crash Log Scan Run that no frontend may write.
+#
+# This file is the deny-list behind the sentence-template detector carried by all
+# four frontend audits:
+#
+#   ui-applications/classic-tui/tests/shared_runtime_audit.rs
+#   classic-cli/tests/test_display_label_audit.cpp
+#   classic-gui/tests/test_display_label_audit.cpp
+#   python-bindings/tests/test_classic_py_cli_display_label_audit.py
+#
+# NOT YET A CONSUMER, and named here so the gap is recorded rather than implied:
+# `node-bindings/classic-node/cli/run-scan.ts` also renders these display lines
+# and has no display-label audit of its own. It is a fifth renderer that the four
+# audits do not reach, so a locally written sentence there ships today. Adding
+# that audit is its own change -- it is the first one this repo would need in
+# TypeScript -- but the deficit is real, not a judgement that Node matters less.
+#
+# One file rather than four inline copies. A deny-list duplicated per frontend
+# would reintroduce, in the test layer, exactly the four-copies drift that
+# `classic-scan-presentation` exists to delete: adding a phrase would mean
+# remembering four lists, and forgetting one would silently unenforce it there.
+#
+# FORMAT
+#   One phrase per line. Blank lines and lines whose first non-blank character is
+#   `#` are ignored. Leading and trailing whitespace is stripped, so a phrase can
+#   neither begin nor end with a space. Matching is a plain, case-sensitive
+#   substring test against string literals in frontend source -- not comments,
+#   and not docstrings.
+#
+# WHY PHRASES RATHER THAN WHOLE SENTENCES
+#   A reworded copy is still a copy. Listing the distinctive middle of a sentence
+#   catches `"Crash Log Scan Run failed during {}"` as readily as a verbatim
+#   paste, and catches it in every language's template syntax at once, without
+#   the detector having to understand any of them.
+#
+# WHY THE LIST IS SHORT
+#   The detector is deliberately narrow. A general "no format strings" rule was
+#   considered and rejected as unworkably noisy: it would bury real findings in
+#   false positives and get switched off. Only distinctive, multi-word domain
+#   sentences belong here. Bare fragments do not -- see EXTENDING THIS LIST.
+#
+# EXTENDING THIS LIST
+#   Adding core-owned prose to `classic-scan-presentation` means adding it here
+#   too. Nothing derives this file automatically, because not every entry is a
+#   `DisplaySegment::Text` literal: some are Display Labels resolved through
+#   `classic-vocabulary`, and some are retired frontend-local sentences that must
+#   not come back. A phrase belongs here when all three hold:
+#
+#     1. It states something about a Crash Log Scan Run that a user reads.
+#        Section headers, key hints, and button text are Display Layout and stay
+#        each frontend's to write.
+#     2. It is distinctive enough that a frontend could not write it by accident.
+#        Test the phrase against every frontend's sources before adding it.
+#     3. Removing it from a frontend is work that has already landed. A phrase
+#        that some frontend still legitimately writes fails that frontend's audit
+#        the moment it is added here.
+#
+#   Deliberately absent, and worth recording so it is not "fixed" later:
+#
+#   - `succeeded,` -- a bare fragment, not a sentence. `classic-scan-presentation`
+#     does own it (`render_outcome_summary`), but the Qt GUI still composes its
+#     own transient status-bar summary from the scan worker's `finished` signal
+#     rather than from display lines, so listing it *here* would fail the GUI
+#     audit for a migration that has not happened yet. It is therefore carried as
+#     a named local supplement in the Python CLI's audit, which enforced it before
+#     this file existed and must not quietly lose that. Move it here, and delete
+#     the supplement, when the Qt status bar renders display lines.
+#
+#     This is the one shape a shared list cannot express on its own: a phrase that
+#     is enforceable in some frontends but not yet all of them. A supplement named
+#     in one audit is the honest encoding -- an exemption mechanism in this file
+#     would let anything be excused without anyone reading why.
+#   - `Installed YAML Data` -- a domain name that legitimately appears as a
+#     frontend's own section header, which is Display Layout.
+
+# --- Sentences `classic-scan-presentation` owns as fixed prose ----------------
+# Every entry below is a `DisplaySegment::Text` literal in
+# `business-logic/classic-scan-presentation/src/render.rs`.
+
+Crash Log Scan Run failed during
+Crash Log Scan recovery failed
+Start the Crash Log Scan again to retry.
+Local Ignore could not be backed up before reset
+Local Ignore defaults could not be published
+Local Ignore reset conflicted with the current file on disk
+The malformed Local Ignore file was removed while you decided.
+Your Local Ignore file was not replaced.
+Local Ignore was reset, but the replacement is not confirmed durable
+moved to Unsolved Logs
+Effective concurrency:
+
+# --- Display Labels that read as whole statements -----------------------------
+# These arrive in a `label` segment, resolved through `classic-vocabulary`. They
+# are listed because a frontend restating one is drift of the same kind, even
+# though the words are not owned by the presentation crate itself.
+
+Crash Log Scan Run was cancelled
+Crash Log Scan setup failed
+requires a recovery decision
+reset to default, or proceed without ignore
+
+# --- Retired frontend-local prose ---------------------------------------------
+# Sentences a frontend used to compose for itself, kept here so the migration
+# cannot be undone by someone who never saw the original.
+
+Scanlog binding completed
