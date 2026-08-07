@@ -199,7 +199,7 @@ Details worth recording:
 - **The completed summary lost three lines.** Scanned, errors, and cancelled counts are stated by Rust now. What remains is `Reports`, `Unsolved`, `Duration`, and `Speed` — the two aggregates over per-log outcomes and the two facts derived from a clock the contract does not carry.
 - **Section headers that could no longer be positioned are gone.** `Results (discovery order):` used to caption the per-log block; those lines now arrive inside a flat rendered sequence that carries no structure, so captioning a sub-range would mean guessing an index. The FCX setup projection still leads, and `Scan Complete` still heads the CLI-owned totals.
 - **`describe_cli_local_ignore_recovery` takes the execution envelope** rather than the run result, because the rendered lines travel on the envelope. It presents all of them and no longer restates why the run paused — the same call the TUI made in 6ca55427f, for the same reason. Its retained-discovery sentence is still the CLI's, and is the one remaining caller of the local `plural` helper, exactly as in the TUI.
-- **`read_cli_local_ignore_recovery_choice` is untouched.** Its input loop, attempt limit, EOF handling, `[P/R/C]` letters, and availability filter all wait for the gated recovery phase, as does the `abandon` mapping for `CliLocalIgnoreRecoveryChoice::Cancel`.
+- **`read_cli_local_ignore_recovery_choice` is untouched.** Its input loop, attempt limit, EOF handling, `[P/R/C]` letters, and availability filter all wait for the gated recovery phase. The `abandon` mapping for `CliLocalIgnoreRecoveryChoice::Cancel` landed separately in step 8; the prompt that produces the choice is unchanged.
 
 `classic-cli/tests/test_display_label_audit.cpp` inverted its positive half. The CLI calls none of the seven bridge label accessors any more, because every label it prints arrives inside a `Label` segment; their *absence* is now asserted, and the positive half moved down a level to "the renderer reads every segment kind". The wording assertions in `test_scanner.cpp` became renderer conformance over fabricated lines, and the two end-to-end assertions in `test_scan_run_contract.cpp` that pinned CLI prose were re-anchored on content identities and paths the DTO carries.
 
@@ -221,7 +221,7 @@ Details worth recording:
 - **`formatScanRunRejections` is untouched**, and is the one remaining place the GUI composes a sentence about a run — including its own pluralization of `targeted input(s)`. It survives because the event's rendered lines state the rejection *count* but not the per-rejection path and reason, which this frontend shows at discovery time rather than making the user wait for the terminal block. Migrating it means the presentation crate gaining a per-rejection event line; that is a core change and belongs with the Node/Python phase, not here.
 - **The recovery prompt now receives the whole rendered run**, matching the call the TUI and the CLI made and for the same reason. Its own wording, its buttons, and the descriptions beside them are untouched and land with the gated recovery phase.
 
-Still ahead for this frontend, unchanged by this phase: `scanworker.cpp` routing `ScanRunLocalIgnoreRecoveryChoice::Cancel` to the shared `abandon` operation, and the recovery prompt's own Display Content. `ScanRunInstalledYamlDataPresentation` already gained `localIgnoreResetAvailable` and `promptLocalIgnoreRecoveryChoice` already gained the parameter that withholds the reset button.
+Still ahead for this frontend, unchanged by this phase: the recovery prompt's own Display Content. `ScanRunInstalledYamlDataPresentation` already gained `localIgnoreResetAvailable` and `promptLocalIgnoreRecoveryChoice` already gained the parameter that withholds the reset button. `scanworker.cpp` routing `ScanRunLocalIgnoreRecoveryChoice::Cancel` to the shared `abandon` operation landed in step 8.
 
 ### TUI
 
@@ -317,6 +317,35 @@ Three details of that audit are worth copying if the other three frontends adopt
 
 Comments and docstrings are excluded from the literal scans, for the reason the CXX parity gate's name scan was fixed: a comment describing the drift is not the drift.
 
+## Shared Abandonment Rollout
+
+**Landed.** `CrashLogScanRunContinuation::abandon` reaches all three binding surfaces, and both native frontends route their cancel choice through it. The TUI already did, from the phase that added the core operation.
+
+| Surface | Entry point |
+| --- | --- |
+| CXX | `scan_run_continuation_abandon(continuation, cancellation, observer)` |
+| Node | `scanRunAbandon(continuation, cancellation, observer?, cancelOnObserverError?)` |
+| Python | `scan_run_abandon(continuation, cancellation, observer=None, cancel_on_observer_error=False)` |
+
+Each takes no decision, cancels the supplied control, and returns whatever its `resume` sibling returns for a cancelled run — rendered `display_lines` included. One row moved in each of the three baselines; the segment taxonomy did not move at all.
+
+Details worth recording:
+
+- **The CXX entry point does not throw, and its sibling does.** `scan_run_continuation_resume` returns `Result<Box<_>>` only because it must reject CXX's non-exhaustive `ScanRunLocalIgnoreRecoveryDecision` sentinel before claiming the one-shot continuation. Abandonment takes no decision, so it has no argument that can be unrepresentable, and declaring a `throws` contract that can never fire would force every C++ caller into unreachable error handling. On this bridge `Result` means "an argument may be unrepresentable", not "the operation may fail" — operational failure travels in the typed envelope, which is where a replayed abandonment's `scan_run_continuation_consumed` arrives.
+- **Node and Python model abandonment as the absence of a decision, not a third variant.** Node's task carries `Option<LocalIgnoreRecoveryDecision>` and both entry points go through one `claim_continuation_task` builder; Python's two share one private `claim_continuation`. A parallel task or a second function body would have duplicated the observer adapter, the envelope builders, and the rejection routing — the exact duplication this ticket removes, reintroduced one layer down. `LocalIgnoreRecoveryDecision` still has exactly two variants on all five surfaces.
+- **`ScanRunResumeTask` was renamed `ScanRunClaimTask`.** It resumes *or* abandons now, and the one-shot claim is what the two share. The rename costs no baseline row: both entry points override their TypeScript return type, so the task type reaches no declaration.
+- **Node's narrowed observer type is duplicated on purpose.** `scan_run_abandon`'s `ts_arg_type` union is byte-identical to `scan_run_resume`'s, because under `strictFunctionTypes` a callback typed for that union is not assignable to a wider parameter — a consumer wiring one observer across both entry points needs the two to agree exactly. `napi`'s attribute takes a string literal, so it cannot be hoisted into a shared constant; `bun run test:types` and `bun run build:cli` are what catch a divergence. `scan_run_execute`'s union is a third, genuinely different one: it alone carries `discovery_completed`.
+- **Neither native frontend cancels first any more.** The CLI's `Cancel` arm called `cancellation.request()` and the GUI's called `scan_run_cancellation_cancel`, each followed by a resume with a placeholder. Both are gone: the bridge call cancels the control itself, and it does so *before* attempting the claim, which is the ordering the hand-written copies each had to get right independently. The CLI deliberately does not route through `CliScanRunCancellation::request()` — that wrapper's one-shot guard exists to stop the Ctrl+C monitor and an adapter failure from racing, and Rust's control is monotonic, so a later `request()` is inert rather than a second cancel.
+- **Both frontends keep an exhaustive `switch`, now producing a `std::optional<ScanRunLocalIgnoreRecoveryDecision>`.** The first attempt collapsed the three-way choice into `choice == ResetToDefault ? Reset : Proceed` plus an early return for `Cancel`. Semantics were identical today, but it traded away `-Wswitch`: a fourth choice added later would have resolved silently to Proceed Without Ignore — weakening the guard on the two paths that *can* write to disk, in a change whose whole subject is the one that cannot. The `optional` shape also matches the `Option` the Node and Python bindings use, so absence is how abandonment is spelled on all five surfaces. The unreachable trailing `return std::nullopt;` resolves an unrecognized value to abandonment, which is the only outcome that cannot touch a user's files.
+- **Node's new registry entry is separate rather than folded into the recovery-decision one.** That entry's `testCaseId` names a specific Bun test about the two decisions; abandonment is deliberately not a third decision, and its coverage belongs to a test that says so. Python's registry entry is per-suite rather than per-case, so `scan_run_abandon` joins the existing scanlog contract row.
+- **The prompts themselves are untouched.** `read_cli_local_ignore_recovery_choice`, `promptLocalIgnoreRecoveryChoice`, and the GUI's controller-level `Cancel` fallbacks all still produce the same choice; only what the frontend does with that choice changed. Their own Display Content lands with the gated recovery phase below.
+
+Tests are behavioural, matching the bar the TUI's adoption set. One test per surface asserts what a user would notice: the run reads as cancelled with its retained discovery intact, the supplied control is left cancelled, the run still describes itself in rendered lines, the malformed Local Ignore is byte-identical, no Autoscan Report or backup directory exists, and the shared one-shot claim rejects a later `abandon` *and* a later `resume` with the stable consumed code.
+
+The observer assertion is split off from that set, because the CXX seam cannot make it. `ScanRunObserver` is a C++ virtual class that Rust has no way to implement, so every Rust-side bridge test passes a null observer and none of them can assert what an observer saw. "An abandoned run emits nothing" is therefore pinned from C++ instead, in `classic-cli/tests/test_scan_run_contract.cpp`, which is also the only C++-level exercise of the new entry point — the frontends reach it through their own cancel paths, which pin the outcome but not the seam. Node and Python assert the empty event list in their own suites, where the observer is an ordinary callback.
+
+The existing end-to-end cancel pins in both native frontends — `CLI cancellation at the recovery prompt mutates nothing`, `malformed_local_ignore_recovery_resumes_or_cancels_retained_scan_run`, and `real_scan_worker_abandonment_keeps_the_event_loop_running` — pass unchanged, which is the claim that matters: routing through the shared operation changed no observable behaviour.
+
 ## Local Ignore Recovery Phase
 
 This phase does not start until all four conditions hold:
@@ -358,7 +387,7 @@ Adapter Mapping Rule 6 still supersedes this when the render phase lands: `Recov
 5. **Bridge DTOs and CLI migration.** The CLI is the simplest C++ consumer and shakes the DTO out before GUI threading is involved. **Landed.**
 6. **GUI migration.** **Landed.**
 7. **Node and Python surfaces**, then `classic-py-cli` migration. Last, because the segment taxonomy is only stable now and the baselines regenerate once. **Landed.** The taxonomy held: six kinds, unchanged, across all three baselines.
-8. **`CrashLogScanRunContinuation::abandon`** and the three call-site replacements.
+8. **`CrashLogScanRunContinuation::abandon`** and the three call-site replacements. **Landed.** See [Shared Abandonment Rollout](#shared-abandonment-rollout).
 9. **Recovery prompt**, gated as above.
 
 ## Tests To Add Or Update

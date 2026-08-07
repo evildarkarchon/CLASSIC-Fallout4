@@ -34,6 +34,7 @@ import {
   scanRunLogDispositionLabel,
   scanRunLogFailureStageLabel,
   scanRunResume,
+  scanRunAbandon,
   parseLogSegments,
   extractFormIds,
   extractPluginList,
@@ -764,6 +765,69 @@ describe("final Crash Log Scan Run contract", () => {
         new ScanRunCancellation(),
       ).catch((error: unknown) => error as { displayLines: JsScanRunDisplayLine[] });
       expectWellFormedDisplayLines(replay.displayLines);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("abandoning a paused run returns the cancelled result and touches nothing", async () => {
+    const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.installedYamlData;
+    const root = writeSharedScanRunDataRoot("classic-node-scan-run-ignore-abandon");
+    const crashLog = writeSharedScanRunLog(root, fixture.input);
+    const ignorePath = join(root, "CLASSIC Data", "CLASSIC Ignore.yaml");
+    const request = ScanRunRequest.targeted(scanRunConfiguration(root), { inputs: [crashLog] });
+
+    try {
+      writeFileSync(ignorePath, fixture.malformedLocalIgnore);
+      const initial = requireScanRunSuccess(
+        await scanRunExecute(request, new ScanRunCancellation()),
+      ).result;
+      expect(initial.status).toBe("local_ignore_recovery_required");
+      const continuation = initial.continuation;
+      expect(continuation).toBeDefined();
+
+      // One control spans the paused run and its abandonment, as a real frontend's does.
+      // `scanRunAbandon` is what cancels it; nothing here asks for cancellation first.
+      const cancellation = new ScanRunCancellation();
+      expect(cancellation.isCancelled).toBe(false);
+      const abandonedEvents: JsScanRunEvent[] = [];
+      const abandonedEnvelope = requireScanRunSuccess(
+        await scanRunAbandon(
+          continuation!,
+          cancellation,
+          abandonedEvents.push.bind(abandonedEvents),
+        ),
+      );
+      const abandoned = abandonedEnvelope.result;
+
+      expect(abandoned.status).toBe("cancelled");
+      expect(abandoned.cancelled).toBe(abandoned.total);
+      expect(abandoned.discovery).toEqual(initial.discovery);
+      expect(abandoned.logs.every((log) => log.disposition === "cancelled_before_start")).toBe(true);
+      // `autoscanReport` is optional on this surface, so an unwritten report is absent rather
+      // than null. Nothing was analyzed, so nothing carries one.
+      expect(abandoned.logs.every((log) => log.autoscanReport === undefined)).toBe(true);
+      expect(abandonedEvents).toEqual([]);
+      expect(cancellation.isCancelled).toBe(true);
+      // A cancelled run still describes itself, so a consumer never writes the sentence.
+      expectWellFormedDisplayLines(abandonedEnvelope.displayLines);
+      // Nothing on disk moved: the malformed file the user was asked about is byte-identical
+      // and no backup directory was created, because no recovery stage ever ran.
+      expect(readFileSync(ignorePath, "utf8")).toBe(fixture.malformedLocalIgnore);
+      expect(existsSync(join(root, "CLASSIC Backup"))).toBe(false);
+
+      // The claim is shared with resume, so a spent continuation closes both seams.
+      await expect(scanRunAbandon(continuation!, new ScanRunCancellation())).rejects.toMatchObject({
+        code: "scan_run_continuation_consumed",
+      });
+      await expect(
+        scanRunResume(
+          continuation!,
+          JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+          new ScanRunCancellation(),
+        ),
+      ).rejects.toMatchObject({ code: "scan_run_continuation_consumed" });
+      expect(readFileSync(ignorePath, "utf8")).toBe(fixture.malformedLocalIgnore);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

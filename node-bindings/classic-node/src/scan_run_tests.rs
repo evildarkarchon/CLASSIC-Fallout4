@@ -911,7 +911,7 @@ fn a_discovery_with_rejections_states_them_separately() {
 
 /// Builds one resume failure of every kind, so no variant rejects untested.
 ///
-/// `Infrastructure` is deliberately absent: `ScanRunResumeTask::compute` routes it
+/// `Infrastructure` is deliberately absent: `ScanRunClaimTask::compute` routes it
 /// into the failure envelope rather than into a rejection, and
 /// [`the_failure_envelope_carries_the_failures_display_lines`] covers that path.
 fn every_resume_failure() -> Vec<contract::ResumeError> {

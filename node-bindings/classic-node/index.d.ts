@@ -6002,6 +6002,23 @@ export declare function scanAllBa2Archives(rootPath: string): Array<JsBa2ScanRes
 export declare function scanModInis(gameRoot: string, gameName: string): JsModIniScanResult
 
 /**
+ * Abandons one retained Crash Log Scan Run without applying either recovery decision.
+ *
+ * Requests cancellation on `cancellation` and then claims the continuation, resolving with the
+ * ordinary post-discovery cancelled envelope. No backup is taken, nothing is published, and the
+ * malformed Local Ignore file is left exactly as it was. Prefer this over cancelling and then
+ * calling [`scan_run_resume`] with a placeholder decision: that sequence is what this replaces,
+ * and getting its ordering wrong spends the one-shot continuation on a real recovery attempt.
+ *
+ * `cancellation` is left cancelled afterwards, which is what abandoning the run means. Replay and
+ * concurrent double consumption reject with JavaScript error code
+ * `scan_run_continuation_consumed`, exactly as [`scan_run_resume`] does. The recovery-plan and
+ * infrastructure failures resume can reject with are unreachable here, because cancellation
+ * short-circuits ahead of every stage that produces them.
+ */
+export declare function scanRunAbandon(continuation: ScanRunContinuation, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
+
+/**
  * Executes one final-contract request with optional serialized observation.
  *
  * The observer is non-controlling. If it throws or cannot be delivered, the

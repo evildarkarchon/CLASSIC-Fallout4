@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-06T09:22:48Z",
+  "generated_at_utc": "2026-08-07T00:33:19Z",
   "entries": [
     {
       "id": "0f1ce653765981f0",
@@ -6895,6 +6895,31 @@
       "signature": {
         "args": [],
         "returnType": "Box<ScanRunCancellation>"
+      }
+    },
+    {
+      "id": "3e200e21dc680fbe",
+      "rustSymbol": "scan_run_continuation_abandon",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "continuation",
+            "type": "&ScanRunContinuation"
+          },
+          {
+            "name": "cancellation",
+            "type": "&ScanRunCancellation"
+          },
+          {
+            "name": "observer",
+            "type": "*const ScanRunObserver"
+          }
+        ],
+        "returnType": "Box<ScanRunContractExecution>"
       }
     },
     {

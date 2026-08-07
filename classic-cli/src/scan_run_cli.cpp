@@ -12,6 +12,7 @@
 #include <chrono>
 #include <fmt/format.h>
 #include <istream>
+#include <optional>
 #include <ostream>
 #include <stdexcept>
 #include <string_view>
@@ -613,21 +614,35 @@ CliScanRunExecutionOutcome execute_cli_scan_run(const scanner::ScanRunRequest& r
     auto continuation = scanner::scan_run_contract_execution_take_continuation(*operation);
     const auto choice = prompt(describe_cli_local_ignore_recovery(outcome.execution));
 
-    auto decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
-    switch (choice) {
-    case CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore:
-        break;
-    case CliLocalIgnoreRecoveryChoice::ResetToDefault:
-        decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault;
-        break;
-    case CliLocalIgnoreRecoveryChoice::Cancel:
-        // Rust observes cancellation before any recovery mutation, so the non-destructive
-        // placeholder decision below can never back up, replace, or analyze anything.
-        cancellation.request();
-        break;
-    }
+    // Cancel maps to *no decision*, which is exactly what the shared abandon operation takes. The
+    // switch stays exhaustive so a choice added later trips `-Wswitch` here rather than silently
+    // resolving to Proceed Without Ignore. The same `optional`-shaped mapping is what the Node and
+    // Python bindings use, for the same reason: `LocalIgnoreRecoveryDecision` deliberately has no
+    // abandonment variant, so absence is how abandonment is spelled everywhere.
+    const auto decision = [&]() -> std::optional<scanner::ScanRunLocalIgnoreRecoveryDecision> {
+        switch (choice) {
+        case CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore:
+            return scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
+        case CliLocalIgnoreRecoveryChoice::ResetToDefault:
+            return scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault;
+        case CliLocalIgnoreRecoveryChoice::Cancel:
+            return std::nullopt;
+        }
+        // Unreachable for a valid enumerator. Abandonment is the safe resolution for a value this
+        // build does not recognize: it is the one outcome that cannot touch the user's files.
+        return std::nullopt;
+    }();
 
-    auto resumed = scanner::scan_run_continuation_resume(*continuation, decision, cancellation.token(), observer);
+    // `scan_run_continuation_abandon` performs the cancel-then-resume-with-a-placeholder sequence
+    // that used to live here, so the CLI cannot reorder it, cannot pick a different placeholder,
+    // and cannot drift from what the Qt GUI and the TUI do. It cancels the shared control itself,
+    // which is why nothing here asks for cancellation first — and deliberately not through
+    // `cancellation.request()`, whose one-shot guard exists to stop the Ctrl+C monitor and an
+    // adapter failure from racing. Rust's control is monotonic, so a later `request()` is inert
+    // rather than a second cancel.
+    auto resumed = decision ? scanner::scan_run_continuation_resume(*continuation, *decision,
+                                                                    cancellation.token(), observer)
+                            : scanner::scan_run_continuation_abandon(*continuation, cancellation.token(), observer);
     outcome.execution = scanner::scan_run_contract_execution_take_result(*resumed);
     outcome.local_ignore_continuation_consumed = true;
 

@@ -1040,6 +1040,68 @@ TEST_CASE("CLI cancellation at the recovery prompt mutates nothing", "[cli][scan
     REQUIRE(present_cli_scan_run_execution(outcome.execution, 1.0).exit_code == 130);
 }
 
+TEST_CASE("CXX abandonment claims the continuation without deciding or observing",
+          "[bridge][scan-run][local-ignore]") {
+    // The C++ half of the shared abandonment operation. The Rust-side bridge test cannot cover the
+    // observer at all — `ScanRunObserver` is a C++ virtual class Rust has no way to implement — so
+    // "an abandoned run emits nothing" is only assertable from here.
+    TemporaryDirectory temporary;
+    copy_shared_yaml_tree(temporary.path());
+    const auto log = copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT);
+    const auto ignore_path = temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
+    malform_local_ignore(temporary.path());
+
+    scanner::ScanRunTargetedSourceDto source{};
+    source.inputs.push_back(log.string());
+    const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
+    auto initial_operation =
+        scanner::scan_run_contract_execute(*request, *scanner::scan_run_cancellation_new(), nullptr);
+    const auto initial = scanner::scan_run_contract_execution_take_result(*initial_operation);
+    REQUIRE(initial.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
+    auto continuation = scanner::scan_run_contract_execution_take_continuation(*initial_operation);
+
+    // One control spans the paused run and its abandonment, as both native frontends' does.
+    // `scan_run_continuation_abandon` is what cancels it; nothing here cancels first.
+    auto cancellation = scanner::scan_run_cancellation_new();
+    REQUIRE_FALSE(scanner::scan_run_cancellation_is_cancelled(*cancellation));
+    const RecordingObserver observer;
+    auto abandon_operation = scanner::scan_run_continuation_abandon(*continuation, *cancellation, &observer);
+    const auto abandoned = scanner::scan_run_contract_execution_take_result(*abandon_operation);
+
+    REQUIRE(abandoned.has_result);
+    REQUIRE(abandoned.result.status == scanner::ScanRunContractStatus::Cancelled);
+    REQUIRE(abandoned.result.has_discovery);
+    REQUIRE(abandoned.result.logs.size() == 1);
+    REQUIRE(abandoned.result.logs[0].disposition ==
+            scanner::ScanRunContractLogDisposition::CancelledBeforeStart);
+    REQUIRE_FALSE(abandoned.result.logs[0].has_autoscan_report);
+    // Cancellation short-circuits ahead of every stage that emits, so no event can reach C++.
+    REQUIRE(observer.count() == 0);
+    REQUIRE(scanner::scan_run_cancellation_is_cancelled(*cancellation));
+    // A cancelled run still describes itself; the frontends render these rather than composing a
+    // cancellation sentence of their own.
+    REQUIRE_FALSE(abandoned.display_lines.empty());
+    // Neither the backup nor the replacement half of the reset was reached.
+    REQUIRE(read_file_bytes(ignore_path) == fixture::MALFORMED_LOCAL_IGNORE);
+    REQUIRE_FALSE(fs::exists(temporary.path() / "CLASSIC Backup"));
+
+    // The one-shot claim is shared with resume, so a spent continuation closes both seams. Reset To
+    // Default is the decision that could have written to disk had the claim survived.
+    auto replay_operation =
+        scanner::scan_run_continuation_abandon(*continuation, *scanner::scan_run_cancellation_new(), nullptr);
+    const auto replay = scanner::scan_run_contract_execution_take_result(*replay_operation);
+    REQUIRE(replay.has_resume_error);
+    REQUIRE(std::string(replay.resume_error.code) == fixture::RESET_CONSUMED_CODE);
+    auto replay_resume_operation = scanner::scan_run_continuation_resume(
+        *continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+        *scanner::scan_run_cancellation_new(), nullptr);
+    const auto replay_resume = scanner::scan_run_contract_execution_take_result(*replay_resume_operation);
+    REQUIRE(replay_resume.has_resume_error);
+    REQUIRE(std::string(replay_resume.resume_error.code) == fixture::RESET_CONSUMED_CODE);
+    REQUIRE(read_file_bytes(ignore_path) == fixture::MALFORMED_LOCAL_IGNORE);
+    REQUIRE_FALSE(fs::exists(temporary.path() / "CLASSIC Backup"));
+}
+
 TEST_CASE("CLI surfaces a typed reset conflict raised while the user decided", "[cli][scan-run][local-ignore]") {
     TemporaryDirectory temporary;
     copy_shared_yaml_tree(temporary.path());

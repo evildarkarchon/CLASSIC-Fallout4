@@ -257,6 +257,47 @@ pub(crate) unsafe fn scan_run_continuation_resume(
     Ok(Box::new(execution_from_resume_result(result)))
 }
 
+/// Abandons retained recovery work without applying either Local Ignore decision.
+///
+/// Requests cancellation on `cancellation` and then claims the continuation, yielding the
+/// ordinary post-discovery cancelled result and touching nothing on disk. This is the single
+/// shared implementation of the cancel-then-resume-with-a-placeholder sequence the native CLI
+/// and the Qt GUI each used to write for themselves, so neither frontend picks the placeholder
+/// decision any more and neither can drift from what the TUI does.
+///
+/// Unlike [`scan_run_continuation_resume`] this returns the envelope directly rather than a
+/// `Result`. Resume is fallible only because it must reject CXX's non-exhaustive
+/// `ScanRunLocalIgnoreRecoveryDecision` sentinel before claiming the one-shot continuation;
+/// abandonment takes no decision, so it has nothing to reject. Declaring a `throws` contract
+/// that can never fire would force every C++ caller into unreachable error handling. Replay is
+/// projected into the same typed resume-error envelope resume uses.
+///
+/// # Safety
+///
+/// A non-null `observer` must point to a live `ScanRunObserver` for this synchronous call.
+pub(crate) unsafe fn scan_run_continuation_abandon(
+    continuation: &ScanRunContinuation,
+    cancellation: &ScanRunCancellation,
+    observer: *const ffi::ScanRunObserver,
+) -> Box<ScanRunContractExecution> {
+    // SAFETY: the caller contract requires a non-null pointer to stay live for
+    // this synchronous invocation; null explicitly means observation is disabled.
+    let observer = unsafe { observer.as_ref() };
+    let result = match observer {
+        Some(observer) => {
+            let mut adapter = CxxObserverAdapter { observer };
+            block_on(
+                continuation
+                    .inner
+                    .abandon(&cancellation.inner, Some(&mut adapter)),
+            )
+        }
+        None => block_on(continuation.inner.abandon(&cancellation.inner, None)),
+    };
+
+    Box::new(execution_from_resume_result(result))
+}
+
 fn execution_from_initial_result(
     result: Result<contract::RunResult, contract::InfrastructureError>,
 ) -> ScanRunContractExecution {

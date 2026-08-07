@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 641,
-    "current_total": 641,
-    "matched": 641,
+    "contract_total": 642,
+    "current_total": 642,
+    "matched": 642,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -3003,6 +3003,14 @@
     {
       "id": "47ab0d08f55f9a74",
       "rustSymbol": "scan_run_cancellation_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3e200e21dc680fbe",
+      "rustSymbol": "scan_run_continuation_abandon",
       "kind": "function",
       "bridgeModule": "scanner",
       "status": "matched",

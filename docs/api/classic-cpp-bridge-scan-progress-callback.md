@@ -20,6 +20,13 @@ non-cloneable `ScanRunContinuation`. Call
 `ResetToDefault`, then take that
 operation's result envelope. Resume emits post-discovery events only.
 
+`scan_run_continuation_abandon(...)` claims the same continuation without a
+decision, for a user who backs out. It takes an observer for signature symmetry
+with resume — so one adapter can be wired to both — but emits **nothing**:
+cancellation short-circuits ahead of every stage that produces an event, which
+is also why nothing on disk is touched. A frontend must therefore not treat
+"observed no event" as a delivery failure on this path.
+
 There is no CXX batch-scan callback, orchestration object, prepared-run entry
 point, resettable scan token, or direct report-writing operation. Native
 frontends construct a tagged request and consume the same Rust-owned lifecycle

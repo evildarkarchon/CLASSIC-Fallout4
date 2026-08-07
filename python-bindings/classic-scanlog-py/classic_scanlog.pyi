@@ -853,6 +853,26 @@ def scan_run_resume(
 ) -> ScanRunExecution:
     """Resume retained work without repeating discovery or YAML Data selection."""
 
+def scan_run_abandon(
+    continuation: ScanRunContinuation,
+    cancellation: ScanRunCancellation,
+    observer: Callable[[ScanRunEvent], None] | None = None,
+    cancel_on_observer_error: bool = False,
+) -> ScanRunExecution:
+    """Abandon retained work without applying either recovery decision.
+
+    Requests cancellation on ``cancellation`` and then claims the continuation,
+    returning the ordinary post-discovery cancelled execution. Nothing on disk
+    is touched. Prefer this over cancelling and then calling
+    :func:`scan_run_resume` with a placeholder decision; that sequence is what
+    this replaces, and getting its ordering wrong spends the one-shot
+    continuation on a real recovery attempt.
+
+    ``cancellation`` is left cancelled afterwards. Replay raises
+    :class:`ScanRunContinuationConsumedError`, exactly as
+    :func:`scan_run_resume` does.
+    """
+
 def scan_run_installed_yaml_data_diagnostic_kind_label(token: str) -> str:
     """Return the human-facing Display Label for one diagnostic-kind token.
 

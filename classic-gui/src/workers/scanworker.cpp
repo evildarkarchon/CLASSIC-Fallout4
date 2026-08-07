@@ -13,6 +13,7 @@
 #include <QSet>
 
 #include <exception>
+#include <optional>
 #include <utility>
 
 namespace {
@@ -174,21 +175,34 @@ void ScanWorker::doScan(const QString& installationRoot, const classic::gui::Cra
             auto continuation = scanner::scan_run_contract_execution_take_continuation(*operation);
             const auto choice = m_localIgnoreRecoveryPrompt(
                 terminal.richText, classic::gui::offersLocalIgnoreResetToDefault(terminal));
-            auto decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
-            switch (choice) {
-            case classic::gui::ScanRunLocalIgnoreRecoveryChoice::ProceedWithoutIgnore:
-                break;
-            case classic::gui::ScanRunLocalIgnoreRecoveryChoice::ResetToDefault:
-                decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault;
-                break;
-            case classic::gui::ScanRunLocalIgnoreRecoveryChoice::Cancel:
-                // Rust observes cancellation before the placeholder decision, so dismissal cannot mutate Local Ignore.
-                scanner::scan_run_cancellation_cancel(*m_cancellation);
-                break;
-            }
+            // Dismissal maps to *no decision*, which is exactly what the shared abandon operation
+            // takes. The switch stays exhaustive so a choice added later trips `-Wswitch` here
+            // rather than silently resolving to Proceed Without Ignore. The same `optional`-shaped
+            // mapping is what the native CLI and the Node and Python bindings use, for the same
+            // reason: `LocalIgnoreRecoveryDecision` deliberately has no abandonment variant, so
+            // absence is how abandonment is spelled everywhere.
+            const auto decision = [&]() -> std::optional<scanner::ScanRunLocalIgnoreRecoveryDecision> {
+                switch (choice) {
+                case classic::gui::ScanRunLocalIgnoreRecoveryChoice::ProceedWithoutIgnore:
+                    return scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
+                case classic::gui::ScanRunLocalIgnoreRecoveryChoice::ResetToDefault:
+                    return scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault;
+                case classic::gui::ScanRunLocalIgnoreRecoveryChoice::Cancel:
+                    return std::nullopt;
+                }
+                // Unreachable for a valid enumerator. Abandonment is the safe resolution for a
+                // value this build does not recognize: it cannot touch the user's files.
+                return std::nullopt;
+            }();
 
+            // `scan_run_continuation_abandon` performs the cancel-then-resume sequence that used to
+            // live here, so the GUI cannot reorder it, cannot pick a different placeholder, and
+            // cannot drift from what the native CLI and the TUI do. It cancels `m_cancellation`
+            // itself, which is why nothing here cancels first — and it leaves the control cancelled,
+            // exactly as the hand-written sequence did, so a later `requestCancel()` stays inert.
             auto resumedOperation =
-                scanner::scan_run_continuation_resume(*continuation, decision, *m_cancellation, &observer);
+                decision ? scanner::scan_run_continuation_resume(*continuation, *decision, *m_cancellation, &observer)
+                         : scanner::scan_run_continuation_abandon(*continuation, *m_cancellation, &observer);
             const auto resumedExecution =
                 scanner::scan_run_contract_execution_take_result(*resumedOperation);
             if (observer.deliveryFailed()) {

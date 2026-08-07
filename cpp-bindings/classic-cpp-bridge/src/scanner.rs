@@ -27,10 +27,10 @@ pub(crate) use analyzer::{
 pub(crate) use contract::{
     ScanRunCancellation, ScanRunContinuation, ScanRunContractExecution, ScanRunRequest,
     ScanRunUnsolvedLogs, scan_run_cancellation_cancel, scan_run_cancellation_is_cancelled,
-    scan_run_cancellation_new, scan_run_continuation_resume, scan_run_contract_execute,
-    scan_run_contract_execution_has_continuation, scan_run_contract_execution_take_continuation,
-    scan_run_contract_execution_take_result, scan_run_infrastructure_error_stage_label,
-    scan_run_installed_yaml_data_diagnostic_kind_label,
+    scan_run_cancellation_new, scan_run_continuation_abandon, scan_run_continuation_resume,
+    scan_run_contract_execute, scan_run_contract_execution_has_continuation,
+    scan_run_contract_execution_take_continuation, scan_run_contract_execution_take_result,
+    scan_run_infrastructure_error_stage_label, scan_run_installed_yaml_data_diagnostic_kind_label,
     scan_run_installed_yaml_data_provenance_label, scan_run_local_ignore_reset_failure_stage_label,
     scan_run_local_ignore_yaml_data_state_label, scan_run_log_disposition_label,
     scan_run_log_failure_stage_label, scan_run_request_standard,
@@ -1237,6 +1237,25 @@ mod ffi {
             cancellation: &ScanRunCancellation,
             observer: *const ScanRunObserver,
         ) -> Result<Box<ScanRunContractExecution>>;
+        /// Abandons retained work without applying either Local Ignore recovery decision.
+        ///
+        /// Requests cancellation on `cancellation` and then claims the one-shot continuation,
+        /// returning the ordinary post-discovery cancelled envelope. No backup is taken, nothing
+        /// is published, and the malformed Local Ignore file is left exactly as it was. Prefer
+        /// this over cancelling and then resuming with a placeholder decision: that sequence is
+        /// what this replaces, and getting its ordering wrong spends the continuation on a real
+        /// recovery attempt.
+        ///
+        /// `cancellation` is left cancelled afterwards, which is what abandoning the run means.
+        /// A second call reports the same consumed-continuation envelope `resume` does; unlike
+        /// `resume` this never throws, because it takes no decision that could be out of range.
+        ///
+        /// `observer` may be null and observes nothing, since no post-discovery work runs.
+        unsafe fn scan_run_continuation_abandon(
+            continuation: &ScanRunContinuation,
+            cancellation: &ScanRunCancellation,
+            observer: *const ScanRunObserver,
+        ) -> Box<ScanRunContractExecution>;
 
         /// Human-facing Display Label for one scan-run Installed YAML Data
         /// diagnostic kind.

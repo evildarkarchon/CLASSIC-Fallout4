@@ -292,10 +292,26 @@ leave an opaque continuation beside the moved result. Call
 `scan_run_contract_execution_has_continuation(...)`, move it once with
 `scan_run_contract_execution_take_continuation(...)`, and resume it through
 `scan_run_continuation_resume(...)` with either `ProceedWithoutIgnore` or
-`ResetToDefault`. The bridge has
-no public orchestration object, single-log analysis executor, batch lifecycle,
-reconstructable prepared-run executor, resettable scan token, process-global
-FCX control, or direct report writer.
+`ResetToDefault`. A frontend whose user backs out of the decision instead calls
+`scan_run_continuation_abandon(continuation, cancellation, observer)`, which
+takes no decision, cancels the supplied control, and returns the ordinary
+post-discovery cancelled envelope without touching anything on disk. The bridge
+has no public orchestration object, single-log analysis executor, batch
+lifecycle, reconstructable prepared-run executor, resettable scan token,
+process-global FCX control, or direct report writer.
+
+Prefer `scan_run_continuation_abandon(...)` over cancelling and then resuming
+with a placeholder decision. The two are equivalent only when
+`scan_run_cancellation_cancel(...)` runs strictly before the claim; reversing
+that order spends the one-shot continuation on a real recovery attempt. Both
+native frontends used to write that sequence for themselves and no longer do.
+
+Unlike `scan_run_continuation_resume(...)`, this one does not throw. Resume is
+fallible only because it must reject an out-of-range
+`ScanRunLocalIgnoreRecoveryDecision` before claiming the continuation; with no
+decision to reject, abandonment has no argument that can be unrepresentable.
+Replay still arrives as `has_resume_error` with code
+`scan_run_continuation_consumed`, exactly as it does for a replayed resume.
 
 ### Scan-run Display Labels
 
@@ -467,11 +483,14 @@ with an empty string or zero.
 ### Display Content on the envelope
 
 The envelope also carries `display_lines`: what the run *says*, in Rust's words,
-for whichever payload the presence flags select. Both `scan_run_contract_execute`
-and `scan_run_continuation_resume` return this same envelope type, so one field
-covers the initial run and the continuation resume alike, and it is populated for
-a result, an infrastructure error, and a resume error equally. A moved-from
-envelope leaves it empty, as it does every other field.
+for whichever payload the presence flags select. `scan_run_contract_execute`,
+`scan_run_continuation_resume`, and `scan_run_continuation_abandon` all return
+this same envelope type, so one field covers the initial run, the continuation
+resume, and an abandoned run alike, and it is populated for a result, an
+infrastructure error, and a resume error equally. An abandoned run is an ordinary
+cancelled one, so it describes itself here like any other; a frontend never has
+to write the cancellation sentence. A moved-from envelope leaves it empty, as it
+does every other field.
 
 Rendering happens on the Rust side while the run value is still live, because
 C++ receives a projected copy and cannot render from the Rust value later. The

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-06T11:29:50.574293+00:00",
+  "generated_at_utc": "2026-08-07T00:33:44.207949+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -3787,6 +3787,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function scanModInis(gameRoot: string, gameName: string): JsModIniScanResult",
       "arity": 2
+    },
+    {
+      "export": "scanRunAbandon",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function scanRunAbandon(continuation: ScanRunContinuation, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
+      "arity": 4
     },
     {
       "export": "scanRunExecute",

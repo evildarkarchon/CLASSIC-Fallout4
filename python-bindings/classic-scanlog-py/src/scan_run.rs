@@ -2089,8 +2089,6 @@ pub fn scan_run_resume(
     observer: Option<Py<PyAny>>,
     cancel_on_observer_error: bool,
 ) -> PyResult<PyScanRunExecution> {
-    let continuation = Arc::clone(&continuation.inner);
-    let cancellation = cancellation.inner.clone();
     let decision = match decision {
         PyScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
             contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore
@@ -2099,6 +2097,63 @@ pub fn scan_run_resume(
             contract::LocalIgnoreRecoveryDecision::ResetToDefault
         }
     };
+    claim_continuation(
+        py,
+        Arc::clone(&continuation.inner),
+        Some(decision),
+        cancellation.inner.clone(),
+        observer,
+        cancel_on_observer_error,
+    )
+}
+
+/// Abandons one retained Crash Log Scan Run without applying either recovery decision.
+///
+/// Requests cancellation on `cancellation` and then claims the continuation, returning the ordinary
+/// post-discovery cancelled execution. No backup is taken, nothing is published, and the malformed
+/// Local Ignore file is left exactly as it was. Prefer this over cancelling and then calling
+/// [`scan_run_resume`] with a placeholder decision: that sequence is what this replaces, and getting
+/// its ordering wrong spends the one-shot continuation on a real recovery attempt.
+///
+/// `cancellation` is left cancelled afterwards, which is what abandoning the run means. The GIL is
+/// released while the shared runtime executes. Sequential or concurrent replay raises
+/// [`ScanRunContinuationConsumedError`] with code `scan_run_continuation_consumed`, exactly as
+/// [`scan_run_resume`] does. The reset and infrastructure failures resume can raise are unreachable
+/// here, because cancellation short-circuits ahead of every stage that produces them.
+#[pyfunction]
+#[pyo3(signature = (continuation, cancellation, observer=None, cancel_on_observer_error=false))]
+pub fn scan_run_abandon(
+    py: Python<'_>,
+    continuation: PyRef<'_, PyScanRunContinuation>,
+    cancellation: PyRef<'_, PyScanRunCancellation>,
+    observer: Option<Py<PyAny>>,
+    cancel_on_observer_error: bool,
+) -> PyResult<PyScanRunExecution> {
+    claim_continuation(
+        py,
+        Arc::clone(&continuation.inner),
+        None,
+        cancellation.inner.clone(),
+        observer,
+        cancel_on_observer_error,
+    )
+}
+
+/// Claims a continuation once on the shared runtime and projects its outcome to Python.
+///
+/// `decision` is `None` to abandon the run. Abandonment is modelled as the absence of a decision
+/// rather than as a third variant, because [`contract::LocalIgnoreRecoveryDecision`] deliberately
+/// carries none — adding one would reshape a type crossing five binding surfaces. Sharing one body
+/// keeps `scan_run_abandon` and [`scan_run_resume`] on the same observer adapter, the same GIL
+/// release, and the same exception mapping, so the two cannot drift.
+fn claim_continuation(
+    py: Python<'_>,
+    continuation: Arc<contract::CrashLogScanRunContinuation>,
+    decision: Option<contract::LocalIgnoreRecoveryDecision>,
+    cancellation: contract::Cancellation,
+    observer: Option<Py<PyAny>>,
+    cancel_on_observer_error: bool,
+) -> PyResult<PyScanRunExecution> {
     let (result, observer_error) = without_gil_block_on(py, || async move {
         let mut observer = observer.map(|callback| PyObserverAdapter {
             callback,
@@ -2107,15 +2162,29 @@ pub fn scan_run_resume(
             delivery_error: None,
             delivery_failed: false,
         });
-        let result = continuation
-            .resume(
-                decision,
-                &cancellation,
-                observer
-                    .as_mut()
-                    .map(|adapter| adapter as &mut dyn contract::Observer),
-            )
-            .await;
+        let result = match decision {
+            Some(decision) => {
+                continuation
+                    .resume(
+                        decision,
+                        &cancellation,
+                        observer
+                            .as_mut()
+                            .map(|adapter| adapter as &mut dyn contract::Observer),
+                    )
+                    .await
+            }
+            None => {
+                continuation
+                    .abandon(
+                        &cancellation,
+                        observer
+                            .as_mut()
+                            .map(|adapter| adapter as &mut dyn contract::Observer),
+                    )
+                    .await
+            }
+        };
         let observer_error = observer.and_then(|adapter| adapter.delivery_error);
         (result, observer_error)
     });

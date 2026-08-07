@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-06T23:01:40.127181+00:00",
+  "generated_at_utc": "2026-08-07T00:33:29.249161+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -7470,6 +7470,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def scan_records_batch( texts: list[list[str]], record_list: list[str], ignore_records: list[str] ) -> list[list[str]]:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "scan_run_abandon",
+      "export_path": "scan_run_abandon",
+      "kind": "function",
+      "arity": 4,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def scan_run_abandon( continuation: ScanRunContinuation, cancellation: ScanRunCancellation, observer: Callable[[ScanRunEvent], None] | None = None, cancel_on_observer_error: bool = False, ) -> ScanRunExecution:"
     },
     {
       "module": "classic_scanlog",

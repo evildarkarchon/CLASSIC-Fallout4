@@ -915,6 +915,69 @@ def test_pre_resume_cancellation_wins_without_mutating_local_ignore(
     ]
 
 
+def test_abandon_returns_the_cancelled_result_without_touching_anything(
+    tmp_path: Path,
+) -> None:
+    """Abandoning a paused run cancels it, writes nothing, and spends the continuation."""
+
+    import classic_scanlog
+
+    fixture = SHARED_SCAN_RUN_MANIFEST["fixtures"]["installedYamlData"]
+    _copy_shared_scan_run_data_root(tmp_path)
+    crash_log = _write_shared_scan_run_logs(tmp_path, [fixture["input"]])[0]
+    ignore_path = tmp_path / "CLASSIC Data" / "CLASSIC Ignore.yaml"
+    ignore_path.write_text(fixture["malformedLocalIgnore"], encoding="utf-8")
+    initial = classic_scanlog.scan_run_execute(
+        classic_scanlog.ScanRunRequest.targeted(
+            _configuration(classic_scanlog, tmp_path),
+            classic_scanlog.ScanRunTargetedSource(inputs=[str(crash_log)]),
+        ),
+        classic_scanlog.ScanRunCancellation(),
+    ).result
+    assert initial.status == "local_ignore_recovery_required"
+    # The caller shares one control across the paused run and its abandonment, so the test does
+    # too. `scan_run_abandon` is what cancels it; nothing here asks for cancellation first.
+    cancellation = classic_scanlog.ScanRunCancellation()
+    assert cancellation.is_cancelled is False
+    events: list[object] = []
+
+    execution = classic_scanlog.scan_run_abandon(
+        initial.continuation,
+        cancellation,
+        events.append,
+    )
+    abandoned = execution.result
+
+    assert abandoned is not None
+    assert abandoned.status == "cancelled"
+    assert abandoned.cancelled == abandoned.total
+    assert abandoned.discovery.accepted_logs == initial.discovery.accepted_logs
+    assert all(log.disposition == "cancelled_before_start" for log in abandoned.logs)
+    assert events == []
+    assert cancellation.is_cancelled is True
+    # A cancelled run still describes itself, so a consumer never has to write the sentence.
+    assert execution.display_lines != []
+    assert ignore_path.read_text(encoding="utf-8") == fixture["malformedLocalIgnore"]
+    assert (tmp_path / "CLASSIC Backup").exists() is False
+    assert all(log.autoscan_report is None for log in abandoned.logs)
+
+    # The claim is shared with resume, so a spent continuation closes both seams.
+    with pytest.raises(classic_scanlog.ScanRunContinuationConsumedError) as replay:
+        classic_scanlog.scan_run_abandon(
+            initial.continuation,
+            classic_scanlog.ScanRunCancellation(),
+        )
+    assert replay.value.code == "scan_run_continuation_consumed"
+    assert replay.value.display_lines != []
+    with pytest.raises(classic_scanlog.ScanRunContinuationConsumedError):
+        classic_scanlog.scan_run_resume(
+            initial.continuation,
+            classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+            classic_scanlog.ScanRunCancellation(),
+        )
+    assert ignore_path.read_text(encoding="utf-8") == fixture["malformedLocalIgnore"]
+
+
 def test_post_critical_cancellation_waits_for_durable_reset(tmp_path: Path) -> None:
     """Cancellation after reset lock acquisition waits for backup and replacement durability."""
 

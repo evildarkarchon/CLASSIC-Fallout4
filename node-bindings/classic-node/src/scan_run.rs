@@ -721,8 +721,8 @@ pub fn scan_run_execute(
     }))
 }
 
-/// Internal resume output retained until JavaScript-thread resolution.
-pub enum ScanRunResumeTaskOutput {
+/// Internal continuation-claim output retained until JavaScript-thread resolution.
+pub enum ScanRunClaimTaskOutput {
     /// The retained run produced normal terminal result data.
     Success(Box<JsScanRunSuccess>),
     /// The retained run encountered an infrastructure failure.
@@ -733,20 +733,34 @@ pub enum ScanRunResumeTaskOutput {
     LocalIgnoreResetError(contract::ResumeError),
 }
 
-/// Background task that resumes one Rust-owned continuation on the shared runtime.
-pub struct ScanRunResumeTask {
+/// Background task that claims one Rust-owned continuation on the shared runtime.
+///
+/// Named for the claim rather than for `resume`, because both `scanRunResume` and `scanRunAbandon`
+/// run through it and the one-shot claim is what they share. It reaches no TypeScript declaration —
+/// both entry points override their return type — so the name costs no baseline row.
+pub struct ScanRunClaimTask {
     continuation: Arc<contract::CrashLogScanRunContinuation>,
-    decision: contract::LocalIgnoreRecoveryDecision,
+    /// The recovery decision to claim the continuation with, or `None` to abandon the run.
+    ///
+    /// Abandonment is modelled as the absence of a decision rather than as a third variant,
+    /// because that is what it is: `LocalIgnoreRecoveryDecision` deliberately carries no
+    /// abandonment variant, and adding one would reshape a type crossing five binding surfaces.
+    /// Sharing one task keeps `scanRunAbandon` and `scanRunResume` on the same observer adapter,
+    /// the same envelope builders, and the same rejection routing.
+    decision: Option<contract::LocalIgnoreRecoveryDecision>,
     cancellation: contract::Cancellation,
     observer: Option<JsObserverFunction>,
     cancel_on_observer_error: bool,
 }
 
-impl Task for ScanRunResumeTask {
-    type Output = ScanRunResumeTaskOutput;
+impl Task for ScanRunClaimTask {
+    type Output = ScanRunClaimTaskOutput;
     type JsValue = Either<JsScanRunSuccess, JsScanRunFailure>;
 
-    /// Claims and resumes the core continuation without constructing another runtime.
+    /// Claims the core continuation without constructing another runtime.
+    ///
+    /// A `None` decision abandons the run through the shared core operation rather than
+    /// cancelling here and resuming with a placeholder; that sequence is Rust's to own.
     fn compute(&mut self) -> napi::Result<Self::Output> {
         let observer_error = Arc::new(Mutex::new(None));
         let mut adapter = self.observer.take().map(|callback| JsObserverAdapter {
@@ -756,15 +770,26 @@ impl Task for ScanRunResumeTask {
             delivery_error: Arc::clone(&observer_error),
             delivery_failed: false,
         });
-        let result = classic_shared_core::get_runtime().block_on(
-            self.continuation.resume(
-                self.decision,
-                &self.cancellation,
-                adapter
-                    .as_mut()
-                    .map(|observer| observer as &mut dyn contract::Observer),
+        let runtime = classic_shared_core::get_runtime();
+        let result = match self.decision {
+            Some(decision) => runtime.block_on(
+                self.continuation.resume(
+                    decision,
+                    &self.cancellation,
+                    adapter
+                        .as_mut()
+                        .map(|observer| observer as &mut dyn contract::Observer),
+                ),
             ),
-        );
+            None => runtime.block_on(
+                self.continuation.abandon(
+                    &self.cancellation,
+                    adapter
+                        .as_mut()
+                        .map(|observer| observer as &mut dyn contract::Observer),
+                ),
+            ),
+        };
         let observer_error = observer_error
             .lock()
             .map_err(|_| napi::Error::from_reason("scan-run observer error state was poisoned"))?
@@ -772,34 +797,34 @@ impl Task for ScanRunResumeTask {
 
         Ok(match result {
             Ok(result) => {
-                ScanRunResumeTaskOutput::Success(Box::new(success_envelope(result, observer_error)))
+                ScanRunClaimTaskOutput::Success(Box::new(success_envelope(result, observer_error)))
             }
             Err(contract::ResumeError::Infrastructure(error)) => {
-                ScanRunResumeTaskOutput::Failure(failure_envelope(error, observer_error))
+                ScanRunClaimTaskOutput::Failure(failure_envelope(error, observer_error))
             }
             Err(contract::ResumeError::ContinuationConsumed) => {
-                ScanRunResumeTaskOutput::ContinuationConsumed
+                ScanRunClaimTaskOutput::ContinuationConsumed
             }
-            Err(error) => ScanRunResumeTaskOutput::LocalIgnoreResetError(error),
+            Err(error) => ScanRunClaimTaskOutput::LocalIgnoreResetError(error),
         })
     }
 
     /// Resolves normal envelopes and rejects replay or reset failures with stable metadata.
     fn resolve(&mut self, env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
         match output {
-            ScanRunResumeTaskOutput::Success(result) => Ok(Either::A(*result)),
-            ScanRunResumeTaskOutput::Failure(error) => Ok(Either::B(error)),
+            ScanRunClaimTaskOutput::Success(result) => Ok(Either::A(*result)),
+            ScanRunClaimTaskOutput::Failure(error) => Ok(Either::B(error)),
             // Routed through the shared rejection builder rather than rebuilding
             // the code and message by hand. The pair written here was already
             // byte-identical to `ResumeErrorKind::as_str` and `ResumeError`'s
             // `Display`, so it recorded the agreement instead of checking it —
             // and it is what kept this one rejection from carrying the rendered
             // lines every other one now does.
-            ScanRunResumeTaskOutput::ContinuationConsumed => Err(scan_run_resume_error_to_napi(
+            ScanRunClaimTaskOutput::ContinuationConsumed => Err(scan_run_resume_error_to_napi(
                 env,
                 contract::ResumeError::ContinuationConsumed,
             )),
-            ScanRunResumeTaskOutput::LocalIgnoreResetError(error) => {
+            ScanRunClaimTaskOutput::LocalIgnoreResetError(error) => {
                 Err(scan_run_resume_error_to_napi(env, error))
             }
         }
@@ -824,8 +849,70 @@ pub fn scan_run_resume(
     )]
     observer: Option<Function<'_, FnArgs<(JsScanRunEvent,)>, UnknownReturnValue>>,
     cancel_on_observer_error: Option<bool>,
-) -> napi::Result<AsyncTask<ScanRunResumeTask>> {
-    let decision = local_ignore_recovery_decision_to_core(decision);
+) -> napi::Result<AsyncTask<ScanRunClaimTask>> {
+    claim_continuation_task(
+        continuation,
+        Some(local_ignore_recovery_decision_to_core(decision)),
+        cancellation,
+        observer,
+        cancel_on_observer_error,
+    )
+}
+
+/// Abandons one retained Crash Log Scan Run without applying either recovery decision.
+///
+/// Requests cancellation on `cancellation` and then claims the continuation, resolving with the
+/// ordinary post-discovery cancelled envelope. No backup is taken, nothing is published, and the
+/// malformed Local Ignore file is left exactly as it was. Prefer this over cancelling and then
+/// calling [`scan_run_resume`] with a placeholder decision: that sequence is what this replaces,
+/// and getting its ordering wrong spends the one-shot continuation on a real recovery attempt.
+///
+/// `cancellation` is left cancelled afterwards, which is what abandoning the run means. Replay and
+/// concurrent double consumption reject with JavaScript error code
+/// `scan_run_continuation_consumed`, exactly as [`scan_run_resume`] does. The recovery-plan and
+/// infrastructure failures resume can reject with are unreachable here, because cancellation
+/// short-circuits ahead of every stage that produces them.
+#[napi(ts_return_type = "Promise<JsScanRunSuccess | JsScanRunFailure>")]
+pub fn scan_run_abandon(
+    continuation: &ScanRunContinuation,
+    cancellation: &ScanRunCancellation,
+    // Byte-identical to `scan_run_resume`'s narrowing, and deliberately so: under
+    // `strictFunctionTypes` a callback typed for that union is not assignable to a wider parameter,
+    // so a consumer wiring one observer across both entry points needs the two to agree exactly.
+    // `napi`'s attribute takes a literal, so this cannot be hoisted into a shared constant;
+    // `bun run test:types` and `bun run build:cli` are what catch a divergence.
+    //
+    // An abandoned run observes nothing in practice — cancellation short-circuits ahead of every
+    // stage that emits — but the parameter stays for that assignability, and for symmetry with the
+    // CXX and Python surfaces, which both accept an observer here too.
+    #[napi(
+        ts_arg_type = "(event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void"
+    )]
+    observer: Option<Function<'_, FnArgs<(JsScanRunEvent,)>, UnknownReturnValue>>,
+    cancel_on_observer_error: Option<bool>,
+) -> napi::Result<AsyncTask<ScanRunClaimTask>> {
+    claim_continuation_task(
+        continuation,
+        None,
+        cancellation,
+        observer,
+        cancel_on_observer_error,
+    )
+}
+
+/// Builds the background task that claims a continuation exactly once.
+///
+/// `decision` is `None` to abandon the run. Sharing one builder keeps [`scan_run_resume`] and
+/// [`scan_run_abandon`] on the same threadsafe-observer construction and the same task fields, so
+/// the two cannot drift in how they reach the core — which is the whole point of the shared
+/// abandonment operation they both call into.
+fn claim_continuation_task(
+    continuation: &ScanRunContinuation,
+    decision: Option<contract::LocalIgnoreRecoveryDecision>,
+    cancellation: &ScanRunCancellation,
+    observer: Option<Function<'_, FnArgs<(JsScanRunEvent,)>, UnknownReturnValue>>,
+    cancel_on_observer_error: Option<bool>,
+) -> napi::Result<AsyncTask<ScanRunClaimTask>> {
     let observer = observer
         .map(|observer| {
             observer
@@ -834,7 +921,7 @@ pub fn scan_run_resume(
                 .build_callback(|context| Ok((context.value,).into()))
         })
         .transpose()?;
-    Ok(AsyncTask::new(ScanRunResumeTask {
+    Ok(AsyncTask::new(ScanRunClaimTask {
         continuation: Arc::clone(&continuation.inner),
         decision,
         cancellation: cancellation.inner.clone(),

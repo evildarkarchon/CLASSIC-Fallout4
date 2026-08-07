@@ -625,12 +625,13 @@
         "classic_scanlog.ScanRunEvent",
         "classic_scanlog.ScanRunExecution",
         "classic_scanlog.scan_run_execute",
-        "classic_scanlog.scan_run_resume"
+        "classic_scanlog.scan_run_resume",
+        "classic_scanlog.scan_run_abandon"
       ],
       "verificationMode": "contract_test",
       "testSuite": "python-bindings/tests/test_scan_run_contract.py",
       "testCaseId": "scanlog-final-run-contract",
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes. Abandonment is covered as its own case: it takes no decision, resolves as an ordinary post-discovery cancelled execution carrying its own rendered lines, observes no event, leaves the supplied cancellation cancelled, leaves the malformed Local Ignore and the absent backup directory untouched, and shares its one-shot claim with resume so a spent continuation rejects both."
     },
     {
       "coverageId": "python-tier1-version-registry",

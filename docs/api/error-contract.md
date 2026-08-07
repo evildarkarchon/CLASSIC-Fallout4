@@ -84,6 +84,21 @@ the terminal result and do not throw. This envelope is required because a CXX
 `Result<T>` would flatten the typed core infrastructure error into
 `rust::Error` text and discard stage/path data.
 
+`scan_run_continuation_abandon(...)` shares that envelope and narrows it to one
+case: it takes no decision, and cancellation short-circuits ahead of every stage
+that produces a reset or infrastructure failure, so the only `has_resume_error`
+it can set is consumed-continuation — the shared one-shot claim, spent by
+whichever of it and `scan_run_continuation_resume(...)` ran first.
+
+The two also differ in whether they throw, and deliberately. Resume is declared
+`Result<Box<_>>` only because it must reject an out-of-range
+`ScanRunLocalIgnoreRecoveryDecision` before claiming the one-shot continuation;
+abandonment takes no decision, so it has no argument that can be unrepresentable
+and is declared to return the envelope directly. On this bridge a CXX `Result`
+means "an argument may be unrepresentable", not "the operation may fail" —
+operational failure always travels in the typed envelope. Declaring a `throws`
+contract that can never fire would only force callers into unreachable handling.
+
 **Pattern:** `rust::Error` exceptions for hard failures, empty-string sentinels for fail-soft returns.
 
 **Example 1 -- empty-string sentinel:** `db_pool_get_entry()` in [`cpp-bindings/classic-cpp-bridge/src/database.rs`](../../cpp-bindings/classic-cpp-bridge/src/database.rs) returns `""` on lookup failure because Qt callers check `.isEmpty()` rather than catching exceptions.
@@ -98,11 +113,13 @@ the terminal result and do not throw. This envelope is required because a CXX
 
 **Pattern:** `napi::Error` with a `code` field matching the Rust error variant name (e.g., `"InvalidArg"`, `"ParseError"`).
 
-Node Crash Log Scan Run execution follows the same typed-envelope rationale as CXX. `scanRunExecute(...)` and successful `scanRunResume(...)` resolve the generated `JsScanRunSuccess | JsScanRunFailure` union, so `result` and `error` are mutually exclusive by construction; `JsScanRunInfrastructureError` retains the stable lowercase stage, message, and optional path. Expected lifecycle states and per-log failures remain result data. Consuming a continuation more than once rejects with an `Error` whose `code` is `scan_run_continuation_consumed`; Reset To Default conflict/backup/replacement failures reject with their stable reset code plus applicable identities, backup path, affected path, and publication stage. Replacement durability uncertainty has its own stable code and verified-backup recovery receipt. These are not infrastructure failures. JavaScript observer throws or delivery failures are reported separately as `observerError`, with optional safe cancellation controlled by the caller. No analysis-only, batch, report-writer, or global-FCX export is an alternative error channel.
+Node Crash Log Scan Run execution follows the same typed-envelope rationale as CXX. `scanRunExecute(...)` and successful `scanRunResume(...)` or `scanRunAbandon(...)` resolve the generated `JsScanRunSuccess | JsScanRunFailure` union, so `result` and `error` are mutually exclusive by construction; `JsScanRunInfrastructureError` retains the stable lowercase stage, message, and optional path. Expected lifecycle states and per-log failures remain result data. Consuming a continuation more than once rejects with an `Error` whose `code` is `scan_run_continuation_consumed`; Reset To Default conflict/backup/replacement failures reject with their stable reset code plus applicable identities, backup path, affected path, and publication stage. Replacement durability uncertainty has its own stable code and verified-backup recovery receipt. These are not infrastructure failures. JavaScript observer throws or delivery failures are reported separately as `observerError`, with optional safe cancellation controlled by the caller. No analysis-only, batch, report-writer, or global-FCX export is an alternative error channel.
 
 Every one of those rejections also carries `displayLines` — what the failure says, in Rust's words, so a consumer reporting it does not have to write the sentence. The rendered lines deliberately omit the stable code that `code` still carries, which is the split in miniature: prose for a person, a token to branch on. Branch on `code`, never on a line.
 
 All five resume rejections now go through one builder, so `scan_run_continuation_consumed` gained the `kind` property the reset rejections already had. It duplicates `code`, and its `code` and `message` are unchanged; it exists because the replay case used to construct its own pair by hand, which is what would otherwise have left it as the one rejection with nothing to say.
+
+`scanRunAbandon(...)` shares that rejection channel and narrows it to one case. It takes no decision, and cancellation short-circuits ahead of every stage that produces a reset or infrastructure failure, so the only rejection it can raise is `scan_run_continuation_consumed` — the shared one-shot claim, spent by whichever of the two entry points ran first. A consumer that already handles resume's rejections needs no new branch.
 
 **Example 1:** `config_error_to_napi_err()` in [`node-bindings/classic-node/src/config.rs`](../../node-bindings/classic-node/src/config.rs) converts `ConfigError` variants to NAPI errors with structured codes. JavaScript consumers use `catch (e) { if (e.code === "ParseError") ... }`.
 
@@ -118,11 +135,13 @@ Tests verify both `error.message` and `error.code` to ensure the structured erro
 
 **Pattern:** Typed Python exception classes (e.g., `RustConfigParseError`, `RustConfigIOError`) with message inspection.
 
-Python Crash Log Scan Run execution is the deliberate structured-operation exception to that general rule. `classic_scanlog.scan_run_execute(...)` and successful `scan_run_resume(...)` return `ScanRunExecution`, where exactly one of `result` and `error` is populated. `ScanRunInfrastructureError` preserves the six stable lifecycle stages, message, and optional relevant path; expected lifecycle outcomes and per-log failures remain result data. Continuation replay raises `ScanRunContinuationConsumedError`; Reset To Default conflict, backup, replacement, and replacement-durability-unknown failures raise dedicated `ScanRunLocalIgnoreReset*Error` subclasses. Every exception exposes a stable lowercase code, and the reset subclasses preserve applicable identity/path/stage or recovery-receipt metadata; all remain distinct from infrastructure failure. A Python observer exception is reported independently through `observer_error` and requests safe cancellation only when the caller opts into `cancel_on_observer_error`. Python exposes no orchestration, resettable batch cancellation, report-writer, or global-FCX compatibility error path.
+Python Crash Log Scan Run execution is the deliberate structured-operation exception to that general rule. `classic_scanlog.scan_run_execute(...)` and successful `scan_run_resume(...)` or `scan_run_abandon(...)` return `ScanRunExecution`, where exactly one of `result` and `error` is populated. `ScanRunInfrastructureError` preserves the six stable lifecycle stages, message, and optional relevant path; expected lifecycle outcomes and per-log failures remain result data. Continuation replay raises `ScanRunContinuationConsumedError`; Reset To Default conflict, backup, replacement, and replacement-durability-unknown failures raise dedicated `ScanRunLocalIgnoreReset*Error` subclasses. Every exception exposes a stable lowercase code, and the reset subclasses preserve applicable identity/path/stage or recovery-receipt metadata; all remain distinct from infrastructure failure. A Python observer exception is reported independently through `observer_error` and requests safe cancellation only when the caller opts into `cancel_on_observer_error`. Python exposes no orchestration, resettable batch cancellation, report-writer, or global-FCX compatibility error path.
 
 Every one of those exceptions also carries `display_lines` — what the failure says, in Rust's words, so a consumer reporting it does not have to write the sentence. The rendered lines deliberately omit the stable code that `code` still carries, which is the split in miniature: prose for a person, a token to branch on. Branch on `code`, never on a line. `ScanRunExecution` carries the same field for whichever of `result` and `error` it holds, matching the single-envelope shape the C++ bridge has.
 
 All five resume exceptions now go through one builder, so `ScanRunContinuationConsumedError` gained the `kind` attribute the four reset subclasses have published since they were written. It duplicates `code`, and its `code` and `message` are unchanged. It is kept because this was the one member of the resume family without it, so `except (...) as error: error.kind` raised `AttributeError` for exactly one variant; the shared builder is what made it free, not what made it correct. Node publishes the same property on its own resume rejections, but that is not the reason — binding surfaces are held to the core's contract, not to each other's shapes.
+
+`scan_run_abandon(...)` shares that exception channel and narrows it to one case. It takes no decision, and cancellation short-circuits ahead of every stage that produces a reset or infrastructure failure, so the only exception it can raise is `ScanRunContinuationConsumedError` — the shared one-shot claim, spent by whichever of the two entry points ran first. A consumer that already handles resume's exceptions needs no new `except` clause.
 
 **Example 1:** `config_error_to_pyerr()` in [`python-bindings/classic-config-py/src/lib.rs`](../../python-bindings/classic-config-py/src/lib.rs) maps each `ConfigError` variant to a specific Python exception class.
 

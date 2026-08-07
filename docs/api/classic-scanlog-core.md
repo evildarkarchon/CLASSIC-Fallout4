@@ -505,11 +505,22 @@ and binding-local CLIs construct requests and present Rust-owned facts; they do
 not perform discovery, select concurrency, reset FCX state, write reports, or
 move failed logs around the call.
 
-`CrashLogScanRunContinuation::abandon` is Rust-only for now. The TUI depends on
-this crate directly and calls it; the CXX, Node, and Python surfaces still carry
-only `resume`, and the native CLI and Qt GUI still write the cancel-then-resume
-sequence themselves. Exposing `abandon` across those surfaces and adopting it in
-both native frontends is tracked separately.
+`CrashLogScanRunContinuation::abandon` reaches every surface. The TUI depends on
+this crate directly and calls it; CXX exposes it as
+`scan_run_continuation_abandon`, Node as `scanRunAbandon`, and Python as
+`scan_run_abandon`. Each takes a continuation and a cancellation and no
+decision, and returns the same envelope its `resume` sibling does. Every
+frontend that offers the choice — the TUI, the native CLI, and the Qt GUI —
+routes it through this operation, so none of them writes the
+cancel-then-resume-with-a-placeholder sequence any more. `classic-py-cli` has no
+such choice to route: it treats a recovery-required result as terminal and never
+resumes.
+
+A binding consumer should prefer it over cancelling and then resuming with a
+placeholder decision. The two are equivalent only when cancellation is requested
+strictly before the claim; reversing that order spends the one-shot continuation
+on a real recovery attempt, which is the failure this operation exists to make
+unwritable.
 
 The Focused Semantic Analyzer cutover was deliberately breaking across Rust, CXX, Node,
 and Python. Retired report primitives and fragment-producing methods have no
