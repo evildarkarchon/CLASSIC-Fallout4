@@ -1974,8 +1974,13 @@ fn scan_run_resume_error_body(
         contract::ResumeError::ContinuationConsumed => {
             let py_error = ScanRunContinuationConsumedError::new_err(message);
             let value = py_error.value(py);
-            // `kind` duplicates `code` here and was not asked for; it comes free with
-            // the shared builder and is recorded rather than special-cased away.
+            // `kind` duplicates `code` and is kept because the four reset exceptions
+            // beside this one have published it since they were written. This was the
+            // one member of the resume family without it, so `except (...) as error:
+            // error.kind` raised `AttributeError` for exactly one variant. The shared
+            // builder makes it free; the family's existing shape is what makes it
+            // correct. Node publishes it too, but that is not the reason — binding
+            // surfaces are not held to each other's shapes, only to the core's.
             let _ = value
                 .setattr("code", code)
                 .and_then(|()| value.setattr("kind", code));
