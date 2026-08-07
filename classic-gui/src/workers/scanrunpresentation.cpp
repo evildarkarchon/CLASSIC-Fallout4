@@ -191,12 +191,28 @@ ScanRunInstalledYamlDataPresentation presentInstalledYamlData(
     return presentation;
 }
 
-} // namespace
-
-bool offersLocalIgnoreResetToDefault(const ScanRunTerminalPresentation& terminal)
+/// Projects one bare segment list into Qt-owned values, preserving Rust's order.
+///
+/// Split out of `presentScanRunDisplayLines` because a recovery decision's description is a segment
+/// list with no line around it: it is drawn beside a button this frontend creates, so there is no
+/// severity to take a colour from. The projection rule is the same one rather than a second copy.
+QVector<ScanRunDisplaySegmentPresentation> presentScanRunDisplaySegments(
+    const rust::Vec<classic::scanner::ScanRunDisplaySegment>& segments)
 {
-    return !terminal.hasInstalledYamlData || terminal.installedYamlData.localIgnoreResetAvailable;
+    QVector<ScanRunDisplaySegmentPresentation> presented;
+    presented.reserve(static_cast<qsizetype>(segments.size()));
+    for (const auto& segment : segments) {
+        ScanRunDisplaySegmentPresentation mapped;
+        mapped.kind = segment.kind;
+        mapped.text = classic::toQString(segment.text);
+        mapped.path = classic::toQString(segment.path);
+        mapped.count = segment.count;
+        presented.append(std::move(mapped));
+    }
+    return presented;
 }
+
+} // namespace
 
 QString localIgnoreStateLabel(classic::scanner::ScanRunLocalIgnoreYamlDataState state)
 {
@@ -216,15 +232,7 @@ QVector<ScanRunDisplayLinePresentation> presentScanRunDisplayLines(
     for (const auto& line : lines) {
         ScanRunDisplayLinePresentation mapped;
         mapped.severity = line.severity;
-        mapped.segments.reserve(static_cast<qsizetype>(line.segments.size()));
-        for (const auto& segment : line.segments) {
-            ScanRunDisplaySegmentPresentation mappedSegment;
-            mappedSegment.kind = segment.kind;
-            mappedSegment.text = classic::toQString(segment.text);
-            mappedSegment.path = classic::toQString(segment.path);
-            mappedSegment.count = segment.count;
-            mapped.segments.append(std::move(mappedSegment));
-        }
+        mapped.segments = presentScanRunDisplaySegments(line.segments);
         presented.append(std::move(mapped));
     }
     return presented;
@@ -442,6 +450,42 @@ QStringList scanRunReportDirectories(const classic::scanner::ScanRunContractDisc
     return directories;
 }
 
+namespace {
+
+/// Projects the Rust-rendered recovery prompt into the Qt-owned value the prompt seam carries.
+///
+/// Rendered here, on the worker thread, because the bridged envelope cannot cross the hop to the
+/// GUI thread and cannot be re-rendered on the far side. Rich text rather than plain, so a path in
+/// the question stays an actionable `file:` anchor: the user is being asked to decide about files,
+/// and a decision whose subject they cannot open is a worse decision.
+///
+/// Unavailable decisions are carried rather than filtered. A prompt that must explain the absence
+/// it is about to create can only do so if it is told what is being withheld.
+///
+/// Declared here, below the renderers it calls, rather than beside the other projectors above.
+ScanRunLocalIgnoreRecoveryPresentation presentRecoveryPrompt(const classic::scanner::ScanRunRecoveryPrompt& prompt)
+{
+    ScanRunLocalIgnoreRecoveryPresentation presentation;
+    presentation.prompt = renderScanRunDisplayLinesAsRichText(presentScanRunDisplayLines(prompt.lines));
+    presentation.decisions.reserve(static_cast<qsizetype>(prompt.decisions.size()));
+    for (const auto& description : prompt.decisions) {
+        ScanRunRecoveryDecisionPresentation mapped;
+        mapped.decision = description.decision;
+        mapped.label = classic::toQString(description.label);
+        // Wrapped in a one-line block so the shared segment renderer applies, which is what keeps a
+        // description's markup identical to every other line's rather than a second rendering rule.
+        ScanRunDisplayLinePresentation descriptionLine;
+        descriptionLine.severity = classic::scanner::ScanRunDisplaySeverity::Info;
+        descriptionLine.segments = presentScanRunDisplaySegments(description.description);
+        mapped.description = renderScanRunDisplayLineAsRichText(descriptionLine);
+        mapped.available = description.available;
+        presentation.decisions.append(std::move(mapped));
+    }
+    return presentation;
+}
+
+} // namespace
+
 ScanRunTerminalPresentation presentScanRunExecution(const classic::scanner::ScanRunContractExecutionResult& execution)
 {
     ScanRunTerminalPresentation presentation;
@@ -453,6 +497,18 @@ ScanRunTerminalPresentation presentScanRunExecution(const classic::scanner::Scan
     presentation.displayLines = presentScanRunDisplayLines(execution.display_lines);
     presentation.message = renderScanRunDisplayLinesAsPlainText(presentation.displayLines);
     presentation.richText = renderScanRunDisplayLinesAsRichText(presentation.displayLines);
+
+    // Projected before anything branches, for the same reason the lines above are: the prompt rides
+    // the same envelope and Rust has already decided whether there is a question to ask. This
+    // frontend never re-decides that — `has_recovery_prompt` is true only for the one status that
+    // pauses for an answer.
+    presentation.hasRecoveryPrompt = execution.has_recovery_prompt;
+    if (execution.has_recovery_prompt) {
+        presentation.recoveryPrompt = presentRecoveryPrompt(execution.recovery_prompt);
+        // The whole rendered run travels with the question, because Rust exposes the Installed YAML
+        // Data block — the facts this decision is about — only as part of it.
+        presentation.recoveryPrompt.message = presentation.richText;
+    }
 
     if (execution.has_error || execution.has_resume_error) {
         // Both failure envelopes land on one terminal kind, exactly as before. The machine-facing

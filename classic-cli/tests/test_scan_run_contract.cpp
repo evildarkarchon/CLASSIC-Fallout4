@@ -315,7 +315,7 @@ public:
     CliLocalIgnoreRecoveryChoice operator()(const CliLocalIgnoreRecoveryPresentation& recovery) {
         invocations_ += 1;
         details_ = message_text(recovery.details);
-        reset_available_ = recovery.reset_available;
+        decisions_ = recovery.decisions;
         return choice_;
     }
 
@@ -325,14 +325,29 @@ public:
     /// Returns the recovery facts presented with the most recent question.
     [[nodiscard]] const std::vector<std::string>& details() const noexcept { return details_; }
 
-    /// Returns whether the most recent question offered Reset To Default.
-    [[nodiscard]] bool reset_available() const noexcept { return reset_available_; }
+    /// Returns every decision the most recent question described, available or not.
+    [[nodiscard]] const std::vector<CliLocalIgnoreRecoveryDecisionOption>& decisions() const noexcept {
+        return decisions_;
+    }
+
+    /// Returns whether the most recent question offered one decision as one this run can honor.
+    ///
+    /// Reads the availability attached to the decision itself, which is the whole point of the
+    /// shape: a caller asking this question cannot answer it from anything but the decision.
+    [[nodiscard]] bool offered(scanner::ScanRunLocalIgnoreRecoveryDecision decision) const noexcept {
+        for (const auto& option : decisions_) {
+            if (option.decision == decision) {
+                return option.available;
+            }
+        }
+        return false;
+    }
 
 private:
     CliLocalIgnoreRecoveryChoice choice_;
     std::size_t invocations_ = 0;
     std::vector<std::string> details_;
-    bool reset_available_ = false;
+    std::vector<CliLocalIgnoreRecoveryDecisionOption> decisions_;
 };
 
 } // namespace
@@ -988,9 +1003,19 @@ TEST_CASE("CLI Reset To Default resumes with durable backup metadata", "[cli][sc
                                               });
 
     REQUIRE(prompt.invocations() == 1);
-    // End-to-end proof that availability survives the bridge rather than defaulting: this fixture's
-    // Main YAML Data does retain a usable default, and the reset below is what proves it was true.
-    REQUIRE(prompt.reset_available());
+    // End-to-end proof that the described decisions survive the bridge rather than defaulting: this
+    // fixture's Main YAML Data does retain a usable default, and the reset below is what proves the
+    // availability attached to that decision was true. Both decisions are described whether or not
+    // they can be honored, which is what lets a frontend explain an absence it is about to create.
+    REQUIRE(prompt.decisions().size() == 2);
+    REQUIRE(prompt.offered(scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault));
+    REQUIRE(prompt.offered(scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore));
+    // Every word beside the decision came from Rust, so the label is Rust's Display Label rather
+    // than any spelling this frontend once used.
+    for (const auto& option : prompt.decisions()) {
+        REQUIRE_FALSE(option.label.empty());
+        REQUIRE_FALSE(option.description.empty());
+    }
     REQUIRE(outcome.execution.has_result);
     REQUIRE(outcome.execution.result.status == scanner::ScanRunContractStatus::Completed);
     const auto& installed = outcome.execution.result.installed_yaml_data;

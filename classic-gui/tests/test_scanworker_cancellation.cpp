@@ -215,9 +215,18 @@ void ScanWorkerCancellationTests::malformed_local_ignore_recovery_resumes_or_can
 
     bool promptCalled = false;
     bool offeredReset = false;
-    ScanWorker worker([&promptCalled, &offeredReset, choiceValue](const QString&, bool resetAvailable) {
+    QStringList describedDecisions;
+    ScanWorker worker([&promptCalled, &offeredReset, &describedDecisions,
+                       choiceValue](const classic::gui::ScanRunLocalIgnoreRecoveryPresentation& recovery) {
         promptCalled = true;
-        offeredReset = resetAvailable;
+        for (const auto& option : recovery.decisions) {
+            describedDecisions.append(option.label);
+            if (option.decision == classic::scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault) {
+                // Read from the decision it belongs to, which is what makes offering an unavailable
+                // one impossible without ignoring data already in hand.
+                offeredReset = option.available;
+            }
+        }
         return static_cast<classic::gui::ScanRunLocalIgnoreRecoveryChoice>(choiceValue);
     });
     QSignalSpy errorSpy(&worker, &ScanWorker::error);
@@ -238,6 +247,11 @@ void ScanWorkerCancellationTests::malformed_local_ignore_recovery_resumes_or_can
     // the availability fact survives Rust, the bridge DTO, and the Qt projection in a real run —
     // rather than the worker withholding a decision that would have worked.
     QVERIFY(offeredReset);
+    // Both decisions are described in a real run, each in Rust's words, so a dialog has something to
+    // put beside every button it creates and something to explain any button it withholds.
+    QCOMPARE(describedDecisions.size(), 2);
+    QVERIFY(describedDecisions.contains(QStringLiteral("Proceed Without Ignore")));
+    QVERIFY(describedDecisions.contains(QStringLiteral("Reset To Default")));
     QCOMPARE(errorSpy.count(), 0);
     QCOMPARE(cancelledSpy.count(), expectsCancelled ? 1 : 0);
     QCOMPARE(finishedSpy.count(), expectsFinished ? 1 : 0);
@@ -335,7 +349,8 @@ void ScanWorkerCancellationTests::a_throwing_prompt_fails_the_run_without_mutati
 
     // The worker takes the continuation before asking, so an exception from the prompt drops it and
     // the run can never be resumed with an answer the user never gave.
-    ScanWorker worker([](const QString&, bool) -> classic::gui::ScanRunLocalIgnoreRecoveryChoice {
+    ScanWorker worker([](const classic::gui::ScanRunLocalIgnoreRecoveryPresentation&)
+                          -> classic::gui::ScanRunLocalIgnoreRecoveryChoice {
         throw std::runtime_error("recovery prompt failed");
     });
     QSignalSpy errorSpy(&worker, &ScanWorker::error);

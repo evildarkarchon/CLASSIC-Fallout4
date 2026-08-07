@@ -92,20 +92,44 @@ enum class CliLocalIgnoreRecoveryChoice {
     Cancel,
 };
 
-/// Run-level facts the native CLI presents before it asks for an explicit recovery decision.
+/// One Local Ignore recovery decision as Rust describes it, flattened into CLI-owned values.
 ///
-/// `reset_available` travels with the diagnostics rather than beside them so a prompt cannot offer
-/// Reset To Default without having been handed the fact that decides whether it can succeed. The
-/// TUI's `LocalIgnoreRecoveryPrompt` has the same shape for the same reason.
-struct CliLocalIgnoreRecoveryPresentation {
-    /// Lines explaining why recovery is required, in the order they should be printed.
-    std::vector<CliScanRunMessage> details;
-    /// Whether Reset To Default is a decision this run can actually satisfy.
+/// A copy rather than a view onto the bridged envelope: the prompt seam is a plain value a test can
+/// build and a caller can hold after the envelope has moved on.
+struct CliLocalIgnoreRecoveryDecisionOption {
+    /// The decision to hand back when this option is chosen.
+    classic::scanner::ScanRunLocalIgnoreRecoveryDecision decision =
+        classic::scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
+    /// The decision's Display Label, as Rust resolved it.
+    std::string label;
+    /// What choosing it will actually do, in Rust's words.
+    std::string description;
+    /// Whether this run can honor the decision.
     ///
     /// False when the selected Main YAML Data retained no usable default Local Ignore to publish.
     /// Offering it anyway spends the one-shot continuation on a typed failure, leaving the user
     /// with no scan, no repair, and no second attempt without re-running from scratch.
-    bool reset_available = true;
+    ///
+    /// Defaults to false so a partially built option is withheld rather than offered. Rust decides
+    /// this; the CLI never infers it.
+    bool available = false;
+};
+
+/// Run-level facts the native CLI presents before it asks for an explicit recovery decision.
+///
+/// Availability travels on each decision rather than as one flag beside them, which is what makes
+/// honouring it take no separate lookup: a menu cannot print an option without having read the
+/// field that says whether it can succeed. The bracketed letters beside the labels are still this
+/// frontend's own — the labels and the sentences are not.
+struct CliLocalIgnoreRecoveryPresentation {
+    /// Lines explaining why recovery is required, in the order they should be printed.
+    std::vector<CliScanRunMessage> details;
+    /// Every decision the continuation contract accepts, in Rust's declared order.
+    ///
+    /// Carries the unavailable ones too. A menu that must explain the absence it is about to
+    /// create can only do so if it is told what is being withheld, so filtering happens where the
+    /// option is printed rather than where the list is built.
+    std::vector<CliLocalIgnoreRecoveryDecisionOption> decisions;
 };
 
 /// Console decision seam invoked while Rust still retains the single-use recovery continuation.
@@ -121,14 +145,18 @@ inline constexpr int CLI_LOCAL_IGNORE_RECOVERY_PROMPT_ATTEMPTS = 3;
 /// Builds the run-level presentation explaining why Local Ignore recovery is required.
 ///
 /// The lines carry retained Installed YAML Data facts and structured diagnostics only; they never
-/// reach an Autoscan Report. `reset_available` is read straight from the retained Installed YAML
-/// Data, so the CLI applies no policy of its own beyond what the run reported.
+/// reach an Autoscan Report. Every word of them, and every word of the decision descriptions, comes
+/// from the Rust-rendered prompt on the envelope; the CLI applies no policy of its own beyond what
+/// the run reported.
 ///
 /// This takes the whole execution envelope rather than the run result, because the rendered display
 /// lines travel on the envelope. It presents all of them rather than trying to pick the Installed
 /// YAML Data block back out: Rust exposes that block only as part of the rendered run, so selecting
 /// it by position would be a structural assumption about a sequence that carries no structure. Every
 /// surrounding line describes the very run the user is being asked to decide about.
+///
+/// Rust's own prompt lines are appended last so the question sits immediately above the menu in a
+/// scrolling terminal, rather than at the top of a block the user has already scrolled past.
 CliLocalIgnoreRecoveryPresentation describe_cli_local_ignore_recovery(
     const classic::scanner::ScanRunContractExecutionResult& execution);
 
@@ -138,18 +166,24 @@ CliLocalIgnoreRecoveryPresentation describe_cli_local_ignore_recovery(
 /// `Cancel` on end-of-input or after `CLI_LOCAL_IGNORE_RECOVERY_PROMPT_ATTEMPTS` unusable answers.
 /// No input path can ever select `ResetToDefault` implicitly.
 ///
-/// When `reset_available` is false the reset option is neither printed nor accepted: `r` and
-/// `reset` are rejected exactly like any other unrecognized word, and the bracketed letters narrow
-/// to `[P/C]`. An option the run has already reported it cannot honor is not an option, and
-/// choosing it would spend the single-use continuation on a guaranteed failure.
+/// A decision whose `available` is false is neither printed nor accepted: its letter and its long
+/// word are rejected exactly like any other unrecognized answer, and the bracketed letters narrow
+/// to just the offered ones. An option the run has already reported it cannot honor is not an
+/// option, and choosing it would spend the single-use continuation on a guaranteed failure. The
+/// menu, the bracketed letters, the retry hint, and the accepted answers are all derived from
+/// `decisions`, so none of them can advertise something another withheld.
+///
+/// Cancel is always offered and is never in `decisions`: Rust models backing out as the *absence*
+/// of a decision, reached through the shared abandon operation, so its letter and its wording stay
+/// this frontend's own.
 ///
 /// Responsiveness caveat: cancellation is re-checked only after the console read returns, so Ctrl+C
 /// pressed while the read is still blocked is honored when the read completes rather than
 /// immediately. That affects only how quickly the question closes; the answer is discarded either
 /// way, so a late Ctrl+C can never authorize a reset.
-CliLocalIgnoreRecoveryChoice read_cli_local_ignore_recovery_choice(std::istream& input, std::ostream& output,
-                                                                   const CliScanRunCancellation& cancellation,
-                                                                   bool reset_available);
+CliLocalIgnoreRecoveryChoice read_cli_local_ignore_recovery_choice(
+    std::istream& input, std::ostream& output, const CliScanRunCancellation& cancellation,
+    const std::vector<CliLocalIgnoreRecoveryDecisionOption>& decisions);
 
 /// Terminal envelope after any Local Ignore recovery decision has been applied.
 struct CliScanRunExecutionOutcome {

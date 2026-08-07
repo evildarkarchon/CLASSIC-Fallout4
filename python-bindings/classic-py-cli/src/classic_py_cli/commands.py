@@ -13,7 +13,7 @@ from typing import Any, Protocol
 
 from .binding_loader import list_bindings, require_binding
 from .context import CommandContext
-from .display import render_display_lines
+from .display import render_display_lines, render_display_segments
 from .exit_codes import ExitCode, worst_exit_code
 from .output import CommandResult, binding_exception, failure, success
 from .scenarios import Scenario, all_scenarios, get_scenario, scenarios_for_profile
@@ -675,6 +675,75 @@ def _scan_run_summary(display_lines: list[str]) -> str:
     return display_lines[0] if display_lines else _UNRENDERED_RUN
 
 
+# Introduces the decisions a paused run would accept. Display Layout, and about this
+# frontend rather than about the run: `scan logs` is CI-oriented and never prompts
+# (`docs/CLASSIC_Python_CLI_PRD.md`, Out Of Scope), so a paused run is terminal here.
+# Printing Rust's decisions with no way to answer them would read as a menu that does
+# nothing; saying where they *can* be answered is what makes the list useful instead.
+_RECOVERY_DECISIONS_HEADER = "This command does not prompt. An interactive CLASSIC frontend offers:"
+
+
+def _scan_recovery_prompt(execution: object) -> dict[str, Any] | None:
+    """Project the Rust-rendered recovery prompt a paused run carries.
+
+    Args:
+        execution: A ``ScanRunExecution``, or any object publishing the same
+            ``recovery_prompt`` attribute.
+
+    Returns:
+        A payload holding the prompt's rendered lines and one entry per decision
+        this run can honor, or ``None`` when the run is not waiting on a decision.
+
+    Only available decisions are listed. This CLI cannot answer any of them, so the
+    filter costs it nothing today -- but a consumer reading this payload to drive its
+    own prompt would repeat the two native frontends' bug if the list included a
+    decision the run had already reported it cannot honor. The availability is read
+    from the description that carries it, so there is no second fact to consult.
+
+    ``decision`` is ``str()`` of the binding's own enum -- ``scan_run_resume`` takes
+    that enum rather than a snake_case token, and the binding publishes no token for
+    it. Stringifying is what keeps the mapping table out of this frontend; writing one
+    here is exactly the drift the enum was chosen to prevent.
+
+    Read through ``getattr`` for the same reason every other field on this envelope
+    is: the binding is resolved at run time, so this CLI can be pointed at a build
+    older than itself and simply reports no prompt.
+    """
+
+    prompt = getattr(execution, "recovery_prompt", None)
+    if prompt is None:
+        return None
+    return {
+        "lines": render_display_lines(getattr(prompt, "lines", [])),
+        "decisions": [
+            {
+                "decision": str(description.decision),
+                "label": description.label,
+                "description": render_display_segments(description.description),
+            }
+            for description in getattr(prompt, "decisions", [])
+            if description.available
+        ],
+    }
+
+
+def _scan_recovery_prompt_lines(recovery_prompt: dict[str, Any]) -> list[str]:
+    """Render a projected recovery prompt as plain lines for the text stream.
+
+    Every word comes from Rust except :data:`_RECOVERY_DECISIONS_HEADER` and the
+    ``" - "`` between a label and its description, both of which are Display Layout.
+    There is no bracketed letter or key hint, because this frontend offers no
+    affordance to hint at.
+    """
+
+    lines = list(recovery_prompt["lines"])
+    decisions = recovery_prompt["decisions"]
+    if decisions:
+        lines.append(_RECOVERY_DECISIONS_HEADER)
+        lines.extend(f"{entry['label']} - {entry['description']}" for entry in decisions)
+    return lines
+
+
 def _scan_report_text(result: object) -> str:
     """Return report text from a scanlog result-like object."""
 
@@ -878,17 +947,28 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         # line rather than to a sentence written here, so the field is Rust's words in
         # every branch rather than in some of them.
         message = str(getattr(result, "message", None) or _scan_run_summary(display_lines))
+        data: dict[str, Any] = {
+            "events": events,
+            "observerError": observer_error,
+            "result": _scan_run_result_summary(result),
+        }
+        # A paused run is terminal for this CLI, but terminal is not the same as
+        # unexplained: Rust states why it paused and what each decision would do, and
+        # a user reading CI output needs both to know what to run next. Nothing here
+        # claims the continuation, so no file is touched and there is nothing to
+        # abandon -- the run is simply left where Rust left it.
+        recovery_prompt = _scan_recovery_prompt(execution)
+        terminal_lines = display_lines
+        if recovery_prompt is not None:
+            data["recoveryPrompt"] = recovery_prompt
+            terminal_lines = display_lines + _scan_recovery_prompt_lines(recovery_prompt)
         return failure(
             "scan logs",
             _scan_run_summary(display_lines),
             unsuccessful_exit_code,
             error={"classification": "scan-run-terminal", "status": terminal_status, "message": message},
-            data={
-                "events": events,
-                "observerError": observer_error,
-                "result": _scan_run_result_summary(result),
-            },
-            text_lines=display_lines,
+            data=data,
+            text_lines=terminal_lines,
         )
     results = list(result.logs)
     failures = [_scan_failure_summary(item) for item in results if not _scan_result_success(item)]

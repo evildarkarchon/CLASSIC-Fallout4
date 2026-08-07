@@ -69,10 +69,10 @@ private slots:
 private:
     /// Runs the configured recovery prompt on the controller's GUI thread, defaulting safely to cancellation.
     ///
-    /// `resetAvailable` is passed through untouched: the controller marshals the run's answer, it
-    /// does not decide it.
+    /// The presentation is passed through untouched: the controller marshals the run's question, it
+    /// does not decide it, and it never withdraws a decision the run offered or adds one it did not.
     [[nodiscard]] classic::gui::ScanRunLocalIgnoreRecoveryChoice
-    requestLocalIgnoreRecoveryChoice(const QString& message, bool resetAvailable) const;
+    requestLocalIgnoreRecoveryChoice(const classic::gui::ScanRunLocalIgnoreRecoveryPresentation& recovery) const;
 
     bool m_scanning = false;
     SignalHub* m_signalHub = nullptr;

@@ -73,8 +73,10 @@ pub fn render_run_result(result: &RunResult) -> Vec<DisplayLine>;
 pub fn render_event(event: &Event) -> Vec<DisplayLine>;
 pub fn render_infrastructure_error(error: &InfrastructureError) -> Vec<DisplayLine>;
 pub fn render_resume_error(error: &ResumeError) -> Vec<DisplayLine>;
-pub fn render_local_ignore_recovery(data: &InstalledYamlDataRunData) -> RecoveryPrompt;
+pub fn render_local_ignore_recovery(data: Option<&InstalledYamlDataRunData>) -> RecoveryPrompt;
 ```
+
+The last signature gained its `Option` when it was built. A caller holding `RunResult::installed_yaml_data` holds one and must do *something* when it is absent, and all three native frontends had independently written the same answer for themselves — see [Confirmed Reset To Default Availability Gap](#confirmed-reset-to-default-availability-gap), where the rule is recorded as a three-way agreement. Taking the `Option` makes it one rule rather than three, which is the move this brief makes everywhere else for prose.
 
 Every adapter must continue to take the continuation out of the result *before* rendering. All three native frontends already do this; the ordering becomes load-bearing rather than incidental, and the crate documents it.
 
@@ -182,7 +184,7 @@ Three details differ from the sketch above, each for a reason worth recording:
 - **The rendered resume failure drops the code, which stays on the DTO.** `render_resume_error` deliberately omits the stable code, and `resume_error.code` still carries it. That is the boundary the brief asks for, made visible: prose for a person, a token for a consumer.
 - **Two parity-gate bugs surfaced during this work and were fixed rather than worked around.** The parser's name scan was a keyword regex over raw text, so a doc comment merely *mentioning* `enum Foo` became a contract row; three phantoms had reached the committed baseline (`definitions` twice, from "cannot share enum definitions", plus `mirroring`). Comments are now stripped before the scan, the three rows are gone, and no real row moved. Separately, `--update-baseline` mirrored the committed contract straight back, so it could never accept an added, removed, or modified item — the flag refreshed only the reports while the contributor guide documented it as the one-step way to accept an intentional bridge change. It now rewrites the contract from current source and exits `0`. Both are covered by new tests in `tools/cxx_api_parity/tests/`.
 
-The recovery prompt crosses as `ScanRunRecoveryPrompt { lines, decisions }` with `ScanRunRecoveryDecisionDescription { decision, label, description, available }`. Not yet built: it lands with the gated recovery phase.
+**Landed.** The recovery prompt crosses as `ScanRunRecoveryPrompt { lines, decisions }` with `ScanRunRecoveryDecisionDescription { decision, label, description, available }`, carried on `ScanRunContractExecutionResult` behind `has_recovery_prompt`. A description's segments flatten exactly as a line's do, so a frontend renders one with the renderer it already has, and the presence flag follows the `has_local_ignore_reset` convention beside it because `cxx` has no optional struct. Two rows were added to the contract and one modified; the segment taxonomy did not move.
 
 ### CLI
 
@@ -351,9 +353,26 @@ The existing end-to-end cancel pins in both native frontends — `CLI cancellati
 This phase does not start until all four conditions hold:
 
 1. The render phase has landed in the TUI, CLI, GUI, and `classic-py-cli`. **Satisfied.**
-2. Golden tests pass for every locked item in the subset table.
-3. All three parity gates are green against regenerated baselines.
+2. Golden tests pass for every locked item in the subset table. **Satisfied.**
+3. All three parity gates are green against regenerated baselines. **Satisfied.**
 4. A non-blocking GUI recovery prompt path is demonstrated. **Satisfied** — see `docs/implementation/qt_recovery_prompt_nonblocking_spike.md`.
+
+**Landed.** `render_local_ignore_recovery` produces the prompt, it reaches the C++ bridge, the Node binding, and the Python binding, and all four frontends now render it. No frontend writes a decision sentence any more; `plural` still has one caller each in the TUI, the native CLI, and the Node demo CLI, for the retained-discovery sentence alone.
+
+Details worth recording:
+
+- **The seams changed shape rather than losing a parameter.** `CliLocalIgnoreRecoveryPresentation { details, reset_available }` became `{ details, decisions }`, and `read_cli_local_ignore_recovery_choice` takes the decision list instead of a bool: the menu, the bracketed letters, the retry hint, and the accepted answers are now built in one pass over it, so none can advertise what another withheld. `ScanRunLocalIgnoreRecoveryPrompt` went from `(QString message, bool resetAvailable)` to one copyable `ScanRunLocalIgnoreRecoveryPresentation`, projected on the worker thread — the five constraints the spike fixed all still hold. The TUI's `LocalIgnoreRecoveryPrompt` swapped `reset_available` for `prompt_lines` plus `decisions`, and `App::local_ignore_reset_available` became `local_ignore_decision_available(decision)`.
+- **The TUI gates *both* decision keys, not just `r`.** Proceed Without Ignore is unconditionally available, so its guard costs nothing today; what it buys is that a third decision would arrive gated rather than silently ungated. Enter stays unbound.
+- **`offersLocalIgnoreResetToDefault` is gone.** Its "silence is not a denial" rule was one of three copies — the CLI and the TUI each had their own. `render_local_ignore_recovery` takes the `Option<&InstalledYamlDataRunData>` precisely so that rule is written once, which is what let all three copies be deleted rather than merely aligned.
+- **The Qt buttons now read `Proceed Without Ignore` and `Reset To Default`.** They previously read `Continue Without Ignore` and `Back Up && Reset to Default` — the spelling the Display Label doc comment singles out as not using the word *Proceed* at all. Button text is the Display Label now; only the escaping of a literal `&` is the dialog's.
+- **The Python CLI renders the prompt without prompting.** A paused run stays terminal there — `docs/CLASSIC_Python_CLI_PRD.md` puts interactive prompts in CI-oriented commands out of scope — but terminal is not unexplained. The prompt's lines and every *available* decision reach both the plain stream and `data.recoveryPrompt`. It claims no continuation, so no file is touched and there is nothing to abandon. The filter costs that CLI nothing itself; it is there because a consumer reading that payload to drive its own prompt would otherwise repeat the two native frontends' bug.
+- **The three sentences joined `core-owned-phrases.txt` with this change**, not before it, exactly as the entry below predicted. All five audits enforce them now.
+
+- **The list carries both decisions, and each carries its own availability.** The acceptance condition "only decisions core is willing to accept appear" is met by construction rather than by filtering: `decisions` is built by walking `LocalIgnoreRecoveryDecision::VARIANTS`, so it can neither offer something the contract will refuse nor omit something it accepts, and the two exhaustive `match`es behind it stop the crate compiling if a third variant is ever added. Filtering unavailable decisions out instead was rejected — a frontend must be able to explain the absence it is about to create, and it can only do that if core tells it what is being withheld.
+- **The unavailability sentence moved to core, and nothing else did.** `Reset To Default is unavailable: the selected Main YAML Data retains no usable default Local Ignore to publish.` was already written identically in the TUI overlay, the native CLI menu, and the Qt dialog, each with a comment saying core would own it once this renderer existed. It is a prompt *line* rather than part of the Reset decision's `description`, because a description says what the decision *does* and stays true whether or not this run can honor it.
+- **Proceed Without Ignore is hard-coded available.** It needs nothing from the installation, so no run can withdraw it. That the two answers differ is the argument for a per-decision field over one prompt-wide flag, made in code.
+- **No entry was added to `core-owned-phrases.txt` by the core phase.** Every phrase on that list must already be gone from every frontend — the file's own third condition — and at that point these three sentences were still written locally in four places. They joined the deny-list with the frontend adoption, not before it, or all five audits would have failed the moment the renderer landed.
+- **The retained-discovery sentence stays each frontend's for now.** `render_local_ignore_recovery` reads Installed YAML Data, which does not carry the discovery count. Moving that sentence means the prompt taking a `RunResult`; that is a deliberate widening, not something to do in passing, and it is what would retire `plural`'s last caller on three surfaces.
 
 Condition 4 was the real risk and is why the phase is separated. The CLI blocks on `std::getline` and the TUI owns its render loop, but `ScanWorker` runs its prompt as an injected callable that must not block the Qt event loop. If the shared prompt could not be driven without blocking, that would have been a design finding that stopped this phase rather than surfacing mid-implementation.
 
@@ -376,7 +395,7 @@ Because that is a recoverability bug a user hits today, the frontend half was sh
 - `ScanRunInstalledYamlDataPresentation` gained `localIgnoreResetAvailable`, `ScanRunLocalIgnoreRecoveryPrompt` and `promptLocalIgnoreRecoveryChoice` gained a `resetAvailable` parameter, and the reset button is not created when it is false.
 - All three frontends resolve absent Installed YAML Data as *available*: a run that reported nothing has not reported a denial, and withdrawing an option on silence would regress the behaviour that shipped before the fact existed.
 
-Adapter Mapping Rule 6 still supersedes this when the render phase lands: `RecoveryDecisionDescription::available` travels with the decision, so a frontend cannot offer an unavailable one without ignoring data placed directly in its hands. At that point the parameters described above are replaced by the bridged prompt rather than removed piecemeal.
+Adapter Mapping Rule 6 has now superseded all of that. `RecoveryDecisionDescription::available` travels with the decision, so a frontend cannot offer an unavailable one without ignoring data placed directly in its hands. The parameters described above were replaced by the bridged prompt rather than removed piecemeal: `read_cli_local_ignore_recovery_choice` takes the decision list, `promptLocalIgnoreRecoveryChoice` takes the whole presentation, `ScanRunInstalledYamlDataPresentation::localIgnoreResetAvailable` is still projected but no longer read by any prompt, and `offersLocalIgnoreResetToDefault` is gone — the ambiguity it resolved is resolved once, in `render_local_ignore_recovery`, for all four frontends.
 
 ## Implementation Order
 
@@ -388,7 +407,7 @@ Adapter Mapping Rule 6 still supersedes this when the render phase lands: `Recov
 6. **GUI migration.** **Landed.**
 7. **Node and Python surfaces**, then `classic-py-cli` migration. Last, because the segment taxonomy is only stable now and the baselines regenerate once. **Landed.** The taxonomy held: six kinds, unchanged, across all three baselines.
 8. **`CrashLogScanRunContinuation::abandon`** and the three call-site replacements. **Landed.** See [Shared Abandonment Rollout](#shared-abandonment-rollout).
-9. **Recovery prompt**, gated as above.
+9. **Recovery prompt**, gated as above. **Landed** — core, transport, and all four frontends. See [Local Ignore Recovery Phase](#local-ignore-recovery-phase).
 
 ## Tests To Add Or Update
 

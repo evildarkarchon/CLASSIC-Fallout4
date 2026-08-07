@@ -237,7 +237,7 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
             for (const auto& message : recovery.details) {
                 print_cli_scan_message(message);
             }
-            return read_cli_local_ignore_recovery_choice(std::cin, std::cout, cancellation, recovery.reset_available);
+            return read_cli_local_ignore_recovery_choice(std::cin, std::cout, cancellation, recovery.decisions);
         };
     }
 

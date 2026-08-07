@@ -100,6 +100,8 @@ private slots:
     void local_ignore_reset_availability_is_projected_data();
     /// Verifies the offer rule honours an explicit denial and treats an absent report as available.
     void local_ignore_reset_is_offered_unless_the_run_denied_it();
+    /// Verifies a run with nothing to ask carries no prompt for a frontend to show.
+    void a_finished_run_carries_no_question_to_ask();
     void setup_failure_presents_checks_updates_configuration_issues_actions_and_fatal_errors();
     void installed_yaml_data_presence_preserves_generated_ignore_metadata_and_diagnostics();
     /// Verifies successful reset metadata remains typed and Qt-owned for later interaction work.
@@ -535,20 +537,58 @@ void ScanRunPresentationTests::local_ignore_reset_availability_is_projected_data
 
 void ScanRunPresentationTests::local_ignore_reset_is_offered_unless_the_run_denied_it()
 {
-    classic::gui::ScanRunTerminalPresentation terminal{};
-    terminal.kind = classic::gui::ScanRunTerminalKind::LocalIgnoreRecoveryRequired;
+    // The "silence is not a denial" rule this used to assert here is gone from every frontend:
+    // `render_local_ignore_recovery` takes the optional Installed YAML Data and resolves it once, in
+    // Rust, rather than three times in three adapters. What this pins now is the half that is still
+    // this frontend's — that the described decisions cross the projection intact, availability and
+    // all, so a dialog reading `available` reads what the run actually said.
+    auto execution = executionWithStatus(classic::scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
+    execution.has_recovery_prompt = true;
+    classic::scanner::ScanRunDisplayLine promptLine{};
+    promptLine.severity = classic::scanner::ScanRunDisplaySeverity::Warning;
+    promptLine.segments.push_back(segment(classic::scanner::ScanRunDisplaySegmentKind::Text, "why the run paused"));
+    execution.recovery_prompt.lines.push_back(std::move(promptLine));
 
-    // Silence is not a denial. `localIgnoreResetAvailable` defaults to false to mirror the bridge
-    // DTO, so reading it without the presence check would withhold a decision that works.
-    terminal.hasInstalledYamlData = false;
-    QVERIFY(classic::gui::offersLocalIgnoreResetToDefault(terminal));
+    classic::scanner::ScanRunRecoveryDecisionDescription proceed{};
+    proceed.decision = classic::scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
+    proceed.label = "Proceed Without Ignore";
+    proceed.description.push_back(segment(classic::scanner::ScanRunDisplaySegmentKind::Text, "what proceeding does"));
+    proceed.available = true;
+    classic::scanner::ScanRunRecoveryDecisionDescription reset{};
+    reset.decision = classic::scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault;
+    reset.label = "Reset To Default";
+    reset.description.push_back(segment(classic::scanner::ScanRunDisplaySegmentKind::Text, "what resetting does"));
+    reset.available = false;
+    execution.recovery_prompt.decisions.push_back(std::move(proceed));
+    execution.recovery_prompt.decisions.push_back(std::move(reset));
 
-    terminal.hasInstalledYamlData = true;
-    terminal.installedYamlData.localIgnoreResetAvailable = true;
-    QVERIFY(classic::gui::offersLocalIgnoreResetToDefault(terminal));
+    const auto presentation = classic::gui::presentScanRunExecution(execution);
 
-    terminal.installedYamlData.localIgnoreResetAvailable = false;
-    QVERIFY(!classic::gui::offersLocalIgnoreResetToDefault(terminal));
+    QVERIFY(presentation.hasRecoveryPrompt);
+    QVERIFY(presentation.recoveryPrompt.prompt.contains(QStringLiteral("why the run paused")));
+    // The whole rendered run travels with the question, because Rust exposes the Installed YAML Data
+    // block only as part of it.
+    QCOMPARE(presentation.recoveryPrompt.message, presentation.richText);
+    QCOMPARE(presentation.recoveryPrompt.decisions.size(), 2);
+    QCOMPARE(presentation.recoveryPrompt.decisions[0].label, QStringLiteral("Proceed Without Ignore"));
+    QVERIFY(presentation.recoveryPrompt.decisions[0].description.contains(QStringLiteral("what proceeding does")));
+    QVERIFY(presentation.recoveryPrompt.decisions[0].available);
+    // Withheld decisions are projected too, so a dialog can explain the absence it is about to make.
+    QCOMPARE(presentation.recoveryPrompt.decisions[1].decision,
+             classic::scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault);
+    QVERIFY(!presentation.recoveryPrompt.decisions[1].available);
+}
+
+void ScanRunPresentationTests::a_finished_run_carries_no_question_to_ask()
+{
+    // A prompt attached to a run that is not waiting on an answer would invite a frontend to show
+    // one. Rust decides this; the projection must not widen it.
+    const auto presentation = classic::gui::presentScanRunExecution(
+        executionWithStatus(classic::scanner::ScanRunContractStatus::Completed));
+
+    QVERIFY(!presentation.hasRecoveryPrompt);
+    QVERIFY(presentation.recoveryPrompt.decisions.isEmpty());
+    QVERIFY(presentation.recoveryPrompt.prompt.isEmpty());
 }
 
 void ScanRunPresentationTests::setup_failure_presents_checks_updates_configuration_issues_actions_and_fatal_errors()

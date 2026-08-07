@@ -743,18 +743,23 @@ impl App {
         self.active_overlay = Some(Overlay::LocalIgnoreRecovery);
     }
 
-    /// Accepts one explicit Rust-defined Local Ignore recovery decision and resumes the paused run.
-    /// Returns whether the pending recovery can actually satisfy Reset To Default.
+    /// Returns whether the pending recovery can actually satisfy one recovery decision.
+    ///
+    /// Answered from the description core attached to that decision, so a key handler gates on the
+    /// same fact the overlay drew its choice line from. Asking per decision rather than about Reset
+    /// To Default alone is what makes a third decision, if one is ever added, arrive already gated
+    /// instead of silently ungated.
     ///
     /// False with no pending recovery at all, which is the safe answer for a key handler: there is
     /// nothing to accept.
     #[must_use]
-    pub fn local_ignore_reset_available(&self) -> bool {
+    pub fn local_ignore_decision_available(&self, decision: LocalIgnoreRecoveryDecision) -> bool {
         self.pending_local_ignore_recovery
             .as_ref()
-            .is_some_and(|pending| pending.prompt.reset_available)
+            .is_some_and(|pending| pending.prompt.decision_available(decision))
     }
 
+    /// Accepts one explicit Rust-defined Local Ignore recovery decision and resumes the paused run.
     pub fn accept_local_ignore_recovery(&mut self, decision: LocalIgnoreRecoveryDecision) {
         self.resume_local_ignore_recovery(RecoveryAnswer::Accept(decision));
     }

@@ -1,19 +1,20 @@
 use super::{
-    CANCEL_RECOVERY_CHOICE, LocalIgnoreRecoveryPrompt, PROCEED_WITHOUT_IGNORE_CHOICE,
-    PresentedLine, RESET_TO_DEFAULT_CHOICE, ScanRunIntent, TerminalPresentation, build_request,
-    describe_local_ignore_recovery, format_error, format_event, format_result, format_resume_error,
-    join_presented, sentence_case,
+    CANCEL_RECOVERY_CHOICE, LocalIgnoreRecoveryPrompt, PresentedLine, ScanRunIntent,
+    TerminalPresentation, build_request, describe_local_ignore_recovery, format_error, format_event,
+    format_result, format_resume_error, join_presented, sentence_case,
 };
 use classic_config_core::YamlDataContentIdentity;
 use classic_scan_presentation::{
-    DisplayLine, DisplaySegment, render_event, render_infrastructure_error, render_resume_error,
+    DisplayLine, DisplaySegment, RecoveryDecisionDescription, render_event,
+    render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
     render_run_result,
 };
 use classic_scanlog_core::scan_run::contract::{
     Configuration, Event, InfrastructureError, InfrastructureErrorStage,
-    LocalIgnoreResetConflictError, LocalIgnoreResetDurabilityUnknownError, LocalIgnoreResetFailure,
-    LocalIgnoreResetFailureStage, LogDisposition, LogEvent, LogFailure, LogFailureStage, LogResult,
-    Options, Request, ResumeError, RunResult,
+    LocalIgnoreRecoveryDecision, LocalIgnoreResetConflictError,
+    LocalIgnoreResetDurabilityUnknownError, LocalIgnoreResetFailure, LocalIgnoreResetFailureStage,
+    LogDisposition, LogEvent, LogFailure, LogFailureStage, LogResult, Options, Request, ResumeError,
+    RunResult,
 };
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanFacts,
@@ -798,6 +799,11 @@ fn paused_recovery_result(message: Option<&str>) -> RunResult {
 }
 
 /// Verifies the recovery overlay offers both Rust-defined decisions and a non-mutating cancel.
+///
+/// The decision wording is asserted against `render_local_ignore_recovery` rather than restated
+/// here, so this pins that the overlay *renders core* rather than re-pinning sentences the
+/// presentation crate already pins once. What is restated is only what stays this frontend's own:
+/// the bracketed keys and the cancel line.
 #[test]
 fn recovery_prompt_offers_both_decisions_and_a_non_mutating_cancel() {
     let result = paused_recovery_result(Some("Local Ignore recovery is required"));
@@ -812,13 +818,33 @@ fn recovery_prompt_offers_both_decisions_and_a_non_mutating_cancel() {
     );
     assert!(text.contains("Local Ignore recovery is required"));
     assert!(text.contains("Retained discovery: 2 crash logs will be scanned once you decide."));
-    assert!(text.contains(PROCEED_WITHOUT_IGNORE_CHOICE));
-    assert!(text.contains(RESET_TO_DEFAULT_CHOICE));
     assert!(text.contains(CANCEL_RECOVERY_CHOICE));
-    // Each choice must state its expected outcome, not merely advertise a key.
-    assert!(text.contains("left exactly as it is"));
-    assert!(text.contains("back up your malformed file byte-exactly"));
-    assert!(text.contains("Local Ignore is not modified"));
+
+    let core = render_local_ignore_recovery(result.installed_yaml_data.as_ref());
+    assert_eq!(core.decisions.len(), 2);
+    for description in &core.decisions {
+        assert!(
+            description.available,
+            "a run that reported no Installed YAML Data withdraws nothing"
+        );
+        // The label and every word of the description come from core; only the key is the TUI's.
+        assert!(
+            text.contains(description.label),
+            "the overlay must name the decision as core does: {}",
+            description.label
+        );
+        for segment in &description.description {
+            let DisplaySegment::Text(sentence) = segment else {
+                panic!("a decision description is fixed core-owned prose: {segment:?}");
+            };
+            assert!(
+                text.contains(sentence),
+                "the overlay must state what the decision does, in core's words: {sentence}"
+            );
+        }
+    }
+    assert!(text.contains("[P] Proceed Without Ignore"));
+    assert!(text.contains("[R] Reset To Default"));
 }
 
 /// Verifies the paused run is described to the user by core rather than by this frontend.
@@ -828,38 +854,70 @@ fn recovery_prompt_carries_the_run_as_core_describes_it() {
     let prompt = describe_local_ignore_recovery(&result);
 
     assert_renders_core_lines(&prompt.run_detail, &render_run_result(&result));
+    assert_renders_core_lines(
+        &prompt.prompt_lines,
+        &render_local_ignore_recovery(result.installed_yaml_data.as_ref()).lines,
+    );
     // The detail sits below the choices, because a choice the user cannot see is not a choice they
     // were offered and every line here wraps.
     let text = join_presented(&prompt.overlay_lines());
     assert!(text.find(CANCEL_RECOVERY_CHOICE) < text.find(&prompt.run_detail[0].text));
 }
 
-/// Verifies an unavailable Reset To Default is omitted from the overlay and explained.
+/// Verifies an unavailable Reset To Default is withheld from the overlay and from the key map.
 ///
 /// Constructed directly rather than through `describe_local_ignore_recovery`, because
 /// `InspectedYamlDataFile` exposes no public constructor and a paused-run fixture therefore cannot
 /// carry Installed YAML Data. The presentation rule is what changed, so that is what is pinned.
+///
+/// Both halves are asserted together on purpose. The overlay and the key map now read the same
+/// `available` field on the same description, and this is the test that would fail if one of them
+/// ever went back to reading a fact of its own.
 #[test]
 fn recovery_prompt_omits_reset_when_the_contract_says_it_cannot_succeed() {
     let prompt = LocalIgnoreRecoveryPrompt {
         message: Some("Local Ignore recovery is required".to_string()),
         retained_logs: 2,
         run_detail: Vec::new(),
-        reset_available: false,
+        prompt_lines: Vec::from([PresentedLine {
+            severity: classic_scan_presentation::DisplaySeverity::Notice,
+            text: "Reset To Default is unavailable: the selected Main YAML Data retains no usable \
+                   default Local Ignore to publish."
+                .to_string(),
+        }]),
+        decisions: Vec::from([
+            RecoveryDecisionDescription {
+                decision: LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                label: "Proceed Without Ignore",
+                description: Vec::from([DisplaySegment::Text("Scan now with an empty ignore list.")]),
+                available: true,
+            },
+            RecoveryDecisionDescription {
+                decision: LocalIgnoreRecoveryDecision::ResetToDefault,
+                label: "Reset To Default",
+                description: Vec::from([DisplaySegment::Text("Back up your malformed file.")]),
+                available: false,
+            },
+        ]),
     };
 
     let text = join_presented(&prompt.overlay_lines());
 
-    assert!(text.contains(PROCEED_WITHOUT_IGNORE_CHOICE));
+    assert!(text.contains("[P] Proceed Without Ignore"));
     assert!(text.contains(CANCEL_RECOVERY_CHOICE));
     assert!(
-        !text.contains(RESET_TO_DEFAULT_CHOICE),
+        !text.contains("[R] Reset To Default"),
         "an impossible choice must not be advertised, got:\n{text}"
     );
     assert!(
         text.contains("Reset To Default is unavailable"),
         "the omission must be explained rather than left as a silent gap, got:\n{text}"
     );
+    assert!(
+        !prompt.decision_available(LocalIgnoreRecoveryDecision::ResetToDefault),
+        "the key map must be gated on the same description the overlay drew from"
+    );
+    assert!(prompt.decision_available(LocalIgnoreRecoveryDecision::ProceedWithoutIgnore));
 }
 
 /// Verifies a paused run without a Rust message still explains why a decision is needed.
@@ -887,25 +945,24 @@ fn recovery_prompt_explains_a_paused_run_that_carried_no_message() {
     );
 }
 
-/// Verifies the overlay states the pause once rather than three times over.
+/// Verifies the overlay opens on core's question and restates nothing of its own above it.
 ///
-/// The overlay title already names it, and core's run detail states it twice more — as the status
-/// line and as `Message:`. A fourth copy written here is what was removed, so what this pins is the
-/// absence: the body opens on the retained-discovery line, not on a restatement.
+/// The headline this frontend used to write is gone. What opens the body now is core's own prompt
+/// line, which is not a fourth copy of the pause: it is the one wording every frontend shows, and
+/// it is the only one that frames the question. What this pins is that the frontend adds nothing
+/// ahead of it — a locally written headline reappearing above core's is the regression.
 #[test]
 fn recovery_prompt_does_not_restate_the_run_message_above_the_choices() {
     let result = paused_recovery_result(Some("Local Ignore recovery is required"));
     let prompt = describe_local_ignore_recovery(&result);
     let lines = prompt.overlay_lines();
 
-    assert!(
-        lines[0].text.starts_with("Retained discovery:"),
-        "the body must open on the retained-discovery line: {}",
-        lines[0].text
-    );
+    let core = render_local_ignore_recovery(result.installed_yaml_data.as_ref());
+    assert!(!core.lines.is_empty());
+    assert_renders_core_lines(&lines[..core.lines.len()], &core.lines);
     let before_choices = lines
         .iter()
-        .take_while(|line| !line.text.starts_with(PROCEED_WITHOUT_IGNORE_CHOICE))
+        .take_while(|line| !line.text.starts_with("[P] "))
         .filter(|line| line.text.contains("Local Ignore recovery is required"))
         .count();
     assert_eq!(

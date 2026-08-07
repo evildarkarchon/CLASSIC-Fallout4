@@ -85,12 +85,53 @@ def _fake_display_lines(status: str) -> list[types.SimpleNamespace]:
     ]
 
 
+def _fake_recovery_prompt(*, reset_available: bool) -> types.SimpleNamespace:
+    """Return a recovery prompt shaped as the binding publishes one.
+
+    Deliberately not real wording, for the reason :func:`_fake_display_lines` is not:
+    the sentences are pinned once in `classic-scan-presentation`, and a fixture that
+    reused them would still pass if the CLI ignored its argument and printed a
+    hard-coded copy.
+
+    Both decisions are carried whether or not the run can honor them, exactly as the
+    binding carries them, so the filtering under test is the CLI's own.
+    """
+
+    return types.SimpleNamespace(
+        lines=[
+            types.SimpleNamespace(
+                severity="warning",
+                segments=[types.SimpleNamespace(kind="text", text="why the run paused", path="", count=0)],
+            )
+        ],
+        decisions=[
+            types.SimpleNamespace(
+                decision="ScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore",
+                label="Proceed Without Ignore",
+                description=[
+                    types.SimpleNamespace(kind="text", text="what proceeding does", path="", count=0)
+                ],
+                available=True,
+            ),
+            types.SimpleNamespace(
+                decision="ScanRunLocalIgnoreRecoveryDecision.ResetToDefault",
+                label="Reset To Default",
+                description=[
+                    types.SimpleNamespace(kind="text", text="what resetting does", path="", count=0)
+                ],
+                available=reset_available,
+            ),
+        ],
+    )
+
+
 def _install_final_scan_run_fake(
     fake: types.ModuleType,
     make_logs: object,
     *,
     status: str = "completed",
     message: str | None = None,
+    recovery_prompt: object | None = None,
 ) -> None:
     """Attach a selectable final request/execution result to a fake scanlog module."""
 
@@ -141,6 +182,7 @@ def _install_final_scan_run_fake(
             error=None,
             observer_error=None,
             display_lines=_fake_display_lines(status),
+            recovery_prompt=recovery_prompt,
         )
 
     fake.ScanRunConfiguration = ScanRunConfiguration
@@ -394,6 +436,71 @@ def test_scan_logs_reports_unsuccessful_terminal_statuses(
     }
     assert payload["data"]["result"]["status"] == status
     assert payload["data"]["result"]["installedYamlData"] is None
+    # A run that carries no prompt gets no prompt payload, and a binding older than
+    # this CLI publishes no `recovery_prompt` attribute at all.
+    assert "recoveryPrompt" not in payload["data"]
+
+
+@pytest.mark.parametrize("reset_available", [True, False])
+def test_scan_logs_states_a_paused_run_in_rusts_words(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    reset_available: bool,
+) -> None:
+    """A paused run is terminal here, but never unexplained.
+
+    `scan logs` is CI-oriented and never prompts, so it resumes nothing and touches no
+    file. What it does do is state Rust's question and describe every decision an
+    interactive frontend would offer -- in Rust's words, never its own.
+    """
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+
+    fake = types.ModuleType("classic_scanlog")
+    fake.__version__ = "test"
+    _install_final_scan_run_fake(
+        fake,
+        lambda _configuration, _paths: [],
+        status="local_ignore_recovery_required",
+        message="terminal local_ignore_recovery_required",
+        recovery_prompt=_fake_recovery_prompt(reset_available=reset_available),
+    )
+    monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
+    _install_user_settings_fake(monkeypatch)
+
+    code = main(["--json", "scan", "logs", "--path", str(tmp_path)])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 1
+    assert payload["success"] is False
+    prompt = payload["data"]["recoveryPrompt"]
+    assert prompt["lines"] == ["why the run paused"]
+
+    proceed = {
+        "decision": "ScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore",
+        "label": "Proceed Without Ignore",
+        "description": "what proceeding does",
+    }
+    reset = {
+        "decision": "ScanRunLocalIgnoreRecoveryDecision.ResetToDefault",
+        "label": "Reset To Default",
+        "description": "what resetting does",
+    }
+    # Withheld rather than listed-and-caveated. This CLI answers nothing itself, but a
+    # consumer reading this payload to drive its own prompt would repeat the two native
+    # frontends' bug if an unavailable decision appeared here.
+    assert prompt["decisions"] == ([proceed, reset] if reset_available else [proceed])
+
+    # The plain stream is where `text_lines` surfaces; the JSON envelope carries the
+    # structured projection above instead. Both have to state the question, so the
+    # decisions are asserted on each.
+    assert main(["scan", "logs", "--path", str(tmp_path)]) == 1
+    rendered = capsys.readouterr().out
+    assert "why the run paused" in rendered
+    assert "Proceed Without Ignore - what proceeding does" in rendered
+    assert ("Reset To Default - what resetting does" in rendered) is reset_available
 
 
 def test_scan_logs_consumes_final_result_and_event_contract(

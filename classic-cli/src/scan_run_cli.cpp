@@ -221,26 +221,95 @@ std::string normalize_console_answer(const std::string& answer) {
     return normalized;
 }
 
+/// The console affordance this frontend binds to one Rust-owned recovery decision.
+///
+/// Display Layout, and all that is left of a choice line the CLI still decides: the label and the
+/// sentence beside it arrive already worded on the bridged prompt.
+struct CliRecoveryAffordance {
+    /// The bracketed letter shown in the menu and in the offered-letters hint.
+    char letter;
+    /// The spelled-out word accepted as an equivalent answer.
+    std::string_view word;
+    /// The presentation-level choice this decision resolves to when chosen.
+    CliLocalIgnoreRecoveryChoice choice;
+};
+
+/// Returns the letter, long word, and resolved choice for one decision.
+///
+/// One switch rather than two beside each other: a decision's key and the choice that key produces
+/// are the same fact seen twice, and two exhaustive switches over one enum can drift by exactly one
+/// clause. Exhaustive rather than table-driven so a third decision added to the contract trips
+/// `-Wswitch` here — a decision the menu cannot name is one it must not print, and silently falling
+/// through to a placeholder letter would print exactly that.
+CliRecoveryAffordance recovery_affordance(scanner::ScanRunLocalIgnoreRecoveryDecision decision) {
+    switch (decision) {
+    case scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore:
+        return {'P', "proceed", CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore};
+    case scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault:
+        return {'R', "reset", CliLocalIgnoreRecoveryChoice::ResetToDefault};
+    }
+    // Unreachable for a valid enumerator. An empty word and a letter no answer can spell keep an
+    // unrecognized decision unofferable rather than mapping it onto another decision's key, and
+    // Cancel is the safe resolution if one is somehow chosen: it cannot touch the user's files.
+    return {'?', "", CliLocalIgnoreRecoveryChoice::Cancel};
+}
+
+/// Returns the bracketed hint printed beside the cursor, such as `[P/R/C]`.
+std::string format_offered_letters(const std::vector<char>& offered) {
+    std::string joined;
+    for (const char letter : offered) {
+        if (!joined.empty()) {
+            joined += '/';
+        }
+        joined += letter;
+    }
+    return fmt::format("[{}]", joined);
+}
+
+/// Returns the sentence printed after an unusable answer, such as `Enter P, R, or C.`.
+///
+/// Derived from the same letters the bracketed hint is, so the two cannot disagree about what was
+/// offered. Separate from that hint because a retry is a sentence the user reads after a mistake
+/// rather than a label beside the cursor: the serial comma appears only for three or more, which is
+/// what keeps two options reading as `Enter P or C.` instead of as a list.
+std::string format_retry_hint(const std::vector<char>& offered) {
+    std::string hint = "Unrecognized answer. Enter ";
+    for (std::size_t index = 0; index < offered.size(); ++index) {
+        if (index > 0) {
+            hint += index + 1 == offered.size() ? (offered.size() > 2 ? ", or " : " or ") : ", ";
+        }
+        hint += offered[index];
+    }
+    hint += ".\n";
+    return hint;
+}
+
 /// Maps one normalized console answer onto an explicit choice, or nothing when unusable.
 ///
-/// Only the two Rust-owned decisions have affirmative spellings. Every other answer is rejected
-/// rather than defaulted, because a mistyped answer must never mutate Local Ignore YAML Data.
+/// Every other answer is rejected rather than defaulted, because a mistyped answer must never
+/// mutate Local Ignore YAML Data.
 ///
-/// `reset_available` false removes the reset spellings from the accepted set entirely. The menu
-/// does not print the option in that case, so accepting the letter anyway would honor a decision
-/// the run was never offered — and spend its one-shot continuation on a failure.
-bool match_recovery_choice(std::string_view answer, bool reset_available, CliLocalIgnoreRecoveryChoice& choice) {
-    if (answer == "p" || answer == "proceed") {
-        choice = CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore;
-        return true;
-    }
-    if (reset_available && (answer == "r" || answer == "reset")) {
-        choice = CliLocalIgnoreRecoveryChoice::ResetToDefault;
-        return true;
-    }
+/// The accepted set is derived from `decisions` rather than written out, so it is the same list the
+/// menu printed from and the two cannot disagree. An unavailable decision is skipped here for the
+/// same reason it is skipped there: the menu did not print it, so accepting its letter anyway would
+/// honor a decision the run was never offered — and spend its one-shot continuation on a failure.
+bool match_recovery_choice(std::string_view answer,
+                           const std::vector<CliLocalIgnoreRecoveryDecisionOption>& decisions,
+                           CliLocalIgnoreRecoveryChoice& choice) {
     if (answer == "c" || answer == "cancel") {
         choice = CliLocalIgnoreRecoveryChoice::Cancel;
         return true;
+    }
+    for (const auto& option : decisions) {
+        if (!option.available) {
+            continue;
+        }
+        const auto affordance = recovery_affordance(option.decision);
+        const std::string letter(1, static_cast<char>(std::tolower(static_cast<unsigned char>(affordance.letter))));
+        if (answer == letter || (!affordance.word.empty() && answer == affordance.word)) {
+            choice = affordance.choice;
+            return true;
+        }
     }
     return false;
 }
@@ -282,17 +351,27 @@ std::string render_cli_display_segment(const scanner::ScanRunDisplaySegment& seg
     return to_std_string(segment.text);
 }
 
-} // namespace
-
-std::string render_cli_display_line(const scanner::ScanRunDisplayLine& line) {
+/// Concatenates a bare segment list, in Rust's order, into one plain-text string.
+///
+/// Split out of `render_cli_display_line` because a recovery decision's description is a segment
+/// list with no line around it: it is drawn inside a menu row this frontend composes, so there is
+/// no severity to route on. The concatenation rule is deliberately the same one rather than a
+/// second copy of it.
+std::string render_cli_display_segments(const rust::Vec<scanner::ScanRunDisplaySegment>& segments) {
     std::string rendered;
-    for (const auto& segment : line.segments) {
+    for (const auto& segment : segments) {
         if (!rendered.empty()) {
             rendered += ' ';
         }
         rendered += render_cli_display_segment(segment);
     }
     return rendered;
+}
+
+} // namespace
+
+std::string render_cli_display_line(const scanner::ScanRunDisplayLine& line) {
+    return render_cli_display_segments(line.segments);
 }
 
 rust::Box<scanner::ScanRunRequest> build_cli_scan_run_request(const CliArgs& args,
@@ -507,58 +586,65 @@ CliLocalIgnoreRecoveryPresentation describe_cli_local_ignore_recovery(
     append_display_lines(execution.display_lines, recovery.details);
     if (result.has_discovery) {
         // The retained discovery set is the reason recovery is a choice rather than a restart:
-        // whichever decision the user makes resumes these exact Crash Logs.
+        // whichever decision the user makes resumes these exact Crash Logs. Still this frontend's
+        // own sentence, and the last one it writes about a run: `render_local_ignore_recovery`
+        // reads Installed YAML Data, which carries no discovery count.
         const auto accepted = result.discovery.accepted_logs.size();
         recovery.details.push_back({false, fmt::format("  Retained discovery: {} {} will be scanned once you decide.",
                                                        accepted, plural(accepted, "crash log", "crash logs"))});
     }
-    // Absent Installed YAML Data means the run said nothing about reset availability, which a
-    // recovery-required result never does in practice. Keep offering the decision in that case: an
-    // unknown answer must not silently withdraw an option that may well work, and offering is
-    // exactly the behavior that shipped before this fact existed. The TUI reads the same fact the
-    // same way in `describe_local_ignore_recovery`.
-    recovery.reset_available =
-        !result.has_installed_yaml_data || result.installed_yaml_data.local_ignore_reset_available;
+    // Rust's question, last, so it sits immediately above the menu rather than at the top of a
+    // block the user has already scrolled past. This is where the CLI used to resolve absent
+    // Installed YAML Data into an availability flag for itself, next to the GUI and the TUI each
+    // resolving it for themselves; `render_local_ignore_recovery` takes that `Option` so the rule
+    // is written once. Both vectors are empty when the envelope carries no prompt, which leaves
+    // Cancel as the only offered answer — the safe reading of a contract violation.
+    append_display_lines(execution.recovery_prompt.lines, recovery.details);
+    for (const auto& description : execution.recovery_prompt.decisions) {
+        recovery.decisions.push_back({description.decision, to_std_string(description.label),
+                                      render_cli_display_segments(description.description),
+                                      description.available});
+    }
     return recovery;
 }
 
-CliLocalIgnoreRecoveryChoice read_cli_local_ignore_recovery_choice(std::istream& input, std::ostream& output,
-                                                                   const CliScanRunCancellation& cancellation,
-                                                                   bool reset_available) {
+CliLocalIgnoreRecoveryChoice read_cli_local_ignore_recovery_choice(
+    std::istream& input, std::ostream& output, const CliScanRunCancellation& cancellation,
+    const std::vector<CliLocalIgnoreRecoveryDecisionOption>& decisions) {
     // Ctrl+C observed before the question is asked already decided the run; never offer a
     // destructive default to a user who is on their way out.
     if (scanner::scan_run_cancellation_is_cancelled(cancellation.token())) {
         return CliLocalIgnoreRecoveryChoice::Cancel;
     }
 
-    output << "Choose how to continue:\n"
-           << "  [P] Proceed without Ignore - scan now with no ignore entries; the malformed file is left "
-              "unchanged\n";
-    if (reset_available) {
-        output << "  [R] Reset to default       - back up the malformed file byte-exactly, then restore selected "
-                  "Main defaults\n";
-    }
-    output << "  [C] Cancel                 - stop this scan without changing any file\n";
-    if (!reset_available) {
+    // The menu, the bracketed letters, and the retry hint are all built in this one pass over
+    // `decisions`, so the question can never advertise an answer the menu withheld. Why an
+    // unavailable decision is missing was already stated by Rust's own prompt lines, printed just
+    // above this menu, so nothing is said about the absence here.
+    output << "Choose how to continue:\n";
+    std::vector<char> offered;
+    for (const auto& option : decisions) {
         // Omitted rather than listed-and-refused: a bracketed letter the prompt will not accept
-        // reads as a bug. Saying why it is gone keeps the omission from reading as a missing
-        // feature instead of a decision this run cannot honor.
-        //
-        // Worded identically to the TUI's overlay and the Qt dialog rather than freshly phrased
-        // here. Core will own this sentence once the presentation crate lands; until then, three
-        // copies that already agree are one wording to move, not three to reconcile.
-        output << "Reset To Default is unavailable: the selected Main YAML Data retains no usable default "
-                  "Local Ignore to publish.\n";
+        // reads as a bug.
+        if (!option.available) {
+            continue;
+        }
+        const auto affordance = recovery_affordance(option.decision);
+        output << fmt::format("  [{}] {} - {}\n", affordance.letter, option.label, option.description);
+        offered.push_back(affordance.letter);
     }
+    // Cancel is always last and always offered. Rust has no decision for backing out — it is spelled
+    // as the absence of one — so its letter and its sentence are this frontend's to write.
+    output << "  [C] Cancel - stop this scan without changing any file\n";
+    offered.push_back('C');
 
-    // The offered letters and the retry hint are derived from the same fact that gated the menu, so
-    // the question can never advertise an answer the menu withheld.
-    const std::string_view offered_letters = reset_available ? "[P/R/C]" : "[P/C]";
-    const std::string_view retry_hint =
-        reset_available ? "Unrecognized answer. Enter P, R, or C.\n" : "Unrecognized answer. Enter P or C.\n";
+    // Both hints are derived from the one list of letters the menu just printed, so neither can
+    // advertise an answer the menu withheld.
+    const std::string letters_hint = format_offered_letters(offered);
+    const std::string retry_hint = format_retry_hint(offered);
 
     for (int attempt = 0; attempt < CLI_LOCAL_IGNORE_RECOVERY_PROMPT_ATTEMPTS; ++attempt) {
-        output << "Local Ignore recovery " << offered_letters << ": " << std::flush;
+        output << "Local Ignore recovery " << letters_hint << ": " << std::flush;
         std::string answer;
         if (!std::getline(input, answer)) {
             // End of input is not an answer. Treat it as dismissal so redirected or closed stdin
@@ -571,7 +657,7 @@ CliLocalIgnoreRecoveryChoice read_cli_local_ignore_recovery_choice(std::istream&
         }
 
         CliLocalIgnoreRecoveryChoice choice = CliLocalIgnoreRecoveryChoice::Cancel;
-        if (match_recovery_choice(normalize_console_answer(answer), reset_available, choice)) {
+        if (match_recovery_choice(normalize_console_answer(answer), decisions, choice)) {
             return choice;
         }
         output << retry_hint;

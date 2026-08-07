@@ -166,15 +166,18 @@ void ScanWorker::doScan(const QString& installationRoot, const classic::gui::Cra
                 return;
             }
 
-            // The prompt is handed the whole rendered run rather than the run message alone. Rust
-            // exposes the Installed YAML Data block — the facts this decision is about — only as
-            // part of the rendered run, and picking that block back out by position would be a
-            // structural assumption about a sequence that carries no structure. The native CLI and
-            // the TUI made the same call for the same reason. The prompt's own wording, its buttons,
-            // and the descriptions beside them are untouched and land with the gated recovery phase.
+            // The prompt is handed the whole rendered run *and* Rust's own question, already
+            // rendered on this thread. Rust exposes the Installed YAML Data block — the facts this
+            // decision is about — only as part of the rendered run, and picking that block back out
+            // by position would be a structural assumption about a sequence that carries no
+            // structure. The native CLI and the TUI made the same call for the same reason.
+            //
+            // Rendering happens here rather than in the dialog because the bridged envelope cannot
+            // cross the hop to the GUI thread: `presentScanRunExecution` above has already turned it
+            // into copyable Qt values carrying no `rust::Box`, which is what makes the
+            // `Qt::BlockingQueuedConnection` in `makeLocalIgnoreRecoveryPrompt` legal.
             auto continuation = scanner::scan_run_contract_execution_take_continuation(*operation);
-            const auto choice = m_localIgnoreRecoveryPrompt(
-                terminal.richText, classic::gui::offersLocalIgnoreResetToDefault(terminal));
+            const auto choice = m_localIgnoreRecoveryPrompt(terminal.recoveryPrompt);
             // Dismissal maps to *no decision*, which is exactly what the shared abandon operation
             // takes. The switch stays exhaustive so a choice added later trips `-Wswitch` here
             // rather than silently resolving to Proceed Without Ignore. The same `optional`-shaped

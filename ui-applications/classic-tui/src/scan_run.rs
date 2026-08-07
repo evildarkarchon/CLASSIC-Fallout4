@@ -26,11 +26,13 @@
 mod tests;
 
 use classic_scan_presentation::{
-    DisplayLine, DisplaySegment, DisplaySeverity, render_event, render_infrastructure_error,
-    render_resume_error, render_run_result,
+    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryDecisionDescription, render_event,
+    render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
+    render_run_result,
 };
 use classic_scanlog_core::scan_run::contract::{
-    Configuration, Event, InfrastructureError, LogEvent, Request, ResumeError, RunResult,
+    Configuration, Event, InfrastructureError, LocalIgnoreRecoveryDecision, LogEvent, Request,
+    ResumeError, RunResult,
 };
 use classic_scanlog_core::{
     CrashLogScanSetupContext, ScanProgressPhase, StandardCrashLogScanSource,
@@ -94,7 +96,17 @@ enum PathDetail {
 /// to decide — segments keep their order, a label keeps its words, and a count keeps the noun core
 /// already agreed with its value.
 fn flatten_line(line: &DisplayLine, detail: PathDetail) -> String {
-    line.segments
+    flatten_segments(&line.segments, detail)
+}
+
+/// Concatenates a bare segment list, in core's order, into drawable text.
+///
+/// Split out of [`flatten_line`] because a `RecoveryDecisionDescription` carries segments without a
+/// severity around them: a decision's description is drawn inside a choice line this frontend
+/// composes, so there is no line to take a severity from. The concatenation rule is the same one,
+/// deliberately shared rather than restated.
+fn flatten_segments(segments: &[DisplaySegment], detail: PathDetail) -> String {
+    segments
         .iter()
         .map(|segment| segment_text(segment, detail))
         .collect::<Vec<_>>()
@@ -212,10 +224,21 @@ pub(crate) fn build_request(
     }
 }
 
-/// Expected-outcome line for the operation-scoped Proceed Without Ignore decision.
-pub(crate) const PROCEED_WITHOUT_IGNORE_CHOICE: &str = "[P] Proceed Without Ignore - scan now with an empty ignore list. Your malformed file is left exactly as it is, and this choice applies only to this scan.";
-/// Expected-outcome line for the durable Reset To Default decision.
-pub(crate) const RESET_TO_DEFAULT_CHOICE: &str = "[R] Reset To Default - back up your malformed file byte-exactly, replace it with the selected Main defaults, then scan.";
+/// Returns the bracketed key this overlay binds to one recovery decision.
+///
+/// The letters are Display Layout and stay this frontend's own, which is the whole of what a
+/// choice line still decides here: the label and the sentence beside them arrive in a
+/// [`RecoveryDecisionDescription`] and are read identically in every frontend.
+///
+/// Exhaustive, so a third decision cannot reach the overlay without someone choosing a key for
+/// it — an unbound choice line advertises a key that does nothing, which reads as a bug.
+const fn recovery_decision_key(decision: LocalIgnoreRecoveryDecision) -> &'static str {
+    match decision {
+        LocalIgnoreRecoveryDecision::ProceedWithoutIgnore => "[P]",
+        LocalIgnoreRecoveryDecision::ResetToDefault => "[R]",
+    }
+}
+
 /// Expected-outcome line for dismissing the decision without mutation or analysis.
 ///
 /// Both dismissal keys are advertised because both are live; an unadvertised binding is exactly
@@ -245,15 +268,33 @@ pub(crate) struct LocalIgnoreRecoveryPrompt {
     /// exactly the guess this consolidation exists to remove. Showing the surrounding facts is no
     /// loss: every one of them describes the run the user is being asked to decide about.
     pub(crate) run_detail: Vec<PresentedLine>,
-    /// Whether Reset To Default is a choice this run can actually satisfy.
+    /// The question core asks, in reading order: why the run paused, which file is at fault, and
+    /// — when one is being withheld — why the overlay is about to offer fewer choices.
     ///
-    /// False when the selected Main YAML retained no usable `default_ignorefile`. The contract
-    /// projects this so the overlay can omit an option that would consume the one-shot
-    /// continuation and fail, leaving the user with no scan and no second attempt.
-    pub(crate) reset_available: bool,
+    /// Separate from [`Self::run_detail`] because they answer different questions. The detail is
+    /// the whole run; these lines are the decision the user is standing in front of.
+    pub(crate) prompt_lines: Vec<PresentedLine>,
+    /// One description per recovery decision, each carrying its own availability.
+    ///
+    /// Kept whole rather than pre-filtered to the offered ones. The overlay reads `available` at
+    /// the moment it draws each line, and [`Self::decision_available`] reads the same field at
+    /// the moment a key is pressed, so the key map and the drawn choices cannot disagree — which
+    /// is what the separate `reset_available` flag this replaced could not guarantee.
+    pub(crate) decisions: Vec<RecoveryDecisionDescription>,
 }
 
 impl LocalIgnoreRecoveryPrompt {
+    /// Returns whether this run can honor one recovery decision.
+    ///
+    /// Answered from the description core attached to the decision itself, so a key binding and
+    /// the choice line beside it are gated on one fact rather than on two that could drift. An
+    /// unknown decision reports unavailable, which fails closed.
+    pub(crate) fn decision_available(&self, decision: LocalIgnoreRecoveryDecision) -> bool {
+        self.decisions
+            .iter()
+            .any(|description| description.decision == decision && description.available)
+    }
+
     /// Returns the status line describing how much retained work an accepted decision resumes.
     pub(crate) fn resume_status(&self) -> String {
         format!(
@@ -282,40 +323,48 @@ impl LocalIgnoreRecoveryPrompt {
     /// bottom of the overlay. Supporting detail may sit below the fold; an option the user cannot
     /// see is not an option they were offered.
     ///
-    /// The body opens on the retained-discovery line rather than on a headline restating why the
-    /// run paused. Three things were saying that at once: the overlay's own title, and then core's
-    /// status line and its `Message:` line, adjacent to each other in [`Self::run_detail`]. Two of
-    /// those are core's and one is the window chrome, so the one worth dropping was the copy this
-    /// frontend was making.
+    /// The body opens on core's prompt lines, which is where this frontend's own headline used to
+    /// sit. That headline was removed because core's status line and its `Message:` line, adjacent
+    /// to each other in [`Self::run_detail`], already said it and were free to disagree with it.
+    /// What opens the body now is not a fourth copy: it is the one wording every frontend shows,
+    /// and it frames the question — *choose how to continue* — which neither of those two does.
     ///
-    /// The choices themselves are still written here. The Local Ignore recovery prompt renderer
-    /// lands with the gated recovery phase, so until it exists there is nothing in core to render
-    /// them from — which is also why `plural` still has one caller.
+    /// The unavailability notice is among those lines rather than beside the withheld choice,
+    /// because a decision's description says what it *does* and stays true whether or not this run
+    /// can honor it. Stating the absence is what keeps a missing option from reading as a missing
+    /// feature.
+    ///
+    /// Only the bracketed key and the cancel line are still written here; `plural` survives for
+    /// the retained-discovery sentence, which core cannot render because
+    /// `render_local_ignore_recovery` reads Installed YAML Data and that does not carry a
+    /// discovery count.
     pub(crate) fn overlay_lines(&self) -> Vec<PresentedLine> {
-        let mut lines = Vec::from([
-            PresentedLine::local(format!(
-                "Retained discovery: {} crash {} will be scanned once you decide.",
-                self.retained_logs,
-                plural(self.retained_logs, "log", "logs")
-            )),
-            PresentedLine::local(String::new()),
-            PresentedLine::local(PROCEED_WITHOUT_IGNORE_CHOICE.to_string()),
-        ]);
-        // Omitted rather than shown-and-disabled: this overlay is plain text with no affordance for
-        // an inert entry, and listing a key that does nothing reads as a bug.
-        if self.reset_available {
-            lines.push(PresentedLine::local(RESET_TO_DEFAULT_CHOICE.to_string()));
+        let mut lines = self.prompt_lines.clone();
+        if !lines.is_empty() {
+            lines.push(PresentedLine::local(String::new()));
+        }
+        lines.push(PresentedLine::local(format!(
+            "Retained discovery: {} crash {} will be scanned once you decide.",
+            self.retained_logs,
+            plural(self.retained_logs, "log", "logs")
+        )));
+        lines.push(PresentedLine::local(String::new()));
+        for description in &self.decisions {
+            // Omitted rather than shown-and-disabled: this overlay is plain text with no affordance
+            // for an inert entry, and listing a key that does nothing reads as a bug. The `continue`
+            // reads the availability core attached to this very description, so there is no second
+            // fact to consult and none to forget.
+            if !description.available {
+                continue;
+            }
+            lines.push(PresentedLine::local(format!(
+                "{} {} - {}",
+                recovery_decision_key(description.decision),
+                description.label,
+                flatten_segments(&description.description, PathDetail::Full),
+            )));
         }
         lines.push(PresentedLine::local(CANCEL_RECOVERY_CHOICE.to_string()));
-        if !self.reset_available {
-            lines.push(PresentedLine::local(String::new()));
-            lines.push(PresentedLine {
-                severity: DisplaySeverity::Notice,
-                text: "Reset To Default is unavailable: the selected Main YAML Data retains no \
-                       usable default Local Ignore to publish."
-                    .to_string(),
-            });
-        }
         if !self.run_detail.is_empty() {
             lines.push(PresentedLine::local(String::new()));
             lines.extend(self.run_detail.iter().cloned());
@@ -338,21 +387,19 @@ pub(crate) fn join_presented(lines: &[PresentedLine]) -> String {
 /// Every fact comes from the retained result; the TUI adds no policy and never inspects the
 /// malformed file itself.
 pub(crate) fn describe_local_ignore_recovery(result: &RunResult) -> LocalIgnoreRecoveryPrompt {
+    // Absent Installed YAML Data used to be resolved here, identically to how the native CLI and
+    // the Qt GUI each resolved it for themselves. `render_local_ignore_recovery` takes the
+    // `Option` precisely so that stays one rule rather than three.
+    let prompt = render_local_ignore_recovery(result.installed_yaml_data.as_ref());
     LocalIgnoreRecoveryPrompt {
         run_detail: present_lines(&render_run_result(result)),
+        prompt_lines: present_lines(&prompt.lines),
+        decisions: prompt.decisions,
         message: result.message.clone(),
         retained_logs: result
             .discovery
             .as_ref()
             .map_or(result.total, |discovery| discovery.accepted_logs.len()),
-        // Absent Installed YAML Data means the contract told us nothing about reset availability,
-        // which a recovery-required result never does in practice. Keep offering the choice in that
-        // case rather than hiding it: an unknown answer must not silently remove an option that may
-        // well work, and offering is exactly the behaviour that shipped before this fact existed.
-        reset_available: result
-            .installed_yaml_data
-            .as_ref()
-            .is_none_or(|installed| installed.local_ignore_reset_available),
     }
 }
 

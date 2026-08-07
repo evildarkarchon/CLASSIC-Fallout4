@@ -30,18 +30,57 @@ enum class ScanRunLocalIgnoreRecoveryChoice {
     Cancel,
 };
 
+/// One Local Ignore recovery decision as Rust describes it, projected into Qt-owned values.
+///
+/// A copy rather than a view onto the bridged envelope, and free of any `rust::Box`: this rides a
+/// `Qt::BlockingQueuedConnection` from the worker thread to the GUI thread, so it must be copyable
+/// and must carry nothing the worker still owns.
+struct ScanRunRecoveryDecisionPresentation {
+    /// The decision to hand back when this option is chosen.
+    classic::scanner::ScanRunLocalIgnoreRecoveryDecision decision =
+        classic::scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
+    /// The decision's Display Label, as Rust resolved it. Button text, unchanged.
+    QString label;
+    /// What choosing it will actually do, rendered as rich text like every other line.
+    QString description;
+    /// Whether this run can honor the decision.
+    ///
+    /// A prompt must not offer a decision for which this is false: Rust still fails safely and
+    /// touches nothing on disk, but the attempt spends the one-shot continuation, so the user is
+    /// left with no scan and no second attempt. Defaults to false so a partially built decision is
+    /// withheld rather than offered.
+    bool available = false;
+};
+
+/// The Rust-owned content of a Local Ignore recovery prompt, projected into Qt-owned values.
+///
+/// Rendered on the worker thread before the hop to the GUI thread, because the bridged envelope
+/// cannot cross that hop and cannot be re-rendered on the far side.
+struct ScanRunLocalIgnoreRecoveryPresentation {
+    /// The paused run rendered as rich text, not a sentence about it.
+    ///
+    /// The whole rendered run, because Rust exposes the Installed YAML Data block — the facts this
+    /// decision is about — only as part of it. An implementation must be prepared for markup and
+    /// for more than one line.
+    QString message;
+    /// Rust's own question, rendered as rich text: why the run paused, which file is at fault, and
+    /// — when one is being withheld — why fewer decisions are about to be offered.
+    QString prompt;
+    /// Every decision the continuation contract accepts, in Rust's declared order.
+    ///
+    /// Carries the unavailable ones too, so a prompt that must explain the absence it is about to
+    /// create is told what is being withheld. Filtering happens where a button is created.
+    QVector<ScanRunRecoveryDecisionPresentation> decisions;
+};
+
 /// GUI-thread prompt used by ScanWorker while Rust retains the single-use recovery continuation.
 ///
-/// `message` is the paused run rendered as rich text, not a sentence about it. `ScanWorker` hands
-/// over the whole rendered run because the Rust core exposes the Installed YAML Data block — the
-/// facts this decision is about — only as part of it; an implementation must therefore be prepared
-/// for markup and for more than one line.
-///
-/// `resetAvailable` is the run's own answer to whether Reset To Default can succeed. It is a
-/// parameter rather than something the dialog looks up so the fact arrives with the question,
-/// which is what stops a prompt from offering a decision that would burn the continuation.
+/// Takes one value rather than a message and a flag beside it. Availability travels attached to the
+/// decision it describes, which is what stops a prompt offering a decision that would burn the
+/// continuation: a button cannot be created without reading the field that says whether it can
+/// succeed.
 using ScanRunLocalIgnoreRecoveryPrompt =
-    std::function<ScanRunLocalIgnoreRecoveryChoice(const QString& message, bool resetAvailable)>;
+    std::function<ScanRunLocalIgnoreRecoveryChoice(const ScanRunLocalIgnoreRecoveryPresentation& recovery)>;
 
 /// One typed piece of a Crash Log Scan Run display line, projected into Qt-owned values.
 ///
@@ -177,21 +216,15 @@ struct ScanRunTerminalPresentation {
     QVector<ScanRunLogPresentation> logs;
     bool hasInstalledYamlData = false;
     ScanRunInstalledYamlDataPresentation installedYamlData;
+    /// Whether `recoveryPrompt` describes a decision this run is waiting on.
+    ///
+    /// True only for `LocalIgnoreRecoveryRequired`, which is also exactly when the execution
+    /// retains a continuation to answer with.
+    bool hasRecoveryPrompt = false;
+    /// What to ask the user, and which answers this run can honor. Empty when there is nothing to
+    /// ask, so a finished run never carries a question a frontend could show.
+    ScanRunLocalIgnoreRecoveryPresentation recoveryPrompt;
 };
-
-/// Returns whether a paused run's Reset To Default decision may be offered to the user.
-///
-/// Absent Installed YAML Data means the run reported nothing about reset availability, which a
-/// recovery-required result never does in practice. Silence is not a denial: withdrawing the
-/// decision on an unknown answer would remove an option that may well work, and would regress the
-/// behavior that shipped before this fact existed. The native CLI and the TUI resolve the same
-/// ambiguity the same way.
-///
-/// Every GUI caller goes through this rather than reading `localIgnoreResetAvailable` directly.
-/// That field defaults to false to mirror the bridge DTO, so a site that read it without checking
-/// `hasInstalledYamlData` would silently withhold a decision that works — the mirror image of the
-/// bug this whole change exists to fix.
-bool offersLocalIgnoreResetToDefault(const ScanRunTerminalPresentation& terminal);
 
 /// Returns the core Display Label for one scan-run Local Ignore YAML Data state.
 ///

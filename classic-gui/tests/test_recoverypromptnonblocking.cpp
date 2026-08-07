@@ -13,6 +13,7 @@
 
 #include "app/localignorerecoveryprompt.h"
 #include "controllers/scancontroller.h"
+#include "recoverypromptfixture.h"
 #include "workers/scanworker.h"
 
 #include <functional>
@@ -240,12 +241,13 @@ RecoveryExchange driveAcrossControllerSeam(bool resetAvailable, const std::funct
     // SignalHub is a singleton and ThreadManager is only touched by startScan, which this harness
     // does not reach; ScanController null-checks both, so nullptr keeps the exchange self-contained.
     ScanController controller(nullptr, nullptr);
-    controller.setLocalIgnoreRecoveryPrompt([&harness](const QString& message, bool available) {
-        harness.exchange.promptThread = QThread::currentThread();
-        // Parented to the probe, matching MainWindow::initializeControllers, so the dialog is the
-        // application-modal child of a real window rather than an unparented top level.
-        return classic::gui::promptLocalIgnoreRecoveryChoice(&harness.window, message, available);
-    });
+    controller.setLocalIgnoreRecoveryPrompt(
+        [&harness](const classic::gui::ScanRunLocalIgnoreRecoveryPresentation& recovery) {
+            harness.exchange.promptThread = QThread::currentThread();
+            // Parented to the probe, matching MainWindow::initializeControllers, so the dialog is
+            // the application-modal child of a real window rather than an unparented top level.
+            return classic::gui::promptLocalIgnoreRecoveryChoice(&harness.window, recovery);
+        });
 
     const auto prompt = controller.makeLocalIgnoreRecoveryPrompt();
 
@@ -254,7 +256,7 @@ RecoveryExchange driveAcrossControllerSeam(bool resetAvailable, const std::funct
     workerContext.moveToThread(&worker);
     QObject::connect(&worker, &QThread::started, &workerContext, [&harness, &prompt, &worker, resetAvailable]() {
         harness.exchange.callerThread = QThread::currentThread();
-        harness.exchange.choice = prompt(QStringLiteral("Local Ignore YAML Data is malformed."), resetAvailable);
+        harness.exchange.choice = prompt(classic::gui::test::recoveryPresentation(resetAvailable));
         worker.quit();
     });
 
@@ -328,19 +330,26 @@ ScanWorkerRun driveThroughScanWorker(const QString& installationRoot, const QStr
     LivenessHarness harness;
 
     ScanController controller(nullptr, nullptr);
-    controller.setLocalIgnoreRecoveryPrompt([&harness, &run](const QString& message, bool available) {
-        harness.exchange.promptThread = QThread::currentThread();
-        run.offeredReset = available;
-        harness.exchange.choice = classic::gui::promptLocalIgnoreRecoveryChoice(&harness.window, message, available);
-        return harness.exchange.choice;
-    });
+    controller.setLocalIgnoreRecoveryPrompt(
+        [&harness, &run](const classic::gui::ScanRunLocalIgnoreRecoveryPresentation& recovery) {
+            harness.exchange.promptThread = QThread::currentThread();
+            // Read from the decision that describes it rather than from a flag beside the prompt,
+            // which is the whole shape this phase introduced.
+            for (const auto& option : recovery.decisions) {
+                if (option.decision == classic::scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault) {
+                    run.offeredReset = option.available;
+                }
+            }
+            harness.exchange.choice = classic::gui::promptLocalIgnoreRecoveryChoice(&harness.window, recovery);
+            return harness.exchange.choice;
+        });
 
     // Wrapping the controller's marshalling callable is the only way to observe which thread the
     // worker asked from; ScanWorker offers no hook of its own, and the answer is the point.
     const auto marshalling = controller.makeLocalIgnoreRecoveryPrompt();
-    ScanWorker worker([&harness, marshalling](const QString& message, bool available) {
+    ScanWorker worker([&harness, marshalling](const classic::gui::ScanRunLocalIgnoreRecoveryPresentation& recovery) {
         harness.exchange.callerThread = QThread::currentThread();
-        return marshalling(message, available);
+        return marshalling(recovery);
     });
 
     QSignalSpy finishedSpy(&worker, &ScanWorker::finished);
@@ -426,7 +435,7 @@ void RecoveryPromptNonBlockingTests::choosing_a_decision_keeps_the_event_loop_ru
 {
     bool clicked = false;
     const auto exchange = driveAcrossControllerSeam(true, [&clicked](QMessageBox* box) {
-        QAbstractButton* button = buttonContaining(box, QStringLiteral("Continue Without Ignore"));
+        QAbstractButton* button = buttonContaining(box, QStringLiteral("Proceed Without Ignore"));
         if (button == nullptr) {
             box->close();
             return;
@@ -436,7 +445,7 @@ void RecoveryPromptNonBlockingTests::choosing_a_decision_keeps_the_event_loop_ru
     });
 
     VERIFY_EVENT_LOOP_STAYED_LIVE(exchange);
-    QVERIFY2(clicked, "Continue Without Ignore was not present in the prompt");
+    QVERIFY2(clicked, "Proceed Without Ignore was not present in the prompt");
     QCOMPARE(exchange.choice, Choice::ProceedWithoutIgnore);
 }
 
@@ -462,7 +471,7 @@ void RecoveryPromptNonBlockingTests::withheld_reset_keeps_the_event_loop_running
         for (QAbstractButton* button : box->buttons()) {
             offered.append(button->text().remove(QLatin1Char('&')));
         }
-        QAbstractButton* button = buttonContaining(box, QStringLiteral("Continue Without Ignore"));
+        QAbstractButton* button = buttonContaining(box, QStringLiteral("Proceed Without Ignore"));
         if (button == nullptr) {
             box->close();
             return;
@@ -476,7 +485,7 @@ void RecoveryPromptNonBlockingTests::withheld_reset_keeps_the_event_loop_running
     // test_localignorerecoveryprompt.cpp shows the dialog withholds the button but is called
     // directly on the GUI thread. Asserting it here is what shows the responsive path does not
     // quietly restore an option the run reported cannot succeed.
-    QVERIFY2(offered.filter(QStringLiteral("Reset to Default")).isEmpty(),
+    QVERIFY2(offered.filter(QStringLiteral("Reset To Default")).isEmpty(),
              "Reset To Default must not be offered when the run reported it cannot succeed");
     QCOMPARE(exchange.choice, Choice::ProceedWithoutIgnore);
 }
@@ -511,7 +520,7 @@ void RecoveryPromptNonBlockingTests::real_scan_worker_recovery_keeps_the_event_l
 
     bool clicked = false;
     const auto run = driveThroughScanWorker(root.path(), crashLog, [&clicked](QMessageBox* box) {
-        QAbstractButton* button = buttonContaining(box, QStringLiteral("Continue Without Ignore"));
+        QAbstractButton* button = buttonContaining(box, QStringLiteral("Proceed Without Ignore"));
         if (button == nullptr) {
             box->close();
             return;
@@ -521,7 +530,7 @@ void RecoveryPromptNonBlockingTests::real_scan_worker_recovery_keeps_the_event_l
     });
 
     VERIFY_EVENT_LOOP_STAYED_LIVE(run.exchange);
-    QVERIFY2(clicked, "Continue Without Ignore was not present in the prompt");
+    QVERIFY2(clicked, "Proceed Without Ignore was not present in the prompt");
     QCOMPARE(run.exchange.choice, Choice::ProceedWithoutIgnore);
     // This fixture's Main YAML Data retains a usable default, so the run really can honor a reset;
     // the availability fact reaching the prompt intact is what makes the withheld case meaningful.

@@ -90,6 +90,20 @@ Local Ignore was reset, but the replacement is not confirmed durable
 moved to Unsolved Logs
 Effective concurrency:
 
+# From `recovery.rs`. The first is a prompt line; the other two are the decision
+# descriptions themselves. All three were written identically in the TUI overlay,
+# the native CLI menu, and the Qt dialog before the frontends adopted the rendered
+# prompt, each with a comment saying core would own them once the renderer existed.
+# They join this list with that adoption rather than before it -- a phrase some
+# frontend still legitimately writes fails that frontend's audit the moment it is
+# added here, and every audit reads this one file.
+#
+# Fragments rather than whole sentences, following the rule above: the distinctive
+# middle catches a reworded copy as readily as a verbatim paste.
+Reset To Default is unavailable:
+Scan now with an empty ignore list.
+byte-exactly, replace it with the selected Main defaults
+
 # From `render_outcome_summary`. A fragment rather than a sentence, and the only
 # entry here that is not prose on its own -- it earns its place because it is the
 # exact shape the drift took twice: the Python CLI wrote

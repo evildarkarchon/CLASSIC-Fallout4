@@ -102,6 +102,23 @@ void push_lines(rust::Vec<scanner::ScanRunDisplayLine>& target, std::vector<scan
     }
 }
 
+/// Builds a decision list shaped like the bridged prompt, with `reset_available` deciding the one
+/// availability that varies.
+///
+/// The wording here is deliberately *not* Rust's. What these prompt tests pin is that the menu
+/// prints, advertises, and accepts exactly what it was handed — a fixture that reused Rust's
+/// sentences would still pass if the prompt ignored its argument and printed a hard-coded copy.
+/// The real sentences are pinned once, in `classic-scan-presentation`, and the fact that they
+/// reach this seam is pinned by the `describe_cli_local_ignore_recovery` cases below.
+std::vector<CliLocalIgnoreRecoveryDecisionOption> recovery_decisions(bool reset_available) {
+    return {
+        {scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore, "Proceed Without Ignore",
+         "what proceeding does", true},
+        {scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault, "Reset To Default", "what resetting does",
+         reset_available},
+    };
+}
+
 /// Serves console input one character at a time and cancels as the answer's newline is consumed.
 ///
 /// Models Ctrl+C landing while a console read is already in flight: the answer is fully entered,
@@ -434,39 +451,64 @@ TEST_CASE("CLI Local Ignore recovery description offers retained discovery and d
     execution.result.installed_yaml_data.local_ignore_state =
         scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired;
     execution.result.installed_yaml_data.local_ignore_reset_available = false;
+    // The bridged prompt this frontend now renders from. Set on the envelope rather than derived,
+    // because `describe_cli_local_ignore_recovery` reads a projected copy of the run and cannot
+    // re-render it.
+    execution.has_recovery_prompt = true;
+    push_lines(execution.recovery_prompt.lines, {text_line("Rust asks the question here")});
 
     const auto recovery = describe_cli_local_ignore_recovery(execution);
     const auto lines = message_text(recovery.details);
 
     REQUIRE(lines[0] == "why the run paused");
     REQUIRE(lines[1] == "what is wrong with the file");
-    // Still the CLI's own sentence: the recovery prompt renderer lands with the gated recovery
-    // phase, not with this change. It is the only count this frontend still pluralizes.
-    REQUIRE(lines.back() == "  Retained discovery: 2 crash logs will be scanned once you decide.");
-    // This fixture's retained Installed YAML Data reports no usable default, so the description
-    // must carry that through rather than leaving the prompt to assume the decision can succeed.
-    REQUIRE_FALSE(recovery.reset_available);
+    // The last sentence this frontend still writes about a run. Rust's recovery renderer reads
+    // Installed YAML Data, which carries no discovery count, so this one stays here.
+    REQUIRE(lines[2] == "  Retained discovery: 2 crash logs will be scanned once you decide.");
+    // Rust's question comes last so it sits immediately above the menu rather than at the top of a
+    // block the user has already scrolled past.
+    REQUIRE(lines.back() == "Rust asks the question here");
 }
 
-TEST_CASE("CLI Local Ignore recovery description offers reset only when the run can honor it",
+TEST_CASE("CLI Local Ignore recovery description carries every decision Rust described",
           "[scanner][scan-run][local-ignore]") {
-    SECTION("an available reset is offered") {
+    SECTION("each decision arrives labelled, explained, and marked available or not") {
         auto execution = execution_with_result(scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
-        execution.result.has_installed_yaml_data = true;
-        execution.result.installed_yaml_data.local_ignore_reset_available = true;
+        execution.has_recovery_prompt = true;
+        scanner::ScanRunRecoveryDecisionDescription proceed{};
+        proceed.decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
+        proceed.label = "Proceed Without Ignore";
+        proceed.description.push_back(segment(scanner::ScanRunDisplaySegmentKind::Text, "what proceeding does"));
+        proceed.available = true;
+        scanner::ScanRunRecoveryDecisionDescription reset{};
+        reset.decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault;
+        reset.label = "Reset To Default";
+        reset.description.push_back(segment(scanner::ScanRunDisplaySegmentKind::Text, "what resetting does"));
+        reset.available = false;
+        execution.recovery_prompt.decisions.push_back(std::move(proceed));
+        execution.recovery_prompt.decisions.push_back(std::move(reset));
 
-        REQUIRE(describe_cli_local_ignore_recovery(execution).reset_available);
+        const auto recovery = describe_cli_local_ignore_recovery(execution);
+
+        REQUIRE(recovery.decisions.size() == 2);
+        REQUIRE(recovery.decisions[0].decision == scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore);
+        REQUIRE(recovery.decisions[0].label == "Proceed Without Ignore");
+        REQUIRE(recovery.decisions[0].description == "what proceeding does");
+        REQUIRE(recovery.decisions[0].available);
+        // Carried through rather than filtered out: a menu that must explain the absence it is
+        // about to create can only do so if it is told what is being withheld.
+        REQUIRE(recovery.decisions[1].decision == scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault);
+        REQUIRE_FALSE(recovery.decisions[1].available);
     }
 
-    SECTION("absent Installed YAML Data keeps offering the decision") {
-        // Silence is not a denial. A recovery-required result always carries Installed YAML Data in
-        // practice, but withdrawing an option because the run said nothing about it would remove a
-        // choice that may well work, and would regress the behavior that shipped before this fact
-        // existed. The TUI resolves the same ambiguity the same way.
+    SECTION("an envelope carrying no prompt offers nothing rather than guessing") {
+        // A recovery-required envelope always carries a prompt, so this is a broken contract rather
+        // than a user-visible state. Failing closed leaves Cancel as the only answer, which is the
+        // one outcome that cannot touch the user's files.
         auto execution = execution_with_result(scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
-        execution.result.has_installed_yaml_data = false;
+        execution.has_recovery_prompt = false;
 
-        REQUIRE(describe_cli_local_ignore_recovery(execution).reset_available);
+        REQUIRE(describe_cli_local_ignore_recovery(execution).decisions.empty());
     }
 }
 
@@ -476,7 +518,7 @@ TEST_CASE("CLI Local Ignore recovery prompt accepts both Rust-defined decisions 
         std::istringstream input(answer + "\n");
         std::ostringstream output;
         const CliScanRunCancellation cancellation(false);
-        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, true) ==
+        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, recovery_decisions(true)) ==
                 CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore);
     }
 
@@ -484,16 +526,18 @@ TEST_CASE("CLI Local Ignore recovery prompt accepts both Rust-defined decisions 
         std::istringstream input(answer + "\n");
         std::ostringstream output;
         const CliScanRunCancellation cancellation(false);
-        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, true) ==
+        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, recovery_decisions(true)) ==
                 CliLocalIgnoreRecoveryChoice::ResetToDefault);
     }
 
     std::istringstream input("c\n");
     std::ostringstream output;
     const CliScanRunCancellation cancellation(false);
-    REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, true) ==
+    REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, recovery_decisions(true)) ==
             CliLocalIgnoreRecoveryChoice::Cancel);
-    REQUIRE(output.str().find("[R] Reset to default") != std::string::npos);
+    // The bracketed letter is this frontend's; every word beside it came from the decision list.
+    REQUIRE(output.str().find("[P] Proceed Without Ignore - what proceeding does") != std::string::npos);
+    REQUIRE(output.str().find("[R] Reset To Default - what resetting does") != std::string::npos);
     REQUIRE(output.str().find("[P/R/C]") != std::string::npos);
 }
 
@@ -503,16 +547,19 @@ TEST_CASE("CLI Local Ignore recovery prompt withholds Reset To Default when it c
         std::istringstream input("c\n");
         std::ostringstream output;
         const CliScanRunCancellation cancellation(false);
-        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, false) ==
+        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, recovery_decisions(false)) ==
                 CliLocalIgnoreRecoveryChoice::Cancel);
         const auto printed = output.str();
-        REQUIRE(printed.find("[R] Reset to default") == std::string::npos);
+        REQUIRE(printed.find("[R] Reset To Default") == std::string::npos);
+        REQUIRE(printed.find("what resetting does") == std::string::npos);
         REQUIRE(printed.find("[P/R/C]") == std::string::npos);
         REQUIRE(printed.find("[P/C]") != std::string::npos);
-        // The remaining decisions are untouched, and the omission is explained rather than silent.
-        REQUIRE(printed.find("[P] Proceed without Ignore") != std::string::npos);
+        // The remaining decisions are untouched.
+        REQUIRE(printed.find("[P] Proceed Without Ignore") != std::string::npos);
         REQUIRE(printed.find("[C] Cancel") != std::string::npos);
-        REQUIRE(printed.find("Reset To Default is unavailable") != std::string::npos);
+        // Why it is gone is Rust's sentence now, printed among the prompt lines above this menu, so
+        // the menu says nothing about the absence and this prompt writes no explanation of its own.
+        REQUIRE(printed.find("Reset To Default is unavailable") == std::string::npos);
     }
 
     SECTION("the reset letter is refused if it is entered anyway") {
@@ -523,7 +570,7 @@ TEST_CASE("CLI Local Ignore recovery prompt withholds Reset To Default when it c
             std::istringstream input(answer + "\n" + answer + "\n" + answer + "\n");
             std::ostringstream output;
             const CliScanRunCancellation cancellation(false);
-            REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, false) ==
+            REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, recovery_decisions(false)) ==
                     CliLocalIgnoreRecoveryChoice::Cancel);
             REQUIRE(output.str().find("Unrecognized answer. Enter P or C.") != std::string::npos);
             REQUIRE(output.str().find("No usable answer after 3 attempts") != std::string::npos);
@@ -534,13 +581,15 @@ TEST_CASE("CLI Local Ignore recovery prompt withholds Reset To Default when it c
         std::istringstream proceed_input("p\n");
         std::ostringstream proceed_output;
         const CliScanRunCancellation proceed_cancellation(false);
-        REQUIRE(read_cli_local_ignore_recovery_choice(proceed_input, proceed_output, proceed_cancellation, false) ==
+        REQUIRE(read_cli_local_ignore_recovery_choice(proceed_input, proceed_output, proceed_cancellation,
+                                                      recovery_decisions(false)) ==
                 CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore);
 
         std::istringstream cancel_input("cancel\n");
         std::ostringstream cancel_output;
         const CliScanRunCancellation cancel_cancellation(false);
-        REQUIRE(read_cli_local_ignore_recovery_choice(cancel_input, cancel_output, cancel_cancellation, false) ==
+        REQUIRE(read_cli_local_ignore_recovery_choice(cancel_input, cancel_output, cancel_cancellation,
+                                                      recovery_decisions(false)) ==
                 CliLocalIgnoreRecoveryChoice::Cancel);
     }
 
@@ -548,9 +597,21 @@ TEST_CASE("CLI Local Ignore recovery prompt withholds Reset To Default when it c
         std::istringstream input("");
         std::ostringstream output;
         const CliScanRunCancellation cancellation(false);
-        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, false) ==
+        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, recovery_decisions(false)) ==
                 CliLocalIgnoreRecoveryChoice::Cancel);
         REQUIRE(output.str().find("No answer was available") != std::string::npos);
+    }
+
+    SECTION("a prompt offering no decision at all still cancels cleanly") {
+        // The shape a broken contract produces. Cancel must stay reachable and must stay the only
+        // answer: no decision was offered, so none can be accepted.
+        std::istringstream input("p\nr\nc\n");
+        std::ostringstream output;
+        const CliScanRunCancellation cancellation(false);
+        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, {}) ==
+                CliLocalIgnoreRecoveryChoice::Cancel);
+        REQUIRE(output.str().find("[C]") != std::string::npos);
+        REQUIRE(output.str().find("Unrecognized answer. Enter C.") != std::string::npos);
     }
 }
 
@@ -559,7 +620,7 @@ TEST_CASE("CLI Local Ignore recovery prompt never infers Reset To Default", "[sc
         std::istringstream input("");
         std::ostringstream output;
         const CliScanRunCancellation cancellation(false);
-        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, true) ==
+        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, recovery_decisions(true)) ==
                 CliLocalIgnoreRecoveryChoice::Cancel);
         REQUIRE(output.str().find("No answer was available") != std::string::npos);
     }
@@ -568,7 +629,7 @@ TEST_CASE("CLI Local Ignore recovery prompt never infers Reset To Default", "[sc
         std::istringstream input("yes\nreset to default please\n1\nr\n");
         std::ostringstream output;
         const CliScanRunCancellation cancellation(false);
-        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, true) ==
+        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, recovery_decisions(true)) ==
                 CliLocalIgnoreRecoveryChoice::Cancel);
         REQUIRE(output.str().find("No usable answer after 3 attempts") != std::string::npos);
     }
@@ -578,7 +639,7 @@ TEST_CASE("CLI Local Ignore recovery prompt never infers Reset To Default", "[sc
         std::istringstream input("q\nquit\ny\nr\n");
         std::ostringstream output;
         const CliScanRunCancellation cancellation(false);
-        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, true) ==
+        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, recovery_decisions(true)) ==
                 CliLocalIgnoreRecoveryChoice::Cancel);
         REQUIRE(output.str().find("No usable answer after 3 attempts") != std::string::npos);
     }
@@ -588,7 +649,7 @@ TEST_CASE("CLI Local Ignore recovery prompt never infers Reset To Default", "[sc
         std::ostringstream output;
         CliScanRunCancellation cancellation(false);
         cancellation.request();
-        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, true) ==
+        REQUIRE(read_cli_local_ignore_recovery_choice(input, output, cancellation, recovery_decisions(true)) ==
                 CliLocalIgnoreRecoveryChoice::Cancel);
         REQUIRE(output.str().empty());
         std::string unread;
@@ -601,7 +662,7 @@ TEST_CASE("CLI Local Ignore recovery prompt never infers Reset To Default", "[sc
         CliScanRunCancellation cancellation(false);
         CancellingInputBuffer buffer("r\n", cancellation);
         std::istream racing_input(&buffer);
-        REQUIRE(read_cli_local_ignore_recovery_choice(racing_input, output, cancellation, true) ==
+        REQUIRE(read_cli_local_ignore_recovery_choice(racing_input, output, cancellation, recovery_decisions(true)) ==
                 CliLocalIgnoreRecoveryChoice::Cancel);
     }
 }

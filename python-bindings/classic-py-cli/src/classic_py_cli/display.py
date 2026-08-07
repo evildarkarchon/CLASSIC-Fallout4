@@ -45,7 +45,26 @@ def render_display_line(line: Any) -> str:
     and it is the one case where this frontend has nothing to print.
     """
 
-    rendered = (_render_segment(segment) for segment in line.segments)
+    return render_display_segments(line.segments)
+
+
+def render_display_segments(segments: Any) -> str:
+    """Render a bare segment sequence as a single plain string.
+
+    Args:
+        segments: An ordered sequence of ``ScanRunDisplaySegment``, such as a
+            ``ScanRunRecoveryDecisionDescription.description``.
+
+    Returns:
+        The segments concatenated in reading order, separated by single spaces.
+
+    Split out of :func:`render_display_line` because a recovery decision's
+    description is a segment list with no line around it -- there is no severity
+    to read and no line to belong to. The concatenation rule is deliberately the
+    same one rather than a second copy of it.
+    """
+
+    rendered = (_render_segment(segment) for segment in segments)
     return " ".join(text for text in rendered if text)
 
 
