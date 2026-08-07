@@ -588,20 +588,28 @@ std::vector<std::string> coreOwnedPhrases()
     return phrases;
 }
 
-/// Returns `source` with its comments removed and everything else, string
-/// literals included, intact.
+/// Returns the contents of every string literal in `source`, one per line, with
+/// nothing else.
 ///
-/// Comments are excluded for the reason the CXX parity gate's name scan was
+/// Literals rather than comment-stripped code, which is what this scanned first.
+/// Prose is only ever a literal, so reading more than literals only adds ways to
+/// be wrong — and it was wrong here specifically: `succeeded,` is core-owned prose
+/// that occurs verbatim in this frontend's own code as `emit
+/// finished(terminal.succeeded, terminal.failed, ...)`. Extracting literals
+/// removes that whole class of false positive rather than asking the deny-list to
+/// dodge it, and matches the Python audit, which reads literals off the AST for
+/// the same reason.
+///
+/// Comments never appear, for the reason the CXX parity gate's name scan was
 /// fixed: a comment *describing* the drift is not the drift, and this file's own
-/// header quotes phrases the detector forbids. String literals are kept rather
-/// than extracted because every deny-list phrase contains a space — enforced by
-/// `the_shared_deny_list_is_readable_and_not_empty` — so a phrase cannot occur
-/// anywhere but a string.
+/// header quotes phrases the detector forbids. Tracking string state is what
+/// tells the two apart, and it also stops a `//` inside a path or URL literal
+/// from reading as the start of a comment.
 ///
-/// String state is tracked only so a `//` or `/*` *inside* a literal does not
-/// read as the start of a comment; a path or URL literal would otherwise swallow
-/// the rest of its line, taking any phrase written there out of the audit.
-std::string codeWithoutComments(const std::string& source)
+/// Literals are newline-separated rather than concatenated so two adjacent ones
+/// cannot form a phrase neither contains — `"succeeded" ", "` must not read as
+/// `succeeded, `.
+std::string stringLiterals(const std::string& source)
 {
     std::string out;
     out.reserve(source.size());
@@ -641,6 +649,7 @@ std::string codeWithoutComments(const std::string& source)
                 const auto close = source.find(closer, open + 1);
                 const auto bodyEnd = close == std::string::npos ? source.size() : close;
                 out.append(source, open + 1, bodyEnd - (open + 1));
+                out.push_back('\n');
                 index = close == std::string::npos ? source.size() : close + closer.size();
                 continue;
             }
@@ -670,9 +679,10 @@ std::string codeWithoutComments(const std::string& source)
                 out.push_back(source[index]);
                 ++index;
             }
+            out.push_back('\n');
             continue;
         }
-        out.push_back(source[index]);
+        // Ordinary code, which is deliberately dropped rather than collected.
         ++index;
     }
     return out;
@@ -770,7 +780,7 @@ void DisplayLabelAuditTests::no_gui_source_writes_a_sentence_the_presentation_cr
         std::string source;
         QVERIFY2(readSource(path, source), qPrintable(QStringLiteral("Unable to read %1").arg(path)));
 
-        const std::string code = codeWithoutComments(source);
+        const std::string code = stringLiterals(source);
         for (const auto& phrase : phrases) {
             if (code.find(phrase) == std::string::npos) {
                 continue;
@@ -796,20 +806,14 @@ void DisplayLabelAuditTests::the_shared_deny_list_is_readable_and_not_empty()
     QVERIFY(phrases.size() >= 10);
     QVERIFY(std::find(phrases.begin(), phrases.end(), "Crash Log Scan Run failed during") != phrases.end());
 
-    // Every phrase must be multi-word. That is what lets this detector search
-    // comment-stripped code rather than extracted literals: a phrase containing a
-    // space cannot hide inside an identifier, so the only place it can appear is
-    // a string.
-    QStringList singleWords;
-    for (const auto& phrase : phrases) {
-        if (phrase.find(' ') == std::string::npos) {
-            singleWords.append(QString::fromStdString(phrase));
-        }
-    }
-    QVERIFY2(singleWords.isEmpty(),
-             qPrintable(QStringLiteral("a deny-list entry must be a phrase, or the detector cannot tell prose from "
-                                       "an identifier: %1")
-                            .arg(singleWords.join(QStringLiteral(", ")))));
+    // No constraint on an entry's shape is asserted any more, and that is
+    // deliberate. An earlier version required each entry to contain a space,
+    // because the detector searched comment-stripped *code* and a bare word could
+    // match an identifier. That constraint was load-bearing only because the
+    // detector read more than it needed: `stringLiterals` now yields literals
+    // alone, where no identifier can appear, so `succeeded,` — core-owned prose
+    // that occurs in this frontend's own code as `emit
+    // finished(terminal.succeeded, terminal.failed, ...)` — is safe to list.
 }
 
 void DisplayLabelAuditTests::the_phrase_detector_catches_the_drift_it_exists_for()
@@ -819,11 +823,11 @@ void DisplayLabelAuditTests::the_phrase_detector_catches_the_drift_it_exists_for
     // it exists to catch is what tells the two apart — the same proof the TUI
     // audit carries for its naming detectors, and the reason the header above can
     // claim each detector was verified by planting the shape it targets.
-    const std::string drift = codeWithoutComments(std::string(REWORDED_SENTENCE));
+    const std::string drift = stringLiterals(std::string(REWORDED_SENTENCE));
     QVERIFY(drift.find("Crash Log Scan Run failed during") != std::string::npos);
 
     // A comment describing the drift is documentation, not the drift.
-    const std::string commented = codeWithoutComments(
+    const std::string commented = stringLiterals(
         "// Crash Log Scan Run failed during is core's to say.\n"
         "/* Crash Log Scan Run failed during, again. */\n"
         "int x = 1;\n");
@@ -832,7 +836,7 @@ void DisplayLabelAuditTests::the_phrase_detector_catches_the_drift_it_exists_for
     // A raw string is still a literal, and `//` inside a literal is not a comment
     // — without that, everything after a path or URL silently leaves the audit.
     // Both shapes appear in this frontend's own sources.
-    const std::string raw = codeWithoutComments(
+    const std::string raw = stringLiterals(
         "const auto s = R\"(Crash Log Scan Run failed during)\";\n"
         "const auto u = QStringLiteral(\"https://example.invalid\");\n"
         "const auto t = QStringLiteral(\"Start the Crash Log Scan again to retry.\");\n");
@@ -843,16 +847,31 @@ void DisplayLabelAuditTests::the_phrase_detector_catches_the_drift_it_exists_for
     // contains one today, which is exactly why this needs a test rather than a
     // reader's vigilance: the failure would be a silent hole in the audit, where
     // everything to the next quote leaves the audited text, not a red test.
-    const std::string quoted = codeWithoutComments(
+    const std::string quoted = stringLiterals(
         "const char q = '\"';\n"
         "const char e = '\\'';\n"
         "const auto s = QStringLiteral(\"Crash Log Scan Run failed during\");\n");
     QVERIFY(quoted.find("Crash Log Scan Run failed during") != std::string::npos);
 
+    // Literals are read; the code around them is not. `succeeded,` is core-owned
+    // prose and also, character for character, an ordinary argument list — this
+    // frontend's own `emit finished(terminal.succeeded, terminal.failed, ...)`.
+    // A detector that searched code rather than literals reported that line as
+    // drift, which is how this scanner came to extract literals.
+    const std::string argumentList = stringLiterals("emit finished(terminal.succeeded, terminal.failed);\n");
+    QVERIFY(argumentList.find("succeeded,") == std::string::npos);
+    const std::string writtenOut = stringLiterals("const auto s = QStringLiteral(\"3 succeeded, 4 failed\");\n");
+    QVERIFY(writtenOut.find("succeeded,") != std::string::npos);
+
+    // Two adjacent literals must not fuse into a phrase neither contains, or the
+    // separator this relies on is doing nothing.
+    const std::string adjacent = stringLiterals("const auto s = \"succeeded\" \", failed\";\n");
+    QVERIFY(adjacent.find("succeeded,") == std::string::npos);
+
     // The other half of the proof: rendering a segment core produced is the
     // correct shape and must stay quiet, or the audit becomes noise a contributor
     // learns to work around.
-    const std::string compliant = codeWithoutComments(
+    const std::string compliant = stringLiterals(
         "for (const auto& segment : line.segments) { html += segmentHtml(segment); }\n");
     QStringList falsePositives;
     for (const auto& phrase : coreOwnedPhrases()) {

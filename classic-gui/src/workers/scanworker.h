@@ -36,7 +36,13 @@ signals:
     /// Publishes the exact Qt-owned YAML Data selection before terminal lifecycle signals destroy the worker.
     void installedYamlDataResolved(const classic::gui::ScanRunInstalledYamlDataPresentation& installedYamlData);
     void logScanned(int index, bool success, const QString& logPath);
-    void finished(int totalLogs, int successCount, int errorCount);
+    /// Reports a completed run, carrying the rendered run as rich text alongside its counts.
+    ///
+    /// `message` is what the other three terminal signals carry, and it is here for the same
+    /// reason: without it the window had nothing to say about a completed run and composed a
+    /// sentence of its own, which is the one thing an adapter may not do. The counts stay because
+    /// consumers key on them as data; they are no longer the raw material for prose.
+    void finished(int totalLogs, int successCount, int errorCount, const QString& message);
     void noLogsFound(const QString& message);
     void cancelled(const QString& message);
     void error(const QString& message);

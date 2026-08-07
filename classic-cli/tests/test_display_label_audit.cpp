@@ -310,20 +310,27 @@ std::vector<std::string> core_owned_phrases() {
     return phrases;
 }
 
-/// Returns `source` with its comments removed and everything else, string
-/// literals included, intact.
+/// Returns the contents of every string literal in `source`, one per line, with
+/// nothing else.
 ///
-/// Comments are excluded for the reason the CXX parity gate's name scan was
+/// Literals rather than comment-stripped code, which is what this scanned first.
+/// Prose is only ever a literal, so reading more than literals only adds ways to
+/// be wrong — and it was wrong: `succeeded,` is core-owned prose that occurs
+/// verbatim in ordinary code as `terminal.succeeded, terminal.failed`. Extracting
+/// literals removes that whole class of false positive rather than asking the
+/// deny-list to dodge it, and matches the Python audit, which reads literals off
+/// the AST for the same reason.
+///
+/// Comments never appear, for the reason the CXX parity gate's name scan was
 /// fixed: a comment *describing* the drift is not the drift, and this file's own
-/// header quotes phrases the detector forbids. String literals are kept rather
-/// than extracted because every deny-list phrase contains a space — enforced by
-/// "The shared deny-list is readable and not empty" — so a phrase cannot occur
-/// anywhere but a string.
+/// header quotes phrases the detector forbids. Tracking string state is what
+/// tells the two apart, and it also stops a `//` inside a path or URL literal
+/// from reading as the start of a comment.
 ///
-/// String state is tracked only so a `//` or `/*` *inside* a literal does not
-/// read as the start of a comment; a path or URL literal would otherwise swallow
-/// the rest of its line, taking any phrase written there out of the audit.
-std::string code_without_comments(const std::string& source) {
+/// Literals are newline-separated rather than concatenated so two adjacent ones
+/// cannot form a phrase neither contains — `"succeeded" ", "` must not read as
+/// `succeeded, `.
+std::string string_literals(const std::string& source) {
     std::string out;
     out.reserve(source.size());
 
@@ -360,6 +367,7 @@ std::string code_without_comments(const std::string& source) {
                 const auto close = source.find(closer, open + 1);
                 const auto body_end = close == std::string::npos ? source.size() : close;
                 out.append(source, open + 1, body_end - (open + 1));
+                out.push_back('\n');
                 index = close == std::string::npos ? source.size() : close + closer.size();
                 continue;
             }
@@ -389,9 +397,10 @@ std::string code_without_comments(const std::string& source) {
                 out.push_back(source[index]);
                 ++index;
             }
+            out.push_back('\n');
             continue;
         }
-        out.push_back(source[index]);
+        // Ordinary code, which is deliberately dropped rather than collected.
         ++index;
     }
     return out;
@@ -482,7 +491,7 @@ TEST_CASE("No CLI source writes a sentence the presentation crate owns", "[displ
     // having it.
     const auto phrases = core_owned_phrases();
     for (const auto& relative_path : AUDITED_SOURCES) {
-        const std::string code = code_without_comments(read_source(relative_path));
+        const std::string code = string_literals(read_source(relative_path));
         for (const auto& phrase : phrases) {
             INFO(relative_path << " writes \"" << phrase
                                << "\", which classic-scan-presentation already says about a Crash Log Scan "
@@ -502,16 +511,14 @@ TEST_CASE("The shared deny-list is readable and not empty", "[display-label][aud
     CHECK(phrases.size() >= 10);
     CHECK(std::find(phrases.begin(), phrases.end(), "Crash Log Scan Run failed during") != phrases.end());
 
-    // Every phrase must be multi-word. That is what lets this detector search
-    // comment-stripped code rather than extracted literals: a phrase containing a
-    // space cannot hide inside an identifier, so the only place it can appear is
-    // a string.
-    for (const auto& phrase : phrases) {
-        INFO('"' << phrase
-                 << "\" is a single word; a deny-list entry must be a phrase, or the detector cannot "
-                    "tell prose from an identifier");
-        CHECK(phrase.find(' ') != std::string::npos);
-    }
+    // No constraint on an entry's shape is asserted any more, and that is
+    // deliberate. An earlier version required each entry to contain a space,
+    // because the detector searched comment-stripped *code* and a bare word could
+    // match an identifier. That constraint was load-bearing only because the
+    // detector read more than it needed: `string_literals` now yields literals
+    // alone, where no identifier can appear, so `succeeded,` — core-owned prose
+    // that occurs in ordinary code as `terminal.succeeded, terminal.failed` — is
+    // safe to list.
 }
 
 TEST_CASE("The phrase detector catches the drift it exists for", "[display-label][audit]") {
@@ -523,12 +530,12 @@ TEST_CASE("The phrase detector catches the drift it exists for", "[display-label
     // Split into sections so a failure names which property broke, matching the
     // one-test-per-property shape the Rust and Qt ports use.
     SECTION("a sentence template reusing a core-owned phrase is caught") {
-        const std::string drift = code_without_comments(std::string(REWORDED_SENTENCE));
+        const std::string drift = string_literals(std::string(REWORDED_SENTENCE));
         CHECK(drift.find("Crash Log Scan Run failed during") != std::string::npos);
     }
 
     SECTION("a comment describing the drift is documentation, not the drift") {
-        const std::string commented = code_without_comments(
+        const std::string commented = string_literals(
             "// Crash Log Scan Run failed during is core's to say.\n"
             "/* Crash Log Scan Run failed during, again. */\n"
             "int x = 1;\n");
@@ -538,7 +545,7 @@ TEST_CASE("The phrase detector catches the drift it exists for", "[display-label
     SECTION("a raw string is a literal, and `//` inside one is not a comment") {
         // Without this, everything after a path or URL on the same line silently
         // leaves the audited text, taking any phrase written there with it.
-        const std::string raw = code_without_comments(
+        const std::string raw = string_literals(
             "const auto s = R\"(Crash Log Scan Run failed during)\";\n"
             "const auto u = \"https://example.invalid\";\n"
             "const auto t = \"Start the Crash Log Scan again to retry.\";\n");
@@ -550,18 +557,36 @@ TEST_CASE("The phrase detector catches the drift it exists for", "[display-label
         // No CLI source contains one today, which is exactly why this needs a
         // test rather than a reader's vigilance: the failure would be a silent
         // hole in the audit, not a red test.
-        const std::string quoted = code_without_comments(
+        const std::string quoted = string_literals(
             "const char q = '\"';\n"
             "const char e = '\\'';\n"
             "const auto s = \"Crash Log Scan Run failed during\";\n");
         CHECK(quoted.find("Crash Log Scan Run failed during") != std::string::npos);
     }
 
+    SECTION("literals are read, and the code around them is not") {
+        // `succeeded,` is core-owned prose and also, character for character, an
+        // ordinary argument list. A detector that searched code rather than
+        // literals reported the Qt GUI's `emit finished(terminal.succeeded,
+        // terminal.failed, ...)` as drift, which is how this scanner came to
+        // extract literals instead of merely stripping comments.
+        const std::string code = string_literals("emit finished(terminal.succeeded, terminal.failed);\n");
+        CHECK(code.find("succeeded,") == std::string::npos);
+
+        const std::string written = string_literals("const auto s = \"3 succeeded, 4 failed\";\n");
+        CHECK(written.find("succeeded,") != std::string::npos);
+
+        // Two adjacent literals must not fuse into a phrase neither contains, or
+        // the separator this relies on is doing nothing.
+        const std::string adjacent = string_literals("const auto s = \"succeeded\" \", failed\";\n");
+        CHECK(adjacent.find("succeeded,") == std::string::npos);
+    }
+
     SECTION("rendering core's own segments stays quiet") {
         // The other half of the proof. A detector that answered "drift" to
         // everything would make the audit noise a contributor learns to work
         // around, which is worse than not having it.
-        const std::string compliant = code_without_comments(
+        const std::string compliant = string_literals(
             "for (const auto& segment : line.segments) { out += segment_text(segment); }\n");
         for (const auto& phrase : core_owned_phrases()) {
             INFO("concatenating core's own segments should not read as writing \"" << phrase << '"');

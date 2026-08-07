@@ -1,24 +1,20 @@
 # Phrases about a Crash Log Scan Run that no frontend may write.
 #
 # This file is the deny-list behind the sentence-template detector carried by all
-# four frontend audits:
+# five frontend audits:
 #
 #   ui-applications/classic-tui/tests/shared_runtime_audit.rs
 #   classic-cli/tests/test_display_label_audit.cpp
 #   classic-gui/tests/test_display_label_audit.cpp
 #   python-bindings/tests/test_classic_py_cli_display_label_audit.py
+#   node-bindings/classic-node/__test__/display_label_audit.spec.ts
 #
-# NOT YET A CONSUMER, and named here so the gap is recorded rather than implied:
-# `node-bindings/classic-node/cli/run-scan.ts` also renders these display lines
-# and has no display-label audit of its own. It is a fifth renderer that the four
-# audits do not reach, so a locally written sentence there ships today. Adding
-# that audit is its own change -- it is the first one this repo would need in
-# TypeScript -- but the deficit is real, not a judgement that Node matters less.
-#
-# One file rather than four inline copies. A deny-list duplicated per frontend
-# would reintroduce, in the test layer, exactly the four-copies drift that
+# One file rather than five inline copies. A deny-list duplicated per frontend
+# would reintroduce, in the test layer, exactly the five-copies drift that
 # `classic-scan-presentation` exists to delete: adding a phrase would mean
-# remembering four lists, and forgetting one would silently unenforce it there.
+# remembering five lists, and forgetting one would silently unenforce it there.
+# That the roster went from four to five without touching a single detector is
+# the property the shared file was chosen for.
 #
 # FORMAT
 #   One phrase per line. Blank lines and lines whose first non-blank character is
@@ -26,6 +22,13 @@
 #   neither begin nor end with a space. Matching is a plain, case-sensitive
 #   substring test against string literals in frontend source -- not comments,
 #   and not docstrings.
+#
+#   Every entry must carry at least one character that cannot appear in an
+#   identifier: a space, a comma, a colon, or a period. All five audits assert it.
+#   That is what lets the three source-scanning ports search comment-stripped code
+#   rather than extracting literals -- an entry spellable as an identifier could
+#   match a variable or function name and report drift that is not there. A bare
+#   word is the one thing this file may not hold.
 #
 # WHY PHRASES RATHER THAN WHOLE SENTENCES
 #   A reworded copy is still a copy. Listing the distinctive middle of a sentence
@@ -36,8 +39,8 @@
 # WHY THE LIST IS SHORT
 #   The detector is deliberately narrow. A general "no format strings" rule was
 #   considered and rejected as unworkably noisy: it would bury real findings in
-#   false positives and get switched off. Only distinctive, multi-word domain
-#   sentences belong here. Bare fragments do not -- see EXTENDING THIS LIST.
+#   false positives and get switched off. Only distinctive domain prose belongs
+#   here -- see EXTENDING THIS LIST.
 #
 # EXTENDING THIS LIST
 #   Adding core-owned prose to `classic-scan-presentation` means adding it here
@@ -57,21 +60,19 @@
 #
 #   Deliberately absent, and worth recording so it is not "fixed" later:
 #
-#   - `succeeded,` -- a bare fragment, not a sentence. `classic-scan-presentation`
-#     does own it (`render_outcome_summary`), but the Qt GUI still composes its
-#     own transient status-bar summary from the scan worker's `finished` signal
-#     rather than from display lines, so listing it *here* would fail the GUI
-#     audit for a migration that has not happened yet. It is therefore carried as
-#     a named local supplement in the Python CLI's audit, which enforced it before
-#     this file existed and must not quietly lose that. Move it here, and delete
-#     the supplement, when the Qt status bar renders display lines.
-#
-#     This is the one shape a shared list cannot express on its own: a phrase that
-#     is enforceable in some frontends but not yet all of them. A supplement named
-#     in one audit is the honest encoding -- an exemption mechanism in this file
-#     would let anything be excused without anyone reading why.
 #   - `Installed YAML Data` -- a domain name that legitimately appears as a
 #     frontend's own section header, which is Display Layout.
+#
+#   `succeeded,` used to be listed here as knowingly withheld, and is now an
+#   ordinary entry below. It is worth recording why, because it is the shape this
+#   file will hit again: a phrase core owns that one frontend has not stopped
+#   writing is not enforceable anywhere, since every audit reads this one list. It
+#   lived as a named supplement in the Python CLI's audit -- which had enforced it
+#   before this file existed and must not quietly lose that -- until the Qt GUI's
+#   status bar stopped composing its own run summary. Then it moved here and the
+#   supplement went away. A supplement in one audit is the honest encoding of that
+#   state; a general exemption mechanism in this file would let anything be excused
+#   without anyone reading why.
 
 # --- Sentences `classic-scan-presentation` owns as fixed prose ----------------
 # Every entry below is a `DisplaySegment::Text` literal in
@@ -88,6 +89,15 @@ Your Local Ignore file was not replaced.
 Local Ignore was reset, but the replacement is not confirmed durable
 moved to Unsolved Logs
 Effective concurrency:
+
+# From `render_outcome_summary`. A fragment rather than a sentence, and the only
+# entry here that is not prose on its own -- it earns its place because it is the
+# exact shape the drift took twice: the Python CLI wrote
+# `Scanlog binding completed: 1 succeeded, 0 failed` and the Qt GUI's status bar
+# wrote `(3 succeeded, 4 failed)`, each re-deciding the wording and the plural of
+# the noun beside it. The trailing comma is load-bearing: it is what stops this
+# matching an identifier.
+succeeded,
 
 # --- Display Labels that read as whole statements -----------------------------
 # These arrive in a `label` segment, resolved through `classic-vocabulary`. They

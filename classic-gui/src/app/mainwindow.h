@@ -104,7 +104,7 @@ private slots:
     void onExit();
     void onCrashScanProgress(float percent, const QString& status, int completed, int total);
     void onScanProgress(float percent, const QString& status);
-    void onScanCompleted(int total, int success, int errors);
+    void onScanCompleted(int total, int success, int errors, const QString& message);
     /// Restores idle scan controls for the expected no-logs lifecycle state.
     void onScanNoLogsFound(const QString& message);
     /// Restores idle scan controls and presents a Rust-owned cancellation terminal summary.

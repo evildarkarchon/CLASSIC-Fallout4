@@ -336,7 +336,7 @@ fn no_tui_source_writes_a_sentence_the_presentation_crate_owns() {
     let phrases = core_owned_phrases();
     let mut offenders = Vec::new();
     for name in AUDITED_SOURCES {
-        let code = code_without_comments(&read_source(name));
+        let code = string_literals(&read_source(name));
         for phrase in &phrases {
             if contains(&code, phrase.as_bytes()) {
                 offenders.push(format!("{name} writes {phrase:?}"));
@@ -370,29 +370,31 @@ fn the_shared_deny_list_is_readable_and_not_empty() {
         phrases.contains(&"Crash Log Scan Run failed during".to_string()),
         "the shared deny-list no longer carries the phrase the original drift took"
     );
-    // Every phrase must be multi-word. That is what lets this detector search comment-stripped code
-    // rather than extracted literals: a phrase containing a space cannot hide inside an identifier,
-    // so the only place it can appear is a string.
-    for phrase in &phrases {
-        assert!(
-            phrase.contains(' '),
-            "{phrase:?} is a single word; a deny-list entry must be a phrase, or the detector \
-             cannot tell prose from an identifier"
-        );
-    }
+    // No constraint on an entry's shape is asserted any more, and that is deliberate. An earlier
+    // version required each entry to contain a space, because the detector searched comment-stripped
+    // *code* and a bare word could match an identifier. That constraint was load-bearing only
+    // because the detector was reading more than it needed: `string_literals` now yields literals
+    // alone, where no identifier can appear, so `succeeded,` — core-owned prose that occurs in
+    // ordinary code as `terminal.succeeded, terminal.failed` — is safe to list.
 }
 
-/// Returns `source` with its comments removed and everything else, string literals included, intact.
+/// Returns the contents of every string literal in `source`, one per line, with nothing else.
 ///
-/// Comments are excluded for the reason the CXX parity gate's name scan was fixed: a comment
+/// Literals rather than comment-stripped code, which is what this scanned first. Prose is only ever
+/// a literal, so scanning anything more than literals only adds ways to be wrong — and it was wrong:
+/// `succeeded,` is core-owned prose that occurs verbatim in ordinary code as `terminal.succeeded,
+/// terminal.failed`. Extracting literals removes that whole class of false positive rather than
+/// asking the deny-list to dodge it, and puts this in line with the Python audit, which reads
+/// literals off the AST for the same reason.
+///
+/// Comments never appear, for the reason the CXX parity gate's name scan was fixed: a comment
 /// *describing* the drift is not the drift, and this file's own module docs quote the phrases it
-/// forbids. String literals are kept rather than extracted because every deny-list phrase contains
-/// a space — enforced by `the_shared_deny_list_is_readable_and_not_empty` — so a phrase cannot occur
-/// anywhere but a string.
+/// forbids. Tracking string state is what tells the two apart, and it also stops a `//` inside a
+/// path or URL literal from reading as the start of a comment.
 ///
-/// String state is tracked only so a `//` or `/*` *inside* a literal does not read as the start of a
-/// comment; a path or URL literal would otherwise swallow the rest of its line.
-fn code_without_comments(source: &str) -> Vec<u8> {
+/// Literals are newline-separated rather than concatenated so two adjacent ones cannot form a
+/// phrase neither contains — `"succeeded" ", "` must not read as `succeeded, `.
+fn string_literals(source: &str) -> Vec<u8> {
     let bytes = source.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
     let mut index = 0;
@@ -437,6 +439,7 @@ fn code_without_comments(source: &str) -> Vec<u8> {
                     out.push(bytes[index]);
                     index += 1;
                 }
+                out.push(b'\n');
                 continue;
             }
         }
@@ -477,9 +480,10 @@ fn code_without_comments(source: &str) -> Vec<u8> {
                 out.push(bytes[index]);
                 index += 1;
             }
+            out.push(b'\n');
             continue;
         }
-        out.push(bytes[index]);
+        // Ordinary code, which is deliberately dropped rather than collected.
         index += 1;
     }
     out
@@ -824,7 +828,7 @@ fn summary(stage: InfrastructureErrorStage, message: &str) -> String {
 fn the_phrase_detector_catches_the_drift_it_exists_for() {
     // Same proof the naming detectors carry above, for the same reason: the TUI writes none of these
     // phrases now, so a broken phrase detector and a compliant frontend look identical from here.
-    let code = code_without_comments(REWORDED_SENTENCE);
+    let code = string_literals(REWORDED_SENTENCE);
     assert!(
         contains(&code, b"Crash Log Scan Run failed during"),
         "a sentence template reusing a core-owned phrase should be caught"
@@ -836,15 +840,33 @@ fn the_phrase_detector_reads_code_rather_than_comments() {
     // A comment describing the drift is documentation, not the drift — the same false positive the
     // CXX parity gate's name scan hit. This file's own module docs would trip a detector that could
     // not tell the two apart.
-    let commented = code_without_comments(
+    let commented = string_literals(
         "// Crash Log Scan Run failed during is core's to say.\n\
          /* Crash Log Scan Run failed during, again. */\nlet x = 1;\n",
     );
     assert!(!contains(&commented, b"Crash Log Scan Run failed during"));
 
     // The converse: a literal writing it is the drift, and a raw string is still a literal.
-    let raw = code_without_comments("let s = r\"Crash Log Scan Run failed during\";\n");
+    let raw = string_literals("let s = r\"Crash Log Scan Run failed during\";\n");
     assert!(contains(&raw, b"Crash Log Scan Run failed during"));
+}
+
+#[test]
+fn the_phrase_detector_reads_literals_rather_than_the_code_around_them() {
+    // `succeeded,` is core-owned prose and also, character for character, an ordinary argument list.
+    // A detector that searched code rather than literals reported the Qt GUI's
+    // `emit finished(terminal.total, terminal.succeeded, terminal.failed, ...)` as drift, which is
+    // how this scanner came to extract literals instead of merely stripping comments.
+    let code = string_literals("emit finished(terminal.succeeded, terminal.failed);\n");
+    assert!(!contains(&code, b"succeeded,"));
+
+    let written = string_literals("let s = \"3 succeeded, 4 failed\";\n");
+    assert!(contains(&written, b"succeeded,"));
+
+    // Two adjacent literals must not fuse into a phrase neither contains, or the separator this
+    // relies on is doing nothing.
+    let adjacent = string_literals("let s = concat!(\"succeeded\", \", failed\");\n");
+    assert!(!contains(&adjacent, b"succeeded,"));
 }
 
 #[test]
@@ -852,13 +874,13 @@ fn the_phrase_detector_survives_a_character_literal_holding_a_quote() {
     // A `'"'` read as a string opener would swallow everything up to the next quote, taking the
     // phrase after it out of the audit — a silent hole rather than a failure. No TUI source
     // contains one today, which is precisely why it needs a test rather than a reader's vigilance.
-    let code = code_without_comments(
+    let code = string_literals(
         "let quote = '\"';\nlet escaped = '\\'';\nlet s = \"Crash Log Scan Run failed during\";\n",
     );
     assert!(contains(&code, b"Crash Log Scan Run failed during"));
 
     // A lifetime is not a character literal and must not be consumed as one.
-    let lifetime = code_without_comments(
+    let lifetime = string_literals(
         "fn label(s: &'static str) -> &'static str { \"Crash Log Scan recovery failed\" }\n",
     );
     assert!(contains(&lifetime, b"Crash Log Scan recovery failed"));
@@ -868,7 +890,7 @@ fn the_phrase_detector_survives_a_character_literal_holding_a_quote() {
 fn the_phrase_detector_does_not_mistake_a_literal_slash_for_a_comment() {
     // A path or URL literal containing `//` must not read as the start of a comment, or everything
     // after it on that line silently leaves the audited text — including a phrase written there.
-    let code = code_without_comments(
+    let code = string_literals(
         "let url = \"https://example.invalid\"; let s = \"Crash Log Scan Run failed during\";\n",
     );
     assert!(contains(&code, b"Crash Log Scan Run failed during"));
@@ -878,7 +900,7 @@ fn the_phrase_detector_does_not_mistake_a_literal_slash_for_a_comment() {
 fn the_phrase_detector_leaves_compliant_rendering_alone() {
     // The other half of the proof. Rendering a segment core produced is the correct shape and must
     // stay quiet, or the audit becomes noise a contributor learns to work around.
-    let compliant = code_without_comments(
+    let compliant = string_literals(
         "fn render(line: &DisplayLine) -> String {\n\
              line.segments.iter().map(segment_text).collect::<Vec<_>>().join(\" \")\n\
          }\n",

@@ -242,16 +242,21 @@ void ScanWorker::doScan(const QString& installationRoot, const classic::gui::Cra
             emit logScanned(log.discoveryIndex, log.succeeded, log.crashLog);
         }
 
-        // The three terminal signals that carry prose carry the rendered run as rich text, because
-        // every one of them ends in a `QMessageBox` — a widget that can style a severity and open a
-        // path the run just wrote. The window reduces it to one plain line for the progress row,
-        // which is the only surface here that cannot hold more.
+        // Every terminal signal carries the rendered run as rich text, because each ends in a
+        // `QMessageBox` — a widget that can style a severity and open a path the run just wrote.
+        // The window reduces it to one plain line for the progress row, which is the only surface
+        // here that cannot hold more.
+        //
+        // `finished` was the exception until it carried a message: it published three counts and no
+        // words, so the window had nothing to state the outcome with and wrote its own sentence,
+        // re-deciding both the wording and the plural of "logs". Handing it the same rendered run
+        // the other three get is what removed that.
         switch (terminal.kind) {
         case TerminalKind::Completed:
             emit progress(100.0F, QStringLiteral("Complete"));
             emit progressDetailed(100.0F, QStringLiteral("Complete"), terminal.succeeded + terminal.failed,
                                   terminal.total);
-            emit finished(terminal.total, terminal.succeeded, terminal.failed);
+            emit finished(terminal.total, terminal.succeeded, terminal.failed, terminal.richText);
             break;
         case TerminalKind::CancelledBeforeDiscovery:
         case TerminalKind::Cancelled:

@@ -1538,8 +1538,11 @@ void MainWindow::onCrashLogScanned(int /*index*/, bool /*success*/, const QStrin
     }
 }
 
-void MainWindow::onScanCompleted(int total, int success, int errors)
+void MainWindow::onScanCompleted(int total, int success, int errors, const QString& message)
 {
+    Q_UNUSED(success);
+    Q_UNUSED(errors);
+
     m_btnScanCrashLogs->setEnabled(true);
     m_btnScanCrashLogs->setText(QStringLiteral("SCAN CRASH LOGS"));
     m_progressBar->setRange(0, 100);
@@ -1548,11 +1551,21 @@ void MainWindow::onScanCompleted(int total, int success, int errors)
     m_crashScanTotalLogs = total;
     m_crashScanLogsCompleted = total;
     initResultsReportDir();
-    setStatusMessage(QStringLiteral("Scan completed: %1 logs scanned in %2s (%3 succeeded, %4 failed)")
-                         .arg(total)
-                         .arg(format_elapsed_seconds(m_crashScanTimer))
-                         .arg(success)
-                         .arg(errors) +
+
+    // The same shape as every other terminal path in this window: the run states its own outcome,
+    // and this window adds only what the run cannot know. That is the elapsed time, measured from a
+    // clock Rust does not carry, and the Installed YAML Data suffix.
+    //
+    // This used to read `Scan completed: %1 logs scanned in %2s (%3 succeeded, %4 failed)`, composed
+    // from the counts alone. It was the last sentence about a Crash Log Scan Run that this frontend
+    // wrote for itself, and it re-derived the plural of "logs" — so a one-log run read "1 logs"
+    // here while every other frontend read "1 log". `success` and `errors` stay in the signal
+    // because they are data a consumer may key on; they are simply no longer the raw material for
+    // prose. The counts a user reads now arrive inside the rendered run as `Count` segments whose
+    // noun Rust already agreed with its value.
+    setStatusMessage(QStringLiteral("%1 (%2s)")
+                         .arg(scanRunStatusLine(message))
+                         .arg(format_elapsed_seconds(m_crashScanTimer)) +
                      installedYamlDataStatusSuffix());
 
     // Auto-switch to Results tab is handled by ResultsController::onScanCompleted()

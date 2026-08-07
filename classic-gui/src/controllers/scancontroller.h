@@ -44,7 +44,11 @@ signals:
     void scanDiscovered(int totalLogs);
     void scanConcurrencySelected(int concurrency);
     void scanLogScanned(int index, bool success, const QString& logPath);
-    void scanFinished(int total, int success, int errors);
+    /// Relays a completed run's counts together with the rendered run the worker produced.
+    ///
+    /// `message` is the same rich text `scanCancelled`, `scanNoLogsFound`, and `scanError` carry.
+    /// A consumer states the outcome from it rather than composing one from the counts.
+    void scanFinished(int total, int success, int errors, const QString& message);
     void scanNoLogsFound(const QString& message);
     void scanCancelled(const QString& message);
     void scanError(const QString& message);
@@ -55,7 +59,7 @@ signals:
     void scanInstalledYamlDataResolved(const classic::gui::ScanRunInstalledYamlDataPresentation& installedYamlData);
 
 private slots:
-    void onWorkerFinished(int total, int success, int errors);
+    void onWorkerFinished(int total, int success, int errors, const QString& message);
     /// Completes GUI cleanup for the expected no-logs terminal lifecycle state.
     void onWorkerNoLogsFound(const QString& message);
     /// Completes GUI cleanup for an expected safe-seam cancellation without presenting an error.

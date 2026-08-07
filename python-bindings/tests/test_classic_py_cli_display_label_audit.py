@@ -117,19 +117,7 @@ def _load_core_owned_phrases() -> tuple[str, ...]:
     )
 
 
-# Phrases this frontend enforces that the shared list cannot carry yet.
-#
-# `succeeded,` is owned by `classic-scan-presentation` (`render_outcome_summary`),
-# and this audit forbade it before the shared file existed. It cannot move into
-# that file while the Qt GUI still composes its own transient status-bar summary
-# from the scan worker's `finished` signal, because the shared list is enforced by
-# every frontend at once and the GUI would fail on a migration that has not
-# happened. Dropping it instead would silently weaken this frontend to make the
-# consolidation look tidier, so it stays here, named, until the shared list can
-# take it.
-LOCALLY_ENFORCED_PHRASES = ("succeeded,",)
-
-PRESENTATION_OWNED_PHRASES = _load_core_owned_phrases() + LOCALLY_ENFORCED_PHRASES
+PRESENTATION_OWNED_PHRASES = _load_core_owned_phrases()
 
 # The label entry points `classic_scanlog` publishes. They stay correct for a
 # surface that labels a domain enum *outside* a display line -- this CLI has no
@@ -459,21 +447,23 @@ def test_the_shared_deny_list_is_readable_and_not_empty() -> None:
     assert len(shared) >= 10
     assert "Crash Log Scan Run failed during" in shared
 
-    # Every phrase in the *shared* file must be multi-word. This audit does not
-    # need that -- it extracts literals from the AST -- but the three native
-    # audits search comment-stripped source instead, where a single-word entry
-    # could match an identifier. The shared file has to satisfy its strictest
+    # Every entry must carry a character that cannot appear in an identifier. This
+    # audit does not need the rule -- it extracts literals from the AST -- but the
+    # three source-scanning audits search comment-stripped code, where an entry
+    # spellable as an identifier could match a variable or function name and
+    # report drift that is not there. The shared file has to satisfy its strictest
     # consumer, and asserting it here means the file is checked wherever it is
     # read rather than only where the constraint bites.
+    #
+    # Not "contains a space": `succeeded,` is a single word whose trailing comma
+    # is exactly as disqualifying, and requiring a space would have kept a real
+    # core-owned fragment out of the shared list for no reason.
     for phrase in shared:
-        assert " " in phrase, (
-            f"{phrase!r} is a single word; a shared deny-list entry must be a phrase, or the "
-            "native audits cannot tell prose from an identifier."
+        assert not phrase.replace("_", "").isalnum(), (
+            f"{phrase!r} could be spelled as an identifier; a shared deny-list entry needs a "
+            "space or punctuation, or the source-scanning audits cannot tell prose from a name."
         )
 
-    # The local supplement is deliberately exempt from that rule: `succeeded,` is
-    # a bare fragment, which is part of why it cannot move to the shared file yet.
-    assert LOCALLY_ENFORCED_PHRASES, "the supplement must not be emptied without moving its phrases"
     assert all(phrase == phrase.strip() for phrase in PRESENTATION_OWNED_PHRASES)
 
 

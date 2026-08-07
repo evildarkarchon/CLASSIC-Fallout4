@@ -128,11 +128,11 @@ bool ScanController::isScanning() const
     return m_scanning;
 }
 
-void ScanController::onWorkerFinished(int total, int success, int errors)
+void ScanController::onWorkerFinished(int total, int success, int errors, const QString& message)
 {
     m_scanning = false;
     m_currentWorker = nullptr;
-    emit scanFinished(total, success, errors);
+    emit scanFinished(total, success, errors, message);
     if (m_signalHub) {
         emit m_signalHub->scanCompleted();
     }
