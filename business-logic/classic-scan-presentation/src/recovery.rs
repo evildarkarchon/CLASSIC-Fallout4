@@ -16,6 +16,15 @@
 //! and no second attempt. A binding consumer building its own frontend gets the same
 //! protection.
 //!
+//! # What this does not say
+//!
+//! The prompt states the question, not the facts behind it. It does not name the malformed
+//! file's identity, because [`render_run_result`](crate::render_run_result) already renders
+//! that in the Installed YAML Data block — and every surface that receives a prompt receives
+//! the rendered run on the same envelope, so the identity is never missing, only stated once.
+//! Rendering it here as well put the same line on screen twice in all three interactive
+//! frontends, which is the drift this crate exists to remove, merely relocated into core.
+//!
 //! # What is Display Layout here
 //!
 //! The affordance beside a description is not core's. A native CLI's bracketed letters, a
@@ -33,11 +42,13 @@
 //! binding surfaces and reopen the run contract's cancellation semantics, so the cancel
 //! affordance and its wording stay each frontend's own.
 
+#[cfg(test)]
+#[path = "recovery_tests.rs"]
+mod tests;
+
 use crate::display::{DisplayLine, DisplaySegment, DisplaySeverity};
-use crate::render::render_local_ignore;
-use classic_config_core::YamlDataContentIdentity;
 use classic_scanlog_core::scan_run::contract::{
-    InstalledYamlDataRunData, LocalIgnoreRecoveryDecision, LocalIgnoreRunState,
+    InstalledYamlDataRunData, LocalIgnoreRecoveryDecision,
 };
 use classic_vocabulary::Vocabulary;
 
@@ -94,42 +105,29 @@ pub struct RecoveryDecisionDescription {
 /// # Scope
 ///
 /// `data.local_ignore_reset_available` is meaningful only while the run's Local Ignore state
-/// is [`LocalIgnoreRunState::RecoveryRequired`], and is `false` in every other state. Calling
+/// is `LocalIgnoreRunState::RecoveryRequired`, and is `false` in every other state. Calling
 /// this for a run that is not paused on a recovery decision therefore reports Reset To
 /// Default as unavailable, which fails closed rather than open.
 #[must_use]
 pub fn render_local_ignore_recovery(data: Option<&InstalledYamlDataRunData>) -> RecoveryPrompt {
-    match data {
-        Some(data) => render_recovery_prompt(
-            Some((data.local_ignore_state, &data.local_ignore_identity)),
-            data.local_ignore_reset_available,
-        ),
-        None => render_recovery_prompt(None, true),
-    }
+    // Absent Installed YAML Data resolves to available here, once, rather than in each of the
+    // three frontends that used to resolve it for themselves.
+    render_recovery_prompt(data.is_none_or(|data| data.local_ignore_reset_available))
 }
 
-/// Renders a recovery prompt from the three facts it reads.
+/// Renders a recovery prompt from the one fact it reads.
 ///
 /// `pub(crate)` and fact-taking for the reason [`crate::render::render_yaml_data_file`] is:
 /// [`InstalledYamlDataRunData`] embeds accessor-only types with no public constructor, so no
 /// test can assemble one to feed through [`render_local_ignore_recovery`]. Pinning this
-/// wording means calling the renderer with the same facts that function reads out.
-///
-/// `local_ignore` is `None` when the run reported no Installed YAML Data at all, in which
-/// case the prompt states the situation without naming the file's identity.
-pub(crate) fn render_recovery_prompt(
-    local_ignore: Option<(LocalIgnoreRunState, &YamlDataContentIdentity)>,
-    reset_available: bool,
-) -> RecoveryPrompt {
+/// wording means calling the renderer with the same fact that function reads out.
+pub(crate) fn render_recovery_prompt(reset_available: bool) -> RecoveryPrompt {
     let mut lines = vec![DisplayLine::new(
         Warning,
         vec![Text(
             "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
         )],
     )];
-    if let Some((state, identity)) = local_ignore {
-        lines.push(render_local_ignore(state, identity));
-    }
     if !reset_available {
         // Stated as a line rather than folded into the decision's own description, because
         // the description says what the decision *does* and stays true whether or not this

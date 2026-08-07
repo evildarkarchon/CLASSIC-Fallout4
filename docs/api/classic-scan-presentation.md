@@ -129,6 +129,15 @@ behind it stop the crate compiling if a third variant is ever added.
 list is simply empty for this operation — so no run can withdraw it. That the two answers differ is
 exactly why availability is a per-decision field rather than one flag.
 
+**`lines` states the question, not the facts behind it.** It does not name the malformed file's
+identity: `render_run_result` already renders that in the Installed YAML Data block, and every
+surface receiving a prompt receives the rendered run on the same envelope — so the identity is never
+missing, only stated once. Rendering it in both put the same line on screen twice in all three
+interactive frontends, which is the drift this crate exists to remove, merely relocated into core.
+So `lines` holds the pause statement, plus a `Notice` explaining any decision being withheld. That
+second line is a prompt line rather than part of the withheld decision's `description`, because a
+description says what a decision *does* and stays true whether or not this run can honor it.
+
 **Backing out is not a decision.** `LocalIgnoreRecoveryDecision` has exactly two variants by design;
 abandonment is spelled as the *absence* of a decision and reaches the contract through
 `CrashLogScanRunContinuation::abandon`. The cancel affordance and its wording stay each frontend's.
