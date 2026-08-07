@@ -11,6 +11,10 @@ use classic_scanlog_core::{CrashLogScanRejectedInput, CrashLogScanRunStatus};
 // or `VARIANTS` off a core variant to derive an expectation rather than restate
 // one.
 use classic_vocabulary::Vocabulary;
+// Imported here rather than in `scan_run.rs`, which names only `RecoveryPrompt`: the
+// descriptions inside one are read through it there, while these tests fabricate
+// descriptions directly and so need the type by name.
+use classic_scan_presentation::RecoveryDecisionDescription;
 
 const SHARED_SCAN_RUN_MANIFEST: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -1016,4 +1020,183 @@ fn glossary_capitalization_survives_the_javascript_boundary() {
             .expect("a published token must resolve"),
         "FormID database access"
     );
+}
+
+// --- Local Ignore recovery prompt ------------------------------------------------
+//
+// These pin no wording either. What they prove is that the prompt reaches JavaScript
+// whole: the decision Rust named, the label it resolved, the description it wrote,
+// and - the fact this type exists for - whether this run can honor the decision.
+
+/// Builds a run paused on a Local Ignore recovery decision.
+///
+/// Built twice for the reason [`completed_run_result`] is: `RunResult` retains a
+/// one-shot continuation and is not `Clone`.
+fn recovery_required_run_result() -> RunResult {
+    RunResult {
+        status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
+        discovery: None,
+        setup: None,
+        installed_yaml_data: None,
+        continuation: None,
+        effective_concurrency: None,
+        message: Some("Local Ignore requires a recovery decision".to_string()),
+        total: 0,
+        succeeded: 0,
+        failed: 0,
+        cancelled: 0,
+        logs: vec![],
+    }
+}
+
+#[test]
+/// A run paused on Local Ignore recovery resolves with the prompt Rust rendered for it.
+fn the_success_envelope_carries_the_recovery_prompt_core_rendered() {
+    let expected = recovery_prompt_to_js(&render_local_ignore_recovery(None));
+    let envelope = success_envelope(recovery_required_run_result(), None);
+
+    let prompt = envelope
+        .recovery_prompt
+        .expect("a paused run resolves with a prompt");
+    assert_display_lines_match(&prompt.lines, &expected.lines);
+    assert_eq!(prompt.decisions.len(), expected.decisions.len());
+    for (index, (actual, expected)) in prompt.decisions.iter().zip(&expected.decisions).enumerate()
+    {
+        assert_eq!(actual.decision, expected.decision, "decision {index}");
+        assert_eq!(actual.label, expected.label, "decision {index} label");
+        assert_eq!(
+            actual.available, expected.available,
+            "decision {index} availability"
+        );
+        assert_segments_match(&actual.description, &expected.description);
+    }
+}
+
+/// Asserts two flattened segment lists carry the same payloads in the same order.
+///
+/// Written out rather than derived, for the reason [`assert_display_lines_match`] is:
+/// the napi object types implement no equality.
+fn assert_segments_match(actual: &[JsScanRunDisplaySegment], expected: &[JsScanRunDisplaySegment]) {
+    assert_eq!(actual.len(), expected.len(), "segment count changed");
+    for (index, (actual_segment, expected_segment)) in actual.iter().zip(expected).enumerate() {
+        assert_eq!(
+            actual_segment.kind, expected_segment.kind,
+            "segment {index} kind"
+        );
+        assert_eq!(
+            actual_segment.text, expected_segment.text,
+            "segment {index} text"
+        );
+        assert_eq!(
+            actual_segment.path, expected_segment.path,
+            "segment {index} path"
+        );
+        assert_eq!(
+            actual_segment.count, expected_segment.count,
+            "segment {index} count"
+        );
+    }
+}
+
+#[test]
+/// A run that is not waiting on a decision resolves with no prompt to show.
+fn a_terminal_envelope_resolves_without_a_recovery_prompt() {
+    assert!(
+        success_envelope(completed_run_result(), None)
+            .recovery_prompt
+            .is_none()
+    );
+}
+
+#[test]
+/// Every recovery decision reaches JavaScript with its own availability.
+///
+/// This is the whole point of the type. A consumer reading `available` off the
+/// decision it is about to offer cannot repeat the gap this closed, where the fact
+/// lived beside the prompt and two frontends never looked at it.
+fn each_recovery_decision_reaches_javascript_with_its_own_availability() {
+    let prompt = recovery_prompt_to_js(&RecoveryPrompt {
+        lines: Vec::new(),
+        decisions: vec![
+            RecoveryDecisionDescription {
+                decision: contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                label: "Proceed Without Ignore",
+                description: vec![DisplaySegment::Text("proceed")],
+                available: true,
+            },
+            RecoveryDecisionDescription {
+                decision: contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+                label: "Reset To Default",
+                description: vec![DisplaySegment::Text("reset")],
+                available: false,
+            },
+        ],
+    });
+
+    assert_eq!(prompt.decisions.len(), 2);
+    assert_eq!(
+        prompt.decisions[0].decision,
+        JsScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+    );
+    assert_eq!(prompt.decisions[0].label, "Proceed Without Ignore");
+    assert!(prompt.decisions[0].available);
+    assert_eq!(
+        prompt.decisions[1].decision,
+        JsScanRunLocalIgnoreRecoveryDecision::ResetToDefault
+    );
+    assert_eq!(prompt.decisions[1].label, "Reset To Default");
+    assert!(!prompt.decisions[1].available);
+}
+
+#[test]
+/// A decision's description flattens the same way the lines beside it do.
+fn a_recovery_decision_description_flattens_like_any_other_segments() {
+    let prompt = recovery_prompt_to_js(&RecoveryPrompt {
+        lines: Vec::new(),
+        decisions: vec![RecoveryDecisionDescription {
+            decision: contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            label: "Reset To Default",
+            description: vec![
+                DisplaySegment::Text("back up"),
+                DisplaySegment::Path(PathBuf::from("CLASSIC Ignore.yaml")),
+                DisplaySegment::Count {
+                    value: 1,
+                    noun: "file",
+                },
+            ],
+            available: true,
+        }],
+    });
+
+    let segments = &prompt.decisions[0].description;
+    assert_eq!(segments.len(), 3);
+    assert_eq!(segments[0].kind, JsScanRunDisplaySegmentKind::Text);
+    assert_eq!(segments[0].text, "back up");
+    assert_eq!(segments[1].kind, JsScanRunDisplaySegmentKind::Path);
+    assert_eq!(segments[1].path, "CLASSIC Ignore.yaml");
+    assert!(segments[1].text.is_empty());
+    assert_eq!(segments[2].kind, JsScanRunDisplaySegmentKind::Count);
+    assert_eq!(segments[2].count, 1);
+    assert_eq!(segments[2].text, "file");
+}
+
+#[test]
+/// Both contract decisions map to distinct JavaScript twins, and back again.
+///
+/// The round trip is what matters: a consumer answers with the decision it was
+/// offered, so the outbound and inbound halves must name the same thing.
+fn every_recovery_decision_maps_to_its_own_javascript_twin() {
+    for (core, expected) in [
+        (
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            JsScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+        ),
+        (
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            JsScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+        ),
+    ] {
+        assert_eq!(map_local_ignore_recovery_decision(core), expected);
+        assert_eq!(local_ignore_recovery_decision_to_core(expected), core);
+    }
 }

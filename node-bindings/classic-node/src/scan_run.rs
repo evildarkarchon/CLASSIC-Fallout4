@@ -16,8 +16,9 @@ use crate::installed_yaml_data::{
 use crate::scanlog::JsFcxConfigIssue;
 use crate::shared::{JsGameId, js_to_core_game_id};
 use classic_scan_presentation::{
-    DisplayLine, DisplaySegment, DisplaySeverity, render_event, render_infrastructure_error,
-    render_resume_error, render_run_result,
+    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryPrompt, render_event,
+    render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
+    render_run_result,
 };
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
@@ -322,6 +323,10 @@ pub enum JsScanRunLocalIgnoreState {
 }
 
 /// Explicit Local Ignore recovery decisions owned by Rust scan coordination.
+// `Clone`, `Copy`, `Debug`, and `PartialEq` exist for the recovery-prompt tests, which
+// compare a projected decision against the twin it should have produced and round-trip
+// it back. Same reason `JsScanRunDisplaySeverity` carries them.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[napi(string_enum)]
 pub enum JsScanRunLocalIgnoreRecoveryDecision {
     /// Resume with an empty ignore list scoped only to the retained run.
@@ -514,6 +519,49 @@ pub struct JsScanRunDisplayLine {
     pub segments: Vec<JsScanRunDisplaySegment>,
 }
 
+/// One Local Ignore recovery decision, named and explained, with its availability
+/// attached.
+///
+/// `available` travels here rather than as a separate flag beside the prompt, which
+/// is what makes honouring it take no separate lookup. A consumer must not offer a
+/// decision for which it is false: Rust still fails safely and touches nothing on
+/// disk, but the attempt spends the one-shot continuation, so the user is left with
+/// no scan and no second attempt. Two native frontends made exactly that mistake
+/// while the fact lived beside the prompt instead of on the decision.
+//
+// Output-only, unlike the display types above: its only parent is
+// `JsScanRunSuccess`, which is already `object_from_js = false`, so napi needs no
+// readable-from-JavaScript form and no consumer-constructible shape is widened.
+#[napi(object, object_from_js = false)]
+pub struct JsScanRunRecoveryDecisionDescription {
+    /// The decision to hand back to `scanRunResume`.
+    pub decision: JsScanRunLocalIgnoreRecoveryDecision,
+    /// The decision's Display Label.
+    pub label: String,
+    /// What choosing it will actually do, concatenated in order like any other line.
+    pub description: Vec<JsScanRunDisplaySegment>,
+    /// Whether this run can honor the decision.
+    pub available: bool,
+}
+
+/// The Rust-owned content of a Local Ignore recovery prompt.
+///
+/// `lines` state why the run paused and what is being decided about; `decisions`
+/// lists every decision the continuation contract accepts. The affordance beside a
+/// description is the consumer's own, as is the order it presents them in and what
+/// kind of surface asks the question. The descriptions themselves are not.
+///
+/// Backing out appears nowhere here. `JsScanRunLocalIgnoreRecoveryDecision` has
+/// exactly two variants by design, and abandonment is spelled as the absence of a
+/// decision through `scanRunAbandon`.
+#[napi(object, object_from_js = false)]
+pub struct JsScanRunRecoveryPrompt {
+    /// Why the run paused and what is being decided about, in reading order.
+    pub lines: Vec<JsScanRunDisplayLine>,
+    /// One description per recovery decision, in the contract's variant order.
+    pub decisions: Vec<JsScanRunRecoveryDecisionDescription>,
+}
+
 /// Complete terminal Crash Log Scan Run result.
 #[napi(object, object_from_js = false)]
 pub struct JsScanRunResult {
@@ -599,6 +647,17 @@ pub struct JsScanRunSuccess {
     /// `scanRunExecute` and `scanRunResume` resolve the same envelope, so this
     /// one field covers the initial run and the continuation resume alike.
     pub display_lines: Vec<JsScanRunDisplayLine>,
+    /// What to ask the user, and which answers this run can honor.
+    ///
+    /// Present only when `result.status` is `local_ignore_recovery_required`, which
+    /// is also exactly when the run retains a continuation to answer with. Absent
+    /// rather than empty, because a run with nothing to ask has no prompt rather
+    /// than an empty one — and `undefined` is what a JavaScript consumer already
+    /// reads as "not present" everywhere else on this surface.
+    ///
+    /// Rendered here for the reason `displayLines` is: JavaScript receives a
+    /// projected copy of the run and cannot render from the Rust value later.
+    pub recovery_prompt: Option<JsScanRunRecoveryPrompt>,
 }
 
 /// Failed final operation envelope with adapter-only observation failure data.
@@ -1595,10 +1654,20 @@ fn success_envelope(
     observer_error: Option<String>,
 ) -> JsScanRunSuccess {
     let display_lines = display_lines_to_js(&render_run_result(&result));
+    // Rendered only for the one status that pauses for an answer. Every other status
+    // has nothing to ask, and a prompt attached to a finished run would invite a
+    // consumer to show one.
+    let recovery_prompt =
+        (result.status == contract::RunStatus::LocalIgnoreRecoveryRequired).then(|| {
+            recovery_prompt_to_js(&render_local_ignore_recovery(
+                result.installed_yaml_data.as_ref(),
+            ))
+        });
     JsScanRunSuccess {
         result: run_result_to_js(result),
         observer_error,
         display_lines,
+        recovery_prompt,
     }
 }
 
@@ -1687,6 +1756,51 @@ const fn map_display_severity(value: DisplaySeverity) -> JsScanRunDisplaySeverit
         DisplaySeverity::Warning => JsScanRunDisplaySeverity::Warning,
         DisplaySeverity::Failure => JsScanRunDisplaySeverity::Failure,
         DisplaySeverity::Success => JsScanRunDisplaySeverity::Success,
+    }
+}
+
+/// Flattens a rendered Local Ignore recovery prompt into the JavaScript mirror types.
+///
+/// The decision descriptions cross as ordinary segment lists, the same flattening the
+/// lines beside them use, so a consumer reads a description with the renderer it
+/// already has.
+fn recovery_prompt_to_js(prompt: &RecoveryPrompt) -> JsScanRunRecoveryPrompt {
+    JsScanRunRecoveryPrompt {
+        lines: display_lines_to_js(&prompt.lines),
+        decisions: prompt
+            .decisions
+            .iter()
+            .map(|description| JsScanRunRecoveryDecisionDescription {
+                decision: map_local_ignore_recovery_decision(description.decision),
+                label: description.label.to_string(),
+                description: description
+                    .description
+                    .iter()
+                    .map(display_segment_to_js)
+                    .collect(),
+                available: description.available,
+            })
+            .collect(),
+    }
+}
+
+/// Maps a Rust-owned recovery decision onto its JavaScript twin.
+///
+/// The outbound half of the mapping whose inbound half is
+/// [`local_ignore_recovery_decision_to_core`]. Written separately because Rust cannot
+/// invert a `match`, and exhaustive so that a third variant added to the contract stops
+/// this from compiling rather than silently describing itself as one of the two that
+/// exist.
+const fn map_local_ignore_recovery_decision(
+    value: contract::LocalIgnoreRecoveryDecision,
+) -> JsScanRunLocalIgnoreRecoveryDecision {
+    match value {
+        contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
+            JsScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+        }
+        contract::LocalIgnoreRecoveryDecision::ResetToDefault => {
+            JsScanRunLocalIgnoreRecoveryDecision::ResetToDefault
+        }
     }
 }
 

@@ -802,6 +802,38 @@ class ScanRunDisplayLine:
     severity: Literal["info", "notice", "warning", "failure", "success"]
     segments: list[ScanRunDisplaySegment]
 
+class ScanRunRecoveryDecisionDescription:
+    """One Local Ignore recovery decision, explained, with its availability.
+
+    Never offer a decision whose ``available`` is ``False``. Rust still fails
+    safely and touches nothing on disk, but the attempt spends the one-shot
+    continuation, so the user is left with no scan and no second attempt.
+
+    ``decision`` is the enum rather than a token, unlike every other tag this
+    surface publishes on an output, because ``scan_run_resume`` takes the enum:
+    a consumer answers with exactly what it was offered.
+    """
+
+    decision: ScanRunLocalIgnoreRecoveryDecision
+    label: str
+    description: list[ScanRunDisplaySegment]
+    available: bool
+
+class ScanRunRecoveryPrompt:
+    """The Rust-owned content of a Local Ignore recovery prompt.
+
+    ``lines`` state why the run paused; ``decisions`` lists every decision the
+    continuation contract accepts. The affordance beside a description is the
+    consumer's own, as is the order they are presented in -- the descriptions
+    themselves are not.
+
+    Backing out appears nowhere here: it is spelled as the absence of a decision
+    through ``scan_run_abandon``.
+    """
+
+    lines: list[ScanRunDisplayLine]
+    decisions: list[ScanRunRecoveryDecisionDescription]
+
 class ScanRunLogEvent:
     """Common facts for one log-scoped observer event."""
 
@@ -835,6 +867,7 @@ class ScanRunExecution:
     error: ScanRunInfrastructureError | None
     observer_error: str | None
     display_lines: list[ScanRunDisplayLine]
+    recovery_prompt: ScanRunRecoveryPrompt | None
 
 def scan_run_execute(
     request: ScanRunRequest,

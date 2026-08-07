@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 642,
-    "current_total": 642,
-    "matched": 642,
+    "contract_total": 644,
+    "current_total": 644,
+    "matched": 644,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -3811,6 +3811,22 @@
     {
       "id": "e0e0fec08acd4c5b",
       "rustSymbol": "ScanRunLocalIgnoreResetRunDataDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "92ccebfd8d784717",
+      "rustSymbol": "ScanRunRecoveryDecisionDescription",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "54164d0fad3f13e3",
+      "rustSymbol": "ScanRunRecoveryPrompt",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",

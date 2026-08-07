@@ -145,9 +145,10 @@ pub use scan_run::{
     PyScanRunInfrastructureError, PyScanRunInspectedYamlDataFile,
     PyScanRunInstalledYamlDataDiagnostic, PyScanRunInstalledYamlDataRunData,
     PyScanRunLocalIgnoreRecoveryDecision, PyScanRunLocalIgnoreResetRunData, PyScanRunLogEvent,
-    PyScanRunLogFailure, PyScanRunLogResult, PyScanRunRejectedInput, PyScanRunRequest,
-    PyScanRunResult, PyScanRunSetupCheck, PyScanRunSetupContext, PyScanRunSetupPathUpdate,
-    PyScanRunSetupResult, PyScanRunStandardSource, PyScanRunTargetedSource, PyScanRunUnsolvedLogs,
+    PyScanRunLogFailure, PyScanRunLogResult, PyScanRunRecoveryDecisionDescription,
+    PyScanRunRecoveryPrompt, PyScanRunRejectedInput, PyScanRunRequest, PyScanRunResult,
+    PyScanRunSetupCheck, PyScanRunSetupContext, PyScanRunSetupPathUpdate, PyScanRunSetupResult,
+    PyScanRunStandardSource, PyScanRunTargetedSource, PyScanRunUnsolvedLogs,
     PyScanRunYamlDataContentIdentity, ScanRunContinuationConsumedError,
     ScanRunLocalIgnoreResetBackupError, ScanRunLocalIgnoreResetConflictError,
     ScanRunLocalIgnoreResetDurabilityUnknownError, ScanRunLocalIgnoreResetReplacementError,
@@ -220,6 +221,8 @@ fn register_scan_run_exports(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyScanRunLogEvent>()?;
     m.add_class::<PyScanRunDisplaySegment>()?;
     m.add_class::<PyScanRunDisplayLine>()?;
+    m.add_class::<PyScanRunRecoveryDecisionDescription>()?;
+    m.add_class::<PyScanRunRecoveryPrompt>()?;
     m.add_class::<PyScanRunEvent>()?;
     m.add_class::<PyScanRunExecution>()?;
     m.add_function(wrap_pyfunction!(scan_run_execute, m)?)?;

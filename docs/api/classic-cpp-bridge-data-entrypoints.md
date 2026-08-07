@@ -534,6 +534,46 @@ line.
 [`classic-scan-presentation.md`](classic-scan-presentation.md) for the Rust
 owner of this content.
 
+### The Local Ignore recovery prompt on the envelope
+
+`has_recovery_prompt` and `recovery_prompt` carry what to ask a user whose Local
+Ignore is malformed, and which answers this run can honor. The flag is true only
+when `result.status` is `LocalIgnoreRecoveryRequired`, which is also exactly when
+the execution retains an opaque continuation — so a run with nothing to ask
+carries no prompt rather than an empty one. It follows the presence-flag
+convention `has_local_ignore_reset` already uses, because CXX has no optional
+struct.
+
+`ScanRunRecoveryPrompt` is two vectors:
+
+| Field | Contents |
+|---|---|
+| `lines` | Why the run paused and what is being decided about, as ordinary `ScanRunDisplayLine`s |
+| `decisions` | One `ScanRunRecoveryDecisionDescription` per decision the continuation contract accepts |
+
+Each `ScanRunRecoveryDecisionDescription` carries the
+`ScanRunLocalIgnoreRecoveryDecision` to hand back to
+`scan_run_continuation_resume`, its Display Label, a `description` flattened
+exactly as any other segment list, and `available`.
+
+**A frontend must not offer a decision whose `available` is false.** The fact
+travels on the decision rather than beside the prompt precisely so honouring it
+takes no separate lookup — the shape that closed a confirmed gap, where
+`local_ignore_reset_available` sat on the Installed YAML Data DTO and neither C++
+frontend read it. Rust still fails safely and touches nothing on disk if one is
+offered anyway, but the attempt spends the one-shot continuation, so the user is
+left with no scan, no repair, and no second attempt.
+
+Proceed Without Ignore is never unavailable; it needs nothing from the
+installation. Only Reset To Default can be withdrawn.
+
+Backing out appears nowhere in `decisions`.
+`ScanRunLocalIgnoreRecoveryDecision` has exactly two variants by design, and
+abandonment is spelled as the absence of a decision through
+`scan_run_continuation_abandon`. The affordance beside a description — a
+bracketed letter, a key hint, a button — is the frontend's, as is the order it
+presents them in. The description itself is not.
+
 ---
 
 ## Small Scan And Papyrus Utilities

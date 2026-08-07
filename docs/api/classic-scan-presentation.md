@@ -85,14 +85,59 @@ pub struct DisplayLine {
     pub segments: Vec<DisplaySegment>,
 }
 
+pub struct RecoveryPrompt {
+    pub lines: Vec<DisplayLine>,
+    pub decisions: Vec<RecoveryDecisionDescription>,
+}
+
+pub struct RecoveryDecisionDescription {
+    pub decision: LocalIgnoreRecoveryDecision,
+    pub label: &'static str,
+    pub description: Vec<DisplaySegment>,
+    pub available: bool,
+}
+
 pub fn render_run_result(result: &RunResult) -> Vec<DisplayLine>;
 pub fn render_event(event: &Event) -> Vec<DisplayLine>;
 pub fn render_infrastructure_error(error: &InfrastructureError) -> Vec<DisplayLine>;
 pub fn render_resume_error(error: &ResumeError) -> Vec<DisplayLine>;
+pub fn render_local_ignore_recovery(data: Option<&InstalledYamlDataRunData>) -> RecoveryPrompt;
 ```
 
-All four entry points are pure over a borrowed contract value, so wording can be pinned without
+All five entry points are pure over a borrowed contract value, so wording can be pinned without
 running a scan.
+
+### The Local Ignore recovery prompt
+
+`render_local_ignore_recovery` is the one entry point that produces something other than a bare line
+sequence, because the one interactive surface a run has needs the decisions named as well as
+described.
+
+**Availability travels attached to the decision it describes**, not as a separate flag beside the
+prompt. That is what closes a confirmed gap by construction: a frontend cannot offer an unavailable
+decision without ignoring data placed directly in its hands. Before this, `local_ignore_reset_available`
+was a fact each frontend had to remember to consult, and two of them did not — they offered Reset To
+Default unconditionally, and choosing it spent the one-shot continuation on a guaranteed failure,
+leaving the user with no scan, no repair, and no second attempt. A binding consumer building its own
+frontend gets the same protection.
+
+`decisions` is built by walking `LocalIgnoreRecoveryDecision::VARIANTS`, so the list can neither
+offer a decision the contract will refuse nor omit one it accepts, and the two exhaustive `match`es
+behind it stop the crate compiling if a third variant is ever added.
+
+**Proceed Without Ignore is never unavailable.** It needs nothing from the installation — the ignore
+list is simply empty for this operation — so no run can withdraw it. That the two answers differ is
+exactly why availability is a per-decision field rather than one flag.
+
+**Backing out is not a decision.** `LocalIgnoreRecoveryDecision` has exactly two variants by design;
+abandonment is spelled as the *absence* of a decision and reaches the contract through
+`CrashLogScanRunContinuation::abandon`. The cancel affordance and its wording stay each frontend's.
+
+**The argument is optional** because a caller holding `RunResult::installed_yaml_data` holds an
+`Option` and must do something when it is absent. All three native frontends independently decided
+the same thing — a run that reported nothing has not reported a denial, so withdrawing an option on
+silence would regress the behaviour that shipped before the fact existed — and each wrote that rule
+for itself. Taking the `Option` here makes it one rule rather than three.
 
 ### The segment taxonomy is closed
 
@@ -145,16 +190,19 @@ ordering a contract rather than a coincidence.
 4. Never re-decide a `Count`'s noun. Print `value`, then `noun`.
 5. Keep Vocabulary Tokens in structured, machine-readable output. Display Content is for humans and
    never appears in a payload a consumer matches on.
+6. Never offer a `RecoveryDecisionDescription` whose `available` is false. The fact travels attached
+   to the decision precisely so honouring it takes no separate lookup.
 
 ## Locked versus free
 
 **Locked** — byte-identical everywhere, pinned by the tests in `src/lib_tests.rs`: terminal status
 prose, infrastructure error prose, resume error prose, the per-log outcome line, the Installed YAML
-Data block, and the per-event progress line.
+Data block, the per-event progress line, and the Local Ignore recovery decision descriptions.
 
 **Free, and expected to differ** — line ordering and grouping, section headers, colour and emphasis
 mapping, truncation and wrapping, widget choice, collapsibility, and whether a section is shown at
-all. A CLI's bracketed letters and a TUI's key hints are Display Layout.
+all. A CLI's bracketed letters and a TUI's key hints are Display Layout, and so is the affordance
+beside a recovery decision — a button, a key, a menu letter. The description next to it is not.
 
 Two consequences worth naming, because they look like omissions:
 
@@ -174,8 +222,12 @@ Two consequences worth naming, because they look like omissions:
   would mean inventing prose for machine identifiers — the exact failure this crate exists to
   remove. Adapters keep their existing `Display`-based setup projection until those types adopt
   `Vocabulary` in their own change.
-- **The Local Ignore recovery prompt.** `RecoveryPrompt` and `RecoveryDecisionDescription` land with
-  the gated recovery phase, behind the conditions listed in the implementation brief.
+- **The retained-discovery sentence beside a recovery prompt.** How much work an accepted decision
+  resumes is a count the prompt's own input does not carry — `render_local_ignore_recovery` reads
+  Installed YAML Data, not the run's discovery. It stays each frontend's, and is the one remaining
+  caller of the local `plural` helper the TUI, the native CLI, and the Node demo CLI each kept.
+  Moving it means the prompt taking a `RunResult`; that is a deliberate change, not a fix to make in
+  passing.
 - **The resume error's stable code.** `ResumeErrorKind` is token-only by decision: it is an error
   code, not prose, and labelling it invites rendering a code where a sentence belongs. Each resume
   category is instead distinguished by prose, because the distinctions are what a user acts on.
@@ -199,8 +251,9 @@ it does not re-export. `classic-tui` carries the same dependency for the same re
 line's segments into one string, keeps the whole path in the scrollable overlay and shortens it to a
 filename in the one-row status line, groups the FCX Mode setup projection in after the rendered
 lines, and hands the severity through to `theme::severity_color`. It composes no sentence about a
-run and keeps a `plural` helper for one caller only — the Local Ignore recovery prompt, whose
-renderer lands with the gated recovery phase.
+run and keeps a `plural` helper for one caller only — the Local Ignore recovery overlay. That
+overlay still writes its own choice text; `render_local_ignore_recovery` now exists and reaches
+every binding, and the frontends adopt it in their own change.
 
 Its handling of severity on the shared status row is worth copying. That row is written from around
 sixty places, most of them nothing to do with a scan run and carrying no severity, so the TUI stores
@@ -237,6 +290,23 @@ Where the seams differ is only in where the field can sit and how each language 
   alike, plus one on each of the five resume exceptions.
 
 Events carry it identically on all three.
+
+The recovery prompt rides the same seams and is rendered under the same rule — while the Rust value
+is live — but only for a run whose status is Local Ignore Recovery Required, which is exactly when
+the execution retains a continuation to answer with. Every other run carries no prompt rather than an
+empty one, so a consumer cannot mistake "nothing to ask" for "ask with no options":
+
+- **The bridge** carries `has_recovery_prompt` beside a `ScanRunRecoveryPrompt`, because `cxx` has no
+  optional struct — the same presence-flag convention `has_local_ignore_reset` already uses.
+- **Node** carries `recoveryPrompt?: JsScanRunRecoveryPrompt` on the success envelope, and **Python**
+  a `recovery_prompt: ScanRunRecoveryPrompt | None` getter on `ScanRunExecution`. Both languages have
+  a native absent form, and `undefined`/`None` is what a consumer on each surface already reads as
+  "not present".
+
+A decision's `description` is an ordinary segment list on all three, flattened exactly as the lines
+beside it are, so a consumer renders one with the renderer it already has. The `decision` itself
+crosses as each surface's existing recovery-decision enum rather than as a token, on all three, so a
+consumer answers with precisely the value it was offered instead of mapping a string back.
 
 Two per-seam details worth knowing:
 

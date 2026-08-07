@@ -9,8 +9,9 @@ use classic_config_core::{
     YamlDataContentIdentity,
 };
 use classic_scan_presentation::{
-    DisplayLine, DisplaySegment, DisplaySeverity, render_event, render_infrastructure_error,
-    render_resume_error, render_run_result,
+    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryPrompt, render_event,
+    render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
+    render_run_result,
 };
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
@@ -993,6 +994,62 @@ pub struct PyScanRunDisplayLine {
     segments: Vec<PyScanRunDisplaySegment>,
 }
 
+/// One Local Ignore recovery decision, named and explained, with its availability
+/// attached.
+///
+/// `available` travels here rather than as a separate flag beside the prompt, which is
+/// what makes honouring it take no separate lookup. A consumer must not offer a decision
+/// for which it is false: Rust still fails safely and touches nothing on disk, but the
+/// attempt spends the one-shot continuation, so the user is left with no scan and no
+/// second attempt. Two native frontends made exactly that mistake while the fact lived
+/// beside the prompt instead of on the decision.
+#[pyclass(
+    name = "ScanRunRecoveryDecisionDescription",
+    frozen,
+    skip_from_py_object
+)]
+#[derive(Clone)]
+pub struct PyScanRunRecoveryDecisionDescription {
+    /// The decision to hand straight back to `scan_run_resume`.
+    ///
+    /// The enum rather than a snake_case token, unlike every other tag this surface
+    /// publishes on an output. `scan_run_resume` takes the enum, so a token here would
+    /// make a consumer map it back — and a mapping table written by a consumer is the
+    /// drift this whole effort removes.
+    #[pyo3(get)]
+    decision: PyScanRunLocalIgnoreRecoveryDecision,
+    /// The decision's Display Label.
+    #[pyo3(get)]
+    label: String,
+    /// What choosing it will actually do, concatenated in order like any other line.
+    #[pyo3(get)]
+    description: Vec<PyScanRunDisplaySegment>,
+    /// Whether this run can honor the decision.
+    #[pyo3(get)]
+    available: bool,
+}
+
+/// The Rust-owned content of a Local Ignore recovery prompt.
+///
+/// `lines` state why the run paused and what is being decided about; `decisions` lists
+/// every decision the continuation contract accepts. The affordance beside a description
+/// is the consumer's own, as is the order it presents them in and what kind of surface
+/// asks the question. The descriptions themselves are not.
+///
+/// Backing out appears nowhere here. `ScanRunLocalIgnoreRecoveryDecision` has exactly two
+/// variants by design, and abandonment is spelled as the absence of a decision through
+/// `scan_run_abandon`.
+#[pyclass(name = "ScanRunRecoveryPrompt", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunRecoveryPrompt {
+    /// Why the run paused and what is being decided about, in reading order.
+    #[pyo3(get)]
+    lines: Vec<PyScanRunDisplayLine>,
+    /// One description per recovery decision, in the contract's variant order.
+    #[pyo3(get)]
+    decisions: Vec<PyScanRunRecoveryDecisionDescription>,
+}
+
 /// Common log-scoped event payload.
 #[pyclass(name = "ScanRunLogEvent", from_py_object)]
 #[derive(Clone)]
@@ -1100,6 +1157,7 @@ pub struct PyScanRunExecution {
     error: Option<PyScanRunInfrastructureError>,
     observer_error: Option<String>,
     display_lines: Vec<PyScanRunDisplayLine>,
+    recovery_prompt: Option<PyScanRunRecoveryPrompt>,
 }
 
 #[pymethods]
@@ -1136,6 +1194,21 @@ impl PyScanRunExecution {
     #[getter]
     pub fn display_lines(&self) -> Vec<PyScanRunDisplayLine> {
         self.display_lines.clone()
+    }
+
+    /// Returns what to ask the user, and which answers this run can honor.
+    ///
+    /// Present only when `result.status` is `"local_ignore_recovery_required"`, which is
+    /// also exactly when the run retains a continuation to answer with. `None` rather
+    /// than an empty prompt, because a run with nothing to ask has no prompt rather than
+    /// an empty one — and `None` is what a Python consumer already reads as "not
+    /// present" everywhere else on this surface.
+    ///
+    /// Rendered here for the reason `display_lines` is: Python receives a projected copy
+    /// of the run and cannot render from the Rust value later.
+    #[getter]
+    pub fn recovery_prompt(&self) -> Option<PyScanRunRecoveryPrompt> {
+        self.recovery_prompt.clone()
     }
 }
 
@@ -1744,6 +1817,50 @@ const fn display_severity_to_string(value: DisplaySeverity) -> &'static str {
     }
 }
 
+/// Flattens a rendered Local Ignore recovery prompt into the Python mirror types.
+///
+/// The decision descriptions cross as ordinary segment lists, the same flattening the
+/// lines beside them use, so a consumer reads a description with the renderer it already
+/// has.
+fn recovery_prompt_to_py(prompt: &RecoveryPrompt) -> PyScanRunRecoveryPrompt {
+    PyScanRunRecoveryPrompt {
+        lines: display_lines_to_py(&prompt.lines),
+        decisions: prompt
+            .decisions
+            .iter()
+            .map(|description| PyScanRunRecoveryDecisionDescription {
+                decision: local_ignore_recovery_decision_to_py(description.decision),
+                label: description.label.to_string(),
+                description: description
+                    .description
+                    .iter()
+                    .map(display_segment_to_py)
+                    .collect(),
+                available: description.available,
+            })
+            .collect(),
+    }
+}
+
+/// Maps a Rust-owned recovery decision onto its Python twin.
+///
+/// The outbound half of the mapping whose inbound half is inlined in `scan_run_resume`.
+/// Written separately because Rust cannot invert a `match`, and exhaustive so that a
+/// third variant added to the contract stops this from compiling rather than silently
+/// describing itself as one of the two that exist.
+const fn local_ignore_recovery_decision_to_py(
+    value: contract::LocalIgnoreRecoveryDecision,
+) -> PyScanRunLocalIgnoreRecoveryDecision {
+    match value {
+        contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
+            PyScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+        }
+        contract::LocalIgnoreRecoveryDecision::ResetToDefault => {
+            PyScanRunLocalIgnoreRecoveryDecision::ResetToDefault
+        }
+    }
+}
+
 /// Builds the success envelope, rendering the run before projecting it.
 ///
 /// The order is load-bearing. `run_result_to_py` consumes the result — including
@@ -1759,11 +1876,21 @@ fn success_execution(
     observer_error: Option<String>,
 ) -> PyResult<PyScanRunExecution> {
     let display_lines = display_lines_to_py(&render_run_result(&result));
+    // Rendered only for the one status that pauses for an answer. Every other status has
+    // nothing to ask, and a prompt attached to a finished run would invite a consumer to
+    // show one.
+    let recovery_prompt =
+        (result.status == contract::RunStatus::LocalIgnoreRecoveryRequired).then(|| {
+            recovery_prompt_to_py(&render_local_ignore_recovery(
+                result.installed_yaml_data.as_ref(),
+            ))
+        });
     Ok(PyScanRunExecution {
         result: Some(run_result_to_py(py, result)?),
         error: None,
         observer_error,
         display_lines,
+        recovery_prompt,
     })
 }
 
@@ -1778,6 +1905,8 @@ fn failure_execution(
         error: Some(infrastructure_error_to_py(error)),
         observer_error,
         display_lines,
+        // A run that failed run-wide never reached a decision to pause on.
+        recovery_prompt: None,
     }
 }
 

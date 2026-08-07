@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-07T00:33:19Z",
+  "generated_at_utc": "2026-08-07T02:50:55Z",
   "entries": [
     {
       "id": "0f1ce653765981f0",
@@ -8906,6 +8906,14 @@
         {
           "name": "display_lines",
           "type": "Vec<ScanRunDisplayLine>"
+        },
+        {
+          "name": "has_recovery_prompt",
+          "type": "bool"
+        },
+        {
+          "name": "recovery_prompt",
+          "type": "ScanRunRecoveryPrompt"
         }
       ]
     },
@@ -9420,6 +9428,50 @@
         {
           "name": "replacement_identity",
           "type": "ScanRunYamlDataContentIdentityDto"
+        }
+      ]
+    },
+    {
+      "id": "92ccebfd8d784717",
+      "rustSymbol": "ScanRunRecoveryDecisionDescription",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "decision",
+          "type": "ScanRunLocalIgnoreRecoveryDecision"
+        },
+        {
+          "name": "label",
+          "type": "String"
+        },
+        {
+          "name": "description",
+          "type": "Vec<ScanRunDisplaySegment>"
+        },
+        {
+          "name": "available",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "id": "54164d0fad3f13e3",
+      "rustSymbol": "ScanRunRecoveryPrompt",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "lines",
+          "type": "Vec<ScanRunDisplayLine>"
+        },
+        {
+          "name": "decisions",
+          "type": "Vec<ScanRunRecoveryDecisionDescription>"
         }
       ]
     },

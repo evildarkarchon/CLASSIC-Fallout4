@@ -40,9 +40,19 @@ Mods_FREQ: []
 Mods_SOLU: []
 """
 
+MAIN_YAML_WITHOUT_DEFAULT_IGNORE = """schema_version: "2.0"
+CLASSIC_Info:
+  version: "9.0.0"
+  version_date: "2026-02-25"
+catch_log_records:
+  - "LAND"
+"""
+
 IGNORE_YAML = """
 CLASSIC_Ignore_Fallout4: []
 """
+
+MALFORMED_IGNORE_YAML = "CLASSIC_Ignore_Fallout4: [unterminated\n"
 
 SAMPLE_CRASH_LOG = """Fallout 4 v1.10.163
 Buffout 4 v1.28.6
@@ -1415,3 +1425,132 @@ def test_scan_run_display_label_rejects_an_unknown_token(resolver: str) -> None:
 
     with pytest.raises(ValueError):
         getattr(classic_scanlog, resolver)("not_a_real_token")
+
+
+def _paused_run(classic_scanlog: object, tmp_path: Path, main_yaml: str) -> object:
+    """Run a real scan against a malformed Local Ignore and return the paused result.
+
+    Takes the Main YAML verbatim so one helper serves both availability cases: the
+    only thing that decides whether Reset To Default can succeed is whether the
+    selected Main retains a usable ``CLASSIC_Info.default_ignorefile``.
+    """
+
+    _write_scan_run_data_root(tmp_path)
+    (tmp_path / "CLASSIC Data" / "databases" / "CLASSIC Main.yaml").write_text(
+        main_yaml,
+        encoding="utf-8",
+    )
+    (tmp_path / "CLASSIC Data" / "CLASSIC Ignore.yaml").write_text(
+        MALFORMED_IGNORE_YAML,
+        encoding="utf-8",
+    )
+    crash_log = _write_logs(tmp_path / "logs", ["crash-recovery.log"])[0]
+    request = classic_scanlog.ScanRunRequest.targeted(
+        _configuration(classic_scanlog, tmp_path),
+        classic_scanlog.ScanRunTargetedSource(inputs=[str(crash_log)]),
+    )
+    return classic_scanlog.scan_run_execute(
+        request,
+        classic_scanlog.ScanRunCancellation(),
+    )
+
+
+def test_a_paused_run_describes_every_recovery_decision_it_accepts(
+    tmp_path: Path,
+) -> None:
+    """Both decisions arrive described, and both are available with defaults present."""
+
+    import classic_scanlog
+
+    execution = _paused_run(classic_scanlog, tmp_path, MAIN_YAML)
+
+    assert execution.result.status == "local_ignore_recovery_required"
+    prompt = execution.recovery_prompt
+    assert prompt is not None
+    # Rust states the situation; a frontend adds only its own affordances.
+    assert prompt.lines
+    assert [description.decision for description in prompt.decisions] == [
+        classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+        classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+    ]
+    for description in prompt.decisions:
+        assert description.label
+        assert description.description
+        assert description.available
+        # A description flattens exactly as any other segment list, so a consumer
+        # renders it with the renderer it already has.
+        for segment in description.description:
+            assert segment.kind in {
+                "text",
+                "label",
+                "count",
+                "path",
+                "name",
+                "emphasis",
+            }
+
+
+def test_a_paused_run_marks_reset_unavailable_when_no_defaults_are_retained(
+    tmp_path: Path,
+) -> None:
+    """The one decision that can fail is withdrawn on the decision itself.
+
+    This is the whole point of the shape. Before availability travelled with the
+    decision it described, this fact sat one level away on the Installed YAML Data
+    projection and two frontends never read it -- so choosing Reset To Default spent
+    the one-shot continuation on a guaranteed failure.
+    """
+
+    import classic_scanlog
+
+    execution = _paused_run(
+        classic_scanlog,
+        tmp_path,
+        MAIN_YAML_WITHOUT_DEFAULT_IGNORE,
+    )
+
+    assert execution.result.status == "local_ignore_recovery_required"
+    assert execution.result.installed_yaml_data.local_ignore_reset_available is False
+    prompt = execution.recovery_prompt
+    assert prompt is not None
+
+    # Compared as ordered pairs rather than a mapping: this enum is declared with
+    # `eq`/`eq_int` and no `hash`, so it cannot be a dict key on this surface.
+    availability = [
+        (description.decision, description.available)
+        for description in prompt.decisions
+    ]
+    assert availability == [
+        # Proceeding needs nothing from the installation, so no run can withdraw it.
+        (
+            classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+            True,
+        ),
+        (classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ResetToDefault, False),
+    ]
+    # Listed rather than dropped: a frontend must be able to explain the absence it
+    # is about to create, and Rust supplies that explanation as a prompt line.
+    assert any(
+        segment.kind == "text" and "unavailable" in segment.text
+        for line in prompt.lines
+        for segment in line.segments
+    )
+
+
+def test_a_completed_run_carries_no_recovery_prompt(tmp_path: Path) -> None:
+    """A run with nothing to ask has no prompt rather than an empty one."""
+
+    import classic_scanlog
+
+    _write_scan_run_data_root(tmp_path)
+    crash_log = _write_logs(tmp_path / "logs", ["crash-complete.log"])[0]
+    execution = classic_scanlog.scan_run_execute(
+        classic_scanlog.ScanRunRequest.targeted(
+            _configuration(classic_scanlog, tmp_path),
+            classic_scanlog.ScanRunTargetedSource(inputs=[str(crash_log)]),
+        ),
+        classic_scanlog.ScanRunCancellation(),
+    )
+
+    assert execution.result.status == "completed"
+    assert execution.recovery_prompt is None

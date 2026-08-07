@@ -906,6 +906,41 @@ mod ffi {
         segments: Vec<ScanRunDisplaySegment>,
     }
 
+    /// One Local Ignore recovery decision, named and explained, with its availability
+    /// attached.
+    ///
+    /// `available` travels here rather than as a separate flag beside the prompt, which is
+    /// what makes honouring it take no separate lookup. An adapter must not offer a decision
+    /// for which it is false: Rust still fails safely and touches nothing on disk, but the
+    /// attempt spends the one-shot continuation, so the user is left with no scan and no
+    /// second attempt.
+    struct ScanRunRecoveryDecisionDescription {
+        /// The decision to hand back to `scan_run_continuation_resume`.
+        decision: ScanRunLocalIgnoreRecoveryDecision,
+        /// The decision's Display Label.
+        label: String,
+        /// What choosing it will actually do, concatenated in order like any other line.
+        description: Vec<ScanRunDisplaySegment>,
+        /// Whether this run can honor the decision.
+        available: bool,
+    }
+
+    /// The Rust-owned content of a Local Ignore recovery prompt.
+    ///
+    /// `lines` state why the run paused and what is being decided about; `decisions` lists
+    /// every decision the continuation contract accepts. The affordance beside a description
+    /// — a bracketed letter, a key hint, a button — is the adapter's own, as is the order it
+    /// presents them in and whether the prompt is a dialog, an overlay, or a line of stdin.
+    /// The descriptions themselves are not.
+    ///
+    /// Backing out appears nowhere here. `ScanRunLocalIgnoreRecoveryDecision` has exactly two
+    /// variants by design, and abandonment is spelled as the absence of a decision through
+    /// `scan_run_continuation_abandon`.
+    struct ScanRunRecoveryPrompt {
+        lines: Vec<ScanRunDisplayLine>,
+        decisions: Vec<ScanRunRecoveryDecisionDescription>,
+    }
+
     /// Complete terminal result from the final Crash Log Scan Run contract.
     struct ScanRunContractRunResult {
         status: ScanRunContractStatus,
@@ -978,6 +1013,17 @@ mod ffi {
         /// Empty when no payload is present, which is what a moved-from envelope leaves
         /// behind.
         display_lines: Vec<ScanRunDisplayLine>,
+        /// Whether `recovery_prompt` below describes a decision this run is waiting on.
+        ///
+        /// True only when `result.status` is `LocalIgnoreRecoveryRequired`, which is also
+        /// exactly when the execution retains an opaque continuation.
+        has_recovery_prompt: bool,
+        /// What to ask the user, and which answers this run can honor.
+        ///
+        /// Rendered here for the reason `display_lines` is: C++ receives a projected copy of
+        /// the run and cannot render from the Rust value later. Empty in both vectors when
+        /// `has_recovery_prompt` is false.
+        recovery_prompt: ScanRunRecoveryPrompt,
     }
 
     /// One serialized lifecycle event from the final contract.

@@ -698,11 +698,31 @@ describe("final Crash Log Scan Run contract", () => {
       const baselineReport = readFileSync(baseline.logs[0]!.autoscanReport!);
       writeFileSync(ignorePath, fixture.malformedLocalIgnore);
       const initialEvents: JsScanRunEvent[] = [];
-      const initial = requireScanRunSuccess(
+      const initialEnvelope = requireScanRunSuccess(
         await scanRunExecute(request, new ScanRunCancellation(), initialEvents.push.bind(initialEvents)),
-      ).result;
+      );
+      const initial = initialEnvelope.result;
 
       expect(initial.status).toBe("local_ignore_recovery_required");
+      // The prompt reaches JavaScript from a real paused run, with each decision
+      // carrying its own availability. This fixture's Main YAML retains a usable
+      // default, so both are offered; the withheld case is proven in the Rust
+      // renderer's own tests, which can vary that fact without a second fixture.
+      expect(initialEnvelope.recoveryPrompt).toBeDefined();
+      expect(initialEnvelope.recoveryPrompt!.lines.length).toBeGreaterThan(0);
+      expect(
+        initialEnvelope.recoveryPrompt!.decisions.map((description) => [
+          description.decision,
+          description.available,
+        ]),
+      ).toEqual([
+        [JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore, true],
+        [JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault, true],
+      ]);
+      for (const description of initialEnvelope.recoveryPrompt!.decisions) {
+        expect(description.label.length).toBeGreaterThan(0);
+        expect(description.description.length).toBeGreaterThan(0);
+      }
       expect(initial.installedYamlData?.localIgnoreState).toBe(
         JsScanRunLocalIgnoreState.RecoveryRequired,
       );
@@ -735,6 +755,8 @@ describe("final Crash Log Scan Run contract", () => {
       for (const event of resumedEvents) {
         expectWellFormedDisplayLines(event.displayLines);
       }
+      // The decision has been made, so there is nothing left to ask.
+      expect(resumedEnvelope.recoveryPrompt).toBeUndefined();
 
       expect(resumed.status).toBe("completed");
       expect(resumed.discovery).toEqual(initial.discovery);

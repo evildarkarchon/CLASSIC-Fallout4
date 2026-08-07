@@ -4,8 +4,9 @@ use classic_config_core::{
     InstalledYamlDataProvenance, InstalledYamlDataRole, YamlDataContentIdentity,
 };
 use classic_scan_presentation::{
-    DisplayLine, DisplaySegment, DisplaySeverity, render_event, render_infrastructure_error,
-    render_resume_error, render_run_result,
+    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryDecisionDescription, RecoveryPrompt,
+    render_event, render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
+    render_run_result,
 };
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
@@ -20,8 +21,10 @@ use pyo3::Python;
 use pyo3::types::PyAnyMethods;
 
 use super::{
-    PyScanRunConfiguration, configuration_to_core, display_lines_to_py, display_segment_to_py,
-    display_severity_to_string, disposition_to_string, event_to_py,
+    PyScanRunConfiguration, PyScanRunLocalIgnoreRecoveryDecision, configuration_to_core,
+    display_lines_to_py, display_segment_to_py, display_severity_to_string, disposition_to_string,
+    event_to_py, failure_execution, local_ignore_recovery_decision_to_py, recovery_prompt_to_py,
+    success_execution,
     infrastructure_error_stage_to_string, infrastructure_error_to_py,
     installed_yaml_data_diagnostic_kind_to_string, installed_yaml_data_provenance_to_string,
     installed_yaml_data_role_to_string, local_ignore_state_to_string, log_failure_stage_to_string,
@@ -1053,5 +1056,186 @@ fn an_unknown_scan_run_token_raises_rather_than_returning_a_placeholder_label() 
         ] {
             assert!(error.is_instance_of::<pyo3::exceptions::PyValueError>(py));
         }
+    });
+}
+
+// --- Local Ignore recovery prompt -----------------------------------------
+//
+// These pin no wording either. What they prove is that the prompt crosses whole:
+// the decision Rust named, the label it resolved, the description it wrote, and -
+// the fact this type exists for - whether this run can honor the decision.
+
+#[test]
+/// Every recovery decision crosses with its own availability rather than a shared flag.
+///
+/// This is the whole point of the type. A consumer reading `available` off the
+/// decision it is about to offer cannot repeat the gap this closed, where the fact
+/// lived beside the prompt and two frontends never looked at it.
+fn each_recovery_decision_crosses_with_its_own_availability() {
+    let prompt = recovery_prompt_to_py(&RecoveryPrompt {
+        lines: Vec::new(),
+        decisions: vec![
+            RecoveryDecisionDescription {
+                decision: contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                label: "Proceed Without Ignore",
+                description: vec![DisplaySegment::Text("proceed")],
+                available: true,
+            },
+            RecoveryDecisionDescription {
+                decision: contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+                label: "Reset To Default",
+                description: vec![DisplaySegment::Text("reset")],
+                available: false,
+            },
+        ],
+    });
+
+    assert_eq!(prompt.decisions.len(), 2);
+    assert_eq!(
+        prompt.decisions[0].decision,
+        PyScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+    );
+    assert_eq!(prompt.decisions[0].label, "Proceed Without Ignore");
+    assert!(prompt.decisions[0].available);
+    assert_eq!(
+        prompt.decisions[1].decision,
+        PyScanRunLocalIgnoreRecoveryDecision::ResetToDefault
+    );
+    assert_eq!(prompt.decisions[1].label, "Reset To Default");
+    assert!(!prompt.decisions[1].available);
+}
+
+#[test]
+/// A decision's description flattens the same way the lines beside it do.
+fn a_recovery_decision_description_flattens_like_any_other_segments() {
+    let prompt = recovery_prompt_to_py(&RecoveryPrompt {
+        lines: vec![every_segment_kind()],
+        decisions: vec![RecoveryDecisionDescription {
+            decision: contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            label: "Reset To Default",
+            description: vec![
+                DisplaySegment::Text("back up"),
+                DisplaySegment::Path(PathBuf::from("CLASSIC Ignore.yaml")),
+                DisplaySegment::Count {
+                    value: 1,
+                    noun: "file",
+                },
+            ],
+            available: true,
+        }],
+    });
+
+    assert_eq!(prompt.lines.len(), 1);
+    assert_eq!(prompt.lines[0].segments.len(), 6);
+
+    let observed: Vec<(&str, &str, &str, u64)> = prompt.decisions[0]
+        .description
+        .iter()
+        .map(|segment| {
+            (
+                segment.kind.as_str(),
+                segment.text.as_str(),
+                segment.path.as_str(),
+                segment.count,
+            )
+        })
+        .collect();
+    assert_eq!(
+        observed,
+        vec![
+            ("text", "back up", "", 0),
+            ("path", "", "CLASSIC Ignore.yaml", 0),
+            ("count", "file", "", 1),
+        ],
+    );
+}
+
+#[test]
+/// Both contract decisions cross as distinct Python twins.
+///
+/// The enum crosses rather than a token, unlike every other tag on this surface,
+/// because `scan_run_resume` takes the enum: a consumer answers with exactly what it
+/// was offered rather than mapping a string back.
+fn every_recovery_decision_crosses_as_its_own_python_twin() {
+    assert_eq!(
+        local_ignore_recovery_decision_to_py(
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+        ),
+        PyScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+    );
+    assert_eq!(
+        local_ignore_recovery_decision_to_py(contract::LocalIgnoreRecoveryDecision::ResetToDefault),
+        PyScanRunLocalIgnoreRecoveryDecision::ResetToDefault
+    );
+}
+
+#[test]
+/// A run paused on Local Ignore recovery carries the prompt Rust rendered for it.
+fn the_execution_envelope_carries_the_recovery_prompt_core_rendered() {
+    Python::attach(|py| {
+        let build = || contract::RunResult {
+            status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
+            discovery: None,
+            setup: None,
+            installed_yaml_data: None,
+            continuation: None,
+            effective_concurrency: None,
+            message: Some("Local Ignore requires a recovery decision".to_string()),
+            total: 0,
+            succeeded: 0,
+            failed: 0,
+            cancelled: 0,
+            logs: Vec::new(),
+        };
+        let expected = recovery_prompt_to_py(&render_local_ignore_recovery(None));
+        let execution = success_execution(py, build(), None).expect("envelope should build");
+
+        let prompt = execution
+            .recovery_prompt()
+            .expect("a paused run carries a prompt");
+        assert_eq!(prompt.lines.len(), expected.lines.len());
+        assert_eq!(prompt.decisions.len(), expected.decisions.len());
+        for (actual, expected) in prompt.decisions.iter().zip(&expected.decisions) {
+            assert_eq!(actual.decision, expected.decision);
+            assert_eq!(actual.label, expected.label);
+            assert_eq!(actual.available, expected.available);
+        }
+    });
+}
+
+#[test]
+/// A run that is not waiting on a decision carries no prompt for a consumer to show.
+fn a_terminal_envelope_carries_no_recovery_prompt() {
+    Python::attach(|py| {
+        let completed = success_execution(
+            py,
+            contract::RunResult {
+                status: CrashLogScanRunStatus::Completed,
+                discovery: None,
+                setup: None,
+                installed_yaml_data: None,
+                continuation: None,
+                effective_concurrency: None,
+                message: None,
+                total: 0,
+                succeeded: 0,
+                failed: 0,
+                cancelled: 0,
+                logs: Vec::new(),
+            },
+            None,
+        )
+        .expect("envelope should build");
+        assert!(completed.recovery_prompt().is_none());
+
+        let failed = failure_execution(
+            contract::InfrastructureError {
+                stage: contract::InfrastructureErrorStage::Discovery,
+                message: "discovery failed".to_string(),
+                path: None,
+            },
+            None,
+        );
+        assert!(failed.recovery_prompt().is_none());
     });
 }

@@ -4,6 +4,10 @@ use super::*;
 // only where the tests read `label()` off a core variant to derive their
 // expectation from.
 use classic_vocabulary::Vocabulary;
+// Imported here for the same reason: `contract.rs` names only `RecoveryPrompt`, because the
+// descriptions inside one are read through it. The tests fabricate descriptions directly, so
+// they need the type by name.
+use classic_scan_presentation::RecoveryDecisionDescription;
 use tempfile::tempdir;
 
 const FIXTURE_LOG_SMALL: &str = include_str!(
@@ -1071,6 +1075,27 @@ fn cxx_continuation_resumes_retained_recovery_once_and_projects_typed_replay_fai
         initial.result.installed_yaml_data.local_ignore_state,
         ffi::ScanRunLocalIgnoreYamlDataState::RecoveryRequired
     );
+    // The prompt reaches C++ from a real paused run, not just from a fabricated one.
+    // This fixture's Main YAML retains a usable default, so both decisions are offered;
+    // the withheld case is proven in the Rust renderer's own tests, which can vary that
+    // fact without needing a second scan fixture.
+    assert!(initial.has_recovery_prompt);
+    assert!(!initial.recovery_prompt.lines.is_empty());
+    assert_eq!(
+        initial
+            .recovery_prompt
+            .decisions
+            .iter()
+            .map(|description| (description.decision, description.available))
+            .collect::<Vec<_>>(),
+        vec![
+            (
+                ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                true
+            ),
+            (ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault, true),
+        ]
+    );
     let retained_discovery = initial.result.discovery.accepted_logs.clone();
     let retained_main_identity = initial.result.installed_yaml_data.main.sha256.clone();
     let retained_game_identity = initial.result.installed_yaml_data.game_file.sha256.clone();
@@ -1927,6 +1952,213 @@ fn assert_display_lines_match(
             assert_eq!(
                 actual_segment.count, expected_segment.count,
                 "line {index} segment {position} count"
+            );
+        }
+    }
+}
+
+// --- Local Ignore recovery prompt ------------------------------------------------------
+//
+// These do not pin wording either. What they prove is that the prompt crosses whole: the
+// decision Rust named, the label it resolved, the description it wrote, and — the fact this
+// type exists for — whether this run can honor the decision at all.
+
+#[test]
+/// A run paused on Local Ignore recovery crosses with the prompt Rust rendered for it.
+fn a_recovery_required_envelope_carries_the_prompt_core_rendered() {
+    let build = || contract::RunResult {
+        status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
+        discovery: None,
+        setup: None,
+        installed_yaml_data: None,
+        effective_concurrency: None,
+        message: Some("Local Ignore requires a recovery decision".to_string()),
+        total: 0,
+        succeeded: 0,
+        failed: 0,
+        cancelled: 0,
+        logs: Vec::new(),
+        continuation: None,
+    };
+    let expected = recovery_prompt_to_dto(&render_local_ignore_recovery(None));
+    let envelope = success_execution_result_dto(build());
+
+    assert!(envelope.has_recovery_prompt);
+    assert_display_lines_match(&envelope.recovery_prompt.lines, &expected.lines);
+    assert_decisions_match(&envelope.recovery_prompt.decisions, &expected.decisions);
+}
+
+#[test]
+/// A run that is not waiting on a decision carries no prompt for a frontend to show.
+fn a_terminal_envelope_carries_no_recovery_prompt() {
+    let result = success_execution_result_dto(contract::RunResult {
+        status: CrashLogScanRunStatus::Completed,
+        discovery: None,
+        setup: None,
+        installed_yaml_data: None,
+        effective_concurrency: None,
+        message: None,
+        total: 0,
+        succeeded: 0,
+        failed: 0,
+        cancelled: 0,
+        logs: Vec::new(),
+        continuation: None,
+    });
+
+    assert!(!result.has_recovery_prompt);
+    assert!(result.recovery_prompt.lines.is_empty());
+    assert!(result.recovery_prompt.decisions.is_empty());
+
+    let failed = infrastructure_execution_result_dto(contract::InfrastructureError {
+        stage: contract::InfrastructureErrorStage::Discovery,
+        message: "discovery failed".to_string(),
+        path: None,
+    });
+    assert!(!failed.has_recovery_prompt);
+    assert!(!empty_execution_result_dto().has_recovery_prompt);
+}
+
+#[test]
+/// Every recovery decision crosses with its own availability rather than a shared flag.
+///
+/// This is the whole point of the type. A C++ frontend reading `available` off the decision
+/// it is about to offer cannot repeat the gap this closed, where the fact lived beside the
+/// prompt and two frontends never looked at it.
+fn each_recovery_decision_crosses_with_its_own_availability() {
+    let prompt = recovery_prompt_to_dto(&RecoveryPrompt {
+        lines: Vec::new(),
+        decisions: vec![
+            RecoveryDecisionDescription {
+                decision: contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                label: "Proceed Without Ignore",
+                description: vec![DisplaySegment::Text("proceed")],
+                available: true,
+            },
+            RecoveryDecisionDescription {
+                decision: contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+                label: "Reset To Default",
+                description: vec![DisplaySegment::Text("reset")],
+                available: false,
+            },
+        ],
+    });
+
+    assert_eq!(prompt.decisions.len(), 2);
+    assert_eq!(
+        prompt.decisions[0].decision,
+        ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+    );
+    assert_eq!(prompt.decisions[0].label, "Proceed Without Ignore");
+    assert!(prompt.decisions[0].available);
+    assert_eq!(
+        prompt.decisions[1].decision,
+        ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault
+    );
+    assert_eq!(prompt.decisions[1].label, "Reset To Default");
+    assert!(!prompt.decisions[1].available);
+}
+
+#[test]
+/// A decision's description crosses with the same segment flattening its lines use.
+fn a_recovery_decision_description_flattens_like_any_other_segments() {
+    let prompt = recovery_prompt_to_dto(&RecoveryPrompt {
+        lines: Vec::new(),
+        decisions: vec![RecoveryDecisionDescription {
+            decision: contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            label: "Reset To Default",
+            description: vec![
+                DisplaySegment::Text("back up"),
+                DisplaySegment::Path(PathBuf::from("CLASSIC Ignore.yaml")),
+                DisplaySegment::Count {
+                    value: 1,
+                    noun: "file",
+                },
+            ],
+            available: true,
+        }],
+    });
+
+    let segments = &prompt.decisions[0].description;
+    assert_eq!(segments.len(), 3);
+    assert_eq!(segments[0].kind, ffi::ScanRunDisplaySegmentKind::Text);
+    assert_eq!(segments[0].text, "back up");
+    assert_eq!(segments[1].kind, ffi::ScanRunDisplaySegmentKind::Path);
+    assert_eq!(segments[1].path, "CLASSIC Ignore.yaml");
+    assert!(segments[1].text.is_empty());
+    assert_eq!(segments[2].kind, ffi::ScanRunDisplaySegmentKind::Count);
+    assert_eq!(segments[2].count, 1);
+    assert_eq!(segments[2].text, "file");
+}
+
+#[test]
+/// Both contract decisions have a distinct CXX twin, so none is silently offered as the other.
+fn every_recovery_decision_maps_to_its_own_cxx_twin() {
+    for (core, expected) in [
+        (
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+        ),
+        (
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+        ),
+    ] {
+        assert_eq!(map_local_ignore_recovery_decision_to_dto(core), expected);
+        // Round trip: the inbound half must resolve the twin back to the decision it named,
+        // or a frontend would answer with something other than what it was offered.
+        assert_eq!(map_local_ignore_recovery_decision(expected), Ok(core));
+    }
+}
+
+/// Asserts two flattened decision lists describe the same decisions the same way.
+///
+/// Written out rather than derived, for the reason [`assert_display_lines_match`] is: the CXX
+/// shared structs implement no equality.
+fn assert_decisions_match(
+    actual: &[ffi::ScanRunRecoveryDecisionDescription],
+    expected: &[ffi::ScanRunRecoveryDecisionDescription],
+) {
+    assert_eq!(actual.len(), expected.len(), "decision count changed");
+    for (index, (actual_decision, expected_decision)) in actual.iter().zip(expected).enumerate() {
+        assert_eq!(
+            actual_decision.decision, expected_decision.decision,
+            "decision {index} identity"
+        );
+        assert_eq!(
+            actual_decision.label, expected_decision.label,
+            "decision {index} label"
+        );
+        assert_eq!(
+            actual_decision.available, expected_decision.available,
+            "decision {index} availability"
+        );
+        assert_eq!(
+            actual_decision.description.len(),
+            expected_decision.description.len(),
+            "decision {index} changed segment count"
+        );
+        for (position, (actual_segment, expected_segment)) in actual_decision
+            .description
+            .iter()
+            .zip(&expected_decision.description)
+            .enumerate()
+        {
+            assert_eq!(
+                actual_segment.kind, expected_segment.kind,
+                "decision {index} segment {position} kind"
+            );
+            assert_eq!(
+                actual_segment.text, expected_segment.text,
+                "decision {index} segment {position} text"
+            );
+            assert_eq!(
+                actual_segment.path, expected_segment.path,
+                "decision {index} segment {position} path"
+            );
+            assert_eq!(
+                actual_segment.count, expected_segment.count,
+                "decision {index} segment {position} count"
             );
         }
     }

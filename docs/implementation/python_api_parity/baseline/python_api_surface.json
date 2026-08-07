@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-07T00:33:29.249161+00:00",
+  "generated_at_utc": "2026-08-07T02:52:08.530913+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -7141,6 +7141,26 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "class ScanRunLogResult:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunRecoveryDecisionDescription",
+      "export_path": "ScanRunRecoveryDecisionDescription",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunRecoveryDecisionDescription:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunRecoveryPrompt",
+      "export_path": "ScanRunRecoveryPrompt",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunRecoveryPrompt:"
     },
     {
       "module": "classic_scanlog",

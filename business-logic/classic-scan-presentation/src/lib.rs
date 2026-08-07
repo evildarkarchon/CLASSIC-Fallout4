@@ -4,7 +4,9 @@
 //! event, a run-wide infrastructure failure, or a resume failure into an ordered sequence of
 //! [`DisplayLine`]s. Each line is a [`DisplaySeverity`] plus an ordered list of typed
 //! [`DisplaySegment`]s, so a frontend can style a path as a clickable link or emphasise a
-//! number without re-deciding the words around it.
+//! number without re-deciding the words around it. It also renders the one interactive
+//! surface a run has — the Local Ignore [`RecoveryPrompt`], whose decisions each carry their
+//! own availability so a frontend cannot offer one that would fail.
 //!
 //! Frontends keep Display Layout: what order to show lines in, what to group, what to
 //! colour, what to truncate, which widget to use, and which key or button offers a choice.
@@ -37,6 +39,8 @@
 //! 4. Never re-decide a [`DisplaySegment::Count`]'s noun. Print `value`, then `noun`.
 //! 5. Keep Vocabulary Tokens in structured, machine-readable output. Display Content is for
 //!    humans and never appears in a payload a consumer matches on.
+//! 6. Never offer a [`RecoveryDecisionDescription`] whose `available` is false. The fact
+//!    travels attached to the decision precisely so honouring it takes no separate lookup.
 //!
 //! # Dependency direction
 //!
@@ -55,9 +59,11 @@
 //! surfaces follow.
 
 mod display;
+mod recovery;
 mod render;
 
 pub use display::{DisplayLine, DisplaySegment, DisplaySeverity};
+pub use recovery::{RecoveryDecisionDescription, RecoveryPrompt, render_local_ignore_recovery};
 pub use render::{
     render_event, render_infrastructure_error, render_resume_error, render_run_result,
 };

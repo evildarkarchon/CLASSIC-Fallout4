@@ -4,8 +4,9 @@ use classic_config_core::{
     YamlDataContentIdentity,
 };
 use classic_scan_presentation::{
-    DisplayLine, DisplaySegment, DisplaySeverity, render_event, render_infrastructure_error,
-    render_resume_error, render_run_result,
+    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryPrompt, render_event,
+    render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
+    render_run_result,
 };
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
@@ -340,6 +341,9 @@ fn execution_from_resume_result(
             // not where it belongs.
             display_lines: display_lines_to_dto(&render_resume_error(&error)),
             resume_error: resume_error_to_dto(error),
+            // A resume that failed is not waiting on a decision; it already had one.
+            has_recovery_prompt: false,
+            recovery_prompt: empty_recovery_prompt_dto(),
         },
     };
     ScanRunContractExecution {
@@ -354,6 +358,17 @@ fn success_execution_result_dto(
     // Rendered from the borrowed result before `run_result_to_dto` consumes it. The
     // caller has already taken the continuation out, which is what makes the borrow legal.
     let display_lines = display_lines_to_dto(&render_run_result(&result));
+    // Rendered only for the one status that pauses for an answer. Every other status has
+    // nothing to ask, and a prompt attached to a finished run would invite a frontend to show
+    // one. This is also exactly when the execution retains a continuation to answer with.
+    let has_recovery_prompt = result.status == contract::RunStatus::LocalIgnoreRecoveryRequired;
+    let recovery_prompt = if has_recovery_prompt {
+        recovery_prompt_to_dto(&render_local_ignore_recovery(
+            result.installed_yaml_data.as_ref(),
+        ))
+    } else {
+        empty_recovery_prompt_dto()
+    };
     ffi::ScanRunContractExecutionResult {
         has_result: true,
         result: run_result_to_dto(result),
@@ -362,6 +377,8 @@ fn success_execution_result_dto(
         has_resume_error: false,
         resume_error: empty_resume_error_dto(),
         display_lines,
+        has_recovery_prompt,
+        recovery_prompt,
     }
 }
 
@@ -377,6 +394,9 @@ fn infrastructure_execution_result_dto(
         has_resume_error: false,
         resume_error: empty_resume_error_dto(),
         display_lines,
+        // A run that failed run-wide never reached a decision to pause on.
+        has_recovery_prompt: false,
+        recovery_prompt: empty_recovery_prompt_dto(),
     }
 }
 
@@ -436,6 +456,57 @@ fn display_segment_to_dto(segment: &DisplaySegment) -> ffi::ScanRunDisplaySegmen
         }
     }
     dto
+}
+
+/// Flattens a rendered Local Ignore recovery prompt into the CXX mirror types.
+///
+/// The decision descriptions cross as ordinary segment lists, the same flattening the lines
+/// beside them use, so a C++ consumer reads a description with the renderer it already has.
+fn recovery_prompt_to_dto(prompt: &RecoveryPrompt) -> ffi::ScanRunRecoveryPrompt {
+    ffi::ScanRunRecoveryPrompt {
+        lines: display_lines_to_dto(&prompt.lines),
+        decisions: prompt
+            .decisions
+            .iter()
+            .map(|description| ffi::ScanRunRecoveryDecisionDescription {
+                decision: map_local_ignore_recovery_decision_to_dto(description.decision),
+                label: description.label.to_string(),
+                description: description
+                    .description
+                    .iter()
+                    .map(display_segment_to_dto)
+                    .collect(),
+                available: description.available,
+            })
+            .collect(),
+    }
+}
+
+/// Maps a Rust-owned recovery decision onto its CXX twin.
+///
+/// The outbound half of the mapping whose inbound half is
+/// [`map_local_ignore_recovery_decision`]. Written separately because Rust cannot invert a
+/// `match`, and exhaustive so that a third variant added to the contract stops this from
+/// compiling rather than silently describing itself as one of the two that exist.
+fn map_local_ignore_recovery_decision_to_dto(
+    value: contract::LocalIgnoreRecoveryDecision,
+) -> ffi::ScanRunLocalIgnoreRecoveryDecision {
+    match value {
+        contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+        }
+        contract::LocalIgnoreRecoveryDecision::ResetToDefault => {
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault
+        }
+    }
+}
+
+/// Builds the prompt an envelope carries when it is not waiting on a decision.
+fn empty_recovery_prompt_dto() -> ffi::ScanRunRecoveryPrompt {
+    ffi::ScanRunRecoveryPrompt {
+        lines: Vec::new(),
+        decisions: Vec::new(),
+    }
 }
 
 /// Maps how gravely a line should read onto its scanner-local CXX twin.
@@ -815,6 +886,8 @@ fn empty_execution_result_dto() -> ffi::ScanRunContractExecutionResult {
         resume_error: empty_resume_error_dto(),
         // No payload is present, so there is nothing for this envelope to say.
         display_lines: Vec::new(),
+        has_recovery_prompt: false,
+        recovery_prompt: empty_recovery_prompt_dto(),
     }
 }
 

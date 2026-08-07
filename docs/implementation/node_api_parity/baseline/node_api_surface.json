@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-07T00:33:44.207949+00:00",
+  "generated_at_utc": "2026-08-07T02:51:45.372510+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -1563,6 +1563,22 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunLogResult {"
+    },
+    {
+      "export": "JsScanRunRecoveryDecisionDescription",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunRecoveryDecisionDescription {"
+    },
+    {
+      "export": "JsScanRunRecoveryPrompt",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunRecoveryPrompt {"
     },
     {
       "export": "JsScanRunRejectedInput",
