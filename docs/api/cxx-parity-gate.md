@@ -19,20 +19,30 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 - **Purpose:** detect drift between the committed CXX bridge contract and the
   current bridge source tree.
 - **Scope:** every file listed in
-  `classic-cpp-bridge/build.rs::cxx_build::bridges([...])` (14 files as of this
+  `classic-cpp-bridge/build.rs::cxx_build::bridges([...])` (19 files as of this
   milestone).
 - **Single source of truth for the file list:**
   [`cpp-bindings/classic-cpp-bridge/build.rs`](../../cpp-bindings/classic-cpp-bridge/build.rs).
   The gate parses it dynamically — there is no hardcoded list to keep in sync.
 - **Single source of truth for the contract:**
   [`docs/implementation/cxx_api_parity/baseline/parity_contract.json`](../implementation/cxx_api_parity/baseline/parity_contract.json).
+- **Single source of truth for canonical Rust mappings:**
+  [`tools/cxx_api_parity/canonical_mappings.json`](../../tools/cxx_api_parity/canonical_mappings.json).
+  Every CXX row is reviewed as either a canonical Rust capability or an
+  explicitly binding-only declaration.
 - **Exit codes:** `0` = pass (no drift, no stale artifacts); `1` = drift
-  detected, stale committed artifacts, or baseline file missing.
+  detected, stale committed artifacts, missing/stale canonical metadata, a
+  canonical target absent from the live Rust public surface, or a missing
+  baseline file.
 
 The gate is intentionally conservative: it compares only semantic contract
 fields (`rustSymbol`, `kind`, `bridgeModule`, `blockOrigin`, `signature`,
 `fields`, `variants`). `sourceFile` is NOT part of the comparison, so moving a
 function across files inside the same `bridgeModule` is not reported as drift.
+Canonical metadata is validated independently and is deliberately excluded
+from the source/ABI comparison. This preserves the existing stable identities
+and source-only drift semantics while still failing closed when the reviewed
+mapping inventory is incomplete or stale.
 
 ---
 
@@ -50,11 +60,10 @@ to stderr with a summary of missing, added, and signature-mismatched rows.
 The gate is **source-only** — it does not invoke Cargo, `cxx-build`, or MSVC.
 All you need is Python 3.12+. The Python parser pulls from the repo's existing
 bindings venv in CI; locally, any Python 3.12+ interpreter works because the
-script depends only on the standard library (`re`, `json`, `hashlib`,
-`argparse`, `shutil`).
+script and its shared Rust-surface parser depend only on the standard library.
 
-To run the gate's own integration test suite (22 tests covering the parser,
-the gate, and drift detection):
+To run the gate's own test suite (covering the parser, canonical mappings, the
+gate, and drift detection):
 
 ```bash
 python-bindings/.venv/Scripts/pytest tools/cxx_api_parity/tests/ -q
@@ -68,16 +77,28 @@ After an intentional bridge change — adding, removing, or modifying a
 `#[cxx::bridge]` item — refresh the committed baseline in the same commit that
 touches the bridge source:
 
+1. Run the plain gate first and review the reported bridge drift.
+2. Add, remove, or update the exact stable-ID entry in
+   `tools/cxx_api_parity/canonical_mappings.json`.
+   - Use `ownerModule`, `rustCrate`, and `coreRustSymbol` when the row projects
+     a verified public Rust capability.
+   - Use a non-empty `unmappedReason` only for a genuinely binding-owned
+     declaration with no canonical Rust counterpart.
+3. Run the refresh command:
+
 ```bash
 python tools/cxx_api_parity/check_parity_gate.py --repo-root . --update-baseline
-git add docs/implementation/cxx_api_parity/baseline/
+git add tools/cxx_api_parity/canonical_mappings.json docs/implementation/cxx_api_parity/baseline/
 git commit -m "Docs: refresh CXX parity baseline"
 ```
 
-`--update-baseline` rewrites `parity_contract.json` from the current bridge
-source, regenerates every committed artifact to match, and exits `0`, printing
-a one-line summary of how many items it accepted as added, removed, or
-modified. A follow-up plain run then also exits `0`.
+`--update-baseline` first requires exact mapping coverage and verifies every
+canonical tuple against the current non-module Rust public surface. It then
+rewrites `parity_contract.json` from the current bridge source, regenerates
+every committed artifact to match, and exits `0`, printing a one-line summary
+of how many items it accepted as added, removed, or modified. A missing row,
+an orphaned mapping, or a removed/renamed/moved Rust target cannot be accepted
+by using the refresh flag. A follow-up plain run then also exits `0`.
 
 The committed diff report describes the state it was committed alongside, so
 after a refresh it reads as clean rather than as a record of what was accepted
@@ -134,6 +155,10 @@ Each row in `parity_contract.json` has these fields:
 | `bridgeModule` | all | Filename stem (e.g. `scanner`, `scangame`, `yaml`) |
 | `sourceFile` | all | Repo-relative path with forward slashes |
 | `blockOrigin` | all | `Rust` for items in `extern "Rust"`/top-level structs/enums; `C++` for items inside `unsafe extern "C++"` |
+| `ownerModule` | canonical rows | Canonical Rust capability owner (for example `scanlog`) |
+| `rustCrate` | canonical rows | Rust crate that publishes the capability |
+| `coreRustSymbol` | canonical rows | Verified public, non-module Rust symbol represented by the CXX row |
+| `unmappedReason` | binding-only rows | Non-empty explanation of why no canonical Rust capability exists |
 | `signature` | function only | `{"args": [{"name", "type"}, ...], "returnType": str \| null}` |
 | `fields` | struct only | Ordered list of `{"name", "type"}` — source order preserved |
 | `variants` | enum only | Ordered list of variant name strings (discriminants stripped) |
@@ -142,10 +167,17 @@ Doc comments (`///` and `//!`) are NOT compared. Lifetimes, `&`/`&mut`,
 `Pin<&mut T>`, `Box<T>`, and `UniquePtr<T>` wrappers ARE part of the signature
 and ARE compared — they are ABI-relevant.
 
-Entries are sorted by `(bridgeModule, kind, rustSymbol)` so the committed JSON
-is byte-identical across runs on the same source tree. The contract file also
-carries `schema_version: 1` so future schema migrations can branch without
-breaking older gates.
+Every row has exactly one mapping classification: all three canonical fields,
+or `unmappedReason`. Entries are sorted by `(bridgeModule, kind, rustSymbol)`
+so the committed JSON is byte-identical across runs on the same source tree.
+The contract carries `schema_version: 2`; schema 2 adds canonical mapping
+metadata without changing the stable ID recipe or source/ABI comparison.
+
+The CXX transport exceptions are recorded row by row in the mapping inventory.
+The `classic-resource-core` exception is different: C++ reaches it transitively
+through `classic-file-io-core`, so it remains the separate package-level policy
+obligation documented in [`binding-parity-policy.md`](binding-parity-policy.md)
+and is not represented by a synthetic CXX row.
 
 ---
 
@@ -156,11 +188,14 @@ The gate parses
 for the `cxx_build::bridges([...])` array. This is the single source of truth
 for which bridge files participate in the gate.
 
-Adding a new bridge source file is a two-step workflow:
+Adding a new bridge source file is a three-step workflow:
 
 1. Add the new `src/foo.rs` file to the bridge crate and add its path to
    `build.rs::cxx_build::bridges([...])`.
-2. Run
+2. Add one reviewed canonical or binding-only mapping for every new row to
+   `tools/cxx_api_parity/canonical_mappings.json` and catalog any newly used
+   Rust crate in that file's `rustCrates` section.
+3. Run
    `python tools/cxx_api_parity/check_parity_gate.py --repo-root . --update-baseline`
    to accept the new entries into the committed baseline.
 
@@ -219,6 +254,12 @@ it with the command from the "Bootstrap From Scratch" section above.
 `docs/implementation/cxx_api_parity/baseline/` no longer match a fresh source
 scan. If the change was intended, run `--update-baseline`. If not, investigate
 what changed in the bridge source.
+
+**"CXX canonical mapping validation failed" error.** Reconcile
+`tools/cxx_api_parity/canonical_mappings.json` with both the current bridge rows
+and the live Rust public surface. The diagnostic distinguishes missing bridge
+mappings, stale mappings for removed rows, invalid classifications, and Rust
+targets that were removed, renamed, or moved to a different owner/crate.
 
 **"No `#[cxx::bridge] mod ffi` block found" error.** A file listed in
 `build.rs` is missing its `#[cxx::bridge]` attribute. Add the attribute or

@@ -701,6 +701,58 @@ def _parity_obligations(repo_root: Path) -> list[dict[str, Any]]:
             analyzer_id = ANALYZER_IDS[participant]
 
             if participant == "cxx":
+                binding_only = isinstance(row.get("unmappedReason"), str)
+                if binding_only:
+                    declaration_only = (
+                        row.get("kind") != "function" or row.get("blockOrigin") == "C++"
+                    )
+                    if declaration_only:
+                        # Opaque transports and foreign C++ callbacks expose only
+                        # declaration shape; the retained source analyzer owns that
+                        # irreducibly structural evidence.
+                        obligations.append(
+                            _analyzer_obligation(
+                                obligation_id=obligation_id,
+                                source_kind="parity_row",
+                                artifact=artifact,
+                                locator=locator,
+                                participant=participant,
+                                mapping_origin="binding_only",
+                                classification="structural_analyzer",
+                                analyzer_id=analyzer_id,
+                            )
+                        )
+                        continue
+
+                    bridge_module = row.get("bridgeModule")
+                    if not isinstance(bridge_module, str) or not bridge_module:
+                        raise LedgerValidationError(
+                            f"{artifact}:{row_key}[{index}] has no CXX bridge module"
+                        )
+                    # Binding-owned public operations still require executed
+                    # evidence even though no canonical Rust symbol owns them.
+                    obligations.append(
+                        _planned_runtime_obligation(
+                            obligation_id=obligation_id,
+                            source_kind="parity_row",
+                            artifact=artifact,
+                            locator=locator,
+                            participant=participant,
+                            mapping_origin="binding_only",
+                            family_id=f"cxx-binding:{bridge_module}",
+                            retained_analyzer_ids=(analyzer_id,),
+                        )
+                    )
+                    continue
+
+                canonical_fields = ("ownerModule", "rustCrate", "coreRustSymbol")
+                if not all(
+                    isinstance(row.get(field), str) and row[field]
+                    for field in canonical_fields
+                ):
+                    raise LedgerValidationError(
+                        f"{artifact}:{row_key}[{index}] has no canonical CXX mapping"
+                    )
                 obligations.append(
                     _planned_runtime_obligation(
                         obligation_id=obligation_id,
@@ -708,9 +760,8 @@ def _parity_obligations(repo_root: Path) -> list[dict[str, Any]]:
                         artifact=artifact,
                         locator=locator,
                         participant=participant,
-                        # Issue #188 owns the missing canonical core mapping.
-                        mapping_origin="cxx_bridge_declaration",
-                        family_id=f"cxx-bridge:{row.get('bridgeModule', 'unknown')}",
+                        mapping_origin="canonical_rust",
+                        family_id=str(row["ownerModule"]),
                         retained_analyzer_ids=(analyzer_id,),
                     )
                 )

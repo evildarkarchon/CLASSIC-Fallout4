@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import re
 import sys
 from datetime import datetime, timezone
@@ -38,6 +39,21 @@ from typing import Any
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from parity_artifact_io import preserve_baseline_generated_at, write_json
+from parity_rust_surface import parse_rust_surface
+
+CANONICAL_MAPPING_SCHEMA_VERSION = 1
+CXX_CONTRACT_SCHEMA_VERSION = 2
+DEFAULT_CANONICAL_MAPPINGS = "tools/cxx_api_parity/canonical_mappings.json"
+
+_MAPPING_IDENTITY_FIELDS = frozenset({"id", "rustSymbol", "kind", "bridgeModule"})
+_CANONICAL_MAPPING_FIELDS = frozenset({"ownerModule", "rustCrate", "coreRustSymbol"})
+_BINDING_ONLY_MAPPING_FIELDS = frozenset({"unmappedReason"})
+_ALL_MAPPING_FIELDS = _CANONICAL_MAPPING_FIELDS | _BINDING_ONLY_MAPPING_FIELDS
+
+
+class CanonicalMappingError(ValueError):
+    """Raised when canonical CXX mapping metadata is missing, stale, or invalid."""
+
 
 # ---- JSON helper (mirrors tools/python_api_parity/generate_baseline.write_json) ----
 
@@ -463,6 +479,298 @@ def parse_cxx_bridge_surface(
     }
 
 
+def _nonempty_mapping_string(value: object, label: str) -> str:
+    """Return one required mapping string or raise a field-specific error."""
+
+    if not isinstance(value, str) or not value.strip():
+        raise CanonicalMappingError(f"{label} must be a non-empty string")
+    return value
+
+
+def _index_rows_by_id(
+    raw_rows: object,
+    entries_label: str,
+    duplicate_label: str,
+) -> dict[str, dict[str, Any]]:
+    """Validate an entry collection and index its object rows by unique string ID."""
+
+    if not isinstance(raw_rows, list):
+        raise CanonicalMappingError(f"{entries_label} must be a list")
+    indexed: dict[str, dict[str, Any]] = {}
+    for index, raw_row in enumerate(raw_rows):
+        if not isinstance(raw_row, dict):
+            raise CanonicalMappingError(f"{entries_label}[{index}] must be an object")
+        row_id = _nonempty_mapping_string(
+            raw_row.get("id"), f"{entries_label}[{index}].id"
+        )
+        if row_id in indexed:
+            raise CanonicalMappingError(f"duplicate {duplicate_label} {row_id!r}")
+        indexed[row_id] = raw_row
+    return indexed
+
+
+def enrich_surface_with_canonical_mappings(
+    surface: dict[str, Any],
+    mappings: dict[str, Any],
+) -> dict[str, Any]:
+    """Attach reviewed canonical or binding-only metadata to every parsed CXX row.
+
+    The mapping inventory is exact: every source-derived row must appear once and
+    every mapping must still point at a current row. The returned payload is a new
+    object, and stable row IDs plus the source-only bridge fields remain unchanged.
+    """
+
+    if not isinstance(mappings, dict):
+        raise CanonicalMappingError("canonical mapping document must be an object")
+    if mappings.get("schema_version") != CANONICAL_MAPPING_SCHEMA_VERSION:
+        raise CanonicalMappingError(
+            "canonical mapping schema_version must be "
+            f"{CANONICAL_MAPPING_SCHEMA_VERSION}"
+        )
+    surface_by_id = _index_rows_by_id(
+        surface.get("entries"), "surface entries", "CXX surface row id"
+    )
+    mapping_by_id = _index_rows_by_id(
+        mappings.get("entries"),
+        "canonical mapping entries",
+        "canonical mapping id",
+    )
+
+    surface_ids = set(surface_by_id)
+    mapping_ids = set(mapping_by_id)
+    missing = sorted(surface_ids - mapping_ids)
+    stale = sorted(mapping_ids - surface_ids)
+    if missing:
+        raise CanonicalMappingError(
+            "missing canonical mappings for CXX row ids: " + ", ".join(missing)
+        )
+    if stale:
+        raise CanonicalMappingError(
+            "stale canonical mappings for removed CXX row ids: " + ", ".join(stale)
+        )
+
+    enriched_rows: list[dict[str, Any]] = []
+    for raw_row in surface_by_id.values():
+        row_id = raw_row["id"]
+        mapping = mapping_by_id[row_id]
+        canonical_present = _CANONICAL_MAPPING_FIELDS.intersection(mapping)
+        binding_only_present = _BINDING_ONLY_MAPPING_FIELDS.intersection(mapping)
+        is_canonical = canonical_present == _CANONICAL_MAPPING_FIELDS
+        is_binding_only = (
+            binding_only_present == _BINDING_ONLY_MAPPING_FIELDS
+            and not canonical_present
+        )
+        if not (is_canonical ^ is_binding_only):
+            raise CanonicalMappingError(
+                f"canonical mapping {row_id!r} must have exactly one mapping "
+                "classification: ownerModule/rustCrate/coreRustSymbol or unmappedReason"
+            )
+
+        expected_fields = _MAPPING_IDENTITY_FIELDS.union(
+            _CANONICAL_MAPPING_FIELDS if is_canonical else _BINDING_ONLY_MAPPING_FIELDS
+        )
+        if set(mapping) != expected_fields:
+            unexpected = sorted(set(mapping) - expected_fields)
+            missing_fields = sorted(expected_fields - set(mapping))
+            raise CanonicalMappingError(
+                f"canonical mapping {row_id!r} has invalid fields; "
+                f"missing={missing_fields}, unexpected={unexpected}"
+            )
+
+        for field in ("rustSymbol", "kind", "bridgeModule"):
+            mapped_value = _nonempty_mapping_string(
+                mapping.get(field), f"canonical mapping {row_id!r}.{field}"
+            )
+            if mapped_value != raw_row.get(field):
+                raise CanonicalMappingError(
+                    f"canonical mapping {row_id!r} identity metadata for {field} "
+                    f"is {mapped_value!r}, expected {raw_row.get(field)!r}"
+                )
+
+        # Keep insertion order deterministic in generated JSON; iterating the
+        # frozensets used for validation would vary with Python's hash seed.
+        metadata_fields = (
+            ("ownerModule", "rustCrate", "coreRustSymbol")
+            if is_canonical
+            else ("unmappedReason",)
+        )
+        metadata = {
+            field: _nonempty_mapping_string(
+                mapping.get(field), f"canonical mapping {row_id!r}.{field}"
+            )
+            for field in metadata_fields
+        }
+        enriched_rows.append({**raw_row, **metadata})
+
+    return {**surface, "entries": enriched_rows}
+
+
+def validate_committed_canonical_metadata(
+    contract: dict[str, Any],
+    current_surface: dict[str, Any],
+) -> None:
+    """Require committed mapping metadata to match the independently enriched model.
+
+    Only row IDs present in both models are checked here. Added and removed bridge
+    rows remain the responsibility of the source-only parity diff, which preserves
+    its established drift categories and comparison semantics.
+    """
+
+    committed_by_id = _index_rows_by_id(
+        contract.get("entries"),
+        "committed CXX contract entries",
+        "committed CXX contract row id",
+    )
+    current_by_id = _index_rows_by_id(
+        current_surface.get("entries"),
+        "current CXX surface entries",
+        "current CXX surface row id",
+    )
+    mismatched_ids = []
+    for row_id in sorted(set(committed_by_id) & set(current_by_id)):
+        committed_metadata = {
+            field: committed_by_id[row_id][field]
+            for field in _ALL_MAPPING_FIELDS
+            if field in committed_by_id[row_id]
+        }
+        current_metadata = {
+            field: current_by_id[row_id][field]
+            for field in _ALL_MAPPING_FIELDS
+            if field in current_by_id[row_id]
+        }
+        if committed_metadata != current_metadata:
+            mismatched_ids.append(row_id)
+
+    if mismatched_ids:
+        raise CanonicalMappingError(
+            "stale canonical metadata in committed CXX rows: "
+            + ", ".join(mismatched_ids)
+        )
+
+
+def validate_canonical_mapping_targets(
+    repo_root: Path,
+    mappings: dict[str, Any],
+) -> None:
+    """Require every canonical mapping to resolve on the live Rust public surface.
+
+    ``rustCrates`` is a reviewed crate/owner/path catalog inside the mapping
+    document. A target that exists only as a Rust module is rejected because a
+    module is not a public capability symbol that a binding row can observe.
+    """
+
+    expected_document_fields = {"schema_version", "rustCrates", "entries"}
+    if set(mappings) != expected_document_fields:
+        raise CanonicalMappingError(
+            "canonical mapping document must contain exactly schema_version, "
+            "rustCrates, and entries"
+        )
+    raw_crates = mappings.get("rustCrates")
+    if not isinstance(raw_crates, list):
+        raise CanonicalMappingError("canonical mappings rustCrates must be a list")
+
+    target_crates: dict[str, str] = {}
+    owner_by_crate: dict[str, str] = {}
+    crate_fields = {"ownerModule", "rustCrate", "libRs"}
+    for index, raw_crate in enumerate(raw_crates):
+        if not isinstance(raw_crate, dict) or set(raw_crate) != crate_fields:
+            raise CanonicalMappingError(
+                f"canonical mappings rustCrates[{index}] must contain exactly "
+                "ownerModule, rustCrate, and libRs"
+            )
+        owner = _nonempty_mapping_string(
+            raw_crate.get("ownerModule"), f"rustCrates[{index}].ownerModule"
+        )
+        crate = _nonempty_mapping_string(
+            raw_crate.get("rustCrate"), f"rustCrates[{index}].rustCrate"
+        )
+        lib_rs = _nonempty_mapping_string(
+            raw_crate.get("libRs"), f"rustCrates[{index}].libRs"
+        )
+        lib_path = Path(lib_rs)
+        if (
+            lib_path.is_absolute()
+            or ".." in lib_path.parts
+            or "\\" in lib_rs
+            or lib_path.as_posix() != lib_rs
+        ):
+            raise CanonicalMappingError(
+                f"rustCrates[{index}].libRs must be a canonical repository-relative path"
+            )
+        if crate in target_crates:
+            raise CanonicalMappingError(f"duplicate canonical Rust crate {crate!r}")
+        target_crates[crate] = lib_rs
+        owner_by_crate[crate] = owner
+
+    mapping_rows = mappings.get("entries")
+    if not isinstance(mapping_rows, list):
+        raise CanonicalMappingError("canonical mapping entries must be a list")
+    canonical_rows = [
+        row
+        for row in mapping_rows
+        if isinstance(row, dict) and _CANONICAL_MAPPING_FIELDS.issubset(row)
+    ]
+    used_crates = {str(row["rustCrate"]) for row in canonical_rows}
+    missing_catalog_crates = sorted(used_crates - set(target_crates))
+    stale_catalog_crates = sorted(set(target_crates) - used_crates)
+    if missing_catalog_crates:
+        raise CanonicalMappingError(
+            "canonical mapping rows reference uncatalogued Rust crates: "
+            + ", ".join(missing_catalog_crates)
+        )
+    if stale_catalog_crates:
+        raise CanonicalMappingError(
+            "canonical mappings contain stale unused Rust crates: "
+            + ", ".join(stale_catalog_crates)
+        )
+
+    try:
+        rust_surface = parse_rust_surface(
+            Path(repo_root), target_crates, owner_by_crate
+        )
+    except (OSError, KeyError, ValueError) as error:
+        raise CanonicalMappingError(
+            f"cannot inspect canonical Rust targets: {error}"
+        ) from error
+    live_targets = {
+        (entry["owner_module"], entry["crate"], entry["symbol"])
+        for entry in rust_surface["symbols"]
+        if entry.get("kind") != "module"
+    }
+    requested_targets = {
+        (row["ownerModule"], row["rustCrate"], row["coreRustSymbol"])
+        for row in canonical_rows
+    }
+    missing_targets = sorted(requested_targets - live_targets)
+    if missing_targets:
+        rendered = ", ".join("/".join(target) for target in missing_targets)
+        raise CanonicalMappingError(f"missing live Rust targets: {rendered}")
+
+
+def generate_cxx_parity_model(
+    repo_root: Path,
+    bridge_crate_rel: str = "cpp-bindings/classic-cpp-bridge",
+    canonical_mappings_rel: str = DEFAULT_CANONICAL_MAPPINGS,
+) -> dict[str, Any]:
+    """Generate the source-derived CXX model with reviewed canonical metadata.
+
+    Raises ``CanonicalMappingError`` when the inventory cannot be read or does
+    not exactly cover the current bridge rows.
+    """
+
+    surface = parse_cxx_bridge_surface(repo_root, bridge_crate_rel)
+    mapping_path = Path(repo_root) / canonical_mappings_rel
+    try:
+        mappings = json.loads(mapping_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise CanonicalMappingError(
+            f"cannot read canonical CXX mappings from {mapping_path}: {error}"
+        ) from error
+    enriched = enrich_surface_with_canonical_mappings(surface, mappings)
+    validate_canonical_mapping_targets(repo_root, mappings)
+    return enriched
+
+
 # ---- Diff report generation ----
 
 
@@ -673,7 +981,11 @@ def main() -> int:
     baseline_output_dir = repo_root / args.baseline_output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    surface = parse_cxx_bridge_surface(repo_root)
+    try:
+        surface = generate_cxx_parity_model(repo_root)
+    except CanonicalMappingError as error:
+        print(f"CXX canonical mapping validation failed: {error}", file=sys.stderr)
+        return 1
     # Carry the committed timestamp forward when the bridge surface is
     # unchanged, so a no-op rerun leaves the tracked baseline byte-identical.
     # Applied before the scratch write as well, so both copies agree.
@@ -684,10 +996,10 @@ def main() -> int:
 
     if args.write_baseline:
         # Bootstrap path: the contract IS the fresh surface on the first run.
-        # schema_version is locked at 1 for this milestone.
+        # Canonical mapping metadata is the explicit v2 schema migration.
         contract = {
             "generated_at_utc": surface["generated_at_utc"],
-            "schema_version": 1,
+            "schema_version": CXX_CONTRACT_SCHEMA_VERSION,
             "entries": surface["entries"],
         }
         # Preserve against the contract's own committed copy rather than relying

@@ -12,18 +12,20 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 GATE_SCRIPT = REPO_ROOT / "tools" / "cxx_api_parity" / "check_parity_gate.py"
 BOOTSTRAP_SCRIPT = REPO_ROOT / "tools" / "cxx_api_parity" / "generate_baseline.py"
 BASELINE_DIR = REPO_ROOT / "docs" / "implementation" / "cxx_api_parity" / "baseline"
+MAPPINGS_FILE = REPO_ROOT / "tools" / "cxx_api_parity" / "canonical_mappings.json"
 BRIDGE_BUILD_RS = REPO_ROOT / "cpp-bindings" / "classic-cpp-bridge" / "build.rs"
 
 # Make the parser importable so we can derive the expected module set from build.rs
 # at test time instead of hardcoding it (D-07: build.rs is the single source of truth).
 sys.path.insert(0, str(REPO_ROOT / "tools" / "cxx_api_parity"))
-from generate_baseline import parse_build_rs_file_list  # noqa: E402
+from generate_baseline import (  # noqa: E402
+    parse_build_rs_file_list,
+    parse_cxx_bridge_surface,
+)
 
 
 def _expected_modules_from_build_rs() -> set[str]:
@@ -73,8 +75,49 @@ class TestBaselineExists:
         )
         assert "entries" in data
         assert isinstance(data["entries"], list)
+        assert data["schema_version"] == 2
         assert "tier1Mappings" not in data
         assert not any(k.startswith("tier2") for k in data)
+
+    def test_baseline_rows_have_exact_canonical_or_binding_only_metadata(self):
+        """Every generated row is traceable without relabeling CXX-only declarations."""
+
+        data = json.loads(
+            (BASELINE_DIR / "parity_contract.json").read_text(encoding="utf-8")
+        )
+        canonical = [row for row in data["entries"] if "ownerModule" in row]
+        binding_only = [row for row in data["entries"] if "unmappedReason" in row]
+
+        assert canonical
+        assert binding_only
+        assert len(canonical) + len(binding_only) == len(data["entries"])
+        assert all(
+            all(
+                row.get(field)
+                for field in ("ownerModule", "rustCrate", "coreRustSymbol")
+            )
+            and "unmappedReason" not in row
+            for row in canonical
+        )
+        assert all(
+            row["unmappedReason"]
+            and not any(
+                field in row for field in ("ownerModule", "rustCrate", "coreRustSymbol")
+            )
+            for row in binding_only
+        )
+
+    def test_reviewed_mapping_inventory_exactly_covers_baseline(self):
+        """The independent sidecar neither omits nor outlives a generated row."""
+
+        baseline = json.loads(
+            (BASELINE_DIR / "parity_contract.json").read_text(encoding="utf-8")
+        )
+        mappings = json.loads(MAPPINGS_FILE.read_text(encoding="utf-8"))
+
+        assert {row["id"] for row in mappings["entries"]} == {
+            row["id"] for row in baseline["entries"]
+        }
 
     def test_baseline_entries_are_sorted(self):
         """Determinism: baseline entries sorted by (bridgeModule, kind, rustSymbol)."""
@@ -109,6 +152,56 @@ class TestGateSmoke:
 # ----- Drift detection (CXXG-03) -----
 
 
+def _write_synthetic_canonical_inventory(synth_repo: Path) -> None:
+    """Write exact fake core declarations and mappings for a synthetic bridge."""
+
+    parsed = parse_cxx_bridge_surface(synth_repo)
+    synth_lib = synth_repo / "business-logic" / "classic-synth-core" / "src" / "lib.rs"
+    synth_lib.parent.mkdir(parents=True, exist_ok=True)
+    declarations: list[str] = []
+    for row in parsed["entries"]:
+        symbol = row["rustSymbol"]
+        if row["kind"] == "function":
+            declarations.append(f"pub fn {symbol}() {{}}")
+        elif row["kind"] == "enum":
+            declarations.append(f"pub enum {symbol} {{ Placeholder }}")
+        else:
+            declarations.append(f"pub struct {symbol};")
+    synth_lib.write_text("\n".join(declarations) + "\n", encoding="utf-8")
+
+    mapping_path = synth_repo / "tools" / "cxx_api_parity" / "canonical_mappings.json"
+    mapping_path.parent.mkdir(parents=True, exist_ok=True)
+    mapping_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "rustCrates": [
+                    {
+                        "ownerModule": "synth",
+                        "rustCrate": "classic-synth-core",
+                        "libRs": "business-logic/classic-synth-core/src/lib.rs",
+                    }
+                ],
+                "entries": [
+                    {
+                        "id": row["id"],
+                        "rustSymbol": row["rustSymbol"],
+                        "kind": row["kind"],
+                        "bridgeModule": row["bridgeModule"],
+                        "ownerModule": "synth",
+                        "rustCrate": "classic-synth-core",
+                        "coreRustSymbol": row["rustSymbol"],
+                    }
+                    for row in parsed["entries"]
+                ],
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
 def _bootstrap_synthetic_gate(tmp_path: Path, fixture_files: dict[str, str]) -> Path:
     """Build a synthetic bridge crate tree + baseline under tmp_path.
 
@@ -129,6 +222,11 @@ def _bootstrap_synthetic_gate(tmp_path: Path, fixture_files: dict[str, str]) -> 
     )
     for name, content in fixture_files.items():
         (bridge / "src" / name).write_text(content, encoding="utf-8")
+
+    # Synthetic rows use a one-to-one fake core mapping. Production mappings are
+    # reviewed individually; this fixture only needs an exact inventory so gate
+    # mutation tests can distinguish bridge drift from mapping drift.
+    _write_synthetic_canonical_inventory(synth_repo)
 
     # Bootstrap the baseline for this synthetic tree
     result = subprocess.run(
@@ -206,7 +304,7 @@ _SIMPLE_BRIDGE = (
 
 class TestDriftDetection:
     def test_gate_fails_on_added_function(self, tmp_path: Path):
-        """CXXG-03: adding a fn to a bridge file -> gate exits 1."""
+        """An added bridge function fails closed until its mapping is reviewed."""
         synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
         synth_file = synth_repo / "cpp-bindings/classic-cpp-bridge/src/synth.rs"
         mutated = _SIMPLE_BRIDGE.replace(
@@ -219,9 +317,7 @@ class TestDriftDetection:
         assert result.returncode == 1, (
             f"gate should fail on added fn. stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
         )
-        assert (
-            "drift" in result.stderr.lower() or "missing_from_contract" in result.stderr
-        )
+        assert "missing canonical mappings" in result.stderr
 
     def test_update_baseline_accepts_an_intentional_bridge_change(self, tmp_path: Path):
         """The documented one-step refresh actually accepts an added, removed, or changed item.
@@ -247,6 +343,7 @@ class TestDriftDetection:
             )
             synth_file = synth_repo / "cpp-bindings/classic-cpp-bridge/src/synth.rs"
             synth_file.write_text(mutated, encoding="utf-8")
+            _write_synthetic_canonical_inventory(synth_repo)
 
             # The change is real drift until it is accepted.
             assert _run_gate(synth_repo).returncode == 1, f"{label} was not detected"
@@ -276,7 +373,7 @@ class TestDriftDetection:
             )
 
     def test_gate_fails_on_removed_function(self, tmp_path: Path):
-        """CXXG-03: removing a fn -> gate exits 1 with missing_from_current drift."""
+        """A removed bridge function fails closed until its mapping is removed."""
         synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
         synth_file = synth_repo / "cpp-bindings/classic-cpp-bridge/src/synth.rs"
         mutated = _SIMPLE_BRIDGE.replace(
@@ -286,7 +383,7 @@ class TestDriftDetection:
 
         result = _run_gate(synth_repo)
         assert result.returncode == 1
-        assert "missing_from_current" in result.stderr
+        assert "stale canonical mappings" in result.stderr
 
     def test_gate_fails_on_struct_field_rename(self, tmp_path: Path):
         """CXXG-03: renaming a struct field -> gate exits 1 with signature_mismatch."""
@@ -385,6 +482,115 @@ class TestStaleArtifact:
         assert post.returncode == 0, (
             f"post-refresh gate should pass. stdout:\n{post.stdout}\nstderr:\n{post.stderr}"
         )
+
+
+class TestCanonicalMappingDrift:
+    def test_gate_fails_when_a_current_row_loses_its_mapping(self, tmp_path: Path):
+        """A bridge row cannot be accepted or refreshed without reviewed metadata."""
+
+        synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
+        mapping_path = (
+            synth_repo / "tools" / "cxx_api_parity" / "canonical_mappings.json"
+        )
+        mappings = json.loads(mapping_path.read_text(encoding="utf-8"))
+        mappings["entries"].pop()
+        mapping_path.write_text(json.dumps(mappings, indent=2) + "\n", encoding="utf-8")
+
+        result = _run_gate(synth_repo)
+
+        assert result.returncode == 1
+        assert "missing canonical mappings" in result.stderr
+
+    def test_gate_fails_when_a_mapping_outlives_its_row(self, tmp_path: Path):
+        """Removing bridge source cannot leave stale canonical metadata behind."""
+
+        synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
+        mapping_path = (
+            synth_repo / "tools" / "cxx_api_parity" / "canonical_mappings.json"
+        )
+        mappings = json.loads(mapping_path.read_text(encoding="utf-8"))
+        mappings["entries"].append(
+            {
+                "id": "removed-row-id",
+                "rustSymbol": "removed_bridge_symbol",
+                "kind": "function",
+                "bridgeModule": "synth",
+                "unmappedReason": "Synthetic row removed from bridge source.",
+            }
+        )
+        mapping_path.write_text(json.dumps(mappings, indent=2) + "\n", encoding="utf-8")
+
+        result = _run_gate(synth_repo)
+
+        assert result.returncode == 1
+        assert "stale canonical mappings" in result.stderr
+
+    def test_gate_and_refresh_reject_a_stale_live_rust_target(self, tmp_path: Path):
+        """Neither a normal run nor baseline refresh can bless a removed core symbol."""
+
+        synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
+        synth_lib = (
+            synth_repo / "business-logic" / "classic-synth-core" / "src" / "lib.rs"
+        )
+        synth_lib.write_text("pub fn unrelated() {}\n", encoding="utf-8")
+
+        result = _run_gate(synth_repo)
+        refresh = subprocess.run(
+            [
+                sys.executable,
+                str(GATE_SCRIPT),
+                "--repo-root",
+                str(synth_repo),
+                "--update-baseline",
+            ],
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+        )
+
+        assert result.returncode == 1
+        assert refresh.returncode == 1
+        assert "missing live Rust targets" in result.stderr
+        assert "missing live Rust targets" in refresh.stderr
+
+    def test_gate_rejects_tampered_contract_metadata_until_refresh(
+        self, tmp_path: Path
+    ):
+        """The committed contract cannot contradict the independent mapping sidecar."""
+
+        synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
+        contract_path = (
+            synth_repo
+            / "docs/implementation/cxx_api_parity/baseline/parity_contract.json"
+        )
+        contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        row = contract["entries"][0]
+        row.pop("ownerModule")
+        row.pop("rustCrate")
+        row.pop("coreRustSymbol")
+        row["unmappedReason"] = "Fabricated binding-only classification."
+        contract_path.write_text(
+            json.dumps(contract, indent=2) + "\n", encoding="utf-8"
+        )
+
+        result = _run_gate(synth_repo)
+        assert result.returncode == 1
+        assert "stale canonical metadata" in result.stderr
+
+        refresh = subprocess.run(
+            [
+                sys.executable,
+                str(GATE_SCRIPT),
+                "--repo-root",
+                str(synth_repo),
+                "--update-baseline",
+            ],
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+        )
+        assert refresh.returncode == 0, refresh.stderr
+        assert _run_gate(synth_repo).returncode == 0
 
 
 # ----- CLI surface (CXXG-04 / D-12) -----

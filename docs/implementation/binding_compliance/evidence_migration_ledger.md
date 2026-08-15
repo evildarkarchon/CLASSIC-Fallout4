@@ -12,8 +12,8 @@
 | --- | ---: |
 | `negative_analyzer` | 207 |
 | `policy_exception` | 1 |
-| `runtime_verifiable` | 3,047 |
-| `structural_analyzer` | 395 |
+| `runtime_verifiable` | 3,043 |
+| `structural_analyzer` | 399 |
 
 ## Current evidence sources
 

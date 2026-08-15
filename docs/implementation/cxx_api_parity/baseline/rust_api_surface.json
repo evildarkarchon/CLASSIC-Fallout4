@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-07T02:50:55Z",
+  "generated_at_utc": "2026-08-15T08:22:59Z",
   "entries": [
     {
       "id": "0f1ce653765981f0",
@@ -13,7 +13,10 @@
         "Fallout4VR",
         "Skyrim",
         "Starfield"
-      ]
+      ],
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
+      "coreRustSymbol": "GameId"
     },
     {
       "id": "d788cd5f512be74d",
@@ -24,7 +27,10 @@
       "blockOrigin": "Rust",
       "variants": [
         "Fallout4"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "GameDataRole"
     },
     {
       "id": "c2ca3547c25211b0",
@@ -39,7 +45,10 @@
         "InvalidUtf8",
         "Parse",
         "InvalidRoleData"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataLoadError"
     },
     {
       "id": "6c8feae9819e3978",
@@ -52,7 +61,10 @@
         "Main",
         "Game",
         "LocalIgnore"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataRole"
     },
     {
       "id": "75942fa5f3d0fe80",
@@ -72,7 +84,10 @@
         "InvalidRoleData",
         "LocalIgnoreGenerated",
         "LocalIgnoreReset"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataDiagnosticKind"
     },
     {
       "id": "c010e0abe2580ab2",
@@ -83,7 +98,10 @@
       "blockOrigin": "Rust",
       "variants": [
         "Fallout4"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "GameDataRole"
     },
     {
       "id": "8c213f5606888cd0",
@@ -95,7 +113,10 @@
       "variants": [
         "UnsupportedGame",
         "NoUsableSource"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataInspectionError"
     },
     {
       "id": "baaff5630bc6d152",
@@ -111,7 +132,10 @@
         "InvalidSelectedData",
         "LocalIgnoreDefaultInvalid",
         "LocalIgnoreCreate"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataLoadError"
     },
     {
       "id": "6e782896f6e6efc1",
@@ -124,7 +148,10 @@
         "Main",
         "Game",
         "LocalIgnore"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataRole"
     },
     {
       "id": "d956269b815428f0",
@@ -137,7 +164,10 @@
         "Updated",
         "Previous",
         "Bundled"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataProvenance"
     },
     {
       "id": "97103d837ce461be",
@@ -149,7 +179,10 @@
       "variants": [
         "Main",
         "Game"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataRole"
     },
     {
       "id": "467825b86f31980c",
@@ -167,7 +200,10 @@
         "BackupVerification",
         "ReplacementPublication",
         "ReplacementDurabilityUnknown"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetError"
     },
     {
       "id": "45a481c1f7080f80",
@@ -182,7 +218,10 @@
         "Flush",
         "Sync",
         "Publish"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetPublicationStage"
     },
     {
       "id": "30c322625eae2fc6",
@@ -196,7 +235,10 @@
         "Generated",
         "ProceedWithoutIgnore",
         "ResetToDefault"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreYamlDataState"
     },
     {
       "id": "834cc04debdcc0cd",
@@ -221,7 +263,10 @@
           }
         ],
         "returnType": "Box<ExplicitYamlDataLoad>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_explicit_yaml_data"
     },
     {
       "id": "2f968cd2f6c16714",
@@ -238,7 +283,10 @@
           }
         ],
         "returnType": "ExplicitYamlDataLoadStatusDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_explicit_yaml_data"
     },
     {
       "id": "4dc74e6f6f5a1585",
@@ -255,7 +303,10 @@
           }
         ],
         "returnType": "Result<Box<ExplicitYamlDataSnapshot>>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_explicit_yaml_data"
     },
     {
       "id": "fff0494d03d2c5be",
@@ -272,7 +323,10 @@
           }
         ],
         "returnType": "ExplicitYamlDataGameId"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataSnapshot"
     },
     {
       "id": "5b7dbb2a67be5e4b",
@@ -289,7 +343,10 @@
           }
         ],
         "returnType": "YamlDataContentIdentityDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataSnapshot"
     },
     {
       "id": "a2a255891415c137",
@@ -306,7 +363,10 @@
           }
         ],
         "returnType": "ExplicitYamlDataGameRole"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataSnapshot"
     },
     {
       "id": "b566d94e02156d52",
@@ -323,7 +383,10 @@
           }
         ],
         "returnType": "YamlDataContentIdentityDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataSnapshot"
     },
     {
       "id": "58c1cb9047677930",
@@ -340,7 +403,10 @@
           }
         ],
         "returnType": "YamlDataContentIdentityDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataSnapshot"
     },
     {
       "id": "7333a449b0268f1e",
@@ -357,7 +423,10 @@
           }
         ],
         "returnType": "Box<YamlData>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataSnapshot"
     },
     {
       "id": "4edaf409db8e95cb",
@@ -374,7 +443,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataDiagnosticKind"
     },
     {
       "id": "f214164a9d4eb6f0",
@@ -395,7 +467,10 @@
           }
         ],
         "returnType": "Box<InstalledYamlDataInspectionOperation>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "inspect_installed_yaml_data"
     },
     {
       "id": "a089a390b0513c86",
@@ -412,7 +487,10 @@
           }
         ],
         "returnType": "Vec<InstalledYamlDataDiagnosticDto>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataInspection"
     },
     {
       "id": "79c00541e9c6b7c5",
@@ -429,7 +507,10 @@
           }
         ],
         "returnType": "ExplicitYamlDataGameId"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataInspection"
     },
     {
       "id": "4d5d79853dc4d389",
@@ -446,7 +527,10 @@
           }
         ],
         "returnType": "InspectedYamlDataFileDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataInspection"
     },
     {
       "id": "be75f7174e6e40c9",
@@ -463,7 +547,10 @@
           }
         ],
         "returnType": "InstalledYamlDataGameRole"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataInspection"
     },
     {
       "id": "c2fdc4d665765109",
@@ -480,7 +567,10 @@
           }
         ],
         "returnType": "InspectedYamlDataFileDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataInspection"
     },
     {
       "id": "9e812b792616c2f5",
@@ -497,7 +587,10 @@
           }
         ],
         "returnType": "InstalledYamlDataInspectionStatusDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "inspect_installed_yaml_data"
     },
     {
       "id": "2bb4e9453411c734",
@@ -514,7 +607,10 @@
           }
         ],
         "returnType": "Result<Box<InstalledYamlDataInspection>>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "inspect_installed_yaml_data"
     },
     {
       "id": "e6ac015edd41b7b0",
@@ -539,7 +635,10 @@
           }
         ],
         "returnType": "Box<InstalledYamlDataLoadOperation>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_installed_yaml_data"
     },
     {
       "id": "0c1607fcb9a1c354",
@@ -556,7 +655,10 @@
           }
         ],
         "returnType": "InstalledYamlDataLoadStatusDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_installed_yaml_data"
     },
     {
       "id": "88b627b389e2f391",
@@ -573,7 +675,10 @@
           }
         ],
         "returnType": "Result<Box<LocalIgnoreRecoveryPlan>>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_installed_yaml_data"
     },
     {
       "id": "df6e0230342a3d0b",
@@ -590,7 +695,10 @@
           }
         ],
         "returnType": "Result<Box<InstalledYamlDataSnapshot>>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_installed_yaml_data"
     },
     {
       "id": "52396b1071598365",
@@ -607,7 +715,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataProvenance"
     },
     {
       "id": "8f8c7430e730a71f",
@@ -624,7 +735,10 @@
           }
         ],
         "returnType": "Vec<InstalledYamlDataDiagnosticDto>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
     },
     {
       "id": "77c00497e2aee6c4",
@@ -641,7 +755,10 @@
           }
         ],
         "returnType": "ExplicitYamlDataGameId"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
     },
     {
       "id": "f9fd50d9f68b0a48",
@@ -658,7 +775,10 @@
           }
         ],
         "returnType": "InspectedYamlDataFileDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
     },
     {
       "id": "9d3723fd3e79f5a2",
@@ -675,7 +795,10 @@
           }
         ],
         "returnType": "InstalledYamlDataGameRole"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
     },
     {
       "id": "b94a65e01d41dfd6",
@@ -692,7 +815,10 @@
           }
         ],
         "returnType": "YamlDataContentIdentityDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
     },
     {
       "id": "01725a5af9a194c1",
@@ -709,7 +835,10 @@
           }
         ],
         "returnType": "LocalIgnoreYamlDataState"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
     },
     {
       "id": "94c44bd78fe1d419",
@@ -726,7 +855,10 @@
           }
         ],
         "returnType": "InspectedYamlDataFileDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
     },
     {
       "id": "86746f77e4a76a74",
@@ -743,7 +875,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
     },
     {
       "id": "eee7642555cd2405",
@@ -760,7 +895,10 @@
           }
         ],
         "returnType": "Box<YamlData>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
     },
     {
       "id": "b0d609f9ed78e468",
@@ -777,7 +915,10 @@
           }
         ],
         "returnType": "MainYamlVersionDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_main_yaml_version_with_bundled_dir"
     },
     {
       "id": "95a16a804c4e2d18",
@@ -794,7 +935,10 @@
           }
         ],
         "returnType": "YamlDataContentIdentityDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
     },
     {
       "id": "042ea4bfbf165c0c",
@@ -811,7 +955,10 @@
           }
         ],
         "returnType": "Vec<InstalledYamlDataDiagnosticDto>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
     },
     {
       "id": "6590701d939cbab8",
@@ -828,7 +975,10 @@
           }
         ],
         "returnType": "ExplicitYamlDataGameId"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
     },
     {
       "id": "80e5b767c9ce0968",
@@ -845,7 +995,10 @@
           }
         ],
         "returnType": "InspectedYamlDataFileDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
     },
     {
       "id": "60f29c15d9dab027",
@@ -862,7 +1015,10 @@
           }
         ],
         "returnType": "InstalledYamlDataGameRole"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
     },
     {
       "id": "42b6d46433453bfc",
@@ -879,7 +1035,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
     },
     {
       "id": "1a660dba5feab46c",
@@ -896,7 +1055,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
     },
     {
       "id": "16afc4754fba2126",
@@ -913,7 +1075,10 @@
           }
         ],
         "returnType": "InspectedYamlDataFileDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
     },
     {
       "id": "a6c74bbe8859ecc6",
@@ -930,7 +1095,10 @@
           }
         ],
         "returnType": "YamlDataContentIdentityDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
     },
     {
       "id": "e6b3bc86b5f014f4",
@@ -947,7 +1115,10 @@
           }
         ],
         "returnType": "Box<InstalledYamlDataSnapshot>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
     },
     {
       "id": "bbb8ff75577dc70c",
@@ -964,7 +1135,10 @@
           }
         ],
         "returnType": "Box<LocalIgnoreResetOperation>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
     },
     {
       "id": "0652d87cbbbad64b",
@@ -981,7 +1155,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
     },
     {
       "id": "66951d1fda4db345",
@@ -998,7 +1175,10 @@
           }
         ],
         "returnType": "YamlDataContentIdentityDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetConflict"
     },
     {
       "id": "05ba651b12e06072",
@@ -1015,7 +1195,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetConflict"
     },
     {
       "id": "14a7448d83b53b4e",
@@ -1032,7 +1215,10 @@
           }
         ],
         "returnType": "YamlDataContentIdentityDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetConflict"
     },
     {
       "id": "a431d055a0672c48",
@@ -1049,7 +1235,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetConflict"
     },
     {
       "id": "63529dbf6b96286a",
@@ -1066,7 +1255,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetConflict"
     },
     {
       "id": "3826799282880de4",
@@ -1083,7 +1275,10 @@
           }
         ],
         "returnType": "YamlDataContentIdentityDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetResult"
     },
     {
       "id": "063a438f552ae962",
@@ -1100,7 +1295,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetResult"
     },
     {
       "id": "f132e54d8b09b4af",
@@ -1117,7 +1315,10 @@
           }
         ],
         "returnType": "Vec<InstalledYamlDataDiagnosticDto>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetResult"
     },
     {
       "id": "8f79b89d012e692f",
@@ -1134,7 +1335,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetResult"
     },
     {
       "id": "7e952ca9b9e5564c",
@@ -1151,7 +1355,10 @@
           }
         ],
         "returnType": "YamlDataContentIdentityDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetResult"
     },
     {
       "id": "4badd555c22fea3b",
@@ -1168,7 +1375,10 @@
           }
         ],
         "returnType": "YamlDataContentIdentityDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetResult"
     },
     {
       "id": "a0f067057740682d",
@@ -1185,7 +1395,10 @@
           }
         ],
         "returnType": "Box<InstalledYamlDataSnapshot>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetResult"
     },
     {
       "id": "2ae9f534e125ea75",
@@ -1202,7 +1415,10 @@
           }
         ],
         "returnType": "LocalIgnoreResetStatusDto"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetOutcome"
     },
     {
       "id": "dd3197bb4ec7ff78",
@@ -1219,7 +1435,10 @@
           }
         ],
         "returnType": "Result<Box<LocalIgnoreResetConflict>>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetOutcome"
     },
     {
       "id": "66f714501c41701b",
@@ -1236,7 +1455,10 @@
           }
         ],
         "returnType": "Result<Box<LocalIgnoreResetResult>>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetOutcome"
     },
     {
       "id": "88a8165b0039518c",
@@ -1253,7 +1475,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreYamlDataState"
     },
     {
       "id": "583bb255b5c8b9ef",
@@ -1265,7 +1490,10 @@
       "signature": {
         "args": [],
         "returnType": null
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "reset_cache_stats"
     },
     {
       "id": "81e177b3b99a1dc3",
@@ -1290,7 +1518,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "persist_game_local_paths"
     },
     {
       "id": "7a1d4610ddf2ed0c",
@@ -1302,7 +1533,10 @@
       "signature": {
         "args": [],
         "returnType": null
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "clear_cache"
     },
     {
       "id": "0fb5927c6b83a48e",
@@ -1314,7 +1548,10 @@
       "signature": {
         "args": [],
         "returnType": "usize"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "cache_stats"
     },
     {
       "id": "0fcf0af39ea7b5ad",
@@ -1326,7 +1563,10 @@
       "signature": {
         "args": [],
         "returnType": "CacheStats"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "cache_stats"
     },
     {
       "id": "24056aa58898d14c",
@@ -1343,7 +1583,10 @@
           }
         ],
         "returnType": "&str"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "7b8c6eb9492e1c32",
@@ -1360,7 +1603,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "b762e701c2308c31",
@@ -1377,7 +1623,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "3c24543321b57b5c",
@@ -1394,7 +1643,10 @@
           }
         ],
         "returnType": "&str"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "05966ef90c85cc23",
@@ -1411,7 +1663,10 @@
           }
         ],
         "returnType": "&str"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "dfd8d8f7cbeb21d5",
@@ -1428,7 +1683,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "ab77b5a709c2a9b5",
@@ -1445,7 +1703,10 @@
           }
         ],
         "returnType": "&str"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "26435fc531e77832",
@@ -1462,7 +1723,10 @@
           }
         ],
         "returnType": "&str"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "2e87c5e95b5a857b",
@@ -1479,7 +1743,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "d7d71f9c020e0914",
@@ -1496,7 +1763,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "99206a8c09fdee2c",
@@ -1513,7 +1783,10 @@
           }
         ],
         "returnType": "&str"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "3e24780ccc7c3f21",
@@ -1530,7 +1803,10 @@
           }
         ],
         "returnType": "&str"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "d5710394d6d7f987",
@@ -1547,7 +1823,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "57a6a58d8f4c1904",
@@ -1564,7 +1843,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "eab1b7ed95e1be6f",
@@ -1581,7 +1863,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "908512331205c1b5",
@@ -1598,7 +1883,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "6a230c7003a1475b",
@@ -1615,7 +1903,10 @@
           }
         ],
         "returnType": "usize"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "f77188b181778c4f",
@@ -1632,7 +1923,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "5efd2c325f9c1a13",
@@ -1649,7 +1943,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "8493807e8eab5ab3",
@@ -1666,7 +1963,10 @@
           }
         ],
         "returnType": "Vec<bool>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "824098a1b1722d6f",
@@ -1683,7 +1983,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "ee10e462939ceef7",
@@ -1700,7 +2003,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "470756e70aa2cba5",
@@ -1717,7 +2023,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "5a0bbfca1379bcc9",
@@ -1734,7 +2043,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "57fd73a3ff2bfff2",
@@ -1751,7 +2063,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "e63c4bedc3ac3dcb",
@@ -1768,7 +2083,10 @@
           }
         ],
         "returnType": "usize"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "227e0eb9c09ecc8a",
@@ -1785,7 +2103,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "f6c7a42ae8d0bff9",
@@ -1802,7 +2123,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "2e5bb798ad0b8aa4",
@@ -1819,7 +2143,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "c6b2d3138d049cee",
@@ -1836,7 +2163,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "7075f233e94985e1",
@@ -1853,7 +2183,10 @@
           }
         ],
         "returnType": "Vec<YamlDataModSolutionEntry>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "bf6af92be013a78a",
@@ -1870,7 +2203,10 @@
           }
         ],
         "returnType": "Vec<YamlDataModSolutionEntry>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "744a68192d559802",
@@ -1887,7 +2223,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "97cec77a8d2e2e96",
@@ -1904,7 +2243,10 @@
           }
         ],
         "returnType": "Vec<SuspectErrorRuleDto>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "2a710d36e6fa02c3",
@@ -1921,7 +2263,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "f24e4f874c362e59",
@@ -1942,7 +2287,10 @@
           }
         ],
         "returnType": "Vec<SuspectStackCountRuleDto>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "c91ae72d650f0c51",
@@ -1959,7 +2307,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "0c519624cdf61bab",
@@ -1976,7 +2327,10 @@
           }
         ],
         "returnType": "Vec<SuspectStackRuleMetadataDto>"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "490b36f3d2d4090d",
@@ -1993,7 +2347,10 @@
           }
         ],
         "returnType": "&str"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "5ae5eff26e556d89",
@@ -2010,7 +2367,10 @@
           }
         ],
         "returnType": "&str"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "47dd37d8d5f95877",
@@ -2027,7 +2387,10 @@
           }
         ],
         "returnType": "&str"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "353d0963a6fdac14",
@@ -2035,7 +2398,10 @@
       "kind": "opaque",
       "bridgeModule": "config",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_explicit_yaml_data"
     },
     {
       "id": "860c9e31f59961af",
@@ -2043,7 +2409,10 @@
       "kind": "opaque",
       "bridgeModule": "config",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataSnapshot"
     },
     {
       "id": "b6007d4cc8315383",
@@ -2051,7 +2420,10 @@
       "kind": "opaque",
       "bridgeModule": "config",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataInspection"
     },
     {
       "id": "16e2ba0287122f6f",
@@ -2059,7 +2431,10 @@
       "kind": "opaque",
       "bridgeModule": "config",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "inspect_installed_yaml_data"
     },
     {
       "id": "e80c97d786e49c15",
@@ -2067,7 +2442,10 @@
       "kind": "opaque",
       "bridgeModule": "config",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_installed_yaml_data"
     },
     {
       "id": "dbe40950823ca347",
@@ -2075,7 +2453,10 @@
       "kind": "opaque",
       "bridgeModule": "config",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
     },
     {
       "id": "fd696b0479788803",
@@ -2083,7 +2464,10 @@
       "kind": "opaque",
       "bridgeModule": "config",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
     },
     {
       "id": "3f1a6fda380d25bb",
@@ -2091,7 +2475,10 @@
       "kind": "opaque",
       "bridgeModule": "config",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetConflict"
     },
     {
       "id": "a4bf40e5594d9afa",
@@ -2099,7 +2486,10 @@
       "kind": "opaque",
       "bridgeModule": "config",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetOutcome"
     },
     {
       "id": "28b913c45be7bcb2",
@@ -2107,7 +2497,10 @@
       "kind": "opaque",
       "bridgeModule": "config",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetResult"
     },
     {
       "id": "9719f25c94df3c38",
@@ -2115,7 +2508,10 @@
       "kind": "opaque",
       "bridgeModule": "config",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
     },
     {
       "id": "5be115198cf789f5",
@@ -2145,7 +2541,10 @@
           "name": "capacity",
           "type": "usize"
         }
-      ]
+      ],
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "CacheStats"
     },
     {
       "id": "29c8bda868e64cf0",
@@ -2179,7 +2578,10 @@
           "name": "message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataLoadError"
     },
     {
       "id": "25585cc0468a453a",
@@ -2201,7 +2603,10 @@
           "name": "error",
           "type": "ExplicitYamlDataLoadErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_explicit_yaml_data"
     },
     {
       "id": "fc5bd5cc414a2c56",
@@ -2223,7 +2628,10 @@
           "name": "ignore_path",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataRequest"
     },
     {
       "id": "7e6aeec3be30900e",
@@ -2253,7 +2661,10 @@
           "name": "byte_len",
           "type": "u64"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InspectedYamlDataFile"
     },
     {
       "id": "4f20ef33a68d7bff",
@@ -2295,7 +2706,10 @@
           "name": "message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataDiagnostic"
     },
     {
       "id": "31053421dd71dae8",
@@ -2325,7 +2739,10 @@
           "name": "message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataInspectionError"
     },
     {
       "id": "965e0b54154c8e65",
@@ -2347,7 +2764,10 @@
           "name": "error",
           "type": "InstalledYamlDataInspectionErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "inspect_installed_yaml_data"
     },
     {
       "id": "4b9506517c00a4db",
@@ -2385,7 +2805,10 @@
           "name": "message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataLoadError"
     },
     {
       "id": "985812440f95f7ad",
@@ -2411,7 +2834,10 @@
           "name": "error",
           "type": "InstalledYamlDataLoadErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_installed_yaml_data"
     },
     {
       "id": "e4dcff0e1be52937",
@@ -2465,7 +2891,10 @@
           "name": "message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetError"
     },
     {
       "id": "d81ba71bfa4db7d0",
@@ -2491,7 +2920,10 @@
           "name": "error",
           "type": "LocalIgnoreResetErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetOutcome"
     },
     {
       "id": "e4c0636b37aa1f97",
@@ -2513,7 +2945,10 @@
           "name": "error_message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_main_yaml_version_with_bundled_dir"
     },
     {
       "id": "326a5464aeff0639",
@@ -2539,7 +2974,10 @@
           "name": "main_error_contains_any",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "SuspectErrorRule"
     },
     {
       "id": "2462f4275406f47c",
@@ -2557,7 +2995,10 @@
           "name": "count",
           "type": "u32"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "SuspectStackCountRule"
     },
     {
       "id": "ed8cd7216e09c113",
@@ -2595,7 +3036,10 @@
           "name": "exclude_if_stack_contains_any",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "SuspectStackRule"
     },
     {
       "id": "1fc343fbefc7f2e0",
@@ -2613,7 +3057,10 @@
           "name": "byte_len",
           "type": "u64"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataContentIdentity"
     },
     {
       "id": "380c263525e94a83",
@@ -2631,7 +3078,10 @@
           "name": "all",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ModSolutionCriteria"
     },
     {
       "id": "af2958f6c983862b",
@@ -2661,7 +3111,10 @@
           "name": "description",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ModSolutionEntry"
     },
     {
       "id": "955a22a24ee7f2dd",
@@ -2673,7 +3126,10 @@
       "variants": [
         "MalformedResult",
         "OperationalFailure"
-      ]
+      ],
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookupError"
     },
     {
       "id": "d2d830b8ac7fbc53",
@@ -2686,7 +3142,10 @@
         "Disabled",
         "Missing",
         "Found"
-      ]
+      ],
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookupOutcome"
     },
     {
       "id": "34e356ed10413add",
@@ -2699,7 +3158,10 @@
         "Missing",
         "Found",
         "OperationalFailure"
-      ]
+      ],
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookupInMemoryReply"
     },
     {
       "id": "698065f32540d11b",
@@ -2716,7 +3178,10 @@
           }
         ],
         "returnType": "usize"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "cache_size"
     },
     {
       "id": "336c985bb9964955",
@@ -2737,7 +3202,10 @@
           }
         ],
         "returnType": "usize"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "clear_cache"
     },
     {
       "id": "8addcd26fa221004",
@@ -2754,7 +3222,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "close"
     },
     {
       "id": "9426645f5bd4a58b",
@@ -2771,7 +3242,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "get_game_table"
     },
     {
       "id": "40fdaa5f74b0786f",
@@ -2796,7 +3270,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "get_entries_batch"
     },
     {
       "id": "830b80633d19d947",
@@ -2821,7 +3298,10 @@
           }
         ],
         "returnType": "Vec<FormIdEntryDto>"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "get_entries_batch"
     },
     {
       "id": "9429287d2a83b2c4",
@@ -2846,7 +3326,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "get_entry"
     },
     {
       "id": "d9af7a7e92f0b398",
@@ -2871,7 +3354,10 @@
           }
         ],
         "returnType": "FormIdEntryDto"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "get_entry"
     },
     {
       "id": "2bc26dd58119a478",
@@ -2892,7 +3378,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "initialize"
     },
     {
       "id": "fe4f5a5b3c8d38b6",
@@ -2909,7 +3398,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "is_available"
     },
     {
       "id": "47cb6b65171178ba",
@@ -2934,7 +3426,10 @@
           }
         ],
         "returnType": "Box<DbPool>"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "DatabasePool"
     },
     {
       "id": "f4288dd77f48c72f",
@@ -2951,7 +3446,10 @@
           }
         ],
         "returnType": "FormIdValueLookupConstructionResultDto"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookup"
     },
     {
       "id": "0d69b0b22b9fbde8",
@@ -2963,7 +3461,10 @@
       "signature": {
         "args": [],
         "returnType": "Box<FormIdValueLookup>"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "disabled"
     },
     {
       "id": "d3d9018357b7889d",
@@ -2980,7 +3481,10 @@
           }
         ],
         "returnType": "Box<FormIdValueLookup>"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "in_memory"
     },
     {
       "id": "c69d1717bf7d1c64",
@@ -3005,7 +3509,10 @@
           }
         ],
         "returnType": "FormIdValueLookupExecutionResultDto"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "lookup"
     },
     {
       "id": "95bf308a567246e7",
@@ -3026,7 +3533,10 @@
           }
         ],
         "returnType": "FormIdValueLookupBatchExecutionResultDto"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "lookup_batch"
     },
     {
       "id": "4150711535568f88",
@@ -3043,7 +3553,10 @@
           }
         ],
         "returnType": "Box<FormIdValueLookup>"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "shared_pool"
     },
     {
       "id": "815a782f66901232",
@@ -3064,7 +3577,10 @@
           }
         ],
         "returnType": "Box<FormIdValueLookup>"
-      }
+      },
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "sqlite"
     },
     {
       "id": "dddc8330ff698837",
@@ -3072,7 +3588,10 @@
       "kind": "opaque",
       "bridgeModule": "database",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "DatabasePool"
     },
     {
       "id": "dca796d041e6d369",
@@ -3080,7 +3599,10 @@
       "kind": "opaque",
       "bridgeModule": "database",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookup"
     },
     {
       "id": "866877a98c3624dc",
@@ -3106,7 +3628,10 @@
           "name": "found",
           "type": "bool"
         }
-      ]
+      ],
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "DatabasePool"
     },
     {
       "id": "360ff525def88b92",
@@ -3132,7 +3657,10 @@
           "name": "error",
           "type": "FormIdValueLookupErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookup"
     },
     {
       "id": "5c08976f3b42149e",
@@ -3146,7 +3674,10 @@
           "name": "pairs",
           "type": "Vec<FormIdValueLookupKeyDto>"
         }
-      ]
+      ],
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookup"
     },
     {
       "id": "b3e18bf9899c7c68",
@@ -3168,7 +3699,10 @@
           "name": "error",
           "type": "FormIdValueLookupErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookup"
     },
     {
       "id": "c004995b34b6c45c",
@@ -3202,7 +3736,10 @@
           "name": "plugin",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookupError"
     },
     {
       "id": "97d4c71e6760fe72",
@@ -3228,7 +3765,10 @@
           "name": "error",
           "type": "FormIdValueLookupErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookup"
     },
     {
       "id": "42c6d7d6f9e0dea4",
@@ -3242,7 +3782,10 @@
           "name": "entries",
           "type": "Vec<FormIdValueLookupInMemoryEntryDto>"
         }
-      ]
+      ],
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookup"
     },
     {
       "id": "3b7621f5bf49007c",
@@ -3272,7 +3815,10 @@
           "name": "error_message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookupEntry"
     },
     {
       "id": "e6e6b1b967769d27",
@@ -3290,7 +3836,10 @@
           "name": "plugin",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookup"
     },
     {
       "id": "ae86867785f1b30d",
@@ -3316,7 +3865,10 @@
           "name": "value",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookupOutcome"
     },
     {
       "id": "572c98266d404834",
@@ -3337,7 +3889,10 @@
           }
         ],
         "returnType": "Result<String>"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "create_backup"
     },
     {
       "id": "e634facb1dfa09cf",
@@ -3358,7 +3913,10 @@
           }
         ],
         "returnType": "Result<bool>"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "backup_exists"
     },
     {
       "id": "d712dc77c40be28c",
@@ -3375,7 +3933,10 @@
           }
         ],
         "returnType": "Box<CxxBackupManager>"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "BackupManager"
     },
     {
       "id": "668ccd61b6def77c",
@@ -3396,7 +3957,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "remove_backup"
     },
     {
       "id": "a69e68a10525da92",
@@ -3417,7 +3981,10 @@
           }
         ],
         "returnType": "Result<u32>"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "restore_backup"
     },
     {
       "id": "525f265ed13a5b79",
@@ -3438,7 +4005,10 @@
           }
         ],
         "returnType": "Result<f64>"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "calculate_similarity"
     },
     {
       "id": "a0c197477ec619ba",
@@ -3455,7 +4025,8 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "unmappedReason": "Bridge-owned AUTOSCAN report discovery and modification-time sorting helper implemented with std::fs; no project Rust core symbol owns this behavior."
     },
     {
       "id": "7cac550435b163e0",
@@ -3480,7 +4051,10 @@
           }
         ],
         "returnType": "Result<String>"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "backup"
     },
     {
       "id": "c4809f59822838b9",
@@ -3501,7 +4075,10 @@
           }
         ],
         "returnType": "Box<CxxGameFilesManager>"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "GameFilesManager"
     },
     {
       "id": "2b0ef3efe34ed59f",
@@ -3526,7 +4103,10 @@
           }
         ],
         "returnType": "Result<String>"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "remove"
     },
     {
       "id": "c0c130fd973c9c62",
@@ -3551,7 +4131,10 @@
           }
         ],
         "returnType": "Result<String>"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "restore"
     },
     {
       "id": "0508354fbb86e6ed",
@@ -3563,7 +4146,10 @@
       "signature": {
         "args": [],
         "returnType": null
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "clear_cache"
     },
     {
       "id": "066dfacfc13f2844",
@@ -3575,7 +4161,10 @@
       "signature": {
         "args": [],
         "returnType": "usize"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "cache_size"
     },
     {
       "id": "2c51e41f9c630c28",
@@ -3587,7 +4176,10 @@
       "signature": {
         "args": [],
         "returnType": "CacheStats"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "cache_stats"
     },
     {
       "id": "1462d027a7cba8dd",
@@ -3604,7 +4196,10 @@
           }
         ],
         "returnType": "Result<Vec<String>>"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "collect_all"
     },
     {
       "id": "acf327fd1cc5bdc2",
@@ -3621,7 +4216,10 @@
           }
         ],
         "returnType": "Result<Vec<String>>"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "collect_crash_logs"
     },
     {
       "id": "8d5f7aa4b18d4e1f",
@@ -3646,7 +4244,10 @@
           }
         ],
         "returnType": "Box<CxxLogCollector>"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "LogCollector"
     },
     {
       "id": "e3994ba433157302",
@@ -3683,7 +4284,10 @@
           }
         ],
         "returnType": "Box<CxxLogCollector>"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "new_for_scan"
     },
     {
       "id": "593bc31a2e6e946e",
@@ -3700,7 +4304,10 @@
           }
         ],
         "returnType": "Result<String>"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "read_file"
     },
     {
       "id": "85a0993cf6b6c9bf",
@@ -3717,7 +4324,10 @@
           }
         ],
         "returnType": "Result<String>"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "read_file"
     },
     {
       "id": "f8228a618afe7c5e",
@@ -3729,7 +4339,10 @@
       "signature": {
         "args": [],
         "returnType": null
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "reset_cache_stats"
     },
     {
       "id": "f6e214ca909e6484",
@@ -3746,7 +4359,10 @@
           }
         ],
         "returnType": "TargetedResolutionDto"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "resolve_targeted_inputs"
     },
     {
       "id": "1b8ea71ffef356b6",
@@ -3767,7 +4383,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "write_file"
     },
     {
       "id": "ad281c6da3ef9e21",
@@ -3775,7 +4394,10 @@
       "kind": "opaque",
       "bridgeModule": "files",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "BackupManager"
     },
     {
       "id": "663e41f8b7c8e06b",
@@ -3783,7 +4405,10 @@
       "kind": "opaque",
       "bridgeModule": "files",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "GameFilesManager"
     },
     {
       "id": "168db9095a927ded",
@@ -3791,7 +4416,10 @@
       "kind": "opaque",
       "bridgeModule": "files",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "LogCollector"
     },
     {
       "id": "79758f9465821426",
@@ -3821,7 +4449,10 @@
           "name": "capacity",
           "type": "usize"
         }
-      ]
+      ],
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "CacheStats"
     },
     {
       "id": "4d50dc66f06f4349",
@@ -3843,7 +4474,10 @@
           "name": "rejected_reasons",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "TargetedResolution"
     },
     {
       "id": "8079b22313359649",
@@ -3860,7 +4494,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "is_restricted_path"
     },
     {
       "id": "a52ce294384eee2c",
@@ -3881,7 +4518,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "detect_xse_version"
     },
     {
       "id": "b2ef7e82ec676f1a",
@@ -3898,7 +4538,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "version",
+      "rustCrate": "classic-version-core",
+      "coreRustSymbol": "extract_pe_version"
     },
     {
       "id": "0db733da878a6b77",
@@ -3935,7 +4578,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "find_game_path"
     },
     {
       "id": "3ede3b6812f645bb",
@@ -3956,7 +4602,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "is_xse_installed"
     },
     {
       "id": "770d9538e2edcfa1",
@@ -3973,7 +4622,10 @@
           }
         ],
         "returnType": "GameVersionDto"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "parse"
     },
     {
       "id": "ef0c70d7c9e34cd5",
@@ -3990,7 +4642,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "is_valid_path"
     },
     {
       "id": "b76c250f7ff0c815",
@@ -4002,7 +4657,10 @@
       "signature": {
         "args": [],
         "returnType": "usize"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_all"
     },
     {
       "id": "e149b1e1b376458b",
@@ -4014,7 +4672,10 @@
       "signature": {
         "args": [],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_all"
     },
     {
       "id": "fb140bd2bff08658",
@@ -4031,7 +4692,10 @@
           }
         ],
         "returnType": "VersionInfoDto"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_by_id"
     },
     {
       "id": "6fe0011abbccb86a",
@@ -4052,7 +4716,10 @@
           }
         ],
         "returnType": "CrashgenConfigDto"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_crashgen_for_version"
     },
     {
       "id": "ec8a805f7df79178",
@@ -4069,7 +4736,10 @@
           }
         ],
         "returnType": "Vec<CrashgenConfigDto>"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_crashgen_versions"
     },
     {
       "id": "eaa1d3e716de57dd",
@@ -4086,7 +4756,10 @@
           }
         ],
         "returnType": "XseConfigDto"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "XseConfig"
     },
     {
       "id": "d752ad0fce3bad32",
@@ -4111,7 +4784,10 @@
           }
         ],
         "returnType": "MatchResultDto"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "match_version"
     },
     {
       "id": "448faab48e89fafb",
@@ -4145,7 +4821,10 @@
           "name": "download_url",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "CrashgenConfig"
     },
     {
       "id": "d1b0f340e22c3997",
@@ -4175,7 +4854,10 @@
           "name": "valid",
           "type": "bool"
         }
-      ]
+      ],
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "GameVersion"
     },
     {
       "id": "e6e363c7d77f3068",
@@ -4201,7 +4883,10 @@
           "name": "is_match",
           "type": "bool"
         }
-      ]
+      ],
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "MatchResult"
     },
     {
       "id": "e4dc25aa68d9392d",
@@ -4243,7 +4928,10 @@
           "name": "found",
           "type": "bool"
         }
-      ]
+      ],
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "VersionInfo"
     },
     {
       "id": "331c8fce40f2de72",
@@ -4277,7 +4965,10 @@
           "name": "found",
           "type": "bool"
         }
-      ]
+      ],
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "XseConfig"
     },
     {
       "id": "2c624a0ad743bab6",
@@ -4294,7 +4985,8 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "unmappedReason": "Bridge-owned Markdown-to-HTML presentation helper built on pulldown-cmark; no project Rust core symbol owns this CXX/Qt transport behavior."
     },
     {
       "id": "5feb28dc0ac98182",
@@ -4311,7 +5003,8 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "unmappedReason": "Bridge-owned CLASSIC report normalization helper for CXX/Qt Markdown presentation; no project Rust core symbol owns this behavior."
     },
     {
       "id": "9d00aa992ec8d24e",
@@ -4323,7 +5016,10 @@
       "signature": {
         "args": [],
         "returnType": null
-      }
+      },
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "init"
     },
     {
       "id": "5963705f0fe47784",
@@ -4340,7 +5036,10 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "debug"
     },
     {
       "id": "4aa8e25c9b047279",
@@ -4357,7 +5056,10 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "error"
     },
     {
       "id": "1df692abdc91370c",
@@ -4374,7 +5076,10 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "info"
     },
     {
       "id": "810e88fc7a340d77",
@@ -4403,7 +5108,10 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "log_startup_acceleration_status"
     },
     {
       "id": "93108031235dad9f",
@@ -4440,7 +5148,10 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "log_startup_binding_contract_failed"
     },
     {
       "id": "f00aef7eae80c452",
@@ -4465,7 +5176,10 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "log_startup_binding_contract_validated"
     },
     {
       "id": "fa62f5bb81c0d21e",
@@ -4482,7 +5196,10 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "trace"
     },
     {
       "id": "c442f4cab4a21cb1",
@@ -4499,7 +5216,10 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "warning"
     },
     {
       "id": "12499068ea3118fb",
@@ -4520,7 +5240,10 @@
           }
         ],
         "returnType": "Result<String>"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "create_backup"
     },
     {
       "id": "31c8949e2bfdacaf",
@@ -4541,7 +5264,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "list_versions"
     },
     {
       "id": "26c83f9c366e11ce",
@@ -4558,7 +5284,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "is_restricted_path"
     },
     {
       "id": "616cd4e4697c377e",
@@ -4579,7 +5308,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "find_docs_path"
     },
     {
       "id": "bf56cb23a9a4c33b",
@@ -4600,7 +5332,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "find_game_path"
     },
     {
       "id": "250ec3783388f0b4",
@@ -4621,7 +5356,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "run_all_checks"
     },
     {
       "id": "ba316345b137172b",
@@ -4646,7 +5384,10 @@
           }
         ],
         "returnType": "IniCheckResultDto"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "validate_ini_file"
     },
     {
       "id": "ba8eea7df3e21c2f",
@@ -4683,7 +5424,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "find_game_path"
     },
     {
       "id": "3e7173a2014af233",
@@ -4700,7 +5444,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "is_restricted_path"
     },
     {
       "id": "18b69f0fbebc68bc",
@@ -4717,7 +5464,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "is_valid_path"
     },
     {
       "id": "b1292e6711b8c02f",
@@ -4734,7 +5484,10 @@
           }
         ],
         "returnType": "Result<String>"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "parse_xse_log"
     },
     {
       "id": "67cdcd293768260c",
@@ -4751,7 +5504,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "validate_custom_scan_path"
     },
     {
       "id": "05e39e517d1d52d7",
@@ -4768,7 +5524,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "validate_path_exists"
     },
     {
       "id": "cda253fce9192d69",
@@ -4785,7 +5544,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "validate_is_directory"
     },
     {
       "id": "92a0085674e7c6c0",
@@ -4802,7 +5564,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "validate_is_file"
     },
     {
       "id": "cff13ceeb2ccbf58",
@@ -4823,7 +5588,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "validate_required_files"
     },
     {
       "id": "2cd440ef71f6e18d",
@@ -4840,7 +5608,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "resolve_registry_version_info"
     },
     {
       "id": "5318454026bb9a08",
@@ -4857,7 +5628,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "is_valid_path"
     },
     {
       "id": "0e07d936b2a180bb",
@@ -4891,7 +5665,10 @@
           "name": "has_issue",
           "type": "bool"
         }
-      ]
+      ],
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "IniCheckResult"
     },
     {
       "id": "1e32a6af317a1a05",
@@ -4903,7 +5680,10 @@
       "signature": {
         "args": [],
         "returnType": null
-      }
+      },
+      "ownerModule": "perf",
+      "rustCrate": "classic-perf-core",
+      "coreRustSymbol": "clear_metrics"
     },
     {
       "id": "c54fc5f0aaa38dac",
@@ -4920,7 +5700,10 @@
           }
         ],
         "returnType": "f64"
-      }
+      },
+      "ownerModule": "perf",
+      "rustCrate": "classic-perf-core",
+      "coreRustSymbol": "get_summary"
     },
     {
       "id": "34c276ef0854d166",
@@ -4937,7 +5720,10 @@
           }
         ],
         "returnType": "u32"
-      }
+      },
+      "ownerModule": "perf",
+      "rustCrate": "classic-perf-core",
+      "coreRustSymbol": "get_summary"
     },
     {
       "id": "cad43f6a47d24b68",
@@ -4949,7 +5735,10 @@
       "signature": {
         "args": [],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "perf",
+      "rustCrate": "classic-perf-core",
+      "coreRustSymbol": "get_summary"
     },
     {
       "id": "4a95ea2335786d28",
@@ -4970,7 +5759,10 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "ownerModule": "perf",
+      "rustCrate": "classic-perf-core",
+      "coreRustSymbol": "record_timing"
     },
     {
       "id": "5dab0d5bde8625d2",
@@ -4982,7 +5774,10 @@
       "signature": {
         "args": [],
         "returnType": null
-      }
+      },
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "clear_all"
     },
     {
       "id": "77b0845ef43c93bd",
@@ -4999,7 +5794,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "get"
     },
     {
       "id": "c2f6ab4b536b5048",
@@ -5011,7 +5809,10 @@
       "signature": {
         "args": [],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "get_game"
     },
     {
       "id": "9add6c9c98f5757f",
@@ -5028,7 +5829,10 @@
           }
         ],
         "returnType": "i32"
-      }
+      },
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "get"
     },
     {
       "id": "5802612afa59b272",
@@ -5045,7 +5849,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "get"
     },
     {
       "id": "6f449d41ad1928ed",
@@ -5057,7 +5864,10 @@
       "signature": {
         "args": [],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "is_gui_mode"
     },
     {
       "id": "0669dd57c46f1f6c",
@@ -5074,7 +5884,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "is_registered"
     },
     {
       "id": "b592f71cc1fd2e42",
@@ -5086,7 +5899,10 @@
       "signature": {
         "args": [],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "GAME"
     },
     {
       "id": "3e31f3113029e6b5",
@@ -5098,7 +5914,10 @@
       "signature": {
         "args": [],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "IS_GUI_MODE"
     },
     {
       "id": "a0bc7e5ba8d68686",
@@ -5119,7 +5938,10 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "register"
     },
     {
       "id": "f575cb39f9442655",
@@ -5136,7 +5958,10 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "set_game"
     },
     {
       "id": "241ace22ae8e7afa",
@@ -5157,7 +5982,10 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "register"
     },
     {
       "id": "50692b14d6258f80",
@@ -5178,7 +6006,10 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "register"
     },
     {
       "id": "ebd8e8a6d1633829",
@@ -5195,7 +6026,10 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "unregister"
     },
     {
       "id": "e0835029077faf11",
@@ -5207,7 +6041,10 @@
       "signature": {
         "args": [],
         "returnType": null
-      }
+      },
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
+      "coreRustSymbol": "get_runtime"
     },
     {
       "id": "a4648549d0405311",
@@ -5219,7 +6056,10 @@
       "signature": {
         "args": [],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
+      "coreRustSymbol": "get_runtime"
     },
     {
       "id": "b0a1036b892934c2",
@@ -5231,7 +6071,8 @@
       "signature": {
         "args": [],
         "returnType": null
-      }
+      },
+      "unmappedReason": "CXX API-symmetry no-op; the shared LazyLock runtime has no public core shutdown operation and lives for the process lifetime."
     },
     {
       "id": "7fcf8be2f8d9060d",
@@ -5243,7 +6084,10 @@
       "variants": [
         "ExecutableVersion",
         "InstallationLocation"
-      ]
+      ],
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "CheckType"
     },
     {
       "id": "d085560129c0184c",
@@ -5256,7 +6100,10 @@
         "Valid",
         "NotFound",
         "Unreadable"
-      ]
+      ],
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "EnbConfigResult"
     },
     {
       "id": "730a860079a4d20b",
@@ -5269,7 +6116,10 @@
         "Present",
         "Partial",
         "NotInstalled"
-      ]
+      ],
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "EnbResult"
     },
     {
       "id": "d0636e436245da31",
@@ -5282,7 +6132,10 @@
         "Error",
         "Warning",
         "Info"
-      ]
+      ],
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "IssueSeverity"
     },
     {
       "id": "8ebe0b5d73b2d5a5",
@@ -5295,7 +6148,10 @@
         "Info",
         "Warning",
         "Error"
-      ]
+      ],
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "TomlIssueSeverity"
     },
     {
       "id": "8cec4e60e88b3126",
@@ -5308,7 +6164,10 @@
         "Info",
         "Warning",
         "Error"
-      ]
+      ],
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "WryeSeverity"
     },
     {
       "id": "c2d88f97e660941f",
@@ -5325,7 +6184,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "scan_archive"
     },
     {
       "id": "69804ddb991c9894",
@@ -5342,7 +6204,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "scan_archive"
     },
     {
       "id": "063d86c932c21210",
@@ -5359,7 +6224,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "scan_archive"
     },
     {
       "id": "d0ad6e52f88a788d",
@@ -5376,7 +6244,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "scan_archive"
     },
     {
       "id": "6f8055797c607b03",
@@ -5393,7 +6264,10 @@
           }
         ],
         "returnType": "Ba2IssuesSummaryDto"
-      }
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "scan_archive"
     },
     {
       "id": "5fdd2c76ec1d62d2",
@@ -5414,7 +6288,10 @@
           }
         ],
         "returnType": "CrashgenCheckResultDto"
-      }
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "check"
     },
     {
       "id": "74f4720eb2c3d9d1",
@@ -5435,7 +6312,10 @@
           }
         ],
         "returnType": "Vec<TomlConfigIssueDto>"
-      }
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "check"
     },
     {
       "id": "a0b7b74ca9eb8e4a",
@@ -5456,7 +6336,10 @@
           }
         ],
         "returnType": "CrashgenReportSummaryDto"
-      }
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "check"
     },
     {
       "id": "f79d6ed4a4843260",
@@ -5477,7 +6360,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "check"
     },
     {
       "id": "eec34db48beaf639",
@@ -5498,7 +6384,10 @@
           }
         ],
         "returnType": "Vec<TomlConfigIssueDto>"
-      }
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "check"
     },
     {
       "id": "3579592d25c9540d",
@@ -5515,7 +6404,10 @@
           }
         ],
         "returnType": "EnbValidationResultDto"
-      }
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "validate"
     },
     {
       "id": "67d52d0e3e5715b7",
@@ -5536,7 +6428,10 @@
           }
         ],
         "returnType": "Vec<IniConfigIssueDto>"
-      }
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "detect_all_issues"
     },
     {
       "id": "dad771a5ac5d7783",
@@ -5557,7 +6452,10 @@
           }
         ],
         "returnType": "Result<String>"
-      }
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "validate_inis"
     },
     {
       "id": "164f9907a9bad5e6",
@@ -5582,7 +6480,10 @@
           }
         ],
         "returnType": "Vec<IntegrityCheckResultDto>"
-      }
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "run_all_checks"
     },
     {
       "id": "f476636ba97cee6c",
@@ -5603,7 +6504,10 @@
           }
         ],
         "returnType": "GameSetupIntakeDto"
-      }
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "run"
     },
     {
       "id": "ce2b902774c4ab1d",
@@ -5628,7 +6532,10 @@
           }
         ],
         "returnType": "Vec<WryeIssueRowDto>"
-      }
+      },
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "parse"
     },
     {
       "id": "ba593c60f4921ab7",
@@ -5662,7 +6569,10 @@
           "name": "has_issues",
           "type": "bool"
         }
-      ]
+      ],
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "BA2Issues"
     },
     {
       "id": "f99d4f29385dda09",
@@ -5680,7 +6590,10 @@
           "name": "issue_count",
           "type": "u32"
         }
-      ]
+      ],
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "check"
     },
     {
       "id": "1403d85def1ae0ef",
@@ -5714,7 +6627,10 @@
           "name": "installed_plugin_count",
           "type": "u32"
         }
-      ]
+      ],
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "CrashgenReport"
     },
     {
       "id": "bf1aa3d058515301",
@@ -5732,7 +6648,10 @@
           "name": "config",
           "type": "EnbConfigResult"
         }
-      ]
+      ],
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "EnbValidationResult"
     },
     {
       "id": "17ae6c60e6c3bbd6",
@@ -5786,7 +6705,10 @@
           "name": "game_executable",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "GameSetupIntakeResult"
     },
     {
       "id": "6c105c01ea5f0d3c",
@@ -5804,7 +6726,10 @@
           "name": "path",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "GameSetupPathUpdate"
     },
     {
       "id": "8fd138371890a42d",
@@ -5842,7 +6767,10 @@
           "name": "severity",
           "type": "IssueSeverity"
         }
-      ]
+      ],
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "ConfigIssue"
     },
     {
       "id": "ec3568d08ff543ed",
@@ -5864,7 +6792,10 @@
           "name": "check_type",
           "type": "CheckType"
         }
-      ]
+      ],
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "IntegrityCheckResult"
     },
     {
       "id": "61815dc13da0e187",
@@ -5902,7 +6833,10 @@
           "name": "severity",
           "type": "TomlIssueSeverity"
         }
-      ]
+      ],
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "TomlConfigIssue"
     },
     {
       "id": "45d754712dfa50dc",
@@ -5936,7 +6870,10 @@
           "name": "severity",
           "type": "WryeSeverity"
         }
-      ]
+      ],
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "WryeIssue"
     },
     {
       "id": "ec6f769e1fa773a7",
@@ -5950,7 +6887,10 @@
         "UnsupportedConfigurationVersion",
         "MalformedResult",
         "OperationalFailure"
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "AnalyzerErrorCode"
     },
     {
       "id": "af3dafea3acc6f3c",
@@ -5966,7 +6906,10 @@
         "PluginEvidence",
         "FormIdFinding",
         "NamedRecordFinding"
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "AnalyzerKind"
     },
     {
       "id": "85ecdba27cb0e319",
@@ -5978,7 +6921,10 @@
       "variants": [
         "Settings",
         "ErrorInformation"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "AutoscanReportPlacement"
     },
     {
       "id": "dc625dd379172967",
@@ -5991,7 +6937,10 @@
         "MainErrorRule",
         "StackRule",
         "DllInvolvement"
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectFindingKind"
     },
     {
       "id": "8d09ade750ccd944",
@@ -6004,7 +6953,10 @@
         "Og",
         "Vr",
         "Unknown"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ConfigLayout"
     },
     {
       "id": "ae5e2640e3a9f7bc",
@@ -6017,7 +6969,10 @@
         "Notice",
         "Issue",
         "Success"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "OutcomeKind"
     },
     {
       "id": "48978a1988cae0c4",
@@ -6030,7 +6985,10 @@
         "Info",
         "Warning",
         "Error"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "RuleSeverity"
     },
     {
       "id": "265e1c864e00bf37",
@@ -6043,7 +7001,10 @@
         "Missing",
         "Found",
         "OperationalFailure"
-      ]
+      ],
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookupInMemoryReply"
     },
     {
       "id": "fcec1e0fdd22e089",
@@ -6057,7 +7018,10 @@
         "Disabled",
         "Missing",
         "Found"
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDValueLookupStatus"
     },
     {
       "id": "961e055bf0a35267",
@@ -6069,7 +7033,10 @@
       "variants": [
         "Any",
         "All"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ModSolutionCriteria"
     },
     {
       "id": "1dd49731cac9d8b9",
@@ -6082,7 +7049,10 @@
         "Matched",
         "Missing",
         "GpuMismatch"
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceMatchState"
     },
     {
       "id": "d8f7976d67cc2ff2",
@@ -6094,7 +7064,10 @@
       "variants": [
         "Standard",
         "Targeted"
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanDiscoverySource"
     },
     {
       "id": "51ac768463d220fb",
@@ -6110,7 +7083,10 @@
         "LogStarted",
         "LogPhase",
         "LogFinished"
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Event"
     },
     {
       "id": "2d58772196446cdf",
@@ -6126,7 +7102,10 @@
         "FormIdDatabaseAccess",
         "Initialization",
         "InternalInvariant"
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "InfrastructureErrorStage"
     },
     {
       "id": "d73ec2ef99cf2f5c",
@@ -6139,7 +7118,10 @@
         "Succeeded",
         "Failed",
         "CancelledBeforeStart"
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LogDisposition"
     },
     {
       "id": "0d5a50d174756fd5",
@@ -6152,7 +7134,10 @@
         "Analysis",
         "ReportWrite",
         "UnsolvedLogsFinalization"
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LogFailureStage"
     },
     {
       "id": "55062b4069b3a08c",
@@ -6166,7 +7151,10 @@
         "Parse",
         "Analyze",
         "Finalize"
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ScanProgressPhase"
     },
     {
       "id": "5d861f1371811b6e",
@@ -6181,7 +7169,10 @@
         "LocalIgnoreResetBackupFailure",
         "LocalIgnoreResetReplacementFailure",
         "LocalIgnoreResetDurabilityUnknown"
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ResumeErrorKind"
     },
     {
       "id": "6fac94d2ef62d67d",
@@ -6197,7 +7188,10 @@
         "CancelledBeforeDiscovery",
         "Cancelled",
         "LocalIgnoreRecoveryRequired"
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanRunStatus"
     },
     {
       "id": "4f8ff71acf6e2763",
@@ -6213,7 +7207,10 @@
         "Path",
         "Name",
         "Emphasis"
-      ]
+      ],
+      "ownerModule": "scan_presentation",
+      "rustCrate": "classic-scan-presentation",
+      "coreRustSymbol": "DisplaySegment"
     },
     {
       "id": "2a505bf704804de4",
@@ -6228,7 +7225,10 @@
         "Warning",
         "Failure",
         "Success"
-      ]
+      ],
+      "ownerModule": "scan_presentation",
+      "rustCrate": "classic-scan-presentation",
+      "coreRustSymbol": "DisplaySeverity"
     },
     {
       "id": "17a9ae976a21c5f7",
@@ -6242,7 +7242,10 @@
         "Fallout4VR",
         "Skyrim",
         "Starfield"
-      ]
+      ],
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
+      "coreRustSymbol": "GameId"
     },
     {
       "id": "db9a2cfb2c4ea16e",
@@ -6262,7 +7265,10 @@
         "InvalidRoleData",
         "LocalIgnoreGenerated",
         "LocalIgnoreReset"
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "InstalledYamlDataRunDiagnosticKind"
     },
     {
       "id": "785fc3aab2cb7556",
@@ -6275,7 +7281,10 @@
         "Updated",
         "Previous",
         "Bundled"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataProvenance"
     },
     {
       "id": "48e45574328d0baf",
@@ -6287,7 +7296,10 @@
       "variants": [
         "Main",
         "Game"
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataRole"
     },
     {
       "id": "1ca5c72cad0943dd",
@@ -6299,7 +7311,10 @@
       "variants": [
         "ProceedWithoutIgnore",
         "ResetToDefault"
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryDecision"
     },
     {
       "id": "82770c04cc35ca65",
@@ -6314,7 +7329,10 @@
         "Flush",
         "Sync",
         "Publish"
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LocalIgnoreResetFailureStage"
     },
     {
       "id": "1ad54c3b19d79960",
@@ -6329,7 +7347,10 @@
         "RecoveryRequired",
         "ProceedWithoutIgnore",
         "ResetToDefault"
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LocalIgnoreRunState"
     },
     {
       "id": "768db92e85831061",
@@ -6350,7 +7371,10 @@
           }
         ],
         "returnType": "CrashSuspectAnalysisExecutionResultDto"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalyzer"
     },
     {
       "id": "b2938d1534829ea4",
@@ -6367,7 +7391,10 @@
           }
         ],
         "returnType": "CrashSuspectAnalyzerConstructionResultDto"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalyzer"
     },
     {
       "id": "a52417d5f9e83cc9",
@@ -6384,7 +7411,10 @@
           }
         ],
         "returnType": "Box<CxxCrashSuspectAnalyzer>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalyzer"
     },
     {
       "id": "50ad3eff99e57376",
@@ -6405,7 +7435,10 @@
           }
         ],
         "returnType": "CrashgenSettingsAnalysisExecutionResultDto"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalyzer"
     },
     {
       "id": "6e3ae84672f1f96b",
@@ -6422,7 +7455,10 @@
           }
         ],
         "returnType": "CrashgenSettingsAnalyzerConstructionResultDto"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalyzer"
     },
     {
       "id": "65319264323580ea",
@@ -6439,7 +7475,10 @@
           }
         ],
         "returnType": "Box<CxxCrashgenSettingsAnalyzer>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalyzer"
     },
     {
       "id": "997880f5a0bc006d",
@@ -6456,7 +7495,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LogParser"
     },
     {
       "id": "57a72189be1829d2",
@@ -6473,7 +7515,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "detect_vr_log"
     },
     {
       "id": "689dceccfd9be6f8",
@@ -6494,7 +7539,10 @@
           }
         ],
         "returnType": "FormIDFindingAnalysisExecutionResultDto"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalyzer"
     },
     {
       "id": "7d25ad92f2c615d5",
@@ -6511,7 +7559,10 @@
           }
         ],
         "returnType": "FormIDFindingAnalyzerConstructionResultDto"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalyzer"
     },
     {
       "id": "6ea8c0bd04ed0292",
@@ -6523,7 +7574,10 @@
       "signature": {
         "args": [],
         "returnType": "Box<CxxFormIDFindingAnalyzer>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalyzer"
     },
     {
       "id": "404672c761345c3a",
@@ -6540,7 +7594,10 @@
           }
         ],
         "returnType": "Box<CxxFormIDFindingAnalyzer>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalyzer"
     },
     {
       "id": "fdc0f6289d855f5c",
@@ -6561,7 +7618,10 @@
           }
         ],
         "returnType": "Box<CxxFormIDFindingAnalyzer>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalyzer"
     },
     {
       "id": "01c3e73e182b287b",
@@ -6582,7 +7642,10 @@
           }
         ],
         "returnType": "ModGuidanceAnalysisExecutionResultDto"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalyzer"
     },
     {
       "id": "3ae13a1cf0a920a7",
@@ -6599,7 +7662,10 @@
           }
         ],
         "returnType": "ModGuidanceAnalyzerConstructionResultDto"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalyzer"
     },
     {
       "id": "8e998a3a3c59e66b",
@@ -6616,7 +7682,10 @@
           }
         ],
         "returnType": "Box<CxxModGuidanceAnalyzer>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalyzer"
     },
     {
       "id": "ded80043dbedb369",
@@ -6637,7 +7706,10 @@
           }
         ],
         "returnType": "NamedRecordFindingAnalysisExecutionResultDto"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalyzer"
     },
     {
       "id": "ee18a8096bfe511f",
@@ -6654,7 +7726,10 @@
           }
         ],
         "returnType": "NamedRecordFindingAnalyzerConstructionResultDto"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalyzer"
     },
     {
       "id": "fed8112c3cf307c7",
@@ -6671,7 +7746,10 @@
           }
         ],
         "returnType": "Box<CxxNamedRecordFindingAnalyzer>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalyzer"
     },
     {
       "id": "21d3f385eae475d7",
@@ -6692,7 +7770,8 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "unmappedReason": "Foreign C++ ScanRunObserver callback declaration used only to transport serialized Rust events across CXX; it is not a Rust core symbol."
     },
     {
       "id": "a480a5d10a01a815",
@@ -6709,7 +7788,10 @@
           }
         ],
         "returnType": "Result<PapyrusStatsDto>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PapyrusAnalyzer"
     },
     {
       "id": "a41132de3ba754ad",
@@ -6726,7 +7808,10 @@
           }
         ],
         "returnType": "Box<CxxPapyrusAnalyzer>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PapyrusAnalyzer"
     },
     {
       "id": "00b3615f572fe030",
@@ -6743,7 +7828,10 @@
           }
         ],
         "returnType": "PapyrusStatsDto"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PapyrusAnalyzer"
     },
     {
       "id": "77d802abd118295b",
@@ -6760,7 +7848,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PapyrusAnalyzer"
     },
     {
       "id": "db3f53b518f9a4f4",
@@ -6777,7 +7868,10 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PapyrusAnalyzer"
     },
     {
       "id": "610a788c7852f628",
@@ -6794,7 +7888,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PapyrusAnalyzer"
     },
     {
       "id": "aa6e69d7d60eb97b",
@@ -6815,7 +7912,10 @@
           }
         ],
         "returnType": "PluginEvidenceAnalysisExecutionResultDto"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalyzer"
     },
     {
       "id": "c7d2c667f19e6ea6",
@@ -6832,7 +7932,10 @@
           }
         ],
         "returnType": "PluginEvidenceAnalyzerConstructionResultDto"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalyzer"
     },
     {
       "id": "f5cefbf986abfcbe",
@@ -6849,7 +7952,10 @@
           }
         ],
         "returnType": "Box<CxxPluginEvidenceAnalyzer>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalyzer"
     },
     {
       "id": "923b1638b9731c37",
@@ -6866,7 +7972,10 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Cancellation"
     },
     {
       "id": "90e001f80354e716",
@@ -6883,7 +7992,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Cancellation"
     },
     {
       "id": "47ab0d08f55f9a74",
@@ -6895,7 +8007,10 @@
       "signature": {
         "args": [],
         "returnType": "Box<ScanRunCancellation>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Cancellation"
     },
     {
       "id": "3e200e21dc680fbe",
@@ -6920,7 +8035,10 @@
           }
         ],
         "returnType": "Box<ScanRunContractExecution>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanRunContinuation"
     },
     {
       "id": "1473c74ad462f005",
@@ -6949,7 +8067,10 @@
           }
         ],
         "returnType": "Result<Box<ScanRunContractExecution>>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanRunContinuation"
     },
     {
       "id": "f1a23f880846dde0",
@@ -6974,7 +8095,10 @@
           }
         ],
         "returnType": "Box<ScanRunContractExecution>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "execute"
     },
     {
       "id": "8b7e216f62dd5d3b",
@@ -6991,7 +8115,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanRunContinuation"
     },
     {
       "id": "bcba7f5d14da68c4",
@@ -7008,7 +8135,10 @@
           }
         ],
         "returnType": "Result<Box<ScanRunContinuation>>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanRunContinuation"
     },
     {
       "id": "db795bbb11e180e8",
@@ -7025,7 +8155,10 @@
           }
         ],
         "returnType": "ScanRunContractExecutionResult"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "RunResult"
     },
     {
       "id": "e48cf5838f378baf",
@@ -7042,7 +8175,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "InfrastructureErrorStage"
     },
     {
       "id": "78b3cc5fa73a4c33",
@@ -7059,7 +8195,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "InstalledYamlDataRunDiagnosticKind"
     },
     {
       "id": "dd0f5440c631a842",
@@ -7076,7 +8215,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataProvenance"
     },
     {
       "id": "3e7dcba09e694224",
@@ -7093,7 +8235,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LocalIgnoreResetFailureStage"
     },
     {
       "id": "e339f7882fe08cf9",
@@ -7110,7 +8255,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LocalIgnoreRunState"
     },
     {
       "id": "10d97d2dc9c9c401",
@@ -7127,7 +8275,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LogDisposition"
     },
     {
       "id": "594f2973e02fe0ce",
@@ -7144,7 +8295,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LogFailureStage"
     },
     {
       "id": "ff0c442b4af6143e",
@@ -7169,7 +8323,10 @@
           }
         ],
         "returnType": "Result<Box<ScanRunRequest>>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Request"
     },
     {
       "id": "76006ede9dfe9790",
@@ -7198,7 +8355,10 @@
           }
         ],
         "returnType": "Result<Box<ScanRunRequest>>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Request"
     },
     {
       "id": "8551cdd2dd6c4917",
@@ -7219,7 +8379,10 @@
           }
         ],
         "returnType": "Result<Box<ScanRunRequest>>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Request"
     },
     {
       "id": "420c8577cd769536",
@@ -7244,7 +8407,10 @@
           }
         ],
         "returnType": "Result<Box<ScanRunRequest>>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Request"
     },
     {
       "id": "771e00e31d2bd5c2",
@@ -7256,7 +8422,10 @@
       "signature": {
         "args": [],
         "returnType": "Box<ScanRunUnsolvedLogs>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "StandardUnsolvedLogsIntent"
     },
     {
       "id": "8aeac5013aa69e9b",
@@ -7268,7 +8437,10 @@
       "signature": {
         "args": [],
         "returnType": "Box<ScanRunUnsolvedLogs>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "StandardUnsolvedLogsIntent"
     },
     {
       "id": "02f4a2242c9b36f5",
@@ -7285,7 +8457,10 @@
           }
         ],
         "returnType": "Result<Box<ScanRunUnsolvedLogs>>"
-      }
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "StandardUnsolvedLogsIntent"
     },
     {
       "id": "d4db63b323df9d90",
@@ -7293,7 +8468,10 @@
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalyzer"
     },
     {
       "id": "4703b74efa2672a7",
@@ -7301,7 +8479,10 @@
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalyzer"
     },
     {
       "id": "bf67a6d66d028b53",
@@ -7309,7 +8490,10 @@
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalyzer"
     },
     {
       "id": "22546314349a5a8a",
@@ -7317,7 +8501,10 @@
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalyzer"
     },
     {
       "id": "a3bba0a791a308d8",
@@ -7325,7 +8512,10 @@
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalyzer"
     },
     {
       "id": "19f1b50474db40e6",
@@ -7333,7 +8523,10 @@
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PapyrusAnalyzer"
     },
     {
       "id": "19fef74c8d0d7844",
@@ -7341,7 +8534,10 @@
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalyzer"
     },
     {
       "id": "7e171291b252d3dd",
@@ -7349,7 +8545,10 @@
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Cancellation"
     },
     {
       "id": "841c557115efd105",
@@ -7357,7 +8556,10 @@
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanRunContinuation"
     },
     {
       "id": "20927c22fed83137",
@@ -7365,7 +8567,10 @@
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "RunResult"
     },
     {
       "id": "9d43dc52d6749684",
@@ -7373,7 +8578,8 @@
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "C++"
+      "blockOrigin": "C++",
+      "unmappedReason": "Foreign C++ observer interface borrowed by the CXX adapter; the Rust core Observer trait is implemented by a separate bridge-local adapter, not by this C++ type."
     },
     {
       "id": "a899cfded87e21d4",
@@ -7381,7 +8587,10 @@
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Request"
     },
     {
       "id": "4f70a780c6f389a6",
@@ -7389,7 +8598,10 @@
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "StandardUnsolvedLogsIntent"
     },
     {
       "id": "7460d2a3d9eb44fb",
@@ -7411,7 +8623,10 @@
           "name": "message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "AnalyzerError"
     },
     {
       "id": "6b5d8730417eec6c",
@@ -7437,7 +8652,10 @@
           "name": "error",
           "type": "AnalyzerErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalysisResult"
     },
     {
       "id": "41b540d0979d96c6",
@@ -7455,7 +8673,10 @@
           "name": "call_stack",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalysisInput"
     },
     {
       "id": "7fff3b0fc48c72c8",
@@ -7469,7 +8690,10 @@
           "name": "findings",
           "type": "Vec<CrashSuspectFindingDto>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalysisResult"
     },
     {
       "id": "59985695352b9928",
@@ -7487,7 +8711,10 @@
           "name": "stack_rules",
           "type": "Vec<CrashSuspectStackRuleDto>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalyzer"
     },
     {
       "id": "4fb21f2411542b83",
@@ -7509,7 +8736,10 @@
           "name": "error",
           "type": "AnalyzerErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalyzer"
     },
     {
       "id": "4d08241bfb685ecb",
@@ -7547,7 +8777,10 @@
           "name": "severity",
           "type": "i32"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectFinding"
     },
     {
       "id": "762ec9ed13896eb0",
@@ -7573,7 +8806,10 @@
           "name": "main_error_contains_any",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "SuspectErrorRule"
     },
     {
       "id": "f8a00f8f64f325b5",
@@ -7591,7 +8827,10 @@
           "name": "count",
           "type": "usize"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "SuspectStackCountRule"
     },
     {
       "id": "e7da5285f6b077f8",
@@ -7633,7 +8872,10 @@
           "name": "stack_contains_at_least",
           "type": "Vec<CrashSuspectStackCountRuleDto>"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "SuspectStackRule"
     },
     {
       "id": "9b4543106d933b14",
@@ -7703,7 +8945,10 @@
           "name": "actual",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenExpectationOutcome"
     },
     {
       "id": "7e45bc7ac1be0f8e",
@@ -7729,7 +8974,10 @@
           "name": "value",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "CrashgenSettingsSnapshot"
     },
     {
       "id": "ce187e85df00ac6b",
@@ -7755,7 +9003,10 @@
           "name": "error",
           "type": "AnalyzerErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalysisResult"
     },
     {
       "id": "6d94354720a39a71",
@@ -7793,7 +9044,10 @@
           "name": "config_layout",
           "type": "CrashgenConfigLayout"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalysisInput"
     },
     {
       "id": "7fa662ff3e46b0c5",
@@ -7811,7 +9065,10 @@
           "name": "disabled_setting_notices",
           "type": "Vec<DisabledSettingNoticeDto>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalysisResult"
     },
     {
       "id": "2b468bc86eb00370",
@@ -7849,7 +9106,10 @@
           "name": "settings_rules_json",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalyzer"
     },
     {
       "id": "d75f50d970f14b4d",
@@ -7871,7 +9131,10 @@
           "name": "error",
           "type": "AnalyzerErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalyzer"
     },
     {
       "id": "6944744ebbb7e4de",
@@ -7885,7 +9148,10 @@
           "name": "setting_name",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "DisabledSettingNotice"
     },
     {
       "id": "0ea85cd7a4b6a5fb",
@@ -7927,7 +9193,10 @@
           "name": "severity",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ConfigIssue"
     },
     {
       "id": "6e77a9e1d9541360",
@@ -7953,7 +9222,10 @@
           "name": "error",
           "type": "AnalyzerErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalysisResult"
     },
     {
       "id": "48f6fbdd9235bd22",
@@ -7971,7 +9243,10 @@
           "name": "plugins",
           "type": "Vec<FormIDPluginDto>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalysisInput"
     },
     {
       "id": "a3856cf8f6be5926",
@@ -7985,7 +9260,10 @@
           "name": "findings",
           "type": "Vec<FormIDFindingDto>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalysisResult"
     },
     {
       "id": "172a534212badf25",
@@ -8007,7 +9285,10 @@
           "name": "error",
           "type": "AnalyzerErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalyzer"
     },
     {
       "id": "c3aea1f2c53cfc93",
@@ -8045,7 +9326,10 @@
           "name": "value",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFinding"
     },
     {
       "id": "70f4c969d985e22e",
@@ -8075,7 +9359,10 @@
           "name": "error_message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookupEntry"
     },
     {
       "id": "16758b137ae088f8",
@@ -8093,7 +9380,10 @@
           "name": "prefix",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDPlugin"
     },
     {
       "id": "fe3157d10e6b8468",
@@ -8135,7 +9425,10 @@
           "name": "gpu_mismatch_warning",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ImportantModGuidance"
     },
     {
       "id": "69b1449c33eeaab1",
@@ -8185,7 +9478,10 @@
           "name": "link",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModConflictGuidance"
     },
     {
       "id": "c6b830591749db47",
@@ -8211,7 +9507,10 @@
           "name": "error",
           "type": "AnalyzerErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalysisResult"
     },
     {
       "id": "508d6e3b22ee63e7",
@@ -8237,7 +9536,10 @@
           "name": "xse_modules",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalysisInput"
     },
     {
       "id": "46a48b1b36ce4822",
@@ -8263,7 +9565,10 @@
           "name": "important_mods",
           "type": "Vec<ImportantModGuidanceDto>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalysisResult"
     },
     {
       "id": "f3580339444423d5",
@@ -8289,7 +9594,10 @@
           "name": "important_mods",
           "type": "Vec<ModGuidanceImportantModConfigurationDto>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalyzer"
     },
     {
       "id": "c80002d8a3e7b3a7",
@@ -8311,7 +9619,10 @@
           "name": "error",
           "type": "AnalyzerErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalyzer"
     },
     {
       "id": "45cf99e3f023bb5a",
@@ -8357,7 +9668,10 @@
           "name": "link",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ModConflictEntry"
     },
     {
       "id": "6aa94f829e72f06c",
@@ -8403,7 +9717,10 @@
           "name": "exclude_when_plugin_any",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "CoreModEntry"
     },
     {
       "id": "ed60b8f11bb8599e",
@@ -8421,7 +9738,10 @@
           "name": "id",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalysisInput"
     },
     {
       "id": "6375a8f52b907c74",
@@ -8455,7 +9775,10 @@
           "name": "description",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ModSolutionEntry"
     },
     {
       "id": "847e1a3f99e995fc",
@@ -8485,7 +9808,10 @@
           "name": "matched_plugin_ids",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModSolutionGuidance"
     },
     {
       "id": "f8945bac678ecaa0",
@@ -8511,7 +9837,10 @@
           "name": "error",
           "type": "AnalyzerErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalysisResult"
     },
     {
       "id": "3d55e037871f72a3",
@@ -8525,7 +9854,10 @@
           "name": "crash_lines",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalysisInput"
     },
     {
       "id": "c37a62fb49f26295",
@@ -8539,7 +9871,10 @@
           "name": "findings",
           "type": "Vec<NamedRecordFindingDto>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalysisResult"
     },
     {
       "id": "fea1f9e52eb0eb49",
@@ -8557,7 +9892,10 @@
           "name": "ignored_records",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalyzer"
     },
     {
       "id": "156eb8732e58b00d",
@@ -8579,7 +9917,10 @@
           "name": "error",
           "type": "AnalyzerErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalyzer"
     },
     {
       "id": "2b0ac3bc94081e21",
@@ -8597,7 +9938,10 @@
           "name": "occurrences",
           "type": "u32"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFinding"
     },
     {
       "id": "668e1b029522e8b3",
@@ -8631,7 +9975,10 @@
           "name": "dumps_stacks_ratio",
           "type": "f64"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PapyrusStats"
     },
     {
       "id": "9c82ff3b30e1c2d1",
@@ -8657,7 +10004,10 @@
           "name": "error",
           "type": "AnalyzerErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalysisResult"
     },
     {
       "id": "997085eb0ecef6fe",
@@ -8675,7 +10025,10 @@
           "name": "plugins",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalysisInput"
     },
     {
       "id": "94a5ec11a8b1a70b",
@@ -8689,7 +10042,10 @@
           "name": "evidence",
           "type": "Vec<PluginEvidenceDto>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalysisResult"
     },
     {
       "id": "11d94ca071c64892",
@@ -8703,7 +10059,10 @@
           "name": "ignored_plugins",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalyzer"
     },
     {
       "id": "5aa7722a75cca7e7",
@@ -8725,7 +10084,10 @@
           "name": "error",
           "type": "AnalyzerErrorDto"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalyzer"
     },
     {
       "id": "54f9de9ccb9d0060",
@@ -8743,7 +10105,10 @@
           "name": "occurrences",
           "type": "u32"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidence"
     },
     {
       "id": "7f21c3f07683bec8",
@@ -8793,7 +10158,10 @@
           "name": "max_concurrent",
           "type": "usize"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Configuration"
     },
     {
       "id": "2188ae79d262bd02",
@@ -8819,7 +10187,10 @@
           "name": "searched_locations",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanDiscoveryResult"
     },
     {
       "id": "8fc4ea858ed62e22",
@@ -8869,7 +10240,10 @@
           "name": "display_lines",
           "type": "Vec<ScanRunDisplayLine>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Event"
     },
     {
       "id": "24f1a81c7250876f",
@@ -8915,7 +10289,10 @@
           "name": "recovery_prompt",
           "type": "ScanRunRecoveryPrompt"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "RunResult"
     },
     {
       "id": "28360bc4ad49662b",
@@ -8941,7 +10318,10 @@
           "name": "path",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "InfrastructureError"
     },
     {
       "id": "8d16b68e65cb409c",
@@ -8959,7 +10339,10 @@
           "name": "message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LogFailure"
     },
     {
       "id": "893c36f80ef68c51",
@@ -9025,7 +10408,10 @@
           "name": "suspect_count",
           "type": "usize"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LogResult"
     },
     {
       "id": "6f699e1d4081f7e3",
@@ -9043,7 +10429,10 @@
           "name": "reason",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanRejectedInput"
     },
     {
       "id": "70d603c217c3cd76",
@@ -9121,7 +10510,10 @@
           "name": "replacement_identity",
           "type": "ScanRunYamlDataContentIdentityDto"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ResumeError"
     },
     {
       "id": "0d53fcc05979fa65",
@@ -9195,7 +10587,10 @@
           "name": "logs",
           "type": "Vec<ScanRunContractLogResult>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "RunResult"
     },
     {
       "id": "a7294d8a252b0b2e",
@@ -9241,7 +10636,10 @@
           "name": "fatal_errors",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanSetupResult"
     },
     {
       "id": "95a8829b439c6f88",
@@ -9259,7 +10657,10 @@
           "name": "segments",
           "type": "Vec<ScanRunDisplaySegment>"
         }
-      ]
+      ],
+      "ownerModule": "scan_presentation",
+      "rustCrate": "classic-scan-presentation",
+      "coreRustSymbol": "DisplayLine"
     },
     {
       "id": "96859cdfda9f3705",
@@ -9285,7 +10686,10 @@
           "name": "count",
           "type": "u64"
         }
-      ]
+      ],
+      "ownerModule": "scan_presentation",
+      "rustCrate": "classic-scan-presentation",
+      "coreRustSymbol": "DisplaySegment"
     },
     {
       "id": "bed961986b7dfb6e",
@@ -9315,7 +10719,10 @@
           "name": "byte_len",
           "type": "u64"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InspectedYamlDataFile"
     },
     {
       "id": "bf911e575ada1446",
@@ -9357,7 +10764,10 @@
           "name": "message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "InstalledYamlDataRunDiagnostic"
     },
     {
       "id": "453cd25252d2362f",
@@ -9399,7 +10809,10 @@
           "name": "local_ignore_reset",
           "type": "ScanRunLocalIgnoreResetRunDataDto"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "InstalledYamlDataRunData"
     },
     {
       "id": "e0e0fec08acd4c5b",
@@ -9429,7 +10842,10 @@
           "name": "replacement_identity",
           "type": "ScanRunYamlDataContentIdentityDto"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LocalIgnoreResetRunData"
     },
     {
       "id": "92ccebfd8d784717",
@@ -9455,7 +10871,10 @@
           "name": "available",
           "type": "bool"
         }
-      ]
+      ],
+      "ownerModule": "scan_presentation",
+      "rustCrate": "classic-scan-presentation",
+      "coreRustSymbol": "RecoveryDecisionDescription"
     },
     {
       "id": "54164d0fad3f13e3",
@@ -9473,7 +10892,10 @@
           "name": "decisions",
           "type": "Vec<ScanRunRecoveryDecisionDescription>"
         }
-      ]
+      ],
+      "ownerModule": "scan_presentation",
+      "rustCrate": "classic-scan-presentation",
+      "coreRustSymbol": "RecoveryPrompt"
     },
     {
       "id": "9b28bab3cd0970b5",
@@ -9499,7 +10921,10 @@
           "name": "details",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanSetupCheck"
     },
     {
       "id": "f2145ca368ac9cbd",
@@ -9541,7 +10966,10 @@
           "name": "xse_log_path",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanSetupContext"
     },
     {
       "id": "8ce956fd6e9c6003",
@@ -9559,7 +10987,10 @@
           "name": "path",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanSetupPathUpdate"
     },
     {
       "id": "f4fe5d9760a8767f",
@@ -9589,7 +11020,10 @@
           "name": "configured_documents_root",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "StandardCrashLogScanSource"
     },
     {
       "id": "596a3783149095bf",
@@ -9603,7 +11037,10 @@
           "name": "inputs",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "TargetedCrashLogScanSource"
     },
     {
       "id": "cce056c122024147",
@@ -9621,7 +11058,10 @@
           "name": "byte_len",
           "type": "u64"
         }
-      ]
+      ],
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataContentIdentity"
     },
     {
       "id": "944ab5475ec76ef8",
@@ -9637,7 +11077,10 @@
         "GameLocal",
         "Test",
         "Cache"
-      ]
+      ],
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "YamlFile"
     },
     {
       "id": "0b5a4ad5368e8a02",
@@ -9649,7 +11092,10 @@
       "signature": {
         "args": [],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "cache_keys"
     },
     {
       "id": "8157906174d19c79",
@@ -9661,7 +11107,10 @@
       "signature": {
         "args": [],
         "returnType": "u64"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "cache_size"
     },
     {
       "id": "a514d3953ef4f930",
@@ -9673,7 +11122,10 @@
       "signature": {
         "args": [],
         "returnType": "SettingsCacheStats"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "cache_stats"
     },
     {
       "id": "311251adf834665c",
@@ -9685,7 +11137,10 @@
       "signature": {
         "args": [],
         "returnType": null
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "clear_cache"
     },
     {
       "id": "e31a74d851e93942",
@@ -9706,7 +11161,10 @@
           }
         ],
         "returnType": "Result<SettingsCoercedValue>"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "coerce_setting_value"
     },
     {
       "id": "4564cea4680b2678",
@@ -9723,7 +11181,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "invalidate"
     },
     {
       "id": "8ae656d87f7c75d9",
@@ -9740,7 +11201,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "is_cached"
     },
     {
       "id": "ae510a6e96cf2b0e",
@@ -9761,7 +11225,10 @@
           }
         ],
         "returnType": "Result<u32>"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "load_settings_async"
     },
     {
       "id": "84fee06859b0a2af",
@@ -9778,7 +11245,10 @@
           }
         ],
         "returnType": "Result<u32>"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "load_batch_async"
     },
     {
       "id": "ccf2092ef6a7af97",
@@ -9795,7 +11265,10 @@
           }
         ],
         "returnType": "Result<u32>"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "load_batch_sync"
     },
     {
       "id": "8a23d6d46fbc41e8",
@@ -9816,7 +11289,10 @@
           }
         ],
         "returnType": "Result<u32>"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "load_settings_sync"
     },
     {
       "id": "914acb0d0c76351f",
@@ -9828,7 +11304,10 @@
       "signature": {
         "args": [],
         "returnType": null
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "reset_cache_stats"
     },
     {
       "id": "727754cf675669f7",
@@ -9849,7 +11328,10 @@
           }
         ],
         "returnType": "Result<bool>"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "validate_setting_value"
     },
     {
       "id": "79201417da3a7764",
@@ -9870,7 +11352,10 @@
           }
         ],
         "returnType": "Result<Box<UserSettingsMigrationApplyHandle>>"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "apply"
     },
     {
       "id": "e076f2617c474b29",
@@ -9895,7 +11380,10 @@
           }
         ],
         "returnType": "Result<UserSettingsCommitResultDto>"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "commit"
     },
     {
       "id": "38462bb98e2fb110",
@@ -9920,7 +11408,10 @@
           }
         ],
         "returnType": "Result<UserSettingsCommitResultDto>"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "commit_frontend_geometry_transition"
     },
     {
       "id": "e2ad1a7f27fb5f5a",
@@ -9945,7 +11436,10 @@
           }
         ],
         "returnType": "Result<UserSettingsCommitResultDto>"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "commit"
     },
     {
       "id": "c420901386dcb35c",
@@ -9957,7 +11451,10 @@
       "signature": {
         "args": [],
         "returnType": "GuiSettingsSnapshotDto"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "published_defaults"
     },
     {
       "id": "3ae5a012f30378dd",
@@ -9978,7 +11475,10 @@
           }
         ],
         "returnType": "Result<Box<LegacyTuiStateImportHandle>>"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "import_legacy_tui_state"
     },
     {
       "id": "b8852a8a7ccc1741",
@@ -9995,7 +11495,10 @@
           }
         ],
         "returnType": "LegacyTuiStateImportOutcomeDto"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "LegacyTuiStateImportOutcome"
     },
     {
       "id": "684181a2023cb151",
@@ -10012,7 +11515,10 @@
           }
         ],
         "returnType": "UserSettingsMigrationApplyOutcomeDto"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsMigrationApplyOutcome"
     },
     {
       "id": "142913a8b27dd2d5",
@@ -10029,7 +11535,10 @@
           }
         ],
         "returnType": "CrashLogScanSettingsDto"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "CrashLogScanSettings"
     },
     {
       "id": "8a63df003627ca8b",
@@ -10046,7 +11555,10 @@
           }
         ],
         "returnType": "FrontendStateDto"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "FrontendState"
     },
     {
       "id": "be7beecfe544998c",
@@ -10063,7 +11575,10 @@
           }
         ],
         "returnType": "GameSetupSettingsDto"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "GameSetupSettings"
     },
     {
       "id": "99865408ab0b4232",
@@ -10080,7 +11595,10 @@
           }
         ],
         "returnType": "GuiSettingsSnapshotDto"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettings"
     },
     {
       "id": "ba33f05b060305af",
@@ -10097,7 +11615,10 @@
           }
         ],
         "returnType": "UpdatePreferencesDto"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UpdatePreferences"
     },
     {
       "id": "ceb7da066f8d0590",
@@ -10114,7 +11635,10 @@
           }
         ],
         "returnType": "UserSettingsMigrationPlanningOutcomeDto"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "plan_migration"
     },
     {
       "id": "f114c6437912ff97",
@@ -10135,7 +11659,10 @@
           }
         ],
         "returnType": "UserSettingsUpdatePreviewDto"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "preview_bootstrap"
     },
     {
       "id": "03a8fd971064fde1",
@@ -10156,7 +11683,10 @@
           }
         ],
         "returnType": "UserSettingsUpdatePreviewDto"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "preview_update"
     },
     {
       "id": "08917ee3d237e40b",
@@ -10177,7 +11707,10 @@
           }
         ],
         "returnType": "Result<LegacyTuiStateImportRestoreOutcomeDto>"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "restore"
     },
     {
       "id": "d1781f505576ec4d",
@@ -10198,7 +11731,10 @@
           }
         ],
         "returnType": "Result<UserSettingsMigrationRestoreOutcomeDto>"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "restore"
     },
     {
       "id": "c4407f3d73622218",
@@ -10215,7 +11751,10 @@
           }
         ],
         "returnType": "Result<UserSettingsMigrationPlanningOutcomeDto>"
-      }
+      },
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "reverse_in_memory"
     },
     {
       "id": "867131bd442e6121",
@@ -10232,7 +11771,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "as_str"
     },
     {
       "id": "580f6717bd5ba7bb",
@@ -10249,7 +11791,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "description"
     },
     {
       "id": "6d0d03498a2bb1b0",
@@ -10266,7 +11811,10 @@
           }
         ],
         "returnType": "usize"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "yaml_cache_stats"
     },
     {
       "id": "219c62a477ca8380",
@@ -10283,7 +11831,10 @@
           }
         ],
         "returnType": "YamlCacheStatsDto"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "yaml_cache_stats"
     },
     {
       "id": "5896777bf0f69809",
@@ -10300,7 +11851,10 @@
           }
         ],
         "returnType": null
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "clear_cache"
     },
     {
       "id": "dbdde37b38282be1",
@@ -10317,7 +11871,10 @@
           }
         ],
         "returnType": "Result<String>"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "dump_yaml"
     },
     {
       "id": "c269a555b9dde1d8",
@@ -10338,7 +11895,10 @@
           }
         ],
         "returnType": "YamlValue"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "get_setting"
     },
     {
       "id": "b2f3b4c4f10970ef",
@@ -10363,7 +11923,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "get_string_value"
     },
     {
       "id": "5decd278e9b58daf",
@@ -10384,7 +11947,10 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "get_vec_value"
     },
     {
       "id": "96ca042960ccb2c9",
@@ -10401,7 +11967,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "YamlOperations"
     },
     {
       "id": "f457a8a59811bca3",
@@ -10422,7 +11991,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "load_yaml_file"
     },
     {
       "id": "3e9ed67ac8950a25",
@@ -10434,7 +12006,10 @@
       "signature": {
         "args": [],
         "returnType": "Box<YamlOps>"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "new"
     },
     {
       "id": "3ebf1fc5db56922e",
@@ -10455,7 +12030,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "parse_yaml"
     },
     {
       "id": "94a2e92d425a7c4b",
@@ -10476,7 +12054,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "save_yaml_file"
     },
     {
       "id": "4138a9eeef265811",
@@ -10501,7 +12082,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "set_setting"
     },
     {
       "id": "1794e03a2a355763",
@@ -10526,7 +12110,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "set_setting"
     },
     {
       "id": "1949aadb1704dc02",
@@ -10551,7 +12138,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "set_setting"
     },
     {
       "id": "377caa356b71e76d",
@@ -10576,7 +12166,10 @@
           }
         ],
         "returnType": "Result<()>"
-      }
+      },
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "set_setting"
     },
     {
       "id": "7badbce78c203270",
@@ -10584,7 +12177,10 @@
       "kind": "opaque",
       "bridgeModule": "settings",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "import_legacy_tui_state"
     },
     {
       "id": "630aada96fe224e1",
@@ -10592,7 +12188,10 @@
       "kind": "opaque",
       "bridgeModule": "settings",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "apply"
     },
     {
       "id": "4c363ee3786a32b3",
@@ -10600,7 +12199,10 @@
       "kind": "opaque",
       "bridgeModule": "settings",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "YamlOperations"
     },
     {
       "id": "17d1eef26108ac8d",
@@ -10718,7 +12320,10 @@
           "name": "diagnostics",
           "type": "Vec<UserSettingsDiagnosticDto>"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "CrashLogScanSettings"
     },
     {
       "id": "af22cdd14c9a5cf1",
@@ -10736,7 +12341,10 @@
           "name": "path",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "CrashLogScanSettings"
     },
     {
       "id": "ee10cbce2e652a9a",
@@ -10806,7 +12414,10 @@
           "name": "diagnostics",
           "type": "Vec<UserSettingsDiagnosticDto>"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "FrontendState"
     },
     {
       "id": "5bf9e83ee7c33813",
@@ -10932,7 +12543,10 @@
           "name": "diagnostics",
           "type": "Vec<UserSettingsDiagnosticDto>"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "GameSetupSettings"
     },
     {
       "id": "6d15af291eab196a",
@@ -10958,7 +12572,10 @@
           "name": "frontend_state",
           "type": "FrontendStateDto"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettings"
     },
     {
       "id": "b91ef2da139516c2",
@@ -11024,7 +12641,10 @@
           "name": "settings_backup_path",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "LegacyTuiStateImportOutcome"
     },
     {
       "id": "1b78824669cf8026",
@@ -11050,7 +12670,10 @@
           "name": "actual_revision",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "LegacyTuiStateImportRestoreOutcome"
     },
     {
       "id": "310d1c205c55a783",
@@ -11080,7 +12703,10 @@
           "name": "capacity",
           "type": "u64"
         }
-      ]
+      ],
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "CacheStats"
     },
     {
       "id": "f78d79a6ed011c75",
@@ -11110,7 +12736,10 @@
           "name": "bool_val",
           "type": "bool"
         }
-      ]
+      ],
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "CoercedValue"
     },
     {
       "id": "615d61776d653242",
@@ -11180,7 +12809,10 @@
           "name": "original_content",
           "type": "Vec<u8>"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UpdatePreferences"
     },
     {
       "id": "54e7a4cc156c5504",
@@ -11210,7 +12842,10 @@
           "name": "diagnostics",
           "type": "Vec<UserSettingsUpdateDiagnosticDto>"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsCommitOutcome"
     },
     {
       "id": "0b2551f3acc13938",
@@ -11228,7 +12863,10 @@
           "name": "message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "Diagnostic"
     },
     {
       "id": "9d40cb5a9aea78c0",
@@ -11258,7 +12896,10 @@
           "name": "receipt",
           "type": "UserSettingsMigrationReceiptDto"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsMigrationApplyOutcome"
     },
     {
       "id": "c7e58b7da3dde86d",
@@ -11304,7 +12945,10 @@
           "name": "after",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "MigrationChange"
     },
     {
       "id": "45e78cb86f84aa12",
@@ -11386,7 +13030,10 @@
           "name": "diagnostics",
           "type": "Vec<UserSettingsDiagnosticDto>"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "MigrationPlanningOutcome"
     },
     {
       "id": "351a1f899d3760aa",
@@ -11448,7 +13095,10 @@
           "name": "published_revision",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsMigrationReceipt"
     },
     {
       "id": "96a863c46ca1a913",
@@ -11474,7 +13124,10 @@
           "name": "actual_revision",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsMigrationRestoreOutcome"
     },
     {
       "id": "1a848f887399dc55",
@@ -11500,7 +13153,10 @@
           "name": "message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UpdateDiagnostic"
     },
     {
       "id": "3aa44f3905210d92",
@@ -11726,7 +13382,10 @@
           "name": "max_concurrent_scans",
           "type": "i64"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsUpdate"
     },
     {
       "id": "2d703c9e9dfcfbde",
@@ -11760,7 +13419,10 @@
           "name": "u32_value",
           "type": "u32"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsUpdateField"
     },
     {
       "id": "8e77def1f30afb1a",
@@ -11794,7 +13456,10 @@
           "name": "diagnostics",
           "type": "Vec<UserSettingsUpdateDiagnosticDto>"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsUpdatePreview"
     },
     {
       "id": "5893592284b575c4",
@@ -11820,7 +13485,10 @@
           "name": "height",
           "type": "i64"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsUpdate"
     },
     {
       "id": "519937ab9742360f",
@@ -11858,7 +13526,10 @@
           "name": "height_origin",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "WindowGeometry"
     },
     {
       "id": "2aebfbea63f0f869",
@@ -11888,7 +13559,10 @@
           "name": "capacity",
           "type": "usize"
         }
-      ]
+      ],
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "YamlCacheStats"
     },
     {
       "id": "24c217dbe9791c8b",
@@ -11910,7 +13584,10 @@
           "name": "value_type",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "get_setting"
     },
     {
       "id": "d04a85fb7225176b",
@@ -11924,7 +13601,10 @@
         "Fallout4VR",
         "Skyrim",
         "Starfield"
-      ]
+      ],
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
+      "coreRustSymbol": "GameId"
     },
     {
       "id": "e5c87d8b488cc983",
@@ -11941,7 +13621,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
+      "coreRustSymbol": "as_str"
     },
     {
       "id": "43170371baf7eb95",
@@ -11962,7 +13645,8 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringMap transport wrapper; no project Rust core symbol owns this helper."
     },
     {
       "id": "728a8c257cb744a0",
@@ -11983,7 +13667,8 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringMap transport wrapper; no project Rust core symbol owns this helper."
     },
     {
       "id": "081d894ab034a74e",
@@ -12000,7 +13685,8 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringMap transport wrapper; no project Rust core symbol owns this helper."
     },
     {
       "id": "a69eaec534143467",
@@ -12017,7 +13703,8 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringMap transport wrapper; no project Rust core symbol owns this helper."
     },
     {
       "id": "ad342c1d98c14d3e",
@@ -12034,7 +13721,8 @@
           }
         ],
         "returnType": "usize"
-      }
+      },
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringMap transport wrapper; no project Rust core symbol owns this helper."
     },
     {
       "id": "f05b307ac6ad388e",
@@ -12051,7 +13739,8 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringMap transport wrapper; no project Rust core symbol owns this helper."
     },
     {
       "id": "4d2f2f96139b81a4",
@@ -12072,7 +13761,8 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringVecMap transport wrapper; no project Rust core symbol owns this helper."
     },
     {
       "id": "759e3005b388a292",
@@ -12093,7 +13783,8 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringVecMap transport wrapper; no project Rust core symbol owns this helper."
     },
     {
       "id": "4a274b7e62581001",
@@ -12110,7 +13801,8 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringVecMap transport wrapper; no project Rust core symbol owns this helper."
     },
     {
       "id": "0784638d48d0218e",
@@ -12127,7 +13819,8 @@
           }
         ],
         "returnType": "Vec<String>"
-      }
+      },
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringVecMap transport wrapper; no project Rust core symbol owns this helper."
     },
     {
       "id": "348e54bedb9a7f34",
@@ -12144,7 +13837,8 @@
           }
         ],
         "returnType": "usize"
-      }
+      },
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringVecMap transport wrapper; no project Rust core symbol owns this helper."
     },
     {
       "id": "ab070ea9a79b012d",
@@ -12152,7 +13846,8 @@
       "kind": "opaque",
       "bridgeModule": "types",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/types.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "unmappedReason": "CXX-only opaque wrapper for IndexMap<String, String>; no project Rust core type owns this transport."
     },
     {
       "id": "0f279da34178477c",
@@ -12160,7 +13855,8 @@
       "kind": "opaque",
       "bridgeModule": "types",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/types.rs",
-      "blockOrigin": "Rust"
+      "blockOrigin": "Rust",
+      "unmappedReason": "CXX-only opaque wrapper for IndexMap<String, Vec<String>>; no project Rust core type owns this transport."
     },
     {
       "id": "20888c90002f9464",
@@ -12185,7 +13881,10 @@
           }
         ],
         "returnType": "NotificationStatusDto"
-      }
+      },
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "check_app_notification"
     },
     {
       "id": "5b0f082531a28c27",
@@ -12210,7 +13909,10 @@
           }
         ],
         "returnType": "UpdateCheckResult"
-      }
+      },
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "get_latest_release"
     },
     {
       "id": "db4d594c980a264a",
@@ -12231,7 +13933,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "has_update"
     },
     {
       "id": "0eeee967af4cfa2d",
@@ -12248,7 +13953,10 @@
           }
         ],
         "returnType": "YamlUpdateReportDto"
-      }
+      },
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "apply_yaml_update_with_decision"
     },
     {
       "id": "ce26959df3d010dd",
@@ -12281,7 +13989,10 @@
           }
         ],
         "returnType": "YamlUpdateStatusDto"
-      }
+      },
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "check_yaml_update"
     },
     {
       "id": "fea7ac727c06be80",
@@ -12302,7 +14013,10 @@
           }
         ],
         "returnType": "YamlUpdateReportDto"
-      }
+      },
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "apply_yaml_data_update_with_decision"
     },
     {
       "id": "6332111bd05c50fe",
@@ -12319,7 +14033,10 @@
           }
         ],
         "returnType": "YamlUpdateStatusDto"
-      }
+      },
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "check_yaml_data_update"
     },
     {
       "id": "621b9554c0305916",
@@ -12331,7 +14048,10 @@
       "signature": {
         "args": [],
         "returnType": "YamlRollbackReportDto"
-      }
+      },
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "rollback_yaml_data_update"
     },
     {
       "id": "9b1acfc60be56622",
@@ -12348,7 +14068,10 @@
           }
         ],
         "returnType": "YamlRollbackOutcomeDto"
-      }
+      },
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "rollback_yaml_update"
     },
     {
       "id": "f0ae26428d3c795b",
@@ -12370,7 +14093,10 @@
           "name": "file_sha256",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "ApprovedUpdate"
     },
     {
       "id": "0fd15da635276348",
@@ -12416,7 +14142,10 @@
           "name": "error_message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "NotificationStatus"
     },
     {
       "id": "fdf05d86cfb41258",
@@ -12442,7 +14171,10 @@
           "name": "error_message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "GithubRelease"
     },
     {
       "id": "992cf44bfb2981ed",
@@ -12476,7 +14208,10 @@
           "name": "bundled_yaml_dir",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "apply_yaml_update_with_decision"
     },
     {
       "id": "8aef2c1cfc7c97cf",
@@ -12510,7 +14245,10 @@
           "name": "installed_minor",
           "type": "u32"
         }
-      ]
+      ],
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "ClientSchemaEntry"
     },
     {
       "id": "c7d8aa1ee5aed27e",
@@ -12532,7 +14270,10 @@
           "name": "error_message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "RollbackOutcome"
     },
     {
       "id": "6e14533e9d595fd3",
@@ -12558,7 +14299,10 @@
           "name": "failure_reasons",
           "type": "Vec<String>"
         }
-      ]
+      ],
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "rollback_yaml_data_update"
     },
     {
       "id": "ee8abce557bf4560",
@@ -12588,7 +14332,10 @@
           "name": "download_url",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "YamlManifestFile"
     },
     {
       "id": "c77712b2140e1ebe",
@@ -12618,7 +14365,10 @@
           "name": "failure_reason",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "FileInstallOutcome"
     },
     {
       "id": "7d9f8579b4faec8a",
@@ -12640,7 +14390,10 @@
           "name": "error_message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "YamlUpdateReport"
     },
     {
       "id": "10e249f28357e5aa",
@@ -12682,7 +14435,10 @@
           "name": "error_message",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "YamlUpdateStatus"
     },
     {
       "id": "b44331b1502123ea",
@@ -12696,7 +14452,10 @@
         "NextGen",
         "AnniversaryEdition",
         "Vr"
-      ]
+      ],
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "Fallout4Version"
     },
     {
       "id": "5dae9f5dc26da915",
@@ -12713,7 +14472,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "as_str"
     },
     {
       "id": "3a21b9406bb4c3cf",
@@ -12730,7 +14492,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "docs_folder_name"
     },
     {
       "id": "3dfc84f544e66a6b",
@@ -12747,7 +14512,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "exe_name"
     },
     {
       "id": "48a6955582f0fca2",
@@ -12764,7 +14532,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "is_standard"
     },
     {
       "id": "e8b952340bdccfbf",
@@ -12781,7 +14552,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "is_vr"
     },
     {
       "id": "6ae0917b1c2a9661",
@@ -12798,7 +14572,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "registry_id"
     },
     {
       "id": "9c9e99ae498e0e45",
@@ -12815,7 +14592,10 @@
           }
         ],
         "returnType": "u32"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "steam_app_id"
     },
     {
       "id": "76de962f36a6993c",
@@ -12840,7 +14620,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "NULL_VERSION"
     },
     {
       "id": "9d82340dd1a34d6b",
@@ -12857,7 +14640,10 @@
           }
         ],
         "returnType": "GameVersionDto"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "parse"
     },
     {
       "id": "c982b74740f8ee3d",
@@ -12869,7 +14655,10 @@
       "signature": {
         "args": [],
         "returnType": "usize"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_all"
     },
     {
       "id": "3837aef1f9dcf5d3",
@@ -12890,7 +14679,10 @@
           }
         ],
         "returnType": "Vec<VersionInfoDto>"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_all"
     },
     {
       "id": "adebe347a211dda5",
@@ -12902,7 +14694,10 @@
       "signature": {
         "args": [],
         "returnType": "Vec<String>"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_all"
     },
     {
       "id": "931c3651f7130049",
@@ -12919,7 +14714,10 @@
           }
         ],
         "returnType": "VersionInfoDto"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_by_id"
     },
     {
       "id": "a2cca2c61a1dfd3a",
@@ -12940,7 +14738,10 @@
           }
         ],
         "returnType": "CrashgenConfigDto"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_crashgen_for_version"
     },
     {
       "id": "768bf40c78fc5667",
@@ -12957,7 +14758,10 @@
           }
         ],
         "returnType": "Vec<CrashgenConfigDto>"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_crashgen_versions"
     },
     {
       "id": "c9980a87fd7f20d4",
@@ -12974,7 +14778,10 @@
           }
         ],
         "returnType": "XseConfigDto"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "XseConfig"
     },
     {
       "id": "647471140dada0d8",
@@ -12999,7 +14806,10 @@
           }
         ],
         "returnType": "MatchResultDto"
-      }
+      },
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "match_version"
     },
     {
       "id": "a3896f08d956320e",
@@ -13033,7 +14843,10 @@
           "name": "download_url",
           "type": "String"
         }
-      ]
+      ],
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "CrashgenConfig"
     },
     {
       "id": "69f123ef2717bdbe",
@@ -13063,7 +14876,10 @@
           "name": "valid",
           "type": "bool"
         }
-      ]
+      ],
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "GameVersion"
     },
     {
       "id": "008b083968da62f2",
@@ -13089,7 +14905,10 @@
           "name": "is_match",
           "type": "bool"
         }
-      ]
+      ],
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "MatchResult"
     },
     {
       "id": "aa5ac3996d1f24e9",
@@ -13131,7 +14950,10 @@
           "name": "found",
           "type": "bool"
         }
-      ]
+      ],
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "VersionInfo"
     },
     {
       "id": "6e53840a0f9ef5b7",
@@ -13165,7 +14987,10 @@
           "name": "found",
           "type": "bool"
         }
-      ]
+      ],
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "XseConfig"
     },
     {
       "id": "56c2a9c53f62ef8b",
@@ -13178,7 +15003,10 @@
         "NexusMods",
         "BethesdaNet",
         "ModDB"
-      ]
+      ],
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "ModSite"
     },
     {
       "id": "7aefe345782399f3",
@@ -13192,7 +15020,10 @@
         "Fallout4VR",
         "Skyrim",
         "Starfield"
-      ]
+      ],
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
+      "coreRustSymbol": "GameId"
     },
     {
       "id": "b9ec3ba45bfbad24",
@@ -13209,7 +15040,10 @@
           }
         ],
         "returnType": "Result<String>"
-      }
+      },
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "extract_domain"
     },
     {
       "id": "0950f5414356da6a",
@@ -13226,7 +15060,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "is_valid_url"
     },
     {
       "id": "7d9536f46f7a602a",
@@ -13243,7 +15080,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "base_url"
     },
     {
       "id": "0474e9d9d4c830e0",
@@ -13264,7 +15104,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "game_url"
     },
     {
       "id": "1c07ae6197b62a4e",
@@ -13281,7 +15124,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "name"
     },
     {
       "id": "18ea0cfdb5e17d7f",
@@ -13298,7 +15144,10 @@
           }
         ],
         "returnType": "Result<String>"
-      }
+      },
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "validate_url"
     },
     {
       "id": "e2dce70adc9aba7a",
@@ -13323,7 +15172,10 @@
           }
         ],
         "returnType": "Result<String>"
-      }
+      },
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "build_url_with_query"
     },
     {
       "id": "746d496c15af12af",
@@ -13335,7 +15187,10 @@
       "signature": {
         "args": [],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "get_user_agent"
     },
     {
       "id": "5920a39e7197ac87",
@@ -13352,7 +15207,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "get_user_agent_with_suffix"
     },
     {
       "id": "3f5f11c3df34c621",
@@ -13373,7 +15231,10 @@
           }
         ],
         "returnType": "Result<String>"
-      }
+      },
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "join_url"
     },
     {
       "id": "7c4723bac8969140",
@@ -13389,7 +15250,10 @@
         "SKSE64",
         "SKSEVR",
         "SFSE"
-      ]
+      ],
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "XseType"
     },
     {
       "id": "2396a15798a0b0b7",
@@ -13410,7 +15274,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "detect_xse_version"
     },
     {
       "id": "ecd913c0bf62192f",
@@ -13431,7 +15298,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "detect_xse_version"
     },
     {
       "id": "622499dfe357e2f2",
@@ -13452,7 +15322,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "is_xse_installed"
     },
     {
       "id": "866ec46b5dbb24ca",
@@ -13473,7 +15346,10 @@
           }
         ],
         "returnType": "bool"
-      }
+      },
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "is_xse_installed"
     },
     {
       "id": "d6aeb07b6b9d96e1",
@@ -13502,7 +15378,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "resolve_xse_folder_for_scan"
     },
     {
       "id": "fed1f3c1692a2596",
@@ -13519,7 +15398,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "dll_prefix"
     },
     {
       "id": "d7059d6d8a7ad764",
@@ -13540,7 +15422,10 @@
           }
         ],
         "returnType": "XseInfoDto"
-      }
+      },
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "get_xse_info"
     },
     {
       "id": "fc1c537a29272570",
@@ -13557,7 +15442,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "loader_name"
     },
     {
       "id": "faedc73b20514c24",
@@ -13574,7 +15462,10 @@
           }
         ],
         "returnType": "String"
-      }
+      },
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "from_game_id"
     },
     {
       "id": "3fea903f299b7e61",
@@ -13600,7 +15491,10 @@
           "name": "installed",
           "type": "bool"
         }
-      ]
+      ],
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "XseInfo"
     }
   ]
 }

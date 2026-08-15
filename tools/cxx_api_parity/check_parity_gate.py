@@ -23,18 +23,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from generate_baseline import (  # noqa: E402
+    CXX_CONTRACT_SCHEMA_VERSION,
+    CanonicalMappingError,
+    generate_cxx_parity_model,
     generate_diff_report,
-    parse_cxx_bridge_surface,
     render_diff_markdown,
+    validate_committed_canonical_metadata,
     write_json,
 )
-
 from parity_artifact_io import (
     artifacts_match,
     preserve_baseline_generated_at,
     sync_baseline_artifacts,
 )
-
 
 TRACKED_ARTIFACT_NAMES: tuple[str, ...] = (
     "parity_contract.json",
@@ -148,8 +149,26 @@ def main() -> int:
 
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
 
+    if (
+        not args.update_baseline
+        and contract.get("schema_version") != CXX_CONTRACT_SCHEMA_VERSION
+    ):
+        print(
+            "CXX parity contract schema is stale: expected "
+            f"{CXX_CONTRACT_SCHEMA_VERSION}, got {contract.get('schema_version')!r}. "
+            "Run with --update-baseline to perform the reviewed schema refresh.",
+            file=sys.stderr,
+        )
+        return 1
+
     # Fresh surface scan
-    current_surface = parse_cxx_bridge_surface(repo_root)
+    try:
+        current_surface = generate_cxx_parity_model(repo_root)
+        if not args.update_baseline:
+            validate_committed_canonical_metadata(contract, current_surface)
+    except CanonicalMappingError as error:
+        print(f"CXX canonical mapping validation failed: {error}", file=sys.stderr)
+        return 1
     diff_report = generate_diff_report(contract, current_surface)
 
     # Carry the committed timestamp forward when the bridge surface is
@@ -172,15 +191,13 @@ def main() -> int:
     # the reports, and the two-step `generate_baseline.py --write-baseline` bootstrap was the
     # only path that actually worked.
     #
-    # `schema_version` is carried forward rather than restamped, because a schema migration is a
-    # deliberate change to this tool and not something a baseline refresh should perform
-    # silently. Key order matches the committed file so an unchanged surface round-trips
-    # byte-identically.
+    # The schema version is owned by this generator, while key order matches the
+    # committed file so an unchanged surface round-trips byte-identically.
     if args.update_baseline:
         accepted_summary = diff_report["summary"]
         baseline_contract = {
             "generated_at_utc": current_surface["generated_at_utc"],
-            "schema_version": contract.get("schema_version", 1),
+            "schema_version": CXX_CONTRACT_SCHEMA_VERSION,
             "entries": current_surface["entries"],
         }
         preserve_baseline_generated_at(contract_path, baseline_contract)

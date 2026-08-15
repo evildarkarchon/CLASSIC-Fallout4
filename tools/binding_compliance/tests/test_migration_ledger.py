@@ -145,6 +145,16 @@ def test_binding_only_rows_and_cxx_policy_exception_remain_explicit() -> None:
         for entry in obligations
         if entry["sourceKind"] == "parity_row" and entry["participant"] == "cxx"
     ]
+    contract = json.loads(
+        (
+            REPO_ROOT
+            / "docs/implementation/cxx_api_parity/baseline/parity_contract.json"
+        ).read_text(encoding="utf-8")
+    )
+    contract_rows = {row["id"]: row for row in contract["entries"]}
+    obligations_by_row_id = {
+        entry["id"].removeprefix("parity:cxx:"): entry for entry in cxx_rows
+    }
     resource_exception = next(
         entry
         for entry in obligations
@@ -152,11 +162,31 @@ def test_binding_only_rows_and_cxx_policy_exception_remain_explicit() -> None:
         == "policy-exception:cxx:cxx-classic-resource-core-transitive-access"
     )
 
-    assert Counter(entry["participant"] for entry in binding_only) == {
+    assert Counter(
+        entry["participant"] for entry in binding_only if entry["participant"] != "cxx"
+    ) == {
         "node": 7,
         "python": 1,
     }
-    assert {entry["mappingOrigin"] for entry in cxx_rows} == {"cxx_bridge_declaration"}
+    assert set(obligations_by_row_id) == set(contract_rows)
+    for row_id, row in contract_rows.items():
+        obligation = obligations_by_row_id[row_id]
+        if "unmappedReason" not in row:
+            assert obligation["mappingOrigin"] == "canonical_rust"
+            assert obligation["classification"] == "runtime_verifiable"
+            assert obligation["target"]["familyId"] == row["ownerModule"]
+            continue
+
+        assert obligation["mappingOrigin"] == "binding_only"
+        declaration_only = row["kind"] != "function" or row["blockOrigin"] == "C++"
+        expected_classification = (
+            "structural_analyzer" if declaration_only else "runtime_verifiable"
+        )
+        assert obligation["classification"] == expected_classification
+        if not declaration_only:
+            assert obligation["target"]["familyId"] == (
+                f"cxx-binding:{row['bridgeModule']}"
+            )
     assert resource_exception["classification"] == "policy_exception"
 
 
