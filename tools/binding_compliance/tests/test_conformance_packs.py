@@ -13,6 +13,7 @@ from conformance.packs import (
     PackValidationError,
     discover_pack_paths,
     load_and_validate_pack,
+    load_prepared_run,
     materialize_run_plan,
 )
 
@@ -416,9 +417,40 @@ def test_each_materialization_is_fresh_and_never_exposes_the_oracle(
     }
     assert Path(first_plan["fixtureRoot"]).is_absolute()
     assert all(Path(path).is_absolute() for path in first_plan["fixtures"].values())
+    assert first_plan["sourcePaths"] == ["runner.py"]
     assert first_plan["scenarios"][0]["input"]["expected"] == "legitimate-input-field"
     assert "expected" not in first_plan["scenarios"][0]
     assert oracle_sentinel not in first.run_plan_path.read_text(encoding="utf-8")
+
+
+def test_materialized_run_can_be_authenticated_by_a_later_cli_process(
+    tmp_path: Path,
+) -> None:
+    """Receipt-only validation reloads the exact current immutable plan."""
+
+    pack_path = _write_pack(tmp_path, _valid_pack())
+    runner_path = tmp_path / "runner.py"
+    runner_path.write_text("# native launcher\n", encoding="utf-8")
+    _commit_repository(tmp_path)
+    pack = load_and_validate_pack(tmp_path, pack_path)
+    run = materialize_run_plan(
+        pack,
+        participant_id="node",
+        participant_role="semantic-adapter",
+        execution_instance_id="node",
+        source_paths=(runner_path,),
+        artifact_root=tmp_path / "tools" / "binding_compliance" / "artifacts",
+    )
+
+    reloaded = load_prepared_run(pack, run.run_plan_path, receipt_path=run.receipt_path)
+
+    assert reloaded.has_trusted_provenance
+    assert reloaded.canonical_json == run.canonical_json
+    assert reloaded.receipt_path == run.receipt_path
+
+    runner_path.write_text("# changed native launcher\n", encoding="utf-8")
+    with pytest.raises(MaterializationError, match="source identity"):
+        load_prepared_run(pack, run.run_plan_path, receipt_path=run.receipt_path)
 
 
 def test_source_identity_tracks_only_declared_current_runner_inputs(

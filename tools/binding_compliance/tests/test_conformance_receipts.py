@@ -10,6 +10,8 @@ from typing import Any
 
 import pytest
 from conformance import (
+    CoveragePredicate,
+    FamilyCoveragePolicy,
     load_and_validate_pack,
     materialize_run_plan,
     validate_prepared_run,
@@ -927,3 +929,97 @@ def test_report_output_is_deterministic_in_tracked_scenario_order(
         "second-case",
     ]
     assert first_report.json_text() == second_report.json_text()
+
+
+def test_matching_receipt_derives_facts_from_family_owned_predicates(
+    tmp_path: Path,
+) -> None:
+    """Coverage facts come from the trusted action and normalized observation."""
+
+    pack, run = _prepare_run(tmp_path)
+    receipt = _completed_receipt(run)
+    run.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+    policy = FamilyCoveragePolicy(
+        family_id="example-family",
+        predicates=(
+            CoveragePredicate(
+                id="example.completed",
+                capability_id="example.execute",
+                action="example.execute",
+                observation_family="result",
+                rust_symbols=("Request", "execute"),
+                matches=lambda observation: observation.get("status") == "completed",
+            ),
+        ),
+    )
+
+    report = validate_prepared_run(pack, run, coverage_policy=policy)
+
+    assert report.document()["scenarios"] == [
+        {
+            "id": "base-case",
+            "executionStatus": "completed",
+            "result": "pass",
+            "failureKinds": [],
+            "observedFactIds": ["example.completed"],
+        }
+    ]
+
+
+def test_valid_runner_metadata_cannot_change_derived_facts(tmp_path: Path) -> None:
+    """Runner identity remains diagnostic and outside family predicate inputs."""
+
+    pack, run = _prepare_run(tmp_path)
+    policy = FamilyCoveragePolicy(
+        family_id="example-family",
+        predicates=(
+            CoveragePredicate(
+                id="example.completed",
+                capability_id="example.execute",
+                action="example.execute",
+                observation_family="result",
+                rust_symbols=("execute",),
+                matches=lambda observation: observation.get("status") == "completed",
+            ),
+        ),
+    )
+    receipt = _completed_receipt(run)
+    receipt["runner"] = {
+        "id": "renamed-runner",
+        "version": 99,
+        "platform": "diagnostic-platform",
+        "toolchain": "diagnostic-toolchain",
+    }
+    run.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+
+    report = validate_prepared_run(pack, run, coverage_policy=policy)
+
+    assert report.document()["scenarios"][0]["observedFactIds"] == ["example.completed"]
+
+
+@pytest.mark.parametrize(
+    ("container", "field"),
+    [
+        ("runner", "coverage"),
+        ("runner", "testName"),
+        ("runner", "selectorHash"),
+        ("scenario", "factIds"),
+        ("scenario", "migrationLedgerState"),
+    ],
+)
+def test_runner_authored_coverage_claim_fields_are_malformed(
+    tmp_path: Path, container: str, field: str
+) -> None:
+    """Receipts cannot smuggle acknowledgements into central coverage reports."""
+
+    pack, run = _prepare_run(tmp_path)
+    receipt = _completed_receipt(run)
+    target = receipt["runner"] if container == "runner" else receipt["scenarios"][0]
+    target[field] = "runner-authored-claim"
+    run.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+
+    report = validate_prepared_run(pack, run)
+
+    assert [failure["kind"] for failure in report.document()["failures"]] == [
+        "malformed_execution_receipt"
+    ]

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +20,11 @@ from .compare import (
     normalize_observations,
     validate_display_content_carriers,
 )
+from .coverage import (
+    CoverageDerivationError,
+    FamilyCoveragePolicy,
+    derive_observed_fact_ids,
+)
 from .failures import FailureKind
 from .packs import (
     MaterializedRun,
@@ -32,6 +37,8 @@ from .schema import (
     reject_duplicate_json_keys,
     validate_receipt_document,
 )
+
+_COVERAGE_PROOF_SEAL = object()
 
 
 @dataclass(frozen=True)
@@ -62,6 +69,7 @@ class ScenarioValidationResult:
     execution_status: str
     result: str
     failure_kinds: tuple[FailureKind, ...] = ()
+    observed_fact_ids: tuple[str, ...] = ()
 
     def document(self) -> dict[str, object]:
         """Return the stable machine-readable scenario record."""
@@ -69,12 +77,15 @@ class ScenarioValidationResult:
         ordered_kinds = sorted(
             set(self.failure_kinds), key=lambda kind: list(FailureKind).index(kind)
         )
-        return {
+        document: dict[str, object] = {
             "id": self.id,
             "executionStatus": self.execution_status,
             "result": self.result,
             "failureKinds": [kind.value for kind in ordered_kinds],
         }
+        if self.observed_fact_ids:
+            document["observedFactIds"] = list(self.observed_fact_ids)
+        return document
 
 
 @dataclass(frozen=True)
@@ -88,9 +99,12 @@ class PreparedRunReport:
     participant: Mapping[str, Any]
     scenarios: tuple[ScenarioValidationResult, ...]
     failures: tuple[ReceiptFailure, ...]
+    _coverage_proof_seal: object | None = field(
+        default=None, init=False, repr=False, compare=False
+    )
 
     @classmethod
-    def from_plan(
+    def _from_plan(
         cls,
         plan: Mapping[str, Any],
         *,
@@ -99,7 +113,7 @@ class PreparedRunReport:
     ) -> PreparedRunReport:
         """Build a report using the immutable identity of one prepared run plan."""
 
-        return cls(
+        report = cls(
             family_id=plan["familyId"],
             family_version=plan["familyVersion"],
             expectation_digest=plan["expectationDigest"],
@@ -108,6 +122,14 @@ class PreparedRunReport:
             scenarios=tuple(scenarios),
             failures=tuple(failures),
         )
+        object.__setattr__(report, "_coverage_proof_seal", _COVERAGE_PROOF_SEAL)
+        return report
+
+    @property
+    def has_trusted_coverage_provenance(self) -> bool:
+        """Return whether central receipt validation created this report."""
+
+        return self._coverage_proof_seal is _COVERAGE_PROOF_SEAL
 
     def document(self) -> dict[str, object]:
         """Return a detached stable report document suitable for aggregation."""
@@ -203,13 +225,16 @@ def _unexpected_evidence_failures(
 
     failures: list[ReceiptFailure] = []
     receipt_participant = receipt["participant"]
-    for field in ("id", "role", "executionInstanceId"):
-        if receipt_participant[field] != plan["participant"][field]:
+    for participant_field in ("id", "role", "executionInstanceId"):
+        if (
+            receipt_participant[participant_field]
+            != plan["participant"][participant_field]
+        ):
             failures.append(
                 ReceiptFailure(
                     FailureKind.MALFORMED_RECEIPT,
-                    f"receipt participant {field} is unexpected for this prepared run",
-                    path=f"$.participant.{field}",
+                    f"receipt participant {participant_field} is unexpected for this prepared run",
+                    path=f"$.participant.{participant_field}",
                 )
             )
 
@@ -332,6 +357,7 @@ def validate_prepared_run(
     *,
     receipt_paths: Sequence[Path] | None = None,
     policy_exceptions_path: Path = DEFAULT_POLICY_EXCEPTIONS_PATH,
+    coverage_policy: FamilyCoveragePolicy | None = None,
 ) -> PreparedRunReport:
     """Validate and exactly compare receipts for one fresh prepared invocation.
 
@@ -346,9 +372,19 @@ def validate_prepared_run(
     paths = tuple(receipt_paths) if receipt_paths is not None else (run.receipt_path,)
     failures: list[ReceiptFailure] = []
     scenario_results: list[ScenarioValidationResult] = []
+    if not run.has_trusted_provenance:
+        return PreparedRunReport._from_plan(
+            plan,
+            failures=(
+                ReceiptFailure(
+                    FailureKind.STALE_RECEIPT,
+                    "prepared run lacks central materialization provenance",
+                ),
+            ),
+        )
     current_input_failures = _current_prepared_input_failures(pack, run)
     if current_input_failures:
-        return PreparedRunReport.from_plan(
+        return PreparedRunReport._from_plan(
             plan,
             failures=current_input_failures,
         )
@@ -359,7 +395,7 @@ def validate_prepared_run(
                 "the prepared invocation did not produce a receipt",
             )
         )
-        return PreparedRunReport.from_plan(
+        return PreparedRunReport._from_plan(
             plan,
             failures=failures,
         )
@@ -370,7 +406,7 @@ def validate_prepared_run(
                 "the prepared invocation produced duplicate receipt evidence",
             )
         )
-        return PreparedRunReport.from_plan(
+        return PreparedRunReport._from_plan(
             plan,
             failures=failures,
         )
@@ -382,7 +418,7 @@ def validate_prepared_run(
                 "the prepared invocation did not produce a receipt",
             )
         )
-        return PreparedRunReport.from_plan(
+        return PreparedRunReport._from_plan(
             plan,
             failures=failures,
         )
@@ -396,14 +432,14 @@ def validate_prepared_run(
         ConformanceSchemaError,
     ) as error:
         failures.append(ReceiptFailure(FailureKind.MALFORMED_RECEIPT, str(error)))
-        return PreparedRunReport.from_plan(
+        return PreparedRunReport._from_plan(
             plan,
             failures=failures,
         )
 
     forbidden_status_failures = _forbidden_status_failures(receipt)
     if forbidden_status_failures:
-        return PreparedRunReport.from_plan(
+        return PreparedRunReport._from_plan(
             plan,
             failures=forbidden_status_failures,
         )
@@ -411,21 +447,21 @@ def validate_prepared_run(
         validate_receipt_document(receipt, allow_schema_version_mismatch=True)
     except ConformanceSchemaError as error:
         failures.append(ReceiptFailure(FailureKind.MALFORMED_RECEIPT, str(error)))
-        return PreparedRunReport.from_plan(
+        return PreparedRunReport._from_plan(
             plan,
             failures=failures,
         )
 
     stale_failures = _stale_identity_failures(receipt, plan)
     if stale_failures:
-        return PreparedRunReport.from_plan(
+        return PreparedRunReport._from_plan(
             plan,
             failures=stale_failures,
         )
 
     unexpected_failures = _unexpected_evidence_failures(receipt, plan)
     if unexpected_failures:
-        return PreparedRunReport.from_plan(
+        return PreparedRunReport._from_plan(
             plan,
             failures=unexpected_failures,
         )
@@ -559,6 +595,23 @@ def validate_prepared_run(
             )
             for difference in differences
         ]
+        observed_fact_ids: tuple[str, ...] = ()
+        if not scenario_failures and coverage_policy is not None:
+            try:
+                observed_fact_ids = derive_observed_fact_ids(
+                    pack_document,
+                    expected_scenario,
+                    actual_observation,
+                    coverage_policy,
+                )
+            except CoverageDerivationError as error:
+                scenario_failures.append(
+                    ReceiptFailure(
+                        FailureKind.COVERAGE_MAPPING,
+                        str(error),
+                        scenario_id=scenario_id,
+                    )
+                )
         failures.extend(scenario_failures)
         scenario_results.append(
             ScenarioValidationResult(
@@ -566,10 +619,11 @@ def validate_prepared_run(
                 actual_scenario["executionStatus"],
                 "fail" if scenario_failures else "pass",
                 tuple(failure.kind for failure in scenario_failures),
+                observed_fact_ids,
             )
         )
 
-    return PreparedRunReport.from_plan(
+    return PreparedRunReport._from_plan(
         plan,
         scenarios=scenario_results,
         failures=failures,

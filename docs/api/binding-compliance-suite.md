@@ -21,10 +21,26 @@ The command writes:
 | `cxx-ci` | CI slice for the Windows C++ workflow. Runs the canonical suite around the CXX parity gate and shared static policy checks. |
 | `node-ci` | CI slice for the Node workflow. Runs the canonical suite around Node parity and `index.d.ts` freshness checks. |
 | `python-ci` | CI slice for the Python workflow. Runs the canonical suite around Python parity, stub validation, uv drift-guard setup, and the schema-version guard. |
-| `full` | Local release/backstop profile. Adds Bun/Node runtime tests, the Python PyO3 rebuild, and Python smoke tests. |
+| `conformance` | Receipt-only native-job validation for one participant or execution instance. Requires `--participant` and repeatable `--receipt`; CXX also requires companion `--attempt` and `--junit` diagnostics. |
+| `full` | Local release/backstop profile. Adds Bun/Node runtime tests, the Python PyO3 rebuild, and Python smoke tests. Repeatable `--receipt` inputs may also produce a full-repository shadow aggregation without making absent shadow receipts block the legacy profile. |
 | `static` | Policy, docs, artifact presence, and known-gap reporting without external commands. |
 
 Use `--skip-commands` when reviewing policy mapping without invoking lower-level gates. Use `--fail-on-gaps` when maintainers are ready to turn known non-blocking coverage gaps into blocking failures.
+
+Native launchers validate one exact instance with this receipt-only shape:
+
+```powershell
+python tools/binding_compliance/check_compliance.py `
+  --repo-root . `
+  --profile conformance `
+  --participant cxx `
+  --execution-instance windows-msvc `
+  --receipt tools/binding_compliance/artifacts/cxx/windows-msvc/<invocation>/receipt.json `
+  --attempt tools/binding_compliance/artifacts/cxx/windows-msvc/<invocation>/attempt.json `
+  --junit tools/binding_compliance/artifacts/cxx/windows-msvc/<invocation>/ctest.junit.xml
+```
+
+The receipt must have a sibling immutable `run_plan.json`. The engine rebinds it to the current tracked pack and source revision before validation. Attempt and JUnit files can add command diagnostics but cannot supply semantic facts, row coverage, or a broader scope claim. Participant reports require every source-derived execution instance; only `full` can claim repository completeness, and missing row coverage or unresolved consumer obligations fails that claim closed. Full aggregation independently authenticates each participant-specific source digest and requires their embedded Git revisions to match; the digests themselves may differ because each run plan declares its own runner source roots.
 
 ## What The Suite Proves
 

@@ -1,6 +1,6 @@
 # Executable Cross-Adapter Conformance Specification
 
-> **Status: accepted design; implementation in progress.** [ADR-0008](../adr/0008-executable-cross-adapter-conformance.md) records the decision. Phase 0's diagnostic ledger, validated-pack/input-only materialization, and generic prepared-run receipt validation and exact comparison are implemented; coverage derivation, scoped shadow reports, adapters, and blocking domain packs remain later migration slices. Until a phase reaches its blocking exit gate, the commands and evidence documented in `docs/api/binding-compliance-suite.md` remain authoritative.
+> **Status: accepted design; implementation in progress.** [ADR-0008](../adr/0008-executable-cross-adapter-conformance.md) records the decision. Phase 0's diagnostic ledger and the generic engine for validated-pack/input-only materialization, prepared-run receipt validation, exact comparison, predicate-derived row coverage, applicability, scoped shadow reports, and receipt-only CLI aggregation are implemented. Domain predicate registries, adapters, consumer receipt registries, and blocking domain packs remain later migration slices. Until a phase reaches its blocking exit gate, the commands and evidence documented in `docs/api/binding-compliance-suite.md` remain authoritative.
 
 ## Target
 
@@ -173,13 +173,14 @@ The engine validates a pack and materializes a temporary run plan containing onl
 - normalization instructions needed to construct observations;
 - an opaque expectation digest;
 - a unique invocation ID, current source identity, and run-plan digest;
+- canonical repository-relative participant/runner source paths so receipt-only validation can recompute source identity;
 - the required participant identity and role.
 
 The run plan omits `expected`. Adapter runners must not load expectations or compare themselves with Rust output. Existing native tests may keep focused local assertions, but conformance passes only when the central comparator receives actual observations.
 
 The expectation digest is SHA-256 over the engine's validated canonical JSON representation of the pack plus the relative path and raw bytes of every declared fixture, ordered by relative path and framed unambiguously by the engine. Canonical JSON uses UTF-8, recursively sorted object keys, no insignificant whitespace, and no ASCII escaping. Floating-point JSON numbers are forbidden in the common schema; normalized quantities use integers or an explicitly formatted string. The version 1 digest preimage uses type-tagged, unsigned 64-bit big-endian length frames for the contract marker, canonical pack, and each ordered fixture path/byte pair. Native runners receive the digest as opaque launch data, and the compliance engine recomputes it from the current tracked pack and fixtures when validating a receipt.
 
-Every launch uses a new UUID invocation ID and unique artifact directory. The run-plan digest covers the canonical materialized plan before the self-referential `runPlanDigest` member is inserted; every other plan field, including the invocation ID, is covered. Source identity has the form `git:<current-revision>:sha256:<source-input-digest>` and covers the declared path identities and current bytes of the pack, declared fixtures, and caller-declared participant/runner source paths. It is recomputed for every materialization but remains stable when those source inputs are unchanged. The reserved receipt path must be absent before execution, preventing a prior receipt from being reused when source changes but the pack does not.
+Every launch uses a new UUID invocation ID and unique artifact directory. The run-plan digest covers the canonical materialized plan before the self-referential `runPlanDigest` member is inserted; every other plan field, including the invocation ID, is covered. Source identity has the form `git:<current-revision>:sha256:<source-input-digest>` and covers the declared path identities and current bytes of the pack, declared fixtures, and caller-declared participant/runner source paths. It is recomputed during materialization and again when a later receipt-only process authenticates the plan, but remains stable when those source inputs are unchanged. Aggregation compares the embedded Git revision after authenticating each plan independently; participant-specific source digests need not be equal because their declared runner roots differ. The reserved receipt path must be absent before execution, preventing a prior receipt from being reused when source changes but the pack does not.
 
 ## Receipt contract
 

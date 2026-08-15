@@ -9,7 +9,7 @@ import re
 import subprocess
 import uuid
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
@@ -25,6 +25,7 @@ _EXACT_JSON_PATH = re.compile(
     r"^\$(?:(?:\.[A-Za-z_][A-Za-z0-9_-]*)|(?:\[(?:0|[1-9][0-9]*)\]))+$"
 )
 DEFAULT_PACKS_ROOT = Path("tests/conformance/packs")
+_PREPARED_RUN_SEAL = object()
 
 
 class PackValidationError(ValueError):
@@ -72,6 +73,29 @@ class MaterializedRun:
     run_plan_path: Path
     receipt_path: Path
     canonical_json: bytes
+    _provenance_seal: object | None = field(
+        default=None, init=False, repr=False, compare=False
+    )
+
+    @classmethod
+    def _from_central_preparation(
+        cls,
+        *,
+        artifact_dir: Path,
+        run_plan_path: Path,
+        receipt_path: Path,
+        canonical_json: bytes,
+    ) -> MaterializedRun:
+        """Create a run only after central materialization or authentication."""
+
+        run = cls(
+            artifact_dir=artifact_dir,
+            run_plan_path=run_plan_path,
+            receipt_path=receipt_path,
+            canonical_json=canonical_json,
+        )
+        object.__setattr__(run, "_provenance_seal", _PREPARED_RUN_SEAL)
+        return run
 
     def document(self) -> dict[str, Any]:
         """Return a detached copy of the materialized input-only run plan."""
@@ -80,6 +104,12 @@ class MaterializedRun:
         if not isinstance(value, dict):  # pragma: no cover - construction invariant
             raise TypeError("materialized run plan JSON must be an object")
         return value
+
+    @property
+    def has_trusted_provenance(self) -> bool:
+        """Return whether the central engine prepared or reloaded this run."""
+
+        return self._provenance_seal is _PREPARED_RUN_SEAL
 
 
 @dataclass(frozen=True)
@@ -576,6 +606,25 @@ def _source_identity(pack: ValidatedPack, source_paths: Sequence[Path]) -> str:
     return f"git:{revision.lower()}:sha256:{digest.hexdigest()}"
 
 
+def _declared_participant_source_paths(
+    pack: ValidatedPack, source_paths: Sequence[Path]
+) -> tuple[str, ...]:
+    """Return canonical repository-relative runner/source roots for revalidation."""
+
+    declared = [
+        _lexical_repository_path(
+            pack.repo_root,
+            path if path.is_absolute() else pack.repo_root / path,
+        )[0]
+        for path in source_paths
+    ]
+    if len(declared) != len(set(declared)):
+        raise MaterializationError(
+            "materialization source paths must name unique repository roots"
+        )
+    return tuple(sorted(declared))
+
+
 def _run_plan_digest(plan_without_digest: Mapping[str, Any]) -> str:
     """Hash every plan field except the self-referential digest field itself."""
 
@@ -727,7 +776,10 @@ def materialize_run_plan(
             "validated pack or declared fixture changed before materialization"
         )
 
-    source_identity = _source_identity(pack, source_paths)
+    declared_source_paths = _declared_participant_source_paths(pack, source_paths)
+    source_identity = _source_identity(
+        pack, tuple(Path(path) for path in declared_source_paths)
+    )
     invocation_id = str(uuid.uuid4())
     pack_document = pack.document()
     scenarios = [
@@ -751,6 +803,7 @@ def materialize_run_plan(
             fixture.reference: str(fixture.resolved_path)
             for fixture in sorted(pack.fixtures, key=lambda item: item.reference)
         },
+        "sourcePaths": list(declared_source_paths),
         "participant": {
             "id": participant_id,
             "role": participant_role,
@@ -805,10 +858,139 @@ def materialize_run_plan(
             # Preserve the primary write failure if external interference left files.
             pass
         raise MaterializationError(f"cannot write fresh run plan: {error}") from error
-    return MaterializedRun(
+    return MaterializedRun._from_central_preparation(
         artifact_dir=artifact_dir,
         run_plan_path=run_plan_path,
         receipt_path=receipt_path,
+        canonical_json=canonical_plan,
+    )
+
+
+def load_prepared_run(
+    pack: ValidatedPack,
+    run_plan_path: Path,
+    *,
+    receipt_path: Path | None = None,
+) -> MaterializedRun:
+    """Reload and authenticate one repository-owned materialized run plan.
+
+    This is the receipt-only CLI boundary used after a native launcher exits.
+    It validates the closed plan, its digest, current pack-owned fields, source
+    revision, and sibling artifact paths before minting trusted provenance.
+    """
+
+    root = pack.repo_root.resolve()
+    candidate = run_plan_path if run_plan_path.is_absolute() else root / run_plan_path
+    try:
+        resolved_plan = candidate.resolve(strict=True)
+        resolved_plan.relative_to(root)
+    except (OSError, ValueError) as error:
+        raise MaterializationError(
+            "prepared run plan must resolve beneath the repository root"
+        ) from error
+    if not resolved_plan.is_file():
+        raise MaterializationError("prepared run plan must resolve to a file")
+    try:
+        canonical_plan = resolved_plan.read_bytes()
+        value = json.loads(
+            canonical_plan,
+            object_pairs_hook=_reject_duplicate_json_keys,
+            parse_constant=_reject_nonfinite_json_number,
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError, PackValidationError) as error:
+        raise MaterializationError(f"cannot read prepared run plan: {error}") from error
+    if not isinstance(value, Mapping):
+        raise MaterializationError("run plan must be an object")
+    plan = value
+    try:
+        validate_run_plan_document(plan)
+    except ConformanceSchemaError as error:
+        raise MaterializationError(str(error)) from error
+    try:
+        _reject_floating_point_values(plan)
+    except PackValidationError as error:
+        raise MaterializationError(str(error)) from error
+    if canonical_plan != _canonical_json(plan):
+        raise MaterializationError("prepared run plan is not canonical JSON")
+
+    pack_document = pack.document()
+    expected_scenarios = [
+        {
+            "id": scenario["id"],
+            "action": scenario["action"],
+            "capabilityIds": scenario["capabilityIds"],
+            "fixtureRefs": scenario["fixtureRefs"],
+            "input": scenario["input"],
+            "normalization": scenario["normalization"],
+        }
+        for scenario in pack_document["scenarios"]
+    ]
+    expected_pack_fields = {
+        "schemaVersion": 1,
+        "familyId": pack_document["familyId"],
+        "familyVersion": pack_document["familyVersion"],
+        "expectationDigest": pack.expectation_digest,
+        "fixtureRoot": str(pack.fixture_root),
+        "fixtures": {
+            fixture.reference: str(fixture.resolved_path)
+            for fixture in sorted(pack.fixtures, key=lambda item: item.reference)
+        },
+        "scenarios": expected_scenarios,
+    }
+    mismatches = sorted(
+        key
+        for key, expected in expected_pack_fields.items()
+        if plan.get(key) != expected
+    )
+    if mismatches:
+        raise MaterializationError(
+            "prepared run plan no longer matches the current tracked pack: "
+            + ", ".join(mismatches)
+        )
+
+    invocation = plan["invocation"]
+    run_plan_digest = invocation.get("runPlanDigest")
+    plan_without_digest = dict(plan)
+    invocation_without_digest = dict(invocation)
+    invocation_without_digest.pop("runPlanDigest", None)
+    plan_without_digest["invocation"] = invocation_without_digest
+    if run_plan_digest != _run_plan_digest(plan_without_digest):
+        raise MaterializationError(
+            "prepared run plan digest does not match its content"
+        )
+    raw_source_paths = plan["sourcePaths"]
+    try:
+        source_paths = tuple(
+            Path(_validate_relative_posix_path(path, f"sourcePaths[{index}]"))
+            for index, path in enumerate(raw_source_paths)
+        )
+        expected_source_identity = _source_identity(pack, source_paths)
+    except (PackValidationError, MaterializationError) as error:
+        raise MaterializationError(str(error)) from error
+    if invocation.get("sourceIdentity") != expected_source_identity:
+        raise MaterializationError(
+            "prepared run plan source identity does not match current declared inputs"
+        )
+
+    artifact_dir = resolved_plan.parent
+    receipt_candidate = receipt_path or artifact_dir / "receipt.json"
+    if not receipt_candidate.is_absolute():
+        receipt_candidate = root / receipt_candidate
+    try:
+        resolved_receipt = receipt_candidate.resolve(strict=False)
+        resolved_receipt.relative_to(root)
+    except (OSError, ValueError) as error:
+        raise MaterializationError(
+            "prepared receipt path must stay beneath the repository root"
+        ) from error
+    if resolved_receipt.parent != artifact_dir:
+        raise MaterializationError(
+            "prepared receipt must be a sibling of its immutable run plan"
+        )
+    return MaterializedRun._from_central_preparation(
+        artifact_dir=artifact_dir,
+        run_plan_path=resolved_plan,
+        receipt_path=resolved_receipt,
         canonical_json=canonical_plan,
     )
 

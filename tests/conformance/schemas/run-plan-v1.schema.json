@@ -12,6 +12,7 @@
     "expectationDigest",
     "fixtureRoot",
     "fixtures",
+    "sourcePaths",
     "participant",
     "invocation",
     "scenarios"
@@ -26,6 +27,16 @@
       "type": "object",
       "propertyNames": { "$ref": "#/$defs/fixtureRef" },
       "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "sourcePaths": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(?![A-Za-z]:)(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+      }
     },
     "participant": {
       "type": "object",

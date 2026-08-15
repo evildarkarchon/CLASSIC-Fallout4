@@ -6,8 +6,13 @@ import subprocess
 from pathlib import Path
 from unittest.mock import patch
 
-from catalog import ComplianceRequirement, CommandSpec, TextExpectation # type: ignore
-from suite import ComplianceSuite, RequirementResult, build_summary # type: ignore
+from catalog import (  # type: ignore
+    CommandSpec,
+    ComplianceRequirement,
+    TextExpectation,
+    requirements_for_profile,  # type: ignore
+)
+from suite import ComplianceSuite, RequirementResult, build_summary  # type: ignore
 
 
 def test_build_summary_keeps_gap_reporting_non_blocking_by_default() -> None:
@@ -134,3 +139,127 @@ def test_timeout_preserves_stdout_and_stderr_separately(tmp_path: Path) -> None:
     assert result["status"] == "failed"
     assert result["stdout"] == "captured stdout"
     assert result["stderr"] == "captured stderr"
+
+
+def test_shadow_conformance_failure_does_not_weaken_or_fail_blocking_summary(
+    tmp_path: Path,
+) -> None:
+    """Shadow evidence is visible without replacing current blocking gates."""
+
+    requirement = ComplianceRequirement(
+        id="existing-gate",
+        title="Existing gate",
+        surface="node",
+        classification="existing_gate",
+        profiles=("ci",),
+        blocking=True,
+        summary="The current parity gate remains authoritative.",
+    )
+    shadow = {
+        "schemaVersion": 1,
+        "enforcement": "shadow",
+        "result": "fail",
+        "failures": [{"kind": "coverage_mapping_gap"}],
+    }
+
+    report = ComplianceSuite(
+        repo_root=tmp_path,
+        profile="ci",
+        requirements=(requirement,),
+        shadow_conformance=shadow,
+    ).run()
+
+    assert report["summary"]["result"] == "pass"
+    assert report["shadowConformance"] == shadow
+
+
+def test_shadow_success_cannot_turn_a_blocking_failure_green(tmp_path: Path) -> None:
+    """A passing shadow section never overrides a failed current requirement."""
+
+    requirement = ComplianceRequirement(
+        id="missing-existing-gate",
+        title="Missing existing gate",
+        surface="python",
+        classification="existing_gate",
+        profiles=("ci",),
+        blocking=True,
+        summary="The current parity artifact is still required.",
+        paths=("missing.json",),
+    )
+
+    report = ComplianceSuite(
+        repo_root=tmp_path,
+        profile="ci",
+        requirements=(requirement,),
+        shadow_conformance={
+            "schemaVersion": 1,
+            "enforcement": "shadow",
+            "result": "pass",
+            "failures": [],
+        },
+    ).run()
+
+    assert report["summary"]["result"] == "fail"
+    assert report["shadowConformance"]["result"] == "pass"
+
+
+def test_new_row_guard_remains_blocking_inside_shadow_report(tmp_path: Path) -> None:
+    """A post-Phase-0 uncovered row fails without promoting all shadow evidence."""
+
+    requirement = ComplianceRequirement(
+        id="existing-gate",
+        title="Existing gate",
+        surface="cxx",
+        classification="existing_gate",
+        profiles=("ci",),
+        blocking=True,
+        summary="The current source parity check remains green.",
+    )
+    shadow = {
+        "schemaVersion": 1,
+        "enforcement": "shadow",
+        "result": "fail",
+        "failures": [],
+        "coverage": {
+            "failures": [
+                {
+                    "kind": "coverage_mapping_gap",
+                    "obligationId": "parity:cxx:new-row",
+                    "blocking": True,
+                }
+            ]
+        },
+    }
+
+    report = ComplianceSuite(
+        repo_root=tmp_path,
+        profile="ci",
+        requirements=(requirement,),
+        shadow_conformance=shadow,
+    ).run()
+
+    assert report["summary"]["result"] == "fail"
+    assert report["summary"]["blocking_shadow_coverage_gaps"] == 1
+
+
+def test_conformance_profile_uses_its_scoped_report_as_process_result(
+    tmp_path: Path,
+) -> None:
+    """A receipt-only native job fails when its exact scope is incomplete."""
+
+    shadow = {
+        "schemaVersion": 1,
+        "enforcement": "shadow",
+        "result": "fail",
+        "failures": [{"kind": "missing_receipt"}],
+    }
+
+    report = ComplianceSuite(
+        repo_root=tmp_path,
+        profile="conformance",
+        requirements=requirements_for_profile("conformance"),
+        shadow_conformance=shadow,
+    ).run()
+
+    assert report["requirements"] == []
+    assert report["summary"]["result"] == "fail"

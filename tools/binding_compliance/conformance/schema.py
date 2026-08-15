@@ -6,6 +6,8 @@ import re
 from collections.abc import Mapping
 from typing import Any, TypeGuard
 
+from .failures import FailureKind
+
 _STABLE_ID = re.compile(r"^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$")
 _SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
 _UUID_V4 = re.compile(
@@ -260,6 +262,7 @@ def validate_run_plan_document(document: Mapping[str, Any]) -> None:
                 "expectationDigest",
                 "fixtureRoot",
                 "fixtures",
+                "sourcePaths",
                 "participant",
                 "invocation",
                 "scenarios",
@@ -276,6 +279,8 @@ def validate_run_plan_document(document: Mapping[str, Any]) -> None:
     for reference, path in fixtures.items():
         _nonempty_string(reference, f"{prefix}.fixtures reference")
         _nonempty_string(path, f"{prefix}.fixtures.{reference}")
+
+    _string_array(document["sourcePaths"], f"{prefix}.sourcePaths", nonempty=True)
 
     participant = _mapping(document["participant"], f"{prefix}.participant")
     _exact_keys(
@@ -458,3 +463,305 @@ def validate_receipt_document(
             _exact_keys(failure, frozenset({"kind", "message"}), f"{label}.failure")
             _pattern_string(failure["kind"], f"{label}.failure.kind", _STABLE_ID)
             _nonempty_string(failure["message"], f"{label}.failure.message")
+
+
+def validate_conformance_report_document(document: Mapping[str, Any]) -> None:
+    """Validate one closed instance, participant, or repository shadow report.
+
+    The scope selector and completeness claim are checked together so a caller
+    cannot broaden an otherwise valid partial report by changing a label.
+    Raises ``ConformanceSchemaError`` for malformed or inconsistent reports.
+    """
+
+    prefix = "conformance-report schema"
+    _exact_keys(
+        document,
+        frozenset(
+            {
+                "schemaVersion",
+                "familyId",
+                "enforcement",
+                "scope",
+                "result",
+                "repositoryComplete",
+                "requiredExecutions",
+                "receivedExecutions",
+                "missingExecutions",
+                "failures",
+                "coverage",
+            }
+        ),
+        prefix,
+    )
+    _positive_integer(document["schemaVersion"], f"{prefix}.schemaVersion", exact=1)
+    _pattern_string(document["familyId"], f"{prefix}.familyId", _STABLE_ID)
+    if document["enforcement"] != "shadow":
+        raise ConformanceSchemaError(f"{prefix}.enforcement must be shadow")
+    if document["result"] not in {"pass", "fail"}:
+        raise ConformanceSchemaError(f"{prefix}.result must be pass or fail")
+    if not isinstance(document["repositoryComplete"], bool):
+        raise ConformanceSchemaError(f"{prefix}.repositoryComplete must be boolean")
+
+    scope = _mapping(document["scope"], f"{prefix}.scope")
+    _exact_keys(
+        scope,
+        frozenset({"kind", "participantId", "executionInstanceId"}),
+        f"{prefix}.scope",
+    )
+    scope_kind = scope["kind"]
+    if scope_kind == "execution-instance":
+        _pattern_string(
+            scope["participantId"], f"{prefix}.scope.participantId", _STABLE_ID
+        )
+        _pattern_string(
+            scope["executionInstanceId"],
+            f"{prefix}.scope.executionInstanceId",
+            _STABLE_ID,
+        )
+    elif scope_kind == "participant":
+        _pattern_string(
+            scope["participantId"], f"{prefix}.scope.participantId", _STABLE_ID
+        )
+        if scope["executionInstanceId"] is not None:
+            raise ConformanceSchemaError(
+                f"{prefix}.scope participant needs null executionInstanceId"
+            )
+    elif scope_kind == "full-repository":
+        if (
+            scope["participantId"] is not None
+            or scope["executionInstanceId"] is not None
+        ):
+            raise ConformanceSchemaError(
+                f"{prefix}.scope full-repository needs null selectors"
+            )
+    else:
+        raise ConformanceSchemaError(f"{prefix}.scope has an unsupported kind")
+
+    def execution_set(field: str) -> set[tuple[str, str]]:
+        """Validate and return one exact execution identity set."""
+
+        raw_executions = _list(document[field], f"{prefix}.{field}")
+        executions: list[tuple[str, str]] = []
+        for index, raw_execution in enumerate(raw_executions):
+            label = f"{prefix}.{field}[{index}]"
+            execution = _mapping(raw_execution, label)
+            _exact_keys(
+                execution,
+                frozenset({"participantId", "executionInstanceId"}),
+                label,
+            )
+            executions.append(
+                (
+                    _pattern_string(
+                        execution["participantId"],
+                        f"{label}.participantId",
+                        _STABLE_ID,
+                    ),
+                    _pattern_string(
+                        execution["executionInstanceId"],
+                        f"{label}.executionInstanceId",
+                        _STABLE_ID,
+                    ),
+                )
+            )
+        if len(executions) != len(set(executions)):
+            raise ConformanceSchemaError(f"{prefix}.{field} contains duplicates")
+        return set(executions)
+
+    required = execution_set("requiredExecutions")
+    received = execution_set("receivedExecutions")
+    missing = execution_set("missingExecutions")
+    if received - required:
+        raise ConformanceSchemaError(
+            f"{prefix}.receivedExecutions contains out-of-scope evidence"
+        )
+    if missing != required - received:
+        raise ConformanceSchemaError(
+            f"{prefix}.missingExecutions does not match the required denominator"
+        )
+
+    failures = _list(document["failures"], f"{prefix}.failures")
+    for index, raw_failure in enumerate(failures):
+        label = f"{prefix}.failures[{index}]"
+        failure = _mapping(raw_failure, label)
+        _exact_keys(
+            failure,
+            frozenset({"kind", "participantId", "executionInstanceId", "message"}),
+            label,
+        )
+        if failure["kind"] not in {kind.value for kind in FailureKind}:
+            raise ConformanceSchemaError(f"{label}.kind is unsupported")
+        _nonempty_string(failure["message"], f"{label}.message")
+        for selector in ("participantId", "executionInstanceId"):
+            value = failure[selector]
+            if value is not None:
+                _pattern_string(value, f"{label}.{selector}", _STABLE_ID)
+
+    coverage = document["coverage"]
+    # A scoped pass is a coverage claim, so a missing partition must fail
+    # closed even when all execution receipts are otherwise present.
+    coverage_passed = False
+    if coverage is not None:
+        coverage_object = _mapping(coverage, f"{prefix}.coverage")
+        _exact_keys(
+            coverage_object,
+            frozenset(
+                {
+                    "familyId",
+                    "result",
+                    "executionEvidence",
+                    "preparedEvidenceDigest",
+                    "rows",
+                    "failures",
+                }
+            ),
+            f"{prefix}.coverage",
+        )
+        if coverage_object["familyId"] != document["familyId"]:
+            raise ConformanceSchemaError(
+                f"{prefix}.coverage family does not match the report"
+            )
+        if coverage_object["result"] not in {"pass", "fail"}:
+            raise ConformanceSchemaError(
+                f"{prefix}.coverage.result must be pass or fail"
+            )
+        coverage_executions = _list(
+            coverage_object["executionEvidence"],
+            f"{prefix}.coverage.executionEvidence",
+        )
+        coverage_execution_keys: list[tuple[str, str]] = []
+        for index, raw_execution in enumerate(coverage_executions):
+            label = f"{prefix}.coverage.executionEvidence[{index}]"
+            execution = _mapping(raw_execution, label)
+            _exact_keys(
+                execution,
+                frozenset({"participantId", "executionInstanceId"}),
+                label,
+            )
+            coverage_execution_keys.append(
+                (
+                    _pattern_string(
+                        execution["participantId"],
+                        f"{label}.participantId",
+                        _STABLE_ID,
+                    ),
+                    _pattern_string(
+                        execution["executionInstanceId"],
+                        f"{label}.executionInstanceId",
+                        _STABLE_ID,
+                    ),
+                )
+            )
+        if len(coverage_execution_keys) != len(set(coverage_execution_keys)):
+            raise ConformanceSchemaError(
+                f"{prefix}.coverage.executionEvidence contains duplicates"
+            )
+        _pattern_string(
+            coverage_object["preparedEvidenceDigest"],
+            f"{prefix}.coverage.preparedEvidenceDigest",
+            _SHA256,
+        )
+        coverage_rows = _list(coverage_object["rows"], f"{prefix}.coverage.rows")
+        row_ids: list[str] = []
+        for index, raw_row in enumerate(coverage_rows):
+            label = f"{prefix}.coverage.rows[{index}]"
+            row = _mapping(raw_row, label)
+            _exact_keys(
+                row,
+                frozenset(
+                    {
+                        "obligationId",
+                        "participantId",
+                        "mappingOrigin",
+                        "capabilityId",
+                        "evidenceKind",
+                        "evidenceIds",
+                    }
+                ),
+                label,
+            )
+            row_ids.append(
+                _nonempty_string(row["obligationId"], f"{label}.obligationId")
+            )
+            _pattern_string(row["participantId"], f"{label}.participantId", _STABLE_ID)
+            if row["mappingOrigin"] not in {
+                "canonical_rust",
+                "binding_only",
+                "rust_only",
+            }:
+                raise ConformanceSchemaError(
+                    f"{label}.mappingOrigin has an unsupported value"
+                )
+            capability_id = row["capabilityId"]
+            if capability_id is not None:
+                _pattern_string(capability_id, f"{label}.capabilityId", _STABLE_ID)
+            if row["evidenceKind"] not in {
+                "executable",
+                "structural",
+                "negative",
+                "policy-exception",
+            }:
+                raise ConformanceSchemaError(
+                    f"{label}.evidenceKind has an unsupported value"
+                )
+            evidence_ids = _string_array(
+                row["evidenceIds"], f"{label}.evidenceIds", nonempty=True
+            )
+            if len(evidence_ids) != len(set(evidence_ids)):
+                raise ConformanceSchemaError(f"{label}.evidenceIds contains duplicates")
+            for evidence_index, evidence_id in enumerate(evidence_ids):
+                _pattern_string(
+                    evidence_id,
+                    f"{label}.evidenceIds[{evidence_index}]",
+                    _STABLE_ID,
+                )
+        if len(row_ids) != len(set(row_ids)):
+            raise ConformanceSchemaError(
+                f"{prefix}.coverage.rows contains duplicate obligations"
+            )
+        coverage_failures = _list(
+            coverage_object["failures"], f"{prefix}.coverage.failures"
+        )
+        failure_ids: list[str] = []
+        for index, raw_failure in enumerate(coverage_failures):
+            label = f"{prefix}.coverage.failures[{index}]"
+            failure = _mapping(raw_failure, label)
+            _exact_keys(
+                failure,
+                frozenset({"kind", "obligationId", "blocking", "message"}),
+                label,
+            )
+            if failure["kind"] != FailureKind.COVERAGE_MAPPING.value:
+                raise ConformanceSchemaError(
+                    f"{label}.kind must be coverage_mapping_gap"
+                )
+            failure_ids.append(
+                _nonempty_string(failure["obligationId"], f"{label}.obligationId")
+            )
+            if not isinstance(failure["blocking"], bool):
+                raise ConformanceSchemaError(f"{label}.blocking must be boolean")
+            _nonempty_string(failure["message"], f"{label}.message")
+        if len(failure_ids) != len(set(failure_ids)):
+            raise ConformanceSchemaError(
+                f"{prefix}.coverage.failures contains duplicate obligations"
+            )
+        expected_coverage_result = "fail" if coverage_failures else "pass"
+        if coverage_object["result"] != expected_coverage_result:
+            raise ConformanceSchemaError(
+                f"{prefix}.coverage.result does not match coverage failures"
+            )
+        coverage_passed = coverage_object["result"] == "pass" and not coverage_failures
+    passed = not missing and not failures and coverage_passed
+    if document["result"] != ("pass" if passed else "fail"):
+        raise ConformanceSchemaError(
+            f"{prefix}.result does not match missing executions and failures"
+        )
+    repository_complete = document["repositoryComplete"]
+    if repository_complete and scope_kind != "full-repository":
+        raise ConformanceSchemaError(
+            f"{prefix}.repositoryComplete requires full-repository scope"
+        )
+    if repository_complete != (scope_kind == "full-repository" and passed):
+        raise ConformanceSchemaError(
+            f"{prefix}.repositoryComplete does not match full-repository success"
+        )

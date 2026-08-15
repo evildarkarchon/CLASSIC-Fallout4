@@ -539,11 +539,17 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
 def requirements_for_profile(profile: str) -> tuple[ComplianceRequirement, ...]:
     """Return requirements that participate in a named execution profile."""
 
+    if profile == "conformance":
+        # Native conformance jobs are governed by their scoped receipt report,
+        # not by a duplicate run of the repository-wide requirement catalog.
+        return ()
     selected = tuple(
         requirement for requirement in REQUIREMENTS if profile in requirement.profiles
     )
     if not selected:
-        known = sorted({name for req in REQUIREMENTS for name in req.profiles})
+        known = sorted(
+            {name for req in REQUIREMENTS for name in req.profiles} | {"conformance"}
+        )
         raise ValueError(
             f"Unknown binding compliance profile '{profile}'. Known profiles: {', '.join(known)}"
         )

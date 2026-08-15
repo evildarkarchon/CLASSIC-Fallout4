@@ -24,6 +24,7 @@ def test_tracked_common_schemas_are_closed_and_versioned() -> None:
         "run-plan-v1.schema.json",
         "receipt-v1.schema.json",
         "policy-exceptions-v1.schema.json",
+        "conformance-report-v1.schema.json",
     ):
         schema = _schema(name)
         assert schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
@@ -112,3 +113,19 @@ def test_policy_exception_schema_requires_reviewable_exact_scope() -> None:
     }
     assert exception["additionalProperties"] is False
     assert catalog == {"schemaVersion": 1, "exceptions": []}
+
+
+def test_report_schema_pins_scope_and_shadow_enforcement() -> None:
+    """The aggregate envelope cannot relabel partial shadow evidence as complete."""
+
+    report_schema = _schema("conformance-report-v1.schema.json")
+    scope = report_schema["properties"]["scope"]
+
+    assert report_schema["properties"]["enforcement"] == {"const": "shadow"}
+    assert report_schema["properties"]["repositoryComplete"] == {"type": "boolean"}
+    assert scope["additionalProperties"] is False
+    assert {choice["properties"]["kind"]["const"] for choice in scope["oneOf"]} == {
+        "execution-instance",
+        "participant",
+        "full-repository",
+    }
