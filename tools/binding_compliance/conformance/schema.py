@@ -2,12 +2,37 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, TypeGuard
+
+_STABLE_ID = re.compile(r"^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$")
+_SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
+_UUID_V4 = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+)
+_SOURCE_IDENTITY = re.compile(r"^git:[0-9a-f]{40,64}:sha256:[0-9a-f]{64}$")
 
 
 class ConformanceSchemaError(ValueError):
     """Raised when a conformance document violates its closed common schema."""
+
+
+def reject_duplicate_json_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    """Build a JSON object while rejecting ambiguous duplicate field names."""
+
+    value: dict[str, Any] = {}
+    for key, item in pairs:
+        if key in value:
+            raise ConformanceSchemaError(f"duplicate JSON object key {key!r}")
+        value[key] = item
+    return value
+
+
+def is_stable_machine_id(value: object) -> TypeGuard[str]:
+    """Return whether a value uses the shared conformance identity grammar."""
+
+    return isinstance(value, str) and _STABLE_ID.fullmatch(value) is not None
 
 
 def _mapping(value: object, label: str) -> Mapping[str, Any]:
@@ -55,6 +80,28 @@ def _nonempty_string(value: object, label: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ConformanceSchemaError(f"{label} must be a non-empty string")
     return value
+
+
+def _pattern_string(value: object, label: str, pattern: re.Pattern[str]) -> str:
+    """Return a string matching one frozen schema pattern."""
+
+    result = _nonempty_string(value, label)
+    if pattern.fullmatch(result) is None:
+        raise ConformanceSchemaError(f"{label} has an invalid format")
+    return result
+
+
+def _reject_floating_point_values(value: object, label: str) -> None:
+    """Reject floating-point values anywhere in common receipt observations."""
+
+    if isinstance(value, float):
+        raise ConformanceSchemaError(f"{label} contains a floating-point value")
+    if isinstance(value, Mapping):
+        for key, child in value.items():
+            _reject_floating_point_values(child, f"{label}.{key}")
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            _reject_floating_point_values(child, f"{label}[{index}]")
 
 
 def _string_array(value: object, label: str, *, nonempty: bool = False) -> list[str]:
@@ -268,3 +315,146 @@ def validate_run_plan_document(document: Mapping[str, Any]) -> None:
         _validate_normalization_envelope(
             scenario["normalization"], f"{label}.normalization"
         )
+
+
+def validate_receipt_document(
+    document: Mapping[str, Any],
+    *,
+    allow_schema_version_mismatch: bool = False,
+) -> None:
+    """Validate the closed common structure of a version-one execution receipt.
+
+    Family-specific observations remain opaque JSON objects. Raises
+    ``ConformanceSchemaError`` when common execution evidence is incomplete or
+    has an invalid type. ``allow_schema_version_mismatch`` lets current-launch
+    validation distinguish a well-formed older schema identity from malformed
+    evidence without trusting a differently shaped envelope.
+    """
+
+    prefix = "receipt schema"
+    _exact_keys(
+        document,
+        frozenset(
+            {
+                "schemaVersion",
+                "familyId",
+                "familyVersion",
+                "expectationDigest",
+                "invocation",
+                "participant",
+                "runner",
+                "scenarios",
+            }
+        ),
+        prefix,
+    )
+    _positive_integer(
+        document["schemaVersion"],
+        f"{prefix}.schemaVersion",
+        exact=None if allow_schema_version_mismatch else 1,
+    )
+    _positive_integer(document["familyVersion"], f"{prefix}.familyVersion")
+    _pattern_string(document["familyId"], f"{prefix}.familyId", _STABLE_ID)
+    _pattern_string(
+        document["expectationDigest"], f"{prefix}.expectationDigest", _SHA256
+    )
+
+    invocation = _mapping(document["invocation"], f"{prefix}.invocation")
+    _exact_keys(
+        invocation,
+        frozenset({"id", "sourceIdentity", "runPlanDigest"}),
+        f"{prefix}.invocation",
+    )
+    _pattern_string(invocation["id"], f"{prefix}.invocation.id", _UUID_V4)
+    _pattern_string(
+        invocation["sourceIdentity"],
+        f"{prefix}.invocation.sourceIdentity",
+        _SOURCE_IDENTITY,
+    )
+    _pattern_string(
+        invocation["runPlanDigest"],
+        f"{prefix}.invocation.runPlanDigest",
+        _SHA256,
+    )
+
+    participant = _mapping(document["participant"], f"{prefix}.participant")
+    _exact_keys(
+        participant,
+        frozenset({"id", "role", "executionInstanceId"}),
+        f"{prefix}.participant",
+    )
+    _pattern_string(participant["id"], f"{prefix}.participant.id", _STABLE_ID)
+    _pattern_string(
+        participant["executionInstanceId"],
+        f"{prefix}.participant.executionInstanceId",
+        _STABLE_ID,
+    )
+    participant_role = _nonempty_string(
+        participant["role"], f"{prefix}.participant.role"
+    )
+    if participant_role not in {"semantic-adapter", "consumer"}:
+        raise ConformanceSchemaError(
+            f"{prefix}.participant.role must be semantic-adapter or consumer"
+        )
+
+    runner = _mapping(document["runner"], f"{prefix}.runner")
+    _exact_keys(
+        runner,
+        frozenset({"id", "version", "platform", "toolchain"}),
+        f"{prefix}.runner",
+    )
+    _pattern_string(runner["id"], f"{prefix}.runner.id", _STABLE_ID)
+    _positive_integer(runner["version"], f"{prefix}.runner.version")
+    _pattern_string(runner["platform"], f"{prefix}.runner.platform", _STABLE_ID)
+    _pattern_string(runner["toolchain"], f"{prefix}.runner.toolchain", _STABLE_ID)
+
+    scenarios = _list(document["scenarios"], f"{prefix}.scenarios")
+    for index, raw_scenario in enumerate(scenarios):
+        label = f"{prefix}.scenarios[{index}]"
+        scenario = _mapping(raw_scenario, label)
+        status = scenario.get("executionStatus")
+        common_keys = {
+            "id",
+            "executionStatus",
+            "capabilityIds",
+            "observation",
+            "failure",
+        }
+        if status == "not_applicable":
+            common_keys.add("policyExceptionId")
+        _exact_keys(scenario, frozenset(common_keys), label)
+        _pattern_string(scenario["id"], f"{label}.id", _STABLE_ID)
+        _nonempty_string(status, f"{label}.executionStatus")
+        capability_ids = _string_array(
+            scenario["capabilityIds"], f"{label}.capabilityIds", nonempty=True
+        )
+        for capability_index, capability_id in enumerate(capability_ids):
+            _pattern_string(
+                capability_id,
+                f"{label}.capabilityIds[{capability_index}]",
+                _STABLE_ID,
+            )
+        if status in {"completed", "failed"}:
+            observation = _mapping(scenario["observation"], f"{label}.observation")
+            _reject_floating_point_values(observation, f"{label}.observation")
+        elif status == "not_applicable":
+            if scenario["observation"] is not None or scenario["failure"] is not None:
+                raise ConformanceSchemaError(
+                    f"{label} not_applicable evidence needs null observation and failure"
+                )
+            _pattern_string(
+                scenario["policyExceptionId"],
+                f"{label}.policyExceptionId",
+                _STABLE_ID,
+            )
+        else:
+            raise ConformanceSchemaError(
+                f"{label}.executionStatus must be completed, failed, or not_applicable"
+            )
+        if status == "completed" and scenario["failure"] is not None:
+            raise ConformanceSchemaError(f"{label}.failure must be null when completed")
+        if status == "failed":
+            failure = _mapping(scenario["failure"], f"{label}.failure")
+            _exact_keys(failure, frozenset({"kind", "message"}), f"{label}.failure")
+            _pattern_string(failure["kind"], f"{label}.failure.kind", _STABLE_ID)
+            _nonempty_string(failure["message"], f"{label}.failure.message")
