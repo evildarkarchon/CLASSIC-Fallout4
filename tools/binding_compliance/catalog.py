@@ -106,6 +106,37 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         ),
     ),
     ComplianceRequirement(
+        id="evidence-migration-ledger",
+        title="Evidence migration ledger is exhaustive and classified",
+        surface="policy",
+        classification="new_check",
+        profiles=STATIC_PROFILES,
+        blocking=True,
+        summary=(
+            "Checks that every current parity, runtime-registry, Crash Log Scan Run, "
+            "and consumer/source-audit obligation has exactly one diagnostic target "
+            "disposition. The ledger cannot grant compliance or replace another gate."
+        ),
+        command=CommandSpec(
+            argv=(
+                "python",
+                "tools/binding_compliance/migration_ledger.py",
+                "--repo-root",
+                ".",
+            )
+        ),
+        paths=(
+            "tools/binding_compliance/migration_ledger.py",
+            "docs/implementation/binding_compliance/evidence_migration_ledger.json",
+            "docs/implementation/binding_compliance/evidence_migration_ledger.md",
+        ),
+        proves=(
+            "The diagnostic inventory matches every live Phase 0 obligation occurrence.",
+            "Every obligation names a runtime target, retained analyzer, or documented policy exception.",
+            "No ledger row supplies executed coverage or permits an existing gate to be removed.",
+        ),
+    ),
+    ComplianceRequirement(
         id="policy-one-tier-contract",
         title="One-tier parity policy is documented",
         surface="policy",

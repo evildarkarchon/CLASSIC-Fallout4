@@ -80,3 +80,32 @@ def test_static_profiles_block_on_scan_run_variant_acknowledgements() -> None:
         "--repo-root",
         ".",
     )
+
+
+def test_migration_ledger_is_a_diagnostic_guard_without_replacing_gates() -> None:
+    """Ledger completeness is blocking while all existing evidence owners remain."""
+
+    requirements = {requirement.id: requirement for requirement in REQUIREMENTS}
+    ledger = requirements["evidence-migration-ledger"]
+
+    assert ledger.blocking is True
+    assert "cannot grant compliance" in ledger.summary
+    assert ledger.command is not None
+    assert ledger.command.argv == (
+        "python",
+        "tools/binding_compliance/migration_ledger.py",
+        "--repo-root",
+        ".",
+    )
+    retained_gate_ids = {
+        "cxx-parity-gate",
+        "node-parity-gate",
+        "python-parity-gate",
+        "python-stub-validation",
+        "scan-run-contract-variants",
+        "user-settings-exclusive-ownership",
+    }
+    assert retained_gate_ids <= requirements.keys()
+    assert all(
+        requirements[requirement_id].blocking for requirement_id in retained_gate_ids
+    )
