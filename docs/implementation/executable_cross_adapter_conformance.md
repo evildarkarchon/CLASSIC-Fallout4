@@ -1,6 +1,6 @@
 # Executable Cross-Adapter Conformance Specification
 
-> **Status: accepted design; not yet implemented.** [ADR-0008](../adr/0008-executable-cross-adapter-conformance.md) records the decision. This document specifies the target architecture and its required migration. Until a phase reaches its blocking exit gate, the commands and evidence documented in `docs/api/binding-compliance-suite.md` remain authoritative.
+> **Status: accepted design; implementation in progress.** [ADR-0008](../adr/0008-executable-cross-adapter-conformance.md) records the decision. Phase 0's diagnostic ledger and the generic validated-pack/input-only materialization path are implemented; receipt validation, comparison, coverage, adapters, and blocking domain packs remain later migration slices. Until a phase reaches its blocking exit gate, the commands and evidence documented in `docs/api/binding-compliance-suite.md` remain authoritative.
 
 ## Target
 
@@ -161,6 +161,8 @@ The example omits domain payloads for readability. Implemented schemas must enfo
 - Normalization declarations name exact observation paths. Wildcard removal of arbitrary fields is invalid.
 - Every exclusion has a rationale. Timing and unconstrained concurrent interleaving are excluded by default; stable serialized ordering remains contractual.
 
+Version 1 normalization paths use a deliberately small exact JSONPath grammar: `$` followed by one or more dotted field names or numeric array indices. Wildcards, recursive descent, filters, slices, and the root by itself are invalid. `unorderedPaths` is an array of those exact path strings. Each `excludedPaths` entry is an object containing exactly `path` and a non-empty `rationale`; a path cannot be both unordered and excluded.
+
 ### Input-only run plan
 
 The engine validates a pack and materializes a temporary run plan containing only:
@@ -175,7 +177,9 @@ The engine validates a pack and materializes a temporary run plan containing onl
 
 The run plan omits `expected`. Adapter runners must not load expectations or compare themselves with Rust output. Existing native tests may keep focused local assertions, but conformance passes only when the central comparator receives actual observations.
 
-The expectation digest is SHA-256 over the engine's validated canonical JSON representation of the pack plus the relative path and raw bytes of every declared fixture, ordered by relative path and framed unambiguously by the engine. Canonical JSON uses UTF-8, recursively sorted object keys, no insignificant whitespace, and no ASCII escaping. Floating-point JSON numbers are forbidden in the common schema; normalized quantities use integers or an explicitly formatted string. Native runners receive the digest as opaque launch data, and the compliance engine recomputes it from the current tracked pack and fixtures when validating a receipt. Every launch uses a new invocation ID and unique artifact directory. The run-plan digest covers the exact materialized plan, while the source identity records the current commit plus a digest of relevant dirty participant and runner inputs. The launcher requires the output path to be absent before execution, preventing a prior receipt from being reused when source changes but the pack does not.
+The expectation digest is SHA-256 over the engine's validated canonical JSON representation of the pack plus the relative path and raw bytes of every declared fixture, ordered by relative path and framed unambiguously by the engine. Canonical JSON uses UTF-8, recursively sorted object keys, no insignificant whitespace, and no ASCII escaping. Floating-point JSON numbers are forbidden in the common schema; normalized quantities use integers or an explicitly formatted string. The version 1 digest preimage uses type-tagged, unsigned 64-bit big-endian length frames for the contract marker, canonical pack, and each ordered fixture path/byte pair. Native runners receive the digest as opaque launch data, and the compliance engine recomputes it from the current tracked pack and fixtures when validating a receipt.
+
+Every launch uses a new UUID invocation ID and unique artifact directory. The run-plan digest covers the canonical materialized plan before the self-referential `runPlanDigest` member is inserted; every other plan field, including the invocation ID, is covered. Source identity has the form `git:<current-revision>:sha256:<source-input-digest>` and covers the declared path identities and current bytes of the pack, declared fixtures, and caller-declared participant/runner source paths. It is recomputed for every materialization but remains stable when those source inputs are unchanged. The reserved receipt path must be absent before execution, preventing a prior receipt from being reused when source changes but the pack does not.
 
 ## Receipt contract
 

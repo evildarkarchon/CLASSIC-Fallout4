@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/evildarkarchon/CLASSIC-Fallout4/tests/conformance/schemas/run-plan-v1.schema.json",
+  "title": "CLASSIC input-only conformance run plan v1",
+  "x-classic-reject-floating-point-lexemes": true,
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "familyId",
+    "familyVersion",
+    "expectationDigest",
+    "fixtureRoot",
+    "fixtures",
+    "participant",
+    "invocation",
+    "scenarios"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "familyId": { "$ref": "#/$defs/stableId" },
+    "familyVersion": { "type": "integer", "minimum": 1 },
+    "expectationDigest": { "$ref": "#/$defs/sha256" },
+    "fixtureRoot": { "type": "string", "minLength": 1 },
+    "fixtures": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/fixtureRef" },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "participant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "executionInstanceId"],
+      "properties": {
+        "id": { "$ref": "#/$defs/stableId" },
+        "role": { "enum": ["semantic-adapter", "consumer"] },
+        "executionInstanceId": { "$ref": "#/$defs/stableId" }
+      }
+    },
+    "invocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sourceIdentity", "runPlanDigest"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+        },
+        "sourceIdentity": {
+          "type": "string",
+          "pattern": "^git:[0-9a-f]{40,64}:sha256:[0-9a-f]{64}$"
+        },
+        "runPlanDigest": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "action",
+          "capabilityIds",
+          "fixtureRefs",
+          "input",
+          "normalization"
+        ],
+        "properties": {
+          "id": { "$ref": "#/$defs/stableId" },
+          "action": { "$ref": "#/$defs/stableId" },
+          "capabilityIds": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "$ref": "#/$defs/stableId" }
+          },
+          "fixtureRefs": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "$ref": "#/$defs/fixtureRef" }
+          },
+          "input": { "$ref": "#/$defs/canonicalJsonObject" },
+          "normalization": { "$ref": "#/$defs/normalization" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$"
+    },
+    "fixtureRef": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "canonicalJsonObject": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/canonicalJsonValue" }
+    },
+    "canonicalJsonValue": {
+      "description": "Canonical JSON value. The loader additionally rejects integer-valued float lexemes such as 1.0, which JSON Schema cannot distinguish after parsing.",
+      "x-classic-number-lexeme": "integer-only",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "integer" },
+        { "type": "boolean" },
+        { "type": "null" },
+        {
+          "type": "array",
+          "items": { "$ref": "#/$defs/canonicalJsonValue" }
+        },
+        { "$ref": "#/$defs/canonicalJsonObject", "type": "object" }
+      ]
+    },
+    "exactJsonPath": {
+      "type": "string",
+      "pattern": "^\\$(?:(?:\\.[A-Za-z_][A-Za-z0-9_-]*)|(?:\\[(?:0|[1-9][0-9]*)\\]))+$"
+    },
+    "normalization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rootRelativePaths", "unorderedPaths", "excludedPaths"],
+      "properties": {
+        "rootRelativePaths": { "type": "boolean" },
+        "unorderedPaths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/exactJsonPath" }
+        },
+        "excludedPaths": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "rationale"],
+            "properties": {
+              "path": { "$ref": "#/$defs/exactJsonPath" },
+              "rationale": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    }
+  }
+}
