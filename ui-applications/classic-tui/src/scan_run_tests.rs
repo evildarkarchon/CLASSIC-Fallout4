@@ -1,7 +1,7 @@
 use super::{
     CANCEL_RECOVERY_CHOICE, LocalIgnoreRecoveryPrompt, PresentedLine, ScanRunIntent,
-    TerminalPresentation, build_request, describe_local_ignore_recovery, format_error, format_event,
-    format_result, format_resume_error, join_presented, sentence_case,
+    TerminalPresentation, build_request, describe_local_ignore_recovery, format_error,
+    format_event, format_result, format_resume_error, join_presented, sentence_case,
 };
 use classic_config_core::YamlDataContentIdentity;
 use classic_scan_presentation::{
@@ -13,8 +13,8 @@ use classic_scanlog_core::scan_run::contract::{
     Configuration, Event, InfrastructureError, InfrastructureErrorStage,
     LocalIgnoreRecoveryDecision, LocalIgnoreResetConflictError,
     LocalIgnoreResetDurabilityUnknownError, LocalIgnoreResetFailure, LocalIgnoreResetFailureStage,
-    LogDisposition, LogEvent, LogFailure, LogFailureStage, LogResult, Options, Request, ResumeError,
-    RunResult,
+    LogDisposition, LogEvent, LogFailure, LogFailureStage, LogResult, Options, Request,
+    ResumeError, RunResult,
 };
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanFacts,
@@ -889,7 +889,9 @@ fn recovery_prompt_omits_reset_when_the_contract_says_it_cannot_succeed() {
             RecoveryDecisionDescription {
                 decision: LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
                 label: "Proceed Without Ignore",
-                description: Vec::from([DisplaySegment::Text("Scan now with an empty ignore list.")]),
+                description: Vec::from([DisplaySegment::Text(
+                    "Scan now with an empty ignore list.",
+                )]),
                 available: true,
             },
             RecoveryDecisionDescription {
