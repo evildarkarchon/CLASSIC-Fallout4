@@ -67,6 +67,7 @@ private:
         return (value >> count) | (value << (32U - count));
     }
 
+    /// Absorbs bytes into the digest state, compressing each complete 64-byte block.
     void update(std::span<const std::uint8_t> bytes) {
         byte_count_ += bytes.size();
         for (const std::uint8_t byte : bytes) {
@@ -78,6 +79,7 @@ private:
         }
     }
 
+    /// Applies one SHA-256 compression round sequence to a complete message block.
     void transform(const std::array<std::uint8_t, 64>& block) {
         std::array<std::uint32_t, 64> words{};
         for (std::size_t index = 0; index < 16; ++index) {
@@ -100,23 +102,24 @@ private:
             const std::uint32_t big_one =
                 rotate_right(working[4], 6U) ^ rotate_right(working[4], 11U) ^ rotate_right(working[4], 25U);
             const std::uint32_t choice = (working[4] & working[5]) ^ (~working[4] & working[6]);
-            const std::uint32_t first = working[7] + big_one + choice + ROUND_CONSTANTS[index] + words[index];
+            const std::uint32_t round_t1 = working[7] + big_one + choice + ROUND_CONSTANTS[index] + words[index];
             const std::uint32_t big_zero =
                 rotate_right(working[0], 2U) ^ rotate_right(working[0], 13U) ^ rotate_right(working[0], 22U);
             const std::uint32_t majority =
                 (working[0] & working[1]) ^ (working[0] & working[2]) ^ (working[1] & working[2]);
-            const std::uint32_t second = big_zero + majority;
+            const std::uint32_t round_t2 = big_zero + majority;
             for (std::size_t position = working.size() - 1; position > 0; --position) {
                 working[position] = working[position - 1];
             }
-            working[4] += first;
-            working[0] = first + second;
+            working[4] += round_t1;
+            working[0] = round_t1 + round_t2;
         }
         for (std::size_t index = 0; index < state_.size(); ++index) {
             state_[index] += working[index];
         }
     }
 
+    /// Finalizes the padded message and returns its lowercase hexadecimal digest.
     [[nodiscard]] std::string finish() {
         const std::uint64_t bit_count = byte_count_ * 8U;
         buffer_[buffer_size_++] = 0x80U;
