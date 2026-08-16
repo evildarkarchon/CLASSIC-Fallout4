@@ -2,8 +2,8 @@
 
 > **Diagnostic only.** This ledger classifies migration targets and does **not** grant compliance, runtime coverage, or permission to remove a gate.
 
-- Obligations: **3,650**
-- Named retained analyzers: **18**
+- Obligations: **3,655**
+- Named retained analyzers: **19**
 - Documented policy exceptions: **1**
 
 ## Target dispositions
@@ -12,8 +12,8 @@
 | --- | ---: |
 | `negative_analyzer` | 207 |
 | `policy_exception` | 1 |
-| `runtime_verifiable` | 3,043 |
-| `structural_analyzer` | 399 |
+| `runtime_verifiable` | 3,023 |
+| `structural_analyzer` | 424 |
 
 ## Current evidence sources
 
@@ -30,7 +30,7 @@
 | `rust_enum_inventory_audit` | 15 |
 | `scan_run_contract_variant` | 73 |
 | `scan_run_required_participant` | 28 |
-| `scan_run_source_marker` | 119 |
+| `scan_run_source_marker` | 124 |
 | `scan_run_supported_adapter` | 4 |
 | `scan_run_variant_acknowledgement` | 292 |
 | `shared_runtime_source_audit` | 1 |
@@ -54,6 +54,7 @@
 - `python-source-and-stub-parity` (structural): `tools/python_api_parity/check_parity_gate.py`, `validate_stubs.py`, `docs/implementation/python_api_parity/baseline/parity_contract.json`
 - `scan-run-contract-validator` (structural): `tools/binding_compliance/scan_run_contract.py`, `tests/fixtures/crash_log_scan_run/manifest.json`
 - `scan-run-forbidden-export-audit` (negative): `tools/binding_compliance/scan_run_contract.py`
+- `scan-run-local-ignore-reset-internal-faults` (structural): `tools/binding_compliance/scan_run_contract.py`, `tests/fixtures/crash_log_scan_run/manifest.json`, `business-logic/classic-durable-publication/src/publication_fault.rs`, `business-logic/classic-config-core/src/installed_yaml_data_reset_fault.rs`, `business-logic/classic-config-core/src/installed_yaml_data_tests.rs`, `business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs`, `cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs`, `node-bindings/classic-node/src/scan_run_tests.rs`, `python-bindings/classic-scanlog-py/src/scan_run_tests.rs`
 - `scan-run-rust-enum-inventory` (structural): `tools/binding_compliance/scan_run_contract.py`
 - `tui-shared-runtime-ownership` (structural): `ui-applications/classic-tui/tests/shared_runtime_audit.rs`
 - `user-settings-exclusive-ownership` (negative): `tools/user_settings_ownership/check.py`

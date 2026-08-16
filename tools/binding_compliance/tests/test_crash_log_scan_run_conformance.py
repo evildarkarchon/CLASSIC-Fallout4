@@ -56,6 +56,20 @@ PARTICIPANT_SOURCES = {
     ),
 }
 
+EXPECTED_SCENARIO_IDS = [
+    "standard-happy-path",
+    "targeted-happy-path",
+    "generated-local-ignore",
+    "proceed-without-ignore-recovery",
+    "reset-to-default-recovery",
+    "reset-intervening-change-conflict",
+    "reset-operational-failure",
+    "reset-pre-cancelled",
+    "reset-post-critical-cancelled",
+    "abandon-local-ignore-recovery",
+]
+"""The public-seam Crash Log Scan Run v1 scenarios required by issues #193-194."""
+
 
 def test_live_pack_is_input_only_for_all_three_base_adapters(tmp_path: Path) -> None:
     """Fresh Rust, Node, and Python plans share scenarios but never the oracle."""
@@ -78,14 +92,9 @@ def test_live_pack_is_input_only_for_all_three_base_adapters(tmp_path: Path) -> 
         "malformedLocalIgnoreYaml",
     }
     assert "manifest.json" not in str(pack_document)
-    assert [scenario["id"] for scenario in pack_document["scenarios"]] == [
-        "standard-happy-path",
-        "targeted-happy-path",
-        "generated-local-ignore",
-        "proceed-without-ignore-recovery",
-        "reset-to-default-recovery",
-        "abandon-local-ignore-recovery",
-    ]
+    assert [scenario["id"] for scenario in pack_document["scenarios"]] == (
+        EXPECTED_SCENARIO_IDS
+    )
 
     artifact_root = (
         REPO_ROOT
@@ -110,14 +119,9 @@ def test_live_pack_is_input_only_for_all_three_base_adapters(tmp_path: Path) -> 
             plans[participant_id] = plan
             assert not prepared.receipt_path.exists()
             assert all("expected" not in scenario for scenario in plan["scenarios"])
-            assert [scenario["id"] for scenario in plan["scenarios"]] == [
-                "standard-happy-path",
-                "targeted-happy-path",
-                "generated-local-ignore",
-                "proceed-without-ignore-recovery",
-                "reset-to-default-recovery",
-                "abandon-local-ignore-recovery",
-            ]
+            assert [scenario["id"] for scenario in plan["scenarios"]] == (
+                EXPECTED_SCENARIO_IDS
+            )
     finally:
         if artifact_root.exists():
             shutil.rmtree(artifact_root)
@@ -162,14 +166,9 @@ def test_cxx_preparation_materializes_fresh_input_only_toolchain_instances(
                 "executionInstanceId": f"windows-{compiler}",
             }
             assert all("expected" not in scenario for scenario in plan["scenarios"])
-            assert [scenario["id"] for scenario in plan["scenarios"]] == [
-                "standard-happy-path",
-                "targeted-happy-path",
-                "generated-local-ignore",
-                "proceed-without-ignore-recovery",
-                "reset-to-default-recovery",
-                "abandon-local-ignore-recovery",
-            ]
+            assert [scenario["id"] for scenario in plan["scenarios"]] == (
+                EXPECTED_SCENARIO_IDS
+            )
     finally:
         if artifact_root.exists():
             shutil.rmtree(artifact_root)
@@ -372,6 +371,122 @@ def test_reset_recovery_facts_fail_closed_on_semantic_mutation() -> None:
             "scan-run.recovery.reset-backup-and-repair": lambda value: value[
                 "durableEffects"
             ].__setitem__("backups", []),
+            "scan-run.recovery.reset-replay-rejected": lambda value: value[
+                "replays"
+            ][0]["error"].__setitem__("kind", "other"),
+        },
+    )
+
+
+def test_reset_conflict_facts_fail_closed_on_semantic_mutation() -> None:
+    """Conflict coverage requires typed identities, no overwrite, and one-shot replay."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "reset-intervening-change-conflict",
+        {
+            "scan-run.recovery.initial-retained-snapshot": lambda value: value[
+                "initial"
+            ]["installedYamlData"]["localIgnoreIdentity"].__setitem__(
+                "byteLength", 0
+            ),
+            "scan-run.recovery.initial-prompt": lambda value: value["initial"][
+                "recoveryPrompt"
+            ]["decisions"][1].__setitem__("available", False),
+            "scan-run.recovery.reset-conflict": lambda value: value[
+                "terminalError"
+            ].__setitem__("code", "other"),
+            "scan-run.recovery.reset-conflict-forbidden-effects": lambda value: value[
+                "durableEffects"
+            ]["localIgnore"]["identity"].__setitem__("byteLength", 0),
+            "scan-run.recovery.reset-replay-rejected": lambda value: value[
+                "replays"
+            ][0]["error"].__setitem__("kind", "other"),
+        },
+    )
+
+
+def test_reset_operational_failure_facts_fail_closed_on_semantic_mutation() -> None:
+    """Operational coverage requires a stable rejection and no reset side effects."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "reset-operational-failure",
+        {
+            "scan-run.recovery.initial-retained-snapshot": lambda value: value[
+                "initial"
+            ]["discovery"]["acceptedLogs"][0].__setitem__(
+                "path", "Recovery/other.log"
+            ),
+            "scan-run.recovery.initial-prompt": lambda value: value["initial"][
+                "recoveryPrompt"
+            ]["decisions"][1].__setitem__("available", False),
+            "scan-run.recovery.reset-operational-failure": lambda value: value[
+                "terminalError"
+            ].__setitem__("messageNonEmpty", False),
+            "scan-run.recovery.reset-operational-forbidden-effects": lambda value: value[
+                "durableEffects"
+            ]["forbidden"][2].__setitem__("exists", True),
+            "scan-run.recovery.reset-replay-rejected": lambda value: value[
+                "replays"
+            ][0]["error"].__setitem__("kind", "other"),
+        },
+    )
+
+
+def test_pre_reset_cancellation_facts_fail_closed_on_semantic_mutation() -> None:
+    """Pre-reset cancellation requires a normal result and zero durable mutation."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "reset-pre-cancelled",
+        {
+            "scan-run.recovery.initial-retained-snapshot": lambda value: value[
+                "initial"
+            ]["installedYamlData"].__setitem__("localIgnoreResetAvailable", False),
+            "scan-run.recovery.initial-prompt": lambda value: value["initial"][
+                "recoveryPrompt"
+            ]["decisions"][1].__setitem__("available", False),
+            "scan-run.recovery.reset-pre-cancelled": lambda value: value["terminal"][
+                "run"
+            ].__setitem__("status", "completed"),
+            "scan-run.recovery.reset-pre-cancelled-forbidden-effects": lambda value: value[
+                "durableEffects"
+            ]["forbidden"][4].__setitem__("exists", True),
+            "scan-run.recovery.reset-replay-rejected": lambda value: value[
+                "replays"
+            ][0]["error"].__setitem__("kind", "other"),
+        },
+    )
+
+
+def test_post_critical_cancellation_facts_fail_closed_on_semantic_mutation() -> None:
+    """Post-critical cancellation requires a complete receipt and byte-exact backup."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "reset-post-critical-cancelled",
+        {
+            "scan-run.recovery.initial-retained-snapshot": lambda value: value[
+                "initial"
+            ]["installedYamlData"]["localIgnoreIdentity"].__setitem__(
+                "byteLength", 39
+            ),
+            "scan-run.recovery.initial-prompt": lambda value: value["initial"][
+                "recoveryPrompt"
+            ]["decisions"][1].__setitem__("available", False),
+            "scan-run.recovery.reset-post-critical-cancelled": lambda value: value[
+                "terminal"
+            ]["installedYamlData"]["localIgnoreReset"]["backup"].__setitem__(
+                "identityMatchesReceipt", False
+            ),
+            "scan-run.recovery.reset-post-critical-durable-effects": lambda value: value[
+                "durableEffects"
+            ]["backups"][0]["identity"].__setitem__("byteLength", 39),
             "scan-run.recovery.reset-replay-rejected": lambda value: value[
                 "replays"
             ][0]["error"].__setitem__("kind", "other"),
@@ -688,6 +803,9 @@ def test_cxx_runner_and_launcher_stay_bridge_only_and_oracle_blind() -> None:
     assert "scan_run_continuation_abandon" in runner
     assert "materialize_post_pause_data" in runner
     assert 'flow.value("replays"' in runner
+    assert "project_terminal_resume_error" in runner
+    assert '"after-reset-critical-section"' in runner
+    assert '"localIgnorePaddingBytes"' in runner
     assert 'scenario.contains("expected")' in runner
     assert "scan_run_fixture_config" not in runner
     assert "manifest.json" not in runner
@@ -749,6 +867,9 @@ def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None
             "ContinuationOperationInput::Abandon",
             "flow.post_pause_data",
             "flow.replays",
+            "project_terminal_error",
+            "CancellationBoundaryInput::AfterResetCriticalSection",
+            "local_ignore_padding_bytes",
         ),
         "node": (
             "scanRunExecute",
@@ -757,6 +878,9 @@ def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None
             'from "../index.js"',
             "flow.postPauseData",
             "flow.replays",
+            "terminalResumeError",
+            '"after-reset-critical-section"',
+            "localIgnorePaddingBytes",
         ),
         "python": (
             "scan_run_execute",
@@ -765,6 +889,9 @@ def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None
             "import classic_scanlog",
             'flow.get("postPauseData"',
             'flow.get("replays"',
+            "_project_terminal_resume_error",
+            '"after-reset-critical-section"',
+            "localIgnorePaddingBytes",
         ),
     }
     for participant_id, source_paths in PARTICIPANT_SOURCES.items():

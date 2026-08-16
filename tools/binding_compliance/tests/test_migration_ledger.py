@@ -100,7 +100,7 @@ def test_discovery_freezes_every_current_evidence_source() -> None:
         "scan_run_contract_variant": 73,
         "scan_run_supported_adapter": 4,
         "scan_run_variant_acknowledgement": 292,
-        "scan_run_source_marker": 119,
+        "scan_run_source_marker": 124,
         "scan_run_required_participant": 28,
         "consumer_required_participant": 3,
         "consumer_audit": 6,
@@ -190,6 +190,55 @@ def test_binding_only_rows_and_cxx_policy_exception_remain_explicit() -> None:
     assert resource_exception["classification"] == "policy_exception"
 
 
+def test_unreachable_reset_faults_remain_blocking_structural_obligations() -> None:
+    """Private replacement faults cannot be mislabeled as public semantic receipts."""
+
+    obligations = discover_current_obligations(REPO_ROOT)
+    reset_faults = [
+        entry
+        for entry in obligations
+        if entry["mappingOrigin"] == "retained_internal_fault_projection"
+    ]
+
+    assert {
+        entry["participant"] for entry in reset_faults
+    } == {"rust", "cxx", "node", "python"}
+    assert all(entry["classification"] == "structural_analyzer" for entry in reset_faults)
+    assert all(entry["migrationState"] == "blocking" for entry in reset_faults)
+    assert all(
+        entry["target"]["analyzerId"]
+        == "scan-run-local-ignore-reset-internal-faults"
+        for entry in reset_faults
+    )
+    variant_faults = [
+        entry
+        for entry in reset_faults
+        if entry["sourceKind"] == "scan_run_variant_acknowledgement"
+    ]
+    marker_faults = [
+        entry
+        for entry in reset_faults
+        if entry["sourceKind"] == "scan_run_source_marker"
+    ]
+    assert len(variant_faults) == 8
+    assert len(marker_faults) == 17
+
+    public_reset_variants = {
+        entry["id"]: entry
+        for entry in obligations
+        if entry["sourceKind"] == "scan_run_variant_acknowledgement"
+        and (
+            entry["id"].endswith("local_ignore_reset_conflict")
+            or entry["id"].endswith("local_ignore_reset_backup_failure")
+        )
+    }
+    assert len(public_reset_variants) == 8
+    assert all(
+        entry["classification"] == "runtime_verifiable"
+        for entry in public_reset_variants.values()
+    )
+
+
 def test_preserved_id_with_stale_source_metadata_is_rejected() -> None:
     """An unchanged ID cannot hide that the underlying source locator drifted."""
 
@@ -248,7 +297,7 @@ def test_generated_ledger_is_deterministic_and_non_evidentiary() -> None:
 
     assert first == second
     assert first["diagnosticOnly"] is True
-    assert first["sourceSummary"]["total"] == 3_650
+    assert first["sourceSummary"]["total"] == 3_655
     assert "coverage" not in first
     assert "receipts" not in first
     validate_ledger_entries(first, discover_current_obligations(REPO_ROOT))
@@ -261,7 +310,7 @@ def test_markdown_summary_warns_that_the_ledger_grants_no_compliance() -> None:
 
     assert "Diagnostic only" in markdown
     assert "does **not** grant compliance" in markdown
-    assert "3,650" in markdown
+    assert "3,655" in markdown
 
 
 def test_analyzer_must_resolve_to_a_blocking_owner_and_matching_kind() -> None:

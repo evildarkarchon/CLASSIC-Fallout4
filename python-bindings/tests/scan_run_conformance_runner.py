@@ -9,6 +9,8 @@ import shutil
 import stat
 import sys
 import tempfile
+import threading
+import time
 import uuid
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
@@ -194,6 +196,28 @@ def _materialize_scenario_inputs(
     elif intent != "targeted":
         raise RunnerContractError("scenario intent must be standard or targeted")
     return inputs
+
+
+def _append_local_ignore_padding(inputs: Mapping[str, Any], root: Path) -> None:
+    """Append declared bytes that keep the reset transaction observable to cancellation."""
+
+    raw_byte_count = inputs.get("localIgnorePaddingBytes")
+    if raw_byte_count is None:
+        return
+    if type(raw_byte_count) is not int or raw_byte_count < 0:
+        raise RunnerContractError(
+            "scenario input localIgnorePaddingBytes must be a non-negative integer"
+        )
+    if raw_byte_count == 0:
+        return
+    local_ignore_path = root / "CLASSIC Data" / "CLASSIC Ignore.yaml"
+    try:
+        with local_ignore_path.open("ab") as local_ignore:
+            local_ignore.write(b"x" * raw_byte_count)
+    except OSError as error:
+        raise RunnerContractError(
+            "cannot append declared Local Ignore padding"
+        ) from error
 
 
 @contextmanager
@@ -662,14 +686,14 @@ def _file_effect(root: Path, path: Path, label: str) -> dict[str, Any]:
 
 
 def _local_ignore_durable_effects(
-    result: Any, inputs: Mapping[str, Any], root: Path
+    result: Any | None, inputs: Mapping[str, Any], root: Path
 ) -> dict[str, Any]:
-    """Observe Local Ignore, backup, report, and explicitly forbidden file effects."""
+    """Observe Local Ignore and every durable effect, including failed resume outcomes."""
 
     backup_directory = root / "CLASSIC Backup" / "YAML Data" / "Local Ignore"
     try:
         backup_entries = sorted(backup_directory.iterdir())
-    except FileNotFoundError:
+    except (FileNotFoundError, NotADirectoryError):
         backup_entries = []
     backups = []
     for path in backup_entries:
@@ -690,7 +714,8 @@ def _local_ignore_durable_effects(
         )
 
     reports = []
-    for log in result.logs:
+    logs = () if result is None else result.logs
+    for log in logs:
         if log.autoscan_report is None:
             continue
         report_path = Path(str(log.autoscan_report))
@@ -699,14 +724,10 @@ def _local_ignore_durable_effects(
         content = _read_optional_file(report_path)
         reports.append(
             {
-                "path": _relative_path(
-                    root, report_path, "durable Autoscan Report"
-                ),
+                "path": _relative_path(root, report_path, "durable Autoscan Report"),
                 "exists": content is not None,
                 "nonEmpty": content is not None and len(content) > 0,
-                "identity": None
-                if content is None
-                else _identity_from_bytes(content),
+                "identity": None if content is None else _identity_from_bytes(content),
             }
         )
 
@@ -871,9 +892,7 @@ def _local_ignore_observation(
         continuation_available=result.continuation is not None,
         recovery_prompt=execution.recovery_prompt,
     )
-    observation["durableEffects"] = _local_ignore_durable_effects(
-        result, inputs, root
-    )
+    observation["durableEffects"] = _local_ignore_durable_effects(result, inputs, root)
     return observation
 
 
@@ -950,6 +969,77 @@ def _project_replay_error(
     }
 
 
+def _optional_error_identity(error: Exception, attribute: str) -> dict[str, Any] | None:
+    """Project an optional exact-byte identity carried by a typed resume exception."""
+
+    identity = getattr(error, attribute, None)
+    return None if identity is None else _content_identity(identity, "byte_len")
+
+
+def _optional_error_path(
+    error: Exception, attribute: str, root: Path, label: str
+) -> dict[str, str] | None:
+    """Project an optional typed resume-exception path beneath the runtime root."""
+
+    path = getattr(error, attribute, None)
+    return None if path is None else _path_carrier(root, path, label)
+
+
+def _project_terminal_resume_error(
+    error: Exception, callbacks: Sequence[Any], root: Path
+) -> dict[str, Any]:
+    """Normalize a public reset conflict or backup failure without OS-dependent prose."""
+
+    kind = getattr(error, "kind", None)
+    code = getattr(error, "code", None)
+    display_lines = getattr(error, "display_lines", None)
+    if (
+        kind
+        not in {
+            "local_ignore_reset_conflict",
+            "local_ignore_reset_backup_failure",
+        }
+        or display_lines is None
+    ):
+        raise RunnerContractError(
+            "terminal continuation raised an unsupported untyped error: "
+            f"{type(error).__name__}"
+        ) from error
+    if callbacks:
+        raise RunnerContractError(
+            "failed Local Ignore reset unexpectedly emitted scan events"
+        ) from error
+    if not isinstance(code, str) or code != kind:
+        raise RunnerContractError(
+            "terminal continuation error kind and code must agree"
+        ) from error
+    stage = getattr(error, "stage", None)
+    if stage is not None and not isinstance(stage, str):
+        raise RunnerContractError(
+            "typed Local Ignore reset failure exposed a non-string stage"
+        ) from error
+    return {
+        "code": code,
+        "kind": kind,
+        "path": _optional_error_path(error, "path", root, "reset failure path"),
+        "stage": stage,
+        "expectedIdentity": _optional_error_identity(error, "expected_identity"),
+        "actualIdentity": _optional_error_identity(error, "actual_identity"),
+        "backupPath": _optional_error_path(
+            error,
+            "backup_path",
+            root,
+            "reset failure backup path",
+        ),
+        "malformedIdentity": _optional_error_identity(error, "malformed_identity"),
+        "backupIdentity": _optional_error_identity(error, "backup_identity"),
+        "replacementIdentity": _optional_error_identity(error, "replacement_identity"),
+        "displaySeverities": [str(line.severity) for line in display_lines],
+        "messageNonEmpty": bool(str(error)),
+        "events": [],
+    }
+
+
 def _materialize_post_pause_data(
     plan: Mapping[str, Any],
     scenario: Mapping[str, Any],
@@ -976,7 +1066,7 @@ def _execute_continuation_flow(
     initial_execution: Any,
     initial_callbacks: Sequence[Any],
 ) -> dict[str, Any]:
-    """Resume or abandon the same prepared run, then prove its claim rejects replays."""
+    """Resolve one prepared run across reset outcomes and prove its claim rejects replays."""
 
     flow = _require_mapping(inputs.get("continuationFlow"), "continuationFlow")
     action = flow.get("action")
@@ -984,6 +1074,19 @@ def _execute_continuation_flow(
     replays = _require_sequence(flow.get("replays", []), "continuationFlow.replays")
     for index, replay in enumerate(replays):
         _continuation_action(replay, f"continuationFlow.replays[{index}]")
+    cancellation_boundary = flow.get("cancellation")
+    if cancellation_boundary is not None:
+        cancellation_boundary = _require_string(
+            cancellation_boundary, "continuationFlow.cancellation"
+        )
+        if cancellation_boundary not in {
+            "before-resume",
+            "after-reset-critical-section",
+        }:
+            raise RunnerContractError(
+                "continuationFlow.cancellation must be before-resume or "
+                "after-reset-critical-section"
+            )
 
     initial_result = _result_or_raise(initial_execution)
     continuation = initial_result.continuation
@@ -1011,25 +1114,65 @@ def _execute_continuation_flow(
         flow.get("postPauseData", []),
         root,
     )
+    reset_entry_observed: threading.Event | None = None
+    canceller: threading.Thread | None = None
+    if cancellation_boundary == "before-resume":
+        cancellation.cancel()
+    elif cancellation_boundary == "after-reset-critical-section":
+        operation, decision = _continuation_action(action, "continuationFlow.action")
+        if operation != "resume" or decision != "reset-to-default":
+            raise RunnerContractError(
+                "after-reset-critical-section cancellation requires reset-to-default"
+            )
+        reset_lock = root / ".classic-local-ignore-reset.lock"
+        reset_entry_observed = threading.Event()
+
+        def cancel_after_reset_entry() -> None:
+            """Cancel only after the public reset transaction exposes its lock boundary."""
+
+            deadline = time.monotonic() + 5
+            while not reset_lock.exists() and time.monotonic() < deadline:
+                time.sleep(0.001)
+            if reset_lock.exists():
+                reset_entry_observed.set()
+                cancellation.cancel()
+
+        canceller = threading.Thread(target=cancel_after_reset_entry)
+        canceller.start()
+
     cancelled_before_terminal = bool(cancellation.is_cancelled)
     terminal_callbacks: list[Any] = []
-    terminal_execution = _run_continuation_action(
-        classic_scanlog,
-        continuation,
-        cancellation,
-        action,
-        "continuationFlow.action",
-        terminal_callbacks,
-    )
-    terminal_result = _result_or_raise(terminal_execution)
-    terminal = _local_ignore_phase(
-        classic_scanlog,
-        terminal_execution,
-        terminal_callbacks,
-        root,
-        continuation_available=False,
-        recovery_prompt=None,
-    )
+    terminal_result = None
+    terminal = None
+    terminal_error = None
+    try:
+        terminal_execution = _run_continuation_action(
+            classic_scanlog,
+            continuation,
+            cancellation,
+            action,
+            "continuationFlow.action",
+            terminal_callbacks,
+        )
+    except Exception as error:  # noqa: BLE001 - typed reset rejection is receipt data.
+        terminal_error = _project_terminal_resume_error(error, terminal_callbacks, root)
+    else:
+        terminal_result = _result_or_raise(terminal_execution)
+        terminal = _local_ignore_phase(
+            classic_scanlog,
+            terminal_execution,
+            terminal_callbacks,
+            root,
+            continuation_available=False,
+            recovery_prompt=None,
+        )
+    finally:
+        if canceller is not None:
+            canceller.join()
+    if reset_entry_observed is not None and not reset_entry_observed.is_set():
+        raise RunnerContractError(
+            "Local Ignore reset critical section was not observed before its deadline"
+        )
     cancelled_after_terminal = bool(cancellation.is_cancelled)
 
     replay_observations = []
@@ -1054,15 +1197,14 @@ def _execute_continuation_flow(
     return {
         "initial": initial,
         "terminal": terminal,
+        "terminalError": terminal_error,
         "replays": replay_observations,
         "cancellation": {
             "beforeTerminal": cancelled_before_terminal,
             "afterTerminal": cancelled_after_terminal,
             "afterReplays": bool(cancellation.is_cancelled),
         },
-        "durableEffects": _local_ignore_durable_effects(
-            terminal_result, inputs, root
-        ),
+        "durableEffects": _local_ignore_durable_effects(terminal_result, inputs, root),
     }
 
 
@@ -1074,6 +1216,7 @@ def _execute_scenario(
     with tempfile.TemporaryDirectory(prefix="classic-python-conformance-") as directory:
         root = Path(directory).resolve()
         inputs = _materialize_scenario_inputs(plan, scenario, root)
+        _append_local_ignore_padding(inputs, root)
         with _isolated_runtime_environment(root):
             import classic_scanlog
             import classic_shared
@@ -1113,9 +1256,7 @@ def _execute_scenario(
                     inputs,
                     root,
                 )
-            raise RunnerContractError(
-                "observationProfile must be base or local-ignore"
-            )
+            raise RunnerContractError("observationProfile must be base or local-ignore")
 
 
 def _scenario_receipt(plan: Mapping[str, Any], raw_scenario: object) -> dict[str, Any]:

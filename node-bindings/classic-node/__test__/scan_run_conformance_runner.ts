@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import type { Dirent } from "node:fs";
 import {
   access,
+  appendFile,
   copyFile,
   mkdir,
   mkdtemp,
@@ -60,6 +61,7 @@ interface StandardSourceInput {
 interface CommonScenarioInput {
   observationProfile?: "local-ignore";
   installationData: FixturePathInput[];
+  localIgnorePaddingBytes?: number;
   game: string;
   gameVersion: string;
   showFormidValues: boolean;
@@ -73,6 +75,7 @@ interface CommonScenarioInput {
 /** Input-only instructions for one terminal continuation claim and its replays. */
 interface ContinuationFlowInput {
   action: ContinuationActionInput;
+  cancellation?: "before-resume" | "after-reset-critical-section";
   postPauseData: FixturePathInput[];
   replays: ContinuationActionInput[];
 }
@@ -401,6 +404,29 @@ async function materializePostPauseData(
       `continuationFlow.postPauseData[${index}]`,
     );
   }
+}
+
+/** Append scenario-owned bytes that make the reset critical section observable. */
+async function appendLocalIgnorePadding(
+  input: ScenarioInput,
+  root: string,
+): Promise<void> {
+  if (input.localIgnorePaddingBytes === undefined) {
+    return;
+  }
+  const byteLength = requireInteger(
+    input.localIgnorePaddingBytes,
+    "localIgnorePaddingBytes",
+  );
+  if (byteLength < 0) {
+    throw new RunnerContractError(
+      "localIgnorePaddingBytes must be non-negative",
+    );
+  }
+  await appendFile(
+    join(root, "CLASSIC Data", "CLASSIC Ignore.yaml"),
+    Buffer.alloc(byteLength, "x", "ascii"),
+  );
 }
 
 /** Convert PascalCase binding enums to their frozen lowercase token spelling. */
@@ -947,8 +973,27 @@ async function exactFileEffect(
   };
 }
 
-/** Enumerate Local Ignore backups without treating access or file-type failures as absence. */
+/** Enumerate backups, including the intentional regular-file backup blocker as none. */
 async function localIgnoreBackupEffects(root: string): Promise<JsonObject[]> {
+  const backupRoot = join(root, "CLASSIC Backup");
+  try {
+    const rootMetadata = await stat(backupRoot);
+    if (rootMetadata.isFile()) {
+      // A scenario can deliberately block backup creation with a regular file.
+      return [];
+    }
+    if (!rootMetadata.isDirectory()) {
+      throw new RunnerContractError(
+        "Local Ignore backup root is neither a file nor a directory",
+      );
+    }
+  } catch (error) {
+    if (isMissingPathError(error)) {
+      return [];
+    }
+    throw error;
+  }
+
   const directory = join(root, "CLASSIC Backup", "YAML Data", "Local Ignore");
   const entries = await readOptionalDirectory(directory);
   if (entries === null) {
@@ -995,12 +1040,12 @@ async function readOptionalDirectory(
 
 /** Observe exact Local Ignore, backup, report, and forbidden filesystem effects. */
 async function localIgnoreDurableEffects(
-  result: JsScanRunResult,
+  result: JsScanRunResult | null,
   input: ScenarioInput,
   root: string,
 ): Promise<JsonObject> {
   const reports: JsonObject[] = [];
-  for (const log of result.logs) {
+  for (const log of result?.logs ?? []) {
     if (log.autoscanReport === undefined) {
       continue;
     }
@@ -1153,6 +1198,116 @@ async function runContinuationAction(
   );
 }
 
+/** Project one optional reset identity from a rejected public continuation. */
+function resumeErrorIdentity(
+  value: unknown,
+  label: string,
+): FileIdentity | null {
+  if (value === undefined) {
+    return null;
+  }
+  const identity = requireObject(value, label);
+  return {
+    sha256: requireString(identity.sha256, `${label}.sha256`),
+    byteLength: requireInteger(identity.byteLen, `${label}.byteLen`),
+  };
+}
+
+/** Normalize one typed reset rejection without retaining OS-dependent prose. */
+function terminalResumeError(
+  error: unknown,
+  callbacks: JsScanRunEvent[],
+  root: string,
+): JsonObject {
+  const value = requireObject(error, "terminal continuation error");
+  const kind = requireString(
+    value.kind ?? value.code,
+    "terminal continuation error kind",
+  );
+  const code = requireString(
+    value.code ?? value.kind,
+    "terminal continuation error code",
+  );
+  if (code !== kind) {
+    throw new RunnerContractError(
+      "terminal continuation error kind and code must agree",
+    );
+  }
+  const message = requireString(
+    value.message,
+    "terminal continuation error message",
+  );
+  const lines = requireArray(
+    value.displayLines,
+    "terminal continuation error displayLines",
+  );
+  return {
+    kind,
+    code,
+    messageNonEmpty: message.length > 0,
+    path:
+      value.path === undefined
+        ? null
+        : pathCarrier(root, value.path, "terminal continuation error path"),
+    stage:
+      value.stage === undefined
+        ? null
+        : normalizedToken(
+            requireString(value.stage, "terminal continuation error stage"),
+          ),
+    expectedIdentity: resumeErrorIdentity(
+      value.expectedIdentity,
+      "terminal continuation error expectedIdentity",
+    ),
+    actualIdentity: resumeErrorIdentity(
+      value.actualIdentity,
+      "terminal continuation error actualIdentity",
+    ),
+    backupPath:
+      value.backupPath === undefined
+        ? null
+        : pathCarrier(
+            root,
+            value.backupPath,
+            "terminal continuation error backupPath",
+          ),
+    malformedIdentity: resumeErrorIdentity(
+      value.malformedIdentity,
+      "terminal continuation error malformedIdentity",
+    ),
+    backupIdentity: resumeErrorIdentity(
+      value.backupIdentity,
+      "terminal continuation error backupIdentity",
+    ),
+    replacementIdentity: resumeErrorIdentity(
+      value.replacementIdentity,
+      "terminal continuation error replacementIdentity",
+    ),
+    displaySeverities: lines.map((line, index) =>
+      normalizedToken(
+        requireObject(
+          line,
+          `terminal continuation error displayLines[${index}]`,
+        ).severity,
+      ),
+    ),
+    events: callbacks.map((event) => normalizedToken(event.kind)),
+  };
+}
+
+/** Yield briefly while polling the public reset lock used as the critical-section seam. */
+async function waitForResetCriticalSection(root: string): Promise<boolean> {
+  const lockPath = join(root, ".classic-local-ignore-reset.lock");
+  const deadline = Date.now() + 5_000;
+  while (Date.now() < deadline) {
+    if (await pathExists(lockPath)) {
+      return true;
+    }
+    await new Promise<void>((resolveDelay) => setTimeout(resolveDelay, 1));
+  }
+  return await pathExists(lockPath);
+}
+
 /** Project a rejected one-shot replay through its stable typed error and severity contract. */
 function replayError(
   action: ContinuationActionInput,
@@ -1224,27 +1379,89 @@ async function continuationObservation(
   );
   await materializePostPauseData(plan, scenario, flow.postPauseData, root);
 
+  if (
+    flow.cancellation !== undefined &&
+    flow.cancellation !== "before-resume" &&
+    flow.cancellation !== "after-reset-critical-section"
+  ) {
+    throw new RunnerContractError(
+      "continuationFlow.cancellation is not a supported cancellation seam",
+    );
+  }
+  if (flow.cancellation === "before-resume") {
+    cancellation.cancel();
+  }
   const cancelledBeforeTerminal = cancellation.isCancelled;
   const terminalCallbacks: JsScanRunEvent[] = [];
-  const terminalExecution = await runContinuationAction(
-    classic,
-    continuation,
-    flow.action,
-    cancellation,
-    terminalCallbacks,
-  );
-  const terminalSuccess = requireSuccessfulExecution(
-    terminalExecution,
-    "terminal continuation action",
-  );
+  let terminalExecution: JsScanRunSuccess | JsScanRunFailure | null = null;
+  let terminalError: JsonObject | null = null;
+  if (flow.cancellation === "after-reset-critical-section") {
+    if (
+      flow.action.operation !== "resume" ||
+      flow.action.decision !== "reset-to-default"
+    ) {
+      throw new RunnerContractError(
+        "after-reset-critical-section cancellation requires Reset To Default",
+      );
+    }
+    const pending = runContinuationAction(
+      classic,
+      continuation,
+      flow.action,
+      cancellation,
+      terminalCallbacks,
+    ).then(
+      (execution) => ({ ok: true as const, execution }),
+      (error: unknown) => ({ ok: false as const, error }),
+    );
+    if (!(await waitForResetCriticalSection(root))) {
+      cancellation.cancel();
+      await pending;
+      throw new RunnerContractError(
+        "reset critical section was not observed before the five-second deadline",
+      );
+    }
+    cancellation.cancel();
+    const outcome = await pending;
+    if (outcome.ok) {
+      terminalExecution = outcome.execution;
+    } else {
+      terminalError = terminalResumeError(
+        outcome.error,
+        terminalCallbacks,
+        root,
+      );
+    }
+  } else {
+    try {
+      terminalExecution = await runContinuationAction(
+        classic,
+        continuation,
+        flow.action,
+        cancellation,
+        terminalCallbacks,
+      );
+    } catch (error) {
+      terminalError = terminalResumeError(error, terminalCallbacks, root);
+    }
+  }
+
+  let terminalSuccess: JsScanRunSuccess | null = null;
+  let terminal: JsonObject | null = null;
+  if (terminalExecution !== null) {
+    terminalSuccess = requireSuccessfulExecution(
+      terminalExecution,
+      "terminal continuation action",
+    );
+    terminal = await localIgnorePhase(
+      terminalSuccess,
+      terminalCallbacks,
+      root,
+      false,
+      undefined,
+    );
+  }
   const cancelledAfterTerminal = cancellation.isCancelled;
-  const terminal = await localIgnorePhase(
-    terminalSuccess,
-    terminalCallbacks,
-    root,
-    false,
-    undefined,
-  );
 
   const replays: JsonObject[] = [];
   for (const action of flow.replays) {
@@ -1264,6 +1481,7 @@ async function continuationObservation(
   return {
     initial,
     terminal,
+    terminalError,
     replays,
     cancellation: {
       beforeTerminal: cancelledBeforeTerminal,
@@ -1271,7 +1489,7 @@ async function continuationObservation(
       afterReplays: cancellation.isCancelled,
     },
     durableEffects: await localIgnoreDurableEffects(
-      terminalSuccess.result,
+      terminalSuccess?.result ?? null,
       input,
       root,
     ),
@@ -1336,6 +1554,7 @@ async function executeScenario(
   const previousDirectory = process.cwd();
   try {
     const input = await materializeScenarioInputs(plan, scenario, root);
+    await appendLocalIgnorePadding(input, root);
     const cacheRoot = join(root, "isolated-cache");
     await mkdir(cacheRoot, { recursive: true });
     // Cache selection is process-global, so scenarios run serially with a fresh empty root.

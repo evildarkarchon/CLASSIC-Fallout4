@@ -25,6 +25,8 @@ use std::ffi::OsString;
 use std::fs::{self, File};
 use std::io::{self, Write};
 use std::path::{Component, Path, PathBuf};
+use std::thread;
+use std::time::{Duration, Instant};
 use tempfile::{NamedTempFile, tempdir};
 
 const RUN_PLAN_ENV: &str = "CLASSIC_CONFORMANCE_RUN_PLAN";
@@ -94,6 +96,8 @@ struct ScenarioInput {
     targeted_inputs: Vec<TargetedInput>,
     #[serde(default)]
     forbidden_effect_paths: Vec<String>,
+    #[serde(default)]
+    local_ignore_padding_bytes: usize,
     continuation_flow: Option<ContinuationFlowInput>,
     standard_source: Option<StandardSourceInput>,
     unsolved_logs: Option<UnsolvedLogsInput>,
@@ -156,6 +160,15 @@ struct ContinuationFlowInput {
     post_pause_data: Vec<FixturePlacement>,
     #[serde(default)]
     replays: Vec<ContinuationActionInput>,
+    cancellation: Option<CancellationBoundaryInput>,
+}
+
+/// Public cancellation boundary exercised around one retained reset attempt.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+enum CancellationBoundaryInput {
+    BeforeResume,
+    AfterResetCriticalSection,
 }
 
 /// One public continuation operation and its decision when the operation is Resume.
@@ -302,6 +315,7 @@ fn execute_scenario(
 ) -> RunnerResult<Value> {
     let scenario_root = tempdir()?;
     materialize_scenario(fixtures, &scenario.input, scenario_root.path())?;
+    append_local_ignore_padding(&scenario.input, scenario_root.path())?;
     let request = build_request(&scenario.input, scenario_root.path())?;
     let cancellation = contract::Cancellation::new();
     let mut events = Vec::new();
@@ -360,19 +374,47 @@ fn execute_continuation_flow(
         .ok_or_else(|| invalid_data("continuationFlow initial result has no continuation"))?;
     materialize_placements(fixtures, &flow.post_pause_data, root)?;
 
+    if flow.cancellation == Some(CancellationBoundaryInput::BeforeResume) {
+        cancellation.cancel();
+    }
+    let cancellation_worker =
+        if flow.cancellation == Some(CancellationBoundaryInput::AfterResetCriticalSection) {
+            Some(cancel_after_reset_entry(root, cancellation.clone()))
+        } else {
+            None
+        };
     let cancelled_before_terminal = cancellation.is_cancelled();
     let mut terminal_events = Vec::new();
-    let terminal_result = get_runtime()
-        .block_on(run_continuation_action(
-            &continuation,
-            flow.action,
-            cancellation,
-            Some(&mut |event| terminal_events.push(event)),
-        ))
-        .map_err(|error| invalid_data(format!("terminal continuation action failed: {error}")))?;
+    let terminal_outcome = get_runtime().block_on(run_continuation_action(
+        &continuation,
+        flow.action,
+        cancellation,
+        Some(&mut |event| terminal_events.push(event)),
+    ));
+    if let Some(worker) = cancellation_worker {
+        let observed = worker
+            .join()
+            .map_err(|_| invalid_data("reset-entry cancellation worker panicked"))?;
+        if !observed {
+            return Err(invalid_data(
+                "reset-entry cancellation boundary was not observed within five seconds",
+            )
+            .into());
+        }
+    }
     let cancelled_after_terminal = cancellation.is_cancelled();
-    let terminal =
-        project_local_ignore_phase(root, &terminal_result, &terminal_events, false, None)?;
+    let (terminal_result, terminal, terminal_error) = match terminal_outcome {
+        Ok(result) => {
+            let terminal =
+                project_local_ignore_phase(root, &result, &terminal_events, false, None)?;
+            (Some(result), Some(terminal), None)
+        }
+        Err(error) => (
+            None,
+            None,
+            Some(project_terminal_error(root, &error, &terminal_events)?),
+        ),
+    };
 
     let replays = flow
         .replays
@@ -396,14 +438,34 @@ fn execute_continuation_flow(
     Ok(json!({
         "initial": initial,
         "terminal": terminal,
+        "terminalError": terminal_error,
         "replays": replays,
         "cancellation": {
             "beforeTerminal": cancelled_before_terminal,
             "afterTerminal": cancelled_after_terminal,
             "afterReplays": cancellation.is_cancelled(),
         },
-        "durableEffects": project_local_ignore_effects(root, input, &terminal_result)?,
+        "durableEffects": project_local_ignore_effects(root, input, terminal_result.as_ref())?,
     }))
+}
+
+/// Requests cancellation only after the public reset lock proves critical-section entry.
+fn cancel_after_reset_entry(
+    root: &Path,
+    cancellation: contract::Cancellation,
+) -> thread::JoinHandle<bool> {
+    let reset_lock = root.join(".classic-local-ignore-reset.lock");
+    thread::spawn(move || {
+        let deadline = Instant::now() + Duration::from_secs(5);
+        while !reset_lock.exists() && Instant::now() < deadline {
+            thread::sleep(Duration::from_millis(1));
+        }
+        if !reset_lock.exists() {
+            return false;
+        }
+        cancellation.cancel();
+        true
+    })
 }
 
 /// Rejects structurally invalid operation/decision pairs before spending a continuation.
@@ -465,6 +527,23 @@ fn materialize_scenario(
         if let Some(fixture_ref) = &targeted.fixture_ref {
             copy_fixture(fixtures, fixture_ref, root, &targeted.path)?;
         }
+    }
+    Ok(())
+}
+
+/// Appends deterministic malformed bytes used to hold reset inside its critical section.
+fn append_local_ignore_padding(input: &ScenarioInput, root: &Path) -> RunnerResult<()> {
+    if input.local_ignore_padding_bytes == 0 {
+        return Ok(());
+    }
+    let path = root.join("CLASSIC Data/CLASSIC Ignore.yaml");
+    let mut file = File::options().append(true).open(&path)?;
+    let chunk = [b'x'; 64 * 1024];
+    let mut remaining = input.local_ignore_padding_bytes;
+    while remaining > 0 {
+        let count = remaining.min(chunk.len());
+        file.write_all(&chunk[..count])?;
+        remaining -= count;
     }
     Ok(())
 }
@@ -671,7 +750,7 @@ fn project_local_ignore_observation(
         .ok_or_else(|| invalid_data("Local Ignore phase projection is not an object"))?
         .insert(
             "durableEffects".to_string(),
-            project_local_ignore_effects(root, input, result)?,
+            project_local_ignore_effects(root, input, Some(result))?,
         );
     Ok(observation)
 }
@@ -756,6 +835,67 @@ fn project_replay_error(action: ContinuationActionInput, error: &contract::Resum
             "displaySeverities": display_severities(&render_resume_error(error)),
         },
     })
+}
+
+/// Projects one typed terminal resume rejection without retaining OS-dependent prose.
+fn project_terminal_error(
+    root: &Path,
+    error: &contract::ResumeError,
+    events: &[contract::Event],
+) -> RunnerResult<Value> {
+    if !events.is_empty() {
+        return Err(
+            invalid_data("terminal resume error unexpectedly emitted observer events").into(),
+        );
+    }
+    let mut path = None;
+    let mut stage = None;
+    let mut expected_identity = None;
+    let mut actual_identity = None;
+    let mut backup_path = None;
+    let mut malformed_identity = None;
+    let mut backup_identity = None;
+    let mut replacement_identity = None;
+    match error {
+        contract::ResumeError::LocalIgnoreResetConflict(conflict) => {
+            expected_identity = Some(project_identity(&conflict.expected_identity));
+            actual_identity = conflict.actual_identity.as_ref().map(project_identity);
+            backup_path = conflict
+                .backup_path
+                .as_ref()
+                .map(|value| path_carrier(root, value))
+                .transpose()?;
+        }
+        contract::ResumeError::LocalIgnoreResetBackupFailure(failure)
+        | contract::ResumeError::LocalIgnoreResetReplacementFailure(failure) => {
+            path = Some(path_carrier(root, &failure.path)?);
+            stage = failure.stage.map(Vocabulary::as_str);
+        }
+        contract::ResumeError::LocalIgnoreResetDurabilityUnknown(receipt) => {
+            path = Some(path_carrier(root, &receipt.path)?);
+            backup_path = Some(path_carrier(root, &receipt.backup_path)?);
+            malformed_identity = Some(project_identity(&receipt.malformed_identity));
+            backup_identity = Some(project_identity(&receipt.backup_identity));
+            replacement_identity = Some(project_identity(&receipt.replacement_identity));
+        }
+        contract::ResumeError::ContinuationConsumed | contract::ResumeError::Infrastructure(_) => {}
+    }
+    let code = error.kind().as_str();
+    Ok(json!({
+        "kind": code,
+        "code": code,
+        "messageNonEmpty": !error.to_string().is_empty(),
+        "path": path,
+        "stage": stage,
+        "expectedIdentity": expected_identity,
+        "actualIdentity": actual_identity,
+        "backupPath": backup_path,
+        "malformedIdentity": malformed_identity,
+        "backupIdentity": backup_identity,
+        "replacementIdentity": replacement_identity,
+        "displaySeverities": display_severities(&render_resume_error(error)),
+        "events": [],
+    }))
 }
 
 /// Preserves the ordered severity contract while omitting prose already covered by render tests.
@@ -884,7 +1024,7 @@ fn append_compact_log_event(
 fn project_local_ignore_effects(
     root: &Path,
     input: &ScenarioInput,
-    result: &contract::RunResult,
+    result: Option<&contract::RunResult>,
 ) -> RunnerResult<Value> {
     let local_ignore = root.join("CLASSIC Data/CLASSIC Ignore.yaml");
     let backup_directory = root.join("CLASSIC Backup/YAML Data/Local Ignore");
@@ -902,8 +1042,8 @@ fn project_local_ignore_effects(
         .map(|path| project_backup_effect(root, path))
         .collect::<RunnerResult<Vec<_>>>()?;
     let reports = result
-        .logs
-        .iter()
+        .into_iter()
+        .flat_map(|value| value.logs.iter())
         .filter_map(|log| log.autoscan_report.as_ref())
         .map(|path| project_exact_report_effect(root, path))
         .collect::<RunnerResult<Vec<_>>>()?;

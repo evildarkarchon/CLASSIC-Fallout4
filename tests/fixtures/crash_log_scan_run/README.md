@@ -7,11 +7,12 @@ adapter and native frontend acknowledges those facts.
 
 The Installed YAML Data fixture also owns the malformed Local Ignore recovery
 corpus. Its Reset To Default expectations cover retained Main/game selection,
-single-use continuation resume, typed conflict, operational failures, and the
-post-replacement durability-unknown recovery receipt,
+single-use continuation resume, typed conflict, operational failures,
 pre-reset and post-critical-section cancellation, byte-exact backup bytes, reset
 diagnostics, and byte-identical Autoscan Report content across Rust, C++, Node,
-and Python.
+and Python. Replacement-publication and post-replacement durability-unknown
+receipts remain blocking internal fault-projection evidence because no portable
+public filesystem condition can trigger them deterministically across adapters.
 
 `malformed-local-ignore.yaml` is the input-only malformed file used by the
 executable conformance pack. The pack observes the paused result, applies declared

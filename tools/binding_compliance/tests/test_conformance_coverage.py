@@ -602,6 +602,7 @@ def test_retained_analyzers_resolve_only_from_current_blocking_owners() -> None:
     analyzers = load_retained_analyzer_kinds(REPO_ROOT)
 
     assert analyzers["cxx-source-parity"] == "structural"
+    assert analyzers["scan-run-local-ignore-reset-internal-faults"] == "structural"
     assert analyzers["user-settings-exclusive-ownership"] == "negative"
 
 

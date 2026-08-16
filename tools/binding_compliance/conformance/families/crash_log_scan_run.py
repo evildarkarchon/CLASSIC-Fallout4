@@ -16,6 +16,9 @@ _GENERATED_IGNORE_SHA256 = (
 _MALFORMED_IGNORE_SHA256 = (
     "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
 )
+_LARGE_MALFORMED_IGNORE_SHA256 = (
+    "2cdeab79c003cd00910cdbcc55abcb31070c28115fc596e3dcbddac083ec305d"
+)
 _LOCAL_IGNORE_PATH = "CLASSIC Data/CLASSIC Ignore.yaml"
 _BACKUP_PARENT = "CLASSIC Backup/YAML Data/Local Ignore"
 _TRACE = (
@@ -256,7 +259,13 @@ def _compact_success_events(value: object) -> bool:
     }
 
 
-def _initial_recovery_snapshot(observation: Mapping[str, Any], stem: str) -> bool:
+def _initial_recovery_snapshot(
+    observation: Mapping[str, Any],
+    stem: str,
+    *,
+    local_ignore_sha256: str = _MALFORMED_IGNORE_SHA256,
+    local_ignore_byte_length: int = 39,
+) -> bool:
     """Recognize prepared discovery and YAML identities retained at the pause."""
 
     initial = _mapping(observation.get("initial"))
@@ -265,8 +274,8 @@ def _initial_recovery_snapshot(observation: Mapping[str, Any], stem: str) -> boo
     installed = _compact_installed_yaml_data(
         initial.get("installedYamlData"),
         local_ignore_state="recovery_required",
-        local_ignore_sha256=_MALFORMED_IGNORE_SHA256,
-        local_ignore_byte_length=39,
+        local_ignore_sha256=local_ignore_sha256,
+        local_ignore_byte_length=local_ignore_byte_length,
         diagnostic_kinds=("parse",),
         reset_available=True,
     )
@@ -305,15 +314,22 @@ def _initial_recovery_prompt(observation: Mapping[str, Any]) -> bool:
 
 
 def _resume_initial_prompt(observation: Mapping[str, Any]) -> bool:
-    """Recognize the prompt only in the two explicit decision scenarios."""
+    """Recognize the prompt in every explicit continuation decision scenario."""
 
     initial = _mapping(observation.get("initial"))
     return (
         _initial_recovery_prompt(observation)
         and initial is not None
-        and (
-            _compact_discovery(initial.get("discovery"), "proceed")
-            or _compact_discovery(initial.get("discovery"), "reset")
+        and any(
+            _compact_discovery(initial.get("discovery"), stem)
+            for stem in (
+                "proceed",
+                "reset",
+                "reset-conflict",
+                "reset-operational",
+                "reset-pre-cancelled",
+                "reset-post-critical",
+            )
         )
     )
 
@@ -860,6 +876,285 @@ def _reset_replay(observation: Mapping[str, Any]) -> bool:
     )
 
 
+def _reset_terminal_error(
+    observation: Mapping[str, Any],
+    *,
+    kind: str,
+    path: str | None,
+    expected_identity: tuple[str, int] | None,
+    actual_identity: tuple[str, int] | None,
+    display_severities: Sequence[str],
+) -> bool:
+    """Match one normalized typed reset rejection and its stable diagnostics."""
+
+    error = _mapping(observation.get("terminalError"))
+    if observation.get("terminal") is not None or error is None:
+        return False
+    expected = (
+        {"sha256": expected_identity[0], "byteLength": expected_identity[1]}
+        if expected_identity is not None
+        else None
+    )
+    actual = (
+        {"sha256": actual_identity[0], "byteLength": actual_identity[1]}
+        if actual_identity is not None
+        else None
+    )
+    return error == {
+        "kind": kind,
+        "code": kind,
+        "messageNonEmpty": True,
+        "path": {"path": path} if path is not None else None,
+        "stage": None,
+        "expectedIdentity": expected,
+        "actualIdentity": actual,
+        "backupPath": None,
+        "malformedIdentity": None,
+        "backupIdentity": None,
+        "replacementIdentity": None,
+        "displaySeverities": list(display_severities),
+        "events": [],
+    }
+
+
+def _reset_nonmutating_effects(
+    observation: Mapping[str, Any],
+    *,
+    stem: str,
+    local_ignore_sha256: str,
+    local_ignore_byte_length: int,
+    cancellation: Mapping[str, bool],
+    extra_forbidden_paths: Sequence[str] = (),
+) -> bool:
+    """Prove an interrupted reset wrote no backup, report, replacement, or stray path."""
+
+    effects = _mapping(observation.get("durableEffects"))
+    return (
+        effects is not None
+        and effects.get("localIgnore")
+        == {
+            "path": _LOCAL_IGNORE_PATH,
+            "exists": True,
+            "identity": {
+                "sha256": local_ignore_sha256,
+                "byteLength": local_ignore_byte_length,
+            },
+        }
+        and effects.get("backups") == []
+        and effects.get("reports") == []
+        and _all_forbidden_absent(
+            effects.get("forbidden"),
+            (
+                _LOCAL_IGNORE_PATH + ".prev",
+                "Unsolved Logs",
+                f"Recovery/{stem}-AUTOSCAN.md",
+                f"Recovery/{stem}-late-AUTOSCAN.md",
+                *extra_forbidden_paths,
+            ),
+        )
+        and observation.get("cancellation") == cancellation
+    )
+
+
+def _reset_conflict_terminal(observation: Mapping[str, Any]) -> bool:
+    """Recognize an early identity conflict without accepting an overwrite."""
+
+    return _reset_terminal_error(
+        observation,
+        kind="local_ignore_reset_conflict",
+        path=None,
+        expected_identity=(_MALFORMED_IGNORE_SHA256, 39),
+        actual_identity=(_IGNORE_SHA256, 29),
+        display_severities=("failure", "info", "info", "notice"),
+    )
+
+
+def _reset_conflict_effects(observation: Mapping[str, Any]) -> bool:
+    """Recognize preservation of intervening canonical bytes and zero reset effects."""
+
+    return _reset_nonmutating_effects(
+        observation,
+        stem="reset-conflict",
+        local_ignore_sha256=_IGNORE_SHA256,
+        local_ignore_byte_length=29,
+        cancellation={
+            "beforeTerminal": False,
+            "afterTerminal": False,
+            "afterReplays": False,
+        },
+    )
+
+
+def _reset_operational_failure_terminal(observation: Mapping[str, Any]) -> bool:
+    """Recognize a portable backup-directory failure through the public seam."""
+
+    return _reset_terminal_error(
+        observation,
+        kind="local_ignore_reset_backup_failure",
+        path=_BACKUP_PARENT,
+        expected_identity=None,
+        actual_identity=None,
+        display_severities=("failure", "failure", "info"),
+    )
+
+
+def _reset_operational_failure_effects(observation: Mapping[str, Any]) -> bool:
+    """Recognize an operational reset rejection before any durable mutation."""
+
+    return _reset_nonmutating_effects(
+        observation,
+        stem="reset-operational",
+        local_ignore_sha256=_MALFORMED_IGNORE_SHA256,
+        local_ignore_byte_length=39,
+        cancellation={
+            "beforeTerminal": False,
+            "afterTerminal": False,
+            "afterReplays": False,
+        },
+    )
+
+
+def _reset_pre_cancelled_terminal(observation: Mapping[str, Any]) -> bool:
+    """Recognize cancellation before reset enters the durable transaction."""
+
+    terminal = _mapping(observation.get("terminal"))
+    logs = _sequence(terminal.get("logs")) if terminal is not None else None
+    return (
+        observation.get("terminalError") is None
+        and terminal is not None
+        and terminal.get("run")
+        == {
+            "status": "cancelled",
+            "message": "Cancelled after crash log discovery",
+            "total": 1,
+            "succeeded": 0,
+            "failed": 0,
+            "cancelled": 1,
+            "effectiveConcurrency": None,
+        }
+        and _compact_discovery(terminal.get("discovery"), "reset-pre-cancelled")
+        and terminal.get("installedYamlData") is None
+        and logs is not None
+        and len(logs) == 1
+        and _compact_log(logs[0], "reset-pre-cancelled", "cancelled_before_start")
+        and terminal.get("events")
+        == {"run": [], "logs": [{"discoveryIndex": 0, "trace": []}]}
+        and terminal.get("continuationAvailable") is False
+        and terminal.get("recoveryPrompt") is None
+    )
+
+
+def _reset_pre_cancelled_effects(observation: Mapping[str, Any]) -> bool:
+    """Recognize monotonic pre-reset cancellation with no filesystem mutation."""
+
+    return _reset_nonmutating_effects(
+        observation,
+        stem="reset-pre-cancelled",
+        local_ignore_sha256=_MALFORMED_IGNORE_SHA256,
+        local_ignore_byte_length=39,
+        cancellation={
+            "beforeTerminal": True,
+            "afterTerminal": True,
+            "afterReplays": True,
+        },
+        extra_forbidden_paths=(".classic-local-ignore-reset.lock",),
+    )
+
+
+def _reset_post_critical_terminal(observation: Mapping[str, Any]) -> bool:
+    """Recognize cancellation only after a complete durable reset receipt exists."""
+
+    terminal = _mapping(observation.get("terminal"))
+    if terminal is None or observation.get("terminalError") is not None:
+        return False
+    installed = _compact_installed_yaml_data(
+        terminal.get("installedYamlData"),
+        local_ignore_state="reset_to_default",
+        local_ignore_sha256=_GENERATED_IGNORE_SHA256,
+        local_ignore_byte_length=28,
+        diagnostic_kinds=("parse", "local_ignore_reset"),
+        reset_available=False,
+    )
+    reset = _mapping(installed.get("localIgnoreReset")) if installed is not None else None
+    logs = _sequence(terminal.get("logs"))
+    return (
+        terminal.get("run")
+        == {
+            "status": "cancelled",
+            "message": "Cancelled after crash log discovery",
+            "total": 1,
+            "succeeded": 0,
+            "failed": 0,
+            "cancelled": 1,
+            "effectiveConcurrency": None,
+        }
+        and _compact_discovery(terminal.get("discovery"), "reset-post-critical")
+        and reset is not None
+        and reset.get("localIgnorePath") == {"path": _LOCAL_IGNORE_PATH}
+        and reset.get("backup")
+        == {
+            "parentPath": _BACKUP_PARENT,
+            "exists": True,
+            "identityMatchesReceipt": True,
+        }
+        and _identity(
+            reset.get("malformedIdentity"), _LARGE_MALFORMED_IGNORE_SHA256, 16_777_255
+        )
+        and _identity(
+            reset.get("backupIdentity"), _LARGE_MALFORMED_IGNORE_SHA256, 16_777_255
+        )
+        and _identity(reset.get("replacementIdentity"), _GENERATED_IGNORE_SHA256, 28)
+        and logs is not None
+        and len(logs) == 1
+        and _compact_log(logs[0], "reset-post-critical", "cancelled_before_start")
+        and terminal.get("events")
+        == {"run": [], "logs": [{"discoveryIndex": 0, "trace": []}]}
+        and terminal.get("continuationAvailable") is False
+        and terminal.get("recoveryPrompt") is None
+    )
+
+
+def _reset_post_critical_effects(observation: Mapping[str, Any]) -> bool:
+    """Recognize byte-exact repair before post-critical cancellation returns."""
+
+    effects = _mapping(observation.get("durableEffects"))
+    return (
+        effects is not None
+        and effects.get("localIgnore")
+        == {
+            "path": _LOCAL_IGNORE_PATH,
+            "exists": True,
+            "identity": {"sha256": _GENERATED_IGNORE_SHA256, "byteLength": 28},
+        }
+        and effects.get("backups")
+        == [
+            {
+                "parentPath": _BACKUP_PARENT,
+                "identity": {
+                    "sha256": _LARGE_MALFORMED_IGNORE_SHA256,
+                    "byteLength": 16_777_255,
+                },
+            }
+        ]
+        and effects.get("reports") == []
+        and _all_forbidden_absent(
+            effects.get("forbidden"),
+            (
+                _LOCAL_IGNORE_PATH + ".prev",
+                "Unsolved Logs",
+                "Recovery/reset-post-critical-AUTOSCAN.md",
+                "Recovery/reset-post-critical-late-AUTOSCAN.md",
+            ),
+        )
+        and observation.get("cancellation")
+        == {
+            "beforeTerminal": False,
+            "afterTerminal": True,
+            "afterReplays": True,
+        }
+    )
+
+
 def _abandon_initial(observation: Mapping[str, Any]) -> bool:
     """Recognize the prepared abandonment snapshot and typed recovery prompt."""
 
@@ -900,7 +1195,7 @@ def _abandon_terminal(observation: Mapping[str, Any]) -> bool:
 def _abandon_cancellation(observation: Mapping[str, Any]) -> bool:
     """Recognize abandonment as the sole source of monotonic cancellation."""
 
-    return observation.get("cancellation") == {
+    return _abandon_terminal(observation) and observation.get("cancellation") == {
         "beforeTerminal": False,
         "afterTerminal": True,
         "afterReplays": True,
@@ -1056,7 +1351,16 @@ _RESUME_PREDICATES = (
         "recovery",
         ("CrashLogScanRunContinuation", "LocalIgnoreRecoveryDecision"),
         lambda observation: _initial_recovery_snapshot(observation, "proceed")
-        or _initial_recovery_snapshot(observation, "reset"),
+        or _initial_recovery_snapshot(observation, "reset")
+        or _initial_recovery_snapshot(observation, "reset-conflict")
+        or _initial_recovery_snapshot(observation, "reset-operational")
+        or _initial_recovery_snapshot(observation, "reset-pre-cancelled")
+        or _initial_recovery_snapshot(
+            observation,
+            "reset-post-critical",
+            local_ignore_sha256=_LARGE_MALFORMED_IGNORE_SHA256,
+            local_ignore_byte_length=16_777_255,
+        ),
     ),
     CoveragePredicate(
         "scan-run.recovery.initial-prompt",
@@ -1129,6 +1433,70 @@ _RESUME_PREDICATES = (
         "replay",
         ("ResumeError",),
         _reset_replay,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.reset-conflict",
+        "scan-run.execute",
+        "scan-run.execute",
+        "recovery",
+        ("ResumeError", "LocalIgnoreResetConflictError"),
+        _reset_conflict_terminal,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.reset-conflict-forbidden-effects",
+        "scan-run.execute",
+        "scan-run.execute",
+        "durable-effects",
+        ("LocalIgnoreResetConflictError",),
+        _reset_conflict_effects,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.reset-operational-failure",
+        "scan-run.execute",
+        "scan-run.execute",
+        "recovery",
+        ("ResumeError", "LocalIgnoreResetFailure"),
+        _reset_operational_failure_terminal,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.reset-operational-forbidden-effects",
+        "scan-run.execute",
+        "scan-run.execute",
+        "durable-effects",
+        ("LocalIgnoreResetFailure",),
+        _reset_operational_failure_effects,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.reset-pre-cancelled",
+        "scan-run.execute",
+        "scan-run.execute",
+        "recovery",
+        ("Cancellation", "CrashLogScanRunContinuation"),
+        _reset_pre_cancelled_terminal,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.reset-pre-cancelled-forbidden-effects",
+        "scan-run.execute",
+        "scan-run.execute",
+        "durable-effects",
+        ("Cancellation",),
+        _reset_pre_cancelled_effects,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.reset-post-critical-cancelled",
+        "scan-run.execute",
+        "scan-run.execute",
+        "recovery",
+        ("Cancellation", "LocalIgnoreResetRunData"),
+        _reset_post_critical_terminal,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.reset-post-critical-durable-effects",
+        "scan-run.execute",
+        "scan-run.execute",
+        "durable-effects",
+        ("Cancellation", "LocalIgnoreResetRunData"),
+        _reset_post_critical_effects,
     ),
 )
 
@@ -1206,6 +1574,50 @@ REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO: Mapping[str, tuple[str, ...]] = {
                 "scan-run.recovery.reset-to-default",
                 "scan-run.recovery.reset-no-rediscovery",
                 "scan-run.recovery.reset-backup-and-repair",
+                "scan-run.recovery.reset-replay-rejected",
+            }
+        )
+    ),
+    "reset-intervening-change-conflict": tuple(
+        sorted(
+            {
+                "scan-run.recovery.initial-retained-snapshot",
+                "scan-run.recovery.initial-prompt",
+                "scan-run.recovery.reset-conflict",
+                "scan-run.recovery.reset-conflict-forbidden-effects",
+                "scan-run.recovery.reset-replay-rejected",
+            }
+        )
+    ),
+    "reset-operational-failure": tuple(
+        sorted(
+            {
+                "scan-run.recovery.initial-retained-snapshot",
+                "scan-run.recovery.initial-prompt",
+                "scan-run.recovery.reset-operational-failure",
+                "scan-run.recovery.reset-operational-forbidden-effects",
+                "scan-run.recovery.reset-replay-rejected",
+            }
+        )
+    ),
+    "reset-pre-cancelled": tuple(
+        sorted(
+            {
+                "scan-run.recovery.initial-retained-snapshot",
+                "scan-run.recovery.initial-prompt",
+                "scan-run.recovery.reset-pre-cancelled",
+                "scan-run.recovery.reset-pre-cancelled-forbidden-effects",
+                "scan-run.recovery.reset-replay-rejected",
+            }
+        )
+    ),
+    "reset-post-critical-cancelled": tuple(
+        sorted(
+            {
+                "scan-run.recovery.initial-retained-snapshot",
+                "scan-run.recovery.initial-prompt",
+                "scan-run.recovery.reset-post-critical-cancelled",
+                "scan-run.recovery.reset-post-critical-durable-effects",
                 "scan-run.recovery.reset-replay-rejected",
             }
         )

@@ -760,8 +760,15 @@
             "reset_to_default_returns_typed_conflict_without_overwriting_current_local_ignore",
             "reset_to_default_returns_typed_backup_failure_without_mutation_or_analysis",
             "reset_replacement_publication_failure_projects_stable_typed_details",
+            "reset_replacement_durability_unknown_projects_recoverable_receipt",
             "cancellation_before_reset_to_default_performs_no_durable_or_analysis_work",
             "cancellation_racing_after_reset_begins_returns_cancelled_after_durable_reset"
+          ]
+        },
+        {
+          "path": "business-logic/classic-config-core/src/installed_yaml_data_tests.rs",
+          "contains": [
+            "local_ignore_reset_types_durability_unknown_after_canonical_replacement"
           ]
         },
         {
@@ -857,7 +864,8 @@
             "structured_result_mapping_preserves_pairs_options_failures_and_paths",
             "shared_failure_fixture_maps_every_cxx_failure_field",
             "execute_covers_standard_no_logs_and_cancellation_before_discovery",
-            "cxx_resume_operational_errors_preserve_every_stable_reset_outcome_field"
+            "cxx_resume_operational_errors_preserve_every_stable_reset_outcome_field",
+            "cxx_resume_durability_unknown_preserves_recovery_receipt"
           ]
         },
         {
@@ -956,7 +964,8 @@
             "terminal_mapping_preserves_every_status_failure_and_optional_path",
             "shared_failure_fixture_maps_every_node_failure_field",
             "infrastructure_mapping_covers_every_stage_with_and_without_paths",
-            "replacement_failure_projects_shared_node_rejection_metadata"
+            "replacement_failure_projects_shared_node_rejection_metadata",
+            "durability_unknown_projects_shared_node_recovery_receipt"
           ]
         },
         {
@@ -1058,7 +1067,8 @@
             "maps_complete_log_result_and_all_failure_stages",
             "shared_failure_fixture_maps_every_python_failure_field",
             "maps_every_infrastructure_stage_and_optional_path",
-            "replacement_failure_maps_shared_outcome_to_typed_python_exception"
+            "replacement_failure_maps_shared_outcome_to_typed_python_exception",
+            "durability_unknown_maps_shared_outcome_to_typed_python_exception"
           ]
         },
         {

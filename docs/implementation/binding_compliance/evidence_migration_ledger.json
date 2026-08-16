@@ -4,7 +4,7 @@
   "purpose": "Classify current evidence migration targets without granting compliance or replacing any blocking check.",
   "shadowTargetPolicy": "A shadow runtime target may name its planned family while scenario and observation IDs remain null. Only executed receipts may justify a later state.",
   "sourceSummary": {
-    "total": 3650,
+    "total": 3655,
     "byKind": {
       "consumer_audit": 6,
       "consumer_required_participant": 3,
@@ -17,7 +17,7 @@
       "rust_enum_inventory_audit": 15,
       "scan_run_contract_variant": 73,
       "scan_run_required_participant": 28,
-      "scan_run_source_marker": 119,
+      "scan_run_source_marker": 124,
       "scan_run_supported_adapter": 4,
       "scan_run_variant_acknowledgement": 292,
       "shared_runtime_source_audit": 1,
@@ -27,17 +27,17 @@
     "byClassification": {
       "negative_analyzer": 207,
       "policy_exception": 1,
-      "runtime_verifiable": 3043,
-      "structural_analyzer": 399
+      "runtime_verifiable": 3023,
+      "structural_analyzer": 424
     },
     "byParticipant": {
       "cli": 7,
-      "cxx": 804,
+      "cxx": 805,
       "gui": 63,
-      "node": 1099,
-      "python": 1442,
+      "node": 1100,
+      "python": 1443,
       "python-cli": 5,
-      "rust": 220,
+      "rust": 222,
       "shared": 4,
       "tui": 6
     }
@@ -196,6 +196,22 @@
       "evidenceKind": "negative",
       "paths": [
         "tools/binding_compliance/scan_run_contract.py"
+      ],
+      "blockingRequirementId": "scan-run-contract-variants"
+    },
+    {
+      "id": "scan-run-local-ignore-reset-internal-faults",
+      "evidenceKind": "structural",
+      "paths": [
+        "tools/binding_compliance/scan_run_contract.py",
+        "tests/fixtures/crash_log_scan_run/manifest.json",
+        "business-logic/classic-durable-publication/src/publication_fault.rs",
+        "business-logic/classic-config-core/src/installed_yaml_data_reset_fault.rs",
+        "business-logic/classic-config-core/src/installed_yaml_data_tests.rs",
+        "business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs",
+        "cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs",
+        "node-bindings/classic-node/src/scan_run_tests.rs",
+        "python-bindings/classic-scanlog-py/src/scan_run_tests.rs"
       ],
       "blockingRequirementId": "scan-run-contract-variants"
     },
@@ -75127,20 +75143,21 @@
         "locator": "/adapters/cxx/acknowledgedVariants/61#resume_error_kind.local_ignore_reset_durability_unknown"
       },
       "participant": "cxx",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/cxx/acknowledgedVariants/61#resume_error_kind.local_ignore_reset_durability_unknown",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -75151,20 +75168,21 @@
         "locator": "/adapters/cxx/acknowledgedVariants/60#resume_error_kind.local_ignore_reset_replacement_failure"
       },
       "participant": "cxx",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/cxx/acknowledgedVariants/60#resume_error_kind.local_ignore_reset_replacement_failure",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -76879,20 +76897,21 @@
         "locator": "/adapters/node/acknowledgedVariants/61#resume_error_kind.local_ignore_reset_durability_unknown"
       },
       "participant": "node",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/node/acknowledgedVariants/61#resume_error_kind.local_ignore_reset_durability_unknown",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -76903,20 +76922,21 @@
         "locator": "/adapters/node/acknowledgedVariants/60#resume_error_kind.local_ignore_reset_replacement_failure"
       },
       "participant": "node",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/node/acknowledgedVariants/60#resume_error_kind.local_ignore_reset_replacement_failure",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -78631,20 +78651,21 @@
         "locator": "/adapters/python/acknowledgedVariants/61#resume_error_kind.local_ignore_reset_durability_unknown"
       },
       "participant": "python",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/python/acknowledgedVariants/61#resume_error_kind.local_ignore_reset_durability_unknown",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -78655,20 +78676,21 @@
         "locator": "/adapters/python/acknowledgedVariants/60#resume_error_kind.local_ignore_reset_replacement_failure"
       },
       "participant": "python",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/python/acknowledgedVariants/60#resume_error_kind.local_ignore_reset_replacement_failure",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -80383,20 +80405,21 @@
         "locator": "/adapters/rust/acknowledgedVariants/61#resume_error_kind.local_ignore_reset_durability_unknown"
       },
       "participant": "rust",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/rust/acknowledgedVariants/61#resume_error_kind.local_ignore_reset_durability_unknown",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -80407,20 +80430,21 @@
         "locator": "/adapters/rust/acknowledgedVariants/60#resume_error_kind.local_ignore_reset_replacement_failure"
       },
       "participant": "rust",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/rust/acknowledgedVariants/60#resume_error_kind.local_ignore_reset_replacement_failure",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -80784,6 +80808,31 @@
       ]
     },
     {
+      "id": "scan_run_source_marker:cxx:34785dcbda2d695c",
+      "sourceKind": "scan_run_source_marker",
+      "source": {
+        "artifact": "tests/fixtures/crash_log_scan_run/manifest.json",
+        "locator": "/adapters/cxx/evidence/0/contains/6#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=cxx_resume_durability_unknown_preserves_recovery_receipt"
+      },
+      "participant": "cxx",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
+      "target": {
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/adapters/cxx/evidence/0/contains/6#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=cxx_resume_durability_unknown_preserves_recovery_receipt",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
+      },
+      "retainedAnalyzerIds": [
+        "scan-run-local-ignore-reset-internal-faults"
+      ],
+      "migrationState": "blocking",
+      "stateEvidence": [
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
+      ]
+    },
+    {
       "id": "scan_run_source_marker:cxx:361d12695889bec1",
       "sourceKind": "scan_run_source_marker",
       "source": {
@@ -81079,20 +81128,21 @@
         "locator": "/adapters/cxx/evidence/0/contains/5#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=cxx_resume_operational_errors_preserve_every_stable_reset_outcome_field"
       },
       "participant": "cxx",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/cxx/evidence/0/contains/5#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=cxx_resume_operational_errors_preserve_every_stable_reset_outcome_field",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -81151,20 +81201,21 @@
         "locator": "/scenarios/reset_to_default_continuation/evidence/cxx/1/contains/0#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=cxx_resume_operational_errors_preserve_every_stable_reset_outcome_field"
       },
       "participant": "cxx",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "reset_to_default_continuation",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/reset_to_default_continuation/evidence/cxx/1/contains/0#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=cxx_resume_operational_errors_preserve_every_stable_reset_outcome_field",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -81223,20 +81274,21 @@
         "locator": "/scenarios/reset_to_default_continuation/evidence/cxx/1/contains/1#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=cxx_resume_durability_unknown_preserves_recovery_receipt"
       },
       "participant": "cxx",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "reset_to_default_continuation",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/reset_to_default_continuation/evidence/cxx/1/contains/1#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=cxx_resume_durability_unknown_preserves_recovery_receipt",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -81391,20 +81443,21 @@
         "locator": "/scenarios/reset_to_default_continuation/evidence/node/1/contains/0#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=replacement_failure_projects_shared_node_rejection_metadata"
       },
       "participant": "node",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "reset_to_default_continuation",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/reset_to_default_continuation/evidence/node/1/contains/0#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=replacement_failure_projects_shared_node_rejection_metadata",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -81573,6 +81626,31 @@
       "migrationState": "shadow",
       "stateEvidence": [
         "Phase 0 records the target disposition only; no executable receipt exists."
+      ]
+    },
+    {
+      "id": "scan_run_source_marker:node:6cbacca1c4474102",
+      "sourceKind": "scan_run_source_marker",
+      "source": {
+        "artifact": "tests/fixtures/crash_log_scan_run/manifest.json",
+        "locator": "/adapters/node/evidence/0/contains/5#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=durability_unknown_projects_shared_node_recovery_receipt"
+      },
+      "participant": "node",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
+      "target": {
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/adapters/node/evidence/0/contains/5#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=durability_unknown_projects_shared_node_recovery_receipt",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
+      },
+      "retainedAnalyzerIds": [
+        "scan-run-local-ignore-reset-internal-faults"
+      ],
+      "migrationState": "blocking",
+      "stateEvidence": [
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -81871,20 +81949,21 @@
         "locator": "/adapters/node/evidence/0/contains/4#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=replacement_failure_projects_shared_node_rejection_metadata"
       },
       "participant": "node",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/node/evidence/0/contains/4#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=replacement_failure_projects_shared_node_rejection_metadata",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -81943,20 +82022,21 @@
         "locator": "/scenarios/reset_to_default_continuation/evidence/node/1/contains/1#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=durability_unknown_projects_shared_node_recovery_receipt"
       },
       "participant": "node",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "reset_to_default_continuation",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/reset_to_default_continuation/evidence/node/1/contains/1#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=durability_unknown_projects_shared_node_recovery_receipt",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -82087,20 +82167,21 @@
         "locator": "/scenarios/reset_to_default_continuation/evidence/python/1/contains/1#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=durability_unknown_maps_shared_outcome_to_typed_python_exception"
       },
       "participant": "python",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "reset_to_default_continuation",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/reset_to_default_continuation/evidence/python/1/contains/1#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=durability_unknown_maps_shared_outcome_to_typed_python_exception",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -82351,20 +82432,21 @@
         "locator": "/adapters/python/evidence/0/contains/5#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=replacement_failure_maps_shared_outcome_to_typed_python_exception"
       },
       "participant": "python",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/python/evidence/0/contains/5#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=replacement_failure_maps_shared_outcome_to_typed_python_exception",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -82485,6 +82567,31 @@
       "migrationState": "shadow",
       "stateEvidence": [
         "Phase 0 records the target disposition only; no executable receipt exists."
+      ]
+    },
+    {
+      "id": "scan_run_source_marker:python:b8082ac4fbef1688",
+      "sourceKind": "scan_run_source_marker",
+      "source": {
+        "artifact": "tests/fixtures/crash_log_scan_run/manifest.json",
+        "locator": "/adapters/python/evidence/0/contains/6#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=durability_unknown_maps_shared_outcome_to_typed_python_exception"
+      },
+      "participant": "python",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
+      "target": {
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/adapters/python/evidence/0/contains/6#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=durability_unknown_maps_shared_outcome_to_typed_python_exception",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
+      },
+      "retainedAnalyzerIds": [
+        "scan-run-local-ignore-reset-internal-faults"
+      ],
+      "migrationState": "blocking",
+      "stateEvidence": [
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -82663,20 +82770,21 @@
         "locator": "/scenarios/reset_to_default_continuation/evidence/python/1/contains/0#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=replacement_failure_maps_shared_outcome_to_typed_python_exception"
       },
       "participant": "python",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "reset_to_default_continuation",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/reset_to_default_continuation/evidence/python/1/contains/0#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=replacement_failure_maps_shared_outcome_to_typed_python_exception",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -82780,7 +82888,7 @@
       "sourceKind": "scan_run_source_marker",
       "source": {
         "artifact": "tests/fixtures/crash_log_scan_run/manifest.json",
-        "locator": "/adapters/rust/evidence/0/contains/9#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=cancellation_before_reset_to_default_performs_no_durable_or_analysis_work"
+        "locator": "/adapters/rust/evidence/0/contains/10#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=cancellation_before_reset_to_default_performs_no_durable_or_analysis_work"
       },
       "participant": "rust",
       "mappingOrigin": "legacy_source_marker",
@@ -82855,20 +82963,21 @@
         "locator": "/scenarios/reset_to_default_continuation/evidence/rust/0/contains/3#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=reset_replacement_publication_failure_projects_stable_typed_details"
       },
       "participant": "rust",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "reset_to_default_continuation",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/reset_to_default_continuation/evidence/rust/0/contains/3#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=reset_replacement_publication_failure_projects_stable_typed_details",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -82903,20 +83012,21 @@
         "locator": "/adapters/rust/evidence/0/contains/8#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=reset_replacement_publication_failure_projects_stable_typed_details"
       },
       "participant": "rust",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/rust/evidence/0/contains/8#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=reset_replacement_publication_failure_projects_stable_typed_details",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -82941,6 +83051,31 @@
       "migrationState": "shadow",
       "stateEvidence": [
         "Phase 0 records the target disposition only; no executable receipt exists."
+      ]
+    },
+    {
+      "id": "scan_run_source_marker:rust:3c3bb796e0f53a5b",
+      "sourceKind": "scan_run_source_marker",
+      "source": {
+        "artifact": "tests/fixtures/crash_log_scan_run/manifest.json",
+        "locator": "/adapters/rust/evidence/1/contains/0#path=business-logic/classic-config-core/src/installed_yaml_data_tests.rs;marker=local_ignore_reset_types_durability_unknown_after_canonical_replacement"
+      },
+      "participant": "rust",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
+      "target": {
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/adapters/rust/evidence/1/contains/0#path=business-logic/classic-config-core/src/installed_yaml_data_tests.rs;marker=local_ignore_reset_types_durability_unknown_after_canonical_replacement",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
+      },
+      "retainedAnalyzerIds": [
+        "scan-run-local-ignore-reset-internal-faults"
+      ],
+      "migrationState": "blocking",
+      "stateEvidence": [
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -83020,7 +83155,7 @@
       "sourceKind": "scan_run_source_marker",
       "source": {
         "artifact": "tests/fixtures/crash_log_scan_run/manifest.json",
-        "locator": "/adapters/rust/evidence/1/contains/0#path=business-logic/classic-scanlog-core/tests/scan_run_contract_parity.rs;marker=shared_standard_and_targeted_fixtures_match_normalized_contract"
+        "locator": "/adapters/rust/evidence/2/contains/0#path=business-logic/classic-scanlog-core/tests/scan_run_contract_parity.rs;marker=shared_standard_and_targeted_fixtures_match_normalized_contract"
       },
       "participant": "rust",
       "mappingOrigin": "legacy_source_marker",
@@ -83335,20 +83470,46 @@
         "locator": "/scenarios/reset_to_default_continuation/evidence/rust/0/contains/4#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=reset_replacement_durability_unknown_projects_recoverable_receipt"
       },
       "participant": "rust",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "reset_to_default_continuation",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/reset_to_default_continuation/evidence/rust/0/contains/4#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=reset_replacement_durability_unknown_projects_recoverable_receipt",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-local-ignore-reset-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
+      ]
+    },
+    {
+      "id": "scan_run_source_marker:rust:a5bbe6f3204495f5",
+      "sourceKind": "scan_run_source_marker",
+      "source": {
+        "artifact": "tests/fixtures/crash_log_scan_run/manifest.json",
+        "locator": "/adapters/rust/evidence/0/contains/9#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=reset_replacement_durability_unknown_projects_recoverable_receipt"
+      },
+      "participant": "rust",
+      "mappingOrigin": "retained_internal_fault_projection",
+      "classification": "structural_analyzer",
+      "target": {
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/adapters/rust/evidence/0/contains/9#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=reset_replacement_durability_unknown_projects_recoverable_receipt",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-local-ignore-reset-internal-faults"
+      },
+      "retainedAnalyzerIds": [
+        "scan-run-local-ignore-reset-internal-faults"
+      ],
+      "migrationState": "blocking",
+      "stateEvidence": [
+        "The retained scan-run-local-ignore-reset-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -83476,7 +83637,7 @@
       "sourceKind": "scan_run_source_marker",
       "source": {
         "artifact": "tests/fixtures/crash_log_scan_run/manifest.json",
-        "locator": "/adapters/rust/evidence/0/contains/10#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=cancellation_racing_after_reset_begins_returns_cancelled_after_durable_reset"
+        "locator": "/adapters/rust/evidence/0/contains/11#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=cancellation_racing_after_reset_begins_returns_cancelled_after_durable_reset"
       },
       "participant": "rust",
       "mappingOrigin": "legacy_source_marker",

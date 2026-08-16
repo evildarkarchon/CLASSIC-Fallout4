@@ -42,7 +42,7 @@ python tools/binding_compliance/check_compliance.py `
 
 The receipt must have a sibling immutable `run_plan.json`. The engine rebinds it to the current tracked pack and source revision before validation. Attempt and JUnit files can add command diagnostics but cannot supply semantic facts, row coverage, or a broader scope claim. Participant reports require every source-derived execution instance; only `full` can claim repository completeness, and missing row coverage or unresolved consumer obligations fails that claim closed. Full aggregation independently authenticates each participant-specific source digest and requires their embedded Git revisions to match; the digests themselves may differ because each run plan declares its own runner source roots.
 
-The base Crash Log Scan Run pack also has private shadow launchers for its
+The Crash Log Scan Run pack also has private shadow launchers for its
 Rust, Node, Python, and native CXX semantic adapters:
 
 ```powershell
@@ -79,7 +79,7 @@ The suite does not replace lower-level parsers. It owns the top-level pass/fail 
 - Python: `python tools/python_api_parity/check_parity_gate.py --repo-root .` plus `validate_stubs.py`.
 - User Settings ownership: `python tools/user_settings_ownership/check.py --repo-root .` rejects first-party production references that reintroduce flat models, generic User Settings variants/key policies, raw `CLASSIC_Settings` interpretation outside `classic-user-settings-core`, or runtime use of the generated default mirror.
 - Crash Log Scan Run parity and contraction: `python tools/binding_compliance/scan_run_contract.py --repo-root .` validates the shared corpus under `tests/fixtures/crash_log_scan_run/`, compares its variant inventory with the Rust enums, and fails unless Rust, CXX, Node, and Python acknowledge every variant. The inventory includes Installed YAML Data roles, provenance, diagnostic kinds, Local Ignore states, both explicit recovery decisions, resume-error kinds, and continuation/reset invariants in addition to lifecycle variants. The same manifest carries a per-surface forbidden-export inventory; the check fails if a removed orchestration, analysis-only execution, batch lifecycle, direct report-writing, resettable cancellation, or global-FCX name remains in public source, CXX parity data, Node declarations/parity/runtime coverage, or Python stubs/parity/runtime coverage. It also requires executable Standard, Targeted, existing/generated/recovery/reset Installed YAML Data, cancellation on both sides of the reset critical section, replay, retained-snapshot, byte-exact backup, structured-failure evidence, and CLI, GUI, and TUI presentation evidence.
-- Evidence migration ledger: `python tools/binding_compliance/migration_ledger.py --repo-root .` fails closed when a tracked parity row, raw runtime-registry claim, Crash Log Scan Run marker/audit, or current consumer/source audit is missing, duplicated, stale, or unclassified. The check is blocking in every source-level profile because inventory drift must be classified, but the ledger and its migration states are diagnostic only: they cannot grant compliance, runtime coverage, or receipts. The C++, Node, Python, User Settings, and Crash Log Scan Run gates above remain the executable evidence owners.
+- Evidence migration ledger: `python tools/binding_compliance/migration_ledger.py --repo-root .` fails closed when a tracked parity row, raw runtime-registry claim, Crash Log Scan Run marker/audit, or current consumer/source audit is missing, duplicated, stale, or unclassified. The check is blocking in every source-level profile because inventory drift must be classified, but the ledger and its migration states are diagnostic only: they cannot grant compliance, runtime coverage, or receipts. The named `scan-run-local-ignore-reset-internal-faults` analyzer keeps replacement-publication and durability-unknown projection tests blocking because those faults have no safe deterministic public-adapter trigger. The C++, Node, Python, User Settings, and Crash Log Scan Run gates above remain the executable evidence owners.
 
 Existing C++, Node, and Python parity gates remain available as focused debugging commands. Do not remove or weaken them unless the compliance suite demonstrably covers the same check and the replacement is documented in the same change.
 
@@ -89,6 +89,7 @@ The first implementation intentionally reports known weak coverage instead of si
 
 - C++ has no editable runtime-coverage registry equivalent to the Node and Python registries. The Crash Log Scan Run v1 pack now produces executable CXX receipts from generated bridge DTOs and events on MSVC and clang-cl, while the source parity gate and existing CLI/GUI wrapper suites remain blocking during shadow migration.
 - The Crash Log Scan Run v1 pack has Rust, Node, Python, and both required CXX execution-instance receipts in shadow. Their scoped reports are useful diagnostics, but they do not retire existing evidence until equivalence review and blocking promotion complete.
+- Replacement-publication failure and replacement durability uncertainty remain blocking internal fault analyzers, not semantic receipts. A deterministic public scenario may replace that classification later; a test-only public binding hook or fabricated adapter receipt may not.
 
 Treat new drift, stale generated artifacts, stale baselines, missing runtime coverage, policy/source contradictions, tooling bugs, and local environment failures as separate failure classes in the structured report.
 
@@ -97,12 +98,16 @@ Treat new drift, stale generated artifacts, stale baselines, missing runtime cov
 `tests/fixtures/crash_log_scan_run/manifest.json` is the machine-readable owner for normalized cross-interface expectations. Paths are compared relative to each runner's temporary root; processing timings and exact concurrent event interleavings are deliberately excluded. Discovery, Rust-selected effective concurrency, serialized event variants, discovery-order outcomes, structured failures, Installed YAML Data and reset metadata, valid/generated/malformed/repaired Local Ignore behavior, retained-snapshot continuation resume, reset conflict/operational outcomes, both reset cancellation boundaries, replay, byte-exact backup, durable artifact presence, and report-byte stability remain contractual.
 
 Separately, `tests/conformance/packs/crash_log_scan_run/v1.json` owns the
-independently authored Standard and Targeted happy-path shadow oracle. Its
+independently authored ten-scenario shadow oracle: Standard and Targeted happy
+paths, existing and generated Local Ignore, both recovery decisions, reset
+success, intervening-change conflict, portable backup failure, both reset
+cancellation boundaries, replay, and abandonment. Its
 materialized plans contain only declared inputs and normalization policy; the
 Rust, Node, Python, and CXX runners cannot read its expected observations. The pack
 compares ordered discovery, setup absence, effective concurrency, Installed
 YAML Data identities, terminal log outcomes, stable per-log event traces, full
-typed Display Content carriers, and durable report effects. Timings and
+typed Display Content carriers, typed resume diagnostics, byte-exact reset
+receipts, cancellation state, forbidden effects, and durable report effects. Timings and
 cross-log concurrent interleaving are projected out before receipt emission.
 This shadow pack does not supersede the broader blocking manifest.
 

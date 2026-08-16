@@ -9,7 +9,9 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <charconv>
+#include <chrono>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
@@ -24,6 +26,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -458,6 +461,40 @@ std::string_view recovery_decision_token(scanner::ScanRunLocalIgnoreRecoveryDeci
     throw RunnerError("unrecognized CXX Local Ignore recovery decision");
 }
 
+/// Returns the exhaustive stable token for one durable publication failure stage.
+std::string_view reset_failure_stage_token(scanner::ScanRunLocalIgnoreResetFailureStage value) {
+    switch (value) {
+    case scanner::ScanRunLocalIgnoreResetFailureStage::Create:
+        return "create";
+    case scanner::ScanRunLocalIgnoreResetFailureStage::Write:
+        return "write";
+    case scanner::ScanRunLocalIgnoreResetFailureStage::Flush:
+        return "flush";
+    case scanner::ScanRunLocalIgnoreResetFailureStage::Sync:
+        return "sync";
+    case scanner::ScanRunLocalIgnoreResetFailureStage::Publish:
+        return "publish";
+    }
+    throw RunnerError("unrecognized CXX Local Ignore reset failure stage");
+}
+
+/// Returns the exhaustive stable token for one typed continuation rejection kind.
+std::string_view resume_error_kind_token(scanner::ScanRunContractResumeErrorKind value) {
+    switch (value) {
+    case scanner::ScanRunContractResumeErrorKind::ContinuationConsumed:
+        return "scan_run_continuation_consumed";
+    case scanner::ScanRunContractResumeErrorKind::LocalIgnoreResetConflict:
+        return "local_ignore_reset_conflict";
+    case scanner::ScanRunContractResumeErrorKind::LocalIgnoreResetBackupFailure:
+        return "local_ignore_reset_backup_failure";
+    case scanner::ScanRunContractResumeErrorKind::LocalIgnoreResetReplacementFailure:
+        return "local_ignore_reset_replacement_failure";
+    case scanner::ScanRunContractResumeErrorKind::LocalIgnoreResetDurabilityUnknown:
+        return "local_ignore_reset_durability_unknown";
+    }
+    throw RunnerError("unrecognized CXX continuation rejection kind");
+}
+
 /// Returns the exhaustive stable token for Display Content severity.
 std::string_view severity_token(scanner::ScanRunDisplaySeverity value) {
     switch (value) {
@@ -789,6 +826,17 @@ public:
         return json{{"run", std::move(run)}, {"logs", std::move(logs)}};
     }
 
+    /// Rejects an error observation if the continuation emitted any callback side effect.
+    void require_empty() const {
+        std::lock_guard lock(mutex_);
+        if (!error_.empty()) {
+            throw RunnerError("observer delivery failed: " + error_);
+        }
+        if (!run_events_.empty() || !log_events_.empty()) {
+            throw RunnerError("terminal resume error unexpectedly emitted observer events");
+        }
+    }
+
 private:
     struct LogEventStream {
         std::string crash_log;
@@ -857,6 +905,32 @@ const json& materialize_inputs(const json& plan, const json& scenario, const fs:
         throw RunnerError("scenario intent must be standard or targeted");
     }
     return input;
+}
+
+/// Appends deterministic malformed bytes used to keep the reset critical section observable.
+void append_local_ignore_padding(const json& input, const fs::path& root) {
+    if (!input.contains("localIgnorePaddingBytes")) {
+        return;
+    }
+    if (!input.at("localIgnorePaddingBytes").is_number_unsigned()) {
+        throw RunnerError("localIgnorePaddingBytes must be an unsigned integer");
+    }
+    const std::size_t byte_count = input.at("localIgnorePaddingBytes").get<std::size_t>();
+    std::ofstream output(root / "CLASSIC Data/CLASSIC Ignore.yaml", std::ios::binary | std::ios::app);
+    if (!output) {
+        throw RunnerError("cannot append Local Ignore cancellation padding");
+    }
+    constexpr std::size_t CHUNK_SIZE = 64U * 1024U;
+    const std::string chunk(CHUNK_SIZE, 'x');
+    std::size_t remaining = byte_count;
+    while (remaining > 0) {
+        const std::size_t count = std::min(remaining, chunk.size());
+        output.write(chunk.data(), static_cast<std::streamsize>(count));
+        remaining -= count;
+    }
+    if (!output) {
+        throw RunnerError("cannot write Local Ignore cancellation padding");
+    }
 }
 
 /// Builds the shared CXX request entirely from one input-only scenario.
@@ -933,7 +1007,7 @@ json project_exact_report_effect(const fs::path& root, const fs::path& path) {
 
 /// Projects Local Ignore, backup, report, and explicitly forbidden filesystem effects.
 json project_local_ignore_effects(const fs::path& root, const json& input,
-                                  const scanner::ScanRunContractRunResult& result) {
+                                  const scanner::ScanRunContractRunResult* result) {
     const fs::path backup_directory = root / "CLASSIC Backup/YAML Data/Local Ignore";
     std::vector<fs::path> backup_paths;
     if (fs::is_directory(backup_directory)) {
@@ -955,9 +1029,11 @@ json project_local_ignore_effects(const fs::path& root, const json& input,
     }
 
     json reports = json::array();
-    for (const auto& log : result.logs) {
-        if (log.has_autoscan_report) {
-            reports.push_back(project_exact_report_effect(root, fs::path(owned_string(log.autoscan_report))));
+    if (result != nullptr) {
+        for (const auto& log : result->logs) {
+            if (log.has_autoscan_report) {
+                reports.push_back(project_exact_report_effect(root, fs::path(owned_string(log.autoscan_report))));
+            }
         }
     }
     json forbidden = json::array();
@@ -1031,8 +1107,40 @@ json project_local_ignore_observation(const scanner::ScanRunContractExecutionRes
                                       bool continuation_available) {
     json observation =
         project_local_ignore_phase(execution, observer, root, continuation_available, execution.has_recovery_prompt);
-    observation["durableEffects"] = project_local_ignore_effects(root, input, execution.result);
+    observation["durableEffects"] = project_local_ignore_effects(root, input, &execution.result);
     return observation;
+}
+
+/// Projects one typed reset rejection without retaining platform-specific error prose.
+json project_terminal_resume_error(const scanner::ScanRunContractExecutionResult& execution,
+                                   const RecordingObserver& observer, const fs::path& root) {
+    if (execution.has_result || execution.has_error || !execution.has_resume_error) {
+        throw RunnerError("terminal continuation did not return one typed resume error");
+    }
+    observer.require_empty();
+    const auto& error = execution.resume_error;
+    const std::string code = owned_string(error.code);
+    const std::string_view kind = resume_error_kind_token(error.kind);
+    if (kind != code) {
+        throw RunnerError("CXX continuation rejection kind and code disagree");
+    }
+    return json{
+        {"kind", kind},
+        {"code", code},
+        {"messageNonEmpty", !owned_string(error.message).empty()},
+        {"path", error.has_path ? path_carrier(root, fs::path(owned_string(error.path))) : json(nullptr)},
+        {"stage", error.has_stage ? json(reset_failure_stage_token(error.stage)) : json(nullptr)},
+        {"expectedIdentity", error.has_expected_identity ? serialize_identity(error.expected_identity) : json(nullptr)},
+        {"actualIdentity", error.has_actual_identity ? serialize_identity(error.actual_identity) : json(nullptr)},
+        {"backupPath",
+         error.has_backup_path ? path_carrier(root, fs::path(owned_string(error.backup_path))) : json(nullptr)},
+        {"malformedIdentity",
+         error.has_durability_receipt ? serialize_identity(error.malformed_identity) : json(nullptr)},
+        {"backupIdentity", error.has_durability_receipt ? serialize_identity(error.backup_identity) : json(nullptr)},
+        {"replacementIdentity",
+         error.has_durability_receipt ? serialize_identity(error.replacement_identity) : json(nullptr)},
+        {"displaySeverities", display_severities(execution.display_lines)},
+        {"events", json::array()}};
 }
 
 /// Maps one validated plan decision to the generated public CXX enumeration.
@@ -1143,6 +1251,7 @@ json execute_scenario(const json& plan, const json& scenario) {
     const std::string scenario_id = scenario.at("id").get<std::string>();
     TemporaryDirectory temporary(invocation_id, scenario_id);
     const json& input = materialize_inputs(plan, scenario, temporary.path());
+    append_local_ignore_padding(input, temporary.path());
     RuntimeEnvironment environment(temporary.path());
     const auto request = build_request(input, temporary.path());
     const auto cancellation = scanner::scan_run_cancellation_new();
@@ -1159,14 +1268,70 @@ json execute_scenario(const json& plan, const json& scenario) {
         const json& flow = input.at("continuationFlow");
         materialize_post_pause_data(plan, scenario, flow, temporary.path());
 
+        std::string cancellation_mode;
+        if (flow.contains("cancellation") && !flow.at("cancellation").is_null()) {
+            if (!flow.at("cancellation").is_string()) {
+                throw RunnerError("continuationFlow.cancellation must be a string or null");
+            }
+            cancellation_mode = flow.at("cancellation").get<std::string>();
+            if (cancellation_mode != "before-resume" && cancellation_mode != "after-reset-critical-section") {
+                throw RunnerError("unsupported continuationFlow cancellation boundary: " + cancellation_mode);
+            }
+            if (cancellation_mode == "after-reset-critical-section" &&
+                (flow.at("action").at("operation") != "resume" ||
+                 flow.at("action").at("decision") != "reset-to-default")) {
+                throw RunnerError("after-reset-critical-section cancellation requires Reset To Default");
+            }
+        }
+        if (cancellation_mode == "before-resume") {
+            scanner::scan_run_cancellation_cancel(*cancellation);
+        }
+
         const bool cancelled_before_terminal = scanner::scan_run_cancellation_is_cancelled(*cancellation);
         const RecordingObserver terminal_observer(temporary.path());
-        auto terminal_operation =
-            run_continuation_action(*continuation, flow.at("action"), *cancellation, &terminal_observer);
+        auto terminal_operation = [&]() -> rust::Box<scanner::ScanRunContractExecution> {
+            if (cancellation_mode != "after-reset-critical-section") {
+                return run_continuation_action(*continuation, flow.at("action"), *cancellation, &terminal_observer);
+            }
+
+            const fs::path reset_lock = temporary.path() / ".classic-local-ignore-reset.lock";
+            std::atomic_bool observed_reset_entry = false;
+            // Cancellation is deliberately triggered only after the public reset lock proves
+            // that the non-interruptible durable transaction has begun.
+            std::jthread cancel_after_reset_entry([&] {
+                const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+                while (!fs::exists(reset_lock) && std::chrono::steady_clock::now() < deadline) {
+                    std::this_thread::yield();
+                }
+                if (fs::exists(reset_lock)) {
+                    observed_reset_entry.store(true, std::memory_order_release);
+                    scanner::scan_run_cancellation_cancel(*cancellation);
+                }
+            });
+            auto result = run_continuation_action(*continuation, flow.at("action"), *cancellation, &terminal_observer);
+            cancel_after_reset_entry.join();
+            if (!observed_reset_entry.load(std::memory_order_acquire)) {
+                throw RunnerError("reset critical-section cancellation boundary was not observed");
+            }
+            return result;
+        }();
         const auto terminal_execution = scanner::scan_run_contract_execution_take_result(*terminal_operation);
         const bool cancelled_after_terminal = scanner::scan_run_cancellation_is_cancelled(*cancellation);
-        const json terminal =
-            project_local_ignore_phase(terminal_execution, terminal_observer, temporary.path(), false, false);
+        json terminal = nullptr;
+        json terminal_error = nullptr;
+        const scanner::ScanRunContractRunResult* terminal_result = nullptr;
+        if (terminal_execution.has_result) {
+            terminal =
+                project_local_ignore_phase(terminal_execution, terminal_observer, temporary.path(), false, false);
+            terminal_result = &terminal_execution.result;
+        } else if (terminal_execution.has_resume_error) {
+            terminal_error = project_terminal_resume_error(terminal_execution, terminal_observer, temporary.path());
+        } else if (terminal_execution.has_error) {
+            throw RunnerError("CXX continuation returned infrastructure error: " +
+                              owned_string(terminal_execution.error.message));
+        } else {
+            throw RunnerError("CXX continuation returned no result or error");
+        }
 
         json replays = json::array();
         for (const auto& action : flow.value("replays", json::array())) {
@@ -1177,11 +1342,12 @@ json execute_scenario(const json& plan, const json& scenario) {
         return json{
             {"initial", initial},
             {"terminal", terminal},
+            {"terminalError", terminal_error},
             {"replays", std::move(replays)},
             {"cancellation", json{{"beforeTerminal", cancelled_before_terminal},
                                   {"afterTerminal", cancelled_after_terminal},
                                   {"afterReplays", scanner::scan_run_cancellation_is_cancelled(*cancellation)}}},
-            {"durableEffects", project_local_ignore_effects(temporary.path(), input, terminal_execution.result)}};
+            {"durableEffects", project_local_ignore_effects(temporary.path(), input, terminal_result)}};
     }
     if (input.value("observationProfile", "base") == "local-ignore") {
         return project_local_ignore_observation(execution, observer, temporary.path(), input, continuation_available);

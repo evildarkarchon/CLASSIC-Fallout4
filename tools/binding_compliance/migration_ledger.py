@@ -83,6 +83,29 @@ ANALYZER_IDS = {
     "python": "python-source-and-stub-parity",
 }
 
+SCAN_RUN_INTERNAL_RESET_VARIANTS = frozenset(
+    {
+        "resume_error_kind.local_ignore_reset_replacement_failure",
+        "resume_error_kind.local_ignore_reset_durability_unknown",
+    }
+)
+"""Reset outcomes that cannot be triggered safely through every public adapter seam."""
+
+SCAN_RUN_INTERNAL_RESET_MARKERS = frozenset(
+    {
+        "local_ignore_reset_types_durability_unknown_after_canonical_replacement",
+        "reset_replacement_publication_failure_projects_stable_typed_details",
+        "reset_replacement_durability_unknown_projects_recoverable_receipt",
+        "cxx_resume_operational_errors_preserve_every_stable_reset_outcome_field",
+        "cxx_resume_durability_unknown_preserves_recovery_receipt",
+        "replacement_failure_projects_shared_node_rejection_metadata",
+        "durability_unknown_projects_shared_node_recovery_receipt",
+        "replacement_failure_maps_shared_outcome_to_typed_python_exception",
+        "durability_unknown_maps_shared_outcome_to_typed_python_exception",
+    }
+)
+"""Blocking internal tests that preserve unreachable reset-fault projection coverage."""
+
 DISPLAY_AUDIT_SPECS: tuple[
     tuple[str, Path, tuple[tuple[str, str], ...], tuple[tuple[str, str], ...]], ...
 ] = (
@@ -295,6 +318,22 @@ BASE_ANALYZER_CATALOG: tuple[dict[str, Any], ...] = (
         "id": "scan-run-rust-enum-inventory",
         "evidenceKind": "structural",
         "paths": ["tools/binding_compliance/scan_run_contract.py"],
+        "blockingRequirementId": "scan-run-contract-variants",
+    },
+    {
+        "id": "scan-run-local-ignore-reset-internal-faults",
+        "evidenceKind": "structural",
+        "paths": [
+            "tools/binding_compliance/scan_run_contract.py",
+            "tests/fixtures/crash_log_scan_run/manifest.json",
+            "business-logic/classic-durable-publication/src/publication_fault.rs",
+            "business-logic/classic-config-core/src/installed_yaml_data_reset_fault.rs",
+            "business-logic/classic-config-core/src/installed_yaml_data_tests.rs",
+            "business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs",
+            "cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs",
+            "node-bindings/classic-node/src/scan_run_tests.rs",
+            "python-bindings/classic-scanlog-py/src/scan_run_tests.rs",
+        ],
         "blockingRequirementId": "scan-run-contract-variants",
     },
     {
@@ -867,6 +906,23 @@ def _evidence_markers(
                     f"{scope}[{entry_index}].contains[{marker_index}] must be a string"
                 )
             digest = _stable_digest(scope, path, marker)
+            if marker in SCAN_RUN_INTERNAL_RESET_MARKERS:
+                obligations.append(
+                    _analyzer_obligation(
+                        obligation_id=f"{source_kind}:{participant}:{digest}",
+                        source_kind=source_kind,
+                        artifact=artifact,
+                        locator=(
+                            f"{scope}/{entry_index}/contains/{marker_index}"
+                            f"#path={path};marker={marker}"
+                        ),
+                        participant=participant,
+                        mapping_origin="retained_internal_fault_projection",
+                        classification="structural_analyzer",
+                        analyzer_id="scan-run-local-ignore-reset-internal-faults",
+                    )
+                )
+                continue
             obligations.append(
                 _planned_runtime_obligation(
                     obligation_id=f"{source_kind}:{participant}:{digest}",
@@ -952,14 +1008,27 @@ def _scan_run_obligations(repo_root: Path) -> list[dict[str, Any]]:
                     f"manifest.adapters.{participant}.acknowledgedVariants[{index}] "
                     "must be a string"
                 )
+            locator = f"/adapters/{participant}/acknowledgedVariants/{index}#{variant}"
+            if variant in SCAN_RUN_INTERNAL_RESET_VARIANTS:
+                obligations.append(
+                    _analyzer_obligation(
+                        obligation_id=f"scan-run:variant:{participant}:{variant}",
+                        source_kind="scan_run_variant_acknowledgement",
+                        artifact=SCAN_RUN_MANIFEST,
+                        locator=locator,
+                        participant=participant,
+                        mapping_origin="retained_internal_fault_projection",
+                        classification="structural_analyzer",
+                        analyzer_id="scan-run-local-ignore-reset-internal-faults",
+                    )
+                )
+                continue
             obligations.append(
                 _planned_runtime_obligation(
                     obligation_id=f"scan-run:variant:{participant}:{variant}",
                     source_kind="scan_run_variant_acknowledgement",
                     artifact=SCAN_RUN_MANIFEST,
-                    locator=(
-                        f"/adapters/{participant}/acknowledgedVariants/{index}#{variant}"
-                    ),
+                    locator=locator,
                     participant=participant,
                     mapping_origin="legacy_variant_acknowledgement",
                     family_id="crash-log-scan-run",
