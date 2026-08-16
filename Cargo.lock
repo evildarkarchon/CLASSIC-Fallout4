@@ -1023,7 +1023,12 @@ version = "9.1.0"
 dependencies = [
  "classic-config-core",
  "classic-scanlog-core",
+ "classic-shared-core",
  "classic-vocabulary",
+ "serde",
+ "serde_json",
+ "temp-env",
+ "tempfile",
 ]
 
 [[package]]

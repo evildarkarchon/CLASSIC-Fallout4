@@ -1,0 +1,873 @@
+import { randomUUID } from "node:crypto";
+import {
+  access,
+  copyFile,
+  mkdir,
+  mkdtemp,
+  open,
+  readFile,
+  rename,
+  rm,
+  stat,
+} from "node:fs/promises";
+import { tmpdir } from "node:os";
+import {
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+  sep,
+} from "node:path";
+import type {
+  JsInstalledYamlDataRunData,
+  JsScanRunConfiguration,
+  JsScanRunDisplayLine,
+  JsScanRunEvent,
+  JsScanRunLogResult,
+  JsScanRunResult,
+} from "../index.js";
+
+const RUN_PLAN_ENV = "CLASSIC_CONFORMANCE_RUN_PLAN" as const;
+const OUTPUT_ENV = "CLASSIC_CONFORMANCE_OUTPUT" as const;
+
+type InvocationEnvironmentName = typeof RUN_PLAN_ENV | typeof OUTPUT_ENV;
+type JsonObject = Record<string, unknown>;
+
+/** One canonical plan-relative path. */
+interface PathInput {
+  path: string;
+}
+
+/** One fixture-backed or intentionally absent runtime input. */
+interface FixturePathInput extends PathInput {
+  fixtureRef?: string;
+}
+
+/** The frozen Standard discovery source. */
+interface StandardSourceInput {
+  baseDirectory: PathInput;
+  configuredDocumentsRoot: PathInput;
+}
+
+/** Inputs shared by both frozen Crash Log Scan Run scenarios. */
+interface CommonScenarioInput {
+  installationData: FixturePathInput[];
+  game: string;
+  gameVersion: string;
+  showFormidValues: boolean;
+  simplifyLogs: boolean;
+  formidDatabasePaths: Array<string | PathInput>;
+  maxConcurrent: number;
+}
+
+/** The frozen Standard scenario input. */
+interface StandardScenarioInput extends CommonScenarioInput {
+  intent: "standard";
+  logInputs: FixturePathInput[];
+  standardSource: StandardSourceInput;
+  unsolvedLogs: string;
+}
+
+/** The frozen Targeted scenario input. */
+interface TargetedScenarioInput extends CommonScenarioInput {
+  intent: "targeted";
+  targetedInputs: FixturePathInput[];
+}
+
+type ScenarioInput = StandardScenarioInput | TargetedScenarioInput;
+
+/** One scenario from the centrally authenticated input-only plan. */
+interface RunPlanScenario {
+  id: string;
+  action: string;
+  capabilityIds: string[];
+  fixtureRefs: string[];
+  input: ScenarioInput;
+  normalization: JsonObject;
+}
+
+/** Centrally owned participant identity copied into the receipt. */
+interface ParticipantIdentity {
+  id: string;
+  role: string;
+  executionInstanceId: string;
+}
+
+/** Centrally owned invocation identity copied into the receipt. */
+interface InvocationIdentity {
+  id: string;
+  sourceIdentity: string;
+  runPlanDigest: string;
+}
+
+/** The private runner's input-only invocation document. */
+interface RunPlan {
+  schemaVersion: number;
+  familyId: string;
+  familyVersion: number;
+  expectationDigest: string;
+  fixtureRoot: string;
+  fixtures: Record<string, string>;
+  participant: ParticipantIdentity;
+  invocation: InvocationIdentity;
+  scenarios: RunPlanScenario[];
+}
+
+/** A completed or failed scenario receipt. */
+interface ScenarioReceipt {
+  id: string;
+  executionStatus: "completed" | "failed";
+  capabilityIds: string[];
+  observation: JsonObject;
+  failure: { kind: string; message: string } | null;
+}
+
+/** Report an invalid private runner invocation or input-only plan. */
+class RunnerContractError extends Error {
+  /** Create one stable runner-contract failure. */
+  constructor(message: string) {
+    super(message);
+    this.name = "RunnerContractError";
+  }
+}
+
+/** Return whether an unknown JSON value is a non-array object. */
+function isObject(value: unknown): value is JsonObject {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/** Return one required non-empty string with a path-attributed error. */
+function requireString(value: unknown, label: string): string {
+  if (typeof value !== "string" || value.length === 0) {
+    throw new RunnerContractError(`${label} must be a non-empty string`);
+  }
+  return value;
+}
+
+/** Return one required Boolean without coercing malformed plan data. */
+function requireBoolean(value: unknown, label: string): boolean {
+  if (typeof value !== "boolean") {
+    throw new RunnerContractError(`${label} must be a Boolean`);
+  }
+  return value;
+}
+
+/** Return one required integer without admitting floating-point receipt data. */
+function requireInteger(value: unknown, label: string): number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value)) {
+    throw new RunnerContractError(`${label} must be a safe integer`);
+  }
+  return value;
+}
+
+/** Return one required array with a path-attributed error. */
+function requireArray(value: unknown, label: string): unknown[] {
+  if (!Array.isArray(value)) {
+    throw new RunnerContractError(`${label} must be an array`);
+  }
+  return value;
+}
+
+/** Return one required object with a path-attributed error. */
+function requireObject(value: unknown, label: string): JsonObject {
+  if (!isObject(value)) {
+    throw new RunnerContractError(`${label} must be an object`);
+  }
+  return value;
+}
+
+/** Read one of the two environment-only invocation paths. */
+function requireInvocationEnvironment(name: InvocationEnvironmentName): string {
+  return requireString(process.env[name], name);
+}
+
+/** Load and minimally authenticate one input-only Crash Log Scan Run plan. */
+async function loadRunPlan(path: string): Promise<RunPlan> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(await readFile(path, "utf8"));
+  } catch (error) {
+    throw new RunnerContractError(
+      `cannot read conformance run plan: ${errorMessage(error)}`,
+    );
+  }
+
+  const plan = requireObject(parsed, "run plan");
+  if (plan.schemaVersion !== 1 || plan.familyId !== "crash-log-scan-run") {
+    throw new RunnerContractError(
+      "run plan must be Crash Log Scan Run schema version 1",
+    );
+  }
+  const participant = requireObject(plan.participant, "run plan participant");
+  if (
+    participant.id !== "node" ||
+    participant.role !== "semantic-adapter" ||
+    participant.executionInstanceId !== "node"
+  ) {
+    throw new RunnerContractError(
+      "run plan is not the Node semantic-adapter invocation",
+    );
+  }
+  const scenarios = requireArray(plan.scenarios, "run plan scenarios");
+  if (scenarios.length === 0) {
+    throw new RunnerContractError("run plan must contain scenarios");
+  }
+  for (const [index, value] of scenarios.entries()) {
+    const scenario = requireObject(value, `run plan scenarios[${index}]`);
+    if ("expected" in scenario) {
+      throw new RunnerContractError(
+        "input-only run plan must not contain expectations",
+      );
+    }
+  }
+  requireObject(plan.fixtures, "run plan fixtures");
+  requireObject(plan.invocation, "run plan invocation");
+
+  return plan as unknown as RunPlan;
+}
+
+/** Resolve one canonical plan-relative path beneath a fresh runtime root. */
+function runtimePath(root: string, value: unknown, label: string): string {
+  const text = requireString(value, label);
+  const components = text.split("/");
+  if (
+    isAbsolute(text) ||
+    text.includes("\\") ||
+    components.some((component) =>
+      component === "" || component === "." || component === ".."
+    )
+  ) {
+    throw new RunnerContractError(`${label} must stay beneath the runtime root`);
+  }
+  const candidate = resolve(root, ...components);
+  const projected = relative(root, candidate);
+  if (projected === "" || projected === ".." || projected.startsWith(`..${sep}`)) {
+    throw new RunnerContractError(`${label} escapes the runtime root`);
+  }
+  return candidate;
+}
+
+/** Project one public path result to a canonical runtime-root-relative string. */
+function relativePath(root: string, value: unknown, label: string): string {
+  const text = requireString(value, label);
+  const candidate = resolve(isAbsolute(text) ? text : join(root, text));
+  const projected = relative(root, candidate);
+  if (projected === "" || projected === ".." || projected.startsWith(`..${sep}`)) {
+    throw new RunnerContractError(`${label} is outside the fresh runtime root`);
+  }
+  return projected.split(sep).join("/");
+}
+
+/** Create one normalized path carrier used by the common observation contract. */
+function pathCarrier(root: string, value: unknown, label: string): { path: string } {
+  return { path: relativePath(root, value, label) };
+}
+
+/** Copy one scenario-declared fixture to its writable runtime destination. */
+async function copyDeclaredFixture(
+  plan: RunPlan,
+  scenario: RunPlanScenario,
+  item: FixturePathInput,
+  root: string,
+  label: string,
+): Promise<void> {
+  if (item.fixtureRef === undefined) {
+    return;
+  }
+  const reference = requireString(item.fixtureRef, `${label}.fixtureRef`);
+  if (!scenario.fixtureRefs.includes(reference)) {
+    throw new RunnerContractError(
+      `${label}.fixtureRef is not declared by the scenario`,
+    );
+  }
+  const source = requireString(plan.fixtures[reference], `fixture ${reference}`);
+  const destination = runtimePath(root, item.path, `${label}.path`);
+  await mkdir(dirname(destination), { recursive: true });
+  try {
+    await copyFile(source, destination);
+  } catch (error) {
+    throw new RunnerContractError(
+      `cannot copy fixture ${reference}: ${errorMessage(error)}`,
+    );
+  }
+}
+
+/** Materialize only plan-declared installation data and Crash Log inputs. */
+async function materializeScenarioInputs(
+  plan: RunPlan,
+  scenario: RunPlanScenario,
+  root: string,
+): Promise<ScenarioInput> {
+  const input = scenario.input;
+  for (const [index, item] of input.installationData.entries()) {
+    await copyDeclaredFixture(
+      plan,
+      scenario,
+      item,
+      root,
+      `installationData[${index}]`,
+    );
+  }
+
+  const logInputs = input.intent === "standard" ? input.logInputs : input.targetedInputs;
+  for (const [index, item] of logInputs.entries()) {
+    await copyDeclaredFixture(
+      plan,
+      scenario,
+      item,
+      root,
+      `${input.intent === "standard" ? "logInputs" : "targetedInputs"}[${index}]`,
+    );
+  }
+
+  if (input.intent === "standard") {
+    await mkdir(
+      runtimePath(
+        root,
+        input.standardSource.baseDirectory.path,
+        "standard baseDirectory.path",
+      ),
+      { recursive: true },
+    );
+    await mkdir(
+      runtimePath(
+        root,
+        input.standardSource.configuredDocumentsRoot.path,
+        "standard configuredDocumentsRoot.path",
+      ),
+      { recursive: true },
+    );
+  }
+  return input;
+}
+
+/** Convert PascalCase binding enums to their frozen lowercase token spelling. */
+function normalizedToken(value: unknown): string {
+  return String(value)
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2")
+    .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+    .replace(/-/g, "_")
+    .toLowerCase();
+}
+
+/** Convert plan path values into absolute binding configuration paths. */
+function configuredPaths(root: string, values: Array<string | PathInput>): string[] {
+  return values.map((value, index) =>
+    runtimePath(
+      root,
+      typeof value === "string" ? value : value.path,
+      `formidDatabasePaths[${index}]`,
+    ),
+  );
+}
+
+/** Construct the frozen Standard or Targeted request through public factories. */
+async function buildRequest(input: ScenarioInput, root: string) {
+  const classic = await import("../index.js");
+  if (input.game !== "fallout4") {
+    throw new RunnerContractError("base scenario game must be fallout4");
+  }
+  const configuration: JsScanRunConfiguration = {
+    installationRoot: root,
+    game: classic.JsGameId.Fallout4,
+    gameVersion: requireString(input.gameVersion, "gameVersion"),
+    showFormidValues: requireBoolean(input.showFormidValues, "showFormidValues"),
+    simplifyLogs: requireBoolean(input.simplifyLogs, "simplifyLogs"),
+    formidDatabasePaths: configuredPaths(root, input.formidDatabasePaths),
+    maxConcurrent: requireInteger(input.maxConcurrent, "maxConcurrent"),
+  };
+
+  if (input.intent === "standard") {
+    if (input.unsolvedLogs !== "leave-in-place") {
+      throw new RunnerContractError(
+        "base Standard scenario must leave unsolved logs in place",
+      );
+    }
+    return classic.ScanRunRequest.standard(
+      configuration,
+      {
+        baseDirectory: runtimePath(
+          root,
+          input.standardSource.baseDirectory.path,
+          "baseDirectory.path",
+        ),
+        configuredDocumentsRoot: runtimePath(
+          root,
+          input.standardSource.configuredDocumentsRoot.path,
+          "configuredDocumentsRoot.path",
+        ),
+      },
+      classic.ScanRunUnsolvedLogs.leaveInPlace(),
+    );
+  }
+
+  return classic.ScanRunRequest.targeted(configuration, {
+    inputs: input.targetedInputs.map((item, index) =>
+      runtimePath(root, item.path, `targetedInputs[${index}].path`),
+    ),
+  });
+}
+
+/** Serialize frozen Display Content while preserving every ordered carrier field. */
+function displayContent(lines: JsScanRunDisplayLine[], root: string): JsonObject[] {
+  return lines.map((line) => ({
+    severity: normalizedToken(line.severity),
+    segments: line.segments.map((segment) => ({
+      kind: normalizedToken(segment.kind),
+      text: segment.text,
+      path:
+        segment.path === ""
+          ? ""
+          : relativePath(root, segment.path, "display segment path"),
+      count: requireInteger(segment.count, "display segment count"),
+    })),
+  }));
+}
+
+/** Serialize unexpected FCX setup data so a non-null regression stays visible. */
+function serializeSetup(
+  setup: JsScanRunResult["setup"],
+  root: string,
+): JsonObject | null {
+  if (setup === undefined) {
+    return null;
+  }
+  return {
+    status: normalizedToken(setup.status),
+    message: setup.message ?? null,
+    renderedReport: setup.renderedReport,
+    checks: setup.checks.map((check) => ({
+      kind: normalizedToken(check.kind),
+      state: normalizedToken(check.state),
+      message: check.message,
+      details: [...check.details],
+    })),
+    pathUpdates: setup.pathUpdates.map((update) => ({
+      kind: normalizedToken(update.kind),
+      path: pathCarrier(root, update.path, "setup path update"),
+    })),
+    actions: [...setup.actions],
+    fatalErrors: [...setup.fatalErrors],
+  };
+}
+
+/** Serialize the immutable Installed YAML Data snapshot used by the run. */
+function installedYamlData(
+  installed: JsInstalledYamlDataRunData | undefined,
+  root: string,
+): JsonObject | null {
+  if (installed === undefined) {
+    return null;
+  }
+  return {
+    main: {
+      role: normalizedToken(installed.main.role),
+      provenance: normalizedToken(installed.main.provenance),
+      schemaMajor: requireInteger(installed.main.schemaMajor, "Main schema major"),
+      schemaMinor: requireInteger(installed.main.schemaMinor, "Main schema minor"),
+      identity: {
+        sha256: installed.main.sha256,
+        byteLength: requireInteger(installed.main.byteLength, "Main byte length"),
+      },
+    },
+    gameFile: {
+      role: normalizedToken(installed.gameFile.role),
+      provenance: normalizedToken(installed.gameFile.provenance),
+      schemaMajor: requireInteger(installed.gameFile.schemaMajor, "game schema major"),
+      schemaMinor: requireInteger(installed.gameFile.schemaMinor, "game schema minor"),
+      identity: {
+        sha256: installed.gameFile.sha256,
+        byteLength: requireInteger(installed.gameFile.byteLength, "game byte length"),
+      },
+    },
+    localIgnoreState: normalizedToken(installed.localIgnoreState),
+    localIgnoreIdentity: {
+      sha256: installed.localIgnoreIdentity.sha256,
+      byteLength: requireInteger(
+        installed.localIgnoreIdentity.byteLen,
+        "Local Ignore byte length",
+      ),
+    },
+    diagnostics: installed.diagnostics.map((diagnostic) => ({
+      role:
+        diagnostic.role === undefined ? null : normalizedToken(diagnostic.role),
+      candidate:
+        diagnostic.candidate === undefined
+          ? null
+          : normalizedToken(diagnostic.candidate),
+      path:
+        diagnostic.path === undefined
+          ? null
+          : pathCarrier(root, diagnostic.path, "Installed YAML Data diagnostic path"),
+      kind: normalizedToken(diagnostic.kind),
+      message: diagnostic.message,
+    })),
+    localIgnoreResetAvailable: installed.localIgnoreResetAvailable,
+  };
+}
+
+/** Serialize ordered discovery paths and Targeted rejection reasons. */
+function discovery(
+  value: JsScanRunResult["discovery"],
+  root: string,
+): JsonObject | null {
+  if (value === undefined) {
+    return null;
+  }
+  return {
+    source: value.source,
+    acceptedLogs: value.acceptedLogs.map((path) =>
+      pathCarrier(root, path, "accepted Crash Log"),
+    ),
+    rejectedInputs: value.rejectedInputs.map((rejected) => ({
+      path: relativePath(root, rejected.path, "rejected input"),
+      reason: rejected.reason,
+    })),
+    searchedLocations: value.searchedLocations.map((path) =>
+      pathCarrier(root, path, "searched location"),
+    ),
+  };
+}
+
+/** Serialize discovery-ordered terminal log outcomes without timing fields. */
+function logResults(logs: JsScanRunLogResult[], root: string): JsonObject[] {
+  return logs.map((log) => ({
+    discoveryIndex: requireInteger(log.discoveryIndex, "log discovery index"),
+    crashLog: pathCarrier(root, log.crashLog, "result Crash Log"),
+    autoscanReport:
+      log.autoscanReport === undefined
+        ? null
+        : pathCarrier(root, log.autoscanReport, "Autoscan Report"),
+    disposition: log.disposition,
+    failures: log.failures.map((failure) => ({
+      stage: failure.stage,
+      message: failure.message,
+    })),
+    message: log.message ?? null,
+    movedToUnsolvedLogs: log.movedToUnsolvedLogs,
+  }));
+}
+
+/** Partition callbacks into deterministic run-wide and per-log ordered traces. */
+function events(callbacks: JsScanRunEvent[], root: string): JsonObject {
+  const runEvents: JsonObject[] = [];
+  const logStreams = new Map<number, JsonObject & { trace: JsonObject[] }>();
+  for (const event of callbacks) {
+    const projected: JsonObject = {
+      kind: event.kind,
+      displayContent: displayContent(event.displayLines, root),
+    };
+    if (event.log === undefined) {
+      if (event.effectiveConcurrency !== undefined) {
+        projected.effectiveConcurrency = requireInteger(
+          event.effectiveConcurrency,
+          "event effective concurrency",
+        );
+      }
+      runEvents.push(projected);
+      continue;
+    }
+
+    const discoveryIndex = requireInteger(
+      event.log.discoveryIndex,
+      "event discovery index",
+    );
+    let stream = logStreams.get(discoveryIndex);
+    if (stream === undefined) {
+      stream = {
+        discoveryIndex,
+        crashLog: pathCarrier(root, event.log.crashLog, "event Crash Log"),
+        trace: [],
+      };
+      logStreams.set(discoveryIndex, stream);
+    }
+    if (event.phase !== undefined) {
+      projected.phase = event.phase;
+    }
+    if (event.disposition !== undefined) {
+      projected.disposition = event.disposition;
+    }
+    stream.trace.push(projected);
+  }
+  return {
+    run: runEvents,
+    logs: [...logStreams.entries()]
+      .sort(([left], [right]) => left - right)
+      .map(([, stream]) => stream),
+  };
+}
+
+/** Return a report's observed file state without converting I/O failures to absence. */
+async function reportState(path: string): Promise<{ exists: boolean; nonEmpty: boolean }> {
+  try {
+    const metadata = await stat(path);
+    return {
+      exists: metadata.isFile(),
+      nonEmpty: metadata.isFile() && metadata.size > 0,
+    };
+  } catch (error) {
+    if (isMissingPathError(error)) {
+      return { exists: false, nonEmpty: false };
+    }
+    throw error;
+  }
+}
+
+/** Return whether one path exists while preserving non-absence I/O errors. */
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch (error) {
+    if (isMissingPathError(error)) {
+      return false;
+    }
+    throw error;
+  }
+}
+
+/** Observe report persistence and the forbidden Unsolved Logs destination. */
+async function durableEffects(
+  logs: JsScanRunLogResult[],
+  root: string,
+): Promise<JsonObject> {
+  const reports: JsonObject[] = [];
+  for (const log of logs) {
+    if (log.autoscanReport === undefined) {
+      continue;
+    }
+    const path = resolve(
+      isAbsolute(log.autoscanReport)
+        ? log.autoscanReport
+        : join(root, log.autoscanReport),
+    );
+    reports.push({
+      path: relativePath(root, path, "durable Autoscan Report"),
+      ...(await reportState(path)),
+    });
+  }
+  const unsolved = join(root, "Unsolved Logs");
+  return {
+    reports,
+    unsolvedLogs: {
+      path: "Unsolved Logs",
+      exists: await pathExists(unsolved),
+    },
+  };
+}
+
+/** Project one public execution envelope to the frozen normalized observation. */
+async function observation(
+  execution: Awaited<ReturnType<typeof import("../index.js")["scanRunExecute"]>>,
+  callbacks: JsScanRunEvent[],
+  root: string,
+): Promise<JsonObject> {
+  if (execution.observerError !== undefined) {
+    throw new RunnerContractError(
+      `observer delivery failed: ${execution.observerError}`,
+    );
+  }
+  if ("error" in execution) {
+    const errorPath =
+      execution.error.path === undefined ? "" : ` (${execution.error.path})`;
+    throw new RunnerContractError(
+      `scan failed during ${execution.error.stage}: ${execution.error.message}${errorPath}`,
+    );
+  }
+  const result = execution.result;
+  return {
+    run: {
+      status: result.status,
+      message: result.message ?? null,
+      total: requireInteger(result.total, "run total"),
+      succeeded: requireInteger(result.succeeded, "run succeeded"),
+      failed: requireInteger(result.failed, "run failed"),
+      cancelled: requireInteger(result.cancelled, "run cancelled"),
+      setup: serializeSetup(result.setup, root),
+      effectiveConcurrency:
+        result.effectiveConcurrency === undefined
+          ? null
+          : requireInteger(result.effectiveConcurrency, "effective concurrency"),
+    },
+    discovery: discovery(result.discovery, root),
+    installedYamlData: installedYamlData(result.installedYamlData, root),
+    logs: logResults(result.logs, root),
+    events: events(callbacks, root),
+    displayContent: displayContent(execution.displayLines, root),
+    durableEffects: await durableEffects(result.logs, root),
+  };
+}
+
+/** Execute one scenario through the installed public Node binding operation. */
+async function executeScenario(
+  plan: RunPlan,
+  scenario: RunPlanScenario,
+): Promise<JsonObject> {
+  const root = resolve(await mkdtemp(join(tmpdir(), "classic-node-conformance-")));
+  const previousDirectory = process.cwd();
+  try {
+    const input = await materializeScenarioInputs(plan, scenario, root);
+    const cacheRoot = join(root, "isolated-cache");
+    await mkdir(cacheRoot, { recursive: true });
+    // Cache selection is process-global, so scenarios run serially with a fresh empty root.
+    process.env.LOCALAPPDATA = cacheRoot;
+    process.env.XDG_CACHE_HOME = cacheRoot;
+    process.chdir(root);
+
+    const classic = await import("../index.js");
+    const request = await buildRequest(input, root);
+    const callbacks: JsScanRunEvent[] = [];
+    const execution = await classic.scanRunExecute(
+      request,
+      new classic.ScanRunCancellation(),
+      (event) => {
+        callbacks.push(event);
+      },
+    );
+    return await observation(execution, callbacks, root);
+  } finally {
+    process.chdir(previousDirectory);
+    await rm(root, { recursive: true, force: true });
+  }
+}
+
+/** Execute one scenario and retain adapter failures as receipt evidence. */
+async function scenarioReceipt(
+  plan: RunPlan,
+  scenario: RunPlanScenario,
+): Promise<ScenarioReceipt> {
+  try {
+    return {
+      id: requireString(scenario.id, "scenario id"),
+      executionStatus: "completed",
+      capabilityIds: scenario.capabilityIds.map((id, index) =>
+        requireString(id, `scenario capabilityIds[${index}]`),
+      ),
+      observation: await executeScenario(plan, scenario),
+      failure: null,
+    };
+  } catch (error) {
+    return {
+      id: requireString(scenario.id, "scenario id"),
+      executionStatus: "failed",
+      capabilityIds: scenario.capabilityIds.map((id, index) =>
+        requireString(id, `scenario capabilityIds[${index}]`),
+      ),
+      observation: {},
+      failure: {
+        kind: "node-runner-error",
+        message: errorMessage(error),
+      },
+    };
+  }
+}
+
+/** Build one current receipt while copying every centrally owned identity. */
+async function buildReceipt(plan: RunPlan): Promise<JsonObject> {
+  const scenarios: ScenarioReceipt[] = [];
+  for (const scenario of plan.scenarios) {
+    // Serial execution is required because cache isolation uses process environment.
+    scenarios.push(await scenarioReceipt(plan, scenario));
+  }
+  return {
+    schemaVersion: plan.schemaVersion,
+    familyId: plan.familyId,
+    familyVersion: plan.familyVersion,
+    expectationDigest: plan.expectationDigest,
+    invocation: { ...plan.invocation },
+    participant: { ...plan.participant },
+    runner: {
+      id: "classic-node-conformance",
+      version: 1,
+      platform: "windows",
+      toolchain: "bun",
+    },
+    scenarios,
+  };
+}
+
+/** Recursively sort object keys for deterministic compact JSON bytes. */
+function canonicalJsonValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(canonicalJsonValue);
+  }
+  if (!isObject(value)) {
+    return value;
+  }
+  return Object.fromEntries(
+    Object.keys(value)
+      .sort()
+      .map((key) => [key, canonicalJsonValue(value[key])]),
+  );
+}
+
+/** Atomically publish one fresh JSON receipt without exposing partial bytes. */
+async function publishReceipt(path: string, receipt: JsonObject): Promise<void> {
+  if (await pathExists(path)) {
+    throw new RunnerContractError(
+      "conformance receipt destination already exists",
+    );
+  }
+  await mkdir(dirname(path), { recursive: true });
+  const temporary = join(dirname(path), `.${path.split(sep).at(-1)}.${randomUUID()}.tmp`);
+  const payload = JSON.stringify(canonicalJsonValue(receipt));
+  let handle: Awaited<ReturnType<typeof open>> | undefined;
+  try {
+    handle = await open(temporary, "wx");
+    await handle.writeFile(payload, "utf8");
+    await handle.sync();
+    await handle.close();
+    handle = undefined;
+    await rename(temporary, path);
+  } catch (error) {
+    if (handle !== undefined) {
+      await handle.close().catch(() => {
+        // Preserve the publication failure that caused cleanup to run.
+      });
+    }
+    await rm(temporary, { force: true }).catch(() => {
+      // A failed best-effort cleanup must not replace the publication failure.
+    });
+    throw new RunnerContractError(
+      `cannot publish conformance receipt: ${errorMessage(error)}`,
+    );
+  }
+}
+
+/** Return whether an I/O error means the inspected path is absent. */
+function isMissingPathError(error: unknown): boolean {
+  return isObject(error) && error.code === "ENOENT";
+}
+
+/** Convert any caught value to non-empty receipt-safe diagnostic text. */
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return `${error.name}: ${error.message}`;
+  }
+  const message = String(error);
+  return message.length === 0 ? "unknown runner failure" : message;
+}
+
+/** Read the environment-only invocation, execute its plan, and emit a receipt. */
+async function main(): Promise<number> {
+  try {
+    const runPlanPath = resolve(requireInvocationEnvironment(RUN_PLAN_ENV));
+    const outputPath = resolve(requireInvocationEnvironment(OUTPUT_ENV));
+    if (dirname(runPlanPath) !== dirname(outputPath)) {
+      throw new RunnerContractError(
+        "conformance receipt must be a sibling of its immutable run plan",
+      );
+    }
+    const plan = await loadRunPlan(runPlanPath);
+    await publishReceipt(outputPath, await buildReceipt(plan));
+    return 0;
+  } catch (error) {
+    console.error(`classic-node-conformance: ${errorMessage(error)}`);
+    return 2;
+  }
+}
+
+void main().then((exitCode) => {
+  process.exitCode = exitCode;
+});

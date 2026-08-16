@@ -42,6 +42,25 @@ python tools/binding_compliance/check_compliance.py `
 
 The receipt must have a sibling immutable `run_plan.json`. The engine rebinds it to the current tracked pack and source revision before validation. Attempt and JUnit files can add command diagnostics but cannot supply semantic facts, row coverage, or a broader scope claim. Participant reports require every source-derived execution instance; only `full` can claim repository completeness, and missing row coverage or unresolved consumer obligations fails that claim closed. Full aggregation independently authenticates each participant-specific source digest and requires their embedded Git revisions to match; the digests themselves may differ because each run plan declares its own runner source roots.
 
+The base Crash Log Scan Run pack also has a private shadow launcher for its
+Rust, Node, and Python semantic adapters:
+
+```powershell
+python tools/binding_compliance/run_scan_run_conformance.py --participant rust
+python tools/binding_compliance/run_scan_run_conformance.py --participant node
+uv run --project python-bindings python tools/binding_compliance/run_scan_run_conformance.py --participant python
+```
+
+Each invocation creates a fresh input-only `run_plan.json`, calls only the
+selected adapter's public scan-run seam, and publishes `receipt.json`,
+`attempt.json`, and `shadow_report.json` beneath
+`tools/binding_compliance/artifacts/<participant>/<instance>/<invocation>/`.
+The native workflows upload those diagnostics from explicitly nonblocking
+shadow steps after their existing runtime tests. They do not replace or weaken
+the manifest, parity, declaration/stub, rebuild, or runtime gates. CXX is not a
+participant in this base slice, so three passing receipts cannot claim full
+repository conformance.
+
 ## What The Suite Proves
 
 The suite does not replace lower-level parsers. It owns the top-level pass/fail result, policy mapping, and gap report while reusing existing gates as executable evidence:
@@ -57,15 +76,26 @@ Existing C++, Node, and Python parity gates remain available as focused debuggin
 
 ## Current Coverage Gaps
 
-The first implementation intentionally reports known weak coverage instead of silently rewriting policy around it. The current non-blocking gap is:
+The first implementation intentionally reports known weak coverage instead of silently rewriting policy around it. The current non-blocking gaps are:
 
 - C++ has a source-only bridge parity gate, but no dedicated runtime coverage registry equivalent to the Node and Python registries. C++ runtime behavior remains covered through the CLI/GUI build and test wrappers.
+- The Crash Log Scan Run v1 pack has Rust, Node, and Python shadow receipts but no CXX receipt. Participant-scoped reports are useful diagnostics; a full-repository report remains incomplete until the CXX slice lands and the later equivalence and promotion gates pass.
 
 Treat new drift, stale generated artifacts, stale baselines, missing runtime coverage, policy/source contradictions, tooling bugs, and local environment failures as separate failure classes in the structured report.
 
 ## Crash Log Scan Run Contract Changes
 
 `tests/fixtures/crash_log_scan_run/manifest.json` is the machine-readable owner for normalized cross-interface expectations. Paths are compared relative to each runner's temporary root; processing timings and exact concurrent event interleavings are deliberately excluded. Discovery, Rust-selected effective concurrency, serialized event variants, discovery-order outcomes, structured failures, Installed YAML Data and reset metadata, valid/generated/malformed/repaired Local Ignore behavior, retained-snapshot continuation resume, reset conflict/operational outcomes, both reset cancellation boundaries, replay, byte-exact backup, durable artifact presence, and report-byte stability remain contractual.
+
+Separately, `tests/conformance/packs/crash_log_scan_run/v1.json` owns the
+independently authored Standard and Targeted happy-path shadow oracle. Its
+materialized plans contain only declared inputs and normalization policy; the
+Rust, Node, and Python runners cannot read its expected observations. The pack
+compares ordered discovery, setup absence, effective concurrency, Installed
+YAML Data identities, terminal log outcomes, stable per-log event traces, full
+typed Display Content carriers, and durable report effects. Timings and
+cross-log concurrent interleaving are projected out before receipt emission.
+This shadow pack does not supersede the broader blocking manifest.
 
 The manifest's `forbiddenExports` section is negative evidence for the completed
 contract step. Identifier-shaped markers use identifier boundaries, so removing

@@ -1,6 +1,6 @@
 # Executable Cross-Adapter Conformance Specification
 
-> **Status: accepted design; implementation in progress.** [ADR-0008](../adr/0008-executable-cross-adapter-conformance.md) records the decision. Phase 0's diagnostic ledger and the generic engine for validated-pack/input-only materialization, prepared-run receipt validation, exact comparison, predicate-derived row coverage, applicability, scoped shadow reports, and receipt-only CLI aggregation are implemented. Domain predicate registries, adapters, consumer receipt registries, and blocking domain packs remain later migration slices. Until a phase reaches its blocking exit gate, the commands and evidence documented in `docs/api/binding-compliance-suite.md` remain authoritative.
+> **Status: accepted design; implementation in progress.** [ADR-0008](../adr/0008-executable-cross-adapter-conformance.md) records the decision. Phase 0's diagnostic ledger and generic engine are implemented, together with the first input-only Crash Log Scan Run pack, its centrally derived family predicates, and public-seam Rust, Node, and Python receipt runners in shadow. CXX execution, recovery and remaining scan behavior, consumer receipts, equivalence review, blocking promotion, and legacy-evidence retirement remain later migration slices. Until a phase reaches its blocking exit gate, the commands and evidence documented in `docs/api/binding-compliance-suite.md` remain authoritative.
 
 ## Target
 

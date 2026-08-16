@@ -111,6 +111,21 @@ jobs:
       - name: Run Python bindings smoke tests
         run: uv run --project python-bindings python -m pytest python-bindings/tests -q
 
+      # Shadow evidence remains diagnostic; the rebuilt-binding pytest step
+      # above is still the blocking Python runtime authority.
+      - name: Run Python Crash Log Scan Run shadow conformance
+        continue-on-error: true
+        run: uv run --project python-bindings python tools/binding_compliance/run_scan_run_conformance.py --participant python
+
+      - name: Upload Python Crash Log Scan Run shadow diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-scan-run-shadow-conformance
+          path: tools/binding_compliance/artifacts/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run Python CLI diagnostics
         run: |
           uv run --project python-bindings classic-py --fixture-root python-bindings/tests/fixtures doctor

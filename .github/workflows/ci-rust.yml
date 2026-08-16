@@ -171,3 +171,18 @@ jobs:
 
       - name: Run Rust tests with all features
         run: cargo test --workspace --release --all-features -- --nocapture
+
+      # Shadow evidence is diagnostic until the later equivalence/promotion gate;
+      # the workspace test steps above remain the blocking Rust authority.
+      - name: Run Rust Crash Log Scan Run shadow conformance
+        continue-on-error: true
+        run: python tools/binding_compliance/run_scan_run_conformance.py --participant rust
+
+      - name: Upload Rust Crash Log Scan Run shadow diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-scan-run-shadow-conformance
+          path: tools/binding_compliance/artifacts/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7

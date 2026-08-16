@@ -1,0 +1,2828 @@
+{
+  "schemaVersion": 1,
+  "familyId": "crash-log-scan-run",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scanlog-core"
+  },
+  "fixtureRoot": "tests/fixtures/crash_log_scan_run",
+  "fixtures": {
+    "validCrashLog": "valid-crash.log",
+    "mainYaml": "CLASSIC Data/databases/CLASSIC Main.yaml",
+    "gameYaml": "CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+    "localIgnoreYaml": "CLASSIC Data/CLASSIC Ignore.yaml"
+  },
+  "capabilities": [
+    {
+      "id": "scan-run.execute",
+      "rustSymbols": [
+        "Request",
+        "RunResult",
+        "LogDisposition"
+      ],
+      "observationFamilies": [
+        "run-status",
+        "discovery",
+        "setup",
+        "effective-concurrency",
+        "installed-yaml-data",
+        "log-outcomes",
+        "events",
+        "display-content",
+        "durable-effects"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "standard-happy-path",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 4,
+        "intent": "standard",
+        "logInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Standard/Crash Logs/crash-shared-standard-01.log"
+          },
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Standard/Crash Logs/crash-shared-standard-02.log"
+          }
+        ],
+        "standardSource": {
+          "baseDirectory": {
+            "path": "Standard"
+          },
+          "configuredDocumentsRoot": {
+            "path": "Documents"
+          }
+        },
+        "unsolvedLogs": "leave-in-place"
+      },
+      "expected": {
+        "run": {
+          "status": "completed",
+          "message": null,
+          "total": 2,
+          "succeeded": 2,
+          "failed": 0,
+          "cancelled": 0,
+          "setup": null,
+          "effectiveConcurrency": 2
+        },
+        "discovery": {
+          "source": "standard",
+          "acceptedLogs": [
+            {
+              "path": "Standard/Crash Logs/crash-shared-standard-01.log"
+            },
+            {
+              "path": "Standard/Crash Logs/crash-shared-standard-02.log"
+            }
+          ],
+          "rejectedInputs": [],
+          "searchedLocations": [
+            {
+              "path": "Standard"
+            },
+            {
+              "path": "Standard/Crash Logs"
+            },
+            {
+              "path": "Documents"
+            }
+          ]
+        },
+        "installedYamlData": {
+          "main": {
+            "role": "main",
+            "provenance": "bundled",
+            "schemaMajor": 2,
+            "schemaMinor": 0,
+            "identity": {
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4",
+              "byteLength": 281
+            }
+          },
+          "gameFile": {
+            "role": "game",
+            "provenance": "bundled",
+            "schemaMajor": 1,
+            "schemaMinor": 0,
+            "identity": {
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168",
+              "byteLength": 463
+            }
+          },
+          "localIgnoreState": "existing",
+          "localIgnoreIdentity": {
+            "sha256": "1fc79ee2668e143c355dc3b931de1a2c41041227e79e21890da90a744ad3b70c",
+            "byteLength": 29
+          },
+          "diagnostics": [],
+          "localIgnoreResetAvailable": false
+        },
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Standard/Crash Logs/crash-shared-standard-01.log"
+            },
+            "autoscanReport": {
+              "path": "Standard/Crash Logs/crash-shared-standard-01-AUTOSCAN.md"
+            },
+            "disposition": "succeeded",
+            "failures": [],
+            "message": null,
+            "movedToUnsolvedLogs": false
+          },
+          {
+            "discoveryIndex": 1,
+            "crashLog": {
+              "path": "Standard/Crash Logs/crash-shared-standard-02.log"
+            },
+            "autoscanReport": {
+              "path": "Standard/Crash Logs/crash-shared-standard-02-AUTOSCAN.md"
+            },
+            "disposition": "succeeded",
+            "failures": [],
+            "message": null,
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "events": {
+          "run": [
+            {
+              "kind": "discovery_completed",
+              "displayContent": [
+                {
+                  "severity": "info",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Discovered",
+                      "path": "",
+                      "count": 0
+                    },
+                    {
+                      "kind": "count",
+                      "text": "crash logs",
+                      "path": "",
+                      "count": 2
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "effective_concurrency_selected",
+              "effectiveConcurrency": 2,
+              "displayContent": [
+                {
+                  "severity": "info",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Selected",
+                      "path": "",
+                      "count": 0
+                    },
+                    {
+                      "kind": "count",
+                      "text": "concurrent scans",
+                      "path": "",
+                      "count": 2
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "logs": [
+            {
+              "discoveryIndex": 0,
+              "crashLog": {
+                "path": "Standard/Crash Logs/crash-shared-standard-01.log"
+              },
+              "trace": [
+                {
+                  "kind": "log_queued",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "text",
+                          "text": "queued",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_started",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "text",
+                          "text": "scanning",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "setup",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "preparing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "parse",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "parsing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "analyze",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "analyzing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "finalize",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "finalizing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_finished",
+                  "disposition": "succeeded",
+                  "displayContent": [
+                    {
+                      "severity": "success",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "succeeded",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "discoveryIndex": 1,
+              "crashLog": {
+                "path": "Standard/Crash Logs/crash-shared-standard-02.log"
+              },
+              "trace": [
+                {
+                  "kind": "log_queued",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "text",
+                          "text": "queued",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_started",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "text",
+                          "text": "scanning",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "setup",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "preparing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "parse",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "parsing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "analyze",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "analyzing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "finalize",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "finalizing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_finished",
+                  "disposition": "succeeded",
+                  "displayContent": [
+                    {
+                      "severity": "success",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "succeeded",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "displayContent": [
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "label",
+                "text": "completed",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 2
+              },
+              {
+                "kind": "text",
+                "text": "scanned",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Discovery:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "standard discovery",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "crash logs",
+                "path": "",
+                "count": 2
+              },
+              {
+                "kind": "text",
+                "text": "accepted,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "targeted inputs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "rejected,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "locations",
+                "path": "",
+                "count": 3
+              },
+              {
+                "kind": "text",
+                "text": "searched",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Searched:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Standard",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Searched:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Standard/Crash Logs",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Searched:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Documents",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Effective concurrency:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "concurrent scans",
+                "path": "",
+                "count": 2
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Installed YAML Data",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Selected",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "Main",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "YAML Data:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "bundled",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- schema",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "2.0",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 281
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Selected",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "game",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "YAML Data:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "bundled",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- schema",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "1.0",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 463
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Local Ignore:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "existing",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "1fc79ee2668e143c355dc3b931de1a2c41041227e79e21890da90a744ad3b70c",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 29
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Outcomes:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 2
+              },
+              {
+                "kind": "text",
+                "text": "succeeded,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "failed,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "not started",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "emphasis",
+                "text": "1",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Standard/Crash Logs/crash-shared-standard-01.log",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "succeeded",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- report",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Standard/Crash Logs/crash-shared-standard-01-AUTOSCAN.md",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "emphasis",
+                "text": "2",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Standard/Crash Logs/crash-shared-standard-02.log",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "succeeded",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- report",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Standard/Crash Logs/crash-shared-standard-02-AUTOSCAN.md",
+                "count": 0
+              }
+            ]
+          }
+        ],
+        "durableEffects": {
+          "reports": [
+            {
+              "path": "Standard/Crash Logs/crash-shared-standard-01-AUTOSCAN.md",
+              "exists": true,
+              "nonEmpty": true
+            },
+            {
+              "path": "Standard/Crash Logs/crash-shared-standard-02-AUTOSCAN.md",
+              "exists": true,
+              "nonEmpty": true
+            }
+          ],
+          "unsolvedLogs": {
+            "path": "Unsolved Logs",
+            "exists": false
+          }
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "targeted-happy-path",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 4,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Targeted/crash-shared-targeted-02.log"
+          },
+          {
+            "path": "Targeted/missing-input.txt"
+          },
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Targeted/crash-shared-targeted-01.log"
+          }
+        ]
+      },
+      "expected": {
+        "run": {
+          "status": "completed",
+          "message": null,
+          "total": 2,
+          "succeeded": 2,
+          "failed": 0,
+          "cancelled": 0,
+          "setup": null,
+          "effectiveConcurrency": 2
+        },
+        "discovery": {
+          "source": "targeted",
+          "acceptedLogs": [
+            {
+              "path": "Targeted/crash-shared-targeted-02.log"
+            },
+            {
+              "path": "Targeted/crash-shared-targeted-01.log"
+            }
+          ],
+        "rejectedInputs": [
+          {
+            "path": "Targeted/missing-input.txt",
+            "reason": "path does not exist"
+          }
+          ],
+          "searchedLocations": [
+            {
+              "path": "Targeted/crash-shared-targeted-02.log"
+            },
+            {
+              "path": "Targeted/missing-input.txt"
+            },
+            {
+              "path": "Targeted/crash-shared-targeted-01.log"
+            }
+          ]
+        },
+        "installedYamlData": {
+          "main": {
+            "role": "main",
+            "provenance": "bundled",
+            "schemaMajor": 2,
+            "schemaMinor": 0,
+            "identity": {
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4",
+              "byteLength": 281
+            }
+          },
+          "gameFile": {
+            "role": "game",
+            "provenance": "bundled",
+            "schemaMajor": 1,
+            "schemaMinor": 0,
+            "identity": {
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168",
+              "byteLength": 463
+            }
+          },
+          "localIgnoreState": "existing",
+          "localIgnoreIdentity": {
+            "sha256": "1fc79ee2668e143c355dc3b931de1a2c41041227e79e21890da90a744ad3b70c",
+            "byteLength": 29
+          },
+          "diagnostics": [],
+          "localIgnoreResetAvailable": false
+        },
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Targeted/crash-shared-targeted-02.log"
+            },
+            "autoscanReport": {
+              "path": "Targeted/crash-shared-targeted-02-AUTOSCAN.md"
+            },
+            "disposition": "succeeded",
+            "failures": [],
+            "message": null,
+            "movedToUnsolvedLogs": false
+          },
+          {
+            "discoveryIndex": 1,
+            "crashLog": {
+              "path": "Targeted/crash-shared-targeted-01.log"
+            },
+            "autoscanReport": {
+              "path": "Targeted/crash-shared-targeted-01-AUTOSCAN.md"
+            },
+            "disposition": "succeeded",
+            "failures": [],
+            "message": null,
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "events": {
+          "run": [
+            {
+              "kind": "discovery_completed",
+              "displayContent": [
+                {
+                  "severity": "info",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Discovered",
+                      "path": "",
+                      "count": 0
+                    },
+                    {
+                      "kind": "count",
+                      "text": "crash logs",
+                      "path": "",
+                      "count": 2
+                    }
+                  ]
+                },
+                {
+                  "severity": "notice",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Rejected",
+                      "path": "",
+                      "count": 0
+                    },
+                    {
+                      "kind": "count",
+                      "text": "targeted input",
+                      "path": "",
+                      "count": 1
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "effective_concurrency_selected",
+              "effectiveConcurrency": 2,
+              "displayContent": [
+                {
+                  "severity": "info",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Selected",
+                      "path": "",
+                      "count": 0
+                    },
+                    {
+                      "kind": "count",
+                      "text": "concurrent scans",
+                      "path": "",
+                      "count": 2
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "logs": [
+            {
+              "discoveryIndex": 0,
+              "crashLog": {
+                "path": "Targeted/crash-shared-targeted-02.log"
+              },
+              "trace": [
+                {
+                  "kind": "log_queued",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "text",
+                          "text": "queued",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_started",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "text",
+                          "text": "scanning",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "setup",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "preparing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "parse",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "parsing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "analyze",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "analyzing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "finalize",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "finalizing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_finished",
+                  "disposition": "succeeded",
+                  "displayContent": [
+                    {
+                      "severity": "success",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "succeeded",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "discoveryIndex": 1,
+              "crashLog": {
+                "path": "Targeted/crash-shared-targeted-01.log"
+              },
+              "trace": [
+                {
+                  "kind": "log_queued",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "text",
+                          "text": "queued",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_started",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "text",
+                          "text": "scanning",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "setup",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "preparing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "parse",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "parsing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "analyze",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "analyzing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "finalize",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "finalizing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_finished",
+                  "disposition": "succeeded",
+                  "displayContent": [
+                    {
+                      "severity": "success",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "succeeded",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "displayContent": [
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "label",
+                "text": "completed",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 2
+              },
+              {
+                "kind": "text",
+                "text": "scanned",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Discovery:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "targeted discovery",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "crash logs",
+                "path": "",
+                "count": 2
+              },
+              {
+                "kind": "text",
+                "text": "accepted,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "targeted input",
+                "path": "",
+                "count": 1
+              },
+              {
+                "kind": "text",
+                "text": "rejected,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "locations",
+                "path": "",
+                "count": 3
+              },
+              {
+                "kind": "text",
+                "text": "searched",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "notice",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Rejected:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Targeted/missing-input.txt",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "path does not exist",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Searched:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Targeted/crash-shared-targeted-02.log",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Searched:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Targeted/missing-input.txt",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Searched:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Targeted/crash-shared-targeted-01.log",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Effective concurrency:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "concurrent scans",
+                "path": "",
+                "count": 2
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Installed YAML Data",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Selected",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "Main",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "YAML Data:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "bundled",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- schema",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "2.0",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 281
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Selected",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "game",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "YAML Data:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "bundled",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- schema",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "1.0",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 463
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Local Ignore:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "existing",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "1fc79ee2668e143c355dc3b931de1a2c41041227e79e21890da90a744ad3b70c",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 29
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Outcomes:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 2
+              },
+              {
+                "kind": "text",
+                "text": "succeeded,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "failed,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "not started",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "emphasis",
+                "text": "1",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Targeted/crash-shared-targeted-02.log",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "succeeded",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- report",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Targeted/crash-shared-targeted-02-AUTOSCAN.md",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "emphasis",
+                "text": "2",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Targeted/crash-shared-targeted-01.log",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "succeeded",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- report",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Targeted/crash-shared-targeted-01-AUTOSCAN.md",
+                "count": 0
+              }
+            ]
+          }
+        ],
+        "durableEffects": {
+          "reports": [
+            {
+              "path": "Targeted/crash-shared-targeted-02-AUTOSCAN.md",
+              "exists": true,
+              "nonEmpty": true
+            },
+            {
+              "path": "Targeted/crash-shared-targeted-01-AUTOSCAN.md",
+              "exists": true,
+              "nonEmpty": true
+            }
+          ],
+          "unsolvedLogs": {
+            "path": "Unsolved Logs",
+            "exists": false
+          }
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

@@ -112,6 +112,12 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Set up Python for shadow conformance
+        if: matrix.runtime == 'node'
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
 
@@ -169,3 +175,19 @@ jobs:
         if: matrix.runtime == 'node'
         working-directory: node-bindings/classic-node
         run: bun run test:node
+
+      # Shadow evidence cannot replace either blocking runtime leg while CXX and
+      # the later equivalence/promotion gates are still outstanding.
+      - name: Run Node Crash Log Scan Run shadow conformance
+        if: matrix.runtime == 'node'
+        continue-on-error: true
+        run: python tools/binding_compliance/run_scan_run_conformance.py --participant node
+
+      - name: Upload Node Crash Log Scan Run shadow diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-scan-run-shadow-conformance
+          path: tools/binding_compliance/artifacts/node/node/
+          if-no-files-found: warn
+          retention-days: 7

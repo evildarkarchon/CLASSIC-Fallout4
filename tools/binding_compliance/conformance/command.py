@@ -16,6 +16,7 @@ from .coverage import (
     load_source_parity_rows,
 )
 from .failures import FailureKind
+from .families.crash_log_scan_run import CRASH_LOG_SCAN_RUN_COVERAGE_POLICY
 from .packs import (
     MaterializationError,
     PackValidationError,
@@ -39,7 +40,9 @@ class ConformanceCommandError(ValueError):
 
 # Domain slices register repository-owned predicate policies here as they land.
 # An absent policy leaves coverage unresolved and therefore cannot pass a scope.
-FAMILY_COVERAGE_POLICIES: Mapping[str, FamilyCoveragePolicy] = {}
+FAMILY_COVERAGE_POLICIES: Mapping[str, FamilyCoveragePolicy] = {
+    CRASH_LOG_SCAN_RUN_COVERAGE_POLICY.family_id: CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+}
 
 
 def _repository_path(
@@ -152,6 +155,25 @@ def _diagnostic_failures(
             )
         )
         return tuple(failures)
+    launch_error = attempt.get("launchError")
+    if isinstance(launch_error, str) and launch_error:
+        failures.append(
+            ScopedReportFailure(
+                FailureKind.LOCAL_ENVIRONMENT,
+                f"native conformance command could not start: {launch_error}",
+                participant_id,
+                execution_instance_id,
+            )
+        )
+    elif launch_error is not None:
+        failures.append(
+            ScopedReportFailure(
+                FailureKind.ADAPTER_COMMAND,
+                "native attempt launchError must be a string or null",
+                participant_id,
+                execution_instance_id,
+            )
+        )
     if attempt.get("timedOut") is True:
         failures.append(
             ScopedReportFailure(
