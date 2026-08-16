@@ -103,20 +103,25 @@ def test_cxx_attempt_classifies_wrapper_prerequisite_output_as_local_environment
 ) -> None:
     """A started pwsh process can still fail because its toolchain is absent."""
 
-    attempt_path = _write_cxx_attempt(
-        tmp_path,
-        stdout="Missing required tool: clang-cl.exe\nBuild prerequisites are missing.\n",
+    outputs = (
+        "Missing required tool: clang-cl.exe\nBuild prerequisites are missing.\n",
+        "CMake Error: Could not find toolchain file: D:/missing/vcpkg.cmake\n",
+        "CMake Error: Could not resolve link.exe from CMAKE_LINKER, the compiler directory, or PATH.\n",
+        "CMake Error: Resolved linker is NOT an MSVC-compatible linker.\n",
     )
+    for output in outputs:
+        attempt_path = _write_cxx_attempt(tmp_path, stdout=output)
+        failures = _diagnostic_failures(
+            tmp_path,
+            participant_id="cxx",
+            execution_instance_id="windows-clang-cl",
+            attempt_path=attempt_path,
+            junit_path=None,
+        )
 
-    failures = _diagnostic_failures(
-        tmp_path,
-        participant_id="cxx",
-        execution_instance_id="windows-clang-cl",
-        attempt_path=attempt_path,
-        junit_path=None,
-    )
-
-    assert [failure.kind.value for failure in failures] == ["local_environment_failure"]
+        assert [failure.kind.value for failure in failures] == [
+            "local_environment_failure"
+        ]
 
 
 def test_cxx_attempt_keeps_adapter_failures_distinct_from_toolchain_failures(

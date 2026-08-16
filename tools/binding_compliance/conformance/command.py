@@ -54,6 +54,11 @@ _CXX_LOCAL_ENVIRONMENT_OUTPUT_MARKERS = (
     "could not locate a visual studio installation",
     "vs dev shell initialization completed, but",
     'cmake was unable to find a build program corresponding to "ninja"',
+    "could not find toolchain file:",
+    "could not resolve link.exe from cmake_linker",
+    "resolved linker is not an msvc-compatible linker",
+    "no cmake_cxx_compiler could be found",
+    "the c++ compiler is not able to compile a simple test program",
 )
 
 
