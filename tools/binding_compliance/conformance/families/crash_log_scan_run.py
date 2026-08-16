@@ -172,7 +172,8 @@ def _diagnostics(value: object, kinds: Sequence[str]) -> bool:
     if diagnostics is None or len(diagnostics) != len(kinds):
         return False
     return all(
-        diagnostic == {
+        diagnostic
+        == {
             "role": None,
             "candidate": None,
             "path": {"path": _LOCAL_IGNORE_PATH},
@@ -234,9 +235,7 @@ def _compact_log(value: object, stem: str, disposition: str) -> bool:
     if log is None:
         return False
     expected_report = (
-        {"path": f"Recovery/{stem}-AUTOSCAN.md"}
-        if disposition == "succeeded"
-        else None
+        {"path": f"Recovery/{stem}-AUTOSCAN.md"} if disposition == "succeeded" else None
     )
     expected_message = None if disposition == "succeeded" else "Cancelled by user"
     return log == {
@@ -284,7 +283,8 @@ def _initial_recovery_snapshot(
         and installed is not None
         and installed.get("localIgnoreReset") is None
         and initial.get("logs") == []
-        and initial.get("events") == {
+        and initial.get("events")
+        == {
             "run": ["discovery_completed"],
             "logs": [],
         }
@@ -404,7 +404,8 @@ def _consumed_replay(value: object, operation: str, decision: str | None) -> boo
         and replay.get("decision") == decision
         and error is not None
         and error.get("kind") == "scan_run_continuation_consumed"
-        and error.get("message") == "Crash Log Scan Run continuation was already consumed"
+        and error.get("message")
+        == "Crash Log Scan Run continuation was already consumed"
         and error.get("displaySeverities") == ["failure", "notice"]
     )
 
@@ -592,6 +593,335 @@ def _durable_effects(observation: Mapping[str, Any]) -> bool:
     )
 
 
+def _pre_discovery_cancelled_status(observation: Mapping[str, Any]) -> bool:
+    """Recognize cancellation before discovery can retain any run work."""
+
+    run = _mapping(observation.get("run"))
+    return run == {
+        "status": "cancelled_before_discovery",
+        "message": "Cancelled before crash log discovery",
+        "total": 0,
+        "succeeded": 0,
+        "failed": 0,
+        "cancelled": 0,
+        "effectiveConcurrency": None,
+    }
+
+
+def _pre_discovery_cancelled_boundary(observation: Mapping[str, Any]) -> bool:
+    """Recognize the empty discovery, outcome, and ordered-event boundary."""
+
+    return (
+        observation.get("discovery") is None
+        and observation.get("logs") == []
+        and observation.get("events") == {"run": [], "logs": []}
+        and observation.get("observerFailure") is None
+    )
+
+
+def _pre_discovery_cancellation_requested(observation: Mapping[str, Any]) -> bool:
+    """Recognize the pre-discovery control remaining cancelled after execution."""
+
+    return _pre_discovery_cancelled_status(observation) and observation.get(
+        "cancellation"
+    ) == {"requested": True}
+
+
+def _pre_discovery_forbidden_effects(observation: Mapping[str, Any]) -> bool:
+    """Recognize that pre-discovery cancellation publishes no durable artifacts."""
+
+    return observation.get("durableEffects") == {
+        "reports": [],
+        "forbidden": [
+            {
+                "path": "Lifecycle/crash-pre-discovery-01-AUTOSCAN.md",
+                "exists": False,
+            },
+            {
+                "path": "Lifecycle/crash-pre-discovery-02-AUTOSCAN.md",
+                "exists": False,
+            },
+            {"path": "Unsolved Logs", "exists": False},
+        ],
+    }
+
+
+def _queued_cancelled_status(observation: Mapping[str, Any]) -> bool:
+    """Recognize the all-queued post-discovery terminal status."""
+
+    return observation.get("run") == {
+        "status": "cancelled",
+        "message": None,
+        "total": 2,
+        "succeeded": 0,
+        "failed": 0,
+        "cancelled": 2,
+        "effectiveConcurrency": 1,
+    }
+
+
+def _queued_cancellation_requested(observation: Mapping[str, Any]) -> bool:
+    """Recognize the queued-boundary control remaining cancelled after execution."""
+
+    return _queued_cancelled_status(observation) and observation.get(
+        "cancellation"
+    ) == {"requested": True}
+
+
+def _queued_cancelled_boundary(observation: Mapping[str, Any]) -> bool:
+    """Recognize two queued logs finishing cancelled without either admission."""
+
+    paths = (
+        "Lifecycle/crash-queued-01.log",
+        "Lifecycle/crash-queued-02.log",
+    )
+    return (
+        observation.get("discovery")
+        == {
+            "source": "targeted",
+            "acceptedLogs": [{"path": path} for path in paths],
+            "rejectedInputs": [],
+            "searchedLocations": [{"path": path} for path in paths],
+        }
+        and observation.get("logs")
+        == [
+            {
+                "discoveryIndex": index,
+                "crashLog": {"path": path},
+                "autoscanReport": None,
+                "disposition": "cancelled_before_start",
+                "failures": [],
+                "message": "Cancelled by user",
+                "movedToUnsolvedLogs": False,
+            }
+            for index, path in enumerate(paths)
+        ]
+        and observation.get("events")
+        == {
+            "run": ["discovery_completed", "effective_concurrency_selected"],
+            "logs": [
+                {
+                    "discoveryIndex": index,
+                    "trace": [
+                        "log_queued",
+                        "log_finished:cancelled_before_start",
+                    ],
+                }
+                for index in range(2)
+            ],
+        }
+        and observation.get("observerFailure") is None
+    )
+
+
+def _queued_cancelled_forbidden_effects(observation: Mapping[str, Any]) -> bool:
+    """Recognize that queued cancellation publishes no report or movement."""
+
+    return observation.get("durableEffects") == {
+        "reports": [],
+        "forbidden": [
+            {
+                "path": "Lifecycle/crash-queued-01-AUTOSCAN.md",
+                "exists": False,
+            },
+            {
+                "path": "Lifecycle/crash-queued-02-AUTOSCAN.md",
+                "exists": False,
+            },
+            {"path": "Unsolved Logs", "exists": False},
+        ],
+    }
+
+
+def _admitted_cancelled_status(observation: Mapping[str, Any]) -> bool:
+    """Recognize one admitted success and one unstarted cancelled log."""
+
+    return observation.get("run") == {
+        "status": "cancelled",
+        "message": None,
+        "total": 2,
+        "succeeded": 1,
+        "failed": 0,
+        "cancelled": 1,
+        "effectiveConcurrency": 1,
+    }
+
+
+def _admitted_cancellation_requested(observation: Mapping[str, Any]) -> bool:
+    """Recognize the admitted-boundary control remaining cancelled at return."""
+
+    return _admitted_cancelled_status(observation) and observation.get(
+        "cancellation"
+    ) == {"requested": True}
+
+
+def _admitted_cancelled_boundary(observation: Mapping[str, Any]) -> bool:
+    """Recognize the admitted log's full trace and the later unstarted log."""
+
+    paths = (
+        "Lifecycle/crash-admitted-01.log",
+        "Lifecycle/crash-admitted-02.log",
+    )
+    return (
+        observation.get("discovery")
+        == {
+            "source": "targeted",
+            "acceptedLogs": [{"path": path} for path in paths],
+            "rejectedInputs": [],
+            "searchedLocations": [{"path": path} for path in paths],
+        }
+        and observation.get("logs")
+        == [
+            {
+                "discoveryIndex": 0,
+                "crashLog": {"path": paths[0]},
+                "autoscanReport": {"path": "Lifecycle/crash-admitted-01-AUTOSCAN.md"},
+                "disposition": "succeeded",
+                "failures": [],
+                "message": None,
+                "movedToUnsolvedLogs": False,
+            },
+            {
+                "discoveryIndex": 1,
+                "crashLog": {"path": paths[1]},
+                "autoscanReport": None,
+                "disposition": "cancelled_before_start",
+                "failures": [],
+                "message": "Cancelled by user",
+                "movedToUnsolvedLogs": False,
+            },
+        ]
+        and observation.get("events")
+        == {
+            "run": ["discovery_completed", "effective_concurrency_selected"],
+            "logs": [
+                {
+                    "discoveryIndex": 0,
+                    "trace": [
+                        "log_queued",
+                        "log_started",
+                        "log_phase:setup",
+                        "log_phase:parse",
+                        "log_phase:analyze",
+                        "log_phase:finalize",
+                        "log_finished:succeeded",
+                    ],
+                },
+                {
+                    "discoveryIndex": 1,
+                    "trace": [
+                        "log_queued",
+                        "log_finished:cancelled_before_start",
+                    ],
+                },
+            ],
+        }
+        and observation.get("observerFailure") is None
+    )
+
+
+def _admitted_durable_effects(observation: Mapping[str, Any]) -> bool:
+    """Recognize durable completion for admitted work and no later artifacts."""
+
+    return observation.get("durableEffects") == {
+        "reports": [
+            {
+                "path": "Lifecycle/crash-admitted-01-AUTOSCAN.md",
+                "exists": True,
+                "nonEmpty": True,
+            }
+        ],
+        "forbidden": [
+            {
+                "path": "Lifecycle/crash-admitted-02-AUTOSCAN.md",
+                "exists": False,
+            },
+            {"path": "Unsolved Logs", "exists": False},
+        ],
+    }
+
+
+def _observer_failure_status(observation: Mapping[str, Any]) -> bool:
+    """Recognize safe cancellation immediately after discovery delivery fails."""
+
+    return observation.get("run") == {
+        "status": "cancelled",
+        "message": "Cancelled after crash log discovery",
+        "total": 1,
+        "succeeded": 0,
+        "failed": 0,
+        "cancelled": 1,
+        "effectiveConcurrency": None,
+    }
+
+
+def _observer_failure_boundary(observation: Mapping[str, Any]) -> bool:
+    """Recognize retained discovery with no later event delivered or work admitted."""
+
+    path = "Lifecycle/crash-observer-failure.log"
+    return (
+        observation.get("discovery")
+        == {
+            "source": "targeted",
+            "acceptedLogs": [{"path": path}],
+            "rejectedInputs": [],
+            "searchedLocations": [{"path": path}],
+        }
+        and observation.get("logs")
+        == [
+            {
+                "discoveryIndex": 0,
+                "crashLog": {"path": path},
+                "autoscanReport": None,
+                "disposition": "cancelled_before_start",
+                "failures": [],
+                "message": "Cancelled by user",
+                "movedToUnsolvedLogs": False,
+            }
+        ]
+        and observation.get("events")
+        == {
+            "run": ["discovery_completed"],
+            "logs": [{"discoveryIndex": 0, "trace": []}],
+        }
+    )
+
+
+def _observer_failure_observed(observation: Mapping[str, Any]) -> bool:
+    """Recognize the structured adapter-delivery failure observation."""
+
+    return observation.get("observerFailure") == {
+        "kind": "observer_delivery_failure",
+        "eventKind": "discovery_completed",
+        "messageNonEmpty": True,
+    }
+
+
+def _observer_failure_cancellation_requested(
+    observation: Mapping[str, Any],
+) -> bool:
+    """Recognize cancellation requested separately after observer failure."""
+
+    return _observer_failure_status(observation) and observation.get(
+        "cancellation"
+    ) == {"requested": True}
+
+
+def _observer_failure_forbidden_effects(observation: Mapping[str, Any]) -> bool:
+    """Recognize observer failure prevents reports and movement artifacts."""
+
+    return observation.get("durableEffects") == {
+        "reports": [],
+        "forbidden": [
+            {
+                "path": "Lifecycle/crash-observer-failure-AUTOSCAN.md",
+                "exists": False,
+            },
+            {"path": "Unsolved Logs", "exists": False},
+        ],
+    }
+
+
 def _generated_status(observation: Mapping[str, Any]) -> bool:
     """Recognize the one-log generated-Ignore terminal status."""
 
@@ -613,9 +943,7 @@ def _generated_discovery(observation: Mapping[str, Any]) -> bool:
         "source": "targeted",
         "acceptedLogs": [{"path": "Generated/crash-generated-local-ignore.log"}],
         "rejectedInputs": [],
-        "searchedLocations": [
-            {"path": "Generated/crash-generated-local-ignore.log"}
-        ],
+        "searchedLocations": [{"path": "Generated/crash-generated-local-ignore.log"}],
     }
 
 
@@ -797,13 +1125,9 @@ def _reset_terminal(observation: Mapping[str, Any]) -> bool:
             "exists": True,
             "identityMatchesReceipt": True,
         }
-        and _identity(
-            reset.get("malformedIdentity"), _MALFORMED_IGNORE_SHA256, 39
-        )
+        and _identity(reset.get("malformedIdentity"), _MALFORMED_IGNORE_SHA256, 39)
         and _identity(reset.get("backupIdentity"), _MALFORMED_IGNORE_SHA256, 39)
-        and _identity(
-            reset.get("replacementIdentity"), _GENERATED_IGNORE_SHA256, 28
-        )
+        and _identity(reset.get("replacementIdentity"), _GENERATED_IGNORE_SHA256, 28)
     )
 
 
@@ -1075,7 +1399,9 @@ def _reset_post_critical_terminal(observation: Mapping[str, Any]) -> bool:
         diagnostic_kinds=("parse", "local_ignore_reset"),
         reset_available=False,
     )
-    reset = _mapping(installed.get("localIgnoreReset")) if installed is not None else None
+    reset = (
+        _mapping(installed.get("localIgnoreReset")) if installed is not None else None
+    )
     logs = _sequence(terminal.get("logs"))
     return (
         terminal.get("run")
@@ -1292,6 +1618,154 @@ _BASE_PREDICATES = tuple(
     for fact_id, observation_family, rust_symbols, matches in _BASE_PREDICATE_FACTS
 )
 
+_PRE_DISCOVERY_CANCELLATION_PREDICATES = (
+    CoveragePredicate(
+        "scan-run.lifecycle.pre-discovery-status",
+        "scan-run.execute",
+        "scan-run.execute",
+        "run-status",
+        ("RunResult",),
+        _pre_discovery_cancelled_status,
+    ),
+    CoveragePredicate(
+        "scan-run.lifecycle.pre-discovery-boundary",
+        "scan-run.execute",
+        "scan-run.execute",
+        "events",
+        ("RunResult", "LogDisposition"),
+        _pre_discovery_cancelled_boundary,
+    ),
+    CoveragePredicate(
+        "scan-run.lifecycle.pre-discovery-cancellation",
+        "scan-run.execute",
+        "scan-run.execute",
+        "cancellation",
+        ("Cancellation",),
+        _pre_discovery_cancellation_requested,
+    ),
+    CoveragePredicate(
+        "scan-run.lifecycle.pre-discovery-forbidden-effects",
+        "scan-run.execute",
+        "scan-run.execute",
+        "durable-effects",
+        ("RunResult",),
+        _pre_discovery_forbidden_effects,
+    ),
+)
+
+_QUEUED_CANCELLATION_PREDICATES = (
+    CoveragePredicate(
+        "scan-run.lifecycle.queued-status",
+        "scan-run.execute",
+        "scan-run.execute",
+        "run-status",
+        ("RunResult",),
+        _queued_cancelled_status,
+    ),
+    CoveragePredicate(
+        "scan-run.lifecycle.queued-boundary",
+        "scan-run.execute",
+        "scan-run.execute",
+        "events",
+        ("RunResult", "LogDisposition"),
+        _queued_cancelled_boundary,
+    ),
+    CoveragePredicate(
+        "scan-run.lifecycle.queued-cancellation",
+        "scan-run.execute",
+        "scan-run.execute",
+        "cancellation",
+        ("Cancellation",),
+        _queued_cancellation_requested,
+    ),
+    CoveragePredicate(
+        "scan-run.lifecycle.queued-forbidden-effects",
+        "scan-run.execute",
+        "scan-run.execute",
+        "durable-effects",
+        ("RunResult",),
+        _queued_cancelled_forbidden_effects,
+    ),
+)
+
+_ADMITTED_CANCELLATION_PREDICATES = (
+    CoveragePredicate(
+        "scan-run.lifecycle.admitted-status",
+        "scan-run.execute",
+        "scan-run.execute",
+        "run-status",
+        ("RunResult",),
+        _admitted_cancelled_status,
+    ),
+    CoveragePredicate(
+        "scan-run.lifecycle.admitted-boundary",
+        "scan-run.execute",
+        "scan-run.execute",
+        "events",
+        ("RunResult", "LogDisposition"),
+        _admitted_cancelled_boundary,
+    ),
+    CoveragePredicate(
+        "scan-run.lifecycle.admitted-cancellation",
+        "scan-run.execute",
+        "scan-run.execute",
+        "cancellation",
+        ("Cancellation",),
+        _admitted_cancellation_requested,
+    ),
+    CoveragePredicate(
+        "scan-run.lifecycle.admitted-durable-effects",
+        "scan-run.execute",
+        "scan-run.execute",
+        "durable-effects",
+        ("RunResult",),
+        _admitted_durable_effects,
+    ),
+)
+
+_OBSERVER_FAILURE_PREDICATES = (
+    CoveragePredicate(
+        "scan-run.observer-failure.status",
+        "scan-run.execute",
+        "scan-run.execute",
+        "run-status",
+        ("RunResult",),
+        _observer_failure_status,
+    ),
+    CoveragePredicate(
+        "scan-run.observer-failure.boundary",
+        "scan-run.execute",
+        "scan-run.execute",
+        "events",
+        ("RunResult", "LogDisposition"),
+        _observer_failure_boundary,
+    ),
+    CoveragePredicate(
+        "scan-run.observer-failure.structured-observation",
+        "scan-run.execute",
+        "scan-run.execute",
+        "observer-failure",
+        ("Observer",),
+        _observer_failure_observed,
+    ),
+    CoveragePredicate(
+        "scan-run.observer-failure.cancellation",
+        "scan-run.execute",
+        "scan-run.execute",
+        "cancellation",
+        ("Cancellation",),
+        _observer_failure_cancellation_requested,
+    ),
+    CoveragePredicate(
+        "scan-run.observer-failure.forbidden-effects",
+        "scan-run.execute",
+        "scan-run.execute",
+        "durable-effects",
+        ("RunResult",),
+        _observer_failure_forbidden_effects,
+    ),
+)
+
 _GENERATED_PREDICATES = (
     CoveragePredicate(
         "scan-run.generated.status",
@@ -1350,16 +1824,18 @@ _RESUME_PREDICATES = (
         "scan-run.execute",
         "recovery",
         ("CrashLogScanRunContinuation", "LocalIgnoreRecoveryDecision"),
-        lambda observation: _initial_recovery_snapshot(observation, "proceed")
-        or _initial_recovery_snapshot(observation, "reset")
-        or _initial_recovery_snapshot(observation, "reset-conflict")
-        or _initial_recovery_snapshot(observation, "reset-operational")
-        or _initial_recovery_snapshot(observation, "reset-pre-cancelled")
-        or _initial_recovery_snapshot(
-            observation,
-            "reset-post-critical",
-            local_ignore_sha256=_LARGE_MALFORMED_IGNORE_SHA256,
-            local_ignore_byte_length=16_777_255,
+        lambda observation: (
+            _initial_recovery_snapshot(observation, "proceed")
+            or _initial_recovery_snapshot(observation, "reset")
+            or _initial_recovery_snapshot(observation, "reset-conflict")
+            or _initial_recovery_snapshot(observation, "reset-operational")
+            or _initial_recovery_snapshot(observation, "reset-pre-cancelled")
+            or _initial_recovery_snapshot(
+                observation,
+                "reset-post-critical",
+                local_ignore_sha256=_LARGE_MALFORMED_IGNORE_SHA256,
+                local_ignore_byte_length=16_777_255,
+            )
         ),
     ),
     CoveragePredicate(
@@ -1551,6 +2027,18 @@ REQUIRED_OBSERVATION_FACT_IDS = tuple(
 REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO: Mapping[str, tuple[str, ...]] = {
     "standard-happy-path": REQUIRED_OBSERVATION_FACT_IDS,
     "targeted-happy-path": REQUIRED_OBSERVATION_FACT_IDS,
+    "pre-discovery-cancelled": tuple(
+        sorted(predicate.id for predicate in _PRE_DISCOVERY_CANCELLATION_PREDICATES)
+    ),
+    "post-discovery-queued-cancelled": tuple(
+        sorted(predicate.id for predicate in _QUEUED_CANCELLATION_PREDICATES)
+    ),
+    "admitted-durable-cancelled": tuple(
+        sorted(predicate.id for predicate in _ADMITTED_CANCELLATION_PREDICATES)
+    ),
+    "observer-delivery-failure": tuple(
+        sorted(predicate.id for predicate in _OBSERVER_FAILURE_PREDICATES)
+    ),
     "generated-local-ignore": tuple(
         sorted(predicate.id for predicate in _GENERATED_PREDICATES)
     ),
@@ -1632,6 +2120,10 @@ CRASH_LOG_SCAN_RUN_COVERAGE_POLICY = FamilyCoveragePolicy(
     family_id="crash-log-scan-run",
     predicates=(
         _BASE_PREDICATES
+        + _PRE_DISCOVERY_CANCELLATION_PREDICATES
+        + _QUEUED_CANCELLATION_PREDICATES
+        + _ADMITTED_CANCELLATION_PREDICATES
+        + _OBSERVER_FAILURE_PREDICATES
         + _GENERATED_PREDICATES
         + _RESUME_PREDICATES
         + _ABANDON_PREDICATES

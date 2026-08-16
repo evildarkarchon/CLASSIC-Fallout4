@@ -720,17 +720,77 @@ json serialize_log(const scanner::ScanRunContractLogResult& log, const fs::path&
                 {"movedToUnsolvedLogs", log.moved_to_unsolved_logs}};
 }
 
+/// Input-only controls for one deterministic execution boundary.
+struct ExecutionFlow {
+    struct ObserverFailure {
+        std::string event_kind;
+        std::string message;
+    };
+
+    std::string cancellation;
+    std::optional<ObserverFailure> observer_failure;
+};
+
+/// Validates lifecycle controls without reading centrally owned expectations.
+std::optional<ExecutionFlow> parse_execution_flow(const json& input, std::string_view profile) {
+    const auto flow_iterator = input.find("executionFlow");
+    const bool has_flow = flow_iterator != input.end() && !flow_iterator->is_null();
+    if (profile != "lifecycle") {
+        if (has_flow) {
+            throw RunnerError("executionFlow requires the lifecycle observation profile");
+        }
+        return std::nullopt;
+    }
+    if (!has_flow || !flow_iterator->is_object()) {
+        throw RunnerError("the lifecycle observation profile requires executionFlow");
+    }
+
+    const json& value = *flow_iterator;
+    if (!value.contains("cancellation") || !value.at("cancellation").is_string()) {
+        throw RunnerError("executionFlow.cancellation must be a string");
+    }
+    ExecutionFlow flow{.cancellation = value.at("cancellation").get<std::string>(), .observer_failure = std::nullopt};
+    if (flow.cancellation != "before-discovery" && flow.cancellation != "on-first-log-queued" &&
+        flow.cancellation != "on-first-log-started" && flow.cancellation != "on-observer-failure") {
+        throw RunnerError("unsupported executionFlow cancellation boundary: " + flow.cancellation);
+    }
+
+    const auto failure_iterator = value.find("observerFailure");
+    const bool has_failure = failure_iterator != value.end() && !failure_iterator->is_null();
+    if (flow.cancellation != "on-observer-failure") {
+        if (has_failure) {
+            throw RunnerError("observerFailure requires on-observer-failure cancellation");
+        }
+        return flow;
+    }
+    if (!has_failure || !failure_iterator->is_object()) {
+        throw RunnerError("on-observer-failure cancellation requires observerFailure");
+    }
+    const json& failure = *failure_iterator;
+    if (failure.value("eventKind", "") != "discovery_completed") {
+        throw RunnerError("observer failure must target discovery_completed");
+    }
+    if (!failure.contains("message") || !failure.at("message").is_string() ||
+        failure.at("message").get_ref<const std::string&>().empty()) {
+        throw RunnerError("observer failure message must be a non-empty string");
+    }
+    flow.observer_failure = ExecutionFlow::ObserverFailure{.event_kind = failure.at("eventKind").get<std::string>(),
+                                                           .message = failure.at("message").get<std::string>()};
+    return flow;
+}
+
 /// Snapshots borrowed generated events into CXX-owned normalized JSON.
 class RecordingObserver final : public scanner::ScanRunObserver {
 public:
-    /// Borrows the stable scenario root used to normalize callback paths.
-    explicit RecordingObserver(const fs::path& root)
-        : root_(root) {}
+    /// Borrows the stable scenario root and optional cancellation control for callback-triggered lifecycle seams.
+    explicit RecordingObserver(const fs::path& root, const scanner::ScanRunCancellation* cancellation = nullptr,
+                               const ExecutionFlow* flow = nullptr)
+        : root_(root), cancellation_(cancellation), flow_(flow) {}
 
     /// Traverses every borrowed DTO field before the synchronous callback returns.
     void on_scan_run_event(const scanner::ScanRunContractEvent& event) const noexcept override {
         std::lock_guard lock(mutex_);
-        if (!error_.empty()) {
+        if (!error_.empty() || delivery_failed_) {
             return;
         }
         try {
@@ -739,11 +799,13 @@ public:
             case scanner::ScanRunContractEventKind::DiscoveryCompleted:
                 value["kind"] = "discovery_completed";
                 run_events_.push_back(std::move(value));
+                apply_execution_flow("discovery_completed", event.discovery_index);
                 return;
             case scanner::ScanRunContractEventKind::EffectiveConcurrencySelected:
                 value["kind"] = "effective_concurrency_selected";
                 value["effectiveConcurrency"] = event.effective_concurrency;
                 run_events_.push_back(std::move(value));
+                apply_execution_flow("effective_concurrency_selected", event.discovery_index);
                 return;
             case scanner::ScanRunContractEventKind::LogQueued:
                 value["kind"] = "log_queued";
@@ -768,6 +830,7 @@ public:
                 throw RunnerError("event Crash Log identity changed within one discovery index");
             }
             stream.trace.push_back(std::move(value));
+            apply_execution_flow(stream.trace.back().at("kind").get_ref<const std::string&>(), event.discovery_index);
         } catch (const std::exception& error) {
             error_ = error.what();
         } catch (...) {
@@ -826,6 +889,20 @@ public:
         return json{{"run", std::move(run)}, {"logs", std::move(logs)}};
     }
 
+    /// Returns a structured downstream failure, distinct from observer serialization errors.
+    json delivery_failure() const {
+        std::lock_guard lock(mutex_);
+        if (!error_.empty()) {
+            throw RunnerError("observer delivery failed: " + error_);
+        }
+        if (!delivery_failed_) {
+            return nullptr;
+        }
+        return json{{"kind", "observer_delivery_failure"},
+                    {"eventKind", delivery_failure_event_},
+                    {"messageNonEmpty", !delivery_failure_message_.empty()}};
+    }
+
     /// Rejects an error observation if the continuation emitted any callback side effect.
     void require_empty() const {
         std::lock_guard lock(mutex_);
@@ -838,14 +915,48 @@ public:
     }
 
 private:
+    /// Applies the configured seam only after the triggering event has been retained.
+    void apply_execution_flow(std::string_view event_kind, std::size_t discovery_index) const {
+        if (flow_ == nullptr) {
+            return;
+        }
+        if (cancellation_ == nullptr) {
+            throw RunnerError("executionFlow observer has no cancellation control");
+        }
+        if (flow_->observer_failure.has_value() && flow_->observer_failure->event_kind == event_kind) {
+            // The CXX callback is noexcept; retain adapter failure data here and use
+            // cancellation to stop future work without throwing across the bridge.
+            delivery_failure_event_ = flow_->observer_failure->event_kind;
+            delivery_failure_message_ = flow_->observer_failure->message;
+            delivery_failed_ = true;
+            scanner::scan_run_cancellation_cancel(*cancellation_);
+            return;
+        }
+        if (boundary_triggered_) {
+            return;
+        }
+        if ((flow_->cancellation == "on-first-log-queued" && event_kind == "log_queued") ||
+            (flow_->cancellation == "on-first-log-started" && event_kind == "log_started" &&
+             discovery_index == 0)) {
+            boundary_triggered_ = true;
+            scanner::scan_run_cancellation_cancel(*cancellation_);
+        }
+    }
+
     struct LogEventStream {
         std::string crash_log;
         json trace = json::array();
     };
 
     fs::path root_;
+    const scanner::ScanRunCancellation* cancellation_;
+    const ExecutionFlow* flow_;
     mutable std::mutex mutex_;
     mutable std::string error_;
+    mutable bool boundary_triggered_ = false;
+    mutable bool delivery_failed_ = false;
+    mutable std::string delivery_failure_event_;
+    mutable std::string delivery_failure_message_;
     mutable json run_events_ = json::array();
     mutable std::map<std::size_t, LogEventStream> log_events_;
 };
@@ -1194,6 +1305,70 @@ json project_replay(const json& action, const scanner::ScanRunContractExecutionR
                                {"displaySeverities", display_severities(execution.display_lines)}}}};
 }
 
+/// Projects cancellation seams, observer delivery failure, and their durable effects.
+json project_lifecycle_observation(const scanner::ScanRunContractExecutionResult& execution,
+                                   const RecordingObserver& observer,
+                                   const scanner::ScanRunCancellation& cancellation, const ExecutionFlow& flow,
+                                   const fs::path& root, const json& input) {
+    if (execution.has_error) {
+        throw RunnerError("CXX scan returned infrastructure error: " + owned_string(execution.error.message));
+    }
+    if (execution.has_resume_error) {
+        throw RunnerError("CXX scan returned resume error: " + owned_string(execution.resume_error.message));
+    }
+    if (!execution.has_result) {
+        throw RunnerError("CXX scan returned no result or error");
+    }
+    const auto& result = execution.result;
+    const json observer_failure = observer.delivery_failure();
+    if (flow.observer_failure.has_value() != !observer_failure.is_null()) {
+        throw RunnerError(flow.observer_failure.has_value() ? "expected observer delivery failure was not reported"
+                                                            : "unexpected observer delivery failure was reported");
+    }
+
+    json logs = json::array();
+    json reports = json::array();
+    for (const auto& log : result.logs) {
+        logs.push_back(serialize_log(log, root));
+        if (log.has_autoscan_report) {
+            const fs::path report(owned_string(log.autoscan_report));
+            std::error_code error;
+            const bool exists = fs::is_regular_file(report, error);
+            const bool non_empty = exists && fs::file_size(report, error) > 0 && !error;
+            if (error) {
+                throw RunnerError("cannot inspect lifecycle report: " + report.string() + ": " + error.message());
+            }
+            reports.push_back(
+                json{{"path", relative_path(root, report)}, {"exists", exists}, {"nonEmpty", non_empty}});
+        }
+    }
+    json forbidden = json::array();
+    for (const auto& relative : input.value("forbiddenEffectPaths", json::array())) {
+        const fs::path path = runtime_path(root, relative, "forbiddenEffectPaths entry");
+        std::error_code error;
+        const bool exists = fs::exists(path, error);
+        if (error) {
+            throw RunnerError("cannot inspect forbidden lifecycle effect: " + path.string() + ": " + error.message());
+        }
+        forbidden.push_back(json{{"path", relative_path(root, path)}, {"exists", exists}});
+    }
+    return json{{"run", json{{"status", status_token(result.status)},
+                              {"message", result.has_message ? json(owned_string(result.message)) : json(nullptr)},
+                              {"total", result.total},
+                              {"succeeded", result.succeeded},
+                              {"failed", result.failed},
+                              {"cancelled", result.cancelled},
+                              {"effectiveConcurrency", result.has_effective_concurrency
+                                                           ? json(result.effective_concurrency)
+                                                           : json(nullptr)}}},
+                {"discovery", result.has_discovery ? serialize_discovery(result.discovery, root) : json(nullptr)},
+                {"logs", std::move(logs)},
+                {"events", observer.compact_observation(result)},
+                {"observerFailure", observer_failure},
+                {"cancellation", json{{"requested", scanner::scan_run_cancellation_is_cancelled(cancellation)}}},
+                {"durableEffects", json{{"reports", std::move(reports)}, {"forbidden", std::move(forbidden)}}}};
+}
+
 /// Projects the complete public CXX terminal envelope and durable effects.
 json project_observation(const scanner::ScanRunContractExecutionResult& execution, const RecordingObserver& observer,
                          const fs::path& root) {
@@ -1255,7 +1430,13 @@ json execute_scenario(const json& plan, const json& scenario) {
     RuntimeEnvironment environment(temporary.path());
     const auto request = build_request(input, temporary.path());
     const auto cancellation = scanner::scan_run_cancellation_new();
-    const RecordingObserver observer(temporary.path());
+    const std::string profile = input.value("observationProfile", "base");
+    const auto execution_flow = parse_execution_flow(input, profile);
+    if (execution_flow.has_value() && execution_flow->cancellation == "before-discovery") {
+        scanner::scan_run_cancellation_cancel(*cancellation);
+    }
+    const RecordingObserver observer(temporary.path(), &*cancellation,
+                                     execution_flow.has_value() ? &*execution_flow : nullptr);
     auto operation = scanner::scan_run_contract_execute(*request, *cancellation, &observer);
     const bool continuation_available = scanner::scan_run_contract_execution_has_continuation(*operation);
     const auto execution = scanner::scan_run_contract_execution_take_result(*operation);
@@ -1349,8 +1530,15 @@ json execute_scenario(const json& plan, const json& scenario) {
                                   {"afterReplays", scanner::scan_run_cancellation_is_cancelled(*cancellation)}}},
             {"durableEffects", project_local_ignore_effects(temporary.path(), input, terminal_result)}};
     }
-    if (input.value("observationProfile", "base") == "local-ignore") {
+    if (profile == "local-ignore") {
         return project_local_ignore_observation(execution, observer, temporary.path(), input, continuation_available);
+    }
+    if (profile == "lifecycle") {
+        return project_lifecycle_observation(execution, observer, *cancellation, *execution_flow, temporary.path(),
+                                             input);
+    }
+    if (profile != "base") {
+        throw RunnerError("observationProfile must be base, local-ignore, or lifecycle");
     }
     return project_observation(execution, observer, temporary.path());
 }

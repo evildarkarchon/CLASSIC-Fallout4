@@ -59,7 +59,7 @@ interface StandardSourceInput {
 
 /** Inputs shared by both frozen Crash Log Scan Run scenarios. */
 interface CommonScenarioInput {
-  observationProfile?: "local-ignore";
+  observationProfile?: "local-ignore" | "lifecycle";
   installationData: FixturePathInput[];
   localIgnorePaddingBytes?: number;
   game: string;
@@ -69,7 +69,24 @@ interface CommonScenarioInput {
   formidDatabasePaths: Array<string | PathInput>;
   maxConcurrent: number;
   forbiddenEffectPaths?: string[];
+  executionFlow?: ExecutionFlowInput;
   continuationFlow?: ContinuationFlowInput;
+}
+
+/** Input-only controls for one initial scan execution boundary. */
+interface ExecutionFlowInput {
+  cancellation:
+    | "before-discovery"
+    | "on-first-log-queued"
+    | "on-first-log-started"
+    | "on-observer-failure";
+  observerFailure?: ObserverFailureInput | null;
+}
+
+/** One deterministic downstream delivery failure requested by the plan. */
+interface ObserverFailureInput {
+  eventKind: "discovery_completed";
+  message: string;
 }
 
 /** Input-only instructions for one terminal continuation claim and its replays. */
@@ -922,6 +939,27 @@ async function durableEffects(
   };
 }
 
+/** Observe only lifecycle-relevant durable reports and declared forbidden paths. */
+async function lifecycleDurableEffects(
+  logs: JsScanRunLogResult[],
+  input: ScenarioInput,
+  root: string,
+): Promise<JsonObject> {
+  const base = await durableEffects(logs, root);
+  const forbidden: JsonObject[] = [];
+  for (const [index, path] of (input.forbiddenEffectPaths ?? []).entries()) {
+    const absolute = runtimePath(root, path, `forbiddenEffectPaths[${index}]`);
+    forbidden.push({
+      path: relativePath(root, absolute, "forbidden lifecycle effect"),
+      exists: await pathExists(absolute),
+    });
+  }
+  return {
+    reports: base.reports,
+    forbidden,
+  };
+}
+
 /** Hash one durable file's exact bytes using the canonical SHA-256 identity shape. */
 function fileIdentity(bytes: Uint8Array): FileIdentity {
   return {
@@ -1543,6 +1581,67 @@ async function observation(
   };
 }
 
+/** Project cancellation boundaries and observer delivery failure without diagnostics. */
+async function lifecycleObservation(
+  execution: Awaited<
+    ReturnType<(typeof import("../index.js"))["scanRunExecute"]>
+  >,
+  callbacks: JsScanRunEvent[],
+  input: ScenarioInput,
+  cancellation: ScanRunCancellation,
+  root: string,
+): Promise<JsonObject> {
+  if ("error" in execution) {
+    const errorPath =
+      execution.error.path === undefined ? "" : ` (${execution.error.path})`;
+    throw new RunnerContractError(
+      `scan failed during ${execution.error.stage}: ${execution.error.message}${errorPath}`,
+    );
+  }
+  const expectedFailure = input.executionFlow?.observerFailure ?? null;
+  if (expectedFailure === null && execution.observerError !== undefined) {
+    throw new RunnerContractError(
+      `unexpected observer delivery failure: ${execution.observerError}`,
+    );
+  }
+  if (expectedFailure !== null && execution.observerError === undefined) {
+    throw new RunnerContractError(
+      "expected observer delivery failure was not reported",
+    );
+  }
+  const result = execution.result;
+  return {
+    run: {
+      status: result.status,
+      message: result.message ?? null,
+      total: requireInteger(result.total, "run total"),
+      succeeded: requireInteger(result.succeeded, "run succeeded"),
+      failed: requireInteger(result.failed, "run failed"),
+      cancelled: requireInteger(result.cancelled, "run cancelled"),
+      effectiveConcurrency:
+        result.effectiveConcurrency === undefined
+          ? null
+          : requireInteger(
+              result.effectiveConcurrency,
+              "effective concurrency",
+            ),
+    },
+    discovery: discovery(result.discovery, root),
+    logs: logResults(result.logs, root),
+    events: compactEvents(result, callbacks),
+    observerFailure:
+      expectedFailure === null
+        ? null
+        : {
+            kind: "observer_delivery_failure",
+            eventKind: expectedFailure.eventKind,
+            messageNonEmpty: execution.observerError!.length > 0,
+          },
+    cancellation: { requested: cancellation.isCancelled },
+    durableEffects: await lifecycleDurableEffects(result.logs, input, root),
+  };
+}
+
 /** Execute one scenario through the installed public Node binding operation. */
 async function executeScenario(
   plan: RunPlan,
@@ -1566,12 +1665,70 @@ async function executeScenario(
     const request = await buildRequest(input, root);
     const callbacks: JsScanRunEvent[] = [];
     const cancellation = new classic.ScanRunCancellation();
+    const flow = input.executionFlow;
+    if (input.observationProfile === "lifecycle" && flow === undefined) {
+      throw new RunnerContractError(
+        "the lifecycle observation profile requires executionFlow",
+      );
+    }
+    if (input.observationProfile !== "lifecycle" && flow !== undefined) {
+      throw new RunnerContractError(
+        "executionFlow requires the lifecycle observation profile",
+      );
+    }
+    if (flow?.cancellation === "on-observer-failure") {
+      if (flow.observerFailure === undefined || flow.observerFailure === null) {
+        throw new RunnerContractError(
+          "on-observer-failure cancellation requires observerFailure",
+        );
+      }
+      if (
+        flow.observerFailure.eventKind !== "discovery_completed" ||
+        flow.observerFailure.message.trim().length === 0
+      ) {
+        throw new RunnerContractError(
+          "observerFailure requires discovery_completed and a non-empty message",
+        );
+      }
+    } else if (
+      flow?.observerFailure !== undefined &&
+      flow.observerFailure !== null
+    ) {
+      throw new RunnerContractError(
+        "observerFailure requires on-observer-failure cancellation",
+      );
+    }
+    if (flow?.cancellation === "before-discovery") {
+      cancellation.cancel();
+    }
     const execution = await classic.scanRunExecute(
       request,
       cancellation,
       (event) => {
         callbacks.push(event);
+        if (
+          flow?.observerFailure !== null &&
+          flow?.observerFailure !== undefined &&
+          event.kind === flow.observerFailure.eventKind
+        ) {
+          // Throwing here exercises the binding's real delivery-failure envelope.
+          throw new Error(flow.observerFailure.message);
+        }
+        if (
+          flow?.cancellation === "on-first-log-queued" &&
+          event.kind === "log_queued"
+        ) {
+          cancellation.cancel();
+        }
+        if (
+          flow?.cancellation === "on-first-log-started" &&
+          event.kind === "log_started" &&
+          event.log.discoveryIndex === 0
+        ) {
+          cancellation.cancel();
+        }
       },
+      flow?.cancellation === "on-observer-failure",
     );
     if (input.continuationFlow !== undefined) {
       if (input.observationProfile !== "local-ignore") {
@@ -1607,6 +1764,15 @@ async function executeScenario(
           root,
         ),
       };
+    }
+    if (input.observationProfile === "lifecycle") {
+      return await lifecycleObservation(
+        execution,
+        callbacks,
+        input,
+        cancellation,
+        root,
+      );
     }
     return await observation(execution, callbacks, root);
   } finally {

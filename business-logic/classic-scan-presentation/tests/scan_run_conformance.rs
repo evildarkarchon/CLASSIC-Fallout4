@@ -98,6 +98,7 @@ struct ScenarioInput {
     forbidden_effect_paths: Vec<String>,
     #[serde(default)]
     local_ignore_padding_bytes: usize,
+    execution_flow: Option<ExecutionFlowInput>,
     continuation_flow: Option<ContinuationFlowInput>,
     standard_source: Option<StandardSourceInput>,
     unsolved_logs: Option<UnsolvedLogsInput>,
@@ -110,6 +111,40 @@ enum ObservationProfile {
     #[default]
     Base,
     LocalIgnore,
+    Lifecycle,
+}
+
+/// Input-only controls for one initial scan execution boundary.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ExecutionFlowInput {
+    cancellation: ExecutionCancellationInput,
+    observer_failure: Option<ObserverFailureInput>,
+}
+
+/// Public cancellation timing admitted by the current lifecycle slice.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+enum ExecutionCancellationInput {
+    BeforeDiscovery,
+    OnFirstLogQueued,
+    OnFirstLogStarted,
+    OnObserverFailure,
+}
+
+/// One deterministic downstream observer delivery failure requested by the plan.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ObserverFailureInput {
+    event_kind: ObserverFailureEventInput,
+    message: String,
+}
+
+/// Serialized event boundary at which the test adapter rejects delivery.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+enum ObserverFailureEventInput {
+    DiscoveryCompleted,
 }
 
 /// Game vocabulary admitted by the public base-scenario runner.
@@ -318,12 +353,94 @@ fn execute_scenario(
     append_local_ignore_padding(&scenario.input, scenario_root.path())?;
     let request = build_request(&scenario.input, scenario_root.path())?;
     let cancellation = contract::Cancellation::new();
+    if let Some(flow) = &scenario.input.execution_flow {
+        if scenario.input.observation_profile != ObservationProfile::Lifecycle {
+            return Err(invalid_data("executionFlow requires lifecycle observation").into());
+        }
+        if flow.cancellation == ExecutionCancellationInput::OnObserverFailure
+            && flow.observer_failure.is_none()
+        {
+            return Err(
+                invalid_data("on-observer-failure cancellation requires observerFailure").into(),
+            );
+        }
+        if flow.cancellation != ExecutionCancellationInput::OnObserverFailure
+            && flow.observer_failure.is_some()
+        {
+            return Err(
+                invalid_data("observerFailure requires on-observer-failure cancellation").into(),
+            );
+        }
+        if flow
+            .observer_failure
+            .as_ref()
+            .is_some_and(|failure| failure.message.trim().is_empty())
+        {
+            return Err(invalid_data("observerFailure message is empty").into());
+        }
+        if flow.cancellation == ExecutionCancellationInput::BeforeDiscovery {
+            cancellation.cancel();
+        }
+    } else if scenario.input.observation_profile == ObservationProfile::Lifecycle {
+        return Err(invalid_data("lifecycle observation requires executionFlow").into());
+    }
     let mut events = Vec::new();
-    let mut result = get_runtime().block_on(contract::execute(
-        request,
-        &cancellation,
-        Some(&mut |event| events.push(event)),
-    ))?;
+    let mut observer_failure = None;
+    let mut delivery_failed = false;
+    let observer_cancellation = cancellation.clone();
+    let cancel_on_first_queued = scenario
+        .input
+        .execution_flow
+        .as_ref()
+        .is_some_and(|flow| flow.cancellation == ExecutionCancellationInput::OnFirstLogQueued);
+    let cancel_on_first_started = scenario
+        .input
+        .execution_flow
+        .as_ref()
+        .is_some_and(|flow| flow.cancellation == ExecutionCancellationInput::OnFirstLogStarted);
+    let fail_on_discovery = scenario
+        .input
+        .execution_flow
+        .as_ref()
+        .and_then(|flow| flow.observer_failure.as_ref())
+        .is_some_and(|failure| failure.event_kind == ObserverFailureEventInput::DiscoveryCompleted);
+    let mut result = {
+        let mut observer = |event| {
+            if delivery_failed {
+                return;
+            }
+            if fail_on_discovery && matches!(&event, contract::Event::DiscoveryCompleted(_)) {
+                events.push(event);
+                // The Rust observer is infallible, so model a downstream sink refusal by
+                // ending delivery and cancelling future work at the same public boundary.
+                observer_failure = Some(json!({
+                    "kind": "observer_delivery_failure",
+                    "eventKind": "discovery_completed",
+                    "messageNonEmpty": true,
+                }));
+                delivery_failed = true;
+                observer_cancellation.cancel();
+                return;
+            }
+            if cancel_on_first_queued && matches!(&event, contract::Event::LogQueued(_)) {
+                observer_cancellation.cancel();
+            }
+            if cancel_on_first_started
+                && matches!(
+                    &event,
+                    contract::Event::LogStarted(log) if log.discovery_index == 0
+                )
+            {
+                observer_cancellation.cancel();
+            }
+            events.push(event);
+        };
+        get_runtime().block_on(contract::execute(
+            request,
+            &cancellation,
+            Some(&mut observer),
+        ))?
+    };
     if let Some(flow) = &scenario.input.continuation_flow {
         return execute_continuation_flow(
             fixtures,
@@ -342,6 +459,14 @@ fn execute_scenario(
             &scenario.input,
             &result,
             &events,
+        ),
+        ObservationProfile::Lifecycle => project_lifecycle_observation(
+            scenario_root.path(),
+            &scenario.input,
+            &result,
+            &events,
+            &cancellation,
+            observer_failure,
         ),
     }
 }
@@ -730,6 +855,75 @@ fn project_observation(
             },
         },
     }))
+}
+
+/// Projects cancellation lifecycle facts without duplicating happy-path presentation data.
+fn project_lifecycle_observation(
+    root: &Path,
+    input: &ScenarioInput,
+    result: &contract::RunResult,
+    events: &[contract::Event],
+    cancellation: &contract::Cancellation,
+    observer_failure: Option<Value>,
+) -> RunnerResult<Value> {
+    if result.setup.is_some() {
+        return Err(invalid_data("lifecycle scenario unexpectedly returned setup data").into());
+    }
+    let discovery = result
+        .discovery
+        .as_ref()
+        .map(|value| project_discovery(root, value))
+        .transpose()?;
+    let logs = result
+        .logs
+        .iter()
+        .map(|log| project_log(root, log))
+        .collect::<RunnerResult<Vec<_>>>()?;
+    Ok(json!({
+        "run": {
+            "status": result.status.as_str(),
+            "message": result.message,
+            "total": result.total,
+            "succeeded": result.succeeded,
+            "failed": result.failed,
+            "cancelled": result.cancelled,
+            "effectiveConcurrency": result.effective_concurrency,
+        },
+        "discovery": discovery,
+        "logs": logs,
+        "events": project_compact_events(result, events)?,
+        "observerFailure": observer_failure,
+        "cancellation": {
+            "requested": cancellation.is_cancelled(),
+        },
+        "durableEffects": project_lifecycle_effects(root, input, result)?,
+    }))
+}
+
+/// Observes reports plus every explicitly forbidden lifecycle artifact path.
+fn project_lifecycle_effects(
+    root: &Path,
+    input: &ScenarioInput,
+    result: &contract::RunResult,
+) -> RunnerResult<Value> {
+    let reports = result
+        .logs
+        .iter()
+        .filter_map(|log| log.autoscan_report.as_ref())
+        .map(|path| project_report_effect(root, path))
+        .collect::<RunnerResult<Vec<_>>>()?;
+    let forbidden = input
+        .forbidden_effect_paths
+        .iter()
+        .map(|relative| {
+            let path = join_relative(root, relative)?;
+            Ok(json!({
+                "path": relative_path(root, &path)?,
+                "exists": path.exists(),
+            }))
+        })
+        .collect::<RunnerResult<Vec<_>>>()?;
+    Ok(json!({"reports": reports, "forbidden": forbidden}))
 }
 
 /// Projects the stable Local Ignore facts without path-bearing diagnostic prose.

@@ -60,6 +60,10 @@ EXPECTED_SCENARIO_IDS = [
     "standard-happy-path",
     "targeted-happy-path",
     "generated-local-ignore",
+    "pre-discovery-cancelled",
+    "post-discovery-queued-cancelled",
+    "admitted-durable-cancelled",
+    "observer-delivery-failure",
     "proceed-without-ignore-recovery",
     "reset-to-default-recovery",
     "reset-intervening-change-conflict",
@@ -68,7 +72,7 @@ EXPECTED_SCENARIO_IDS = [
     "reset-post-critical-cancelled",
     "abandon-local-ignore-recovery",
 ]
-"""The public-seam Crash Log Scan Run v1 scenarios required by issues #193-194."""
+"""The public-seam Crash Log Scan Run v1 scenarios required by issues #193-195."""
 
 
 def test_live_pack_is_input_only_for_all_three_base_adapters(tmp_path: Path) -> None:
@@ -284,6 +288,105 @@ def _assert_semantic_mutations_lose_facts(
         assert fact_id not in facts
 
 
+def test_pre_discovery_cancellation_facts_fail_closed_on_mutation() -> None:
+    """Pre-discovery coverage requires no discovery, events, logs, or effects."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "pre-discovery-cancelled",
+        {
+            "scan-run.lifecycle.pre-discovery-status": lambda value: value[
+                "run"
+            ].__setitem__("status", "cancelled"),
+            "scan-run.lifecycle.pre-discovery-boundary": lambda value: value["events"][
+                "run"
+            ].append("discovery_completed"),
+            "scan-run.lifecycle.pre-discovery-cancellation": lambda value: value[
+                "cancellation"
+            ].__setitem__("requested", False),
+            "scan-run.lifecycle.pre-discovery-forbidden-effects": lambda value: value[
+                "durableEffects"
+            ]["forbidden"][0].__setitem__("exists", True),
+        },
+    )
+
+
+def test_queued_cancellation_facts_fail_closed_on_mutation() -> None:
+    """Queued coverage requires both logs to remain unadmitted and artifact-free."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "post-discovery-queued-cancelled",
+        {
+            "scan-run.lifecycle.queued-status": lambda value: value["run"].__setitem__(
+                "cancelled", 1
+            ),
+            "scan-run.lifecycle.queued-boundary": lambda value: value["events"]["logs"][
+                0
+            ]["trace"].insert(1, "log_started"),
+            "scan-run.lifecycle.queued-cancellation": lambda value: value[
+                "cancellation"
+            ].__setitem__("requested", False),
+            "scan-run.lifecycle.queued-forbidden-effects": lambda value: value[
+                "durableEffects"
+            ]["forbidden"][0].__setitem__("exists", True),
+        },
+    )
+
+
+def test_admitted_cancellation_facts_fail_closed_on_mutation() -> None:
+    """Admitted coverage requires one completed durable unit and one unstarted log."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "admitted-durable-cancelled",
+        {
+            "scan-run.lifecycle.admitted-status": lambda value: value[
+                "run"
+            ].__setitem__("succeeded", 0),
+            "scan-run.lifecycle.admitted-boundary": lambda value: value["events"][
+                "logs"
+            ][0]["trace"].pop(),
+            "scan-run.lifecycle.admitted-cancellation": lambda value: value[
+                "cancellation"
+            ].__setitem__("requested", False),
+            "scan-run.lifecycle.admitted-durable-effects": lambda value: value[
+                "durableEffects"
+            ]["reports"][0].__setitem__("nonEmpty", False),
+        },
+    )
+
+
+def test_observer_failure_facts_fail_closed_on_mutation() -> None:
+    """Observer coverage requires structured failure, cancellation, and no artifacts."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "observer-delivery-failure",
+        {
+            "scan-run.observer-failure.status": lambda value: value["run"].__setitem__(
+                "message", None
+            ),
+            "scan-run.observer-failure.boundary": lambda value: value["events"][
+                "run"
+            ].append("effective_concurrency_selected"),
+            "scan-run.observer-failure.structured-observation": lambda value: value[
+                "observerFailure"
+            ].__setitem__("messageNonEmpty", False),
+            "scan-run.observer-failure.cancellation": lambda value: value[
+                "cancellation"
+            ].__setitem__("requested", False),
+            "scan-run.observer-failure.forbidden-effects": lambda value: value[
+                "durableEffects"
+            ]["forbidden"][0].__setitem__("exists", True),
+        },
+    )
+
+
 def test_generated_local_ignore_facts_fail_closed_on_semantic_mutation() -> None:
     """Generated-state coverage rejects altered intake, trace, or filesystem facts."""
 
@@ -304,12 +407,12 @@ def test_generated_local_ignore_facts_fail_closed_on_semantic_mutation() -> None
             "scan-run.generated.log-outcome": lambda value: value["logs"][
                 0
             ].__setitem__("disposition", "failed"),
-            "scan-run.generated.events": lambda value: value["events"]["logs"][
-                0
-            ]["trace"].pop(),
-            "scan-run.generated.durable-effects": lambda value: value[
-                "durableEffects"
-            ]["reports"][0]["identity"].__setitem__("byteLength", 1),
+            "scan-run.generated.events": lambda value: value["events"]["logs"][0][
+                "trace"
+            ].pop(),
+            "scan-run.generated.durable-effects": lambda value: value["durableEffects"][
+                "reports"
+            ][0]["identity"].__setitem__("byteLength", 1),
         },
     )
 
@@ -328,18 +431,18 @@ def test_proceed_recovery_facts_fail_closed_on_semantic_mutation() -> None:
             "scan-run.recovery.initial-prompt": lambda value: value["initial"][
                 "recoveryPrompt"
             ]["decisions"][0].__setitem__("available", False),
-            "scan-run.recovery.proceed-without-ignore": lambda value: value[
-                "terminal"
-            ]["installedYamlData"].__setitem__("localIgnoreState", "existing"),
-            "scan-run.recovery.proceed-no-rediscovery": lambda value: value[
-                "terminal"
-            ]["events"]["run"].insert(0, "discovery_completed"),
+            "scan-run.recovery.proceed-without-ignore": lambda value: value["terminal"][
+                "installedYamlData"
+            ].__setitem__("localIgnoreState", "existing"),
+            "scan-run.recovery.proceed-no-rediscovery": lambda value: value["terminal"][
+                "events"
+            ]["run"].insert(0, "discovery_completed"),
             "scan-run.recovery.proceed-no-mutation": lambda value: value[
                 "durableEffects"
             ]["localIgnore"]["identity"].__setitem__("byteLength", 0),
-            "scan-run.recovery.proceed-replay-rejected": lambda value: value[
-                "replays"
-            ][0]["error"].__setitem__("kind", "other"),
+            "scan-run.recovery.proceed-replay-rejected": lambda value: value["replays"][
+                0
+            ]["error"].__setitem__("kind", "other"),
         },
     )
 
@@ -365,15 +468,15 @@ def test_reset_recovery_facts_fail_closed_on_semantic_mutation() -> None:
             ]["localIgnoreReset"]["backup"].__setitem__(
                 "identityMatchesReceipt", False
             ),
-            "scan-run.recovery.reset-no-rediscovery": lambda value: value[
-                "terminal"
-            ]["events"]["run"].insert(0, "discovery_completed"),
+            "scan-run.recovery.reset-no-rediscovery": lambda value: value["terminal"][
+                "events"
+            ]["run"].insert(0, "discovery_completed"),
             "scan-run.recovery.reset-backup-and-repair": lambda value: value[
                 "durableEffects"
             ].__setitem__("backups", []),
-            "scan-run.recovery.reset-replay-rejected": lambda value: value[
-                "replays"
-            ][0]["error"].__setitem__("kind", "other"),
+            "scan-run.recovery.reset-replay-rejected": lambda value: value["replays"][
+                0
+            ]["error"].__setitem__("kind", "other"),
         },
     )
 
@@ -388,9 +491,7 @@ def test_reset_conflict_facts_fail_closed_on_semantic_mutation() -> None:
         {
             "scan-run.recovery.initial-retained-snapshot": lambda value: value[
                 "initial"
-            ]["installedYamlData"]["localIgnoreIdentity"].__setitem__(
-                "byteLength", 0
-            ),
+            ]["installedYamlData"]["localIgnoreIdentity"].__setitem__("byteLength", 0),
             "scan-run.recovery.initial-prompt": lambda value: value["initial"][
                 "recoveryPrompt"
             ]["decisions"][1].__setitem__("available", False),
@@ -400,9 +501,9 @@ def test_reset_conflict_facts_fail_closed_on_semantic_mutation() -> None:
             "scan-run.recovery.reset-conflict-forbidden-effects": lambda value: value[
                 "durableEffects"
             ]["localIgnore"]["identity"].__setitem__("byteLength", 0),
-            "scan-run.recovery.reset-replay-rejected": lambda value: value[
-                "replays"
-            ][0]["error"].__setitem__("kind", "other"),
+            "scan-run.recovery.reset-replay-rejected": lambda value: value["replays"][
+                0
+            ]["error"].__setitem__("kind", "other"),
         },
     )
 
@@ -417,21 +518,19 @@ def test_reset_operational_failure_facts_fail_closed_on_semantic_mutation() -> N
         {
             "scan-run.recovery.initial-retained-snapshot": lambda value: value[
                 "initial"
-            ]["discovery"]["acceptedLogs"][0].__setitem__(
-                "path", "Recovery/other.log"
-            ),
+            ]["discovery"]["acceptedLogs"][0].__setitem__("path", "Recovery/other.log"),
             "scan-run.recovery.initial-prompt": lambda value: value["initial"][
                 "recoveryPrompt"
             ]["decisions"][1].__setitem__("available", False),
             "scan-run.recovery.reset-operational-failure": lambda value: value[
                 "terminalError"
             ].__setitem__("messageNonEmpty", False),
-            "scan-run.recovery.reset-operational-forbidden-effects": lambda value: value[
-                "durableEffects"
-            ]["forbidden"][2].__setitem__("exists", True),
-            "scan-run.recovery.reset-replay-rejected": lambda value: value[
-                "replays"
-            ][0]["error"].__setitem__("kind", "other"),
+            "scan-run.recovery.reset-operational-forbidden-effects": lambda value: (
+                value["durableEffects"]["forbidden"][2].__setitem__("exists", True)
+            ),
+            "scan-run.recovery.reset-replay-rejected": lambda value: value["replays"][
+                0
+            ]["error"].__setitem__("kind", "other"),
         },
     )
 
@@ -453,12 +552,12 @@ def test_pre_reset_cancellation_facts_fail_closed_on_semantic_mutation() -> None
             "scan-run.recovery.reset-pre-cancelled": lambda value: value["terminal"][
                 "run"
             ].__setitem__("status", "completed"),
-            "scan-run.recovery.reset-pre-cancelled-forbidden-effects": lambda value: value[
-                "durableEffects"
-            ]["forbidden"][4].__setitem__("exists", True),
-            "scan-run.recovery.reset-replay-rejected": lambda value: value[
-                "replays"
-            ][0]["error"].__setitem__("kind", "other"),
+            "scan-run.recovery.reset-pre-cancelled-forbidden-effects": lambda value: (
+                value["durableEffects"]["forbidden"][4].__setitem__("exists", True)
+            ),
+            "scan-run.recovery.reset-replay-rejected": lambda value: value["replays"][
+                0
+            ]["error"].__setitem__("kind", "other"),
         },
     )
 
@@ -473,9 +572,7 @@ def test_post_critical_cancellation_facts_fail_closed_on_semantic_mutation() -> 
         {
             "scan-run.recovery.initial-retained-snapshot": lambda value: value[
                 "initial"
-            ]["installedYamlData"]["localIgnoreIdentity"].__setitem__(
-                "byteLength", 39
-            ),
+            ]["installedYamlData"]["localIgnoreIdentity"].__setitem__("byteLength", 39),
             "scan-run.recovery.initial-prompt": lambda value: value["initial"][
                 "recoveryPrompt"
             ]["decisions"][1].__setitem__("available", False),
@@ -484,12 +581,14 @@ def test_post_critical_cancellation_facts_fail_closed_on_semantic_mutation() -> 
             ]["installedYamlData"]["localIgnoreReset"]["backup"].__setitem__(
                 "identityMatchesReceipt", False
             ),
-            "scan-run.recovery.reset-post-critical-durable-effects": lambda value: value[
-                "durableEffects"
-            ]["backups"][0]["identity"].__setitem__("byteLength", 39),
-            "scan-run.recovery.reset-replay-rejected": lambda value: value[
-                "replays"
-            ][0]["error"].__setitem__("kind", "other"),
+            "scan-run.recovery.reset-post-critical-durable-effects": lambda value: (
+                value["durableEffects"]["backups"][0]["identity"].__setitem__(
+                    "byteLength", 39
+                )
+            ),
+            "scan-run.recovery.reset-replay-rejected": lambda value: value["replays"][
+                0
+            ]["error"].__setitem__("kind", "other"),
         },
     )
 

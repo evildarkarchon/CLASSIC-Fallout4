@@ -666,6 +666,30 @@ def _durable_effects(logs: object, root: Path) -> dict[str, Any]:
     }
 
 
+def _lifecycle_durable_effects(
+    logs: object, inputs: Mapping[str, Any], root: Path
+) -> dict[str, Any]:
+    """Observe lifecycle reports plus every plan-declared forbidden destination."""
+
+    forbidden = []
+    for index, raw_path in enumerate(
+        _require_sequence(
+            inputs.get("forbiddenEffectPaths", []), "forbiddenEffectPaths"
+        )
+    ):
+        path = _runtime_path(root, raw_path, f"forbiddenEffectPaths[{index}]")
+        forbidden.append(
+            {
+                "path": _relative_path(root, path, "forbidden lifecycle effect"),
+                "exists": path.exists(),
+            }
+        )
+    return {
+        "reports": _durable_effects(logs, root)["reports"],
+        "forbidden": forbidden,
+    }
+
+
 def _file_effect(root: Path, path: Path, label: str) -> dict[str, Any]:
     """Project a path's existence and file identity, including non-file effects."""
 
@@ -794,6 +818,117 @@ def _observation(
         "displayContent": _display_content(execution.display_lines, root),
         "durableEffects": _durable_effects(result.logs, root),
     }
+
+
+def _lifecycle_observation(
+    execution: Any,
+    callbacks: Sequence[Any],
+    inputs: Mapping[str, Any],
+    cancellation: Any,
+    root: Path,
+) -> dict[str, Any]:
+    """Project cancellation boundaries and structured observer delivery failure."""
+
+    if execution.error is not None:
+        path = "" if execution.error.path is None else f" ({execution.error.path})"
+        raise RunnerContractError(
+            f"scan failed during {execution.error.stage}: "
+            f"{execution.error.message}{path}"
+        )
+    result = execution.result
+    if result is None:
+        raise RunnerContractError("public scan operation returned no result or error")
+
+    flow = _require_mapping(inputs.get("executionFlow"), "executionFlow")
+    raw_failure = flow.get("observerFailure")
+    expected_failure = (
+        None
+        if raw_failure is None
+        else _require_mapping(raw_failure, "executionFlow.observerFailure")
+    )
+    if expected_failure is None and execution.observer_error is not None:
+        raise RunnerContractError(
+            f"unexpected observer delivery failure: {execution.observer_error}"
+        )
+    if expected_failure is not None and execution.observer_error is None:
+        raise RunnerContractError("expected observer delivery failure was not reported")
+
+    return {
+        "run": {
+            "status": str(result.status),
+            "message": result.message,
+            "total": int(result.total),
+            "succeeded": int(result.succeeded),
+            "failed": int(result.failed),
+            "cancelled": int(result.cancelled),
+            "effectiveConcurrency": result.effective_concurrency,
+        },
+        "discovery": _discovery(result.discovery, root),
+        "logs": _log_results(result.logs, root),
+        "events": _compact_events(result, callbacks, root),
+        "observerFailure": None
+        if expected_failure is None
+        else {
+            "kind": "observer_delivery_failure",
+            "eventKind": _require_string(
+                expected_failure.get("eventKind"),
+                "executionFlow.observerFailure.eventKind",
+            ),
+            "messageNonEmpty": bool(execution.observer_error),
+        },
+        "cancellation": {"requested": bool(cancellation.is_cancelled)},
+        "durableEffects": _lifecycle_durable_effects(result.logs, inputs, root),
+    }
+
+
+def _execution_flow(
+    inputs: Mapping[str, Any], profile: object
+) -> Mapping[str, Any] | None:
+    """Validate that execution controls remain exclusive to lifecycle scenarios."""
+
+    raw_flow = inputs.get("executionFlow")
+    if profile != "lifecycle":
+        if raw_flow is not None:
+            raise RunnerContractError(
+                "executionFlow requires observationProfile lifecycle"
+            )
+        return None
+    flow = _require_mapping(raw_flow, "executionFlow")
+    cancellation = _require_string(
+        flow.get("cancellation"), "executionFlow.cancellation"
+    )
+    supported = {
+        "before-discovery",
+        "on-first-log-queued",
+        "on-first-log-started",
+        "on-observer-failure",
+    }
+    if cancellation not in supported:
+        raise RunnerContractError(
+            "executionFlow.cancellation is not a supported lifecycle boundary"
+        )
+    raw_failure = flow.get("observerFailure")
+    if cancellation == "on-observer-failure":
+        failure = _require_mapping(raw_failure, "executionFlow.observerFailure")
+        if (
+            _require_string(
+                failure.get("eventKind"),
+                "executionFlow.observerFailure.eventKind",
+            )
+            != "discovery_completed"
+        ):
+            raise RunnerContractError(
+                "observer failure must target discovery_completed"
+            )
+        if not _require_string(
+            failure.get("message"), "executionFlow.observerFailure.message"
+        ).strip():
+            raise RunnerContractError("observer failure message must be non-empty")
+    elif raw_failure is not None:
+        raise RunnerContractError(
+            "observerFailure requires on-observer-failure cancellation"
+        )
+    return flow
 
 
 def _decision_token(classic_scanlog: Any, decision: Any) -> str:
@@ -1224,13 +1359,61 @@ def _execute_scenario(
             request = _build_request(classic_scanlog, classic_shared, inputs, root)
             cancellation = classic_scanlog.ScanRunCancellation()
             callbacks: list[Any] = []
+            profile = inputs.get("observationProfile", "base")
+            execution_flow = _execution_flow(inputs, profile)
+            boundary = (
+                None
+                if execution_flow is None
+                else _require_string(
+                    execution_flow.get("cancellation"),
+                    "executionFlow.cancellation",
+                )
+            )
+            raw_failure = (
+                None
+                if execution_flow is None
+                else execution_flow.get("observerFailure")
+            )
+            observer_failure = (
+                None
+                if raw_failure is None
+                else _require_mapping(raw_failure, "executionFlow.observerFailure")
+            )
+            if boundary == "before-discovery":
+                cancellation.cancel()
+
+            def observe(event: Any) -> None:
+                """Record one callback, then trigger the requested public boundary."""
+
+                callbacks.append(event)
+                if observer_failure is not None and str(event.kind) == _require_string(
+                    observer_failure.get("eventKind"),
+                    "executionFlow.observerFailure.eventKind",
+                ):
+                    # This exception must remain observer data, not a core run error.
+                    raise RuntimeError(
+                        _require_string(
+                            observer_failure.get("message"),
+                            "executionFlow.observerFailure.message",
+                        )
+                    )
+                if boundary == "on-first-log-queued" and event.kind == "log_queued":
+                    cancellation.cancel()
+                if (
+                    boundary == "on-first-log-started"
+                    and event.kind == "log_started"
+                    and event.log is not None
+                    and int(event.log.discovery_index) == 0
+                ):
+                    cancellation.cancel()
+
             execution = classic_scanlog.scan_run_execute(
                 request,
                 cancellation,
-                callbacks.append,
+                observe,
+                cancel_on_observer_error=boundary == "on-observer-failure",
             )
             continuation_flow = inputs.get("continuationFlow")
-            profile = inputs.get("observationProfile", "base")
             if continuation_flow is not None:
                 if profile != "local-ignore":
                     raise RunnerContractError(
@@ -1256,7 +1439,17 @@ def _execute_scenario(
                     inputs,
                     root,
                 )
-            raise RunnerContractError("observationProfile must be base or local-ignore")
+            if profile == "lifecycle":
+                return _lifecycle_observation(
+                    execution,
+                    callbacks,
+                    inputs,
+                    cancellation,
+                    root,
+                )
+            raise RunnerContractError(
+                "observationProfile must be base, local-ignore, or lifecycle"
+            )
 
 
 def _scenario_receipt(plan: Mapping[str, Any], raw_scenario: object) -> dict[str, Any]:

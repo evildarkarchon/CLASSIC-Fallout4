@@ -26,7 +26,8 @@
         "LocalIgnoreResetConflictError",
         "LocalIgnoreResetFailure",
         "LocalIgnoreResetRunData",
-        "Cancellation"
+        "Cancellation",
+        "Observer"
       ],
       "observationFamilies": [
         "run-status",
@@ -36,6 +37,8 @@
         "installed-yaml-data",
         "log-outcomes",
         "events",
+        "cancellation",
+        "observer-failure",
         "display-content",
         "recovery",
         "replay",
@@ -2993,6 +2996,560 @@
               "path": "Unsolved Logs",
               "exists": false,
               "identity": null
+            }
+          ]
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "pre-discovery-cancelled",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "lifecycle",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Lifecycle/crash-pre-discovery-01.log"
+          },
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Lifecycle/crash-pre-discovery-02.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "Lifecycle/crash-pre-discovery-01-AUTOSCAN.md",
+          "Lifecycle/crash-pre-discovery-02-AUTOSCAN.md",
+          "Unsolved Logs"
+        ],
+        "executionFlow": {
+          "cancellation": "before-discovery",
+          "observerFailure": null
+        }
+      },
+      "expected": {
+        "run": {
+          "status": "cancelled_before_discovery",
+          "message": "Cancelled before crash log discovery",
+          "total": 0,
+          "succeeded": 0,
+          "failed": 0,
+          "cancelled": 0,
+          "effectiveConcurrency": null
+        },
+        "discovery": null,
+        "logs": [],
+        "events": {
+          "run": [],
+          "logs": []
+        },
+        "observerFailure": null,
+        "cancellation": {
+          "requested": true
+        },
+        "durableEffects": {
+          "reports": [],
+          "forbidden": [
+            {
+              "path": "Lifecycle/crash-pre-discovery-01-AUTOSCAN.md",
+              "exists": false
+            },
+            {
+              "path": "Lifecycle/crash-pre-discovery-02-AUTOSCAN.md",
+              "exists": false
+            },
+            {
+              "path": "Unsolved Logs",
+              "exists": false
+            }
+          ]
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "post-discovery-queued-cancelled",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "lifecycle",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Lifecycle/crash-queued-01.log"
+          },
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Lifecycle/crash-queued-02.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "Lifecycle/crash-queued-01-AUTOSCAN.md",
+          "Lifecycle/crash-queued-02-AUTOSCAN.md",
+          "Unsolved Logs"
+        ],
+        "executionFlow": {
+          "cancellation": "on-first-log-queued",
+          "observerFailure": null
+        }
+      },
+      "expected": {
+        "run": {
+          "status": "cancelled",
+          "message": null,
+          "total": 2,
+          "succeeded": 0,
+          "failed": 0,
+          "cancelled": 2,
+          "effectiveConcurrency": 1
+        },
+        "discovery": {
+          "source": "targeted",
+          "acceptedLogs": [
+            {
+              "path": "Lifecycle/crash-queued-01.log"
+            },
+            {
+              "path": "Lifecycle/crash-queued-02.log"
+            }
+          ],
+          "rejectedInputs": [],
+          "searchedLocations": [
+            {
+              "path": "Lifecycle/crash-queued-01.log"
+            },
+            {
+              "path": "Lifecycle/crash-queued-02.log"
+            }
+          ]
+        },
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Lifecycle/crash-queued-01.log"
+            },
+            "autoscanReport": null,
+            "disposition": "cancelled_before_start",
+            "failures": [],
+            "message": "Cancelled by user",
+            "movedToUnsolvedLogs": false
+          },
+          {
+            "discoveryIndex": 1,
+            "crashLog": {
+              "path": "Lifecycle/crash-queued-02.log"
+            },
+            "autoscanReport": null,
+            "disposition": "cancelled_before_start",
+            "failures": [],
+            "message": "Cancelled by user",
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "events": {
+          "run": [
+            "discovery_completed",
+            "effective_concurrency_selected"
+          ],
+          "logs": [
+            {
+              "discoveryIndex": 0,
+              "trace": [
+                "log_queued",
+                "log_finished:cancelled_before_start"
+              ]
+            },
+            {
+              "discoveryIndex": 1,
+              "trace": [
+                "log_queued",
+                "log_finished:cancelled_before_start"
+              ]
+            }
+          ]
+        },
+        "observerFailure": null,
+        "cancellation": {
+          "requested": true
+        },
+        "durableEffects": {
+          "reports": [],
+          "forbidden": [
+            {
+              "path": "Lifecycle/crash-queued-01-AUTOSCAN.md",
+              "exists": false
+            },
+            {
+              "path": "Lifecycle/crash-queued-02-AUTOSCAN.md",
+              "exists": false
+            },
+            {
+              "path": "Unsolved Logs",
+              "exists": false
+            }
+          ]
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "admitted-durable-cancelled",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "lifecycle",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Lifecycle/crash-admitted-01.log"
+          },
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Lifecycle/crash-admitted-02.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "Lifecycle/crash-admitted-02-AUTOSCAN.md",
+          "Unsolved Logs"
+        ],
+        "executionFlow": {
+          "cancellation": "on-first-log-started",
+          "observerFailure": null
+        }
+      },
+      "expected": {
+        "run": {
+          "status": "cancelled",
+          "message": null,
+          "total": 2,
+          "succeeded": 1,
+          "failed": 0,
+          "cancelled": 1,
+          "effectiveConcurrency": 1
+        },
+        "discovery": {
+          "source": "targeted",
+          "acceptedLogs": [
+            {
+              "path": "Lifecycle/crash-admitted-01.log"
+            },
+            {
+              "path": "Lifecycle/crash-admitted-02.log"
+            }
+          ],
+          "rejectedInputs": [],
+          "searchedLocations": [
+            {
+              "path": "Lifecycle/crash-admitted-01.log"
+            },
+            {
+              "path": "Lifecycle/crash-admitted-02.log"
+            }
+          ]
+        },
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Lifecycle/crash-admitted-01.log"
+            },
+            "autoscanReport": {
+              "path": "Lifecycle/crash-admitted-01-AUTOSCAN.md"
+            },
+            "disposition": "succeeded",
+            "failures": [],
+            "message": null,
+            "movedToUnsolvedLogs": false
+          },
+          {
+            "discoveryIndex": 1,
+            "crashLog": {
+              "path": "Lifecycle/crash-admitted-02.log"
+            },
+            "autoscanReport": null,
+            "disposition": "cancelled_before_start",
+            "failures": [],
+            "message": "Cancelled by user",
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "events": {
+          "run": [
+            "discovery_completed",
+            "effective_concurrency_selected"
+          ],
+          "logs": [
+            {
+              "discoveryIndex": 0,
+              "trace": [
+                "log_queued",
+                "log_started",
+                "log_phase:setup",
+                "log_phase:parse",
+                "log_phase:analyze",
+                "log_phase:finalize",
+                "log_finished:succeeded"
+              ]
+            },
+            {
+              "discoveryIndex": 1,
+              "trace": [
+                "log_queued",
+                "log_finished:cancelled_before_start"
+              ]
+            }
+          ]
+        },
+        "observerFailure": null,
+        "cancellation": {
+          "requested": true
+        },
+        "durableEffects": {
+          "reports": [
+            {
+              "path": "Lifecycle/crash-admitted-01-AUTOSCAN.md",
+              "exists": true,
+              "nonEmpty": true
+            }
+          ],
+          "forbidden": [
+            {
+              "path": "Lifecycle/crash-admitted-02-AUTOSCAN.md",
+              "exists": false
+            },
+            {
+              "path": "Unsolved Logs",
+              "exists": false
+            }
+          ]
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "observer-delivery-failure",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "lifecycle",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Lifecycle/crash-observer-failure.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "Lifecycle/crash-observer-failure-AUTOSCAN.md",
+          "Unsolved Logs"
+        ],
+        "executionFlow": {
+          "cancellation": "on-observer-failure",
+          "observerFailure": {
+            "eventKind": "discovery_completed",
+            "message": "conformance observer delivery failure"
+          }
+        }
+      },
+      "expected": {
+        "run": {
+          "status": "cancelled",
+          "message": "Cancelled after crash log discovery",
+          "total": 1,
+          "succeeded": 0,
+          "failed": 0,
+          "cancelled": 1,
+          "effectiveConcurrency": null
+        },
+        "discovery": {
+          "source": "targeted",
+          "acceptedLogs": [
+            {
+              "path": "Lifecycle/crash-observer-failure.log"
+            }
+          ],
+          "rejectedInputs": [],
+          "searchedLocations": [
+            {
+              "path": "Lifecycle/crash-observer-failure.log"
+            }
+          ]
+        },
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Lifecycle/crash-observer-failure.log"
+            },
+            "autoscanReport": null,
+            "disposition": "cancelled_before_start",
+            "failures": [],
+            "message": "Cancelled by user",
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "events": {
+          "run": [
+            "discovery_completed"
+          ],
+          "logs": [
+            {
+              "discoveryIndex": 0,
+              "trace": []
+            }
+          ]
+        },
+        "observerFailure": {
+          "kind": "observer_delivery_failure",
+          "eventKind": "discovery_completed",
+          "messageNonEmpty": true
+        },
+        "cancellation": {
+          "requested": true
+        },
+        "durableEffects": {
+          "reports": [],
+          "forbidden": [
+            {
+              "path": "Lifecycle/crash-observer-failure-AUTOSCAN.md",
+              "exists": false
+            },
+            {
+              "path": "Unsolved Logs",
+              "exists": false
             }
           ]
         }
