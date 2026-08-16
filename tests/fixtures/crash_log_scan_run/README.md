@@ -13,6 +13,11 @@ pre-reset and post-critical-section cancellation, byte-exact backup bytes, reset
 diagnostics, and byte-identical Autoscan Report content across Rust, C++, Node,
 and Python.
 
+`malformed-local-ignore.yaml` is the input-only malformed file used by the
+executable conformance pack. The pack observes the paused result, applies declared
+post-pause mutations, and then claims and replays the same opaque continuation so
+rediscovery and duplicate durable effects cannot pass unnoticed.
+
 Tests compare paths relative to their temporary root and ignore processing
 timings and exact concurrent event interleavings. They compare discovery,
 effective concurrency, discovery-order terminal outcomes, structured failures,

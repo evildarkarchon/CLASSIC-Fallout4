@@ -7,7 +7,8 @@
 
 use classic_config_core::{InspectedYamlDataFile, YamlDataContentIdentity};
 use classic_scan_presentation::{
-    DisplayLine, DisplaySegment, DisplaySeverity, render_event, render_run_result,
+    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryPrompt, render_event,
+    render_local_ignore_recovery, render_resume_error, render_run_result,
 };
 use classic_scanlog_core::CrashLogScanFacts;
 use classic_scanlog_core::scan_run::contract;
@@ -77,6 +78,8 @@ struct ScenarioPlan {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ScenarioInput {
+    #[serde(default)]
+    observation_profile: ObservationProfile,
     installation_data: Vec<FixturePlacement>,
     game: GameInput,
     game_version: String,
@@ -89,8 +92,20 @@ struct ScenarioInput {
     log_inputs: Vec<FixturePlacement>,
     #[serde(default)]
     targeted_inputs: Vec<TargetedInput>,
+    #[serde(default)]
+    forbidden_effect_paths: Vec<String>,
+    continuation_flow: Option<ContinuationFlowInput>,
     standard_source: Option<StandardSourceInput>,
     unsolved_logs: Option<UnsolvedLogsInput>,
+}
+
+/// Observation projection selected by the input-only plan.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+enum ObservationProfile {
+    #[default]
+    Base,
+    LocalIgnore,
 }
 
 /// Game vocabulary admitted by the public base-scenario runner.
@@ -130,6 +145,41 @@ struct FixturePlacement {
 struct TargetedInput {
     fixture_ref: Option<String>,
     path: String,
+}
+
+/// Input-only instructions for claiming and replaying one retained continuation.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ContinuationFlowInput {
+    action: ContinuationActionInput,
+    #[serde(default)]
+    post_pause_data: Vec<FixturePlacement>,
+    #[serde(default)]
+    replays: Vec<ContinuationActionInput>,
+}
+
+/// One public continuation operation and its decision when the operation is Resume.
+#[derive(Clone, Copy, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ContinuationActionInput {
+    operation: ContinuationOperationInput,
+    decision: Option<RecoveryDecisionInput>,
+}
+
+/// Public operations admitted for a retained scan-run continuation.
+#[derive(Clone, Copy, Debug, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+enum ContinuationOperationInput {
+    Resume,
+    Abandon,
+}
+
+/// Public Local Ignore recovery decisions admitted by the conformance pack.
+#[derive(Clone, Copy, Debug, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+enum RecoveryDecisionInput {
+    ProceedWithoutIgnore,
+    ResetToDefault,
 }
 
 /// Standard discovery roots supplied to the public request constructor.
@@ -255,12 +305,152 @@ fn execute_scenario(
     let request = build_request(&scenario.input, scenario_root.path())?;
     let cancellation = contract::Cancellation::new();
     let mut events = Vec::new();
-    let result = get_runtime().block_on(contract::execute(
+    let mut result = get_runtime().block_on(contract::execute(
         request,
         &cancellation,
         Some(&mut |event| events.push(event)),
     ))?;
-    project_observation(scenario_root.path(), &result, &events)
+    if let Some(flow) = &scenario.input.continuation_flow {
+        return execute_continuation_flow(
+            fixtures,
+            &scenario.input,
+            scenario_root.path(),
+            &cancellation,
+            &mut result,
+            &events,
+            flow,
+        );
+    }
+    match scenario.input.observation_profile {
+        ObservationProfile::Base => project_observation(scenario_root.path(), &result, &events),
+        ObservationProfile::LocalIgnore => project_local_ignore_observation(
+            scenario_root.path(),
+            &scenario.input,
+            &result,
+            &events,
+        ),
+    }
+}
+
+/// Claims one paused continuation, applies after-pause mutations, then proves one-shot replay.
+fn execute_continuation_flow(
+    fixtures: &BTreeMap<String, PathBuf>,
+    input: &ScenarioInput,
+    root: &Path,
+    cancellation: &contract::Cancellation,
+    initial_result: &mut contract::RunResult,
+    initial_events: &[contract::Event],
+    flow: &ContinuationFlowInput,
+) -> RunnerResult<Value> {
+    if input.observation_profile != ObservationProfile::LocalIgnore {
+        return Err(
+            invalid_data("continuationFlow requires the local-ignore observation profile").into(),
+        );
+    }
+    validate_continuation_action(flow.action)?;
+    for replay in &flow.replays {
+        validate_continuation_action(*replay)?;
+    }
+    let prompt = render_local_ignore_recovery(initial_result.installed_yaml_data.as_ref());
+    let initial =
+        project_local_ignore_phase(root, initial_result, initial_events, true, Some(&prompt))?;
+    let continuation = initial_result
+        .continuation
+        .take()
+        .ok_or_else(|| invalid_data("continuationFlow initial result has no continuation"))?;
+    materialize_placements(fixtures, &flow.post_pause_data, root)?;
+
+    let cancelled_before_terminal = cancellation.is_cancelled();
+    let mut terminal_events = Vec::new();
+    let terminal_result = get_runtime()
+        .block_on(run_continuation_action(
+            &continuation,
+            flow.action,
+            cancellation,
+            Some(&mut |event| terminal_events.push(event)),
+        ))
+        .map_err(|error| invalid_data(format!("terminal continuation action failed: {error}")))?;
+    let cancelled_after_terminal = cancellation.is_cancelled();
+    let terminal =
+        project_local_ignore_phase(root, &terminal_result, &terminal_events, false, None)?;
+
+    let replays = flow
+        .replays
+        .iter()
+        .copied()
+        .map(|action| {
+            match get_runtime().block_on(run_continuation_action(
+                &continuation,
+                action,
+                cancellation,
+                None,
+            )) {
+                Ok(_) => Err(
+                    invalid_data("a replayed continuation action unexpectedly succeeded").into(),
+                ),
+                Err(error) => Ok(project_replay_error(action, &error)),
+            }
+        })
+        .collect::<RunnerResult<Vec<_>>>()?;
+
+    Ok(json!({
+        "initial": initial,
+        "terminal": terminal,
+        "replays": replays,
+        "cancellation": {
+            "beforeTerminal": cancelled_before_terminal,
+            "afterTerminal": cancelled_after_terminal,
+            "afterReplays": cancellation.is_cancelled(),
+        },
+        "durableEffects": project_local_ignore_effects(root, input, &terminal_result)?,
+    }))
+}
+
+/// Rejects structurally invalid operation/decision pairs before spending a continuation.
+fn validate_continuation_action(action: ContinuationActionInput) -> RunnerResult<()> {
+    match (action.operation, action.decision) {
+        (ContinuationOperationInput::Resume, Some(_))
+        | (ContinuationOperationInput::Abandon, None) => Ok(()),
+        (ContinuationOperationInput::Resume, None) => {
+            Err(invalid_data("Resume continuation action has no recovery decision").into())
+        }
+        (ContinuationOperationInput::Abandon, Some(_)) => Err(invalid_data(
+            "Abandon continuation action must not have a recovery decision",
+        )
+        .into()),
+    }
+}
+
+/// Invokes one public continuation action without inferring intent from a scenario identifier.
+async fn run_continuation_action(
+    continuation: &contract::CrashLogScanRunContinuation,
+    action: ContinuationActionInput,
+    cancellation: &contract::Cancellation,
+    observer: Option<&mut dyn contract::Observer>,
+) -> Result<contract::RunResult, contract::ResumeError> {
+    match action.operation {
+        ContinuationOperationInput::Resume => {
+            let decision = action
+                .decision
+                .expect("continuation action was validated before execution");
+            continuation
+                .resume(decision.into(), cancellation, observer)
+                .await
+        }
+        ContinuationOperationInput::Abandon => {
+            debug_assert!(action.decision.is_none());
+            continuation.abandon(cancellation, observer).await
+        }
+    }
+}
+
+impl From<RecoveryDecisionInput> for contract::LocalIgnoreRecoveryDecision {
+    fn from(value: RecoveryDecisionInput) -> Self {
+        match value {
+            RecoveryDecisionInput::ProceedWithoutIgnore => Self::ProceedWithoutIgnore,
+            RecoveryDecisionInput::ResetToDefault => Self::ResetToDefault,
+        }
+    }
 }
 
 /// Copies every declared input fixture without exposing the pack's expected observations.
@@ -269,16 +459,24 @@ fn materialize_scenario(
     input: &ScenarioInput,
     root: &Path,
 ) -> RunnerResult<()> {
-    for placement in &input.installation_data {
-        copy_fixture(fixtures, &placement.fixture_ref, root, &placement.path)?;
-    }
-    for placement in &input.log_inputs {
-        copy_fixture(fixtures, &placement.fixture_ref, root, &placement.path)?;
-    }
+    materialize_placements(fixtures, &input.installation_data, root)?;
+    materialize_placements(fixtures, &input.log_inputs, root)?;
     for targeted in &input.targeted_inputs {
         if let Some(fixture_ref) = &targeted.fixture_ref {
             copy_fixture(fixtures, fixture_ref, root, &targeted.path)?;
         }
+    }
+    Ok(())
+}
+
+/// Copies an ordered set of declared fixtures beneath one isolated scenario root.
+fn materialize_placements(
+    fixtures: &BTreeMap<String, PathBuf>,
+    placements: &[FixturePlacement],
+    root: &Path,
+) -> RunnerResult<()> {
+    for placement in placements {
+        copy_fixture(fixtures, &placement.fixture_ref, root, &placement.path)?;
     }
     Ok(())
 }
@@ -453,6 +651,336 @@ fn project_observation(
             },
         },
     }))
+}
+
+/// Projects the stable Local Ignore facts without path-bearing diagnostic prose.
+///
+/// Generated and recovery diagnostics embed the temporary root, while reset diagnostics also
+/// embed a process-unique backup name. The conformance oracle therefore compares their typed
+/// attribution and durable identities instead of nondeterministic prose.
+fn project_local_ignore_observation(
+    root: &Path,
+    input: &ScenarioInput,
+    result: &contract::RunResult,
+    events: &[contract::Event],
+) -> RunnerResult<Value> {
+    let mut observation =
+        project_local_ignore_phase(root, result, events, result.continuation.is_some(), None)?;
+    observation
+        .as_object_mut()
+        .ok_or_else(|| invalid_data("Local Ignore phase projection is not an object"))?
+        .insert(
+            "durableEffects".to_string(),
+            project_local_ignore_effects(root, input, result)?,
+        );
+    Ok(observation)
+}
+
+/// Projects one initial or terminal Local Ignore result without reading filesystem effects.
+fn project_local_ignore_phase(
+    root: &Path,
+    result: &contract::RunResult,
+    events: &[contract::Event],
+    continuation_available: bool,
+    recovery_prompt: Option<&RecoveryPrompt>,
+) -> RunnerResult<Value> {
+    if result.setup.is_some() {
+        return Err(invalid_data("Local Ignore scenario unexpectedly returned setup data").into());
+    }
+    let discovery = result
+        .discovery
+        .as_ref()
+        .map(|value| project_discovery(root, value))
+        .transpose()?;
+    let installed_yaml_data = result
+        .installed_yaml_data
+        .as_ref()
+        .map(|value| project_local_ignore_installed_yaml_data(root, value))
+        .transpose()?;
+    let logs = result
+        .logs
+        .iter()
+        .map(|log| project_log(root, log))
+        .collect::<RunnerResult<Vec<_>>>()?;
+
+    Ok(json!({
+        "run": {
+            "status": result.status.as_str(),
+            "message": result.message,
+            "total": result.total,
+            "succeeded": result.succeeded,
+            "failed": result.failed,
+            "cancelled": result.cancelled,
+            "effectiveConcurrency": result.effective_concurrency,
+        },
+        "discovery": discovery,
+        "installedYamlData": installed_yaml_data,
+        "logs": logs,
+        "events": project_compact_events(result, events)?,
+        "continuationAvailable": continuation_available,
+        "recoveryPrompt": recovery_prompt.map(project_recovery_prompt),
+    }))
+}
+
+/// Projects the public recovery prompt, including decision labels and availability.
+fn project_recovery_prompt(prompt: &RecoveryPrompt) -> Value {
+    let decisions = prompt
+        .decisions
+        .iter()
+        .map(|decision| {
+            json!({
+                "decision": decision.decision.as_str(),
+                "label": decision.label,
+                "available": decision.available,
+            })
+        })
+        .collect::<Vec<_>>();
+    let display_severities = display_severities(&prompt.lines);
+    json!({
+        "displaySeverities": display_severities,
+        "decisions": decisions,
+    })
+}
+
+/// Projects one typed consumed-continuation replay through the public presentation seam.
+fn project_replay_error(action: ContinuationActionInput, error: &contract::ResumeError) -> Value {
+    json!({
+        "operation": match action.operation {
+            ContinuationOperationInput::Resume => "resume",
+            ContinuationOperationInput::Abandon => "abandon",
+        },
+        "decision": action.decision.map(|decision| contract::LocalIgnoreRecoveryDecision::from(decision).as_str()),
+        "error": {
+            "kind": error.kind().as_str(),
+            "message": error.to_string(),
+            "displaySeverities": display_severities(&render_resume_error(error)),
+        },
+    })
+}
+
+/// Preserves the ordered severity contract while omitting prose already covered by render tests.
+fn display_severities(lines: &[DisplayLine]) -> Vec<&'static str> {
+    lines
+        .iter()
+        .map(|line| severity_token(line.severity))
+        .collect()
+}
+
+/// Projects Installed YAML Data fields whose values are stable across every adapter.
+fn project_local_ignore_installed_yaml_data(
+    root: &Path,
+    installed: &contract::InstalledYamlDataRunData,
+) -> RunnerResult<Value> {
+    let diagnostics = installed
+        .diagnostics
+        .iter()
+        .map(|diagnostic| {
+            Ok(json!({
+                "role": diagnostic.role().map(Vocabulary::as_str),
+                "candidate": diagnostic.candidate().map(Vocabulary::as_str),
+                "path": diagnostic.path().map(|path| path_carrier(root, path)).transpose()?,
+                "kind": diagnostic.kind().as_str(),
+            }))
+        })
+        .collect::<RunnerResult<Vec<_>>>()?;
+    let reset = installed
+        .local_ignore_reset
+        .as_ref()
+        .map(|reset| -> RunnerResult<Value> {
+            let backup_parent = reset
+                .backup_path
+                .parent()
+                .ok_or_else(|| invalid_data("Local Ignore reset backup has no parent directory"))?;
+            let backup_bytes = read_optional_file(&reset.backup_path)?;
+            Ok(json!({
+                "localIgnorePath": path_carrier(root, &reset.local_ignore_path)?,
+                "backup": {
+                    "parentPath": relative_path(root, backup_parent)?,
+                    "exists": backup_bytes.is_some(),
+                    "identityMatchesReceipt": backup_bytes.as_deref().map(YamlDataContentIdentity::from_bytes).as_ref() == Some(&reset.backup_identity),
+                },
+                "malformedIdentity": project_identity(&reset.malformed_identity),
+                "backupIdentity": project_identity(&reset.backup_identity),
+                "replacementIdentity": project_identity(&reset.replacement_identity),
+            }))
+        })
+        .transpose()?;
+
+    Ok(json!({
+        "mainIdentity": project_identity(installed.main.identity()),
+        "gameIdentity": project_identity(installed.game_file.identity()),
+        "localIgnoreState": installed.local_ignore_state.as_str(),
+        "localIgnoreIdentity": project_identity(&installed.local_ignore_identity),
+        "diagnostics": diagnostics,
+        "localIgnoreResetAvailable": installed.local_ignore_reset_available,
+        "localIgnoreReset": reset,
+    }))
+}
+
+/// Projects only stable event tokens while preserving run/log ordering.
+fn project_compact_events(
+    result: &contract::RunResult,
+    events: &[contract::Event],
+) -> RunnerResult<Value> {
+    let mut run_events = Vec::new();
+    let mut traces = vec![Vec::new(); result.logs.len()];
+    for event in events {
+        match event {
+            contract::Event::DiscoveryCompleted(_) => {
+                run_events.push("discovery_completed".to_string());
+            }
+            contract::Event::EffectiveConcurrencySelected { .. } => {
+                run_events.push("effective_concurrency_selected".to_string());
+            }
+            contract::Event::LogQueued(log) => {
+                append_compact_log_event(result, &mut traces, log, "log_queued")?;
+            }
+            contract::Event::LogStarted(log) => {
+                append_compact_log_event(result, &mut traces, log, "log_started")?;
+            }
+            contract::Event::LogPhase { log, phase } => append_compact_log_event(
+                result,
+                &mut traces,
+                log,
+                &format!("log_phase:{}", phase.as_str()),
+            )?,
+            contract::Event::LogFinished { log, disposition } => append_compact_log_event(
+                result,
+                &mut traces,
+                log,
+                &format!("log_finished:{}", disposition.as_str()),
+            )?,
+        }
+    }
+    let logs = result
+        .logs
+        .iter()
+        .zip(traces)
+        .map(|(log, trace)| json!({"discoveryIndex": log.discovery_index, "trace": trace}))
+        .collect::<Vec<_>>();
+    Ok(json!({"run": run_events, "logs": logs}))
+}
+
+/// Appends one compact event after checking its discovery identity.
+fn append_compact_log_event(
+    result: &contract::RunResult,
+    traces: &mut [Vec<String>],
+    event: &contract::LogEvent,
+    token: &str,
+) -> RunnerResult<()> {
+    let position = result
+        .logs
+        .iter()
+        .position(|log| log.discovery_index == event.discovery_index)
+        .ok_or_else(|| invalid_data("compact event references an unknown discovery index"))?;
+    if result.logs[position].crash_log != event.crash_log {
+        return Err(invalid_data("compact event references a different Crash Log").into());
+    }
+    traces[position].push(token.to_string());
+    Ok(())
+}
+
+/// Projects Local Ignore, backup, report, and explicitly forbidden filesystem effects.
+fn project_local_ignore_effects(
+    root: &Path,
+    input: &ScenarioInput,
+    result: &contract::RunResult,
+) -> RunnerResult<Value> {
+    let local_ignore = root.join("CLASSIC Data/CLASSIC Ignore.yaml");
+    let backup_directory = root.join("CLASSIC Backup/YAML Data/Local Ignore");
+    let mut backups = if backup_directory.is_dir() {
+        fs::read_dir(&backup_directory)?
+            .map(|entry| entry.map(|value| value.path()))
+            .collect::<Result<Vec<_>, _>>()?
+    } else {
+        Vec::new()
+    };
+    backups.sort();
+    let backups = backups
+        .iter()
+        .filter(|path| path.is_file())
+        .map(|path| project_backup_effect(root, path))
+        .collect::<RunnerResult<Vec<_>>>()?;
+    let reports = result
+        .logs
+        .iter()
+        .filter_map(|log| log.autoscan_report.as_ref())
+        .map(|path| project_exact_report_effect(root, path))
+        .collect::<RunnerResult<Vec<_>>>()?;
+    let forbidden = input
+        .forbidden_effect_paths
+        .iter()
+        .map(|relative| {
+            let path = join_relative(root, relative)?;
+            project_file_effect(root, &path)
+        })
+        .collect::<RunnerResult<Vec<_>>>()?;
+
+    Ok(json!({
+        "localIgnore": project_file_effect(root, &local_ignore)?,
+        "backups": backups,
+        "reports": reports,
+        "forbidden": forbidden,
+    }))
+}
+
+/// Projects a backup through a stable parent path while retaining its exact byte identity.
+fn project_backup_effect(root: &Path, path: &Path) -> RunnerResult<Value> {
+    let parent = path
+        .parent()
+        .ok_or_else(|| invalid_data("Local Ignore backup has no parent directory"))?;
+    let bytes = read_optional_file(path)?
+        .ok_or_else(|| invalid_data("enumerated Local Ignore backup is not a readable file"))?;
+    let identity = YamlDataContentIdentity::from_bytes(&bytes);
+    Ok(json!({
+        "parentPath": relative_path(root, parent)?,
+        "identity": project_identity(&identity),
+    }))
+}
+
+/// Projects one report's exact durable identity in addition to existence facts.
+fn project_exact_report_effect(root: &Path, path: &Path) -> RunnerResult<Value> {
+    let bytes = read_optional_file(path)?;
+    let identity = bytes
+        .as_deref()
+        .map(YamlDataContentIdentity::from_bytes)
+        .map(|value| project_identity(&value));
+    Ok(json!({
+        "path": relative_path(root, path)?,
+        "exists": bytes.is_some(),
+        "nonEmpty": bytes.as_ref().is_some_and(|value| !value.is_empty()),
+        "identity": identity,
+    }))
+}
+
+/// Projects one file's exact identity when it exists.
+fn project_file_effect(root: &Path, path: &Path) -> RunnerResult<Value> {
+    let metadata = match fs::metadata(path) {
+        Ok(metadata) => Some(metadata),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => None,
+        Err(error) => return Err(error.into()),
+    };
+    let identity = if metadata.as_ref().is_some_and(fs::Metadata::is_file) {
+        Some(project_identity(&YamlDataContentIdentity::from_bytes(
+            &fs::read(path)?,
+        )))
+    } else {
+        None
+    };
+    Ok(json!({
+        "path": relative_path(root, path)?,
+        "exists": metadata.is_some(),
+        "identity": identity,
+    }))
+}
+
+/// Reads an optional file while distinguishing absence from every other I/O failure.
+fn read_optional_file(path: &Path) -> RunnerResult<Option<Vec<u8>>> {
+    match fs::read(path) {
+        Ok(bytes) => Ok(Some(bytes)),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(error.into()),
+    }
 }
 
 /// Projects ordered discovery facts with paths relative to the scenario root.

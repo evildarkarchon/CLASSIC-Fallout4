@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
+import stat
 import sys
 import tempfile
 import uuid
@@ -402,6 +404,87 @@ def _installed_yaml_data(installed: object | None, root: Path) -> object | None:
     }
 
 
+def _identity_from_bytes(content: bytes) -> dict[str, Any]:
+    """Return the exact SHA-256 and byte length of durable file content."""
+
+    return {
+        "sha256": hashlib.sha256(content).hexdigest(),
+        "byteLength": len(content),
+    }
+
+
+def _read_optional_file(path: Path) -> bytes | None:
+    """Read one file, treating only absence as optional and propagating other I/O errors."""
+
+    try:
+        return path.read_bytes()
+    except FileNotFoundError:
+        return None
+
+
+def _local_ignore_installed_yaml_data(
+    installed: object | None, root: Path
+) -> object | None:
+    """Project stable Local Ignore metadata without temporary-root diagnostic prose."""
+
+    if installed is None:
+        return None
+    diagnostics = [
+        {
+            "role": diagnostic.role,
+            "candidate": diagnostic.candidate,
+            "path": None
+            if diagnostic.path is None
+            else _path_carrier(
+                root,
+                diagnostic.path,
+                "Installed YAML Data diagnostic path",
+            ),
+            "kind": str(diagnostic.kind),
+        }
+        for diagnostic in installed.diagnostics
+    ]
+    reset = installed.local_ignore_reset
+    reset_observation = None
+    if reset is not None:
+        backup_path = Path(str(reset.backup_path))
+        backup_content = _read_optional_file(backup_path)
+        backup_identity = (
+            None if backup_content is None else _identity_from_bytes(backup_content)
+        )
+        reset_observation = {
+            "localIgnorePath": _path_carrier(
+                root, reset.local_ignore_path, "Local Ignore reset path"
+            ),
+            "backup": {
+                "parentPath": _relative_path(
+                    root, backup_path.parent, "Local Ignore backup parent"
+                ),
+                "exists": backup_content is not None,
+                "identityMatchesReceipt": backup_identity
+                == _content_identity(reset.backup_identity, "byte_len"),
+            },
+            "malformedIdentity": _content_identity(
+                reset.malformed_identity, "byte_len"
+            ),
+            "backupIdentity": _content_identity(reset.backup_identity, "byte_len"),
+            "replacementIdentity": _content_identity(
+                reset.replacement_identity, "byte_len"
+            ),
+        }
+    return {
+        "mainIdentity": _content_identity(installed.main, "byte_length"),
+        "gameIdentity": _content_identity(installed.game_file, "byte_length"),
+        "localIgnoreState": str(installed.local_ignore_state),
+        "localIgnoreIdentity": _content_identity(
+            installed.local_ignore_identity, "byte_len"
+        ),
+        "diagnostics": diagnostics,
+        "localIgnoreResetAvailable": bool(installed.local_ignore_reset_available),
+        "localIgnoreReset": reset_observation,
+    }
+
+
 def _discovery(discovery: object | None, root: Path) -> object | None:
     """Serialize ordered discovery paths and Targeted rejection reasons."""
 
@@ -488,6 +571,53 @@ def _events(events: Sequence[Any], root: Path) -> dict[str, Any]:
     }
 
 
+def _compact_events(result: Any, events: Sequence[Any], root: Path) -> dict[str, Any]:
+    """Project stable event tokens while preserving the run and per-log order."""
+
+    logs = list(result.logs)
+    positions = {int(log.discovery_index): index for index, log in enumerate(logs)}
+    traces: list[list[str]] = [[] for _ in logs]
+    run_events: list[str] = []
+    for event in events:
+        kind = str(event.kind)
+        if kind in {"discovery_completed", "effective_concurrency_selected"}:
+            run_events.append(kind)
+            continue
+        log = event.log
+        if log is None:
+            raise RunnerContractError(f"compact event {kind} has no log identity")
+        discovery_index = int(log.discovery_index)
+        position = positions.get(discovery_index)
+        if position is None:
+            raise RunnerContractError(
+                f"compact event references unknown discovery index {discovery_index}"
+            )
+        result_path = _relative_path(
+            root, logs[position].crash_log, "compact result Crash Log"
+        )
+        event_path = _relative_path(root, log.crash_log, "compact event Crash Log")
+        if result_path != event_path:
+            raise RunnerContractError(
+                f"compact event Crash Log differs at discovery index {discovery_index}"
+            )
+        if kind == "log_phase":
+            token = f"{kind}:{event.phase}"
+        elif kind == "log_finished":
+            token = f"{kind}:{event.disposition}"
+        elif kind in {"log_queued", "log_started"}:
+            token = kind
+        else:
+            raise RunnerContractError(f"unknown compact scan-run event {kind}")
+        traces[position].append(token)
+    return {
+        "run": run_events,
+        "logs": [
+            {"discoveryIndex": int(log.discovery_index), "trace": traces[index]}
+            for index, log in enumerate(logs)
+        ],
+    }
+
+
 def _durable_effects(logs: object, root: Path) -> dict[str, Any]:
     """Observe report persistence and the forbidden Unsolved Logs destination."""
 
@@ -512,10 +642,97 @@ def _durable_effects(logs: object, root: Path) -> dict[str, Any]:
     }
 
 
-def _observation(
-    execution: Any, callbacks: Sequence[Any], root: Path
+def _file_effect(root: Path, path: Path, label: str) -> dict[str, Any]:
+    """Project a path's existence and file identity, including non-file effects."""
+
+    try:
+        path_metadata = path.stat()
+    except FileNotFoundError:
+        path_metadata = None
+    content = (
+        path.read_bytes()
+        if path_metadata is not None and stat.S_ISREG(path_metadata.st_mode)
+        else None
+    )
+    return {
+        "path": _relative_path(root, path, label),
+        "exists": path_metadata is not None,
+        "identity": None if content is None else _identity_from_bytes(content),
+    }
+
+
+def _local_ignore_durable_effects(
+    result: Any, inputs: Mapping[str, Any], root: Path
 ) -> dict[str, Any]:
-    """Project one public execution envelope to the frozen normalized observation."""
+    """Observe Local Ignore, backup, report, and explicitly forbidden file effects."""
+
+    backup_directory = root / "CLASSIC Backup" / "YAML Data" / "Local Ignore"
+    try:
+        backup_entries = sorted(backup_directory.iterdir())
+    except FileNotFoundError:
+        backup_entries = []
+    backups = []
+    for path in backup_entries:
+        if not stat.S_ISREG(path.stat().st_mode):
+            continue
+        content = _read_optional_file(path)
+        if content is None:
+            raise RunnerContractError(
+                "enumerated Local Ignore backup disappeared before observation"
+            )
+        backups.append(
+            {
+                "parentPath": _relative_path(
+                    root, path.parent, "Local Ignore backup parent"
+                ),
+                "identity": _identity_from_bytes(content),
+            }
+        )
+
+    reports = []
+    for log in result.logs:
+        if log.autoscan_report is None:
+            continue
+        report_path = Path(str(log.autoscan_report))
+        if not report_path.is_absolute():
+            report_path = root / report_path
+        content = _read_optional_file(report_path)
+        reports.append(
+            {
+                "path": _relative_path(
+                    root, report_path, "durable Autoscan Report"
+                ),
+                "exists": content is not None,
+                "nonEmpty": content is not None and len(content) > 0,
+                "identity": None
+                if content is None
+                else _identity_from_bytes(content),
+            }
+        )
+
+    forbidden = []
+    for index, raw_path in enumerate(
+        _require_sequence(
+            inputs.get("forbiddenEffectPaths", []), "forbiddenEffectPaths"
+        )
+    ):
+        path = _runtime_path(root, raw_path, f"forbiddenEffectPaths[{index}]")
+        forbidden.append(_file_effect(root, path, "forbidden effect"))
+
+    return {
+        "localIgnore": _file_effect(
+            root,
+            root / "CLASSIC Data" / "CLASSIC Ignore.yaml",
+            "durable Local Ignore",
+        ),
+        "backups": backups,
+        "reports": reports,
+        "forbidden": forbidden,
+    }
+
+
+def _result_or_raise(execution: Any) -> Any:
+    """Return a public result or raise the adapter failure carried by its envelope."""
 
     if execution.observer_error is not None:
         raise RunnerContractError(
@@ -529,6 +746,15 @@ def _observation(
     result = execution.result
     if result is None:
         raise RunnerContractError("public scan operation returned no result or error")
+    return result
+
+
+def _observation(
+    execution: Any, callbacks: Sequence[Any], root: Path
+) -> dict[str, Any]:
+    """Project one public execution envelope to the frozen normalized observation."""
+
+    result = _result_or_raise(execution)
     return {
         "run": {
             "status": str(result.status),
@@ -549,6 +775,297 @@ def _observation(
     }
 
 
+def _decision_token(classic_scanlog: Any, decision: Any) -> str:
+    """Map the public recovery enum to its Rust-owned vocabulary token."""
+
+    enum = classic_scanlog.ScanRunLocalIgnoreRecoveryDecision
+    if decision == enum.ProceedWithoutIgnore:
+        return "proceed_without_ignore"
+    if decision == enum.ResetToDefault:
+        return "reset_to_default"
+    raise RunnerContractError("recovery prompt exposed an unknown decision")
+
+
+def _recovery_decision(classic_scanlog: Any, token: object, label: str) -> Any:
+    """Resolve one plan decision token to the public Python recovery enum."""
+
+    value = _require_string(token, label)
+    enum = classic_scanlog.ScanRunLocalIgnoreRecoveryDecision
+    if value == "proceed-without-ignore":
+        return enum.ProceedWithoutIgnore
+    if value == "reset-to-default":
+        return enum.ResetToDefault
+    raise RunnerContractError(f"{label} is not a supported recovery decision")
+
+
+def _project_recovery_prompt(classic_scanlog: Any, prompt: Any) -> dict[str, Any]:
+    """Project prompt severities plus public decision labels and availability."""
+
+    return {
+        "displaySeverities": [str(line.severity) for line in prompt.lines],
+        "decisions": [
+            {
+                "decision": _decision_token(classic_scanlog, decision.decision),
+                "label": str(decision.label),
+                "available": bool(decision.available),
+            }
+            for decision in prompt.decisions
+        ],
+    }
+
+
+def _local_ignore_phase(
+    classic_scanlog: Any,
+    execution: Any,
+    callbacks: Sequence[Any],
+    root: Path,
+    *,
+    continuation_available: bool,
+    recovery_prompt: Any | None,
+) -> dict[str, Any]:
+    """Project one initial or terminal Local Ignore phase without filesystem effects."""
+
+    result = _result_or_raise(execution)
+    if result.setup is not None:
+        raise RunnerContractError(
+            "Local Ignore scenario unexpectedly returned setup data"
+        )
+    return {
+        "run": {
+            "status": str(result.status),
+            "message": result.message,
+            "total": int(result.total),
+            "succeeded": int(result.succeeded),
+            "failed": int(result.failed),
+            "cancelled": int(result.cancelled),
+            "effectiveConcurrency": result.effective_concurrency,
+        },
+        "discovery": _discovery(result.discovery, root),
+        "installedYamlData": _local_ignore_installed_yaml_data(
+            result.installed_yaml_data, root
+        ),
+        "logs": _log_results(result.logs, root),
+        "events": _compact_events(result, callbacks, root),
+        "continuationAvailable": continuation_available,
+        "recoveryPrompt": None
+        if recovery_prompt is None
+        else _project_recovery_prompt(classic_scanlog, recovery_prompt),
+    }
+
+
+def _local_ignore_observation(
+    classic_scanlog: Any,
+    execution: Any,
+    callbacks: Sequence[Any],
+    inputs: Mapping[str, Any],
+    root: Path,
+) -> dict[str, Any]:
+    """Project a terminal Local Ignore run and its exact durable effects."""
+
+    result = _result_or_raise(execution)
+    observation = _local_ignore_phase(
+        classic_scanlog,
+        execution,
+        callbacks,
+        root,
+        continuation_available=result.continuation is not None,
+        recovery_prompt=execution.recovery_prompt,
+    )
+    observation["durableEffects"] = _local_ignore_durable_effects(
+        result, inputs, root
+    )
+    return observation
+
+
+def _continuation_action(raw_action: object, label: str) -> tuple[str, str | None]:
+    """Validate one continuation operation and its optional plan decision."""
+
+    action = _require_mapping(raw_action, label)
+    operation = _require_string(action.get("operation"), f"{label}.operation")
+    raw_decision = action.get("decision")
+    decision = None
+    if raw_decision is not None:
+        decision = _require_string(raw_decision, f"{label}.decision")
+    if operation == "resume" and decision in {
+        "proceed-without-ignore",
+        "reset-to-default",
+    }:
+        return operation, decision
+    if operation == "abandon" and decision is None:
+        return operation, None
+    if operation == "resume":
+        raise RunnerContractError(f"{label} has no supported recovery decision")
+    if operation == "abandon":
+        raise RunnerContractError(f"{label} abandon operation must not have a decision")
+    raise RunnerContractError(f"{label}.operation must be resume or abandon")
+
+
+def _run_continuation_action(
+    classic_scanlog: Any,
+    continuation: Any,
+    cancellation: Any,
+    raw_action: object,
+    label: str,
+    callbacks: list[Any] | None,
+) -> Any:
+    """Invoke one public resume or abandon operation on the retained continuation."""
+
+    operation, decision = _continuation_action(raw_action, label)
+    observer = None if callbacks is None else callbacks.append
+    if operation == "resume":
+        return classic_scanlog.scan_run_resume(
+            continuation,
+            _recovery_decision(classic_scanlog, decision, f"{label}.decision"),
+            cancellation,
+            observer,
+        )
+    return classic_scanlog.scan_run_abandon(
+        continuation,
+        cancellation,
+        observer,
+    )
+
+
+def _project_replay_error(
+    raw_action: object, label: str, error: Exception
+) -> dict[str, Any]:
+    """Project a typed consumed-continuation rejection without adapter-only prose."""
+
+    operation, decision = _continuation_action(raw_action, label)
+    kind = getattr(error, "kind", None)
+    display_lines = getattr(error, "display_lines", None)
+    if not isinstance(kind, str) or display_lines is None:
+        raise RunnerContractError(
+            f"{label} raised an untyped replay error: {type(error).__name__}: {error}"
+        ) from error
+    decision_token = None if decision is None else decision.replace("-", "_")
+    return {
+        "operation": operation,
+        "decision": decision_token,
+        "error": {
+            "kind": kind,
+            "message": str(error),
+            "displaySeverities": [str(line.severity) for line in display_lines],
+        },
+    }
+
+
+def _materialize_post_pause_data(
+    plan: Mapping[str, Any],
+    scenario: Mapping[str, Any],
+    raw_placements: object,
+    root: Path,
+) -> None:
+    """Apply declared mutations only after the initial continuation has been retained."""
+
+    placements = _require_sequence(raw_placements, "continuationFlow.postPauseData")
+    for index, raw_placement in enumerate(placements):
+        label = f"continuationFlow.postPauseData[{index}]"
+        placement = _require_mapping(raw_placement, label)
+        _require_string(placement.get("fixtureRef"), f"{label}.fixtureRef")
+        _copy_declared_fixture(plan, scenario, placement, root, label)
+
+
+def _execute_continuation_flow(
+    classic_scanlog: Any,
+    plan: Mapping[str, Any],
+    scenario: Mapping[str, Any],
+    inputs: Mapping[str, Any],
+    root: Path,
+    cancellation: Any,
+    initial_execution: Any,
+    initial_callbacks: Sequence[Any],
+) -> dict[str, Any]:
+    """Resume or abandon the same prepared run, then prove its claim rejects replays."""
+
+    flow = _require_mapping(inputs.get("continuationFlow"), "continuationFlow")
+    action = flow.get("action")
+    _continuation_action(action, "continuationFlow.action")
+    replays = _require_sequence(flow.get("replays", []), "continuationFlow.replays")
+    for index, replay in enumerate(replays):
+        _continuation_action(replay, f"continuationFlow.replays[{index}]")
+
+    initial_result = _result_or_raise(initial_execution)
+    continuation = initial_result.continuation
+    if continuation is None:
+        raise RunnerContractError(
+            "continuationFlow initial result has no retained continuation"
+        )
+    prompt = initial_execution.recovery_prompt
+    if prompt is None:
+        raise RunnerContractError(
+            "continuationFlow initial execution has no recovery prompt"
+        )
+    initial = _local_ignore_phase(
+        classic_scanlog,
+        initial_execution,
+        initial_callbacks,
+        root,
+        continuation_available=True,
+        recovery_prompt=prompt,
+    )
+
+    _materialize_post_pause_data(
+        plan,
+        scenario,
+        flow.get("postPauseData", []),
+        root,
+    )
+    cancelled_before_terminal = bool(cancellation.is_cancelled)
+    terminal_callbacks: list[Any] = []
+    terminal_execution = _run_continuation_action(
+        classic_scanlog,
+        continuation,
+        cancellation,
+        action,
+        "continuationFlow.action",
+        terminal_callbacks,
+    )
+    terminal_result = _result_or_raise(terminal_execution)
+    terminal = _local_ignore_phase(
+        classic_scanlog,
+        terminal_execution,
+        terminal_callbacks,
+        root,
+        continuation_available=False,
+        recovery_prompt=None,
+    )
+    cancelled_after_terminal = bool(cancellation.is_cancelled)
+
+    replay_observations = []
+    for index, replay in enumerate(replays):
+        label = f"continuationFlow.replays[{index}]"
+        try:
+            _run_continuation_action(
+                classic_scanlog,
+                continuation,
+                cancellation,
+                replay,
+                label,
+                None,
+            )
+        except Exception as error:  # noqa: BLE001 - typed rejection is receipt data.
+            replay_observations.append(_project_replay_error(replay, label, error))
+        else:
+            raise RunnerContractError(
+                f"{label} unexpectedly consumed a continuation more than once"
+            )
+
+    return {
+        "initial": initial,
+        "terminal": terminal,
+        "replays": replay_observations,
+        "cancellation": {
+            "beforeTerminal": cancelled_before_terminal,
+            "afterTerminal": cancelled_after_terminal,
+            "afterReplays": bool(cancellation.is_cancelled),
+        },
+        "durableEffects": _local_ignore_durable_effects(
+            terminal_result, inputs, root
+        ),
+    }
+
+
 def _execute_scenario(
     plan: Mapping[str, Any], scenario: Mapping[str, Any]
 ) -> dict[str, Any]:
@@ -562,13 +1079,43 @@ def _execute_scenario(
             import classic_shared
 
             request = _build_request(classic_scanlog, classic_shared, inputs, root)
+            cancellation = classic_scanlog.ScanRunCancellation()
             callbacks: list[Any] = []
             execution = classic_scanlog.scan_run_execute(
                 request,
-                classic_scanlog.ScanRunCancellation(),
+                cancellation,
                 callbacks.append,
             )
-            return _observation(execution, callbacks, root)
+            continuation_flow = inputs.get("continuationFlow")
+            profile = inputs.get("observationProfile", "base")
+            if continuation_flow is not None:
+                if profile != "local-ignore":
+                    raise RunnerContractError(
+                        "continuationFlow requires observationProfile local-ignore"
+                    )
+                return _execute_continuation_flow(
+                    classic_scanlog,
+                    plan,
+                    scenario,
+                    inputs,
+                    root,
+                    cancellation,
+                    execution,
+                    callbacks,
+                )
+            if profile == "base":
+                return _observation(execution, callbacks, root)
+            if profile == "local-ignore":
+                return _local_ignore_observation(
+                    classic_scanlog,
+                    execution,
+                    callbacks,
+                    inputs,
+                    root,
+                )
+            raise RunnerContractError(
+                "observationProfile must be base or local-ignore"
+            )
 
 
 def _scenario_receipt(plan: Mapping[str, Any], raw_scenario: object) -> dict[str, Any]:

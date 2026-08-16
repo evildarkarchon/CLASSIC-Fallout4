@@ -1,4 +1,4 @@
-"""Coverage policy for the base Crash Log Scan Run conformance pack."""
+"""Coverage policy for executable Crash Log Scan Run conformance."""
 
 from __future__ import annotations
 
@@ -10,6 +10,14 @@ from ..coverage import CoveragePredicate, FamilyCoveragePolicy
 _MAIN_SHA256 = "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
 _GAME_SHA256 = "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
 _IGNORE_SHA256 = "1fc79ee2668e143c355dc3b931de1a2c41041227e79e21890da90a744ad3b70c"
+_GENERATED_IGNORE_SHA256 = (
+    "ba0cbe71c9023ebdb553e3a0acdc5c6ad95e9126694077344f4c57f00e3b71e3"
+)
+_MALFORMED_IGNORE_SHA256 = (
+    "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+)
+_LOCAL_IGNORE_PATH = "CLASSIC Data/CLASSIC Ignore.yaml"
+_BACKUP_PARENT = "CLASSIC Backup/YAML Data/Local Ignore"
 _TRACE = (
     ("log_queued", None),
     ("log_started", None),
@@ -19,6 +27,30 @@ _TRACE = (
     ("log_phase", "finalize"),
     ("log_finished", None),
 )
+_COMPACT_SUCCESS_TRACE = (
+    "log_queued",
+    "log_started",
+    "log_phase:setup",
+    "log_phase:parse",
+    "log_phase:analyze",
+    "log_phase:finalize",
+    "log_finished:succeeded",
+)
+_RECOVERY_PROMPT = {
+    "displaySeverities": ["warning"],
+    "decisions": [
+        {
+            "decision": "proceed_without_ignore",
+            "label": "Proceed Without Ignore",
+            "available": True,
+        },
+        {
+            "decision": "reset_to_default",
+            "label": "Reset To Default",
+            "available": True,
+        },
+    ],
+}
 
 
 def _mapping(value: object) -> Mapping[str, Any] | None:
@@ -128,6 +160,265 @@ def _identity(value: object, sha256: str, byte_length: int) -> bool:
         "sha256": sha256,
         "byteLength": byte_length,
     }
+
+
+def _diagnostics(value: object, kinds: Sequence[str]) -> bool:
+    """Match ordered, path-attributed Local Ignore diagnostic kinds."""
+
+    diagnostics = _sequence(value)
+    if diagnostics is None or len(diagnostics) != len(kinds):
+        return False
+    return all(
+        diagnostic == {
+            "role": None,
+            "candidate": None,
+            "path": {"path": _LOCAL_IGNORE_PATH},
+            "kind": kind,
+        }
+        for diagnostic, kind in zip(diagnostics, kinds, strict=True)
+    )
+
+
+def _compact_installed_yaml_data(
+    value: object,
+    *,
+    local_ignore_state: str,
+    local_ignore_sha256: str,
+    local_ignore_byte_length: int,
+    diagnostic_kinds: Sequence[str],
+    reset_available: bool,
+) -> Mapping[str, Any] | None:
+    """Validate stable identities and Local Ignore state in a compact projection."""
+
+    installed = _mapping(value)
+    if (
+        installed is None
+        or not _identity(installed.get("mainIdentity"), _MAIN_SHA256, 281)
+        or not _identity(installed.get("gameIdentity"), _GAME_SHA256, 463)
+        or installed.get("localIgnoreState") != local_ignore_state
+        or not _identity(
+            installed.get("localIgnoreIdentity"),
+            local_ignore_sha256,
+            local_ignore_byte_length,
+        )
+        or not _diagnostics(installed.get("diagnostics"), diagnostic_kinds)
+        or installed.get("localIgnoreResetAvailable") is not reset_available
+    ):
+        return None
+    return installed
+
+
+def _compact_discovery(value: object, stem: str) -> bool:
+    """Match retained targeted discovery, including one post-pause late path."""
+
+    discovery = _mapping(value)
+    if discovery is None:
+        return False
+    accepted = f"Recovery/{stem}.log"
+    late = f"Recovery/{stem}-late.log"
+    return discovery == {
+        "source": "targeted",
+        "acceptedLogs": [{"path": accepted}],
+        "rejectedInputs": [{"path": late, "reason": "path does not exist"}],
+        "searchedLocations": [{"path": accepted}, {"path": late}],
+    }
+
+
+def _compact_log(value: object, stem: str, disposition: str) -> bool:
+    """Match one discovery-indexed compact terminal log outcome."""
+
+    log = _mapping(value)
+    if log is None:
+        return False
+    expected_report = (
+        {"path": f"Recovery/{stem}-AUTOSCAN.md"}
+        if disposition == "succeeded"
+        else None
+    )
+    expected_message = None if disposition == "succeeded" else "Cancelled by user"
+    return log == {
+        "discoveryIndex": 0,
+        "crashLog": {"path": f"Recovery/{stem}.log"},
+        "autoscanReport": expected_report,
+        "disposition": disposition,
+        "failures": [],
+        "message": expected_message,
+        "movedToUnsolvedLogs": False,
+    }
+
+
+def _compact_success_events(value: object) -> bool:
+    """Match a resumed trace that cannot contain a rediscovery event."""
+
+    return value == {
+        "run": ["effective_concurrency_selected"],
+        "logs": [{"discoveryIndex": 0, "trace": list(_COMPACT_SUCCESS_TRACE)}],
+    }
+
+
+def _initial_recovery_snapshot(observation: Mapping[str, Any], stem: str) -> bool:
+    """Recognize prepared discovery and YAML identities retained at the pause."""
+
+    initial = _mapping(observation.get("initial"))
+    if initial is None:
+        return False
+    installed = _compact_installed_yaml_data(
+        initial.get("installedYamlData"),
+        local_ignore_state="recovery_required",
+        local_ignore_sha256=_MALFORMED_IGNORE_SHA256,
+        local_ignore_byte_length=39,
+        diagnostic_kinds=("parse",),
+        reset_available=True,
+    )
+    return (
+        _compact_discovery(initial.get("discovery"), stem)
+        and installed is not None
+        and installed.get("localIgnoreReset") is None
+        and initial.get("logs") == []
+        and initial.get("events") == {
+            "run": ["discovery_completed"],
+            "logs": [],
+        }
+    )
+
+
+def _initial_recovery_prompt(observation: Mapping[str, Any]) -> bool:
+    """Recognize a typed recovery pause with both explicit available decisions."""
+
+    initial = _mapping(observation.get("initial"))
+    run = _mapping(initial.get("run")) if initial is not None else None
+    return (
+        initial is not None
+        and run
+        == {
+            "status": "local_ignore_recovery_required",
+            "message": "Local Ignore recovery is required",
+            "total": 1,
+            "succeeded": 0,
+            "failed": 0,
+            "cancelled": 0,
+            "effectiveConcurrency": None,
+        }
+        and initial.get("continuationAvailable") is True
+        and initial.get("recoveryPrompt") == _RECOVERY_PROMPT
+    )
+
+
+def _resume_initial_prompt(observation: Mapping[str, Any]) -> bool:
+    """Recognize the prompt only in the two explicit decision scenarios."""
+
+    initial = _mapping(observation.get("initial"))
+    return (
+        _initial_recovery_prompt(observation)
+        and initial is not None
+        and (
+            _compact_discovery(initial.get("discovery"), "proceed")
+            or _compact_discovery(initial.get("discovery"), "reset")
+        )
+    )
+
+
+def _successful_recovery_terminal(
+    observation: Mapping[str, Any],
+    stem: str,
+    *,
+    state: str,
+    ignore_sha256: str,
+    ignore_byte_length: int,
+    diagnostic_kinds: Sequence[str],
+) -> Mapping[str, Any] | None:
+    """Validate shared terminal success facts for one retained continuation."""
+
+    terminal = _mapping(observation.get("terminal"))
+    if terminal is None:
+        return None
+    installed = _compact_installed_yaml_data(
+        terminal.get("installedYamlData"),
+        local_ignore_state=state,
+        local_ignore_sha256=ignore_sha256,
+        local_ignore_byte_length=ignore_byte_length,
+        diagnostic_kinds=diagnostic_kinds,
+        reset_available=False,
+    )
+    logs = _sequence(terminal.get("logs"))
+    if (
+        terminal.get("run")
+        != {
+            "status": "completed",
+            "message": None,
+            "total": 1,
+            "succeeded": 1,
+            "failed": 0,
+            "cancelled": 0,
+            "effectiveConcurrency": 1,
+        }
+        or installed is None
+        or logs is None
+        or len(logs) != 1
+        or not _compact_log(logs[0], stem, "succeeded")
+        or terminal.get("continuationAvailable") is not False
+        or terminal.get("recoveryPrompt") is not None
+    ):
+        return None
+    return installed
+
+
+def _retained_without_rediscovery(observation: Mapping[str, Any], stem: str) -> bool:
+    """Recognize identical discovery and a resume trace that starts after discovery."""
+
+    initial = _mapping(observation.get("initial"))
+    terminal = _mapping(observation.get("terminal"))
+    return (
+        initial is not None
+        and terminal is not None
+        and initial.get("discovery") == terminal.get("discovery")
+        and _compact_discovery(terminal.get("discovery"), stem)
+        and _compact_success_events(terminal.get("events"))
+    )
+
+
+def _consumed_replay(value: object, operation: str, decision: str | None) -> bool:
+    """Match one typed rejection from reusing the prepared continuation."""
+
+    replay = _mapping(value)
+    error = _mapping(replay.get("error")) if replay is not None else None
+    return (
+        replay is not None
+        and replay.get("operation") == operation
+        and replay.get("decision") == decision
+        and error is not None
+        and error.get("kind") == "scan_run_continuation_consumed"
+        and error.get("message") == "Crash Log Scan Run continuation was already consumed"
+        and error.get("displaySeverities") == ["failure", "notice"]
+    )
+
+
+def _all_forbidden_absent(value: object, paths: Sequence[str]) -> bool:
+    """Match an exact forbidden-effect inventory with every path still absent."""
+
+    forbidden = _sequence(value)
+    return forbidden is not None and forbidden == [
+        {"path": path, "exists": False, "identity": None} for path in paths
+    ]
+
+
+def _report_effect(
+    value: object,
+    path: str,
+    sha256: str,
+    byte_length: int,
+) -> bool:
+    """Match one non-empty report with its exact retained byte identity."""
+
+    report = _mapping(value)
+    identity = _mapping(report.get("identity")) if report is not None else None
+    return (
+        report is not None
+        and report.get("path") == path
+        and report.get("exists") is True
+        and report.get("nonEmpty") is True
+        and _identity(identity, sha256, byte_length)
+    )
 
 
 def _installed_yaml_data(observation: Mapping[str, Any]) -> bool:
@@ -285,7 +576,379 @@ def _durable_effects(observation: Mapping[str, Any]) -> bool:
     )
 
 
-_PREDICATE_FACTS = (
+def _generated_status(observation: Mapping[str, Any]) -> bool:
+    """Recognize the one-log generated-Ignore terminal status."""
+
+    return observation.get("run") == {
+        "status": "completed",
+        "message": None,
+        "total": 1,
+        "succeeded": 1,
+        "failed": 0,
+        "cancelled": 0,
+        "effectiveConcurrency": 1,
+    }
+
+
+def _generated_discovery(observation: Mapping[str, Any]) -> bool:
+    """Recognize the generated-Ignore scenario's exact targeted discovery."""
+
+    return observation.get("discovery") == {
+        "source": "targeted",
+        "acceptedLogs": [{"path": "Generated/crash-generated-local-ignore.log"}],
+        "rejectedInputs": [],
+        "searchedLocations": [
+            {"path": "Generated/crash-generated-local-ignore.log"}
+        ],
+    }
+
+
+def _generated_installed_yaml_data(observation: Mapping[str, Any]) -> bool:
+    """Recognize the exact generated Local Ignore identity and diagnostic."""
+
+    installed = _compact_installed_yaml_data(
+        observation.get("installedYamlData"),
+        local_ignore_state="generated",
+        local_ignore_sha256=_GENERATED_IGNORE_SHA256,
+        local_ignore_byte_length=28,
+        diagnostic_kinds=("local_ignore_generated",),
+        reset_available=False,
+    )
+    return (
+        installed is not None
+        and installed.get("localIgnoreReset") is None
+        and observation.get("continuationAvailable") is False
+        and observation.get("recoveryPrompt") is None
+    )
+
+
+def _generated_log_outcome(observation: Mapping[str, Any]) -> bool:
+    """Recognize the generated-Ignore scenario's sole successful outcome."""
+
+    logs = _sequence(observation.get("logs"))
+    return (
+        logs is not None
+        and len(logs) == 1
+        and logs[0]
+        == {
+            "discoveryIndex": 0,
+            "crashLog": {"path": "Generated/crash-generated-local-ignore.log"},
+            "autoscanReport": {
+                "path": "Generated/crash-generated-local-ignore-AUTOSCAN.md"
+            },
+            "disposition": "succeeded",
+            "failures": [],
+            "message": None,
+            "movedToUnsolvedLogs": False,
+        }
+    )
+
+
+def _generated_events(observation: Mapping[str, Any]) -> bool:
+    """Recognize the generated-Ignore scenario's compact lifecycle trace."""
+
+    return observation.get("events") == {
+        "run": ["discovery_completed", "effective_concurrency_selected"],
+        "logs": [{"discoveryIndex": 0, "trace": list(_COMPACT_SUCCESS_TRACE)}],
+    }
+
+
+def _generated_durable_effects(observation: Mapping[str, Any]) -> bool:
+    """Recognize generated bytes, one report, and every forbidden effect."""
+
+    effects = _mapping(observation.get("durableEffects"))
+    reports = _sequence(effects.get("reports")) if effects is not None else None
+    return (
+        effects is not None
+        and effects.get("localIgnore")
+        == {
+            "path": _LOCAL_IGNORE_PATH,
+            "exists": True,
+            "identity": {
+                "sha256": _GENERATED_IGNORE_SHA256,
+                "byteLength": 28,
+            },
+        }
+        and effects.get("backups") == []
+        and reports is not None
+        and len(reports) == 1
+        and _report_effect(
+            reports[0],
+            "Generated/crash-generated-local-ignore-AUTOSCAN.md",
+            "6b62381b815b5febd0b1cbf5a3bb4a9638187e21c08fb7a0ee293ffd93881133",
+            1042,
+        )
+        and _all_forbidden_absent(
+            effects.get("forbidden"),
+            (_LOCAL_IGNORE_PATH + ".prev", "Unsolved Logs"),
+        )
+    )
+
+
+def _proceed_terminal(observation: Mapping[str, Any]) -> bool:
+    """Recognize successful Proceed Without Ignore terminal state."""
+
+    installed = _successful_recovery_terminal(
+        observation,
+        "proceed",
+        state="proceed_without_ignore",
+        ignore_sha256=_MALFORMED_IGNORE_SHA256,
+        ignore_byte_length=39,
+        diagnostic_kinds=("parse",),
+    )
+    return installed is not None and installed.get("localIgnoreReset") is None
+
+
+def _proceed_no_rediscovery(observation: Mapping[str, Any]) -> bool:
+    """Recognize Proceed using the retained discovery after late files appear."""
+
+    return _retained_without_rediscovery(observation, "proceed")
+
+
+def _proceed_durable_effects(observation: Mapping[str, Any]) -> bool:
+    """Recognize byte-exact non-mutation and forbidden Proceed effects."""
+
+    effects = _mapping(observation.get("durableEffects"))
+    reports = _sequence(effects.get("reports")) if effects is not None else None
+    return (
+        effects is not None
+        and effects.get("localIgnore")
+        == {
+            "path": _LOCAL_IGNORE_PATH,
+            "exists": True,
+            "identity": {
+                "sha256": _MALFORMED_IGNORE_SHA256,
+                "byteLength": 39,
+            },
+        }
+        and effects.get("backups") == []
+        and reports is not None
+        and len(reports) == 1
+        and _report_effect(
+            reports[0],
+            "Recovery/proceed-AUTOSCAN.md",
+            "fcd495692097a88127999ca1905d2a93cdf120b62c131976bfde86806425c37f",
+            1021,
+        )
+        and _all_forbidden_absent(
+            effects.get("forbidden"),
+            (
+                _LOCAL_IGNORE_PATH + ".prev",
+                "Unsolved Logs",
+                "Recovery/proceed-late-AUTOSCAN.md",
+            ),
+        )
+        and observation.get("cancellation")
+        == {
+            "beforeTerminal": False,
+            "afterTerminal": False,
+            "afterReplays": False,
+        }
+    )
+
+
+def _proceed_replay(observation: Mapping[str, Any]) -> bool:
+    """Recognize one rejected Proceed replay on the already claimed continuation."""
+
+    replays = _sequence(observation.get("replays"))
+    return (
+        replays is not None
+        and len(replays) == 1
+        and _consumed_replay(replays[0], "resume", "proceed_without_ignore")
+    )
+
+
+def _reset_terminal(observation: Mapping[str, Any]) -> bool:
+    """Recognize successful Reset To Default terminal state and receipt."""
+
+    installed = _successful_recovery_terminal(
+        observation,
+        "reset",
+        state="reset_to_default",
+        ignore_sha256=_GENERATED_IGNORE_SHA256,
+        ignore_byte_length=28,
+        diagnostic_kinds=("parse", "local_ignore_reset"),
+    )
+    if installed is None:
+        return False
+    reset = _mapping(installed.get("localIgnoreReset"))
+    return (
+        reset is not None
+        and reset.get("localIgnorePath") == {"path": _LOCAL_IGNORE_PATH}
+        and reset.get("backup")
+        == {
+            "parentPath": _BACKUP_PARENT,
+            "exists": True,
+            "identityMatchesReceipt": True,
+        }
+        and _identity(
+            reset.get("malformedIdentity"), _MALFORMED_IGNORE_SHA256, 39
+        )
+        and _identity(reset.get("backupIdentity"), _MALFORMED_IGNORE_SHA256, 39)
+        and _identity(
+            reset.get("replacementIdentity"), _GENERATED_IGNORE_SHA256, 28
+        )
+    )
+
+
+def _reset_no_rediscovery(observation: Mapping[str, Any]) -> bool:
+    """Recognize Reset using the retained discovery after late files appear."""
+
+    return _retained_without_rediscovery(observation, "reset")
+
+
+def _reset_durable_effects(observation: Mapping[str, Any]) -> bool:
+    """Recognize one byte-exact backup, repaired bytes, and forbidden effects."""
+
+    effects = _mapping(observation.get("durableEffects"))
+    backups = _sequence(effects.get("backups")) if effects is not None else None
+    reports = _sequence(effects.get("reports")) if effects is not None else None
+    return (
+        effects is not None
+        and effects.get("localIgnore")
+        == {
+            "path": _LOCAL_IGNORE_PATH,
+            "exists": True,
+            "identity": {
+                "sha256": _GENERATED_IGNORE_SHA256,
+                "byteLength": 28,
+            },
+        }
+        and backups
+        == [
+            {
+                "parentPath": _BACKUP_PARENT,
+                "identity": {
+                    "sha256": _MALFORMED_IGNORE_SHA256,
+                    "byteLength": 39,
+                },
+            }
+        ]
+        and reports is not None
+        and len(reports) == 1
+        and _report_effect(
+            reports[0],
+            "Recovery/reset-AUTOSCAN.md",
+            "ff71d48fbc44a50ca1e29d2be906034c9ebf63cb3099641f897c6b8bea6e903b",
+            1019,
+        )
+        and _all_forbidden_absent(
+            effects.get("forbidden"),
+            (
+                _LOCAL_IGNORE_PATH + ".prev",
+                "Unsolved Logs",
+                "Recovery/reset-late-AUTOSCAN.md",
+            ),
+        )
+        and observation.get("cancellation")
+        == {
+            "beforeTerminal": False,
+            "afterTerminal": False,
+            "afterReplays": False,
+        }
+    )
+
+
+def _reset_replay(observation: Mapping[str, Any]) -> bool:
+    """Recognize one rejected Reset replay without a second backup."""
+
+    replays = _sequence(observation.get("replays"))
+    return (
+        replays is not None
+        and len(replays) == 1
+        and _consumed_replay(replays[0], "resume", "reset_to_default")
+    )
+
+
+def _abandon_initial(observation: Mapping[str, Any]) -> bool:
+    """Recognize the prepared abandonment snapshot and typed recovery prompt."""
+
+    return _initial_recovery_snapshot(
+        observation, "abandon"
+    ) and _initial_recovery_prompt(observation)
+
+
+def _abandon_terminal(observation: Mapping[str, Any]) -> bool:
+    """Recognize ordinary post-discovery cancellation without recovery state."""
+
+    terminal = _mapping(observation.get("terminal"))
+    logs = _sequence(terminal.get("logs")) if terminal is not None else None
+    return (
+        terminal is not None
+        and terminal.get("run")
+        == {
+            "status": "cancelled",
+            "message": "Cancelled after crash log discovery",
+            "total": 1,
+            "succeeded": 0,
+            "failed": 0,
+            "cancelled": 1,
+            "effectiveConcurrency": None,
+        }
+        and _compact_discovery(terminal.get("discovery"), "abandon")
+        and terminal.get("installedYamlData") is None
+        and logs is not None
+        and len(logs) == 1
+        and _compact_log(logs[0], "abandon", "cancelled_before_start")
+        and terminal.get("events")
+        == {"run": [], "logs": [{"discoveryIndex": 0, "trace": []}]}
+        and terminal.get("continuationAvailable") is False
+        and terminal.get("recoveryPrompt") is None
+    )
+
+
+def _abandon_cancellation(observation: Mapping[str, Any]) -> bool:
+    """Recognize abandonment as the sole source of monotonic cancellation."""
+
+    return observation.get("cancellation") == {
+        "beforeTerminal": False,
+        "afterTerminal": True,
+        "afterReplays": True,
+    }
+
+
+def _abandon_shared_replay(observation: Mapping[str, Any]) -> bool:
+    """Recognize shared one-shot rejection through abandon and resume APIs."""
+
+    replays = _sequence(observation.get("replays"))
+    return (
+        replays is not None
+        and len(replays) == 2
+        and _consumed_replay(replays[0], "abandon", None)
+        and _consumed_replay(replays[1], "resume", "reset_to_default")
+    )
+
+
+def _abandon_durable_effects(observation: Mapping[str, Any]) -> bool:
+    """Recognize byte-exact abandonment with no reports, backups, or movement."""
+
+    effects = _mapping(observation.get("durableEffects"))
+    return (
+        effects is not None
+        and effects.get("localIgnore")
+        == {
+            "path": _LOCAL_IGNORE_PATH,
+            "exists": True,
+            "identity": {
+                "sha256": _MALFORMED_IGNORE_SHA256,
+                "byteLength": 39,
+            },
+        }
+        and effects.get("backups") == []
+        and effects.get("reports") == []
+        and _all_forbidden_absent(
+            effects.get("forbidden"),
+            (
+                _LOCAL_IGNORE_PATH + ".prev",
+                "Unsolved Logs",
+                "Recovery/abandon-AUTOSCAN.md",
+                "Recovery/abandon-late-AUTOSCAN.md",
+            ),
+        )
+    )
+
+
+_BASE_PREDICATE_FACTS = (
     ("scan-run.status", "run-status", ("Request",), _run_status),
     ("scan-run.discovery", "discovery", ("Request",), _discovery),
     ("scan-run.setup", "setup", ("Request",), _setup),
@@ -322,21 +985,244 @@ _PREDICATE_FACTS = (
     ),
 )
 
-REQUIRED_OBSERVATION_FACT_IDS = tuple(sorted(row[0] for row in _PREDICATE_FACTS))
+_BASE_PREDICATES = tuple(
+    CoveragePredicate(
+        id=fact_id,
+        capability_id="scan-run.execute",
+        action="scan-run.execute",
+        observation_family=observation_family,
+        rust_symbols=rust_symbols,
+        matches=matches,
+    )
+    for fact_id, observation_family, rust_symbols, matches in _BASE_PREDICATE_FACTS
+)
+
+_GENERATED_PREDICATES = (
+    CoveragePredicate(
+        "scan-run.generated.status",
+        "scan-run.execute",
+        "scan-run.execute",
+        "run-status",
+        ("RunResult",),
+        _generated_status,
+    ),
+    CoveragePredicate(
+        "scan-run.generated.discovery",
+        "scan-run.execute",
+        "scan-run.execute",
+        "discovery",
+        ("Request",),
+        _generated_discovery,
+    ),
+    CoveragePredicate(
+        "scan-run.generated.installed-yaml-data",
+        "scan-run.execute",
+        "scan-run.execute",
+        "installed-yaml-data",
+        ("RunResult",),
+        _generated_installed_yaml_data,
+    ),
+    CoveragePredicate(
+        "scan-run.generated.log-outcome",
+        "scan-run.execute",
+        "scan-run.execute",
+        "log-outcomes",
+        ("LogDisposition",),
+        _generated_log_outcome,
+    ),
+    CoveragePredicate(
+        "scan-run.generated.events",
+        "scan-run.execute",
+        "scan-run.execute",
+        "events",
+        ("RunResult",),
+        _generated_events,
+    ),
+    CoveragePredicate(
+        "scan-run.generated.durable-effects",
+        "scan-run.execute",
+        "scan-run.execute",
+        "durable-effects",
+        ("RunResult",),
+        _generated_durable_effects,
+    ),
+)
+
+_RESUME_PREDICATES = (
+    CoveragePredicate(
+        "scan-run.recovery.initial-retained-snapshot",
+        "scan-run.execute",
+        "scan-run.execute",
+        "recovery",
+        ("CrashLogScanRunContinuation", "LocalIgnoreRecoveryDecision"),
+        lambda observation: _initial_recovery_snapshot(observation, "proceed")
+        or _initial_recovery_snapshot(observation, "reset"),
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.initial-prompt",
+        "scan-run.execute",
+        "scan-run.execute",
+        "recovery",
+        ("LocalIgnoreRecoveryDecision",),
+        _resume_initial_prompt,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.proceed-without-ignore",
+        "scan-run.execute",
+        "scan-run.execute",
+        "installed-yaml-data",
+        ("LocalIgnoreRecoveryDecision",),
+        _proceed_terminal,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.proceed-no-rediscovery",
+        "scan-run.execute",
+        "scan-run.execute",
+        "events",
+        ("LocalIgnoreRecoveryDecision",),
+        _proceed_no_rediscovery,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.proceed-no-mutation",
+        "scan-run.execute",
+        "scan-run.execute",
+        "durable-effects",
+        ("LocalIgnoreRecoveryDecision",),
+        _proceed_durable_effects,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.proceed-replay-rejected",
+        "scan-run.execute",
+        "scan-run.execute",
+        "replay",
+        ("ResumeError",),
+        _proceed_replay,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.reset-to-default",
+        "scan-run.execute",
+        "scan-run.execute",
+        "installed-yaml-data",
+        ("LocalIgnoreRecoveryDecision",),
+        _reset_terminal,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.reset-no-rediscovery",
+        "scan-run.execute",
+        "scan-run.execute",
+        "events",
+        ("LocalIgnoreRecoveryDecision",),
+        _reset_no_rediscovery,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.reset-backup-and-repair",
+        "scan-run.execute",
+        "scan-run.execute",
+        "durable-effects",
+        ("LocalIgnoreRecoveryDecision",),
+        _reset_durable_effects,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.reset-replay-rejected",
+        "scan-run.execute",
+        "scan-run.execute",
+        "replay",
+        ("ResumeError",),
+        _reset_replay,
+    ),
+)
+
+_ABANDON_PREDICATES = (
+    CoveragePredicate(
+        "scan-run.recovery.abandon-initial",
+        "scan-run.execute",
+        "scan-run.execute",
+        "recovery",
+        ("CrashLogScanRunContinuation",),
+        _abandon_initial,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.abandon-terminal",
+        "scan-run.execute",
+        "scan-run.execute",
+        "log-outcomes",
+        ("CrashLogScanRunContinuation",),
+        _abandon_terminal,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.abandon-cancellation",
+        "scan-run.execute",
+        "scan-run.execute",
+        "recovery",
+        ("CrashLogScanRunContinuation",),
+        _abandon_cancellation,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.abandon-shared-replay",
+        "scan-run.execute",
+        "scan-run.execute",
+        "replay",
+        ("CrashLogScanRunContinuation", "ResumeError"),
+        _abandon_shared_replay,
+    ),
+    CoveragePredicate(
+        "scan-run.recovery.abandon-forbidden-effects",
+        "scan-run.execute",
+        "scan-run.execute",
+        "durable-effects",
+        ("CrashLogScanRunContinuation",),
+        _abandon_durable_effects,
+    ),
+)
+
+REQUIRED_OBSERVATION_FACT_IDS = tuple(
+    sorted(predicate.id for predicate in _BASE_PREDICATES)
+)
 """Every semantic fact required from both base happy-path scenarios."""
+
+REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO: Mapping[str, tuple[str, ...]] = {
+    "standard-happy-path": REQUIRED_OBSERVATION_FACT_IDS,
+    "targeted-happy-path": REQUIRED_OBSERVATION_FACT_IDS,
+    "generated-local-ignore": tuple(
+        sorted(predicate.id for predicate in _GENERATED_PREDICATES)
+    ),
+    "proceed-without-ignore-recovery": tuple(
+        sorted(
+            {
+                "scan-run.recovery.initial-retained-snapshot",
+                "scan-run.recovery.initial-prompt",
+                "scan-run.recovery.proceed-without-ignore",
+                "scan-run.recovery.proceed-no-rediscovery",
+                "scan-run.recovery.proceed-no-mutation",
+                "scan-run.recovery.proceed-replay-rejected",
+            }
+        )
+    ),
+    "reset-to-default-recovery": tuple(
+        sorted(
+            {
+                "scan-run.recovery.initial-retained-snapshot",
+                "scan-run.recovery.initial-prompt",
+                "scan-run.recovery.reset-to-default",
+                "scan-run.recovery.reset-no-rediscovery",
+                "scan-run.recovery.reset-backup-and-repair",
+                "scan-run.recovery.reset-replay-rejected",
+            }
+        )
+    ),
+    "abandon-local-ignore-recovery": tuple(
+        sorted(predicate.id for predicate in _ABANDON_PREDICATES)
+    ),
+}
+"""Exact centrally derived semantic fact IDs required by each v1 scenario."""
 
 CRASH_LOG_SCAN_RUN_COVERAGE_POLICY = FamilyCoveragePolicy(
     family_id="crash-log-scan-run",
-    predicates=tuple(
-        CoveragePredicate(
-            id=fact_id,
-            capability_id="scan-run.execute",
-            action="scan-run.execute",
-            observation_family=observation_family,
-            rust_symbols=rust_symbols,
-            matches=matches,
-        )
-        for fact_id, observation_family, rust_symbols, matches in _PREDICATE_FACTS
+    predicates=(
+        _BASE_PREDICATES
+        + _GENERATED_PREDICATES
+        + _RESUME_PREDICATES
+        + _ABANDON_PREDICATES
     ),
 )
 """The centrally derived coverage policy for Crash Log Scan Run v1."""

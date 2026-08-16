@@ -10,7 +10,8 @@
     "validCrashLog": "valid-crash.log",
     "mainYaml": "CLASSIC Data/databases/CLASSIC Main.yaml",
     "gameYaml": "CLASSIC Data/databases/CLASSIC Fallout4.yaml",
-    "localIgnoreYaml": "CLASSIC Data/CLASSIC Ignore.yaml"
+    "localIgnoreYaml": "CLASSIC Data/CLASSIC Ignore.yaml",
+    "malformedLocalIgnoreYaml": "malformed-local-ignore.yaml"
   },
   "capabilities": [
     {
@@ -18,7 +19,10 @@
       "rustSymbols": [
         "Request",
         "RunResult",
-        "LogDisposition"
+        "LogDisposition",
+        "CrashLogScanRunContinuation",
+        "LocalIgnoreRecoveryDecision",
+        "ResumeError"
       ],
       "observationFamilies": [
         "run-status",
@@ -29,6 +33,8 @@
         "log-outcomes",
         "events",
         "display-content",
+        "recovery",
+        "replay",
         "durable-effects"
       ]
     }
@@ -1475,11 +1481,11 @@
               "path": "Targeted/crash-shared-targeted-01.log"
             }
           ],
-        "rejectedInputs": [
-          {
-            "path": "Targeted/missing-input.txt",
-            "reason": "path does not exist"
-          }
+          "rejectedInputs": [
+            {
+              "path": "Targeted/missing-input.txt",
+              "reason": "path does not exist"
+            }
           ],
           "searchedLocations": [
             {
@@ -2814,6 +2820,1154 @@
           "unsolvedLogs": {
             "path": "Unsolved Logs",
             "exists": false
+          }
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "generated-local-ignore",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml"
+      ],
+      "input": {
+        "observationProfile": "local-ignore",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "forbiddenEffectPaths": [
+          "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+          "Unsolved Logs"
+        ],
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Generated/crash-generated-local-ignore.log"
+          }
+        ]
+      },
+      "expected": {
+        "run": {
+          "status": "completed",
+          "message": null,
+          "total": 1,
+          "succeeded": 1,
+          "failed": 0,
+          "cancelled": 0,
+          "effectiveConcurrency": 1
+        },
+        "discovery": {
+          "source": "targeted",
+          "acceptedLogs": [
+            {
+              "path": "Generated/crash-generated-local-ignore.log"
+            }
+          ],
+          "rejectedInputs": [],
+          "searchedLocations": [
+            {
+              "path": "Generated/crash-generated-local-ignore.log"
+            }
+          ]
+        },
+        "installedYamlData": {
+          "mainIdentity": {
+            "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4",
+            "byteLength": 281
+          },
+          "gameIdentity": {
+            "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168",
+            "byteLength": 463
+          },
+          "localIgnoreState": "generated",
+          "localIgnoreIdentity": {
+            "sha256": "ba0cbe71c9023ebdb553e3a0acdc5c6ad95e9126694077344f4c57f00e3b71e3",
+            "byteLength": 28
+          },
+          "diagnostics": [
+            {
+              "role": null,
+              "candidate": null,
+              "path": {
+                "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+              },
+              "kind": "local_ignore_generated"
+            }
+          ],
+          "localIgnoreResetAvailable": false,
+          "localIgnoreReset": null
+        },
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Generated/crash-generated-local-ignore.log"
+            },
+            "autoscanReport": {
+              "path": "Generated/crash-generated-local-ignore-AUTOSCAN.md"
+            },
+            "disposition": "succeeded",
+            "failures": [],
+            "message": null,
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "events": {
+          "run": [
+            "discovery_completed",
+            "effective_concurrency_selected"
+          ],
+          "logs": [
+            {
+              "discoveryIndex": 0,
+              "trace": [
+                "log_queued",
+                "log_started",
+                "log_phase:setup",
+                "log_phase:parse",
+                "log_phase:analyze",
+                "log_phase:finalize",
+                "log_finished:succeeded"
+              ]
+            }
+          ]
+        },
+        "continuationAvailable": false,
+        "recoveryPrompt": null,
+        "durableEffects": {
+          "localIgnore": {
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml",
+            "exists": true,
+            "identity": {
+              "sha256": "ba0cbe71c9023ebdb553e3a0acdc5c6ad95e9126694077344f4c57f00e3b71e3",
+              "byteLength": 28
+            }
+          },
+          "backups": [],
+          "reports": [
+            {
+              "path": "Generated/crash-generated-local-ignore-AUTOSCAN.md",
+              "exists": true,
+              "nonEmpty": true,
+              "identity": {
+                "sha256": "6b62381b815b5febd0b1cbf5a3bb4a9638187e21c08fb7a0ee293ffd93881133",
+                "byteLength": 1042
+              }
+            }
+          ],
+          "forbidden": [
+            {
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+              "exists": false,
+              "identity": null
+            },
+            {
+              "path": "Unsolved Logs",
+              "exists": false,
+              "identity": null
+            }
+          ]
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "proceed-without-ignore-recovery",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "malformedLocalIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "local-ignore",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "malformedLocalIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Recovery/proceed.log"
+          },
+          {
+            "path": "Recovery/proceed-late.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+          "Unsolved Logs",
+          "Recovery/proceed-late-AUTOSCAN.md"
+        ],
+        "continuationFlow": {
+          "action": {
+            "operation": "resume",
+            "decision": "proceed-without-ignore"
+          },
+          "postPauseData": [
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+            },
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+            },
+            {
+              "fixtureRef": "validCrashLog",
+              "path": "Recovery/proceed-late.log"
+            }
+          ],
+          "replays": [
+            {
+              "operation": "resume",
+              "decision": "proceed-without-ignore"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "cancellation": {
+          "afterReplays": false,
+          "afterTerminal": false,
+          "beforeTerminal": false
+        },
+        "durableEffects": {
+          "backups": [],
+          "forbidden": [
+            {
+              "exists": false,
+              "identity": null,
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml.prev"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Unsolved Logs"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Recovery/proceed-late-AUTOSCAN.md"
+            }
+          ],
+          "localIgnore": {
+            "exists": true,
+            "identity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          },
+          "reports": [
+            {
+              "exists": true,
+              "identity": {
+                "byteLength": 1021,
+                "sha256": "fcd495692097a88127999ca1905d2a93cdf120b62c131976bfde86806425c37f"
+              },
+              "nonEmpty": true,
+              "path": "Recovery/proceed-AUTOSCAN.md"
+            }
+          ]
+        },
+        "initial": {
+          "continuationAvailable": true,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/proceed.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/proceed-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/proceed.log"
+              },
+              {
+                "path": "Recovery/proceed-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [],
+            "run": [
+              "discovery_completed"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "localIgnoreReset": null,
+            "localIgnoreResetAvailable": true,
+            "localIgnoreState": "recovery_required",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [],
+          "recoveryPrompt": {
+            "decisions": [
+              {
+                "available": true,
+                "decision": "proceed_without_ignore",
+                "label": "Proceed Without Ignore"
+              },
+              {
+                "available": true,
+                "decision": "reset_to_default",
+                "label": "Reset To Default"
+              }
+            ],
+            "displaySeverities": [
+              "warning"
+            ]
+          },
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": null,
+            "failed": 0,
+            "message": "Local Ignore recovery is required",
+            "status": "local_ignore_recovery_required",
+            "succeeded": 0,
+            "total": 1
+          }
+        },
+        "replays": [
+          {
+            "decision": "proceed_without_ignore",
+            "error": {
+              "displaySeverities": [
+                "failure",
+                "notice"
+              ],
+              "kind": "scan_run_continuation_consumed",
+              "message": "Crash Log Scan Run continuation was already consumed"
+            },
+            "operation": "resume"
+          }
+        ],
+        "terminal": {
+          "continuationAvailable": false,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/proceed.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/proceed-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/proceed.log"
+              },
+              {
+                "path": "Recovery/proceed-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [
+              {
+                "discoveryIndex": 0,
+                "trace": [
+                  "log_queued",
+                  "log_started",
+                  "log_phase:setup",
+                  "log_phase:parse",
+                  "log_phase:analyze",
+                  "log_phase:finalize",
+                  "log_finished:succeeded"
+                ]
+              }
+            ],
+            "run": [
+              "effective_concurrency_selected"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "localIgnoreReset": null,
+            "localIgnoreResetAvailable": false,
+            "localIgnoreState": "proceed_without_ignore",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [
+            {
+              "autoscanReport": {
+                "path": "Recovery/proceed-AUTOSCAN.md"
+              },
+              "crashLog": {
+                "path": "Recovery/proceed.log"
+              },
+              "discoveryIndex": 0,
+              "disposition": "succeeded",
+              "failures": [],
+              "message": null,
+              "movedToUnsolvedLogs": false
+            }
+          ],
+          "recoveryPrompt": null,
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": 1,
+            "failed": 0,
+            "message": null,
+            "status": "completed",
+            "succeeded": 1,
+            "total": 1
+          }
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "reset-to-default-recovery",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "malformedLocalIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "local-ignore",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "malformedLocalIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Recovery/reset.log"
+          },
+          {
+            "path": "Recovery/reset-late.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+          "Unsolved Logs",
+          "Recovery/reset-late-AUTOSCAN.md"
+        ],
+        "continuationFlow": {
+          "action": {
+            "operation": "resume",
+            "decision": "reset-to-default"
+          },
+          "postPauseData": [
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+            },
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+            },
+            {
+              "fixtureRef": "validCrashLog",
+              "path": "Recovery/reset-late.log"
+            }
+          ],
+          "replays": [
+            {
+              "operation": "resume",
+              "decision": "reset-to-default"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "cancellation": {
+          "afterReplays": false,
+          "afterTerminal": false,
+          "beforeTerminal": false
+        },
+        "durableEffects": {
+          "backups": [
+            {
+              "identity": {
+                "byteLength": 39,
+                "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+              },
+              "parentPath": "CLASSIC Backup/YAML Data/Local Ignore"
+            }
+          ],
+          "forbidden": [
+            {
+              "exists": false,
+              "identity": null,
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml.prev"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Unsolved Logs"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Recovery/reset-late-AUTOSCAN.md"
+            }
+          ],
+          "localIgnore": {
+            "exists": true,
+            "identity": {
+              "byteLength": 28,
+              "sha256": "ba0cbe71c9023ebdb553e3a0acdc5c6ad95e9126694077344f4c57f00e3b71e3"
+            },
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          },
+          "reports": [
+            {
+              "exists": true,
+              "identity": {
+                "byteLength": 1019,
+                "sha256": "ff71d48fbc44a50ca1e29d2be906034c9ebf63cb3099641f897c6b8bea6e903b"
+              },
+              "nonEmpty": true,
+              "path": "Recovery/reset-AUTOSCAN.md"
+            }
+          ]
+        },
+        "initial": {
+          "continuationAvailable": true,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/reset.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/reset-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/reset.log"
+              },
+              {
+                "path": "Recovery/reset-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [],
+            "run": [
+              "discovery_completed"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "localIgnoreReset": null,
+            "localIgnoreResetAvailable": true,
+            "localIgnoreState": "recovery_required",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [],
+          "recoveryPrompt": {
+            "decisions": [
+              {
+                "available": true,
+                "decision": "proceed_without_ignore",
+                "label": "Proceed Without Ignore"
+              },
+              {
+                "available": true,
+                "decision": "reset_to_default",
+                "label": "Reset To Default"
+              }
+            ],
+            "displaySeverities": [
+              "warning"
+            ]
+          },
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": null,
+            "failed": 0,
+            "message": "Local Ignore recovery is required",
+            "status": "local_ignore_recovery_required",
+            "succeeded": 0,
+            "total": 1
+          }
+        },
+        "replays": [
+          {
+            "decision": "reset_to_default",
+            "error": {
+              "displaySeverities": [
+                "failure",
+                "notice"
+              ],
+              "kind": "scan_run_continuation_consumed",
+              "message": "Crash Log Scan Run continuation was already consumed"
+            },
+            "operation": "resume"
+          }
+        ],
+        "terminal": {
+          "continuationAvailable": false,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/reset.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/reset-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/reset.log"
+              },
+              {
+                "path": "Recovery/reset-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [
+              {
+                "discoveryIndex": 0,
+                "trace": [
+                  "log_queued",
+                  "log_started",
+                  "log_phase:setup",
+                  "log_phase:parse",
+                  "log_phase:analyze",
+                  "log_phase:finalize",
+                  "log_finished:succeeded"
+                ]
+              }
+            ],
+            "run": [
+              "effective_concurrency_selected"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              },
+              {
+                "candidate": null,
+                "kind": "local_ignore_reset",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 28,
+              "sha256": "ba0cbe71c9023ebdb553e3a0acdc5c6ad95e9126694077344f4c57f00e3b71e3"
+            },
+            "localIgnoreReset": {
+              "backup": {
+                "exists": true,
+                "identityMatchesReceipt": true,
+                "parentPath": "CLASSIC Backup/YAML Data/Local Ignore"
+              },
+              "backupIdentity": {
+                "byteLength": 39,
+                "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+              },
+              "localIgnorePath": {
+                "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+              },
+              "malformedIdentity": {
+                "byteLength": 39,
+                "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+              },
+              "replacementIdentity": {
+                "byteLength": 28,
+                "sha256": "ba0cbe71c9023ebdb553e3a0acdc5c6ad95e9126694077344f4c57f00e3b71e3"
+              }
+            },
+            "localIgnoreResetAvailable": false,
+            "localIgnoreState": "reset_to_default",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [
+            {
+              "autoscanReport": {
+                "path": "Recovery/reset-AUTOSCAN.md"
+              },
+              "crashLog": {
+                "path": "Recovery/reset.log"
+              },
+              "discoveryIndex": 0,
+              "disposition": "succeeded",
+              "failures": [],
+              "message": null,
+              "movedToUnsolvedLogs": false
+            }
+          ],
+          "recoveryPrompt": null,
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": 1,
+            "failed": 0,
+            "message": null,
+            "status": "completed",
+            "succeeded": 1,
+            "total": 1
+          }
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "abandon-local-ignore-recovery",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "malformedLocalIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "local-ignore",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "malformedLocalIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Recovery/abandon.log"
+          },
+          {
+            "path": "Recovery/abandon-late.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+          "Unsolved Logs",
+          "Recovery/abandon-AUTOSCAN.md",
+          "Recovery/abandon-late-AUTOSCAN.md"
+        ],
+        "continuationFlow": {
+          "action": {
+            "operation": "abandon"
+          },
+          "postPauseData": [
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+            },
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+            },
+            {
+              "fixtureRef": "validCrashLog",
+              "path": "Recovery/abandon-late.log"
+            }
+          ],
+          "replays": [
+            {
+              "operation": "abandon"
+            },
+            {
+              "operation": "resume",
+              "decision": "reset-to-default"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "cancellation": {
+          "afterReplays": true,
+          "afterTerminal": true,
+          "beforeTerminal": false
+        },
+        "durableEffects": {
+          "backups": [],
+          "forbidden": [
+            {
+              "exists": false,
+              "identity": null,
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml.prev"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Unsolved Logs"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Recovery/abandon-AUTOSCAN.md"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Recovery/abandon-late-AUTOSCAN.md"
+            }
+          ],
+          "localIgnore": {
+            "exists": true,
+            "identity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          },
+          "reports": []
+        },
+        "initial": {
+          "continuationAvailable": true,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/abandon.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/abandon-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/abandon.log"
+              },
+              {
+                "path": "Recovery/abandon-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [],
+            "run": [
+              "discovery_completed"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "localIgnoreReset": null,
+            "localIgnoreResetAvailable": true,
+            "localIgnoreState": "recovery_required",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [],
+          "recoveryPrompt": {
+            "decisions": [
+              {
+                "available": true,
+                "decision": "proceed_without_ignore",
+                "label": "Proceed Without Ignore"
+              },
+              {
+                "available": true,
+                "decision": "reset_to_default",
+                "label": "Reset To Default"
+              }
+            ],
+            "displaySeverities": [
+              "warning"
+            ]
+          },
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": null,
+            "failed": 0,
+            "message": "Local Ignore recovery is required",
+            "status": "local_ignore_recovery_required",
+            "succeeded": 0,
+            "total": 1
+          }
+        },
+        "replays": [
+          {
+            "decision": null,
+            "error": {
+              "displaySeverities": [
+                "failure",
+                "notice"
+              ],
+              "kind": "scan_run_continuation_consumed",
+              "message": "Crash Log Scan Run continuation was already consumed"
+            },
+            "operation": "abandon"
+          },
+          {
+            "decision": "reset_to_default",
+            "error": {
+              "displaySeverities": [
+                "failure",
+                "notice"
+              ],
+              "kind": "scan_run_continuation_consumed",
+              "message": "Crash Log Scan Run continuation was already consumed"
+            },
+            "operation": "resume"
+          }
+        ],
+        "terminal": {
+          "continuationAvailable": false,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/abandon.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/abandon-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/abandon.log"
+              },
+              {
+                "path": "Recovery/abandon-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [
+              {
+                "discoveryIndex": 0,
+                "trace": []
+              }
+            ],
+            "run": []
+          },
+          "installedYamlData": null,
+          "logs": [
+            {
+              "autoscanReport": null,
+              "crashLog": {
+                "path": "Recovery/abandon.log"
+              },
+              "discoveryIndex": 0,
+              "disposition": "cancelled_before_start",
+              "failures": [],
+              "message": "Cancelled by user",
+              "movedToUnsolvedLogs": false
+            }
+          ],
+          "recoveryPrompt": null,
+          "run": {
+            "cancelled": 1,
+            "effectiveConcurrency": null,
+            "failed": 0,
+            "message": "Cancelled after crash log discovery",
+            "status": "cancelled",
+            "succeeded": 0,
+            "total": 1
           }
         }
       },

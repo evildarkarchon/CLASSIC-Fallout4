@@ -97,12 +97,14 @@ Treat new drift, stale generated artifacts, stale baselines, missing runtime cov
 `tests/fixtures/crash_log_scan_run/manifest.json` is the machine-readable owner for normalized cross-interface expectations. Paths are compared relative to each runner's temporary root; processing timings and exact concurrent event interleavings are deliberately excluded. Discovery, Rust-selected effective concurrency, serialized event variants, discovery-order outcomes, structured failures, Installed YAML Data and reset metadata, valid/generated/malformed/repaired Local Ignore behavior, retained-snapshot continuation resume, reset conflict/operational outcomes, both reset cancellation boundaries, replay, byte-exact backup, durable artifact presence, and report-byte stability remain contractual.
 
 Separately, `tests/conformance/packs/crash_log_scan_run/v1.json` owns the
-independently authored Standard and Targeted happy-path shadow oracle. Its
+independently authored Standard, Targeted, and Local Ignore recovery shadow oracle. Its
 materialized plans contain only declared inputs and normalization policy; the
 Rust, Node, Python, and CXX runners cannot read its expected observations. The pack
 compares ordered discovery, setup absence, effective concurrency, Installed
-YAML Data identities, terminal log outcomes, stable per-log event traces, full
-typed Display Content carriers, and durable report effects. Timings and
+YAML Data identities, generated and repaired Local Ignore bytes, retained preparation,
+both explicit recovery decisions, abandonment, one-shot replay rejection, terminal log
+outcomes, stable per-log event traces, typed Display Content carriers, byte-exact backups,
+durable reports, and forbidden effects. Timings and
 cross-log concurrent interleaving are projected out before receipt emission.
 This shadow pack does not supersede the broader blocking manifest.
 

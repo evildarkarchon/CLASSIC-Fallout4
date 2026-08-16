@@ -1,31 +1,31 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
+import type { Dirent } from "node:fs";
 import {
   access,
   copyFile,
   mkdir,
   mkdtemp,
   open,
+  readdir,
   readFile,
   rename,
   rm,
   stat,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import {
-  dirname,
-  isAbsolute,
-  join,
-  relative,
-  resolve,
-  sep,
-} from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import type {
   JsInstalledYamlDataRunData,
   JsScanRunConfiguration,
   JsScanRunDisplayLine,
   JsScanRunEvent,
+  JsScanRunFailure,
   JsScanRunLogResult,
+  JsScanRunRecoveryPrompt,
   JsScanRunResult,
+  JsScanRunSuccess,
+  ScanRunCancellation,
+  ScanRunContinuation,
 } from "../index.js";
 
 const RUN_PLAN_ENV = "CLASSIC_CONFORMANCE_RUN_PLAN" as const;
@@ -33,6 +33,12 @@ const OUTPUT_ENV = "CLASSIC_CONFORMANCE_OUTPUT" as const;
 
 type InvocationEnvironmentName = typeof RUN_PLAN_ENV | typeof OUTPUT_ENV;
 type JsonObject = Record<string, unknown>;
+
+/** Exact byte identity used by durable Local Ignore conformance observations. */
+interface FileIdentity extends JsonObject {
+  sha256: string;
+  byteLength: number;
+}
 
 /** One canonical plan-relative path. */
 interface PathInput {
@@ -52,6 +58,7 @@ interface StandardSourceInput {
 
 /** Inputs shared by both frozen Crash Log Scan Run scenarios. */
 interface CommonScenarioInput {
+  observationProfile?: "local-ignore";
   installationData: FixturePathInput[];
   game: string;
   gameVersion: string;
@@ -59,7 +66,24 @@ interface CommonScenarioInput {
   simplifyLogs: boolean;
   formidDatabasePaths: Array<string | PathInput>;
   maxConcurrent: number;
+  forbiddenEffectPaths?: string[];
+  continuationFlow?: ContinuationFlowInput;
 }
+
+/** Input-only instructions for one terminal continuation claim and its replays. */
+interface ContinuationFlowInput {
+  action: ContinuationActionInput;
+  postPauseData: FixturePathInput[];
+  replays: ContinuationActionInput[];
+}
+
+/** One public continuation operation and its decision when resuming. */
+type ContinuationActionInput =
+  | {
+      operation: "resume";
+      decision: "proceed-without-ignore" | "reset-to-default";
+    }
+  | { operation: "abandon"; decision?: never };
 
 /** The frozen Standard scenario input. */
 interface StandardScenarioInput extends CommonScenarioInput {
@@ -234,15 +258,22 @@ function runtimePath(root: string, value: unknown, label: string): string {
   if (
     isAbsolute(text) ||
     text.includes("\\") ||
-    components.some((component) =>
-      component === "" || component === "." || component === ".."
+    components.some(
+      (component) =>
+        component === "" || component === "." || component === "..",
     )
   ) {
-    throw new RunnerContractError(`${label} must stay beneath the runtime root`);
+    throw new RunnerContractError(
+      `${label} must stay beneath the runtime root`,
+    );
   }
   const candidate = resolve(root, ...components);
   const projected = relative(root, candidate);
-  if (projected === "" || projected === ".." || projected.startsWith(`..${sep}`)) {
+  if (
+    projected === "" ||
+    projected === ".." ||
+    projected.startsWith(`..${sep}`)
+  ) {
     throw new RunnerContractError(`${label} escapes the runtime root`);
   }
   return candidate;
@@ -253,14 +284,22 @@ function relativePath(root: string, value: unknown, label: string): string {
   const text = requireString(value, label);
   const candidate = resolve(isAbsolute(text) ? text : join(root, text));
   const projected = relative(root, candidate);
-  if (projected === "" || projected === ".." || projected.startsWith(`..${sep}`)) {
+  if (
+    projected === "" ||
+    projected === ".." ||
+    projected.startsWith(`..${sep}`)
+  ) {
     throw new RunnerContractError(`${label} is outside the fresh runtime root`);
   }
   return projected.split(sep).join("/");
 }
 
 /** Create one normalized path carrier used by the common observation contract. */
-function pathCarrier(root: string, value: unknown, label: string): { path: string } {
+function pathCarrier(
+  root: string,
+  value: unknown,
+  label: string,
+): { path: string } {
   return { path: relativePath(root, value, label) };
 }
 
@@ -281,7 +320,10 @@ async function copyDeclaredFixture(
       `${label}.fixtureRef is not declared by the scenario`,
     );
   }
-  const source = requireString(plan.fixtures[reference], `fixture ${reference}`);
+  const source = requireString(
+    plan.fixtures[reference],
+    `fixture ${reference}`,
+  );
   const destination = runtimePath(root, item.path, `${label}.path`);
   await mkdir(dirname(destination), { recursive: true });
   try {
@@ -310,7 +352,8 @@ async function materializeScenarioInputs(
     );
   }
 
-  const logInputs = input.intent === "standard" ? input.logInputs : input.targetedInputs;
+  const logInputs =
+    input.intent === "standard" ? input.logInputs : input.targetedInputs;
   for (const [index, item] of logInputs.entries()) {
     await copyDeclaredFixture(
       plan,
@@ -342,6 +385,24 @@ async function materializeScenarioInputs(
   return input;
 }
 
+/** Materialize mutations that the plan deliberately withholds until after the run pauses. */
+async function materializePostPauseData(
+  plan: RunPlan,
+  scenario: RunPlanScenario,
+  items: FixturePathInput[],
+  root: string,
+): Promise<void> {
+  for (const [index, item] of items.entries()) {
+    await copyDeclaredFixture(
+      plan,
+      scenario,
+      item,
+      root,
+      `continuationFlow.postPauseData[${index}]`,
+    );
+  }
+}
+
 /** Convert PascalCase binding enums to their frozen lowercase token spelling. */
 function normalizedToken(value: unknown): string {
   return String(value)
@@ -352,7 +413,10 @@ function normalizedToken(value: unknown): string {
 }
 
 /** Convert plan path values into absolute binding configuration paths. */
-function configuredPaths(root: string, values: Array<string | PathInput>): string[] {
+function configuredPaths(
+  root: string,
+  values: Array<string | PathInput>,
+): string[] {
   return values.map((value, index) =>
     runtimePath(
       root,
@@ -372,7 +436,10 @@ async function buildRequest(input: ScenarioInput, root: string) {
     installationRoot: root,
     game: classic.JsGameId.Fallout4,
     gameVersion: requireString(input.gameVersion, "gameVersion"),
-    showFormidValues: requireBoolean(input.showFormidValues, "showFormidValues"),
+    showFormidValues: requireBoolean(
+      input.showFormidValues,
+      "showFormidValues",
+    ),
     simplifyLogs: requireBoolean(input.simplifyLogs, "simplifyLogs"),
     formidDatabasePaths: configuredPaths(root, input.formidDatabasePaths),
     maxConcurrent: requireInteger(input.maxConcurrent, "maxConcurrent"),
@@ -410,7 +477,10 @@ async function buildRequest(input: ScenarioInput, root: string) {
 }
 
 /** Serialize frozen Display Content while preserving every ordered carrier field. */
-function displayContent(lines: JsScanRunDisplayLine[], root: string): JsonObject[] {
+function displayContent(
+  lines: JsScanRunDisplayLine[],
+  root: string,
+): JsonObject[] {
   return lines.map((line) => ({
     severity: normalizedToken(line.severity),
     segments: line.segments.map((segment) => ({
@@ -464,21 +534,39 @@ function installedYamlData(
     main: {
       role: normalizedToken(installed.main.role),
       provenance: normalizedToken(installed.main.provenance),
-      schemaMajor: requireInteger(installed.main.schemaMajor, "Main schema major"),
-      schemaMinor: requireInteger(installed.main.schemaMinor, "Main schema minor"),
+      schemaMajor: requireInteger(
+        installed.main.schemaMajor,
+        "Main schema major",
+      ),
+      schemaMinor: requireInteger(
+        installed.main.schemaMinor,
+        "Main schema minor",
+      ),
       identity: {
         sha256: installed.main.sha256,
-        byteLength: requireInteger(installed.main.byteLength, "Main byte length"),
+        byteLength: requireInteger(
+          installed.main.byteLength,
+          "Main byte length",
+        ),
       },
     },
     gameFile: {
       role: normalizedToken(installed.gameFile.role),
       provenance: normalizedToken(installed.gameFile.provenance),
-      schemaMajor: requireInteger(installed.gameFile.schemaMajor, "game schema major"),
-      schemaMinor: requireInteger(installed.gameFile.schemaMinor, "game schema minor"),
+      schemaMajor: requireInteger(
+        installed.gameFile.schemaMajor,
+        "game schema major",
+      ),
+      schemaMinor: requireInteger(
+        installed.gameFile.schemaMinor,
+        "game schema minor",
+      ),
       identity: {
         sha256: installed.gameFile.sha256,
-        byteLength: requireInteger(installed.gameFile.byteLength, "game byte length"),
+        byteLength: requireInteger(
+          installed.gameFile.byteLength,
+          "game byte length",
+        ),
       },
     },
     localIgnoreState: normalizedToken(installed.localIgnoreState),
@@ -499,11 +587,103 @@ function installedYamlData(
       path:
         diagnostic.path === undefined
           ? null
-          : pathCarrier(root, diagnostic.path, "Installed YAML Data diagnostic path"),
+          : pathCarrier(
+              root,
+              diagnostic.path,
+              "Installed YAML Data diagnostic path",
+            ),
       kind: normalizedToken(diagnostic.kind),
       message: diagnostic.message,
     })),
     localIgnoreResetAvailable: installed.localIgnoreResetAvailable,
+  };
+}
+
+/** Project one retained byte identity to the canonical cross-adapter carrier. */
+function contentIdentity(identity: {
+  sha256: string;
+  byteLen: number;
+}): FileIdentity {
+  return {
+    sha256: identity.sha256,
+    byteLength: requireInteger(
+      identity.byteLen,
+      "content identity byte length",
+    ),
+  };
+}
+
+/** Serialize stable Local Ignore snapshot and reset facts while omitting path-bearing prose. */
+async function localIgnoreInstalledYamlData(
+  installed: JsInstalledYamlDataRunData | undefined,
+  root: string,
+): Promise<JsonObject | null> {
+  if (installed === undefined) {
+    return null;
+  }
+  const reset = installed.localIgnoreReset;
+  let projectedReset: JsonObject | null = null;
+  if (reset !== undefined) {
+    const backupBytes = await readOptionalFile(reset.backupPath);
+    projectedReset = {
+      localIgnorePath: pathCarrier(
+        root,
+        reset.localIgnorePath,
+        "Local Ignore reset path",
+      ),
+      backup: {
+        parentPath: relativePath(
+          root,
+          dirname(reset.backupPath),
+          "Local Ignore reset backup parent",
+        ),
+        exists: backupBytes !== null,
+        identityMatchesReceipt:
+          backupBytes !== null &&
+          sameIdentity(
+            fileIdentity(backupBytes),
+            contentIdentity(reset.backupIdentity),
+          ),
+      },
+      malformedIdentity: contentIdentity(reset.malformedIdentity),
+      backupIdentity: contentIdentity(reset.backupIdentity),
+      replacementIdentity: contentIdentity(reset.replacementIdentity),
+    };
+  }
+
+  return {
+    mainIdentity: {
+      sha256: installed.main.sha256,
+      byteLength: requireInteger(installed.main.byteLength, "Main byte length"),
+    },
+    gameIdentity: {
+      sha256: installed.gameFile.sha256,
+      byteLength: requireInteger(
+        installed.gameFile.byteLength,
+        "game byte length",
+      ),
+    },
+    localIgnoreState: normalizedToken(installed.localIgnoreState),
+    localIgnoreIdentity: contentIdentity(installed.localIgnoreIdentity),
+    diagnostics: installed.diagnostics.map((diagnostic) => ({
+      role:
+        diagnostic.role === undefined ? null : normalizedToken(diagnostic.role),
+      candidate:
+        diagnostic.candidate === undefined
+          ? null
+          : normalizedToken(diagnostic.candidate),
+      path:
+        diagnostic.path === undefined
+          ? null
+          : pathCarrier(
+              root,
+              diagnostic.path,
+              "Installed YAML Data diagnostic path",
+            ),
+      kind: normalizedToken(diagnostic.kind),
+    })),
+    localIgnoreResetAvailable: installed.localIgnoreResetAvailable,
+    localIgnoreReset: projectedReset,
   };
 }
 
@@ -598,8 +778,67 @@ function events(callbacks: JsScanRunEvent[], root: string): JsonObject {
   };
 }
 
+/** Project only stable event tokens while retaining per-log observer ordering. */
+function compactEvents(
+  result: JsScanRunResult,
+  callbacks: JsScanRunEvent[],
+): JsonObject {
+  const run: string[] = [];
+  const traces = new Map<number, string[]>();
+  for (const log of result.logs) {
+    traces.set(log.discoveryIndex, []);
+  }
+
+  for (const event of callbacks) {
+    if (event.kind === "discovery_completed") {
+      run.push("discovery_completed");
+      continue;
+    }
+    if (event.kind === "effective_concurrency_selected") {
+      run.push("effective_concurrency_selected");
+      continue;
+    }
+    if (event.log === undefined) {
+      throw new RunnerContractError(
+        `compact event ${event.kind} has no Crash Log identity`,
+      );
+    }
+    const trace = traces.get(event.log.discoveryIndex);
+    const resultLog = result.logs.find(
+      (log) => log.discoveryIndex === event.log?.discoveryIndex,
+    );
+    if (trace === undefined || resultLog === undefined) {
+      throw new RunnerContractError(
+        "compact event references an unknown discovery index",
+      );
+    }
+    if (resolve(resultLog.crashLog) !== resolve(event.log.crashLog)) {
+      throw new RunnerContractError(
+        "compact event references a different Crash Log",
+      );
+    }
+    if (event.kind === "log_phase") {
+      trace.push(`log_phase:${event.phase}`);
+    } else if (event.kind === "log_finished") {
+      trace.push(`log_finished:${event.disposition}`);
+    } else {
+      trace.push(event.kind);
+    }
+  }
+
+  return {
+    run,
+    logs: result.logs.map((log) => ({
+      discoveryIndex: log.discoveryIndex,
+      trace: traces.get(log.discoveryIndex) ?? [],
+    })),
+  };
+}
+
 /** Return a report's observed file state without converting I/O failures to absence. */
-async function reportState(path: string): Promise<{ exists: boolean; nonEmpty: boolean }> {
+async function reportState(
+  path: string,
+): Promise<{ exists: boolean; nonEmpty: boolean }> {
   try {
     const metadata = await stat(path);
     return {
@@ -657,9 +896,393 @@ async function durableEffects(
   };
 }
 
+/** Hash one durable file's exact bytes using the canonical SHA-256 identity shape. */
+function fileIdentity(bytes: Uint8Array): FileIdentity {
+  return {
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+    byteLength: bytes.byteLength,
+  };
+}
+
+/** Compare two byte identities without relying on JSON key ordering. */
+function sameIdentity(left: FileIdentity, right: FileIdentity): boolean {
+  return left.sha256 === right.sha256 && left.byteLength === right.byteLength;
+}
+
+/** Read an optional file while converting only a genuine NotFound result to absence. */
+async function readOptionalFile(path: string): Promise<Buffer | null> {
+  try {
+    return await readFile(path);
+  } catch (error) {
+    if (isMissingPathError(error)) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+/** Project one file's existence and exact identity beneath the isolated root. */
+async function exactFileEffect(
+  root: string,
+  path: string,
+): Promise<JsonObject> {
+  let metadata;
+  try {
+    metadata = await stat(path);
+  } catch (error) {
+    if (isMissingPathError(error)) {
+      return {
+        path: relativePath(root, path, "durable file effect"),
+        exists: false,
+        identity: null,
+      };
+    }
+    throw error;
+  }
+  const bytes = metadata.isFile() ? await readFile(path) : null;
+  return {
+    path: relativePath(root, path, "durable file effect"),
+    exists: true,
+    identity: bytes === null ? null : fileIdentity(bytes),
+  };
+}
+
+/** Enumerate Local Ignore backups without treating access or file-type failures as absence. */
+async function localIgnoreBackupEffects(root: string): Promise<JsonObject[]> {
+  const directory = join(root, "CLASSIC Backup", "YAML Data", "Local Ignore");
+  const entries = await readOptionalDirectory(directory);
+  if (entries === null) {
+    return [];
+  }
+
+  const paths = entries
+    .filter((entry) => entry.isFile())
+    .map((entry) => join(directory, entry.name))
+    .sort();
+  const effects: JsonObject[] = [];
+  for (const path of paths) {
+    const bytes = await readOptionalFile(path);
+    if (bytes === null) {
+      throw new RunnerContractError(
+        "enumerated Local Ignore backup disappeared before observation",
+      );
+    }
+    effects.push({
+      parentPath: relativePath(
+        root,
+        dirname(path),
+        "Local Ignore backup parent",
+      ),
+      identity: fileIdentity(bytes),
+    });
+  }
+  return effects;
+}
+
+/** Read one optional directory while preserving every failure other than NotFound. */
+async function readOptionalDirectory(
+  directory: string,
+): Promise<Dirent<string>[] | null> {
+  try {
+    return await readdir(directory, { withFileTypes: true });
+  } catch (error) {
+    if (isMissingPathError(error)) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+/** Observe exact Local Ignore, backup, report, and forbidden filesystem effects. */
+async function localIgnoreDurableEffects(
+  result: JsScanRunResult,
+  input: ScenarioInput,
+  root: string,
+): Promise<JsonObject> {
+  const reports: JsonObject[] = [];
+  for (const log of result.logs) {
+    if (log.autoscanReport === undefined) {
+      continue;
+    }
+    const path = resolve(
+      isAbsolute(log.autoscanReport)
+        ? log.autoscanReport
+        : join(root, log.autoscanReport),
+    );
+    const bytes = await readOptionalFile(path);
+    reports.push({
+      path: relativePath(root, path, "durable Autoscan Report"),
+      exists: bytes !== null,
+      nonEmpty: bytes !== null && bytes.byteLength > 0,
+      identity: bytes === null ? null : fileIdentity(bytes),
+    });
+  }
+
+  const forbidden: JsonObject[] = [];
+  for (const [index, relative] of (
+    input.forbiddenEffectPaths ?? []
+  ).entries()) {
+    forbidden.push(
+      await exactFileEffect(
+        root,
+        runtimePath(root, relative, `forbiddenEffectPaths[${index}]`),
+      ),
+    );
+  }
+
+  return {
+    localIgnore: await exactFileEffect(
+      root,
+      join(root, "CLASSIC Data", "CLASSIC Ignore.yaml"),
+    ),
+    backups: await localIgnoreBackupEffects(root),
+    reports,
+    forbidden,
+  };
+}
+
+/** Reject adapter infrastructure or observer failures and return the public success envelope. */
+function requireSuccessfulExecution(
+  execution: JsScanRunSuccess | JsScanRunFailure,
+  label: string,
+): JsScanRunSuccess {
+  if (execution.observerError !== undefined) {
+    throw new RunnerContractError(
+      `${label} observer delivery failed: ${execution.observerError}`,
+    );
+  }
+  if ("error" in execution) {
+    const errorPath =
+      execution.error.path === undefined ? "" : ` (${execution.error.path})`;
+    throw new RunnerContractError(
+      `${label} failed during ${execution.error.stage}: ${execution.error.message}${errorPath}`,
+    );
+  }
+  return execution;
+}
+
+/** Preserve ordered Display Content severities while omitting separately tested prose. */
+function displaySeverities(lines: JsScanRunDisplayLine[]): string[] {
+  return lines.map((line) => normalizedToken(line.severity));
+}
+
+/** Project the stable decision labels and availability from a public recovery prompt. */
+function compactRecoveryPrompt(prompt: JsScanRunRecoveryPrompt): JsonObject {
+  return {
+    displaySeverities: displaySeverities(prompt.lines),
+    decisions: prompt.decisions.map((decision) => ({
+      decision: normalizedToken(decision.decision),
+      label: decision.label,
+      available: decision.available,
+    })),
+  };
+}
+
+/** Project one initial or terminal Local Ignore phase without reading durable effects. */
+async function localIgnorePhase(
+  execution: JsScanRunSuccess | JsScanRunFailure,
+  callbacks: JsScanRunEvent[],
+  root: string,
+  continuationAvailable: boolean,
+  recoveryPrompt: JsScanRunRecoveryPrompt | undefined,
+): Promise<JsonObject> {
+  const success = requireSuccessfulExecution(execution, "scan-run phase");
+  const result = success.result;
+  if (result.setup !== undefined) {
+    throw new RunnerContractError(
+      "Local Ignore scenario unexpectedly returned setup data",
+    );
+  }
+  return {
+    run: {
+      status: result.status,
+      message: result.message ?? null,
+      total: requireInteger(result.total, "run total"),
+      succeeded: requireInteger(result.succeeded, "run succeeded"),
+      failed: requireInteger(result.failed, "run failed"),
+      cancelled: requireInteger(result.cancelled, "run cancelled"),
+      effectiveConcurrency:
+        result.effectiveConcurrency === undefined
+          ? null
+          : requireInteger(
+              result.effectiveConcurrency,
+              "effective concurrency",
+            ),
+    },
+    discovery: discovery(result.discovery, root),
+    installedYamlData: await localIgnoreInstalledYamlData(
+      result.installedYamlData,
+      root,
+    ),
+    logs: logResults(result.logs, root),
+    events: compactEvents(result, callbacks),
+    continuationAvailable,
+    recoveryPrompt:
+      recoveryPrompt === undefined
+        ? null
+        : compactRecoveryPrompt(recoveryPrompt),
+  };
+}
+
+/** Invoke exactly one public continuation operation without deriving it from scenario names. */
+async function runContinuationAction(
+  classic: typeof import("../index.js"),
+  continuation: ScanRunContinuation,
+  action: ContinuationActionInput,
+  cancellation: ScanRunCancellation,
+  callbacks?: JsScanRunEvent[],
+): Promise<JsScanRunSuccess | JsScanRunFailure> {
+  const observer =
+    callbacks === undefined
+      ? undefined
+      : (event: JsScanRunEvent) => {
+          callbacks.push(event);
+        };
+  if (action.operation === "abandon") {
+    return await classic.scanRunAbandon(continuation, cancellation, observer);
+  }
+  const decision =
+    action.decision === "proceed-without-ignore"
+      ? classic.JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore
+      : classic.JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault;
+  return await classic.scanRunResume(
+    continuation,
+    decision,
+    cancellation,
+    observer,
+  );
+}
+
+/** Project a rejected one-shot replay through its stable typed error and severity contract. */
+function replayError(
+  action: ContinuationActionInput,
+  error: unknown,
+): JsonObject {
+  const value = requireObject(error, "continuation replay error");
+  const kind = requireString(
+    value.kind ?? value.code,
+    "continuation replay error kind",
+  );
+  const lines = requireArray(
+    value.displayLines,
+    "continuation replay error displayLines",
+  );
+  const severities = lines.map((line, index) =>
+    normalizedToken(
+      requireObject(line, `continuation replay displayLines[${index}]`)
+        .severity,
+    ),
+  );
+  return {
+    operation: action.operation,
+    decision:
+      action.operation === "resume" ? normalizedToken(action.decision) : null,
+    error: {
+      kind,
+      message:
+        error instanceof Error
+          ? error.message
+          : requireString(value.message, "continuation replay error message"),
+      displaySeverities: severities,
+    },
+  };
+}
+
+/** Claim one paused continuation, apply post-pause mutations, and prove replay is one-shot. */
+async function continuationObservation(
+  plan: RunPlan,
+  scenario: RunPlanScenario,
+  input: ScenarioInput,
+  root: string,
+  classic: typeof import("../index.js"),
+  cancellation: ScanRunCancellation,
+  initialExecution: JsScanRunSuccess | JsScanRunFailure,
+  initialCallbacks: JsScanRunEvent[],
+  flow: ContinuationFlowInput,
+): Promise<JsonObject> {
+  const initialSuccess = requireSuccessfulExecution(
+    initialExecution,
+    "initial scan run",
+  );
+  const continuation = initialSuccess.result.continuation;
+  if (continuation === undefined) {
+    throw new RunnerContractError(
+      "continuationFlow initial result has no continuation",
+    );
+  }
+  if (initialSuccess.recoveryPrompt === undefined) {
+    throw new RunnerContractError(
+      "continuationFlow initial result has no recovery prompt",
+    );
+  }
+  const initial = await localIgnorePhase(
+    initialSuccess,
+    initialCallbacks,
+    root,
+    true,
+    initialSuccess.recoveryPrompt,
+  );
+  await materializePostPauseData(plan, scenario, flow.postPauseData, root);
+
+  const cancelledBeforeTerminal = cancellation.isCancelled;
+  const terminalCallbacks: JsScanRunEvent[] = [];
+  const terminalExecution = await runContinuationAction(
+    classic,
+    continuation,
+    flow.action,
+    cancellation,
+    terminalCallbacks,
+  );
+  const terminalSuccess = requireSuccessfulExecution(
+    terminalExecution,
+    "terminal continuation action",
+  );
+  const cancelledAfterTerminal = cancellation.isCancelled;
+  const terminal = await localIgnorePhase(
+    terminalSuccess,
+    terminalCallbacks,
+    root,
+    false,
+    undefined,
+  );
+
+  const replays: JsonObject[] = [];
+  for (const action of flow.replays) {
+    try {
+      await runContinuationAction(classic, continuation, action, cancellation);
+      throw new RunnerContractError(
+        "a replayed continuation action unexpectedly succeeded",
+      );
+    } catch (error) {
+      if (error instanceof RunnerContractError) {
+        throw error;
+      }
+      replays.push(replayError(action, error));
+    }
+  }
+
+  return {
+    initial,
+    terminal,
+    replays,
+    cancellation: {
+      beforeTerminal: cancelledBeforeTerminal,
+      afterTerminal: cancelledAfterTerminal,
+      afterReplays: cancellation.isCancelled,
+    },
+    durableEffects: await localIgnoreDurableEffects(
+      terminalSuccess.result,
+      input,
+      root,
+    ),
+  };
+}
+
 /** Project one public execution envelope to the frozen normalized observation. */
 async function observation(
-  execution: Awaited<ReturnType<typeof import("../index.js")["scanRunExecute"]>>,
+  execution: Awaited<
+    ReturnType<(typeof import("../index.js"))["scanRunExecute"]>
+  >,
   callbacks: JsScanRunEvent[],
   root: string,
 ): Promise<JsonObject> {
@@ -688,7 +1311,10 @@ async function observation(
       effectiveConcurrency:
         result.effectiveConcurrency === undefined
           ? null
-          : requireInteger(result.effectiveConcurrency, "effective concurrency"),
+          : requireInteger(
+              result.effectiveConcurrency,
+              "effective concurrency",
+            ),
     },
     discovery: discovery(result.discovery, root),
     installedYamlData: installedYamlData(result.installedYamlData, root),
@@ -704,7 +1330,9 @@ async function executeScenario(
   plan: RunPlan,
   scenario: RunPlanScenario,
 ): Promise<JsonObject> {
-  const root = resolve(await mkdtemp(join(tmpdir(), "classic-node-conformance-")));
+  const root = resolve(
+    await mkdtemp(join(tmpdir(), "classic-node-conformance-")),
+  );
   const previousDirectory = process.cwd();
   try {
     const input = await materializeScenarioInputs(plan, scenario, root);
@@ -718,13 +1346,49 @@ async function executeScenario(
     const classic = await import("../index.js");
     const request = await buildRequest(input, root);
     const callbacks: JsScanRunEvent[] = [];
+    const cancellation = new classic.ScanRunCancellation();
     const execution = await classic.scanRunExecute(
       request,
-      new classic.ScanRunCancellation(),
+      cancellation,
       (event) => {
         callbacks.push(event);
       },
     );
+    if (input.continuationFlow !== undefined) {
+      if (input.observationProfile !== "local-ignore") {
+        throw new RunnerContractError(
+          "continuationFlow requires the local-ignore observation profile",
+        );
+      }
+      return await continuationObservation(
+        plan,
+        scenario,
+        input,
+        root,
+        classic,
+        cancellation,
+        execution,
+        callbacks,
+        input.continuationFlow,
+      );
+    }
+    if (input.observationProfile === "local-ignore") {
+      const success = requireSuccessfulExecution(execution, "scan run");
+      return {
+        ...(await localIgnorePhase(
+          success,
+          callbacks,
+          root,
+          success.result.continuation !== undefined,
+          success.recoveryPrompt,
+        )),
+        durableEffects: await localIgnoreDurableEffects(
+          success.result,
+          input,
+          root,
+        ),
+      };
+    }
     return await observation(execution, callbacks, root);
   } finally {
     process.chdir(previousDirectory);
@@ -803,14 +1467,20 @@ function canonicalJsonValue(value: unknown): unknown {
 }
 
 /** Atomically publish one fresh JSON receipt without exposing partial bytes. */
-async function publishReceipt(path: string, receipt: JsonObject): Promise<void> {
+async function publishReceipt(
+  path: string,
+  receipt: JsonObject,
+): Promise<void> {
   if (await pathExists(path)) {
     throw new RunnerContractError(
       "conformance receipt destination already exists",
     );
   }
   await mkdir(dirname(path), { recursive: true });
-  const temporary = join(dirname(path), `.${path.split(sep).at(-1)}.${randomUUID()}.tmp`);
+  const temporary = join(
+    dirname(path),
+    `.${path.split(sep).at(-1)}.${randomUUID()}.tmp`,
+  );
   const payload = JSON.stringify(canonicalJsonValue(receipt));
   let handle: Awaited<ReturnType<typeof open>> | undefined;
   try {

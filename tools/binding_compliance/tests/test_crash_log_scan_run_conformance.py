@@ -20,7 +20,7 @@ from conformance.coverage import (
 )
 from conformance.families.crash_log_scan_run import (
     CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
-    REQUIRED_OBSERVATION_FACT_IDS,
+    REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO,
 )
 from conformance.packs import (
     MaterializedRun,
@@ -75,11 +75,16 @@ def test_live_pack_is_input_only_for_all_three_base_adapters(tmp_path: Path) -> 
         "mainYaml",
         "gameYaml",
         "localIgnoreYaml",
+        "malformedLocalIgnoreYaml",
     }
     assert "manifest.json" not in str(pack_document)
     assert [scenario["id"] for scenario in pack_document["scenarios"]] == [
         "standard-happy-path",
         "targeted-happy-path",
+        "generated-local-ignore",
+        "proceed-without-ignore-recovery",
+        "reset-to-default-recovery",
+        "abandon-local-ignore-recovery",
     ]
 
     artifact_root = (
@@ -108,6 +113,10 @@ def test_live_pack_is_input_only_for_all_three_base_adapters(tmp_path: Path) -> 
             assert [scenario["id"] for scenario in plan["scenarios"]] == [
                 "standard-happy-path",
                 "targeted-happy-path",
+                "generated-local-ignore",
+                "proceed-without-ignore-recovery",
+                "reset-to-default-recovery",
+                "abandon-local-ignore-recovery",
             ]
     finally:
         if artifact_root.exists():
@@ -156,6 +165,10 @@ def test_cxx_preparation_materializes_fresh_input_only_toolchain_instances(
             assert [scenario["id"] for scenario in plan["scenarios"]] == [
                 "standard-happy-path",
                 "targeted-happy-path",
+                "generated-local-ignore",
+                "proceed-without-ignore-recovery",
+                "reset-to-default-recovery",
+                "abandon-local-ignore-recovery",
             ]
     finally:
         if artifact_root.exists():
@@ -177,7 +190,11 @@ def test_family_policy_derives_every_required_fact_from_each_exact_oracle() -> N
             scenario["expected"],
             CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
         )
-        assert facts == REQUIRED_OBSERVATION_FACT_IDS
+        assert facts == REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO[scenario["id"]]
+
+    assert set(REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO) == {
+        scenario["id"] for scenario in pack["scenarios"]
+    }
 
 
 def test_family_policy_loses_the_corresponding_fact_when_each_family_changes() -> None:
@@ -231,6 +248,162 @@ def test_family_policy_loses_the_corresponding_fact_when_each_family_changes() -
         CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
     )
     assert "scan-run.log-outcomes" not in malformed_facts
+
+
+def _scenario_by_id(pack: dict[str, object], scenario_id: str) -> dict[str, object]:
+    """Return one validated scenario dictionary by stable identity."""
+
+    scenarios = pack["scenarios"]
+    assert isinstance(scenarios, list)
+    return next(
+        scenario
+        for scenario in scenarios
+        if isinstance(scenario, dict) and scenario["id"] == scenario_id
+    )
+
+
+def _assert_semantic_mutations_lose_facts(
+    pack: dict[str, object],
+    scenario_id: str,
+    mutations: dict[str, object],
+) -> None:
+    """Assert each observation mutation removes its named policy-owned fact."""
+
+    scenario = _scenario_by_id(pack, scenario_id)
+    expected = scenario["expected"]
+    assert isinstance(expected, dict)
+    for fact_id, raw_mutate in mutations.items():
+        assert callable(raw_mutate)
+        changed = copy.deepcopy(expected)
+        raw_mutate(changed)
+        facts = derive_observed_fact_ids(
+            pack,
+            scenario,
+            changed,
+            CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+        )
+        assert fact_id not in facts
+
+
+def test_generated_local_ignore_facts_fail_closed_on_semantic_mutation() -> None:
+    """Generated-state coverage rejects altered intake, trace, or filesystem facts."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "generated-local-ignore",
+        {
+            "scan-run.generated.status": lambda value: value["run"].__setitem__(
+                "status", "failed"
+            ),
+            "scan-run.generated.discovery": lambda value: value["discovery"][
+                "acceptedLogs"
+            ][0].__setitem__("path", "Generated/rediscovered.log"),
+            "scan-run.generated.installed-yaml-data": lambda value: value[
+                "installedYamlData"
+            ].__setitem__("localIgnoreState", "existing"),
+            "scan-run.generated.log-outcome": lambda value: value["logs"][
+                0
+            ].__setitem__("disposition", "failed"),
+            "scan-run.generated.events": lambda value: value["events"]["logs"][
+                0
+            ]["trace"].pop(),
+            "scan-run.generated.durable-effects": lambda value: value[
+                "durableEffects"
+            ]["reports"][0]["identity"].__setitem__("byteLength", 1),
+        },
+    )
+
+
+def test_proceed_recovery_facts_fail_closed_on_semantic_mutation() -> None:
+    """Proceed coverage requires retained state, no rediscovery, no mutation, and replay."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "proceed-without-ignore-recovery",
+        {
+            "scan-run.recovery.initial-retained-snapshot": lambda value: value[
+                "initial"
+            ]["installedYamlData"]["mainIdentity"].__setitem__("byteLength", 0),
+            "scan-run.recovery.initial-prompt": lambda value: value["initial"][
+                "recoveryPrompt"
+            ]["decisions"][0].__setitem__("available", False),
+            "scan-run.recovery.proceed-without-ignore": lambda value: value[
+                "terminal"
+            ]["installedYamlData"].__setitem__("localIgnoreState", "existing"),
+            "scan-run.recovery.proceed-no-rediscovery": lambda value: value[
+                "terminal"
+            ]["events"]["run"].insert(0, "discovery_completed"),
+            "scan-run.recovery.proceed-no-mutation": lambda value: value[
+                "durableEffects"
+            ]["localIgnore"]["identity"].__setitem__("byteLength", 0),
+            "scan-run.recovery.proceed-replay-rejected": lambda value: value[
+                "replays"
+            ][0]["error"].__setitem__("kind", "other"),
+        },
+    )
+
+
+def test_reset_recovery_facts_fail_closed_on_semantic_mutation() -> None:
+    """Reset coverage requires retained state, exact repair, one backup, and replay."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "reset-to-default-recovery",
+        {
+            "scan-run.recovery.initial-retained-snapshot": lambda value: value[
+                "initial"
+            ]["discovery"]["acceptedLogs"][0].__setitem__(
+                "path", "Recovery/reset-late.log"
+            ),
+            "scan-run.recovery.initial-prompt": lambda value: value["initial"][
+                "recoveryPrompt"
+            ]["decisions"][1].__setitem__("available", False),
+            "scan-run.recovery.reset-to-default": lambda value: value["terminal"][
+                "installedYamlData"
+            ]["localIgnoreReset"]["backup"].__setitem__(
+                "identityMatchesReceipt", False
+            ),
+            "scan-run.recovery.reset-no-rediscovery": lambda value: value[
+                "terminal"
+            ]["events"]["run"].insert(0, "discovery_completed"),
+            "scan-run.recovery.reset-backup-and-repair": lambda value: value[
+                "durableEffects"
+            ].__setitem__("backups", []),
+            "scan-run.recovery.reset-replay-rejected": lambda value: value[
+                "replays"
+            ][0]["error"].__setitem__("kind", "other"),
+        },
+    )
+
+
+def test_abandonment_facts_fail_closed_on_semantic_mutation() -> None:
+    """Abandon coverage requires cancellation, shared replay, and zero durable effects."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "abandon-local-ignore-recovery",
+        {
+            "scan-run.recovery.abandon-initial": lambda value: value["initial"][
+                "recoveryPrompt"
+            ]["decisions"][0].__setitem__("available", False),
+            "scan-run.recovery.abandon-terminal": lambda value: value["terminal"][
+                "run"
+            ].__setitem__("status", "completed"),
+            "scan-run.recovery.abandon-cancellation": lambda value: value[
+                "cancellation"
+            ].__setitem__("afterTerminal", False),
+            "scan-run.recovery.abandon-shared-replay": lambda value: value[
+                "replays"
+            ].pop(),
+            "scan-run.recovery.abandon-forbidden-effects": lambda value: value[
+                "durableEffects"
+            ]["forbidden"][0].__setitem__("exists", True),
+        },
+    )
 
 
 def test_native_workflows_publish_participant_shadow_artifacts_separately() -> None:
@@ -509,6 +682,12 @@ def test_cxx_runner_and_launcher_stay_bridge_only_and_oracle_blind() -> None:
     assert '"classic_cxx_bridge/scanner.h"' in runner
     assert "ScanRunObserver" in runner
     assert "scan_run_contract_execute" in runner
+    assert "scan_run_contract_execution_has_continuation" in runner
+    assert "scan_run_contract_execution_take_continuation" in runner
+    assert "scan_run_continuation_resume" in runner
+    assert "scan_run_continuation_abandon" in runner
+    assert "materialize_post_pause_data" in runner
+    assert 'flow.value("replays"' in runner
     assert 'scenario.contains("expected")' in runner
     assert "scan_run_fixture_config" not in runner
     assert "manifest.json" not in runner
@@ -559,12 +738,34 @@ def test_cxx_runner_and_launcher_stay_bridge_only_and_oracle_blind() -> None:
 
 
 def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None:
-    """No adapter runner imports the tracked oracle or the legacy manifest."""
+    """Private adapters stay oracle-blind across execute, resume, and abandon."""
 
     seam_markers = {
-        "rust": ("contract::execute", "render_run_result"),
-        "node": ("scanRunExecute", 'from "../index.js"'),
-        "python": ("scan_run_execute", "import classic_scanlog"),
+        "rust": (
+            "contract::execute",
+            "render_run_result",
+            "run_continuation_action",
+            "ContinuationOperationInput::Resume",
+            "ContinuationOperationInput::Abandon",
+            "flow.post_pause_data",
+            "flow.replays",
+        ),
+        "node": (
+            "scanRunExecute",
+            "scanRunResume",
+            "scanRunAbandon",
+            'from "../index.js"',
+            "flow.postPauseData",
+            "flow.replays",
+        ),
+        "python": (
+            "scan_run_execute",
+            "scan_run_resume",
+            "scan_run_abandon",
+            "import classic_scanlog",
+            'flow.get("postPauseData"',
+            'flow.get("replays"',
+        ),
     }
     for participant_id, source_paths in PARTICIPANT_SOURCES.items():
         source = source_paths[0].read_text(encoding="utf-8")

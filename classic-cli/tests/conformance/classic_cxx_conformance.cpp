@@ -8,15 +8,18 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <array>
 #include <charconv>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <mutex>
 #include <optional>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -36,6 +39,119 @@ constexpr std::string_view OUTPUT_ENV = "CLASSIC_CONFORMANCE_OUTPUT";
 constexpr std::string_view RUNNER_ID = "classic-cxx-conformance";
 constexpr std::string_view TOOLCHAIN = CLASSIC_CXX_CONFORMANCE_TOOLCHAIN;
 
+/// Computes SHA-256 locally so durable receipt evidence never depends on an adapter utility.
+class Sha256 final {
+public:
+    /// Hashes exact file bytes and returns the lowercase hexadecimal digest used by Rust.
+    [[nodiscard]] static std::string digest(std::span<const std::uint8_t> bytes) {
+        Sha256 hash;
+        hash.update(bytes);
+        return hash.finish();
+    }
+
+private:
+    static constexpr std::array<std::uint32_t, 64> ROUND_CONSTANTS{
+        0x428a2f98U, 0x71374491U, 0xb5c0fbcfU, 0xe9b5dba5U, 0x3956c25bU, 0x59f111f1U, 0x923f82a4U, 0xab1c5ed5U,
+        0xd807aa98U, 0x12835b01U, 0x243185beU, 0x550c7dc3U, 0x72be5d74U, 0x80deb1feU, 0x9bdc06a7U, 0xc19bf174U,
+        0xe49b69c1U, 0xefbe4786U, 0x0fc19dc6U, 0x240ca1ccU, 0x2de92c6fU, 0x4a7484aaU, 0x5cb0a9dcU, 0x76f988daU,
+        0x983e5152U, 0xa831c66dU, 0xb00327c8U, 0xbf597fc7U, 0xc6e00bf3U, 0xd5a79147U, 0x06ca6351U, 0x14292967U,
+        0x27b70a85U, 0x2e1b2138U, 0x4d2c6dfcU, 0x53380d13U, 0x650a7354U, 0x766a0abbU, 0x81c2c92eU, 0x92722c85U,
+        0xa2bfe8a1U, 0xa81a664bU, 0xc24b8b70U, 0xc76c51a3U, 0xd192e819U, 0xd6990624U, 0xf40e3585U, 0x106aa070U,
+        0x19a4c116U, 0x1e376c08U, 0x2748774cU, 0x34b0bcb5U, 0x391c0cb3U, 0x4ed8aa4aU, 0x5b9cca4fU, 0x682e6ff3U,
+        0x748f82eeU, 0x78a5636fU, 0x84c87814U, 0x8cc70208U, 0x90befffaU, 0xa4506cebU, 0xbef9a3f7U, 0xc67178f2U};
+
+    static constexpr std::array<std::uint32_t, 8> INITIAL_STATE{0x6a09e667U, 0xbb67ae85U, 0x3c6ef372U, 0xa54ff53aU,
+                                                                0x510e527fU, 0x9b05688cU, 0x1f83d9abU, 0x5be0cd19U};
+
+    static constexpr std::uint32_t rotate_right(std::uint32_t value, unsigned count) noexcept {
+        return (value >> count) | (value << (32U - count));
+    }
+
+    void update(std::span<const std::uint8_t> bytes) {
+        byte_count_ += bytes.size();
+        for (const std::uint8_t byte : bytes) {
+            buffer_[buffer_size_++] = byte;
+            if (buffer_size_ == buffer_.size()) {
+                transform(buffer_);
+                buffer_size_ = 0;
+            }
+        }
+    }
+
+    void transform(const std::array<std::uint8_t, 64>& block) {
+        std::array<std::uint32_t, 64> words{};
+        for (std::size_t index = 0; index < 16; ++index) {
+            const std::size_t offset = index * 4;
+            words[index] = (static_cast<std::uint32_t>(block[offset]) << 24U) |
+                           (static_cast<std::uint32_t>(block[offset + 1]) << 16U) |
+                           (static_cast<std::uint32_t>(block[offset + 2]) << 8U) |
+                           static_cast<std::uint32_t>(block[offset + 3]);
+        }
+        for (std::size_t index = 16; index < words.size(); ++index) {
+            const std::uint32_t small_zero =
+                rotate_right(words[index - 15], 7U) ^ rotate_right(words[index - 15], 18U) ^ (words[index - 15] >> 3U);
+            const std::uint32_t small_one =
+                rotate_right(words[index - 2], 17U) ^ rotate_right(words[index - 2], 19U) ^ (words[index - 2] >> 10U);
+            words[index] = words[index - 16] + small_zero + words[index - 7] + small_one;
+        }
+
+        auto working = state_;
+        for (std::size_t index = 0; index < words.size(); ++index) {
+            const std::uint32_t big_one =
+                rotate_right(working[4], 6U) ^ rotate_right(working[4], 11U) ^ rotate_right(working[4], 25U);
+            const std::uint32_t choice = (working[4] & working[5]) ^ (~working[4] & working[6]);
+            const std::uint32_t first = working[7] + big_one + choice + ROUND_CONSTANTS[index] + words[index];
+            const std::uint32_t big_zero =
+                rotate_right(working[0], 2U) ^ rotate_right(working[0], 13U) ^ rotate_right(working[0], 22U);
+            const std::uint32_t majority =
+                (working[0] & working[1]) ^ (working[0] & working[2]) ^ (working[1] & working[2]);
+            const std::uint32_t second = big_zero + majority;
+            for (std::size_t position = working.size() - 1; position > 0; --position) {
+                working[position] = working[position - 1];
+            }
+            working[4] += first;
+            working[0] = first + second;
+        }
+        for (std::size_t index = 0; index < state_.size(); ++index) {
+            state_[index] += working[index];
+        }
+    }
+
+    [[nodiscard]] std::string finish() {
+        const std::uint64_t bit_count = byte_count_ * 8U;
+        buffer_[buffer_size_++] = 0x80U;
+        if (buffer_size_ > 56) {
+            while (buffer_size_ < buffer_.size()) {
+                buffer_[buffer_size_++] = 0;
+            }
+            transform(buffer_);
+            buffer_size_ = 0;
+        }
+        while (buffer_size_ < 56) {
+            buffer_[buffer_size_++] = 0;
+        }
+        for (unsigned index = 0; index < 8; ++index) {
+            buffer_[63U - index] = static_cast<std::uint8_t>(bit_count >> (index * 8U));
+        }
+        transform(buffer_);
+
+        constexpr std::string_view HEX = "0123456789abcdef";
+        std::string result;
+        result.reserve(64);
+        for (const std::uint32_t word : state_) {
+            for (int shift = 28; shift >= 0; shift -= 4) {
+                result.push_back(HEX[(word >> static_cast<unsigned>(shift)) & 0x0fU]);
+            }
+        }
+        return result;
+    }
+
+    std::array<std::uint32_t, 8> state_ = INITIAL_STATE;
+    std::array<std::uint8_t, 64> buffer_{};
+    std::size_t buffer_size_ = 0;
+    std::uint64_t byte_count_ = 0;
+};
+
 class RunnerError final : public std::runtime_error {
 public:
     using std::runtime_error::runtime_error;
@@ -46,7 +162,13 @@ class TemporaryDirectory final {
 public:
     /// Creates a fresh directory whose identity is bound to this invocation.
     TemporaryDirectory(const std::string& invocation_id, const std::string& scenario_id)
-        : path_(fs::temp_directory_path() / ("classic-cxx-conformance-" + invocation_id + "-" + scenario_id)) {
+        : path_([&] {
+            const std::string identity = invocation_id + ":" + scenario_id;
+            const std::vector<std::uint8_t> bytes(identity.begin(), identity.end());
+            // Reset backup names are intentionally descriptive, so the scenario root must stay
+            // short enough for the complete durable path to fit legacy Windows path limits.
+            return fs::temp_directory_path() / ("cxc-" + Sha256::digest(bytes).substr(0, 16));
+        }()) {
         if (!fs::create_directory(path_)) {
             throw RunnerError("scenario directory is not fresh: " + path_.string());
         }
@@ -322,6 +444,17 @@ std::string_view local_ignore_state_token(scanner::ScanRunLocalIgnoreYamlDataSta
     throw RunnerError("unrecognized CXX Local Ignore state");
 }
 
+/// Returns the stable public token for one Local Ignore recovery decision.
+std::string_view recovery_decision_token(scanner::ScanRunLocalIgnoreRecoveryDecision value) {
+    switch (value) {
+    case scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore:
+        return "proceed_without_ignore";
+    case scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault:
+        return "reset_to_default";
+    }
+    throw RunnerError("unrecognized CXX Local Ignore recovery decision");
+}
+
 /// Returns the exhaustive stable token for Display Content severity.
 std::string_view severity_token(scanner::ScanRunDisplaySeverity value) {
     switch (value) {
@@ -383,6 +516,40 @@ json serialize_identity(const scanner::ScanRunYamlDataContentIdentityDto& identi
     return json{{"sha256", owned_string(identity.sha256)}, {"byteLength", identity.byte_len}};
 }
 
+/// Reads exact bytes when a path is a regular file and distinguishes absence from I/O failure.
+std::optional<std::vector<std::uint8_t>> read_optional_file(const fs::path& path) {
+    std::error_code status_error;
+    const fs::file_status status = fs::status(path, status_error);
+    if (status_error == std::errc::no_such_file_or_directory || status.type() == fs::file_type::not_found) {
+        return std::nullopt;
+    }
+    if (status_error) {
+        throw RunnerError("cannot inspect durable effect: " + path.string() + ": " + status_error.message());
+    }
+    if (!fs::is_regular_file(status)) {
+        return std::vector<std::uint8_t>{};
+    }
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        throw RunnerError("cannot read durable effect: " + path.string());
+    }
+    return std::vector<std::uint8_t>(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
+}
+
+/// Projects an exact byte identity using the same lowercase SHA-256 representation as Rust.
+json exact_identity(std::span<const std::uint8_t> bytes) {
+    return json{{"sha256", Sha256::digest(bytes)}, {"byteLength", bytes.size()}};
+}
+
+/// Preserves only the ordered severities from public Display Content.
+json display_severities(const rust::Vec<scanner::ScanRunDisplayLine>& lines) {
+    json result = json::array();
+    for (const auto& line : lines) {
+        result.push_back(severity_token(line.severity));
+    }
+    return result;
+}
+
 /// Parses the generated bridge's major.minor schema representation.
 std::pair<std::uint64_t, std::uint64_t> parse_schema_version(const rust::String& raw) {
     const std::string value = owned_string(raw);
@@ -428,6 +595,50 @@ json serialize_installed_yaml_data(const scanner::ScanRunInstalledYamlDataRunDat
                 {"localIgnoreIdentity", serialize_identity(installed.local_ignore_identity)},
                 {"diagnostics", std::move(diagnostics)},
                 {"localIgnoreResetAvailable", installed.local_ignore_reset_available}};
+}
+
+/// Serializes stable Local Ignore recovery fields while omitting path-bearing diagnostic prose.
+json serialize_local_ignore_installed_yaml_data(const scanner::ScanRunInstalledYamlDataRunDataDto& installed,
+                                                const fs::path& root) {
+    json diagnostics = json::array();
+    for (const auto& diagnostic : installed.diagnostics) {
+        diagnostics.push_back(json{
+            {"role", diagnostic.has_role ? json(yaml_role_token(diagnostic.role)) : json(nullptr)},
+            {"candidate", diagnostic.has_candidate ? json(yaml_provenance_token(diagnostic.candidate)) : json(nullptr)},
+            {"path", diagnostic.has_path ? path_carrier(root, fs::path(owned_string(diagnostic.path))) : json(nullptr)},
+            {"kind", yaml_diagnostic_token(diagnostic.kind)}});
+    }
+
+    json reset = nullptr;
+    if (installed.has_local_ignore_reset) {
+        const auto& receipt = installed.local_ignore_reset;
+        const fs::path backup_path(owned_string(receipt.backup_path));
+        const fs::path backup_parent = backup_path.parent_path();
+        if (backup_parent.empty()) {
+            throw RunnerError("Local Ignore reset backup has no parent directory");
+        }
+        const auto backup_bytes = read_optional_file(backup_path);
+        const bool identity_matches = backup_bytes.has_value() &&
+                                      Sha256::digest(*backup_bytes) == owned_string(receipt.backup_identity.sha256) &&
+                                      backup_bytes->size() == receipt.backup_identity.byte_len;
+        reset = json{{"localIgnorePath", path_carrier(root, fs::path(owned_string(receipt.local_ignore_path)))},
+                     {"backup", json{{"parentPath", relative_path(root, backup_parent)},
+                                     {"exists", backup_bytes.has_value()},
+                                     {"identityMatchesReceipt", identity_matches}}},
+                     {"malformedIdentity", serialize_identity(receipt.malformed_identity)},
+                     {"backupIdentity", serialize_identity(receipt.backup_identity)},
+                     {"replacementIdentity", serialize_identity(receipt.replacement_identity)}};
+    }
+
+    return json{{"mainIdentity",
+                 json{{"sha256", owned_string(installed.main.sha256)}, {"byteLength", installed.main.byte_len}}},
+                {"gameIdentity", json{{"sha256", owned_string(installed.game_file.sha256)},
+                                      {"byteLength", installed.game_file.byte_len}}},
+                {"localIgnoreState", local_ignore_state_token(installed.local_ignore_state)},
+                {"localIgnoreIdentity", serialize_identity(installed.local_ignore_identity)},
+                {"diagnostics", std::move(diagnostics)},
+                {"localIgnoreResetAvailable", installed.local_ignore_reset_available},
+                {"localIgnoreReset", std::move(reset)}};
 }
 
 /// Serializes ordered Standard or Targeted discovery facts.
@@ -541,6 +752,40 @@ public:
         return json{{"run", run_events_}, {"logs", std::move(logs)}};
     }
 
+    /// Returns stable event tokens while preserving run and per-log ordering.
+    json compact_observation(const scanner::ScanRunContractRunResult& result) const {
+        std::lock_guard lock(mutex_);
+        if (!error_.empty()) {
+            throw RunnerError("observer delivery failed: " + error_);
+        }
+        json run = json::array();
+        for (const auto& event : run_events_) {
+            run.push_back(event.at("kind"));
+        }
+        json logs = json::array();
+        for (const auto& log : result.logs) {
+            json trace = json::array();
+            const auto found = log_events_.find(log.discovery_index);
+            if (found != log_events_.end()) {
+                if (found->second.crash_log != relative_path(root_, fs::path(owned_string(log.crash_log)))) {
+                    throw RunnerError("compact event references a different Crash Log");
+                }
+                for (const auto& event : found->second.trace) {
+                    const std::string kind = event.at("kind").get<std::string>();
+                    if (kind == "log_phase") {
+                        trace.push_back(kind + ":" + event.at("phase").get<std::string>());
+                    } else if (kind == "log_finished") {
+                        trace.push_back(kind + ":" + event.at("disposition").get<std::string>());
+                    } else {
+                        trace.push_back(kind);
+                    }
+                }
+            }
+            logs.push_back(json{{"discoveryIndex", log.discovery_index}, {"trace", std::move(trace)}});
+        }
+        return json{{"run", std::move(run)}, {"logs", std::move(logs)}};
+    }
+
 private:
     struct LogEventStream {
         std::string crash_log;
@@ -572,7 +817,15 @@ void copy_fixture(const json& plan, const json& scenario, const json& placement,
     const fs::path source(fixture->get<std::string>());
     const fs::path destination = runtime_path(root, placement.at("path"), label);
     fs::create_directories(destination.parent_path());
-    fs::copy_file(source, destination);
+    fs::copy_file(source, destination, fs::copy_options::overwrite_existing);
+}
+
+/// Applies ordered after-pause mutations only after the retained continuation is claimed.
+void materialize_post_pause_data(const json& plan, const json& scenario, const json& flow, const fs::path& root) {
+    std::size_t index = 0;
+    for (const auto& placement : flow.value("postPauseData", json::array())) {
+        copy_fixture(plan, scenario, placement, root, "postPauseData[" + std::to_string(index++) + "]");
+    }
 }
 
 /// Materializes only scenario inputs and returns the closed input object.
@@ -645,6 +898,191 @@ rust::Box<scanner::ScanRunRequest> build_request(const json& input, const fs::pa
     return scanner::scan_run_request_targeted(configuration, source);
 }
 
+/// Projects one regular file's existence and exact identity, retaining absence as null identity.
+json project_file_effect(const fs::path& root, const fs::path& path) {
+    std::error_code error;
+    const bool exists = fs::exists(path, error);
+    if (error) {
+        throw RunnerError("cannot inspect durable effect: " + path.string() + ": " + error.message());
+    }
+    json identity = nullptr;
+    if (exists && fs::is_regular_file(path, error)) {
+        const auto bytes = read_optional_file(path);
+        if (!bytes.has_value()) {
+            throw RunnerError("durable effect disappeared while being observed: " + path.string());
+        }
+        identity = exact_identity(*bytes);
+    }
+    if (error) {
+        throw RunnerError("cannot classify durable effect: " + path.string() + ": " + error.message());
+    }
+    return json{{"path", relative_path(root, path)}, {"exists", exists}, {"identity", std::move(identity)}};
+}
+
+/// Projects one report's exact durable identity alongside existence and non-empty facts.
+json project_exact_report_effect(const fs::path& root, const fs::path& path) {
+    const auto bytes = read_optional_file(path);
+    return json{{"path", relative_path(root, path)},
+                {"exists", bytes.has_value()},
+                {"nonEmpty", bytes.has_value() && !bytes->empty()},
+                {"identity", bytes.has_value() ? exact_identity(*bytes) : json(nullptr)}};
+}
+
+/// Projects Local Ignore, backup, report, and explicitly forbidden filesystem effects.
+json project_local_ignore_effects(const fs::path& root, const json& input,
+                                  const scanner::ScanRunContractRunResult& result) {
+    const fs::path backup_directory = root / "CLASSIC Backup/YAML Data/Local Ignore";
+    std::vector<fs::path> backup_paths;
+    if (fs::is_directory(backup_directory)) {
+        for (const auto& entry : fs::directory_iterator(backup_directory)) {
+            if (entry.is_regular_file()) {
+                backup_paths.push_back(entry.path());
+            }
+        }
+    }
+    std::sort(backup_paths.begin(), backup_paths.end());
+    json backups = json::array();
+    for (const auto& path : backup_paths) {
+        const auto bytes = read_optional_file(path);
+        if (!bytes.has_value()) {
+            throw RunnerError("enumerated Local Ignore backup disappeared before observation");
+        }
+        backups.push_back(
+            json{{"parentPath", relative_path(root, path.parent_path())}, {"identity", exact_identity(*bytes)}});
+    }
+
+    json reports = json::array();
+    for (const auto& log : result.logs) {
+        if (log.has_autoscan_report) {
+            reports.push_back(project_exact_report_effect(root, fs::path(owned_string(log.autoscan_report))));
+        }
+    }
+    json forbidden = json::array();
+    for (const auto& relative : input.value("forbiddenEffectPaths", json::array())) {
+        forbidden.push_back(project_file_effect(root, runtime_path(root, relative, "forbiddenEffectPaths entry")));
+    }
+    return json{{"localIgnore", project_file_effect(root, root / "CLASSIC Data/CLASSIC Ignore.yaml")},
+                {"backups", std::move(backups)},
+                {"reports", std::move(reports)},
+                {"forbidden", std::move(forbidden)}};
+}
+
+/// Projects one initial or terminal Local Ignore envelope without reading durable effects.
+json project_local_ignore_phase(const scanner::ScanRunContractExecutionResult& execution,
+                                const RecordingObserver& observer, const fs::path& root, bool continuation_available,
+                                bool include_recovery_prompt) {
+    if (execution.has_error) {
+        throw RunnerError("CXX scan returned infrastructure error: " + owned_string(execution.error.message));
+    }
+    if (execution.has_resume_error) {
+        throw RunnerError("CXX scan returned resume error: " + owned_string(execution.resume_error.message));
+    }
+    if (!execution.has_result) {
+        throw RunnerError("CXX scan returned no result or error");
+    }
+    const auto& result = execution.result;
+    if (result.has_setup) {
+        throw RunnerError("Local Ignore CXX scenario unexpectedly returned setup data");
+    }
+    json logs = json::array();
+    for (const auto& log : result.logs) {
+        logs.push_back(serialize_log(log, root));
+    }
+
+    json prompt = nullptr;
+    if (include_recovery_prompt) {
+        if (!execution.has_recovery_prompt) {
+            throw RunnerError("Local Ignore recovery result omitted its public recovery prompt");
+        }
+        json decisions = json::array();
+        for (const auto& decision : execution.recovery_prompt.decisions) {
+            decisions.push_back(json{{"decision", recovery_decision_token(decision.decision)},
+                                     {"label", owned_string(decision.label)},
+                                     {"available", decision.available}});
+        }
+        prompt = json{{"displaySeverities", display_severities(execution.recovery_prompt.lines)},
+                      {"decisions", std::move(decisions)}};
+    }
+
+    return json{{"run", json{{"status", status_token(result.status)},
+                             {"message", result.has_message ? json(owned_string(result.message)) : json(nullptr)},
+                             {"total", result.total},
+                             {"succeeded", result.succeeded},
+                             {"failed", result.failed},
+                             {"cancelled", result.cancelled},
+                             {"effectiveConcurrency",
+                              result.has_effective_concurrency ? json(result.effective_concurrency) : json(nullptr)}}},
+                {"discovery", result.has_discovery ? serialize_discovery(result.discovery, root) : json(nullptr)},
+                {"installedYamlData", result.has_installed_yaml_data
+                                          ? serialize_local_ignore_installed_yaml_data(result.installed_yaml_data, root)
+                                          : json(nullptr)},
+                {"logs", std::move(logs)},
+                {"events", observer.compact_observation(result)},
+                {"continuationAvailable", continuation_available},
+                {"recoveryPrompt", std::move(prompt)}};
+}
+
+/// Projects a complete single-stage Local Ignore observation and its durable effects.
+json project_local_ignore_observation(const scanner::ScanRunContractExecutionResult& execution,
+                                      const RecordingObserver& observer, const fs::path& root, const json& input,
+                                      bool continuation_available) {
+    json observation =
+        project_local_ignore_phase(execution, observer, root, continuation_available, execution.has_recovery_prompt);
+    observation["durableEffects"] = project_local_ignore_effects(root, input, execution.result);
+    return observation;
+}
+
+/// Maps one validated plan decision to the generated public CXX enumeration.
+scanner::ScanRunLocalIgnoreRecoveryDecision parse_recovery_decision(const json& action) {
+    if (!action.contains("decision") || !action.at("decision").is_string()) {
+        throw RunnerError("Resume continuation action has no recovery decision");
+    }
+    const std::string decision = action.at("decision").get<std::string>();
+    if (decision == "proceed-without-ignore") {
+        return scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
+    }
+    if (decision == "reset-to-default") {
+        return scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault;
+    }
+    throw RunnerError("unsupported Local Ignore recovery decision: " + decision);
+}
+
+/// Invokes one public continuation action without inferring intent from a scenario identifier.
+rust::Box<scanner::ScanRunContractExecution> run_continuation_action(const scanner::ScanRunContinuation& continuation,
+                                                                     const json& action,
+                                                                     const scanner::ScanRunCancellation& cancellation,
+                                                                     const scanner::ScanRunObserver* observer) {
+    const std::string operation = action.at("operation").get<std::string>();
+    if (operation == "resume") {
+        return scanner::scan_run_continuation_resume(continuation, parse_recovery_decision(action), cancellation,
+                                                     observer);
+    }
+    if (operation == "abandon") {
+        if (action.contains("decision") && !action.at("decision").is_null()) {
+            throw RunnerError("Abandon continuation action must not have a recovery decision");
+        }
+        return scanner::scan_run_continuation_abandon(continuation, cancellation, observer);
+    }
+    throw RunnerError("unsupported continuation operation: " + operation);
+}
+
+/// Projects one typed consumed-continuation replay through the public CXX presentation envelope.
+json project_replay(const json& action, const scanner::ScanRunContractExecutionResult& execution) {
+    if (execution.has_result || execution.has_error || !execution.has_resume_error) {
+        throw RunnerError("a replayed continuation action unexpectedly succeeded");
+    }
+    const std::string operation = action.at("operation").get<std::string>();
+    json decision = nullptr;
+    if (operation == "resume") {
+        decision = recovery_decision_token(parse_recovery_decision(action));
+    }
+    return json{{"operation", operation},
+                {"decision", std::move(decision)},
+                {"error", json{{"kind", owned_string(execution.resume_error.code)},
+                               {"message", owned_string(execution.resume_error.message)},
+                               {"displaySeverities", display_severities(execution.display_lines)}}}};
+}
+
 /// Projects the complete public CXX terminal envelope and durable effects.
 json project_observation(const scanner::ScanRunContractExecutionResult& execution, const RecordingObserver& observer,
                          const fs::path& root) {
@@ -707,7 +1145,44 @@ json execute_scenario(const json& plan, const json& scenario) {
     const auto cancellation = scanner::scan_run_cancellation_new();
     const RecordingObserver observer(temporary.path());
     auto operation = scanner::scan_run_contract_execute(*request, *cancellation, &observer);
+    const bool continuation_available = scanner::scan_run_contract_execution_has_continuation(*operation);
     const auto execution = scanner::scan_run_contract_execution_take_result(*operation);
+    if (input.contains("continuationFlow") && !input.at("continuationFlow").is_null()) {
+        if (!continuation_available) {
+            throw RunnerError("continuationFlow initial result has no continuation");
+        }
+        const json initial = project_local_ignore_phase(execution, observer, temporary.path(), true, true);
+        auto continuation = scanner::scan_run_contract_execution_take_continuation(*operation);
+        const json& flow = input.at("continuationFlow");
+        materialize_post_pause_data(plan, scenario, flow, temporary.path());
+
+        const bool cancelled_before_terminal = scanner::scan_run_cancellation_is_cancelled(*cancellation);
+        const RecordingObserver terminal_observer(temporary.path());
+        auto terminal_operation =
+            run_continuation_action(*continuation, flow.at("action"), *cancellation, &terminal_observer);
+        const auto terminal_execution = scanner::scan_run_contract_execution_take_result(*terminal_operation);
+        const bool cancelled_after_terminal = scanner::scan_run_cancellation_is_cancelled(*cancellation);
+        const json terminal =
+            project_local_ignore_phase(terminal_execution, terminal_observer, temporary.path(), false, false);
+
+        json replays = json::array();
+        for (const auto& action : flow.value("replays", json::array())) {
+            auto replay_operation = run_continuation_action(*continuation, action, *cancellation, nullptr);
+            const auto replay_execution = scanner::scan_run_contract_execution_take_result(*replay_operation);
+            replays.push_back(project_replay(action, replay_execution));
+        }
+        return json{
+            {"initial", initial},
+            {"terminal", terminal},
+            {"replays", std::move(replays)},
+            {"cancellation", json{{"beforeTerminal", cancelled_before_terminal},
+                                  {"afterTerminal", cancelled_after_terminal},
+                                  {"afterReplays", scanner::scan_run_cancellation_is_cancelled(*cancellation)}}},
+            {"durableEffects", project_local_ignore_effects(temporary.path(), input, terminal_execution.result)}};
+    }
+    if (input.value("observationProfile", "base") == "local-ignore") {
+        return project_local_ignore_observation(execution, observer, temporary.path(), input, continuation_available);
+    }
     return project_observation(execution, observer, temporary.path());
 }
 
