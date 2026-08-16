@@ -42,24 +42,33 @@ python tools/binding_compliance/check_compliance.py `
 
 The receipt must have a sibling immutable `run_plan.json`. The engine rebinds it to the current tracked pack and source revision before validation. Attempt and JUnit files can add command diagnostics but cannot supply semantic facts, row coverage, or a broader scope claim. Participant reports require every source-derived execution instance; only `full` can claim repository completeness, and missing row coverage or unresolved consumer obligations fails that claim closed. Full aggregation independently authenticates each participant-specific source digest and requires their embedded Git revisions to match; the digests themselves may differ because each run plan declares its own runner source roots.
 
-The base Crash Log Scan Run pack also has a private shadow launcher for its
-Rust, Node, and Python semantic adapters:
+The base Crash Log Scan Run pack also has private shadow launchers for its
+Rust, Node, Python, and native CXX semantic adapters:
 
 ```powershell
 python tools/binding_compliance/run_scan_run_conformance.py --participant rust
 python tools/binding_compliance/run_scan_run_conformance.py --participant node
 uv run --project python-bindings python tools/binding_compliance/run_scan_run_conformance.py --participant python
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Compiler msvc
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Compiler clang-cl
 ```
 
-Each invocation creates a fresh input-only `run_plan.json`, calls only the
-selected adapter's public scan-run seam, and publishes `receipt.json`,
-`attempt.json`, and `shadow_report.json` beneath
+Each invocation creates a fresh input-only `run_plan.json` and calls only the
+selected adapter's public scan-run seam. Rust, Node, and Python publish
+`receipt.json`, `attempt.json`, and `shadow_report.json` beneath
 `tools/binding_compliance/artifacts/<participant>/<instance>/<invocation>/`.
-The native workflows upload those diagnostics from explicitly nonblocking
-shadow steps after their existing runtime tests. They do not replace or weaken
-the manifest, parity, declaration/stub, rebuild, or runtime gates. CXX is not a
-participant in this base slice, so three passing receipts cannot claim full
-repository conformance.
+The CXX launcher hosts its bridge-only target through the approved CLI wrapper,
+uses a 15-minute child-process bound, and publishes `receipt.json`, mandatory
+`ctest.junit.xml`, `attempt.json`, separate `stdout.log`/`stderr.log`, and the
+instance-scoped JSON/Markdown compliance reports beneath
+`tools/binding_compliance/artifacts/cxx/windows-<compiler>/<invocation>/`.
+Ordinary full CLI wrapper runs visibly skip that target when no current plan and
+receipt destination are supplied. The native workflows upload these diagnostics
+from explicitly nonblocking shadow steps after their existing runtime tests.
+They do not replace or weaken the manifest, parity, declaration/stub, rebuild,
+or runtime gates. Both `windows-msvc` and `windows-clang-cl` receipts are required
+before CXX completes its participant denominator; three Rust/Node/Python
+receipts alone remain incomplete.
 
 ## What The Suite Proves
 
@@ -78,8 +87,8 @@ Existing C++, Node, and Python parity gates remain available as focused debuggin
 
 The first implementation intentionally reports known weak coverage instead of silently rewriting policy around it. The current non-blocking gaps are:
 
-- C++ has a source-only bridge parity gate, but no dedicated runtime coverage registry equivalent to the Node and Python registries. C++ runtime behavior remains covered through the CLI/GUI build and test wrappers.
-- The Crash Log Scan Run v1 pack has Rust, Node, and Python shadow receipts but no CXX receipt. Participant-scoped reports are useful diagnostics; a full-repository report remains incomplete until the CXX slice lands and the later equivalence and promotion gates pass.
+- C++ has no editable runtime-coverage registry equivalent to the Node and Python registries. The Crash Log Scan Run v1 pack now produces executable CXX receipts from generated bridge DTOs and events on MSVC and clang-cl, while the source parity gate and existing CLI/GUI wrapper suites remain blocking during shadow migration.
+- The Crash Log Scan Run v1 pack has Rust, Node, Python, and both required CXX execution-instance receipts in shadow. Their scoped reports are useful diagnostics, but they do not retire existing evidence until equivalence review and blocking promotion complete.
 
 Treat new drift, stale generated artifacts, stale baselines, missing runtime coverage, policy/source contradictions, tooling bugs, and local environment failures as separate failure classes in the structured report.
 
@@ -90,7 +99,7 @@ Treat new drift, stale generated artifacts, stale baselines, missing runtime cov
 Separately, `tests/conformance/packs/crash_log_scan_run/v1.json` owns the
 independently authored Standard and Targeted happy-path shadow oracle. Its
 materialized plans contain only declared inputs and normalization policy; the
-Rust, Node, and Python runners cannot read its expected observations. The pack
+Rust, Node, Python, and CXX runners cannot read its expected observations. The pack
 compares ordered discovery, setup absence, effective concurrency, Installed
 YAML Data identities, terminal log outcomes, stable per-log event traces, full
 typed Display Content carriers, and durable report effects. Timings and

@@ -118,6 +118,53 @@ def test_live_pack_is_input_only_for_all_three_base_adapters(tmp_path: Path) -> 
     assert len({plan["invocation"]["sourceIdentity"] for plan in plans.values()}) == 3
 
 
+def test_cxx_preparation_materializes_fresh_input_only_toolchain_instances(
+    tmp_path: Path,
+) -> None:
+    """MSVC and clang-cl receive distinct current plans without the tracked oracle."""
+
+    from conformance.adapters.prepare_cxx_conformance import prepare_cxx_run
+
+    artifact_root = (
+        REPO_ROOT
+        / "tools"
+        / "binding_compliance"
+        / "artifacts"
+        / "test-cxx-preparation"
+        / tmp_path.name
+    )
+    plans = {}
+    try:
+        for compiler in ("msvc", "clang-cl"):
+            prepared = prepare_cxx_run(
+                REPO_ROOT,
+                compiler=compiler,
+                artifact_root=artifact_root,
+            )
+            plan = prepared.document()
+            plans[compiler] = plan
+
+            assert prepared.artifact_dir.parent.name == f"windows-{compiler}"
+            assert prepared.artifact_dir.parent.parent.name == "cxx"
+            assert not prepared.receipt_path.exists()
+            assert plan["participant"] == {
+                "id": "cxx",
+                "role": "semantic-adapter",
+                "executionInstanceId": f"windows-{compiler}",
+            }
+            assert all("expected" not in scenario for scenario in plan["scenarios"])
+            assert [scenario["id"] for scenario in plan["scenarios"]] == [
+                "standard-happy-path",
+                "targeted-happy-path",
+            ]
+    finally:
+        if artifact_root.exists():
+            shutil.rmtree(artifact_root)
+
+    assert plans["msvc"]["expectationDigest"] == plans["clang-cl"]["expectationDigest"]
+    assert plans["msvc"]["invocation"]["id"] != plans["clang-cl"]["invocation"]["id"]
+
+
 def test_family_policy_derives_every_required_fact_from_each_exact_oracle() -> None:
     """Coverage facts come from semantic observation predicates, not runner claims."""
 
@@ -190,6 +237,11 @@ def test_native_workflows_publish_participant_shadow_artifacts_separately() -> N
     """Runtime jobs keep legacy gates blocking and upload each new slice always."""
 
     workflow_expectations = {
+        ".github/workflows/ci-cpp.yml": (
+            "Build and test CLI",
+            "run_cxx_conformance.ps1",
+            "name: cxx-conformance-${{ matrix.compiler }}",
+        ),
         ".github/workflows/ci-rust.yml": (
             "Run Rust tests with all features",
             "--participant rust",
@@ -225,6 +277,17 @@ def test_native_workflows_publish_participant_shadow_artifacts_separately() -> N
     assert "--participant cxx" not in "\n".join(
         (REPO_ROOT / path).read_text(encoding="utf-8") for path in workflow_expectations
     )
+    cpp_workflow = (REPO_ROOT / ".github/workflows/ci-cpp.yml").read_text(
+        encoding="utf-8"
+    )
+    cli_job = cpp_workflow[cpp_workflow.index("cli-tests:") :]
+    assert "timeout-minutes: 120" in cli_job
+    full_suite = cli_job[
+        cli_job.index("- name: Build and test CLI") : cli_job.index(
+            "- name: Run native CXX scan conformance"
+        )
+    ]
+    assert "timeout-minutes: 90" in full_suite
 
 
 def _write_engine_test_receipt(prepared: MaterializedRun, pack: ValidatedPack) -> None:
@@ -353,6 +416,155 @@ def test_three_base_receipts_pass_their_scopes_but_not_full_repository(
     finally:
         if artifact_root.exists():
             shutil.rmtree(artifact_root)
+
+
+def test_all_base_adapter_instances_complete_full_repository_scope(
+    tmp_path: Path,
+) -> None:
+    """Rust, Node, Python, MSVC, and clang-cl satisfy the semantic denominator."""
+
+    from conformance.adapters.prepare_cxx_conformance import prepare_cxx_run
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH)
+    artifact_root = (
+        REPO_ROOT
+        / "tools"
+        / "binding_compliance"
+        / "artifacts"
+        / "test-full-scan-run-report"
+        / tmp_path.name
+    )
+    prepared_reports = []
+    try:
+        for participant_id, source_paths in PARTICIPANT_SOURCES.items():
+            prepared = materialize_run_plan(
+                pack,
+                participant_id=participant_id,
+                participant_role="semantic-adapter",
+                execution_instance_id=participant_id,
+                source_paths=source_paths,
+                artifact_root=artifact_root,
+            )
+            _write_engine_test_receipt(prepared, pack)
+            prepared_reports.append(
+                validate_prepared_run(
+                    pack,
+                    prepared,
+                    receipt_paths=(prepared.receipt_path,),
+                    coverage_policy=CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+                )
+            )
+
+        for compiler in ("msvc", "clang-cl"):
+            prepared = prepare_cxx_run(
+                REPO_ROOT,
+                compiler=compiler,
+                artifact_root=artifact_root,
+            )
+            _write_engine_test_receipt(prepared, pack)
+            prepared_reports.append(
+                validate_prepared_run(
+                    pack,
+                    prepared,
+                    receipt_paths=(prepared.receipt_path,),
+                    coverage_policy=CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+                )
+            )
+
+        pack_document = pack.document()
+        parity_rows = load_source_parity_rows(REPO_ROOT)
+        retained = load_retained_analyzer_kinds(REPO_ROOT)
+        exceptions = load_policy_exceptions(REPO_ROOT)
+        applicability = derive_applicability(
+            pack_document,
+            parity_rows,
+            policy_exceptions=exceptions,
+        )
+        coverage = derive_row_coverage(
+            pack_document,
+            parity_rows,
+            CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+            tuple(prepared_reports),
+            retained_analyzers=retained,
+            policy_exceptions=exceptions,
+        )
+        report = build_scoped_report(
+            family_id="crash-log-scan-run",
+            profile="full",
+            applicability=applicability,
+            prepared_reports=tuple(prepared_reports),
+            coverage=coverage,
+        ).document()
+
+        assert report["result"] == "pass"
+        assert report["repositoryComplete"] is True
+        assert report["missingExecutions"] == []
+    finally:
+        if artifact_root.exists():
+            shutil.rmtree(artifact_root)
+
+
+def test_cxx_runner_and_launcher_stay_bridge_only_and_oracle_blind() -> None:
+    """Native evidence uses the generated bridge and only the approved wrapper."""
+
+    runner_path = (
+        REPO_ROOT
+        / "classic-cli"
+        / "tests"
+        / "conformance"
+        / "classic_cxx_conformance.cpp"
+    )
+    runner = runner_path.read_text(encoding="utf-8")
+    assert '"classic_cxx_bridge/scanner.h"' in runner
+    assert "ScanRunObserver" in runner
+    assert "scan_run_contract_execute" in runner
+    assert 'scenario.contains("expected")' in runner
+    assert "scan_run_fixture_config" not in runner
+    assert "manifest.json" not in runner
+    assert "tests/conformance/packs" not in runner.replace("\\", "/")
+    assert "scan_run_cli" not in runner
+
+    cmake = (REPO_ROOT / "classic-cli" / "CMakeLists.txt").read_text(encoding="utf-8")
+    target_start = cmake.index("add_executable(classic-cxx-conformance")
+    target_end = cmake.index("add_test(NAME classic-cxx-conformance", target_start)
+    target_block = cmake[target_start:target_end]
+    assert "classic_cxx_bridge" in target_block
+    assert "nlohmann_json::nlohmann_json" in target_block
+    assert "src/scan_run_cli.cpp" not in target_block
+    assert "src/scanner.cpp" not in target_block
+
+    launcher = (
+        REPO_ROOT
+        / "tools"
+        / "binding_compliance"
+        / "conformance"
+        / "adapters"
+        / "run_cxx_conformance.ps1"
+    ).read_text(encoding="utf-8")
+    assert "15 * 60 * 1000" in launcher
+    wrapper_start = launcher.index("$WrapperArguments = @(")
+    wrapper_end = launcher.index("$RecordedCommand", wrapper_start)
+    wrapper_block = launcher[wrapper_start:wrapper_end]
+    required_tokens = (
+        '"-File"',
+        '"classic-cli/build_cli.ps1"',
+        '"-Test"',
+        '"-CTestName"',
+        '"classic-cxx-conformance"',
+        '"-Compiler"',
+        "$Compiler",
+        '"-CTestArgs"',
+        '"--output-junit"',
+        "$JunitPath",
+    )
+    positions = tuple(wrapper_block.index(token) for token in required_tokens)
+    assert positions == tuple(sorted(positions))
+    assert wrapper_block.rstrip().endswith(")")
+    assert "$Process.Kill($true)" in launcher
+    assert '--execution-instance "windows-$Compiler"' in launcher
+    assert "--attempt $AttemptPath" in launcher
+    assert "--junit $JunitPath" in launcher
+    assert "Get-FileSha256" in launcher
 
 
 def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None:

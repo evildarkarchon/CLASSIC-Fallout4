@@ -64,10 +64,17 @@ param(
     [string]$Compiler = "msvc",
     [string[]]$CTestName = @(),
     [string[]]$CTestArgs = @(),
+    # pwsh -File flattens the required two-value CTest array. Keep this adjacent
+    # positional receiver private to the wrapper and fold it back immediately.
+    [string[]]$_CTestArgsContinuation = @(),
     [string[]]$IntegrationTestName = @()
 )
 
 $ErrorActionPreference = "Stop"
+
+if ($_CTestArgsContinuation.Count -gt 0) {
+    $CTestArgs += $_CTestArgsContinuation
+}
 
 function New-ExactTestNameRegex {
     param([string[]]$TestNames)
@@ -337,10 +344,30 @@ try {
             if ($ctestRegex) {
                 $ctestDiscoveryArgs += @("-R", $ctestRegex)
             }
-            & ctest @ctestDiscoveryArgs
-            if ($LASTEXITCODE -ne 0) {
-                Write-Error "CTest discovery failed with exit code $LASTEXITCODE"
-                exit $LASTEXITCODE
+            $ctestDiscoveryOutput = @(& ctest @ctestDiscoveryArgs)
+            $ctestDiscoveryExitCode = $LASTEXITCODE
+            $ctestDiscoveryOutput | ForEach-Object { Write-Host $_ }
+            if ($ctestDiscoveryExitCode -ne 0) {
+                Write-Error "CTest discovery failed with exit code $ctestDiscoveryExitCode"
+                exit $ctestDiscoveryExitCode
+            }
+            if ($CTestName.Count -gt 0) {
+                # Exact-name conformance evidence must never broaden silently if
+                # registration changes. The same guard also protects ordinary
+                # multi-name selections from missing or duplicate discovery.
+                $totalMatch = [regex]::Match(
+                    ($ctestDiscoveryOutput -join "`n"),
+                    '(?m)^Total Tests:\s+(?<count>\d+)\s*$'
+                )
+                if (-not $totalMatch.Success) {
+                    Write-Error "CTest discovery did not report its selected test count."
+                    exit 1
+                }
+                $discoveredTestCount = [int]$totalMatch.Groups['count'].Value
+                if ($discoveredTestCount -ne $CTestName.Count) {
+                    Write-Error "CTest discovery selected $discoveredTestCount tests; expected exactly $($CTestName.Count)."
+                    exit 1
+                }
             }
 
             $ctestRunArgs = @("--test-dir", $buildDirName, "--output-on-failure", "--no-tests=error")

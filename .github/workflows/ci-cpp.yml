@@ -41,7 +41,7 @@ jobs:
     name: CLI Tests (${{ matrix.compiler }})
     needs: [cxx-parity-gate]
     runs-on: windows-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
@@ -94,7 +94,29 @@ jobs:
         run: pwsh -ExecutionPolicy Bypass -File .github/scripts/setup-vcpkg.ps1
 
       - name: Build and test CLI
+        timeout-minutes: 90
         run: pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler ${{ matrix.compiler }}
+
+      - name: Run native CXX scan conformance (shadow)
+        continue-on-error: true
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Compiler ${{ matrix.compiler }}
+
+      - name: Upload native CXX scan conformance artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cxx-conformance-${{ matrix.compiler }}
+          path: |
+            tools/binding_compliance/artifacts/cxx/windows-${{ matrix.compiler }}/**/receipt.json
+            tools/binding_compliance/artifacts/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
+            tools/binding_compliance/artifacts/cxx/windows-${{ matrix.compiler }}/**/attempt.json
+            tools/binding_compliance/artifacts/cxx/windows-${{ matrix.compiler }}/**/stdout.log
+            tools/binding_compliance/artifacts/cxx/windows-${{ matrix.compiler }}/**/stderr.log
+            tools/binding_compliance/artifacts/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.json
+            tools/binding_compliance/artifacts/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.md
+            classic-cli/build*/Testing/
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Upload CLI diagnostics
         if: failure()
