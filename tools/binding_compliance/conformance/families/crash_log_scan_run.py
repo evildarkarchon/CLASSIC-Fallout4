@@ -1569,6 +1569,157 @@ def _abandon_durable_effects(observation: Mapping[str, Any]) -> bool:
     )
 
 
+def _observed_effects_match(
+    observation: Mapping[str, Any], expected: Sequence[tuple[str, str]]
+) -> bool:
+    """Require the exact ordered path/type inventory declared by a failure scenario."""
+
+    effects = _sequence(observation.get("durableEffects"))
+    if effects is None or len(effects) != len(expected):
+        return False
+    return all(
+        _path(effect) == expected_path
+        and _mapping(effect) is not None
+        and _mapping(effect).get("kind") == expected_kind
+        for effect, (expected_path, expected_kind) in zip(effects, expected, strict=True)
+    )
+
+
+def _infrastructure_failure_matches(
+    observation: Mapping[str, Any],
+    *,
+    stage: str,
+    path: str | None,
+    effects: Sequence[tuple[str, str]],
+) -> bool:
+    """Recognize a public run-wide failure without depending on OS error prose."""
+
+    error = _mapping(observation.get("infrastructureError"))
+    if error is None:
+        return False
+    actual_path = error.get("path")
+    path_matches = actual_path is None if path is None else _path(actual_path) == path
+    return (
+        error.get("stage") == stage
+        and error.get("messageNonEmpty") is True
+        and path_matches
+        and _observed_effects_match(observation, effects)
+    )
+
+
+def _request_validation_failure(observation: Mapping[str, Any]) -> bool:
+    """Recognize zero-concurrency rejection and its absence of durable output."""
+
+    return _infrastructure_failure_matches(
+        observation,
+        stage="request_validation",
+        path=None,
+        effects=(
+            ("Failures/crash-request-validation.log", "file"),
+            ("Failures/crash-request-validation-AUTOSCAN.md", "missing"),
+        ),
+    )
+
+
+def _intake_failure(observation: Mapping[str, Any]) -> bool:
+    """Recognize a public Installed YAML Data intake failure and relevant path."""
+
+    return _infrastructure_failure_matches(
+        observation,
+        stage="intake",
+        path="CLASSIC Data",
+        effects=(
+            ("Failures/crash-intake.log", "file"),
+            ("Failures/crash-intake-AUTOSCAN.md", "missing"),
+        ),
+    )
+
+
+def _discovery_failure(observation: Mapping[str, Any]) -> bool:
+    """Recognize a public Standard discovery directory-creation failure."""
+
+    return _infrastructure_failure_matches(
+        observation,
+        stage="discovery",
+        path="Blocked Discovery",
+        effects=(("Blocked Discovery", "file"),),
+    )
+
+
+def _per_log_failure_matches(
+    observation: Mapping[str, Any],
+    *,
+    crash_log: str,
+    failure_stages: Sequence[str],
+    moved: bool,
+    effects: Sequence[tuple[str, str]],
+) -> bool:
+    """Require typed per-log failure stages, disposition, paths, and artifacts."""
+
+    logs = _sequence(observation.get("logs"))
+    if observation.get("status") != "completed" or logs is None or len(logs) != 1:
+        return False
+    log = _mapping(logs[0])
+    if log is None:
+        return False
+    failures = _sequence(log.get("failures"))
+    if failures is None or len(failures) != len(failure_stages):
+        return False
+    typed_failures = [_mapping(failure) for failure in failures]
+    return (
+        log.get("discoveryIndex") == 0
+        and _path(log.get("crashLog")) == crash_log
+        and log.get("autoscanReport") is None
+        and log.get("disposition") == "failed"
+        and log.get("messageNonEmpty") is True
+        and log.get("movedToUnsolvedLogs") is moved
+        and all(failure is not None for failure in typed_failures)
+        and [failure.get("stage") for failure in typed_failures if failure is not None]
+        == list(failure_stages)
+        and all(
+            failure.get("messageNonEmpty") is True
+            for failure in typed_failures
+            if failure is not None
+        )
+        and _observed_effects_match(observation, effects)
+    )
+
+
+def _report_write_failure(observation: Mapping[str, Any]) -> bool:
+    """Recognize a public report persistence failure with the source retained."""
+
+    return _per_log_failure_matches(
+        observation,
+        crash_log="Failures/crash-report-write.log",
+        failure_stages=("report_write",),
+        moved=False,
+        effects=(
+            ("Failures/crash-report-write.log", "file"),
+            ("Failures/crash-report-write-AUTOSCAN.md", "directory"),
+            ("Unsolved Logs", "missing"),
+        ),
+    )
+
+
+def _unsolved_logs_finalization_failure(observation: Mapping[str, Any]) -> bool:
+    """Recognize ordered report and Unsolved Logs finalization failures."""
+
+    return _per_log_failure_matches(
+        observation,
+        crash_log="Failure Standard/Crash Logs/crash-finalization.log",
+        failure_stages=("report_write", "unsolved_logs_finalization"),
+        moved=False,
+        effects=(
+            ("Failure Standard/Crash Logs/crash-finalization.log", "file"),
+            (
+                "Failure Standard/Crash Logs/crash-finalization-AUTOSCAN.md",
+                "directory",
+            ),
+            ("Blocked Unsolved Logs", "file"),
+        ),
+    )
+
+
 _BASE_PREDICATE_FACTS = (
     ("scan-run.status", "run-status", ("Request",), _run_status),
     ("scan-run.discovery", "discovery", ("Request",), _discovery),
@@ -1763,6 +1914,49 @@ _OBSERVER_FAILURE_PREDICATES = (
         "durable-effects",
         ("RunResult",),
         _observer_failure_forbidden_effects,
+    ),
+)
+
+_STRUCTURED_FAILURE_PREDICATES = (
+    CoveragePredicate(
+        "scan-run.failure.request-validation",
+        "scan-run.execute",
+        "scan-run.execute",
+        "structured-failure",
+        ("InfrastructureError", "InfrastructureErrorStage"),
+        _request_validation_failure,
+    ),
+    CoveragePredicate(
+        "scan-run.failure.discovery",
+        "scan-run.execute",
+        "scan-run.execute",
+        "structured-failure",
+        ("InfrastructureError", "InfrastructureErrorStage"),
+        _discovery_failure,
+    ),
+    CoveragePredicate(
+        "scan-run.failure.intake",
+        "scan-run.execute",
+        "scan-run.execute",
+        "structured-failure",
+        ("InfrastructureError", "InfrastructureErrorStage"),
+        _intake_failure,
+    ),
+    CoveragePredicate(
+        "scan-run.failure.report-write",
+        "scan-run.execute",
+        "scan-run.execute",
+        "structured-failure",
+        ("LogResult", "LogFailure", "LogFailureStage", "LogDisposition"),
+        _report_write_failure,
+    ),
+    CoveragePredicate(
+        "scan-run.failure.unsolved-logs-finalization",
+        "scan-run.execute",
+        "scan-run.execute",
+        "structured-failure",
+        ("LogResult", "LogFailure", "LogFailureStage", "LogDisposition"),
+        _unsolved_logs_finalization_failure,
     ),
 )
 
@@ -2039,6 +2233,13 @@ REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO: Mapping[str, tuple[str, ...]] = {
     "observer-delivery-failure": tuple(
         sorted(predicate.id for predicate in _OBSERVER_FAILURE_PREDICATES)
     ),
+    "request-validation-failure": ("scan-run.failure.request-validation",),
+    "discovery-failure": ("scan-run.failure.discovery",),
+    "intake-failure": ("scan-run.failure.intake",),
+    "report-write-failure": ("scan-run.failure.report-write",),
+    "unsolved-logs-finalization-failure": (
+        "scan-run.failure.unsolved-logs-finalization",
+    ),
     "generated-local-ignore": tuple(
         sorted(predicate.id for predicate in _GENERATED_PREDICATES)
     ),
@@ -2124,6 +2325,7 @@ CRASH_LOG_SCAN_RUN_COVERAGE_POLICY = FamilyCoveragePolicy(
         + _QUEUED_CANCELLATION_PREDICATES
         + _ADMITTED_CANCELLATION_PREDICATES
         + _OBSERVER_FAILURE_PREDICATES
+        + _STRUCTURED_FAILURE_PREDICATES
         + _GENERATED_PREDICATES
         + _RESUME_PREDICATES
         + _ABANDON_PREDICATES

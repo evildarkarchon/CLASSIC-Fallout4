@@ -95,6 +95,10 @@ struct ScenarioInput {
     #[serde(default)]
     targeted_inputs: Vec<TargetedInput>,
     #[serde(default)]
+    directory_inputs: Vec<PathInput>,
+    #[serde(default)]
+    observed_paths: Vec<PathInput>,
+    #[serde(default)]
     forbidden_effect_paths: Vec<String>,
     #[serde(default)]
     local_ignore_padding_bytes: usize,
@@ -102,6 +106,7 @@ struct ScenarioInput {
     continuation_flow: Option<ContinuationFlowInput>,
     standard_source: Option<StandardSourceInput>,
     unsolved_logs: Option<UnsolvedLogsInput>,
+    unsolved_logs_path: Option<PathInput>,
 }
 
 /// Observation projection selected by the input-only plan.
@@ -110,6 +115,7 @@ struct ScenarioInput {
 enum ObservationProfile {
     #[default]
     Base,
+    Failure,
     LocalIgnore,
     Lifecycle,
 }
@@ -168,6 +174,7 @@ enum ScanIntentInput {
 #[serde(rename_all = "kebab-case")]
 enum UnsolvedLogsInput {
     LeaveInPlace,
+    MoveToCustom,
 }
 
 /// A declared fixture copied to one scenario-root-relative destination.
@@ -404,7 +411,7 @@ fn execute_scenario(
         .as_ref()
         .and_then(|flow| flow.observer_failure.as_ref())
         .is_some_and(|failure| failure.event_kind == ObserverFailureEventInput::DiscoveryCompleted);
-    let mut result = {
+    let execution = {
         let mut observer = |event| {
             if delivery_failed {
                 return;
@@ -439,7 +446,18 @@ fn execute_scenario(
             request,
             &cancellation,
             Some(&mut observer),
-        ))?
+        ))
+    };
+    let mut result = match execution {
+        Ok(result) => result,
+        Err(error) if scenario.input.observation_profile == ObservationProfile::Failure => {
+            return project_failure_infrastructure_observation(
+                scenario_root.path(),
+                &scenario.input,
+                &error,
+            );
+        }
+        Err(error) => return Err(error.into()),
     };
     if let Some(flow) = &scenario.input.continuation_flow {
         return execute_continuation_flow(
@@ -454,6 +472,9 @@ fn execute_scenario(
     }
     match scenario.input.observation_profile {
         ObservationProfile::Base => project_observation(scenario_root.path(), &result, &events),
+        ObservationProfile::Failure => {
+            project_failure_result_observation(scenario_root.path(), &scenario.input, &result)
+        }
         ObservationProfile::LocalIgnore => project_local_ignore_observation(
             scenario_root.path(),
             &scenario.input,
@@ -653,6 +674,15 @@ fn materialize_scenario(
             copy_fixture(fixtures, fixture_ref, root, &targeted.path)?;
         }
     }
+    materialize_directories(&input.directory_inputs, root)?;
+    Ok(())
+}
+
+/// Creates every declared directory input beneath the isolated scenario root.
+fn materialize_directories(directories: &[PathInput], root: &Path) -> RunnerResult<()> {
+    for directory in directories {
+        fs::create_dir_all(join_relative(root, &directory.path)?)?;
+    }
     Ok(())
 }
 
@@ -737,6 +767,15 @@ fn build_request(input: &ScenarioInput, root: &Path) -> RunnerResult<contract::R
                 .ok_or_else(|| invalid_data("Standard scenario has no standardSource"))?;
             let unsolved_logs = match input.unsolved_logs {
                 Some(UnsolvedLogsInput::LeaveInPlace) => StandardUnsolvedLogsIntent::LeaveInPlace,
+                Some(UnsolvedLogsInput::MoveToCustom) => {
+                    let destination = input.unsolved_logs_path.as_ref().ok_or_else(|| {
+                        invalid_data("move-to-custom requires an unsolvedLogsPath")
+                    })?;
+                    StandardUnsolvedLogsIntent::MoveToCustom(join_relative(
+                        root,
+                        &destination.path,
+                    )?)
+                }
                 None => {
                     return Err(invalid_data("Standard scenario has no unsolvedLogs intent").into());
                 }
@@ -795,6 +834,87 @@ fn join_relative(root: &Path, relative: &str) -> RunnerResult<PathBuf> {
         }
     }
     Ok(destination)
+}
+
+/// Projects a public infrastructure failure as a completed semantic observation.
+fn project_failure_infrastructure_observation(
+    root: &Path,
+    input: &ScenarioInput,
+    error: &contract::InfrastructureError,
+) -> RunnerResult<Value> {
+    Ok(json!({
+        "infrastructureError": {
+            "stage": error.stage.as_str(),
+            "messageNonEmpty": !error.message.is_empty(),
+            "path": error.path.as_ref().map(|path| path_carrier(root, path)).transpose()?,
+        },
+        "durableEffects": project_observed_effects(root, &input.observed_paths)?,
+    }))
+}
+
+/// Projects a completed run whose stable evidence is its per-log structured failures.
+fn project_failure_result_observation(
+    root: &Path,
+    input: &ScenarioInput,
+    result: &contract::RunResult,
+) -> RunnerResult<Value> {
+    let logs = result
+        .logs
+        .iter()
+        .map(|log| project_failure_log(root, log))
+        .collect::<RunnerResult<Vec<_>>>()?;
+    Ok(json!({
+        "status": result.status.as_str(),
+        "logs": logs,
+        "durableEffects": project_observed_effects(root, &input.observed_paths)?,
+    }))
+}
+
+/// Projects one failed log without retaining unstable diagnostic prose.
+fn project_failure_log(root: &Path, log: &contract::LogResult) -> RunnerResult<Value> {
+    let failures = log
+        .failures
+        .iter()
+        .map(|failure| {
+            json!({
+                "stage": failure.stage.as_str(),
+                "messageNonEmpty": !failure.message.is_empty(),
+            })
+        })
+        .collect::<Vec<_>>();
+    Ok(json!({
+        "discoveryIndex": log.discovery_index,
+        "crashLog": path_carrier(root, &log.crash_log)?,
+        "autoscanReport": log.autoscan_report.as_ref().map(|path| path_carrier(root, path)).transpose()?,
+        "disposition": log.disposition.as_str(),
+        "failures": failures,
+        "messageNonEmpty": log.message.as_ref().is_some_and(|message| !message.is_empty()),
+        "movedToUnsolvedLogs": log.moved_to_unsolved_logs,
+    }))
+}
+
+/// Classifies every declared durable-effect path in plan order.
+fn project_observed_effects(root: &Path, paths: &[PathInput]) -> RunnerResult<Vec<Value>> {
+    paths
+        .iter()
+        .map(|path| project_observed_effect(root, path))
+        .collect()
+}
+
+/// Projects one observed path as a regular file, directory, other entry, or absence.
+fn project_observed_effect(root: &Path, input: &PathInput) -> RunnerResult<Value> {
+    let path = join_relative(root, &input.path)?;
+    let kind = match fs::metadata(&path) {
+        Ok(metadata) if metadata.is_file() => "file",
+        Ok(metadata) if metadata.is_dir() => "directory",
+        Ok(_) => "other",
+        Err(error) if error.kind() == io::ErrorKind::NotFound => "missing",
+        Err(error) => return Err(error.into()),
+    };
+    Ok(json!({
+        "path": relative_path(root, &path)?,
+        "kind": kind,
+    }))
 }
 
 /// Projects the complete terminal result, deterministic traces, rendering, and durable effects.

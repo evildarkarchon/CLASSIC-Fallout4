@@ -157,7 +157,7 @@ def _copy_declared_fixture(
 def _materialize_scenario_inputs(
     plan: Mapping[str, Any], scenario: Mapping[str, Any], root: Path
 ) -> Mapping[str, Any]:
-    """Materialize only plan-declared installation data and Crash Log inputs."""
+    """Materialize plan-declared files, directories, and discovery roots."""
 
     inputs = _require_mapping(scenario.get("input"), "scenario input")
     installation = _require_sequence(
@@ -176,14 +176,24 @@ def _materialize_scenario_inputs(
         item = _require_mapping(raw_item, f"{input_field}[{index}]")
         _copy_declared_fixture(plan, scenario, item, root, f"{input_field}[{index}]")
 
+    directories = _require_sequence(
+        inputs.get("directoryInputs", []), "scenario input directoryInputs"
+    )
+    for index, raw_item in enumerate(directories):
+        item = _require_mapping(raw_item, f"directoryInputs[{index}]")
+        _runtime_path(root, item.get("path"), f"directoryInputs[{index}].path").mkdir(
+            parents=True, exist_ok=True
+        )
+
     if intent == "standard":
         standard = _require_mapping(
             inputs.get("standardSource"), "scenario input standardSource"
         )
         base = _require_mapping(standard.get("baseDirectory"), "standard baseDirectory")
-        _runtime_path(root, base.get("path"), "standard baseDirectory.path").mkdir(
-            parents=True, exist_ok=True
-        )
+        base_path = _runtime_path(root, base.get("path"), "standard baseDirectory.path")
+        # A declared file may intentionally block discovery and must reach the public envelope.
+        if not base_path.exists():
+            base_path.mkdir(parents=True)
         documents = _require_mapping(
             standard.get("configuredDocumentsRoot"),
             "standard configuredDocumentsRoot",
@@ -299,11 +309,26 @@ def _build_request(
                 )
             ),
         )
-        if inputs.get("unsolvedLogs") != "leave-in-place":
-            raise RunnerContractError(
-                "base Standard scenario must leave unsolved logs in place"
+        unsolved_logs = inputs.get("unsolvedLogs")
+        if unsolved_logs == "leave-in-place":
+            movement = classic_scanlog.ScanRunUnsolvedLogs.leave_in_place()
+        elif unsolved_logs == "move-to-custom":
+            destination = _require_mapping(
+                inputs.get("unsolvedLogsPath"), "unsolvedLogsPath"
             )
-        movement = classic_scanlog.ScanRunUnsolvedLogs.leave_in_place()
+            movement = classic_scanlog.ScanRunUnsolvedLogs.move_to_custom(
+                str(
+                    _runtime_path(
+                        root,
+                        destination.get("path"),
+                        "unsolvedLogsPath.path",
+                    )
+                )
+            )
+        else:
+            raise RunnerContractError(
+                "Standard scenario unsolvedLogs must be leave-in-place or move-to-custom"
+            )
         return classic_scanlog.ScanRunRequest.standard(configuration, source, movement)
     if intent == "targeted":
         targeted = _require_sequence(inputs.get("targetedInputs"), "targetedInputs")
@@ -663,6 +688,106 @@ def _durable_effects(logs: object, root: Path) -> dict[str, Any]:
     return {
         "reports": reports,
         "unsolvedLogs": {"path": "Unsolved Logs", "exists": unsolved.exists()},
+    }
+
+
+def _failure_durable_effects(
+    inputs: Mapping[str, Any], root: Path
+) -> list[dict[str, str]]:
+    """Classify each declared failure artifact without reading its contents."""
+
+    effects = []
+    observed_paths = _require_sequence(
+        inputs.get("observedPaths"), "scenario input observedPaths"
+    )
+    for index, raw_item in enumerate(observed_paths):
+        item = _require_mapping(raw_item, f"observedPaths[{index}]")
+        path = _runtime_path(root, item.get("path"), f"observedPaths[{index}].path")
+        try:
+            metadata = path.stat()
+        except (FileNotFoundError, NotADirectoryError):
+            kind = "missing"
+        except OSError as error:
+            raise RunnerContractError(
+                f"cannot inspect observedPaths[{index}]: {error}"
+            ) from error
+        else:
+            if stat.S_ISREG(metadata.st_mode):
+                kind = "file"
+            elif stat.S_ISDIR(metadata.st_mode):
+                kind = "directory"
+            else:
+                kind = "other"
+        effects.append(
+            {
+                "path": _relative_path(root, path, f"observedPaths[{index}]"),
+                "kind": kind,
+            }
+        )
+    return effects
+
+
+def _failure_log_results(logs: object, root: Path) -> list[dict[str, Any]]:
+    """Project typed per-log failures while excluding unstable diagnostic prose."""
+
+    serialized = []
+    for log in logs:
+        report = log.autoscan_report
+        serialized.append(
+            {
+                "discoveryIndex": int(log.discovery_index),
+                "crashLog": _path_carrier(root, log.crash_log, "failure Crash Log"),
+                "autoscanReport": None
+                if report is None
+                else _path_carrier(root, report, "failure Autoscan Report"),
+                "disposition": str(log.disposition),
+                "failures": [
+                    {
+                        "stage": str(failure.stage),
+                        "messageNonEmpty": bool(failure.message),
+                    }
+                    for failure in log.failures
+                ],
+                "messageNonEmpty": bool(log.message),
+                "movedToUnsolvedLogs": bool(log.moved_to_unsolved_logs),
+            }
+        )
+    return serialized
+
+
+def _failure_observation(
+    execution: Any, inputs: Mapping[str, Any], root: Path
+) -> dict[str, Any]:
+    """Complete a failure-profile observation from either public envelope payload."""
+
+    if execution.observer_error is not None:
+        raise RunnerContractError(
+            f"unexpected observer delivery failure: {execution.observer_error}"
+        )
+    effects = _failure_durable_effects(inputs, root)
+    error = execution.error
+    result = execution.result
+    if error is not None:
+        if result is not None:
+            raise RunnerContractError(
+                "public scan operation returned both a result and an error"
+            )
+        return {
+            "infrastructureError": {
+                "stage": str(error.stage),
+                "messageNonEmpty": bool(error.message),
+                "path": None
+                if error.path is None
+                else _path_carrier(root, error.path, "infrastructure error path"),
+            },
+            "durableEffects": effects,
+        }
+    if result is None:
+        raise RunnerContractError("public scan operation returned no result or error")
+    return {
+        "status": str(result.status),
+        "logs": _failure_log_results(result.logs, root),
+        "durableEffects": effects,
     }
 
 
@@ -1431,6 +1556,8 @@ def _execute_scenario(
                 )
             if profile == "base":
                 return _observation(execution, callbacks, root)
+            if profile == "failure":
+                return _failure_observation(execution, inputs, root)
             if profile == "local-ignore":
                 return _local_ignore_observation(
                     classic_scanlog,
@@ -1448,7 +1575,7 @@ def _execute_scenario(
                     root,
                 )
             raise RunnerContractError(
-                "observationProfile must be base, local-ignore, or lifecycle"
+                "observationProfile must be base, failure, local-ignore, or lifecycle"
             )
 
 

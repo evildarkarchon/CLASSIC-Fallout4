@@ -3,7 +3,7 @@
 > **Diagnostic only.** This ledger classifies migration targets and does **not** grant compliance, runtime coverage, or permission to remove a gate.
 
 - Obligations: **3,655**
-- Named retained analyzers: **19**
+- Named retained analyzers: **20**
 - Documented policy exceptions: **1**
 
 ## Target dispositions
@@ -12,8 +12,8 @@
 | --- | ---: |
 | `negative_analyzer` | 207 |
 | `policy_exception` | 1 |
-| `runtime_verifiable` | 3,023 |
-| `structural_analyzer` | 424 |
+| `runtime_verifiable` | 2,984 |
+| `structural_analyzer` | 463 |
 
 ## Current evidence sources
 
@@ -56,6 +56,7 @@
 - `scan-run-forbidden-export-audit` (negative): `tools/binding_compliance/scan_run_contract.py`
 - `scan-run-local-ignore-reset-internal-faults` (structural): `tools/binding_compliance/scan_run_contract.py`, `tests/fixtures/crash_log_scan_run/manifest.json`, `business-logic/classic-durable-publication/src/publication_fault.rs`, `business-logic/classic-config-core/src/installed_yaml_data_reset_fault.rs`, `business-logic/classic-config-core/src/installed_yaml_data_tests.rs`, `business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs`, `cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs`, `node-bindings/classic-node/src/scan_run_tests.rs`, `python-bindings/classic-scanlog-py/src/scan_run_tests.rs`
 - `scan-run-rust-enum-inventory` (structural): `tools/binding_compliance/scan_run_contract.py`
+- `scan-run-structured-failure-internal-faults` (structural): `tools/binding_compliance/scan_run_contract.py`, `tests/fixtures/crash_log_scan_run/manifest.json`, `business-logic/classic-scanlog-core/src/scan_run_test_support.rs`, `business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs`, `cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs`, `node-bindings/classic-node/src/scan_run_tests.rs`, `python-bindings/classic-scanlog-py/src/scan_run_tests.rs`
 - `tui-shared-runtime-ownership` (structural): `ui-applications/classic-tui/tests/shared_runtime_audit.rs`
 - `user-settings-exclusive-ownership` (negative): `tools/user_settings_ownership/check.py`
 

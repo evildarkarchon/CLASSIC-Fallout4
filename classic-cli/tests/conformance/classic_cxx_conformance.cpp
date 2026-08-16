@@ -367,6 +367,25 @@ std::string_view failure_stage_token(scanner::ScanRunContractLogFailureStage val
     throw RunnerError("unrecognized CXX log failure stage");
 }
 
+/// Returns the exhaustive stable token for one run-wide infrastructure failure stage.
+std::string_view infrastructure_failure_stage_token(scanner::ScanRunContractInfrastructureErrorStage value) {
+    switch (value) {
+    case scanner::ScanRunContractInfrastructureErrorStage::RequestValidation:
+        return "request_validation";
+    case scanner::ScanRunContractInfrastructureErrorStage::Discovery:
+        return "discovery";
+    case scanner::ScanRunContractInfrastructureErrorStage::Intake:
+        return "intake";
+    case scanner::ScanRunContractInfrastructureErrorStage::FormIdDatabaseAccess:
+        return "formid_database_access";
+    case scanner::ScanRunContractInfrastructureErrorStage::Initialization:
+        return "initialization";
+    case scanner::ScanRunContractInfrastructureErrorStage::InternalInvariant:
+        return "internal_invariant";
+    }
+    throw RunnerError("unrecognized CXX infrastructure failure stage");
+}
+
 /// Returns the exhaustive stable token for one progress phase.
 std::string_view phase_token(scanner::ScanRunContractProgressPhase value) {
     switch (value) {
@@ -720,6 +739,24 @@ json serialize_log(const scanner::ScanRunContractLogResult& log, const fs::path&
                 {"movedToUnsolvedLogs", log.moved_to_unsolved_logs}};
 }
 
+/// Serializes one failure-profile log while reducing unstable error prose to a presence contract.
+json serialize_failure_log(const scanner::ScanRunContractLogResult& log, const fs::path& root) {
+    json failures = json::array();
+    for (const auto& failure : log.failures) {
+        failures.push_back(json{{"stage", failure_stage_token(failure.stage)},
+                                {"messageNonEmpty", !owned_string(failure.message).empty()}});
+    }
+    return json{{"discoveryIndex", log.discovery_index},
+                {"crashLog", path_carrier(root, fs::path(owned_string(log.crash_log)))},
+                {"autoscanReport", log.has_autoscan_report
+                                       ? path_carrier(root, fs::path(owned_string(log.autoscan_report)))
+                                       : json(nullptr)},
+                {"disposition", disposition_token(log.disposition)},
+                {"failures", std::move(failures)},
+                {"messageNonEmpty", log.has_message && !owned_string(log.message).empty()},
+                {"movedToUnsolvedLogs", log.moved_to_unsolved_logs}};
+}
+
 /// Input-only controls for one deterministic execution boundary.
 struct ExecutionFlow {
     struct ObserverFailure {
@@ -785,7 +822,9 @@ public:
     /// Borrows the stable scenario root and optional cancellation control for callback-triggered lifecycle seams.
     explicit RecordingObserver(const fs::path& root, const scanner::ScanRunCancellation* cancellation = nullptr,
                                const ExecutionFlow* flow = nullptr)
-        : root_(root), cancellation_(cancellation), flow_(flow) {}
+        : root_(root)
+        , cancellation_(cancellation)
+        , flow_(flow) {}
 
     /// Traverses every borrowed DTO field before the synchronous callback returns.
     void on_scan_run_event(const scanner::ScanRunContractEvent& event) const noexcept override {
@@ -936,8 +975,7 @@ private:
             return;
         }
         if ((flow_->cancellation == "on-first-log-queued" && event_kind == "log_queued") ||
-            (flow_->cancellation == "on-first-log-started" && event_kind == "log_started" &&
-             discovery_index == 0)) {
+            (flow_->cancellation == "on-first-log-started" && event_kind == "log_started" && discovery_index == 0)) {
             boundary_triggered_ = true;
             scanner::scan_run_cancellation_cancel(*cancellation_);
         }
@@ -1008,12 +1046,34 @@ const json& materialize_inputs(const json& plan, const json& scenario, const fs:
     }
     if (intent == "standard") {
         const json& source = input.at("standardSource");
-        fs::create_directories(
-            runtime_path(root, source.at("baseDirectory").at("path"), "standard baseDirectory.path"));
+        const fs::path base_directory =
+            runtime_path(root, source.at("baseDirectory").at("path"), "standard baseDirectory.path");
+        // Failure plans may deliberately retain a blocker file so public discovery,
+        // rather than runner materialization, owns the typed infrastructure error.
+        if (!fs::exists(base_directory) || fs::is_directory(base_directory)) {
+            fs::create_directories(base_directory);
+        } else if (input.value("observationProfile", "base") != "failure") {
+            throw RunnerError("standard baseDirectory.path must be a directory");
+        }
         fs::create_directories(runtime_path(root, source.at("configuredDocumentsRoot").at("path"),
                                             "standard configuredDocumentsRoot.path"));
     } else if (intent != "targeted") {
         throw RunnerError("scenario intent must be standard or targeted");
+    }
+    const auto directory_inputs = input.find("directoryInputs");
+    if (directory_inputs != input.end()) {
+        if (!directory_inputs->is_array()) {
+            throw RunnerError("directoryInputs must be an array");
+        }
+        index = 0;
+        for (const auto& carrier : *directory_inputs) {
+            if (!carrier.is_object() || !carrier.contains("path")) {
+                throw RunnerError("directoryInputs[" + std::to_string(index) + "] must contain path");
+            }
+            fs::create_directories(
+                runtime_path(root, carrier.at("path"), "directoryInputs[" + std::to_string(index) + "].path"));
+            ++index;
+        }
     }
     return input;
 }
@@ -1065,9 +1125,6 @@ rust::Box<scanner::ScanRunRequest> build_request(const json& input, const fs::pa
 
     const std::string intent = input.at("intent").get<std::string>();
     if (intent == "standard") {
-        if (input.at("unsolvedLogs") != "leave-in-place") {
-            throw RunnerError("base CXX Standard scenario must leave Unsolved Logs in place");
-        }
         const json& raw_source = input.at("standardSource");
         scanner::ScanRunStandardSourceDto source{};
         source.base_directory =
@@ -1076,8 +1133,25 @@ rust::Box<scanner::ScanRunRequest> build_request(const json& input, const fs::pa
         source.configured_documents_root =
             runtime_path(root, raw_source.at("configuredDocumentsRoot").at("path"), "configuredDocumentsRoot.path")
                 .string();
-        const auto movement = scanner::scan_run_unsolved_logs_leave_in_place();
-        return scanner::scan_run_request_standard(configuration, source, *movement);
+        const std::string unsolved_logs = input.at("unsolvedLogs").get<std::string>();
+        if (unsolved_logs == "leave-in-place") {
+            if (input.contains("unsolvedLogsPath") && !input.at("unsolvedLogsPath").is_null()) {
+                throw RunnerError("unsolvedLogsPath requires move-to-custom");
+            }
+            const auto movement = scanner::scan_run_unsolved_logs_leave_in_place();
+            return scanner::scan_run_request_standard(configuration, source, *movement);
+        }
+        if (unsolved_logs == "move-to-custom") {
+            if (!input.contains("unsolvedLogsPath") || !input.at("unsolvedLogsPath").is_object() ||
+                !input.at("unsolvedLogsPath").contains("path")) {
+                throw RunnerError("move-to-custom requires unsolvedLogsPath.path");
+            }
+            const std::string destination =
+                runtime_path(root, input.at("unsolvedLogsPath").at("path"), "unsolvedLogsPath.path").string();
+            const auto movement = scanner::scan_run_unsolved_logs_move_to_custom(destination);
+            return scanner::scan_run_request_standard(configuration, source, *movement);
+        }
+        throw RunnerError("unsupported Standard unsolvedLogs intent: " + unsolved_logs);
     }
     scanner::ScanRunTargetedSourceDto source{};
     for (const auto& raw_input : input.at("targetedInputs")) {
@@ -1105,6 +1179,52 @@ json project_file_effect(const fs::path& root, const fs::path& path) {
         throw RunnerError("cannot classify durable effect: " + path.string() + ": " + error.message());
     }
     return json{{"path", relative_path(root, path)}, {"exists", exists}, {"identity", std::move(identity)}};
+}
+
+/// Classifies one declared path without importing platform-specific filesystem error prose.
+json project_path_kind(const fs::path& root, const fs::path& path) {
+    std::error_code error;
+    if (!fs::exists(path, error)) {
+        if (error) {
+            throw RunnerError("cannot inspect observed path: " + path.string() + ": " + error.message());
+        }
+        return json{{"path", relative_path(root, path)}, {"kind", "missing"}};
+    }
+    if (fs::is_regular_file(path, error)) {
+        return json{{"path", relative_path(root, path)}, {"kind", "file"}};
+    }
+    if (error) {
+        throw RunnerError("cannot classify observed path: " + path.string() + ": " + error.message());
+    }
+    if (fs::is_directory(path, error)) {
+        return json{{"path", relative_path(root, path)}, {"kind", "directory"}};
+    }
+    if (error) {
+        throw RunnerError("cannot classify observed path: " + path.string() + ": " + error.message());
+    }
+    return json{{"path", relative_path(root, path)}, {"kind", "other"}};
+}
+
+/// Projects declared filesystem effects in plan order for failure-profile comparison.
+json project_observed_paths(const fs::path& root, const json& input) {
+    const auto observed_paths = input.find("observedPaths");
+    if (observed_paths == input.end()) {
+        return json::array();
+    }
+    if (!observed_paths->is_array()) {
+        throw RunnerError("observedPaths must be an array");
+    }
+    json effects = json::array();
+    std::size_t index = 0;
+    for (const auto& carrier : *observed_paths) {
+        if (!carrier.is_object() || !carrier.contains("path")) {
+            throw RunnerError("observedPaths[" + std::to_string(index) + "] must contain path");
+        }
+        effects.push_back(project_path_kind(
+            root, runtime_path(root, carrier.at("path"), "observedPaths[" + std::to_string(index) + "].path")));
+        ++index;
+    }
+    return effects;
 }
 
 /// Projects one report's exact durable identity alongside existence and non-empty facts.
@@ -1307,9 +1427,8 @@ json project_replay(const json& action, const scanner::ScanRunContractExecutionR
 
 /// Projects cancellation seams, observer delivery failure, and their durable effects.
 json project_lifecycle_observation(const scanner::ScanRunContractExecutionResult& execution,
-                                   const RecordingObserver& observer,
-                                   const scanner::ScanRunCancellation& cancellation, const ExecutionFlow& flow,
-                                   const fs::path& root, const json& input) {
+                                   const RecordingObserver& observer, const scanner::ScanRunCancellation& cancellation,
+                                   const ExecutionFlow& flow, const fs::path& root, const json& input) {
     if (execution.has_error) {
         throw RunnerError("CXX scan returned infrastructure error: " + owned_string(execution.error.message));
     }
@@ -1338,8 +1457,7 @@ json project_lifecycle_observation(const scanner::ScanRunContractExecutionResult
             if (error) {
                 throw RunnerError("cannot inspect lifecycle report: " + report.string() + ": " + error.message());
             }
-            reports.push_back(
-                json{{"path", relative_path(root, report)}, {"exists", exists}, {"nonEmpty", non_empty}});
+            reports.push_back(json{{"path", relative_path(root, report)}, {"exists", exists}, {"nonEmpty", non_empty}});
         }
     }
     json forbidden = json::array();
@@ -1353,20 +1471,52 @@ json project_lifecycle_observation(const scanner::ScanRunContractExecutionResult
         forbidden.push_back(json{{"path", relative_path(root, path)}, {"exists", exists}});
     }
     return json{{"run", json{{"status", status_token(result.status)},
-                              {"message", result.has_message ? json(owned_string(result.message)) : json(nullptr)},
-                              {"total", result.total},
-                              {"succeeded", result.succeeded},
-                              {"failed", result.failed},
-                              {"cancelled", result.cancelled},
-                              {"effectiveConcurrency", result.has_effective_concurrency
-                                                           ? json(result.effective_concurrency)
-                                                           : json(nullptr)}}},
+                             {"message", result.has_message ? json(owned_string(result.message)) : json(nullptr)},
+                             {"total", result.total},
+                             {"succeeded", result.succeeded},
+                             {"failed", result.failed},
+                             {"cancelled", result.cancelled},
+                             {"effectiveConcurrency",
+                              result.has_effective_concurrency ? json(result.effective_concurrency) : json(nullptr)}}},
                 {"discovery", result.has_discovery ? serialize_discovery(result.discovery, root) : json(nullptr)},
                 {"logs", std::move(logs)},
                 {"events", observer.compact_observation(result)},
                 {"observerFailure", observer_failure},
                 {"cancellation", json{{"requested", scanner::scan_run_cancellation_is_cancelled(cancellation)}}},
                 {"durableEffects", json{{"reports", std::move(reports)}, {"forbidden", std::move(forbidden)}}}};
+}
+
+/// Projects public structured failures without turning domain errors into adapter-command failures.
+json project_failure_observation(const scanner::ScanRunContractExecutionResult& execution, const fs::path& root,
+                                 const json& input) {
+    if (execution.has_resume_error) {
+        throw RunnerError("failure-profile CXX scan returned resume error: " +
+                          owned_string(execution.resume_error.message));
+    }
+    const json durable_effects = project_observed_paths(root, input);
+    if (execution.has_error) {
+        if (execution.has_result) {
+            throw RunnerError("failure-profile CXX scan returned both result and infrastructure error");
+        }
+        return json{
+            {"infrastructureError",
+             json{{"stage", infrastructure_failure_stage_token(execution.error.stage)},
+                  {"messageNonEmpty", !owned_string(execution.error.message).empty()},
+                  {"path", execution.error.has_path ? path_carrier(root, fs::path(owned_string(execution.error.path)))
+                                                    : json(nullptr)}}},
+            {"durableEffects", durable_effects}};
+    }
+    if (!execution.has_result) {
+        throw RunnerError("failure-profile CXX scan returned no result or infrastructure error");
+    }
+
+    json logs = json::array();
+    for (const auto& log : execution.result.logs) {
+        logs.push_back(serialize_failure_log(log, root));
+    }
+    return json{{"status", status_token(execution.result.status)},
+                {"logs", std::move(logs)},
+                {"durableEffects", durable_effects}};
 }
 
 /// Projects the complete public CXX terminal envelope and durable effects.
@@ -1537,8 +1687,11 @@ json execute_scenario(const json& plan, const json& scenario) {
         return project_lifecycle_observation(execution, observer, *cancellation, *execution_flow, temporary.path(),
                                              input);
     }
+    if (profile == "failure") {
+        return project_failure_observation(execution, temporary.path(), input);
+    }
     if (profile != "base") {
-        throw RunnerError("observationProfile must be base, local-ignore, or lifecycle");
+        throw RunnerError("observationProfile must be base, local-ignore, lifecycle, or failure");
     }
     return project_observation(execution, observer, temporary.path());
 }

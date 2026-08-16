@@ -64,6 +64,11 @@ EXPECTED_SCENARIO_IDS = [
     "post-discovery-queued-cancelled",
     "admitted-durable-cancelled",
     "observer-delivery-failure",
+    "request-validation-failure",
+    "discovery-failure",
+    "intake-failure",
+    "report-write-failure",
+    "unsolved-logs-finalization-failure",
     "proceed-without-ignore-recovery",
     "reset-to-default-recovery",
     "reset-intervening-change-conflict",
@@ -72,7 +77,7 @@ EXPECTED_SCENARIO_IDS = [
     "reset-post-critical-cancelled",
     "abandon-local-ignore-recovery",
 ]
-"""The public-seam Crash Log Scan Run v1 scenarios required by issues #193-195."""
+"""The public-seam Crash Log Scan Run v1 scenarios required by issues #193-196."""
 
 
 def test_live_pack_is_input_only_for_all_three_base_adapters(tmp_path: Path) -> None:
@@ -385,6 +390,137 @@ def test_observer_failure_facts_fail_closed_on_mutation() -> None:
             ]["forbidden"][0].__setitem__("exists", True),
         },
     )
+
+
+@pytest.mark.parametrize(
+    ("scenario_id", "expected_fact_id", "mutations"),
+    [
+        (
+            "request-validation-failure",
+            "scan-run.failure.request-validation",
+            (
+                lambda value: value["infrastructureError"].__setitem__(
+                    "stage", "intake"
+                ),
+                lambda value: value["infrastructureError"].__setitem__(
+                    "messageNonEmpty", False
+                ),
+                lambda value: value["infrastructureError"].__setitem__(
+                    "path", {"path": "CLASSIC Data"}
+                ),
+                lambda value: value["durableEffects"][1].__setitem__(
+                    "kind", "file"
+                ),
+            ),
+        ),
+        (
+            "discovery-failure",
+            "scan-run.failure.discovery",
+            (
+                lambda value: value["infrastructureError"].__setitem__(
+                    "stage", "intake"
+                ),
+                lambda value: value["infrastructureError"].__setitem__(
+                    "messageNonEmpty", False
+                ),
+                lambda value: value["infrastructureError"]["path"].__setitem__(
+                    "path", "wrong"
+                ),
+                lambda value: value["durableEffects"][0].__setitem__(
+                    "kind", "missing"
+                ),
+            ),
+        ),
+        (
+            "intake-failure",
+            "scan-run.failure.intake",
+            (
+                lambda value: value["infrastructureError"].__setitem__(
+                    "stage", "request_validation"
+                ),
+                lambda value: value["infrastructureError"].__setitem__(
+                    "messageNonEmpty", False
+                ),
+                lambda value: value["infrastructureError"]["path"].__setitem__(
+                    "path", "wrong"
+                ),
+                lambda value: value["durableEffects"][1].__setitem__(
+                    "kind", "file"
+                ),
+            ),
+        ),
+        (
+            "report-write-failure",
+            "scan-run.failure.report-write",
+            (
+                lambda value: value["logs"][0].__setitem__(
+                    "disposition", "succeeded"
+                ),
+                lambda value: value["logs"][0]["failures"][0].__setitem__(
+                    "stage", "analysis"
+                ),
+                lambda value: value["logs"][0]["failures"][0].__setitem__(
+                    "messageNonEmpty", False
+                ),
+                lambda value: value["logs"][0]["crashLog"].__setitem__(
+                    "path", "wrong.log"
+                ),
+                lambda value: value["logs"][0].__setitem__(
+                    "movedToUnsolvedLogs", True
+                ),
+                lambda value: value["durableEffects"][1].__setitem__(
+                    "kind", "missing"
+                ),
+            ),
+        ),
+        (
+            "unsolved-logs-finalization-failure",
+            "scan-run.failure.unsolved-logs-finalization",
+            (
+                lambda value: value["logs"][0].__setitem__(
+                    "disposition", "succeeded"
+                ),
+                lambda value: value["logs"][0]["failures"][1].__setitem__(
+                    "stage", "analysis"
+                ),
+                lambda value: value["logs"][0]["failures"][1].__setitem__(
+                    "messageNonEmpty", False
+                ),
+                lambda value: value["logs"][0]["crashLog"].__setitem__(
+                    "path", "wrong.log"
+                ),
+                lambda value: value["logs"][0].__setitem__(
+                    "movedToUnsolvedLogs", True
+                ),
+                lambda value: value["durableEffects"][2].__setitem__(
+                    "kind", "missing"
+                ),
+            ),
+        ),
+    ],
+)
+def test_public_failure_facts_fail_closed_on_semantic_mutation(
+    scenario_id: str,
+    expected_fact_id: str,
+    mutations: tuple[object, ...],
+) -> None:
+    """Failure coverage requires typed errors, paths, dispositions, and effects."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    scenario = _scenario_by_id(pack, scenario_id)
+    expected = scenario["expected"]
+    assert isinstance(expected, dict)
+    for raw_mutate in mutations:
+        assert callable(raw_mutate)
+        changed = copy.deepcopy(expected)
+        raw_mutate(changed)
+        facts = derive_observed_fact_ids(
+            pack,
+            scenario,
+            changed,
+            CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+        )
+        assert expected_fact_id not in facts
 
 
 def test_generated_local_ignore_facts_fail_closed_on_semantic_mutation() -> None:

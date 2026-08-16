@@ -27,8 +27,8 @@
     "byClassification": {
       "negative_analyzer": 207,
       "policy_exception": 1,
-      "runtime_verifiable": 3023,
-      "structural_analyzer": 424
+      "runtime_verifiable": 2984,
+      "structural_analyzer": 463
     },
     "byParticipant": {
       "cli": 7,
@@ -220,6 +220,20 @@
       "evidenceKind": "structural",
       "paths": [
         "tools/binding_compliance/scan_run_contract.py"
+      ],
+      "blockingRequirementId": "scan-run-contract-variants"
+    },
+    {
+      "id": "scan-run-structured-failure-internal-faults",
+      "evidenceKind": "structural",
+      "paths": [
+        "tools/binding_compliance/scan_run_contract.py",
+        "tests/fixtures/crash_log_scan_run/manifest.json",
+        "business-logic/classic-scanlog-core/src/scan_run_test_support.rs",
+        "business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs",
+        "cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs",
+        "node-bindings/classic-node/src/scan_run_tests.rs",
+        "python-bindings/classic-scanlog-py/src/scan_run_tests.rs"
       ],
       "blockingRequirementId": "scan-run-contract-variants"
     },
@@ -73943,20 +73957,21 @@
         "locator": "/adapters/cxx/acknowledgedVariants/25#infrastructure_error_stage.formid_database_access"
       },
       "participant": "cxx",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/cxx/acknowledgedVariants/25#infrastructure_error_stage.formid_database_access",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -73967,20 +73982,21 @@
         "locator": "/adapters/cxx/acknowledgedVariants/26#infrastructure_error_stage.initialization"
       },
       "participant": "cxx",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/cxx/acknowledgedVariants/26#infrastructure_error_stage.initialization",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -74015,20 +74031,21 @@
         "locator": "/adapters/cxx/acknowledgedVariants/27#infrastructure_error_stage.internal_invariant"
       },
       "participant": "cxx",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/cxx/acknowledgedVariants/27#infrastructure_error_stage.internal_invariant",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -74663,20 +74680,21 @@
         "locator": "/adapters/cxx/acknowledgedVariants/19#log_failure_stage.analysis"
       },
       "participant": "cxx",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/cxx/acknowledgedVariants/19#log_failure_stage.analysis",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -75697,20 +75715,21 @@
         "locator": "/adapters/node/acknowledgedVariants/25#infrastructure_error_stage.formid_database_access"
       },
       "participant": "node",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/node/acknowledgedVariants/25#infrastructure_error_stage.formid_database_access",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -75721,20 +75740,21 @@
         "locator": "/adapters/node/acknowledgedVariants/26#infrastructure_error_stage.initialization"
       },
       "participant": "node",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/node/acknowledgedVariants/26#infrastructure_error_stage.initialization",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -75769,20 +75789,21 @@
         "locator": "/adapters/node/acknowledgedVariants/27#infrastructure_error_stage.internal_invariant"
       },
       "participant": "node",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/node/acknowledgedVariants/27#infrastructure_error_stage.internal_invariant",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -76417,20 +76438,21 @@
         "locator": "/adapters/node/acknowledgedVariants/19#log_failure_stage.analysis"
       },
       "participant": "node",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/node/acknowledgedVariants/19#log_failure_stage.analysis",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -77451,20 +77473,21 @@
         "locator": "/adapters/python/acknowledgedVariants/25#infrastructure_error_stage.formid_database_access"
       },
       "participant": "python",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/python/acknowledgedVariants/25#infrastructure_error_stage.formid_database_access",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -77475,20 +77498,21 @@
         "locator": "/adapters/python/acknowledgedVariants/26#infrastructure_error_stage.initialization"
       },
       "participant": "python",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/python/acknowledgedVariants/26#infrastructure_error_stage.initialization",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -77523,20 +77547,21 @@
         "locator": "/adapters/python/acknowledgedVariants/27#infrastructure_error_stage.internal_invariant"
       },
       "participant": "python",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/python/acknowledgedVariants/27#infrastructure_error_stage.internal_invariant",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -78171,20 +78196,21 @@
         "locator": "/adapters/python/acknowledgedVariants/19#log_failure_stage.analysis"
       },
       "participant": "python",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/python/acknowledgedVariants/19#log_failure_stage.analysis",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -79205,20 +79231,21 @@
         "locator": "/adapters/rust/acknowledgedVariants/25#infrastructure_error_stage.formid_database_access"
       },
       "participant": "rust",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/rust/acknowledgedVariants/25#infrastructure_error_stage.formid_database_access",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -79229,20 +79256,21 @@
         "locator": "/adapters/rust/acknowledgedVariants/26#infrastructure_error_stage.initialization"
       },
       "participant": "rust",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/rust/acknowledgedVariants/26#infrastructure_error_stage.initialization",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -79277,20 +79305,21 @@
         "locator": "/adapters/rust/acknowledgedVariants/27#infrastructure_error_stage.internal_invariant"
       },
       "participant": "rust",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/rust/acknowledgedVariants/27#infrastructure_error_stage.internal_invariant",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -79925,20 +79954,21 @@
         "locator": "/adapters/rust/acknowledgedVariants/19#log_failure_stage.analysis"
       },
       "participant": "rust",
-      "mappingOrigin": "legacy_variant_acknowledgement",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/rust/acknowledgedVariants/19#log_failure_stage.analysis",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -80719,20 +80749,21 @@
         "locator": "/scenarios/cancellation_boundaries/evidence/cxx/1/contains/1#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=structured_result_mapping_preserves_pairs_options_failures_and_paths"
       },
       "participant": "cxx",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "cancellation_boundaries",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/cancellation_boundaries/evidence/cxx/1/contains/1#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=structured_result_mapping_preserves_pairs_options_failures_and_paths",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -80840,20 +80871,21 @@
         "locator": "/scenarios/structured_failures/evidence/cxx/0/contains/0#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=structured_result_mapping_preserves_pairs_options_failures_and_paths"
       },
       "participant": "cxx",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "structured_failures",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/structured_failures/evidence/cxx/0/contains/0#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=structured_result_mapping_preserves_pairs_options_failures_and_paths",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -80864,20 +80896,21 @@
         "locator": "/adapters/cxx/evidence/0/contains/2#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=structured_result_mapping_preserves_pairs_options_failures_and_paths"
       },
       "participant": "cxx",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/cxx/evidence/0/contains/2#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=structured_result_mapping_preserves_pairs_options_failures_and_paths",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -80936,20 +80969,21 @@
         "locator": "/scenarios/structured_failures/evidence/cxx/0/contains/1#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=shared_failure_fixture_maps_every_cxx_failure_field"
       },
       "participant": "cxx",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "structured_failures",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/structured_failures/evidence/cxx/0/contains/1#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=shared_failure_fixture_maps_every_cxx_failure_field",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -80960,20 +80994,21 @@
         "locator": "/scenarios/structured_failures/evidence/cxx/0/contains/2#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=maps_every_core_enum_variant_to_a_typed_cxx_variant"
       },
       "participant": "cxx",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "structured_failures",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/structured_failures/evidence/cxx/0/contains/2#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=maps_every_core_enum_variant_to_a_typed_cxx_variant",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -81153,20 +81188,21 @@
         "locator": "/adapters/cxx/evidence/0/contains/3#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=shared_failure_fixture_maps_every_cxx_failure_field"
       },
       "participant": "cxx",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/cxx/evidence/0/contains/3#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=shared_failure_fixture_maps_every_cxx_failure_field",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -81226,20 +81262,21 @@
         "locator": "/adapters/cxx/evidence/0/contains/0#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=maps_every_core_enum_variant_to_a_typed_cxx_variant"
       },
       "participant": "cxx",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/cxx/evidence/0/contains/0#path=cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs;marker=maps_every_core_enum_variant_to_a_typed_cxx_variant",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -81371,20 +81408,21 @@
         "locator": "/adapters/node/evidence/0/contains/2#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=shared_failure_fixture_maps_every_node_failure_field"
       },
       "participant": "node",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/node/evidence/0/contains/2#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=shared_failure_fixture_maps_every_node_failure_field",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -81468,20 +81506,21 @@
         "locator": "/scenarios/structured_failures/evidence/node/0/contains/0#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=terminal_mapping_preserves_every_status_failure_and_optional_path"
       },
       "participant": "node",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "structured_failures",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/structured_failures/evidence/node/0/contains/0#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=terminal_mapping_preserves_every_status_failure_and_optional_path",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -81492,20 +81531,21 @@
         "locator": "/adapters/node/evidence/0/contains/1#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=terminal_mapping_preserves_every_status_failure_and_optional_path"
       },
       "participant": "node",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/node/evidence/0/contains/1#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=terminal_mapping_preserves_every_status_failure_and_optional_path",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -81588,20 +81628,21 @@
         "locator": "/scenarios/structured_failures/evidence/node/0/contains/2#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=infrastructure_mapping_covers_every_stage_with_and_without_paths"
       },
       "participant": "node",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "structured_failures",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/structured_failures/evidence/node/0/contains/2#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=infrastructure_mapping_covers_every_stage_with_and_without_paths",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -81733,20 +81774,21 @@
         "locator": "/scenarios/cancellation_boundaries/evidence/node/0/contains/0#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=terminal_mapping_preserves_every_status_failure_and_optional_path"
       },
       "participant": "node",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "cancellation_boundaries",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/cancellation_boundaries/evidence/node/0/contains/0#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=terminal_mapping_preserves_every_status_failure_and_optional_path",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -81877,20 +81919,21 @@
         "locator": "/adapters/node/evidence/0/contains/3#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=infrastructure_mapping_covers_every_stage_with_and_without_paths"
       },
       "participant": "node",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/node/evidence/0/contains/3#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=infrastructure_mapping_covers_every_stage_with_and_without_paths",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -81925,20 +81968,21 @@
         "locator": "/scenarios/structured_failures/evidence/node/0/contains/1#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=shared_failure_fixture_maps_every_node_failure_field"
       },
       "participant": "node",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "structured_failures",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/structured_failures/evidence/node/0/contains/1#path=node-bindings/classic-node/src/scan_run_tests.rs;marker=shared_failure_fixture_maps_every_node_failure_field",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -82119,20 +82163,21 @@
         "locator": "/scenarios/structured_failures/evidence/python/0/contains/2#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=maps_every_infrastructure_stage_and_optional_path"
       },
       "participant": "python",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "structured_failures",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/structured_failures/evidence/python/0/contains/2#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=maps_every_infrastructure_stage_and_optional_path",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -82216,20 +82261,21 @@
         "locator": "/scenarios/structured_failures/evidence/python/0/contains/0#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=maps_complete_log_result_and_all_failure_stages"
       },
       "participant": "python",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "structured_failures",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/structured_failures/evidence/python/0/contains/0#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=maps_complete_log_result_and_all_failure_stages",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -82408,20 +82454,21 @@
         "locator": "/scenarios/structured_failures/evidence/python/0/contains/1#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=shared_failure_fixture_maps_every_python_failure_field"
       },
       "participant": "python",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "structured_failures",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/structured_failures/evidence/python/0/contains/1#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=shared_failure_fixture_maps_every_python_failure_field",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -82722,20 +82769,21 @@
         "locator": "/adapters/python/evidence/0/contains/2#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=maps_complete_log_result_and_all_failure_stages"
       },
       "participant": "python",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/python/evidence/0/contains/2#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=maps_complete_log_result_and_all_failure_stages",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -82746,20 +82794,21 @@
         "locator": "/adapters/python/evidence/0/contains/3#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=shared_failure_fixture_maps_every_python_failure_field"
       },
       "participant": "python",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/python/evidence/0/contains/3#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=shared_failure_fixture_maps_every_python_failure_field",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -82819,20 +82868,21 @@
         "locator": "/adapters/python/evidence/0/contains/4#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=maps_every_infrastructure_stage_and_optional_path"
       },
       "participant": "python",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/python/evidence/0/contains/4#path=python-bindings/classic-scanlog-py/src/scan_run_tests.rs;marker=maps_every_infrastructure_stage_and_optional_path",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -82988,20 +83038,21 @@
         "locator": "/adapters/rust/evidence/0/contains/4#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=injected_infrastructure_failures_preserve_every_stable_contract_field"
       },
       "participant": "rust",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
+        "familyId": null,
         "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "observationOrAssertion": "/adapters/rust/evidence/0/contains/4#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=injected_infrastructure_failures_preserve_every_stable_contract_field",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -83278,20 +83329,21 @@
         "locator": "/scenarios/structured_failures/evidence/rust/0/contains/0#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=final_log_result_preserves_multiple_structured_failure_stages"
       },
       "participant": "rust",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "structured_failures",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/structured_failures/evidence/rust/0/contains/0#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=final_log_result_preserves_multiple_structured_failure_stages",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {
@@ -83302,20 +83354,21 @@
         "locator": "/scenarios/structured_failures/evidence/rust/0/contains/1#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=injected_infrastructure_failures_preserve_every_stable_contract_field"
       },
       "participant": "rust",
-      "mappingOrigin": "legacy_source_marker",
-      "classification": "runtime_verifiable",
+      "mappingOrigin": "retained_internal_failure_projection",
+      "classification": "structural_analyzer",
       "target": {
-        "familyId": "crash-log-scan-run",
-        "scenarioId": "structured_failures",
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "/scenarios/structured_failures/evidence/rust/0/contains/1#path=business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs;marker=injected_infrastructure_failures_preserve_every_stable_contract_field",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "scan-run-structured-failure-internal-faults"
       },
       "retainedAnalyzerIds": [
-        "scan-run-contract-validator"
+        "scan-run-structured-failure-internal-faults"
       ],
-      "migrationState": "shadow",
+      "migrationState": "blocking",
       "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
+        "The retained scan-run-structured-failure-internal-faults analyzer already fails its blocking workflow."
       ]
     },
     {

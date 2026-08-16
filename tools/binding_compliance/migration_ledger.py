@@ -106,6 +106,33 @@ SCAN_RUN_INTERNAL_RESET_MARKERS = frozenset(
 )
 """Blocking internal tests that preserve unreachable reset-fault projection coverage."""
 
+SCAN_RUN_INTERNAL_FAILURE_VARIANTS = frozenset(
+    {
+        "log_failure_stage.analysis",
+        "infrastructure_error_stage.formid_database_access",
+        "infrastructure_error_stage.initialization",
+        "infrastructure_error_stage.internal_invariant",
+    }
+)
+"""Failure variants without a deterministic cross-adapter public execution seam."""
+
+SCAN_RUN_INTERNAL_FAILURE_MARKERS = frozenset(
+    {
+        "final_log_result_preserves_multiple_structured_failure_stages",
+        "injected_infrastructure_failures_preserve_every_stable_contract_field",
+        "structured_result_mapping_preserves_pairs_options_failures_and_paths",
+        "shared_failure_fixture_maps_every_cxx_failure_field",
+        "maps_every_core_enum_variant_to_a_typed_cxx_variant",
+        "terminal_mapping_preserves_every_status_failure_and_optional_path",
+        "shared_failure_fixture_maps_every_node_failure_field",
+        "infrastructure_mapping_covers_every_stage_with_and_without_paths",
+        "maps_complete_log_result_and_all_failure_stages",
+        "shared_failure_fixture_maps_every_python_failure_field",
+        "maps_every_infrastructure_stage_and_optional_path",
+    }
+)
+"""Injected or constructed structured-failure evidence retained as structural proof."""
+
 DISPLAY_AUDIT_SPECS: tuple[
     tuple[str, Path, tuple[tuple[str, str], ...], tuple[tuple[str, str], ...]], ...
 ] = (
@@ -329,6 +356,20 @@ BASE_ANALYZER_CATALOG: tuple[dict[str, Any], ...] = (
             "business-logic/classic-durable-publication/src/publication_fault.rs",
             "business-logic/classic-config-core/src/installed_yaml_data_reset_fault.rs",
             "business-logic/classic-config-core/src/installed_yaml_data_tests.rs",
+            "business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs",
+            "cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs",
+            "node-bindings/classic-node/src/scan_run_tests.rs",
+            "python-bindings/classic-scanlog-py/src/scan_run_tests.rs",
+        ],
+        "blockingRequirementId": "scan-run-contract-variants",
+    },
+    {
+        "id": "scan-run-structured-failure-internal-faults",
+        "evidenceKind": "structural",
+        "paths": [
+            "tools/binding_compliance/scan_run_contract.py",
+            "tests/fixtures/crash_log_scan_run/manifest.json",
+            "business-logic/classic-scanlog-core/src/scan_run_test_support.rs",
             "business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs",
             "cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs",
             "node-bindings/classic-node/src/scan_run_tests.rs",
@@ -923,6 +964,23 @@ def _evidence_markers(
                     )
                 )
                 continue
+            if marker in SCAN_RUN_INTERNAL_FAILURE_MARKERS:
+                obligations.append(
+                    _analyzer_obligation(
+                        obligation_id=f"{source_kind}:{participant}:{digest}",
+                        source_kind=source_kind,
+                        artifact=artifact,
+                        locator=(
+                            f"{scope}/{entry_index}/contains/{marker_index}"
+                            f"#path={path};marker={marker}"
+                        ),
+                        participant=participant,
+                        mapping_origin="retained_internal_failure_projection",
+                        classification="structural_analyzer",
+                        analyzer_id="scan-run-structured-failure-internal-faults",
+                    )
+                )
+                continue
             obligations.append(
                 _planned_runtime_obligation(
                     obligation_id=f"{source_kind}:{participant}:{digest}",
@@ -1020,6 +1078,20 @@ def _scan_run_obligations(repo_root: Path) -> list[dict[str, Any]]:
                         mapping_origin="retained_internal_fault_projection",
                         classification="structural_analyzer",
                         analyzer_id="scan-run-local-ignore-reset-internal-faults",
+                    )
+                )
+                continue
+            if variant in SCAN_RUN_INTERNAL_FAILURE_VARIANTS:
+                obligations.append(
+                    _analyzer_obligation(
+                        obligation_id=f"scan-run:variant:{participant}:{variant}",
+                        source_kind="scan_run_variant_acknowledgement",
+                        artifact=SCAN_RUN_MANIFEST,
+                        locator=locator,
+                        participant=participant,
+                        mapping_origin="retained_internal_failure_projection",
+                        classification="structural_analyzer",
+                        analyzer_id="scan-run-structured-failure-internal-faults",
                     )
                 )
                 continue

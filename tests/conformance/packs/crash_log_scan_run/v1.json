@@ -19,7 +19,12 @@
       "rustSymbols": [
         "Request",
         "RunResult",
+        "LogResult",
+        "LogFailure",
+        "LogFailureStage",
         "LogDisposition",
+        "InfrastructureError",
+        "InfrastructureErrorStage",
         "CrashLogScanRunContinuation",
         "LocalIgnoreRecoveryDecision",
         "ResumeError",
@@ -39,6 +44,7 @@
         "events",
         "cancellation",
         "observer-failure",
+        "structured-failure",
         "display-content",
         "recovery",
         "replay",
@@ -3553,6 +3559,401 @@
             }
           ]
         }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "request-validation-failure",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 0,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Failures/crash-request-validation.log"
+          }
+        ],
+        "observedPaths": [
+          {
+            "path": "Failures/crash-request-validation.log"
+          },
+          {
+            "path": "Failures/crash-request-validation-AUTOSCAN.md"
+          }
+        ]
+      },
+      "expected": {
+        "infrastructureError": {
+          "stage": "request_validation",
+          "messageNonEmpty": true,
+          "path": null
+        },
+        "durableEffects": [
+          {
+            "path": "Failures/crash-request-validation.log",
+            "kind": "file"
+          },
+          {
+            "path": "Failures/crash-request-validation-AUTOSCAN.md",
+            "kind": "missing"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "discovery-failure",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "standard",
+        "logInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Blocked Discovery"
+          }
+        ],
+        "observedPaths": [
+          {
+            "path": "Blocked Discovery"
+          }
+        ],
+        "standardSource": {
+          "baseDirectory": {
+            "path": "Blocked Discovery"
+          },
+          "configuredDocumentsRoot": {
+            "path": "Failure Documents"
+          }
+        },
+        "unsolvedLogs": "leave-in-place"
+      },
+      "expected": {
+        "infrastructureError": {
+          "stage": "discovery",
+          "messageNonEmpty": true,
+          "path": {
+            "path": "Blocked Discovery"
+          }
+        },
+        "durableEffects": [
+          {
+            "path": "Blocked Discovery",
+            "kind": "file"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "intake-failure",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Failures/crash-intake.log"
+          }
+        ],
+        "observedPaths": [
+          {
+            "path": "Failures/crash-intake.log"
+          },
+          {
+            "path": "Failures/crash-intake-AUTOSCAN.md"
+          }
+        ]
+      },
+      "expected": {
+        "infrastructureError": {
+          "stage": "intake",
+          "messageNonEmpty": true,
+          "path": {
+            "path": "CLASSIC Data"
+          }
+        },
+        "durableEffects": [
+          {
+            "path": "Failures/crash-intake.log",
+            "kind": "file"
+          },
+          {
+            "path": "Failures/crash-intake-AUTOSCAN.md",
+            "kind": "missing"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "report-write-failure",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Failures/crash-report-write.log"
+          }
+        ],
+        "directoryInputs": [
+          {
+            "path": "Failures/crash-report-write-AUTOSCAN.md"
+          }
+        ],
+        "observedPaths": [
+          {
+            "path": "Failures/crash-report-write.log"
+          },
+          {
+            "path": "Failures/crash-report-write-AUTOSCAN.md"
+          },
+          {
+            "path": "Unsolved Logs"
+          }
+        ]
+      },
+      "expected": {
+        "status": "completed",
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Failures/crash-report-write.log"
+            },
+            "autoscanReport": null,
+            "disposition": "failed",
+            "failures": [
+              {
+                "stage": "report_write",
+                "messageNonEmpty": true
+              }
+            ],
+            "messageNonEmpty": true,
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "durableEffects": [
+          {
+            "path": "Failures/crash-report-write.log",
+            "kind": "file"
+          },
+          {
+            "path": "Failures/crash-report-write-AUTOSCAN.md",
+            "kind": "directory"
+          },
+          {
+            "path": "Unsolved Logs",
+            "kind": "missing"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "unsolved-logs-finalization-failure",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "standard",
+        "logInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Failure Standard/Crash Logs/crash-finalization.log"
+          },
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Blocked Unsolved Logs"
+          }
+        ],
+        "directoryInputs": [
+          {
+            "path": "Failure Standard/Crash Logs/crash-finalization-AUTOSCAN.md"
+          }
+        ],
+        "observedPaths": [
+          {
+            "path": "Failure Standard/Crash Logs/crash-finalization.log"
+          },
+          {
+            "path": "Failure Standard/Crash Logs/crash-finalization-AUTOSCAN.md"
+          },
+          {
+            "path": "Blocked Unsolved Logs"
+          }
+        ],
+        "standardSource": {
+          "baseDirectory": {
+            "path": "Failure Standard"
+          },
+          "configuredDocumentsRoot": {
+            "path": "Failure Documents"
+          }
+        },
+        "unsolvedLogs": "move-to-custom",
+        "unsolvedLogsPath": {
+          "path": "Blocked Unsolved Logs"
+        }
+      },
+      "expected": {
+        "status": "completed",
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Failure Standard/Crash Logs/crash-finalization.log"
+            },
+            "autoscanReport": null,
+            "disposition": "failed",
+            "failures": [
+              {
+                "stage": "report_write",
+                "messageNonEmpty": true
+              },
+              {
+                "stage": "unsolved_logs_finalization",
+                "messageNonEmpty": true
+              }
+            ],
+            "messageNonEmpty": true,
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "durableEffects": [
+          {
+            "path": "Failure Standard/Crash Logs/crash-finalization.log",
+            "kind": "file"
+          },
+          {
+            "path": "Failure Standard/Crash Logs/crash-finalization-AUTOSCAN.md",
+            "kind": "directory"
+          },
+          {
+            "path": "Blocked Unsolved Logs",
+            "kind": "file"
+          }
+        ]
       },
       "normalization": {
         "rootRelativePaths": true,

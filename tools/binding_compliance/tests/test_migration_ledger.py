@@ -239,6 +239,92 @@ def test_unreachable_reset_faults_remain_blocking_structural_obligations() -> No
     )
 
 
+def test_unreachable_structured_failures_remain_blocking_structural_obligations() -> None:
+    """Injected and constructed failures cannot masquerade as public receipts."""
+
+    obligations = discover_current_obligations(REPO_ROOT)
+    retained_failures = [
+        entry
+        for entry in obligations
+        if entry["mappingOrigin"] == "retained_internal_failure_projection"
+    ]
+
+    assert {
+        entry["participant"] for entry in retained_failures
+    } == {"rust", "cxx", "node", "python"}
+    assert all(
+        entry["classification"] == "structural_analyzer"
+        for entry in retained_failures
+    )
+    assert all(entry["migrationState"] == "blocking" for entry in retained_failures)
+    assert all(
+        entry["target"]["analyzerId"]
+        == "scan-run-structured-failure-internal-faults"
+        for entry in retained_failures
+    )
+    assert all(
+        entry["target"]["evidenceRole"] == "structural_analyzer"
+        and entry["target"]["familyId"] is None
+        and entry["target"]["scenarioId"] is None
+        for entry in retained_failures
+    )
+    assert sum(
+        entry["sourceKind"] == "scan_run_variant_acknowledgement"
+        for entry in retained_failures
+    ) == 16
+    assert sum(
+        entry["sourceKind"] == "scan_run_source_marker"
+        for entry in retained_failures
+    ) == 23
+
+    public_variants = {
+        entry["id"]: entry
+        for entry in obligations
+        if entry["sourceKind"] == "scan_run_variant_acknowledgement"
+        and entry["id"].endswith(
+            (
+                "infrastructure_error_stage.request_validation",
+                "infrastructure_error_stage.discovery",
+                "infrastructure_error_stage.intake",
+                "log_failure_stage.report_write",
+                "log_failure_stage.unsolved_logs_finalization",
+            )
+        )
+    }
+    assert len(public_variants) == 20
+    assert all(
+        entry["classification"] == "runtime_verifiable"
+        for entry in public_variants.values()
+    )
+
+
+def test_cxx_internal_failure_marker_cannot_be_relabelled_as_public_execution() -> None:
+    """A tracked-ledger mutation cannot convert CXX structural proof to a receipt."""
+
+    discovered = discover_current_obligations(REPO_ROOT)
+    ledger = generate_ledger(REPO_ROOT)
+    marker = next(
+        entry
+        for entry in ledger["obligations"]
+        if entry["participant"] == "cxx"
+        and entry["mappingOrigin"] == "retained_internal_failure_projection"
+        and entry["sourceKind"] == "scan_run_source_marker"
+        and "maps_every_core_enum_variant_to_a_typed_cxx_variant"
+        in entry["source"]["locator"]
+    )
+    marker["classification"] = "runtime_verifiable"
+    marker["migrationState"] = "shadow"
+    marker["target"] = {
+        "familyId": "crash-log-scan-run",
+        "scenarioId": "fabricated-cxx-internal-failure",
+        "observationOrAssertion": marker["source"]["locator"],
+        "evidenceRole": "semantic_adapter",
+    }
+
+    with pytest.raises(LedgerValidationError, match="stale obligation entries"):
+        validate_ledger_entries(ledger, discovered)
+
+
 def test_preserved_id_with_stale_source_metadata_is_rejected() -> None:
     """An unchanged ID cannot hide that the underlying source locator drifted."""
 

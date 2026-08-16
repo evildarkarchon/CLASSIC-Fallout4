@@ -59,8 +59,10 @@ interface StandardSourceInput {
 
 /** Inputs shared by both frozen Crash Log Scan Run scenarios. */
 interface CommonScenarioInput {
-  observationProfile?: "local-ignore" | "lifecycle";
+  observationProfile?: "failure" | "local-ignore" | "lifecycle";
   installationData: FixturePathInput[];
+  directoryInputs?: PathInput[];
+  observedPaths?: PathInput[];
   localIgnorePaddingBytes?: number;
   game: string;
   gameVersion: string;
@@ -110,7 +112,8 @@ interface StandardScenarioInput extends CommonScenarioInput {
   intent: "standard";
   logInputs: FixturePathInput[];
   standardSource: StandardSourceInput;
-  unsolvedLogs: string;
+  unsolvedLogs: "leave-in-place" | "move-to-custom";
+  unsolvedLogsPath?: PathInput;
 }
 
 /** The frozen Targeted scenario input. */
@@ -355,7 +358,7 @@ async function copyDeclaredFixture(
   }
 }
 
-/** Materialize only plan-declared installation data and Crash Log inputs. */
+/** Materialize every plan-declared file, directory, and Standard discovery root. */
 async function materializeScenarioInputs(
   plan: RunPlan,
   scenario: RunPlanScenario,
@@ -384,15 +387,24 @@ async function materializeScenarioInputs(
     );
   }
 
-  if (input.intent === "standard") {
+  for (const [index, item] of (input.directoryInputs ?? []).entries()) {
     await mkdir(
-      runtimePath(
-        root,
-        input.standardSource.baseDirectory.path,
-        "standard baseDirectory.path",
-      ),
+      runtimePath(root, item.path, `directoryInputs[${index}].path`),
       { recursive: true },
     );
+  }
+
+  if (input.intent === "standard") {
+    const baseDirectory = runtimePath(
+      root,
+      input.standardSource.baseDirectory.path,
+      "standard baseDirectory.path",
+    );
+    // A failure scenario can deliberately materialize a regular file here so the
+    // public discovery seam, rather than runner setup, owns the resulting error.
+    if (!(await pathExists(baseDirectory))) {
+      await mkdir(baseDirectory, { recursive: true });
+    }
     await mkdir(
       runtimePath(
         root,
@@ -489,9 +501,20 @@ async function buildRequest(input: ScenarioInput, root: string) {
   };
 
   if (input.intent === "standard") {
-    if (input.unsolvedLogs !== "leave-in-place") {
+    let unsolvedLogs;
+    if (input.unsolvedLogs === "leave-in-place") {
+      unsolvedLogs = classic.ScanRunUnsolvedLogs.leaveInPlace();
+    } else if (input.unsolvedLogs === "move-to-custom") {
+      unsolvedLogs = classic.ScanRunUnsolvedLogs.moveToCustom(
+        runtimePath(
+          root,
+          input.unsolvedLogsPath?.path,
+          "unsolvedLogsPath.path",
+        ),
+      );
+    } else {
       throw new RunnerContractError(
-        "base Standard scenario must leave unsolved logs in place",
+        "Standard scenario unsolvedLogs must be leave-in-place or move-to-custom",
       );
     }
     return classic.ScanRunRequest.standard(
@@ -508,7 +531,7 @@ async function buildRequest(input: ScenarioInput, root: string) {
           "configuredDocumentsRoot.path",
         ),
       },
-      classic.ScanRunUnsolvedLogs.leaveInPlace(),
+      unsolvedLogs,
     );
   }
 
@@ -907,6 +930,41 @@ async function pathExists(path: string): Promise<boolean> {
     }
     throw error;
   }
+}
+
+/** Classify one declared durable path without collapsing a directory into file existence. */
+async function observedPathKind(path: string): Promise<string> {
+  try {
+    const metadata = await stat(path);
+    if (metadata.isFile()) {
+      return "file";
+    }
+    if (metadata.isDirectory()) {
+      return "directory";
+    }
+    return "other";
+  } catch (error) {
+    if (isMissingPathError(error)) {
+      return "missing";
+    }
+    throw error;
+  }
+}
+
+/** Observe the exact ordered path/type inventory declared by a failure scenario. */
+async function observedDurableEffects(
+  input: ScenarioInput,
+  root: string,
+): Promise<JsonObject[]> {
+  const effects: JsonObject[] = [];
+  for (const [index, item] of (input.observedPaths ?? []).entries()) {
+    const path = runtimePath(root, item.path, `observedPaths[${index}].path`);
+    effects.push({
+      path: relativePath(root, path, "observed failure effect"),
+      kind: await observedPathKind(path),
+    });
+  }
+  return effects;
 }
 
 /** Observe report persistence and the forbidden Unsolved Logs destination. */
@@ -1581,6 +1639,61 @@ async function observation(
   };
 }
 
+/** Project public typed failures as completed semantic evidence with declared artifacts. */
+async function failureObservation(
+  execution: Awaited<
+    ReturnType<(typeof import("../index.js"))["scanRunExecute"]>
+  >,
+  input: ScenarioInput,
+  root: string,
+): Promise<JsonObject> {
+  const effects = await observedDurableEffects(input, root);
+  if ("error" in execution) {
+    return {
+      infrastructureError: {
+        stage: execution.error.stage,
+        messageNonEmpty: execution.error.message.length > 0,
+        path:
+          execution.error.path === undefined
+            ? null
+            : pathCarrier(
+                root,
+                execution.error.path,
+                "infrastructure failure path",
+              ),
+      },
+      durableEffects: effects,
+    };
+  }
+  if (execution.observerError !== undefined) {
+    throw new RunnerContractError(
+      `failure scenario observer delivery failed: ${execution.observerError}`,
+    );
+  }
+  return {
+    status: execution.result.status,
+    logs: execution.result.logs.map((log) => ({
+      discoveryIndex: requireInteger(
+        log.discoveryIndex,
+        "failure log discovery index",
+      ),
+      crashLog: pathCarrier(root, log.crashLog, "failure Crash Log"),
+      autoscanReport:
+        log.autoscanReport === undefined
+          ? null
+          : pathCarrier(root, log.autoscanReport, "failure Autoscan Report"),
+      disposition: log.disposition,
+      failures: log.failures.map((failure) => ({
+        stage: failure.stage,
+        messageNonEmpty: failure.message.length > 0,
+      })),
+      messageNonEmpty: (log.message?.length ?? 0) > 0,
+      movedToUnsolvedLogs: log.movedToUnsolvedLogs,
+    })),
+    durableEffects: effects,
+  };
+}
+
 /** Project cancellation boundaries and observer delivery failure without diagnostics. */
 async function lifecycleObservation(
   execution: Awaited<
@@ -1730,6 +1843,9 @@ async function executeScenario(
       },
       flow?.cancellation === "on-observer-failure",
     );
+    if (input.observationProfile === "failure") {
+      return await failureObservation(execution, input, root);
+    }
     if (input.continuationFlow !== undefined) {
       if (input.observationProfile !== "local-ignore") {
         throw new RunnerContractError(
