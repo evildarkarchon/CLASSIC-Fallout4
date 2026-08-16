@@ -141,10 +141,10 @@ def test_timeout_preserves_stdout_and_stderr_separately(tmp_path: Path) -> None:
     assert result["stderr"] == "captured stderr"
 
 
-def test_shadow_conformance_failure_does_not_weaken_or_fail_blocking_summary(
+def test_blocking_conformance_failure_fails_alongside_legacy_results(
     tmp_path: Path,
 ) -> None:
-    """Shadow evidence is visible without replacing current blocking gates."""
+    """A promoted receipt failure is conjunctive with retained legacy gates."""
 
     requirement = ComplianceRequirement(
         id="existing-gate",
@@ -157,7 +157,7 @@ def test_shadow_conformance_failure_does_not_weaken_or_fail_blocking_summary(
     )
     shadow = {
         "schemaVersion": 1,
-        "enforcement": "shadow",
+        "enforcement": "blocking",
         "result": "fail",
         "failures": [{"kind": "coverage_mapping_gap"}],
     }
@@ -166,11 +166,11 @@ def test_shadow_conformance_failure_does_not_weaken_or_fail_blocking_summary(
         repo_root=tmp_path,
         profile="ci",
         requirements=(requirement,),
-        shadow_conformance=shadow,
+        conformance_report=shadow,
     ).run()
 
-    assert report["summary"]["result"] == "pass"
-    assert report["shadowConformance"] == shadow
+    assert report["summary"]["result"] == "fail"
+    assert report["conformance"] == shadow
 
 
 def test_shadow_success_cannot_turn_a_blocking_failure_green(tmp_path: Path) -> None:
@@ -191,7 +191,7 @@ def test_shadow_success_cannot_turn_a_blocking_failure_green(tmp_path: Path) -> 
         repo_root=tmp_path,
         profile="ci",
         requirements=(requirement,),
-        shadow_conformance={
+        conformance_report={
             "schemaVersion": 1,
             "enforcement": "shadow",
             "result": "pass",
@@ -200,11 +200,13 @@ def test_shadow_success_cannot_turn_a_blocking_failure_green(tmp_path: Path) -> 
     ).run()
 
     assert report["summary"]["result"] == "fail"
-    assert report["shadowConformance"]["result"] == "pass"
+    assert report["conformance"]["result"] == "pass"
 
 
-def test_new_row_guard_remains_blocking_inside_shadow_report(tmp_path: Path) -> None:
-    """A post-Phase-0 uncovered row fails without promoting all shadow evidence."""
+def test_future_shadow_family_cannot_block_a_passing_retained_gate(
+    tmp_path: Path,
+) -> None:
+    """Coverage diagnostics remain nonblocking until their family is promoted."""
 
     requirement = ComplianceRequirement(
         id="existing-gate",
@@ -235,11 +237,11 @@ def test_new_row_guard_remains_blocking_inside_shadow_report(tmp_path: Path) -> 
         repo_root=tmp_path,
         profile="ci",
         requirements=(requirement,),
-        shadow_conformance=shadow,
+        conformance_report=shadow,
     ).run()
 
-    assert report["summary"]["result"] == "fail"
-    assert report["summary"]["blocking_shadow_coverage_gaps"] == 1
+    assert report["summary"]["result"] == "pass"
+    assert report["summary"]["blocking_conformance_coverage_gaps"] == 1
 
 
 def test_conformance_profile_uses_its_scoped_report_as_process_result(
@@ -258,7 +260,7 @@ def test_conformance_profile_uses_its_scoped_report_as_process_result(
         repo_root=tmp_path,
         profile="conformance",
         requirements=requirements_for_profile("conformance"),
-        shadow_conformance=shadow,
+        conformance_report=shadow,
     ).run()
 
     assert report["requirements"] == []

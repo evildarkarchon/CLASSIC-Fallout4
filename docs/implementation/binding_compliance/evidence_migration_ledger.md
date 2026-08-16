@@ -12,8 +12,15 @@
 | --- | ---: |
 | `negative_analyzer` | 207 |
 | `policy_exception` | 1 |
-| `runtime_verifiable` | 2,984 |
-| `structural_analyzer` | 463 |
+| `runtime_verifiable` | 2,936 |
+| `structural_analyzer` | 511 |
+
+## Migration states
+
+| State | Obligations |
+| --- | ---: |
+| `blocking` | 1,064 |
+| `shadow` | 2,591 |
 
 ## Current evidence sources
 
@@ -64,4 +71,4 @@
 
 - `cxx-classic-resource-core-transitive-access` (cxx): classic-resource-core has no dedicated CXX bridge; C++ reaches its behavior transitively through classic-file-io-core. See `docs/api/binding-parity-policy.md`.
 
-The JSON artifact is the complete occurrence ledger. Runtime entries remain `shadow` until executed receipts independently justify a later ratchet state; ledger text alone can never do so.
+The JSON artifact is the complete occurrence ledger. Runtime entries advance only when objective executable or retained-analyzer evidence independently justifies the ratchet state; ledger text alone can never do so.

@@ -80,14 +80,14 @@ def build_summary(
     }
 
 
-def _blocking_shadow_coverage_gaps(
-    shadow_conformance: Mapping[str, Any] | None,
+def _blocking_conformance_coverage_gaps(
+    conformance_report: Mapping[str, Any] | None,
 ) -> int:
-    """Count only post-baseline row gaps that remain blocking in shadow mode."""
+    """Count centrally classified blocking row gaps for report diagnostics."""
 
-    if shadow_conformance is None:
+    if conformance_report is None:
         return 0
-    coverage = shadow_conformance.get("coverage")
+    coverage = conformance_report.get("coverage")
     if not isinstance(coverage, Mapping):
         return 0
     failures = coverage.get("failures")
@@ -112,13 +112,12 @@ class ComplianceSuite:
         requirements: tuple[ComplianceRequirement, ...] | None = None,
         skip_commands: bool = False,
         fail_on_gaps: bool = False,
-        shadow_conformance: Mapping[str, Any] | None = None,
+        conformance_report: Mapping[str, Any] | None = None,
     ) -> None:
         """Create a suite runner bound to a repository root and profile.
 
-        ``shadow_conformance`` is reported separately. Ordinary shadow failures
-        cannot weaken or replace current blocking results; only a newly added
-        uncovered row's explicit blocking guard may promote the process result.
+        ``conformance_report`` is reported separately. A blocking family is
+        conjunctive with retained gates; a shadow family cannot weaken them.
         """
 
         self.repo_root = repo_root.resolve()
@@ -130,7 +129,7 @@ class ComplianceSuite:
         )
         self.skip_commands = skip_commands
         self.fail_on_gaps = fail_on_gaps
-        self.shadow_conformance = shadow_conformance
+        self.conformance_report = conformance_report
 
     def run(self) -> dict[str, Any]:
         """Evaluate all selected requirements and return a structured report."""
@@ -139,13 +138,21 @@ class ComplianceSuite:
             self._evaluate_requirement(requirement) for requirement in self.requirements
         ]
         summary = build_summary(results, fail_on_gaps=self.fail_on_gaps)
-        blocking_shadow_gaps = _blocking_shadow_coverage_gaps(self.shadow_conformance)
-        summary["blocking_shadow_coverage_gaps"] = blocking_shadow_gaps
-        if self.profile == "conformance" and self.shadow_conformance is not None:
+        blocking_conformance_gaps = _blocking_conformance_coverage_gaps(
+            self.conformance_report
+        )
+        summary["blocking_conformance_coverage_gaps"] = blocking_conformance_gaps
+        if self.profile == "conformance" and self.conformance_report is not None:
             # The receipt-only native job has no legacy requirement catalog;
             # its exact scoped report is therefore the command's own result.
-            summary["result"] = str(self.shadow_conformance.get("result", "fail"))
-        elif blocking_shadow_gaps:
+            summary["result"] = str(self.conformance_report.get("result", "fail"))
+        elif (
+            self.conformance_report is not None
+            and self.conformance_report.get("enforcement") == "blocking"
+            and self.conformance_report.get("result") != "pass"
+        ):
+            # Promoted executable evidence is conjunctive with every retained
+            # legacy gate until the later retirement change removes that gate.
             summary["result"] = "fail"
         report = {
             "schemaVersion": 1,
@@ -164,8 +171,8 @@ class ComplianceSuite:
                 for gap in result.gaps
             ],
         }
-        if self.shadow_conformance is not None:
-            report["shadowConformance"] = dict(self.shadow_conformance)
+        if self.conformance_report is not None:
+            report["conformance"] = dict(self.conformance_report)
         return report
 
     def _evaluate_requirement(
@@ -366,16 +373,16 @@ def render_markdown(report: dict[str, Any]) -> str:
         for gap in report["gaps"]:
             lines.append("- `{requirementId}` ({surface}): {message}".format(**gap))
 
-    shadow = report.get("shadowConformance")
-    if isinstance(shadow, dict):
+    conformance = report.get("conformance")
+    if isinstance(conformance, dict):
         lines.extend(
             (
                 "",
-                "## Shadow Conformance",
+                "## Executable Conformance",
                 "",
-                "Shadow evidence is diagnostic. Existing blocking results remain authoritative; a new uncovered row can only promote this result to failure.",
+                f"Enforcement: **{str(conformance.get('enforcement', 'unknown')).upper()}**",
                 "",
-                f"- Result: **{str(shadow.get('result', 'unknown')).upper()}**",
+                f"- Result: **{str(conformance.get('result', 'unknown')).upper()}**",
             )
         )
 

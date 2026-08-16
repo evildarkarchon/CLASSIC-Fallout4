@@ -16,8 +16,12 @@ from typing import Any
 # Support both package imports in tests and direct execution from this directory.
 try:
     from .catalog import REQUIREMENTS
+    from .conformance.variant_policy import CRASH_LOG_SCAN_RUN_VARIANT_TARGETS
 except ImportError:
     from catalog import REQUIREMENTS  # type: ignore[no-redef]
+    from conformance.variant_policy import (  # type: ignore[no-redef]
+        CRASH_LOG_SCAN_RUN_VARIANT_TARGETS,
+    )
 
 VALID_CLASSIFICATIONS = frozenset(
     {
@@ -645,6 +649,7 @@ def _planned_runtime_obligation(
     evidence_role: str = "semantic_adapter",
     retained_analyzer_ids: Sequence[str] = (),
     planned_scenario_id: str | None = None,
+    planned_observation_or_assertion: str | None = None,
 ) -> dict[str, Any]:
     """Build one diagnostic-only runtime target that grants no executed coverage."""
 
@@ -658,7 +663,7 @@ def _planned_runtime_obligation(
         "target": {
             "familyId": family_id,
             "scenarioId": planned_scenario_id,
-            "observationOrAssertion": None,
+            "observationOrAssertion": planned_observation_or_assertion,
             "evidenceRole": evidence_role,
         },
         "retainedAnalyzerIds": list(retained_analyzer_ids),
@@ -1095,6 +1100,25 @@ def _scan_run_obligations(repo_root: Path) -> list[dict[str, Any]]:
                     )
                 )
                 continue
+            target = CRASH_LOG_SCAN_RUN_VARIANT_TARGETS.get(variant)
+            if target is None:
+                raise LedgerValidationError(
+                    f"scan-run variant {variant} has no reviewed evidence target"
+                )
+            if target.retained_analyzer_id is not None:
+                obligations.append(
+                    _analyzer_obligation(
+                        obligation_id=f"scan-run:variant:{participant}:{variant}",
+                        source_kind="scan_run_variant_acknowledgement",
+                        artifact=SCAN_RUN_MANIFEST,
+                        locator=locator,
+                        participant=participant,
+                        mapping_origin="retained_contract_variant_projection",
+                        classification="structural_analyzer",
+                        analyzer_id=target.retained_analyzer_id,
+                    )
+                )
+                continue
             obligations.append(
                 _planned_runtime_obligation(
                     obligation_id=f"scan-run:variant:{participant}:{variant}",
@@ -1104,6 +1128,8 @@ def _scan_run_obligations(repo_root: Path) -> list[dict[str, Any]]:
                     participant=participant,
                     mapping_origin="legacy_variant_acknowledgement",
                     family_id="crash-log-scan-run",
+                    planned_scenario_id=target.scenario_id,
+                    planned_observation_or_assertion=target.assertion_id,
                     retained_analyzer_ids=("scan-run-contract-validator",),
                 )
             )
@@ -1286,7 +1312,64 @@ def _scan_run_obligations(repo_root: Path) -> list[dict[str, Any]]:
                 analyzer_id="scan-run-rust-enum-inventory",
             )
         )
-    return obligations
+    return [_promote_scan_run_runtime_obligation(entry) for entry in obligations]
+
+
+def _promote_scan_run_runtime_obligation(entry: dict[str, Any]) -> dict[str, Any]:
+    """Attach the concrete blocking evidence target for the promoted receipt surface.
+
+    The broader ``consumer_source_audit`` rows intentionally remain in shadow:
+    they describe source-level GUI assertions beyond the executable consumer
+    catalog and therefore are not part of the Crash Log Scan Run promotion.
+    """
+
+    if (
+        entry.get("classification") != "runtime_verifiable"
+        or entry.get("sourceKind") == "consumer_source_audit"
+    ):
+        return entry
+
+    source_kind = str(entry["sourceKind"])
+    participant = str(entry["participant"])
+    target = dict(entry["target"])
+    legacy_scenario = target.get("scenarioId")
+    scenario_crosswalk = {
+        "standard_end_to_end": "standard-happy-path",
+        "targeted_end_to_end": "targeted-happy-path",
+        "installed_yaml_data_existing_and_generated": "generated-local-ignore",
+        "local_ignore_recovery_continuation": "proceed-without-ignore-recovery",
+        "reset_to_default_continuation": "reset-to-default-recovery",
+        "cancellation_boundaries": "pre-discovery-cancelled",
+        "structured_failures": "request-validation-failure",
+        "rust_owned_facts": "standard-happy-path",
+    }
+    target["scenarioId"] = scenario_crosswalk.get(
+        legacy_scenario, legacy_scenario or "standard-happy-path"
+    )
+    if source_kind == "scan_run_variant_acknowledgement":
+        # The reviewed variant policy already supplied the exact scenario fact.
+        pass
+    elif source_kind in {"consumer_audit", "consumer_required_participant"}:
+        target["observationOrAssertion"] = (
+            f"consumer-coverage.required-obligations:{participant}"
+        )
+    elif source_kind == "scan_run_supported_adapter":
+        target["observationOrAssertion"] = (
+            f"scoped-report.required-executions:{participant}"
+        )
+    elif source_kind == "scan_run_required_participant":
+        target["observationOrAssertion"] = "scoped-report.required-scenarios"
+    else:
+        target["observationOrAssertion"] = "coverage.required-observation-facts"
+
+    promoted = dict(entry)
+    promoted["target"] = target
+    promoted["migrationState"] = "blocking"
+    promoted["stateEvidence"] = [
+        "The blocking Crash Log Scan Run report requires exact same-revision execution coverage.",
+        "The legacy contract validator remains blocking during the dual-run migration.",
+    ]
+    return promoted
 
 
 def _display_content_audit_obligations(repo_root: Path) -> list[dict[str, Any]]:
@@ -1618,6 +1701,7 @@ def generate_ledger(repo_root: Path) -> dict[str, Any]:
     by_kind = Counter(entry["sourceKind"] for entry in obligations)
     by_classification = Counter(entry["classification"] for entry in obligations)
     by_participant = Counter(entry["participant"] for entry in obligations)
+    by_migration_state = Counter(entry["migrationState"] for entry in obligations)
     ledger: dict[str, Any] = {
         "schemaVersion": 1,
         "diagnosticOnly": True,
@@ -1633,6 +1717,7 @@ def generate_ledger(repo_root: Path) -> dict[str, Any]:
             "total": len(obligations),
             "byKind": dict(sorted(by_kind.items())),
             "byClassification": dict(sorted(by_classification.items())),
+            "byMigrationState": dict(sorted(by_migration_state.items())),
             "byParticipant": dict(sorted(by_participant.items())),
         },
         "analyzers": analyzers,
@@ -1673,6 +1758,17 @@ def render_ledger_markdown(ledger: Mapping[str, Any]) -> str:
     lines.extend(
         (
             "",
+            "## Migration states",
+            "",
+            "| State | Obligations |",
+            "| --- | ---: |",
+        )
+    )
+    for migration_state, count in summary["byMigrationState"].items():
+        lines.append(f"| `{migration_state}` | {count:,} |")
+    lines.extend(
+        (
+            "",
             "## Current evidence sources",
             "",
             "| Source kind | Occurrences |",
@@ -1698,8 +1794,9 @@ def render_ledger_markdown(ledger: Mapping[str, Any]) -> str:
             "",
             (
                 "The JSON artifact is the complete occurrence ledger. Runtime entries "
-                "remain `shadow` until executed receipts independently justify a later "
-                "ratchet state; ledger text alone can never do so."
+                "advance only when objective executable or retained-analyzer evidence "
+                "independently justifies the ratchet state; ledger text alone can never "
+                "do so."
             ),
             "",
         )

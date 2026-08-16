@@ -11,7 +11,7 @@ from pathlib import Path
 from catalog import requirements_for_profile  # type: ignore
 from conformance.command import (  # type: ignore
     ConformanceCommandError,
-    build_shadow_report_from_receipts,
+    build_conformance_report_from_receipts,
 )
 from suite import ComplianceSuite, write_report_files  # type: ignore
 
@@ -99,11 +99,11 @@ def _argument_error(args: argparse.Namespace) -> str | None:
     return None
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     """Parse CLI arguments, run the selected profile, and write reports."""
 
     parser = build_argument_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     repo_root = Path(args.repo_root).resolve()
     try:
@@ -134,10 +134,10 @@ def main() -> int:
     if argument_error is not None:
         parser.error(argument_error)
 
-    shadow_conformance = None
+    conformance_report = None
     if args.profile == "conformance" or (args.profile == "full" and args.receipt):
         try:
-            shadow_conformance = build_shadow_report_from_receipts(
+            conformance_report = build_conformance_report_from_receipts(
                 repo_root,
                 profile=args.profile,
                 participant_id=args.participant,
@@ -156,7 +156,7 @@ def main() -> int:
         requirements=requirements,
         skip_commands=args.skip_commands,
         fail_on_gaps=args.fail_on_gaps,
-        shadow_conformance=shadow_conformance,
+        conformance_report=conformance_report,
     )
     report = suite.run()
     json_path, markdown_path = write_report_files(report, repo_root / args.output_dir)

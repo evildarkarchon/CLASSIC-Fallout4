@@ -94,15 +94,52 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         ),
         paths=(
             "tools/binding_compliance/scan_run_contract.py",
+            "tools/binding_compliance/conformance/variant_policy.py",
             "tests/fixtures/crash_log_scan_run/manifest.json",
             "tests/fixtures/crash_log_scan_run/valid-crash.log",
         ),
         proves=(
             "A new Rust contract enum variant cannot land without manifest registration.",
             "Every registered variant is acknowledged by Rust, CXX, Node, and Python.",
+            "Every registered variant names one required executable fact or retained analyzer.",
             "Removed execution seams cannot remain in public source, declarations, stubs, runtime registries, or parity baselines.",
             "Shared Standard, Targeted, cancellation, and failure scenarios retain executable evidence.",
             "CLI, GUI, and TUI tests consume Rust-owned discovery, scheduling, and terminal facts.",
+        ),
+    ),
+    ComplianceRequirement(
+        id="scan-run-workflow-policy",
+        title="Crash Log Scan Run receipts remain blocking in CI",
+        surface="policy",
+        classification="new_check",
+        profiles=STATIC_PROFILES,
+        blocking=True,
+        summary=(
+            "Audits the same-revision legacy/receipt job topology, exact native "
+            "execution denominator, blocking launch steps, and always-uploaded "
+            "diagnostics for every Crash Log Scan Run participant and consumer."
+        ),
+        command=CommandSpec(
+            argv=(
+                "python",
+                "tools/binding_compliance/scan_run_workflow_policy.py",
+                "--repo-root",
+                ".",
+            )
+        ),
+        paths=(
+            "tools/binding_compliance/scan_run_workflow_policy.py",
+            "tools/binding_compliance/conformance/workflow_policy.py",
+            ".github/workflows/ci-rust.yml",
+            ".github/workflows/ci-typescript.yml",
+            ".github/workflows/ci-python-bindings.yml",
+            ".github/workflows/ci-cpp.yml",
+        ),
+        proves=(
+            "Every required semantic adapter and consumer receipt runs as a blocking CI step.",
+            "MSVC and clang-cl remain separate required CXX, CLI, and GUI execution instances.",
+            "Legacy evidence and promoted receipts execute from one default checkout revision.",
+            "Receipt plans and failure diagnostics remain available when execution fails.",
         ),
     ),
     ComplianceRequirement(

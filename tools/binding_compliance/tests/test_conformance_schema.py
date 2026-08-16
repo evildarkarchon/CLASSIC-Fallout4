@@ -118,13 +118,15 @@ def test_policy_exception_schema_requires_reviewable_exact_scope() -> None:
     assert catalog == {"schemaVersion": 1, "exceptions": []}
 
 
-def test_report_schema_pins_scope_and_shadow_enforcement() -> None:
-    """The aggregate envelope cannot relabel partial shadow evidence as complete."""
+def test_report_schema_pins_scope_and_enforcement_lifecycle() -> None:
+    """The envelope admits only reviewed ratchet states and honest scope labels."""
 
     report_schema = _schema("conformance-report-v1.schema.json")
     scope = report_schema["properties"]["scope"]
 
-    assert report_schema["properties"]["enforcement"] == {"const": "shadow"}
+    assert report_schema["properties"]["enforcement"] == {
+        "enum": ["shadow", "blocking"]
+    }
     assert report_schema["properties"]["repositoryComplete"] == {"type": "boolean"}
     assert scope["additionalProperties"] is False
     assert {choice["properties"]["kind"]["const"] for choice in scope["oneOf"]} == {

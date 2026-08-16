@@ -1,6 +1,6 @@
 # Executable Cross-Adapter Conformance Specification
 
-> **Status: accepted design; implementation in progress.** [ADR-0008](../adr/0008-executable-cross-adapter-conformance.md) records the decision. Phase 0's diagnostic ledger and generic engine are implemented, together with the first input-only Crash Log Scan Run pack, its centrally derived family predicates, public-seam Rust, Node, Python, and bridge-only CXX receipt runners, and separate CLI, GUI, and TUI consumer receipt runners in shadow. Existing, generated, malformed, Proceed Without Ignore, Reset To Default, successful reset, intervening conflict, portable backup failure, pre-discovery, post-discovery queued, admitted/durable, pre-reset, and post-critical cancellation, observer delivery failure, public request-validation/discovery/intake/report-write/Unsolved Logs finalization failures, replay, and abandonment scenarios execute through all semantic adapters; the CXX scenarios run through the approved CLI wrapper on both MSVC and clang-cl and publish bounded attempt, JUnit, log, receipt, and instance-report artifacts. Consumer runners exercise maintained frontend seams and publish named obligation coverage separately from semantic adapter coverage. Replacement-publication and durability-unknown mappings remain under the reset blocking internal-fault analyzer. Injected analysis, FormID database access, initialization, and internal-invariant failure projections remain under the separate structured-failure retained analyzer; neither analyzer grants semantic-adapter coverage. Equivalence review, blocking promotion, and legacy-evidence retirement remain later migration slices. Until a phase reaches its blocking exit gate, the commands and evidence documented in `docs/api/binding-compliance-suite.md` remain authoritative.
+> **Status: accepted design; implementation in progress.** [ADR-0008](../adr/0008-executable-cross-adapter-conformance.md) records the decision. Phase 0's diagnostic ledger and generic engine are implemented, and the first input-only Crash Log Scan Run pack is blocking. Its centrally derived family predicates run through public-seam Rust, Node, Python, bridge-only CXX on MSVC and clang-cl, and separate CLI, GUI, and TUI consumer runners. Existing, generated, malformed, Proceed Without Ignore, Reset To Default, successful reset, intervening conflict, portable backup failure, pre-discovery, post-discovery queued, admitted/durable, pre-reset, and post-critical cancellation, observer delivery failure, public request-validation/discovery/intake/report-write/Unsolved Logs finalization failures, replay, and abandonment scenarios execute through all semantic adapters. Native jobs publish bounded attempt, JUnit, log, receipt, run-plan, and scoped-report artifacts even on failure. Replacement-publication and durability-unknown mappings remain under the reset blocking internal-fault analyzer. Injected analysis, FormID database access, initialization, and internal-invariant failure projections remain under the separate structured-failure retained analyzer; neither analyzer grants semantic-adapter coverage. The legacy evidence continues to dual-run; its retirement remains a later reviewed slice.
 
 ## Target
 
@@ -411,7 +411,7 @@ Consumer expectations are keyed by stable obligation profile, not by copied adap
 
 The CLI consumer continues through `classic-cli/build_cli.ps1 -Test`, GUI through `classic-gui/build_gui.ps1 -Test`, and TUI through its Cargo test surface. Production frontends gain no conformance-only public interface.
 
-The trusted catalog at `tests/conformance/consumer-obligations.json` owns each consumer's execution instances, maintained source paths, scenario selection, and exact expected observation. Input-only plans expose only obligation and scenario IDs. Receipts report actual obligation observations, and central validation grants only those named obligations in a separate `consumerCoverage` section. The private launchers are nonblocking shadow jobs in the native CLI, GUI, and Rust workflows; promotion remains a later gate.
+The trusted catalog at `tests/conformance/consumer-obligations.json` owns each consumer's execution instances, maintained source paths, scenario selection, and exact expected observation. Input-only plans expose only obligation and scenario IDs. Receipts report actual obligation observations, and central validation grants only those named obligations in a separate `consumerCoverage` section. The private launchers are blocking for Crash Log Scan Run in the native CLI, GUI, and Rust workflows. They run after retained gates unless the job is cancelled, and their diagnostic artifacts upload unconditionally.
 
 ## Failure taxonomy
 
@@ -475,6 +475,9 @@ Exit gate:
 
 ### Phase 2 — Crash Log Scan Run vertical slice
 
+Status: blocking promotion complete; legacy-evidence retirement remains a
+separate reviewed slice.
+
 Deliverables:
 
 - Add a versioned scenario pack alongside the current manifest's copied acknowledgements and source markers, retaining its fixture inputs and explicit expected outcomes until the later blocking/deletion gate.
@@ -486,7 +489,7 @@ Deliverables:
 Equivalence gate:
 
 - Every publicly executable required scenario produces Rust, Node, Python, MSVC CXX, and clang-cl CXX execution receipts plus the applicable consumer receipts. These roll up to four semantic participants; retained internal-only fault mappings appear separately and grant no semantic-adapter coverage.
-- Observed variant sets equal the source-derived inventory.
+- Reviewed variant evidence targets exactly partition the source-derived inventory. Executable variants name required scenario facts; irreducibly structural values name retained analyzers and grant no semantic receipt credit.
 - Run Status, discovery, setup, Installed YAML Data, per-log outcomes, ordered events, Display Content, durable artifacts, recovery, reset, all five named cancellation boundaries, replay, abandonment, observer failure, and publicly reachable structured failures have equal or stronger executable coverage.
 - Fault injection that remains internal is explicitly retained and cannot be counted as public CXX execution.
 

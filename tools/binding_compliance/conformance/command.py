@@ -1,4 +1,4 @@
-"""Receipt-only command orchestration for scoped shadow conformance reports."""
+"""Receipt-only command orchestration for scoped conformance reports."""
 
 from __future__ import annotations
 
@@ -312,7 +312,7 @@ def _diagnostic_failures(
     return tuple(failures)
 
 
-def build_shadow_report_from_receipts(
+def build_conformance_report_from_receipts(
     repo_root: Path,
     *,
     profile: str,

@@ -46,6 +46,7 @@ jobs:
   build-and-test:
     name: Python Bindings Build + Smoke Tests
     needs: [parity-gates]
+    if: ${{ !cancelled() }}
     runs-on: windows-latest
     timeout-minutes: 90
     steps:
@@ -111,17 +112,15 @@ jobs:
       - name: Run Python bindings smoke tests
         run: uv run --project python-bindings python -m pytest python-bindings/tests -q
 
-      # Shadow evidence remains diagnostic; the rebuilt-binding pytest step
-      # above is still the blocking Python runtime authority.
-      - name: Run Python Crash Log Scan Run shadow conformance
-        continue-on-error: true
+      - name: Run Python Crash Log Scan Run conformance
+        if: ${{ !cancelled() }}
         run: uv run --project python-bindings python tools/binding_compliance/run_scan_run_conformance.py --participant python
 
-      - name: Upload Python Crash Log Scan Run shadow diagnostics
+      - name: Upload Python Crash Log Scan Run conformance diagnostics
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: python-scan-run-shadow-conformance
+          name: python-scan-run-conformance
           path: tools/binding_compliance/artifacts/python/python/
           if-no-files-found: warn
           retention-days: 7

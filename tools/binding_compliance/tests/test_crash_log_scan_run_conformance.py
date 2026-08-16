@@ -12,7 +12,12 @@ from pathlib import Path
 import pytest
 import run_scan_run_conformance as scan_run_launcher
 from conformance.applicability import derive_applicability, load_policy_exceptions
-from conformance.consumers import load_consumer_obligations
+from conformance.consumers import (
+    ConsumerObligationCatalog,
+    derive_consumer_coverage,
+    load_consumer_obligations,
+    prepare_consumer_run,
+)
 from conformance.coverage import (
     derive_observed_fact_ids,
     derive_row_coverage,
@@ -78,6 +83,22 @@ EXPECTED_SCENARIO_IDS = [
     "reset-post-critical-cancelled",
     "abandon-local-ignore-recovery",
 ]
+EXPECTED_OBSERVATION_FAMILIES = {
+    "cancellation",
+    "discovery",
+    "display-content",
+    "durable-effects",
+    "effective-concurrency",
+    "events",
+    "installed-yaml-data",
+    "log-outcomes",
+    "observer-failure",
+    "recovery",
+    "replay",
+    "run-status",
+    "setup",
+    "structured-failure",
+}
 """The public-seam Crash Log Scan Run v1 scenarios required by issues #193-196."""
 
 
@@ -757,106 +778,6 @@ def test_abandonment_facts_fail_closed_on_semantic_mutation() -> None:
     )
 
 
-def test_native_workflows_publish_participant_shadow_artifacts_separately() -> None:
-    """Runtime jobs keep legacy gates blocking and upload each new slice always."""
-
-    workflow_expectations = {
-        ".github/workflows/ci-cpp.yml": (
-            "Build and test CLI",
-            "run_cxx_conformance.ps1",
-            "name: cxx-conformance-${{ matrix.compiler }}",
-        ),
-        ".github/workflows/ci-rust.yml": (
-            "Run Rust tests with all features",
-            "--participant rust",
-            "name: rust-scan-run-shadow-conformance",
-        ),
-        ".github/workflows/ci-typescript.yml": (
-            "Run Node runtime smoke tests",
-            "--participant node",
-            "name: node-scan-run-shadow-conformance",
-        ),
-        ".github/workflows/ci-python-bindings.yml": (
-            "Run Python bindings smoke tests",
-            "--participant python",
-            "name: python-scan-run-shadow-conformance",
-        ),
-    }
-
-    for relative_path, (
-        blocking_step,
-        participant,
-        artifact_name,
-    ) in workflow_expectations.items():
-        source = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
-        blocking_index = source.index(blocking_step)
-        shadow_index = source.index(participant)
-        artifact_index = source.index(artifact_name)
-        assert blocking_index < shadow_index < artifact_index
-        shadow_block = source[shadow_index - 160 : artifact_index]
-        assert "continue-on-error: true" in shadow_block
-        upload_block = source[artifact_index - 160 : artifact_index + 160]
-        assert "always()" in upload_block
-
-    assert "--participant cxx" not in "\n".join(
-        (REPO_ROOT / path).read_text(encoding="utf-8") for path in workflow_expectations
-    )
-    cpp_workflow = (REPO_ROOT / ".github/workflows/ci-cpp.yml").read_text(
-        encoding="utf-8"
-    )
-    cli_job = cpp_workflow[cpp_workflow.index("cli-tests:") :]
-    assert "timeout-minutes: 120" in cli_job
-    full_suite = cli_job[
-        cli_job.index("- name: Build and test CLI") : cli_job.index(
-            "- name: Run native CXX scan conformance"
-        )
-    ]
-    assert "timeout-minutes: 90" in full_suite
-
-
-def test_frontend_workflows_publish_nonblocking_consumer_receipts() -> None:
-    """Each maintained frontend emits its own always-uploaded shadow evidence."""
-
-    cpp_workflow = (REPO_ROOT / ".github/workflows/ci-cpp.yml").read_text(
-        encoding="utf-8"
-    )
-    rust_workflow = (REPO_ROOT / ".github/workflows/ci-rust.yml").read_text(
-        encoding="utf-8"
-    )
-
-    for blocking_step, launcher, artifact_name in (
-        (
-            "Build and test CLI",
-            "run_cli_consumer_conformance.ps1",
-            "name: cli-consumer-conformance-${{ matrix.compiler }}",
-        ),
-        (
-            "Build and test GUI",
-            "run_gui_consumer_conformance.ps1",
-            "name: gui-consumer-conformance-${{ matrix.compiler }}",
-        ),
-    ):
-        blocking_index = cpp_workflow.index(blocking_step)
-        launcher_index = cpp_workflow.index(launcher)
-        artifact_index = cpp_workflow.index(artifact_name)
-        assert blocking_index < launcher_index < artifact_index
-        assert (
-            "continue-on-error: true"
-            in cpp_workflow[launcher_index - 160 : launcher_index]
-        )
-        assert "if: always()" in cpp_workflow[artifact_index - 160 : artifact_index]
-
-    blocking_index = rust_workflow.index("Run Rust tests with all features")
-    launcher_index = rust_workflow.index("--participant tui")
-    artifact_index = rust_workflow.index("name: tui-consumer-conformance")
-    assert blocking_index < launcher_index < artifact_index
-    assert (
-        "continue-on-error: true"
-        in rust_workflow[launcher_index - 160 : launcher_index]
-    )
-    assert "if: always()" in rust_workflow[artifact_index - 160 : artifact_index]
-
-
 def test_native_consumer_runners_fail_closed_on_identity_and_probe_failure() -> None:
     """Native runners bind toolchains and keep failed evidence schema-valid."""
 
@@ -915,6 +836,45 @@ def _write_engine_test_receipt(prepared: MaterializedRun, pack: ValidatedPack) -
     prepared.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
 
 
+def _write_consumer_test_receipt(
+    prepared: MaterializedRun,
+    catalog: ConsumerObligationCatalog,
+) -> None:
+    """Publish catalog-shaped consumer evidence for aggregation tests only."""
+
+    plan = prepared.document()
+    participant = catalog.participant(
+        str(plan["familyId"]), str(plan["participant"]["id"])
+    )
+    expected_by_id = {
+        obligation.id: obligation.expected for obligation in participant.obligations
+    }
+    receipt = {
+        "schemaVersion": plan["schemaVersion"],
+        "familyId": plan["familyId"],
+        "familyVersion": plan["familyVersion"],
+        "expectationDigest": plan["expectationDigest"],
+        "invocation": plan["invocation"],
+        "participant": plan["participant"],
+        "runner": {
+            "id": "synthetic-consumer-engine-test",
+            "version": 1,
+            "platform": "windows",
+            "toolchain": "pytest",
+        },
+        "obligations": [
+            {
+                "id": obligation["id"],
+                "executionStatus": "completed",
+                "observation": expected_by_id[obligation["id"]],
+                "failure": None,
+            }
+            for obligation in plan["obligations"]
+        ],
+    }
+    prepared.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+
+
 def _prepare_base_adapter_reports(
     pack: ValidatedPack, artifact_root: Path
 ) -> list[PreparedRunReport]:
@@ -945,7 +905,7 @@ def _prepare_base_adapter_reports(
 def test_three_base_receipts_pass_their_scopes_but_not_full_repository(
     tmp_path: Path,
 ) -> None:
-    """Rust/Node/Python are exact shadow slices while the CXX denominator remains."""
+    """Three exact participant slices cannot satisfy the blocking denominator."""
 
     pack = load_and_validate_pack(REPO_ROOT, PACK_PATH)
     artifact_root = (
@@ -1091,6 +1051,122 @@ def test_all_base_adapter_instances_need_consumers_for_full_repository_scope(
             shutil.rmtree(artifact_root)
 
 
+def test_complete_same_revision_pack_passes_the_full_repository_denominator(
+    tmp_path: Path,
+) -> None:
+    """All adapters, native instances, scenarios, families, and consumers agree."""
+
+    from conformance.adapters.prepare_cxx_conformance import prepare_cxx_run
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH)
+    artifact_root = (
+        REPO_ROOT
+        / "tools"
+        / "binding_compliance"
+        / "artifacts"
+        / "test-complete-scan-run-report"
+        / tmp_path.name
+    )
+    try:
+        semantic_reports = _prepare_base_adapter_reports(pack, artifact_root)
+        for compiler in ("msvc", "clang-cl"):
+            prepared = prepare_cxx_run(
+                REPO_ROOT,
+                compiler=compiler,
+                artifact_root=artifact_root,
+            )
+            _write_engine_test_receipt(prepared, pack)
+            semantic_reports.append(
+                validate_prepared_run(
+                    pack,
+                    prepared,
+                    receipt_paths=(prepared.receipt_path,),
+                    coverage_policy=CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+                )
+            )
+
+        catalog = load_consumer_obligations(REPO_ROOT)
+        consumer_reports: list[PreparedRunReport] = []
+        for participant in catalog.participants("crash-log-scan-run"):
+            for instance_id in participant.execution_instance_ids:
+                prepared = prepare_consumer_run(
+                    pack,
+                    participant_id=participant.id,
+                    execution_instance_id=instance_id,
+                    artifact_root=artifact_root,
+                    catalog=catalog,
+                )
+                _write_consumer_test_receipt(prepared, catalog)
+                consumer_reports.append(
+                    validate_prepared_run(
+                        pack,
+                        prepared,
+                        receipt_paths=(prepared.receipt_path,),
+                        consumer_catalog=catalog,
+                    )
+                )
+
+        pack_document = pack.document()
+        parity_rows = load_source_parity_rows(REPO_ROOT)
+        retained = load_retained_analyzer_kinds(REPO_ROOT)
+        exceptions = load_policy_exceptions(REPO_ROOT)
+        applicability = derive_applicability(
+            pack_document,
+            parity_rows,
+            policy_exceptions=exceptions,
+            consumer_catalog=catalog,
+        )
+        coverage = derive_row_coverage(
+            pack_document,
+            parity_rows,
+            CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+            tuple(semantic_reports),
+            retained_analyzers=retained,
+            policy_exceptions=exceptions,
+        )
+        consumer_coverage = derive_consumer_coverage(
+            pack_document,
+            catalog,
+            tuple(consumer_reports),
+        )
+        reports = tuple(semantic_reports + consumer_reports)
+        document = build_scoped_report(
+            family_id="crash-log-scan-run",
+            profile="full",
+            applicability=applicability,
+            prepared_reports=reports,
+            coverage=coverage,
+            consumer_coverage=consumer_coverage,
+        ).document()
+
+        assert document["enforcement"] == "blocking"
+        assert document["result"] == "pass"
+        assert document["repositoryComplete"] is True
+        assert len(document["receivedExecutions"]) == 10
+        assert document["missingExecutions"] == []
+        assert all(
+            [scenario.id for scenario in report.scenarios] == EXPECTED_SCENARIO_IDS
+            for report in semantic_reports
+        )
+        assert {
+            family
+            for capability in pack_document["capabilities"]
+            for family in capability["observationFamilies"]
+        } == EXPECTED_OBSERVATION_FAMILIES
+        assert {
+            obligation.id
+            for report in consumer_reports
+            for obligation in report.obligations
+        } == {
+            obligation.id
+            for participant in catalog.participants("crash-log-scan-run")
+            for obligation in participant.obligations
+        }
+    finally:
+        if artifact_root.exists():
+            shutil.rmtree(artifact_root)
+
+
 def test_cxx_runner_and_launcher_stay_bridge_only_and_oracle_blind() -> None:
     """Native evidence uses the generated bridge and only the approved wrapper."""
 
@@ -1209,11 +1285,11 @@ def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None
         assert all(marker in source for marker in seam_markers[participant_id])
 
 
-def test_launcher_records_spawn_failures_as_structured_shadow_diagnostics(
+def test_launcher_records_spawn_failures_as_structured_diagnostics(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A missing adapter executable still produces an attempt and shadow report."""
+    """A missing adapter executable still produces an attempt and report."""
 
     def fail_to_spawn(*_args: object, **_kwargs: object) -> tuple[None, None, OSError]:
         """Simulate an unavailable native runner executable."""
@@ -1239,7 +1315,7 @@ def test_launcher_records_spawn_failures_as_structured_shadow_diagnostics(
             (artifact_dir / "attempt.json").read_text(encoding="utf-8")
         )
         report = json.loads(
-            (artifact_dir / "shadow_report.json").read_text(encoding="utf-8")
+            (artifact_dir / "conformance_report.json").read_text(encoding="utf-8")
         )
         assert result == 1
         assert attempt["exitCode"] is None
@@ -1302,7 +1378,7 @@ def test_launcher_terminates_descendants_before_finalizing_a_timeout(
             (artifact_dir / "attempt.json").read_text(encoding="utf-8")
         )
         report = json.loads(
-            (artifact_dir / "shadow_report.json").read_text(encoding="utf-8")
+            (artifact_dir / "conformance_report.json").read_text(encoding="utf-8")
         )
         assert result == 1
         assert attempt["timedOut"] is True

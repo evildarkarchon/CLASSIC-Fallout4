@@ -298,6 +298,69 @@ def test_unreachable_structured_failures_remain_blocking_structural_obligations(
     )
 
 
+def test_scan_run_runtime_obligations_are_blocking_while_legacy_evidence_remains() -> None:
+    """Promote the receipt-owned surface without claiming broader source audits."""
+
+    obligations = discover_current_obligations(REPO_ROOT)
+    promoted_source_kinds = {
+        "scan_run_variant_acknowledgement",
+        "scan_run_source_marker",
+        "scan_run_required_participant",
+        "consumer_audit",
+        "scan_run_supported_adapter",
+        "consumer_required_participant",
+    }
+    promoted = [
+        entry
+        for entry in obligations
+        if entry["classification"] == "runtime_verifiable"
+        and entry["sourceKind"] in promoted_source_kinds
+    ]
+
+    assert len(promoted) == 345
+    assert all(entry["migrationState"] == "blocking" for entry in promoted)
+    assert all(entry["target"]["scenarioId"] for entry in promoted)
+    assert all(entry["target"]["observationOrAssertion"] for entry in promoted)
+    assert all(entry["retainedAnalyzerIds"] for entry in promoted)
+
+    broader_consumer_source_audits = [
+        entry
+        for entry in obligations
+        if entry["sourceKind"] == "consumer_source_audit"
+        and entry["target"]["familyId"] == "crash-log-scan-run"
+    ]
+    assert len(broader_consumer_source_audits) == 36
+    assert all(
+        entry["migrationState"] == "shadow"
+        for entry in broader_consumer_source_audits
+    )
+
+    source_artifacts = {entry["source"]["artifact"] for entry in promoted}
+    assert "tests/fixtures/crash_log_scan_run/manifest.json" in source_artifacts
+
+    variants = {entry["id"]: entry for entry in promoted if entry["sourceKind"] == "scan_run_variant_acknowledgement"}
+    targeted = variants["scan-run:variant:rust:discovery_source.targeted"]
+    admitted = variants["scan-run:variant:rust:cancellation_seam.admitted"]
+    assert targeted["target"]["scenarioId"] == "targeted-happy-path"
+    assert targeted["target"]["observationOrAssertion"] == "scan-run.discovery"
+    assert admitted["target"]["scenarioId"] == "admitted-durable-cancelled"
+    assert admitted["target"]["observationOrAssertion"] == (
+        "scan-run.lifecycle.admitted-cancellation"
+    )
+
+    retained_public_variants = [
+        entry
+        for entry in obligations
+        if entry["mappingOrigin"] == "retained_contract_variant_projection"
+    ]
+    assert len(retained_public_variants) == 48
+    assert all(
+        entry["classification"] == "structural_analyzer"
+        and entry["migrationState"] == "blocking"
+        for entry in retained_public_variants
+    )
+
+
 def test_cxx_internal_failure_marker_cannot_be_relabelled_as_public_execution() -> None:
     """A tracked-ledger mutation cannot convert CXX structural proof to a receipt."""
 

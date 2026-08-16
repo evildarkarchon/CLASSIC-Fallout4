@@ -9,12 +9,11 @@ from pathlib import Path
 
 import pytest
 
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 TOOLS_ROOT = REPO_ROOT / "tools" / "binding_compliance"
 sys.path.insert(0, str(TOOLS_ROOT))
 
-from scan_run_contract import (  # type: ignore  # noqa: E402
+from scan_run_contract import (  # type: ignore
     ManifestValidationError,
     _validate_forbidden_exports,
     load_manifest,
@@ -129,6 +128,42 @@ def test_unregistered_rust_enum_variant_fails_closed(tmp_path: Path) -> None:
     with pytest.raises(
         ManifestValidationError,
         match="event.adapter_forgotten_variant",
+    ):
+        validate_manifest(tmp_path, manifest)
+
+
+def test_registered_but_unmapped_rust_variant_fails_closed(tmp_path: Path) -> None:
+    """Acknowledgements cannot replace a concrete fact or retained disposition."""
+
+    manifest = copy.deepcopy(load_manifest(REPO_ROOT))
+    event_spec = next(
+        item for item in manifest["rustEnums"] if item["category"] == "event"
+    )
+    source = tmp_path / "event.rs"
+    original = (REPO_ROOT / event_spec["path"]).read_text(encoding="utf-8")
+    source.write_text(
+        original.replace(
+            f"pub enum {event_spec['name']} {{",
+            f"pub enum {event_spec['name']} {{\n    AdapterForgottenVariant,",
+            1,
+        ),
+        encoding="utf-8",
+    )
+    manifest["rustEnums"] = [
+        {
+            "category": "event",
+            "path": source.name,
+            "name": event_spec["name"],
+        }
+    ]
+    new_variant = "event.adapter_forgotten_variant"
+    manifest["contractVariants"].append(new_variant)
+    for adapter in manifest["adapters"].values():
+        adapter["acknowledgedVariants"].append(new_variant)
+
+    with pytest.raises(
+        ManifestValidationError,
+        match=r"variant evidence policy differs: missing=.*adapter_forgotten_variant",
     ):
         validate_manifest(tmp_path, manifest)
 

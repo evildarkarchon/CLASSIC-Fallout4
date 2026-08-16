@@ -9,7 +9,7 @@ from .applicability import (
     derive_applicability,
     load_policy_exceptions,
 )
-from .command import ConformanceCommandError, build_shadow_report_from_receipts
+from .command import ConformanceCommandError, build_conformance_report_from_receipts
 from .consumers import (
     ConsumerCoverageFailure,
     ConsumerCoverageReport,
@@ -90,8 +90,8 @@ __all__ = [
     "ScopedReportFailure",
     "SourceParityRow",
     "ValidatedPack",
+    "build_conformance_report_from_receipts",
     "build_scoped_report",
-    "build_shadow_report_from_receipts",
     "derive_applicability",
     "derive_consumer_coverage",
     "derive_row_coverage",

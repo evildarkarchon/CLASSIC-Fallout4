@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run one base Crash Log Scan Run adapter and publish a shadow report."""
+"""Run one base Crash Log Scan Run adapter and publish its scoped report."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ sys.path.insert(0, str(SCRIPT_DIR))
 
 from conformance.command import (
     ConformanceCommandError,
-    build_shadow_report_from_receipts,
+    build_conformance_report_from_receipts,
 )
 from conformance.packs import (
     PackValidationError,
@@ -164,7 +164,7 @@ def _terminate_process_tree(process: subprocess.Popen[str]) -> None:
 
     Native build/test launchers can outlive their direct parent on timeout. The
     whole owned tree must be gone before central validation, or a descendant
-    could publish a stale receipt after the shadow report has been finalized.
+    could publish a stale receipt after the conformance report is finalized.
     """
 
     if process.poll() is not None:
@@ -239,9 +239,8 @@ def run_participant(
 ) -> tuple[int, Path]:
     """Execute one public adapter seam and build its exact participant report.
 
-    The return code mirrors the shadow result for local diagnostics. CI invokes
-    this command from an explicitly nonblocking step, so existing parity and
-    runtime gates remain authoritative while every artifact is still uploaded.
+    The return code mirrors the blocking report result. CI retains the legacy
+    parity/runtime gates and always uploads the fresh receipt diagnostics.
     """
 
     command = PARTICIPANT_COMMANDS[participant_id]
@@ -274,7 +273,7 @@ def run_participant(
             launch_error,
         ),
     )
-    report = build_shadow_report_from_receipts(
+    report = build_conformance_report_from_receipts(
         REPO_ROOT,
         profile="conformance",
         participant_id=participant_id,
@@ -282,7 +281,7 @@ def run_participant(
         receipt_paths=(prepared.receipt_path,),
         attempt_path=attempt_path,
     )
-    report_path = prepared.artifact_dir / "shadow_report.json"
+    report_path = prepared.artifact_dir / "conformance_report.json"
     _atomic_write_json(report_path, report)
     command_passed = (
         completed is not None

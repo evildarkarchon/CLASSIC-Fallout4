@@ -531,7 +531,7 @@ def validate_receipt_document(
 
 
 def validate_conformance_report_document(document: Mapping[str, Any]) -> None:
-    """Validate one closed instance, participant, or repository shadow report.
+    """Validate one closed instance, participant, or repository report.
 
     The scope selector and completeness claim are checked together so a caller
     cannot broaden an otherwise valid partial report by changing a label.
@@ -561,8 +561,10 @@ def validate_conformance_report_document(document: Mapping[str, Any]) -> None:
     )
     _positive_integer(document["schemaVersion"], f"{prefix}.schemaVersion", exact=1)
     _pattern_string(document["familyId"], f"{prefix}.familyId", _STABLE_ID)
-    if document["enforcement"] != "shadow":
-        raise ConformanceSchemaError(f"{prefix}.enforcement must be shadow")
+    if document["enforcement"] not in {"shadow", "blocking"}:
+        raise ConformanceSchemaError(
+            f"{prefix}.enforcement must be shadow or blocking"
+        )
     if document["result"] not in {"pass", "fail"}:
         raise ConformanceSchemaError(f"{prefix}.result must be pass or fail")
     if not isinstance(document["repositoryComplete"], bool):

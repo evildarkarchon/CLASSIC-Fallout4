@@ -22,7 +22,7 @@ The command writes:
 | `node-ci` | CI slice for the Node workflow. Runs the canonical suite around Node parity and `index.d.ts` freshness checks. |
 | `python-ci` | CI slice for the Python workflow. Runs the canonical suite around Python parity, stub validation, uv drift-guard setup, and the schema-version guard. |
 | `conformance` | Receipt-only native-job validation for one participant or execution instance. Requires `--participant` and repeatable `--receipt`; CXX also requires companion `--attempt` and `--junit` diagnostics. |
-| `full` | Local release/backstop profile. Adds Bun/Node runtime tests, the Python PyO3 rebuild, and Python smoke tests. Repeatable `--receipt` inputs may also produce a full-repository shadow aggregation without making absent shadow receipts block the legacy profile. |
+| `full` | Local release/backstop profile. Adds Bun/Node runtime tests, the Python PyO3 rebuild, and Python smoke tests. Repeatable `--receipt` inputs produce a full-repository aggregation whose centrally selected family enforcement is conjunctive with the retained gates. |
 | `static` | Policy, docs, artifact presence, and known-gap reporting without external commands. |
 
 Use `--skip-commands` when reviewing policy mapping without invoking lower-level gates. Use `--fail-on-gaps` when maintainers are ready to turn known non-blocking coverage gaps into blocking failures.
@@ -42,7 +42,7 @@ python tools/binding_compliance/check_compliance.py `
 
 The receipt must have a sibling immutable `run_plan.json`. The engine rebinds it to the current tracked pack and source revision before validation. Attempt and JUnit files can add command diagnostics but cannot supply semantic facts, row coverage, or a broader scope claim. Participant reports require every source-derived execution instance; only `full` can claim repository completeness, and missing row coverage or unresolved consumer obligations fails that claim closed. Full aggregation independently authenticates each participant-specific source digest and requires their embedded Git revisions to match; the digests themselves may differ because each run plan declares its own runner source roots.
 
-The Crash Log Scan Run pack also has private shadow launchers for its
+The Crash Log Scan Run pack also has private blocking launchers for its
 Rust, Node, Python, and native CXX semantic adapters, plus separate CLI, GUI,
 and TUI consumer participants:
 
@@ -59,7 +59,7 @@ python tools/binding_compliance/run_scan_run_consumer_conformance.py --participa
 
 Each invocation creates a fresh input-only `run_plan.json` and calls only the
 selected adapter's public scan-run seam. Rust, Node, and Python publish
-`receipt.json`, `attempt.json`, and `shadow_report.json` beneath
+`receipt.json`, `attempt.json`, and `conformance_report.json` beneath
 `tools/binding_compliance/artifacts/<participant>/<instance>/<invocation>/`.
 The CXX launcher hosts its bridge-only target through the approved CLI wrapper,
 uses a 15-minute child-process bound, and publishes `receipt.json`, mandatory
@@ -67,10 +67,12 @@ uses a 15-minute child-process bound, and publishes `receipt.json`, mandatory
 instance-scoped JSON/Markdown compliance reports beneath
 `tools/binding_compliance/artifacts/cxx/windows-<compiler>/<invocation>/`.
 Ordinary full CLI wrapper runs visibly skip that target when no current plan and
-receipt destination are supplied. The native workflows upload these diagnostics
-from explicitly nonblocking shadow steps after their existing runtime tests.
-They do not replace or weaken the manifest, parity, declaration/stub, rebuild,
-or runtime gates. Both `windows-msvc` and `windows-clang-cl` receipts are required
+receipt destination are supplied. The native workflows run every promoted
+launcher with `!cancelled()` and upload its diagnostics with `always()`, so a
+retained-gate failure does not suppress replacement evidence and a replacement
+failure still fails the job. They do not replace or weaken the manifest,
+parity, declaration/stub, rebuild, or runtime gates. Both `windows-msvc` and
+`windows-clang-cl` receipts are required
 before CXX completes its participant denominator; three Rust/Node/Python
 receipts alone remain incomplete.
 
@@ -78,8 +80,8 @@ The source-owned catalog at `tests/conformance/consumer-obligations.json`
 independently selects frontend obligations and expectations. Consumer plans
 withhold those expectations, and validated observations appear only under
 `consumerCoverage`: they never grant semantic parity-row coverage. Consumer
-jobs and artifacts remain explicitly nonblocking until the later promotion
-issue.
+jobs are blocking for this family, while their artifacts remain available even
+when execution or validation fails.
 
 ## What The Suite Proves
 
@@ -89,18 +91,19 @@ The suite does not replace lower-level parsers. It owns the top-level pass/fail 
 - Node: `python tools/node_api_parity/check_parity_gate.py --repo-root .` plus `bun run dts:freshness:check` in the Node CI slice.
 - Python: `python tools/python_api_parity/check_parity_gate.py --repo-root .` plus `validate_stubs.py`.
 - User Settings ownership: `python tools/user_settings_ownership/check.py --repo-root .` rejects first-party production references that reintroduce flat models, generic User Settings variants/key policies, raw `CLASSIC_Settings` interpretation outside `classic-user-settings-core`, or runtime use of the generated default mirror.
-- Crash Log Scan Run parity and contraction: `python tools/binding_compliance/scan_run_contract.py --repo-root .` validates the shared corpus under `tests/fixtures/crash_log_scan_run/`, compares its variant inventory with the Rust enums, and fails unless Rust, CXX, Node, and Python acknowledge every variant. The inventory includes Installed YAML Data roles, provenance, diagnostic kinds, Local Ignore states, both explicit recovery decisions, resume-error kinds, and continuation/reset invariants in addition to lifecycle variants. The same manifest carries a per-surface forbidden-export inventory; the check fails if a removed orchestration, analysis-only execution, batch lifecycle, direct report-writing, resettable cancellation, or global-FCX name remains in public source, CXX parity data, Node declarations/parity/runtime coverage, or Python stubs/parity/runtime coverage. It also requires executable Standard, Targeted, existing/generated/recovery/reset Installed YAML Data, cancellation on both sides of the reset critical section, replay, retained-snapshot, byte-exact backup, structured-failure evidence, and CLI, GUI, and TUI presentation evidence.
+- Crash Log Scan Run parity and contraction: `python tools/binding_compliance/scan_run_contract.py --repo-root .` validates the shared corpus under `tests/fixtures/crash_log_scan_run/`, compares its variant inventory with the Rust enums, and fails unless Rust, CXX, Node, and Python acknowledge every variant. The trusted variant policy must also map every source-derived variant to a required executable scenario fact or a named retained analyzer; adding acknowledgements alone cannot cover a new variant. The inventory includes Installed YAML Data roles, provenance, diagnostic kinds, Local Ignore states, both explicit recovery decisions, resume-error kinds, and continuation/reset invariants in addition to lifecycle variants. The same manifest carries a per-surface forbidden-export inventory; the check fails if a removed orchestration, analysis-only execution, batch lifecycle, direct report-writing, resettable cancellation, or global-FCX name remains in public source, CXX parity data, Node declarations/parity/runtime coverage, or Python stubs/parity/runtime coverage. It also requires executable Standard, Targeted, existing/generated/recovery/reset Installed YAML Data, cancellation on both sides of the reset critical section, replay, retained-snapshot, byte-exact backup, structured-failure evidence, and CLI, GUI, and TUI presentation evidence.
 - Evidence migration ledger: `python tools/binding_compliance/migration_ledger.py --repo-root .` fails closed when a tracked parity row, raw runtime-registry claim, Crash Log Scan Run marker/audit, or current consumer/source audit is missing, duplicated, stale, or unclassified. The check is blocking in every source-level profile because inventory drift must be classified, but the ledger and its migration states are diagnostic only: they cannot grant compliance, runtime coverage, or receipts. The named `scan-run-local-ignore-reset-internal-faults` analyzer keeps replacement-publication and durability-unknown projection tests blocking. The separate `scan-run-structured-failure-internal-faults` analyzer retains injected analysis, FormID database access, initialization, and internal-invariant projections that have no hermetic public cross-adapter trigger; it grants no semantic-adapter coverage. The C++, Node, Python, User Settings, and Crash Log Scan Run gates above remain the executable evidence owners.
 
 Existing C++, Node, and Python parity gates remain available as focused debugging commands. Do not remove or weaken them unless the compliance suite demonstrably covers the same check and the replacement is documented in the same change.
 
 ## Current Coverage Gaps
 
-The first implementation intentionally reports known weak coverage instead of silently rewriting policy around it. The current non-blocking gaps are:
+The suite reports known weak coverage instead of silently rewriting policy around it. The remaining gaps are:
 
-- C++ has no editable runtime-coverage registry equivalent to the Node and Python registries. The Crash Log Scan Run v1 pack now produces executable CXX receipts from generated bridge DTOs and events on MSVC and clang-cl, while the source parity gate and existing CLI/GUI wrapper suites remain blocking during shadow migration.
-- The Crash Log Scan Run v1 pack has Rust, Node, Python, both required CXX execution-instance receipts, and separate CLI, GUI, and TUI consumer receipts in shadow. Their scoped reports are useful diagnostics, but they do not retire existing evidence until equivalence review and blocking promotion complete.
+- C++ has no editable runtime-coverage registry equivalent to the Node and Python registries. The Crash Log Scan Run v1 pack closes that family-specific gap with executable CXX receipts on MSVC and clang-cl; other CXX domains still rely on their source-derived parity dispositions until their own packs migrate.
+- The Crash Log Scan Run v1 report is blocking across Rust, Node, Python, both required CXX execution instances, and the separate CLI, GUI, and TUI consumer instances. The retained manifest, parity, declaration/stub, rebuild, runtime, and native wrapper gates continue to dual-run; issue-specific deletion is a separate reviewed change.
 - Replacement-publication failure, replacement durability uncertainty, and the non-hermetic structured-failure injections remain blocking internal fault analyzers, not semantic receipts. A deterministic public scenario may replace that classification later; a test-only public binding hook or fabricated adapter receipt may not.
+- Public enum values without a hermetic v1 scenario—such as no-log/setup terminal states, alternate Installed YAML candidate diagnostics, and custom Unsolved Logs movement—remain exact blocking dispositions under `scan-run-contract-validator`. They grant no semantic receipt credit; the variant policy prevents them, or any newly added value, from falling through to an unrelated happy-path fact.
 
 Treat new drift, stale generated artifacts, stale baselines, missing runtime coverage, policy/source contradictions, tooling bugs, and local environment failures as separate failure classes in the structured report.
 
@@ -109,7 +112,7 @@ Treat new drift, stale generated artifacts, stale baselines, missing runtime cov
 `tests/fixtures/crash_log_scan_run/manifest.json` is the machine-readable owner for normalized cross-interface expectations. Paths are compared relative to each runner's temporary root; processing timings and exact concurrent event interleavings are deliberately excluded. Discovery, Rust-selected effective concurrency, serialized event variants, discovery-order outcomes, structured failures, Installed YAML Data and reset metadata, valid/generated/malformed/repaired Local Ignore behavior, retained-snapshot continuation resume, reset conflict/operational outcomes, both reset cancellation boundaries, replay, byte-exact backup, durable artifact presence, and report-byte stability remain contractual.
 
 Separately, `tests/conformance/packs/crash_log_scan_run/v1.json` owns the
-independently authored nineteen-scenario shadow oracle: Standard and Targeted
+independently authored nineteen-scenario blocking oracle: Standard and Targeted
 happy paths, generated Local Ignore, pre-discovery cancellation,
 post-discovery queued cancellation, admitted/durable cancellation, observer
 delivery failure, public request-validation, discovery, intake, report-write,
@@ -126,7 +129,8 @@ structured failure stage, nonempty-message contract, relevant path, terminal
 disposition, movement outcome, and ordered artifact types, plus durable report effects.
 Timings and cross-log concurrent interleaving are
 projected out before receipt emission.
-This shadow pack does not supersede the broader blocking manifest.
+This promoted pack runs conjunctively with the broader blocking manifest; it
+does not authorize deleting the retained evidence by itself.
 
 The manifest's `forbiddenExports` section is negative evidence for the completed
 contract step. Identifier-shaped markers use identifier boundaries, so removing

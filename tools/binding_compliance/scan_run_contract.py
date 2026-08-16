@@ -9,6 +9,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from conformance.families.crash_log_scan_run import (
+    REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO,
+)
+from conformance.variant_policy import CRASH_LOG_SCAN_RUN_VARIANT_TARGETS
 
 MANIFEST_PATH = Path("tests/fixtures/crash_log_scan_run/manifest.json")
 
@@ -275,6 +279,33 @@ def _validate_rust_inventory(
             )
 
 
+def _validate_variant_evidence_policy(variants: set[str]) -> None:
+    """Require every source variant to name one real fact or retained analyzer."""
+
+    policy_variants = set(CRASH_LOG_SCAN_RUN_VARIANT_TARGETS)
+    missing = variants - policy_variants
+    stale = policy_variants - variants
+    if missing or stale:
+        raise ManifestValidationError(
+            "Crash Log Scan Run variant evidence policy differs: "
+            f"missing={sorted(missing)}, stale={sorted(stale)}"
+        )
+    for variant, target in CRASH_LOG_SCAN_RUN_VARIANT_TARGETS.items():
+        if target.retained_analyzer_id is not None:
+            if target.scenario_id is not None:
+                raise ManifestValidationError(
+                    f"retained variant {variant} cannot claim an executable scenario"
+                )
+            continue
+        scenario_facts = REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO.get(
+            target.scenario_id or ""
+        )
+        if scenario_facts is None or target.assertion_id not in scenario_facts:
+            raise ManifestValidationError(
+                f"variant {variant} references no required executable scenario fact"
+            )
+
+
 def _validate_evidence(repo_root: Path, owner: str, evidence: object) -> None:
     """Require every evidence path and marker declared by one owner to exist."""
 
@@ -536,6 +567,7 @@ def validate_manifest(repo_root: Path, manifest: dict[str, Any]) -> None:
     # Inventory is checked first so a new Rust variant reports directly even if a
     # contributor is still assembling the rest of its cross-interface evidence.
     _validate_rust_inventory(repo_root, manifest, variants)
+    _validate_variant_evidence_policy(variants)
 
     supported = _require_string_list(
         manifest.get("supportedAdapters"), "supportedAdapters"

@@ -6,7 +6,13 @@ import hashlib
 import json
 from pathlib import Path
 
-from check_compliance import _argument_error, build_argument_parser  # type: ignore
+import check_compliance  # type: ignore
+import pytest
+from check_compliance import (  # type: ignore
+    _argument_error,
+    build_argument_parser,
+    main,
+)
 from conformance.command import _diagnostic_failures
 
 
@@ -65,6 +71,40 @@ def test_cxx_conformance_requires_attempt_and_junit_companions() -> None:
     )
 
     assert "--attempt and --junit" in str(_argument_error(args))
+
+
+def test_public_main_returns_nonzero_for_a_blocking_scoped_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The supported command seam propagates a promoted report failure."""
+
+    monkeypatch.setattr(
+        check_compliance,
+        "build_conformance_report_from_receipts",
+        lambda *_args, **_kwargs: {
+            "schemaVersion": 1,
+            "enforcement": "blocking",
+            "result": "fail",
+            "failures": [{"kind": "missing_receipt"}],
+        },
+    )
+
+    exit_code = main(
+        [
+            "--repo-root",
+            str(tmp_path),
+            "--output-dir",
+            "artifacts",
+            "--profile",
+            "conformance",
+            "--participant",
+            "rust",
+            "--receipt",
+            "missing-receipt.json",
+        ]
+    )
+
+    assert exit_code == 1
 
 
 def _write_cxx_attempt(

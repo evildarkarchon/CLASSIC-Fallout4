@@ -82,6 +82,30 @@ def test_static_profiles_block_on_scan_run_variant_acknowledgements() -> None:
     )
 
 
+def test_static_profiles_block_on_promoted_scan_run_workflow_policy() -> None:
+    """Deleting or weakening any receipt job must fail source-level CI."""
+
+    requirements = {requirement.id: requirement for requirement in REQUIREMENTS}
+    requirement = requirements["scan-run-workflow-policy"]
+
+    assert requirement.blocking is True
+    assert requirement.profiles == (
+        "static",
+        "ci",
+        "full",
+        "cxx-ci",
+        "node-ci",
+        "python-ci",
+    )
+    assert requirement.command is not None
+    assert requirement.command.argv == (
+        "python",
+        "tools/binding_compliance/scan_run_workflow_policy.py",
+        "--repo-root",
+        ".",
+    )
+
+
 def test_migration_ledger_is_a_diagnostic_guard_without_replacing_gates() -> None:
     """Ledger completeness is blocking while all existing evidence owners remain."""
 

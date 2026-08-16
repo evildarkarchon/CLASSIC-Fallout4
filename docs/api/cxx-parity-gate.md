@@ -62,6 +62,12 @@ All you need is Python 3.12+. The Python parser pulls from the repo's existing
 bindings venv in CI; locally, any Python 3.12+ interpreter works because the
 script and its shared Rust-surface parser depend only on the standard library.
 
+For Crash Log Scan Run, this source-only gate is retained alongside the
+blocking native conformance executions. The CXX workflow runs the dedicated
+public-seam receipt target under both `windows-msvc` and
+`windows-clang-cl`; neither compiler leg may claim full-repository scope, and
+both remain required independently of this parser.
+
 To run the gate's own test suite (covering the parser, canonical mappings, the
 gate, and drift detection):
 

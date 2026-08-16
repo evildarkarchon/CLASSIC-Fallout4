@@ -40,8 +40,9 @@ jobs:
   cli-tests:
     name: CLI Tests (${{ matrix.compiler }})
     needs: [cxx-parity-gate]
+    if: ${{ !cancelled() }}
     runs-on: windows-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
     strategy:
       fail-fast: false
       matrix:
@@ -97,8 +98,8 @@ jobs:
         timeout-minutes: 90
         run: pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler ${{ matrix.compiler }}
 
-      - name: Run native CXX scan conformance (shadow)
-        continue-on-error: true
+      - name: Run native CXX scan conformance
+        if: ${{ !cancelled() }}
         run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Compiler ${{ matrix.compiler }}
 
       - name: Upload native CXX scan conformance artifacts
@@ -107,6 +108,7 @@ jobs:
         with:
           name: cxx-conformance-${{ matrix.compiler }}
           path: |
+            tools/binding_compliance/artifacts/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
             tools/binding_compliance/artifacts/cxx/windows-${{ matrix.compiler }}/**/receipt.json
             tools/binding_compliance/artifacts/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
             tools/binding_compliance/artifacts/cxx/windows-${{ matrix.compiler }}/**/attempt.json
@@ -118,10 +120,8 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-      # Frontend consumer evidence stays diagnostic until the later promotion gate;
-      # the complete CLI suite above remains the blocking authority.
-      - name: Run CLI Crash Log Scan Run consumer conformance (shadow)
-        continue-on-error: true
+      - name: Run CLI Crash Log Scan Run consumer conformance
+        if: ${{ !cancelled() }}
         run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cli_consumer_conformance.ps1 -Compiler ${{ matrix.compiler }}
 
       - name: Upload CLI consumer conformance artifacts
@@ -150,8 +150,9 @@ jobs:
   gui-tests:
     name: GUI Tests (${{ matrix.compiler }})
     needs: [cxx-parity-gate]
+    if: ${{ !cancelled() }}
     runs-on: windows-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
     strategy:
       fail-fast: false
       matrix:
@@ -230,10 +231,8 @@ jobs:
       - name: Build and test GUI
         run: pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Preset ci-system-qt -Test -TestTimeoutSec 600 -Compiler ${{ matrix.compiler }}
 
-      # Frontend consumer evidence stays diagnostic until the later promotion gate;
-      # the complete GUI suite above remains the blocking authority.
-      - name: Run GUI Crash Log Scan Run consumer conformance (shadow)
-        continue-on-error: true
+      - name: Run GUI Crash Log Scan Run consumer conformance
+        if: ${{ !cancelled() }}
         run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1 -Compiler ${{ matrix.compiler }}
 
       - name: Upload GUI consumer conformance artifacts

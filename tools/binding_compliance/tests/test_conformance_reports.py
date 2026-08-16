@@ -1,4 +1,4 @@
-"""Behavior tests for honest scoped shadow conformance reports."""
+"""Behavior tests for honestly scoped executable conformance reports."""
 
 from __future__ import annotations
 
@@ -12,9 +12,11 @@ from conformance import (
     CoverageFailure,
     PreparedRunReport,
     RowCoverageReport,
+    ScopedConformanceReport,
     build_scoped_report,
     validate_conformance_report_document,
 )
+from conformance.enforcement import enforcement_for_family
 from conformance.receipts import ScenarioValidationResult
 
 
@@ -39,6 +41,14 @@ def _applicability() -> ApplicabilityMatrix:
             ),
         )
     )
+
+
+def test_enforcement_registry_promotes_only_crash_log_scan_run() -> None:
+    """Issue 198 must not silently promote future conformance families."""
+
+    assert enforcement_for_family("crash-log-scan-run") == "blocking"
+    assert enforcement_for_family("future-family") == "shadow"
+    assert "enforcement" not in ScopedConformanceReport.__dataclass_fields__
 
 
 def _prepared_report(
@@ -114,6 +124,7 @@ def test_execution_instance_report_cannot_claim_participant_or_repository() -> N
     )
 
     document = report.document()
+    assert document["enforcement"] == "shadow"
     assert document["scope"] == {
         "kind": "execution-instance",
         "participantId": "cxx",
@@ -259,6 +270,10 @@ def test_report_validator_rejects_a_broadened_completeness_claim() -> None:
         ),
     ).document()
     validate_conformance_report_document(report)
+    invalid_enforcement = copy.deepcopy(report)
+    invalid_enforcement["enforcement"] = "retired"
+    with pytest.raises(ValueError, match="enforcement must be shadow or blocking"):
+        validate_conformance_report_document(invalid_enforcement)
     broadened = copy.deepcopy(report)
     broadened["repositoryComplete"] = True
 
@@ -266,8 +281,8 @@ def test_report_validator_rejects_a_broadened_completeness_claim() -> None:
         validate_conformance_report_document(broadened)
 
 
-def test_scoped_report_exposes_coverage_gaps_in_shadow_result() -> None:
-    """A row gap is visible but remains inside the shadow report envelope."""
+def test_scoped_report_exposes_coverage_gaps_in_report_result() -> None:
+    """A row gap remains visible inside the scoped report envelope."""
 
     prepared_reports = (
         _prepared_report("cxx", "windows-clang-cl"),

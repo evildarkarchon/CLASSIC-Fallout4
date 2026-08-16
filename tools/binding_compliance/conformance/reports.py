@@ -1,4 +1,4 @@
-"""Aggregate prepared invocations into honest scoped shadow reports."""
+"""Aggregate prepared invocations into honestly scoped conformance reports."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from .applicability import ApplicabilityMatrix
 from .consumers import ConsumerCoverageReport
 from .coverage import RowCoverageReport, prepared_report_evidence_digest
+from .enforcement import enforcement_for_family
 from .failures import FailureKind
 from .receipts import PreparedRunReport
 
@@ -61,7 +62,7 @@ class ScopedReportFailure:
 
 @dataclass(frozen=True)
 class ScopedConformanceReport:
-    """A deterministic shadow report whose scope is derived from evidence."""
+    """A deterministic report whose scope and enforcement are centrally derived."""
 
     family_id: str
     scope_kind: str
@@ -109,7 +110,7 @@ class ScopedConformanceReport:
         document: dict[str, object] = {
             "schemaVersion": 1,
             "familyId": self.family_id,
-            "enforcement": "shadow",
+            "enforcement": enforcement_for_family(self.family_id),
             "scope": {
                 "kind": self.scope_kind,
                 "participantId": self.participant_id,
@@ -167,7 +168,7 @@ def build_scoped_report(
     coverage: RowCoverageReport | None = None,
     consumer_coverage: ConsumerCoverageReport | None = None,
 ) -> ScopedConformanceReport:
-    """Build an instance, participant, or full-repository shadow report.
+    """Build an instance, participant, or full-repository conformance report.
 
     Instance scope requires the exact named tuple. Participant scope expands to
     every source-derived instance for that participant. Only ``full`` expands to

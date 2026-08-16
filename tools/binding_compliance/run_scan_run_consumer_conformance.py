@@ -18,7 +18,7 @@ sys.path.insert(0, str(SCRIPT_PATH.parent))
 
 from conformance.command import (
     ConformanceCommandError,
-    build_shadow_report_from_receipts,
+    build_conformance_report_from_receipts,
 )
 from conformance.consumers import (
     ConsumerObligationError,
@@ -170,7 +170,7 @@ def run_tui_consumer(
         attempt_path,
         _attempt_document(completed, launch_error, timed_out),
     )
-    report = build_shadow_report_from_receipts(
+    report = build_conformance_report_from_receipts(
         REPO_ROOT,
         profile="conformance",
         participant_id="tui",
@@ -178,7 +178,7 @@ def run_tui_consumer(
         receipt_paths=(prepared.receipt_path,),
         attempt_path=attempt_path,
     )
-    report_path = prepared.artifact_dir / "shadow_report.json"
+    report_path = prepared.artifact_dir / "conformance_report.json"
     _atomic_write_json(report_path, report)
 
     command_passed = (
