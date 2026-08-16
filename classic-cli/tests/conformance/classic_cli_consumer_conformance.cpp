@@ -463,7 +463,7 @@ json obligation_receipt(const json& plan, const json& obligation) {
     } catch (const std::exception& error) {
         return json{{"id", obligation.value("id", "unknown")},
                     {"executionStatus", "failed"},
-                    {"observation", nullptr},
+                    {"observation", json::object()},
                     {"failure", json{{"kind", "cli-consumer-runner-error"}, {"message", error.what()}}}};
     }
 }

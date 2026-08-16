@@ -448,9 +448,11 @@ QJsonObject obligationReceipt(const QJsonObject& obligation, const QtConsumerObs
 QJsonObject buildReceipt(const QJsonObject& plan)
 {
     const auto participant = requiredObject(plan, QStringLiteral("participant"));
+    const QString expectedInstance = QStringLiteral("windows-") + QStringLiteral(CLASSIC_GUI_CONFORMANCE_TOOLCHAIN);
     if (participant.value(QStringLiteral("id")).toString() != QStringLiteral("gui") ||
-        participant.value(QStringLiteral("role")).toString() != QStringLiteral("consumer")) {
-        throw RunnerError("run plan participant must be the GUI consumer");
+        participant.value(QStringLiteral("role")).toString() != QStringLiteral("consumer") ||
+        participant.value(QStringLiteral("executionInstanceId")).toString() != expectedInstance) {
+        throw RunnerError("run plan participant must match this GUI consumer toolchain");
     }
 
     const auto observations = observeQtConsumerSeams();

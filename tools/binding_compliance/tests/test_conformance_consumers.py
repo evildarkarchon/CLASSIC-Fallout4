@@ -6,13 +6,20 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
 from conformance.applicability import derive_applicability
 from conformance.consumers import (
     derive_consumer_coverage,
     load_consumer_obligations,
     prepare_consumer_run,
 )
-from conformance.packs import load_and_validate_pack
+from conformance.packs import (
+    MaterializationError,
+    _run_plan_digest,
+    _source_identity,
+    load_and_validate_pack,
+    load_prepared_run,
+)
 from conformance.receipts import (
     ObligationValidationResult,
     PreparedRunReport,
@@ -191,6 +198,30 @@ def test_consumer_preparation_withholds_expected_observations(tmp_path: Path) ->
         "classic-cli/src/main.cpp",
         "tests/conformance/consumer-obligations.json",
     ]
+
+
+def test_consumer_reload_rejects_rehashed_source_path_narrowing(tmp_path: Path) -> None:
+    """A plan cannot replace the catalog-owned source denominator and rehash it."""
+
+    pack, catalog, run = _prepare_example_consumer(tmp_path)
+    plan = run.document()
+    narrowed_paths = ["classic-cli/src/main.cpp"]
+    plan["sourcePaths"] = narrowed_paths
+    plan["invocation"]["sourceIdentity"] = _source_identity(
+        pack, tuple(Path(path) for path in narrowed_paths)
+    )
+    plan_without_digest = dict(plan)
+    invocation_without_digest = dict(plan["invocation"])
+    invocation_without_digest.pop("runPlanDigest")
+    plan_without_digest["invocation"] = invocation_without_digest
+    plan["invocation"]["runPlanDigest"] = _run_plan_digest(plan_without_digest)
+    run.run_plan_path.write_text(
+        json.dumps(plan, sort_keys=True, separators=(",", ":")),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(MaterializationError, match="sourcePaths"):
+        load_prepared_run(pack, run.run_plan_path, consumer_catalog=catalog)
 
 
 def test_consumer_receipt_compares_only_named_obligation_observations(

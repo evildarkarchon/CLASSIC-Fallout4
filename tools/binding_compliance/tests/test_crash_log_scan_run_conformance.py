@@ -857,6 +857,29 @@ def test_frontend_workflows_publish_nonblocking_consumer_receipts() -> None:
     assert "if: always()" in rust_workflow[artifact_index - 160 : artifact_index]
 
 
+def test_native_consumer_runners_fail_closed_on_identity_and_probe_failure() -> None:
+    """Native runners bind toolchains and keep failed evidence schema-valid."""
+
+    gui_runner = (
+        REPO_ROOT
+        / "classic-gui"
+        / "tests"
+        / "conformance"
+        / "classic_gui_consumer_conformance.cpp"
+    ).read_text(encoding="utf-8")
+    cli_runner = (
+        REPO_ROOT
+        / "classic-cli"
+        / "tests"
+        / "conformance"
+        / "classic_cli_consumer_conformance.cpp"
+    ).read_text(encoding="utf-8")
+
+    assert 'QStringLiteral("windows-") + QStringLiteral(CLASSIC_GUI_CONFORMANCE_TOOLCHAIN)' in gui_runner
+    assert 'participant.value(QStringLiteral("executionInstanceId"))' in gui_runner
+    assert '{"observation", json::object()}' in cli_runner
+
+
 def _write_engine_test_receipt(prepared: MaterializedRun, pack: ValidatedPack) -> None:
     """Publish an oracle-shaped receipt for central aggregation unit tests only."""
 

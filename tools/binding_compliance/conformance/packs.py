@@ -1010,6 +1010,17 @@ def load_prepared_run(
             for obligation in consumer.obligations
             if obligation.id in declared_obligation_ids
         ]
+        try:
+            catalog_path = consumer_catalog.path.relative_to(pack.repo_root)
+        except ValueError as error:  # pragma: no cover - loader containment invariant
+            raise MaterializationError(
+                "consumer obligation registry must stay beneath the repository root"
+            ) from error
+        expected_pack_fields["sourcePaths"] = list(
+            _declared_participant_source_paths(
+                pack, (catalog_path, *consumer.source_paths)
+            )
+        )
     mismatches = sorted(
         key
         for key, expected in expected_pack_fields.items()
