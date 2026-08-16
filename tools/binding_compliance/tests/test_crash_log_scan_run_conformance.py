@@ -29,7 +29,7 @@ from conformance.packs import (
     load_and_validate_pack,
     materialize_run_plan,
 )
-from conformance.receipts import validate_prepared_run
+from conformance.receipts import PreparedRunReport, validate_prepared_run
 from conformance.reports import build_scoped_report
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -325,6 +325,33 @@ def _write_engine_test_receipt(prepared: MaterializedRun, pack: ValidatedPack) -
     prepared.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
 
 
+def _prepare_base_adapter_reports(
+    pack: ValidatedPack, artifact_root: Path
+) -> list[PreparedRunReport]:
+    """Materialize and centrally validate Rust, Node, and Python test receipts."""
+
+    prepared_reports = []
+    for participant_id, source_paths in PARTICIPANT_SOURCES.items():
+        prepared = materialize_run_plan(
+            pack,
+            participant_id=participant_id,
+            participant_role="semantic-adapter",
+            execution_instance_id=participant_id,
+            source_paths=source_paths,
+            artifact_root=artifact_root,
+        )
+        _write_engine_test_receipt(prepared, pack)
+        prepared_reports.append(
+            validate_prepared_run(
+                pack,
+                prepared,
+                receipt_paths=(prepared.receipt_path,),
+                coverage_policy=CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+            )
+        )
+    return prepared_reports
+
+
 def test_three_base_receipts_pass_their_scopes_but_not_full_repository(
     tmp_path: Path,
 ) -> None:
@@ -339,26 +366,8 @@ def test_three_base_receipts_pass_their_scopes_but_not_full_repository(
         / "test-scan-run-report"
         / tmp_path.name
     )
-    prepared_reports = []
     try:
-        for participant_id, source_paths in PARTICIPANT_SOURCES.items():
-            prepared = materialize_run_plan(
-                pack,
-                participant_id=participant_id,
-                participant_role="semantic-adapter",
-                execution_instance_id=participant_id,
-                source_paths=source_paths,
-                artifact_root=artifact_root,
-            )
-            _write_engine_test_receipt(prepared, pack)
-            prepared_reports.append(
-                validate_prepared_run(
-                    pack,
-                    prepared,
-                    receipt_paths=(prepared.receipt_path,),
-                    coverage_policy=CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
-                )
-            )
+        prepared_reports = _prepare_base_adapter_reports(pack, artifact_root)
 
         pack_document = pack.document()
         parity_rows = load_source_parity_rows(REPO_ROOT)
@@ -434,26 +443,8 @@ def test_all_base_adapter_instances_complete_full_repository_scope(
         / "test-full-scan-run-report"
         / tmp_path.name
     )
-    prepared_reports = []
     try:
-        for participant_id, source_paths in PARTICIPANT_SOURCES.items():
-            prepared = materialize_run_plan(
-                pack,
-                participant_id=participant_id,
-                participant_role="semantic-adapter",
-                execution_instance_id=participant_id,
-                source_paths=source_paths,
-                artifact_root=artifact_root,
-            )
-            _write_engine_test_receipt(prepared, pack)
-            prepared_reports.append(
-                validate_prepared_run(
-                    pack,
-                    prepared,
-                    receipt_paths=(prepared.receipt_path,),
-                    coverage_policy=CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
-                )
-            )
+        prepared_reports = _prepare_base_adapter_reports(pack, artifact_root)
 
         for compiler in ("msvc", "clang-cl"):
             prepared = prepare_cxx_run(

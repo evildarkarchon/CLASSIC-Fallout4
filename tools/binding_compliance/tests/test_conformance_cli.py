@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+from pathlib import Path
+
 from check_compliance import _argument_error, build_argument_parser  # type: ignore
+from conformance.command import _diagnostic_failures
 
 
 def test_conformance_cli_exposes_the_native_receipt_contract() -> None:
@@ -60,3 +65,98 @@ def test_cxx_conformance_requires_attempt_and_junit_companions() -> None:
     )
 
     assert "--attempt and --junit" in str(_argument_error(args))
+
+
+def _write_cxx_attempt(
+    root: Path, *, stdout: str = "", stderr: str = "", exit_code: int = 1
+) -> Path:
+    """Write one digest-bound failing native attempt for classification tests."""
+
+    stdout_path = root / "stdout.log"
+    stderr_path = root / "stderr.log"
+    stdout_path.write_text(stdout, encoding="utf-8")
+    stderr_path.write_text(stderr, encoding="utf-8")
+    attempt_path = root / "attempt.json"
+    attempt_path.write_text(
+        json.dumps(
+            {
+                "launchError": None,
+                "timedOut": False,
+                "exitCode": exit_code,
+                "stdout": {
+                    "path": str(stdout_path.resolve()),
+                    "sha256": hashlib.sha256(stdout_path.read_bytes()).hexdigest(),
+                },
+                "stderr": {
+                    "path": str(stderr_path.resolve()),
+                    "sha256": hashlib.sha256(stderr_path.read_bytes()).hexdigest(),
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    return attempt_path
+
+
+def test_cxx_attempt_classifies_wrapper_prerequisite_output_as_local_environment(
+    tmp_path: Path,
+) -> None:
+    """A started pwsh process can still fail because its toolchain is absent."""
+
+    attempt_path = _write_cxx_attempt(
+        tmp_path,
+        stdout="Missing required tool: clang-cl.exe\nBuild prerequisites are missing.\n",
+    )
+
+    failures = _diagnostic_failures(
+        tmp_path,
+        participant_id="cxx",
+        execution_instance_id="windows-clang-cl",
+        attempt_path=attempt_path,
+        junit_path=None,
+    )
+
+    assert [failure.kind.value for failure in failures] == ["local_environment_failure"]
+
+
+def test_cxx_attempt_keeps_adapter_failures_distinct_from_toolchain_failures(
+    tmp_path: Path,
+) -> None:
+    """Ordinary native compile/test errors remain adapter command failures."""
+
+    attempt_path = _write_cxx_attempt(
+        tmp_path,
+        stderr="classic_cxx_conformance.cpp(42): error C2065: undeclared identifier\n",
+    )
+
+    failures = _diagnostic_failures(
+        tmp_path,
+        participant_id="cxx",
+        execution_instance_id="windows-msvc",
+        attempt_path=attempt_path,
+        junit_path=None,
+    )
+
+    assert [failure.kind.value for failure in failures] == ["adapter_command_failure"]
+
+
+def test_cxx_attempt_rejects_output_changed_after_finalization(tmp_path: Path) -> None:
+    """Only the log bytes authenticated by attempt.json may affect classification."""
+
+    attempt_path = _write_cxx_attempt(
+        tmp_path,
+        stdout="Missing required tool: clang-cl.exe\n",
+        exit_code=0,
+    )
+    (tmp_path / "stdout.log").write_text("changed after hashing", encoding="utf-8")
+
+    failures = _diagnostic_failures(
+        tmp_path,
+        participant_id="cxx",
+        execution_instance_id="windows-clang-cl",
+        attempt_path=attempt_path,
+        junit_path=None,
+    )
+
+    assert [failure.kind.value for failure in failures] == ["adapter_command_failure"]
+    assert "SHA-256" in failures[0].message

@@ -235,7 +235,6 @@ if(BUILD_TESTING AND Catch2_FOUND)
     endif()
 
     # Auto-discover TEST_CASEs and register them with CTest
-    include(CTest)
     include(Catch)
     catch_discover_tests(classic-cli-tests)
 

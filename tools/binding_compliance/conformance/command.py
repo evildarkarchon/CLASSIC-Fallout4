@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
@@ -43,6 +44,17 @@ class ConformanceCommandError(ValueError):
 FAMILY_COVERAGE_POLICIES: Mapping[str, FamilyCoveragePolicy] = {
     CRASH_LOG_SCAN_RUN_COVERAGE_POLICY.family_id: CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
 }
+
+_CXX_LOCAL_ENVIRONMENT_OUTPUT_MARKERS = (
+    "vcpkg_root environment variable is not set",
+    "could not find vs dev shell",
+    "missing required tool:",
+    "missing required environment:",
+    "build prerequisites are missing",
+    "could not locate a visual studio installation",
+    "vs dev shell initialization completed, but",
+    'cmake was unable to find a build program corresponding to "ninja"',
+)
 
 
 def _repository_path(
@@ -89,6 +101,82 @@ def _run_plan_family(run_plan_path: Path) -> str:
     if not isinstance(family_id, str):  # pragma: no cover - schema invariant
         raise ConformanceCommandError("prepared run plan has no family identity")
     return family_id
+
+
+def _cxx_captured_output(
+    repo_root: Path,
+    attempt: Mapping[str, Any],
+    *,
+    participant_id: str,
+    execution_instance_id: str | None,
+) -> tuple[str, tuple[ScopedReportFailure, ...]]:
+    """Read digest-bound native logs without letting diagnostics become evidence."""
+
+    output_parts: list[str] = []
+    failures: list[ScopedReportFailure] = []
+    for stream in ("stdout", "stderr"):
+        metadata = attempt.get(stream)
+        if not isinstance(metadata, Mapping):
+            failures.append(
+                ScopedReportFailure(
+                    FailureKind.ADAPTER_COMMAND,
+                    f"native attempt {stream} diagnostics must be an object",
+                    participant_id,
+                    execution_instance_id,
+                )
+            )
+            continue
+        raw_path = metadata.get("path")
+        expected_digest = metadata.get("sha256")
+        if (
+            not isinstance(raw_path, str)
+            or not Path(raw_path).is_absolute()
+            or not isinstance(expected_digest, str)
+            or len(expected_digest) != 64
+            or any(
+                character not in "0123456789abcdefABCDEF"
+                for character in expected_digest
+            )
+        ):
+            failures.append(
+                ScopedReportFailure(
+                    FailureKind.ADAPTER_COMMAND,
+                    f"native attempt {stream} path or SHA-256 is malformed",
+                    participant_id,
+                    execution_instance_id,
+                )
+            )
+            continue
+        try:
+            resolved = _repository_path(
+                repo_root,
+                Path(raw_path),
+                label=f"native attempt {stream} path",
+                must_exist=True,
+            )
+            payload = resolved.read_bytes()
+        except (ConformanceCommandError, OSError) as error:
+            failures.append(
+                ScopedReportFailure(
+                    FailureKind.ADAPTER_COMMAND,
+                    f"native execution did not produce readable {stream} diagnostics: {error}",
+                    participant_id,
+                    execution_instance_id,
+                )
+            )
+            continue
+        if hashlib.sha256(payload).hexdigest() != expected_digest.lower():
+            failures.append(
+                ScopedReportFailure(
+                    FailureKind.ADAPTER_COMMAND,
+                    f"native attempt {stream} SHA-256 does not match the captured file",
+                    participant_id,
+                    execution_instance_id,
+                )
+            )
+            continue
+        output_parts.append(payload.decode("utf-8", errors="replace"))
+    return "\n".join(output_parts), tuple(failures)
 
 
 def _diagnostic_failures(
@@ -155,6 +243,15 @@ def _diagnostic_failures(
             )
         )
         return tuple(failures)
+    captured_output = ""
+    if participant_id == "cxx":
+        captured_output, output_failures = _cxx_captured_output(
+            repo_root,
+            attempt,
+            participant_id=participant_id,
+            execution_instance_id=execution_instance_id,
+        )
+        failures.extend(output_failures)
     launch_error = attempt.get("launchError")
     if isinstance(launch_error, str) and launch_error:
         failures.append(
@@ -185,10 +282,23 @@ def _diagnostic_failures(
         )
     exit_code = attempt.get("exitCode")
     if type(exit_code) is int and exit_code != 0:
+        local_environment_failure = any(
+            marker in captured_output.lower()
+            for marker in _CXX_LOCAL_ENVIRONMENT_OUTPUT_MARKERS
+        )
         failures.append(
             ScopedReportFailure(
-                FailureKind.ADAPTER_COMMAND,
-                f"native conformance command exited with code {exit_code}",
+                (
+                    FailureKind.LOCAL_ENVIRONMENT
+                    if local_environment_failure
+                    else FailureKind.ADAPTER_COMMAND
+                ),
+                (
+                    "native conformance command failed because local toolchain "
+                    "or environment prerequisites were unavailable"
+                    if local_environment_failure
+                    else f"native conformance command exited with code {exit_code}"
+                ),
                 participant_id,
                 execution_instance_id,
             )
