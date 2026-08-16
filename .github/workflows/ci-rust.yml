@@ -186,3 +186,18 @@ jobs:
           path: tools/binding_compliance/artifacts/rust/rust/
           if-no-files-found: warn
           retention-days: 7
+
+      # TUI consumer evidence remains diagnostic until the later promotion gate;
+      # the workspace test steps above remain the blocking Rust authority.
+      - name: Run TUI Crash Log Scan Run consumer conformance (shadow)
+        continue-on-error: true
+        run: python tools/binding_compliance/run_scan_run_consumer_conformance.py --participant tui
+
+      - name: Upload TUI consumer conformance artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: tui-consumer-conformance
+          path: tools/binding_compliance/artifacts/tui/tui/
+          if-no-files-found: warn
+          retention-days: 7

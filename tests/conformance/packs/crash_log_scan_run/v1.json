@@ -6083,5 +6083,20 @@
       }
     }
   ],
-  "consumerObligations": []
+  "consumerObligations": [
+    { "id": "cli.display-content-delivery" },
+    { "id": "cli.stream-selection" },
+    { "id": "cli.exit-code-routing" },
+    { "id": "cli.recovery-interaction" },
+    { "id": "gui.worker-dispatch" },
+    { "id": "gui.path-links" },
+    { "id": "gui.recovery-interaction" },
+    { "id": "gui.model-updates" },
+    { "id": "gui.display-content-delivery" },
+    { "id": "tui.display-content-delivery" },
+    { "id": "tui.ordering" },
+    { "id": "tui.styling-categories" },
+    { "id": "tui.recovery-interaction" },
+    { "id": "tui.cancellation" }
+  ]
 }

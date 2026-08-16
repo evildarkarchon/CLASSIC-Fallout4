@@ -118,6 +118,21 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      # Frontend consumer evidence stays diagnostic until the later promotion gate;
+      # the complete CLI suite above remains the blocking authority.
+      - name: Run CLI Crash Log Scan Run consumer conformance (shadow)
+        continue-on-error: true
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cli_consumer_conformance.ps1 -Compiler ${{ matrix.compiler }}
+
+      - name: Upload CLI consumer conformance artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cli-consumer-conformance-${{ matrix.compiler }}
+          path: tools/binding_compliance/artifacts/cli/windows-${{ matrix.compiler }}/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Upload CLI diagnostics
         if: failure()
         uses: actions/upload-artifact@v6
@@ -214,6 +229,21 @@ jobs:
 
       - name: Build and test GUI
         run: pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Preset ci-system-qt -Test -TestTimeoutSec 600 -Compiler ${{ matrix.compiler }}
+
+      # Frontend consumer evidence stays diagnostic until the later promotion gate;
+      # the complete GUI suite above remains the blocking authority.
+      - name: Run GUI Crash Log Scan Run consumer conformance (shadow)
+        continue-on-error: true
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1 -Compiler ${{ matrix.compiler }}
+
+      - name: Upload GUI consumer conformance artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: gui-consumer-conformance-${{ matrix.compiler }}
+          path: tools/binding_compliance/artifacts/gui/windows-${{ matrix.compiler }}/
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Upload GUI diagnostics
         if: failure()

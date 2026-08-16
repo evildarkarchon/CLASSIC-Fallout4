@@ -47,6 +47,9 @@ rfd = "0.15"
 
 [dev-dependencies]
 tempfile = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+temp-env = "0.3.6"
 # A dev dependency rather than a runtime one, which is the shape of what this frontend became: no
 # code under `src/` calls `label()` any more, because every Display Label the TUI shows now arrives
 # inside a `DisplaySegment::Label` from `classic-scan-presentation`. The tests still need the trait

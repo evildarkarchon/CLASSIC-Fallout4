@@ -20,6 +20,7 @@ from .compare import (
     normalize_observations,
     validate_display_content_carriers,
 )
+from .consumers import ConsumerObligationCatalog
 from .coverage import (
     CoverageDerivationError,
     FamilyCoveragePolicy,
@@ -89,6 +90,29 @@ class ScenarioValidationResult:
 
 
 @dataclass(frozen=True)
+class ObligationValidationResult:
+    """Summarize central comparison for one consumer obligation profile."""
+
+    id: str
+    execution_status: str
+    result: str
+    failure_kinds: tuple[FailureKind, ...] = ()
+
+    def document(self) -> dict[str, object]:
+        """Return the stable machine-readable obligation result."""
+
+        ordered_kinds = sorted(
+            set(self.failure_kinds), key=lambda kind: list(FailureKind).index(kind)
+        )
+        return {
+            "id": self.id,
+            "executionStatus": self.execution_status,
+            "result": self.result,
+            "failureKinds": [kind.value for kind in ordered_kinds],
+        }
+
+
+@dataclass(frozen=True)
 class PreparedRunReport:
     """Deterministic receipt result for exactly one prepared invocation."""
 
@@ -99,6 +123,7 @@ class PreparedRunReport:
     participant: Mapping[str, Any]
     scenarios: tuple[ScenarioValidationResult, ...]
     failures: tuple[ReceiptFailure, ...]
+    obligations: tuple[ObligationValidationResult, ...] = ()
     _coverage_proof_seal: object | None = field(
         default=None, init=False, repr=False, compare=False
     )
@@ -109,6 +134,7 @@ class PreparedRunReport:
         plan: Mapping[str, Any],
         *,
         scenarios: Sequence[ScenarioValidationResult] = (),
+        obligations: Sequence[ObligationValidationResult] = (),
         failures: Sequence[ReceiptFailure] = (),
     ) -> PreparedRunReport:
         """Build a report using the immutable identity of one prepared run plan."""
@@ -121,6 +147,7 @@ class PreparedRunReport:
             participant=plan["participant"],
             scenarios=tuple(scenarios),
             failures=tuple(failures),
+            obligations=tuple(obligations),
         )
         object.__setattr__(report, "_coverage_proof_seal", _COVERAGE_PROOF_SEAL)
         return report
@@ -143,7 +170,7 @@ class PreparedRunReport:
                 failure.message,
             ),
         )
-        return {
+        document: dict[str, object] = {
             "schemaVersion": 1,
             "scope": "prepared-invocation",
             "familyId": self.family_id,
@@ -155,6 +182,11 @@ class PreparedRunReport:
             "scenarios": [scenario.document() for scenario in self.scenarios],
             "failures": [failure.document() for failure in ordered_failures],
         }
+        if self.obligations:
+            document["obligations"] = [
+                obligation.document() for obligation in self.obligations
+            ]
+        return document
 
     def json_text(self) -> str:
         """Serialize the report deterministically for CI artifact writers."""
@@ -238,8 +270,12 @@ def _unexpected_evidence_failures(
                 )
             )
 
-    planned_scenarios = {scenario["id"]: scenario for scenario in plan["scenarios"]}
-    scenario_ids = [scenario["id"] for scenario in receipt["scenarios"]]
+    payload_field = (
+        "obligations" if plan["participant"]["role"] == "consumer" else "scenarios"
+    )
+    planned_items = {item["id"]: item for item in plan[payload_field]}
+    receipt_items = receipt[payload_field]
+    scenario_ids = [item["id"] for item in receipt_items]
     duplicates = sorted(
         scenario_id
         for scenario_id in set(scenario_ids)
@@ -253,9 +289,9 @@ def _unexpected_evidence_failures(
                 scenario_id=scenario_id,
             )
         )
-    for scenario in receipt["scenarios"]:
+    for scenario in receipt_items:
         scenario_id = scenario["id"]
-        planned = planned_scenarios.get(scenario_id)
+        planned = planned_items.get(scenario_id)
         if planned is None:
             failures.append(
                 ReceiptFailure(
@@ -264,7 +300,10 @@ def _unexpected_evidence_failures(
                     scenario_id=scenario_id,
                 )
             )
-        elif scenario["capabilityIds"] != planned["capabilityIds"]:
+        elif (
+            payload_field == "scenarios"
+            and scenario["capabilityIds"] != planned["capabilityIds"]
+        ):
             failures.append(
                 ReceiptFailure(
                     FailureKind.MALFORMED_RECEIPT,
@@ -281,11 +320,11 @@ def _forbidden_status_failures(
 ) -> tuple[ReceiptFailure, ...]:
     """Classify adapter-authored skip and unsupported outcomes as policy errors."""
 
-    scenarios = receipt.get("scenarios")
-    if not isinstance(scenarios, list):
+    executions = receipt.get("scenarios", receipt.get("obligations"))
+    if not isinstance(executions, list):
         return ()
     failures: list[ReceiptFailure] = []
-    for scenario in scenarios:
+    for scenario in executions:
         if not isinstance(scenario, Mapping):
             continue
         execution_status = scenario.get("executionStatus")
@@ -358,6 +397,7 @@ def validate_prepared_run(
     receipt_paths: Sequence[Path] | None = None,
     policy_exceptions_path: Path = DEFAULT_POLICY_EXCEPTIONS_PATH,
     coverage_policy: FamilyCoveragePolicy | None = None,
+    consumer_catalog: ConsumerObligationCatalog | None = None,
 ) -> PreparedRunReport:
     """Validate and exactly compare receipts for one fresh prepared invocation.
 
@@ -464,6 +504,90 @@ def validate_prepared_run(
         return PreparedRunReport._from_plan(
             plan,
             failures=unexpected_failures,
+        )
+
+    if plan["participant"]["role"] == "consumer":
+        if consumer_catalog is None or not consumer_catalog.has_trusted_provenance:
+            return PreparedRunReport._from_plan(
+                plan,
+                failures=(
+                    ReceiptFailure(
+                        FailureKind.APPLICABILITY,
+                        "consumer validation requires the repository obligation registry",
+                    ),
+                ),
+            )
+        try:
+            participant = consumer_catalog.participant(
+                str(plan["familyId"]), str(plan["participant"]["id"])
+            )
+        except ValueError as error:
+            return PreparedRunReport._from_plan(
+                plan,
+                failures=(ReceiptFailure(FailureKind.APPLICABILITY, str(error)),),
+            )
+        expected_by_id = {
+            obligation.id: obligation
+            for obligation in participant.obligations
+            if obligation.id in {item["id"] for item in plan["obligations"]}
+        }
+        actual_by_id = {
+            obligation["id"]: obligation for obligation in receipt["obligations"]
+        }
+        obligation_results: list[ObligationValidationResult] = []
+        for planned_obligation in plan["obligations"]:
+            obligation_id = planned_obligation["id"]
+            actual = actual_by_id.get(obligation_id)
+            expected = expected_by_id.get(obligation_id)
+            if actual is None or expected is None:
+                failure = ReceiptFailure(
+                    FailureKind.MISSING_RECEIPT,
+                    "the required consumer obligation did not produce execution evidence",
+                    scenario_id=obligation_id,
+                )
+                failures.append(failure)
+                obligation_results.append(
+                    ObligationValidationResult(
+                        obligation_id, "missing", "fail", (failure.kind,)
+                    )
+                )
+                continue
+            if actual["executionStatus"] == "failed":
+                failure = ReceiptFailure(
+                    FailureKind.ADAPTER_COMMAND,
+                    "consumer execution failed before producing a completed observation",
+                    scenario_id=obligation_id,
+                )
+                failures.append(failure)
+                obligation_results.append(
+                    ObligationValidationResult(
+                        obligation_id, "failed", "fail", (failure.kind,)
+                    )
+                )
+                continue
+            differences = exact_differences(expected.expected, actual["observation"])
+            obligation_failures = [
+                ReceiptFailure(
+                    FailureKind.SEMANTIC_MISMATCH,
+                    f"consumer obligation observation differs: {difference.kind}",
+                    scenario_id=obligation_id,
+                    path=difference.path,
+                )
+                for difference in differences
+            ]
+            failures.extend(obligation_failures)
+            obligation_results.append(
+                ObligationValidationResult(
+                    obligation_id,
+                    "completed",
+                    "fail" if obligation_failures else "pass",
+                    tuple(failure.kind for failure in obligation_failures),
+                )
+            )
+        return PreparedRunReport._from_plan(
+            plan,
+            obligations=obligation_results,
+            failures=failures,
         )
 
     receipt_scenarios = {scenario["id"]: scenario for scenario in receipt["scenarios"]}

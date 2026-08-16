@@ -266,6 +266,30 @@ add_classic_gui_qt_test(classic-gui-test-scanworker-cancellation
 )
 link_classic_gui_rust_bridge(classic-gui-test-scanworker-cancellation)
 
+# Executable consumer evidence for the maintained Qt Crash Log Scan Run seam. The runner is a
+# separate consumer participant: it observes worker dispatch, recovery marshalling, progress-model
+# updates, and Display Content layout without granting CXX semantic-adapter coverage.
+add_classic_gui_qt_test(classic-gui-consumer-conformance
+    conformance/classic_gui_consumer_conformance.cpp
+    ${CMAKE_SOURCE_DIR}/src/controllers/scancontroller.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/signalhub.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/threadmanager.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanworker.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanrequestbuilder.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanprogressmodel.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanrunpresentation.cpp
+)
+link_classic_gui_rust_bridge(classic-gui-consumer-conformance)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(CLASSIC_GUI_CONFORMANCE_TOOLCHAIN "clang-cl")
+else()
+    set(CLASSIC_GUI_CONFORMANCE_TOOLCHAIN "msvc")
+endif()
+target_compile_definitions(classic-gui-consumer-conformance PRIVATE
+    CLASSIC_GUI_CONFORMANCE_TOOLCHAIN="${CLASSIC_GUI_CONFORMANCE_TOOLCHAIN}"
+)
+set_tests_properties(classic-gui-consumer-conformance PROPERTIES SKIP_RETURN_CODE 125)
+
 # YAML Data bridge round-trip for the GUI counterpart.
 # Exercises the first-party `classic::update::yaml_data_*` helpers through
 # the same CXX header the GUI controllers use, while the test file also keeps

@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 import run_scan_run_conformance as scan_run_launcher
 from conformance.applicability import derive_applicability, load_policy_exceptions
+from conformance.consumers import load_consumer_obligations
 from conformance.coverage import (
     derive_observed_fact_ids,
     derive_row_coverage,
@@ -813,6 +814,49 @@ def test_native_workflows_publish_participant_shadow_artifacts_separately() -> N
     assert "timeout-minutes: 90" in full_suite
 
 
+def test_frontend_workflows_publish_nonblocking_consumer_receipts() -> None:
+    """Each maintained frontend emits its own always-uploaded shadow evidence."""
+
+    cpp_workflow = (REPO_ROOT / ".github/workflows/ci-cpp.yml").read_text(
+        encoding="utf-8"
+    )
+    rust_workflow = (REPO_ROOT / ".github/workflows/ci-rust.yml").read_text(
+        encoding="utf-8"
+    )
+
+    for blocking_step, launcher, artifact_name in (
+        (
+            "Build and test CLI",
+            "run_cli_consumer_conformance.ps1",
+            "name: cli-consumer-conformance-${{ matrix.compiler }}",
+        ),
+        (
+            "Build and test GUI",
+            "run_gui_consumer_conformance.ps1",
+            "name: gui-consumer-conformance-${{ matrix.compiler }}",
+        ),
+    ):
+        blocking_index = cpp_workflow.index(blocking_step)
+        launcher_index = cpp_workflow.index(launcher)
+        artifact_index = cpp_workflow.index(artifact_name)
+        assert blocking_index < launcher_index < artifact_index
+        assert (
+            "continue-on-error: true"
+            in cpp_workflow[launcher_index - 160 : launcher_index]
+        )
+        assert "if: always()" in cpp_workflow[artifact_index - 160 : artifact_index]
+
+    blocking_index = rust_workflow.index("Run Rust tests with all features")
+    launcher_index = rust_workflow.index("--participant tui")
+    artifact_index = rust_workflow.index("name: tui-consumer-conformance")
+    assert blocking_index < launcher_index < artifact_index
+    assert (
+        "continue-on-error: true"
+        in rust_workflow[launcher_index - 160 : launcher_index]
+    )
+    assert "if: always()" in rust_workflow[artifact_index - 160 : artifact_index]
+
+
 def _write_engine_test_receipt(prepared: MaterializedRun, pack: ValidatedPack) -> None:
     """Publish an oracle-shaped receipt for central aggregation unit tests only."""
 
@@ -896,10 +940,12 @@ def test_three_base_receipts_pass_their_scopes_but_not_full_repository(
         parity_rows = load_source_parity_rows(REPO_ROOT)
         retained = load_retained_analyzer_kinds(REPO_ROOT)
         exceptions = load_policy_exceptions(REPO_ROOT)
+        consumer_catalog = load_consumer_obligations(REPO_ROOT)
         applicability = derive_applicability(
             pack_document,
             parity_rows,
             policy_exceptions=exceptions,
+            consumer_catalog=consumer_catalog,
         )
         for prepared_report in prepared_reports:
             participant_id = str(prepared_report.participant["id"])
@@ -950,10 +996,10 @@ def test_three_base_receipts_pass_their_scopes_but_not_full_repository(
             shutil.rmtree(artifact_root)
 
 
-def test_all_base_adapter_instances_complete_full_repository_scope(
+def test_all_base_adapter_instances_need_consumers_for_full_repository_scope(
     tmp_path: Path,
 ) -> None:
-    """Rust, Node, Python, MSVC, and clang-cl satisfy the semantic denominator."""
+    """Semantic completeness cannot substitute for CLI, GUI, and TUI receipts."""
 
     from conformance.adapters.prepare_cxx_conformance import prepare_cxx_run
 
@@ -989,10 +1035,12 @@ def test_all_base_adapter_instances_complete_full_repository_scope(
         parity_rows = load_source_parity_rows(REPO_ROOT)
         retained = load_retained_analyzer_kinds(REPO_ROOT)
         exceptions = load_policy_exceptions(REPO_ROOT)
+        consumer_catalog = load_consumer_obligations(REPO_ROOT)
         applicability = derive_applicability(
             pack_document,
             parity_rows,
             policy_exceptions=exceptions,
+            consumer_catalog=consumer_catalog,
         )
         coverage = derive_row_coverage(
             pack_document,
@@ -1010,9 +1058,11 @@ def test_all_base_adapter_instances_complete_full_repository_scope(
             coverage=coverage,
         ).document()
 
-        assert report["result"] == "pass"
-        assert report["repositoryComplete"] is True
-        assert report["missingExecutions"] == []
+        assert report["result"] == "fail"
+        assert report["repositoryComplete"] is False
+        assert {
+            execution["participantId"] for execution in report["missingExecutions"]
+        } == {"cli", "gui", "tui"}
     finally:
         if artifact_root.exists():
             shutil.rmtree(artifact_root)

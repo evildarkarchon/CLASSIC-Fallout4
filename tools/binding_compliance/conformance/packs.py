@@ -11,13 +11,16 @@ import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath, PureWindowsPath
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .schema import (
     ConformanceSchemaError,
     validate_pack_document,
     validate_run_plan_document,
 )
+
+if TYPE_CHECKING:
+    from .consumers import ConsumerObligationCatalog
 
 _MACHINE_ID = re.compile(r"^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$")
 _FIXTURE_REF = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*$")
@@ -737,7 +740,8 @@ def materialize_run_plan(
     participant_id: str,
     participant_role: str,
     execution_instance_id: str,
-    source_paths: Sequence[Path],
+    source_paths: Sequence[Path] = (),
+    consumer_catalog: ConsumerObligationCatalog | None = None,
     artifact_root: Path = Path("tools/binding_compliance/artifacts"),
 ) -> MaterializedRun:
     """Materialize one fresh input-only adapter plan in a clean artifact path.
@@ -762,10 +766,36 @@ def materialize_run_plan(
         raise MaterializationError(
             "participant role must be semantic-adapter or consumer"
         )
-    if not source_paths:
+    if participant_role == "semantic-adapter" and not source_paths:
         raise MaterializationError(
             "materialization requires relevant participant or runner source paths"
         )
+    if participant_role == "consumer":
+        if source_paths:
+            raise MaterializationError(
+                "consumer source paths come only from the repository obligation registry"
+            )
+        if consumer_catalog is None or not consumer_catalog.has_trusted_provenance:
+            raise MaterializationError(
+                "consumer materialization requires the repository obligation registry"
+            )
+        try:
+            consumer = consumer_catalog.participant(
+                str(pack.document()["familyId"]), participant_id
+            )
+        except ValueError as error:
+            raise MaterializationError(str(error)) from error
+        if execution_instance_id not in consumer.execution_instance_ids:
+            raise MaterializationError(
+                f"execution instance {execution_instance_id} is not registered for consumer {participant_id}"
+            )
+        try:
+            catalog_path = consumer_catalog.path.relative_to(pack.repo_root)
+        except ValueError as error:  # pragma: no cover - loader containment invariant
+            raise MaterializationError(
+                "consumer obligation registry must stay beneath the repository root"
+            ) from error
+        source_paths = (catalog_path, *consumer.source_paths)
 
     current = load_and_validate_pack(pack.repo_root, pack.pack_path)
     if (
@@ -813,8 +843,23 @@ def materialize_run_plan(
             "id": invocation_id,
             "sourceIdentity": source_identity,
         },
-        "scenarios": scenarios,
     }
+    if participant_role == "semantic-adapter":
+        plan["scenarios"] = scenarios
+    else:
+        declared_obligation_ids = {
+            item["id"] for item in pack_document["consumerObligations"]
+        }
+        obligations = [
+            obligation.plan_document()
+            for obligation in consumer.obligations
+            if obligation.id in declared_obligation_ids
+        ]
+        if not obligations:
+            raise MaterializationError(
+                f"consumer {participant_id} owns no obligations selected by the pack"
+            )
+        plan["obligations"] = obligations
     plan["invocation"]["runPlanDigest"] = _run_plan_digest(plan)
     try:
         validate_run_plan_document(plan)
@@ -871,6 +916,7 @@ def load_prepared_run(
     run_plan_path: Path,
     *,
     receipt_path: Path | None = None,
+    consumer_catalog: ConsumerObligationCatalog | None = None,
 ) -> MaterializedRun:
     """Reload and authenticate one repository-owned materialized run plan.
 
@@ -925,7 +971,7 @@ def load_prepared_run(
         }
         for scenario in pack_document["scenarios"]
     ]
-    expected_pack_fields = {
+    expected_pack_fields: dict[str, Any] = {
         "schemaVersion": 1,
         "familyId": pack_document["familyId"],
         "familyVersion": pack_document["familyVersion"],
@@ -935,8 +981,35 @@ def load_prepared_run(
             fixture.reference: str(fixture.resolved_path)
             for fixture in sorted(pack.fixtures, key=lambda item: item.reference)
         },
-        "scenarios": expected_scenarios,
     }
+    if plan["participant"]["role"] == "semantic-adapter":
+        expected_pack_fields["scenarios"] = expected_scenarios
+    else:
+        if consumer_catalog is None or not consumer_catalog.has_trusted_provenance:
+            raise MaterializationError(
+                "consumer run plan requires the repository obligation registry"
+            )
+        try:
+            consumer = consumer_catalog.participant(
+                str(pack_document["familyId"]), str(plan["participant"]["id"])
+            )
+        except ValueError as error:
+            raise MaterializationError(str(error)) from error
+        if (
+            plan["participant"]["executionInstanceId"]
+            not in consumer.execution_instance_ids
+        ):
+            raise MaterializationError(
+                "consumer execution instance is no longer source-applicable"
+            )
+        declared_obligation_ids = {
+            item["id"] for item in pack_document["consumerObligations"]
+        }
+        expected_pack_fields["obligations"] = [
+            obligation.plan_document()
+            for obligation in consumer.obligations
+            if obligation.id in declared_obligation_ids
+        ]
     mismatches = sorted(
         key
         for key, expected in expected_pack_fields.items()

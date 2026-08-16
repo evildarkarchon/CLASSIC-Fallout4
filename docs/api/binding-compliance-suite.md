@@ -43,7 +43,8 @@ python tools/binding_compliance/check_compliance.py `
 The receipt must have a sibling immutable `run_plan.json`. The engine rebinds it to the current tracked pack and source revision before validation. Attempt and JUnit files can add command diagnostics but cannot supply semantic facts, row coverage, or a broader scope claim. Participant reports require every source-derived execution instance; only `full` can claim repository completeness, and missing row coverage or unresolved consumer obligations fails that claim closed. Full aggregation independently authenticates each participant-specific source digest and requires their embedded Git revisions to match; the digests themselves may differ because each run plan declares its own runner source roots.
 
 The Crash Log Scan Run pack also has private shadow launchers for its
-Rust, Node, Python, and native CXX semantic adapters:
+Rust, Node, Python, and native CXX semantic adapters, plus separate CLI, GUI,
+and TUI consumer participants:
 
 ```powershell
 python tools/binding_compliance/run_scan_run_conformance.py --participant rust
@@ -51,6 +52,9 @@ python tools/binding_compliance/run_scan_run_conformance.py --participant node
 uv run --project python-bindings python tools/binding_compliance/run_scan_run_conformance.py --participant python
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Compiler msvc
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Compiler clang-cl
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cli_consumer_conformance.ps1 -Compiler msvc
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1 -Compiler msvc
+python tools/binding_compliance/run_scan_run_consumer_conformance.py --participant tui
 ```
 
 Each invocation creates a fresh input-only `run_plan.json` and calls only the
@@ -70,6 +74,13 @@ or runtime gates. Both `windows-msvc` and `windows-clang-cl` receipts are requir
 before CXX completes its participant denominator; three Rust/Node/Python
 receipts alone remain incomplete.
 
+The source-owned catalog at `tests/conformance/consumer-obligations.json`
+independently selects frontend obligations and expectations. Consumer plans
+withhold those expectations, and validated observations appear only under
+`consumerCoverage`: they never grant semantic parity-row coverage. Consumer
+jobs and artifacts remain explicitly nonblocking until the later promotion
+issue.
+
 ## What The Suite Proves
 
 The suite does not replace lower-level parsers. It owns the top-level pass/fail result, policy mapping, and gap report while reusing existing gates as executable evidence:
@@ -88,7 +99,7 @@ Existing C++, Node, and Python parity gates remain available as focused debuggin
 The first implementation intentionally reports known weak coverage instead of silently rewriting policy around it. The current non-blocking gaps are:
 
 - C++ has no editable runtime-coverage registry equivalent to the Node and Python registries. The Crash Log Scan Run v1 pack now produces executable CXX receipts from generated bridge DTOs and events on MSVC and clang-cl, while the source parity gate and existing CLI/GUI wrapper suites remain blocking during shadow migration.
-- The Crash Log Scan Run v1 pack has Rust, Node, Python, and both required CXX execution-instance receipts in shadow. Their scoped reports are useful diagnostics, but they do not retire existing evidence until equivalence review and blocking promotion complete.
+- The Crash Log Scan Run v1 pack has Rust, Node, Python, both required CXX execution-instance receipts, and separate CLI, GUI, and TUI consumer receipts in shadow. Their scoped reports are useful diagnostics, but they do not retire existing evidence until equivalence review and blocking promotion complete.
 - Replacement-publication failure, replacement durability uncertainty, and the non-hermetic structured-failure injections remain blocking internal fault analyzers, not semantic receipts. A deterministic public scenario may replace that classification later; a test-only public binding hook or fabricated adapter receipt may not.
 
 Treat new drift, stale generated artifacts, stale baselines, missing runtime coverage, policy/source contradictions, tooling bugs, and local environment failures as separate failure classes in the structured report.

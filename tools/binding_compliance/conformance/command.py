@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from .applicability import derive_applicability, load_policy_exceptions
+from .consumers import derive_consumer_coverage, load_consumer_obligations
 from .coverage import (
     FamilyCoveragePolicy,
     derive_row_coverage,
@@ -363,19 +364,33 @@ def build_shadow_report_from_receipts(
         )
     pack = matching_packs[0]
     coverage_policy = coverage_policies.get(family_id)
+    pack_document = pack.document()
+    has_consumer_obligations = bool(pack_document.get("consumerObligations"))
+    try:
+        consumer_catalog = (
+            load_consumer_obligations(root) if has_consumer_obligations else None
+        )
+    except ValueError as error:
+        raise ConformanceCommandError(str(error)) from error
 
     prepared_reports = []
     try:
         for run_plan_path, receipt_path in zip(
             run_plan_paths, resolved_receipts, strict=True
         ):
-            run = load_prepared_run(pack, run_plan_path, receipt_path=receipt_path)
+            run = load_prepared_run(
+                pack,
+                run_plan_path,
+                receipt_path=receipt_path,
+                consumer_catalog=consumer_catalog,
+            )
             prepared_reports.append(
                 validate_prepared_run(
                     pack,
                     run,
                     receipt_paths=(receipt_path,),
                     coverage_policy=coverage_policy,
+                    consumer_catalog=consumer_catalog,
                 )
             )
         parity_rows = load_source_parity_rows(root)
@@ -384,12 +399,13 @@ def build_shadow_report_from_receipts(
             pack.document(),
             parity_rows,
             policy_exceptions=policy_exceptions,
+            consumer_catalog=consumer_catalog,
         )
     except (MaterializationError, PackValidationError, ValueError) as error:
         raise ConformanceCommandError(str(error)) from error
 
     try:
-        coverage_prepared_reports = tuple(
+        selected_prepared_reports = tuple(
             report
             for report in prepared_reports
             if profile != "conformance"
@@ -401,6 +417,24 @@ def build_shadow_report_from_receipts(
                     == execution_instance_id
                 )
             )
+        )
+        coverage_prepared_reports = tuple(
+            report
+            for report in selected_prepared_reports
+            if report.participant.get("role") == "semantic-adapter"
+        )
+        consumer_prepared_reports = tuple(
+            report
+            for report in selected_prepared_reports
+            if report.participant.get("role") == "consumer"
+        )
+        selected_role = next(
+            (
+                participant.role
+                for participant in applicability.participants
+                if participant.id == participant_id
+            ),
+            None,
         )
         coverage = (
             derive_row_coverage(
@@ -415,6 +449,23 @@ def build_shadow_report_from_receipts(
                 policy_exceptions=policy_exceptions,
             )
             if coverage_policy is not None
+            and (profile == "full" or selected_role == "semantic-adapter")
+            else None
+        )
+        consumer_coverage = (
+            derive_consumer_coverage(
+                pack_document,
+                consumer_catalog,
+                consumer_prepared_reports,
+                scope_participant_id=(
+                    participant_id if profile == "conformance" else None
+                ),
+                scope_execution_instance_id=(
+                    execution_instance_id if profile == "conformance" else None
+                ),
+            )
+            if consumer_catalog is not None
+            and (profile == "full" or selected_role == "consumer")
             else None
         )
         scoped = build_scoped_report(
@@ -425,6 +476,7 @@ def build_shadow_report_from_receipts(
             participant_id=participant_id,
             execution_instance_id=execution_instance_id,
             coverage=coverage,
+            consumer_coverage=consumer_coverage,
         )
     except ValueError as error:
         raise ConformanceCommandError(str(error)) from error

@@ -1,6 +1,6 @@
 # Executable Cross-Adapter Conformance Specification
 
-> **Status: accepted design; implementation in progress.** [ADR-0008](../adr/0008-executable-cross-adapter-conformance.md) records the decision. Phase 0's diagnostic ledger and generic engine are implemented, together with the first input-only Crash Log Scan Run pack, its centrally derived family predicates, and public-seam Rust, Node, Python, and bridge-only CXX receipt runners in shadow. Existing, generated, malformed, Proceed Without Ignore, Reset To Default, successful reset, intervening conflict, portable backup failure, pre-discovery, post-discovery queued, admitted/durable, pre-reset, and post-critical cancellation, observer delivery failure, public request-validation/discovery/intake/report-write/Unsolved Logs finalization failures, replay, and abandonment scenarios execute through all adapters; the CXX scenarios run through the approved CLI wrapper on both MSVC and clang-cl and publish bounded attempt, JUnit, log, receipt, and instance-report artifacts. Replacement-publication and durability-unknown mappings remain under the reset blocking internal-fault analyzer. Injected analysis, FormID database access, initialization, and internal-invariant failure projections remain under the separate structured-failure retained analyzer; neither analyzer grants semantic-adapter coverage. Consumer receipts, equivalence review, blocking promotion, and legacy-evidence retirement remain later migration slices. Until a phase reaches its blocking exit gate, the commands and evidence documented in `docs/api/binding-compliance-suite.md` remain authoritative.
+> **Status: accepted design; implementation in progress.** [ADR-0008](../adr/0008-executable-cross-adapter-conformance.md) records the decision. Phase 0's diagnostic ledger and generic engine are implemented, together with the first input-only Crash Log Scan Run pack, its centrally derived family predicates, public-seam Rust, Node, Python, and bridge-only CXX receipt runners, and separate CLI, GUI, and TUI consumer receipt runners in shadow. Existing, generated, malformed, Proceed Without Ignore, Reset To Default, successful reset, intervening conflict, portable backup failure, pre-discovery, post-discovery queued, admitted/durable, pre-reset, and post-critical cancellation, observer delivery failure, public request-validation/discovery/intake/report-write/Unsolved Logs finalization failures, replay, and abandonment scenarios execute through all semantic adapters; the CXX scenarios run through the approved CLI wrapper on both MSVC and clang-cl and publish bounded attempt, JUnit, log, receipt, and instance-report artifacts. Consumer runners exercise maintained frontend seams and publish named obligation coverage separately from semantic adapter coverage. Replacement-publication and durability-unknown mappings remain under the reset blocking internal-fault analyzer. Injected analysis, FormID database access, initialization, and internal-invariant failure projections remain under the separate structured-failure retained analyzer; neither analyzer grants semantic-adapter coverage. Equivalence review, blocking promotion, and legacy-evidence retirement remain later migration slices. Until a phase reaches its blocking exit gate, the commands and evidence documented in `docs/api/binding-compliance-suite.md` remain authoritative.
 
 ## Target
 
@@ -411,6 +411,8 @@ Consumer expectations are keyed by stable obligation profile, not by copied adap
 
 The CLI consumer continues through `classic-cli/build_cli.ps1 -Test`, GUI through `classic-gui/build_gui.ps1 -Test`, and TUI through its Cargo test surface. Production frontends gain no conformance-only public interface.
 
+The trusted catalog at `tests/conformance/consumer-obligations.json` owns each consumer's execution instances, maintained source paths, scenario selection, and exact expected observation. Input-only plans expose only obligation and scenario IDs. Receipts report actual obligation observations, and central validation grants only those named obligations in a separate `consumerCoverage` section. The private launchers are nonblocking shadow jobs in the native CLI, GUI, and Rust workflows; promotion remains a later gate.
+
 ## Failure taxonomy
 
 The combined report uses stable failure kinds:
@@ -620,7 +622,10 @@ pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler msv
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler clang-cl
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Compiler msvc
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Compiler clang-cl
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cli_consumer_conformance.ps1 -Compiler msvc
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1 -Compiler msvc
+python tools/binding_compliance/run_scan_run_consumer_conformance.py --participant tui
 ```
 
 The CXX launcher prepares the absolute run-plan/output paths and always performs the instance-scoped validation described in [CXX and CLI test-host design](#cxx-and-cli-test-host-design). Invoking the registered CTest without that launcher-provided state only produces a visible skip and grants no evidence.

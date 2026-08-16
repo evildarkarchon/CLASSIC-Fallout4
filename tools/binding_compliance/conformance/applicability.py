@@ -6,6 +6,7 @@ import json
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath, PureWindowsPath
+from typing import TYPE_CHECKING
 
 from .coverage import SourceParityRow
 from .schema import (
@@ -13,6 +14,9 @@ from .schema import (
     is_stable_machine_id,
     reject_duplicate_json_keys,
 )
+
+if TYPE_CHECKING:
+    from .consumers import ConsumerObligationCatalog
 
 DEFAULT_POLICY_EXCEPTIONS_PATH = Path("tests/conformance/policy_exceptions.json")
 _POLICY_EXCEPTION_CATALOG_SEAL = object()
@@ -85,17 +89,21 @@ class ApplicableParticipant:
     execution_instance_ids: tuple[str, ...]
     capability_ids: tuple[str, ...]
     scenario_ids: tuple[str, ...]
+    obligation_ids: tuple[str, ...] = ()
 
     def document(self) -> dict[str, object]:
         """Return the stable machine-readable applicability record."""
 
-        return {
+        document: dict[str, object] = {
             "id": self.id,
             "role": self.role,
             "executionInstanceIds": list(self.execution_instance_ids),
             "capabilityIds": list(self.capability_ids),
             "scenarioIds": list(self.scenario_ids),
         }
+        if self.obligation_ids:
+            document["obligationIds"] = list(self.obligation_ids)
+        return document
 
 
 @dataclass(frozen=True)
@@ -128,13 +136,15 @@ def derive_applicability(
     *,
     execution_instances: Mapping[str, tuple[str, ...]] = DEFAULT_EXECUTION_INSTANCES,
     policy_exceptions: Sequence[PolicyException] = (),
+    consumer_catalog: ConsumerObligationCatalog | None = None,
 ) -> ApplicabilityMatrix:
-    """Derive semantic-adapter applicability from canonical source mappings.
+    """Derive adapter and consumer applicability from permanent source mappings.
 
     Rust owns every canonical capability. Other semantic adapters participate
     only when their live parity inventory maps the pack's Rust crate and at
-    least one symbol of the capability. Caller-authored run-plan identities are
-    deliberately not inputs to this decision.
+    least one symbol of the capability. Consumers come only from a centrally
+    loaded catalog selected by pack obligation IDs. Caller-authored run-plan
+    identities are deliberately not inputs to this decision.
     """
 
     owner = pack.get("domainOwner")
@@ -150,12 +160,11 @@ def derive_applicability(
         raise PolicyExceptionError(
             "validated pack has no consumer obligation inventory"
         )
-    if raw_consumer_obligations:
-        # Consumer applicability needs a permanent source-derived ownership
-        # registry. Until one exists, failing closed prevents a semantic-adapter
-        # denominator from being mislabeled repository-complete.
+    if raw_consumer_obligations and (
+        consumer_catalog is None or not consumer_catalog.has_trusted_provenance
+    ):
         raise PolicyExceptionError(
-            "consumer obligations require a source-derived consumer obligation registry"
+            "consumer obligations require the repository consumer obligation registry"
         )
 
     capabilities: dict[str, frozenset[str]] = {}
@@ -234,7 +243,67 @@ def derive_applicability(
                 scenario_ids=tuple(scenario_ids),
             )
         )
-    return ApplicabilityMatrix(tuple(participants))
+
+    declared_obligation_ids: set[str] = set()
+    for index, raw_obligation in enumerate(raw_consumer_obligations):
+        if not isinstance(raw_obligation, Mapping):
+            raise PolicyExceptionError(
+                f"validated pack consumer obligation {index} must be an object"
+            )
+        obligation_id = raw_obligation.get("id")
+        if not isinstance(obligation_id, str):
+            raise PolicyExceptionError(
+                f"validated pack consumer obligation {index} has no identity"
+            )
+        declared_obligation_ids.add(obligation_id)
+
+    if declared_obligation_ids:
+        assert consumer_catalog is not None  # Trusted provenance was checked above.
+        registered_ids: set[str] = set()
+        known_scenario_ids = {
+            scenario.get("id")
+            for scenario in raw_scenarios
+            if isinstance(scenario, Mapping) and isinstance(scenario.get("id"), str)
+        }
+        for consumer in consumer_catalog.participants(str(pack.get("familyId"))):
+            selected = tuple(
+                obligation
+                for obligation in consumer.obligations
+                if obligation.id in declared_obligation_ids
+            )
+            if not selected:
+                continue
+            registered_ids.update(obligation.id for obligation in selected)
+            scenario_ids = tuple(
+                dict.fromkeys(
+                    scenario_id
+                    for obligation in selected
+                    for scenario_id in obligation.scenario_ids
+                )
+            )
+            unknown_scenarios = sorted(set(scenario_ids) - known_scenario_ids)
+            if unknown_scenarios:
+                raise PolicyExceptionError(
+                    f"consumer {consumer.id} obligations reference unknown scenarios: "
+                    + ", ".join(unknown_scenarios)
+                )
+            participants.append(
+                ApplicableParticipant(
+                    id=consumer.id,
+                    role="consumer",
+                    execution_instance_ids=consumer.execution_instance_ids,
+                    capability_ids=(),
+                    scenario_ids=scenario_ids,
+                    obligation_ids=tuple(obligation.id for obligation in selected),
+                )
+            )
+        missing = sorted(declared_obligation_ids - registered_ids)
+        if missing:
+            raise PolicyExceptionError(
+                "pack consumer obligations have no source-owned registration: "
+                + ", ".join(missing)
+            )
+    return ApplicabilityMatrix(tuple(sorted(participants, key=lambda item: item.id)))
 
 
 def _machine_id(value: object, label: str) -> str:

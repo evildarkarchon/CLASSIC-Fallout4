@@ -24,6 +24,7 @@ def test_tracked_common_schemas_are_closed_and_versioned() -> None:
         "run-plan-v1.schema.json",
         "receipt-v1.schema.json",
         "policy-exceptions-v1.schema.json",
+        "consumer-obligations-v1.schema.json",
         "conformance-report-v1.schema.json",
     ):
         schema = _schema(name)
@@ -81,8 +82,10 @@ def test_receipt_schema_freezes_current_execution_and_status_evidence() -> None:
         "invocation",
         "participant",
         "runner",
-        "scenarios",
     }
+    role_branch = receipt_schema["allOf"][0]
+    assert role_branch["then"]["required"] == ["obligations"]
+    assert role_branch["else"]["required"] == ["scenarios"]
     assert scenario["properties"]["executionStatus"] == {
         "enum": ["completed", "failed", "not_applicable"]
     }

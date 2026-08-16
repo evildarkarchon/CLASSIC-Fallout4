@@ -252,6 +252,13 @@ def validate_run_plan_document(document: Mapping[str, Any]) -> None:
     """
 
     prefix = "run-plan schema"
+    participant_value = document.get("participant")
+    participant_role = (
+        participant_value.get("role")
+        if isinstance(participant_value, Mapping)
+        else None
+    )
+    payload_field = "obligations" if participant_role == "consumer" else "scenarios"
     _exact_keys(
         document,
         frozenset(
@@ -265,7 +272,7 @@ def validate_run_plan_document(document: Mapping[str, Any]) -> None:
                 "sourcePaths",
                 "participant",
                 "invocation",
-                "scenarios",
+                payload_field,
             }
         ),
         prefix,
@@ -299,6 +306,26 @@ def validate_run_plan_document(document: Mapping[str, Any]) -> None:
     )
     for field in ("id", "sourceIdentity", "runPlanDigest"):
         _nonempty_string(invocation[field], f"{prefix}.invocation.{field}")
+
+    if participant_role == "consumer":
+        obligations = _list(document["obligations"], f"{prefix}.obligations")
+        if not obligations:
+            raise ConformanceSchemaError(f"{prefix}.obligations must not be empty")
+        for index, raw_obligation in enumerate(obligations):
+            label = f"{prefix}.obligations[{index}]"
+            obligation = _mapping(raw_obligation, label)
+            _exact_keys(obligation, frozenset({"id", "scenarioIds"}), label)
+            _pattern_string(obligation["id"], f"{label}.id", _STABLE_ID)
+            scenario_ids = _string_array(
+                obligation["scenarioIds"], f"{label}.scenarioIds", nonempty=True
+            )
+            for scenario_index, scenario_id in enumerate(scenario_ids):
+                _pattern_string(
+                    scenario_id,
+                    f"{label}.scenarioIds[{scenario_index}]",
+                    _STABLE_ID,
+                )
+        return
 
     scenarios = _list(document["scenarios"], f"{prefix}.scenarios")
     if not scenarios:
@@ -337,6 +364,15 @@ def validate_receipt_document(
     """
 
     prefix = "receipt schema"
+    participant_value = document.get("participant")
+    participant_role_hint = (
+        participant_value.get("role")
+        if isinstance(participant_value, Mapping)
+        else None
+    )
+    payload_field = (
+        "obligations" if participant_role_hint == "consumer" else "scenarios"
+    )
     _exact_keys(
         document,
         frozenset(
@@ -348,7 +384,7 @@ def validate_receipt_document(
                 "invocation",
                 "participant",
                 "runner",
-                "scenarios",
+                payload_field,
             }
         ),
         prefix,
@@ -412,6 +448,35 @@ def validate_receipt_document(
     _positive_integer(runner["version"], f"{prefix}.runner.version")
     _pattern_string(runner["platform"], f"{prefix}.runner.platform", _STABLE_ID)
     _pattern_string(runner["toolchain"], f"{prefix}.runner.toolchain", _STABLE_ID)
+
+    if participant_role == "consumer":
+        obligations = _list(document["obligations"], f"{prefix}.obligations")
+        for index, raw_obligation in enumerate(obligations):
+            label = f"{prefix}.obligations[{index}]"
+            obligation = _mapping(raw_obligation, label)
+            _exact_keys(
+                obligation,
+                frozenset({"id", "executionStatus", "observation", "failure"}),
+                label,
+            )
+            _pattern_string(obligation["id"], f"{label}.id", _STABLE_ID)
+            status = obligation["executionStatus"]
+            if status not in {"completed", "failed"}:
+                raise ConformanceSchemaError(
+                    f"{label}.executionStatus must be completed or failed"
+                )
+            observation = _mapping(obligation["observation"], f"{label}.observation")
+            _reject_floating_point_values(observation, f"{label}.observation")
+            if status == "completed" and obligation["failure"] is not None:
+                raise ConformanceSchemaError(
+                    f"{label}.failure must be null when completed"
+                )
+            if status == "failed":
+                failure = _mapping(obligation["failure"], f"{label}.failure")
+                _exact_keys(failure, frozenset({"kind", "message"}), f"{label}.failure")
+                _pattern_string(failure["kind"], f"{label}.failure.kind", _STABLE_ID)
+                _nonempty_string(failure["message"], f"{label}.failure.message")
+        return
 
     scenarios = _list(document["scenarios"], f"{prefix}.scenarios")
     for index, raw_scenario in enumerate(scenarios):
@@ -489,6 +554,7 @@ def validate_conformance_report_document(document: Mapping[str, Any]) -> None:
                 "missingExecutions",
                 "failures",
                 "coverage",
+                "consumerCoverage",
             }
         ),
         prefix,
@@ -751,7 +817,137 @@ def validate_conformance_report_document(document: Mapping[str, Any]) -> None:
                 f"{prefix}.coverage.result does not match coverage failures"
             )
         coverage_passed = coverage_object["result"] == "pass" and not coverage_failures
-    passed = not missing and not failures and coverage_passed
+    consumer_coverage = document["consumerCoverage"]
+    consumer_coverage_passed = False
+    if consumer_coverage is not None:
+        label = f"{prefix}.consumerCoverage"
+        consumer_object = _mapping(consumer_coverage, label)
+        _exact_keys(
+            consumer_object,
+            frozenset(
+                {
+                    "familyId",
+                    "result",
+                    "executionEvidence",
+                    "preparedEvidenceDigest",
+                    "obligations",
+                    "failures",
+                }
+            ),
+            label,
+        )
+        if consumer_object["familyId"] != document["familyId"]:
+            raise ConformanceSchemaError(f"{label}.familyId does not match the report")
+        executions = _list(
+            consumer_object["executionEvidence"], f"{label}.executionEvidence"
+        )
+        execution_keys: list[tuple[str, str]] = []
+        for index, raw_execution in enumerate(executions):
+            execution_label = f"{label}.executionEvidence[{index}]"
+            execution = _mapping(raw_execution, execution_label)
+            _exact_keys(
+                execution,
+                frozenset({"participantId", "executionInstanceId"}),
+                execution_label,
+            )
+            execution_keys.append(
+                (
+                    _pattern_string(
+                        execution["participantId"],
+                        f"{execution_label}.participantId",
+                        _STABLE_ID,
+                    ),
+                    _pattern_string(
+                        execution["executionInstanceId"],
+                        f"{execution_label}.executionInstanceId",
+                        _STABLE_ID,
+                    ),
+                )
+            )
+        if len(execution_keys) != len(set(execution_keys)):
+            raise ConformanceSchemaError(
+                f"{label}.executionEvidence contains duplicates"
+            )
+        _pattern_string(
+            consumer_object["preparedEvidenceDigest"],
+            f"{label}.preparedEvidenceDigest",
+            _SHA256,
+        )
+        obligations = _list(consumer_object["obligations"], f"{label}.obligations")
+        obligation_ids: list[str] = []
+        for index, raw_obligation in enumerate(obligations):
+            obligation_label = f"{label}.obligations[{index}]"
+            obligation = _mapping(raw_obligation, obligation_label)
+            _exact_keys(
+                obligation,
+                frozenset({"obligationId", "participantId", "evidenceIds"}),
+                obligation_label,
+            )
+            obligation_ids.append(
+                _pattern_string(
+                    obligation["obligationId"],
+                    f"{obligation_label}.obligationId",
+                    _STABLE_ID,
+                )
+            )
+            _pattern_string(
+                obligation["participantId"],
+                f"{obligation_label}.participantId",
+                _STABLE_ID,
+            )
+            evidence_ids = _string_array(
+                obligation["evidenceIds"],
+                f"{obligation_label}.evidenceIds",
+                nonempty=True,
+            )
+            for evidence_index, evidence_id in enumerate(evidence_ids):
+                _pattern_string(
+                    evidence_id,
+                    f"{obligation_label}.evidenceIds[{evidence_index}]",
+                    _STABLE_ID,
+                )
+        if len(obligation_ids) != len(set(obligation_ids)):
+            raise ConformanceSchemaError(f"{label}.obligations contains duplicates")
+        consumer_failures = _list(consumer_object["failures"], f"{label}.failures")
+        consumer_failure_ids: list[str] = []
+        for index, raw_failure in enumerate(consumer_failures):
+            failure_label = f"{label}.failures[{index}]"
+            failure = _mapping(raw_failure, failure_label)
+            _exact_keys(
+                failure,
+                frozenset({"kind", "obligationId", "blocking", "message"}),
+                failure_label,
+            )
+            if failure["kind"] != FailureKind.COVERAGE_MAPPING.value:
+                raise ConformanceSchemaError(
+                    f"{failure_label}.kind must be coverage_mapping_gap"
+                )
+            consumer_failure_ids.append(
+                _pattern_string(
+                    failure["obligationId"],
+                    f"{failure_label}.obligationId",
+                    _STABLE_ID,
+                )
+            )
+            if not isinstance(failure["blocking"], bool):
+                raise ConformanceSchemaError(
+                    f"{failure_label}.blocking must be boolean"
+                )
+            _nonempty_string(failure["message"], f"{failure_label}.message")
+        if len(consumer_failure_ids) != len(set(consumer_failure_ids)):
+            raise ConformanceSchemaError(f"{label}.failures contains duplicates")
+        expected_result = "fail" if consumer_failures else "pass"
+        if consumer_object["result"] != expected_result:
+            raise ConformanceSchemaError(
+                f"{label}.result does not match coverage failures"
+            )
+        consumer_coverage_passed = expected_result == "pass"
+
+    has_coverage = coverage is not None or consumer_coverage is not None
+    all_coverage_passed = (coverage is None or coverage_passed) and (
+        consumer_coverage is None or consumer_coverage_passed
+    )
+    passed = not missing and not failures and has_coverage and all_coverage_passed
     if document["result"] != ("pass" if passed else "fail"):
         raise ConformanceSchemaError(
             f"{prefix}.result does not match missing executions and failures"

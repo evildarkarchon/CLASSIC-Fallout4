@@ -195,6 +195,37 @@ if(BUILD_TESTING)
 
     add_test(NAME classic-cxx-conformance COMMAND classic-cxx-conformance)
     set_tests_properties(classic-cxx-conformance PROPERTIES SKIP_RETURN_CODE 125)
+
+    # The CLI consumer runner links the maintained frontend presentation and
+    # recovery seams. It remains test-only and emits consumer obligations, never
+    # semantic CXX adapter observations.
+    add_executable(classic-cli-consumer-conformance
+        tests/conformance/classic_cli_consumer_conformance.cpp
+        src/scan_run_cli.cpp
+    )
+
+    target_include_directories(classic-cli-consumer-conformance PRIVATE src/)
+    target_link_libraries(classic-cli-consumer-conformance PRIVATE
+        fmt::fmt
+        classic_cxx_bridge
+        nlohmann_json::nlohmann_json
+    )
+
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set(CLASSIC_CLI_CONSUMER_CONFORMANCE_TOOLCHAIN "clang-cl")
+    else()
+        set(CLASSIC_CLI_CONSUMER_CONFORMANCE_TOOLCHAIN "msvc")
+    endif()
+    target_compile_definitions(classic-cli-consumer-conformance PRIVATE
+        CLASSIC_CLI_CONSUMER_CONFORMANCE_TOOLCHAIN="${CLASSIC_CLI_CONSUMER_CONFORMANCE_TOOLCHAIN}"
+    )
+
+    if(MSVC)
+        target_compile_options(classic-cli-consumer-conformance PRIVATE /utf-8 /W4)
+    endif()
+
+    add_test(NAME classic-cli-consumer-conformance COMMAND classic-cli-consumer-conformance)
+    set_tests_properties(classic-cli-consumer-conformance PROPERTIES SKIP_RETURN_CODE 125)
 endif()
 
 # ── Unit Tests (Catch2) ──────────────────────────────────────────────
