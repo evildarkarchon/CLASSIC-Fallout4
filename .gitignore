@@ -372,5 +372,7 @@ opencode.json
 # Since worktrees and submodules don't work well together, it's easier to just use a normal directory.
 !sample_logs/**
 graphify-out/
-Architecture*.html
+Architecture review*.html
+Architecture review*_files/
 .mcp.json
+.pytest-tmp/
