@@ -4,5 +4,5 @@
 		"noEmit": true,
 		"types": ["node", "bun-types"]
 	},
-	"include": ["scan_run_contract.types.ts"]
+	"include": ["scan_run_contract.types.ts", "user_settings_conformance_runner.ts"]
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare one fresh input-only Crash Log Scan Run plan for native CXX."""
+"""Prepare one fresh input-only semantic family plan for native CXX."""
 
 from __future__ import annotations
 
@@ -23,12 +23,15 @@ from conformance.packs import (
 PACK_RELATIVE_PATH = Path("tests/conformance/packs/crash_log_scan_run/v1.json")
 DEFAULT_ARTIFACT_ROOT = Path("tools/binding_compliance/artifacts")
 SUPPORTED_COMPILERS = ("msvc", "clang-cl")
+SUPPORTED_FAMILIES = ("crash-log-scan-run", "user-settings")
 
 
-def _cxx_source_paths(repo_root: Path) -> tuple[Path, ...]:
+def _cxx_source_paths(
+    repo_root: Path, family: str = "crash-log-scan-run"
+) -> tuple[Path, ...]:
     """Return current native runner and core inputs bound into source identity."""
 
-    return (
+    paths = (
         SCRIPT_PATH,
         repo_root
         / "tools"
@@ -44,6 +47,11 @@ def _cxx_source_paths(repo_root: Path) -> tuple[Path, ...]:
         / "tests"
         / "conformance"
         / "classic_cxx_conformance.cpp",
+        repo_root
+        / "classic-cli"
+        / "tests"
+        / "conformance"
+        / "classic_cxx_user_settings_conformance.h",
         repo_root / "cpp-bindings" / "classic-cpp-bridge" / "src" / "scanner.rs",
         repo_root
         / "cpp-bindings"
@@ -54,6 +62,12 @@ def _cxx_source_paths(repo_root: Path) -> tuple[Path, ...]:
         repo_root / "business-logic" / "classic-scanlog-core" / "src" / "scan_run",
         repo_root / "business-logic" / "classic-scan-presentation" / "src",
     )
+    if family == "user-settings":
+        paths += (
+            repo_root / "cpp-bindings" / "classic-cpp-bridge" / "src" / "settings.rs",
+            repo_root / "business-logic" / "classic-user-settings-core" / "src",
+        )
+    return paths
 
 
 def prepare_cxx_run(
@@ -61,10 +75,12 @@ def prepare_cxx_run(
     *,
     compiler: str,
     artifact_root: Path = DEFAULT_ARTIFACT_ROOT,
+    family: str = "crash-log-scan-run",
 ) -> MaterializedRun:
     """Materialize one CXX execution-instance plan in a fresh artifact directory.
 
-    ``compiler`` selects the supported Windows/MSVC-ABI execution instance. The
+    ``compiler`` selects the supported Windows/MSVC-ABI execution instance and
+    ``family`` selects the trusted repository pack. The
     returned receipt path is reserved but intentionally absent until native C++
     traverses the generated bridge and publishes its observations.
     """
@@ -73,14 +89,21 @@ def prepare_cxx_run(
         raise ValueError(
             "CXX conformance compiler must be one of: " + ", ".join(SUPPORTED_COMPILERS)
         )
+    if family not in SUPPORTED_FAMILIES:
+        raise ValueError("unsupported CXX conformance family: " + family)
     root = repo_root.resolve(strict=True)
-    pack = load_and_validate_pack(root, root / PACK_RELATIVE_PATH)
+    pack_path = (
+        Path("tests/conformance/packs/user_settings/v1.json")
+        if family == "user-settings"
+        else PACK_RELATIVE_PATH
+    )
+    pack = load_and_validate_pack(root, root / pack_path)
     return materialize_run_plan(
         pack,
         participant_id="cxx",
         participant_role="semantic-adapter",
         execution_instance_id=f"windows-{compiler}",
-        source_paths=_cxx_source_paths(root),
+        source_paths=_cxx_source_paths(root, family),
         artifact_root=artifact_root,
     )
 
@@ -91,6 +114,9 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", type=Path, default=DEFAULT_REPO_ROOT)
     parser.add_argument("--compiler", choices=SUPPORTED_COMPILERS, required=True)
+    parser.add_argument(
+        "--family", choices=SUPPORTED_FAMILIES, default="crash-log-scan-run"
+    )
     parser.add_argument("--artifact-root", type=Path, default=DEFAULT_ARTIFACT_ROOT)
     return parser
 
@@ -104,6 +130,7 @@ def main(argv: list[str] | None = None) -> int:
             args.repo_root,
             compiler=args.compiler,
             artifact_root=args.artifact_root,
+            family=args.family,
         )
         plan = prepared.document()
     except (OSError, MaterializationError, PackValidationError, ValueError) as error:

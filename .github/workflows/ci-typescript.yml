@@ -181,6 +181,21 @@ jobs:
         if: matrix.runtime == 'node' && !cancelled()
         run: python tools/binding_compliance/run_scan_run_conformance.py --participant node
 
+      # Existing runtime and registry-backed parity gates remain blocking.
+      - name: Run Node User Settings conformance in shadow
+        if: matrix.runtime == 'node' && !cancelled()
+        continue-on-error: true
+        run: python tools/binding_compliance/run_user_settings_conformance.py --participant node --artifact-root tools/binding_compliance/artifacts/user-settings
+
+      - name: Upload Node User Settings conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-user-settings-conformance
+          path: tools/binding_compliance/artifacts/user-settings/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Upload Node Crash Log Scan Run conformance diagnostics
         if: matrix.runtime == 'node' && always()
         uses: actions/upload-artifact@v6

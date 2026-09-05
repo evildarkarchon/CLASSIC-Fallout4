@@ -236,15 +236,19 @@ def run_participant(
     *,
     artifact_root: Path = DEFAULT_ARTIFACT_ROOT,
     timeout_seconds: int = 1_200,
+    pack_path: Path = PACK_PATH,
+    command: ParticipantCommand | None = None,
 ) -> tuple[int, Path]:
     """Execute one public adapter seam and build its exact participant report.
 
-    The return code mirrors the blocking report result. CI retains the legacy
-    parity/runtime gates and always uploads the fresh receipt diagnostics.
+    ``pack_path`` and ``command`` select another family without duplicating
+    invocation isolation or failure handling. The return code reports actual
+    execution/comparison success even for a shadow family; CI separately keeps
+    its retained parity/runtime gates blocking.
     """
 
-    command = PARTICIPANT_COMMANDS[participant_id]
-    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH)
+    command = command or PARTICIPANT_COMMANDS[participant_id]
+    pack = load_and_validate_pack(REPO_ROOT, pack_path)
     prepared = materialize_run_plan(
         pack,
         participant_id=participant_id,

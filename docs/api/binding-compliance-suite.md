@@ -83,6 +83,42 @@ withhold those expectations, and validated observations appear only under
 jobs are blocking for this family, while their artifacts remain available even
 when execution or validation fails.
 
+## User Settings Read-Only Shadow Execution
+
+`tests/conformance/packs/user_settings/v1.json` selects eleven opening cases from
+`tests/fixtures/user_settings_compatibility/expectations.json`. The existing
+compatibility expectations are the single independent oracle: the central
+engine resolves case references in memory and binds the oracle and input fixture
+bytes into the expectation digest. Adapter plans contain only fixture placement
+and the names of typed fields to observe, never expected values.
+
+The Rust, CXX, Node, and Python runners open their public User Settings seam in an
+isolated temporary root and emit actual source metadata, commit eligibility,
+diagnostic codes, selected typed settings, original-content/revision checks, and
+whole-tree preservation observations. Exact central comparison rejects missing,
+extra, mistyped, or changed observations. Cases cover canonical and missing
+documents, legacy shape/location, alias precedence, invalid values, malformed
+and future-major fallback, unknown entries, and GUI geometry. Explicit legacy
+TUI import and update/migration/conflict operations retain their existing tests
+and belong to subsequent slices.
+
+```powershell
+python tools/binding_compliance/run_user_settings_conformance.py --participant rust
+python tools/binding_compliance/run_user_settings_conformance.py --participant node
+uv run --project python-bindings python tools/binding_compliance/run_user_settings_conformance.py --participant python
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Compiler msvc -Family user-settings
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Compiler clang-cl -Family user-settings
+```
+
+Run these after the maintained native build prerequisites. The CXX launcher uses
+the same bridge-only CTest target and approved CLI wrapper as scan conformance;
+each compiler emits its own receipt and mandatory JUnit evidence. CI runs this
+family with `continue-on-error: true` and uploads diagnostics under
+`tools/binding_compliance/artifacts/user-settings/`. A failed shadow comparison
+remains visible as failure in its report. The current parity gates, runtime
+registries, compatibility tests, and ownership audit remain blocking; this slice
+does not promote User Settings or retire any existing evidence.
+
 ## What The Suite Proves
 
 The suite does not replace lower-level parsers. It owns the top-level pass/fail result, policy mapping, and gap report while reusing existing gates as executable evidence:

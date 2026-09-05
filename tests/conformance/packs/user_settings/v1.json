@@ -1,0 +1,388 @@
+{
+  "schemaVersion": 1,
+  "familyId": "user-settings",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-user-settings-core"
+  },
+  "fixtureRoot": "tests/fixtures/user_settings_compatibility",
+  "fixtures": {
+    "canonical_current_nested": "canonical_current_nested.yaml",
+    "flat_classic_config": "flat_classic_config.yaml",
+    "previous_settings_location": "previous_location_nested.yaml",
+    "malformed_document": "malformed.yaml",
+    "invalid_known_values": "invalid_known_values.yaml",
+    "alias_only": "alias_only.yaml",
+    "canonical_alias_conflict": "canonical_alias_conflict.yaml",
+    "unknown_entries": "unknown_entries.yaml",
+    "newer_major_schema": "newer_major_schema.yaml",
+    "gui_geometry": "gui_geometry.yaml"
+  },
+  "capabilities": [
+    {
+      "id": "user-settings.open",
+      "rustSymbols": [
+        "UserSettings",
+        "SettingsSource",
+        "SourceLocation",
+        "DocumentClassification",
+        "CommitEligibility",
+        "Revision",
+        "UpdatePreferences",
+        "CrashLogScanSettings",
+        "FrontendState",
+        "WindowGeometry",
+        "Diagnostic"
+      ],
+      "observationFamilies": [
+        "source",
+        "projection",
+        "diagnostics",
+        "durable-effects"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "canonical-current-nested",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "canonical_current_nested"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "canonical_current_nested",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": [
+          "formid_databases",
+          "game_version",
+          "max_concurrent_scans",
+          "move_unsolved_logs",
+          "update_check"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "canonical_current_nested"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "flat-classic-config",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "flat_classic_config"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "flat_classic_config",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": []
+      },
+      "expected": {
+        "compatibilityCase": "flat_classic_config"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "previous-settings-location",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "previous_settings_location"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "previous_settings_location",
+            "path": "CLASSIC Data/CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": []
+      },
+      "expected": {
+        "compatibilityCase": "previous_settings_location"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "missing-document",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "installationData": [],
+        "observationFields": [
+          "fcx_mode",
+          "game_version",
+          "max_concurrent_scans",
+          "move_unsolved_logs",
+          "show_formid_values",
+          "simplify_logs",
+          "update_check"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "missing_document"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "malformed-document",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "malformed_document"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "malformed_document",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": [
+          "fcx_mode",
+          "game_version",
+          "max_concurrent_scans",
+          "move_unsolved_logs",
+          "show_formid_values",
+          "simplify_logs",
+          "update_check"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "malformed_document"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid-known-values",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "invalid_known_values"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "invalid_known_values",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": [
+          "game_version",
+          "main_tab_maximized",
+          "main_tab_width",
+          "max_concurrent_scans",
+          "move_unsolved_logs",
+          "update_check"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "invalid_known_values"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "alias-only",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "alias_only"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "alias_only",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": [
+          "custom_scan_folder"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "alias_only"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "canonical-alias-conflict",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "canonical_alias_conflict"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "canonical_alias_conflict",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": [
+          "custom_scan_folder",
+          "mods_folder"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "canonical_alias_conflict"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "unknown-entries",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "unknown_entries"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "unknown_entries",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": [
+          "main_tab",
+          "update_check"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "unknown_entries"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "newer-major-schema",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "newer_major_schema"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "newer_major_schema",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": [
+          "fcx_mode",
+          "game_version",
+          "max_concurrent_scans",
+          "move_unsolved_logs",
+          "show_formid_values",
+          "simplify_logs",
+          "update_check"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "newer_major_schema"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "gui-geometry",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "gui_geometry"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "gui_geometry",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": [
+          "articles_tab",
+          "backups_tab",
+          "main_tab",
+          "results_tab"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "gui_geometry"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

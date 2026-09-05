@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Runs one bounded native CXX Crash Log Scan Run conformance instance.
+    Runs one bounded native CXX semantic family conformance instance.
 
 .DESCRIPTION
     Prepares a fresh input-only plan, invokes only the approved CLI build wrapper
@@ -11,7 +11,10 @@
 [CmdletBinding()]
 param(
     [ValidateSet("msvc", "clang-cl")]
-    [string]$Compiler = "msvc"
+    [string]$Compiler = "msvc",
+    [ValidateSet("crash-log-scan-run", "user-settings")]
+    [string]$Family = "crash-log-scan-run",
+    [string]$ArtifactRoot = "tools/binding_compliance/artifacts"
 )
 
 $ErrorActionPreference = "Stop"
@@ -58,7 +61,7 @@ try {
     Set-Location -LiteralPath $RepoRoot
 
     $PreparationScript = Join-Path $RepoRoot "tools/binding_compliance/conformance/adapters/prepare_cxx_conformance.py"
-    $PreparationOutput = @(& python $PreparationScript --repo-root $RepoRoot --compiler $Compiler)
+    $PreparationOutput = @(& python $PreparationScript --repo-root $RepoRoot --compiler $Compiler --family $Family --artifact-root $ArtifactRoot)
     if ($LASTEXITCODE -ne 0) {
         throw "CXX conformance preparation failed: $($PreparationOutput -join [Environment]::NewLine)"
     }

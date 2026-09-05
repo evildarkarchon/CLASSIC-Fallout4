@@ -20,6 +20,7 @@
     "build:debug": "napi build --platform --manifest-path ./Cargo.toml && bun run build:cli",
     "cli": "bun run build:cli && node ./dist/cli/main.js",
     "conformance:scan-run": "bun __test__/scan_run_conformance_runner.ts",
+    "conformance:user-settings": "bun __test__/user_settings_conformance_runner.ts",
     "dts:refresh": "bun x napi build --platform --manifest-path ./Cargo.toml --dts index.d.ts --no-js",
     "parity:gate": "python ../../tools/node_api_parity/check_parity_gate.py --repo-root ../..",
     "parity:gate:update-baseline": "python ../../tools/node_api_parity/check_parity_gate.py --repo-root ../.. --update-baseline",

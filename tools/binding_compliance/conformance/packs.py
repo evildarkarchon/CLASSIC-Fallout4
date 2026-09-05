@@ -58,6 +58,7 @@ class ValidatedPack:
     fixture_root: Path
     fixtures: tuple[ValidatedFixture, ...]
     expectation_digest: str
+    oracle_paths: tuple[Path, ...] = ()
 
     def document(self) -> dict[str, Any]:
         """Return a detached copy of the validated JSON document."""
@@ -462,13 +463,18 @@ def _digest_frame(digest: Any, tag: bytes, payload: bytes) -> None:
 
 
 def _expectation_digest(
-    canonical_pack: bytes, fixtures: tuple[ValidatedFixture, ...]
+    canonical_pack: bytes,
+    fixtures: tuple[ValidatedFixture, ...],
+    oracle_sources: tuple[tuple[str, bytes], ...] = (),
 ) -> str:
-    """Hash canonical pack content and every declared fixture path and byte."""
+    """Hash canonical content, input fixtures, and any separate authored oracle."""
 
     digest = hashlib.sha256()
     _digest_frame(digest, b"contract", b"classic-conformance-expectation-v1")
     _digest_frame(digest, b"pack", canonical_pack)
+    for relative_path, oracle_bytes in oracle_sources:
+        _digest_frame(digest, b"oracle-path", relative_path.encode("utf-8"))
+        _digest_frame(digest, b"oracle-bytes", oracle_bytes)
     for fixture in fixtures:
         _digest_frame(digest, b"fixture-path", fixture.relative_path.encode("utf-8"))
         try:
@@ -542,6 +548,7 @@ def _source_inputs(
     """
 
     candidates = [pack.pack_path]
+    candidates.extend(pack.oracle_paths)
     candidates.extend(fixture.resolved_path for fixture in pack.fixtures)
     candidates.extend(
         path if path.is_absolute() else pack.repo_root / path for path in source_paths
@@ -1116,13 +1123,40 @@ def load_and_validate_pack(repo_root: Path, pack_path: Path) -> ValidatedPack:
     _validate_identities(pack)
     fixture_root, fixtures = _validate_fixtures(pack, root)
     _validate_normalization(pack)
+    oracle_paths: tuple[Path, ...] = ()
+    oracle_sources: tuple[tuple[str, bytes], ...] = ()
+    if pack["familyId"] == "user-settings":
+        from .families.user_settings import compile_compatibility_expectations
+
+        # The oracle is a central source dependency, never an adapter input fixture.
+        try:
+            oracle_path = (fixture_root / "expectations.json").resolve(strict=True)
+            oracle_path.relative_to(fixture_root)
+            oracle_bytes = oracle_path.read_bytes()
+            oracle = json.loads(
+                oracle_bytes,
+                object_pairs_hook=_reject_duplicate_json_keys,
+                parse_constant=_reject_nonfinite_json_number,
+            )
+            if any(fixture.resolved_path == oracle_path for fixture in fixtures):
+                raise ValueError(
+                    "User Settings oracle cannot be an adapter input fixture"
+                )
+            pack = compile_compatibility_expectations(pack, oracle)
+            _reject_floating_point_values(pack)
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            raise PackValidationError(
+                f"invalid User Settings compatibility oracle: {error}"
+            ) from error
+        oracle_paths = (oracle_path,)
+        oracle_sources = ((oracle_path.relative_to(root).as_posix(), oracle_bytes),)
     canonical = json.dumps(
         pack,
         ensure_ascii=False,
         sort_keys=True,
         separators=(",", ":"),
     ).encode("utf-8")
-    expectation_digest = _expectation_digest(canonical, fixtures)
+    expectation_digest = _expectation_digest(canonical, fixtures, oracle_sources)
     return ValidatedPack(
         repo_root=root,
         pack_path=resolved_pack,
@@ -1130,4 +1164,5 @@ def load_and_validate_pack(repo_root: Path, pack_path: Path) -> ValidatedPack:
         fixture_root=fixture_root,
         fixtures=fixtures,
         expectation_digest=expectation_digest,
+        oracle_paths=oracle_paths,
     )

@@ -360,6 +360,10 @@
       "expected_outcomes": ["read_only_open", "proposed_update", "accepted_commit"],
       "commit_eligible": true,
       "migration_required": false,
+      "expected_view": {
+        "update_check": true,
+        "main_tab": {"maximized": false, "width": 640, "height": 500}
+      },
       "diagnostics": [],
       "preserve_nodes": [
         {"pointer": "/ThirdPartyPlugin/enabled", "type": "boolean", "value": true},

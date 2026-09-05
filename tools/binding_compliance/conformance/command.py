@@ -19,6 +19,7 @@ from .coverage import (
 )
 from .failures import FailureKind
 from .families.crash_log_scan_run import CRASH_LOG_SCAN_RUN_COVERAGE_POLICY
+from .families.user_settings import USER_SETTINGS_COVERAGE_POLICY
 from .packs import (
     MaterializationError,
     PackValidationError,
@@ -44,6 +45,7 @@ class ConformanceCommandError(ValueError):
 # An absent policy leaves coverage unresolved and therefore cannot pass a scope.
 FAMILY_COVERAGE_POLICIES: Mapping[str, FamilyCoveragePolicy] = {
     CRASH_LOG_SCAN_RUN_COVERAGE_POLICY.family_id: CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+    USER_SETTINGS_COVERAGE_POLICY.family_id: USER_SETTINGS_COVERAGE_POLICY,
 }
 
 _CXX_LOCAL_ENVIRONMENT_OUTPUT_MARKERS = (

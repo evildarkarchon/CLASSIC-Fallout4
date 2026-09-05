@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 //
-// Bridge-only Crash Log Scan Run conformance participant. This executable is
+// Bridge-only semantic conformance participant. This executable is
 // hosted by the CLI build but does not link or compile any frontend source.
 
 #include "classic_cxx_bridge/scanner.h"
+#include "classic_cxx_bridge/settings.h"
 
 #include <nlohmann/json.hpp>
 
@@ -1696,13 +1697,17 @@ json execute_scenario(const json& plan, const json& scenario) {
     return project_observation(execution, observer, temporary.path());
 }
 
+#include "classic_cxx_user_settings_conformance.h"
+
 /// Executes one planned case while retaining runner failures as receipt evidence.
 json scenario_receipt(const json& plan, const json& scenario) {
     try {
         return json{{"id", scenario.at("id")},
                     {"executionStatus", "completed"},
                     {"capabilityIds", scenario.at("capabilityIds")},
-                    {"observation", execute_scenario(plan, scenario)},
+                    {"observation", plan.at("familyId") == "user-settings"
+                                        ? execute_user_settings_scenario(plan, scenario)
+                                        : execute_scenario(plan, scenario)},
                     {"failure", nullptr}};
     } catch (const std::exception& error) {
         return json{{"id", scenario.value("id", "unknown")},
@@ -1715,7 +1720,8 @@ json scenario_receipt(const json& plan, const json& scenario) {
 
 /// Validates the closed header and rejects any accidental oracle exposure.
 void validate_plan(const json& plan) {
-    if (!plan.is_object() || plan.at("schemaVersion") != 1 || plan.at("familyId") != "crash-log-scan-run") {
+    if (!plan.is_object() || plan.at("schemaVersion") != 1 ||
+        (plan.at("familyId") != "crash-log-scan-run" && plan.at("familyId") != "user-settings")) {
         throw RunnerError("unsupported CXX conformance run plan");
     }
     const json& participant = plan.at("participant");

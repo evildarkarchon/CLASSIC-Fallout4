@@ -120,6 +120,21 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      # Each compiler supplies shadow settings evidence beside its blocking scan evidence.
+      - name: Run native CXX User Settings conformance in shadow
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family user-settings -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/user-settings
+
+      - name: Upload native CXX User Settings conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cxx-user-settings-conformance-${{ matrix.compiler }}
+          path: tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run CLI Crash Log Scan Run consumer conformance
         if: ${{ !cancelled() }}
         run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cli_consumer_conformance.ps1 -Compiler ${{ matrix.compiler }}

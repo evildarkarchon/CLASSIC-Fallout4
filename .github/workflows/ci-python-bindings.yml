@@ -116,6 +116,21 @@ jobs:
         if: ${{ !cancelled() }}
         run: uv run --project python-bindings python tools/binding_compliance/run_scan_run_conformance.py --participant python
 
+      # Existing runtime and registry-backed parity gates remain blocking.
+      - name: Run Python User Settings conformance in shadow
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: uv run --project python-bindings python tools/binding_compliance/run_user_settings_conformance.py --participant python --artifact-root tools/binding_compliance/artifacts/user-settings
+
+      - name: Upload Python User Settings conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-user-settings-conformance
+          path: tools/binding_compliance/artifacts/user-settings/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Upload Python Crash Log Scan Run conformance diagnostics
         if: always()
         uses: actions/upload-artifact@v6
