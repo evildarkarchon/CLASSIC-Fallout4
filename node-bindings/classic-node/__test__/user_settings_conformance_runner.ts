@@ -1,10 +1,17 @@
 import { createHash, randomUUID } from "node:crypto";
-import { copyFile, lstat, mkdir, mkdtemp, open, readdir, readFile, rename, rm } from "node:fs/promises";
+import { copyFile, lstat, mkdir, mkdtemp, open, readdir, readFile, rename, rm, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import type { JsUserSettingsSnapshot, JsUserSettingsUpdate, JsWindowGeometry } from "../index.js";
+import type { JsUserSettingsMigrationEndpoint, JsUserSettingsMigrationPlan, JsUserSettingsMigrationPlanningResult, JsUserSettingsMigrationReceipt, JsUserSettingsSnapshot, JsUserSettingsUpdate, JsWindowGeometry } from "../index.js";
 
 type JsonObject = Record<string, unknown>;
+
+/** Caller-controlled disturbance between public migration phases. */
+type MigrationIntervention =
+  | { kind: "external-edit"; fixtureRef: string; path: string }
+  | { kind: "block-backup-directory" }
+  | { kind: "tamper-backup"; fixtureRef: string }
+  | { kind: "remove-backup" };
 
 /** One centrally supplied input-only scenario; fixture bytes are the only external inputs read. */
 interface Scenario {
@@ -20,6 +27,10 @@ interface Scenario {
     installationRootExists?: boolean;
     commit?: boolean;
     externalEdit?: { fixtureRef: string; path: string } | null;
+    apply?: boolean;
+    restore?: boolean;
+    beforeApply?: MigrationIntervention | null;
+    beforeRestore?: MigrationIntervention | null;
   };
 }
 
@@ -87,7 +98,7 @@ async function loadPlan(path: string): Promise<RunPlan> {
     const scenario = object(value, "scenario");
     if ("expected" in scenario) throw new Error("input-only run plan must not contain expectations");
     string(scenario.id, "scenario.id");
-    if (!["user-settings.open", "user-settings.update"].includes(String(scenario.action))) {
+    if (!["user-settings.open", "user-settings.update", "user-settings.migrate"].includes(String(scenario.action))) {
       throw new Error("unsupported User Settings action");
     }
     strings(scenario.capabilityIds, "scenario.capabilityIds");
@@ -95,7 +106,7 @@ async function loadPlan(path: string): Promise<RunPlan> {
     const input = object(scenario.input, "scenario.input");
     if (scenario.action === "user-settings.open") {
       strings(input.observationFields, "observationFields");
-    } else {
+    } else if (scenario.action === "user-settings.update") {
       object(input.requestedUpdate, "requestedUpdate");
       if (input.previewMode !== "update" && input.previewMode !== "bootstrap") throw new Error("previewMode must be update or bootstrap");
       if (typeof input.installationRootExists !== "boolean") throw new Error("installationRootExists must be a boolean");
@@ -104,6 +115,24 @@ async function loadPlan(path: string): Promise<RunPlan> {
         const edit = object(input.externalEdit, "externalEdit");
         string(edit.fixtureRef, "externalEdit.fixtureRef");
         string(edit.path, "externalEdit.path");
+      }
+    } else {
+      if (typeof input.apply !== "boolean" || typeof input.restore !== "boolean") {
+        throw new Error("migration apply and restore must be booleans");
+      }
+      for (const [phase, kinds] of [
+        ["beforeApply", ["external-edit", "block-backup-directory"]],
+        ["beforeRestore", ["external-edit", "tamper-backup", "remove-backup"]],
+      ] as const) {
+        if (input[phase] === null) continue;
+        const intervention = object(input[phase], phase);
+        if (!(kinds as readonly string[]).includes(string(intervention.kind, `${phase}.kind`))) {
+          throw new Error(`unsupported ${phase} intervention`);
+        }
+        if (["external-edit", "tamper-backup"].includes(String(intervention.kind))) {
+          string(intervention.fixtureRef, `${phase}.fixtureRef`);
+        }
+        if (intervention.kind === "external-edit") string(intervention.path, `${phase}.path`);
       }
     }
     if (!Array.isArray(input.installationData)) throw new Error("installationData must be an array");
@@ -203,6 +232,7 @@ function projectView(snapshot: JsUserSettingsSnapshot, fields: string[]): JsonOb
 
 /** Dispatch explicit operations or observe the public read-only open API and its durable effects. */
 async function executeScenario(plan: RunPlan, scenario: Scenario): Promise<JsonObject> {
+  if (scenario.action === "user-settings.migrate") return executeMigration(plan, scenario);
   if (scenario.action !== "user-settings.open") return executeOperation(plan, scenario);
   const root = resolve(await mkdtemp(join(tmpdir(), "classic-node-user-settings-")));
   try {
@@ -297,6 +327,141 @@ async function durableTree(root: string): Promise<JsonObject[]> {
       : { path: { path }, kind: "file", bytesHex: bytes.toString("hex") });
   }
   return entries;
+}
+
+/** Project an endpoint's public fields without interpreting its document content. */
+function migrationEndpoint(endpoint: JsUserSettingsMigrationEndpoint): JsonObject {
+  return {
+    location: token(endpoint.location),
+    schemaVersion: endpoint.schemaVersion === undefined ? null : {
+      major: endpoint.schemaVersion.major, minor: endpoint.schemaVersion.minor,
+    },
+  };
+}
+
+/** Retain exact proposal bytes and ordered public review rows for the central oracle. */
+function migrationPlan(plan: JsUserSettingsMigrationPlan): JsonObject {
+  return {
+    required: plan.required,
+    baseRevision: plan.baseRevision,
+    source: migrationEndpoint(plan.source),
+    target: migrationEndpoint(plan.target),
+    changes: plan.changes.map((change) => ({
+      kind: token(change.kind), sourcePath: change.sourcePath ?? null,
+      targetPath: change.targetPath ?? null, before: change.before ?? null, after: change.after ?? null,
+    })),
+    originalHex: plan.originalContent.toString("hex"),
+    proposedHex: plan.proposedContent.toString("hex"),
+  };
+}
+
+/** Normalize the binding's planning status spelling and preserve its diagnostics. */
+function migrationPlanning(outcome: JsUserSettingsMigrationPlanningResult): JsonObject {
+  return {
+    status: outcome.status === "notRequired" ? "not-required" : outcome.status,
+    diagnostics: outcome.diagnostics.map((diagnostic) => diagnostic.code),
+    plan: outcome.plan === undefined ? null : migrationPlan(outcome.plan),
+  };
+}
+
+/** Observe a native receipt's getters while leaving its restore authority opaque. */
+function migrationReceipt(root: string, receipt: JsUserSettingsMigrationReceipt): JsonObject {
+  return {
+    sourcePath: { path: relativePath(root, receipt.sourcePath) },
+    destinationPath: { path: relativePath(root, receipt.destinationPath) },
+    backupPath: { path: relativePath(root, receipt.backupPath) },
+    source: migrationEndpoint(receipt.source), target: migrationEndpoint(receipt.target),
+    backupRevision: receipt.backupRevision, publishedRevision: receipt.publishedRevision,
+  };
+}
+
+/** Extract only the stable native error code; unexpected JS errors fail the scenario. */
+function migrationErrorCode(error: unknown): string {
+  if (!(error instanceof Error) || !("code" in error)) throw error;
+  return string(error.code, "migration error code");
+}
+
+/** Apply declared external bytes or backup disturbances only at their requested phase. */
+async function migrationIntervention(
+  plan: RunPlan, scenario: Scenario, root: string, intervention: MigrationIntervention | null | undefined,
+  receipt?: JsUserSettingsMigrationReceipt,
+): Promise<void> {
+  if (intervention === null || intervention === undefined) return;
+  if (intervention.kind === "external-edit") {
+    await installFixture(plan, scenario, root, intervention);
+  } else if (intervention.kind === "block-backup-directory") {
+    await writeFile(runtimePath(root, "CLASSIC Backup"), "blocked");
+  } else {
+    if (receipt === undefined) throw new Error("backup intervention requires an applied native receipt");
+    // Validate the observed backup path before writing, but keep the original native receipt for restore.
+    const backup = runtimePath(root, relativePath(root, receipt.backupPath));
+    if (intervention.kind === "remove-backup") {
+      await unlink(backup);
+    } else {
+      if (!scenario.fixtureRefs.includes(intervention.fixtureRef)) throw new Error("fixtureRef is not declared by the scenario");
+      await copyFile(string(plan.fixtures[intervention.fixtureRef], "backup fixture"), backup);
+    }
+  }
+}
+
+/** Exercise public planning, reversal, application, and opaque-receipt restoration. */
+async function executeMigration(plan: RunPlan, scenario: Scenario): Promise<JsonObject> {
+  const root = resolve(await mkdtemp(join(tmpdir(), "classic-node-user-settings-migration-")));
+  try {
+    for (const item of scenario.input.installationData) await installFixture(plan, scenario, root, item);
+    const classic = await import("../index.js");
+    const planning = classic.planUserSettingsMigration(root);
+    const repeatedPlanning = classic.planUserSettingsMigration(root);
+    const approved = planning.plan;
+    const reversed = approved === undefined ? undefined : classic.reverseUserSettingsMigrationPlan(approved);
+    const roundTrip = reversed === undefined ? undefined : classic.reverseUserSettingsMigrationPlan(reversed);
+    const afterPlanningTree = await durableTree(root);
+    let appliedReceipt: JsUserSettingsMigrationReceipt | undefined;
+    let apply: JsonObject = {
+      status: "not-attempted", expectedRevision: null, actualRevision: null, errorCode: null, receipt: null,
+    };
+    if (scenario.input.apply && approved !== undefined) {
+      await migrationIntervention(plan, scenario, root, scenario.input.beforeApply);
+      try {
+        const outcome = classic.applyUserSettingsMigration(root, approved.baseRevision, approved.proposedContent);
+        appliedReceipt = outcome.receipt;
+        apply = {
+          status: outcome.status,
+          // Python/core expose expected revisions only on conflict; Node repeats approval on success.
+          expectedRevision: outcome.status === "conflict" ? outcome.expectedRevision : null,
+          actualRevision: outcome.actualRevision ?? null, errorCode: null,
+          receipt: appliedReceipt === undefined ? null : migrationReceipt(root, appliedReceipt),
+        };
+      } catch (error) {
+        apply = { ...apply, status: "error", errorCode: migrationErrorCode(error) };
+      }
+    }
+    const afterApplyTree = await durableTree(root);
+    let restore: JsonObject = {
+      status: "not-attempted", revision: null, expectedRevision: null, actualRevision: null, errorCode: null,
+    };
+    if (scenario.input.restore && appliedReceipt !== undefined) {
+      await migrationIntervention(plan, scenario, root, scenario.input.beforeRestore, appliedReceipt);
+      try {
+        const outcome = appliedReceipt.restore(root);
+        restore = {
+          status: outcome.status, revision: outcome.revision ?? null,
+          expectedRevision: outcome.status === "conflict" ? outcome.expectedRevision : null,
+          actualRevision: outcome.actualRevision ?? null, errorCode: null,
+        };
+      } catch (error) {
+        restore = { ...restore, status: "error", errorCode: migrationErrorCode(error) };
+      }
+    }
+    return {
+      planning: migrationPlanning(planning), repeatedPlanning: migrationPlanning(repeatedPlanning),
+      reversedPlan: reversed === undefined ? null : migrationPlan(reversed),
+      roundTripPlan: roundTrip === undefined ? null : migrationPlan(roundTrip),
+      afterPlanningTree, apply, afterApplyTree, restore, finalTree: await durableTree(root),
+    };
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 }
 
 /** Execute an explicit public preview and optional commit, measuring each durable phase separately. */

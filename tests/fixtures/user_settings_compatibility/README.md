@@ -53,3 +53,15 @@ complete first-run documents. The alias and invalid-value `*_after_update.yaml`
 fixtures preserve every unrelated node during an ordinary accepted update.
 Already-stale update and bootstrap commits preserve the complete installation
 tree, including the absence of a newly created coordination lock.
+
+`migration_cases` and `migration_scenarios` are the independent migration oracle
+for the same cross-adapter family. Cases retain ordered review rows and expected
+documents; scenarios specify explicit apply/restore approval and controlled
+external interference. `flat_migrated.yaml` is reused from the existing operation
+oracle. `previous_location_migrated.yaml`, `alias_conflict_migrated.yaml`, and
+`alias_only_migrated.yaml` describe the authored migration results, while
+`unsupported_older_schema.yaml` exercises an unsupported migration gap. Expected
+documents are digest-bound central dependencies and are never adapter inputs.
+Backups and restored bytes compare exactly; proposals compare as typed YAML and
+must then be published byte-for-byte as approved. Failed apply/restore scenarios
+retain all observable files and directories, including verified recovery backups.

@@ -1,7 +1,9 @@
-//! Input-only receipt runner for public User Settings opening, bootstrap, and updates.
+//! Input-only receipt runner for public User Settings opening, updates, and migrations.
 
 use classic_user_settings_core::{
-    Revision, UserSettings, UserSettingsCommitOutcome, UserSettingsUpdate, UserSettingsUpdateField,
+    MigrationEndpoint, MigrationPlanningOutcome, Revision, UserSettings, UserSettingsCommitOutcome,
+    UserSettingsMigrationApplyOutcome, UserSettingsMigrationPlan, UserSettingsMigrationReceipt,
+    UserSettingsMigrationRestoreOutcome, UserSettingsUpdate, UserSettingsUpdateField,
     UserSettingsUpdatePreview, WindowGeometry,
 };
 use classic_vocabulary::Vocabulary;
@@ -276,6 +278,198 @@ fn execute_operation(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
     )
 }
 
+/// Preserves every byte of a public migration artifact in the private receipt transport.
+fn migration_hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+/// Projects the public location and optional schema version without deriving compatibility.
+fn migration_endpoint(endpoint: &MigrationEndpoint) -> Value {
+    json!({
+        "location": endpoint.location().as_str(),
+        "schemaVersion": endpoint.schema_version().map(|version| json!({
+            "major": version.major(), "minor": version.minor(),
+        })),
+    })
+}
+
+/// Projects the exact public plan and ordered review rows without interpreting their values.
+fn migration_plan(plan: &UserSettingsMigrationPlan) -> Value {
+    json!({
+        "required": plan.required(), "baseRevision": plan.base_revision().token(),
+        "source": migration_endpoint(plan.source()), "target": migration_endpoint(plan.target()),
+        "changes": plan.changes().iter().map(|change| json!({
+            "kind": change.kind().as_str(), "sourcePath": change.source_path(),
+            "targetPath": change.target_path(), "before": change.before(), "after": change.after(),
+        })).collect::<Vec<_>>(),
+        "originalHex": migration_hex(plan.original_bytes()),
+        "proposedHex": migration_hex(plan.proposed_bytes()),
+    })
+}
+
+/// Projects a planner result while retaining all unsupported diagnostic codes.
+fn migration_planning(outcome: &MigrationPlanningOutcome) -> Value {
+    match outcome {
+        MigrationPlanningOutcome::NotRequired => {
+            json!({"status": "not-required", "diagnostics": [], "plan": null})
+        }
+        MigrationPlanningOutcome::Planned(plan) => {
+            json!({"status": "planned", "diagnostics": [], "plan": migration_plan(plan)})
+        }
+        MigrationPlanningOutcome::Unsupported(diagnostics) => json!({
+            "status": "unsupported", "plan": null,
+            "diagnostics": diagnostics.iter().map(|diagnostic| diagnostic.code()).collect::<Vec<_>>(),
+        }),
+    }
+}
+
+/// Makes a returned artifact path portable while rejecting paths outside the isolated root.
+fn migration_path(root: &Path, path: &Path) -> RunnerResult<Value> {
+    Ok(json!({"path": path.strip_prefix(root)?.to_string_lossy().replace('\\', "/")}))
+}
+
+/// Copies only the public receipt's verified paths, endpoints, and revision attestations.
+fn migration_receipt(root: &Path, receipt: &UserSettingsMigrationReceipt) -> RunnerResult<Value> {
+    Ok(json!({
+        "sourcePath": migration_path(root, receipt.source_path())?,
+        "destinationPath": migration_path(root, receipt.destination_path())?,
+        "backupPath": migration_path(root, receipt.backup_path())?,
+        "source": migration_endpoint(receipt.source()), "target": migration_endpoint(receipt.target()),
+        "backupRevision": receipt.backup_revision().token(),
+        "publishedRevision": receipt.published_revision().token(),
+    }))
+}
+
+/// Applies an input-declared filesystem edit at the selected public operation boundary.
+fn migration_interference(
+    plan: &Value,
+    scenario: &Value,
+    root: &Path,
+    interference: &Value,
+    receipt: Option<&UserSettingsMigrationReceipt>,
+) -> RunnerResult<()> {
+    if interference.is_null() {
+        return Ok(());
+    }
+    match string(&interference["kind"], "interference kind")? {
+        "external-edit" => install_fixture(plan, scenario, root, interference)?,
+        "block-backup-directory" if receipt.is_none() => {
+            fs::write(root.join("CLASSIC Backup"), b"blocked")?;
+        }
+        "tamper-backup" | "remove-backup" if receipt.is_some() => {
+            let backup = receipt
+                .expect("the match guard requires a real receipt")
+                .backup_path();
+            // Only the real core receipt chooses the backup; input cannot target an arbitrary file.
+            let path = migration_path(root, backup)?;
+            if interference["kind"] == "tamper-backup" {
+                install_fixture(
+                    plan,
+                    scenario,
+                    root,
+                    &json!({
+                        "fixtureRef": interference["fixtureRef"], "path": path["path"],
+                    }),
+                )?;
+            } else {
+                fs::remove_file(backup)?;
+            }
+        }
+        _ => return Err(invalid("unsupported migration interference at this boundary").into()),
+    }
+    Ok(())
+}
+
+/// Observes pure planning and reversal, then runs consented public apply and receipt restoration.
+fn execute_migration(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
+    let temporary = tempdir()?;
+    let root = temporary.path();
+    let input = &scenario["input"];
+    for placement in array(&input["installationData"], "installationData")? {
+        install_fixture(plan, scenario, root, placement)?;
+    }
+    let settings = UserSettings::open(root);
+    let planning = settings.plan_migration();
+    let repeated_planning = settings.plan_migration();
+    let (reversed, round_trip) = match &planning {
+        MigrationPlanningOutcome::Planned(plan) => {
+            let reversed = plan.reverse_in_memory();
+            let round_trip = reversed.reverse_in_memory();
+            (migration_plan(&reversed), migration_plan(&round_trip))
+        }
+        _ => (Value::Null, Value::Null),
+    };
+    let after_planning = operation_tree(root)?;
+    let mut apply = json!({"status": "not-attempted", "expectedRevision": null,
+        "actualRevision": null, "errorCode": null, "receipt": null});
+    let mut applied_receipt = None;
+    if input["apply"]
+        .as_bool()
+        .ok_or_else(|| invalid("apply must be boolean"))?
+        && let MigrationPlanningOutcome::Planned(migration) = &planning
+    {
+        migration_interference(plan, scenario, root, &input["beforeApply"], None)?;
+        match migration.apply(root) {
+            Ok(UserSettingsMigrationApplyOutcome::Applied(receipt)) => {
+                apply["status"] = json!("applied");
+                apply["receipt"] = migration_receipt(root, &receipt)?;
+                applied_receipt = Some(receipt);
+            }
+            Ok(UserSettingsMigrationApplyOutcome::Conflict {
+                expected_revision,
+                actual_revision,
+            }) => {
+                apply["status"] = json!("conflict");
+                apply["expectedRevision"] = json!(expected_revision.token());
+                apply["actualRevision"] = json!(actual_revision.token());
+            }
+            Err(error) => {
+                apply["status"] = json!("error");
+                apply["errorCode"] = json!(error.code());
+            }
+        }
+    }
+    let after_apply = operation_tree(root)?;
+    let mut restore = json!({"status": "not-attempted", "revision": null,
+        "expectedRevision": null, "actualRevision": null, "errorCode": null});
+    if input["restore"]
+        .as_bool()
+        .ok_or_else(|| invalid("restore must be boolean"))?
+        && let Some(receipt) = applied_receipt
+    {
+        migration_interference(
+            plan,
+            scenario,
+            root,
+            &input["beforeRestore"],
+            Some(&receipt),
+        )?;
+        match receipt.restore(root) {
+            Ok(UserSettingsMigrationRestoreOutcome::Restored { revision }) => {
+                restore["status"] = json!("restored");
+                restore["revision"] = json!(revision.token());
+            }
+            Ok(UserSettingsMigrationRestoreOutcome::Conflict {
+                expected_revision,
+                actual_revision,
+            }) => {
+                restore["status"] = json!("conflict");
+                restore["expectedRevision"] = json!(expected_revision.token());
+                restore["actualRevision"] = json!(actual_revision.token());
+            }
+            Err(error) => {
+                restore["status"] = json!("error");
+                restore["errorCode"] = json!(error.code());
+            }
+        }
+    }
+    Ok(json!({
+        "planning": migration_planning(&planning), "repeatedPlanning": migration_planning(&repeated_planning),
+        "reversedPlan": reversed, "roundTripPlan": round_trip, "afterPlanningTree": after_planning,
+        "apply": apply, "afterApplyTree": after_apply, "restore": restore, "finalTree": operation_tree(root)?,
+    }))
+}
+
 /// Dispatches an input-only action through the corresponding public Rust operation.
 fn execute_scenario(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
     if scenario.get("expected").is_some() {
@@ -283,6 +477,9 @@ fn execute_scenario(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
     }
     if scenario["action"] == "user-settings.update" {
         return execute_operation(plan, scenario);
+    }
+    if scenario["action"] == "user-settings.migrate" {
+        return execute_migration(plan, scenario);
     }
     if scenario["action"] != "user-settings.open" {
         return Err(invalid("unsupported User Settings action").into());

@@ -168,6 +168,8 @@ def _execute_scenario(
     import classic_user_settings
 
     action = scenario.get("action")
+    if action == "user-settings.migrate":
+        return _execute_migration(plan, scenario)
     if action == "user-settings.update":
         return _execute_operation(plan, scenario)
     if action != "user-settings.open":
@@ -288,6 +290,233 @@ def _durable_tree(root: Path) -> list[dict[str, Any]]:
                 {"path": {"path": path}, "kind": "file", "bytesHex": content.hex()}
             )
     return result
+
+
+def _migration_endpoint(endpoint: Any) -> dict[str, Any]:
+    """Project public endpoint getters without interpreting document content."""
+    version = endpoint.schema_version
+    return {
+        "location": endpoint.location,
+        "schemaVersion": None
+        if version is None
+        else {"major": version.major, "minor": version.minor},
+    }
+
+
+def _migration_plan(plan: Any) -> dict[str, Any]:
+    """Retain exact proposal bytes and ordered public rows for the central oracle."""
+    return {
+        "required": plan.required,
+        "baseRevision": plan.base_revision,
+        "source": _migration_endpoint(plan.source),
+        "target": _migration_endpoint(plan.target),
+        "changes": [
+            {
+                "kind": change.kind,
+                "sourcePath": change.source_path,
+                "targetPath": change.target_path,
+                "before": change.before,
+                "after": change.after,
+            }
+            for change in plan.changes
+        ],
+        "originalHex": plan.original_content.hex(),
+        "proposedHex": plan.proposed_content.hex(),
+    }
+
+
+def _migration_planning(outcome: Any) -> dict[str, Any]:
+    """Normalize only the public planning status spelling and field names."""
+    return {
+        "status": "not-required"
+        if outcome.status == "not_required"
+        else outcome.status,
+        "diagnostics": [diagnostic.code for diagnostic in outcome.diagnostics],
+        "plan": None if outcome.plan is None else _migration_plan(outcome.plan),
+    }
+
+
+def _migration_relative_path(root: Path, path: str) -> str:
+    """Validate native receipt paths before projecting or modifying backup bytes."""
+    try:
+        relative = Path(path).resolve().relative_to(root).as_posix()
+    except ValueError as error:
+        raise RunnerContractError(
+            "migration receipt path escapes the runtime root"
+        ) from error
+    if relative == ".":
+        raise RunnerContractError("migration receipt path must name a file")
+    return relative
+
+
+def _migration_receipt(root: Path, receipt: Any) -> dict[str, Any]:
+    """Observe receipt getters while leaving native restoration authority opaque."""
+    return {
+        "sourcePath": {"path": _migration_relative_path(root, receipt.source_path)},
+        "destinationPath": {
+            "path": _migration_relative_path(root, receipt.destination_path)
+        },
+        "backupPath": {"path": _migration_relative_path(root, receipt.backup_path)},
+        "source": _migration_endpoint(receipt.source),
+        "target": _migration_endpoint(receipt.target),
+        "backupRevision": receipt.backup_revision,
+        "publishedRevision": receipt.published_revision,
+    }
+
+
+def _migration_error_code(error: Exception) -> str:
+    """Extract the stable code prefix transported by the public Python exception."""
+    code, separator, _message = str(error).partition(": ")
+    if (
+        not separator
+        or not code
+        or any(char not in "abcdefghijklmnopqrstuvwxyz0123456789_" for char in code)
+    ):
+        raise RunnerContractError(
+            "migration exception has no stable core code"
+        ) from error
+    return code
+
+
+def _migration_intervention(
+    plan: Mapping[str, Any],
+    scenario: Mapping[str, Any],
+    root: Path,
+    intervention: object,
+    receipt: Any = None,
+) -> None:
+    """Apply declared external edits or backup disturbances at the requested phase."""
+    if intervention is None:
+        return
+    edit = _mapping(intervention, "migration intervention")
+    kind = edit.get("kind")
+    if kind == "external-edit":
+        _install_external_edit(plan, scenario, root, edit)
+    elif kind == "block-backup-directory":
+        (root / "CLASSIC Backup").write_bytes(b"blocked")
+    elif kind in {"tamper-backup", "remove-backup"}:
+        if receipt is None:
+            raise RunnerContractError(
+                "backup intervention requires an applied native receipt"
+            )
+        # Check the native path before writing; the original receipt still performs restoration.
+        backup = _runtime_path(
+            root, _migration_relative_path(root, receipt.backup_path)
+        )
+        if kind == "remove-backup":
+            backup.unlink()
+        else:
+            reference = _string(edit.get("fixtureRef"), "backup fixtureRef")
+            if reference not in _array(
+                scenario.get("fixtureRefs"), "scenario fixtureRefs"
+            ):
+                raise RunnerContractError(
+                    "backup fixture is not declared by the scenario"
+                )
+            fixtures = _mapping(plan.get("fixtures"), "run plan fixtures")
+            shutil.copyfile(
+                Path(_string(fixtures.get(reference), "backup fixture")), backup
+            )
+    else:
+        raise RunnerContractError("unsupported migration intervention")
+
+
+def _execute_migration(
+    plan: Mapping[str, Any], scenario: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Exercise public planning, reversal, apply, and opaque-receipt restoration."""
+    import classic_user_settings
+
+    with tempfile.TemporaryDirectory(
+        prefix="classic-user-settings-migration-"
+    ) as temporary:
+        root = Path(temporary).resolve()
+        inputs = _materialize_inputs(plan, scenario, root)
+        if not isinstance(inputs.get("apply"), bool) or not isinstance(
+            inputs.get("restore"), bool
+        ):
+            raise RunnerContractError("migration apply and restore must be booleans")
+        for phase, kinds in (
+            ("beforeApply", {"external-edit", "block-backup-directory"}),
+            ("beforeRestore", {"external-edit", "tamper-backup", "remove-backup"}),
+        ):
+            if phase not in inputs:
+                raise RunnerContractError(f"{phase} must be supplied explicitly")
+            if (
+                inputs[phase] is not None
+                and _mapping(inputs[phase], phase).get("kind") not in kinds
+            ):
+                raise RunnerContractError(f"unsupported {phase} intervention")
+        planning = classic_user_settings.open_user_settings(str(root)).plan_migration()
+        repeated = classic_user_settings.open_user_settings(str(root)).plan_migration()
+        approved = planning.plan
+        reversed_plan = None if approved is None else approved.reverse_in_memory()
+        round_trip = (
+            None if reversed_plan is None else reversed_plan.reverse_in_memory()
+        )
+        after_planning = _durable_tree(root)
+        applied_receipt = None
+        apply: dict[str, Any] = {
+            "status": "not-attempted",
+            "expectedRevision": None,
+            "actualRevision": None,
+            "errorCode": None,
+            "receipt": None,
+        }
+        if inputs["apply"] and approved is not None:
+            _migration_intervention(plan, scenario, root, inputs["beforeApply"])
+            try:
+                outcome = approved.apply(str(root))
+                applied_receipt = outcome.receipt
+                apply = {
+                    "status": outcome.status,
+                    "expectedRevision": outcome.expected_revision,
+                    "actualRevision": outcome.actual_revision,
+                    "errorCode": None,
+                    "receipt": None
+                    if applied_receipt is None
+                    else _migration_receipt(root, applied_receipt),
+                }
+            except classic_user_settings.UserSettingsMigrationError as error:
+                apply.update(status="error", errorCode=_migration_error_code(error))
+        after_apply = _durable_tree(root)
+        restore: dict[str, Any] = {
+            "status": "not-attempted",
+            "revision": None,
+            "expectedRevision": None,
+            "actualRevision": None,
+            "errorCode": None,
+        }
+        if inputs["restore"] and applied_receipt is not None:
+            _migration_intervention(
+                plan, scenario, root, inputs["beforeRestore"], applied_receipt
+            )
+            try:
+                outcome = applied_receipt.restore(str(root))
+                restore = {
+                    "status": outcome.status,
+                    "revision": outcome.revision,
+                    "expectedRevision": outcome.expected_revision,
+                    "actualRevision": outcome.actual_revision,
+                    "errorCode": None,
+                }
+            except classic_user_settings.UserSettingsMigrationError as error:
+                restore.update(status="error", errorCode=_migration_error_code(error))
+        return {
+            "planning": _migration_planning(planning),
+            "repeatedPlanning": _migration_planning(repeated),
+            "reversedPlan": None
+            if reversed_plan is None
+            else _migration_plan(reversed_plan),
+            "roundTripPlan": None
+            if round_trip is None
+            else _migration_plan(round_trip),
+            "afterPlanningTree": after_planning,
+            "apply": apply,
+            "afterApplyTree": after_apply,
+            "restore": restore,
+            "finalTree": _durable_tree(root),
+        }
 
 
 def _execute_operation(

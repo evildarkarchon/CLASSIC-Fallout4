@@ -12,6 +12,11 @@ from typing import Any
 
 from ..compare import NormalizationError, exact_differences
 from ..coverage import CoveragePredicate, FamilyCoveragePolicy
+from .user_settings_migration import (
+    compile_migrations,
+    migration_predicates,
+    normalize_migration,
+)
 
 _DEFAULT_FIELDS = {
     "update_check": "Update Check",
@@ -152,6 +157,7 @@ def compile_compatibility_expectations(
             "originalContent": {"present": present, "matchesSourceBytes": True},
         }
     _compile_operations(result, oracle, fixture_root)
+    compile_migrations(result, oracle, fixture_root)
     return result
 
 
@@ -179,6 +185,11 @@ def operation_oracle_paths(
                 _oracle_fixture(fixture_root, operation["expected_document"])
                 for operation in oracle["operation_scenarios"]
                 if "conformance" in operation and operation["writes_document"]
+            }
+            | {
+                _oracle_fixture(fixture_root, case["expected_document"])
+                for case in oracle.get("migration_cases", {}).values()
+                if "expected_document" in case
             }
         )
     )
@@ -311,7 +322,7 @@ def _compile_operations(
     scenarios = [
         scenario
         for scenario in pack["scenarios"]
-        if scenario["action"] != "user-settings.open"
+        if scenario["action"] == "user-settings.update"
     ]
     selected = [scenario["expected"].get("operationScenario") for scenario in scenarios]
     if len(selected) != len(set(selected)) or set(selected) != set(operations):
@@ -469,6 +480,8 @@ def normalize_operation_observation(
     """
 
     result = copy.deepcopy(dict(actual))
+    if "planning" in expected:
+        return normalize_migration(expected, actual)
     if expected.get("commit", {}).get("status") != "committed":
         return result
     try:
@@ -723,6 +736,7 @@ USER_SETTINGS_COVERAGE_POLICY = FamilyCoveragePolicy(
     family_id="user-settings",
     predicates=(
         *_operation_predicates(),
+        *migration_predicates(),
         CoveragePredicate(
             "user-settings.source",
             "user-settings.open",

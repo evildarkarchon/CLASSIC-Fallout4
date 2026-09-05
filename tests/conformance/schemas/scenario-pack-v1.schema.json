@@ -153,6 +153,23 @@
           "uniqueItems": true,
           "items": { "$ref": "#/$defs/exactJsonPath" }
         },
+        "optionalEmptyFiles": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "relativePath", "rationale"],
+            "properties": {
+              "path": { "$ref": "#/$defs/exactJsonPath" },
+              "relativePath": {
+                "type": "string",
+                "pattern": "^(?!\\.{1,2}(?:/|$))[^/\\\\:\\u0000]+(?:/(?!\\.{1,2}(?:/|$))[^/\\\\:\\u0000]+)*$"
+              },
+              "rationale": { "type": "string", "minLength": 1, "pattern": "\\S" }
+            }
+          }
+        },
         "excludedPaths": {
           "type": "array",
           "items": {

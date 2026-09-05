@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import shutil
@@ -144,6 +145,8 @@ def _receipt(pack, run) -> dict:
     }
     for scenario in receipt["scenarios"]:
         observation = scenario["observation"]
+        if "planning" in observation:
+            _raw_migration_observation(observation, scenario["id"], oracle, oracle_root)
         if observation.get("commit", {}).get("status") == "committed":
             content = (
                 oracle_root / operations[scenario["id"]]["expected_document"]
@@ -155,6 +158,55 @@ def _receipt(pack, run) -> dict:
                 "sha256:" + hashlib.sha256(content).hexdigest()
             )
     return receipt
+
+
+def _raw_migration_observation(observation, scenario_id, oracle, fixture_root) -> None:
+    """Encode independently authored migration evidence for comparator mutation tests.
+
+    This fixture builder is test-only: native runners never see expected documents
+    or this oracle-derived receipt. The tests mutate evidence at the public seam.
+    """
+    spec = next(
+        item for item in oracle["migration_scenarios"] if item["id"] == scenario_id
+    )
+    case = oracle["migration_cases"][spec["case"]]
+    plan = observation["planning"]["plan"]
+    if plan is not None:
+        proposed = (fixture_root / case["expected_document"]).read_bytes()
+        revision = "sha256:" + hashlib.sha256(proposed).hexdigest()
+        plan["changes"] = copy.deepcopy(case["changes"])
+        del plan["proposedYamlNodes"]
+        plan["proposedHex"] = proposed.hex()
+        inverse = copy.deepcopy(plan)
+        inverse.update(
+            source=plan["target"],
+            target=plan["source"],
+            baseRevision=revision,
+            originalHex=plan["proposedHex"],
+            proposedHex=plan["originalHex"],
+        )
+        inverse["changes"] = [
+            {
+                **row,
+                "sourcePath": row["targetPath"],
+                "targetPath": row["sourcePath"],
+                "before": row["after"],
+                "after": row["before"],
+            }
+            for row in reversed(plan["changes"])
+        ]
+        observation["reversedPlan"] = inverse
+        observation["roundTripPlan"] = copy.deepcopy(plan)
+        if observation["apply"]["receipt"] is not None:
+            observation["apply"]["receipt"]["publishedRevision"] = revision
+        if observation["restore"]["expectedRevision"] == "<verified-proposed-revision>":
+            observation["restore"]["expectedRevision"] = revision
+        for checkpoint in ("afterApplyTree", "finalTree"):
+            for entry in observation[checkpoint]:
+                if "proposedYamlNodes" in entry:
+                    del entry["proposedYamlNodes"]
+                    entry["bytesHex"] = proposed.hex()
+    observation["repeatedPlanning"] = copy.deepcopy(observation["planning"])
 
 
 @pytest.mark.parametrize(

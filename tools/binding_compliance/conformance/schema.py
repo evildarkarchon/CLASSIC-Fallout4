@@ -14,6 +14,12 @@ _UUID_V4 = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
 )
 _SOURCE_IDENTITY = re.compile(r"^git:[0-9a-f]{40,64}:sha256:[0-9a-f]{64}$")
+_EXACT_JSON_PATH = re.compile(
+    r"\$(?:(?:\.[A-Za-z_][A-Za-z0-9_-]*)|(?:\[(?:0|[1-9][0-9]*)\]))+"
+)
+_RELATIVE_FILE_PATH = re.compile(
+    r"(?!\.{1,2}(?:/|$))[^/\\:\x00]+(?:/(?!\.{1,2}(?:/|$))[^/\\:\x00]+)*"
+)
 
 
 class ConformanceSchemaError(ValueError):
@@ -129,7 +135,12 @@ def _validate_normalization_envelope(value: object, label: str) -> None:
     normalization = _mapping(value, label)
     _exact_keys(
         normalization,
-        frozenset({"rootRelativePaths", "unorderedPaths", "excludedPaths"}),
+        frozenset({"rootRelativePaths", "unorderedPaths", "excludedPaths"})
+        | (
+            frozenset({"optionalEmptyFiles"})
+            if "optionalEmptyFiles" in normalization
+            else frozenset()
+        ),
         label,
     )
     if not isinstance(normalization["rootRelativePaths"], bool):
@@ -142,6 +153,27 @@ def _validate_normalization_envelope(value: object, label: str) -> None:
         _exact_keys(exclusion, frozenset({"path", "rationale"}), exclusion_label)
         _nonempty_string(exclusion["path"], f"{exclusion_label}.path")
         _nonempty_string(exclusion["rationale"], f"{exclusion_label}.rationale")
+    selectors: set[tuple[str, str]] = set()
+    for index, raw in enumerate(
+        _list(
+            normalization.get("optionalEmptyFiles", []), f"{label}.optionalEmptyFiles"
+        )
+    ):
+        entry_label = f"{label}.optionalEmptyFiles[{index}]"
+        entry = _mapping(raw, entry_label)
+        _exact_keys(
+            entry, frozenset({"path", "relativePath", "rationale"}), entry_label
+        )
+        path = _pattern_string(entry["path"], f"{entry_label}.path", _EXACT_JSON_PATH)
+        relative = _pattern_string(
+            entry["relativePath"], f"{entry_label}.relativePath", _RELATIVE_FILE_PATH
+        )
+        _nonempty_string(entry["rationale"], f"{entry_label}.rationale")
+        if (path, relative) in selectors:
+            raise ConformanceSchemaError(
+                f"{entry_label} duplicates an optional file selector"
+            )
+        selectors.add((path, relative))
 
 
 def validate_pack_document(document: Mapping[str, Any]) -> None:
@@ -562,9 +594,7 @@ def validate_conformance_report_document(document: Mapping[str, Any]) -> None:
     _positive_integer(document["schemaVersion"], f"{prefix}.schemaVersion", exact=1)
     _pattern_string(document["familyId"], f"{prefix}.familyId", _STABLE_ID)
     if document["enforcement"] not in {"shadow", "blocking"}:
-        raise ConformanceSchemaError(
-            f"{prefix}.enforcement must be shadow or blocking"
-        )
+        raise ConformanceSchemaError(f"{prefix}.enforcement must be shadow or blocking")
     if document["result"] not in {"pass", "fail"}:
         raise ConformanceSchemaError(f"{prefix}.result must be pass or fail")
     if not isinstance(document["repositoryComplete"], bool):

@@ -277,8 +277,202 @@ json execute_user_settings_operation_scenario(const json& plan, const json& scen
                 {"finalTree", settings_operation_tree(root)}};
 }
 
+/// Projects a public migration endpoint without interpreting its location or schema.
+json settings_migration_endpoint(const rust::String& location, bool has_version, std::uint32_t major,
+                                 std::uint32_t minor) {
+    return json{{"location", owned_string(location)},
+                {"schemaVersion", has_version ? json{{"major", major}, {"minor", minor}} : json(nullptr)}};
+}
+
+/// Retains every public review row and exact byte buffer for the central migration oracle.
+json settings_migration_plan(const classic::settings::UserSettingsMigrationPlanningOutcomeDto& plan) {
+    if (!plan.has_plan) {
+        return nullptr;
+    }
+    if (!plan.has_original_content || !plan.has_proposed_content) {
+        throw RunnerError("public migration plan omitted its retained content");
+    }
+    json changes = json::array();
+    for (const auto& change : plan.changes) {
+        changes.push_back(
+            json{{"kind", owned_string(change.kind)},
+                 {"sourcePath", change.has_source_path ? json(owned_string(change.source_path)) : json(nullptr)},
+                 {"targetPath", change.has_target_path ? json(owned_string(change.target_path)) : json(nullptr)},
+                 {"before", change.has_before ? json(owned_string(change.before)) : json(nullptr)},
+                 {"after", change.has_after ? json(owned_string(change.after)) : json(nullptr)}});
+    }
+    return json{
+        {"required", plan.required},
+        {"baseRevision", owned_string(plan.base_revision)},
+        {"source", settings_migration_endpoint(plan.source_location, plan.has_source_schema_version,
+                                               plan.source_schema_major, plan.source_schema_minor)},
+        {"target", settings_migration_endpoint(plan.target_location, plan.has_target_schema_version,
+                                               plan.target_schema_major, plan.target_schema_minor)},
+        {"changes", std::move(changes)},
+        {"originalHex",
+         settings_bytes_hex(std::vector<std::uint8_t>(plan.original_content.begin(), plan.original_content.end()))},
+        {"proposedHex",
+         settings_bytes_hex(std::vector<std::uint8_t>(plan.proposed_content.begin(), plan.proposed_content.end()))}};
+}
+
+/// Normalizes only the bridge status spelling and preserves ordered public diagnostic codes.
+json settings_migration_planning(const classic::settings::UserSettingsMigrationPlanningOutcomeDto& outcome) {
+    json diagnostics = json::array();
+    for (const auto& diagnostic : outcome.diagnostics) {
+        diagnostics.push_back(owned_string(diagnostic.code));
+    }
+    const std::string status = owned_string(outcome.status);
+    return json{{"status", status == "not_required" ? "not-required" : status},
+                {"diagnostics", std::move(diagnostics)},
+                {"plan", settings_migration_plan(outcome)}};
+}
+
+/// Reads the public receipt projection while persistence authority stays in the opaque Rust handle.
+json settings_migration_receipt(const fs::path& root,
+                                const classic::settings::UserSettingsMigrationReceiptDto& receipt) {
+    return json{{"sourcePath", path_carrier(root, fs::path(owned_string(receipt.source_path)))},
+                {"destinationPath", path_carrier(root, fs::path(owned_string(receipt.destination_path)))},
+                {"backupPath", path_carrier(root, fs::path(owned_string(receipt.backup_path)))},
+                {"source", settings_migration_endpoint(receipt.source_location, receipt.has_source_schema_version,
+                                                       receipt.source_schema_major, receipt.source_schema_minor)},
+                {"target", settings_migration_endpoint(receipt.target_location, receipt.has_target_schema_version,
+                                                       receipt.target_schema_major, receipt.target_schema_minor)},
+                {"backupRevision", owned_string(receipt.backup_revision)},
+                {"publishedRevision", owned_string(receipt.published_revision)}};
+}
+
+/// Extracts the stable core category from CXX's public error transport, rejecting unclassified failures.
+std::string settings_migration_error_code(const rust::Error& error) {
+    // CXX exposes Result failures as text; core Display prefixes its stable code before the first colon.
+    const std::string message(error.what());
+    const auto delimiter = message.find(':');
+    const std::string code = message.substr(0, delimiter);
+    if (delimiter == std::string::npos || !code.starts_with("migration_") ||
+        !std::all_of(code.begin(), code.end(),
+                     [](char value) { return (value >= 'a' && value <= 'z') || value == '_'; })) {
+        throw RunnerError("public migration failure has no stable core code: " + message);
+    }
+    return code;
+}
+
+/// Applies one declared pre-operation fixture change, limiting backup mutations to the returned receipt path.
+void settings_migration_interference(const json& plan, const json& scenario, const json& interference,
+                                     const fs::path& root, const std::optional<fs::path>& backup_path = std::nullopt) {
+    if (interference.is_null()) {
+        return;
+    }
+    const std::string kind = interference.at("kind").get<std::string>();
+    if (kind == "external-edit") {
+        copy_fixture(plan, scenario, interference, root, "migration external edit");
+    } else if (kind == "block-backup-directory" && !backup_path) {
+        std::ofstream blocker(root / "CLASSIC Backup", std::ios::binary);
+        blocker << "blocked";
+        blocker.close();
+        if (!blocker) {
+            throw RunnerError("cannot create migration backup directory blocker");
+        }
+    } else if (kind == "tamper-backup" && backup_path) {
+        const json placement{{"fixtureRef", interference.at("fixtureRef")},
+                             {"path", relative_path(root, *backup_path)}};
+        copy_fixture(plan, scenario, placement, root, "migration backup tamper");
+    } else if (kind == "remove-backup" && backup_path) {
+        if (!fs::remove(*backup_path)) {
+            throw RunnerError("cannot remove returned migration backup");
+        }
+    } else {
+        throw RunnerError("unsupported migration interference: " + kind);
+    }
+}
+
+/// Observes pure planning, approved apply, and receipt-based restore through generated native CXX APIs.
+json execute_user_settings_migration_scenario(const json& plan, const json& scenario) {
+    TemporaryDirectory temporary(plan.at("invocation").at("id").get<std::string>(),
+                                 scenario.at("id").get<std::string>());
+    const fs::path& root = temporary.path();
+    const json& input = scenario.at("input");
+    for (const auto& placement : input.at("installationData")) {
+        copy_fixture(plan, scenario, placement, root, "installationData");
+    }
+    const auto planned = classic::settings::user_settings_plan_migration(root.string());
+    const auto repeated = classic::settings::user_settings_plan_migration(root.string());
+    json reversed = nullptr;
+    json round_trip = nullptr;
+    if (planned.has_plan) {
+        const auto reverse = classic::settings::user_settings_reverse_migration_plan(planned);
+        reversed = settings_migration_plan(reverse);
+        round_trip = settings_migration_plan(classic::settings::user_settings_reverse_migration_plan(reverse));
+    }
+    const json after_planning = settings_operation_tree(root);
+    json applied{{"status", "not-attempted"},
+                 {"expectedRevision", nullptr},
+                 {"actualRevision", nullptr},
+                 {"errorCode", nullptr},
+                 {"receipt", nullptr}};
+    json restored{{"status", "not-attempted"},
+                  {"revision", nullptr},
+                  {"expectedRevision", nullptr},
+                  {"actualRevision", nullptr},
+                  {"errorCode", nullptr}};
+    // Keep the real apply handle alive across observation and interference; receipt DTOs cannot authorize restore.
+    std::optional<rust::Box<classic::settings::UserSettingsMigrationApplyHandle>> handle;
+    std::optional<fs::path> backup_path;
+    if (input.at("apply").get<bool>() && planned.has_plan) {
+        settings_migration_interference(plan, scenario, input.at("beforeApply"), root);
+        try {
+            handle.emplace(classic::settings::user_settings_apply_migration(root.string(), planned));
+            const auto outcome = classic::settings::user_settings_migration_apply_outcome(**handle);
+            const std::string status = owned_string(outcome.status);
+            applied["status"] = status;
+            if (status == "applied" && outcome.has_receipt) {
+                applied["receipt"] = settings_migration_receipt(root, outcome.receipt);
+                backup_path = fs::path(owned_string(outcome.receipt.backup_path));
+            } else if (status == "conflict" && !outcome.has_receipt) {
+                applied["expectedRevision"] = owned_string(outcome.expected_revision);
+                applied["actualRevision"] = owned_string(outcome.actual_revision);
+            } else {
+                throw RunnerError("unexpected public migration apply outcome: " + status);
+            }
+        } catch (const rust::Error& error) {
+            applied["status"] = "error";
+            applied["errorCode"] = settings_migration_error_code(error);
+        }
+    }
+    const json after_apply = settings_operation_tree(root);
+    if (input.at("restore").get<bool>() && backup_path) {
+        settings_migration_interference(plan, scenario, input.at("beforeRestore"), root, backup_path);
+        try {
+            const auto outcome = classic::settings::user_settings_restore_migration(root.string(), **handle);
+            const std::string status = owned_string(outcome.status);
+            restored["status"] = status;
+            if (status == "restored") {
+                restored["revision"] = owned_string(outcome.revision);
+            } else if (status == "conflict") {
+                restored["expectedRevision"] = owned_string(outcome.expected_revision);
+                restored["actualRevision"] = owned_string(outcome.actual_revision);
+            } else {
+                throw RunnerError("unexpected public migration restore outcome: " + status);
+            }
+        } catch (const rust::Error& error) {
+            restored["status"] = "error";
+            restored["errorCode"] = settings_migration_error_code(error);
+        }
+    }
+    return json{{"planning", settings_migration_planning(planned)},
+                {"repeatedPlanning", settings_migration_planning(repeated)},
+                {"reversedPlan", std::move(reversed)},
+                {"roundTripPlan", std::move(round_trip)},
+                {"afterPlanningTree", after_planning},
+                {"apply", std::move(applied)},
+                {"afterApplyTree", after_apply},
+                {"restore", std::move(restored)},
+                {"finalTree", settings_operation_tree(root)}};
+}
+
 /// Dispatches input-only User Settings scenarios to their public API observations.
 json execute_user_settings_scenario(const json& plan, const json& scenario) {
+    if (scenario.at("action") == "user-settings.migrate") {
+        return execute_user_settings_migration_scenario(plan, scenario);
+    }
     return scenario.at("action") == "user-settings.open" ? execute_user_settings_open_scenario(plan, scenario)
                                                          : execute_user_settings_operation_scenario(plan, scenario);
 }

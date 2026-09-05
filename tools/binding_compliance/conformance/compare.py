@@ -198,6 +198,47 @@ def _normalize_fixture_paths(
     return expected, actual
 
 
+def _remove_optional_empty_file(value: object, path: str, relative_path: str) -> None:
+    """Remove at most one declared empty file after validating the checkpoint evidence.
+
+    Unlike an exclusion, this permits only absence or the exact empty regular-file
+    carrier; malformed trees and changed file contents remain normalization errors.
+    """
+    tree = _resolve(value, _path_tokens(path), path)
+    if not isinstance(tree, list):
+        raise NormalizationError(
+            "optional empty file requires a present tree array", path
+        )
+    matching = []
+    for index, entry in enumerate(tree):
+        if (
+            not isinstance(entry, dict)
+            or not isinstance(entry.get("path"), dict)
+            or set(entry["path"]) != {"path"}
+            or not isinstance(entry["path"]["path"], str)
+            or entry.get("kind") not in ("file", "directory")
+        ):
+            raise NormalizationError(
+                "optional empty file checkpoint has a malformed path carrier", path
+            )
+        if entry["path"]["path"] == relative_path:
+            matching.append(index)
+            if entry != {
+                "path": {"path": relative_path},
+                "kind": "file",
+                "bytesHex": "",
+            }:
+                raise NormalizationError(
+                    "optional empty file must be an exact empty regular file", path
+                )
+    if len(matching) > 1:
+        raise NormalizationError(
+            "optional empty file checkpoint contains duplicate entries", path
+        )
+    if matching:
+        tree.pop(matching[0])
+
+
 def normalize_observations(
     expected: Mapping[str, Any],
     actual: Mapping[str, Any],
@@ -205,7 +246,7 @@ def normalize_observations(
     *,
     fixture_root: Path,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Apply only declared root-path, exclusion, and unordered normalization."""
+    """Apply declared root-path, optional-empty-file, exclusion, and unordered rules."""
 
     normalized_expected = copy.deepcopy(dict(expected))
     normalized_actual = copy.deepcopy(dict(actual))
@@ -219,6 +260,12 @@ def normalize_observations(
             normalized_actual, dict
         ):  # pragma: no cover - mapping inputs preserve this invariant
             raise NormalizationError("normalized observations must be objects", "$")
+    # Validate optional evidence before broader declared transforms can hide a malformed file.
+    for declaration in normalization.get("optionalEmptyFiles", []):
+        for observation in (normalized_expected, normalized_actual):
+            _remove_optional_empty_file(
+                observation, declaration["path"], declaration["relativePath"]
+            )
     excluded_paths = [entry["path"] for entry in normalization["excludedPaths"]]
     for path in sorted(excluded_paths, key=_exclusion_order, reverse=True):
         tokens = _path_tokens(path)

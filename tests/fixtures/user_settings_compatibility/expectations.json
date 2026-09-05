@@ -1258,5 +1258,490 @@
         "preview_mode": "bootstrap"
       }
     }
+  ],
+  "migration_cases": {
+    "flat": {
+      "source_fixture": "flat_classic_config.yaml",
+      "source_path": "CLASSIC Settings.yaml",
+      "status": "planned",
+      "diagnostics": [],
+      "required": true,
+      "source_version": null,
+      "expected_document": "flat_migrated.yaml",
+      "changes": [
+        {
+          "kind": "schema_version_transition",
+          "sourcePath": null,
+          "targetPath": "/schema_version",
+          "before": null,
+          "after": "1.0"
+        },
+        {
+          "kind": "field_transition",
+          "sourcePath": "/fcx_mode",
+          "targetPath": "/CLASSIC_Settings/FCX Mode",
+          "before": "true",
+          "after": "true"
+        },
+        {
+          "kind": "field_transition",
+          "sourcePath": "/show_formid_values",
+          "targetPath": "/CLASSIC_Settings/Show FormID Values",
+          "before": "true",
+          "after": "true"
+        },
+        {
+          "kind": "field_transition",
+          "sourcePath": "/stat_logging",
+          "targetPath": "/CLASSIC_Settings/Show Statistics",
+          "before": "true",
+          "after": "true"
+        },
+        {
+          "kind": "field_transition",
+          "sourcePath": "/move_unsolved_logs",
+          "targetPath": "/CLASSIC_Settings/Move Unsolved Logs",
+          "before": "false",
+          "after": "false"
+        },
+        {
+          "kind": "field_transition",
+          "sourcePath": "/unsolved_logs_destination",
+          "targetPath": "/CLASSIC_Settings/Unsolved Logs Destination",
+          "before": "\"C:/CLASSIC/Unsolved\"",
+          "after": "\"C:/CLASSIC/Unsolved\""
+        },
+        {
+          "kind": "field_transition",
+          "sourcePath": "/simplify_logs",
+          "targetPath": "/CLASSIC_Settings/Simplify Logs",
+          "before": "true",
+          "after": "true"
+        },
+        {
+          "kind": "field_transition",
+          "sourcePath": "/update_check",
+          "targetPath": "/CLASSIC_Settings/Update Check",
+          "before": "false",
+          "after": "false"
+        },
+        {
+          "kind": "field_transition",
+          "sourcePath": "/game_version",
+          "targetPath": "/CLASSIC_Settings/Game Version",
+          "before": "\"Original\"",
+          "after": "\"Original\""
+        },
+        {
+          "kind": "field_transition",
+          "sourcePath": "/update_source",
+          "targetPath": "/CLASSIC_Settings/Update Source",
+          "before": "github",
+          "after": "\"GitHub\""
+        },
+        {
+          "kind": "field_transition",
+          "sourcePath": "/paths/ini_folder",
+          "targetPath": "/CLASSIC_Settings/INI Folder Path",
+          "before": "\"C:/Users/Test/Documents/My Games/Fallout4\"",
+          "after": "\"C:/Users/Test/Documents/My Games/Fallout4\""
+        },
+        {
+          "kind": "field_transition",
+          "sourcePath": "/paths/docs_root",
+          "targetPath": "/CLASSIC_Settings/Documents Folder Path",
+          "before": "\"C:/Users/Test/Documents/My Games/Fallout4\"",
+          "after": "\"C:/Users/Test/Documents/My Games/Fallout4\""
+        },
+        {
+          "kind": "field_transition",
+          "sourcePath": "/paths/scan_custom",
+          "targetPath": "/CLASSIC_Settings/SCAN Custom Path",
+          "before": "\"D:/Crash Logs\"",
+          "after": "\"D:/Crash Logs\""
+        },
+        {
+          "kind": "field_transition",
+          "sourcePath": "/paths/mods_folder",
+          "targetPath": "/CLASSIC_Settings/MODS Folder Path",
+          "before": "\"D:/Mod Staging\"",
+          "after": "\"D:/Mod Staging\""
+        },
+        {
+          "kind": "field_transition",
+          "sourcePath": "/paths/game_root",
+          "targetPath": "/CLASSIC_Settings/Game Folder Path",
+          "before": "\"E:/Games/Fallout 4\"",
+          "after": "\"E:/Games/Fallout 4\""
+        },
+        {
+          "kind": "field_transition",
+          "sourcePath": "/formid_databases",
+          "targetPath": "/CLASSIC_Settings/FormID Databases",
+          "before": "Fallout4:\n  - databases/Fallout4 FormIDs.db",
+          "after": "Fallout4:\n  - databases/Fallout4 FormIDs.db"
+        },
+        {
+          "kind": "field_transition",
+          "sourcePath": "/auto_switch_to_results",
+          "targetPath": "/UI/preferences/auto_switch_after_scan",
+          "before": "false",
+          "after": "false"
+        },
+        {
+          "kind": "field_transition",
+          "sourcePath": "/auto_refresh_interval_ms",
+          "targetPath": "/UI/preferences/auto_refresh_interval_ms",
+          "before": "2500",
+          "after": "2500"
+        }
+      ]
+    },
+    "previous": {
+      "source_fixture": "previous_location_nested.yaml",
+      "source_path": "CLASSIC Data/CLASSIC Settings.yaml",
+      "status": "planned",
+      "diagnostics": [],
+      "required": true,
+      "source_version": null,
+      "expected_document": "previous_location_migrated.yaml",
+      "changes": [
+        {
+          "kind": "location_transition",
+          "sourcePath": "CLASSIC Data/CLASSIC Settings.yaml",
+          "targetPath": "CLASSIC Settings.yaml",
+          "before": null,
+          "after": null
+        },
+        {
+          "kind": "schema_version_transition",
+          "sourcePath": null,
+          "targetPath": "/schema_version",
+          "before": null,
+          "after": "1.0"
+        }
+      ]
+    },
+    "alias-conflict": {
+      "source_fixture": "canonical_alias_conflict.yaml",
+      "source_path": "CLASSIC Settings.yaml",
+      "status": "planned",
+      "diagnostics": [],
+      "required": false,
+      "source_version": {
+        "major": 1,
+        "minor": 0
+      },
+      "expected_document": "alias_conflict_migrated.yaml",
+      "changes": [
+        {
+          "kind": "alias_canonicalization",
+          "sourcePath": "/CLASSIC_Settings/Staging Mods Folder",
+          "targetPath": "/CLASSIC_Settings/MODS Folder Path",
+          "before": "E:/Alias Mods",
+          "after": "D:/Canonical Mods"
+        },
+        {
+          "kind": "alias_canonicalization",
+          "sourcePath": "/CLASSIC_Settings/Custom Scan Folder",
+          "targetPath": "/CLASSIC_Settings/SCAN Custom Path",
+          "before": "E:/Alias Crash Logs",
+          "after": "D:/Canonical Crash Logs"
+        }
+      ]
+    },
+    "alias-only": {
+      "source_fixture": "alias_only.yaml",
+      "source_path": "CLASSIC Settings.yaml",
+      "status": "planned",
+      "diagnostics": [],
+      "required": false,
+      "source_version": {
+        "major": 1,
+        "minor": 0
+      },
+      "expected_document": "alias_only_migrated.yaml",
+      "changes": [
+        {
+          "kind": "alias_canonicalization",
+          "sourcePath": "/CLASSIC_Settings/Custom Scan Folder",
+          "targetPath": "/CLASSIC_Settings/SCAN Custom Path",
+          "before": "E:/Alias Crash Logs",
+          "after": "E:/Alias Crash Logs"
+        }
+      ]
+    },
+    "current": {
+      "source_fixture": "canonical_current_nested.yaml",
+      "source_path": "CLASSIC Settings.yaml",
+      "status": "not-required",
+      "diagnostics": []
+    },
+    "missing": {
+      "source_fixture": null,
+      "source_path": "CLASSIC Settings.yaml",
+      "status": "not-required",
+      "diagnostics": []
+    },
+    "unsupported": {
+      "source_fixture": "newer_major_schema.yaml",
+      "source_path": "CLASSIC Settings.yaml",
+      "status": "unsupported",
+      "diagnostics": [
+        "future_major_schema_read_only"
+      ]
+    },
+    "older": {
+      "source_fixture": "unsupported_older_schema.yaml",
+      "source_path": "CLASSIC Settings.yaml",
+      "status": "unsupported",
+      "diagnostics": [
+        "unsupported_schema_version_gap"
+      ]
+    },
+    "malformed": {
+      "source_fixture": "malformed.yaml",
+      "source_path": "CLASSIC Settings.yaml",
+      "status": "unsupported",
+      "diagnostics": [
+        "migration_source_untrusted"
+      ]
+    }
+  },
+  "migration_scenarios": [
+    {
+      "id": "migration-current",
+      "case": "current",
+      "apply": true,
+      "restore": false,
+      "before_apply": null,
+      "before_restore": null,
+      "apply_status": "not-attempted",
+      "restore_status": "not-attempted",
+      "error_code": null
+    },
+    {
+      "id": "migration-missing",
+      "case": "missing",
+      "apply": true,
+      "restore": false,
+      "before_apply": null,
+      "before_restore": null,
+      "apply_status": "not-attempted",
+      "restore_status": "not-attempted",
+      "error_code": null
+    },
+    {
+      "id": "migration-unsupported",
+      "case": "unsupported",
+      "apply": true,
+      "restore": false,
+      "before_apply": null,
+      "before_restore": null,
+      "apply_status": "not-attempted",
+      "restore_status": "not-attempted",
+      "error_code": null
+    },
+    {
+      "id": "migration-older",
+      "case": "older",
+      "apply": true,
+      "restore": false,
+      "before_apply": null,
+      "before_restore": null,
+      "apply_status": "not-attempted",
+      "restore_status": "not-attempted",
+      "error_code": null
+    },
+    {
+      "id": "migration-malformed",
+      "case": "malformed",
+      "apply": true,
+      "restore": false,
+      "before_apply": null,
+      "before_restore": null,
+      "apply_status": "not-attempted",
+      "restore_status": "not-attempted",
+      "error_code": null
+    },
+    {
+      "id": "migration-review-only",
+      "case": "flat",
+      "apply": false,
+      "restore": false,
+      "before_apply": null,
+      "before_restore": null,
+      "apply_status": "not-attempted",
+      "restore_status": "not-attempted",
+      "error_code": null
+    },
+    {
+      "id": "migration-flat-restore",
+      "case": "flat",
+      "apply": true,
+      "restore": true,
+      "before_apply": null,
+      "before_restore": null,
+      "apply_status": "applied",
+      "restore_status": "restored",
+      "error_code": null
+    },
+    {
+      "id": "migration-previous-restore",
+      "case": "previous",
+      "apply": true,
+      "restore": true,
+      "before_apply": null,
+      "before_restore": null,
+      "apply_status": "applied",
+      "restore_status": "restored",
+      "error_code": null
+    },
+    {
+      "id": "migration-alias-conflict",
+      "case": "alias-conflict",
+      "apply": true,
+      "restore": true,
+      "before_apply": null,
+      "before_restore": null,
+      "apply_status": "applied",
+      "restore_status": "restored",
+      "error_code": null
+    },
+    {
+      "id": "migration-alias-only",
+      "case": "alias-only",
+      "apply": true,
+      "restore": false,
+      "before_apply": null,
+      "before_restore": null,
+      "apply_status": "applied",
+      "restore_status": "not-attempted",
+      "error_code": null
+    },
+    {
+      "id": "migration-stale-apply",
+      "case": "flat",
+      "apply": true,
+      "restore": false,
+      "before_apply": {
+        "kind": "external-edit",
+        "fixtureRef": "concurrent_external_edit",
+        "path": "CLASSIC Settings.yaml"
+      },
+      "before_restore": null,
+      "apply_status": "conflict",
+      "restore_status": "not-attempted",
+      "error_code": null,
+      "optional_empty_files": [
+        {
+          "path": "$.afterApplyTree",
+          "relativePath": "CLASSIC Settings.yaml.commit.lock",
+          "rationale": "Rust and Python acquire an empty coordination lock before detecting a stale revision; CXX and Node reject in their approval preflight."
+        },
+        {
+          "path": "$.finalTree",
+          "relativePath": "CLASSIC Settings.yaml.commit.lock",
+          "rationale": "The optional empty coordination lock remains after a rejected apply; all document and backup entries remain exact."
+        }
+      ]
+    },
+    {
+      "id": "migration-previous-shadowed",
+      "case": "previous",
+      "apply": true,
+      "restore": false,
+      "before_apply": {
+        "kind": "external-edit",
+        "fixtureRef": "concurrent_external_edit",
+        "path": "CLASSIC Settings.yaml"
+      },
+      "before_restore": null,
+      "apply_status": "conflict",
+      "restore_status": "not-attempted",
+      "error_code": null,
+      "optional_empty_files": [
+        {
+          "path": "$.afterApplyTree",
+          "relativePath": "CLASSIC Settings.yaml.commit.lock",
+          "rationale": "Rust and Python acquire an empty coordination lock before detecting a stale revision; CXX and Node reject in their approval preflight."
+        },
+        {
+          "path": "$.finalTree",
+          "relativePath": "CLASSIC Settings.yaml.commit.lock",
+          "rationale": "The optional empty coordination lock remains after a rejected apply; all document and backup entries remain exact."
+        }
+      ]
+    },
+    {
+      "id": "migration-stale-restore",
+      "case": "flat",
+      "apply": true,
+      "restore": true,
+      "before_apply": null,
+      "before_restore": {
+        "kind": "external-edit",
+        "fixtureRef": "concurrent_external_edit",
+        "path": "CLASSIC Settings.yaml"
+      },
+      "apply_status": "applied",
+      "restore_status": "conflict",
+      "error_code": null
+    },
+    {
+      "id": "migration-legacy-edited",
+      "case": "previous",
+      "apply": true,
+      "restore": true,
+      "before_apply": null,
+      "before_restore": {
+        "kind": "external-edit",
+        "fixtureRef": "concurrent_external_edit",
+        "path": "CLASSIC Data/CLASSIC Settings.yaml"
+      },
+      "apply_status": "applied",
+      "restore_status": "conflict",
+      "error_code": null
+    },
+    {
+      "id": "migration-tampered-backup",
+      "case": "flat",
+      "apply": true,
+      "restore": true,
+      "before_apply": null,
+      "before_restore": {
+        "kind": "tamper-backup",
+        "fixtureRef": "concurrent_external_edit"
+      },
+      "apply_status": "applied",
+      "restore_status": "error",
+      "error_code": "migration_restore_backup_verify_failed"
+    },
+    {
+      "id": "migration-missing-backup",
+      "case": "flat",
+      "apply": true,
+      "restore": true,
+      "before_apply": null,
+      "before_restore": {
+        "kind": "remove-backup"
+      },
+      "apply_status": "applied",
+      "restore_status": "error",
+      "error_code": "migration_restore_backup_read_failed"
+    },
+    {
+      "id": "migration-blocked-backup",
+      "case": "flat",
+      "apply": true,
+      "restore": false,
+      "before_apply": {
+        "kind": "block-backup-directory"
+      },
+      "before_restore": null,
+      "apply_status": "error",
+      "restore_status": "not-attempted",
+      "error_code": "migration_backup_directory_failed"
+    }
   ]
 }

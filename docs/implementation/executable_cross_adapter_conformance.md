@@ -163,6 +163,14 @@ The example omits domain payloads for readability. Implemented schemas must enfo
 
 Version 1 normalization paths use a deliberately small exact JSONPath grammar: `$` followed by one or more dotted field names or numeric array indices. Wildcards, recursive descent, filters, slices, and the root by itself are invalid. `unorderedPaths` is an array of those exact path strings. Each `excludedPaths` entry is an object containing exactly `path` and a non-empty `rationale`; a path cannot be both unordered and excluded.
 
+The optional `optionalEmptyFiles` array declares a narrower durable-tree exception.
+Each entry names an exact tree-array `path`, a canonical relative `relativePath`,
+and a non-empty `rationale`. Only an absent entry or one empty regular-file
+observation at that filename is permitted; duplicate entries, directories,
+nonempty bytes, and malformed observations fail normalization. This represents
+the empty User Settings coordination lock that some adapters acquire before a
+stale-approval rejection. Every other durable tree entry remains exact.
+
 ### Input-only run plan
 
 The engine validates a pack and materializes a temporary run plan containing only:
@@ -245,6 +253,7 @@ The family normalizer converts public adapter values into the schema-owned obser
 - project language-native option/result/envelope mechanics into the declared structured field;
 - sort only collections named by `unorderedPaths` using a schema-defined stable key;
 - omit only paths named by `excludedPaths`;
+- omit only absent-or-empty regular files explicitly named by `optionalEmptyFiles`;
 - record durable files by relative path, byte length, and SHA-256 where byte identity is contractual;
 - record ordered events after the public observer serialization point.
 

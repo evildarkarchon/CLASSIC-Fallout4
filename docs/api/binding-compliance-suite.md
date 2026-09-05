@@ -113,7 +113,29 @@ revision against the actual published bytes. Every other artifact remains
 byte-exact, including external edits and the retained coordination lock. This
 covers unknown entries, aliases, and untouched invalid settings without making
 adapters owners of persistence or validation policy. Explicit legacy TUI import
-and migration operations retain their existing tests for subsequent slices.
+retains its existing tests for a subsequent slice.
+
+Migration cases extend the same compatibility oracle with current, missing,
+supported flat and previous-location, alias-only/conflicting, malformed, older,
+and future-major documents. Each runner calls its public planner twice and
+reverses the plan twice before any write. The comparator authenticates the exact
+original revision, deterministic proposals, inverse endpoints and ordered review
+rows, and an unchanged installation tree. Proposed documents and YAML review
+fragments compare against independently authored typed YAML; published bytes
+must equal the exact approved proposal, and backups and restored content remain
+byte-exact. Expected documents never enter adapter input plans.
+
+Explicit apply/restore scenarios exercise declined approval, stale source and
+destination revisions, dormant legacy-source conflicts, unavailable or tampered
+backups, and an obstructed backup directory. Opaque applied receipts authorize
+restoration; their paths and revisions are checked against complete durable tree
+checkpoints. Operational outcomes retain stable core codes without adapter error
+envelopes. A stale apply may leave one empty coordination lock in Rust/Python,
+while CXX/Node reject during their approval preflight; this specific optional
+empty file is normalized only for apply conflicts through scenario-owned
+`optionalEmptyFiles` declarations naming each tree path, relative filename, and
+rationale. No other tree entry is excluded. Internal publication fault injection remains in the retained core
+tests; no public test API is introduced to reach internal durability failures.
 
 ```powershell
 python -m pip install "ruamel.yaml>=0.18,<0.19"
