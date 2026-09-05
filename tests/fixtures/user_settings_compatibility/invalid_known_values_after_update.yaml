@@ -1,0 +1,19 @@
+schema_version: "1.0"
+CLASSIC_Settings:
+  Update Check: true
+  Game Version: Future
+  FCX Mode: false
+  Simplify Logs: false
+  Show FormID Values: false
+  Move Unsolved Logs: ask-me
+  Unsolved Logs Destination: relative/path
+  SCAN Custom Path: relative/logs
+  Max Concurrent Scans: -4
+  FormID Databases:
+    "": [""]
+UI:
+  window_geometry:
+    main_tab:
+      maximized: sometimes
+      width: wide
+      height: 500

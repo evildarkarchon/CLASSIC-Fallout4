@@ -1,6 +1,9 @@
-//! Input-only receipt runner for the public read-only User Settings Rust seam.
+//! Input-only receipt runner for public User Settings opening, bootstrap, and updates.
 
-use classic_user_settings_core::{Revision, UserSettings, WindowGeometry};
+use classic_user_settings_core::{
+    Revision, UserSettings, UserSettingsCommitOutcome, UserSettingsUpdate, UserSettingsUpdateField,
+    UserSettingsUpdatePreview, WindowGeometry,
+};
 use classic_vocabulary::Vocabulary;
 use serde_json::{Map, Value, json};
 use sha2::{Digest, Sha256};
@@ -116,10 +119,173 @@ fn view(settings: &UserSettings, fields: &[Value]) -> RunnerResult<Value> {
     Ok(Value::Object(values))
 }
 
-/// Materializes declared fixture bytes and observes one public read-only open call.
+/// Installs a declared input fixture beneath the isolated operation root.
+fn install_fixture(
+    plan: &Value,
+    scenario: &Value,
+    root: &Path,
+    placement: &Value,
+) -> RunnerResult<()> {
+    let reference = string(&placement["fixtureRef"], "fixtureRef")?;
+    if !array(&scenario["fixtureRefs"], "fixtureRefs")?.contains(&json!(reference)) {
+        return Err(invalid("fixtureRef is not declared by the scenario").into());
+    }
+    let source = Path::new(string(&plan["fixtures"][reference], "fixture source")?);
+    let destination = runtime_path(root, &placement["path"])?;
+    fs::create_dir_all(
+        destination
+            .parent()
+            .ok_or_else(|| invalid("placement has no parent"))?,
+    )?;
+    fs::copy(source, destination)?;
+    Ok(())
+}
+
+/// Captures every operation artifact as exact bytes, including the root and empty directories.
+fn operation_tree(root: &Path) -> RunnerResult<Value> {
+    match fs::symlink_metadata(root) {
+        Ok(metadata) if metadata.is_dir() && !metadata.is_symlink() => {}
+        Ok(_) => return Err(invalid("operation root must be a directory, not a link").into()),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(json!([])),
+        Err(error) => return Err(error.into()),
+    }
+    let mut entries = vec![json!({"path": {"path": "."}, "kind": "directory"})];
+    for (path, content) in tree(root)? {
+        let mut entry = json!({"path": {"path": path.to_string_lossy().replace('\\', "/")},
+            "kind": if content.is_some() { "file" } else { "directory" }});
+        if let Some(bytes) = content {
+            entry["bytesHex"] = json!(
+                bytes
+                    .iter()
+                    .map(|byte| format!("{byte:02x}"))
+                    .collect::<String>()
+            );
+        }
+        entries.push(entry);
+    }
+    entries.sort_by(|left, right| {
+        left["path"]["path"]
+            .as_str()
+            .cmp(&right["path"]["path"].as_str())
+    });
+    Ok(json!(entries))
+}
+
+/// Transports the scenario's typed requests into public builders without validating settings policy.
+fn operation_update(input: &Value) -> RunnerResult<UserSettingsUpdate> {
+    let requested = input["requestedUpdate"]
+        .as_object()
+        .ok_or_else(|| invalid("requestedUpdate must be an object"))?;
+    let mut update = UserSettingsUpdate::new();
+    for (path, value) in requested {
+        update = match path.as_str() {
+            "/CLASSIC_Settings/Update Check" => update.with_update_check(
+                value
+                    .as_bool()
+                    .ok_or_else(|| invalid("Update Check request must be boolean"))?,
+            ),
+            "/CLASSIC_Settings/Max Concurrent Scans" => update.with_max_concurrent_scans(
+                value
+                    .as_i64()
+                    .ok_or_else(|| invalid("Max Concurrent Scans request must be an integer"))?,
+            ),
+            _ => {
+                return Err(
+                    invalid(format!("unsupported operation request selector {path}")).into(),
+                );
+            }
+        };
+    }
+    Ok(update)
+}
+
+/// Projects actual accepted values; unsupported public field variants fail execution visibly.
+fn accepted_field(field: &UserSettingsUpdateField) -> RunnerResult<Value> {
+    let value = match field {
+        UserSettingsUpdateField::UpdateCheck(value) => json!(value),
+        UserSettingsUpdateField::MaxConcurrentScans(value) => json!(value),
+        _ => return Err(invalid("unsupported accepted operation field").into()),
+    };
+    Ok(json!({"fieldPath": field.canonical_path(), "value": value}))
+}
+
+/// Observes preview before caller consent or an external edit, then optionally commits its artifact.
+fn execute_operation(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
+    let temporary = tempdir()?;
+    // A missing installation root makes even incidental preview directory creation observable.
+    let root = temporary.path().join("installation");
+    let input = &scenario["input"];
+    if input["installationRootExists"]
+        .as_bool()
+        .ok_or_else(|| invalid("installationRootExists must be boolean"))?
+    {
+        fs::create_dir(&root)?;
+    }
+    for placement in array(&input["installationData"], "installationData")? {
+        install_fixture(plan, scenario, &root, placement)?;
+    }
+    let settings = UserSettings::open(&root);
+    let update = operation_update(input)?;
+    let preview = match string(&input["previewMode"], "previewMode")? {
+        "bootstrap" => settings.preview_bootstrap(update),
+        "update" => settings.preview_update(update),
+        _ => return Err(invalid("unsupported User Settings preview mode").into()),
+    };
+    let preview_observation = match &preview {
+        UserSettingsUpdatePreview::Accepted(accepted) => json!({
+            "status": "accepted", "baseRevision": accepted.base_revision().token(),
+            "acceptedFields": accepted.fields().iter().map(accepted_field).collect::<RunnerResult<Vec<_>>>()?,
+            "diagnostics": [],
+        }),
+        UserSettingsUpdatePreview::Rejected(diagnostics) => json!({
+            "status": "rejected", "baseRevision": null, "acceptedFields": [],
+            "diagnostics": diagnostics.iter().map(|diagnostic| json!({
+                "fieldPath": diagnostic.field_path(), "code": diagnostic.code(), "message": diagnostic.message()
+            })).collect::<Vec<_>>(),
+        }),
+    };
+    let after_preview = operation_tree(&root)?;
+    if !input["externalEdit"].is_null() {
+        install_fixture(plan, scenario, &root, &input["externalEdit"])?;
+    }
+    let mut commit = json!({"status": "not-attempted", "revision": null,
+        "expectedRevision": null, "actualRevision": null});
+    if input["commit"]
+        .as_bool()
+        .ok_or_else(|| invalid("commit must be boolean"))?
+        && let UserSettingsUpdatePreview::Accepted(accepted) = preview
+    {
+        match accepted.commit(&root)? {
+            UserSettingsCommitOutcome::Committed { revision } => {
+                commit["status"] = json!("committed");
+                commit["revision"] = json!(revision.token());
+            }
+            UserSettingsCommitOutcome::Conflict {
+                expected_revision,
+                actual_revision,
+            } => {
+                commit["status"] = json!("conflict");
+                commit["expectedRevision"] = json!(expected_revision.token());
+                commit["actualRevision"] = json!(actual_revision.token());
+            }
+        }
+    }
+    Ok(
+        json!({"preview": preview_observation, "afterPreviewTree": after_preview,
+        "commit": commit, "finalTree": operation_tree(&root)?}),
+    )
+}
+
+/// Dispatches an input-only action through the corresponding public Rust operation.
 fn execute_scenario(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
-    if scenario.get("expected").is_some() || scenario["action"] != "user-settings.open" {
-        return Err(invalid("scenario must be an input-only User Settings open action").into());
+    if scenario.get("expected").is_some() {
+        return Err(invalid("scenario must be an input-only User Settings action").into());
+    }
+    if scenario["action"] == "user-settings.update" {
+        return execute_operation(plan, scenario);
+    }
+    if scenario["action"] != "user-settings.open" {
+        return Err(invalid("unsupported User Settings action").into());
     }
     let root = tempdir()?;
     let input = &scenario["input"];

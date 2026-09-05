@@ -42,3 +42,14 @@ cargo test -p classic-user-settings-core --test compatibility_contract
 | `concurrent_revision_conflict` | Stale open versus `concurrent_external_edit.yaml`, producing a conflict without overwrite |
 
 The operation scenarios collectively distinguish and validate read-only open, degraded fallback, proposed update, accepted commit, rejected commit, conflict, migration, and restore. User Settings implementation tests consume the same fixtures through the public core interface and compare its typed views, diagnostics, preservation behavior, verified backups, and persistence decisions to these golden documents.
+
+Entries carrying `conformance` also drive the input-only cross-adapter scenario
+pack. They specify caller consent, update or bootstrap preview mode, installation
+root presence, requested values, and exact structured rejection diagnostics.
+The central engine retains expected output fixtures and compares successful
+publication as typed YAML; runners emit only actual public values and raw file
+bytes. `bootstrap_defaults.yaml` and `bootstrap_overrides.yaml` characterize
+complete first-run documents. The alias and invalid-value `*_after_update.yaml`
+fixtures preserve every unrelated node during an ordinary accepted update.
+Already-stale update and bootstrap commits preserve the complete installation
+tree, including the absence of a newly created coordination lock.

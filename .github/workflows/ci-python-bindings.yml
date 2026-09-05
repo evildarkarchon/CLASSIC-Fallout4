@@ -29,6 +29,9 @@ jobs:
           enable-cache: true
           cache-dependency-glob: python-bindings/uv.lock
 
+      - name: Install User Settings conformance YAML parser
+        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
+
       - name: Run Python binding compliance profile
         run: python tools/binding_compliance/check_compliance.py --repo-root . --profile python-ci
 
@@ -97,7 +100,7 @@ jobs:
       # `--locked` fails the job if the committed uv.lock drifts from
       # pyproject.toml — catches silent lock/manifest divergence.
       - name: Install Python bindings tooling
-        run: uv sync --project python-bindings --inexact --locked
+        run: uv sync --project python-bindings --inexact --locked --group drift-guards
 
       # `maturin` is intentionally installed into `python-bindings/.venv` by
       # the step above. `rebuild_rust.ps1` targets that interpreter explicitly

@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { copyFile, lstat, mkdir, mkdtemp, open, readdir, readFile, rename, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import type { JsUserSettingsSnapshot, JsWindowGeometry } from "../index.js";
+import type { JsUserSettingsSnapshot, JsUserSettingsUpdate, JsWindowGeometry } from "../index.js";
 
 type JsonObject = Record<string, unknown>;
 
@@ -14,7 +14,12 @@ interface Scenario {
   fixtureRefs: string[];
   input: {
     installationData: { fixtureRef: string; path: string }[];
-    observationFields: string[];
+    observationFields?: string[];
+    requestedUpdate?: JsonObject;
+    previewMode?: "update" | "bootstrap";
+    installationRootExists?: boolean;
+    commit?: boolean;
+    externalEdit?: { fixtureRef: string; path: string } | null;
   };
 }
 
@@ -82,11 +87,25 @@ async function loadPlan(path: string): Promise<RunPlan> {
     const scenario = object(value, "scenario");
     if ("expected" in scenario) throw new Error("input-only run plan must not contain expectations");
     string(scenario.id, "scenario.id");
-    if (scenario.action !== "user-settings.open") throw new Error("unsupported User Settings action");
+    if (!["user-settings.open", "user-settings.update"].includes(String(scenario.action))) {
+      throw new Error("unsupported User Settings action");
+    }
     strings(scenario.capabilityIds, "scenario.capabilityIds");
     strings(scenario.fixtureRefs, "scenario.fixtureRefs");
     const input = object(scenario.input, "scenario.input");
-    strings(input.observationFields, "observationFields");
+    if (scenario.action === "user-settings.open") {
+      strings(input.observationFields, "observationFields");
+    } else {
+      object(input.requestedUpdate, "requestedUpdate");
+      if (input.previewMode !== "update" && input.previewMode !== "bootstrap") throw new Error("previewMode must be update or bootstrap");
+      if (typeof input.installationRootExists !== "boolean") throw new Error("installationRootExists must be a boolean");
+      if (typeof input.commit !== "boolean") throw new Error("commit must be a boolean");
+      if (input.externalEdit !== null) {
+        const edit = object(input.externalEdit, "externalEdit");
+        string(edit.fixtureRef, "externalEdit.fixtureRef");
+        string(edit.path, "externalEdit.path");
+      }
+    }
     if (!Array.isArray(input.installationData)) throw new Error("installationData must be an array");
     for (const value of input.installationData) {
       const item = object(value, "installationData item");
@@ -182,8 +201,9 @@ function projectView(snapshot: JsUserSettingsSnapshot, fields: string[]): JsonOb
   }));
 }
 
-/** Materialize declared inputs, call only the public read-only open API, and measure durable effects. */
+/** Dispatch explicit operations or observe the public read-only open API and its durable effects. */
 async function executeScenario(plan: RunPlan, scenario: Scenario): Promise<JsonObject> {
+  if (scenario.action !== "user-settings.open") return executeOperation(plan, scenario);
   const root = resolve(await mkdtemp(join(tmpdir(), "classic-node-user-settings-")));
   try {
     for (const item of scenario.input.installationData) {
@@ -209,7 +229,7 @@ async function executeScenario(plan: RunPlan, scenario: Scenario): Promise<JsonO
       },
       commitEligibility: token(snapshot.commitEligibility),
       diagnostics: snapshot.diagnostics.map((diagnostic) => diagnostic.code),
-      view: projectView(snapshot, scenario.input.observationFields),
+      view: projectView(snapshot, strings(scenario.input.observationFields, "observationFields")),
       durableEffects: { treeUnchanged: treeUnchanged(before, after) },
       revision: {
         kind: snapshot.revision.startsWith("sha256:") ? "sha256" : snapshot.revision,
@@ -226,6 +246,103 @@ async function executeScenario(plan: RunPlan, scenario: Scenario): Promise<JsonO
     };
   } finally {
     await rm(root, { recursive: true, force: true });
+  }
+}
+
+/** Translate centrally selected fields into public binding arguments without owning validation. */
+function requestedUpdate(fields: JsonObject): JsUserSettingsUpdate {
+  const update: JsUserSettingsUpdate = {};
+  for (const [path, value] of Object.entries(fields)) {
+    switch (path) {
+      case "/CLASSIC_Settings/Update Check":
+        if (typeof value !== "boolean") throw new Error("Update Check input must be a boolean");
+        update.updateCheck = value;
+        break;
+      case "/CLASSIC_Settings/Max Concurrent Scans":
+        if (typeof value !== "number" || !Number.isSafeInteger(value)) throw new Error("Max Concurrent Scans input must be an integer");
+        update.maxConcurrentScans = value;
+        break;
+      default:
+        throw new Error(`unsupported requested field: ${path}`);
+    }
+  }
+  return update;
+}
+
+/** Copy one declared input, including a caller-controlled edit between preview and commit. */
+async function installFixture(plan: RunPlan, scenario: Scenario, root: string, item: { fixtureRef: string; path: string }): Promise<void> {
+  if (!scenario.fixtureRefs.includes(item.fixtureRef)) throw new Error("fixtureRef is not declared by the scenario");
+  const source = string(plan.fixtures[item.fixtureRef], `fixture ${item.fixtureRef}`);
+  const destination = runtimePath(root, item.path);
+  await mkdir(dirname(destination), { recursive: true });
+  await copyFile(source, destination);
+}
+
+/** Observe every durable entry and exact bytes, preserving the difference between absent and empty roots. */
+async function durableTree(root: string): Promise<JsonObject[]> {
+  try {
+    const entry = await lstat(root);
+    if (!entry.isDirectory() || entry.isSymbolicLink()) throw new Error("runtime root must be a regular directory");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+    throw error;
+  }
+  const tree = await snapshotTree(root);
+  const entries: JsonObject[] = [{ path: { path: "." }, kind: "directory" }];
+  const paths = [...tree.directories, ...tree.files.keys()].sort();
+  for (const path of paths) {
+    const bytes = tree.files.get(path);
+    entries.push(bytes === undefined
+      ? { path: { path }, kind: "directory" }
+      : { path: { path }, kind: "file", bytesHex: bytes.toString("hex") });
+  }
+  return entries;
+}
+
+/** Execute an explicit public preview and optional commit, measuring each durable phase separately. */
+async function executeOperation(plan: RunPlan, scenario: Scenario): Promise<JsonObject> {
+  const temporary = resolve(await mkdtemp(join(tmpdir(), "classic-node-user-settings-operation-")));
+  // An absent installation is itself an input: previews must not silently create its root.
+  const root = join(temporary, "installation");
+  try {
+    if (scenario.input.installationRootExists) await mkdir(root);
+    for (const item of scenario.input.installationData) await installFixture(plan, scenario, root, item);
+    const classic = await import("../index.js");
+    const update = requestedUpdate(object(scenario.input.requestedUpdate, "requestedUpdate"));
+    const bootstrap = scenario.input.previewMode === "bootstrap";
+    const preview = bootstrap
+      ? classic.previewUserSettingsBootstrap(root, update)
+      : classic.previewUserSettingsUpdate(root, update);
+    const afterPreviewTree = await durableTree(root);
+    if (scenario.input.externalEdit) await installFixture(plan, scenario, root, scenario.input.externalEdit);
+    let commit: JsonObject = { status: "not-attempted", revision: null, expectedRevision: null, actualRevision: null };
+    if (scenario.input.commit && preview.accepted) {
+      const baseRevision = string(preview.baseRevision, "accepted preview baseRevision");
+      const outcome = bootstrap
+        ? classic.commitUserSettingsBootstrap(root, baseRevision, update)
+        : classic.commitUserSettingsUpdate(root, baseRevision, update);
+      commit = {
+        status: outcome.status,
+        revision: outcome.revision ?? null,
+        expectedRevision: outcome.status === "conflict" ? outcome.expectedRevision : null,
+        actualRevision: outcome.actualRevision ?? null,
+      };
+    }
+    return {
+      preview: {
+        status: preview.accepted ? "accepted" : "rejected",
+        baseRevision: preview.baseRevision ?? null,
+        acceptedFields: preview.fields.map((field) => ({ fieldPath: field.fieldPath, value: field.value })),
+        diagnostics: preview.diagnostics.map((diagnostic) => ({
+          fieldPath: diagnostic.fieldPath ?? null, code: diagnostic.code, message: diagnostic.message,
+        })),
+      },
+      afterPreviewTree,
+      commit,
+      finalTree: await durableTree(root),
+    };
+  } finally {
+    await rm(temporary, { recursive: true, force: true });
   }
 }
 

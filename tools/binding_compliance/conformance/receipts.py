@@ -685,6 +685,15 @@ def validate_prepared_run(
                 expected_scenario["normalization"],
                 fixture_root=Path(plan["fixtureRoot"]),
             )
+            if (
+                pack_document["familyId"] == "user-settings"
+                and expected_scenario["action"] != "user-settings.open"
+            ):
+                from .families.user_settings import normalize_operation_observation
+
+                actual_observation = normalize_operation_observation(
+                    expected_observation, actual_observation
+                )
             if any(
                 "display-content" in observation_families[capability_id]
                 for capability_id in expected_scenario["capabilityIds"]

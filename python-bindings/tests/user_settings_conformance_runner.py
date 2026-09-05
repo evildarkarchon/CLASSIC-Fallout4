@@ -1,4 +1,4 @@
-"""Execute read-only User Settings conformance plans through the public PyO3 API."""
+"""Execute User Settings open, preview, and commit plans through the public PyO3 API."""
 
 from __future__ import annotations
 
@@ -114,7 +114,7 @@ def _materialize_inputs(
 
 
 def _tree_snapshot(root: Path) -> dict[str, bytes | None]:
-    """Capture all directory entries and exact file bytes to detect durable open effects."""
+    """Capture all directory entries and exact file bytes as durable effect evidence."""
     snapshot = {}
     for path in root.rglob("*"):
         if path.is_symlink():
@@ -164,11 +164,14 @@ def _selected_view(snapshot: Any, fields: object) -> dict[str, Any]:
 def _execute_scenario(
     plan: Mapping[str, Any], scenario: Mapping[str, Any]
 ) -> dict[str, Any]:
-    """Open once through the public API and compare byte evidence before and after."""
+    """Dispatch public operations or open once and compare source-byte evidence."""
     import classic_user_settings
 
-    if scenario.get("action") != "user-settings.open":
-        raise RunnerContractError("scenario action must be user-settings.open")
+    action = scenario.get("action")
+    if action == "user-settings.update":
+        return _execute_operation(plan, scenario)
+    if action != "user-settings.open":
+        raise RunnerContractError("unsupported User Settings action")
     with tempfile.TemporaryDirectory(
         prefix="classic-user-settings-conformance-"
     ) as temporary:
@@ -226,6 +229,137 @@ def _execute_scenario(
                 "present": original is not None,
                 "matchesSourceBytes": original == source_bytes,
             },
+        }
+
+
+def _requested_update(fields: object) -> Any:
+    """Translate input selectors into public setters, leaving value policy in Rust."""
+    import classic_user_settings
+
+    update = classic_user_settings.UserSettingsUpdate()
+    for path, value in _mapping(fields, "requestedUpdate").items():
+        if path == "/CLASSIC_Settings/Update Check":
+            if not isinstance(value, bool):
+                raise RunnerContractError("Update Check input must be a boolean")
+            update.set_update_check(value)
+        elif path == "/CLASSIC_Settings/Max Concurrent Scans":
+            if not isinstance(value, int) or isinstance(value, bool):
+                raise RunnerContractError(
+                    "Max Concurrent Scans input must be an integer"
+                )
+            update.set_max_concurrent_scans(value)
+        else:
+            raise RunnerContractError(f"unsupported requested field: {path}")
+    return update
+
+
+def _install_external_edit(
+    plan: Mapping[str, Any], scenario: Mapping[str, Any], root: Path, raw_edit: object
+) -> None:
+    """Materialize one declared caller edit after preview without interpreting its bytes."""
+    edit = _mapping(raw_edit, "externalEdit")
+    reference = _string(edit.get("fixtureRef"), "externalEdit.fixtureRef")
+    references = _array(scenario.get("fixtureRefs"), "scenario fixtureRefs")
+    if reference not in references:
+        raise RunnerContractError(
+            "external edit fixture is not declared by the scenario"
+        )
+    fixtures = _mapping(plan.get("fixtures"), "run plan fixtures")
+    source = Path(_string(fixtures.get(reference), f"fixture {reference}"))
+    destination = _runtime_path(root, edit.get("path"))
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(source, destination)
+
+
+def _durable_tree(root: Path) -> list[dict[str, Any]]:
+    """Observe every durable entry and exact bytes, distinguishing absent and empty roots."""
+    if root.is_symlink():
+        raise RunnerContractError("runtime root must be a regular directory")
+    if not root.exists():
+        return []
+    if not root.is_dir():
+        raise RunnerContractError("runtime root must be a regular directory")
+    result: list[dict[str, Any]] = [{"path": {"path": "."}, "kind": "directory"}]
+    for path, content in sorted(_tree_snapshot(root).items()):
+        if content is None:
+            result.append({"path": {"path": path}, "kind": "directory"})
+        else:
+            result.append(
+                {"path": {"path": path}, "kind": "file", "bytesHex": content.hex()}
+            )
+    return result
+
+
+def _execute_operation(
+    plan: Mapping[str, Any], scenario: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Preview and optionally commit through public APIs, preserving each durable phase."""
+    import classic_user_settings
+
+    with tempfile.TemporaryDirectory(
+        prefix="classic-user-settings-operation-"
+    ) as temporary:
+        # An absent installation is an input: previews must not silently create its root.
+        root = Path(temporary).resolve() / "installation"
+        inputs = _mapping(scenario.get("input"), "scenario input")
+        root_exists = inputs.get("installationRootExists")
+        if not isinstance(root_exists, bool):
+            raise RunnerContractError("installationRootExists must be a boolean")
+        if root_exists:
+            root.mkdir()
+        inputs = _materialize_inputs(plan, scenario, root)
+        commit_requested = inputs.get("commit")
+        if not isinstance(commit_requested, bool):
+            raise RunnerContractError("commit must be a boolean")
+        if "externalEdit" not in inputs:
+            raise RunnerContractError("externalEdit must be supplied explicitly")
+        preview_mode = inputs.get("previewMode")
+        if preview_mode not in {"update", "bootstrap"}:
+            raise RunnerContractError("previewMode must be update or bootstrap")
+        update = _requested_update(inputs.get("requestedUpdate"))
+        snapshot = classic_user_settings.open_user_settings(str(root))
+        preview = (
+            snapshot.preview_bootstrap(update)
+            if preview_mode == "bootstrap"
+            else snapshot.preview_update(update)
+        )
+        after_preview = _durable_tree(root)
+        if inputs.get("externalEdit") is not None:
+            _install_external_edit(plan, scenario, root, inputs.get("externalEdit"))
+        commit: dict[str, Any] = {
+            "status": "not-attempted",
+            "revision": None,
+            "expectedRevision": None,
+            "actualRevision": None,
+        }
+        if commit_requested and preview.accepted:
+            outcome = preview.commit(str(root))
+            commit = {
+                "status": outcome.status,
+                "revision": outcome.revision,
+                "expectedRevision": outcome.expected_revision,
+                "actualRevision": outcome.actual_revision,
+            }
+        return {
+            "preview": {
+                "status": "accepted" if preview.accepted else "rejected",
+                "baseRevision": preview.base_revision,
+                "acceptedFields": [
+                    {"fieldPath": field.canonical_path, "value": field.value}
+                    for field in preview.fields
+                ],
+                "diagnostics": [
+                    {
+                        "fieldPath": diagnostic.field_path,
+                        "code": diagnostic.code,
+                        "message": diagnostic.message,
+                    }
+                    for diagnostic in preview.diagnostics
+                ],
+            },
+            "afterPreviewTree": after_preview,
+            "commit": commit,
+            "finalTree": _durable_tree(root),
         }
 
 

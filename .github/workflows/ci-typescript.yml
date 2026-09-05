@@ -76,6 +76,9 @@ jobs:
             exit 1
           }
 
+      - name: Install User Settings conformance YAML parser
+        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
+
       - name: Run Node binding compliance profile
         run: python tools/binding_compliance/check_compliance.py --repo-root . --profile node-ci
 
@@ -176,6 +179,10 @@ jobs:
         if: matrix.runtime == 'node'
         working-directory: node-bindings/classic-node
         run: bun run test:node
+
+      - name: Install User Settings conformance YAML parser
+        if: matrix.runtime == 'node'
+        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
 
       - name: Run Node Crash Log Scan Run conformance
         if: matrix.runtime == 'node' && !cancelled()

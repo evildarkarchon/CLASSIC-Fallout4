@@ -83,14 +83,16 @@ withhold those expectations, and validated observations appear only under
 jobs are blocking for this family, while their artifacts remain available even
 when execution or validation fails.
 
-## User Settings Read-Only Shadow Execution
+## User Settings Shadow Execution
 
-`tests/conformance/packs/user_settings/v1.json` selects eleven opening cases from
+`tests/conformance/packs/user_settings/v1.json` selects opening and operation cases from
 `tests/fixtures/user_settings_compatibility/expectations.json`. The existing
 compatibility expectations are the single independent oracle: the central
 engine resolves case references in memory and binds the oracle and input fixture
-bytes into the expectation digest. Adapter plans contain only fixture placement
-and the names of typed fields to observe, never expected values.
+bytes into the expectation digest. Expected document fixtures also participate
+in freshness checks and remain outside the adapter fixture map. Adapter plans
+contain fixture placement, typed requests, field selectors, and caller commit
+decisions, never expected observations.
 
 The Rust, CXX, Node, and Python runners open their public User Settings seam in an
 isolated temporary root and emit actual source metadata, commit eligibility,
@@ -98,11 +100,24 @@ diagnostic codes, selected typed settings, original-content/revision checks, and
 whole-tree preservation observations. Exact central comparison rejects missing,
 extra, mistyped, or changed observations. Cases cover canonical and missing
 documents, legacy shape/location, alias precedence, invalid values, malformed
-and future-major fallback, unknown entries, and GUI geometry. Explicit legacy
-TUI import and update/migration/conflict operations retain their existing tests
-and belong to subsequent slices.
+and future-major fallback, unknown entries, and GUI geometry.
+
+Operation cases exercise bootstrap and update previews separately from caller
+commit decisions, including declined and rejected requests, successful commits,
+and stale revisions after a controlled external edit. Runners project actual
+accepted fields and ordered diagnostics with field, code, and message. They
+capture full directory trees and exact file bytes immediately after preview and
+after the optional commit. Central comparison checks successful publication's
+YAML semantics against independent oracle documents and verifies its returned
+revision against the actual published bytes. Every other artifact remains
+byte-exact, including external edits and the retained coordination lock. This
+covers unknown entries, aliases, and untouched invalid settings without making
+adapters owners of persistence or validation policy. Explicit legacy TUI import
+and migration operations retain their existing tests for subsequent slices.
 
 ```powershell
+python -m pip install "ruamel.yaml>=0.18,<0.19"
+uv sync --project python-bindings --inexact --group drift-guards
 python tools/binding_compliance/run_user_settings_conformance.py --participant rust
 python tools/binding_compliance/run_user_settings_conformance.py --participant node
 uv run --project python-bindings python tools/binding_compliance/run_user_settings_conformance.py --participant python

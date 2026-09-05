@@ -22,7 +22,7 @@ See the [Workspace Migration Matrix](docs/workspace-migration-matrix.md) for old
 
 The [Binding Compliance Suite](docs/api/binding-compliance-suite.md) documents contributor validation. Crash Log Scan Run coverage uses blocking executable adapter and frontend receipts. Its copied acknowledgement lists and positive source markers are retired; fixture expectations, Rust variant inventory checks, negative export audits, and internal fault analyzers remain required.
 
-User Settings read-only opening and typed snapshots run as the second scenario family in shadow across Rust, CXX, Node, and Python. The existing compatibility corpus remains its independent oracle, and existing User Settings runtime and registry-backed checks remain blocking.
+User Settings opening, typed snapshots, caller-controlled bootstrap, and update preview/commit run as the second scenario family in shadow across Rust, CXX, Node, and Python. The shared compatibility oracle checks structured rejections, stale revisions, source bytes, and durable effects, including unknown-entry preservation after commits. Existing User Settings runtime and registry-backed checks remain blocking.
 
 For older historical context, see [CLASSIC - Readme.pdf](CLASSIC%20-%20Readme.pdf).
 

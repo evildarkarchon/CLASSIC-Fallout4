@@ -176,6 +176,9 @@ jobs:
         if: ${{ !cancelled() }}
         run: python tools/binding_compliance/scan_run_contract.py --repo-root .
 
+      - name: Install User Settings conformance YAML parser
+        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
+
       - name: Run Rust Crash Log Scan Run conformance
         if: ${{ !cancelled() }}
         run: python tools/binding_compliance/run_scan_run_conformance.py --participant rust

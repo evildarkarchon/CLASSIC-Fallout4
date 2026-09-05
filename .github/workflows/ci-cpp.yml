@@ -23,6 +23,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install User Settings conformance YAML parser
+        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
+
       - name: Run CXX binding compliance profile
         run: python tools/binding_compliance/check_compliance.py --repo-root . --profile cxx-ci
 
@@ -97,6 +100,9 @@ jobs:
       - name: Build and test CLI
         timeout-minutes: 90
         run: pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler ${{ matrix.compiler }}
+
+      - name: Install User Settings conformance YAML parser
+        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
 
       - name: Run native CXX scan conformance
         if: ${{ !cancelled() }}
@@ -245,6 +251,9 @@ jobs:
 
       - name: Build and test GUI
         run: pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Preset ci-system-qt -Test -TestTimeoutSec 600 -Compiler ${{ matrix.compiler }}
+
+      - name: Install User Settings conformance YAML parser
+        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
 
       - name: Run GUI Crash Log Scan Run consumer conformance
         if: ${{ !cancelled() }}

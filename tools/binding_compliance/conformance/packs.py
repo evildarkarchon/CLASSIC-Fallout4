@@ -1126,7 +1126,10 @@ def load_and_validate_pack(repo_root: Path, pack_path: Path) -> ValidatedPack:
     oracle_paths: tuple[Path, ...] = ()
     oracle_sources: tuple[tuple[str, bytes], ...] = ()
     if pack["familyId"] == "user-settings":
-        from .families.user_settings import compile_compatibility_expectations
+        from .families.user_settings import (
+            compile_compatibility_expectations,
+            operation_oracle_paths,
+        )
 
         # The oracle is a central source dependency, never an adapter input fixture.
         try:
@@ -1142,14 +1145,18 @@ def load_and_validate_pack(repo_root: Path, pack_path: Path) -> ValidatedPack:
                 raise ValueError(
                     "User Settings oracle cannot be an adapter input fixture"
                 )
-            pack = compile_compatibility_expectations(pack, oracle)
+            pack = compile_compatibility_expectations(pack, oracle, fixture_root)
+            operation_paths = operation_oracle_paths(oracle, fixture_root)
             _reject_floating_point_values(pack)
         except (OSError, ValueError, KeyError, TypeError) as error:
             raise PackValidationError(
                 f"invalid User Settings compatibility oracle: {error}"
             ) from error
-        oracle_paths = (oracle_path,)
-        oracle_sources = ((oracle_path.relative_to(root).as_posix(), oracle_bytes),)
+        oracle_paths = (oracle_path, *operation_paths)
+        oracle_sources = tuple(
+            (path.relative_to(root).as_posix(), path.read_bytes())
+            for path in oracle_paths
+        )
     canonical = json.dumps(
         pack,
         ensure_ascii=False,

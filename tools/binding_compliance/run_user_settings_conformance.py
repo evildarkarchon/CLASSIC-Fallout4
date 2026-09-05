@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run one read-only User Settings adapter and publish its shadow report."""
+"""Run one User Settings adapter's opening and operation scenarios in shadow."""
 
 from __future__ import annotations
 
