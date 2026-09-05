@@ -69351,11 +69351,11 @@
       ]
     },
     {
-      "id": "runtime-claim:node:node-tier1-user-settings",
+      "id": "runtime-claim:node:node-tier1-user-settings-unmigrated",
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/0#coverageId=node-tier1-user-settings"
+        "locator": "/entries/0#coverageId=node-tier1-user-settings-unmigrated"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -70311,11 +70311,11 @@
       ]
     },
     {
-      "id": "runtime-claim:python:python-tier1-user-settings",
+      "id": "runtime-claim:python:python-tier1-user-settings-unmigrated",
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/0#coverageId=python-tier1-user-settings"
+        "locator": "/entries/0#coverageId=python-tier1-user-settings-unmigrated"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",

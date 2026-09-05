@@ -232,11 +232,6 @@ test("exposes only the User Settings replacement contract in Node", () => {
   try {
     assert.equal(classic.ClassicConfigJs, undefined);
     assert.equal(classic.createDefaultConfig, undefined);
-    assert.equal(typeof classic.openUserSettings, "function");
-    assert.equal(typeof classic.previewUserSettingsUpdate, "function");
-    assert.equal(typeof classic.commitUserSettingsUpdate, "function");
-    assert.equal(typeof classic.planUserSettingsMigration, "function");
-    assert.equal(typeof classic.applyUserSettingsMigration, "function");
 
     const snapshot = classic.openUserSettings(root);
     assert.equal(snapshot.classification, "missing");

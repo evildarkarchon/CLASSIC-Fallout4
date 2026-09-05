@@ -262,10 +262,17 @@ def build_coverage_summary(
         if row.get("rustCrate") == "classic-user-settings-core"
         and row.get("rustSymbol") in settings_symbols
     }
+    migrated_identifiers: set[str] = set()
     for item in tracked_surface:
         mapping = settings_rows.get(item.get("contractId"))
         if mapping is None:
             continue
+        if item.get("bindingIdentifier") is not None:
+            migrated_identifiers.add(item["bindingIdentifier"])
+        # Receipt obligations must not inherit a legacy test pointer or prose
+        # claim, even when an old registry is supplied by a caller.
+        for key in ("coverageId", "testSuite", "testCaseId", "fixtureRefs", "notes"):
+            item.pop(key, None)
         structural = binding == "node" and mapping.get("nodeKind") in {
             "interface",
             "type",
@@ -294,6 +301,10 @@ def build_coverage_summary(
         rust_symbols = registry_entry.get("rustSymbols", [])
 
         for binding_identifier in binding_identifiers:
+            # A second registry-only row would relabel the migrated public
+            # surface as verified even though its contract requires receipts.
+            if binding_identifier in migrated_identifiers:
+                continue
             tracked_id = f"binding:{binding_identifier}"
             if tracked_id in tracked_ids:
                 continue

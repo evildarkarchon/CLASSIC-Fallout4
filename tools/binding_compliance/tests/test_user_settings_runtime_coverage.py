@@ -39,6 +39,15 @@ def test_registry_cannot_grant_migrated_settings_runtime_coverage(
                 "user-settings-open",
                 "user_settings.open",
             ],
+            "bindingIdentifiers": [
+                "openUserSettings"
+                if binding == "node"
+                else "classic_user_settings.open_user_settings"
+            ],
+            "testSuite": "claimed-test.py",
+            "testCaseId": "claimed-pass",
+            "fixtureRefs": ["claimed-fixture"],
+            "notes": "Human-authored runtime verification claim.",
         }
     )
     hostile_registry = tmp_path / "registry.json"
@@ -75,6 +84,17 @@ def test_registry_cannot_grant_migrated_settings_runtime_coverage(
         for row in migrated
     )
     assert any(row["classification"] == "receipt_required" for row in migrated)
+    assert all(
+        not {"coverageId", "testSuite", "testCaseId", "fixtureRefs", "notes"}
+        & row.keys()
+        for row in migrated
+    )
+    migrated_identifiers = {row["bindingIdentifier"] for row in migrated}
+    assert not any(
+        row["trackedType"] == "registry_only"
+        and row.get("bindingIdentifier") in migrated_identifiers
+        for row in summary["trackedSurface"]
+    )
     if legacy_classification == "runtime_verified":
         assert summary["summary"]["tier1_missing_runtime_total"] == 0
     else:

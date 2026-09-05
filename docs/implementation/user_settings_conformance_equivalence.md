@@ -85,5 +85,19 @@ TUI import and its restoration remain covered by their existing focused tests.
 Frontend geometry methods likewise retain their semantic tests; consumer
 execution is separate evidence and cannot promote those semantic rows.
 
-No old corpus test is retired by this change. Further deletion requires a
+Issue #204 retires the broad Node/Python User Settings registry selectors and
+hashes, the migrated contract/identifier claims, and their copied summary test
+pointers and prose. Explicit registry contract IDs retain the rows outside
+the current family coverage policy; focused binding identifiers retain the
+additional unmigrated property, geometry, and legacy-import diagnostics.
+Neither the narrowed registries nor this map can grant migrated coverage.
+
+The Node smoke test's five positive function-existence assertions for open,
+update preview/commit, and migration planning/application are removed. Blocking
+adapter receipts execute these operations and compare their observations;
+source/declaration checks still validate their exported signatures. The smoke
+test retains forbidden-export negatives and its actual Node-runtime open and
+bootstrap calls, since the semantic receipt runner uses Bun.
+
+No corpus or focused semantic test is retired. Further deletion requires a
 separate fact-by-fact proof for the specific evidence being removed.

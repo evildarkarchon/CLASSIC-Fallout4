@@ -1,8 +1,8 @@
 # Node Runtime Coverage Summary
 
-- Generated: `2026-09-05T02:23:34.792751+00:00`
-- Tracked surfaces: **1058**
-- Runtime verified: **1024**
+- Generated: `2026-09-05T02:48:07.894484+00:00`
+- Tracked surfaces: **1031**
+- Runtime verified: **997**
 - Requiring executable receipts: **5**
 - Retained structural analysis: **29**
 - Contract mapped only: **0**
@@ -26,7 +26,7 @@
 | `settings` | 45 | 0 | 0 | 0 | 0 | 45 |
 | `shared` | 10 | 0 | 0 | 0 | 0 | 10 |
 | `update` | 6 | 0 | 0 | 0 | 0 | 6 |
-| `user_settings` | 180 | 5 | 29 | 0 | 0 | 214 |
+| `user_settings` | 153 | 5 | 29 | 0 | 0 | 187 |
 | `version` | 13 | 0 | 0 | 0 | 0 | 13 |
 | `version_registry` | 74 | 0 | 0 | 0 | 0 | 74 |
 | `web` | 15 | 0 | 0 | 0 | 0 | 15 |

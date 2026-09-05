@@ -157,6 +157,14 @@ Migrated settings rows require validated semantic receipts; registry enrollment
 cannot grant their runtime coverage. Source parity, declarations, stubs, type
 negatives, forbidden exports, and the Rust ownership audit remain blocking.
 
+The Node and Python registries no longer contain owner-wide User Settings
+selectors, selector hashes, or claims for migrated rows and identifiers.
+Explicit retained contract IDs cover only the still-unmigrated accessors,
+builders, defaults, and frontend/legacy-import semantics. Shared registry
+loaders remain for those rows and other unmigrated owners. Migrated summary
+rows omit legacy test pointers and prose claims; duplicate registry-only
+identifiers cannot restore a runtime-verified classification.
+
 The Rust launcher executes `compatibility_contract` and `open_conformance` in
 one Cargo invocation, with both sources included in the invocation identity.
 CI retains the existing native runtime suites at the same checkout as the new
