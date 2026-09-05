@@ -1,0 +1,19 @@
+{
+  "configuration": {
+    "ignoredPlugins": [
+      " "
+    ]
+  },
+  "request": {
+    "crashLines": [
+      "Example.ESP",
+      "example.esp",
+      "modified by: example.esp"
+    ],
+    "plugins": [
+      "Example.ESP",
+      "Fallout4.esm",
+      " "
+    ]
+  }
+}

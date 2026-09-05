@@ -1,4 +1,4 @@
-"""Static policy audit for blocking Scan Run and User Settings receipt jobs."""
+"""Static policy audit for all promoted semantic and consumer receipt jobs."""
 
 from __future__ import annotations
 
@@ -129,6 +129,39 @@ _EXECUTION_POLICIES += tuple(
             )
         ),
     )
+    for policy in _EXECUTION_POLICIES
+)
+
+
+# Focused analyzers share four semantic adapters, with no fabricated frontend
+# obligations. Every family has its own blocking step and diagnostic artifact.
+_EXECUTION_POLICIES += tuple(
+    replace(
+        policy,
+        launcher_marker=(
+            f"run_semantic_conformance.py --family {family} --participant {policy.participant_id}"
+            if policy.participant_id != "cxx"
+            else f"run_cxx_conformance.ps1 -Family {family} -Compiler ${{{{ matrix.compiler }}}}"
+        ),
+        artifact_marker=(
+            f"name: {policy.participant_id}-{family}-conformance"
+            + ("-${{ matrix.compiler }}" if policy.participant_id == "cxx" else "")
+        ),
+    )
+    for family in (
+        "crash-suspect",
+        "crashgen-settings",
+        "mod-guidance",
+        "formid-lookup",
+        "named-record",
+        "plugin-evidence",
+    )
+    for policy in _EXECUTION_POLICIES[:7]
+    if policy.participant_id in {"rust", "node", "python", "cxx"}
+)
+# The CLI job retains its original suite and now reserves ten bounded launches.
+_EXECUTION_POLICIES = tuple(
+    replace(policy, job_timeout_minutes=270) if policy.job_id == "cli-tests" else policy
     for policy in _EXECUTION_POLICIES
 )
 

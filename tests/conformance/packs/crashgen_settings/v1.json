@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 1,
+  "familyId": "crashgen-settings",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scanlog-core"
+  },
+  "fixtureRoot": "tests/fixtures/semantic_conformance/crashgen-settings",
+  "fixtures": {
+    "authored_guidance": "authored-guidance.json",
+    "empty_after_reuse": "empty-after-reuse.json",
+    "unsupported_version": "unsupported-version.json",
+    "setting_issue": "setting-issue.json",
+    "setting_success": "setting-success.json"
+  },
+  "capabilities": [
+    {
+      "id": "crashgen-settings.analyze",
+      "rustSymbols": [
+        "CrashgenSettingsAnalyzer",
+        "CrashgenSettingsAnalysisInput",
+        "CrashgenSettingsAnalysisResult",
+        "CrashgenExpectationOutcome",
+        "DisabledSettingNotice"
+      ],
+      "observationFamilies": [
+        "semantic-result",
+        "structured-error"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "authored-guidance",
+      "action": "crashgen-settings.analyze",
+      "capabilityIds": [
+        "crashgen-settings.analyze"
+      ],
+      "fixtureRefs": [
+        "authored_guidance"
+      ],
+      "input": {
+        "fixtureRef": "authored_guidance"
+      },
+      "expected": {
+        "analyzerKind": "crashgen_settings",
+        "result": {
+          "expectationOutcomes": [
+            {
+              "ruleId": "compatibility_notice",
+              "kind": "notice",
+              "severity": "warning",
+              "message": "Authored guidance for Buffout 4",
+              "fix": "Authored fix",
+              "placement": "error_information",
+              "section": null,
+              "setting": null,
+              "expected": null,
+              "actual": null
+            }
+          ],
+          "disabledSettingNotices": [
+            {
+              "settingName": "DisabledSetting"
+            }
+          ]
+        },
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "empty-after-reuse",
+      "action": "crashgen-settings.analyze",
+      "capabilityIds": [
+        "crashgen-settings.analyze"
+      ],
+      "fixtureRefs": [
+        "empty_after_reuse"
+      ],
+      "input": {
+        "fixtureRef": "empty_after_reuse"
+      },
+      "expected": {
+        "analyzerKind": "crashgen_settings",
+        "result": {
+          "expectationOutcomes": [],
+          "disabledSettingNotices": []
+        },
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "unsupported-version",
+      "action": "crashgen-settings.analyze",
+      "capabilityIds": [
+        "crashgen-settings.analyze"
+      ],
+      "fixtureRefs": [
+        "unsupported_version"
+      ],
+      "input": {
+        "fixtureRef": "unsupported_version"
+      },
+      "expected": {
+        "analyzerKind": "crashgen_settings",
+        "result": null,
+        "error": {
+          "analyzerKind": "crashgen_settings",
+          "code": "unsupported_configuration_version",
+          "message": "unsupported Crashgen Expectations version 2"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "setting-issue",
+      "action": "crashgen-settings.analyze",
+      "capabilityIds": [
+        "crashgen-settings.analyze"
+      ],
+      "fixtureRefs": [
+        "setting_issue"
+      ],
+      "input": {
+        "fixtureRef": "setting_issue"
+      },
+      "expected": {
+        "analyzerKind": "crashgen_settings",
+        "result": {
+          "expectationOutcomes": [
+            {
+              "ruleId": "setting_check",
+              "kind": "issue",
+              "severity": "error",
+              "message": "Authored expectation message",
+              "fix": "Authored expectation fix",
+              "placement": "settings",
+              "section": "Patches",
+              "setting": "Achievements",
+              "expected": "false",
+              "actual": "true"
+            }
+          ],
+          "disabledSettingNotices": []
+        },
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "setting-success",
+      "action": "crashgen-settings.analyze",
+      "capabilityIds": [
+        "crashgen-settings.analyze"
+      ],
+      "fixtureRefs": [
+        "setting_success"
+      ],
+      "input": {
+        "fixtureRef": "setting_success"
+      },
+      "expected": {
+        "analyzerKind": "crashgen_settings",
+        "result": {
+          "expectationOutcomes": [
+            {
+              "ruleId": "setting_check",
+              "kind": "success",
+              "severity": "info",
+              "message": "Authored expectation passed",
+              "fix": null,
+              "placement": "settings",
+              "section": "Patches",
+              "setting": "Achievements",
+              "expected": "false",
+              "actual": "false"
+            }
+          ],
+          "disabledSettingNotices": [
+            {
+              "settingName": "Achievements"
+            }
+          ]
+        },
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

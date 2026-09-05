@@ -614,6 +614,26 @@ CI does not move raw observations into a later cross-workflow comparison job. Ev
 
 ## Verification commands
 
+Issue #205 adds blocking semantic receipts for `crash-suspect`,
+`crashgen-settings`, `mod-guidance`, `formid-lookup`, `named-record`, and
+`plugin-evidence`. They use the same invocation, comparison, and native CI
+lifecycle while retaining all their previous registry and focused test
+evidence. The [focused semantic equivalence map](semantic_conformance_equivalence.md)
+records their fixture sources and distinct observations. These families have
+four semantic adapters and both CXX compiler instances; they add no frontend
+consumer obligations.
+
+```powershell
+python tools/binding_compliance/run_semantic_conformance.py --family crash-suspect --participant rust
+python tools/binding_compliance/run_semantic_conformance.py --family crash-suspect --participant node
+uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family crash-suspect --participant python
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family crash-suspect -Compiler msvc
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family crash-suspect -Compiler clang-cl
+```
+
+Repeat with each family ID above. Build the Node addon and synchronize/rebuild
+the Python environment as described below before launching those adapters.
+
 Commands are run from the repository root unless a working directory is stated. The new `conformance`, `participant`, `execution-instance`, receipt, JUnit, and attempt arguments shown here are part of the implementation contract; adapter-specific launchers may add private diagnostic options without changing them.
 
 Tooling and source compliance:

@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "familyId": "crash-suspect",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scanlog-core"
+  },
+  "fixtureRoot": "tests/fixtures/semantic_conformance/crash-suspect",
+  "fixtures": {
+    "findings": "findings.json",
+    "empty_after_reuse": "empty-after-reuse.json",
+    "invalid_configuration": "invalid-configuration.json"
+  },
+  "capabilities": [
+    {
+      "id": "crash-suspect.analyze",
+      "rustSymbols": [
+        "CrashSuspectAnalyzer",
+        "CrashSuspectAnalysisInput",
+        "CrashSuspectAnalysisResult",
+        "CrashSuspectFinding",
+        "CrashSuspectFindingKind"
+      ],
+      "observationFamilies": [
+        "semantic-result",
+        "structured-error"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "findings",
+      "action": "crash-suspect.analyze",
+      "capabilityIds": [
+        "crash-suspect.analyze"
+      ],
+      "fixtureRefs": [
+        "findings"
+      ],
+      "input": {
+        "fixtureRef": "findings"
+      },
+      "expected": {
+        "analyzerKind": "crash_suspect",
+        "result": {
+          "findings": [
+            {
+              "kind": "main_error_rule",
+              "ruleId": "main-rule",
+              "name": "Main Rule",
+              "severity": 5
+            },
+            {
+              "kind": "stack_rule",
+              "ruleId": "stack-rule",
+              "name": "Stack Rule",
+              "severity": 4
+            },
+            {
+              "kind": "dll_involvement",
+              "ruleId": null,
+              "name": null,
+              "severity": null
+            }
+          ]
+        },
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "empty-after-reuse",
+      "action": "crash-suspect.analyze",
+      "capabilityIds": [
+        "crash-suspect.analyze"
+      ],
+      "fixtureRefs": [
+        "empty_after_reuse"
+      ],
+      "input": {
+        "fixtureRef": "empty_after_reuse"
+      },
+      "expected": {
+        "analyzerKind": "crash_suspect",
+        "result": {
+          "findings": []
+        },
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid-configuration",
+      "action": "crash-suspect.analyze",
+      "capabilityIds": [
+        "crash-suspect.analyze"
+      ],
+      "fixtureRefs": [
+        "invalid_configuration"
+      ],
+      "input": {
+        "fixtureRef": "invalid_configuration"
+      },
+      "expected": {
+        "analyzerKind": "crash_suspect",
+        "result": null,
+        "error": {
+          "analyzerKind": "crash_suspect",
+          "code": "invalid_configuration",
+          "message": "Crash Suspect main-error rule id must not be empty"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

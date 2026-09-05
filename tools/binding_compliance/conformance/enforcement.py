@@ -8,6 +8,12 @@ FAMILY_ENFORCEMENT = MappingProxyType(
     {
         "crash-log-scan-run": "blocking",
         "user-settings": "blocking",
+        "crash-suspect": "blocking",
+        "crashgen-settings": "blocking",
+        "mod-guidance": "blocking",
+        "formid-lookup": "blocking",
+        "named-record": "blocking",
+        "plugin-evidence": "blocking",
     }
 )
 

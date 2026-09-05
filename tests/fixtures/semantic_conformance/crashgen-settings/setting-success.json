@@ -1,0 +1,45 @@
+{
+  "configuration": {
+    "crashgenName": "Buffout 4",
+    "entry": {
+      "display_section": "[Compatibility]",
+      "ignore_keys": [
+        "IgnoredSetting"
+      ],
+      "settings_rules": {
+        "version": 1,
+        "preflight": [],
+        "checks": [
+          {
+            "id": "setting_check",
+            "target": {
+              "section": "Patches",
+              "key": "Achievements",
+              "valueType": "bool"
+            },
+            "when": {},
+            "expect": {
+              "equals": false
+            },
+            "messages": {
+              "fail": "Authored expectation message",
+              "fix": "Authored expectation fix",
+              "pass": "Authored expectation passed"
+            },
+            "severity": "error"
+          }
+        ]
+      }
+    }
+  },
+  "request": {
+    "settings": {
+      "Patches": {
+        "Achievements": "false"
+      }
+    },
+    "installedPlugins": [],
+    "crashgenVersion": null,
+    "configLayout": "og"
+  }
+}

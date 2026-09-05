@@ -1,0 +1,25 @@
+{
+  "configuration": {
+    "ignoredPlugins": [
+      "Fallout4.esm"
+    ]
+  },
+  "request": {
+    "crashLines": [],
+    "plugins": [
+      "Example.ESP"
+    ]
+  },
+  "warmupRequest": {
+    "crashLines": [
+      "Example.ESP",
+      "example.esp",
+      "modified by: example.esp"
+    ],
+    "plugins": [
+      "Example.ESP",
+      "Fallout4.esm",
+      " "
+    ]
+  }
+}

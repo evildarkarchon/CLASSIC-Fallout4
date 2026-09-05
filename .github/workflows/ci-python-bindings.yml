@@ -133,6 +133,84 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Python crash-suspect conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family crash-suspect --participant python --artifact-root tools/binding_compliance/artifacts/crash-suspect
+
+      - name: Upload Python crash-suspect conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-crash-suspect-conformance
+          path: tools/binding_compliance/artifacts/crash-suspect/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python crashgen-settings conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family crashgen-settings --participant python --artifact-root tools/binding_compliance/artifacts/crashgen-settings
+
+      - name: Upload Python crashgen-settings conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-crashgen-settings-conformance
+          path: tools/binding_compliance/artifacts/crashgen-settings/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python mod-guidance conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family mod-guidance --participant python --artifact-root tools/binding_compliance/artifacts/mod-guidance
+
+      - name: Upload Python mod-guidance conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-mod-guidance-conformance
+          path: tools/binding_compliance/artifacts/mod-guidance/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python formid-lookup conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family formid-lookup --participant python --artifact-root tools/binding_compliance/artifacts/formid-lookup
+
+      - name: Upload Python formid-lookup conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-formid-lookup-conformance
+          path: tools/binding_compliance/artifacts/formid-lookup/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python named-record conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family named-record --participant python --artifact-root tools/binding_compliance/artifacts/named-record
+
+      - name: Upload Python named-record conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-named-record-conformance
+          path: tools/binding_compliance/artifacts/named-record/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python plugin-evidence conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family plugin-evidence --participant python --artifact-root tools/binding_compliance/artifacts/plugin-evidence
+
+      - name: Upload Python plugin-evidence conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-plugin-evidence-conformance
+          path: tools/binding_compliance/artifacts/plugin-evidence/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Upload Python Crash Log Scan Run conformance diagnostics
         if: always()
         uses: actions/upload-artifact@v6

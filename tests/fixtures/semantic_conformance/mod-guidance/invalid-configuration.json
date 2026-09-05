@@ -1,0 +1,91 @@
+{
+  "configuration": {
+    "conflicts": [
+      {
+        "modA": "",
+        "modB": "beta",
+        "nameA": "Alpha Mod",
+        "nameB": "Beta Mod",
+        "description": "Authored conflict description",
+        "fix": "Install the authored compatibility patch",
+        "link": "https://example.invalid/patch"
+      }
+    ],
+    "frequentCrashes": [
+      {
+        "id": "frequent-crash",
+        "criteriaKind": "any",
+        "criteria": [
+          "crashfix"
+        ],
+        "exceptions": [],
+        "name": "Frequent Crash Mod",
+        "description": "Authored frequent-crash guidance"
+      }
+    ],
+    "solutions": [
+      {
+        "id": "solution",
+        "criteriaKind": "all",
+        "criteria": [
+          "solution",
+          "alpha"
+        ],
+        "exceptions": [],
+        "name": "Solution Mod",
+        "description": "Authored solution guidance"
+      }
+    ],
+    "importantMods": [
+      {
+        "detect": "installed.dll",
+        "name": "Installed Important Mod",
+        "description": "Installed authored description",
+        "gpu": null,
+        "gpuMismatchWarning": null,
+        "exclude": null
+      },
+      {
+        "detect": "missing.dll",
+        "name": "Missing Important Mod",
+        "description": "Missing authored description\nwith a second line",
+        "gpu": "amd",
+        "gpuMismatchWarning": null,
+        "exclude": null
+      },
+      {
+        "detect": "wronggpu.dll",
+        "name": "Wrong GPU Important Mod",
+        "description": "Wrong GPU authored description",
+        "gpu": "nvidia",
+        "gpuMismatchWarning": "Authored GPU mismatch warning",
+        "exclude": null
+      }
+    ]
+  },
+  "request": {
+    "plugins": [
+      {
+        "name": "Alpha.esp",
+        "id": "01"
+      },
+      {
+        "name": "Beta.esp",
+        "id": "02"
+      },
+      {
+        "name": "CrashFix.esp",
+        "id": "03"
+      },
+      {
+        "name": "Solution.esp",
+        "id": "04"
+      }
+    ],
+    "userGpu": "amd",
+    "xseModules": [
+      "Installed.dll",
+      "WrongGpu.dll"
+    ]
+  }
+}

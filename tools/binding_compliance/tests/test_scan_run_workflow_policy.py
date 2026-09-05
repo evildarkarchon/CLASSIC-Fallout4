@@ -21,6 +21,50 @@ def test_repository_workflows_keep_every_promoted_execution_blocking() -> None:
 
 
 @pytest.mark.parametrize(
+    "family",
+    (
+        "crash-suspect",
+        "crashgen-settings",
+        "mod-guidance",
+        "formid-lookup",
+        "named-record",
+        "plugin-evidence",
+    ),
+)
+@pytest.mark.parametrize(
+    ("participant", "workflow"),
+    (
+        ("rust", "ci-rust.yml"),
+        ("node", "ci-typescript.yml"),
+        ("python", "ci-python-bindings.yml"),
+        ("cxx", "ci-cpp.yml"),
+    ),
+)
+def test_every_focused_family_adapter_is_a_required_blocking_step(
+    tmp_path: Path,
+    family: str,
+    participant: str,
+    workflow: str,
+) -> None:
+    """Removing any single family/adapter cannot borrow another family's gate."""
+
+    workflow_root = tmp_path / ".github/workflows"
+    workflow_root.parent.mkdir(parents=True)
+    shutil.copytree(REPO_ROOT / ".github/workflows", workflow_root)
+    path = workflow_root / workflow
+    source = path.read_text(encoding="utf-8")
+    marker = (
+        f"run_cxx_conformance.ps1 -Family {family} -Compiler"
+        if participant == "cxx"
+        else f"run_semantic_conformance.py --family {family} --participant {participant}"
+    )
+    assert source.count(marker) == 1
+    path.write_text(source.replace(marker, "removed-family-launcher"), encoding="utf-8")
+    with pytest.raises(WorkflowPolicyError, match="missing a required marker"):
+        validate_scan_run_workflow_policy(tmp_path)
+
+
+@pytest.mark.parametrize(
     ("relative_path", "needle", "replacement", "message"),
     (
         (

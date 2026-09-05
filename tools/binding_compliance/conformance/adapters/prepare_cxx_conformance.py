@@ -23,7 +23,16 @@ from conformance.packs import (
 PACK_RELATIVE_PATH = Path("tests/conformance/packs/crash_log_scan_run/v1.json")
 DEFAULT_ARTIFACT_ROOT = Path("tools/binding_compliance/artifacts")
 SUPPORTED_COMPILERS = ("msvc", "clang-cl")
-SUPPORTED_FAMILIES = ("crash-log-scan-run", "user-settings")
+SUPPORTED_FAMILIES = (
+    "crash-log-scan-run",
+    "user-settings",
+    "crash-suspect",
+    "crashgen-settings",
+    "mod-guidance",
+    "formid-lookup",
+    "named-record",
+    "plugin-evidence",
+)
 
 
 def _cxx_source_paths(
@@ -67,6 +76,15 @@ def _cxx_source_paths(
             repo_root / "cpp-bindings" / "classic-cpp-bridge" / "src" / "settings.rs",
             repo_root / "business-logic" / "classic-user-settings-core" / "src",
         )
+    elif family != "crash-log-scan-run":
+        paths += (
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_semantic_conformance.h",
+            repo_root / "cpp-bindings/classic-cpp-bridge/src",
+            repo_root / "business-logic/classic-scanlog-core/src",
+            repo_root / "business-logic/classic-database-core/src",
+            repo_root / "business-logic/classic-config-core/src",
+        )
     return paths
 
 
@@ -92,11 +110,7 @@ def prepare_cxx_run(
     if family not in SUPPORTED_FAMILIES:
         raise ValueError("unsupported CXX conformance family: " + family)
     root = repo_root.resolve(strict=True)
-    pack_path = (
-        Path("tests/conformance/packs/user_settings/v1.json")
-        if family == "user-settings"
-        else PACK_RELATIVE_PATH
-    )
+    pack_path = Path("tests/conformance/packs") / family.replace("-", "_") / "v1.json"
     pack = load_and_validate_pack(root, root / pack_path)
     return materialize_run_plan(
         pack,

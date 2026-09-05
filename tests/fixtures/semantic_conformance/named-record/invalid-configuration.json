@@ -1,0 +1,15 @@
+{
+  "configuration": {
+    "targetRecords": [
+      " "
+    ],
+    "ignoreRecords": []
+  },
+  "request": {
+    "crashLines": [
+      "ActorBase_Player",
+      "ActorBase_System",
+      "ActorBase_Player"
+    ]
+  }
+}

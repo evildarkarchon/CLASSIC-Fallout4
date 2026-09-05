@@ -1,0 +1,44 @@
+{
+  "configuration": {
+    "crashgenName": "Buffout 4",
+    "entry": {
+      "display_section": "[Compatibility]",
+      "ignore_keys": [
+        "IgnoredSetting"
+      ],
+      "settings_rules": {
+        "version": 2,
+        "preflight": [
+          {
+            "id": "compatibility_notice",
+            "when": {
+              "plugin_any": [
+                "MixedCase.dll"
+              ]
+            },
+            "action": {
+              "kind": "notice",
+              "placement": "error_information",
+              "severity": "warning",
+              "message": "Authored guidance for {crashgen_name}",
+              "fix": "Authored fix"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "request": {
+    "settings": {
+      "Compatibility": {
+        "DisabledSetting": "false",
+        "IgnoredSetting": "false"
+      }
+    },
+    "installedPlugins": [
+      "MIXEDCASE.DLL"
+    ],
+    "crashgenVersion": null,
+    "configLayout": "og"
+  }
+}

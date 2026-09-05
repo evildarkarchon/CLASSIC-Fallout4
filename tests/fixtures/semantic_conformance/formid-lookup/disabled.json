@@ -1,0 +1,10 @@
+{
+  "configuration": {
+    "mode": "disabled",
+    "entries": []
+  },
+  "request": {
+    "formid": "000800",
+    "plugin": "SOMEMOD.ESP"
+  }
+}

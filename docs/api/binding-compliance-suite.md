@@ -201,9 +201,23 @@ Existing C++, Node, and Python parity gates remain available as focused debuggin
 
 ## Current Coverage Gaps
 
+The six focused families `crash-suspect`, `crashgen-settings`, `mod-guidance`,
+`formid-lookup`, `named-record`, and `plugin-evidence` now also require blocking
+receipts from Rust, Node, Python, and CXX on both MSVC and clang-cl. Launch one
+with `python tools/binding_compliance/run_semantic_conformance.py --family
+<family> --participant <rust|node|python>` after its native build, or use
+`tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family
+<family> -Compiler <msvc|clang-cl>`. CI retains the existing runtime suites and
+registry evidence and uploads each family's diagnostics separately. Successful
+hits, misses, disabled lookup, empty findings, authored guidance, and structured
+failures remain distinct typed observations. See the
+[equivalence map](../implementation/semantic_conformance_equivalence.md) for
+fixture ownership and retained evidence. These family slices make no new
+frontend-consumer or full-repository completeness claim.
+
 The suite reports known weak coverage instead of silently rewriting policy around it. The remaining gaps are:
 
-- C++ has no editable runtime-coverage registry equivalent to the Node and Python registries. The Crash Log Scan Run v1 pack closes that family-specific gap with executable CXX receipts on MSVC and clang-cl; other CXX domains still rely on their source-derived parity dispositions until their own packs migrate.
+- C++ has no editable runtime-coverage registry equivalent to the Node and Python registries. Crash Log Scan Run, User Settings, and the six focused semantic v1 packs close their family-specific gaps with executable CXX receipts on MSVC and clang-cl; other CXX domains still rely on their source-derived parity dispositions until their own packs migrate.
 - The Crash Log Scan Run v1 report is blocking across Rust, Node, Python, both required CXX execution instances, and the separate CLI, GUI, and TUI consumer instances. Its copied acknowledgements and positive source-marker evidence have been retired. The fixture, source-inventory, negative-export, parity, declaration/stub, rebuild, runtime, and native wrapper gates remain blocking; other families have not inherited this retirement.
 - Replacement-publication failure, replacement durability uncertainty, and the non-hermetic structured-failure injections remain blocking internal fault analyzers, not semantic receipts. A deterministic public scenario may replace that classification later; a test-only public binding hook or fabricated adapter receipt may not.
 - Public enum values without a hermetic v1 scenario—such as no-log/setup terminal states, alternate Installed YAML candidate diagnostics, and custom Unsolved Logs movement—remain exact blocking dispositions under `scan-run-contract-validator`. They grant no semantic receipt credit; the variant policy prevents them, or any newly added value, from falling through to an unrelated happy-path fact.

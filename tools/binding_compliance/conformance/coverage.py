@@ -32,6 +32,33 @@ _PARITY_ANALYZERS = {
 _ROW_COVERAGE_SEAL = object()
 _RETAINED_ANALYZER_CATALOG_SEAL = object()
 
+# Exact public operation names, not parity-row hashes. Unknown new bridge
+# functions retain their source identity and cannot borrow an existing fact.
+_SEMANTIC_BRIDGE_OPERATIONS = {
+    **{
+        prefix + suffix: operation
+        for prefix in (
+            "crash_suspect",
+            "crashgen_settings",
+            "mod_guidance",
+            "named_record_finding",
+            "plugin_evidence",
+        )
+        for suffix, operation in (
+            ("_analyzer_new", "new"),
+            ("_analyze", "analyze"),
+            ("_analyzer_construction_result", "construction_result"),
+        )
+    },
+    "formid_value_lookup_construction_result": "construction_result",
+    "formid_value_lookup_disabled_new": "disabled",
+    "formid_value_lookup_in_memory_new": "in_memory",
+    "formid_value_lookup_lookup": "lookup",
+    "formid_value_lookup_lookup_batch": "lookup_batch",
+    "formid_value_lookup_shared_pool_new": "shared_pool",
+    "formid_value_lookup_sqlite_new": "sqlite",
+}
+
 
 class CoverageDerivationError(ValueError):
     """Raised when family coverage policy cannot produce trustworthy facts."""
@@ -167,6 +194,8 @@ class CoveragePredicate:
     ``matches`` receives only the centrally normalized actual observation. The
     trusted scenario action is matched separately, so receipt runner metadata,
     test names, selector hashes, and migration state cannot influence the fact.
+    ``runtime_operations`` optionally limits credit to public operations derived
+    from current source declarations; ``None`` inside that tuple names carriers.
     """
 
     id: str
@@ -176,6 +205,11 @@ class CoveragePredicate:
     rust_symbols: tuple[str, ...]
     matches: Callable[[Mapping[str, Any]], bool]
     binding_obligation_ids: tuple[str, ...] = ()
+    runtime_operations: tuple[str | None, ...] | None = None
+
+    def covers_runtime_operation(self, operation: str | None) -> bool:
+        """Return whether this fact may cover the source-derived public operation."""
+        return self.runtime_operations is None or operation in self.runtime_operations
 
 
 @dataclass(frozen=True)
@@ -199,6 +233,7 @@ class SourceParityRow:
     locator: str
     required_evidence_kind: str = "runtime"
     retained_analyzer_id: str | None = None
+    runtime_operation: str | None = None
 
 
 def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
@@ -299,6 +334,29 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
                     )
                     required_evidence_kind = "runtime"
                 rust_symbol = raw_row.get("rustSymbol")
+            # Python maps methods to their owning Rust type; CXX uses both
+            # method and type mappings. Read the public binding operation so a
+            # new class method or bridge alias cannot inherit existing credit.
+            runtime_operation = None
+            if participant_id == "python" and raw_row.get("pythonKind") == "method":
+                export = raw_row.get("pythonExportPath")
+                if not isinstance(export, str):
+                    raise CoverageDerivationError(
+                        "Python method row has no export path"
+                    )
+                owner, _, method = export.rpartition(".")
+                runtime_operation = method if owner == rust_symbol else export
+                if runtime_operation == "from_shared_pool":
+                    runtime_operation = "shared_pool"
+            elif participant_id == "cxx" and raw_row.get("kind") == "function":
+                binding_symbol = raw_row.get("rustSymbol")
+                if not isinstance(binding_symbol, str):
+                    raise CoverageDerivationError(
+                        "CXX function row has no binding symbol"
+                    )
+                runtime_operation = _SEMANTIC_BRIDGE_OPERATIONS.get(
+                    binding_symbol, binding_symbol
+                )
             rust_crate = raw_row.get("rustCrate")
             rows.append(
                 SourceParityRow(
@@ -312,6 +370,7 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
                     artifact=relative_path.as_posix(),
                     locator=f"/{row_key}/{index}#id={row_id}",
                     required_evidence_kind=required_evidence_kind,
+                    runtime_operation=runtime_operation,
                     retained_analyzer_id=(
                         _PARITY_ANALYZERS[participant_id]
                         if required_evidence_kind != "runtime"
@@ -706,7 +765,7 @@ def derive_row_coverage(
             raise CoverageDerivationError(
                 "row coverage requires policy exceptions from the reviewed repository catalog"
             )
-    trusted_analyzers = retained_analyzers or {}
+    trusted_analyzers: Mapping[str, str] = retained_analyzers or {}
     row_results: list[RowCoverage] = []
     failures: list[CoverageFailure] = []
     for row in selected_parity_rows:
@@ -818,7 +877,8 @@ def derive_row_coverage(
             sorted(
                 fact_id
                 for fact_id in participant_facts
-                if (
+                if (predicates[fact_id].covers_runtime_operation(row.runtime_operation))
+                and (
                     (row.obligation_id in predicates[fact_id].binding_obligation_ids)
                     if predicates[fact_id].binding_obligation_ids
                     else (

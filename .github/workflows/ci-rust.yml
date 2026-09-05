@@ -206,6 +206,84 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Rust crash-suspect conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family crash-suspect --participant rust --artifact-root tools/binding_compliance/artifacts/crash-suspect
+
+      - name: Upload Rust crash-suspect conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-crash-suspect-conformance
+          path: tools/binding_compliance/artifacts/crash-suspect/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust crashgen-settings conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family crashgen-settings --participant rust --artifact-root tools/binding_compliance/artifacts/crashgen-settings
+
+      - name: Upload Rust crashgen-settings conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-crashgen-settings-conformance
+          path: tools/binding_compliance/artifacts/crashgen-settings/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust mod-guidance conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family mod-guidance --participant rust --artifact-root tools/binding_compliance/artifacts/mod-guidance
+
+      - name: Upload Rust mod-guidance conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-mod-guidance-conformance
+          path: tools/binding_compliance/artifacts/mod-guidance/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust formid-lookup conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family formid-lookup --participant rust --artifact-root tools/binding_compliance/artifacts/formid-lookup
+
+      - name: Upload Rust formid-lookup conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-formid-lookup-conformance
+          path: tools/binding_compliance/artifacts/formid-lookup/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust named-record conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family named-record --participant rust --artifact-root tools/binding_compliance/artifacts/named-record
+
+      - name: Upload Rust named-record conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-named-record-conformance
+          path: tools/binding_compliance/artifacts/named-record/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust plugin-evidence conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family plugin-evidence --participant rust --artifact-root tools/binding_compliance/artifacts/plugin-evidence
+
+      - name: Upload Rust plugin-evidence conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-plugin-evidence-conformance
+          path: tools/binding_compliance/artifacts/plugin-evidence/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run TUI Crash Log Scan Run consumer conformance
         if: ${{ !cancelled() }}
         run: python tools/binding_compliance/run_scan_run_consumer_conformance.py --participant tui

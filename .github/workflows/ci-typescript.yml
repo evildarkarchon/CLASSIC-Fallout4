@@ -202,6 +202,84 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Node crash-suspect conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family crash-suspect --participant node --artifact-root tools/binding_compliance/artifacts/crash-suspect
+
+      - name: Upload Node crash-suspect conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-crash-suspect-conformance
+          path: tools/binding_compliance/artifacts/crash-suspect/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node crashgen-settings conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family crashgen-settings --participant node --artifact-root tools/binding_compliance/artifacts/crashgen-settings
+
+      - name: Upload Node crashgen-settings conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-crashgen-settings-conformance
+          path: tools/binding_compliance/artifacts/crashgen-settings/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node mod-guidance conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family mod-guidance --participant node --artifact-root tools/binding_compliance/artifacts/mod-guidance
+
+      - name: Upload Node mod-guidance conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-mod-guidance-conformance
+          path: tools/binding_compliance/artifacts/mod-guidance/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node formid-lookup conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family formid-lookup --participant node --artifact-root tools/binding_compliance/artifacts/formid-lookup
+
+      - name: Upload Node formid-lookup conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-formid-lookup-conformance
+          path: tools/binding_compliance/artifacts/formid-lookup/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node named-record conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family named-record --participant node --artifact-root tools/binding_compliance/artifacts/named-record
+
+      - name: Upload Node named-record conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-named-record-conformance
+          path: tools/binding_compliance/artifacts/named-record/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node plugin-evidence conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family plugin-evidence --participant node --artifact-root tools/binding_compliance/artifacts/plugin-evidence
+
+      - name: Upload Node plugin-evidence conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-plugin-evidence-conformance
+          path: tools/binding_compliance/artifacts/plugin-evidence/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Upload Node Crash Log Scan Run conformance diagnostics
         if: matrix.runtime == 'node' && always()
         uses: actions/upload-artifact@v6
