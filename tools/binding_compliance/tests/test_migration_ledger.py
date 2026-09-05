@@ -98,12 +98,7 @@ def test_discovery_freezes_every_current_evidence_source() -> None:
         "parity_row": 2_776,
         "runtime_registry_claim": 67,
         "scan_run_contract_variant": 73,
-        "scan_run_supported_adapter": 4,
-        "scan_run_variant_acknowledgement": 292,
-        "scan_run_source_marker": 124,
-        "scan_run_required_participant": 28,
-        "consumer_required_participant": 3,
-        "consumer_audit": 6,
+        "scan_run_variant_policy": 73,
         "source_audit": 189,
         "rust_enum_inventory_audit": 15,
         "display_content_source_audit": 11,
@@ -190,200 +185,86 @@ def test_binding_only_rows_and_cxx_policy_exception_remain_explicit() -> None:
     assert resource_exception["classification"] == "policy_exception"
 
 
-def test_unreachable_reset_faults_remain_blocking_structural_obligations() -> None:
-    """Private replacement faults cannot be mislabeled as public semantic receipts."""
+def test_scan_run_retirement_uses_policy_targets_and_retains_analyzers() -> None:
+    """Retirement removes copied proof rows while retaining real evidence targets."""
 
     obligations = discover_current_obligations(REPO_ROOT)
-    reset_faults = [
-        entry
+    variants = {
+        entry["id"].removeprefix("scan-run:policy-variant:"): entry
         for entry in obligations
-        if entry["mappingOrigin"] == "retained_internal_fault_projection"
-    ]
-
-    assert {
-        entry["participant"] for entry in reset_faults
-    } == {"rust", "cxx", "node", "python"}
-    assert all(entry["classification"] == "structural_analyzer" for entry in reset_faults)
-    assert all(entry["migrationState"] == "blocking" for entry in reset_faults)
-    assert all(
-        entry["target"]["analyzerId"]
-        == "scan-run-local-ignore-reset-internal-faults"
-        for entry in reset_faults
-    )
-    variant_faults = [
-        entry
-        for entry in reset_faults
-        if entry["sourceKind"] == "scan_run_variant_acknowledgement"
-    ]
-    marker_faults = [
-        entry
-        for entry in reset_faults
-        if entry["sourceKind"] == "scan_run_source_marker"
-    ]
-    assert len(variant_faults) == 8
-    assert len(marker_faults) == 17
-
-    public_reset_variants = {
-        entry["id"]: entry
-        for entry in obligations
-        if entry["sourceKind"] == "scan_run_variant_acknowledgement"
-        and (
-            entry["id"].endswith("local_ignore_reset_conflict")
-            or entry["id"].endswith("local_ignore_reset_backup_failure")
-        )
+        if entry["sourceKind"] == "scan_run_variant_policy"
     }
-    assert len(public_reset_variants) == 8
-    assert all(
-        entry["classification"] == "runtime_verifiable"
-        for entry in public_reset_variants.values()
-    )
-
-
-def test_unreachable_structured_failures_remain_blocking_structural_obligations() -> None:
-    """Injected and constructed failures cannot masquerade as public receipts."""
-
-    obligations = discover_current_obligations(REPO_ROOT)
-    retained_failures = [
+    assert len(variants) == 73
+    runtime = [
         entry
-        for entry in obligations
-        if entry["mappingOrigin"] == "retained_internal_failure_projection"
-    ]
-
-    assert {
-        entry["participant"] for entry in retained_failures
-    } == {"rust", "cxx", "node", "python"}
-    assert all(
-        entry["classification"] == "structural_analyzer"
-        for entry in retained_failures
-    )
-    assert all(entry["migrationState"] == "blocking" for entry in retained_failures)
-    assert all(
-        entry["target"]["analyzerId"]
-        == "scan-run-structured-failure-internal-faults"
-        for entry in retained_failures
-    )
-    assert all(
-        entry["target"]["evidenceRole"] == "structural_analyzer"
-        and entry["target"]["familyId"] is None
-        and entry["target"]["scenarioId"] is None
-        for entry in retained_failures
-    )
-    assert sum(
-        entry["sourceKind"] == "scan_run_variant_acknowledgement"
-        for entry in retained_failures
-    ) == 16
-    assert sum(
-        entry["sourceKind"] == "scan_run_source_marker"
-        for entry in retained_failures
-    ) == 23
-
-    public_variants = {
-        entry["id"]: entry
-        for entry in obligations
-        if entry["sourceKind"] == "scan_run_variant_acknowledgement"
-        and entry["id"].endswith(
-            (
-                "infrastructure_error_stage.request_validation",
-                "infrastructure_error_stage.discovery",
-                "infrastructure_error_stage.intake",
-                "log_failure_stage.report_write",
-                "log_failure_stage.unsolved_logs_finalization",
-            )
-        )
-    }
-    assert len(public_variants) == 20
-    assert all(
-        entry["classification"] == "runtime_verifiable"
-        for entry in public_variants.values()
-    )
-
-
-def test_scan_run_runtime_obligations_are_blocking_while_legacy_evidence_remains() -> None:
-    """Promote the receipt-owned surface without claiming broader source audits."""
-
-    obligations = discover_current_obligations(REPO_ROOT)
-    promoted_source_kinds = {
-        "scan_run_variant_acknowledgement",
-        "scan_run_source_marker",
-        "scan_run_required_participant",
-        "consumer_audit",
-        "scan_run_supported_adapter",
-        "consumer_required_participant",
-    }
-    promoted = [
-        entry
-        for entry in obligations
+        for entry in variants.values()
         if entry["classification"] == "runtime_verifiable"
-        and entry["sourceKind"] in promoted_source_kinds
     ]
+    retained = [
+        entry
+        for entry in variants.values()
+        if entry["classification"] == "structural_analyzer"
+    ]
+    assert len(runtime) == 55
+    assert len(retained) == 18
+    assert all(entry["migrationState"] == "retired" for entry in runtime)
+    assert all(entry["migrationState"] == "blocking" for entry in retained)
+    assert all(
+        entry["target"]["scenarioId"] and entry["target"]["observationOrAssertion"]
+        for entry in runtime
+    )
+    assert {entry["target"]["analyzerId"] for entry in retained} == {
+        "scan-run-contract-validator",
+        "scan-run-local-ignore-reset-internal-faults",
+        "scan-run-structured-failure-internal-faults",
+    }
+    assert (
+        variants["discovery_source.targeted"]["target"]["scenarioId"]
+        == "targeted-happy-path"
+    )
+    assert (
+        variants["cancellation_seam.admitted"]["target"]["observationOrAssertion"]
+        == "scan-run.lifecycle.admitted-cancellation"
+    )
+    assert all(
+        entry["source"]["artifact"]
+        == "tools/binding_compliance/conformance/variant_policy.py"
+        for entry in variants.values()
+    )
+    assert not any(
+        "/adapters/" in entry["source"]["locator"]
+        or "/requiredOwners/" in entry["source"]["locator"]
+        for entry in obligations
+    )
 
-    assert len(promoted) == 345
-    assert all(entry["migrationState"] == "blocking" for entry in promoted)
-    assert all(entry["target"]["scenarioId"] for entry in promoted)
-    assert all(entry["target"]["observationOrAssertion"] for entry in promoted)
-    assert all(entry["retainedAnalyzerIds"] for entry in promoted)
-
-    broader_consumer_source_audits = [
+    broader = [
         entry
         for entry in obligations
         if entry["sourceKind"] == "consumer_source_audit"
         and entry["target"]["familyId"] == "crash-log-scan-run"
     ]
-    assert len(broader_consumer_source_audits) == 36
-    assert all(
-        entry["migrationState"] == "shadow"
-        for entry in broader_consumer_source_audits
-    )
-
-    source_artifacts = {entry["source"]["artifact"] for entry in promoted}
-    assert "tests/fixtures/crash_log_scan_run/manifest.json" in source_artifacts
-
-    variants = {entry["id"]: entry for entry in promoted if entry["sourceKind"] == "scan_run_variant_acknowledgement"}
-    targeted = variants["scan-run:variant:rust:discovery_source.targeted"]
-    admitted = variants["scan-run:variant:rust:cancellation_seam.admitted"]
-    assert targeted["target"]["scenarioId"] == "targeted-happy-path"
-    assert targeted["target"]["observationOrAssertion"] == "scan-run.discovery"
-    assert admitted["target"]["scenarioId"] == "admitted-durable-cancelled"
-    assert admitted["target"]["observationOrAssertion"] == (
-        "scan-run.lifecycle.admitted-cancellation"
-    )
-
-    retained_public_variants = [
-        entry
-        for entry in obligations
-        if entry["mappingOrigin"] == "retained_contract_variant_projection"
-    ]
-    assert len(retained_public_variants) == 48
-    assert all(
-        entry["classification"] == "structural_analyzer"
-        and entry["migrationState"] == "blocking"
-        for entry in retained_public_variants
-    )
+    assert len(broader) == 36
+    assert all(entry["migrationState"] == "shadow" for entry in broader)
 
 
-def test_cxx_internal_failure_marker_cannot_be_relabelled_as_public_execution() -> None:
-    """A tracked-ledger mutation cannot convert CXX structural proof to a receipt."""
+def test_retained_internal_variant_cannot_be_relabelled_as_public_execution() -> None:
+    """Diagnostic ledger mutations cannot convert internal proof to a receipt."""
 
     discovered = discover_current_obligations(REPO_ROOT)
     ledger = generate_ledger(REPO_ROOT)
-    marker = next(
+    entry = next(
         entry
         for entry in ledger["obligations"]
-        if entry["participant"] == "cxx"
-        and entry["mappingOrigin"] == "retained_internal_failure_projection"
-        and entry["sourceKind"] == "scan_run_source_marker"
-        and "maps_every_core_enum_variant_to_a_typed_cxx_variant"
-        in entry["source"]["locator"]
+        if entry["id"] == "scan-run:policy-variant:log_failure_stage.analysis"
     )
-    marker["classification"] = "runtime_verifiable"
-    marker["migrationState"] = "shadow"
-    marker["target"] = {
+    entry["classification"] = "runtime_verifiable"
+    entry["migrationState"] = "shadow"
+    entry["target"] = {
         "familyId": "crash-log-scan-run",
-        "scenarioId": "fabricated-cxx-internal-failure",
-        "observationOrAssertion": marker["source"]["locator"],
+        "scenarioId": "fabricated-internal-failure",
+        "observationOrAssertion": "fabricated-observation",
         "evidenceRole": "semantic_adapter",
     }
-
     with pytest.raises(LedgerValidationError, match="stale obligation entries"):
         validate_ledger_entries(ledger, discovered)
 
@@ -446,7 +327,7 @@ def test_generated_ledger_is_deterministic_and_non_evidentiary() -> None:
 
     assert first == second
     assert first["diagnosticOnly"] is True
-    assert first["sourceSummary"]["total"] == 3_655
+    assert first["sourceSummary"]["total"] == 3_271
     assert "coverage" not in first
     assert "receipts" not in first
     validate_ledger_entries(first, discover_current_obligations(REPO_ROOT))
@@ -459,7 +340,8 @@ def test_markdown_summary_warns_that_the_ledger_grants_no_compliance() -> None:
 
     assert "Diagnostic only" in markdown
     assert "does **not** grant compliance" in markdown
-    assert "3,655" in markdown
+    assert "3,271" in markdown
+    assert "Executable conformance and retained analyzers remain blocking" in markdown
 
 
 def test_analyzer_must_resolve_to_a_blocking_owner_and_matching_kind() -> None:

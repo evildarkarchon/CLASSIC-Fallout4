@@ -87,56 +87,6 @@ ANALYZER_IDS = {
     "python": "python-source-and-stub-parity",
 }
 
-SCAN_RUN_INTERNAL_RESET_VARIANTS = frozenset(
-    {
-        "resume_error_kind.local_ignore_reset_replacement_failure",
-        "resume_error_kind.local_ignore_reset_durability_unknown",
-    }
-)
-"""Reset outcomes that cannot be triggered safely through every public adapter seam."""
-
-SCAN_RUN_INTERNAL_RESET_MARKERS = frozenset(
-    {
-        "local_ignore_reset_types_durability_unknown_after_canonical_replacement",
-        "reset_replacement_publication_failure_projects_stable_typed_details",
-        "reset_replacement_durability_unknown_projects_recoverable_receipt",
-        "cxx_resume_operational_errors_preserve_every_stable_reset_outcome_field",
-        "cxx_resume_durability_unknown_preserves_recovery_receipt",
-        "replacement_failure_projects_shared_node_rejection_metadata",
-        "durability_unknown_projects_shared_node_recovery_receipt",
-        "replacement_failure_maps_shared_outcome_to_typed_python_exception",
-        "durability_unknown_maps_shared_outcome_to_typed_python_exception",
-    }
-)
-"""Blocking internal tests that preserve unreachable reset-fault projection coverage."""
-
-SCAN_RUN_INTERNAL_FAILURE_VARIANTS = frozenset(
-    {
-        "log_failure_stage.analysis",
-        "infrastructure_error_stage.formid_database_access",
-        "infrastructure_error_stage.initialization",
-        "infrastructure_error_stage.internal_invariant",
-    }
-)
-"""Failure variants without a deterministic cross-adapter public execution seam."""
-
-SCAN_RUN_INTERNAL_FAILURE_MARKERS = frozenset(
-    {
-        "final_log_result_preserves_multiple_structured_failure_stages",
-        "injected_infrastructure_failures_preserve_every_stable_contract_field",
-        "structured_result_mapping_preserves_pairs_options_failures_and_paths",
-        "shared_failure_fixture_maps_every_cxx_failure_field",
-        "maps_every_core_enum_variant_to_a_typed_cxx_variant",
-        "terminal_mapping_preserves_every_status_failure_and_optional_path",
-        "shared_failure_fixture_maps_every_node_failure_field",
-        "infrastructure_mapping_covers_every_stage_with_and_without_paths",
-        "maps_complete_log_result_and_all_failure_stages",
-        "shared_failure_fixture_maps_every_python_failure_field",
-        "maps_every_infrastructure_stage_and_optional_path",
-    }
-)
-"""Injected or constructed structured-failure evidence retained as structural proof."""
-
 DISPLAY_AUDIT_SPECS: tuple[
     tuple[str, Path, tuple[tuple[str, str], ...], tuple[tuple[str, str], ...]], ...
 ] = (
@@ -925,93 +875,13 @@ def _runtime_registry_obligations(repo_root: Path) -> list[dict[str, Any]]:
     return obligations
 
 
-def _evidence_markers(
-    *,
-    artifact: Path,
-    entries: object,
-    scope: str,
-    participant: str,
-    source_kind: str,
-    evidence_role: str,
-    planned_scenario_id: str | None,
-) -> list[dict[str, Any]]:
-    """Expand every positive source-marker occurrence into one obligation."""
-
-    obligations: list[dict[str, Any]] = []
-    for entry_index, raw_entry in enumerate(_require_list(entries, scope)):
-        entry = _require_object(raw_entry, f"{scope}[{entry_index}]")
-        path = entry.get("path")
-        if not isinstance(path, str) or not path:
-            raise LedgerValidationError(f"{scope}[{entry_index}] has no path")
-        markers = _require_list(
-            entry.get("contains"), f"{scope}[{entry_index}].contains"
-        )
-        for marker_index, marker in enumerate(markers):
-            if not isinstance(marker, str) or not marker:
-                raise LedgerValidationError(
-                    f"{scope}[{entry_index}].contains[{marker_index}] must be a string"
-                )
-            digest = _stable_digest(scope, path, marker)
-            if marker in SCAN_RUN_INTERNAL_RESET_MARKERS:
-                obligations.append(
-                    _analyzer_obligation(
-                        obligation_id=f"{source_kind}:{participant}:{digest}",
-                        source_kind=source_kind,
-                        artifact=artifact,
-                        locator=(
-                            f"{scope}/{entry_index}/contains/{marker_index}"
-                            f"#path={path};marker={marker}"
-                        ),
-                        participant=participant,
-                        mapping_origin="retained_internal_fault_projection",
-                        classification="structural_analyzer",
-                        analyzer_id="scan-run-local-ignore-reset-internal-faults",
-                    )
-                )
-                continue
-            if marker in SCAN_RUN_INTERNAL_FAILURE_MARKERS:
-                obligations.append(
-                    _analyzer_obligation(
-                        obligation_id=f"{source_kind}:{participant}:{digest}",
-                        source_kind=source_kind,
-                        artifact=artifact,
-                        locator=(
-                            f"{scope}/{entry_index}/contains/{marker_index}"
-                            f"#path={path};marker={marker}"
-                        ),
-                        participant=participant,
-                        mapping_origin="retained_internal_failure_projection",
-                        classification="structural_analyzer",
-                        analyzer_id="scan-run-structured-failure-internal-faults",
-                    )
-                )
-                continue
-            obligations.append(
-                _planned_runtime_obligation(
-                    obligation_id=f"{source_kind}:{participant}:{digest}",
-                    source_kind=source_kind,
-                    artifact=artifact,
-                    locator=(
-                        f"{scope}/{entry_index}/contains/{marker_index}"
-                        f"#path={path};marker={marker}"
-                    ),
-                    participant=participant,
-                    mapping_origin=(
-                        "legacy_consumer_marker"
-                        if source_kind == "consumer_audit"
-                        else "legacy_source_marker"
-                    ),
-                    family_id="crash-log-scan-run",
-                    evidence_role=evidence_role,
-                    planned_scenario_id=planned_scenario_id,
-                    retained_analyzer_ids=("scan-run-contract-validator",),
-                )
-            )
-    return obligations
-
-
 def _scan_run_obligations(repo_root: Path) -> list[dict[str, Any]]:
-    """Discover current Crash Log Scan Run acknowledgements, markers, and audits."""
+    """Discover retained scan-run audits and policy targets after proof retirement.
+
+    Variant targets come from the trusted executable policy, once per variant.
+    Diagnostic retirement records never provide receipt coverage; internal and
+    structural projections continue to belong to their blocking analyzers.
+    """
 
     manifest = _read_json(repo_root, SCAN_RUN_MANIFEST)
     obligations: list[dict[str, Any]] = []
@@ -1037,212 +907,38 @@ def _scan_run_obligations(repo_root: Path) -> list[dict[str, Any]]:
             )
         )
 
-    supported_adapters = _require_list(
-        manifest.get("supportedAdapters"), "manifest.supportedAdapters"
-    )
-    for index, participant in enumerate(supported_adapters):
-        if not isinstance(participant, str) or not participant:
-            raise LedgerValidationError(
-                f"manifest.supportedAdapters[{index}] must be a string"
-            )
-        obligations.append(
-            _planned_runtime_obligation(
-                obligation_id=f"scan-run:supported-adapter:{participant}",
-                source_kind="scan_run_supported_adapter",
-                artifact=SCAN_RUN_MANIFEST,
-                locator=f"/supportedAdapters/{index}#{participant}",
-                participant=participant,
-                mapping_origin="legacy_applicability_claim",
-                family_id="crash-log-scan-run",
-                retained_analyzer_ids=("scan-run-contract-validator",),
-            )
-        )
-
-    adapters = _require_object(manifest.get("adapters"), "manifest.adapters")
-    for participant, raw_adapter in adapters.items():
-        adapter = _require_object(raw_adapter, f"manifest.adapters.{participant}")
-        variants = _require_list(
-            adapter.get("acknowledgedVariants"),
-            f"manifest.adapters.{participant}.acknowledgedVariants",
-        )
-        for index, variant in enumerate(variants):
-            if not isinstance(variant, str) or not variant:
-                raise LedgerValidationError(
-                    f"manifest.adapters.{participant}.acknowledgedVariants[{index}] "
-                    "must be a string"
-                )
-            locator = f"/adapters/{participant}/acknowledgedVariants/{index}#{variant}"
-            if variant in SCAN_RUN_INTERNAL_RESET_VARIANTS:
-                obligations.append(
-                    _analyzer_obligation(
-                        obligation_id=f"scan-run:variant:{participant}:{variant}",
-                        source_kind="scan_run_variant_acknowledgement",
-                        artifact=SCAN_RUN_MANIFEST,
-                        locator=locator,
-                        participant=participant,
-                        mapping_origin="retained_internal_fault_projection",
-                        classification="structural_analyzer",
-                        analyzer_id="scan-run-local-ignore-reset-internal-faults",
-                    )
-                )
-                continue
-            if variant in SCAN_RUN_INTERNAL_FAILURE_VARIANTS:
-                obligations.append(
-                    _analyzer_obligation(
-                        obligation_id=f"scan-run:variant:{participant}:{variant}",
-                        source_kind="scan_run_variant_acknowledgement",
-                        artifact=SCAN_RUN_MANIFEST,
-                        locator=locator,
-                        participant=participant,
-                        mapping_origin="retained_internal_failure_projection",
-                        classification="structural_analyzer",
-                        analyzer_id="scan-run-structured-failure-internal-faults",
-                    )
-                )
-                continue
-            target = CRASH_LOG_SCAN_RUN_VARIANT_TARGETS.get(variant)
-            if target is None:
-                raise LedgerValidationError(
-                    f"scan-run variant {variant} has no reviewed evidence target"
-                )
-            if target.retained_analyzer_id is not None:
-                obligations.append(
-                    _analyzer_obligation(
-                        obligation_id=f"scan-run:variant:{participant}:{variant}",
-                        source_kind="scan_run_variant_acknowledgement",
-                        artifact=SCAN_RUN_MANIFEST,
-                        locator=locator,
-                        participant=participant,
-                        mapping_origin="retained_contract_variant_projection",
-                        classification="structural_analyzer",
-                        analyzer_id=target.retained_analyzer_id,
-                    )
-                )
-                continue
+    policy_path = Path("tools/binding_compliance/conformance/variant_policy.py")
+    for variant, target in CRASH_LOG_SCAN_RUN_VARIANT_TARGETS.items():
+        identity = {
+            "obligation_id": f"scan-run:policy-variant:{variant}",
+            "source_kind": "scan_run_variant_policy",
+            "artifact": policy_path,
+            "locator": f"CRASH_LOG_SCAN_RUN_VARIANT_TARGETS[{variant}]",
+            "participant": "rust",
+            "mapping_origin": "reviewed_variant_policy",
+        }
+        if target.retained_analyzer_id is not None:
             obligations.append(
-                _planned_runtime_obligation(
-                    obligation_id=f"scan-run:variant:{participant}:{variant}",
-                    source_kind="scan_run_variant_acknowledgement",
-                    artifact=SCAN_RUN_MANIFEST,
-                    locator=locator,
-                    participant=participant,
-                    mapping_origin="legacy_variant_acknowledgement",
-                    family_id="crash-log-scan-run",
-                    planned_scenario_id=target.scenario_id,
-                    planned_observation_or_assertion=target.assertion_id,
-                    retained_analyzer_ids=("scan-run-contract-validator",),
+                _analyzer_obligation(
+                    **identity,
+                    classification="structural_analyzer",
+                    analyzer_id=target.retained_analyzer_id,
                 )
             )
-        obligations.extend(
-            _evidence_markers(
-                artifact=SCAN_RUN_MANIFEST,
-                entries=adapter.get("evidence"),
-                scope=f"/adapters/{participant}/evidence",
-                participant=participant,
-                source_kind="scan_run_source_marker",
-                evidence_role="semantic_adapter",
-                planned_scenario_id=None,
-            )
+            continue
+        obligation = _planned_runtime_obligation(
+            **identity,
+            family_id="crash-log-scan-run",
+            planned_scenario_id=target.scenario_id,
+            planned_observation_or_assertion=target.assertion_id,
         )
-
-    scenarios = _require_object(manifest.get("scenarios"), "manifest.scenarios")
-    for scenario_id, raw_scenario in scenarios.items():
-        scenario = _require_object(raw_scenario, f"manifest.scenarios.{scenario_id}")
-        required_owners = _require_list(
-            scenario.get("requiredOwners"),
-            f"manifest.scenarios.{scenario_id}.requiredOwners",
-        )
-        for index, participant in enumerate(required_owners):
-            if not isinstance(participant, str) or not participant:
-                raise LedgerValidationError(
-                    f"manifest.scenarios.{scenario_id}.requiredOwners[{index}] "
-                    "must be a string"
-                )
-            obligations.append(
-                _planned_runtime_obligation(
-                    obligation_id=(
-                        f"scan-run:required-participant:{scenario_id}:{participant}"
-                    ),
-                    source_kind="scan_run_required_participant",
-                    artifact=SCAN_RUN_MANIFEST,
-                    locator=(
-                        f"/scenarios/{scenario_id}/requiredOwners/{index}#{participant}"
-                    ),
-                    participant=participant,
-                    mapping_origin="legacy_applicability_claim",
-                    family_id="crash-log-scan-run",
-                    planned_scenario_id=scenario_id,
-                    retained_analyzer_ids=("scan-run-contract-validator",),
-                )
-            )
-        evidence = _require_object(
-            scenario.get("evidence"), f"manifest.scenarios.{scenario_id}.evidence"
-        )
-        for participant, entries in evidence.items():
-            obligations.extend(
-                _evidence_markers(
-                    artifact=SCAN_RUN_MANIFEST,
-                    entries=entries,
-                    scope=f"/scenarios/{scenario_id}/evidence/{participant}",
-                    participant=participant,
-                    source_kind="scan_run_source_marker",
-                    evidence_role="semantic_adapter",
-                    planned_scenario_id=scenario_id,
-                )
-            )
-
-    presentations = _require_object(
-        manifest.get("presentations"), "manifest.presentations"
-    )
-    for presentation_id, raw_presentation in presentations.items():
-        presentation = _require_object(
-            raw_presentation, f"manifest.presentations.{presentation_id}"
-        )
-        required_owners = _require_list(
-            presentation.get("requiredOwners"),
-            f"manifest.presentations.{presentation_id}.requiredOwners",
-        )
-        for index, participant in enumerate(required_owners):
-            if not isinstance(participant, str) or not participant:
-                raise LedgerValidationError(
-                    f"manifest.presentations.{presentation_id}.requiredOwners[{index}] "
-                    "must be a string"
-                )
-            obligations.append(
-                _planned_runtime_obligation(
-                    obligation_id=(
-                        f"consumer:required-participant:{presentation_id}:{participant}"
-                    ),
-                    source_kind="consumer_required_participant",
-                    artifact=SCAN_RUN_MANIFEST,
-                    locator=(
-                        f"/presentations/{presentation_id}/requiredOwners/{index}"
-                        f"#{participant}"
-                    ),
-                    participant=participant,
-                    mapping_origin="legacy_applicability_claim",
-                    family_id="crash-log-scan-run",
-                    evidence_role="consumer",
-                    planned_scenario_id=presentation_id,
-                    retained_analyzer_ids=("scan-run-contract-validator",),
-                )
-            )
-        evidence = _require_object(
-            presentation.get("evidence"),
-            f"manifest.presentations.{presentation_id}.evidence",
-        )
-        for participant, entries in evidence.items():
-            obligations.extend(
-                _evidence_markers(
-                    artifact=SCAN_RUN_MANIFEST,
-                    entries=entries,
-                    scope=f"/presentations/{presentation_id}/evidence/{participant}",
-                    participant=participant,
-                    source_kind="consumer_audit",
-                    evidence_role="consumer",
-                    planned_scenario_id=presentation_id,
-                )
-            )
+        # Retirement describes the old proof mechanism, not the executable gate.
+        obligation["migrationState"] = "retired"
+        obligation["stateEvidence"] = [
+            "The legacy positive proof mechanism was removed after executable coverage became blocking.",
+            "The blocking Crash Log Scan Run report requires exact same-revision execution coverage.",
+        ]
+        obligations.append(obligation)
 
     forbidden_exports = _require_object(
         manifest.get("forbiddenExports"), "manifest.forbiddenExports"
@@ -1312,64 +1008,7 @@ def _scan_run_obligations(repo_root: Path) -> list[dict[str, Any]]:
                 analyzer_id="scan-run-rust-enum-inventory",
             )
         )
-    return [_promote_scan_run_runtime_obligation(entry) for entry in obligations]
-
-
-def _promote_scan_run_runtime_obligation(entry: dict[str, Any]) -> dict[str, Any]:
-    """Attach the concrete blocking evidence target for the promoted receipt surface.
-
-    The broader ``consumer_source_audit`` rows intentionally remain in shadow:
-    they describe source-level GUI assertions beyond the executable consumer
-    catalog and therefore are not part of the Crash Log Scan Run promotion.
-    """
-
-    if (
-        entry.get("classification") != "runtime_verifiable"
-        or entry.get("sourceKind") == "consumer_source_audit"
-    ):
-        return entry
-
-    source_kind = str(entry["sourceKind"])
-    participant = str(entry["participant"])
-    target = dict(entry["target"])
-    legacy_scenario = target.get("scenarioId")
-    scenario_crosswalk = {
-        "standard_end_to_end": "standard-happy-path",
-        "targeted_end_to_end": "targeted-happy-path",
-        "installed_yaml_data_existing_and_generated": "generated-local-ignore",
-        "local_ignore_recovery_continuation": "proceed-without-ignore-recovery",
-        "reset_to_default_continuation": "reset-to-default-recovery",
-        "cancellation_boundaries": "pre-discovery-cancelled",
-        "structured_failures": "request-validation-failure",
-        "rust_owned_facts": "standard-happy-path",
-    }
-    target["scenarioId"] = scenario_crosswalk.get(
-        legacy_scenario, legacy_scenario or "standard-happy-path"
-    )
-    if source_kind == "scan_run_variant_acknowledgement":
-        # The reviewed variant policy already supplied the exact scenario fact.
-        pass
-    elif source_kind in {"consumer_audit", "consumer_required_participant"}:
-        target["observationOrAssertion"] = (
-            f"consumer-coverage.required-obligations:{participant}"
-        )
-    elif source_kind == "scan_run_supported_adapter":
-        target["observationOrAssertion"] = (
-            f"scoped-report.required-executions:{participant}"
-        )
-    elif source_kind == "scan_run_required_participant":
-        target["observationOrAssertion"] = "scoped-report.required-scenarios"
-    else:
-        target["observationOrAssertion"] = "coverage.required-observation-facts"
-
-    promoted = dict(entry)
-    promoted["target"] = target
-    promoted["migrationState"] = "blocking"
-    promoted["stateEvidence"] = [
-        "The blocking Crash Log Scan Run report requires exact same-revision execution coverage.",
-        "The legacy contract validator remains blocking during the dual-run migration.",
-    ]
-    return promoted
+    return obligations
 
 
 def _display_content_audit_obligations(repo_root: Path) -> list[dict[str, Any]]:
@@ -1713,6 +1352,11 @@ def generate_ledger(repo_root: Path) -> dict[str, Any]:
             "A shadow runtime target may name its planned family while scenario and "
             "observation IDs remain null. Only executed receipts may justify a later state."
         ),
+        "retirementPolicy": (
+            "Retired Crash Log Scan Run policy targets record removal of legacy positive "
+            "proof only. Executable conformance and retained analyzers remain blocking; "
+            "this diagnostic ledger never establishes a passing execution."
+        ),
         "sourceSummary": {
             "total": len(obligations),
             "byKind": dict(sorted(by_kind.items())),
@@ -1766,6 +1410,7 @@ def render_ledger_markdown(ledger: Mapping[str, Any]) -> str:
     )
     for migration_state, count in summary["byMigrationState"].items():
         lines.append(f"| `{migration_state}` | {count:,} |")
+    lines.extend(("", ledger["retirementPolicy"]))
     lines.extend(
         (
             "",

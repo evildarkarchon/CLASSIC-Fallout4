@@ -22,24 +22,11 @@ from scan_run_contract import (  # type: ignore
 
 
 def test_live_scan_run_contract_manifest_is_complete() -> None:
-    """The repository manifest acknowledges every variant and scenario."""
+    """The repository fixtures, source inventory, and export constraints remain valid."""
 
     manifest = load_manifest(REPO_ROOT)
 
     validate_manifest(REPO_ROOT, manifest)
-
-
-def test_missing_adapter_variant_acknowledgement_fails_closed() -> None:
-    """Every supported adapter must explicitly acknowledge every variant."""
-
-    manifest = copy.deepcopy(load_manifest(REPO_ROOT))
-    manifest["adapters"]["node"]["acknowledgedVariants"].remove("event.log_finished")
-
-    with pytest.raises(
-        ManifestValidationError,
-        match=r"node.*event\.log_finished",
-    ):
-        validate_manifest(REPO_ROOT, manifest)
 
 
 def test_forbidden_legacy_export_fails_closed(tmp_path: Path) -> None:
@@ -133,7 +120,7 @@ def test_unregistered_rust_enum_variant_fails_closed(tmp_path: Path) -> None:
 
 
 def test_registered_but_unmapped_rust_variant_fails_closed(tmp_path: Path) -> None:
-    """Acknowledgements cannot replace a concrete fact or retained disposition."""
+    """Each registered variant needs a concrete executable fact or retained analyzer."""
 
     manifest = copy.deepcopy(load_manifest(REPO_ROOT))
     event_spec = next(
@@ -158,8 +145,6 @@ def test_registered_but_unmapped_rust_variant_fails_closed(tmp_path: Path) -> No
     ]
     new_variant = "event.adapter_forgotten_variant"
     manifest["contractVariants"].append(new_variant)
-    for adapter in manifest["adapters"].values():
-        adapter["acknowledgedVariants"].append(new_variant)
 
     with pytest.raises(
         ManifestValidationError,
@@ -205,7 +190,7 @@ def test_missing_reset_fixture_root_fails_closed() -> None:
 
 
 def test_missing_reset_fixture_fails_closed() -> None:
-    """The shared reset outcomes cannot disappear while adapter evidence remains."""
+    """The shared reset outcomes must remain part of the independent fixture oracle."""
 
     manifest = copy.deepcopy(load_manifest(REPO_ROOT))
     manifest["fixtures"].pop("installedYamlData")
@@ -258,19 +243,6 @@ def test_changed_reset_fixture_semantics_fail_closed() -> None:
     with pytest.raises(
         ManifestValidationError,
         match=r"expectedResetToDefault\.localIgnoreState",
-    ):
-        validate_manifest(REPO_ROOT, manifest)
-
-
-def test_missing_reset_scenario_fails_closed() -> None:
-    """All supported adapters must retain executable Reset To Default evidence."""
-
-    manifest = copy.deepcopy(load_manifest(REPO_ROOT))
-    manifest["scenarios"].pop("reset_to_default_continuation")
-
-    with pytest.raises(
-        ManifestValidationError,
-        match="reset_to_default_continuation",
     ):
         validate_manifest(REPO_ROOT, manifest)
 

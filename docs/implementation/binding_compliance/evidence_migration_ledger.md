@@ -2,7 +2,7 @@
 
 > **Diagnostic only.** This ledger classifies migration targets and does **not** grant compliance, runtime coverage, or permission to remove a gate.
 
-- Obligations: **3,655**
+- Obligations: **3,271**
 - Named retained analyzers: **20**
 - Documented policy exceptions: **1**
 
@@ -12,22 +12,23 @@
 | --- | ---: |
 | `negative_analyzer` | 207 |
 | `policy_exception` | 1 |
-| `runtime_verifiable` | 2,936 |
-| `structural_analyzer` | 511 |
+| `runtime_verifiable` | 2,646 |
+| `structural_analyzer` | 417 |
 
 ## Migration states
 
 | State | Obligations |
 | --- | ---: |
-| `blocking` | 1,064 |
+| `blocking` | 625 |
+| `retired` | 55 |
 | `shadow` | 2,591 |
+
+Retired Crash Log Scan Run policy targets record removal of legacy positive proof only. Executable conformance and retained analyzers remain blocking; this diagnostic ledger never establishes a passing execution.
 
 ## Current evidence sources
 
 | Source kind | Occurrences |
 | --- | ---: |
-| `consumer_audit` | 6 |
-| `consumer_required_participant` | 3 |
 | `consumer_source_audit` | 58 |
 | `display_content_consumer_audit` | 3 |
 | `display_content_source_audit` | 11 |
@@ -36,10 +37,7 @@
 | `runtime_registry_claim` | 67 |
 | `rust_enum_inventory_audit` | 15 |
 | `scan_run_contract_variant` | 73 |
-| `scan_run_required_participant` | 28 |
-| `scan_run_source_marker` | 124 |
-| `scan_run_supported_adapter` | 4 |
-| `scan_run_variant_acknowledgement` | 292 |
+| `scan_run_variant_policy` | 73 |
 | `shared_runtime_source_audit` | 1 |
 | `source_audit` | 189 |
 | `user_settings_source_audit` | 4 |

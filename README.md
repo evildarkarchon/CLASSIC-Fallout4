@@ -20,6 +20,8 @@ Rust owns typed, preservation-aware User Settings, including widget-independent 
 
 See the [Workspace Migration Matrix](docs/workspace-migration-matrix.md) for old-to-new command, path, and artifact translations.
 
+The [Binding Compliance Suite](docs/api/binding-compliance-suite.md) documents contributor validation. Crash Log Scan Run coverage uses blocking executable adapter and frontend receipts. Its copied acknowledgement lists and positive source markers are retired; fixture expectations, Rust variant inventory checks, negative export audits, and internal fault analyzers remain required.
+
 For older historical context, see [CLASSIC - Readme.pdf](CLASSIC%20-%20Readme.pdf).
 
 Nexus Mods: <https://www.nexusmods.com/fallout4/mods/56255>

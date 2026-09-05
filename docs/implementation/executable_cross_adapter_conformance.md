@@ -1,6 +1,6 @@
 # Executable Cross-Adapter Conformance Specification
 
-> **Status: accepted design; implementation in progress.** [ADR-0008](../adr/0008-executable-cross-adapter-conformance.md) records the decision. Phase 0's diagnostic ledger and generic engine are implemented, and the first input-only Crash Log Scan Run pack is blocking. Its centrally derived family predicates run through public-seam Rust, Node, Python, bridge-only CXX on MSVC and clang-cl, and separate CLI, GUI, and TUI consumer runners. Existing, generated, malformed, Proceed Without Ignore, Reset To Default, successful reset, intervening conflict, portable backup failure, pre-discovery, post-discovery queued, admitted/durable, pre-reset, and post-critical cancellation, observer delivery failure, public request-validation/discovery/intake/report-write/Unsolved Logs finalization failures, replay, and abandonment scenarios execute through all semantic adapters. Native jobs publish bounded attempt, JUnit, log, receipt, run-plan, and scoped-report artifacts even on failure. Replacement-publication and durability-unknown mappings remain under the reset blocking internal-fault analyzer. Injected analysis, FormID database access, initialization, and internal-invariant failure projections remain under the separate structured-failure retained analyzer; neither analyzer grants semantic-adapter coverage. The legacy evidence continues to dual-run; its retirement remains a later reviewed slice.
+> **Status: accepted design; implementation in progress.** [ADR-0008](../adr/0008-executable-cross-adapter-conformance.md) records the decision. Phase 0's diagnostic ledger and generic engine are implemented, and the first input-only Crash Log Scan Run pack is blocking. Its centrally derived family predicates run through public-seam Rust, Node, Python, bridge-only CXX on MSVC and clang-cl, and separate CLI, GUI, and TUI consumer runners. Existing, generated, malformed, Proceed Without Ignore, Reset To Default, successful reset, intervening conflict, portable backup failure, pre-discovery, post-discovery queued, admitted/durable, pre-reset, and post-critical cancellation, observer delivery failure, public request-validation/discovery/intake/report-write/Unsolved Logs finalization failures, replay, and abandonment scenarios execute through all semantic adapters. Native jobs publish bounded attempt, JUnit, log, receipt, run-plan, and scoped-report artifacts even on failure. Replacement-publication and durability-unknown mappings remain under the reset blocking internal-fault analyzer. Injected analysis, FormID database access, initialization, and internal-invariant failure projections remain under the separate structured-failure retained analyzer; neither analyzer grants semantic-adapter coverage. The Crash Log Scan Run copied adapter acknowledgements, positive source markers, and scenario/presentation required-owner lists are retired after blocking receipt promotion. Fixture expectations, source-derived inventory, negative export audits, internal-fault analyzers, and the other binding families' parity/runtime gates remain required.
 
 ## Target
 
@@ -475,16 +475,16 @@ Exit gate:
 
 ### Phase 2 — Crash Log Scan Run vertical slice
 
-Status: blocking promotion complete; legacy-evidence retirement remains a
-separate reviewed slice.
+Status: blocking promotion and Crash Log Scan Run positive-evidence retirement
+complete.
 
 Deliverables:
 
-- Add a versioned scenario pack alongside the current manifest's copied acknowledgements and source markers, retaining its fixture inputs and explicit expected outcomes until the later blocking/deletion gate.
+- Added a versioned scenario pack alongside the former manifest acknowledgements and source markers. The blocking/deletion gate is complete; fixture inputs and explicit expected outcomes remain retained.
 - Make Rust, CXX, Node, and Python emit the same normalized observation families for every publicly executable scenario. Keep unreachable internal fault-mapping rows explicitly classified under retained analyzers rather than misreporting them as CXX runtime coverage.
 - Add the dedicated CXX target and run it through the CLI wrapper on MSVC and clang-cl.
 - Add CLI, GUI, and TUI consumer receipts for their presentation obligations.
-- Dual-run all existing scan-run evidence and the new receipts.
+- Dual-ran the legacy scan-run evidence and new receipts before retiring the redundant positive evidence. Continue running retained structural, negative, and internal-fault checks alongside receipts.
 
 Equivalence gate:
 

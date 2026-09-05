@@ -2,8 +2,13 @@
 
 This immutable corpus is copied into a temporary directory by Rust, C++, Node,
 and Python tests. `manifest.json` owns the normalized Standard and Targeted
-expectations, the stable contract-variant inventory, and the evidence that each
-adapter and native frontend acknowledges those facts.
+expectations, the source-checked contract-variant inventory, and retained
+negative export checks. Executable adapter and frontend coverage comes from
+the blocking pack at `tests/conformance/packs/crash_log_scan_run/v1.json` and
+the consumer obligations at `tests/conformance/consumer-obligations.json`.
+Copied adapter acknowledgements, positive source markers, and per-scenario
+or presentation required-owner lists have been retired; do not add them when
+extending the corpus.
 
 The Installed YAML Data fixture also owns the malformed Local Ignore recovery
 corpus. Its Reset To Default expectations cover retained Main/game selection,

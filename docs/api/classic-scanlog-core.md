@@ -529,9 +529,12 @@ semantic analyzer surfaces and negative absence checks for those retired names.
 
 Cross-interface behavior is pinned by
 [`tests/fixtures/crash_log_scan_run/manifest.json`](../../tests/fixtures/crash_log_scan_run/manifest.json).
-The binding compliance suite checks both exhaustive variant acknowledgement and
-the absence of contracted execution exports from source, declarations, stubs,
-runtime registries, and parity baselines.
+The binding compliance suite checks the inventory against Rust and requires
+each variant to map to a required executable scenario fact or a named retained
+analyzer. Blocking semantic and consumer receipts prove executable coverage;
+copied adapter acknowledgements and positive source markers are retired.
+Negative checks retain the absence of contracted execution exports from source,
+declarations, stubs, runtime registries, and parity baselines.
 
 ---
 
@@ -580,4 +583,6 @@ for log in result.logs {
 When a public contract type or variant changes, update the applicable CXX,
 Node, and Python projections, generated declarations/stubs, runtime coverage
 registries, parity baselines, this page, and the binding compliance manifest in
-the same change.
+the same change. Update the source-derived variant evidence policy and affected
+executable pack expectations or retained analyzer dispositions as applicable;
+do not restore per-adapter acknowledgement or marker lists.

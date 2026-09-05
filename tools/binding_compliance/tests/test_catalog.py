@@ -58,7 +58,7 @@ def test_full_profile_includes_runtime_backstops() -> None:
     } <= command_ids
 
 
-def test_static_profiles_block_on_scan_run_variant_acknowledgements() -> None:
+def test_static_profiles_block_on_scan_run_source_contract() -> None:
     """The shared scan-run manifest is mandatory for every source-level profile."""
 
     requirements = {requirement.id: requirement for requirement in REQUIREMENTS}

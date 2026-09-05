@@ -73,7 +73,7 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
     ),
     ComplianceRequirement(
         id="scan-run-contract-variants",
-        title="Crash Log Scan Run variants have cross-interface evidence",
+        title="Crash Log Scan Run fixtures and source contracts remain valid",
         surface="policy",
         classification="new_check",
         profiles=STATIC_PROFILES,
@@ -81,8 +81,8 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         summary=(
             "Validates the shared Standard and Targeted fixture corpus, compares the "
             "manifest with Rust enum inventory, rejects contracted legacy exports in "
-            "source and tracked contract artifacts, and requires Rust, CXX, Node, "
-            "Python, CLI, GUI, and TUI acknowledgements for their owned facts."
+            "source and tracked contract artifacts, and requires a concrete executable "
+            "fact or retained analyzer for each source-derived variant."
         ),
         command=CommandSpec(
             argv=(
@@ -100,11 +100,9 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         ),
         proves=(
             "A new Rust contract enum variant cannot land without manifest registration.",
-            "Every registered variant is acknowledged by Rust, CXX, Node, and Python.",
             "Every registered variant names one required executable fact or retained analyzer.",
             "Removed execution seams cannot remain in public source, declarations, stubs, runtime registries, or parity baselines.",
-            "Shared Standard, Targeted, cancellation, and failure scenarios retain executable evidence.",
-            "CLI, GUI, and TUI tests consume Rust-owned discovery, scheduling, and terminal facts.",
+            "Repository-owned fixtures retain independent reset outcomes and every typed failure stage.",
         ),
     ),
     ComplianceRequirement(
