@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run one User Settings adapter's opening and operation scenarios in shadow."""
+"""Run one User Settings adapter's mandatory opening and operation receipts."""
 
 from __future__ import annotations
 
@@ -33,16 +33,18 @@ PARTICIPANT_COMMANDS = {
             "-p",
             "classic-user-settings-core",
             "--test",
+            "compatibility_contract",
+            "--test",
             "open_conformance",
             "--",
-            "--exact",
-            "writes_user_settings_conformance_receipt",
             "--nocapture",
         ),
         working_directory=REPO_ROOT,
         source_paths=(
             REPO_ROOT
             / "business-logic/classic-user-settings-core/tests/open_conformance.rs",
+            REPO_ROOT
+            / "business-logic/classic-user-settings-core/tests/compatibility_contract.rs",
             *_COMMON_SOURCES,
         ),
     ),
@@ -84,9 +86,10 @@ def run_participant(
 ) -> tuple[int, Path]:
     """Execute settings through shared launch/receipt validation machinery.
 
-    Shadow enforcement leaves retained registry-backed checks authoritative.
-    This diagnostic command still returns nonzero on failed execution or
-    comparison so callers can distinguish shadow failure from success.
+    Rust executes the retained corpus contract and replacement receipts in one
+    invocation against the same source identity. Other adapters retain their
+    native corpus suites alongside this blocking command in the same CI revision.
+    Failed execution or comparison returns nonzero and retains diagnostics.
     """
 
     return run_prepared_participant(

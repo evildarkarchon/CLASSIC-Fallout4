@@ -11,7 +11,10 @@
 [CmdletBinding()]
 param(
     [ValidateSet("msvc", "clang-cl")]
-    [string]$Compiler = "msvc"
+    [string]$Compiler = "msvc",
+    [ValidateSet("crash-log-scan-run", "user-settings")]
+    [string]$Family = "crash-log-scan-run",
+    [string]$ArtifactRoot = "tools/binding_compliance/artifacts"
 )
 
 $ErrorActionPreference = "Stop"
@@ -58,9 +61,16 @@ try {
     Set-Location -LiteralPath $RepoRoot
 
     $PreparationScript = Join-Path $RepoRoot "tools/binding_compliance/conformance/adapters/prepare_consumer_conformance.py"
+    $PackPath = if ($Family -eq "user-settings") {
+        "tests/conformance/packs/user_settings/v1.json"
+    } else {
+        "tests/conformance/packs/crash_log_scan_run/v1.json"
+    }
     $PreparationOutput = @(
         & python $PreparationScript `
             --repo-root $RepoRoot `
+            --pack $PackPath `
+            --artifact-root $ArtifactRoot `
             --participant cli `
             --execution-instance "windows-$Compiler"
     )

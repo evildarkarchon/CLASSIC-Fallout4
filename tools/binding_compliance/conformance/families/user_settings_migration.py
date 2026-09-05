@@ -439,6 +439,8 @@ def migration_predicates() -> tuple[CoveragePredicate, ...]:
                 "projection",
                 (
                     "MigrationPlanningOutcome",
+                    "plan_migration",
+                    "reverse_in_memory",
                     "UserSettingsMigrationPlan",
                     "MigrationEndpoint",
                     "MigrationChange",
@@ -449,12 +451,19 @@ def migration_predicates() -> tuple[CoveragePredicate, ...]:
             (
                 "apply",
                 "durable-effects",
-                ("UserSettingsMigrationApplyOutcome", "UserSettingsMigrationReceipt"),
+                (
+                    "UserSettingsMigrationApplyOutcome",
+                    "UserSettingsMigrationReceipt",
+                    "apply",
+                ),
                 applied,
             ),
             (
                 "restore",
                 "durable-effects",
+                # CXX also maps legacy TUI import restoration to `restore`.
+                # Keep that ambiguous method under retained evidence; these
+                # receipt outcome types identify migration restoration exactly.
                 ("UserSettingsMigrationRestoreOutcome",),
                 restored,
             ),

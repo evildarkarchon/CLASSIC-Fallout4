@@ -25,6 +25,12 @@ def test_repository_workflows_keep_every_promoted_execution_blocking() -> None:
     (
         (
             ".github/workflows/ci-rust.yml",
+            "run_user_settings_conformance.py --participant rust",
+            "run_removed_settings_conformance.py --participant rust",
+            "missing a required marker",
+        ),
+        (
+            ".github/workflows/ci-rust.yml",
             "run: python tools/binding_compliance/run_scan_run_conformance.py --participant rust",
             "continue-on-error: true\n        run: python tools/binding_compliance/run_scan_run_conformance.py --participant rust",
             "launcher must be blocking",
@@ -82,6 +88,24 @@ def test_repository_workflows_keep_every_promoted_execution_blocking() -> None:
             "runtime: [bun, node]\n    env:\n      RUST_BACKTRACE: full\n    steps:\n      - uses: actions/checkout@v6",
             "runtime: [bun, node]\n    env:\n      RUST_BACKTRACE: full\n    steps:\n      - uses: actions/checkout@v6\n        with:\n          ref: classic-next",
             "cannot replace the event source revision",
+        ),
+        (
+            ".github/workflows/ci-cpp.yml",
+            "run_gui_consumer_conformance.ps1 -Compiler ${{ matrix.compiler }} -Preset ci-system-qt",
+            "run_gui_consumer_conformance.ps1 -Compiler ${{ matrix.compiler }}",
+            "must reuse the preceding GUI build preset",
+        ),
+        (
+            ".github/workflows/ci-cpp.yml",
+            "run_gui_consumer_conformance.ps1 -Family user-settings -Compiler ${{ matrix.compiler }} -Preset ci-system-qt",
+            "run_gui_consumer_conformance.ps1 -Family user-settings -Compiler ${{ matrix.compiler }} -Preset default",
+            "must reuse the preceding GUI build preset",
+        ),
+        (
+            ".github/workflows/ci-cpp.yml",
+            "classic-gui/build_gui.ps1 -Preset ci-system-qt",
+            "classic-gui/build_gui.ps1 -Preset default",
+            "must reuse the preceding GUI build preset",
         ),
         (
             ".github/workflows/ci-cpp.yml",

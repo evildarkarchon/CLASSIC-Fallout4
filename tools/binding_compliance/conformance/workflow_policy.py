@@ -1,9 +1,9 @@
-"""Static policy audit for blocking Crash Log Scan Run receipt jobs."""
+"""Static policy audit for blocking Scan Run and User Settings receipt jobs."""
 
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 
@@ -97,6 +97,39 @@ _EXECUTION_POLICIES = (
         matrix_marker="compiler: [msvc, clang-cl]",
         job_timeout_minutes=180,
     ),
+)
+
+# Both promoted families retain the same native denominator and predecessor
+# gates. Family selection precedes compiler selection so markers stay unique.
+_EXECUTION_POLICIES += tuple(
+    replace(
+        policy,
+        launcher_marker=(
+            policy.launcher_marker.replace(
+                "run_scan_run_conformance.py", "run_user_settings_conformance.py"
+            )
+            if policy.participant_id in {"rust", "node", "python"}
+            else policy.launcher_marker.replace(
+                " --participant", " --family user-settings --participant"
+            ).replace(" -Compiler", " -Family user-settings -Compiler")
+        ),
+        artifact_marker=(
+            "name: "
+            + policy.participant_id
+            + "-user-settings-"
+            + (
+                "consumer-conformance"
+                if policy.participant_id in {"cli", "gui", "tui"}
+                else "conformance"
+            )
+            + (
+                "-${{ matrix.compiler }}"
+                if policy.matrix_marker == "compiler: [msvc, clang-cl]"
+                else ""
+            )
+        ),
+    )
+    for policy in _EXECUTION_POLICIES
 )
 
 
@@ -204,6 +237,19 @@ def validate_scan_run_workflow_policy(repo_root: Path) -> None:
                 policy.launcher_marker,
                 label=f"{label} launcher",
             )
+            if policy.participant_id == "gui":
+                legacy = _step_block(
+                    job, policy.legacy_marker, label=f"{label} legacy build"
+                )
+                # A different preset rebuilds Qt through vcpkg and consumes the bounded
+                # receipt window before the consumer can execute.
+                if any(
+                    re.findall(r"(?<!\S)-Preset\s+(\S+)", step) != ["ci-system-qt"]
+                    for step in (legacy, launcher)
+                ):
+                    raise WorkflowPolicyError(
+                        f"{label} must reuse the preceding GUI build preset ci-system-qt"
+                    )
             if "continue-on-error:" in launcher:
                 raise WorkflowPolicyError(f"{label} launcher must be blocking")
             if policy.launcher_condition not in launcher:

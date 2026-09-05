@@ -271,6 +271,7 @@ link_classic_gui_rust_bridge(classic-gui-test-scanworker-cancellation)
 # updates, and Display Content layout without granting CXX semantic-adapter coverage.
 add_classic_gui_qt_test(classic-gui-consumer-conformance
     conformance/classic_gui_consumer_conformance.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/guiusersettings.cpp
     ${CMAKE_SOURCE_DIR}/src/controllers/scancontroller.cpp
     ${CMAKE_SOURCE_DIR}/src/core/signalhub.cpp
     ${CMAKE_SOURCE_DIR}/src/core/threadmanager.cpp

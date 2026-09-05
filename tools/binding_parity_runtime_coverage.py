@@ -9,6 +9,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from binding_compliance.conformance.families.user_settings import (
+    USER_SETTINGS_COVERAGE_POLICY,
+)
 from parity_artifact_io import stable_id_hash, write_json  # noqa: F401
 
 VALID_CLASSIFICATIONS = {
@@ -220,7 +223,11 @@ def build_coverage_summary(
     runtime_registry: dict[str, Any],
     source_paths: dict[str, str] | None = None,
 ) -> dict[str, Any]:
-    """Build a machine-readable coverage summary from parity artifacts."""
+    """Report legacy metadata and migrated receipt obligations separately.
+
+    A migrated row is never runtime-verified by registry metadata. Its native
+    conformance job must supply the predicate-derived executable evidence.
+    """
     runtime_entries = runtime_registry.get("entries", [])
 
     invalid_entries = [
@@ -242,6 +249,38 @@ def build_coverage_summary(
     for contract_row in diff_report.get("contract_results", []):
         tracked_surface.append(
             _surface_row_from_contract(binding, contract_lookup, contract_row)
+        )
+
+    settings_symbols = {
+        symbol
+        for predicate in USER_SETTINGS_COVERAGE_POLICY.predicates
+        for symbol in predicate.rust_symbols
+    }
+    settings_rows = {
+        row["id"]: row
+        for row in contract.get("tier1Mappings", [])
+        if row.get("rustCrate") == "classic-user-settings-core"
+        and row.get("rustSymbol") in settings_symbols
+    }
+    for item in tracked_surface:
+        mapping = settings_rows.get(item.get("contractId"))
+        if mapping is None:
+            continue
+        structural = binding == "node" and mapping.get("nodeKind") in {
+            "interface",
+            "type",
+            "const_enum",
+        }
+        # This is a delegation label, never an execution claim. The retained
+        # source/declaration checks still own erased TypeScript declarations.
+        item["classification"] = (
+            "structural_analyzer" if structural else "receipt_required"
+        )
+        item["conformanceFamily"] = "user-settings"
+        item["verificationMode"] = (
+            "source-declaration-analysis"
+            if structural
+            else "execution-receipt-required"
         )
 
     for gap_row in diff_report.get("gaps", []):
@@ -291,13 +330,25 @@ def build_coverage_summary(
         per_owner_counts[owner_module][classification] += 1
         per_owner_counts[owner_module]["total"] += 1
 
-        if item["trackedType"] == "contract_row" and item["tier"] == "tier1":
-            if classification != "runtime_verified":
-                tier1_missing_runtime_total += 1
+        if (
+            item["trackedType"] == "contract_row"
+            and item["tier"] == "tier1"
+            and classification
+            not in {
+                "runtime_verified",
+                "receipt_required",
+                "structural_analyzer",
+            }
+        ):
+            tier1_missing_runtime_total += 1
 
     summary = {
         "tracked_surface_total": len(tracked_surface),
         "runtime_verified_total": classification_counts.get("runtime_verified", 0),
+        "receipt_required_total": classification_counts.get("receipt_required", 0),
+        "structural_analyzer_total": classification_counts.get(
+            "structural_analyzer", 0
+        ),
         "contract_mapped_total": classification_counts.get("contract_mapped", 0),
         "newly_uncovered_total": classification_counts.get("newly_uncovered", 0),
         "tier1_contract_total": len(contract.get("tier1Mappings", [])),
@@ -327,20 +378,24 @@ def render_coverage_summary_markdown(summary_payload: dict[str, Any]) -> str:
         f"- Generated: `{summary_payload['generated_at_utc']}`",
         f"- Tracked surfaces: **{summary['tracked_surface_total']}**",
         f"- Runtime verified: **{summary['runtime_verified_total']}**",
+        f"- Requiring executable receipts: **{summary.get('receipt_required_total', 0)}**",
+        f"- Retained structural analysis: **{summary.get('structural_analyzer_total', 0)}**",
         f"- Contract mapped only: **{summary['contract_mapped_total']}**",
         f"- Newly uncovered: **{summary['newly_uncovered_total']}**",
         f"- Tier-1 rows missing runtime metadata: **{summary['tier1_missing_runtime_total']}**",
         "",
         "## Per-owner totals",
         "",
-        "| Owner Module | Runtime Verified | Contract Mapped | Newly Uncovered | Total |",
-        "|---|---:|---:|---:|---:|",
+        "| Owner Module | Runtime Verified | Receipt Required | Structural | Contract Mapped | Newly Uncovered | Total |",
+        "|---|---:|---:|---:|---:|---:|---:|",
     ]
     for owner_module, counts in summary_payload["perOwnerModule"].items():
         lines.append(
-            "| `{owner}` | {runtime_verified} | {contract_mapped} | {newly_uncovered} | {total} |".format(
+            "| `{owner}` | {runtime_verified} | {receipt_required} | {structural} | {contract_mapped} | {newly_uncovered} | {total} |".format(
                 owner=owner_module,
                 runtime_verified=counts.get("runtime_verified", 0),
+                receipt_required=counts.get("receipt_required", 0),
+                structural=counts.get("structural_analyzer", 0),
                 contract_mapped=counts.get("contract_mapped", 0),
                 newly_uncovered=counts.get("newly_uncovered", 0),
                 total=counts.get("total", 0),
@@ -355,5 +410,3 @@ def render_coverage_summary_markdown(summary_payload: dict[str, Any]) -> str:
         )
     )
     return "\n".join(lines)
-
-

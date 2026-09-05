@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate blocking Crash Log Scan Run receipt placement in tracked CI."""
+"""Validate blocking Scan Run and User Settings receipt placement in tracked CI."""
 
 from __future__ import annotations
 
@@ -25,9 +25,9 @@ def main(argv: list[str] | None = None) -> int:
     try:
         validate_scan_run_workflow_policy(args.repo_root)
     except WorkflowPolicyError as error:
-        print(f"Crash Log Scan Run workflow policy failed: {error}")
+        print(f"Scan Run and User Settings workflow policy failed: {error}")
         return 1
-    print("Crash Log Scan Run workflow policy passed.")
+    print("Scan Run and User Settings workflow policy passed.")
     return 0
 
 

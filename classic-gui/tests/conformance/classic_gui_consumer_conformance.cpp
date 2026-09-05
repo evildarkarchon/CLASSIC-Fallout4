@@ -9,8 +9,10 @@
 #include <QRegularExpression>
 #include <QSaveFile>
 #include <QThread>
+#include <QTemporaryDir>
 
 #include "controllers/scancontroller.h"
+#include "core/guiusersettings.h"
 #include "workers/scanprogressmodel.h"
 #include "workers/scanrunpresentation.h"
 
@@ -417,8 +419,79 @@ QJsonObject obligationObservation(const QString& id, const QtConsumerObservation
     throw RunnerError(QStringLiteral("unknown GUI consumer obligation: %1").arg(id).toStdString());
 }
 
+/// Reads exact persisted bytes for non-mutation and unknown-entry observations.
+QByteArray settingsBytes(const QString& path)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        throw RunnerError("cannot read GUI settings observation");
+    }
+    return file.readAll();
+}
+
+/// Observes the maintained Qt settings adapter through actual opens, saves, and transitions.
+QJsonObject settingsObservation(const QJsonObject& plan, const QJsonObject& obligation)
+{
+    using namespace classic::gui;
+    QTemporaryDir temporary;
+    if (!temporary.isValid()) {
+        throw RunnerError("cannot create GUI settings root");
+    }
+    const QString root = temporary.path();
+    const QString path = root + QStringLiteral("/CLASSIC Settings.yaml");
+    const auto fixtures = requiredObject(plan, QStringLiteral("fixtures"));
+    const QString id = obligation.value(QStringLiteral("id")).toString();
+    if (id == QStringLiteral("gui.settings-scan-projection")) {
+        if (!QFile::copy(fixtures.value(QStringLiteral("canonical_current_nested")).toString(), path)) {
+            throw RunnerError("cannot copy canonical GUI settings fixture");
+        }
+        const auto before = settingsBytes(path);
+        const auto snapshot = GuiUserSettings::open(root);
+        const auto launch = snapshot.scanLaunchSettings(QStringLiteral("Fallout4"));
+        return {{"classification", snapshot.classification}, {"updateCheck", snapshot.update.updateCheck},
+                {"game", launch.game}, {"gameVersion", launch.gameVersion},
+                {"formIdDatabasePaths", QJsonArray::fromStringList(launch.formIdDatabasePaths)},
+                {"unchanged", before == settingsBytes(path)}};
+    }
+    if (id == QStringLiteral("gui.settings-explicit-bootstrap")) {
+        GuiUserSettings::open(root);
+        const bool readCreatedFile = QFile::exists(path);
+        GuiUserSettingsChanges changes;
+        changes.fcxMode = true;
+        changes.autoSwitchAfterScan = false;
+        const auto committed = GuiUserSettings::bootstrap(root, changes);
+        const auto snapshot = GuiUserSettings::open(root);
+        return {{"readCreatedFile", readCreatedFile}, {"status", committed.status},
+                {"classification", snapshot.classification}, {"fcxMode", snapshot.scan.fcxMode},
+                {"autoSwitchAfterScan", snapshot.frontend.autoSwitchAfterScan}};
+    }
+    if (id == QStringLiteral("gui.settings-revision-and-geometry")) {
+        if (!QFile::copy(fixtures.value(QStringLiteral("unknown_entries")).toString(), path)) {
+            throw RunnerError("cannot copy GUI unknown-entry fixture");
+        }
+        const auto initial = GuiUserSettings::open(root);
+        GuiUserSettingsChanges changes;
+        changes.updateCheck = false;
+        const auto committed = GuiUserSettings::commit(root, initial.revision, changes);
+        changes.updateCheck = true;
+        const auto stale = GuiUserSettings::commit(root, initial.revision, changes);
+        auto snapshot = GuiUserSettings::open(root);
+        const auto geometry = GuiUserSettings::commitFrontendTransition(
+            root, snapshot, GuiWindowGeometryChange{GuiWindow::Main, GuiWindowGeometry{false, 940, 710}});
+        const auto reopened = GuiUserSettings::open(root);
+        const auto window = reopened.frontend.windowGeometry.value(GuiWindow::Main);
+        return {{"status", committed.status}, {"staleStatus", stale.status},
+                {"updateCheck", reopened.update.updateCheck},
+                {"unknownRetained", settingsBytes(path).contains("ThirdPartyPlugin")},
+                {"geometryStatus", geometry.status}, {"width", window.width}, {"height", window.height},
+                {"snapshotRefreshed", snapshot.revision == reopened.revision && snapshot.revision != committed.revision}};
+    }
+    throw RunnerError("unknown GUI User Settings obligation");
+}
+
 /// Builds one obligation receipt after validating the plan-owned scenario denominator.
-QJsonObject obligationReceipt(const QJsonObject& obligation, const QtConsumerObservations& observations)
+QJsonObject obligationReceipt(const QJsonObject& plan, const QJsonObject& obligation,
+                              const QtConsumerObservations& observations)
 {
     const QString id = obligation.value(QStringLiteral("id")).toString();
     const QJsonArray scenarioIds = requiredArray(obligation, QStringLiteral("scenarioIds"));
@@ -429,7 +502,8 @@ QJsonObject obligationReceipt(const QJsonObject& obligation, const QtConsumerObs
         return {
             {QStringLiteral("id"), id},
             {QStringLiteral("executionStatus"), QStringLiteral("completed")},
-            {QStringLiteral("observation"), obligationObservation(id, observations)},
+            {QStringLiteral("observation"), plan.value(QStringLiteral("familyId")) == QStringLiteral("user-settings")
+                ? settingsObservation(plan, obligation) : obligationObservation(id, observations)},
             {QStringLiteral("failure"), QJsonValue::Null},
         };
     } catch (const std::exception& error) {
@@ -455,13 +529,19 @@ QJsonObject buildReceipt(const QJsonObject& plan)
         throw RunnerError("run plan participant must match this GUI consumer toolchain");
     }
 
-    const auto observations = observeQtConsumerSeams();
+    const auto family = plan.value(QStringLiteral("familyId")).toString();
+    if ((family != QStringLiteral("crash-log-scan-run") && family != QStringLiteral("user-settings")) ||
+        plan.contains(QStringLiteral("scenarios")) || plan.contains(QStringLiteral("expected"))) {
+        throw RunnerError("unsupported GUI consumer family or semantic input");
+    }
+    const auto observations = family == QStringLiteral("crash-log-scan-run")
+        ? observeQtConsumerSeams() : QtConsumerObservations{};
     QJsonArray obligations;
     for (const auto& value : requiredArray(plan, QStringLiteral("obligations"))) {
         if (!value.isObject()) {
             throw RunnerError("run plan obligations must contain only objects");
         }
-        obligations.append(obligationReceipt(value.toObject(), observations));
+        obligations.append(obligationReceipt(plan, value.toObject(), observations));
     }
     if (obligations.isEmpty()) {
         throw RunnerError("GUI consumer run plan contains no obligations");

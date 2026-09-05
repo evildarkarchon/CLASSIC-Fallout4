@@ -190,7 +190,10 @@ fn execute_and_publish(plan_path: &Path, output_path: &Path) -> RunnerResult<()>
 /// Rejects plans for another family, participant, or obligation inventory.
 fn validate_plan(plan: &RunPlan) -> RunnerResult<()> {
     if plan.schema_version != 1
-        || plan.family_id != "crash-log-scan-run"
+        || !matches!(
+            plan.family_id.as_str(),
+            "crash-log-scan-run" | "user-settings"
+        )
         || plan.family_version != 1
         || plan.participant.id != "tui"
         || plan.participant.role != "consumer"
@@ -232,6 +235,9 @@ fn execute_obligation(plan: &RunPlan, obligation: &ObligationPlan) -> Value {
 
 /// Dispatches one stable obligation ID to its actual TUI observation.
 fn obligation_observation(plan: &RunPlan, obligation: &ObligationPlan) -> RunnerResult<Value> {
+    if plan.family_id == "user-settings" {
+        return observe_user_settings(plan, obligation);
+    }
     match obligation.id.as_str() {
         "tui.display-content-delivery" => observe_display_delivery(plan, obligation),
         "tui.ordering" => observe_ordering(plan, obligation),
@@ -239,6 +245,86 @@ fn obligation_observation(plan: &RunPlan, obligation: &ObligationPlan) -> Runner
         "tui.recovery-interaction" => observe_recovery_interactions(plan, obligation),
         "tui.cancellation" => observe_cancellation_interactions(plan, obligation),
         unknown => Err(invalid_data(format!("unknown TUI consumer obligation {unknown}")).into()),
+    }
+}
+
+/// Exercises User Settings at the maintained TUI startup, save, and key-event boundaries.
+fn observe_user_settings(plan: &RunPlan, obligation: &ObligationPlan) -> RunnerResult<Value> {
+    let root = tempdir()?;
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    match obligation.id.as_str() {
+        "tui.settings-startup" => {
+            require_scenarios(obligation, &["flat-classic-config"])?;
+            fs::copy(&plan.fixtures["flat_classic_config"], &settings_path)?;
+            let before = fs::read(&settings_path)?;
+            let app = App::new_with_settings_root(root.path(), None);
+            Ok(json!({
+                "modsPath": app.staging_mods_input.value,
+                "customScanPath": app.custom_scan_input.value,
+                "migrationPrompt": app.settings_overlay_text().contains("Press M"),
+                "unchanged": before == fs::read(&settings_path)?,
+            }))
+        }
+        "tui.settings-explicit-save" => {
+            require_scenarios(
+                obligation,
+                &[
+                    "bootstrap-missing-overrides",
+                    "commit-one-canonical-field-without-losing-unknowns",
+                ],
+            )?;
+            let mut app = App::new_with_settings_root(root.path(), None);
+            let read_created_file = settings_path.exists();
+            let mods = root.path().join("receipt-mods");
+            fs::create_dir(&mods)?;
+            let mods_text = mods.to_string_lossy().into_owned();
+            app.staging_mods_input.set_value(mods_text.clone());
+            let bootstrap_succeeded = app.save_paths_from_inputs().is_ok();
+            let bootstrap_mods_match =
+                app.settings.game_setup_settings().mods_root() == Some(mods_text.as_str());
+            fs::copy(&plan.fixtures["unknown_entries"], &settings_path)?;
+            let mut app = App::new_with_settings_root(root.path(), None);
+            app.staging_mods_input.set_value(mods_text.clone());
+            let save_succeeded = app.save_paths_from_inputs().is_ok();
+            let reopened = classic_user_settings_core::UserSettings::open(root.path());
+            Ok(json!({
+                "readCreatedFile": read_created_file,
+                "bootstrapSucceeded": bootstrap_succeeded,
+                "bootstrapModsMatch": bootstrap_mods_match,
+                "saveSucceeded": save_succeeded,
+                "savedModsMatch": reopened.game_setup_settings().mods_root() == Some(mods_text.as_str()),
+                "unknownRetained": fs::read_to_string(&settings_path)?.contains("ThirdPartyPlugin"),
+            }))
+        }
+        "tui.settings-migration-interaction" => {
+            require_scenarios(obligation, &["migration-flat-restore"])?;
+            fs::copy(&plan.fixtures["flat_classic_config"], &settings_path)?;
+            let before = fs::read(&settings_path)?;
+            let mut app = App::new_with_settings_root(root.path(), None);
+            let prompted = app.settings_overlay_text().contains("Press M");
+            app.active_overlay = Some(Overlay::Settings);
+            app.handle_event(TerminalEvent::Key(KeyEvent::new(
+                KeyCode::Char('m'),
+                KeyModifiers::NONE,
+            )));
+            // The displayed backup path is the maintained UI result, so inspect that file rather
+            // than minting a separate core migration receipt that bypasses the user's key action.
+            let backup_matches = app
+                .scan_status
+                .split_once("verified backup retained at ")
+                .is_some_and(|(_, path)| fs::read(path).is_ok_and(|bytes| bytes == before));
+            Ok(json!({
+                "prompted": prompted,
+                "classification": app.settings.classification().as_str(),
+                "statusReportsBackup": app.scan_status.contains("verified backup retained at "),
+                "changed": before != fs::read(&settings_path)?,
+                "backupMatchesOriginal": backup_matches,
+                "fcxMode": app.settings.crash_log_scan_settings().fcx_mode(),
+            }))
+        }
+        unknown => {
+            Err(invalid_data(format!("unknown TUI User Settings obligation {unknown}")).into())
+        }
     }
 }
 

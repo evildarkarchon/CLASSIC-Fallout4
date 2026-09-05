@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the TUI Crash Log Scan Run consumer and publish a scoped report."""
+"""Run a maintained TUI consumer family and publish its scoped report."""
 
 from __future__ import annotations
 
@@ -150,10 +150,18 @@ def run_tui_consumer(
     *,
     artifact_root: Path = DEFAULT_ARTIFACT_ROOT,
     timeout_seconds: int = 1_200,
+    family: str = "crash-log-scan-run",
 ) -> tuple[int, Path]:
     """Execute the maintained TUI seam and build its exact consumer report."""
 
-    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH)
+    if family not in {"crash-log-scan-run", "user-settings"}:
+        raise ValueError(f"unsupported consumer family: {family}")
+    pack_path = (
+        PACK_PATH
+        if family == "crash-log-scan-run"
+        else (REPO_ROOT / "tests/conformance/packs/user_settings/v1.json")
+    )
+    pack = load_and_validate_pack(REPO_ROOT, pack_path)
     prepared = prepare_consumer_run(
         pack,
         participant_id="tui",
@@ -198,6 +206,11 @@ def build_argument_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--participant", choices=("tui",), required=True)
+    parser.add_argument(
+        "--family",
+        choices=("crash-log-scan-run", "user-settings"),
+        default="crash-log-scan-run",
+    )
     parser.add_argument("--artifact-root", type=Path, default=DEFAULT_ARTIFACT_ROOT)
     parser.add_argument("--timeout-seconds", type=int, default=1_200)
     return parser
@@ -211,6 +224,7 @@ def main(argv: list[str] | None = None) -> int:
         result, artifact_dir = run_tui_consumer(
             artifact_root=args.artifact_root,
             timeout_seconds=args.timeout_seconds,
+            family=args.family,
         )
     except (
         ConformanceCommandError,

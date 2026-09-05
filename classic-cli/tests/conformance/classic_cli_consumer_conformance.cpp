@@ -3,6 +3,7 @@
 // Test-only Crash Log Scan Run consumer receipt runner for the native CLI.
 
 #include "scan_run_cli.h"
+#include "user_settings_action.h"
 
 #include <nlohmann/json.hpp>
 
@@ -417,9 +418,93 @@ void validate_scenario_ids(const json& obligation, const std::vector<std::string
     }
 }
 
+/// Reads exact persisted bytes so read-only and rejected actions prove non-mutation.
+std::string settings_bytes(const fs::path& path) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        throw RunnerError("cannot read settings observation");
+    }
+    return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
+}
+
+/// Drives the maintained CLI settings preparation and explicit-save boundaries.
+json observe_user_settings(const json& plan, const json& obligation) {
+    const std::string id = obligation.at("id").get<std::string>();
+    TemporaryDirectory temporary(plan.at("invocation").at("id").get<std::string>(), id);
+    const auto& root = temporary.path();
+    const auto settings = root / "CLASSIC Settings.yaml";
+    if (id == "cli.settings-scan-projection") {
+        validate_scenario_ids(obligation, {"canonical-current-nested"});
+        fs::copy_file(plan.at("fixtures").at("canonical_current_nested").get<std::string>(), settings);
+        const auto before = settings_bytes(settings);
+        CliArgs args{};
+        args.game_version = "Original";
+        args.game_version_was_explicit = true;
+        args.max_concurrent = 3;
+        args.max_concurrent_was_explicit = true;
+        const auto prepared = prepare_scan_user_settings(args, root.string());
+        if (!prepared) {
+            throw RunnerError("CLI did not prepare typed settings");
+        }
+        return json{{"game", prepared->game}, {"gameVersion", prepared->game_version},
+                    {"maxConcurrent", prepared->max_concurrent},
+                    {"formIdDatabasePaths", prepared->formid_database_paths},
+                    {"classification", prepared->classification}, {"commitEligibility", prepared->commit_eligibility},
+                    {"unchanged", before == settings_bytes(settings)}};
+    }
+    if (id == "cli.settings-explicit-save") {
+        validate_scenario_ids(obligation, {"bootstrap-missing-overrides", "commit-one-canonical-field-without-losing-unknowns"});
+        CliArgs args{};
+        args.unsolved_logs_destination = "D:/Receipt/Unsolved";
+        const bool bootstrapped = persist_unsolved_logs_destination_option(args, root.string());
+        const auto bootstrap = prepare_scan_user_settings(CliArgs{}, root.string());
+        if (!bootstrap) {
+            throw RunnerError("CLI bootstrap did not produce scan settings");
+        }
+        fs::copy_file(plan.at("fixtures").at("unknown_entries").get<std::string>(), settings,
+                      fs::copy_options::overwrite_existing);
+        const bool saved = persist_unsolved_logs_destination_option(args, root.string());
+        // Observe the ordinary save before reset can hide a lost destination update.
+        const auto after_save = prepare_scan_user_settings(CliArgs{}, root.string());
+        if (!after_save) {
+            throw RunnerError("CLI ordinary save did not produce scan settings");
+        }
+        CliArgs reset{};
+        reset.reset_unsolved_logs_destination = true;
+        const bool reset_saved = persist_unsolved_logs_destination_option(reset, root.string());
+        const auto reopened = prepare_scan_user_settings(CliArgs{}, root.string());
+        if (!reopened) {
+            throw RunnerError("CLI accepted save did not produce scan settings");
+        }
+        return json{{"bootstrapSucceeded", bootstrapped}, {"bootstrapClassification", bootstrap->classification},
+                    {"destination", bootstrap->unsolved_logs_destination}, {"saveSucceeded", saved},
+                    {"savedDestination", after_save->unsolved_logs_destination},
+                    {"resetSucceeded", reset_saved}, {"resetDestination", reopened->unsolved_logs_destination},
+                    {"unknownRetained", settings_bytes(settings).find("ThirdPartyPlugin") != std::string::npos}};
+    }
+    if (id == "cli.settings-degraded-rejection") {
+        validate_scenario_ids(obligation, {"reject-update-malformed"});
+        fs::copy_file(plan.at("fixtures").at("malformed_document").get<std::string>(), settings);
+        const auto before = settings_bytes(settings);
+        const auto prepared = prepare_scan_user_settings(CliArgs{}, root.string());
+        if (!prepared) {
+            throw RunnerError("CLI did not expose a degraded read snapshot");
+        }
+        CliArgs args{};
+        args.unsolved_logs_destination = "D:/Receipt/Unsolved";
+        const bool saved = persist_unsolved_logs_destination_option(args, root.string());
+        return json{{"classification", prepared->classification}, {"commitEligibility", prepared->commit_eligibility},
+                    {"saved", saved}, {"unchanged", before == settings_bytes(settings)}};
+    }
+    throw RunnerError("unsupported CLI User Settings obligation: " + id);
+}
+
 /// Executes one named consumer obligation and returns its narrow actual observation.
 json execute_obligation(const json& plan, const json& obligation) {
     const std::string id = obligation.at("id").get<std::string>();
+    if (plan.at("familyId") == "user-settings") {
+        return observe_user_settings(plan, obligation);
+    }
     if (id == "cli.display-content-delivery") {
         validate_scenario_ids(obligation, {"standard-happy-path"});
         return observe_display_content_delivery();
@@ -470,7 +555,8 @@ json obligation_receipt(const json& plan, const json& obligation) {
 
 /// Rejects semantic inputs and plans for any other execution identity.
 void validate_plan(const json& plan) {
-    if (!plan.is_object() || plan.at("schemaVersion") != 1 || plan.at("familyId") != "crash-log-scan-run") {
+    if (!plan.is_object() || plan.at("schemaVersion") != 1 ||
+        (plan.at("familyId") != "crash-log-scan-run" && plan.at("familyId") != "user-settings")) {
         throw RunnerError("unsupported CLI consumer conformance run plan");
     }
     const json& participant = plan.at("participant");

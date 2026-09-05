@@ -44,7 +44,7 @@ python tools/binding_compliance/check_compliance.py --repo-root . --profile ci
 
 The suite owns the top-level pass/fail result, policy mapping, structured report, and known-gap report. The surface-specific gates below remain available as lower-level checks and focused debugging commands.
 
-Crash Log Scan Run also has a blocking executable conformance obligation. Rust,
+Crash Log Scan Run and User Settings have blocking executable conformance obligations. Rust,
 Node, Python, CXX on both MSVC and clang-cl, CLI and GUI on both compiler legs,
 and TUI must emit current same-revision receipts for their exact applicable
 scopes. Central validation requires the full scenario and observation-family

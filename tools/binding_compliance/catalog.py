@@ -107,7 +107,7 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
     ),
     ComplianceRequirement(
         id="scan-run-workflow-policy",
-        title="Crash Log Scan Run receipts remain blocking in CI",
+        title="Scan Run and User Settings receipts remain blocking in CI",
         surface="policy",
         classification="new_check",
         profiles=STATIC_PROFILES,
@@ -115,7 +115,7 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         summary=(
             "Audits the same-revision legacy/receipt job topology, exact native "
             "execution denominator, blocking launch steps, and always-uploaded "
-            "diagnostics for every Crash Log Scan Run participant and consumer."
+            "diagnostics for every Scan Run and User Settings participant and consumer."
         ),
         command=CommandSpec(
             argv=(

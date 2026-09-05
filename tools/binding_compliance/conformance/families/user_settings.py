@@ -690,6 +690,8 @@ def _operation_predicates() -> tuple[CoveragePredicate, ...]:
                     "UserSettingsUpdate",
                     "UserSettingsUpdatePreview",
                     "AcceptedUserSettingsUpdate",
+                    "preview_update",
+                    "preview_bootstrap",
                 ),
                 _accepted_update,
             ),
@@ -708,7 +710,7 @@ def _operation_predicates() -> tuple[CoveragePredicate, ...]:
             (
                 "committed",
                 "durable-effects",
-                ("UserSettingsCommitOutcome",),
+                ("UserSettingsCommitOutcome", "commit"),
                 _committed_update,
             ),
             (
@@ -744,6 +746,7 @@ USER_SETTINGS_COVERAGE_POLICY = FamilyCoveragePolicy(
             "source",
             (
                 "UserSettings",
+                "open",
                 "SettingsSource",
                 "SourceLocation",
                 "DocumentClassification",

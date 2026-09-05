@@ -126,10 +126,9 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-      # Each compiler supplies shadow settings evidence beside its blocking scan evidence.
-      - name: Run native CXX User Settings conformance in shadow
+      # Each compiler must prove settings execution beside its retained corpus tests.
+      - name: Run native CXX User Settings conformance
         if: ${{ !cancelled() }}
-        continue-on-error: true
         run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family user-settings -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/user-settings
 
       - name: Upload native CXX User Settings conformance diagnostics
@@ -137,7 +136,15 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: cxx-user-settings-conformance-${{ matrix.compiler }}
-          path: tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/
+          path: |
+            tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
+            tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/**/receipt.json
+            tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
+            tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/**/attempt.json
+            tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/**/stdout.log
+            tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/**/stderr.log
+            tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.json
+            tools/binding_compliance/artifacts/user-settings/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.md
           if-no-files-found: warn
           retention-days: 7
 
@@ -151,6 +158,19 @@ jobs:
         with:
           name: cli-consumer-conformance-${{ matrix.compiler }}
           path: tools/binding_compliance/artifacts/cli/windows-${{ matrix.compiler }}/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run CLI User Settings consumer conformance
+        if: ${{ !cancelled() }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cli_consumer_conformance.ps1 -Family user-settings -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/user-settings
+
+      - name: Upload CLI User Settings consumer conformance artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cli-user-settings-consumer-conformance-${{ matrix.compiler }}
+          path: tools/binding_compliance/artifacts/user-settings/cli/windows-${{ matrix.compiler }}/
           if-no-files-found: warn
           retention-days: 7
 
@@ -257,7 +277,7 @@ jobs:
 
       - name: Run GUI Crash Log Scan Run consumer conformance
         if: ${{ !cancelled() }}
-        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1 -Compiler ${{ matrix.compiler }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1 -Compiler ${{ matrix.compiler }} -Preset ci-system-qt
 
       - name: Upload GUI consumer conformance artifacts
         if: always()
@@ -265,6 +285,19 @@ jobs:
         with:
           name: gui-consumer-conformance-${{ matrix.compiler }}
           path: tools/binding_compliance/artifacts/gui/windows-${{ matrix.compiler }}/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run GUI User Settings consumer conformance
+        if: ${{ !cancelled() }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1 -Family user-settings -Compiler ${{ matrix.compiler }} -Preset ci-system-qt -ArtifactRoot tools/binding_compliance/artifacts/user-settings
+
+      - name: Upload GUI User Settings consumer conformance artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: gui-user-settings-consumer-conformance-${{ matrix.compiler }}
+          path: tools/binding_compliance/artifacts/user-settings/gui/windows-${{ matrix.compiler }}/
           if-no-files-found: warn
           retention-days: 7
 

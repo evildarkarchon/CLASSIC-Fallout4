@@ -513,6 +513,206 @@
           ]
         }
       ]
+    },
+    {
+      "familyId": "user-settings",
+      "consumers": [
+        {
+          "id": "cli",
+          "executionInstanceIds": [
+            "windows-clang-cl",
+            "windows-msvc"
+          ],
+          "sourcePaths": [
+            "business-logic/classic-user-settings-core/src",
+            "classic-cli/CMakeLists.txt",
+            "classic-cli/build_cli.ps1",
+            "classic-cli/src/cli_args.h",
+            "classic-cli/src/user_settings_action.cpp",
+            "classic-cli/src/user_settings_action.h",
+            "classic-cli/tests/conformance/classic_cli_consumer_conformance.cpp",
+            "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+            "tools/binding_compliance/conformance/adapters/prepare_consumer_conformance.py",
+            "tools/binding_compliance/conformance/adapters/run_cli_consumer_conformance.ps1"
+          ],
+          "obligations": [
+            {
+              "id": "cli.settings-scan-projection",
+              "scenarioIds": [
+                "canonical-current-nested"
+              ],
+              "expected": {
+                "game": "Fallout4",
+                "gameVersion": "Original",
+                "maxConcurrent": 3,
+                "formIdDatabasePaths": [
+                  "databases/Fallout4 FormIDs.db"
+                ],
+                "classification": "current",
+                "commitEligibility": "eligible",
+                "unchanged": true
+              }
+            },
+            {
+              "id": "cli.settings-explicit-save",
+              "scenarioIds": [
+                "bootstrap-missing-overrides",
+                "commit-one-canonical-field-without-losing-unknowns"
+              ],
+              "expected": {
+                "bootstrapSucceeded": true,
+                "bootstrapClassification": "current",
+                "destination": "D:/Receipt/Unsolved",
+                "saveSucceeded": true,
+                "savedDestination": "D:/Receipt/Unsolved",
+                "resetSucceeded": true,
+                "resetDestination": "",
+                "unknownRetained": true
+              }
+            },
+            {
+              "id": "cli.settings-degraded-rejection",
+              "scenarioIds": [
+                "reject-update-malformed"
+              ],
+              "expected": {
+                "classification": "malformed",
+                "commitEligibility": "blocked_untrusted",
+                "saved": false,
+                "unchanged": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "gui",
+          "executionInstanceIds": [
+            "windows-clang-cl",
+            "windows-msvc"
+          ],
+          "sourcePaths": [
+            "business-logic/classic-user-settings-core/src",
+            "classic-gui/CMakeLists.txt",
+            "classic-gui/build_gui.ps1",
+            "classic-gui/src/core/guiusersettings.cpp",
+            "classic-gui/src/core/guiusersettings.h",
+            "classic-gui/src/core/rust_qt_bridge.h",
+            "classic-gui/tests/CMakeLists.txt",
+            "classic-gui/tests/conformance/classic_gui_consumer_conformance.cpp",
+            "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+            "tools/binding_compliance/conformance/adapters/prepare_consumer_conformance.py",
+            "tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1"
+          ],
+          "obligations": [
+            {
+              "id": "gui.settings-scan-projection",
+              "scenarioIds": [
+                "canonical-current-nested"
+              ],
+              "expected": {
+                "classification": "current",
+                "updateCheck": true,
+                "game": "Fallout4",
+                "gameVersion": "auto",
+                "formIdDatabasePaths": [
+                  "databases/Fallout4 FormIDs.db"
+                ],
+                "unchanged": true
+              }
+            },
+            {
+              "id": "gui.settings-explicit-bootstrap",
+              "scenarioIds": [
+                "bootstrap-missing-overrides"
+              ],
+              "expected": {
+                "readCreatedFile": false,
+                "status": "committed",
+                "classification": "current",
+                "fcxMode": true,
+                "autoSwitchAfterScan": false
+              }
+            },
+            {
+              "id": "gui.settings-revision-and-geometry",
+              "scenarioIds": [
+                "commit-one-canonical-field-without-losing-unknowns",
+                "refuse-stale-revision",
+                "gui-geometry"
+              ],
+              "expected": {
+                "status": "committed",
+                "staleStatus": "conflict",
+                "updateCheck": false,
+                "unknownRetained": true,
+                "geometryStatus": "committed",
+                "width": 940,
+                "height": 710,
+                "snapshotRefreshed": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "tui",
+          "executionInstanceIds": [
+            "tui"
+          ],
+          "sourcePaths": [
+            "business-logic/classic-user-settings-core/src",
+            "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+            "tools/binding_compliance/conformance/adapters/prepare_consumer_conformance.py",
+            "tools/binding_compliance/run_scan_run_consumer_conformance.py",
+            "ui-applications/classic-tui/Cargo.toml",
+            "ui-applications/classic-tui/src/app.rs",
+            "ui-applications/classic-tui/src/event.rs",
+            "ui-applications/classic-tui/tests/scan_run_consumer_conformance.rs"
+          ],
+          "obligations": [
+            {
+              "id": "tui.settings-startup",
+              "scenarioIds": [
+                "flat-classic-config"
+              ],
+              "expected": {
+                "modsPath": "D:/Mod Staging",
+                "customScanPath": "D:/Crash Logs",
+                "migrationPrompt": true,
+                "unchanged": true
+              }
+            },
+            {
+              "id": "tui.settings-explicit-save",
+              "scenarioIds": [
+                "bootstrap-missing-overrides",
+                "commit-one-canonical-field-without-losing-unknowns"
+              ],
+              "expected": {
+                "readCreatedFile": false,
+                "bootstrapSucceeded": true,
+                "bootstrapModsMatch": true,
+                "saveSucceeded": true,
+                "savedModsMatch": true,
+                "unknownRetained": true
+              }
+            },
+            {
+              "id": "tui.settings-migration-interaction",
+              "scenarioIds": [
+                "migration-flat-restore"
+              ],
+              "expected": {
+                "prompted": true,
+                "classification": "current",
+                "statusReportsBackup": true,
+                "changed": true,
+                "backupMatchesOriginal": true,
+                "fcxMode": true
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

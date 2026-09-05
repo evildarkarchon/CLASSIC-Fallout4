@@ -83,7 +83,7 @@ withhold those expectations, and validated observations appear only under
 jobs are blocking for this family, while their artifacts remain available even
 when execution or validation fails.
 
-## User Settings Shadow Execution
+## User Settings Blocking Execution
 
 `tests/conformance/packs/user_settings/v1.json` selects opening and operation cases from
 `tests/fixtures/user_settings_compatibility/expectations.json`. The existing
@@ -149,12 +149,34 @@ pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters
 
 Run these after the maintained native build prerequisites. The CXX launcher uses
 the same bridge-only CTest target and approved CLI wrapper as scan conformance;
-each compiler emits its own receipt and mandatory JUnit evidence. CI runs this
-family with `continue-on-error: true` and uploads diagnostics under
-`tools/binding_compliance/artifacts/user-settings/`. A failed shadow comparison
-remains visible as failure in its report. The current parity gates, runtime
-registries, compatibility tests, and ownership audit remain blocking; this slice
-does not promote User Settings or retire any existing evidence.
+each compiler emits its own receipt and mandatory JUnit evidence. CI requires
+successful execution and comparison and uploads diagnostics even after failure
+under `tools/binding_compliance/artifacts/user-settings/`. Missing, skipped,
+stale, malformed, or mismatching receipts fail the applicable native job.
+Migrated settings rows require validated semantic receipts; registry enrollment
+cannot grant their runtime coverage. Source parity, declarations, stubs, type
+negatives, forbidden exports, and the Rust ownership audit remain blocking.
+
+The Rust launcher executes `compatibility_contract` and `open_conformance` in
+one Cargo invocation, with both sources included in the invocation identity.
+CI retains the existing native runtime suites at the same checkout as the new
+receipts. The [equivalence map](../implementation/user_settings_conformance_equivalence.md)
+records shared facts and focused evidence that must remain.
+
+Maintained CLI, GUI, and TUI settings boundaries have separate obligations in
+`tests/conformance/consumer-obligations.json`. Run the existing CLI/GUI consumer
+launchers with `-Family user-settings`, or the TUI consumer launcher with
+`--participant tui --family user-settings`. Each consumer emits current native
+observations under `consumerCoverage`; it cannot satisfy semantic adapter rows.
+Only maintained frontend actions are enrolled; an adapter's restore API does
+not imply that every frontend has a restore action.
+
+The GUI launcher accepts `-Preset` and forwards it to the approved build wrapper.
+CI uses `-Preset ci-system-qt` for both its full GUI test run and its consumer
+receipts, reusing the installed Qt package and build tree. Local runs can use
+the same preset with `CMAKE_PREFIX_PATH` pointing to an MSVC Qt installation,
+or keep the default vcpkg preset. Match the preceding build's preset; switching
+toolchain strategies in an existing CMake cache requires a fresh configuration.
 
 ## What The Suite Proves
 

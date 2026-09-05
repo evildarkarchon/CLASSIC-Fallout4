@@ -24,6 +24,7 @@
     {
       "id": "user-settings.open",
       "rustSymbols": [
+        "open",
         "UserSettings",
         "SettingsSource",
         "SourceLocation",
@@ -46,6 +47,9 @@
     {
       "id": "user-settings.update",
       "rustSymbols": [
+        "preview_update",
+        "preview_bootstrap",
+        "commit",
         "UserSettingsUpdate",
         "UserSettingsUpdatePreview",
         "AcceptedUserSettingsUpdate",
@@ -62,6 +66,9 @@
     {
       "id": "user-settings.migrate",
       "rustSymbols": [
+        "plan_migration",
+        "reverse_in_memory",
+        "apply",
         "MigrationPlanningOutcome",
         "UserSettingsMigrationPlan",
         "MigrationEndpoint",
@@ -1574,5 +1581,33 @@
       }
     }
   ],
-  "consumerObligations": []
+  "consumerObligations": [
+    {
+      "id": "cli.settings-scan-projection"
+    },
+    {
+      "id": "cli.settings-explicit-save"
+    },
+    {
+      "id": "cli.settings-degraded-rejection"
+    },
+    {
+      "id": "gui.settings-scan-projection"
+    },
+    {
+      "id": "gui.settings-explicit-bootstrap"
+    },
+    {
+      "id": "gui.settings-revision-and-geometry"
+    },
+    {
+      "id": "tui.settings-startup"
+    },
+    {
+      "id": "tui.settings-explicit-save"
+    },
+    {
+      "id": "tui.settings-migration-interaction"
+    }
+  ]
 }

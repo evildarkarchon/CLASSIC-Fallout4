@@ -202,6 +202,7 @@ if(BUILD_TESTING)
     add_executable(classic-cli-consumer-conformance
         tests/conformance/classic_cli_consumer_conformance.cpp
         src/scan_run_cli.cpp
+        src/user_settings_action.cpp
     )
 
     target_include_directories(classic-cli-consumer-conformance PRIVATE src/)

@@ -192,10 +192,9 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-      # User Settings stays diagnostic until its complete family proves equivalence.
-      - name: Run Rust User Settings conformance in shadow
+      # Settings receipts and retained corpus tests must both pass on this checkout.
+      - name: Run Rust User Settings conformance
         if: ${{ !cancelled() }}
-        continue-on-error: true
         run: python tools/binding_compliance/run_user_settings_conformance.py --participant rust --artifact-root tools/binding_compliance/artifacts/user-settings
 
       - name: Upload Rust User Settings conformance diagnostics
@@ -217,5 +216,18 @@ jobs:
         with:
           name: tui-consumer-conformance
           path: tools/binding_compliance/artifacts/tui/tui/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run TUI User Settings consumer conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_scan_run_consumer_conformance.py --family user-settings --participant tui --artifact-root tools/binding_compliance/artifacts/user-settings
+
+      - name: Upload TUI User Settings consumer conformance artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: tui-user-settings-consumer-conformance
+          path: tools/binding_compliance/artifacts/user-settings/tui/tui/
           if-no-files-found: warn
           retention-days: 7

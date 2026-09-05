@@ -120,9 +120,8 @@ jobs:
         run: uv run --project python-bindings python tools/binding_compliance/run_scan_run_conformance.py --participant python
 
       # Existing runtime and registry-backed parity gates remain blocking.
-      - name: Run Python User Settings conformance in shadow
+      - name: Run Python User Settings conformance
         if: ${{ !cancelled() }}
-        continue-on-error: true
         run: uv run --project python-bindings python tools/binding_compliance/run_user_settings_conformance.py --participant python --artifact-root tools/binding_compliance/artifacts/user-settings
 
       - name: Upload Python User Settings conformance diagnostics

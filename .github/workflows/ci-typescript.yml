@@ -189,9 +189,8 @@ jobs:
         run: python tools/binding_compliance/run_scan_run_conformance.py --participant node
 
       # Existing runtime and registry-backed parity gates remain blocking.
-      - name: Run Node User Settings conformance in shadow
+      - name: Run Node User Settings conformance
         if: matrix.runtime == 'node' && !cancelled()
-        continue-on-error: true
         run: python tools/binding_compliance/run_user_settings_conformance.py --participant node --artifact-root tools/binding_compliance/artifacts/user-settings
 
       - name: Upload Node User Settings conformance diagnostics
