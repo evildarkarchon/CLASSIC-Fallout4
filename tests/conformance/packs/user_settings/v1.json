@@ -1,0 +1,1578 @@
+{
+  "schemaVersion": 1,
+  "familyId": "user-settings",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-user-settings-core"
+  },
+  "fixtureRoot": "tests/fixtures/user_settings_compatibility",
+  "fixtures": {
+    "canonical_current_nested": "canonical_current_nested.yaml",
+    "flat_classic_config": "flat_classic_config.yaml",
+    "previous_settings_location": "previous_location_nested.yaml",
+    "malformed_document": "malformed.yaml",
+    "invalid_known_values": "invalid_known_values.yaml",
+    "alias_only": "alias_only.yaml",
+    "canonical_alias_conflict": "canonical_alias_conflict.yaml",
+    "unknown_entries": "unknown_entries.yaml",
+    "newer_major_schema": "newer_major_schema.yaml",
+    "gui_geometry": "gui_geometry.yaml",
+    "concurrent_external_edit": "concurrent_external_edit.yaml",
+    "unsupported_older_schema": "unsupported_older_schema.yaml"
+  },
+  "capabilities": [
+    {
+      "id": "user-settings.open",
+      "rustSymbols": [
+        "UserSettings",
+        "SettingsSource",
+        "SourceLocation",
+        "DocumentClassification",
+        "CommitEligibility",
+        "Revision",
+        "UpdatePreferences",
+        "CrashLogScanSettings",
+        "FrontendState",
+        "WindowGeometry",
+        "Diagnostic"
+      ],
+      "observationFamilies": [
+        "source",
+        "projection",
+        "diagnostics",
+        "durable-effects"
+      ]
+    },
+    {
+      "id": "user-settings.update",
+      "rustSymbols": [
+        "UserSettingsUpdate",
+        "UserSettingsUpdatePreview",
+        "AcceptedUserSettingsUpdate",
+        "UserSettingsUpdateField",
+        "UpdateDiagnostic",
+        "UserSettingsCommitOutcome"
+      ],
+      "observationFamilies": [
+        "projection",
+        "diagnostics",
+        "durable-effects"
+      ]
+    },
+    {
+      "id": "user-settings.migrate",
+      "rustSymbols": [
+        "MigrationPlanningOutcome",
+        "UserSettingsMigrationPlan",
+        "MigrationEndpoint",
+        "MigrationChange",
+        "MigrationChangeKind",
+        "MigrationDiagnostic",
+        "UserSettingsMigrationApplyOutcome",
+        "UserSettingsMigrationReceipt",
+        "UserSettingsMigrationRestoreOutcome",
+        "UserSettingsMigrationError"
+      ],
+      "observationFamilies": [
+        "projection",
+        "diagnostics",
+        "durable-effects"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "canonical-current-nested",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "canonical_current_nested"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "canonical_current_nested",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": [
+          "formid_databases",
+          "game_version",
+          "max_concurrent_scans",
+          "move_unsolved_logs",
+          "update_check"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "canonical_current_nested"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "flat-classic-config",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "flat_classic_config"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "flat_classic_config",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": []
+      },
+      "expected": {
+        "compatibilityCase": "flat_classic_config"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "previous-settings-location",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "previous_settings_location"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "previous_settings_location",
+            "path": "CLASSIC Data/CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": []
+      },
+      "expected": {
+        "compatibilityCase": "previous_settings_location"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "missing-document",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "installationData": [],
+        "observationFields": [
+          "fcx_mode",
+          "game_version",
+          "max_concurrent_scans",
+          "move_unsolved_logs",
+          "show_formid_values",
+          "simplify_logs",
+          "update_check"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "missing_document"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "malformed-document",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "malformed_document"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "malformed_document",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": [
+          "fcx_mode",
+          "game_version",
+          "max_concurrent_scans",
+          "move_unsolved_logs",
+          "show_formid_values",
+          "simplify_logs",
+          "update_check"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "malformed_document"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid-known-values",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "invalid_known_values"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "invalid_known_values",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": [
+          "game_version",
+          "main_tab_maximized",
+          "main_tab_width",
+          "max_concurrent_scans",
+          "move_unsolved_logs",
+          "update_check"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "invalid_known_values"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "alias-only",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "alias_only"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "alias_only",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": [
+          "custom_scan_folder"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "alias_only"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "canonical-alias-conflict",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "canonical_alias_conflict"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "canonical_alias_conflict",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": [
+          "custom_scan_folder",
+          "mods_folder"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "canonical_alias_conflict"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "unknown-entries",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "unknown_entries"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "unknown_entries",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": [
+          "main_tab",
+          "update_check"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "unknown_entries"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "newer-major-schema",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "newer_major_schema"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "newer_major_schema",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": [
+          "fcx_mode",
+          "game_version",
+          "max_concurrent_scans",
+          "move_unsolved_logs",
+          "show_formid_values",
+          "simplify_logs",
+          "update_check"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "newer_major_schema"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "gui-geometry",
+      "action": "user-settings.open",
+      "capabilityIds": [
+        "user-settings.open"
+      ],
+      "fixtureRefs": [
+        "gui_geometry"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "gui_geometry",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "observationFields": [
+          "articles_tab",
+          "backups_tab",
+          "main_tab",
+          "results_tab"
+        ]
+      },
+      "expected": {
+        "compatibilityCase": "gui_geometry"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "preview-multi-field-update",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "canonical_current_nested"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "canonical_current_nested",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": false,
+          "/CLASSIC_Settings/Max Concurrent Scans": 4
+        },
+        "commit": false,
+        "externalEdit": null,
+        "installationRootExists": true,
+        "previewMode": "update"
+      },
+      "expected": {
+        "operationScenario": "preview_multi_field_update"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "commit-one-canonical-field-without-losing-unknowns",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "unknown_entries"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "unknown_entries",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": false
+        },
+        "commit": true,
+        "externalEdit": null,
+        "installationRootExists": true,
+        "previewMode": "update"
+      },
+      "expected": {
+        "operationScenario": "commit_one_canonical_field_without_losing_unknowns"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "reject-invalid-update-as-one-unit",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "invalid_known_values"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "invalid_known_values",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": true,
+          "/CLASSIC_Settings/Max Concurrent Scans": -9
+        },
+        "commit": true,
+        "externalEdit": null,
+        "installationRootExists": true,
+        "previewMode": "update"
+      },
+      "expected": {
+        "operationScenario": "reject_invalid_update_as_one_unit"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "refuse-stale-revision",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "canonical_current_nested",
+        "concurrent_external_edit"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "canonical_current_nested",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": false
+        },
+        "commit": true,
+        "externalEdit": {
+          "fixtureRef": "concurrent_external_edit",
+          "path": "CLASSIC Settings.yaml"
+        },
+        "installationRootExists": true,
+        "previewMode": "update"
+      },
+      "expected": {
+        "operationScenario": "refuse_stale_revision"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "commit-preserves-alias-only",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "alias_only"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "alias_only",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": true
+        },
+        "commit": true,
+        "externalEdit": null,
+        "installationRootExists": true,
+        "previewMode": "update"
+      },
+      "expected": {
+        "operationScenario": "commit_preserves_alias_only"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "commit-preserves-canonical-alias-conflict",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "canonical_alias_conflict"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "canonical_alias_conflict",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": true
+        },
+        "commit": true,
+        "externalEdit": null,
+        "installationRootExists": true,
+        "previewMode": "update"
+      },
+      "expected": {
+        "operationScenario": "commit_preserves_canonical_alias_conflict"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "commit-preserves-invalid-known-values",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "invalid_known_values"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "invalid_known_values",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": true
+        },
+        "commit": true,
+        "externalEdit": null,
+        "installationRootExists": true,
+        "previewMode": "update"
+      },
+      "expected": {
+        "operationScenario": "commit_preserves_invalid_known_values"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "reject-update-malformed",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "malformed_document"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "malformed_document",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": true
+        },
+        "commit": true,
+        "externalEdit": null,
+        "installationRootExists": true,
+        "previewMode": "update"
+      },
+      "expected": {
+        "operationScenario": "reject_update_malformed"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "reject-update-newer-major-schema",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "newer_major_schema"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "newer_major_schema",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": true
+        },
+        "commit": true,
+        "externalEdit": null,
+        "installationRootExists": true,
+        "previewMode": "update"
+      },
+      "expected": {
+        "operationScenario": "reject_update_newer_major_schema"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "reject-update-flat-classic-config",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "flat_classic_config"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "flat_classic_config",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": true
+        },
+        "commit": true,
+        "externalEdit": null,
+        "installationRootExists": true,
+        "previewMode": "update"
+      },
+      "expected": {
+        "operationScenario": "reject_update_flat_classic_config"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "reject-update-missing",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "installationData": [],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": false
+        },
+        "commit": true,
+        "externalEdit": null,
+        "installationRootExists": false,
+        "previewMode": "update"
+      },
+      "expected": {
+        "operationScenario": "reject_update_missing"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "bootstrap-missing-declined",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "installationData": [],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": false,
+          "/CLASSIC_Settings/Max Concurrent Scans": 4
+        },
+        "commit": false,
+        "externalEdit": null,
+        "installationRootExists": false,
+        "previewMode": "bootstrap"
+      },
+      "expected": {
+        "operationScenario": "bootstrap_missing_declined"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "bootstrap-missing-defaults",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "installationData": [],
+        "requestedUpdate": {},
+        "commit": true,
+        "externalEdit": null,
+        "installationRootExists": true,
+        "previewMode": "bootstrap"
+      },
+      "expected": {
+        "operationScenario": "bootstrap_missing_defaults"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "bootstrap-missing-overrides",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "installationData": [],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": false,
+          "/CLASSIC_Settings/Max Concurrent Scans": 4
+        },
+        "commit": true,
+        "externalEdit": null,
+        "installationRootExists": true,
+        "previewMode": "bootstrap"
+      },
+      "expected": {
+        "operationScenario": "bootstrap_missing_overrides"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "bootstrap-invalid-update",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "installationData": [],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": false,
+          "/CLASSIC_Settings/Max Concurrent Scans": -9
+        },
+        "commit": true,
+        "externalEdit": null,
+        "installationRootExists": false,
+        "previewMode": "bootstrap"
+      },
+      "expected": {
+        "operationScenario": "bootstrap_invalid_update"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "bootstrap-concurrent-creation",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "concurrent_external_edit"
+      ],
+      "input": {
+        "installationData": [],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": false
+        },
+        "commit": true,
+        "externalEdit": {
+          "fixtureRef": "concurrent_external_edit",
+          "path": "CLASSIC Settings.yaml"
+        },
+        "installationRootExists": true,
+        "previewMode": "bootstrap"
+      },
+      "expected": {
+        "operationScenario": "bootstrap_concurrent_creation"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "reject-bootstrap-canonical-current-nested",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "canonical_current_nested"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "canonical_current_nested",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": false
+        },
+        "commit": true,
+        "externalEdit": null,
+        "installationRootExists": true,
+        "previewMode": "bootstrap"
+      },
+      "expected": {
+        "operationScenario": "reject_bootstrap_canonical_current_nested"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "reject-bootstrap-malformed",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "malformed_document"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "malformed_document",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": false
+        },
+        "commit": true,
+        "externalEdit": null,
+        "installationRootExists": true,
+        "previewMode": "bootstrap"
+      },
+      "expected": {
+        "operationScenario": "reject_bootstrap_malformed"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "reject-bootstrap-newer-major-schema",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "newer_major_schema"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "newer_major_schema",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": false
+        },
+        "commit": true,
+        "externalEdit": null,
+        "installationRootExists": true,
+        "previewMode": "bootstrap"
+      },
+      "expected": {
+        "operationScenario": "reject_bootstrap_newer_major_schema"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "migration-current",
+      "action": "user-settings.migrate",
+      "capabilityIds": [
+        "user-settings.migrate"
+      ],
+      "fixtureRefs": [
+        "canonical_current_nested"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "canonical_current_nested",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "apply": true,
+        "restore": false,
+        "beforeApply": null,
+        "beforeRestore": null
+      },
+      "expected": {
+        "migrationScenario": "migration-current"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "migration-missing",
+      "action": "user-settings.migrate",
+      "capabilityIds": [
+        "user-settings.migrate"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "installationData": [],
+        "apply": true,
+        "restore": false,
+        "beforeApply": null,
+        "beforeRestore": null
+      },
+      "expected": {
+        "migrationScenario": "migration-missing"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "migration-unsupported",
+      "action": "user-settings.migrate",
+      "capabilityIds": [
+        "user-settings.migrate"
+      ],
+      "fixtureRefs": [
+        "newer_major_schema"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "newer_major_schema",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "apply": true,
+        "restore": false,
+        "beforeApply": null,
+        "beforeRestore": null
+      },
+      "expected": {
+        "migrationScenario": "migration-unsupported"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "migration-older",
+      "action": "user-settings.migrate",
+      "capabilityIds": [
+        "user-settings.migrate"
+      ],
+      "fixtureRefs": [
+        "unsupported_older_schema"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "unsupported_older_schema",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "apply": true,
+        "restore": false,
+        "beforeApply": null,
+        "beforeRestore": null
+      },
+      "expected": {
+        "migrationScenario": "migration-older"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "migration-malformed",
+      "action": "user-settings.migrate",
+      "capabilityIds": [
+        "user-settings.migrate"
+      ],
+      "fixtureRefs": [
+        "malformed_document"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "malformed_document",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "apply": true,
+        "restore": false,
+        "beforeApply": null,
+        "beforeRestore": null
+      },
+      "expected": {
+        "migrationScenario": "migration-malformed"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "migration-review-only",
+      "action": "user-settings.migrate",
+      "capabilityIds": [
+        "user-settings.migrate"
+      ],
+      "fixtureRefs": [
+        "flat_classic_config"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "flat_classic_config",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "apply": false,
+        "restore": false,
+        "beforeApply": null,
+        "beforeRestore": null
+      },
+      "expected": {
+        "migrationScenario": "migration-review-only"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "migration-flat-restore",
+      "action": "user-settings.migrate",
+      "capabilityIds": [
+        "user-settings.migrate"
+      ],
+      "fixtureRefs": [
+        "flat_classic_config"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "flat_classic_config",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "apply": true,
+        "restore": true,
+        "beforeApply": null,
+        "beforeRestore": null
+      },
+      "expected": {
+        "migrationScenario": "migration-flat-restore"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "migration-previous-restore",
+      "action": "user-settings.migrate",
+      "capabilityIds": [
+        "user-settings.migrate"
+      ],
+      "fixtureRefs": [
+        "previous_settings_location"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "previous_settings_location",
+            "path": "CLASSIC Data/CLASSIC Settings.yaml"
+          }
+        ],
+        "apply": true,
+        "restore": true,
+        "beforeApply": null,
+        "beforeRestore": null
+      },
+      "expected": {
+        "migrationScenario": "migration-previous-restore"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "migration-alias-conflict",
+      "action": "user-settings.migrate",
+      "capabilityIds": [
+        "user-settings.migrate"
+      ],
+      "fixtureRefs": [
+        "canonical_alias_conflict"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "canonical_alias_conflict",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "apply": true,
+        "restore": true,
+        "beforeApply": null,
+        "beforeRestore": null
+      },
+      "expected": {
+        "migrationScenario": "migration-alias-conflict"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "migration-alias-only",
+      "action": "user-settings.migrate",
+      "capabilityIds": [
+        "user-settings.migrate"
+      ],
+      "fixtureRefs": [
+        "alias_only"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "alias_only",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "apply": true,
+        "restore": false,
+        "beforeApply": null,
+        "beforeRestore": null
+      },
+      "expected": {
+        "migrationScenario": "migration-alias-only"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "migration-stale-apply",
+      "action": "user-settings.migrate",
+      "capabilityIds": [
+        "user-settings.migrate"
+      ],
+      "fixtureRefs": [
+        "flat_classic_config",
+        "concurrent_external_edit"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "flat_classic_config",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "apply": true,
+        "restore": false,
+        "beforeApply": {
+          "kind": "external-edit",
+          "fixtureRef": "concurrent_external_edit",
+          "path": "CLASSIC Settings.yaml"
+        },
+        "beforeRestore": null
+      },
+      "expected": {
+        "migrationScenario": "migration-stale-apply"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": [],
+        "optionalEmptyFiles": [
+          {
+            "path": "$.afterApplyTree",
+            "relativePath": "CLASSIC Settings.yaml.commit.lock",
+            "rationale": "Rust and Python acquire an empty coordination lock before detecting a stale revision; CXX and Node reject in their approval preflight."
+          },
+          {
+            "path": "$.finalTree",
+            "relativePath": "CLASSIC Settings.yaml.commit.lock",
+            "rationale": "The optional empty coordination lock remains after a rejected apply; all document and backup entries remain exact."
+          }
+        ]
+      }
+    },
+    {
+      "id": "migration-previous-shadowed",
+      "action": "user-settings.migrate",
+      "capabilityIds": [
+        "user-settings.migrate"
+      ],
+      "fixtureRefs": [
+        "previous_settings_location",
+        "concurrent_external_edit"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "previous_settings_location",
+            "path": "CLASSIC Data/CLASSIC Settings.yaml"
+          }
+        ],
+        "apply": true,
+        "restore": false,
+        "beforeApply": {
+          "kind": "external-edit",
+          "fixtureRef": "concurrent_external_edit",
+          "path": "CLASSIC Settings.yaml"
+        },
+        "beforeRestore": null
+      },
+      "expected": {
+        "migrationScenario": "migration-previous-shadowed"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": [],
+        "optionalEmptyFiles": [
+          {
+            "path": "$.afterApplyTree",
+            "relativePath": "CLASSIC Settings.yaml.commit.lock",
+            "rationale": "Rust and Python acquire an empty coordination lock before detecting a stale revision; CXX and Node reject in their approval preflight."
+          },
+          {
+            "path": "$.finalTree",
+            "relativePath": "CLASSIC Settings.yaml.commit.lock",
+            "rationale": "The optional empty coordination lock remains after a rejected apply; all document and backup entries remain exact."
+          }
+        ]
+      }
+    },
+    {
+      "id": "migration-stale-restore",
+      "action": "user-settings.migrate",
+      "capabilityIds": [
+        "user-settings.migrate"
+      ],
+      "fixtureRefs": [
+        "flat_classic_config",
+        "concurrent_external_edit"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "flat_classic_config",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "apply": true,
+        "restore": true,
+        "beforeApply": null,
+        "beforeRestore": {
+          "kind": "external-edit",
+          "fixtureRef": "concurrent_external_edit",
+          "path": "CLASSIC Settings.yaml"
+        }
+      },
+      "expected": {
+        "migrationScenario": "migration-stale-restore"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "migration-legacy-edited",
+      "action": "user-settings.migrate",
+      "capabilityIds": [
+        "user-settings.migrate"
+      ],
+      "fixtureRefs": [
+        "previous_settings_location",
+        "concurrent_external_edit"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "previous_settings_location",
+            "path": "CLASSIC Data/CLASSIC Settings.yaml"
+          }
+        ],
+        "apply": true,
+        "restore": true,
+        "beforeApply": null,
+        "beforeRestore": {
+          "kind": "external-edit",
+          "fixtureRef": "concurrent_external_edit",
+          "path": "CLASSIC Data/CLASSIC Settings.yaml"
+        }
+      },
+      "expected": {
+        "migrationScenario": "migration-legacy-edited"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "migration-tampered-backup",
+      "action": "user-settings.migrate",
+      "capabilityIds": [
+        "user-settings.migrate"
+      ],
+      "fixtureRefs": [
+        "flat_classic_config",
+        "concurrent_external_edit"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "flat_classic_config",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "apply": true,
+        "restore": true,
+        "beforeApply": null,
+        "beforeRestore": {
+          "kind": "tamper-backup",
+          "fixtureRef": "concurrent_external_edit"
+        }
+      },
+      "expected": {
+        "migrationScenario": "migration-tampered-backup"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "migration-missing-backup",
+      "action": "user-settings.migrate",
+      "capabilityIds": [
+        "user-settings.migrate"
+      ],
+      "fixtureRefs": [
+        "flat_classic_config"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "flat_classic_config",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "apply": true,
+        "restore": true,
+        "beforeApply": null,
+        "beforeRestore": {
+          "kind": "remove-backup"
+        }
+      },
+      "expected": {
+        "migrationScenario": "migration-missing-backup"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "migration-blocked-backup",
+      "action": "user-settings.migrate",
+      "capabilityIds": [
+        "user-settings.migrate"
+      ],
+      "fixtureRefs": [
+        "flat_classic_config"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "flat_classic_config",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "apply": true,
+        "restore": false,
+        "beforeApply": {
+          "kind": "block-backup-directory"
+        },
+        "beforeRestore": null
+      },
+      "expected": {
+        "migrationScenario": "migration-blocked-backup"
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

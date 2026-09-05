@@ -37,6 +37,18 @@ choose `LocalIgnoreRecoveryDecision::ProceedWithoutIgnore` or
 `continuation.resume(decision, cancellation, observer).await` consumes the
 retained work once and returns `Result<RunResult, ResumeError>`.
 
+A caller that wants to back out instead of deciding calls
+`continuation.abandon(cancellation, observer).await`. It requests cancellation
+on the supplied control and then claims the continuation with a decision the
+run never acts on, so no recovery is applied, nothing on disk is touched, and
+the caller receives the ordinary post-discovery `Cancelled` result described
+under [Cancellation contract](#cancellation-contract). `LocalIgnoreRecoveryDecision`
+deliberately has no abandonment variant — adding one reshapes a type crossing
+five binding surfaces — so `abandon` is the single shared implementation of a
+sequence every frontend would otherwise write for itself. It shares `resume`'s
+one-shot claim: whichever of the two runs first spends the continuation, and
+every later `abandon` or `resume` returns `ResumeError::ContinuationConsumed`.
+
 There is no public prepared-run, orchestration, batch-lifecycle, direct
 Autoscan Report writer, concurrency-policy helper, or process-global FCX
 control. Callers that need a complete scan must not assemble those stages
@@ -87,7 +99,9 @@ Cancellation is cooperative at Rust-owned safe seams:
   and no discovery result
 - once discovery completes, the complete discovery result is retained
 - cancellation already requested before recovery resume consumes the
-  continuation and returns the normal post-discovery `Cancelled` result
+  continuation and returns the normal post-discovery `Cancelled` result;
+  `CrashLogScanRunContinuation::abandon` is that behaviour named, requesting
+  cancellation itself and leaving the control cancelled afterwards
 - queued logs do not start after cancellation is observed
 - an admitted log finishes analysis, report persistence, and applicable
   Unsolved Logs finalization before its terminal outcome is published
@@ -491,6 +505,23 @@ and binding-local CLIs construct requests and present Rust-owned facts; they do
 not perform discovery, select concurrency, reset FCX state, write reports, or
 move failed logs around the call.
 
+`CrashLogScanRunContinuation::abandon` reaches every surface. The TUI depends on
+this crate directly and calls it; CXX exposes it as
+`scan_run_continuation_abandon`, Node as `scanRunAbandon`, and Python as
+`scan_run_abandon`. Each takes a continuation and a cancellation and no
+decision, and returns the same envelope its `resume` sibling does. Every
+frontend that offers the choice — the TUI, the native CLI, and the Qt GUI —
+routes it through this operation, so none of them writes the
+cancel-then-resume-with-a-placeholder sequence any more. `classic-py-cli` has no
+such choice to route: it treats a recovery-required result as terminal and never
+resumes.
+
+A binding consumer should prefer it over cancelling and then resuming with a
+placeholder decision. The two are equivalent only when cancellation is requested
+strictly before the claim; reversing that order spends the one-shot continuation
+on a real recovery attempt, which is the failure this operation exists to make
+unwritable.
+
 The Focused Semantic Analyzer cutover was deliberately breaking across Rust, CXX, Node,
 and Python. Retired report primitives and fragment-producing methods have no
 deprecated aliases or forwarding facades; parity includes the six positive
@@ -498,9 +529,12 @@ semantic analyzer surfaces and negative absence checks for those retired names.
 
 Cross-interface behavior is pinned by
 [`tests/fixtures/crash_log_scan_run/manifest.json`](../../tests/fixtures/crash_log_scan_run/manifest.json).
-The binding compliance suite checks both exhaustive variant acknowledgement and
-the absence of contracted execution exports from source, declarations, stubs,
-runtime registries, and parity baselines.
+The binding compliance suite checks the inventory against Rust and requires
+each variant to map to a required executable scenario fact or a named retained
+analyzer. Blocking semantic and consumer receipts prove executable coverage;
+copied adapter acknowledgements and positive source markers are retired.
+Negative checks retain the absence of contracted execution exports from source,
+declarations, stubs, runtime registries, and parity baselines.
 
 ---
 
@@ -549,4 +583,6 @@ for log in result.logs {
 When a public contract type or variant changes, update the applicable CXX,
 Node, and Python projections, generated declarations/stubs, runtime coverage
 registries, parity baselines, this page, and the binding compliance manifest in
-the same change.
+the same change. Update the source-derived variant evidence policy and affected
+executable pack expectations or retained analyzer dispositions as applicable;
+do not restore per-adapter acknowledgement or marker lists.

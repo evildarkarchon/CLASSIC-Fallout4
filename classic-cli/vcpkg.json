@@ -6,6 +6,7 @@
   "dependencies": [
     "fmt",
     "cli11",
-    "catch2"
+    "catch2",
+    "nlohmann-json"
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-05T12:38:58.800624+00:00",
+  "generated_at_utc": "2026-08-07T00:33:44.215065+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,8 +7,8 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 1057,
-    "runtime_verified_total": 1057,
+    "tracked_surface_total": 1058,
+    "runtime_verified_total": 1058,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
     "tier1_contract_total": 907,
@@ -54,8 +54,8 @@
       "total": 77
     },
     "scanlog": {
-      "runtime_verified": 197,
-      "total": 197
+      "runtime_verified": 198,
+      "total": 198
     },
     "settings": {
       "runtime_verified": 45,
@@ -19550,6 +19550,28 @@
       "owner": null,
       "deferReason": null,
       "notes": "Exercises the opaque Local Ignore recovery continuation and both explicit decisions. Proceed Without Ignore retains discovery/snapshot identity without mutation. Reset To Default retains the same discovery and selected Main/game facts, exposes durable byte-exact backup and replacement metadata plus reset diagnostics, preserves conflict and backup failures as stable coded rejections, honors pre-reset cancellation without filesystem work, and proves cancellation after reset lock acquisition waits for durable repair before returning the normal cancelled result. The companion Rust adapter test projects replacement-publication failure through the same pure Node rejection metadata path. Replay remains typed and successful report output is byte-identical."
+    },
+    {
+      "trackedId": "binding:scanRunAbandon",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "scanRunAbandon",
+      "coverageId": "node-tier2-scanlog-local-ignore-abandonment-runtime",
+      "verificationMode": "contract_test",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "abandoning a paused run returns the cancelled result and touches nothing",
+      "fixtureRefs": [
+        "MAIN_YAML",
+        "GAME_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises the shared abandonment operation a consumer reaches for when a user backs out of a Local Ignore recovery prompt. It is registered separately from the recovery-decision entry because abandonment is deliberately not a third decision: the entry point takes no decision at all. The test proves the run resolves as an ordinary post-discovery cancelled result carrying its own rendered lines, that no event is observed, that the supplied cancellation is left cancelled because abandoning the run is cancelling it, that the malformed Local Ignore file and the absent backup directory are untouched, and that the one-shot claim is shared with scanRunResume so a spent continuation rejects both with the stable consumed code."
     }
   ]
 }

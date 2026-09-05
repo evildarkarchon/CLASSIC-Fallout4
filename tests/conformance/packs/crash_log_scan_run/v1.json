@@ -1,0 +1,6102 @@
+{
+  "schemaVersion": 1,
+  "familyId": "crash-log-scan-run",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scanlog-core"
+  },
+  "fixtureRoot": "tests/fixtures/crash_log_scan_run",
+  "fixtures": {
+    "validCrashLog": "valid-crash.log",
+    "mainYaml": "CLASSIC Data/databases/CLASSIC Main.yaml",
+    "gameYaml": "CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+    "localIgnoreYaml": "CLASSIC Data/CLASSIC Ignore.yaml",
+    "malformedLocalIgnoreYaml": "malformed-local-ignore.yaml"
+  },
+  "capabilities": [
+    {
+      "id": "scan-run.execute",
+      "rustSymbols": [
+        "Request",
+        "RunResult",
+        "LogResult",
+        "LogFailure",
+        "LogFailureStage",
+        "LogDisposition",
+        "InfrastructureError",
+        "InfrastructureErrorStage",
+        "CrashLogScanRunContinuation",
+        "LocalIgnoreRecoveryDecision",
+        "ResumeError",
+        "LocalIgnoreResetConflictError",
+        "LocalIgnoreResetFailure",
+        "LocalIgnoreResetRunData",
+        "Cancellation",
+        "Observer"
+      ],
+      "observationFamilies": [
+        "run-status",
+        "discovery",
+        "setup",
+        "effective-concurrency",
+        "installed-yaml-data",
+        "log-outcomes",
+        "events",
+        "cancellation",
+        "observer-failure",
+        "structured-failure",
+        "display-content",
+        "recovery",
+        "replay",
+        "durable-effects"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "standard-happy-path",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 4,
+        "intent": "standard",
+        "logInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Standard/Crash Logs/crash-shared-standard-01.log"
+          },
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Standard/Crash Logs/crash-shared-standard-02.log"
+          }
+        ],
+        "standardSource": {
+          "baseDirectory": {
+            "path": "Standard"
+          },
+          "configuredDocumentsRoot": {
+            "path": "Documents"
+          }
+        },
+        "unsolvedLogs": "leave-in-place"
+      },
+      "expected": {
+        "run": {
+          "status": "completed",
+          "message": null,
+          "total": 2,
+          "succeeded": 2,
+          "failed": 0,
+          "cancelled": 0,
+          "setup": null,
+          "effectiveConcurrency": 2
+        },
+        "discovery": {
+          "source": "standard",
+          "acceptedLogs": [
+            {
+              "path": "Standard/Crash Logs/crash-shared-standard-01.log"
+            },
+            {
+              "path": "Standard/Crash Logs/crash-shared-standard-02.log"
+            }
+          ],
+          "rejectedInputs": [],
+          "searchedLocations": [
+            {
+              "path": "Standard"
+            },
+            {
+              "path": "Standard/Crash Logs"
+            },
+            {
+              "path": "Documents"
+            }
+          ]
+        },
+        "installedYamlData": {
+          "main": {
+            "role": "main",
+            "provenance": "bundled",
+            "schemaMajor": 2,
+            "schemaMinor": 0,
+            "identity": {
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4",
+              "byteLength": 281
+            }
+          },
+          "gameFile": {
+            "role": "game",
+            "provenance": "bundled",
+            "schemaMajor": 1,
+            "schemaMinor": 0,
+            "identity": {
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168",
+              "byteLength": 463
+            }
+          },
+          "localIgnoreState": "existing",
+          "localIgnoreIdentity": {
+            "sha256": "1fc79ee2668e143c355dc3b931de1a2c41041227e79e21890da90a744ad3b70c",
+            "byteLength": 29
+          },
+          "diagnostics": [],
+          "localIgnoreResetAvailable": false
+        },
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Standard/Crash Logs/crash-shared-standard-01.log"
+            },
+            "autoscanReport": {
+              "path": "Standard/Crash Logs/crash-shared-standard-01-AUTOSCAN.md"
+            },
+            "disposition": "succeeded",
+            "failures": [],
+            "message": null,
+            "movedToUnsolvedLogs": false
+          },
+          {
+            "discoveryIndex": 1,
+            "crashLog": {
+              "path": "Standard/Crash Logs/crash-shared-standard-02.log"
+            },
+            "autoscanReport": {
+              "path": "Standard/Crash Logs/crash-shared-standard-02-AUTOSCAN.md"
+            },
+            "disposition": "succeeded",
+            "failures": [],
+            "message": null,
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "events": {
+          "run": [
+            {
+              "kind": "discovery_completed",
+              "displayContent": [
+                {
+                  "severity": "info",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Discovered",
+                      "path": "",
+                      "count": 0
+                    },
+                    {
+                      "kind": "count",
+                      "text": "crash logs",
+                      "path": "",
+                      "count": 2
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "effective_concurrency_selected",
+              "effectiveConcurrency": 2,
+              "displayContent": [
+                {
+                  "severity": "info",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Selected",
+                      "path": "",
+                      "count": 0
+                    },
+                    {
+                      "kind": "count",
+                      "text": "concurrent scans",
+                      "path": "",
+                      "count": 2
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "logs": [
+            {
+              "discoveryIndex": 0,
+              "crashLog": {
+                "path": "Standard/Crash Logs/crash-shared-standard-01.log"
+              },
+              "trace": [
+                {
+                  "kind": "log_queued",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "text",
+                          "text": "queued",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_started",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "text",
+                          "text": "scanning",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "setup",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "preparing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "parse",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "parsing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "analyze",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "analyzing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "finalize",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "finalizing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_finished",
+                  "disposition": "succeeded",
+                  "displayContent": [
+                    {
+                      "severity": "success",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "succeeded",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "discoveryIndex": 1,
+              "crashLog": {
+                "path": "Standard/Crash Logs/crash-shared-standard-02.log"
+              },
+              "trace": [
+                {
+                  "kind": "log_queued",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "text",
+                          "text": "queued",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_started",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "text",
+                          "text": "scanning",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "setup",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "preparing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "parse",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "parsing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "analyze",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "analyzing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "finalize",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "finalizing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_finished",
+                  "disposition": "succeeded",
+                  "displayContent": [
+                    {
+                      "severity": "success",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "succeeded",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Standard/Crash Logs/crash-shared-standard-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "displayContent": [
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "label",
+                "text": "completed",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 2
+              },
+              {
+                "kind": "text",
+                "text": "scanned",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Discovery:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "standard discovery",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "crash logs",
+                "path": "",
+                "count": 2
+              },
+              {
+                "kind": "text",
+                "text": "accepted,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "targeted inputs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "rejected,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "locations",
+                "path": "",
+                "count": 3
+              },
+              {
+                "kind": "text",
+                "text": "searched",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Searched:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Standard",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Searched:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Standard/Crash Logs",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Searched:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Documents",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Effective concurrency:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "concurrent scans",
+                "path": "",
+                "count": 2
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Installed YAML Data",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Selected",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "Main",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "YAML Data:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "bundled",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- schema",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "2.0",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 281
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Selected",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "game",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "YAML Data:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "bundled",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- schema",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "1.0",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 463
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Local Ignore:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "existing",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "1fc79ee2668e143c355dc3b931de1a2c41041227e79e21890da90a744ad3b70c",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 29
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Outcomes:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 2
+              },
+              {
+                "kind": "text",
+                "text": "succeeded,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "failed,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "not started",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "emphasis",
+                "text": "1",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Standard/Crash Logs/crash-shared-standard-01.log",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "succeeded",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- report",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Standard/Crash Logs/crash-shared-standard-01-AUTOSCAN.md",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "emphasis",
+                "text": "2",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Standard/Crash Logs/crash-shared-standard-02.log",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "succeeded",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- report",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Standard/Crash Logs/crash-shared-standard-02-AUTOSCAN.md",
+                "count": 0
+              }
+            ]
+          }
+        ],
+        "durableEffects": {
+          "reports": [
+            {
+              "path": "Standard/Crash Logs/crash-shared-standard-01-AUTOSCAN.md",
+              "exists": true,
+              "nonEmpty": true
+            },
+            {
+              "path": "Standard/Crash Logs/crash-shared-standard-02-AUTOSCAN.md",
+              "exists": true,
+              "nonEmpty": true
+            }
+          ],
+          "unsolvedLogs": {
+            "path": "Unsolved Logs",
+            "exists": false
+          }
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "targeted-happy-path",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 4,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Targeted/crash-shared-targeted-02.log"
+          },
+          {
+            "path": "Targeted/missing-input.txt"
+          },
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Targeted/crash-shared-targeted-01.log"
+          }
+        ]
+      },
+      "expected": {
+        "run": {
+          "status": "completed",
+          "message": null,
+          "total": 2,
+          "succeeded": 2,
+          "failed": 0,
+          "cancelled": 0,
+          "setup": null,
+          "effectiveConcurrency": 2
+        },
+        "discovery": {
+          "source": "targeted",
+          "acceptedLogs": [
+            {
+              "path": "Targeted/crash-shared-targeted-02.log"
+            },
+            {
+              "path": "Targeted/crash-shared-targeted-01.log"
+            }
+          ],
+          "rejectedInputs": [
+            {
+              "path": "Targeted/missing-input.txt",
+              "reason": "path does not exist"
+            }
+          ],
+          "searchedLocations": [
+            {
+              "path": "Targeted/crash-shared-targeted-02.log"
+            },
+            {
+              "path": "Targeted/missing-input.txt"
+            },
+            {
+              "path": "Targeted/crash-shared-targeted-01.log"
+            }
+          ]
+        },
+        "installedYamlData": {
+          "main": {
+            "role": "main",
+            "provenance": "bundled",
+            "schemaMajor": 2,
+            "schemaMinor": 0,
+            "identity": {
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4",
+              "byteLength": 281
+            }
+          },
+          "gameFile": {
+            "role": "game",
+            "provenance": "bundled",
+            "schemaMajor": 1,
+            "schemaMinor": 0,
+            "identity": {
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168",
+              "byteLength": 463
+            }
+          },
+          "localIgnoreState": "existing",
+          "localIgnoreIdentity": {
+            "sha256": "1fc79ee2668e143c355dc3b931de1a2c41041227e79e21890da90a744ad3b70c",
+            "byteLength": 29
+          },
+          "diagnostics": [],
+          "localIgnoreResetAvailable": false
+        },
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Targeted/crash-shared-targeted-02.log"
+            },
+            "autoscanReport": {
+              "path": "Targeted/crash-shared-targeted-02-AUTOSCAN.md"
+            },
+            "disposition": "succeeded",
+            "failures": [],
+            "message": null,
+            "movedToUnsolvedLogs": false
+          },
+          {
+            "discoveryIndex": 1,
+            "crashLog": {
+              "path": "Targeted/crash-shared-targeted-01.log"
+            },
+            "autoscanReport": {
+              "path": "Targeted/crash-shared-targeted-01-AUTOSCAN.md"
+            },
+            "disposition": "succeeded",
+            "failures": [],
+            "message": null,
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "events": {
+          "run": [
+            {
+              "kind": "discovery_completed",
+              "displayContent": [
+                {
+                  "severity": "info",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Discovered",
+                      "path": "",
+                      "count": 0
+                    },
+                    {
+                      "kind": "count",
+                      "text": "crash logs",
+                      "path": "",
+                      "count": 2
+                    }
+                  ]
+                },
+                {
+                  "severity": "notice",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Rejected",
+                      "path": "",
+                      "count": 0
+                    },
+                    {
+                      "kind": "count",
+                      "text": "targeted input",
+                      "path": "",
+                      "count": 1
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "effective_concurrency_selected",
+              "effectiveConcurrency": 2,
+              "displayContent": [
+                {
+                  "severity": "info",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Selected",
+                      "path": "",
+                      "count": 0
+                    },
+                    {
+                      "kind": "count",
+                      "text": "concurrent scans",
+                      "path": "",
+                      "count": 2
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "logs": [
+            {
+              "discoveryIndex": 0,
+              "crashLog": {
+                "path": "Targeted/crash-shared-targeted-02.log"
+              },
+              "trace": [
+                {
+                  "kind": "log_queued",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "text",
+                          "text": "queued",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_started",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "text",
+                          "text": "scanning",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "setup",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "preparing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "parse",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "parsing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "analyze",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "analyzing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "finalize",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "finalizing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_finished",
+                  "disposition": "succeeded",
+                  "displayContent": [
+                    {
+                      "severity": "success",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "succeeded",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-02.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "1",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "discoveryIndex": 1,
+              "crashLog": {
+                "path": "Targeted/crash-shared-targeted-01.log"
+              },
+              "trace": [
+                {
+                  "kind": "log_queued",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "text",
+                          "text": "queued",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_started",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "text",
+                          "text": "scanning",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "setup",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "preparing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "parse",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "parsing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "analyze",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "analyzing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_phase",
+                  "phase": "finalize",
+                  "displayContent": [
+                    {
+                      "severity": "info",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "finalizing",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "log_finished",
+                  "disposition": "succeeded",
+                  "displayContent": [
+                    {
+                      "severity": "success",
+                      "segments": [
+                        {
+                          "kind": "label",
+                          "text": "succeeded",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "path",
+                          "text": "",
+                          "path": "Targeted/crash-shared-targeted-01.log",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "-",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "emphasis",
+                          "text": "2",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "text",
+                          "text": "of",
+                          "path": "",
+                          "count": 0
+                        },
+                        {
+                          "kind": "count",
+                          "text": "logs",
+                          "path": "",
+                          "count": 2
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "displayContent": [
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "label",
+                "text": "completed",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 2
+              },
+              {
+                "kind": "text",
+                "text": "scanned",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Discovery:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "targeted discovery",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "crash logs",
+                "path": "",
+                "count": 2
+              },
+              {
+                "kind": "text",
+                "text": "accepted,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "targeted input",
+                "path": "",
+                "count": 1
+              },
+              {
+                "kind": "text",
+                "text": "rejected,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "locations",
+                "path": "",
+                "count": 3
+              },
+              {
+                "kind": "text",
+                "text": "searched",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "notice",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Rejected:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Targeted/missing-input.txt",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "path does not exist",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Searched:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Targeted/crash-shared-targeted-02.log",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Searched:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Targeted/missing-input.txt",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Searched:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Targeted/crash-shared-targeted-01.log",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Effective concurrency:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "concurrent scans",
+                "path": "",
+                "count": 2
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Installed YAML Data",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Selected",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "Main",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "YAML Data:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "bundled",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- schema",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "2.0",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 281
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Selected",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "game",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "YAML Data:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "bundled",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- schema",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "1.0",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 463
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Local Ignore:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "existing",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "1fc79ee2668e143c355dc3b931de1a2c41041227e79e21890da90a744ad3b70c",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 29
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Outcomes:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 2
+              },
+              {
+                "kind": "text",
+                "text": "succeeded,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "failed,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "not started",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "emphasis",
+                "text": "1",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Targeted/crash-shared-targeted-02.log",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "succeeded",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- report",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Targeted/crash-shared-targeted-02-AUTOSCAN.md",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "emphasis",
+                "text": "2",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Targeted/crash-shared-targeted-01.log",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "succeeded",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- report",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "Targeted/crash-shared-targeted-01-AUTOSCAN.md",
+                "count": 0
+              }
+            ]
+          }
+        ],
+        "durableEffects": {
+          "reports": [
+            {
+              "path": "Targeted/crash-shared-targeted-02-AUTOSCAN.md",
+              "exists": true,
+              "nonEmpty": true
+            },
+            {
+              "path": "Targeted/crash-shared-targeted-01-AUTOSCAN.md",
+              "exists": true,
+              "nonEmpty": true
+            }
+          ],
+          "unsolvedLogs": {
+            "path": "Unsolved Logs",
+            "exists": false
+          }
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "generated-local-ignore",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml"
+      ],
+      "input": {
+        "observationProfile": "local-ignore",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "forbiddenEffectPaths": [
+          "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+          "Unsolved Logs"
+        ],
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Generated/crash-generated-local-ignore.log"
+          }
+        ]
+      },
+      "expected": {
+        "run": {
+          "status": "completed",
+          "message": null,
+          "total": 1,
+          "succeeded": 1,
+          "failed": 0,
+          "cancelled": 0,
+          "effectiveConcurrency": 1
+        },
+        "discovery": {
+          "source": "targeted",
+          "acceptedLogs": [
+            {
+              "path": "Generated/crash-generated-local-ignore.log"
+            }
+          ],
+          "rejectedInputs": [],
+          "searchedLocations": [
+            {
+              "path": "Generated/crash-generated-local-ignore.log"
+            }
+          ]
+        },
+        "installedYamlData": {
+          "mainIdentity": {
+            "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4",
+            "byteLength": 281
+          },
+          "gameIdentity": {
+            "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168",
+            "byteLength": 463
+          },
+          "localIgnoreState": "generated",
+          "localIgnoreIdentity": {
+            "sha256": "ba0cbe71c9023ebdb553e3a0acdc5c6ad95e9126694077344f4c57f00e3b71e3",
+            "byteLength": 28
+          },
+          "diagnostics": [
+            {
+              "role": null,
+              "candidate": null,
+              "path": {
+                "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+              },
+              "kind": "local_ignore_generated"
+            }
+          ],
+          "localIgnoreResetAvailable": false,
+          "localIgnoreReset": null
+        },
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Generated/crash-generated-local-ignore.log"
+            },
+            "autoscanReport": {
+              "path": "Generated/crash-generated-local-ignore-AUTOSCAN.md"
+            },
+            "disposition": "succeeded",
+            "failures": [],
+            "message": null,
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "events": {
+          "run": [
+            "discovery_completed",
+            "effective_concurrency_selected"
+          ],
+          "logs": [
+            {
+              "discoveryIndex": 0,
+              "trace": [
+                "log_queued",
+                "log_started",
+                "log_phase:setup",
+                "log_phase:parse",
+                "log_phase:analyze",
+                "log_phase:finalize",
+                "log_finished:succeeded"
+              ]
+            }
+          ]
+        },
+        "continuationAvailable": false,
+        "recoveryPrompt": null,
+        "durableEffects": {
+          "localIgnore": {
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml",
+            "exists": true,
+            "identity": {
+              "sha256": "ba0cbe71c9023ebdb553e3a0acdc5c6ad95e9126694077344f4c57f00e3b71e3",
+              "byteLength": 28
+            }
+          },
+          "backups": [],
+          "reports": [
+            {
+              "path": "Generated/crash-generated-local-ignore-AUTOSCAN.md",
+              "exists": true,
+              "nonEmpty": true,
+              "identity": {
+                "sha256": "6b62381b815b5febd0b1cbf5a3bb4a9638187e21c08fb7a0ee293ffd93881133",
+                "byteLength": 1042
+              }
+            }
+          ],
+          "forbidden": [
+            {
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+              "exists": false,
+              "identity": null
+            },
+            {
+              "path": "Unsolved Logs",
+              "exists": false,
+              "identity": null
+            }
+          ]
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "pre-discovery-cancelled",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "lifecycle",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Lifecycle/crash-pre-discovery-01.log"
+          },
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Lifecycle/crash-pre-discovery-02.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "Lifecycle/crash-pre-discovery-01-AUTOSCAN.md",
+          "Lifecycle/crash-pre-discovery-02-AUTOSCAN.md",
+          "Unsolved Logs"
+        ],
+        "executionFlow": {
+          "cancellation": "before-discovery",
+          "observerFailure": null
+        }
+      },
+      "expected": {
+        "run": {
+          "status": "cancelled_before_discovery",
+          "message": "Cancelled before crash log discovery",
+          "total": 0,
+          "succeeded": 0,
+          "failed": 0,
+          "cancelled": 0,
+          "effectiveConcurrency": null
+        },
+        "discovery": null,
+        "logs": [],
+        "events": {
+          "run": [],
+          "logs": []
+        },
+        "observerFailure": null,
+        "cancellation": {
+          "requested": true
+        },
+        "durableEffects": {
+          "reports": [],
+          "forbidden": [
+            {
+              "path": "Lifecycle/crash-pre-discovery-01-AUTOSCAN.md",
+              "exists": false
+            },
+            {
+              "path": "Lifecycle/crash-pre-discovery-02-AUTOSCAN.md",
+              "exists": false
+            },
+            {
+              "path": "Unsolved Logs",
+              "exists": false
+            }
+          ]
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "post-discovery-queued-cancelled",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "lifecycle",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Lifecycle/crash-queued-01.log"
+          },
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Lifecycle/crash-queued-02.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "Lifecycle/crash-queued-01-AUTOSCAN.md",
+          "Lifecycle/crash-queued-02-AUTOSCAN.md",
+          "Unsolved Logs"
+        ],
+        "executionFlow": {
+          "cancellation": "on-first-log-queued",
+          "observerFailure": null
+        }
+      },
+      "expected": {
+        "run": {
+          "status": "cancelled",
+          "message": null,
+          "total": 2,
+          "succeeded": 0,
+          "failed": 0,
+          "cancelled": 2,
+          "effectiveConcurrency": 1
+        },
+        "discovery": {
+          "source": "targeted",
+          "acceptedLogs": [
+            {
+              "path": "Lifecycle/crash-queued-01.log"
+            },
+            {
+              "path": "Lifecycle/crash-queued-02.log"
+            }
+          ],
+          "rejectedInputs": [],
+          "searchedLocations": [
+            {
+              "path": "Lifecycle/crash-queued-01.log"
+            },
+            {
+              "path": "Lifecycle/crash-queued-02.log"
+            }
+          ]
+        },
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Lifecycle/crash-queued-01.log"
+            },
+            "autoscanReport": null,
+            "disposition": "cancelled_before_start",
+            "failures": [],
+            "message": "Cancelled by user",
+            "movedToUnsolvedLogs": false
+          },
+          {
+            "discoveryIndex": 1,
+            "crashLog": {
+              "path": "Lifecycle/crash-queued-02.log"
+            },
+            "autoscanReport": null,
+            "disposition": "cancelled_before_start",
+            "failures": [],
+            "message": "Cancelled by user",
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "events": {
+          "run": [
+            "discovery_completed",
+            "effective_concurrency_selected"
+          ],
+          "logs": [
+            {
+              "discoveryIndex": 0,
+              "trace": [
+                "log_queued",
+                "log_finished:cancelled_before_start"
+              ]
+            },
+            {
+              "discoveryIndex": 1,
+              "trace": [
+                "log_queued",
+                "log_finished:cancelled_before_start"
+              ]
+            }
+          ]
+        },
+        "observerFailure": null,
+        "cancellation": {
+          "requested": true
+        },
+        "durableEffects": {
+          "reports": [],
+          "forbidden": [
+            {
+              "path": "Lifecycle/crash-queued-01-AUTOSCAN.md",
+              "exists": false
+            },
+            {
+              "path": "Lifecycle/crash-queued-02-AUTOSCAN.md",
+              "exists": false
+            },
+            {
+              "path": "Unsolved Logs",
+              "exists": false
+            }
+          ]
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "admitted-durable-cancelled",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "lifecycle",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Lifecycle/crash-admitted-01.log"
+          },
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Lifecycle/crash-admitted-02.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "Lifecycle/crash-admitted-02-AUTOSCAN.md",
+          "Unsolved Logs"
+        ],
+        "executionFlow": {
+          "cancellation": "on-first-log-started",
+          "observerFailure": null
+        }
+      },
+      "expected": {
+        "run": {
+          "status": "cancelled",
+          "message": null,
+          "total": 2,
+          "succeeded": 1,
+          "failed": 0,
+          "cancelled": 1,
+          "effectiveConcurrency": 1
+        },
+        "discovery": {
+          "source": "targeted",
+          "acceptedLogs": [
+            {
+              "path": "Lifecycle/crash-admitted-01.log"
+            },
+            {
+              "path": "Lifecycle/crash-admitted-02.log"
+            }
+          ],
+          "rejectedInputs": [],
+          "searchedLocations": [
+            {
+              "path": "Lifecycle/crash-admitted-01.log"
+            },
+            {
+              "path": "Lifecycle/crash-admitted-02.log"
+            }
+          ]
+        },
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Lifecycle/crash-admitted-01.log"
+            },
+            "autoscanReport": {
+              "path": "Lifecycle/crash-admitted-01-AUTOSCAN.md"
+            },
+            "disposition": "succeeded",
+            "failures": [],
+            "message": null,
+            "movedToUnsolvedLogs": false
+          },
+          {
+            "discoveryIndex": 1,
+            "crashLog": {
+              "path": "Lifecycle/crash-admitted-02.log"
+            },
+            "autoscanReport": null,
+            "disposition": "cancelled_before_start",
+            "failures": [],
+            "message": "Cancelled by user",
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "events": {
+          "run": [
+            "discovery_completed",
+            "effective_concurrency_selected"
+          ],
+          "logs": [
+            {
+              "discoveryIndex": 0,
+              "trace": [
+                "log_queued",
+                "log_started",
+                "log_phase:setup",
+                "log_phase:parse",
+                "log_phase:analyze",
+                "log_phase:finalize",
+                "log_finished:succeeded"
+              ]
+            },
+            {
+              "discoveryIndex": 1,
+              "trace": [
+                "log_queued",
+                "log_finished:cancelled_before_start"
+              ]
+            }
+          ]
+        },
+        "observerFailure": null,
+        "cancellation": {
+          "requested": true
+        },
+        "durableEffects": {
+          "reports": [
+            {
+              "path": "Lifecycle/crash-admitted-01-AUTOSCAN.md",
+              "exists": true,
+              "nonEmpty": true
+            }
+          ],
+          "forbidden": [
+            {
+              "path": "Lifecycle/crash-admitted-02-AUTOSCAN.md",
+              "exists": false
+            },
+            {
+              "path": "Unsolved Logs",
+              "exists": false
+            }
+          ]
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "observer-delivery-failure",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "lifecycle",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Lifecycle/crash-observer-failure.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "Lifecycle/crash-observer-failure-AUTOSCAN.md",
+          "Unsolved Logs"
+        ],
+        "executionFlow": {
+          "cancellation": "on-observer-failure",
+          "observerFailure": {
+            "eventKind": "discovery_completed",
+            "message": "conformance observer delivery failure"
+          }
+        }
+      },
+      "expected": {
+        "run": {
+          "status": "cancelled",
+          "message": "Cancelled after crash log discovery",
+          "total": 1,
+          "succeeded": 0,
+          "failed": 0,
+          "cancelled": 1,
+          "effectiveConcurrency": null
+        },
+        "discovery": {
+          "source": "targeted",
+          "acceptedLogs": [
+            {
+              "path": "Lifecycle/crash-observer-failure.log"
+            }
+          ],
+          "rejectedInputs": [],
+          "searchedLocations": [
+            {
+              "path": "Lifecycle/crash-observer-failure.log"
+            }
+          ]
+        },
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Lifecycle/crash-observer-failure.log"
+            },
+            "autoscanReport": null,
+            "disposition": "cancelled_before_start",
+            "failures": [],
+            "message": "Cancelled by user",
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "events": {
+          "run": [
+            "discovery_completed"
+          ],
+          "logs": [
+            {
+              "discoveryIndex": 0,
+              "trace": []
+            }
+          ]
+        },
+        "observerFailure": {
+          "kind": "observer_delivery_failure",
+          "eventKind": "discovery_completed",
+          "messageNonEmpty": true
+        },
+        "cancellation": {
+          "requested": true
+        },
+        "durableEffects": {
+          "reports": [],
+          "forbidden": [
+            {
+              "path": "Lifecycle/crash-observer-failure-AUTOSCAN.md",
+              "exists": false
+            },
+            {
+              "path": "Unsolved Logs",
+              "exists": false
+            }
+          ]
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "request-validation-failure",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 0,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Failures/crash-request-validation.log"
+          }
+        ],
+        "observedPaths": [
+          {
+            "path": "Failures/crash-request-validation.log"
+          },
+          {
+            "path": "Failures/crash-request-validation-AUTOSCAN.md"
+          }
+        ]
+      },
+      "expected": {
+        "infrastructureError": {
+          "stage": "request_validation",
+          "messageNonEmpty": true,
+          "path": null
+        },
+        "durableEffects": [
+          {
+            "path": "Failures/crash-request-validation.log",
+            "kind": "file"
+          },
+          {
+            "path": "Failures/crash-request-validation-AUTOSCAN.md",
+            "kind": "missing"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "discovery-failure",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "standard",
+        "logInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Blocked Discovery"
+          }
+        ],
+        "observedPaths": [
+          {
+            "path": "Blocked Discovery"
+          }
+        ],
+        "standardSource": {
+          "baseDirectory": {
+            "path": "Blocked Discovery"
+          },
+          "configuredDocumentsRoot": {
+            "path": "Failure Documents"
+          }
+        },
+        "unsolvedLogs": "leave-in-place"
+      },
+      "expected": {
+        "infrastructureError": {
+          "stage": "discovery",
+          "messageNonEmpty": true,
+          "path": {
+            "path": "Blocked Discovery"
+          }
+        },
+        "durableEffects": [
+          {
+            "path": "Blocked Discovery",
+            "kind": "file"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "intake-failure",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Failures/crash-intake.log"
+          }
+        ],
+        "observedPaths": [
+          {
+            "path": "Failures/crash-intake.log"
+          },
+          {
+            "path": "Failures/crash-intake-AUTOSCAN.md"
+          }
+        ]
+      },
+      "expected": {
+        "infrastructureError": {
+          "stage": "intake",
+          "messageNonEmpty": true,
+          "path": {
+            "path": "CLASSIC Data"
+          }
+        },
+        "durableEffects": [
+          {
+            "path": "Failures/crash-intake.log",
+            "kind": "file"
+          },
+          {
+            "path": "Failures/crash-intake-AUTOSCAN.md",
+            "kind": "missing"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "report-write-failure",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Failures/crash-report-write.log"
+          }
+        ],
+        "directoryInputs": [
+          {
+            "path": "Failures/crash-report-write-AUTOSCAN.md"
+          }
+        ],
+        "observedPaths": [
+          {
+            "path": "Failures/crash-report-write.log"
+          },
+          {
+            "path": "Failures/crash-report-write-AUTOSCAN.md"
+          },
+          {
+            "path": "Unsolved Logs"
+          }
+        ]
+      },
+      "expected": {
+        "status": "completed",
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Failures/crash-report-write.log"
+            },
+            "autoscanReport": null,
+            "disposition": "failed",
+            "failures": [
+              {
+                "stage": "report_write",
+                "messageNonEmpty": true
+              }
+            ],
+            "messageNonEmpty": true,
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "durableEffects": [
+          {
+            "path": "Failures/crash-report-write.log",
+            "kind": "file"
+          },
+          {
+            "path": "Failures/crash-report-write-AUTOSCAN.md",
+            "kind": "directory"
+          },
+          {
+            "path": "Unsolved Logs",
+            "kind": "missing"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "unsolved-logs-finalization-failure",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "standard",
+        "logInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Failure Standard/Crash Logs/crash-finalization.log"
+          },
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Blocked Unsolved Logs"
+          }
+        ],
+        "directoryInputs": [
+          {
+            "path": "Failure Standard/Crash Logs/crash-finalization-AUTOSCAN.md"
+          }
+        ],
+        "observedPaths": [
+          {
+            "path": "Failure Standard/Crash Logs/crash-finalization.log"
+          },
+          {
+            "path": "Failure Standard/Crash Logs/crash-finalization-AUTOSCAN.md"
+          },
+          {
+            "path": "Blocked Unsolved Logs"
+          }
+        ],
+        "standardSource": {
+          "baseDirectory": {
+            "path": "Failure Standard"
+          },
+          "configuredDocumentsRoot": {
+            "path": "Failure Documents"
+          }
+        },
+        "unsolvedLogs": "move-to-custom",
+        "unsolvedLogsPath": {
+          "path": "Blocked Unsolved Logs"
+        }
+      },
+      "expected": {
+        "status": "completed",
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Failure Standard/Crash Logs/crash-finalization.log"
+            },
+            "autoscanReport": null,
+            "disposition": "failed",
+            "failures": [
+              {
+                "stage": "report_write",
+                "messageNonEmpty": true
+              },
+              {
+                "stage": "unsolved_logs_finalization",
+                "messageNonEmpty": true
+              }
+            ],
+            "messageNonEmpty": true,
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "durableEffects": [
+          {
+            "path": "Failure Standard/Crash Logs/crash-finalization.log",
+            "kind": "file"
+          },
+          {
+            "path": "Failure Standard/Crash Logs/crash-finalization-AUTOSCAN.md",
+            "kind": "directory"
+          },
+          {
+            "path": "Blocked Unsolved Logs",
+            "kind": "file"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "proceed-without-ignore-recovery",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "malformedLocalIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "local-ignore",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "malformedLocalIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Recovery/proceed.log"
+          },
+          {
+            "path": "Recovery/proceed-late.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+          "Unsolved Logs",
+          "Recovery/proceed-late-AUTOSCAN.md"
+        ],
+        "continuationFlow": {
+          "action": {
+            "operation": "resume",
+            "decision": "proceed-without-ignore"
+          },
+          "postPauseData": [
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+            },
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+            },
+            {
+              "fixtureRef": "validCrashLog",
+              "path": "Recovery/proceed-late.log"
+            }
+          ],
+          "replays": [
+            {
+              "operation": "resume",
+              "decision": "proceed-without-ignore"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "terminalError": null,
+        "cancellation": {
+          "afterReplays": false,
+          "afterTerminal": false,
+          "beforeTerminal": false
+        },
+        "durableEffects": {
+          "backups": [],
+          "forbidden": [
+            {
+              "exists": false,
+              "identity": null,
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml.prev"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Unsolved Logs"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Recovery/proceed-late-AUTOSCAN.md"
+            }
+          ],
+          "localIgnore": {
+            "exists": true,
+            "identity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          },
+          "reports": [
+            {
+              "exists": true,
+              "identity": {
+                "byteLength": 1021,
+                "sha256": "fcd495692097a88127999ca1905d2a93cdf120b62c131976bfde86806425c37f"
+              },
+              "nonEmpty": true,
+              "path": "Recovery/proceed-AUTOSCAN.md"
+            }
+          ]
+        },
+        "initial": {
+          "continuationAvailable": true,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/proceed.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/proceed-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/proceed.log"
+              },
+              {
+                "path": "Recovery/proceed-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [],
+            "run": [
+              "discovery_completed"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "localIgnoreReset": null,
+            "localIgnoreResetAvailable": true,
+            "localIgnoreState": "recovery_required",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [],
+          "recoveryPrompt": {
+            "decisions": [
+              {
+                "available": true,
+                "decision": "proceed_without_ignore",
+                "label": "Proceed Without Ignore"
+              },
+              {
+                "available": true,
+                "decision": "reset_to_default",
+                "label": "Reset To Default"
+              }
+            ],
+            "displaySeverities": [
+              "warning"
+            ]
+          },
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": null,
+            "failed": 0,
+            "message": "Local Ignore recovery is required",
+            "status": "local_ignore_recovery_required",
+            "succeeded": 0,
+            "total": 1
+          }
+        },
+        "replays": [
+          {
+            "decision": "proceed_without_ignore",
+            "error": {
+              "displaySeverities": [
+                "failure",
+                "notice"
+              ],
+              "kind": "scan_run_continuation_consumed",
+              "message": "Crash Log Scan Run continuation was already consumed"
+            },
+            "operation": "resume"
+          }
+        ],
+        "terminal": {
+          "continuationAvailable": false,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/proceed.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/proceed-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/proceed.log"
+              },
+              {
+                "path": "Recovery/proceed-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [
+              {
+                "discoveryIndex": 0,
+                "trace": [
+                  "log_queued",
+                  "log_started",
+                  "log_phase:setup",
+                  "log_phase:parse",
+                  "log_phase:analyze",
+                  "log_phase:finalize",
+                  "log_finished:succeeded"
+                ]
+              }
+            ],
+            "run": [
+              "effective_concurrency_selected"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "localIgnoreReset": null,
+            "localIgnoreResetAvailable": false,
+            "localIgnoreState": "proceed_without_ignore",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [
+            {
+              "autoscanReport": {
+                "path": "Recovery/proceed-AUTOSCAN.md"
+              },
+              "crashLog": {
+                "path": "Recovery/proceed.log"
+              },
+              "discoveryIndex": 0,
+              "disposition": "succeeded",
+              "failures": [],
+              "message": null,
+              "movedToUnsolvedLogs": false
+            }
+          ],
+          "recoveryPrompt": null,
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": 1,
+            "failed": 0,
+            "message": null,
+            "status": "completed",
+            "succeeded": 1,
+            "total": 1
+          }
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "reset-to-default-recovery",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "malformedLocalIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "local-ignore",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "malformedLocalIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Recovery/reset.log"
+          },
+          {
+            "path": "Recovery/reset-late.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+          "Unsolved Logs",
+          "Recovery/reset-late-AUTOSCAN.md"
+        ],
+        "continuationFlow": {
+          "action": {
+            "operation": "resume",
+            "decision": "reset-to-default"
+          },
+          "postPauseData": [
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+            },
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+            },
+            {
+              "fixtureRef": "validCrashLog",
+              "path": "Recovery/reset-late.log"
+            }
+          ],
+          "replays": [
+            {
+              "operation": "resume",
+              "decision": "reset-to-default"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "terminalError": null,
+        "cancellation": {
+          "afterReplays": false,
+          "afterTerminal": false,
+          "beforeTerminal": false
+        },
+        "durableEffects": {
+          "backups": [
+            {
+              "identity": {
+                "byteLength": 39,
+                "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+              },
+              "parentPath": "CLASSIC Backup/YAML Data/Local Ignore"
+            }
+          ],
+          "forbidden": [
+            {
+              "exists": false,
+              "identity": null,
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml.prev"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Unsolved Logs"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Recovery/reset-late-AUTOSCAN.md"
+            }
+          ],
+          "localIgnore": {
+            "exists": true,
+            "identity": {
+              "byteLength": 28,
+              "sha256": "ba0cbe71c9023ebdb553e3a0acdc5c6ad95e9126694077344f4c57f00e3b71e3"
+            },
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          },
+          "reports": [
+            {
+              "exists": true,
+              "identity": {
+                "byteLength": 1019,
+                "sha256": "ff71d48fbc44a50ca1e29d2be906034c9ebf63cb3099641f897c6b8bea6e903b"
+              },
+              "nonEmpty": true,
+              "path": "Recovery/reset-AUTOSCAN.md"
+            }
+          ]
+        },
+        "initial": {
+          "continuationAvailable": true,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/reset.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/reset-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/reset.log"
+              },
+              {
+                "path": "Recovery/reset-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [],
+            "run": [
+              "discovery_completed"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "localIgnoreReset": null,
+            "localIgnoreResetAvailable": true,
+            "localIgnoreState": "recovery_required",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [],
+          "recoveryPrompt": {
+            "decisions": [
+              {
+                "available": true,
+                "decision": "proceed_without_ignore",
+                "label": "Proceed Without Ignore"
+              },
+              {
+                "available": true,
+                "decision": "reset_to_default",
+                "label": "Reset To Default"
+              }
+            ],
+            "displaySeverities": [
+              "warning"
+            ]
+          },
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": null,
+            "failed": 0,
+            "message": "Local Ignore recovery is required",
+            "status": "local_ignore_recovery_required",
+            "succeeded": 0,
+            "total": 1
+          }
+        },
+        "replays": [
+          {
+            "decision": "reset_to_default",
+            "error": {
+              "displaySeverities": [
+                "failure",
+                "notice"
+              ],
+              "kind": "scan_run_continuation_consumed",
+              "message": "Crash Log Scan Run continuation was already consumed"
+            },
+            "operation": "resume"
+          }
+        ],
+        "terminal": {
+          "continuationAvailable": false,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/reset.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/reset-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/reset.log"
+              },
+              {
+                "path": "Recovery/reset-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [
+              {
+                "discoveryIndex": 0,
+                "trace": [
+                  "log_queued",
+                  "log_started",
+                  "log_phase:setup",
+                  "log_phase:parse",
+                  "log_phase:analyze",
+                  "log_phase:finalize",
+                  "log_finished:succeeded"
+                ]
+              }
+            ],
+            "run": [
+              "effective_concurrency_selected"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              },
+              {
+                "candidate": null,
+                "kind": "local_ignore_reset",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 28,
+              "sha256": "ba0cbe71c9023ebdb553e3a0acdc5c6ad95e9126694077344f4c57f00e3b71e3"
+            },
+            "localIgnoreReset": {
+              "backup": {
+                "exists": true,
+                "identityMatchesReceipt": true,
+                "parentPath": "CLASSIC Backup/YAML Data/Local Ignore"
+              },
+              "backupIdentity": {
+                "byteLength": 39,
+                "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+              },
+              "localIgnorePath": {
+                "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+              },
+              "malformedIdentity": {
+                "byteLength": 39,
+                "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+              },
+              "replacementIdentity": {
+                "byteLength": 28,
+                "sha256": "ba0cbe71c9023ebdb553e3a0acdc5c6ad95e9126694077344f4c57f00e3b71e3"
+              }
+            },
+            "localIgnoreResetAvailable": false,
+            "localIgnoreState": "reset_to_default",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [
+            {
+              "autoscanReport": {
+                "path": "Recovery/reset-AUTOSCAN.md"
+              },
+              "crashLog": {
+                "path": "Recovery/reset.log"
+              },
+              "discoveryIndex": 0,
+              "disposition": "succeeded",
+              "failures": [],
+              "message": null,
+              "movedToUnsolvedLogs": false
+            }
+          ],
+          "recoveryPrompt": null,
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": 1,
+            "failed": 0,
+            "message": null,
+            "status": "completed",
+            "succeeded": 1,
+            "total": 1
+          }
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "reset-intervening-change-conflict",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "malformedLocalIgnoreYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "local-ignore",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "malformedLocalIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Recovery/reset-conflict.log"
+          },
+          {
+            "path": "Recovery/reset-conflict-late.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+          "Unsolved Logs",
+          "Recovery/reset-conflict-AUTOSCAN.md",
+          "Recovery/reset-conflict-late-AUTOSCAN.md"
+        ],
+        "continuationFlow": {
+          "action": {
+            "operation": "resume",
+            "decision": "reset-to-default"
+          },
+          "postPauseData": [
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+            },
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+            },
+            {
+              "fixtureRef": "validCrashLog",
+              "path": "Recovery/reset-conflict-late.log"
+            },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "replays": [
+            {
+              "operation": "resume",
+              "decision": "reset-to-default"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "cancellation": {
+          "afterReplays": false,
+          "afterTerminal": false,
+          "beforeTerminal": false
+        },
+        "durableEffects": {
+          "localIgnore": {
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml",
+            "exists": true,
+            "identity": {
+              "sha256": "1fc79ee2668e143c355dc3b931de1a2c41041227e79e21890da90a744ad3b70c",
+              "byteLength": 29
+            }
+          },
+          "backups": [],
+          "reports": [],
+          "forbidden": [
+            {
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+              "exists": false,
+              "identity": null
+            },
+            {
+              "path": "Unsolved Logs",
+              "exists": false,
+              "identity": null
+            },
+            {
+              "path": "Recovery/reset-conflict-AUTOSCAN.md",
+              "exists": false,
+              "identity": null
+            },
+            {
+              "path": "Recovery/reset-conflict-late-AUTOSCAN.md",
+              "exists": false,
+              "identity": null
+            }
+          ]
+        },
+        "initial": {
+          "continuationAvailable": true,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/reset-conflict.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/reset-conflict-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/reset-conflict.log"
+              },
+              {
+                "path": "Recovery/reset-conflict-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [],
+            "run": [
+              "discovery_completed"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "localIgnoreReset": null,
+            "localIgnoreResetAvailable": true,
+            "localIgnoreState": "recovery_required",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [],
+          "recoveryPrompt": {
+            "decisions": [
+              {
+                "available": true,
+                "decision": "proceed_without_ignore",
+                "label": "Proceed Without Ignore"
+              },
+              {
+                "available": true,
+                "decision": "reset_to_default",
+                "label": "Reset To Default"
+              }
+            ],
+            "displaySeverities": [
+              "warning"
+            ]
+          },
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": null,
+            "failed": 0,
+            "message": "Local Ignore recovery is required",
+            "status": "local_ignore_recovery_required",
+            "succeeded": 0,
+            "total": 1
+          }
+        },
+        "replays": [
+          {
+            "decision": "reset_to_default",
+            "error": {
+              "displaySeverities": [
+                "failure",
+                "notice"
+              ],
+              "kind": "scan_run_continuation_consumed",
+              "message": "Crash Log Scan Run continuation was already consumed"
+            },
+            "operation": "resume"
+          }
+        ],
+        "terminal": null,
+        "terminalError": {
+          "kind": "local_ignore_reset_conflict",
+          "code": "local_ignore_reset_conflict",
+          "messageNonEmpty": true,
+          "path": null,
+          "stage": null,
+          "expectedIdentity": {
+            "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11",
+            "byteLength": 39
+          },
+          "actualIdentity": {
+            "sha256": "1fc79ee2668e143c355dc3b931de1a2c41041227e79e21890da90a744ad3b70c",
+            "byteLength": 29
+          },
+          "backupPath": null,
+          "malformedIdentity": null,
+          "backupIdentity": null,
+          "replacementIdentity": null,
+          "displaySeverities": [
+            "failure",
+            "info",
+            "info",
+            "notice"
+          ],
+          "events": []
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "reset-operational-failure",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "malformedLocalIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "local-ignore",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "malformedLocalIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Recovery/reset-operational.log"
+          },
+          {
+            "path": "Recovery/reset-operational-late.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+          "Unsolved Logs",
+          "Recovery/reset-operational-AUTOSCAN.md",
+          "Recovery/reset-operational-late-AUTOSCAN.md"
+        ],
+        "continuationFlow": {
+          "action": {
+            "operation": "resume",
+            "decision": "reset-to-default"
+          },
+          "postPauseData": [
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+            },
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+            },
+            {
+              "fixtureRef": "validCrashLog",
+              "path": "Recovery/reset-operational-late.log"
+            },
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "CLASSIC Backup"
+          }
+        ],
+        "replays": [
+            {
+              "operation": "resume",
+              "decision": "reset-to-default"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "cancellation": {
+          "afterReplays": false,
+          "afterTerminal": false,
+          "beforeTerminal": false
+        },
+        "durableEffects": {
+          "localIgnore": {
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml",
+            "exists": true,
+            "identity": {
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11",
+              "byteLength": 39
+            }
+          },
+          "backups": [],
+          "reports": [],
+          "forbidden": [
+            {
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+              "exists": false,
+              "identity": null
+            },
+            {
+              "path": "Unsolved Logs",
+              "exists": false,
+              "identity": null
+            },
+            {
+              "path": "Recovery/reset-operational-AUTOSCAN.md",
+              "exists": false,
+              "identity": null
+            },
+            {
+              "path": "Recovery/reset-operational-late-AUTOSCAN.md",
+              "exists": false,
+              "identity": null
+            }
+          ]
+        },
+        "initial": {
+          "continuationAvailable": true,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/reset-operational.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/reset-operational-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/reset-operational.log"
+              },
+              {
+                "path": "Recovery/reset-operational-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [],
+            "run": [
+              "discovery_completed"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "localIgnoreReset": null,
+            "localIgnoreResetAvailable": true,
+            "localIgnoreState": "recovery_required",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [],
+          "recoveryPrompt": {
+            "decisions": [
+              {
+                "available": true,
+                "decision": "proceed_without_ignore",
+                "label": "Proceed Without Ignore"
+              },
+              {
+                "available": true,
+                "decision": "reset_to_default",
+                "label": "Reset To Default"
+              }
+            ],
+            "displaySeverities": [
+              "warning"
+            ]
+          },
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": null,
+            "failed": 0,
+            "message": "Local Ignore recovery is required",
+            "status": "local_ignore_recovery_required",
+            "succeeded": 0,
+            "total": 1
+          }
+        },
+        "replays": [
+          {
+            "decision": "reset_to_default",
+            "error": {
+              "displaySeverities": [
+                "failure",
+                "notice"
+              ],
+              "kind": "scan_run_continuation_consumed",
+              "message": "Crash Log Scan Run continuation was already consumed"
+            },
+            "operation": "resume"
+          }
+        ],
+        "terminal": null,
+        "terminalError": {
+          "kind": "local_ignore_reset_backup_failure",
+          "code": "local_ignore_reset_backup_failure",
+          "messageNonEmpty": true,
+          "path": {
+            "path": "CLASSIC Backup/YAML Data/Local Ignore"
+          },
+          "stage": null,
+          "expectedIdentity": null,
+          "actualIdentity": null,
+          "backupPath": null,
+          "malformedIdentity": null,
+          "backupIdentity": null,
+          "replacementIdentity": null,
+          "displaySeverities": [
+            "failure",
+            "failure",
+            "info"
+          ],
+          "events": []
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "reset-pre-cancelled",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "malformedLocalIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "local-ignore",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "malformedLocalIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Recovery/reset-pre-cancelled.log"
+          },
+          {
+            "path": "Recovery/reset-pre-cancelled-late.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+          "Unsolved Logs",
+          "Recovery/reset-pre-cancelled-AUTOSCAN.md",
+          "Recovery/reset-pre-cancelled-late-AUTOSCAN.md",
+          ".classic-local-ignore-reset.lock"
+        ],
+        "continuationFlow": {
+          "action": {
+            "operation": "resume",
+            "decision": "reset-to-default"
+          },
+          "postPauseData": [
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+            },
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+            },
+            {
+              "fixtureRef": "validCrashLog",
+              "path": "Recovery/reset-pre-cancelled-late.log"
+            }
+          ],
+          "replays": [
+            {
+              "operation": "resume",
+              "decision": "reset-to-default"
+            }
+          ],
+          "cancellation": "before-resume"
+        }
+      },
+      "expected": {
+        "cancellation": {
+          "beforeTerminal": true,
+          "afterTerminal": true,
+          "afterReplays": true
+        },
+        "durableEffects": {
+          "localIgnore": {
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml",
+            "exists": true,
+            "identity": {
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11",
+              "byteLength": 39
+            }
+          },
+          "backups": [],
+          "reports": [],
+          "forbidden": [
+            {
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+              "exists": false,
+              "identity": null
+            },
+            {
+              "path": "Unsolved Logs",
+              "exists": false,
+              "identity": null
+            },
+            {
+              "path": "Recovery/reset-pre-cancelled-AUTOSCAN.md",
+              "exists": false,
+              "identity": null
+            },
+            {
+              "path": "Recovery/reset-pre-cancelled-late-AUTOSCAN.md",
+              "exists": false,
+              "identity": null
+            },
+            {
+              "path": ".classic-local-ignore-reset.lock",
+              "exists": false,
+              "identity": null
+            }
+          ]
+        },
+        "initial": {
+          "continuationAvailable": true,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/reset-pre-cancelled.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/reset-pre-cancelled-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/reset-pre-cancelled.log"
+              },
+              {
+                "path": "Recovery/reset-pre-cancelled-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [],
+            "run": [
+              "discovery_completed"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "localIgnoreReset": null,
+            "localIgnoreResetAvailable": true,
+            "localIgnoreState": "recovery_required",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [],
+          "recoveryPrompt": {
+            "decisions": [
+              {
+                "available": true,
+                "decision": "proceed_without_ignore",
+                "label": "Proceed Without Ignore"
+              },
+              {
+                "available": true,
+                "decision": "reset_to_default",
+                "label": "Reset To Default"
+              }
+            ],
+            "displaySeverities": [
+              "warning"
+            ]
+          },
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": null,
+            "failed": 0,
+            "message": "Local Ignore recovery is required",
+            "status": "local_ignore_recovery_required",
+            "succeeded": 0,
+            "total": 1
+          }
+        },
+        "replays": [
+          {
+            "decision": "reset_to_default",
+            "error": {
+              "displaySeverities": [
+                "failure",
+                "notice"
+              ],
+              "kind": "scan_run_continuation_consumed",
+              "message": "Crash Log Scan Run continuation was already consumed"
+            },
+            "operation": "resume"
+          }
+        ],
+        "terminal": {
+          "run": {
+            "status": "cancelled",
+            "message": "Cancelled after crash log discovery",
+            "total": 1,
+            "succeeded": 0,
+            "failed": 0,
+            "cancelled": 1,
+            "effectiveConcurrency": null
+          },
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/reset-pre-cancelled.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/reset-pre-cancelled-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/reset-pre-cancelled.log"
+              },
+              {
+                "path": "Recovery/reset-pre-cancelled-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "installedYamlData": null,
+          "logs": [
+            {
+              "discoveryIndex": 0,
+              "crashLog": {
+                "path": "Recovery/reset-pre-cancelled.log"
+              },
+              "autoscanReport": null,
+              "disposition": "cancelled_before_start",
+              "failures": [],
+              "message": "Cancelled by user",
+              "movedToUnsolvedLogs": false
+            }
+          ],
+          "events": {
+            "run": [],
+            "logs": [
+              {
+                "discoveryIndex": 0,
+                "trace": []
+              }
+            ]
+          },
+          "continuationAvailable": false,
+          "recoveryPrompt": null
+        },
+        "terminalError": null
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "reset-post-critical-cancelled",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "malformedLocalIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "local-ignore",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "malformedLocalIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Recovery/reset-post-critical.log"
+          },
+          {
+            "path": "Recovery/reset-post-critical-late.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+          "Unsolved Logs",
+          "Recovery/reset-post-critical-AUTOSCAN.md",
+          "Recovery/reset-post-critical-late-AUTOSCAN.md"
+        ],
+        "continuationFlow": {
+          "action": {
+            "operation": "resume",
+            "decision": "reset-to-default"
+          },
+          "postPauseData": [
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+            },
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+            },
+            {
+              "fixtureRef": "validCrashLog",
+              "path": "Recovery/reset-post-critical-late.log"
+            }
+          ],
+          "replays": [
+            {
+              "operation": "resume",
+              "decision": "reset-to-default"
+            }
+          ],
+          "cancellation": "after-reset-critical-section"
+        },
+        "localIgnorePaddingBytes": 16777216
+      },
+      "expected": {
+        "cancellation": {
+          "beforeTerminal": false,
+          "afterTerminal": true,
+          "afterReplays": true
+        },
+        "durableEffects": {
+          "localIgnore": {
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml",
+            "exists": true,
+            "identity": {
+              "sha256": "ba0cbe71c9023ebdb553e3a0acdc5c6ad95e9126694077344f4c57f00e3b71e3",
+              "byteLength": 28
+            }
+          },
+          "backups": [
+            {
+              "parentPath": "CLASSIC Backup/YAML Data/Local Ignore",
+              "identity": {
+                "sha256": "2cdeab79c003cd00910cdbcc55abcb31070c28115fc596e3dcbddac083ec305d",
+                "byteLength": 16777255
+              }
+            }
+          ],
+          "reports": [],
+          "forbidden": [
+            {
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+              "exists": false,
+              "identity": null
+            },
+            {
+              "path": "Unsolved Logs",
+              "exists": false,
+              "identity": null
+            },
+            {
+              "path": "Recovery/reset-post-critical-AUTOSCAN.md",
+              "exists": false,
+              "identity": null
+            },
+            {
+              "path": "Recovery/reset-post-critical-late-AUTOSCAN.md",
+              "exists": false,
+              "identity": null
+            }
+          ]
+        },
+        "initial": {
+          "continuationAvailable": true,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/reset-post-critical.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/reset-post-critical-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/reset-post-critical.log"
+              },
+              {
+                "path": "Recovery/reset-post-critical-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [],
+            "run": [
+              "discovery_completed"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "sha256": "2cdeab79c003cd00910cdbcc55abcb31070c28115fc596e3dcbddac083ec305d",
+              "byteLength": 16777255
+            },
+            "localIgnoreReset": null,
+            "localIgnoreResetAvailable": true,
+            "localIgnoreState": "recovery_required",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [],
+          "recoveryPrompt": {
+            "decisions": [
+              {
+                "available": true,
+                "decision": "proceed_without_ignore",
+                "label": "Proceed Without Ignore"
+              },
+              {
+                "available": true,
+                "decision": "reset_to_default",
+                "label": "Reset To Default"
+              }
+            ],
+            "displaySeverities": [
+              "warning"
+            ]
+          },
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": null,
+            "failed": 0,
+            "message": "Local Ignore recovery is required",
+            "status": "local_ignore_recovery_required",
+            "succeeded": 0,
+            "total": 1
+          }
+        },
+        "replays": [
+          {
+            "decision": "reset_to_default",
+            "error": {
+              "displaySeverities": [
+                "failure",
+                "notice"
+              ],
+              "kind": "scan_run_continuation_consumed",
+              "message": "Crash Log Scan Run continuation was already consumed"
+            },
+            "operation": "resume"
+          }
+        ],
+        "terminal": {
+          "run": {
+            "status": "cancelled",
+            "message": "Cancelled after crash log discovery",
+            "total": 1,
+            "succeeded": 0,
+            "failed": 0,
+            "cancelled": 1,
+            "effectiveConcurrency": null
+          },
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/reset-post-critical.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/reset-post-critical-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/reset-post-critical.log"
+              },
+              {
+                "path": "Recovery/reset-post-critical-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              },
+              {
+                "candidate": null,
+                "kind": "local_ignore_reset",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 28,
+              "sha256": "ba0cbe71c9023ebdb553e3a0acdc5c6ad95e9126694077344f4c57f00e3b71e3"
+            },
+            "localIgnoreReset": {
+              "backup": {
+                "exists": true,
+                "identityMatchesReceipt": true,
+                "parentPath": "CLASSIC Backup/YAML Data/Local Ignore"
+              },
+              "backupIdentity": {
+                "sha256": "2cdeab79c003cd00910cdbcc55abcb31070c28115fc596e3dcbddac083ec305d",
+                "byteLength": 16777255
+              },
+              "localIgnorePath": {
+                "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+              },
+              "malformedIdentity": {
+                "sha256": "2cdeab79c003cd00910cdbcc55abcb31070c28115fc596e3dcbddac083ec305d",
+                "byteLength": 16777255
+              },
+              "replacementIdentity": {
+                "byteLength": 28,
+                "sha256": "ba0cbe71c9023ebdb553e3a0acdc5c6ad95e9126694077344f4c57f00e3b71e3"
+              }
+            },
+            "localIgnoreResetAvailable": false,
+            "localIgnoreState": "reset_to_default",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [
+            {
+              "discoveryIndex": 0,
+              "crashLog": {
+                "path": "Recovery/reset-post-critical.log"
+              },
+              "autoscanReport": null,
+              "disposition": "cancelled_before_start",
+              "failures": [],
+              "message": "Cancelled by user",
+              "movedToUnsolvedLogs": false
+            }
+          ],
+          "events": {
+            "run": [],
+            "logs": [
+              {
+                "discoveryIndex": 0,
+                "trace": []
+              }
+            ]
+          },
+          "continuationAvailable": false,
+          "recoveryPrompt": null
+        },
+        "terminalError": null
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "abandon-local-ignore-recovery",
+      "action": "scan-run.execute",
+      "capabilityIds": [
+        "scan-run.execute"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "malformedLocalIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "local-ignore",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "malformedLocalIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Recovery/abandon.log"
+          },
+          {
+            "path": "Recovery/abandon-late.log"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "CLASSIC Data/CLASSIC Ignore.yaml.prev",
+          "Unsolved Logs",
+          "Recovery/abandon-AUTOSCAN.md",
+          "Recovery/abandon-late-AUTOSCAN.md"
+        ],
+        "continuationFlow": {
+          "action": {
+            "operation": "abandon"
+          },
+          "postPauseData": [
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+            },
+            {
+              "fixtureRef": "malformedLocalIgnoreYaml",
+              "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+            },
+            {
+              "fixtureRef": "validCrashLog",
+              "path": "Recovery/abandon-late.log"
+            }
+          ],
+          "replays": [
+            {
+              "operation": "abandon"
+            },
+            {
+              "operation": "resume",
+              "decision": "reset-to-default"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "terminalError": null,
+        "cancellation": {
+          "afterReplays": true,
+          "afterTerminal": true,
+          "beforeTerminal": false
+        },
+        "durableEffects": {
+          "backups": [],
+          "forbidden": [
+            {
+              "exists": false,
+              "identity": null,
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml.prev"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Unsolved Logs"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Recovery/abandon-AUTOSCAN.md"
+            },
+            {
+              "exists": false,
+              "identity": null,
+              "path": "Recovery/abandon-late-AUTOSCAN.md"
+            }
+          ],
+          "localIgnore": {
+            "exists": true,
+            "identity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          },
+          "reports": []
+        },
+        "initial": {
+          "continuationAvailable": true,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/abandon.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/abandon-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/abandon.log"
+              },
+              {
+                "path": "Recovery/abandon-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [],
+            "run": [
+              "discovery_completed"
+            ]
+          },
+          "installedYamlData": {
+            "diagnostics": [
+              {
+                "candidate": null,
+                "kind": "parse",
+                "path": {
+                  "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+                },
+                "role": null
+              }
+            ],
+            "gameIdentity": {
+              "byteLength": 463,
+              "sha256": "5ff58f93e2018429043a00b11b43c0199b927b984f809a103eb80aa29f7b2168"
+            },
+            "localIgnoreIdentity": {
+              "byteLength": 39,
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11"
+            },
+            "localIgnoreReset": null,
+            "localIgnoreResetAvailable": true,
+            "localIgnoreState": "recovery_required",
+            "mainIdentity": {
+              "byteLength": 281,
+              "sha256": "934f888a914fa210688d2b3f17ed003d7ee57efa1d695486c20907456a697ac4"
+            }
+          },
+          "logs": [],
+          "recoveryPrompt": {
+            "decisions": [
+              {
+                "available": true,
+                "decision": "proceed_without_ignore",
+                "label": "Proceed Without Ignore"
+              },
+              {
+                "available": true,
+                "decision": "reset_to_default",
+                "label": "Reset To Default"
+              }
+            ],
+            "displaySeverities": [
+              "warning"
+            ]
+          },
+          "run": {
+            "cancelled": 0,
+            "effectiveConcurrency": null,
+            "failed": 0,
+            "message": "Local Ignore recovery is required",
+            "status": "local_ignore_recovery_required",
+            "succeeded": 0,
+            "total": 1
+          }
+        },
+        "replays": [
+          {
+            "decision": null,
+            "error": {
+              "displaySeverities": [
+                "failure",
+                "notice"
+              ],
+              "kind": "scan_run_continuation_consumed",
+              "message": "Crash Log Scan Run continuation was already consumed"
+            },
+            "operation": "abandon"
+          },
+          {
+            "decision": "reset_to_default",
+            "error": {
+              "displaySeverities": [
+                "failure",
+                "notice"
+              ],
+              "kind": "scan_run_continuation_consumed",
+              "message": "Crash Log Scan Run continuation was already consumed"
+            },
+            "operation": "resume"
+          }
+        ],
+        "terminal": {
+          "continuationAvailable": false,
+          "discovery": {
+            "acceptedLogs": [
+              {
+                "path": "Recovery/abandon.log"
+              }
+            ],
+            "rejectedInputs": [
+              {
+                "path": "Recovery/abandon-late.log",
+                "reason": "path does not exist"
+              }
+            ],
+            "searchedLocations": [
+              {
+                "path": "Recovery/abandon.log"
+              },
+              {
+                "path": "Recovery/abandon-late.log"
+              }
+            ],
+            "source": "targeted"
+          },
+          "events": {
+            "logs": [
+              {
+                "discoveryIndex": 0,
+                "trace": []
+              }
+            ],
+            "run": []
+          },
+          "installedYamlData": null,
+          "logs": [
+            {
+              "autoscanReport": null,
+              "crashLog": {
+                "path": "Recovery/abandon.log"
+              },
+              "discoveryIndex": 0,
+              "disposition": "cancelled_before_start",
+              "failures": [],
+              "message": "Cancelled by user",
+              "movedToUnsolvedLogs": false
+            }
+          ],
+          "recoveryPrompt": null,
+          "run": {
+            "cancelled": 1,
+            "effectiveConcurrency": null,
+            "failed": 0,
+            "message": "Cancelled after crash log discovery",
+            "status": "cancelled",
+            "succeeded": 0,
+            "total": 1
+          }
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": [
+    { "id": "cli.display-content-delivery" },
+    { "id": "cli.stream-selection" },
+    { "id": "cli.exit-code-routing" },
+    { "id": "cli.recovery-interaction" },
+    { "id": "gui.worker-dispatch" },
+    { "id": "gui.path-links" },
+    { "id": "gui.recovery-interaction" },
+    { "id": "gui.model-updates" },
+    { "id": "gui.display-content-delivery" },
+    { "id": "tui.display-content-delivery" },
+    { "id": "tui.ordering" },
+    { "id": "tui.styling-categories" },
+    { "id": "tui.recovery-interaction" },
+    { "id": "tui.cancellation" }
+  ]
+}

@@ -52,7 +52,11 @@ auto execution = scan_run_contract_execution_take_result(*operation);
 
 Rust owns discovery, Targeted rejection policy, effective-concurrency selection, scheduling, FCX setup evaluation, Autoscan Report persistence, Unsolved Logs finalization, cancellation admission seams, aggregate counts, and terminal ordering. Qt supplies facts and presents the resulting contract; it does not repeat those decisions.
 
-If that envelope reports `LocalIgnoreRecoveryRequired`, the operation still owns an opaque single-use continuation. `ScanWorker` publishes the retained malformed-file metadata, takes the continuation, and synchronously asks `MainWindow` for one explicit choice through `ScanController`. `ScanController::makeLocalIgnoreRecoveryPrompt()` builds that handoff: the returned callable runs on the worker thread, marshals only the message across a `Qt::BlockingQueuedConnection`, and returns a typed decision. The operation, continuation, cancellation control, and original observer remain live on the worker stack throughout, and every path that cannot reach a live controller resolves to `Cancel`. The worker then calls `scan_run_continuation_resume(...)`, takes the resumed envelope, and presents it through the same terminal path.
+If that envelope reports `LocalIgnoreRecoveryRequired`, the operation still owns an opaque single-use continuation. `ScanWorker` publishes the retained malformed-file metadata, takes the continuation, and synchronously asks `MainWindow` for one explicit choice through `ScanController`. `ScanController::makeLocalIgnoreRecoveryPrompt()` builds that handoff: the returned callable runs on the worker thread, marshals only the message across a `Qt::BlockingQueuedConnection`, and returns a typed decision. The operation, continuation, cancellation control, and original observer remain live on the worker stack throughout, and every path that cannot reach a live controller resolves to `Cancel`. The worker then claims the continuation once, takes the resulting envelope, and presents it through the same terminal path.
+
+Which call it makes depends on the choice, and the mapping is an exhaustive `switch` producing a `std::optional<ScanRunLocalIgnoreRecoveryDecision>`. A decision calls `scan_run_continuation_resume(...)`; `Cancel` is *no decision* and calls `scan_run_continuation_abandon(...)`, the shared operation that cancels `m_cancellation` and claims the continuation without applying either recovery decision, touching nothing on disk. The worker no longer cancels first and no longer picks a placeholder decision — that sequence is Rust's now, written once for this frontend, the native CLI, and the TUI. The `optional` shape mirrors the `Option` the Node and Python bindings use, because `LocalIgnoreRecoveryDecision` deliberately carries no abandonment variant. Keeping the `switch` exhaustive means a choice added later trips `-Wswitch` here rather than silently resolving to Proceed Without Ignore.
+
+Abandonment emits no observer event — cancellation short-circuits ahead of every stage that emits — so `deliveryFailed()` stays false on that path and an empty event stream is not a delivery failure.
 
 The worker takes the continuation *before* it asks. That ordering means a prompt that throws drops the continuation instead of leaving the run resumable with an answer the user never gave, and it matches `execute_cli_scan_run(...)` in the native CLI.
 
@@ -103,12 +107,11 @@ The value is informational: Qt reports the exact Rust-selected admission limit a
 
 ### Per-log events
 
-`LogQueued`, `LogStarted`, `LogPhase`, and `LogFinished` update the progress model and emit both progress signals. Status presentation is event-aware:
+`LogQueued`, `LogStarted`, `LogPhase`, and `LogFinished` update the progress model and emit both progress signals.
 
-- `LogQueued` -> `Queued: <path>`
-- `LogStarted` -> `Scanning: <path>`
-- `LogPhase` -> `setup`, `parse`, `analysis`, or `finalization` plus the path
-- `LogFinished` -> `Finished: <path>`
+Status presentation is no longer event-aware, because it is no longer this frontend's to compose. `eventStatus(...)` renders `ScanRunContractEvent::display_lines`, which `classic-cpp-bridge` populates inline on the observer callback — before the event reaches C++, because this process receives a projected copy and never holds the Rust event. Every event kind renders, including the two the GUI used to phrase itself.
+
+What remains this frontend's is the shape rather than the words: the progress row is a single `QProgressBar` format string, so an event that produced more than one line (a discovery that also states a rejection) is joined onto one line with ` - `.
 
 The correlation key is `event.discovery_index`. `event.completed` and `event.total` remain Rust-owned lifecycle snapshots forwarded through `progressDetailed(...)`.
 
@@ -174,20 +177,27 @@ Terminal mapping:
 - `Cancelled` emits `cancelled(...)` with completed and not-started counts
 - `NoCrashLogsFound` emits the dedicated `noLogsFound(...)` signal with searched locations when available; the controller relays `scanNoLogsFound(...)`, and MainWindow restores idle state without presenting an error dialog
 - `SetupFailed` emits `error(...)` with structured setup details
-- `LocalIgnoreRecoveryRequired` calls `promptLocalIgnoreRecoveryChoice(...)`, a warning prompt with Back Up & Reset To Default, Continue Without Ignore, and Cancel choices; the first two resume the retained run, while cancellation is recorded before a non-mutating placeholder decision so Rust returns the ordinary cancelled lifecycle without touching Local Ignore. Cancel is both the default and the escape button, so Return, Escape, and closing the window are all non-destructive
-- typed continuation replay and Local Ignore reset conflict/backup/replacement errors emit `error(...)` with their stable code, message, and applicable path
-- a typed infrastructure error emits `error(...)` with its stage, message, and optional path
+- `LocalIgnoreRecoveryRequired` calls `promptLocalIgnoreRecoveryChoice(parent, recovery)`, a warning prompt whose buttons are built from `recovery.decisions` — one per decision, labelled with Rust's Display Label — plus a Cancel this frontend owns. `recovery.message` is the paused run rendered as rich text rather than a sentence about it, because Rust exposes the Installed YAML Data block this decision is about only as part of the rendered run — the same call the native CLI and the TUI made. `recovery.prompt` is Rust's own question, and each decision's `description` says what choosing it will do; the dialog writes neither. What stays the GUI's: that this is a modal dialog, that the descriptions sit under the question rather than on the buttons, and Cancel's affordance and wording. The dialog sets `Qt::TextBrowserInteraction` so the paths it shows can be opened. A decision resumes the retained run, while cancellation routes to the shared abandon operation so Rust returns the ordinary cancelled lifecycle without touching Local Ignore. Cancel is both the default and the escape button, so Return, Escape, and closing the window are all non-destructive
+  - `ScanRunLocalIgnoreRecoveryPresentation` is projected by `presentScanRunExecution` on the **worker thread**, from `execution.recovery_prompt` behind `has_recovery_prompt`. It holds only Qt-owned copies and no `rust::Box`, which is what makes the `Qt::BlockingQueuedConnection` hop in `ScanController::makeLocalIgnoreRecoveryPrompt` legal — the bridged envelope cannot cross that hop and cannot be re-rendered on the far side
+  - A decision whose `available` is false gets no button. `resume` claims the single-use continuation before validating the decision and then fails with a typed reset error: nothing on disk changes, but the run cannot be retried without starting over. Availability travels *on* the decision rather than as a separate flag, which is what makes offering an unavailable one impossible without ignoring a field already in hand — the shape that replaced `offersLocalIgnoreResetToDefault`, whose "silence is not a denial" rule now lives once in Rust's `render_local_ignore_recovery`. Why a decision is missing is stated among `recovery.prompt`'s lines, so the dialog explains no absence of its own
+  - The window stays responsive throughout. `BlockingQueuedConnection` parks the *worker* thread while `QMessageBox::exec()` runs a *nested* loop on the GUI thread rather than suspending it; `classic-gui/tests/test_recoverypromptnonblocking.cpp` pins that with heartbeat, repaint, and input probes
+- typed continuation replay and Local Ignore reset conflict/backup/replacement errors emit `error(...)`; the stable code stays on `resume_error.code` for a consumer to match on and is deliberately absent from the rendered sentences, because a code is machine-facing identity rather than prose
+- a typed infrastructure error emits `error(...)` with the rendered failure block; the typed stage and path stay on `error` for a consumer
+
+The three terminal signals that carry prose — `cancelled(...)`, `noLogsFound(...)`, and `error(...)` — carry the run rendered as **rich text**, because every one of them ends in a `QMessageBox`. `MainWindow::showScanRunMessage(...)` sets `Qt::TextBrowserInteraction` so a run's `Path` segments stay selectable and open from the dialog; `scanRunStatusLine(...)` reduces the same block to its leading line for the progress row, which is a single plain format string and can hold nothing more. Both are Display Layout: the words are identical to the ones the native CLI and the TUI print.
 
 Cancellation after discovery does not interrupt admitted work. Rust finishes durable report/movement handling for admitted logs, prevents later admissions at safe seams, and returns non-started accepted logs as `CancelledBeforeStart`. The worker skips those entries when emitting `logScanned(...)`.
 
 The presentation layer projects:
 
-- the run-scoped FCX setup status, message, rendered report, checks, proposed path updates, complete configuration-issue severity/file/section/setting/current/recommended/description data, actions, and fatal errors
-- optional Installed YAML Data presence plus selected Main/game role, provenance, schema, SHA-256 and byte length; `Existing`, `Generated`, `RecoveryRequired`, or `ProceedWithoutIgnore` Local Ignore state and exact identity; and diagnostic role/candidate/path/kind/message context
+- the envelope's `display_lines` into Qt-owned `ScanRunDisplayLinePresentation` values, plus the same sequence rendered as plain text (`message`) and as rich text (`richText`). One field covers all three payloads, because `scan_run_contract_execute` and `scan_run_continuation_resume` return the same envelope and the lines describe whichever payload the presence flags select
+- the run-scoped FCX setup status, message, rendered report, checks, proposed path updates, complete configuration-issue severity/file/section/setting/current/recommended/description data, actions, and fatal errors. This projection stays this frontend's, because the FCX Mode setup types have not adopted the shared vocabulary and `classic-scan-presentation` deliberately does not render them. It is grouped in *after* the rendered lines rather than spliced into them
+- optional Installed YAML Data presence plus selected Main/game role, provenance, schema, SHA-256 and byte length; `Existing`, `Generated`, `RecoveryRequired`, or `ProceedWithoutIgnore` Local Ignore state and exact identity; whether Reset To Default can succeed for this run; and diagnostic role/candidate/path/kind/message context
 - per-log `Succeeded`, `Failed`, and `CancelledBeforeStart` dispositions
-- all applicable `Analysis`, `ReportWrite`, and `UnsolvedLogsFinalization` failures
 - Autoscan Report paths and movement state
 - discovery-ordered terminal logs and Rust-owned aggregate counts
+
+Structured per-log failures are **not** projected into strings any more. Rust renders one display line per failure beneath the log's outcome, so a `<stage>: <message>` list built here would be the same sentence written twice in two places able to disagree. `ScanWorker` logs the whole rendered run once instead of composing its own per-log warnings.
 
 For completed or cancelled work, report directories are also derived from terminal Autoscan Report paths and emitted through `reportDirectoriesResolved(...)` when non-empty.
 
@@ -195,8 +205,14 @@ When intake metadata is present, `ScanWorker` emits the Qt-owned snapshot throug
 `installedYamlDataResolved(...)` before terminal lifecycle signals can destroy
 the worker. `ScanController` relays it as `scanInstalledYamlDataResolved(...)`;
 MainWindow clears stale state at scan start, retains the complete snapshot past
-worker lifetime, logs exact identities and diagnostics, and includes selected
-provenance/schema and Local Ignore state in terminal status. Recovery first
+worker lifetime, and includes selected provenance/schema and Local Ignore state
+in terminal status through `installedYamlDataStatusSuffix()`. That suffix is the
+one place this frontend still calls a bridge label accessor directly, and it is
+the case they remain correct for: the status row is a single progress-bar format
+string with no room for the rendered Installed YAML Data block, so it labels the
+enums outside a display line. MainWindow no longer logs identities or
+diagnostics itself — `ScanWorker` logs the rendered run, which carries that block
+in the words every frontend uses. Recovery first
 publishes the malformed-file identity, then successful continuation publishes
 the final `ProceedWithoutIgnore` or `ResetToDefault` snapshot and durable reset
 metadata before its terminal lifecycle signal.
@@ -204,14 +220,31 @@ metadata before its terminal lifecycle signal.
 `formatInstalledYamlDataWarning(...)` then aggregates that snapshot into at most
 one run-level warning, which `MainWindow::onScanInstalledYamlDataResolved(...)`
 hands to `onScanWarning(...)` — the same presentation Targeted discovery
-rejections reach through `ScanController::scanWarning`. The projection is
-deliberately selective:
+rejections reach through `ScanController::scanWarning`.
+
+What that warning *says* is no longer this frontend's. Its body is the run's
+rendered lines under a GUI-owned section header, carried on
+`ScanRunInstalledYamlDataPresentation::runDisplayLines`. It carries the whole run
+rather than the Installed YAML Data block alone because Rust exposes that block
+only as part of `render_run_result`, and selecting it back out by position would
+be a structural assumption about a sequence that deliberately carries no
+structure — the same call the native CLI and the TUI made for their recovery
+prompts.
+
+Which lines the dialog withholds is still deliberately selective, and still this
+frontend's, because omitting whole lines is what an adapter may do. A withheld
+line is recognised by the diagnostic message it carries as its `Emphasis`
+payload, a value this frontend already holds a typed copy of and compares rather
+than parses:
 
 - degraded selection diagnostics (cache unavailable, missing, read, invalid
-  UTF-8, parse, invalid/incompatible schema, invalid role data) are reported
-  with their role, candidate provenance, and path
-- a durable Local Ignore reset is reported with its byte-exact backup location
-  and identity, because that is the only way a user recovers the replaced edits
+  UTF-8, parse, invalid/incompatible schema, invalid role data) are shown with
+  their role, candidate provenance, and path, all of which Rust already renders
+  onto the diagnostic's line
+- a durable Local Ignore reset is shown with its byte-exact backup location and
+  identity, because that is the only way a user recovers the replaced edits.
+  Those are Rust's `Local Ignore backup:` and `Local Ignore replacement:` lines,
+  and their paths are actionable in the dialog
 - `LocalIgnoreGenerated` is excluded: generating an absent Local Ignore file from
   the selected Main defaults is an expected successful path, so a clean first run
   never interrupts the user
@@ -226,6 +259,9 @@ deliberately selective:
   and re-reporting it would warn about a question the user just answered. A reset
   still warns, because its durable backup location is information the dialog
   could not have given
+- the `LocalIgnoreReset` diagnostic line itself is withheld under those same two
+  states, because the backup and replacement lines beside it say the same thing
+  with the paths attached
 
 These diagnostics are run-level only. Nothing in this path contributes to
 Autoscan Report content.

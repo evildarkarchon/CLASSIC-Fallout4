@@ -711,7 +711,12 @@ void ScanSettingsWiringTests::mainwindow_wires_scan_warnings_to_user_feedback()
     const QString sourceText = QString::fromUtf8(sourceFile.readAll());
     QVERIFY2(sourceText.contains(QStringLiteral("&ScanController::scanWarning")),
              "MainWindow should connect ScanController::scanWarning to user-visible feedback");
-    QVERIFY2(sourceText.contains(QStringLiteral("QMessageBox::warning(this, QStringLiteral(\"Scan Warning\")")),
+    // The dialog now goes through `showScanRunMessage` rather than the bare `QMessageBox::warning`
+    // convenience. The intent this pins is unchanged — a warning still reaches the user as a warning
+    // dialog — but a scan warning may now carry rendered Display Content, and the helper is what
+    // sets the interaction flags that keep a run's paths selectable and openable.
+    QVERIFY2(sourceText.contains(
+                 QStringLiteral("showScanRunMessage(this, QMessageBox::Warning, QStringLiteral(\"Scan Warning\")")),
              "MainWindow should surface scan warnings through a warning dialog");
 }
 

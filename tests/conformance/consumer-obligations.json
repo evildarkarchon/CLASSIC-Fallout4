@@ -1,0 +1,518 @@
+{
+  "schemaVersion": 1,
+  "families": [
+    {
+      "familyId": "crash-log-scan-run",
+      "consumers": [
+        {
+          "id": "cli",
+          "executionInstanceIds": [
+            "windows-clang-cl",
+            "windows-msvc"
+          ],
+          "sourcePaths": [
+            "business-logic/classic-scan-presentation/src",
+            "business-logic/classic-scanlog-core/src/scan_run",
+            "classic-cli/CMakeLists.txt",
+            "classic-cli/build_cli.ps1",
+            "classic-cli/src/scan_run_cli.cpp",
+            "classic-cli/src/scan_run_cli.h",
+            "classic-cli/src/user_settings_action.h",
+            "classic-cli/tests/conformance/classic_cli_consumer_conformance.cpp",
+            "classic-cli/vcpkg.json",
+            "cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_run_observer.h",
+            "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+            "tools/binding_compliance/conformance/adapters/prepare_consumer_conformance.py",
+            "tools/binding_compliance/conformance/adapters/run_cli_consumer_conformance.ps1"
+          ],
+          "obligations": [
+            {
+              "id": "cli.display-content-delivery",
+              "scenarioIds": [
+                "standard-happy-path"
+              ],
+              "expected": {
+                "lines": [
+                  {
+                    "renderedText": "unowned preface unowned label 7 singular-widget C:/Receipt Fixture/unowned crash.log unowned name unowned emphasis",
+                    "segments": [
+                      {
+                        "count": 0,
+                        "kind": "text",
+                        "path": "",
+                        "text": "unowned preface"
+                      },
+                      {
+                        "count": 0,
+                        "kind": "label",
+                        "path": "",
+                        "text": "unowned label"
+                      },
+                      {
+                        "count": 7,
+                        "kind": "count",
+                        "path": "",
+                        "text": "singular-widget"
+                      },
+                      {
+                        "count": 0,
+                        "kind": "path",
+                        "path": "C:/Receipt Fixture/unowned crash.log",
+                        "text": ""
+                      },
+                      {
+                        "count": 0,
+                        "kind": "name",
+                        "path": "",
+                        "text": "unowned name"
+                      },
+                      {
+                        "count": 0,
+                        "kind": "emphasis",
+                        "path": "",
+                        "text": "unowned emphasis"
+                      }
+                    ],
+                    "severity": "info",
+                    "stream": "stdout"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "cli.stream-selection",
+              "scenarioIds": [
+                "standard-happy-path",
+                "intake-failure"
+              ],
+              "expected": {
+                "cases": [
+                  {
+                    "routes": [
+                      "stdout",
+                      "stdout"
+                    ],
+                    "scenarioId": "standard-happy-path"
+                  },
+                  {
+                    "routes": [
+                      "stderr",
+                      "stderr"
+                    ],
+                    "scenarioId": "intake-failure"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "cli.exit-code-routing",
+              "scenarioIds": [
+                "standard-happy-path",
+                "intake-failure",
+                "pre-discovery-cancelled",
+                "proceed-without-ignore-recovery"
+              ],
+              "expected": {
+                "cases": [
+                  {
+                    "exitCode": 0,
+                    "scenarioId": "standard-happy-path"
+                  },
+                  {
+                    "exitCode": 2,
+                    "scenarioId": "intake-failure"
+                  },
+                  {
+                    "exitCode": 130,
+                    "scenarioId": "pre-discovery-cancelled"
+                  },
+                  {
+                    "exitCode": 1,
+                    "scenarioId": "proceed-without-ignore-recovery"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "cli.recovery-interaction",
+              "scenarioIds": [
+                "proceed-without-ignore-recovery",
+                "reset-to-default-recovery",
+                "abandon-local-ignore-recovery"
+              ],
+              "expected": {
+                "cases": [
+                  {
+                    "continuationConsumed": true,
+                    "offered": [
+                      {
+                        "available": true,
+                        "decision": "proceed_without_ignore"
+                      },
+                      {
+                        "available": true,
+                        "decision": "reset_to_default"
+                      }
+                    ],
+                    "prompted": true,
+                    "scenarioId": "proceed-without-ignore-recovery",
+                    "selected": "proceed_without_ignore",
+                    "terminalExitCode": 0
+                  },
+                  {
+                    "continuationConsumed": true,
+                    "offered": [
+                      {
+                        "available": true,
+                        "decision": "proceed_without_ignore"
+                      },
+                      {
+                        "available": true,
+                        "decision": "reset_to_default"
+                      }
+                    ],
+                    "prompted": true,
+                    "scenarioId": "reset-to-default-recovery",
+                    "selected": "reset_to_default",
+                    "terminalExitCode": 0
+                  },
+                  {
+                    "continuationConsumed": true,
+                    "offered": [
+                      {
+                        "available": true,
+                        "decision": "proceed_without_ignore"
+                      },
+                      {
+                        "available": true,
+                        "decision": "reset_to_default"
+                      }
+                    ],
+                    "prompted": true,
+                    "scenarioId": "abandon-local-ignore-recovery",
+                    "selected": "cancel",
+                    "terminalExitCode": 130
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "gui",
+          "executionInstanceIds": [
+            "windows-clang-cl",
+            "windows-msvc"
+          ],
+          "sourcePaths": [
+            "business-logic/classic-scan-presentation/src",
+            "business-logic/classic-scanlog-core/src/scan_run",
+            "classic-gui/build_gui.ps1",
+            "classic-gui/src/controllers/scancontroller.cpp",
+            "classic-gui/src/controllers/scancontroller.h",
+            "classic-gui/src/core/signalhub.cpp",
+            "classic-gui/src/core/threadmanager.cpp",
+            "classic-gui/src/workers/scanprogressmodel.cpp",
+            "classic-gui/src/workers/scanprogressmodel.h",
+            "classic-gui/src/workers/scanrequestbuilder.cpp",
+            "classic-gui/src/workers/scanrunpresentation.cpp",
+            "classic-gui/src/workers/scanrunpresentation.h",
+            "classic-gui/src/workers/scanworker.cpp",
+            "classic-gui/tests/CMakeLists.txt",
+            "classic-gui/tests/conformance/classic_gui_consumer_conformance.cpp",
+            "classic-gui/vcpkg.json",
+            "cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_run_observer.h",
+            "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+            "tools/binding_compliance/conformance/adapters/prepare_consumer_conformance.py",
+            "tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1"
+          ],
+          "obligations": [
+            {
+              "id": "gui.worker-dispatch",
+              "scenarioIds": [
+                "proceed-without-ignore-recovery"
+              ],
+              "expected": {
+                "callerThread": "gui",
+                "workerThread": "worker",
+                "deliveryThread": "gui",
+                "returnedChoice": "reset-to-default"
+              }
+            },
+            {
+              "id": "gui.path-links",
+              "scenarioIds": [
+                "standard-happy-path"
+              ],
+              "expected": {
+                "segmentKind": "path",
+                "path": "C:/CLASSIC/Crash Logs/crash-AUTOSCAN.md",
+                "plainText": "C:/CLASSIC/Crash Logs/crash-AUTOSCAN.md",
+                "fileHref": "file:///C:/CLASSIC/Crash%20Logs/crash-AUTOSCAN.md"
+              }
+            },
+            {
+              "id": "gui.recovery-interaction",
+              "scenarioIds": [
+                "proceed-without-ignore-recovery",
+                "reset-to-default-recovery"
+              ],
+              "expected": {
+                "decisionOrder": [
+                  "proceed-without-ignore",
+                  "reset-to-default"
+                ],
+                "availability": [
+                  true,
+                  false
+                ],
+                "selected": "reset-to-default",
+                "promptThread": "gui"
+              }
+            },
+            {
+              "id": "gui.model-updates",
+              "scenarioIds": [
+                "standard-happy-path"
+              ],
+              "expected": {
+                "totalLogs": 2,
+                "effectiveConcurrency": 1,
+                "progress": [
+                  0,
+                  4,
+                  41,
+                  50,
+                  100
+                ]
+              }
+            },
+            {
+              "id": "gui.display-content-delivery",
+              "scenarioIds": [
+                "standard-happy-path"
+              ],
+              "expected": {
+                "severity": "success",
+                "segments": [
+                  {
+                    "kind": "text",
+                    "text": "receipt sentinel",
+                    "path": "",
+                    "count": 0
+                  },
+                  {
+                    "kind": "count",
+                    "text": "sprockets",
+                    "path": "",
+                    "count": 12
+                  },
+                  {
+                    "kind": "path",
+                    "text": "",
+                    "path": "C:/CLASSIC/Crash Logs/crash-AUTOSCAN.md",
+                    "count": 0
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "tui",
+          "executionInstanceIds": [
+            "tui"
+          ],
+          "sourcePaths": [
+            "business-logic/classic-scan-presentation/src",
+            "business-logic/classic-scanlog-core/src/scan_run",
+            "tools/binding_compliance/run_scan_run_consumer_conformance.py",
+            "ui-applications/classic-tui/Cargo.toml",
+            "ui-applications/classic-tui/src/app.rs",
+            "ui-applications/classic-tui/src/event.rs",
+            "ui-applications/classic-tui/src/scan_run.rs",
+            "ui-applications/classic-tui/src/theme.rs",
+            "ui-applications/classic-tui/src/ui.rs",
+            "ui-applications/classic-tui/tests/scan_run_consumer_conformance.rs"
+          ],
+          "obligations": [
+            {
+              "id": "tui.display-content-delivery",
+              "scenarioIds": [
+                "standard-happy-path"
+              ],
+              "expected": {
+                "deliveredSourceLineIndices": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8,
+                  9,
+                  10,
+                  11,
+                  12
+                ],
+                "sourceLineCount": 13,
+                "typedCounts": [
+                  { "lineIndex": 0, "noun": "logs", "segmentIndex": 2, "value": 2 },
+                  { "lineIndex": 1, "noun": "crash logs", "segmentIndex": 3, "value": 2 },
+                  { "lineIndex": 1, "noun": "targeted inputs", "segmentIndex": 5, "value": 0 },
+                  { "lineIndex": 1, "noun": "locations", "segmentIndex": 7, "value": 3 },
+                  { "lineIndex": 5, "noun": "concurrent scans", "segmentIndex": 1, "value": 2 },
+                  { "lineIndex": 7, "noun": "bytes", "segmentIndex": 9, "value": 281 },
+                  { "lineIndex": 8, "noun": "bytes", "segmentIndex": 9, "value": 463 },
+                  { "lineIndex": 9, "noun": "bytes", "segmentIndex": 5, "value": 29 },
+                  { "lineIndex": 10, "noun": "logs", "segmentIndex": 1, "value": 2 },
+                  { "lineIndex": 10, "noun": "logs", "segmentIndex": 3, "value": 0 },
+                  { "lineIndex": 10, "noun": "logs", "segmentIndex": 5, "value": 0 }
+                ],
+                "typedPaths": [
+                  { "lineIndex": 2, "path": "Standard", "segmentIndex": 1 },
+                  { "lineIndex": 3, "path": "Standard/Crash Logs", "segmentIndex": 1 },
+                  { "lineIndex": 4, "path": "Documents", "segmentIndex": 1 },
+                  { "lineIndex": 11, "path": "Standard/Crash Logs/crash-shared-standard-01.log", "segmentIndex": 2 },
+                  { "lineIndex": 11, "path": "Standard/Crash Logs/crash-shared-standard-01-AUTOSCAN.md", "segmentIndex": 6 },
+                  { "lineIndex": 12, "path": "Standard/Crash Logs/crash-shared-standard-02.log", "segmentIndex": 2 },
+                  { "lineIndex": 12, "path": "Standard/Crash Logs/crash-shared-standard-02-AUTOSCAN.md", "segmentIndex": 6 }
+                ]
+              }
+            },
+            {
+              "id": "tui.ordering",
+              "scenarioIds": [
+                "standard-happy-path"
+              ],
+              "expected": {
+                "sourceLineIndices": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8,
+                  9,
+                  10,
+                  11,
+                  12
+                ]
+              }
+            },
+            {
+              "id": "tui.styling-categories",
+              "scenarioIds": [
+                "standard-happy-path"
+              ],
+              "expected": {
+                "categories": [
+                  { "color": "rgb:224,224,224", "severity": "info" },
+                  { "color": "rgb:120,170,255", "severity": "notice" },
+                  { "color": "rgb:255,183,77", "severity": "warning" },
+                  { "color": "rgb:255,107,107", "severity": "failure" },
+                  { "color": "rgb:129,199,132", "severity": "success" }
+                ]
+              }
+            },
+            {
+              "id": "tui.recovery-interaction",
+              "scenarioIds": [
+                "proceed-without-ignore-recovery",
+                "reset-to-default-recovery",
+                "abandon-local-ignore-recovery"
+              ],
+              "expected": {
+                "interactions": [
+                  {
+                    "key": "p",
+                    "offeredDecisions": [
+                      "proceed-without-ignore",
+                      "reset-to-default"
+                    ],
+                    "overlayAfterSelection": "none",
+                    "remainingContinuationCount": 0,
+                    "scenarioId": "proceed-without-ignore-recovery",
+                    "terminalStatus": "completed"
+                  },
+                  {
+                    "key": "r",
+                    "offeredDecisions": [
+                      "proceed-without-ignore",
+                      "reset-to-default"
+                    ],
+                    "overlayAfterSelection": "none",
+                    "remainingContinuationCount": 0,
+                    "scenarioId": "reset-to-default-recovery",
+                    "terminalStatus": "completed"
+                  },
+                  {
+                    "key": "escape",
+                    "offeredDecisions": [
+                      "proceed-without-ignore",
+                      "reset-to-default"
+                    ],
+                    "overlayAfterSelection": "none",
+                    "remainingContinuationCount": 0,
+                    "scenarioId": "abandon-local-ignore-recovery",
+                    "terminalStatus": "cancelled"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "tui.cancellation",
+              "scenarioIds": [
+                "pre-discovery-cancelled",
+                "post-discovery-queued-cancelled",
+                "admitted-durable-cancelled"
+              ],
+              "expected": {
+                "interactions": [
+                  {
+                    "cancelled": 0,
+                    "failed": 0,
+                    "logDispositions": [],
+                    "scenarioId": "pre-discovery-cancelled",
+                    "succeeded": 0,
+                    "terminalStatus": "cancelled_before_discovery",
+                    "trigger": "before-discovery"
+                  },
+                  {
+                    "cancelled": 2,
+                    "failed": 0,
+                    "logDispositions": [
+                      "cancelled_before_start",
+                      "cancelled_before_start"
+                    ],
+                    "scenarioId": "post-discovery-queued-cancelled",
+                    "succeeded": 0,
+                    "terminalStatus": "cancelled",
+                    "trigger": "on-first-log-queued"
+                  },
+                  {
+                    "cancelled": 1,
+                    "failed": 0,
+                    "logDispositions": [
+                      "succeeded",
+                      "cancelled_before_start"
+                    ],
+                    "scenarioId": "admitted-durable-cancelled",
+                    "succeeded": 1,
+                    "terminalStatus": "cancelled",
+                    "trigger": "on-first-log-started"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

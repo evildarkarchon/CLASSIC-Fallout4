@@ -1,6 +1,5 @@
 use std::collections::HashSet;
 
-use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 
 use super::*;

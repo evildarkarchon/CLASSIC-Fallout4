@@ -747,6 +747,7 @@ dependencies = [
  "classic-path-core",
  "classic-perf-core",
  "classic-registry-core",
+ "classic-scan-presentation",
  "classic-scangame-core",
  "classic-scanlog-core",
  "classic-settings-core",
@@ -894,6 +895,7 @@ dependencies = [
  "classic-perf-core",
  "classic-registry-core",
  "classic-resource-core",
+ "classic-scan-presentation",
  "classic-scangame-core",
  "classic-scanlog-core",
  "classic-settings-core",
@@ -1016,6 +1018,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "classic-scan-presentation"
+version = "9.1.0"
+dependencies = [
+ "classic-config-core",
+ "classic-scanlog-core",
+ "classic-shared-core",
+ "classic-vocabulary",
+ "serde",
+ "serde_json",
+ "temp-env",
+ "tempfile",
+]
+
+[[package]]
 name = "classic-scangame-core"
 version = "9.1.0"
 dependencies = [
@@ -1129,6 +1145,7 @@ dependencies = [
  "classic-config-py",
  "classic-database-core",
  "classic-registry-core",
+ "classic-scan-presentation",
  "classic-scangame-core",
  "classic-scanlog-core",
  "classic-shared-core",
@@ -1223,6 +1240,7 @@ dependencies = [
  "classic-config-core",
  "classic-file-io-core",
  "classic-path-core",
+ "classic-scan-presentation",
  "classic-scangame-core",
  "classic-scanlog-core",
  "classic-shared-core",
@@ -1236,6 +1254,9 @@ dependencies = [
  "pulldown-cmark",
  "ratatui",
  "rfd",
+ "serde",
+ "serde_json",
+ "temp-env",
  "tempfile",
  "tokio",
  "tracing",

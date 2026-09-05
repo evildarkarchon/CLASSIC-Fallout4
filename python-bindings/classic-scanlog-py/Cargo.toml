@@ -18,6 +18,11 @@ classic-registry-core = { path = "../../business-logic/classic-registry-core" }
 
 # Core business logic (pure Rust - no PyO3)
 classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
+
+# Crash Log Scan Run Display Content. Rust decides what a run says; this binding
+# only carries the rendered lines across the seam, because a `RunResult` retains a
+# one-shot continuation and cannot be held on the Python side to render later.
+classic-scan-presentation = { path = "../../business-logic/classic-scan-presentation" }
 classic-scangame-core = { path = "../../business-logic/classic-scangame-core" }
 classic-config-core = { path = "../../business-logic/classic-config-core" }
 classic-user-settings-core = { path = "../../business-logic/classic-user-settings-core" }

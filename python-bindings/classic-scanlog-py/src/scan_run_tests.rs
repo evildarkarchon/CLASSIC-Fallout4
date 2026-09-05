@@ -3,6 +3,11 @@ use std::path::PathBuf;
 use classic_config_core::{
     InstalledYamlDataProvenance, InstalledYamlDataRole, YamlDataContentIdentity,
 };
+use classic_scan_presentation::{
+    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryDecisionDescription, RecoveryPrompt,
+    render_event, render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
+    render_run_result,
+};
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanRejectedInput,
@@ -10,12 +15,16 @@ use classic_scanlog_core::{
     CrashLogScanSetupResult, ScanProgressPhase,
 };
 use classic_vocabulary::Vocabulary;
+use pyo3::Py;
 use pyo3::PyResult;
 use pyo3::Python;
 use pyo3::types::PyAnyMethods;
 
 use super::{
-    PyScanRunConfiguration, configuration_to_core, disposition_to_string, event_to_py,
+    PyScanRunConfiguration, PyScanRunLocalIgnoreRecoveryDecision, configuration_to_core,
+    display_lines_to_py, display_segment_to_py, display_severity_to_string, disposition_to_string,
+    event_to_py, failure_execution, local_ignore_recovery_decision_to_py, recovery_prompt_to_py,
+    success_execution,
     infrastructure_error_stage_to_string, infrastructure_error_to_py,
     installed_yaml_data_diagnostic_kind_to_string, installed_yaml_data_provenance_to_string,
     installed_yaml_data_role_to_string, local_ignore_state_to_string, log_failure_stage_to_string,
@@ -23,7 +32,7 @@ use super::{
     run_status_to_string, scan_run_infrastructure_error_stage_label,
     scan_run_installed_yaml_data_diagnostic_kind_label,
     scan_run_local_ignore_reset_failure_stage_label, scan_run_local_ignore_yaml_data_state_label,
-    scan_run_log_disposition_label, scan_run_log_failure_stage_label, scan_run_reset_error_to_py,
+    scan_run_log_disposition_label, scan_run_log_failure_stage_label, scan_run_resume_error_to_py,
     setup_to_py, ScanRunLocalIgnoreResetDurabilityUnknownError,
     ScanRunLocalIgnoreResetReplacementError,
 };
@@ -90,23 +99,21 @@ fn configuration_conversion_treats_blank_destination_as_absent() {
 
 #[test]
 fn maps_every_stable_enum_identifier() {
-    // The run status has no `VARIANTS` to iterate - it does not implement the
-    // Vocabulary contract, because no frontend renders a Display Label for it -
-    // so the variant list stays written out here. The expected string does not:
-    // it is the core's own token rather than a second spelling of it, which is
-    // the half of this check that can actually fail.
-    let statuses = [
-        CrashLogScanRunStatus::Completed,
-        CrashLogScanRunStatus::NoCrashLogsFound,
-        CrashLogScanRunStatus::SetupFailed,
-        CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
-        CrashLogScanRunStatus::CancelledBeforeDiscovery,
-        CrashLogScanRunStatus::Cancelled,
-    ];
-    assert_eq!(
-        statuses.map(run_status_to_string),
-        statuses.map(CrashLogScanRunStatus::as_str),
-    );
+    // Derived from `VARIANTS` like everything below it. The expected string was
+    // already the core's own token rather than a second spelling of it; the
+    // variant list used to be written out here because the run status had no
+    // `VARIANTS` to iterate, and adopting the Vocabulary contract is what let
+    // that hardcoded array go.
+    for variant in <CrashLogScanRunStatus as Vocabulary>::VARIANTS
+        .iter()
+        .copied()
+    {
+        assert_eq!(
+            run_status_to_string(variant),
+            variant.as_str(),
+            "the run surface must publish the core's own token",
+        );
+    }
 
     // Derived from `VARIANTS` for the same reason as the twins further down,
     // and the reason applies even though these two enums are not twins: the
@@ -144,22 +151,28 @@ fn maps_every_stable_enum_identifier() {
         );
     }
 
-    let phases = [
-        ScanProgressPhase::Setup,
-        ScanProgressPhase::Parse,
-        ScanProgressPhase::Analyze,
-        ScanProgressPhase::Finalize,
-    ];
-    assert_eq!(
-        phases.map(phase_to_string),
-        ["setup", "parse", "analyze", "finalize"].map(str::to_string),
-    );
+    // These two were the arrays the note below warns about, comparing this file's
+    // copy of the vocabulary against itself. Both enums have adopted the contract,
+    // so the expectation now comes from the core and the literal spellings are
+    // pinned once, in the crate that owns them.
+    for variant in <ScanProgressPhase as Vocabulary>::VARIANTS.iter().copied() {
+        assert_eq!(
+            phase_to_string(variant),
+            variant.as_str(),
+            "the run surface must publish the core's own token",
+        );
+    }
 
-    assert_eq!(
-        [InstalledYamlDataRole::Main, InstalledYamlDataRole::Game]
-            .map(installed_yaml_data_role_to_string),
-        ["main", "game"],
-    );
+    for variant in <InstalledYamlDataRole as Vocabulary>::VARIANTS
+        .iter()
+        .copied()
+    {
+        assert_eq!(
+            installed_yaml_data_role_to_string(variant),
+            variant.as_str(),
+            "the run surface must publish the core's own token",
+        );
+    }
     // Derived from the core, not restated. A hand-written array here would pass
     // just as happily against a surface that had already drifted, because it
     // would only be comparing this file's copy of the vocabulary against
@@ -229,7 +242,7 @@ fn replacement_failure_maps_shared_outcome_to_typed_python_exception() {
     Python::initialize();
     Python::attach(|py| {
         let path = PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml");
-        let error = scan_run_reset_error_to_py(
+        let error = scan_run_resume_error_to_py(
             py,
             contract::ResumeError::LocalIgnoreResetReplacementFailure(
                 contract::LocalIgnoreResetFailure {
@@ -282,7 +295,7 @@ fn durability_unknown_maps_shared_outcome_to_typed_python_exception() {
         let malformed_identity = YamlDataContentIdentity::from_bytes(b"malformed");
         let backup_identity = malformed_identity.clone();
         let replacement_identity = YamlDataContentIdentity::from_bytes(b"defaults");
-        let error = scan_run_reset_error_to_py(
+        let error = scan_run_resume_error_to_py(
             py,
             contract::ResumeError::LocalIgnoreResetDurabilityUnknown(
                 Box::new(contract::LocalIgnoreResetDurabilityUnknownError {
@@ -746,6 +759,288 @@ fn glossary_capitalization_survives_the_python_boundary() {
     );
 }
 
+// --- Display Content ------------------------------------------------------
+//
+// These tests pin the *flattening*, never a sentence. Wording is pinned once, in
+// `classic-scan-presentation`; restating a sentence here would be a second copy
+// of it, which is the drift this whole effort removes. What this surface owes is
+// narrower: that every segment kind fills exactly its own fields, that order
+// survives, that every severity crosses distinctly, and that each carrier hands
+// over the lines the renderer actually produced.
+
+/// Returns one fabricated line carrying every segment kind, in a fixed order.
+///
+/// Fabricated rather than rendered because no single real run emits all six
+/// kinds in one line — and because the flattening is what is under test here,
+/// not which segments a given run happens to produce.
+fn every_segment_kind() -> DisplayLine {
+    DisplayLine {
+        severity: DisplaySeverity::Notice,
+        segments: vec![
+            DisplaySegment::Text("scanned"),
+            DisplaySegment::Label("discovery"),
+            DisplaySegment::Count {
+                value: 3,
+                noun: "logs",
+            },
+            DisplaySegment::Path(PathBuf::from("logs/crash.log")),
+            DisplaySegment::Name("Buffout 4".to_string()),
+            DisplaySegment::Emphasis("parse failure".to_string()),
+        ],
+    }
+}
+
+#[test]
+/// Every segment kind fills exactly the fields its kind selects, and no others.
+fn every_display_segment_kind_fills_exactly_its_own_fields() {
+    let segments: Vec<_> = every_segment_kind()
+        .segments
+        .iter()
+        .map(display_segment_to_py)
+        .collect();
+
+    let observed: Vec<(&str, &str, &str, u64)> = segments
+        .iter()
+        .map(|segment| {
+            (
+                segment.kind.as_str(),
+                segment.text.as_str(),
+                segment.path.as_str(),
+                segment.count,
+            )
+        })
+        .collect();
+
+    assert_eq!(
+        observed,
+        vec![
+            ("text", "scanned", "", 0),
+            ("label", "discovery", "", 0),
+            // A count rides in two fields at once: the quantity in `count` and the
+            // noun Rust already agreed with it in `text`.
+            ("count", "logs", "", 3),
+            ("path", "", "logs/crash.log", 0),
+            ("name", "Buffout 4", "", 0),
+            ("emphasis", "parse failure", "", 0),
+        ],
+    );
+}
+
+#[test]
+/// Segments cross in reading order, and a line keeps its severity.
+fn display_segments_cross_the_boundary_in_reading_order() {
+    let line = every_segment_kind();
+    let crossed = display_lines_to_py(std::slice::from_ref(&line));
+
+    assert_eq!(crossed.len(), 1);
+    assert_eq!(crossed[0].severity, "notice");
+    assert_eq!(
+        crossed[0]
+            .segments
+            .iter()
+            .map(|segment| segment.kind.as_str())
+            .collect::<Vec<_>>(),
+        ["text", "label", "count", "path", "name", "emphasis"],
+    );
+}
+
+#[test]
+/// Every severity crosses as its own token; none collapses onto another.
+fn every_display_severity_crosses_as_a_distinct_token() {
+    let severities = [
+        DisplaySeverity::Info,
+        DisplaySeverity::Notice,
+        DisplaySeverity::Warning,
+        DisplaySeverity::Failure,
+        DisplaySeverity::Success,
+    ];
+    let tokens: Vec<&str> = severities
+        .iter()
+        .copied()
+        .map(display_severity_to_string)
+        .collect();
+
+    assert_eq!(
+        tokens,
+        ["info", "notice", "warning", "failure", "success"],
+        "each severity must publish its own token",
+    );
+}
+
+#[test]
+/// A count crosses with the noun Rust resolved, in both grammatical numbers.
+///
+/// The value and the noun travel as separate fields precisely so no consumer can
+/// re-decide the form. Pinning both numbers is what proves this surface carries
+/// what it was handed rather than deriving a plural of its own.
+fn a_count_crosses_with_the_noun_rust_agreed_with() {
+    let singular = display_segment_to_py(&DisplaySegment::Count {
+        value: 1,
+        noun: "log",
+    });
+    let plural = display_segment_to_py(&DisplaySegment::Count {
+        value: 2,
+        noun: "logs",
+    });
+
+    assert_eq!((singular.count, singular.text.as_str()), (1, "log"));
+    assert_eq!((plural.count, plural.text.as_str()), (2, "logs"));
+}
+
+#[test]
+/// An observed event carries the lines the renderer produced, in its order.
+fn an_event_carries_the_lines_the_renderer_produced() {
+    let event = contract::Event::LogFinished {
+        log: log_event(),
+        disposition: contract::LogDisposition::Failed,
+    };
+    let expected = display_lines_to_py(&render_event(&event));
+    let mapped = event_to_py(event);
+
+    assert!(!expected.is_empty(), "a finished log must say something");
+    assert_eq!(
+        mapped
+            .display_lines
+            .iter()
+            .map(|line| (line.severity.clone(), line.segments.len()))
+            .collect::<Vec<_>>(),
+        expected
+            .iter()
+            .map(|line| (line.severity.clone(), line.segments.len()))
+            .collect::<Vec<_>>(),
+    );
+}
+
+#[test]
+/// A completed run's envelope carries the lines rendered from that run.
+fn an_execution_carries_the_lines_rendered_from_its_run() {
+    Python::initialize();
+    Python::attach(|py| {
+        let facts = || contract::RunResult {
+            status: CrashLogScanRunStatus::Completed,
+            discovery: Some(discovery()),
+            setup: None,
+            installed_yaml_data: None,
+            continuation: None,
+            effective_concurrency: Some(2),
+            message: None,
+            total: 1,
+            succeeded: 1,
+            failed: 0,
+            cancelled: 0,
+            logs: Vec::new(),
+        };
+        let expected = display_lines_to_py(&render_run_result(&facts()));
+        let execution = super::success_execution(py, facts(), None).expect("envelope should build");
+
+        assert!(!expected.is_empty(), "a completed run must say something");
+        assert_eq!(execution.display_lines.len(), expected.len());
+        assert_eq!(
+            execution.display_lines[0].segments[0].kind,
+            expected[0].segments[0].kind,
+        );
+    });
+}
+
+#[test]
+/// An infrastructure failure states its stage in prose and keeps its token.
+///
+/// The token assertion is the point: the rendered lines are for a person and the
+/// `stage` field is for a consumer matching on it, and this surface must publish
+/// both rather than choosing between them.
+fn an_infrastructure_failure_carries_lines_beside_its_frozen_token() {
+    let facts = || contract::InfrastructureError {
+        stage: contract::InfrastructureErrorStage::FormIdDatabaseAccess,
+        message: "database is locked".to_string(),
+        path: None,
+    };
+    let expected = display_lines_to_py(&render_infrastructure_error(&facts()));
+    let execution = super::failure_execution(facts(), None);
+
+    assert!(!expected.is_empty(), "a failure must say something");
+    assert_eq!(execution.display_lines.len(), expected.len());
+    assert_eq!(
+        execution
+            .error
+            .as_ref()
+            .expect("a failure envelope carries its typed error")
+            .stage,
+        "formid_database_access",
+    );
+    assert!(
+        !execution.display_lines.iter().any(|line| {
+            line.segments
+                .iter()
+                .any(|segment| segment.text == "formid_database_access")
+        }),
+        "a Vocabulary Token must never reach a rendered line as prose",
+    );
+}
+
+#[test]
+/// Every resume failure reaches Python with lines beside its stable code.
+fn every_resume_failure_carries_lines_beside_its_stable_code() {
+    Python::initialize();
+    Python::attach(|py| {
+        for error in [
+            contract::ResumeError::ContinuationConsumed,
+            contract::ResumeError::LocalIgnoreResetBackupFailure(contract::LocalIgnoreResetFailure {
+                path: PathBuf::from("CLASSIC Ignore.yaml"),
+                stage: Some(contract::LocalIgnoreResetFailureStage::Write),
+                message: "disk is full".to_string(),
+            }),
+        ] {
+            let code = error.kind().as_str();
+            let rendered = display_lines_to_py(&render_resume_error(&error));
+            let py_error = super::scan_run_resume_error_to_py(py, error);
+            let value = py_error.value(py);
+
+            let lines: Vec<Py<super::PyScanRunDisplayLine>> = value
+                .getattr("display_lines")
+                .expect("every resume failure publishes display lines")
+                .extract()
+                .expect("display lines extract as their own class");
+            assert_eq!(lines.len(), rendered.len());
+            assert!(!rendered.is_empty(), "a resume failure must say something");
+            assert_eq!(
+                value
+                    .getattr("code")
+                    .expect("every resume failure publishes its code")
+                    .extract::<String>()
+                    .expect("a code is a string"),
+                code,
+            );
+        }
+    });
+}
+
+#[test]
+/// The replay rejection keeps the exact code and message it published before.
+///
+/// Quoted as literals rather than derived from the same core call the projection
+/// makes: deriving them would prove only that the surface agrees with itself.
+fn the_replay_rejection_keeps_its_published_code_and_message() {
+    Python::initialize();
+    Python::attach(|py| {
+        let py_error =
+            super::scan_run_resume_error_to_py(py, contract::ResumeError::ContinuationConsumed);
+        let value = py_error.value(py);
+
+        assert_eq!(
+            value
+                .getattr("code")
+                .expect("the replay rejection publishes its code")
+                .extract::<String>()
+                .expect("a code is a string"),
+            "scan_run_continuation_consumed",
+        );
+        assert_eq!(
+            value.to_string(),
+            "Crash Log Scan Run continuation was already consumed",
+        );
+    });
+}
+
 #[test]
 /// An unrecognized token is rejected rather than resolved to a default label.
 fn an_unknown_scan_run_token_raises_rather_than_returning_a_placeholder_label() {
@@ -761,5 +1056,186 @@ fn an_unknown_scan_run_token_raises_rather_than_returning_a_placeholder_label() 
         ] {
             assert!(error.is_instance_of::<pyo3::exceptions::PyValueError>(py));
         }
+    });
+}
+
+// --- Local Ignore recovery prompt -----------------------------------------
+//
+// These pin no wording either. What they prove is that the prompt crosses whole:
+// the decision Rust named, the label it resolved, the description it wrote, and -
+// the fact this type exists for - whether this run can honor the decision.
+
+#[test]
+/// Every recovery decision crosses with its own availability rather than a shared flag.
+///
+/// This is the whole point of the type. A consumer reading `available` off the
+/// decision it is about to offer cannot repeat the gap this closed, where the fact
+/// lived beside the prompt and two frontends never looked at it.
+fn each_recovery_decision_crosses_with_its_own_availability() {
+    let prompt = recovery_prompt_to_py(&RecoveryPrompt {
+        lines: Vec::new(),
+        decisions: vec![
+            RecoveryDecisionDescription {
+                decision: contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                label: "Proceed Without Ignore",
+                description: vec![DisplaySegment::Text("proceed")],
+                available: true,
+            },
+            RecoveryDecisionDescription {
+                decision: contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+                label: "Reset To Default",
+                description: vec![DisplaySegment::Text("reset")],
+                available: false,
+            },
+        ],
+    });
+
+    assert_eq!(prompt.decisions.len(), 2);
+    assert_eq!(
+        prompt.decisions[0].decision,
+        PyScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+    );
+    assert_eq!(prompt.decisions[0].label, "Proceed Without Ignore");
+    assert!(prompt.decisions[0].available);
+    assert_eq!(
+        prompt.decisions[1].decision,
+        PyScanRunLocalIgnoreRecoveryDecision::ResetToDefault
+    );
+    assert_eq!(prompt.decisions[1].label, "Reset To Default");
+    assert!(!prompt.decisions[1].available);
+}
+
+#[test]
+/// A decision's description flattens the same way the lines beside it do.
+fn a_recovery_decision_description_flattens_like_any_other_segments() {
+    let prompt = recovery_prompt_to_py(&RecoveryPrompt {
+        lines: vec![every_segment_kind()],
+        decisions: vec![RecoveryDecisionDescription {
+            decision: contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            label: "Reset To Default",
+            description: vec![
+                DisplaySegment::Text("back up"),
+                DisplaySegment::Path(PathBuf::from("CLASSIC Ignore.yaml")),
+                DisplaySegment::Count {
+                    value: 1,
+                    noun: "file",
+                },
+            ],
+            available: true,
+        }],
+    });
+
+    assert_eq!(prompt.lines.len(), 1);
+    assert_eq!(prompt.lines[0].segments.len(), 6);
+
+    let observed: Vec<(&str, &str, &str, u64)> = prompt.decisions[0]
+        .description
+        .iter()
+        .map(|segment| {
+            (
+                segment.kind.as_str(),
+                segment.text.as_str(),
+                segment.path.as_str(),
+                segment.count,
+            )
+        })
+        .collect();
+    assert_eq!(
+        observed,
+        vec![
+            ("text", "back up", "", 0),
+            ("path", "", "CLASSIC Ignore.yaml", 0),
+            ("count", "file", "", 1),
+        ],
+    );
+}
+
+#[test]
+/// Both contract decisions cross as distinct Python twins.
+///
+/// The enum crosses rather than a token, unlike every other tag on this surface,
+/// because `scan_run_resume` takes the enum: a consumer answers with exactly what it
+/// was offered rather than mapping a string back.
+fn every_recovery_decision_crosses_as_its_own_python_twin() {
+    assert_eq!(
+        local_ignore_recovery_decision_to_py(
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+        ),
+        PyScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+    );
+    assert_eq!(
+        local_ignore_recovery_decision_to_py(contract::LocalIgnoreRecoveryDecision::ResetToDefault),
+        PyScanRunLocalIgnoreRecoveryDecision::ResetToDefault
+    );
+}
+
+#[test]
+/// A run paused on Local Ignore recovery carries the prompt Rust rendered for it.
+fn the_execution_envelope_carries_the_recovery_prompt_core_rendered() {
+    Python::attach(|py| {
+        let build = || contract::RunResult {
+            status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
+            discovery: None,
+            setup: None,
+            installed_yaml_data: None,
+            continuation: None,
+            effective_concurrency: None,
+            message: Some("Local Ignore requires a recovery decision".to_string()),
+            total: 0,
+            succeeded: 0,
+            failed: 0,
+            cancelled: 0,
+            logs: Vec::new(),
+        };
+        let expected = recovery_prompt_to_py(&render_local_ignore_recovery(None));
+        let execution = success_execution(py, build(), None).expect("envelope should build");
+
+        let prompt = execution
+            .recovery_prompt()
+            .expect("a paused run carries a prompt");
+        assert_eq!(prompt.lines.len(), expected.lines.len());
+        assert_eq!(prompt.decisions.len(), expected.decisions.len());
+        for (actual, expected) in prompt.decisions.iter().zip(&expected.decisions) {
+            assert_eq!(actual.decision, expected.decision);
+            assert_eq!(actual.label, expected.label);
+            assert_eq!(actual.available, expected.available);
+        }
+    });
+}
+
+#[test]
+/// A run that is not waiting on a decision carries no prompt for a consumer to show.
+fn a_terminal_envelope_carries_no_recovery_prompt() {
+    Python::attach(|py| {
+        let completed = success_execution(
+            py,
+            contract::RunResult {
+                status: CrashLogScanRunStatus::Completed,
+                discovery: None,
+                setup: None,
+                installed_yaml_data: None,
+                continuation: None,
+                effective_concurrency: None,
+                message: None,
+                total: 0,
+                succeeded: 0,
+                failed: 0,
+                cancelled: 0,
+                logs: Vec::new(),
+            },
+            None,
+        )
+        .expect("envelope should build");
+        assert!(completed.recovery_prompt().is_none());
+
+        let failed = failure_execution(
+            contract::InfrastructureError {
+                stage: contract::InfrastructureErrorStage::Discovery,
+                message: "discovery failed".to_string(),
+                path: None,
+            },
+            None,
+        );
+        assert!(failed.recovery_prompt().is_none());
     });
 }

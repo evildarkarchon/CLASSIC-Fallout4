@@ -5,11 +5,16 @@ use classic_scanlog_core::scan_run::contract::{
     LogFailureStage, LogResult, RunResult,
 };
 use classic_scanlog_core::{CrashLogScanRejectedInput, CrashLogScanRunStatus};
-// Imported here rather than in `scan_run.rs`: the module itself only projects
-// labels through `crate::vocabulary::display_label`, so the trait is in scope
-// only where these tests read `label()` off a core variant to derive their
-// expectation from.
+// Imported here as well as in `scan_run.rs`, which needs it since the run status
+// and progress phase adopted the naming contract and their projections delegate
+// to `as_str()`. These tests need it for the other direction: reading `label()`
+// or `VARIANTS` off a core variant to derive an expectation rather than restate
+// one.
 use classic_vocabulary::Vocabulary;
+// Imported here rather than in `scan_run.rs`, which names only `RecoveryPrompt`: the
+// descriptions inside one are read through it there, while these tests fabricate
+// descriptions directly and so need the type by name.
+use classic_scan_presentation::RecoveryDecisionDescription;
 
 const SHARED_SCAN_RUN_MANIFEST: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -297,18 +302,16 @@ fn event_mapping_covers_every_variant_and_phase() {
 
 #[test]
 fn terminal_mapping_preserves_every_status_failure_and_optional_path() {
-    // The variant list stays written out - the run status does not implement
-    // the Vocabulary contract, so there is no `VARIANTS` to iterate - but the
-    // expected string is the core's own token rather than a second spelling of
-    // it. That is the half of the check that can actually fail.
-    for status in [
-        CrashLogScanRunStatus::Completed,
-        CrashLogScanRunStatus::NoCrashLogsFound,
-        CrashLogScanRunStatus::SetupFailed,
-        CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
-        CrashLogScanRunStatus::CancelledBeforeDiscovery,
-        CrashLogScanRunStatus::Cancelled,
-    ] {
+    // Both halves now derive from the core. The expected string was already the
+    // core's own token rather than a second spelling of it; the variant list used
+    // to be written out here because the run status had no `VARIANTS` to iterate,
+    // and adopting the Vocabulary contract is what let that hardcoded array go.
+    // A status added later is covered from the day it lands rather than when
+    // someone remembers this file.
+    for status in <CrashLogScanRunStatus as Vocabulary>::VARIANTS
+        .iter()
+        .copied()
+    {
         let mapped = run_result_to_js(RunResult {
             status,
             discovery: None,
@@ -595,6 +598,411 @@ fn an_unknown_scan_run_token_is_rejected_rather_than_labelled() {
     }
 }
 
+// Display Content tests.
+//
+// Wording is pinned once, in `classic-scan-presentation`. Restating a sentence
+// here would be a second copy of it, so one rewording would produce two diffs and
+// two chances to disagree - the drift that work exists to remove. What these
+// prove is narrower: that a typed segment reaches JavaScript with its payload in
+// the field its kind selects, that the fields the kind does not select stay
+// empty, that a count's noun is the one Rust already agreed with the value, and
+// that every surface which should carry lines does.
+
+/// Builds a line carrying one segment of every kind, in taxonomy order.
+///
+/// `Name` is included even though no render path emits one yet: the taxonomy is
+/// fixed for this version, so the flattening for a kind that arrives later is
+/// settled now rather than bolted on then.
+fn every_segment_kind() -> DisplayLine {
+    DisplayLine {
+        severity: DisplaySeverity::Warning,
+        segments: vec![
+            DisplaySegment::Text("fixed prose"),
+            DisplaySegment::Label("a display label"),
+            DisplaySegment::Count {
+                value: 1,
+                noun: "log",
+            },
+            DisplaySegment::Path(PathBuf::from("crash-é.log")),
+            DisplaySegment::Name("a domain name".to_string()),
+            DisplaySegment::Emphasis("set apart".to_string()),
+        ],
+    }
+}
+
+/// Asserts two projected line sequences are the same lines, field for field.
+///
+/// Written by hand rather than derived, because `PartialEq` on a published napi
+/// object would widen the surface for a test's convenience.
+fn assert_display_lines_match(actual: &[JsScanRunDisplayLine], expected: &[JsScanRunDisplayLine]) {
+    assert_eq!(actual.len(), expected.len(), "line count");
+    for (index, (actual, expected)) in actual.iter().zip(expected).enumerate() {
+        assert_eq!(actual.severity, expected.severity, "line {index} severity");
+        assert_eq!(
+            actual.segments.len(),
+            expected.segments.len(),
+            "line {index} segment count"
+        );
+        for (position, (actual, expected)) in
+            actual.segments.iter().zip(&expected.segments).enumerate()
+        {
+            assert_eq!(
+                actual.kind, expected.kind,
+                "line {index} segment {position}"
+            );
+            assert_eq!(
+                actual.text, expected.text,
+                "line {index} segment {position}"
+            );
+            assert_eq!(
+                actual.path, expected.path,
+                "line {index} segment {position}"
+            );
+            assert_eq!(
+                actual.count, expected.count,
+                "line {index} segment {position}"
+            );
+        }
+    }
+}
+
+/// Builds one paused-free terminal result, twice, for the two renders a test needs.
+///
+/// `RunResult` is not `Clone` - it retains a one-shot continuation - so a test
+/// that compares a projection against a fresh render has to build the value
+/// twice rather than reuse it.
+fn completed_run_result() -> RunResult {
+    RunResult {
+        status: CrashLogScanRunStatus::Completed,
+        discovery: None,
+        setup: None,
+        installed_yaml_data: None,
+        continuation: None,
+        effective_concurrency: Some(2),
+        message: Some("terminal message".to_string()),
+        total: 1,
+        succeeded: 1,
+        failed: 0,
+        cancelled: 0,
+        logs: vec![],
+    }
+}
+
+#[test]
+/// Every segment kind reaches JavaScript with its payload in the field the tag selects.
+fn each_display_segment_kind_flattens_into_exactly_its_own_fields() {
+    let lines = display_lines_to_js(&[every_segment_kind()]);
+    assert_eq!(lines.len(), 1);
+    let line = &lines[0];
+    assert_eq!(line.severity, JsScanRunDisplaySeverity::Warning);
+    assert_eq!(line.segments.len(), 6, "segments must not be dropped");
+
+    let expected = [
+        (JsScanRunDisplaySegmentKind::Text, "fixed prose", "", 0_i64),
+        (JsScanRunDisplaySegmentKind::Label, "a display label", "", 0),
+        // The noun rides in `text` because the flattening is the bridge's, and
+        // `cxx` has no payload-carrying enum to put it in.
+        (JsScanRunDisplaySegmentKind::Count, "log", "", 1),
+        (JsScanRunDisplaySegmentKind::Path, "", "crash-é.log", 0),
+        (JsScanRunDisplaySegmentKind::Name, "a domain name", "", 0),
+        (JsScanRunDisplaySegmentKind::Emphasis, "set apart", "", 0),
+    ];
+    for (index, (kind, text, path, count)) in expected.into_iter().enumerate() {
+        let segment = &line.segments[index];
+        assert_eq!(segment.kind, kind, "segment {index} changed kind");
+        assert_eq!(segment.text, text, "segment {index} text");
+        assert_eq!(segment.path, path, "segment {index} path");
+        assert_eq!(segment.count, count, "segment {index} count");
+    }
+}
+
+#[test]
+/// Segments keep the order Rust put them in, so a consumer can concatenate blindly.
+fn display_segments_reach_javascript_in_reading_order() {
+    let lines = display_lines_to_js(&[every_segment_kind()]);
+    let kinds: Vec<_> = lines[0]
+        .segments
+        .iter()
+        .map(|segment| segment.kind)
+        .collect();
+    assert_eq!(
+        kinds,
+        vec![
+            JsScanRunDisplaySegmentKind::Text,
+            JsScanRunDisplaySegmentKind::Label,
+            JsScanRunDisplaySegmentKind::Count,
+            JsScanRunDisplaySegmentKind::Path,
+            JsScanRunDisplaySegmentKind::Name,
+            JsScanRunDisplaySegmentKind::Emphasis,
+        ]
+    );
+}
+
+#[test]
+/// A count arrives with the noun Rust resolved, not one a consumer could re-derive.
+fn a_count_reaches_javascript_with_the_noun_that_agrees_with_its_value() {
+    let one = DisplayLine {
+        severity: DisplaySeverity::Info,
+        segments: vec![DisplaySegment::Count {
+            value: 1,
+            noun: "log",
+        }],
+    };
+    // Zero rather than two, because zero is the count a re-deriving adapter is
+    // most likely to get wrong: it takes the plural, not the singular.
+    let zero = DisplayLine {
+        severity: DisplaySeverity::Info,
+        segments: vec![DisplaySegment::Count {
+            value: 0,
+            noun: "logs",
+        }],
+    };
+    let lines = display_lines_to_js(&[one, zero]);
+    assert_eq!(lines[0].segments[0].count, 1);
+    assert_eq!(lines[0].segments[0].text, "log");
+    assert_eq!(lines[1].segments[0].count, 0);
+    assert_eq!(lines[1].segments[0].text, "logs");
+}
+
+#[test]
+/// Every severity has a distinct JavaScript twin, so no line arrives more or less grave.
+fn every_display_severity_maps_to_its_own_javascript_twin() {
+    for (core, expected) in [
+        (DisplaySeverity::Info, JsScanRunDisplaySeverity::Info),
+        (DisplaySeverity::Notice, JsScanRunDisplaySeverity::Notice),
+        (DisplaySeverity::Warning, JsScanRunDisplaySeverity::Warning),
+        (DisplaySeverity::Failure, JsScanRunDisplaySeverity::Failure),
+        (DisplaySeverity::Success, JsScanRunDisplaySeverity::Success),
+    ] {
+        let lines = display_lines_to_js(&[DisplayLine {
+            severity: core,
+            segments: vec![DisplaySegment::Text("anything")],
+        }]);
+        assert_eq!(lines[0].severity, expected);
+    }
+}
+
+#[test]
+/// A count larger than JavaScript's integer range saturates rather than wrapping.
+fn an_enormous_count_saturates_at_the_javascript_boundary() {
+    // Unreachable from any render path today - nothing counts past `u64::MAX / 2`
+    // - but the widening is a lossy conversion, and a silently wrapped negative
+    // count would read as a nonsense quantity rather than as an obvious ceiling.
+    let lines = display_lines_to_js(&[DisplayLine {
+        severity: DisplaySeverity::Info,
+        segments: vec![DisplaySegment::Count {
+            value: u64::MAX,
+            noun: "logs",
+        }],
+    }]);
+    assert_eq!(lines[0].segments[0].count, i64::MAX);
+}
+
+#[test]
+/// The resolved success envelope says what the run says.
+fn the_success_envelope_carries_the_runs_display_lines() {
+    let envelope = success_envelope(completed_run_result(), None);
+    let expected = display_lines_to_js(&render_run_result(&completed_run_result()));
+    assert!(
+        !envelope.display_lines.is_empty(),
+        "a terminal result always states its outcome"
+    );
+    assert_display_lines_match(&envelope.display_lines, &expected);
+    // The machine-facing half is untouched: a consumer still matches on the token.
+    assert_eq!(
+        envelope.result.status,
+        CrashLogScanRunStatus::Completed.as_str()
+    );
+}
+
+#[test]
+/// The resolved failure envelope says what the failure says, without losing the token.
+fn the_failure_envelope_carries_the_failures_display_lines() {
+    // Every stage, because the stage is the one part of an infrastructure failure
+    // that reads as prose in a line and as a token on the DTO at the same time.
+    for stage in InfrastructureErrorStage::VARIANTS.iter().copied() {
+        let build = || InfrastructureError {
+            stage,
+            message: "failure".to_string(),
+            path: Some(PathBuf::from("C:/failure/path")),
+        };
+        let envelope = failure_envelope(build(), None);
+        let expected = display_lines_to_js(&render_infrastructure_error(&build()));
+        assert!(!envelope.display_lines.is_empty());
+        assert_display_lines_match(&envelope.display_lines, &expected);
+
+        // Structured output keeps the Vocabulary Token; the sentence carries the
+        // Display Label instead. This is the split the whole change turns on, so
+        // it is asserted rather than assumed: the token must not appear in the
+        // prose, and the label must.
+        assert_eq!(envelope.error.stage, stage.as_str());
+        let spoken: Vec<&str> = envelope
+            .display_lines
+            .iter()
+            .flat_map(|line| line.segments.iter())
+            .map(|segment| segment.text.as_str())
+            .collect();
+        assert!(
+            spoken.contains(&stage.label()),
+            "{} must reach a consumer as its Display Label",
+            stage.as_str()
+        );
+        if stage.label() != stage.as_str() {
+            assert!(
+                !spoken.contains(&stage.as_str()),
+                "{} leaked into prose",
+                stage.as_str()
+            );
+        }
+    }
+}
+
+#[test]
+/// Every observed event says what it says, in Rust's words.
+fn every_event_kind_carries_its_display_lines() {
+    // `Vec` rather than an array so the variants can differ in shape; built twice
+    // because `render_event` borrows and `event_to_js` consumes.
+    let build = || -> Vec<contract::Event> {
+        vec![
+            contract::Event::DiscoveryCompleted(CrashLogScanDiscoveryResult {
+                source: CrashLogScanDiscoverySource::Standard,
+                accepted_logs: vec![PathBuf::from("C:/logs/crash.log")],
+                rejected_inputs: vec![],
+                searched_locations: vec![PathBuf::from("C:/logs")],
+            }),
+            contract::Event::EffectiveConcurrencySelected {
+                effective_concurrency: 3,
+            },
+            contract::Event::LogQueued(log_event()),
+            contract::Event::LogStarted(log_event()),
+            contract::Event::LogPhase {
+                log: log_event(),
+                phase: ScanProgressPhase::Parse,
+            },
+            contract::Event::LogFinished {
+                log: log_event(),
+                disposition: LogDisposition::Succeeded,
+            },
+        ]
+    };
+    for (event, rendered) in build().into_iter().zip(build()) {
+        let expected = display_lines_to_js(&render_event(&rendered));
+        let projected = event_to_js(event);
+        assert!(
+            !projected.display_lines.is_empty(),
+            "every event kind renders; a consumer may omit whole lines, but none arrive absent"
+        );
+        assert_display_lines_match(&projected.display_lines, &expected);
+    }
+}
+
+#[test]
+/// A discovery that refused some inputs states the refusal on its own line.
+fn a_discovery_with_rejections_states_them_separately() {
+    // The one place an event renders more than one line, which is what makes
+    // `displayLines` a sequence rather than a single string.
+    let event = contract::Event::DiscoveryCompleted(CrashLogScanDiscoveryResult {
+        source: CrashLogScanDiscoverySource::Targeted,
+        accepted_logs: vec![PathBuf::from("C:/logs/crash.log")],
+        rejected_inputs: vec![CrashLogScanRejectedInput {
+            path: PathBuf::from("C:/logs/missing.log"),
+            reason: "missing".to_string(),
+        }],
+        searched_locations: vec![],
+    });
+    assert!(event_to_js(event).display_lines.len() > 1);
+}
+
+/// Builds one resume failure of every kind, so no variant rejects untested.
+///
+/// `Infrastructure` is deliberately absent: `ScanRunClaimTask::compute` routes it
+/// into the failure envelope rather than into a rejection, and
+/// [`the_failure_envelope_carries_the_failures_display_lines`] covers that path.
+fn every_resume_failure() -> Vec<contract::ResumeError> {
+    let identity = YamlDataContentIdentity::from_bytes(b"malformed");
+    vec![
+        contract::ResumeError::ContinuationConsumed,
+        contract::ResumeError::LocalIgnoreResetConflict(contract::LocalIgnoreResetConflictError {
+            expected_identity: identity.clone(),
+            actual_identity: Some(YamlDataContentIdentity::from_bytes(b"changed")),
+            backup_path: Some(PathBuf::from("C:/CLASSIC/backups/local-ignore.bak")),
+        }),
+        contract::ResumeError::LocalIgnoreResetBackupFailure(contract::LocalIgnoreResetFailure {
+            path: PathBuf::from("C:/backup"),
+            stage: None,
+            message: "backup failed".to_string(),
+        }),
+        contract::ResumeError::LocalIgnoreResetReplacementFailure(
+            contract::LocalIgnoreResetFailure {
+                path: PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml"),
+                stage: Some(contract::LocalIgnoreResetFailureStage::Publish),
+                message: "replacement failed".to_string(),
+            },
+        ),
+        contract::ResumeError::LocalIgnoreResetDurabilityUnknown(Box::new(
+            contract::LocalIgnoreResetDurabilityUnknownError {
+                path: PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml"),
+                backup_path: PathBuf::from("C:/CLASSIC/backups/local-ignore.bak"),
+                malformed_identity: identity.clone(),
+                backup_identity: identity.clone(),
+                replacement_identity: YamlDataContentIdentity::from_bytes(b"defaults"),
+                message: "replacement visible; durability unknown".to_string(),
+            },
+        )),
+    ]
+}
+
+#[test]
+/// Every rejected resume says what failed, and keeps its stable code out of the prose.
+///
+/// The code stays on the rejection because it is machine-facing identity a consumer
+/// matches on; it stays out of the rendered lines because a sentence is not where a
+/// code belongs.
+///
+/// Every variant, not just the simplest, because each carries different retained
+/// facts — a conflict's two identities, a failure's publication stage, a durability
+/// receipt's three hashes — and a consumer that reports nothing but these lines has
+/// no second route to them. The replay case matters most of the five: it used to
+/// build its own code and message by hand, and so would have been the one rejection
+/// to arrive with nothing to say.
+fn every_rejected_resume_projects_its_display_lines_without_its_code() {
+    for error in every_resume_failure() {
+        let code = error.kind().as_str();
+        let expected = display_lines_to_js(&render_resume_error(&error));
+        let projection = project_scan_run_resume_error(error);
+
+        assert_eq!(projection.code, code);
+        assert!(
+            !projection.display_lines.is_empty(),
+            "{code} rejected with nothing to say"
+        );
+        assert_display_lines_match(&projection.display_lines, &expected);
+        for line in &projection.display_lines {
+            for segment in &line.segments {
+                assert_ne!(
+                    segment.text, code,
+                    "the stable resume error code reached a sentence"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+/// The replay rejection keeps the exact code and message it published before.
+fn the_replay_rejection_keeps_its_published_code_and_message() {
+    // Pinned as literals because routing this case through the shared projection
+    // deleted the hand-written pair that used to spell them out here. Deriving
+    // the expectation from the same core call the projection makes would prove
+    // nothing about whether the published strings changed.
+    let projection = project_scan_run_resume_error(contract::ResumeError::ContinuationConsumed);
+    assert_eq!(projection.code, "scan_run_continuation_consumed");
+    assert_eq!(
+        projection.message,
+        "Crash Log Scan Run continuation was already consumed"
+    );
+}
+
 #[test]
 /// A label a frontend could not have derived from the token reaches JavaScript.
 fn glossary_capitalization_survives_the_javascript_boundary() {
@@ -612,4 +1020,183 @@ fn glossary_capitalization_survives_the_javascript_boundary() {
             .expect("a published token must resolve"),
         "FormID database access"
     );
+}
+
+// --- Local Ignore recovery prompt ------------------------------------------------
+//
+// These pin no wording either. What they prove is that the prompt reaches JavaScript
+// whole: the decision Rust named, the label it resolved, the description it wrote,
+// and - the fact this type exists for - whether this run can honor the decision.
+
+/// Builds a run paused on a Local Ignore recovery decision.
+///
+/// Built twice for the reason [`completed_run_result`] is: `RunResult` retains a
+/// one-shot continuation and is not `Clone`.
+fn recovery_required_run_result() -> RunResult {
+    RunResult {
+        status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
+        discovery: None,
+        setup: None,
+        installed_yaml_data: None,
+        continuation: None,
+        effective_concurrency: None,
+        message: Some("Local Ignore requires a recovery decision".to_string()),
+        total: 0,
+        succeeded: 0,
+        failed: 0,
+        cancelled: 0,
+        logs: vec![],
+    }
+}
+
+#[test]
+/// A run paused on Local Ignore recovery resolves with the prompt Rust rendered for it.
+fn the_success_envelope_carries_the_recovery_prompt_core_rendered() {
+    let expected = recovery_prompt_to_js(&render_local_ignore_recovery(None));
+    let envelope = success_envelope(recovery_required_run_result(), None);
+
+    let prompt = envelope
+        .recovery_prompt
+        .expect("a paused run resolves with a prompt");
+    assert_display_lines_match(&prompt.lines, &expected.lines);
+    assert_eq!(prompt.decisions.len(), expected.decisions.len());
+    for (index, (actual, expected)) in prompt.decisions.iter().zip(&expected.decisions).enumerate()
+    {
+        assert_eq!(actual.decision, expected.decision, "decision {index}");
+        assert_eq!(actual.label, expected.label, "decision {index} label");
+        assert_eq!(
+            actual.available, expected.available,
+            "decision {index} availability"
+        );
+        assert_segments_match(&actual.description, &expected.description);
+    }
+}
+
+/// Asserts two flattened segment lists carry the same payloads in the same order.
+///
+/// Written out rather than derived, for the reason [`assert_display_lines_match`] is:
+/// the napi object types implement no equality.
+fn assert_segments_match(actual: &[JsScanRunDisplaySegment], expected: &[JsScanRunDisplaySegment]) {
+    assert_eq!(actual.len(), expected.len(), "segment count changed");
+    for (index, (actual_segment, expected_segment)) in actual.iter().zip(expected).enumerate() {
+        assert_eq!(
+            actual_segment.kind, expected_segment.kind,
+            "segment {index} kind"
+        );
+        assert_eq!(
+            actual_segment.text, expected_segment.text,
+            "segment {index} text"
+        );
+        assert_eq!(
+            actual_segment.path, expected_segment.path,
+            "segment {index} path"
+        );
+        assert_eq!(
+            actual_segment.count, expected_segment.count,
+            "segment {index} count"
+        );
+    }
+}
+
+#[test]
+/// A run that is not waiting on a decision resolves with no prompt to show.
+fn a_terminal_envelope_resolves_without_a_recovery_prompt() {
+    assert!(
+        success_envelope(completed_run_result(), None)
+            .recovery_prompt
+            .is_none()
+    );
+}
+
+#[test]
+/// Every recovery decision reaches JavaScript with its own availability.
+///
+/// This is the whole point of the type. A consumer reading `available` off the
+/// decision it is about to offer cannot repeat the gap this closed, where the fact
+/// lived beside the prompt and two frontends never looked at it.
+fn each_recovery_decision_reaches_javascript_with_its_own_availability() {
+    let prompt = recovery_prompt_to_js(&RecoveryPrompt {
+        lines: Vec::new(),
+        decisions: vec![
+            RecoveryDecisionDescription {
+                decision: contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                label: "Proceed Without Ignore",
+                description: vec![DisplaySegment::Text("proceed")],
+                available: true,
+            },
+            RecoveryDecisionDescription {
+                decision: contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+                label: "Reset To Default",
+                description: vec![DisplaySegment::Text("reset")],
+                available: false,
+            },
+        ],
+    });
+
+    assert_eq!(prompt.decisions.len(), 2);
+    assert_eq!(
+        prompt.decisions[0].decision,
+        JsScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+    );
+    assert_eq!(prompt.decisions[0].label, "Proceed Without Ignore");
+    assert!(prompt.decisions[0].available);
+    assert_eq!(
+        prompt.decisions[1].decision,
+        JsScanRunLocalIgnoreRecoveryDecision::ResetToDefault
+    );
+    assert_eq!(prompt.decisions[1].label, "Reset To Default");
+    assert!(!prompt.decisions[1].available);
+}
+
+#[test]
+/// A decision's description flattens the same way the lines beside it do.
+fn a_recovery_decision_description_flattens_like_any_other_segments() {
+    let prompt = recovery_prompt_to_js(&RecoveryPrompt {
+        lines: Vec::new(),
+        decisions: vec![RecoveryDecisionDescription {
+            decision: contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            label: "Reset To Default",
+            description: vec![
+                DisplaySegment::Text("back up"),
+                DisplaySegment::Path(PathBuf::from("CLASSIC Ignore.yaml")),
+                DisplaySegment::Count {
+                    value: 1,
+                    noun: "file",
+                },
+            ],
+            available: true,
+        }],
+    });
+
+    let segments = &prompt.decisions[0].description;
+    assert_eq!(segments.len(), 3);
+    assert_eq!(segments[0].kind, JsScanRunDisplaySegmentKind::Text);
+    assert_eq!(segments[0].text, "back up");
+    assert_eq!(segments[1].kind, JsScanRunDisplaySegmentKind::Path);
+    assert_eq!(segments[1].path, "CLASSIC Ignore.yaml");
+    assert!(segments[1].text.is_empty());
+    assert_eq!(segments[2].kind, JsScanRunDisplaySegmentKind::Count);
+    assert_eq!(segments[2].count, 1);
+    assert_eq!(segments[2].text, "file");
+}
+
+#[test]
+/// Both contract decisions map to distinct JavaScript twins, and back again.
+///
+/// The round trip is what matters: a consumer answers with the decision it was
+/// offered, so the outbound and inbound halves must name the same thing.
+fn every_recovery_decision_maps_to_its_own_javascript_twin() {
+    for (core, expected) in [
+        (
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            JsScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+        ),
+        (
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            JsScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+        ),
+    ] {
+        assert_eq!(map_local_ignore_recovery_decision(core), expected);
+        assert_eq!(local_ignore_recovery_decision_to_core(expected), core);
+    }
 }

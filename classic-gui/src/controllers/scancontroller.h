@@ -33,9 +33,10 @@ public:
     /// Builds the prompt handed to a ScanWorker so a paused recovery is decided on the GUI thread.
     ///
     /// The returned callable is invoked on the worker thread while Rust still holds the single-use
-    /// continuation. It marshals only the message across, blocks until the GUI thread answers, and
-    /// returns a typed decision; no continuation or discovery state crosses the boundary. Every
-    /// failure to reach a live controller resolves to `Cancel`, which mutates nothing.
+    /// continuation. It marshals only the message and the run's reset availability across, blocks
+    /// until the GUI thread answers, and returns a typed decision; no continuation or discovery
+    /// state crosses the boundary. Every failure to reach a live controller resolves to `Cancel`,
+    /// which mutates nothing.
     [[nodiscard]] classic::gui::ScanRunLocalIgnoreRecoveryPrompt makeLocalIgnoreRecoveryPrompt();
 
 signals:
@@ -43,7 +44,11 @@ signals:
     void scanDiscovered(int totalLogs);
     void scanConcurrencySelected(int concurrency);
     void scanLogScanned(int index, bool success, const QString& logPath);
-    void scanFinished(int total, int success, int errors);
+    /// Relays a completed run's counts together with the rendered run the worker produced.
+    ///
+    /// `message` is the same rich text `scanCancelled`, `scanNoLogsFound`, and `scanError` carry.
+    /// A consumer states the outcome from it rather than composing one from the counts.
+    void scanFinished(int total, int success, int errors, const QString& message);
     void scanNoLogsFound(const QString& message);
     void scanCancelled(const QString& message);
     void scanError(const QString& message);
@@ -54,7 +59,7 @@ signals:
     void scanInstalledYamlDataResolved(const classic::gui::ScanRunInstalledYamlDataPresentation& installedYamlData);
 
 private slots:
-    void onWorkerFinished(int total, int success, int errors);
+    void onWorkerFinished(int total, int success, int errors, const QString& message);
     /// Completes GUI cleanup for the expected no-logs terminal lifecycle state.
     void onWorkerNoLogsFound(const QString& message);
     /// Completes GUI cleanup for an expected safe-seam cancellation without presenting an error.
@@ -63,8 +68,11 @@ private slots:
 
 private:
     /// Runs the configured recovery prompt on the controller's GUI thread, defaulting safely to cancellation.
+    ///
+    /// The presentation is passed through untouched: the controller marshals the run's question, it
+    /// does not decide it, and it never withdraws a decision the run offered or adds one it did not.
     [[nodiscard]] classic::gui::ScanRunLocalIgnoreRecoveryChoice
-    requestLocalIgnoreRecoveryChoice(const QString& message) const;
+    requestLocalIgnoreRecoveryChoice(const classic::gui::ScanRunLocalIgnoreRecoveryPresentation& recovery) const;
 
     bool m_scanning = false;
     SignalHub* m_signalHub = nullptr;

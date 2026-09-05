@@ -2,16 +2,36 @@
 
 This immutable corpus is copied into a temporary directory by Rust, C++, Node,
 and Python tests. `manifest.json` owns the normalized Standard and Targeted
-expectations, the stable contract-variant inventory, and the evidence that each
-adapter and native frontend acknowledges those facts.
+expectations, the source-checked contract-variant inventory, and retained
+negative export checks. Executable adapter and frontend coverage comes from
+the blocking pack at `tests/conformance/packs/crash_log_scan_run/v1.json` and
+the consumer obligations at `tests/conformance/consumer-obligations.json`.
+Copied adapter acknowledgements, positive source markers, and per-scenario
+or presentation required-owner lists have been retired; do not add them when
+extending the corpus.
 
 The Installed YAML Data fixture also owns the malformed Local Ignore recovery
 corpus. Its Reset To Default expectations cover retained Main/game selection,
-single-use continuation resume, typed conflict, operational failures, and the
-post-replacement durability-unknown recovery receipt,
+single-use continuation resume, typed conflict, operational failures,
 pre-reset and post-critical-section cancellation, byte-exact backup bytes, reset
 diagnostics, and byte-identical Autoscan Report content across Rust, C++, Node,
-and Python.
+and Python. Replacement-publication and post-replacement durability-unknown
+receipts remain blocking internal fault-projection evidence because no portable
+public filesystem condition can trigger them deterministically across adapters.
+
+The executable v1 pack also drives five deterministic public failure seams:
+request validation, Standard discovery, Installed YAML Data intake, Autoscan
+Report persistence, and Unsolved Logs finalization. Receipts compare stable
+stage, nonempty-message contract, relevant path, disposition, movement, and
+ordered artifact types. Synthetic analysis, FormID database access,
+initialization, and internal-invariant mappings stay under the named
+`scan-run-structured-failure-internal-faults` analyzer and grant no adapter
+runtime coverage.
+
+`malformed-local-ignore.yaml` is the input-only malformed file used by the
+executable conformance pack. The pack observes the paused result, applies declared
+post-pause mutations, and then claims and replays the same opaque continuation so
+rediscovery and duplicate durable effects cannot pass unnoticed.
 
 Tests compare paths relative to their temporary root and ignore processing
 timings and exact concurrent event interleavings. They compare discovery,

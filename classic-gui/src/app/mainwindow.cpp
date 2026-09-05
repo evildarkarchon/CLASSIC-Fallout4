@@ -23,6 +23,7 @@
 #include <QSizePolicy>
 #include <QSpacerItem>
 #include <QSplitter>
+#include <QTextDocumentFragment>
 #include <QTextStream>
 #include <QThread>
 #include <QTimer>
@@ -78,10 +79,47 @@ QString format_elapsed_seconds(const QElapsedTimer& timer)
     return QString::number(static_cast<double>(elapsedMs) / 1000.0, 'f', 1);
 }
 
-// The Installed YAML Data label helpers live in `workers/scanrunpresentation.h` so the run-level
-// warning text and this window's log/status text cannot drift apart.
+// The two surviving Installed YAML Data label helpers live in `workers/scanrunpresentation.h`.
+// They label a domain enum *outside* a display line, which is the one place a direct label call is
+// still correct: the status row below is a single progress-bar format string with no room for the
+// rendered Installed YAML Data block, so it states the selection in five words instead.
 using classic::gui::installedYamlDataProvenanceLabel;
 using classic::gui::localIgnoreStateLabel;
+
+/// Reduces a rendered Crash Log Scan Run to the one plain line the progress row can hold.
+///
+/// Terminal scan-run signals carry rich text, because they all end in a `QMessageBox` that can
+/// colour a severity and open a path. The progress row cannot: `setStatusMessage` writes a
+/// `QProgressBar` format string, which is plain and single-line. Every render entry point in the
+/// presentation crate opens on the line that states the outcome, so the leading line is the right
+/// one to keep.
+QString scanRunStatusLine(const QString& richText)
+{
+    const QString plain = QTextDocumentFragment::fromHtml(richText).toPlainText();
+    return plain.section(QLatin1Char('\n'), 0, 0);
+}
+
+/// Shows one rendered Crash Log Scan Run block with its paths selectable and openable.
+///
+/// The interaction flags are the load-bearing part. `QMessageBox` already renders rich text and
+/// already opens external links from its own label, but the flags it starts with come from the
+/// style and on several styles allow neither selection nor link activation — so without this the
+/// `file:` anchors a run's paths render as would be inert text. Typing a path as a path is only
+/// worth anything if a user can reach the Autoscan Report the run just wrote.
+void showScanRunMessage(QWidget* parent, QMessageBox::Icon icon, const QString& title, const QString& richText)
+{
+    QMessageBox box(parent);
+    box.setIcon(icon);
+    box.setWindowTitle(title);
+    // Deliberately left on auto-detection rather than forced to rich text. This same warning slot
+    // also receives the plain, newline-separated targeted-rejection list, and forcing rich text
+    // would collapse its lines into one paragraph. A rendered run opens on a `<span>`, so Qt reads
+    // it as rich text on its own.
+    box.setTextFormat(Qt::AutoText);
+    box.setText(richText);
+    box.setTextInteractionFlags(Qt::TextBrowserInteraction);
+    box.exec();
+}
 
 /// Resolve an existing Fallout 4 script-extender log to use as a setup detection hint.
 /// The selected version controls preference, while checking both names keeps auto-detected VR installs working.
@@ -293,9 +331,10 @@ void MainWindow::initializeControllers()
     m_signalHub = &SignalHub::instance();
     m_threadManager = new ThreadManager(this);
     m_scanController = new ScanController(m_signalHub, m_threadManager, this);
-    m_scanController->setLocalIgnoreRecoveryPrompt([this](const QString& message) {
-        return classic::gui::promptLocalIgnoreRecoveryChoice(this, message);
-    });
+    m_scanController->setLocalIgnoreRecoveryPrompt(
+        [this](const classic::gui::ScanRunLocalIgnoreRecoveryPresentation& recovery) {
+            return classic::gui::promptLocalIgnoreRecoveryChoice(this, recovery);
+        });
     m_gameFilesController = new GameFilesController(m_signalHub, m_threadManager, this);
     m_backupController = new BackupController(QString(), m_signalHub, this);
     m_resultsController =
@@ -1500,8 +1539,11 @@ void MainWindow::onCrashLogScanned(int /*index*/, bool /*success*/, const QStrin
     }
 }
 
-void MainWindow::onScanCompleted(int total, int success, int errors)
+void MainWindow::onScanCompleted(int total, int success, int errors, const QString& message)
 {
+    Q_UNUSED(success);
+    Q_UNUSED(errors);
+
     m_btnScanCrashLogs->setEnabled(true);
     m_btnScanCrashLogs->setText(QStringLiteral("SCAN CRASH LOGS"));
     m_progressBar->setRange(0, 100);
@@ -1510,11 +1552,21 @@ void MainWindow::onScanCompleted(int total, int success, int errors)
     m_crashScanTotalLogs = total;
     m_crashScanLogsCompleted = total;
     initResultsReportDir();
-    setStatusMessage(QStringLiteral("Scan completed: %1 logs scanned in %2s (%3 succeeded, %4 failed)")
-                         .arg(total)
-                         .arg(format_elapsed_seconds(m_crashScanTimer))
-                         .arg(success)
-                         .arg(errors) +
+
+    // The same shape as every other terminal path in this window: the run states its own outcome,
+    // and this window adds only what the run cannot know. That is the elapsed time, measured from a
+    // clock Rust does not carry, and the Installed YAML Data suffix.
+    //
+    // This used to read `Scan completed: %1 logs scanned in %2s (%3 succeeded, %4 failed)`, composed
+    // from the counts alone. It was the last sentence about a Crash Log Scan Run that this frontend
+    // wrote for itself, and it re-derived the plural of "logs" — so a one-log run read "1 logs"
+    // here while every other frontend read "1 log". `success` and `errors` stay in the signal
+    // because they are data a consumer may key on; they are simply no longer the raw material for
+    // prose. The counts a user reads now arrive inside the rendered run as `Count` segments whose
+    // noun Rust already agreed with its value.
+    setStatusMessage(QStringLiteral("%1 (%2s)")
+                         .arg(scanRunStatusLine(message))
+                         .arg(format_elapsed_seconds(m_crashScanTimer)) +
                      installedYamlDataStatusSuffix());
 
     // Auto-switch to Results tab is handled by ResultsController::onScanCompleted()
@@ -1528,7 +1580,9 @@ void MainWindow::onScanCancelled(const QString& message)
     m_progressBar->setValue(0);
     m_crashScanInProgress = false;
     initResultsReportDir();
-    setStatusMessage(QStringLiteral("%1 (%2s)").arg(message).arg(format_elapsed_seconds(m_crashScanTimer)) +
+    setStatusMessage(QStringLiteral("%1 (%2s)")
+                         .arg(scanRunStatusLine(message))
+                         .arg(format_elapsed_seconds(m_crashScanTimer)) +
                      installedYamlDataStatusSuffix());
 }
 
@@ -1540,7 +1594,7 @@ void MainWindow::onScanNoLogsFound(const QString& message)
     m_progressBar->setValue(0);
     m_crashScanInProgress = false;
     initResultsReportDir();
-    setStatusMessage(message + installedYamlDataStatusSuffix());
+    setStatusMessage(scanRunStatusLine(message) + installedYamlDataStatusSuffix());
 }
 
 void MainWindow::onScanError(const QString& message)
@@ -1551,16 +1605,17 @@ void MainWindow::onScanError(const QString& message)
     m_progressBar->setValue(0);
     m_crashScanInProgress = false;
     initResultsReportDir();
-    setStatusMessage(
-        QStringLiteral("Scan failed after %1s: %2").arg(format_elapsed_seconds(m_crashScanTimer)).arg(message) +
-        installedYamlDataStatusSuffix());
+    setStatusMessage(QStringLiteral("Scan failed after %1s: %2")
+                         .arg(format_elapsed_seconds(m_crashScanTimer))
+                         .arg(scanRunStatusLine(message)) +
+                     installedYamlDataStatusSuffix());
 
-    QMessageBox::critical(this, QStringLiteral("Scan Error"), message);
+    showScanRunMessage(this, QMessageBox::Critical, QStringLiteral("Scan Error"), message);
 }
 
 void MainWindow::onScanWarning(const QString& message)
 {
-    QMessageBox::warning(this, QStringLiteral("Scan Warning"), message);
+    showScanRunMessage(this, QMessageBox::Warning, QStringLiteral("Scan Warning"), message);
 }
 
 void MainWindow::onScanReportDirectoriesResolved(const QStringList& reportDirs)
@@ -1575,31 +1630,11 @@ void MainWindow::onScanInstalledYamlDataResolved(
     m_lastInstalledYamlData = installedYamlData;
     m_hasLastInstalledYamlData = true;
 
-    qInfo().noquote() << QStringLiteral(
-                             "Installed YAML Data: Main %1 schema %2 (%3 bytes, sha256 %4); "
-                             "Game %5 schema %6 (%7 bytes, sha256 %8); Local Ignore %9 (%10 bytes, sha256 %11)")
-                             .arg(installedYamlDataProvenanceLabel(installedYamlData.main.provenance))
-                             .arg(installedYamlData.main.schemaVersion)
-                             .arg(installedYamlData.main.byteLength)
-                             .arg(installedYamlData.main.sha256)
-                             .arg(installedYamlDataProvenanceLabel(installedYamlData.gameFile.provenance))
-                             .arg(installedYamlData.gameFile.schemaVersion)
-                             .arg(installedYamlData.gameFile.byteLength)
-                             .arg(installedYamlData.gameFile.sha256)
-                             .arg(localIgnoreStateLabel(installedYamlData.localIgnoreState))
-                             .arg(installedYamlData.localIgnoreIdentity.byteLength)
-                             .arg(installedYamlData.localIgnoreIdentity.sha256);
-    if (installedYamlData.hasLocalIgnoreReset) {
-        qInfo().noquote() << QStringLiteral("Local Ignore reset backup: %1 (%2 bytes, sha256 %3)")
-                                 .arg(installedYamlData.localIgnoreReset.backupPath)
-                                 .arg(installedYamlData.localIgnoreReset.backupIdentity.byteLength)
-                                 .arg(installedYamlData.localIgnoreReset.backupIdentity.sha256);
-    }
-    for (const auto& diagnostic : installedYamlData.diagnostics) {
-        // The log and the run-level warning share one projection so their wording cannot drift.
-        qInfo().noquote() << QStringLiteral("Installed YAML Data diagnostic — %1")
-                                 .arg(classic::gui::formatInstalledYamlDataDiagnostic(diagnostic));
-    }
+    // The three log blocks that used to live here — the selection summary, the reset backup line,
+    // and one line per structured diagnostic — are gone rather than moved. Every fact they carried
+    // is a line in the Installed YAML Data block the Rust core renders, and `ScanWorker` logs the
+    // whole rendered run once. Restating them here would be the same sentence written twice in two
+    // places able to disagree, which is the drift this change exists to remove.
 
     // Degraded selection and durable Local Ignore recovery are run-level facts the user should see
     // once, not per Crash Log. They never reach Autoscan Report content.

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-05T12:39:09.261090+00:00",
+  "generated_at_utc": "2026-08-07T02:52:08.530913+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -6974,6 +6974,26 @@
     },
     {
       "module": "classic_scanlog",
+      "export": "ScanRunDisplayLine",
+      "export_path": "ScanRunDisplayLine",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunDisplayLine:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunDisplaySegment",
+      "export_path": "ScanRunDisplaySegment",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunDisplaySegment:"
+    },
+    {
+      "module": "classic_scanlog",
       "export": "ScanRunEvent",
       "export_path": "ScanRunEvent",
       "kind": "class",
@@ -7121,6 +7141,26 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "class ScanRunLogResult:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunRecoveryDecisionDescription",
+      "export_path": "ScanRunRecoveryDecisionDescription",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunRecoveryDecisionDescription:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunRecoveryPrompt",
+      "export_path": "ScanRunRecoveryPrompt",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunRecoveryPrompt:"
     },
     {
       "module": "classic_scanlog",
@@ -7450,6 +7490,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def scan_records_batch( texts: list[list[str]], record_list: list[str], ignore_records: list[str] ) -> list[list[str]]:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "scan_run_abandon",
+      "export_path": "scan_run_abandon",
+      "kind": "function",
+      "arity": 4,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def scan_run_abandon( continuation: ScanRunContinuation, cancellation: ScanRunCancellation, observer: Callable[[ScanRunEvent], None] | None = None, cancel_on_observer_error: bool = False, ) -> ScanRunExecution:"
     },
     {
       "module": "classic_scanlog",

@@ -163,6 +163,71 @@ set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 include(CPack)
 
+# ── Native CXX conformance ──────────────────────────────────────────
+# This standalone test target deliberately does not share frontend sources with
+# classic-cli or classic-cli-bridge-tests. It traverses the generated bridge
+# directly and uses JSON only to consume input plans and publish observations.
+include(CTest)
+if(BUILD_TESTING)
+    find_package(nlohmann_json CONFIG REQUIRED)
+
+    add_executable(classic-cxx-conformance
+        tests/conformance/classic_cxx_conformance.cpp
+    )
+
+    target_link_libraries(classic-cxx-conformance PRIVATE
+        classic_cxx_bridge
+        nlohmann_json::nlohmann_json
+    )
+
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set(CLASSIC_CXX_CONFORMANCE_TOOLCHAIN "clang-cl")
+    else()
+        set(CLASSIC_CXX_CONFORMANCE_TOOLCHAIN "msvc")
+    endif()
+    target_compile_definitions(classic-cxx-conformance PRIVATE
+        CLASSIC_CXX_CONFORMANCE_TOOLCHAIN="${CLASSIC_CXX_CONFORMANCE_TOOLCHAIN}"
+    )
+
+    if(MSVC)
+        target_compile_options(classic-cxx-conformance PRIVATE /utf-8 /W4)
+    endif()
+
+    add_test(NAME classic-cxx-conformance COMMAND classic-cxx-conformance)
+    set_tests_properties(classic-cxx-conformance PROPERTIES SKIP_RETURN_CODE 125)
+
+    # The CLI consumer runner links the maintained frontend presentation and
+    # recovery seams. It remains test-only and emits consumer obligations, never
+    # semantic CXX adapter observations.
+    add_executable(classic-cli-consumer-conformance
+        tests/conformance/classic_cli_consumer_conformance.cpp
+        src/scan_run_cli.cpp
+    )
+
+    target_include_directories(classic-cli-consumer-conformance PRIVATE src/)
+    target_link_libraries(classic-cli-consumer-conformance PRIVATE
+        fmt::fmt
+        classic_cxx_bridge
+        nlohmann_json::nlohmann_json
+    )
+
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set(CLASSIC_CLI_CONSUMER_CONFORMANCE_TOOLCHAIN "clang-cl")
+    else()
+        set(CLASSIC_CLI_CONSUMER_CONFORMANCE_TOOLCHAIN "msvc")
+    endif()
+    target_compile_definitions(classic-cli-consumer-conformance PRIVATE
+        CLASSIC_CLI_CONSUMER_CONFORMANCE_TOOLCHAIN="${CLASSIC_CLI_CONSUMER_CONFORMANCE_TOOLCHAIN}"
+    )
+
+    if(MSVC)
+        target_compile_options(classic-cli-consumer-conformance PRIVATE /utf-8 /W4)
+    endif()
+
+    add_test(NAME classic-cli-consumer-conformance COMMAND classic-cli-consumer-conformance)
+    set_tests_properties(classic-cli-consumer-conformance PROPERTIES SKIP_RETURN_CODE 125)
+endif()
+
 # ── Unit Tests (Catch2) ──────────────────────────────────────────────
 # Only built when Catch2 is available. Two test executables:
 #   - classic-cli-tests: bridge-free unit tests for ThreadPool / Progress /
@@ -171,7 +236,7 @@ include(CPack)
 #     (e.g. the yaml-update-delivery entry points). Links against
 #     classic_cxx_bridge.
 find_package(Catch2 3 CONFIG QUIET)
-if(Catch2_FOUND)
+if(BUILD_TESTING AND Catch2_FOUND)
     enable_testing()
 
     add_executable(classic-cli-tests
@@ -201,7 +266,6 @@ if(Catch2_FOUND)
     endif()
 
     # Auto-discover TEST_CASEs and register them with CTest
-    include(CTest)
     include(Catch)
     catch_discover_tests(classic-cli-tests)
 

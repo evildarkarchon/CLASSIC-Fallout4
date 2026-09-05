@@ -3,6 +3,11 @@ use classic_config_core::{
     InspectedYamlDataFile, InstalledYamlDataProvenance, InstalledYamlDataRole,
     YamlDataContentIdentity,
 };
+use classic_scan_presentation::{
+    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryPrompt, render_event,
+    render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
+    render_run_result,
+};
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
     ConfigIssue as CoreFcxConfigIssue, CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource,
@@ -253,10 +258,55 @@ pub(crate) unsafe fn scan_run_continuation_resume(
     Ok(Box::new(execution_from_resume_result(result)))
 }
 
+/// Abandons retained recovery work without applying either Local Ignore decision.
+///
+/// Requests cancellation on `cancellation` and then claims the continuation, yielding the
+/// ordinary post-discovery cancelled result and touching nothing on disk. This is the single
+/// shared implementation of the cancel-then-resume-with-a-placeholder sequence the native CLI
+/// and the Qt GUI each used to write for themselves, so neither frontend picks the placeholder
+/// decision any more and neither can drift from what the TUI does.
+///
+/// Unlike [`scan_run_continuation_resume`] this returns the envelope directly rather than a
+/// `Result`. Resume is fallible only because it must reject CXX's non-exhaustive
+/// `ScanRunLocalIgnoreRecoveryDecision` sentinel before claiming the one-shot continuation;
+/// abandonment takes no decision, so it has nothing to reject. Declaring a `throws` contract
+/// that can never fire would force every C++ caller into unreachable error handling. Replay is
+/// projected into the same typed resume-error envelope resume uses.
+///
+/// # Safety
+///
+/// A non-null `observer` must point to a live `ScanRunObserver` for this synchronous call.
+pub(crate) unsafe fn scan_run_continuation_abandon(
+    continuation: &ScanRunContinuation,
+    cancellation: &ScanRunCancellation,
+    observer: *const ffi::ScanRunObserver,
+) -> Box<ScanRunContractExecution> {
+    // SAFETY: the caller contract requires a non-null pointer to stay live for
+    // this synchronous invocation; null explicitly means observation is disabled.
+    let observer = unsafe { observer.as_ref() };
+    let result = match observer {
+        Some(observer) => {
+            let mut adapter = CxxObserverAdapter { observer };
+            block_on(
+                continuation
+                    .inner
+                    .abandon(&cancellation.inner, Some(&mut adapter)),
+            )
+        }
+        None => block_on(continuation.inner.abandon(&cancellation.inner, None)),
+    };
+
+    Box::new(execution_from_resume_result(result))
+}
+
 fn execution_from_initial_result(
     result: Result<contract::RunResult, contract::InfrastructureError>,
 ) -> ScanRunContractExecution {
     match result {
+        // The continuation is taken out of the result before the result is projected, and
+        // therefore before it is rendered. That ordering is now load-bearing rather than
+        // incidental: `render_run_result` borrows the result, so moving the continuation
+        // out afterwards would borrow across the move and not compile.
         Ok(mut result) => ScanRunContractExecution {
             continuation: result
                 .continuation
@@ -285,7 +335,15 @@ fn execution_from_resume_result(
             has_error: false,
             error: empty_infrastructure_error_dto(),
             has_resume_error: true,
+            // Rendered before `resume_error_to_dto` consumes the error. The rendered lines
+            // deliberately omit the stable resume error code that `code` still carries: the
+            // code is machine-facing identity for a consumer to match on, and a sentence is
+            // not where it belongs.
+            display_lines: display_lines_to_dto(&render_resume_error(&error)),
             resume_error: resume_error_to_dto(error),
+            // A resume that failed is not waiting on a decision; it already had one.
+            has_recovery_prompt: false,
+            recovery_prompt: empty_recovery_prompt_dto(),
         },
     };
     ScanRunContractExecution {
@@ -297,6 +355,20 @@ fn execution_from_resume_result(
 fn success_execution_result_dto(
     result: contract::RunResult,
 ) -> ffi::ScanRunContractExecutionResult {
+    // Rendered from the borrowed result before `run_result_to_dto` consumes it. The
+    // caller has already taken the continuation out, which is what makes the borrow legal.
+    let display_lines = display_lines_to_dto(&render_run_result(&result));
+    // Rendered only for the one status that pauses for an answer. Every other status has
+    // nothing to ask, and a prompt attached to a finished run would invite a frontend to show
+    // one. This is also exactly when the execution retains a continuation to answer with.
+    let has_recovery_prompt = result.status == contract::RunStatus::LocalIgnoreRecoveryRequired;
+    let recovery_prompt = if has_recovery_prompt {
+        recovery_prompt_to_dto(&render_local_ignore_recovery(
+            result.installed_yaml_data.as_ref(),
+        ))
+    } else {
+        empty_recovery_prompt_dto()
+    };
     ffi::ScanRunContractExecutionResult {
         has_result: true,
         result: run_result_to_dto(result),
@@ -304,12 +376,16 @@ fn success_execution_result_dto(
         error: empty_infrastructure_error_dto(),
         has_resume_error: false,
         resume_error: empty_resume_error_dto(),
+        display_lines,
+        has_recovery_prompt,
+        recovery_prompt,
     }
 }
 
 fn infrastructure_execution_result_dto(
     error: contract::InfrastructureError,
 ) -> ffi::ScanRunContractExecutionResult {
+    let display_lines = display_lines_to_dto(&render_infrastructure_error(&error));
     ffi::ScanRunContractExecutionResult {
         has_result: false,
         result: empty_run_result_dto(),
@@ -317,6 +393,133 @@ fn infrastructure_execution_result_dto(
         error: infrastructure_error_to_dto(error),
         has_resume_error: false,
         resume_error: empty_resume_error_dto(),
+        display_lines,
+        // A run that failed run-wide never reached a decision to pause on.
+        has_recovery_prompt: false,
+        recovery_prompt: empty_recovery_prompt_dto(),
+    }
+}
+
+/// Flattens rendered Display Content into the CXX mirror types.
+///
+/// `cxx` cannot express a Rust enum carrying payloads, so each segment crosses as a kind
+/// tag plus one field per payload shape. Fields the kind does not use stay empty rather
+/// than carrying a sentinel, because an empty string is what a C++ consumer already reads
+/// as "not present" everywhere else in this bridge.
+fn display_lines_to_dto(lines: &[DisplayLine]) -> Vec<ffi::ScanRunDisplayLine> {
+    lines
+        .iter()
+        .map(|line| ffi::ScanRunDisplayLine {
+            severity: map_display_severity(line.severity),
+            segments: line.segments.iter().map(display_segment_to_dto).collect(),
+        })
+        .collect()
+}
+
+/// Flattens one typed segment, filling exactly the fields its kind selects.
+fn display_segment_to_dto(segment: &DisplaySegment) -> ffi::ScanRunDisplaySegment {
+    let mut dto = ffi::ScanRunDisplaySegment {
+        kind: ffi::ScanRunDisplaySegmentKind::Text,
+        text: String::new(),
+        path: String::new(),
+        count: 0,
+    };
+    match segment {
+        DisplaySegment::Text(text) => {
+            // Assigned rather than left to the initializer's default, so reordering the fields
+            // above cannot silently relabel a `Text` segment as some other kind.
+            dto.kind = ffi::ScanRunDisplaySegmentKind::Text;
+            dto.text = (*text).to_string();
+        }
+        DisplaySegment::Label(label) => {
+            dto.kind = ffi::ScanRunDisplaySegmentKind::Label;
+            dto.text = (*label).to_string();
+        }
+        DisplaySegment::Count { value, noun } => {
+            dto.kind = ffi::ScanRunDisplaySegmentKind::Count;
+            // The noun rides in `text` already agreeing with `value`. An adapter prints the
+            // two side by side; it never re-decides the form.
+            dto.text = (*noun).to_string();
+            dto.count = *value;
+        }
+        DisplaySegment::Path(path) => {
+            dto.kind = ffi::ScanRunDisplaySegmentKind::Path;
+            dto.path = path.to_string_lossy().into_owned();
+        }
+        DisplaySegment::Name(name) => {
+            dto.kind = ffi::ScanRunDisplaySegmentKind::Name;
+            dto.text = name.clone();
+        }
+        DisplaySegment::Emphasis(value) => {
+            dto.kind = ffi::ScanRunDisplaySegmentKind::Emphasis;
+            dto.text = value.clone();
+        }
+    }
+    dto
+}
+
+/// Flattens a rendered Local Ignore recovery prompt into the CXX mirror types.
+///
+/// The decision descriptions cross as ordinary segment lists, the same flattening the lines
+/// beside them use, so a C++ consumer reads a description with the renderer it already has.
+fn recovery_prompt_to_dto(prompt: &RecoveryPrompt) -> ffi::ScanRunRecoveryPrompt {
+    ffi::ScanRunRecoveryPrompt {
+        lines: display_lines_to_dto(&prompt.lines),
+        decisions: prompt
+            .decisions
+            .iter()
+            .map(|description| ffi::ScanRunRecoveryDecisionDescription {
+                decision: map_local_ignore_recovery_decision_to_dto(description.decision),
+                label: description.label.to_string(),
+                description: description
+                    .description
+                    .iter()
+                    .map(display_segment_to_dto)
+                    .collect(),
+                available: description.available,
+            })
+            .collect(),
+    }
+}
+
+/// Maps a Rust-owned recovery decision onto its CXX twin.
+///
+/// The outbound half of the mapping whose inbound half is
+/// [`map_local_ignore_recovery_decision`]. Written separately because Rust cannot invert a
+/// `match`, and exhaustive so that a third variant added to the contract stops this from
+/// compiling rather than silently describing itself as one of the two that exist.
+fn map_local_ignore_recovery_decision_to_dto(
+    value: contract::LocalIgnoreRecoveryDecision,
+) -> ffi::ScanRunLocalIgnoreRecoveryDecision {
+    match value {
+        contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+        }
+        contract::LocalIgnoreRecoveryDecision::ResetToDefault => {
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault
+        }
+    }
+}
+
+/// Builds the prompt an envelope carries when it is not waiting on a decision.
+fn empty_recovery_prompt_dto() -> ffi::ScanRunRecoveryPrompt {
+    ffi::ScanRunRecoveryPrompt {
+        lines: Vec::new(),
+        decisions: Vec::new(),
+    }
+}
+
+/// Maps how gravely a line should read onto its scanner-local CXX twin.
+///
+/// Exhaustive rather than numeric: the two enumerations agree on discriminants today, but a
+/// `match` is what makes them keep agreeing when either one gains a variant.
+fn map_display_severity(value: DisplaySeverity) -> ffi::ScanRunDisplaySeverity {
+    match value {
+        DisplaySeverity::Info => ffi::ScanRunDisplaySeverity::Info,
+        DisplaySeverity::Notice => ffi::ScanRunDisplaySeverity::Notice,
+        DisplaySeverity::Warning => ffi::ScanRunDisplaySeverity::Warning,
+        DisplaySeverity::Failure => ffi::ScanRunDisplaySeverity::Failure,
+        DisplaySeverity::Success => ffi::ScanRunDisplaySeverity::Success,
     }
 }
 
@@ -681,6 +884,10 @@ fn empty_execution_result_dto() -> ffi::ScanRunContractExecutionResult {
         error: empty_infrastructure_error_dto(),
         has_resume_error: false,
         resume_error: empty_resume_error_dto(),
+        // No payload is present, so there is nothing for this envelope to say.
+        display_lines: Vec::new(),
+        has_recovery_prompt: false,
+        recovery_prompt: empty_recovery_prompt_dto(),
     }
 }
 
@@ -699,7 +906,19 @@ fn path_to_string(path: PathBuf) -> String {
 }
 
 /// Maps every tagged lifecycle event; consumers ignore defaulted fields unrelated to the tag.
+///
+/// Display Content is rendered here, inline on the observer path, before the event reaches
+/// C++. There is no later opportunity: the C++ observer receives a projected copy and never
+/// holds the Rust event.
 fn event_to_dto(value: contract::Event) -> ffi::ScanRunContractEvent {
+    let display_lines = display_lines_to_dto(&render_event(&value));
+    let mut event = tagged_event_to_dto(value);
+    event.display_lines = display_lines;
+    event
+}
+
+/// Fills the tag-selected fields of one lifecycle event, leaving the rest defaulted.
+fn tagged_event_to_dto(value: contract::Event) -> ffi::ScanRunContractEvent {
     match value {
         contract::Event::DiscoveryCompleted(discovery) => {
             let mut event = empty_event_dto(ffi::ScanRunContractEventKind::DiscoveryCompleted);
@@ -744,6 +963,9 @@ fn empty_event_dto(kind: ffi::ScanRunContractEventKind) -> ffi::ScanRunContractE
         total: 0,
         phase: ffi::ScanRunContractProgressPhase::Setup,
         disposition: ffi::ScanRunContractLogDisposition::Succeeded,
+        // Filled by `event_to_dto` once the event has been rendered; the tag-filling
+        // helpers below never populate it.
+        display_lines: Vec::new(),
     }
 }
 

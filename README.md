@@ -20,6 +20,10 @@ Rust owns typed, preservation-aware User Settings, including widget-independent 
 
 See the [Workspace Migration Matrix](docs/workspace-migration-matrix.md) for old-to-new command, path, and artifact translations.
 
+The [Binding Compliance Suite](docs/api/binding-compliance-suite.md) documents contributor validation. Crash Log Scan Run coverage uses blocking executable adapter and frontend receipts. Its copied acknowledgement lists and positive source markers are retired; fixture expectations, Rust variant inventory checks, negative export audits, and internal fault analyzers remain required.
+
+User Settings opening, typed snapshots, caller-controlled bootstrap, update preview/commit, and migration planning/apply/restore run as the second scenario family in shadow across Rust, CXX, Node, and Python. The shared compatibility oracle checks structured rejections, stale revisions, source bytes, reversible plans, exact retained backups, and durable effects, including unknown-entry preservation after commits. Existing User Settings runtime and registry-backed checks remain blocking.
+
 For older historical context, see [CLASSIC - Readme.pdf](CLASSIC%20-%20Readme.pdf).
 
 Nexus Mods: <https://www.nexusmods.com/fallout4/mods/56255>

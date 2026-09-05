@@ -44,6 +44,16 @@ python tools/binding_compliance/check_compliance.py --repo-root . --profile ci
 
 The suite owns the top-level pass/fail result, policy mapping, structured report, and known-gap report. The surface-specific gates below remain available as lower-level checks and focused debugging commands.
 
+Crash Log Scan Run also has a blocking executable conformance obligation. Rust,
+Node, Python, CXX on both MSVC and clang-cl, CLI and GUI on both compiler legs,
+and TUI must emit current same-revision receipts for their exact applicable
+scopes. Central validation requires the full scenario and observation-family
+denominator plus every source-owned consumer obligation. Missing, skipped,
+stale, malformed, duplicate, or semantically mismatched evidence fails the
+applicable workflow. These receipts run conjunctively with the source parity,
+declaration/stub, runtime, Rust-variant, and native wrapper gates; promotion
+does not weaken or retire those checks.
+
 See [`binding-compliance-suite.md`](binding-compliance-suite.md).
 
 ---

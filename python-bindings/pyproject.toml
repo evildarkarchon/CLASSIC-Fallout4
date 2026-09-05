@@ -7,11 +7,12 @@ dependencies = [
     "classic-py-cli",
     "maturin>=1.7,<2.0",
     "pytest>=8.0",
+    "ruff>=0.16.1",
 ]
 
 [dependency-groups]
-# Drift-guard tooling used only by the parity-gates CI job (tools/schema_version_gate.py).
-# Kept out of the default `uv sync` set so build-and-test does not pull ruamel.yaml for nothing.
+# YAML parser for schema drift guards and independent User Settings conformance comparison.
+# Conformance runs select this group explicitly; ordinary binding tools do not need it.
 drift-guards = [
     "ruamel.yaml>=0.18,<0.19",
 ]

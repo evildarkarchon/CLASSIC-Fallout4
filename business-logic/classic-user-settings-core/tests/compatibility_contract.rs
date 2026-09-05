@@ -385,7 +385,7 @@ mod compatibility_contract_tests {
         }
     }
 
-    /// Verifies executable before/after invariants for all eight expected persistence outcomes.
+    /// Verifies before/after invariants for existing documents and explicit first-run bootstrap.
     #[test]
     fn test_operation_goldens_enforce_mutation_and_document_state_contracts() {
         let expectations = load_expectations();
@@ -415,22 +415,23 @@ mod compatibility_contract_tests {
             let outcome = scenario["outcome"]
                 .as_str()
                 .expect("scenario outcome must be a string");
-            let source_fixture = scenario["source_fixture"]
-                .as_str()
-                .expect("source fixture must be a string");
-            let disk_fixture_before = scenario["disk_fixture_before"]
-                .as_str()
-                .expect("disk fixture must be a string");
-            let expected_document = scenario["expected_document"]
-                .as_str()
-                .expect("expected document must be a string");
+            let source_fixture = scenario["source_fixture"].as_str();
+            let disk_fixture_before = scenario["disk_fixture_before"].as_str();
+            let expected_document = scenario["expected_document"].as_str();
+            for field in ["source_fixture", "disk_fixture_before", "expected_document"] {
+                assert!(
+                    scenario[field].is_null() || scenario[field].is_string(),
+                    "scenario {id} {field} must name a fixture or an absent document"
+                );
+            }
             let writes_document = scenario["writes_document"]
                 .as_bool()
                 .expect("writes_document must be a boolean");
 
-            let source_bytes = read_fixture_bytes(source_fixture);
-            let disk_bytes = read_fixture_bytes(disk_fixture_before);
-            let expected_bytes = read_fixture_bytes(expected_document);
+            // None distinguishes an absent first-run document from an existing empty file.
+            let source_bytes = source_fixture.map(read_fixture_bytes);
+            let disk_bytes = disk_fixture_before.map(read_fixture_bytes);
+            let expected_bytes = expected_document.map(read_fixture_bytes);
 
             if !writes_document {
                 assert_eq!(
@@ -460,8 +461,37 @@ mod compatibility_contract_tests {
                         "scenario {id} must start at its opened revision"
                     );
 
-                    let before = yaml_semantic_value(&load_yaml_fixture(source_fixture));
-                    let after = yaml_semantic_value(&load_yaml_fixture(expected_document));
+                    let after = yaml_semantic_value(&load_yaml_fixture(
+                        expected_document.expect("accepted commit must publish a document"),
+                    ));
+                    if scenario["conformance"]["preview_mode"] == "bootstrap" {
+                        assert!(
+                            source_fixture.is_none(),
+                            "bootstrap {id} must start missing"
+                        );
+                        let mut expected = serde_json::json!({
+                            "schema_version": expectations["current_schema_version"],
+                            "CLASSIC_Settings": expectations["canonical_defaults"]["CLASSIC_Settings"],
+                            "UI": expectations["canonical_defaults"]["UI"],
+                        });
+                        for (pointer, value) in scenario["requested_update"]
+                            .as_object()
+                            .expect("bootstrap request must be an object")
+                        {
+                            *expected
+                                .pointer_mut(pointer)
+                                .expect("bootstrap request must select a published default") =
+                                value.clone();
+                        }
+                        assert_eq!(
+                            after, expected,
+                            "bootstrap {id} must publish every default and only requested overrides"
+                        );
+                        continue;
+                    }
+                    let before = yaml_semantic_value(&load_yaml_fixture(
+                        source_fixture.expect("ordinary commit must start from a document"),
+                    ));
                     let mut differences = BTreeSet::new();
                     collect_semantic_differences(&before, &after, "", &mut differences);
                     let expected_differences: BTreeSet<_> = scenario["changed_pointers"]
@@ -502,12 +532,16 @@ mod compatibility_contract_tests {
                                 .as_str()
                                 .expect("backup fixture must be a string")
                         ),
-                        source_bytes,
+                        source_bytes.expect("migration must retain its source document"),
                         "scenario {id} backup must be byte-for-byte source content"
                     );
 
-                    let source = load_yaml_fixture(source_fixture);
-                    let migrated = load_yaml_fixture(expected_document);
+                    let source = load_yaml_fixture(
+                        source_fixture.expect("migration requires a source document"),
+                    );
+                    let migrated = load_yaml_fixture(
+                        expected_document.expect("migration must publish a document"),
+                    );
                     let target_nodes = scenario["target_nodes"]
                         .as_array()
                         .expect("target_nodes must be an array");
@@ -559,7 +593,8 @@ mod compatibility_contract_tests {
                             .expect("backup fixture must be a string"),
                     );
                     assert_eq!(
-                        expected_bytes, backup,
+                        expected_bytes.expect("restore must publish a document"),
+                        backup,
                         "scenario {id} must exactly restore the verified backup"
                     );
                 }

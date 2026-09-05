@@ -9,12 +9,11 @@ from pathlib import Path
 
 import pytest
 
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 TOOLS_ROOT = REPO_ROOT / "tools" / "binding_compliance"
 sys.path.insert(0, str(TOOLS_ROOT))
 
-from scan_run_contract import (  # type: ignore  # noqa: E402
+from scan_run_contract import (  # type: ignore
     ManifestValidationError,
     _validate_forbidden_exports,
     load_manifest,
@@ -23,24 +22,11 @@ from scan_run_contract import (  # type: ignore  # noqa: E402
 
 
 def test_live_scan_run_contract_manifest_is_complete() -> None:
-    """The repository manifest acknowledges every variant and scenario."""
+    """The repository fixtures, source inventory, and export constraints remain valid."""
 
     manifest = load_manifest(REPO_ROOT)
 
     validate_manifest(REPO_ROOT, manifest)
-
-
-def test_missing_adapter_variant_acknowledgement_fails_closed() -> None:
-    """Every supported adapter must explicitly acknowledge every variant."""
-
-    manifest = copy.deepcopy(load_manifest(REPO_ROOT))
-    manifest["adapters"]["node"]["acknowledgedVariants"].remove("event.log_finished")
-
-    with pytest.raises(
-        ManifestValidationError,
-        match=r"node.*event\.log_finished",
-    ):
-        validate_manifest(REPO_ROOT, manifest)
 
 
 def test_forbidden_legacy_export_fails_closed(tmp_path: Path) -> None:
@@ -133,6 +119,40 @@ def test_unregistered_rust_enum_variant_fails_closed(tmp_path: Path) -> None:
         validate_manifest(tmp_path, manifest)
 
 
+def test_registered_but_unmapped_rust_variant_fails_closed(tmp_path: Path) -> None:
+    """Each registered variant needs a concrete executable fact or retained analyzer."""
+
+    manifest = copy.deepcopy(load_manifest(REPO_ROOT))
+    event_spec = next(
+        item for item in manifest["rustEnums"] if item["category"] == "event"
+    )
+    source = tmp_path / "event.rs"
+    original = (REPO_ROOT / event_spec["path"]).read_text(encoding="utf-8")
+    source.write_text(
+        original.replace(
+            f"pub enum {event_spec['name']} {{",
+            f"pub enum {event_spec['name']} {{\n    AdapterForgottenVariant,",
+            1,
+        ),
+        encoding="utf-8",
+    )
+    manifest["rustEnums"] = [
+        {
+            "category": "event",
+            "path": source.name,
+            "name": event_spec["name"],
+        }
+    ]
+    new_variant = "event.adapter_forgotten_variant"
+    manifest["contractVariants"].append(new_variant)
+
+    with pytest.raises(
+        ManifestValidationError,
+        match=r"variant evidence policy differs: missing=.*adapter_forgotten_variant",
+    ):
+        validate_manifest(tmp_path, manifest)
+
+
 def test_missing_shared_log_failure_stage_fails_closed() -> None:
     """The shared failure result must exercise every typed per-log stage."""
 
@@ -170,7 +190,7 @@ def test_missing_reset_fixture_root_fails_closed() -> None:
 
 
 def test_missing_reset_fixture_fails_closed() -> None:
-    """The shared reset outcomes cannot disappear while adapter evidence remains."""
+    """The shared reset outcomes must remain part of the independent fixture oracle."""
 
     manifest = copy.deepcopy(load_manifest(REPO_ROOT))
     manifest["fixtures"].pop("installedYamlData")
@@ -223,19 +243,6 @@ def test_changed_reset_fixture_semantics_fail_closed() -> None:
     with pytest.raises(
         ManifestValidationError,
         match=r"expectedResetToDefault\.localIgnoreState",
-    ):
-        validate_manifest(REPO_ROOT, manifest)
-
-
-def test_missing_reset_scenario_fails_closed() -> None:
-    """All supported adapters must retain executable Reset To Default evidence."""
-
-    manifest = copy.deepcopy(load_manifest(REPO_ROOT))
-    manifest["scenarios"].pop("reset_to_default_continuation")
-
-    with pytest.raises(
-        ManifestValidationError,
-        match="reset_to_default_continuation",
     ):
         validate_manifest(REPO_ROOT, manifest)
 

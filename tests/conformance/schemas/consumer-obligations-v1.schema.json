@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://classic-fallout4.local/schemas/consumer-obligations-v1.schema.json",
+  "title": "CLASSIC source-owned consumer obligations v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "families"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "families": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["familyId", "consumers"],
+        "properties": {
+          "familyId": { "$ref": "#/$defs/stableId" },
+          "consumers": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "executionInstanceIds",
+                "sourcePaths",
+                "obligations"
+              ],
+              "properties": {
+                "id": { "$ref": "#/$defs/stableId" },
+                "executionInstanceIds": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": { "$ref": "#/$defs/stableId" }
+                },
+                "sourcePaths": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": { "$ref": "#/$defs/relativePath" }
+                },
+                "obligations": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["id", "scenarioIds", "expected"],
+                    "properties": {
+                      "id": { "$ref": "#/$defs/stableId" },
+                      "scenarioIds": {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": { "$ref": "#/$defs/stableId" }
+                      },
+                      "expected": { "$ref": "#/$defs/canonicalJsonObject" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?![A-Za-z]:)(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "canonicalJsonObject": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/canonicalJsonValue" }
+    },
+    "canonicalJsonValue": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "integer" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/canonicalJsonValue" } },
+        { "$ref": "#/$defs/canonicalJsonObject", "type": "object" }
+      ]
+    }
+  }
+}

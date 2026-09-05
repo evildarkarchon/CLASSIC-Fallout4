@@ -292,10 +292,26 @@ leave an opaque continuation beside the moved result. Call
 `scan_run_contract_execution_has_continuation(...)`, move it once with
 `scan_run_contract_execution_take_continuation(...)`, and resume it through
 `scan_run_continuation_resume(...)` with either `ProceedWithoutIgnore` or
-`ResetToDefault`. The bridge has
-no public orchestration object, single-log analysis executor, batch lifecycle,
-reconstructable prepared-run executor, resettable scan token, process-global
-FCX control, or direct report writer.
+`ResetToDefault`. A frontend whose user backs out of the decision instead calls
+`scan_run_continuation_abandon(continuation, cancellation, observer)`, which
+takes no decision, cancels the supplied control, and returns the ordinary
+post-discovery cancelled envelope without touching anything on disk. The bridge
+has no public orchestration object, single-log analysis executor, batch
+lifecycle, reconstructable prepared-run executor, resettable scan token,
+process-global FCX control, or direct report writer.
+
+Prefer `scan_run_continuation_abandon(...)` over cancelling and then resuming
+with a placeholder decision. The two are equivalent only when
+`scan_run_cancellation_cancel(...)` runs strictly before the claim; reversing
+that order spends the one-shot continuation on a real recovery attempt. Both
+native frontends used to write that sequence for themselves and no longer do.
+
+Unlike `scan_run_continuation_resume(...)`, this one does not throw. Resume is
+fallible only because it must reject an out-of-range
+`ScanRunLocalIgnoreRecoveryDecision` before claiming the continuation; with no
+decision to reject, abandonment has no argument that can be unrepresentable.
+Replay still arrives as `has_resume_error` with code
+`scan_run_continuation_consumed`, exactly as it does for a replayed resume.
 
 ### Scan-run Display Labels
 
@@ -463,6 +479,100 @@ cancellation, and per-log failure states remain result data.
 Paths use the repository's established lossy UTF-8 CXX string conversion.
 Optional output fields use explicit presence flags so absence is not conflated
 with an empty string or zero.
+
+### Display Content on the envelope
+
+The envelope also carries `display_lines`: what the run *says*, in Rust's words,
+for whichever payload the presence flags select. `scan_run_contract_execute`,
+`scan_run_continuation_resume`, and `scan_run_continuation_abandon` all return
+this same envelope type, so one field covers the initial run, the continuation
+resume, and an abandoned run alike, and it is populated for a result, an
+infrastructure error, and a resume error equally. An abandoned run is an ordinary
+cancelled one, so it describes itself here like any other; a frontend never has
+to write the cancellation sentence. A moved-from envelope leaves it empty, as it
+does every other field.
+
+Rendering happens on the Rust side while the run value is still live, because
+C++ receives a projected copy and cannot render from the Rust value later. The
+continuation is taken out of the result before the result is rendered; that
+ordering is load-bearing, not incidental, since the render entry point borrows.
+
+`display_lines` is human-facing and is not a surface to match on. The typed
+fields beside it stay the machine-facing contract — including
+`resume_error.code`, which the rendered sentence deliberately omits because a
+stable error code is identity rather than prose.
+
+Each `ScanRunDisplayLine` carries a `ScanRunDisplaySeverity` — `Info`, `Notice`,
+`Warning`, `Failure`, or `Success` — and an ordered list of segments. Rust names
+no colour, no text attribute, and no widget; a frontend maps severity onto its
+own styling, or onto nothing.
+
+CXX cannot express a payload-carrying Rust enum, so each `ScanRunDisplaySegment`
+crosses flattened as a `ScanRunDisplaySegmentKind` tag plus three payload fields,
+with the fields the kind does not use left empty:
+
+| `kind` | `text` | `path` | `count` |
+|---|---|---|---|
+| `Text` | fixed Rust-owned prose | empty | 0 |
+| `Label` | a Display Label | empty | 0 |
+| `Count` | the noun, already agreeing with `count` | empty | the value |
+| `Path` | empty | the path, whole | 0 |
+| `Name` | a domain entity name | empty | 0 |
+| `Emphasis` | a value set apart from the prose | empty | 0 |
+
+The taxonomy is fixed at six kinds for its first version, because each addition
+touches three binding parity baselines.
+
+A consuming frontend concatenates a line's segments in order and never reorders
+within a line. It may reorder, group, or omit whole lines. It must not call a
+`scan_run_*_label` entry point for anything already carried in a `Label` segment,
+and must not re-decide a `Count`'s noun — print `count`, then `text`. The seven
+label entry points remain correct for labelling a domain enum *outside* a display
+line.
+
+`classic-cli` consumes these today. See
+[`classic-scan-presentation.md`](classic-scan-presentation.md) for the Rust
+owner of this content.
+
+### The Local Ignore recovery prompt on the envelope
+
+`has_recovery_prompt` and `recovery_prompt` carry what to ask a user whose Local
+Ignore is malformed, and which answers this run can honor. The flag is true only
+when `result.status` is `LocalIgnoreRecoveryRequired`, which is also exactly when
+the execution retains an opaque continuation — so a run with nothing to ask
+carries no prompt rather than an empty one. It follows the presence-flag
+convention `has_local_ignore_reset` already uses, because CXX has no optional
+struct.
+
+`ScanRunRecoveryPrompt` is two vectors:
+
+| Field | Contents |
+|---|---|
+| `lines` | Why the run paused and what is being decided about, as ordinary `ScanRunDisplayLine`s |
+| `decisions` | One `ScanRunRecoveryDecisionDescription` per decision the continuation contract accepts |
+
+Each `ScanRunRecoveryDecisionDescription` carries the
+`ScanRunLocalIgnoreRecoveryDecision` to hand back to
+`scan_run_continuation_resume`, its Display Label, a `description` flattened
+exactly as any other segment list, and `available`.
+
+**A frontend must not offer a decision whose `available` is false.** The fact
+travels on the decision rather than beside the prompt precisely so honouring it
+takes no separate lookup — the shape that closed a confirmed gap, where
+`local_ignore_reset_available` sat on the Installed YAML Data DTO and neither C++
+frontend read it. Rust still fails safely and touches nothing on disk if one is
+offered anyway, but the attempt spends the one-shot continuation, so the user is
+left with no scan, no repair, and no second attempt.
+
+Proceed Without Ignore is never unavailable; it needs nothing from the
+installation. Only Reset To Default can be withdrawn.
+
+Backing out appears nowhere in `decisions`.
+`ScanRunLocalIgnoreRecoveryDecision` has exactly two variants by design, and
+abandonment is spelled as the absence of a decision through
+`scan_run_continuation_abandon`. The affordance beside a description — a
+bracketed letter, a key hint, a button — is the frontend's, as is the order it
+presents them in. The description itself is not.
 
 ---
 

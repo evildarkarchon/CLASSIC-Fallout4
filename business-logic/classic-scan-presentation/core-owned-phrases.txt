@@ -1,0 +1,130 @@
+# Phrases about a Crash Log Scan Run that no frontend may write.
+#
+# This file is the deny-list behind the sentence-template detector carried by all
+# five frontend audits:
+#
+#   ui-applications/classic-tui/tests/shared_runtime_audit.rs
+#   classic-cli/tests/test_display_label_audit.cpp
+#   classic-gui/tests/test_display_label_audit.cpp
+#   python-bindings/tests/test_classic_py_cli_display_label_audit.py
+#   node-bindings/classic-node/__test__/display_label_audit.spec.ts
+#
+# One file rather than five inline copies. A deny-list duplicated per frontend
+# would reintroduce, in the test layer, exactly the five-copies drift that
+# `classic-scan-presentation` exists to delete: adding a phrase would mean
+# remembering five lists, and forgetting one would silently unenforce it there.
+# That the roster went from four to five without touching a single detector is
+# the property the shared file was chosen for.
+#
+# FORMAT
+#   One phrase per line. Blank lines and lines whose first non-blank character is
+#   `#` are ignored. Leading and trailing whitespace is stripped, so a phrase can
+#   neither begin nor end with a space. Matching is a plain, case-sensitive
+#   substring test against string literals in frontend source -- not comments,
+#   and not docstrings.
+#
+#   Every entry must carry at least one character that cannot appear in an
+#   identifier: a space, a comma, a colon, or a period. All five audits assert it.
+#   That is what lets the three source-scanning ports search comment-stripped code
+#   rather than extracting literals -- an entry spellable as an identifier could
+#   match a variable or function name and report drift that is not there. A bare
+#   word is the one thing this file may not hold.
+#
+# WHY PHRASES RATHER THAN WHOLE SENTENCES
+#   A reworded copy is still a copy. Listing the distinctive middle of a sentence
+#   catches `"Crash Log Scan Run failed during {}"` as readily as a verbatim
+#   paste, and catches it in every language's template syntax at once, without
+#   the detector having to understand any of them.
+#
+# WHY THE LIST IS SHORT
+#   The detector is deliberately narrow. A general "no format strings" rule was
+#   considered and rejected as unworkably noisy: it would bury real findings in
+#   false positives and get switched off. Only distinctive domain prose belongs
+#   here -- see EXTENDING THIS LIST.
+#
+# EXTENDING THIS LIST
+#   Adding core-owned prose to `classic-scan-presentation` means adding it here
+#   too. Nothing derives this file automatically, because not every entry is a
+#   `DisplaySegment::Text` literal: some are Display Labels resolved through
+#   `classic-vocabulary`, and some are retired frontend-local sentences that must
+#   not come back. A phrase belongs here when all three hold:
+#
+#     1. It states something about a Crash Log Scan Run that a user reads.
+#        Section headers, key hints, and button text are Display Layout and stay
+#        each frontend's to write.
+#     2. It is distinctive enough that a frontend could not write it by accident.
+#        Test the phrase against every frontend's sources before adding it.
+#     3. Removing it from a frontend is work that has already landed. A phrase
+#        that some frontend still legitimately writes fails that frontend's audit
+#        the moment it is added here.
+#
+#   Deliberately absent, and worth recording so it is not "fixed" later:
+#
+#   - `Installed YAML Data` -- a domain name that legitimately appears as a
+#     frontend's own section header, which is Display Layout.
+#
+#   `succeeded,` used to be listed here as knowingly withheld, and is now an
+#   ordinary entry below. It is worth recording why, because it is the shape this
+#   file will hit again: a phrase core owns that one frontend has not stopped
+#   writing is not enforceable anywhere, since every audit reads this one list. It
+#   lived as a named supplement in the Python CLI's audit -- which had enforced it
+#   before this file existed and must not quietly lose that -- until the Qt GUI's
+#   status bar stopped composing its own run summary. Then it moved here and the
+#   supplement went away. A supplement in one audit is the honest encoding of that
+#   state; a general exemption mechanism in this file would let anything be excused
+#   without anyone reading why.
+
+# --- Sentences `classic-scan-presentation` owns as fixed prose ----------------
+# Every entry below is a `DisplaySegment::Text` literal in
+# `business-logic/classic-scan-presentation/src/render.rs`.
+
+Crash Log Scan Run failed during
+Crash Log Scan recovery failed
+Start the Crash Log Scan again to retry.
+Local Ignore could not be backed up before reset
+Local Ignore defaults could not be published
+Local Ignore reset conflicted with the current file on disk
+The malformed Local Ignore file was removed while you decided.
+Your Local Ignore file was not replaced.
+Local Ignore was reset, but the replacement is not confirmed durable
+moved to Unsolved Logs
+Effective concurrency:
+
+# From `recovery.rs`. The first is a prompt line; the other two are the decision
+# descriptions themselves. All three were written identically in the TUI overlay,
+# the native CLI menu, and the Qt dialog before the frontends adopted the rendered
+# prompt, each with a comment saying core would own them once the renderer existed.
+# They join this list with that adoption rather than before it -- a phrase some
+# frontend still legitimately writes fails that frontend's audit the moment it is
+# added here, and every audit reads this one file.
+#
+# Fragments rather than whole sentences, following the rule above: the distinctive
+# middle catches a reworded copy as readily as a verbatim paste.
+Reset To Default is unavailable:
+Scan now with an empty ignore list.
+byte-exactly, replace it with the selected Main defaults
+
+# From `render_outcome_summary`. A fragment rather than a sentence, and the only
+# entry here that is not prose on its own -- it earns its place because it is the
+# exact shape the drift took twice: the Python CLI wrote
+# `Scanlog binding completed: 1 succeeded, 0 failed` and the Qt GUI's status bar
+# wrote `(3 succeeded, 4 failed)`, each re-deciding the wording and the plural of
+# the noun beside it. The trailing comma is load-bearing: it is what stops this
+# matching an identifier.
+succeeded,
+
+# --- Display Labels that read as whole statements -----------------------------
+# These arrive in a `label` segment, resolved through `classic-vocabulary`. They
+# are listed because a frontend restating one is drift of the same kind, even
+# though the words are not owned by the presentation crate itself.
+
+Crash Log Scan Run was cancelled
+Crash Log Scan setup failed
+requires a recovery decision
+reset to default, or proceed without ignore
+
+# --- Retired frontend-local prose ---------------------------------------------
+# Sentences a frontend used to compose for itself, kept here so the migration
+# cannot be undone by someone who never saw the original.
+
+Scanlog binding completed

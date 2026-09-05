@@ -11,7 +11,13 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { getVersion } from "../index.js";
+import {
+	getVersion,
+	JsScanRunDisplaySegmentKind,
+	JsScanRunDisplaySeverity,
+	type JsScanRunDisplayLine,
+} from "../index.js";
+import { renderDisplayLine, renderDisplaySegment } from "../cli/run-scan.js";
 import {
 	CLI_GAME_YAML,
 	CLI_IGNORE_YAML,
@@ -166,7 +172,11 @@ describe("classic-node CLI", () => {
 		const reportPath = join(scanDir, "crash-2026-03-06-12-00-00-AUTOSCAN.md");
 
 		expect(result.exitCode).toBe(0);
-		expect(result.output).toContain("Found 1 crash log");
+		// Anchored on the paths the run carries rather than on a sentence about it.
+		// Both reach the user inside Rust's per-log line, whole and untruncated, which
+		// is what lets a later command open the report this one just wrote.
+		expect(result.output).toContain(logPath);
+		expect(result.output).toContain(reportPath);
 		expect(existsSync(reportPath)).toBe(true);
 		expect(readFileSync(reportPath, "utf8")).toContain("AUTOSCAN REPORT");
 	});
@@ -189,8 +199,13 @@ describe("classic-node CLI", () => {
 		const reportPath = join(scanDir, "crash-2026-03-06-12-00-00-AUTOSCAN.md");
 
 		expect(result.exitCode).toBe(0);
+		// The CLI's own header, which names the game version it read from settings.
 		expect(result.output).toContain("Fallout4 Original");
-		expect(result.output).toContain("Scanning with 1 worker thread");
+		// The settings-configured scan directory reaches discovery, and discovery says
+		// so. Anchored on the path rather than on the concurrency sentence that stood
+		// here: the fact this test exists for is that canonical settings were honoured,
+		// and the directory proves that without restating any of Rust's words.
+		expect(result.output).toContain(scanDir.replace(/\\/g, "/"));
 		expect(existsSync(reportPath)).toBe(true);
 	});
 
@@ -249,9 +264,15 @@ describe("classic-node CLI", () => {
 		);
 
 		expect(result.exitCode).toBe(1);
+		// Both lines are still this frontend's: they aggregate over per-log outcomes
+		// that the run contract does not tally.
 		expect(result.output).toContain("Reports:  0 written");
 		expect(result.output).toContain("Failed:   1 report");
+		// The counts Rust states are gone from this frontend's summary. Reintroducing
+		// either would be a second account of the same run, which is what this whole
+		// migration removes — so their absence is asserted rather than assumed.
 		expect(result.output).not.toContain("Errors:");
+		expect(result.output).not.toContain("Scanned:");
 	});
 
 	test("returns nonfatal exit code when one discovered log fails", () => {
@@ -271,8 +292,12 @@ describe("classic-node CLI", () => {
 		);
 
 		expect(result.exitCode).toBe(1);
-		expect(result.output).toContain("Found 2 crash logs");
-		expect(result.output).toContain("Errors:");
+		// Both discovered logs reach the user, and the one that failed is reported on
+		// stderr because Rust marked its line a failure. Severity reaches no further
+		// than the stream choice here — this output stays plain and pipeable, so a
+		// caller redirecting stdout still sees what went wrong.
+		expect(result.output).toContain(goodLogPath);
+		expect(result.stderr).toContain(badLogDir);
 	});
 
 	test("returns fatal exit code when CLASSIC Data cannot be resolved", () => {
@@ -295,6 +320,62 @@ describe("classic-node CLI", () => {
 		expect(result.exitCode).toBe(2);
 		expect(result.output).toContain("Fatal:");
 		expect(result.output).toContain("WASI binding not found");
+	});
+
+	test("renders display segments in order, reading only the field each kind selects", () => {
+		// Fabricated lines, so this restates none of Rust's wording — that is pinned
+		// once, in the presentation crate. What a frontend must prove is narrower:
+		// that it did not reword or reorder what it was handed.
+		const segment = (
+			kind: JsScanRunDisplaySegmentKind,
+			text: string,
+			path = "",
+			count = 0,
+		) => ({ kind, text, path, count });
+		const line: JsScanRunDisplayLine = {
+			severity: JsScanRunDisplaySeverity.Warning,
+			segments: [
+				segment(JsScanRunDisplaySegmentKind.Text, "fixed prose"),
+				segment(JsScanRunDisplaySegmentKind.Label, "a display label"),
+				segment(JsScanRunDisplaySegmentKind.Count, "log", "", 1),
+				segment(JsScanRunDisplaySegmentKind.Path, "", "C:/crash-é.log"),
+				segment(JsScanRunDisplaySegmentKind.Name, "a domain name"),
+				segment(JsScanRunDisplaySegmentKind.Emphasis, "set apart"),
+			],
+		};
+
+		expect(renderDisplayLine(line)).toBe(
+			"fixed prose a display label 1 log C:/crash-é.log a domain name set apart",
+		);
+	});
+
+	test("prints the noun Rust resolved for a count rather than re-deriving it", () => {
+		// Zero takes the plural and one takes the singular, and neither form is chosen
+		// here. A frontend that re-derived the noun would have to get both right; this
+		// one cannot get either wrong, because it only ever prints what it was given.
+		const count = (value: number, noun: string) =>
+			renderDisplaySegment({
+				kind: JsScanRunDisplaySegmentKind.Count,
+				text: noun,
+				path: "",
+				count: value,
+			});
+
+		expect(count(1, "log")).toBe("1 log");
+		expect(count(0, "logs")).toBe("0 logs");
+	});
+
+	test("keeps a path whole, because a shortened one is not one a later command can open", () => {
+		const long = "C:/Users/someone/Documents/My Games/Fallout4/Crash Logs/crash.log";
+
+		expect(
+			renderDisplaySegment({
+				kind: JsScanRunDisplaySegmentKind.Path,
+				text: "",
+				path: long,
+				count: 0,
+			}),
+		).toBe(long);
 	});
 
 	test("emits structured fatal json when the native binding fails during startup", () => {

@@ -27,5 +27,8 @@
 tests/fixtures/autoscan_report_goldens/cases/*/expected.md -text
 tests/fixtures/autoscan_report_goldens/fcx-game/Fallout4.exe -text
 
+# Recovery conformance hashes malformed bytes exactly; checkout conversion would change the oracle.
+tests/fixtures/crash_log_scan_run/malformed-local-ignore.yaml -text
+
 # Use bd merge for beads JSONL files
 .beads/issues.jsonl merge=beads

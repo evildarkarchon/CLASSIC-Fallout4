@@ -13,6 +13,7 @@ members = [
     "business-logic/classic-database-core",
     "business-logic/classic-file-io-core",
     "business-logic/classic-scanlog-core",
+    "business-logic/classic-scan-presentation",
     "business-logic/classic-config-core",
     "business-logic/classic-user-settings-core",
     "business-logic/classic-scangame-core",

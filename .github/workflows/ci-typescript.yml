@@ -76,6 +76,9 @@ jobs:
             exit 1
           }
 
+      - name: Install User Settings conformance YAML parser
+        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
+
       - name: Run Node binding compliance profile
         run: python tools/binding_compliance/check_compliance.py --repo-root . --profile node-ci
 
@@ -93,6 +96,7 @@ jobs:
   build-and-test:
     name: NAPI-RS Build + Runtime Tests (${{ matrix.runtime }})
     needs: [parity-gates]
+    if: ${{ !cancelled() }}
     runs-on: windows-latest
     timeout-minutes: 60
     strategy:
@@ -111,6 +115,12 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "22"
+
+      - name: Set up Python for scan conformance
+        if: matrix.runtime == 'node'
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
 
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
@@ -169,3 +179,35 @@ jobs:
         if: matrix.runtime == 'node'
         working-directory: node-bindings/classic-node
         run: bun run test:node
+
+      - name: Install User Settings conformance YAML parser
+        if: matrix.runtime == 'node'
+        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
+
+      - name: Run Node Crash Log Scan Run conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_scan_run_conformance.py --participant node
+
+      # Existing runtime and registry-backed parity gates remain blocking.
+      - name: Run Node User Settings conformance in shadow
+        if: matrix.runtime == 'node' && !cancelled()
+        continue-on-error: true
+        run: python tools/binding_compliance/run_user_settings_conformance.py --participant node --artifact-root tools/binding_compliance/artifacts/user-settings
+
+      - name: Upload Node User Settings conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-user-settings-conformance
+          path: tools/binding_compliance/artifacts/user-settings/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload Node Crash Log Scan Run conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-scan-run-conformance
+          path: tools/binding_compliance/artifacts/node/node/
+          if-no-files-found: warn
+          retention-days: 7

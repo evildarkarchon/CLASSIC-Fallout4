@@ -27,10 +27,10 @@ pub(crate) use analyzer::{
 pub(crate) use contract::{
     ScanRunCancellation, ScanRunContinuation, ScanRunContractExecution, ScanRunRequest,
     ScanRunUnsolvedLogs, scan_run_cancellation_cancel, scan_run_cancellation_is_cancelled,
-    scan_run_cancellation_new, scan_run_continuation_resume, scan_run_contract_execute,
-    scan_run_contract_execution_has_continuation, scan_run_contract_execution_take_continuation,
-    scan_run_contract_execution_take_result, scan_run_infrastructure_error_stage_label,
-    scan_run_installed_yaml_data_diagnostic_kind_label,
+    scan_run_cancellation_new, scan_run_continuation_abandon, scan_run_continuation_resume,
+    scan_run_contract_execute, scan_run_contract_execution_has_continuation,
+    scan_run_contract_execution_take_continuation, scan_run_contract_execution_take_result,
+    scan_run_infrastructure_error_stage_label, scan_run_installed_yaml_data_diagnostic_kind_label,
     scan_run_installed_yaml_data_provenance_label, scan_run_local_ignore_reset_failure_stage_label,
     scan_run_local_ignore_yaml_data_state_label, scan_run_log_disposition_label,
     scan_run_log_failure_stage_label, scan_run_request_standard,
@@ -844,6 +844,103 @@ mod ffi {
         replacement_identity: ScanRunYamlDataContentIdentityDto,
     }
 
+    /// How gravely one Crash Log Scan Run display line should read.
+    ///
+    /// Adapters map this onto their own styling. Rust never names a colour, a text
+    /// attribute, or a widget. A plain, pipeable frontend may map it onto nothing more
+    /// than a choice of output stream.
+    ///
+    /// CXX bridge modules cannot share enum definitions, so this scanner-local type
+    /// exhaustively mirrors `classic_scan_presentation::DisplaySeverity`.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunDisplaySeverity {
+        Info = 0,
+        Notice = 1,
+        Warning = 2,
+        Failure = 3,
+        Success = 4,
+    }
+
+    /// Which payload field of a `ScanRunDisplaySegment` carries its value.
+    ///
+    /// Mirrors the variant set of `classic_scan_presentation::DisplaySegment`. The
+    /// taxonomy is fixed at six kinds for its first version: each addition touches three
+    /// binding parity baselines, so growth must be a deliberate decision.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunDisplaySegmentKind {
+        Text = 0,
+        Label = 1,
+        Count = 2,
+        Path = 3,
+        Name = 4,
+        Emphasis = 5,
+    }
+
+    /// One typed piece of a Crash Log Scan Run display line.
+    ///
+    /// CXX cannot express a Rust enum carrying payloads, so the six-variant segment crosses
+    /// flattened: a kind tag plus one field per payload shape, with the fields the kind does
+    /// not use left empty. Read only the field `kind` selects.
+    struct ScanRunDisplaySegment {
+        kind: ScanRunDisplaySegmentKind,
+        /// Payload for `Text`, `Label`, `Name`, and `Emphasis`. For `Count` this is the
+        /// noun Rust already resolved to agree with `count`, so no adapter re-decides
+        /// pluralization and no user reads "1 logs". Empty for `Path`.
+        text: String,
+        /// Payload for `Path`, whole and untruncated. Truncation is the adapter's
+        /// choice. Empty otherwise.
+        path: String,
+        /// Payload for `Count`. Zero otherwise.
+        count: u64,
+    }
+
+    /// One line of Crash Log Scan Run Display Content.
+    ///
+    /// An adapter concatenates `segments` in order and never reorders within a line. It
+    /// may reorder, group, or omit whole lines. It must not re-derive a Display Label
+    /// already carried in a `Label` segment, and must not re-decide a `Count`'s noun.
+    struct ScanRunDisplayLine {
+        severity: ScanRunDisplaySeverity,
+        segments: Vec<ScanRunDisplaySegment>,
+    }
+
+    /// One Local Ignore recovery decision, named and explained, with its availability
+    /// attached.
+    ///
+    /// `available` travels here rather than as a separate flag beside the prompt, which is
+    /// what makes honouring it take no separate lookup. An adapter must not offer a decision
+    /// for which it is false: Rust still fails safely and touches nothing on disk, but the
+    /// attempt spends the one-shot continuation, so the user is left with no scan and no
+    /// second attempt.
+    struct ScanRunRecoveryDecisionDescription {
+        /// The decision to hand back to `scan_run_continuation_resume`.
+        decision: ScanRunLocalIgnoreRecoveryDecision,
+        /// The decision's Display Label.
+        label: String,
+        /// What choosing it will actually do, concatenated in order like any other line.
+        description: Vec<ScanRunDisplaySegment>,
+        /// Whether this run can honor the decision.
+        available: bool,
+    }
+
+    /// The Rust-owned content of a Local Ignore recovery prompt.
+    ///
+    /// `lines` state why the run paused and what is being decided about; `decisions` lists
+    /// every decision the continuation contract accepts. The affordance beside a description
+    /// — a bracketed letter, a key hint, a button — is the adapter's own, as is the order it
+    /// presents them in and whether the prompt is a dialog, an overlay, or a line of stdin.
+    /// The descriptions themselves are not.
+    ///
+    /// Backing out appears nowhere here. `ScanRunLocalIgnoreRecoveryDecision` has exactly two
+    /// variants by design, and abandonment is spelled as the absence of a decision through
+    /// `scan_run_continuation_abandon`.
+    struct ScanRunRecoveryPrompt {
+        lines: Vec<ScanRunDisplayLine>,
+        decisions: Vec<ScanRunRecoveryDecisionDescription>,
+    }
+
     /// Complete terminal result from the final Crash Log Scan Run contract.
     struct ScanRunContractRunResult {
         status: ScanRunContractStatus,
@@ -894,6 +991,10 @@ mod ffi {
     }
 
     /// Exactly one of `result`, `error`, or `resume_error`, identified by presence flags.
+    ///
+    /// Both `scan_run_contract_execute` and `scan_run_continuation_resume` return this
+    /// one envelope, so a single `display_lines` field covers the initial run and the
+    /// continuation resume alike.
     struct ScanRunContractExecutionResult {
         has_result: bool,
         result: ScanRunContractRunResult,
@@ -901,6 +1002,28 @@ mod ffi {
         error: ScanRunContractInfrastructureError,
         has_resume_error: bool,
         resume_error: ScanRunContractResumeError,
+        /// What this run says, in Rust's words, for whichever payload the presence flags
+        /// select above.
+        ///
+        /// Rendered while the Rust run result was still live, because C++ receives a
+        /// projected copy and cannot render from the Rust value later. An adapter states
+        /// the run from these lines rather than composing sentences of its own; the
+        /// fields above stay the machine-facing surface a consumer matches on.
+        ///
+        /// Empty when no payload is present, which is what a moved-from envelope leaves
+        /// behind.
+        display_lines: Vec<ScanRunDisplayLine>,
+        /// Whether `recovery_prompt` below describes a decision this run is waiting on.
+        ///
+        /// True only when `result.status` is `LocalIgnoreRecoveryRequired`, which is also
+        /// exactly when the execution retains an opaque continuation.
+        has_recovery_prompt: bool,
+        /// What to ask the user, and which answers this run can honor.
+        ///
+        /// Rendered here for the reason `display_lines` is: C++ receives a projected copy of
+        /// the run and cannot render from the Rust value later. Empty in both vectors when
+        /// `has_recovery_prompt` is false.
+        recovery_prompt: ScanRunRecoveryPrompt,
     }
 
     /// One serialized lifecycle event from the final contract.
@@ -916,6 +1039,17 @@ mod ffi {
         total: usize,
         phase: ScanRunContractProgressPhase,
         disposition: ScanRunContractLogDisposition,
+        /// What this event says, in Rust's words.
+        ///
+        /// Populated inline in the observer adapter before the event reaches C++, so an
+        /// adapter that shows progress states it in the same words every other frontend
+        /// does. One event can produce more than one line — a discovery that rejected
+        /// some of its targeted inputs states the rejection separately.
+        ///
+        /// Unlike the fields above, this is never defaulted by `kind`: every event kind
+        /// renders. An adapter that shows only some kinds omits whole lines, which the
+        /// adapter contract allows.
+        display_lines: Vec<ScanRunDisplayLine>,
     }
 
     /// Papyrus log statistics transferred across the FFI boundary.
@@ -1149,6 +1283,25 @@ mod ffi {
             cancellation: &ScanRunCancellation,
             observer: *const ScanRunObserver,
         ) -> Result<Box<ScanRunContractExecution>>;
+        /// Abandons retained work without applying either Local Ignore recovery decision.
+        ///
+        /// Requests cancellation on `cancellation` and then claims the one-shot continuation,
+        /// returning the ordinary post-discovery cancelled envelope. No backup is taken, nothing
+        /// is published, and the malformed Local Ignore file is left exactly as it was. Prefer
+        /// this over cancelling and then resuming with a placeholder decision: that sequence is
+        /// what this replaces, and getting its ordering wrong spends the continuation on a real
+        /// recovery attempt.
+        ///
+        /// `cancellation` is left cancelled afterwards, which is what abandoning the run means.
+        /// A second call reports the same consumed-continuation envelope `resume` does; unlike
+        /// `resume` this never throws, because it takes no decision that could be out of range.
+        ///
+        /// `observer` may be null and observes nothing, since no post-discovery work runs.
+        unsafe fn scan_run_continuation_abandon(
+            continuation: &ScanRunContinuation,
+            cancellation: &ScanRunCancellation,
+            observer: *const ScanRunObserver,
+        ) -> Box<ScanRunContractExecution>;
 
         /// Human-facing Display Label for one scan-run Installed YAML Data
         /// diagnostic kind.

@@ -1,0 +1,1390 @@
+"""Behavior tests for the real Crash Log Scan Run conformance family."""
+
+from __future__ import annotations
+
+import copy
+import json
+import shutil
+import sys
+import time
+from pathlib import Path
+
+import pytest
+import run_scan_run_conformance as scan_run_launcher
+from conformance.applicability import derive_applicability, load_policy_exceptions
+from conformance.consumers import (
+    ConsumerObligationCatalog,
+    derive_consumer_coverage,
+    load_consumer_obligations,
+    prepare_consumer_run,
+)
+from conformance.coverage import (
+    derive_observed_fact_ids,
+    derive_row_coverage,
+    load_retained_analyzer_kinds,
+    load_source_parity_rows,
+)
+from conformance.families.crash_log_scan_run import (
+    CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+    REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO,
+)
+from conformance.packs import (
+    MaterializedRun,
+    ValidatedPack,
+    discover_pack_paths,
+    load_and_validate_pack,
+    materialize_run_plan,
+)
+from conformance.receipts import PreparedRunReport, validate_prepared_run
+from conformance.reports import build_scoped_report
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+PACK_PATH = (
+    REPO_ROOT / "tests" / "conformance" / "packs" / "crash_log_scan_run" / "v1.json"
+)
+PARTICIPANT_SOURCES = {
+    "rust": (
+        REPO_ROOT
+        / "business-logic"
+        / "classic-scan-presentation"
+        / "tests"
+        / "scan_run_conformance.rs",
+    ),
+    "node": (
+        REPO_ROOT
+        / "node-bindings"
+        / "classic-node"
+        / "__test__"
+        / "scan_run_conformance_runner.ts",
+    ),
+    "python": (
+        REPO_ROOT / "python-bindings" / "tests" / "scan_run_conformance_runner.py",
+    ),
+}
+
+EXPECTED_SCENARIO_IDS = [
+    "standard-happy-path",
+    "targeted-happy-path",
+    "generated-local-ignore",
+    "pre-discovery-cancelled",
+    "post-discovery-queued-cancelled",
+    "admitted-durable-cancelled",
+    "observer-delivery-failure",
+    "request-validation-failure",
+    "discovery-failure",
+    "intake-failure",
+    "report-write-failure",
+    "unsolved-logs-finalization-failure",
+    "proceed-without-ignore-recovery",
+    "reset-to-default-recovery",
+    "reset-intervening-change-conflict",
+    "reset-operational-failure",
+    "reset-pre-cancelled",
+    "reset-post-critical-cancelled",
+    "abandon-local-ignore-recovery",
+]
+EXPECTED_OBSERVATION_FAMILIES = {
+    "cancellation",
+    "discovery",
+    "display-content",
+    "durable-effects",
+    "effective-concurrency",
+    "events",
+    "installed-yaml-data",
+    "log-outcomes",
+    "observer-failure",
+    "recovery",
+    "replay",
+    "run-status",
+    "setup",
+    "structured-failure",
+}
+"""The public-seam Crash Log Scan Run v1 scenarios required by issues #193-196."""
+
+
+def test_live_pack_is_input_only_for_all_three_base_adapters(tmp_path: Path) -> None:
+    """Fresh Rust, Node, and Python plans share scenarios but never the oracle."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH)
+    discovered = [
+        path
+        for path in discover_pack_paths(REPO_ROOT)
+        if load_and_validate_pack(REPO_ROOT, path).document()["familyId"]
+        == "crash-log-scan-run"
+    ]
+
+    assert discovered == [PACK_PATH]
+    pack_document = pack.document()
+    assert set(pack_document["fixtures"]) == {
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml",
+        "malformedLocalIgnoreYaml",
+    }
+    assert "manifest.json" not in str(pack_document)
+    assert [scenario["id"] for scenario in pack_document["scenarios"]] == (
+        EXPECTED_SCENARIO_IDS
+    )
+
+    artifact_root = (
+        REPO_ROOT
+        / "tools"
+        / "binding_compliance"
+        / "artifacts"
+        / "test-scan-run-pack"
+        / tmp_path.name
+    )
+    plans = {}
+    try:
+        for participant_id, source_paths in PARTICIPANT_SOURCES.items():
+            prepared = materialize_run_plan(
+                pack,
+                participant_id=participant_id,
+                participant_role="semantic-adapter",
+                execution_instance_id=participant_id,
+                source_paths=source_paths,
+                artifact_root=artifact_root,
+            )
+            plan = prepared.document()
+            plans[participant_id] = plan
+            assert not prepared.receipt_path.exists()
+            assert all("expected" not in scenario for scenario in plan["scenarios"])
+            assert [scenario["id"] for scenario in plan["scenarios"]] == (
+                EXPECTED_SCENARIO_IDS
+            )
+    finally:
+        if artifact_root.exists():
+            shutil.rmtree(artifact_root)
+
+    assert len({plan["expectationDigest"] for plan in plans.values()}) == 1
+    assert len({plan["invocation"]["id"] for plan in plans.values()}) == 3
+    assert len({plan["invocation"]["sourceIdentity"] for plan in plans.values()}) == 3
+
+
+def test_cxx_preparation_materializes_fresh_input_only_toolchain_instances(
+    tmp_path: Path,
+) -> None:
+    """MSVC and clang-cl receive distinct current plans without the tracked oracle."""
+
+    from conformance.adapters.prepare_cxx_conformance import prepare_cxx_run
+
+    artifact_root = (
+        REPO_ROOT
+        / "tools"
+        / "binding_compliance"
+        / "artifacts"
+        / "test-cxx-preparation"
+        / tmp_path.name
+    )
+    plans = {}
+    try:
+        for compiler in ("msvc", "clang-cl"):
+            prepared = prepare_cxx_run(
+                REPO_ROOT,
+                compiler=compiler,
+                artifact_root=artifact_root,
+            )
+            plan = prepared.document()
+            plans[compiler] = plan
+
+            assert prepared.artifact_dir.parent.name == f"windows-{compiler}"
+            assert prepared.artifact_dir.parent.parent.name == "cxx"
+            assert not prepared.receipt_path.exists()
+            assert plan["participant"] == {
+                "id": "cxx",
+                "role": "semantic-adapter",
+                "executionInstanceId": f"windows-{compiler}",
+            }
+            assert all("expected" not in scenario for scenario in plan["scenarios"])
+            assert [scenario["id"] for scenario in plan["scenarios"]] == (
+                EXPECTED_SCENARIO_IDS
+            )
+    finally:
+        if artifact_root.exists():
+            shutil.rmtree(artifact_root)
+
+    assert plans["msvc"]["expectationDigest"] == plans["clang-cl"]["expectationDigest"]
+    assert plans["msvc"]["invocation"]["id"] != plans["clang-cl"]["invocation"]["id"]
+
+
+def test_family_policy_derives_every_required_fact_from_each_exact_oracle() -> None:
+    """Coverage facts come from semantic observation predicates, not runner claims."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+
+    for scenario in pack["scenarios"]:
+        facts = derive_observed_fact_ids(
+            pack,
+            scenario,
+            scenario["expected"],
+            CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+        )
+        assert facts == REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO[scenario["id"]]
+
+    assert set(REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO) == {
+        scenario["id"] for scenario in pack["scenarios"]
+    }
+
+
+def test_family_policy_loses_the_corresponding_fact_when_each_family_changes() -> None:
+    """Every advertised observation family has a fail-closed semantic predicate."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    scenario = pack["scenarios"][0]
+    mutations = {
+        "scan-run.status": lambda value: value["run"].__setitem__(
+            "status", "cancelled"
+        ),
+        "scan-run.discovery": lambda value: value["discovery"][
+            "acceptedLogs"
+        ].reverse(),
+        "scan-run.setup": lambda value: value["run"].__setitem__(
+            "setup", {"status": "unexpected"}
+        ),
+        "scan-run.effective-concurrency": lambda value: value["run"].__setitem__(
+            "effectiveConcurrency", 1
+        ),
+        "scan-run.installed-yaml-data": lambda value: value["installedYamlData"][
+            "main"
+        ]["identity"].__setitem__("byteLength", 0),
+        "scan-run.log-outcomes": lambda value: value["logs"][0].__setitem__(
+            "disposition", "failed"
+        ),
+        "scan-run.events": lambda value: value["events"]["logs"][0]["trace"].pop(),
+        "scan-run.display-content": lambda value: value["displayContent"].pop(),
+        "scan-run.durable-effects": lambda value: value["durableEffects"]["reports"][
+            0
+        ].__setitem__("exists", False),
+    }
+
+    for fact_id, mutate in mutations.items():
+        changed = copy.deepcopy(scenario["expected"])
+        mutate(changed)
+        facts = derive_observed_fact_ids(
+            pack,
+            scenario,
+            changed,
+            CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+        )
+        assert fact_id not in facts
+
+    malformed_log = copy.deepcopy(scenario["expected"])
+    malformed_log["logs"][0]["crashLog"] = {}
+    malformed_facts = derive_observed_fact_ids(
+        pack,
+        scenario,
+        malformed_log,
+        CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+    )
+    assert "scan-run.log-outcomes" not in malformed_facts
+
+
+def _scenario_by_id(pack: dict[str, object], scenario_id: str) -> dict[str, object]:
+    """Return one validated scenario dictionary by stable identity."""
+
+    scenarios = pack["scenarios"]
+    assert isinstance(scenarios, list)
+    return next(
+        scenario
+        for scenario in scenarios
+        if isinstance(scenario, dict) and scenario["id"] == scenario_id
+    )
+
+
+def _assert_semantic_mutations_lose_facts(
+    pack: dict[str, object],
+    scenario_id: str,
+    mutations: dict[str, object],
+) -> None:
+    """Assert each observation mutation removes its named policy-owned fact."""
+
+    scenario = _scenario_by_id(pack, scenario_id)
+    expected = scenario["expected"]
+    assert isinstance(expected, dict)
+    for fact_id, raw_mutate in mutations.items():
+        assert callable(raw_mutate)
+        changed = copy.deepcopy(expected)
+        raw_mutate(changed)
+        facts = derive_observed_fact_ids(
+            pack,
+            scenario,
+            changed,
+            CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+        )
+        assert fact_id not in facts
+
+
+def test_pre_discovery_cancellation_facts_fail_closed_on_mutation() -> None:
+    """Pre-discovery coverage requires no discovery, events, logs, or effects."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "pre-discovery-cancelled",
+        {
+            "scan-run.lifecycle.pre-discovery-status": lambda value: value[
+                "run"
+            ].__setitem__("status", "cancelled"),
+            "scan-run.lifecycle.pre-discovery-boundary": lambda value: value["events"][
+                "run"
+            ].append("discovery_completed"),
+            "scan-run.lifecycle.pre-discovery-cancellation": lambda value: value[
+                "cancellation"
+            ].__setitem__("requested", False),
+            "scan-run.lifecycle.pre-discovery-forbidden-effects": lambda value: value[
+                "durableEffects"
+            ]["forbidden"][0].__setitem__("exists", True),
+        },
+    )
+
+
+def test_queued_cancellation_facts_fail_closed_on_mutation() -> None:
+    """Queued coverage requires both logs to remain unadmitted and artifact-free."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "post-discovery-queued-cancelled",
+        {
+            "scan-run.lifecycle.queued-status": lambda value: value["run"].__setitem__(
+                "cancelled", 1
+            ),
+            "scan-run.lifecycle.queued-boundary": lambda value: value["events"]["logs"][
+                0
+            ]["trace"].insert(1, "log_started"),
+            "scan-run.lifecycle.queued-cancellation": lambda value: value[
+                "cancellation"
+            ].__setitem__("requested", False),
+            "scan-run.lifecycle.queued-forbidden-effects": lambda value: value[
+                "durableEffects"
+            ]["forbidden"][0].__setitem__("exists", True),
+        },
+    )
+
+
+def test_admitted_cancellation_facts_fail_closed_on_mutation() -> None:
+    """Admitted coverage requires one completed durable unit and one unstarted log."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "admitted-durable-cancelled",
+        {
+            "scan-run.lifecycle.admitted-status": lambda value: value[
+                "run"
+            ].__setitem__("succeeded", 0),
+            "scan-run.lifecycle.admitted-boundary": lambda value: value["events"][
+                "logs"
+            ][0]["trace"].pop(),
+            "scan-run.lifecycle.admitted-cancellation": lambda value: value[
+                "cancellation"
+            ].__setitem__("requested", False),
+            "scan-run.lifecycle.admitted-durable-effects": lambda value: value[
+                "durableEffects"
+            ]["reports"][0].__setitem__("nonEmpty", False),
+        },
+    )
+
+
+def test_observer_failure_facts_fail_closed_on_mutation() -> None:
+    """Observer coverage requires structured failure, cancellation, and no artifacts."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "observer-delivery-failure",
+        {
+            "scan-run.observer-failure.status": lambda value: value["run"].__setitem__(
+                "message", None
+            ),
+            "scan-run.observer-failure.boundary": lambda value: value["events"][
+                "run"
+            ].append("effective_concurrency_selected"),
+            "scan-run.observer-failure.structured-observation": lambda value: value[
+                "observerFailure"
+            ].__setitem__("messageNonEmpty", False),
+            "scan-run.observer-failure.cancellation": lambda value: value[
+                "cancellation"
+            ].__setitem__("requested", False),
+            "scan-run.observer-failure.forbidden-effects": lambda value: value[
+                "durableEffects"
+            ]["forbidden"][0].__setitem__("exists", True),
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    ("scenario_id", "expected_fact_id", "mutations"),
+    [
+        (
+            "request-validation-failure",
+            "scan-run.failure.request-validation",
+            (
+                lambda value: value["infrastructureError"].__setitem__(
+                    "stage", "intake"
+                ),
+                lambda value: value["infrastructureError"].__setitem__(
+                    "messageNonEmpty", False
+                ),
+                lambda value: value["infrastructureError"].__setitem__(
+                    "path", {"path": "CLASSIC Data"}
+                ),
+                lambda value: value["durableEffects"][1].__setitem__(
+                    "kind", "file"
+                ),
+            ),
+        ),
+        (
+            "discovery-failure",
+            "scan-run.failure.discovery",
+            (
+                lambda value: value["infrastructureError"].__setitem__(
+                    "stage", "intake"
+                ),
+                lambda value: value["infrastructureError"].__setitem__(
+                    "messageNonEmpty", False
+                ),
+                lambda value: value["infrastructureError"]["path"].__setitem__(
+                    "path", "wrong"
+                ),
+                lambda value: value["durableEffects"][0].__setitem__(
+                    "kind", "missing"
+                ),
+            ),
+        ),
+        (
+            "intake-failure",
+            "scan-run.failure.intake",
+            (
+                lambda value: value["infrastructureError"].__setitem__(
+                    "stage", "request_validation"
+                ),
+                lambda value: value["infrastructureError"].__setitem__(
+                    "messageNonEmpty", False
+                ),
+                lambda value: value["infrastructureError"]["path"].__setitem__(
+                    "path", "wrong"
+                ),
+                lambda value: value["durableEffects"][1].__setitem__(
+                    "kind", "file"
+                ),
+            ),
+        ),
+        (
+            "report-write-failure",
+            "scan-run.failure.report-write",
+            (
+                lambda value: value["logs"][0].__setitem__(
+                    "disposition", "succeeded"
+                ),
+                lambda value: value["logs"][0]["failures"][0].__setitem__(
+                    "stage", "analysis"
+                ),
+                lambda value: value["logs"][0]["failures"][0].__setitem__(
+                    "messageNonEmpty", False
+                ),
+                lambda value: value["logs"][0]["crashLog"].__setitem__(
+                    "path", "wrong.log"
+                ),
+                lambda value: value["logs"][0].__setitem__(
+                    "movedToUnsolvedLogs", True
+                ),
+                lambda value: value["durableEffects"][1].__setitem__(
+                    "kind", "missing"
+                ),
+            ),
+        ),
+        (
+            "unsolved-logs-finalization-failure",
+            "scan-run.failure.unsolved-logs-finalization",
+            (
+                lambda value: value["logs"][0].__setitem__(
+                    "disposition", "succeeded"
+                ),
+                lambda value: value["logs"][0]["failures"][1].__setitem__(
+                    "stage", "analysis"
+                ),
+                lambda value: value["logs"][0]["failures"][1].__setitem__(
+                    "messageNonEmpty", False
+                ),
+                lambda value: value["logs"][0]["crashLog"].__setitem__(
+                    "path", "wrong.log"
+                ),
+                lambda value: value["logs"][0].__setitem__(
+                    "movedToUnsolvedLogs", True
+                ),
+                lambda value: value["durableEffects"][2].__setitem__(
+                    "kind", "missing"
+                ),
+            ),
+        ),
+    ],
+)
+def test_public_failure_facts_fail_closed_on_semantic_mutation(
+    scenario_id: str,
+    expected_fact_id: str,
+    mutations: tuple[object, ...],
+) -> None:
+    """Failure coverage requires typed errors, paths, dispositions, and effects."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    scenario = _scenario_by_id(pack, scenario_id)
+    expected = scenario["expected"]
+    assert isinstance(expected, dict)
+    for raw_mutate in mutations:
+        assert callable(raw_mutate)
+        changed = copy.deepcopy(expected)
+        raw_mutate(changed)
+        facts = derive_observed_fact_ids(
+            pack,
+            scenario,
+            changed,
+            CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+        )
+        assert expected_fact_id not in facts
+
+
+def test_generated_local_ignore_facts_fail_closed_on_semantic_mutation() -> None:
+    """Generated-state coverage rejects altered intake, trace, or filesystem facts."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "generated-local-ignore",
+        {
+            "scan-run.generated.status": lambda value: value["run"].__setitem__(
+                "status", "failed"
+            ),
+            "scan-run.generated.discovery": lambda value: value["discovery"][
+                "acceptedLogs"
+            ][0].__setitem__("path", "Generated/rediscovered.log"),
+            "scan-run.generated.installed-yaml-data": lambda value: value[
+                "installedYamlData"
+            ].__setitem__("localIgnoreState", "existing"),
+            "scan-run.generated.log-outcome": lambda value: value["logs"][
+                0
+            ].__setitem__("disposition", "failed"),
+            "scan-run.generated.events": lambda value: value["events"]["logs"][0][
+                "trace"
+            ].pop(),
+            "scan-run.generated.durable-effects": lambda value: value["durableEffects"][
+                "reports"
+            ][0]["identity"].__setitem__("byteLength", 1),
+        },
+    )
+
+
+def test_proceed_recovery_facts_fail_closed_on_semantic_mutation() -> None:
+    """Proceed coverage requires retained state, no rediscovery, no mutation, and replay."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "proceed-without-ignore-recovery",
+        {
+            "scan-run.recovery.initial-retained-snapshot": lambda value: value[
+                "initial"
+            ]["installedYamlData"]["mainIdentity"].__setitem__("byteLength", 0),
+            "scan-run.recovery.initial-prompt": lambda value: value["initial"][
+                "recoveryPrompt"
+            ]["decisions"][0].__setitem__("available", False),
+            "scan-run.recovery.proceed-without-ignore": lambda value: value["terminal"][
+                "installedYamlData"
+            ].__setitem__("localIgnoreState", "existing"),
+            "scan-run.recovery.proceed-no-rediscovery": lambda value: value["terminal"][
+                "events"
+            ]["run"].insert(0, "discovery_completed"),
+            "scan-run.recovery.proceed-no-mutation": lambda value: value[
+                "durableEffects"
+            ]["localIgnore"]["identity"].__setitem__("byteLength", 0),
+            "scan-run.recovery.proceed-replay-rejected": lambda value: value["replays"][
+                0
+            ]["error"].__setitem__("kind", "other"),
+        },
+    )
+
+
+def test_reset_recovery_facts_fail_closed_on_semantic_mutation() -> None:
+    """Reset coverage requires retained state, exact repair, one backup, and replay."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "reset-to-default-recovery",
+        {
+            "scan-run.recovery.initial-retained-snapshot": lambda value: value[
+                "initial"
+            ]["discovery"]["acceptedLogs"][0].__setitem__(
+                "path", "Recovery/reset-late.log"
+            ),
+            "scan-run.recovery.initial-prompt": lambda value: value["initial"][
+                "recoveryPrompt"
+            ]["decisions"][1].__setitem__("available", False),
+            "scan-run.recovery.reset-to-default": lambda value: value["terminal"][
+                "installedYamlData"
+            ]["localIgnoreReset"]["backup"].__setitem__(
+                "identityMatchesReceipt", False
+            ),
+            "scan-run.recovery.reset-no-rediscovery": lambda value: value["terminal"][
+                "events"
+            ]["run"].insert(0, "discovery_completed"),
+            "scan-run.recovery.reset-backup-and-repair": lambda value: value[
+                "durableEffects"
+            ].__setitem__("backups", []),
+            "scan-run.recovery.reset-replay-rejected": lambda value: value["replays"][
+                0
+            ]["error"].__setitem__("kind", "other"),
+        },
+    )
+
+
+def test_reset_conflict_facts_fail_closed_on_semantic_mutation() -> None:
+    """Conflict coverage requires typed identities, no overwrite, and one-shot replay."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "reset-intervening-change-conflict",
+        {
+            "scan-run.recovery.initial-retained-snapshot": lambda value: value[
+                "initial"
+            ]["installedYamlData"]["localIgnoreIdentity"].__setitem__("byteLength", 0),
+            "scan-run.recovery.initial-prompt": lambda value: value["initial"][
+                "recoveryPrompt"
+            ]["decisions"][1].__setitem__("available", False),
+            "scan-run.recovery.reset-conflict": lambda value: value[
+                "terminalError"
+            ].__setitem__("code", "other"),
+            "scan-run.recovery.reset-conflict-forbidden-effects": lambda value: value[
+                "durableEffects"
+            ]["localIgnore"]["identity"].__setitem__("byteLength", 0),
+            "scan-run.recovery.reset-replay-rejected": lambda value: value["replays"][
+                0
+            ]["error"].__setitem__("kind", "other"),
+        },
+    )
+
+
+def test_reset_operational_failure_facts_fail_closed_on_semantic_mutation() -> None:
+    """Operational coverage requires a stable rejection and no reset side effects."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "reset-operational-failure",
+        {
+            "scan-run.recovery.initial-retained-snapshot": lambda value: value[
+                "initial"
+            ]["discovery"]["acceptedLogs"][0].__setitem__("path", "Recovery/other.log"),
+            "scan-run.recovery.initial-prompt": lambda value: value["initial"][
+                "recoveryPrompt"
+            ]["decisions"][1].__setitem__("available", False),
+            "scan-run.recovery.reset-operational-failure": lambda value: value[
+                "terminalError"
+            ].__setitem__("messageNonEmpty", False),
+            "scan-run.recovery.reset-operational-forbidden-effects": lambda value: (
+                value["durableEffects"]["forbidden"][2].__setitem__("exists", True)
+            ),
+            "scan-run.recovery.reset-replay-rejected": lambda value: value["replays"][
+                0
+            ]["error"].__setitem__("kind", "other"),
+        },
+    )
+
+
+def test_pre_reset_cancellation_facts_fail_closed_on_semantic_mutation() -> None:
+    """Pre-reset cancellation requires a normal result and zero durable mutation."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "reset-pre-cancelled",
+        {
+            "scan-run.recovery.initial-retained-snapshot": lambda value: value[
+                "initial"
+            ]["installedYamlData"].__setitem__("localIgnoreResetAvailable", False),
+            "scan-run.recovery.initial-prompt": lambda value: value["initial"][
+                "recoveryPrompt"
+            ]["decisions"][1].__setitem__("available", False),
+            "scan-run.recovery.reset-pre-cancelled": lambda value: value["terminal"][
+                "run"
+            ].__setitem__("status", "completed"),
+            "scan-run.recovery.reset-pre-cancelled-forbidden-effects": lambda value: (
+                value["durableEffects"]["forbidden"][4].__setitem__("exists", True)
+            ),
+            "scan-run.recovery.reset-replay-rejected": lambda value: value["replays"][
+                0
+            ]["error"].__setitem__("kind", "other"),
+        },
+    )
+
+
+def test_post_critical_cancellation_facts_fail_closed_on_semantic_mutation() -> None:
+    """Post-critical cancellation requires a complete receipt and byte-exact backup."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "reset-post-critical-cancelled",
+        {
+            "scan-run.recovery.initial-retained-snapshot": lambda value: value[
+                "initial"
+            ]["installedYamlData"]["localIgnoreIdentity"].__setitem__("byteLength", 39),
+            "scan-run.recovery.initial-prompt": lambda value: value["initial"][
+                "recoveryPrompt"
+            ]["decisions"][1].__setitem__("available", False),
+            "scan-run.recovery.reset-post-critical-cancelled": lambda value: value[
+                "terminal"
+            ]["installedYamlData"]["localIgnoreReset"]["backup"].__setitem__(
+                "identityMatchesReceipt", False
+            ),
+            "scan-run.recovery.reset-post-critical-durable-effects": lambda value: (
+                value["durableEffects"]["backups"][0]["identity"].__setitem__(
+                    "byteLength", 39
+                )
+            ),
+            "scan-run.recovery.reset-replay-rejected": lambda value: value["replays"][
+                0
+            ]["error"].__setitem__("kind", "other"),
+        },
+    )
+
+
+def test_abandonment_facts_fail_closed_on_semantic_mutation() -> None:
+    """Abandon coverage requires cancellation, shared replay, and zero durable effects."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    _assert_semantic_mutations_lose_facts(
+        pack,
+        "abandon-local-ignore-recovery",
+        {
+            "scan-run.recovery.abandon-initial": lambda value: value["initial"][
+                "recoveryPrompt"
+            ]["decisions"][0].__setitem__("available", False),
+            "scan-run.recovery.abandon-terminal": lambda value: value["terminal"][
+                "run"
+            ].__setitem__("status", "completed"),
+            "scan-run.recovery.abandon-cancellation": lambda value: value[
+                "cancellation"
+            ].__setitem__("afterTerminal", False),
+            "scan-run.recovery.abandon-shared-replay": lambda value: value[
+                "replays"
+            ].pop(),
+            "scan-run.recovery.abandon-forbidden-effects": lambda value: value[
+                "durableEffects"
+            ]["forbidden"][0].__setitem__("exists", True),
+        },
+    )
+
+
+def test_native_consumer_runners_fail_closed_on_identity_and_probe_failure() -> None:
+    """Native runners bind toolchains and keep failed evidence schema-valid."""
+
+    gui_runner = (
+        REPO_ROOT
+        / "classic-gui"
+        / "tests"
+        / "conformance"
+        / "classic_gui_consumer_conformance.cpp"
+    ).read_text(encoding="utf-8")
+    cli_runner = (
+        REPO_ROOT
+        / "classic-cli"
+        / "tests"
+        / "conformance"
+        / "classic_cli_consumer_conformance.cpp"
+    ).read_text(encoding="utf-8")
+
+    assert 'QStringLiteral("windows-") + QStringLiteral(CLASSIC_GUI_CONFORMANCE_TOOLCHAIN)' in gui_runner
+    assert 'participant.value(QStringLiteral("executionInstanceId"))' in gui_runner
+    assert '{"observation", json::object()}' in cli_runner
+
+
+def _write_engine_test_receipt(prepared: MaterializedRun, pack: ValidatedPack) -> None:
+    """Publish an oracle-shaped receipt for central aggregation unit tests only."""
+
+    plan = prepared.document()
+    pack_document = pack.document()
+    expected_by_id = {
+        scenario["id"]: scenario["expected"] for scenario in pack_document["scenarios"]
+    }
+    receipt = {
+        "schemaVersion": plan["schemaVersion"],
+        "familyId": plan["familyId"],
+        "familyVersion": plan["familyVersion"],
+        "expectationDigest": plan["expectationDigest"],
+        "invocation": plan["invocation"],
+        "participant": plan["participant"],
+        "runner": {
+            "id": "synthetic-engine-test",
+            "version": 1,
+            "platform": "windows",
+            "toolchain": "pytest",
+        },
+        "scenarios": [
+            {
+                "id": scenario["id"],
+                "executionStatus": "completed",
+                "capabilityIds": scenario["capabilityIds"],
+                "observation": expected_by_id[scenario["id"]],
+                "failure": None,
+            }
+            for scenario in plan["scenarios"]
+        ],
+    }
+    prepared.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+
+
+def _write_consumer_test_receipt(
+    prepared: MaterializedRun,
+    catalog: ConsumerObligationCatalog,
+) -> None:
+    """Publish catalog-shaped consumer evidence for aggregation tests only."""
+
+    plan = prepared.document()
+    participant = catalog.participant(
+        str(plan["familyId"]), str(plan["participant"]["id"])
+    )
+    expected_by_id = {
+        obligation.id: obligation.expected for obligation in participant.obligations
+    }
+    receipt = {
+        "schemaVersion": plan["schemaVersion"],
+        "familyId": plan["familyId"],
+        "familyVersion": plan["familyVersion"],
+        "expectationDigest": plan["expectationDigest"],
+        "invocation": plan["invocation"],
+        "participant": plan["participant"],
+        "runner": {
+            "id": "synthetic-consumer-engine-test",
+            "version": 1,
+            "platform": "windows",
+            "toolchain": "pytest",
+        },
+        "obligations": [
+            {
+                "id": obligation["id"],
+                "executionStatus": "completed",
+                "observation": expected_by_id[obligation["id"]],
+                "failure": None,
+            }
+            for obligation in plan["obligations"]
+        ],
+    }
+    prepared.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+
+
+def _prepare_base_adapter_reports(
+    pack: ValidatedPack, artifact_root: Path
+) -> list[PreparedRunReport]:
+    """Materialize and centrally validate Rust, Node, and Python test receipts."""
+
+    prepared_reports = []
+    for participant_id, source_paths in PARTICIPANT_SOURCES.items():
+        prepared = materialize_run_plan(
+            pack,
+            participant_id=participant_id,
+            participant_role="semantic-adapter",
+            execution_instance_id=participant_id,
+            source_paths=source_paths,
+            artifact_root=artifact_root,
+        )
+        _write_engine_test_receipt(prepared, pack)
+        prepared_reports.append(
+            validate_prepared_run(
+                pack,
+                prepared,
+                receipt_paths=(prepared.receipt_path,),
+                coverage_policy=CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+            )
+        )
+    return prepared_reports
+
+
+def test_three_base_receipts_pass_their_scopes_but_not_full_repository(
+    tmp_path: Path,
+) -> None:
+    """Three exact participant slices cannot satisfy the blocking denominator."""
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH)
+    artifact_root = (
+        REPO_ROOT
+        / "tools"
+        / "binding_compliance"
+        / "artifacts"
+        / "test-scan-run-report"
+        / tmp_path.name
+    )
+    try:
+        prepared_reports = _prepare_base_adapter_reports(pack, artifact_root)
+
+        pack_document = pack.document()
+        parity_rows = load_source_parity_rows(REPO_ROOT)
+        retained = load_retained_analyzer_kinds(REPO_ROOT)
+        exceptions = load_policy_exceptions(REPO_ROOT)
+        consumer_catalog = load_consumer_obligations(REPO_ROOT)
+        applicability = derive_applicability(
+            pack_document,
+            parity_rows,
+            policy_exceptions=exceptions,
+            consumer_catalog=consumer_catalog,
+        )
+        for prepared_report in prepared_reports:
+            participant_id = str(prepared_report.participant["id"])
+            coverage = derive_row_coverage(
+                pack_document,
+                parity_rows,
+                CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+                (prepared_report,),
+                scope_participant_id=participant_id,
+                retained_analyzers=retained,
+                policy_exceptions=exceptions,
+            )
+            scoped = build_scoped_report(
+                family_id="crash-log-scan-run",
+                profile="conformance",
+                applicability=applicability,
+                prepared_reports=(prepared_report,),
+                participant_id=participant_id,
+                execution_instance_id=participant_id,
+                coverage=coverage,
+            ).document()
+            assert scoped["result"] == "pass"
+            assert scoped["repositoryComplete"] is False
+
+        full_coverage = derive_row_coverage(
+            pack_document,
+            parity_rows,
+            CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+            tuple(prepared_reports),
+            retained_analyzers=retained,
+            policy_exceptions=exceptions,
+        )
+        full = build_scoped_report(
+            family_id="crash-log-scan-run",
+            profile="full",
+            applicability=applicability,
+            prepared_reports=tuple(prepared_reports),
+            coverage=full_coverage,
+        ).document()
+        assert full["result"] == "fail"
+        assert full["repositoryComplete"] is False
+        assert any(
+            execution["participantId"] == "cxx"
+            for execution in full["missingExecutions"]
+        )
+    finally:
+        if artifact_root.exists():
+            shutil.rmtree(artifact_root)
+
+
+def test_all_base_adapter_instances_need_consumers_for_full_repository_scope(
+    tmp_path: Path,
+) -> None:
+    """Semantic completeness cannot substitute for CLI, GUI, and TUI receipts."""
+
+    from conformance.adapters.prepare_cxx_conformance import prepare_cxx_run
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH)
+    artifact_root = (
+        REPO_ROOT
+        / "tools"
+        / "binding_compliance"
+        / "artifacts"
+        / "test-full-scan-run-report"
+        / tmp_path.name
+    )
+    try:
+        prepared_reports = _prepare_base_adapter_reports(pack, artifact_root)
+
+        for compiler in ("msvc", "clang-cl"):
+            prepared = prepare_cxx_run(
+                REPO_ROOT,
+                compiler=compiler,
+                artifact_root=artifact_root,
+            )
+            _write_engine_test_receipt(prepared, pack)
+            prepared_reports.append(
+                validate_prepared_run(
+                    pack,
+                    prepared,
+                    receipt_paths=(prepared.receipt_path,),
+                    coverage_policy=CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+                )
+            )
+
+        pack_document = pack.document()
+        parity_rows = load_source_parity_rows(REPO_ROOT)
+        retained = load_retained_analyzer_kinds(REPO_ROOT)
+        exceptions = load_policy_exceptions(REPO_ROOT)
+        consumer_catalog = load_consumer_obligations(REPO_ROOT)
+        applicability = derive_applicability(
+            pack_document,
+            parity_rows,
+            policy_exceptions=exceptions,
+            consumer_catalog=consumer_catalog,
+        )
+        coverage = derive_row_coverage(
+            pack_document,
+            parity_rows,
+            CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+            tuple(prepared_reports),
+            retained_analyzers=retained,
+            policy_exceptions=exceptions,
+        )
+        report = build_scoped_report(
+            family_id="crash-log-scan-run",
+            profile="full",
+            applicability=applicability,
+            prepared_reports=tuple(prepared_reports),
+            coverage=coverage,
+        ).document()
+
+        assert report["result"] == "fail"
+        assert report["repositoryComplete"] is False
+        assert {
+            execution["participantId"] for execution in report["missingExecutions"]
+        } == {"cli", "gui", "tui"}
+    finally:
+        if artifact_root.exists():
+            shutil.rmtree(artifact_root)
+
+
+def test_complete_same_revision_pack_passes_the_full_repository_denominator(
+    tmp_path: Path,
+) -> None:
+    """All adapters, native instances, scenarios, families, and consumers agree."""
+
+    from conformance.adapters.prepare_cxx_conformance import prepare_cxx_run
+
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH)
+    artifact_root = (
+        REPO_ROOT
+        / "tools"
+        / "binding_compliance"
+        / "artifacts"
+        / "test-complete-scan-run-report"
+        / tmp_path.name
+    )
+    try:
+        semantic_reports = _prepare_base_adapter_reports(pack, artifact_root)
+        for compiler in ("msvc", "clang-cl"):
+            prepared = prepare_cxx_run(
+                REPO_ROOT,
+                compiler=compiler,
+                artifact_root=artifact_root,
+            )
+            _write_engine_test_receipt(prepared, pack)
+            semantic_reports.append(
+                validate_prepared_run(
+                    pack,
+                    prepared,
+                    receipt_paths=(prepared.receipt_path,),
+                    coverage_policy=CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+                )
+            )
+
+        catalog = load_consumer_obligations(REPO_ROOT)
+        consumer_reports: list[PreparedRunReport] = []
+        for participant in catalog.participants("crash-log-scan-run"):
+            for instance_id in participant.execution_instance_ids:
+                prepared = prepare_consumer_run(
+                    pack,
+                    participant_id=participant.id,
+                    execution_instance_id=instance_id,
+                    artifact_root=artifact_root,
+                    catalog=catalog,
+                )
+                _write_consumer_test_receipt(prepared, catalog)
+                consumer_reports.append(
+                    validate_prepared_run(
+                        pack,
+                        prepared,
+                        receipt_paths=(prepared.receipt_path,),
+                        consumer_catalog=catalog,
+                    )
+                )
+
+        pack_document = pack.document()
+        parity_rows = load_source_parity_rows(REPO_ROOT)
+        retained = load_retained_analyzer_kinds(REPO_ROOT)
+        exceptions = load_policy_exceptions(REPO_ROOT)
+        applicability = derive_applicability(
+            pack_document,
+            parity_rows,
+            policy_exceptions=exceptions,
+            consumer_catalog=catalog,
+        )
+        coverage = derive_row_coverage(
+            pack_document,
+            parity_rows,
+            CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
+            tuple(semantic_reports),
+            retained_analyzers=retained,
+            policy_exceptions=exceptions,
+        )
+        consumer_coverage = derive_consumer_coverage(
+            pack_document,
+            catalog,
+            tuple(consumer_reports),
+        )
+        reports = tuple(semantic_reports + consumer_reports)
+        document = build_scoped_report(
+            family_id="crash-log-scan-run",
+            profile="full",
+            applicability=applicability,
+            prepared_reports=reports,
+            coverage=coverage,
+            consumer_coverage=consumer_coverage,
+        ).document()
+
+        assert document["enforcement"] == "blocking"
+        assert document["result"] == "pass"
+        assert document["repositoryComplete"] is True
+        assert len(document["receivedExecutions"]) == 10
+        assert document["missingExecutions"] == []
+        assert all(
+            [scenario.id for scenario in report.scenarios] == EXPECTED_SCENARIO_IDS
+            for report in semantic_reports
+        )
+        assert {
+            family
+            for capability in pack_document["capabilities"]
+            for family in capability["observationFamilies"]
+        } == EXPECTED_OBSERVATION_FAMILIES
+        assert {
+            obligation.id
+            for report in consumer_reports
+            for obligation in report.obligations
+        } == {
+            obligation.id
+            for participant in catalog.participants("crash-log-scan-run")
+            for obligation in participant.obligations
+        }
+    finally:
+        if artifact_root.exists():
+            shutil.rmtree(artifact_root)
+
+
+def test_cxx_runner_and_launcher_stay_bridge_only_and_oracle_blind() -> None:
+    """Native evidence uses the generated bridge and only the approved wrapper."""
+
+    runner_path = (
+        REPO_ROOT
+        / "classic-cli"
+        / "tests"
+        / "conformance"
+        / "classic_cxx_conformance.cpp"
+    )
+    runner = runner_path.read_text(encoding="utf-8")
+    assert '"classic_cxx_bridge/scanner.h"' in runner
+    assert "ScanRunObserver" in runner
+    assert "scan_run_contract_execute" in runner
+    assert "scan_run_contract_execution_has_continuation" in runner
+    assert "scan_run_contract_execution_take_continuation" in runner
+    assert "scan_run_continuation_resume" in runner
+    assert "scan_run_continuation_abandon" in runner
+    assert "materialize_post_pause_data" in runner
+    assert 'flow.value("replays"' in runner
+    assert "project_terminal_resume_error" in runner
+    assert '"after-reset-critical-section"' in runner
+    assert '"localIgnorePaddingBytes"' in runner
+    assert 'scenario.contains("expected")' in runner
+    assert "scan_run_fixture_config" not in runner
+    assert "manifest.json" not in runner
+    assert "tests/conformance/packs" not in runner.replace("\\", "/")
+    assert "scan_run_cli" not in runner
+
+    cmake = (REPO_ROOT / "classic-cli" / "CMakeLists.txt").read_text(encoding="utf-8")
+    target_start = cmake.index("add_executable(classic-cxx-conformance")
+    target_end = cmake.index("add_test(NAME classic-cxx-conformance", target_start)
+    target_block = cmake[target_start:target_end]
+    assert "classic_cxx_bridge" in target_block
+    assert "nlohmann_json::nlohmann_json" in target_block
+    assert "src/scan_run_cli.cpp" not in target_block
+    assert "src/scanner.cpp" not in target_block
+
+    launcher = (
+        REPO_ROOT
+        / "tools"
+        / "binding_compliance"
+        / "conformance"
+        / "adapters"
+        / "run_cxx_conformance.ps1"
+    ).read_text(encoding="utf-8")
+    assert "15 * 60 * 1000" in launcher
+    wrapper_start = launcher.index("$WrapperArguments = @(")
+    wrapper_end = launcher.index("$RecordedCommand", wrapper_start)
+    wrapper_block = launcher[wrapper_start:wrapper_end]
+    required_tokens = (
+        '"-File"',
+        '"classic-cli/build_cli.ps1"',
+        '"-Test"',
+        '"-CTestName"',
+        '"classic-cxx-conformance"',
+        '"-Compiler"',
+        "$Compiler",
+        '"-CTestArgs"',
+        '"--output-junit"',
+        "$JunitPath",
+    )
+    positions = tuple(wrapper_block.index(token) for token in required_tokens)
+    assert positions == tuple(sorted(positions))
+    assert wrapper_block.rstrip().endswith(")")
+    assert "$Process.Kill($true)" in launcher
+    assert '--execution-instance "windows-$Compiler"' in launcher
+    assert "--attempt $AttemptPath" in launcher
+    assert "--junit $JunitPath" in launcher
+    assert "Get-FileSha256" in launcher
+
+
+def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None:
+    """Private adapters stay oracle-blind across execute, resume, and abandon."""
+
+    seam_markers = {
+        "rust": (
+            "contract::execute",
+            "render_run_result",
+            "run_continuation_action",
+            "ContinuationOperationInput::Resume",
+            "ContinuationOperationInput::Abandon",
+            "flow.post_pause_data",
+            "flow.replays",
+            "project_terminal_error",
+            "CancellationBoundaryInput::AfterResetCriticalSection",
+            "local_ignore_padding_bytes",
+        ),
+        "node": (
+            "scanRunExecute",
+            "scanRunResume",
+            "scanRunAbandon",
+            'from "../index.js"',
+            "flow.postPauseData",
+            "flow.replays",
+            "terminalResumeError",
+            '"after-reset-critical-section"',
+            "localIgnorePaddingBytes",
+        ),
+        "python": (
+            "scan_run_execute",
+            "scan_run_resume",
+            "scan_run_abandon",
+            "import classic_scanlog",
+            'flow.get("postPauseData"',
+            'flow.get("replays"',
+            "_project_terminal_resume_error",
+            '"after-reset-critical-section"',
+            "localIgnorePaddingBytes",
+        ),
+    }
+    for participant_id, source_paths in PARTICIPANT_SOURCES.items():
+        source = source_paths[0].read_text(encoding="utf-8")
+        assert "manifest.json" not in source
+        assert "tests/conformance/packs" not in source.replace("\\", "/")
+        assert all(marker in source for marker in seam_markers[participant_id])
+
+
+def test_launcher_records_spawn_failures_as_structured_diagnostics(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A missing adapter executable still produces an attempt and report."""
+
+    def fail_to_spawn(*_args: object, **_kwargs: object) -> tuple[None, None, OSError]:
+        """Simulate an unavailable native runner executable."""
+
+        return None, None, FileNotFoundError("adapter executable is unavailable")
+
+    artifact_root = (
+        REPO_ROOT
+        / "tools"
+        / "binding_compliance"
+        / "artifacts"
+        / "test-launcher-failure"
+        / tmp_path.name
+    )
+    monkeypatch.setattr(scan_run_launcher, "_run_adapter_command", fail_to_spawn)
+    try:
+        result, artifact_dir = scan_run_launcher.run_participant(
+            "rust",
+            artifact_root=artifact_root,
+        )
+
+        attempt = json.loads(
+            (artifact_dir / "attempt.json").read_text(encoding="utf-8")
+        )
+        report = json.loads(
+            (artifact_dir / "conformance_report.json").read_text(encoding="utf-8")
+        )
+        assert result == 1
+        assert attempt["exitCode"] is None
+        assert attempt["timedOut"] is False
+        assert "adapter executable is unavailable" in attempt["launchError"]
+        assert report["result"] == "fail"
+        environment_failures = [
+            failure
+            for failure in report["failures"]
+            if failure["kind"] == "local_environment_failure"
+        ]
+        assert len(environment_failures) == 1
+        assert "adapter executable is unavailable" in environment_failures[0]["message"]
+        assert not (artifact_dir / "receipt.json").exists()
+    finally:
+        if artifact_root.exists():
+            shutil.rmtree(artifact_root)
+
+
+def test_launcher_terminates_descendants_before_finalizing_a_timeout(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A timed-out child cannot publish a receipt after central validation."""
+
+    child_code = (
+        "import os,time; from pathlib import Path; time.sleep(2); "
+        "Path(os.environ['CLASSIC_CONFORMANCE_OUTPUT']).write_text"
+        "('{}', encoding='utf-8')"
+    )
+    parent_code = (
+        "import subprocess,sys,time; "
+        f"subprocess.Popen((sys.executable, '-c', {child_code!r})); "
+        "time.sleep(60)"
+    )
+    command = scan_run_launcher.ParticipantCommand(
+        arguments=(sys.executable, "-c", parent_code),
+        working_directory=REPO_ROOT,
+        source_paths=(Path(__file__).resolve(),),
+    )
+    monkeypatch.setitem(scan_run_launcher.PARTICIPANT_COMMANDS, "rust", command)
+
+    artifact_root = (
+        REPO_ROOT
+        / "tools"
+        / "binding_compliance"
+        / "artifacts"
+        / "test-launcher-timeout"
+        / tmp_path.name
+    )
+    try:
+        result, artifact_dir = scan_run_launcher.run_participant(
+            "rust",
+            artifact_root=artifact_root,
+            timeout_seconds=1,
+        )
+        time.sleep(3)
+
+        attempt = json.loads(
+            (artifact_dir / "attempt.json").read_text(encoding="utf-8")
+        )
+        report = json.loads(
+            (artifact_dir / "conformance_report.json").read_text(encoding="utf-8")
+        )
+        assert result == 1
+        assert attempt["timedOut"] is True
+        assert attempt["launchError"] is None
+        assert report["result"] == "fail"
+        assert not (artifact_dir / "receipt.json").exists()
+    finally:
+        if artifact_root.exists():
+            shutil.rmtree(artifact_root)

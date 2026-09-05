@@ -26,7 +26,7 @@ use classic_config_core::{
     inspect_installed_yaml_data as core_inspect_installed_yaml_data,
     load_installed_yaml_data as core_load_installed_yaml_data,
 };
-use classic_vocabulary::display_label;
+use classic_vocabulary::{Vocabulary, display_label};
 use napi::bindgen_prelude::*;
 use std::path::PathBuf;
 
@@ -1085,11 +1085,18 @@ fn installed_yaml_data_error(
         .unwrap_or_else(|_| base_inspection_error(env, code, message))
 }
 
-const fn role_name(role: CoreInstalledYamlDataRole) -> &'static str {
-    match role {
-        CoreInstalledYamlDataRole::Main => "main",
-        CoreInstalledYamlDataRole::Game => "game",
-    }
+/// Returns the published token for one update-eligible Installed YAML Data role.
+///
+/// Delegates rather than restating: the role adopted the Vocabulary naming
+/// contract with the two strings this table already published. The core token is
+/// published unchanged rather than through `js_token`, which is an identity for
+/// both of these single-word spellings anyway — the point is that the rule is the
+/// surface's, not that it happens to change nothing here.
+///
+/// Note that the role's `Display` renders its *Display Label*, which capitalizes
+/// `Main`. This is the token, so it does not.
+fn role_name(role: CoreInstalledYamlDataRole) -> &'static str {
+    role.as_str()
 }
 
 fn base_inspection_error(env: Env, code: &str, message: String) -> napi::Error {

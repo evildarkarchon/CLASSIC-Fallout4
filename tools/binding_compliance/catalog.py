@@ -73,7 +73,7 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
     ),
     ComplianceRequirement(
         id="scan-run-contract-variants",
-        title="Crash Log Scan Run variants have cross-interface evidence",
+        title="Crash Log Scan Run fixtures and source contracts remain valid",
         surface="policy",
         classification="new_check",
         profiles=STATIC_PROFILES,
@@ -81,8 +81,8 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         summary=(
             "Validates the shared Standard and Targeted fixture corpus, compares the "
             "manifest with Rust enum inventory, rejects contracted legacy exports in "
-            "source and tracked contract artifacts, and requires Rust, CXX, Node, "
-            "Python, CLI, GUI, and TUI acknowledgements for their owned facts."
+            "source and tracked contract artifacts, and requires a concrete executable "
+            "fact or retained analyzer for each source-derived variant."
         ),
         command=CommandSpec(
             argv=(
@@ -94,15 +94,81 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         ),
         paths=(
             "tools/binding_compliance/scan_run_contract.py",
+            "tools/binding_compliance/conformance/variant_policy.py",
             "tests/fixtures/crash_log_scan_run/manifest.json",
             "tests/fixtures/crash_log_scan_run/valid-crash.log",
         ),
         proves=(
             "A new Rust contract enum variant cannot land without manifest registration.",
-            "Every registered variant is acknowledged by Rust, CXX, Node, and Python.",
+            "Every registered variant names one required executable fact or retained analyzer.",
             "Removed execution seams cannot remain in public source, declarations, stubs, runtime registries, or parity baselines.",
-            "Shared Standard, Targeted, cancellation, and failure scenarios retain executable evidence.",
-            "CLI, GUI, and TUI tests consume Rust-owned discovery, scheduling, and terminal facts.",
+            "Repository-owned fixtures retain independent reset outcomes and every typed failure stage.",
+        ),
+    ),
+    ComplianceRequirement(
+        id="scan-run-workflow-policy",
+        title="Crash Log Scan Run receipts remain blocking in CI",
+        surface="policy",
+        classification="new_check",
+        profiles=STATIC_PROFILES,
+        blocking=True,
+        summary=(
+            "Audits the same-revision legacy/receipt job topology, exact native "
+            "execution denominator, blocking launch steps, and always-uploaded "
+            "diagnostics for every Crash Log Scan Run participant and consumer."
+        ),
+        command=CommandSpec(
+            argv=(
+                "python",
+                "tools/binding_compliance/scan_run_workflow_policy.py",
+                "--repo-root",
+                ".",
+            )
+        ),
+        paths=(
+            "tools/binding_compliance/scan_run_workflow_policy.py",
+            "tools/binding_compliance/conformance/workflow_policy.py",
+            ".github/workflows/ci-rust.yml",
+            ".github/workflows/ci-typescript.yml",
+            ".github/workflows/ci-python-bindings.yml",
+            ".github/workflows/ci-cpp.yml",
+        ),
+        proves=(
+            "Every required semantic adapter and consumer receipt runs as a blocking CI step.",
+            "MSVC and clang-cl remain separate required CXX, CLI, and GUI execution instances.",
+            "Legacy evidence and promoted receipts execute from one default checkout revision.",
+            "Receipt plans and failure diagnostics remain available when execution fails.",
+        ),
+    ),
+    ComplianceRequirement(
+        id="evidence-migration-ledger",
+        title="Evidence migration ledger is exhaustive and classified",
+        surface="policy",
+        classification="new_check",
+        profiles=STATIC_PROFILES,
+        blocking=True,
+        summary=(
+            "Checks that every current parity, runtime-registry, Crash Log Scan Run, "
+            "and consumer/source-audit obligation has exactly one diagnostic target "
+            "disposition. The ledger cannot grant compliance or replace another gate."
+        ),
+        command=CommandSpec(
+            argv=(
+                "python",
+                "tools/binding_compliance/migration_ledger.py",
+                "--repo-root",
+                ".",
+            )
+        ),
+        paths=(
+            "tools/binding_compliance/migration_ledger.py",
+            "docs/implementation/binding_compliance/evidence_migration_ledger.json",
+            "docs/implementation/binding_compliance/evidence_migration_ledger.md",
+        ),
+        proves=(
+            "The diagnostic inventory matches every live Phase 0 obligation occurrence.",
+            "Every obligation names a runtime target, retained analyzer, or documented policy exception.",
+            "No ledger row supplies executed coverage or permits an existing gate to be removed.",
         ),
     ),
     ComplianceRequirement(
@@ -508,11 +574,17 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
 def requirements_for_profile(profile: str) -> tuple[ComplianceRequirement, ...]:
     """Return requirements that participate in a named execution profile."""
 
+    if profile == "conformance":
+        # Native conformance jobs are governed by their scoped receipt report,
+        # not by a duplicate run of the repository-wide requirement catalog.
+        return ()
     selected = tuple(
         requirement for requirement in REQUIREMENTS if profile in requirement.profiles
     )
     if not selected:
-        known = sorted({name for req in REQUIREMENTS for name in req.profiles})
+        known = sorted(
+            {name for req in REQUIREMENTS for name in req.profiles} | {"conformance"}
+        )
         raise ValueError(
             f"Unknown binding compliance profile '{profile}'. Known profiles: {', '.join(known)}"
         )

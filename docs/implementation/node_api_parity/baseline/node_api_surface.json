@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-05T12:38:58.790839+00:00",
+  "generated_at_utc": "2026-08-07T02:51:45.372510+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -1445,6 +1445,38 @@
       "signature": "export interface JsScanRunDiscoveryResult {"
     },
     {
+      "export": "JsScanRunDisplayLine",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunDisplayLine {"
+    },
+    {
+      "export": "JsScanRunDisplaySegment",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunDisplaySegment {"
+    },
+    {
+      "export": "JsScanRunDisplaySegmentKind",
+      "kind": "const_enum",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsScanRunDisplaySegmentKind {"
+    },
+    {
+      "export": "JsScanRunDisplaySeverity",
+      "kind": "const_enum",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsScanRunDisplaySeverity {"
+    },
+    {
       "export": "JsScanRunEvent",
       "kind": "interface",
       "owner_module": "aux",
@@ -1531,6 +1563,22 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunLogResult {"
+    },
+    {
+      "export": "JsScanRunRecoveryDecisionDescription",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunRecoveryDecisionDescription {"
+    },
+    {
+      "export": "JsScanRunRecoveryPrompt",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunRecoveryPrompt {"
     },
     {
       "export": "JsScanRunRejectedInput",
@@ -3757,12 +3805,21 @@
       "arity": 2
     },
     {
+      "export": "scanRunAbandon",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function scanRunAbandon(continuation: ScanRunContinuation, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
+      "arity": 4
+    },
+    {
       "export": "scanRunExecute",
       "kind": "function",
       "owner_module": "aux",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function scanRunExecute(request: ScanRunRequest, cancellation: ScanRunCancellation, observer?: (event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
+      "signature": "export declare function scanRunExecute(request: ScanRunRequest, cancellation: ScanRunCancellation, observer?: (event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
       "arity": 4
     },
     {
@@ -3825,7 +3882,7 @@
       "owner_module": "aux",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function scanRunResume(continuation: ScanRunContinuation, decision: JsScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
+      "signature": "export declare function scanRunResume(continuation: ScanRunContinuation, decision: JsScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
       "arity": 5
     },
     {

@@ -1,0 +1,5855 @@
+{
+  "schema_version": 1,
+  "rustCrates": [
+    {
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "libRs": "business-logic/classic-config-core/src/lib.rs"
+    },
+    {
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "libRs": "business-logic/classic-database-core/src/lib.rs"
+    },
+    {
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "libRs": "business-logic/classic-file-io-core/src/lib.rs"
+    },
+    {
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "libRs": "business-logic/classic-message-core/src/lib.rs"
+    },
+    {
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "libRs": "business-logic/classic-path-core/src/lib.rs"
+    },
+    {
+      "ownerModule": "perf",
+      "rustCrate": "classic-perf-core",
+      "libRs": "business-logic/classic-perf-core/src/lib.rs"
+    },
+    {
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "libRs": "business-logic/classic-registry-core/src/lib.rs"
+    },
+    {
+      "ownerModule": "scan_presentation",
+      "rustCrate": "classic-scan-presentation",
+      "libRs": "business-logic/classic-scan-presentation/src/lib.rs"
+    },
+    {
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "libRs": "business-logic/classic-scangame-core/src/lib.rs"
+    },
+    {
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "libRs": "business-logic/classic-scanlog-core/src/lib.rs"
+    },
+    {
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "libRs": "business-logic/classic-settings-core/src/lib.rs"
+    },
+    {
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
+      "libRs": "foundation/classic-shared-core/src/lib.rs"
+    },
+    {
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "libRs": "business-logic/classic-update-core/src/lib.rs"
+    },
+    {
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "libRs": "business-logic/classic-user-settings-core/src/lib.rs"
+    },
+    {
+      "ownerModule": "version",
+      "rustCrate": "classic-version-core",
+      "libRs": "business-logic/classic-version-core/src/lib.rs"
+    },
+    {
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "libRs": "business-logic/classic-version-registry-core/src/lib.rs"
+    },
+    {
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "libRs": "business-logic/classic-web-core/src/lib.rs"
+    },
+    {
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "libRs": "business-logic/classic-xse-core/src/lib.rs"
+    }
+  ],
+  "entries": [
+    {
+      "id": "0f1ce653765981f0",
+      "rustSymbol": "ExplicitYamlDataGameId",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
+      "coreRustSymbol": "GameId"
+    },
+    {
+      "id": "d788cd5f512be74d",
+      "rustSymbol": "ExplicitYamlDataGameRole",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "GameDataRole"
+    },
+    {
+      "id": "c2ca3547c25211b0",
+      "rustSymbol": "ExplicitYamlDataLoadErrorKind",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataLoadError"
+    },
+    {
+      "id": "6c8feae9819e3978",
+      "rustSymbol": "ExplicitYamlDataRole",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataRole"
+    },
+    {
+      "id": "75942fa5f3d0fe80",
+      "rustSymbol": "InstalledYamlDataDiagnosticKind",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataDiagnosticKind"
+    },
+    {
+      "id": "c010e0abe2580ab2",
+      "rustSymbol": "InstalledYamlDataGameRole",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "GameDataRole"
+    },
+    {
+      "id": "8c213f5606888cd0",
+      "rustSymbol": "InstalledYamlDataInspectionErrorKind",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataInspectionError"
+    },
+    {
+      "id": "baaff5630bc6d152",
+      "rustSymbol": "InstalledYamlDataLoadErrorKind",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataLoadError"
+    },
+    {
+      "id": "6e782896f6e6efc1",
+      "rustSymbol": "InstalledYamlDataLoadRole",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataRole"
+    },
+    {
+      "id": "d956269b815428f0",
+      "rustSymbol": "InstalledYamlDataProvenance",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataProvenance"
+    },
+    {
+      "id": "97103d837ce461be",
+      "rustSymbol": "InstalledYamlDataRole",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataRole"
+    },
+    {
+      "id": "467825b86f31980c",
+      "rustSymbol": "LocalIgnoreResetErrorKind",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetError"
+    },
+    {
+      "id": "45a481c1f7080f80",
+      "rustSymbol": "LocalIgnoreResetPublicationStage",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetPublicationStage"
+    },
+    {
+      "id": "30c322625eae2fc6",
+      "rustSymbol": "LocalIgnoreYamlDataState",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreYamlDataState"
+    },
+    {
+      "id": "834cc04debdcc0cd",
+      "rustSymbol": "explicit_yaml_data_load",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_explicit_yaml_data"
+    },
+    {
+      "id": "2f968cd2f6c16714",
+      "rustSymbol": "explicit_yaml_data_load_status",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_explicit_yaml_data"
+    },
+    {
+      "id": "4dc74e6f6f5a1585",
+      "rustSymbol": "explicit_yaml_data_load_take_snapshot",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_explicit_yaml_data"
+    },
+    {
+      "id": "fff0494d03d2c5be",
+      "rustSymbol": "explicit_yaml_data_snapshot_game",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataSnapshot"
+    },
+    {
+      "id": "5b7dbb2a67be5e4b",
+      "rustSymbol": "explicit_yaml_data_snapshot_game_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataSnapshot"
+    },
+    {
+      "id": "a2a255891415c137",
+      "rustSymbol": "explicit_yaml_data_snapshot_game_role",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataSnapshot"
+    },
+    {
+      "id": "b566d94e02156d52",
+      "rustSymbol": "explicit_yaml_data_snapshot_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataSnapshot"
+    },
+    {
+      "id": "58c1cb9047677930",
+      "rustSymbol": "explicit_yaml_data_snapshot_main_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataSnapshot"
+    },
+    {
+      "id": "7333a449b0268f1e",
+      "rustSymbol": "explicit_yaml_data_snapshot_yaml_data",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataSnapshot"
+    },
+    {
+      "id": "4edaf409db8e95cb",
+      "rustSymbol": "installed_yaml_data_diagnostic_kind_label",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataDiagnosticKind"
+    },
+    {
+      "id": "f214164a9d4eb6f0",
+      "rustSymbol": "installed_yaml_data_inspect",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "inspect_installed_yaml_data"
+    },
+    {
+      "id": "a089a390b0513c86",
+      "rustSymbol": "installed_yaml_data_inspection_diagnostics",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataInspection"
+    },
+    {
+      "id": "79c00541e9c6b7c5",
+      "rustSymbol": "installed_yaml_data_inspection_game",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataInspection"
+    },
+    {
+      "id": "4d5d79853dc4d389",
+      "rustSymbol": "installed_yaml_data_inspection_game_file",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataInspection"
+    },
+    {
+      "id": "be75f7174e6e40c9",
+      "rustSymbol": "installed_yaml_data_inspection_game_role",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataInspection"
+    },
+    {
+      "id": "c2fdc4d665765109",
+      "rustSymbol": "installed_yaml_data_inspection_main",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataInspection"
+    },
+    {
+      "id": "9e812b792616c2f5",
+      "rustSymbol": "installed_yaml_data_inspection_status",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "inspect_installed_yaml_data"
+    },
+    {
+      "id": "2bb4e9453411c734",
+      "rustSymbol": "installed_yaml_data_inspection_take",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "inspect_installed_yaml_data"
+    },
+    {
+      "id": "e6ac015edd41b7b0",
+      "rustSymbol": "installed_yaml_data_load",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_installed_yaml_data"
+    },
+    {
+      "id": "0c1607fcb9a1c354",
+      "rustSymbol": "installed_yaml_data_load_status",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_installed_yaml_data"
+    },
+    {
+      "id": "88b627b389e2f391",
+      "rustSymbol": "installed_yaml_data_load_take_recovery_plan",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_installed_yaml_data"
+    },
+    {
+      "id": "df6e0230342a3d0b",
+      "rustSymbol": "installed_yaml_data_load_take_snapshot",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_installed_yaml_data"
+    },
+    {
+      "id": "52396b1071598365",
+      "rustSymbol": "installed_yaml_data_provenance_label",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataProvenance"
+    },
+    {
+      "id": "8f8c7430e730a71f",
+      "rustSymbol": "installed_yaml_data_snapshot_diagnostics",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
+    },
+    {
+      "id": "77c00497e2aee6c4",
+      "rustSymbol": "installed_yaml_data_snapshot_game",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
+    },
+    {
+      "id": "f9fd50d9f68b0a48",
+      "rustSymbol": "installed_yaml_data_snapshot_game_file",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
+    },
+    {
+      "id": "9d3723fd3e79f5a2",
+      "rustSymbol": "installed_yaml_data_snapshot_game_role",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
+    },
+    {
+      "id": "b94a65e01d41dfd6",
+      "rustSymbol": "installed_yaml_data_snapshot_local_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
+    },
+    {
+      "id": "01725a5af9a194c1",
+      "rustSymbol": "installed_yaml_data_snapshot_local_ignore_state",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
+    },
+    {
+      "id": "94c44bd78fe1d419",
+      "rustSymbol": "installed_yaml_data_snapshot_main",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
+    },
+    {
+      "id": "86746f77e4a76a74",
+      "rustSymbol": "installed_yaml_data_snapshot_simplify_remove_list",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
+    },
+    {
+      "id": "eee7642555cd2405",
+      "rustSymbol": "installed_yaml_data_snapshot_yaml_data",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
+    },
+    {
+      "id": "b0d609f9ed78e468",
+      "rustSymbol": "load_main_yaml_version",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_main_yaml_version_with_bundled_dir"
+    },
+    {
+      "id": "95a16a804c4e2d18",
+      "rustSymbol": "local_ignore_recovery_plan_default_local_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
+    },
+    {
+      "id": "042ea4bfbf165c0c",
+      "rustSymbol": "local_ignore_recovery_plan_diagnostics",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
+    },
+    {
+      "id": "6590701d939cbab8",
+      "rustSymbol": "local_ignore_recovery_plan_game",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
+    },
+    {
+      "id": "80e5b767c9ce0968",
+      "rustSymbol": "local_ignore_recovery_plan_game_file",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
+    },
+    {
+      "id": "60f29c15d9dab027",
+      "rustSymbol": "local_ignore_recovery_plan_game_role",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
+    },
+    {
+      "id": "42b6d46433453bfc",
+      "rustSymbol": "local_ignore_recovery_plan_has_default_local_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
+    },
+    {
+      "id": "1a660dba5feab46c",
+      "rustSymbol": "local_ignore_recovery_plan_local_ignore_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
+    },
+    {
+      "id": "16afc4754fba2126",
+      "rustSymbol": "local_ignore_recovery_plan_main",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
+    },
+    {
+      "id": "a6c74bbe8859ecc6",
+      "rustSymbol": "local_ignore_recovery_plan_malformed_local_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
+    },
+    {
+      "id": "e6b3bc86b5f014f4",
+      "rustSymbol": "local_ignore_recovery_plan_proceed_without_ignore",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
+    },
+    {
+      "id": "bbb8ff75577dc70c",
+      "rustSymbol": "local_ignore_recovery_plan_reset_to_default",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
+    },
+    {
+      "id": "0652d87cbbbad64b",
+      "rustSymbol": "local_ignore_recovery_plan_selected_game_version",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
+    },
+    {
+      "id": "66951d1fda4db345",
+      "rustSymbol": "local_ignore_reset_conflict_actual_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetConflict"
+    },
+    {
+      "id": "05ba651b12e06072",
+      "rustSymbol": "local_ignore_reset_conflict_backup_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetConflict"
+    },
+    {
+      "id": "14a7448d83b53b4e",
+      "rustSymbol": "local_ignore_reset_conflict_expected_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetConflict"
+    },
+    {
+      "id": "a431d055a0672c48",
+      "rustSymbol": "local_ignore_reset_conflict_has_actual_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetConflict"
+    },
+    {
+      "id": "63529dbf6b96286a",
+      "rustSymbol": "local_ignore_reset_conflict_has_backup_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetConflict"
+    },
+    {
+      "id": "3826799282880de4",
+      "rustSymbol": "local_ignore_reset_result_backup_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetResult"
+    },
+    {
+      "id": "063a438f552ae962",
+      "rustSymbol": "local_ignore_reset_result_backup_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetResult"
+    },
+    {
+      "id": "f132e54d8b09b4af",
+      "rustSymbol": "local_ignore_reset_result_diagnostics",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetResult"
+    },
+    {
+      "id": "8f79b89d012e692f",
+      "rustSymbol": "local_ignore_reset_result_local_ignore_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetResult"
+    },
+    {
+      "id": "7e952ca9b9e5564c",
+      "rustSymbol": "local_ignore_reset_result_malformed_local_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetResult"
+    },
+    {
+      "id": "4badd555c22fea3b",
+      "rustSymbol": "local_ignore_reset_result_replacement_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetResult"
+    },
+    {
+      "id": "a0f067057740682d",
+      "rustSymbol": "local_ignore_reset_result_take_snapshot",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetResult"
+    },
+    {
+      "id": "2ae9f534e125ea75",
+      "rustSymbol": "local_ignore_reset_status",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetOutcome"
+    },
+    {
+      "id": "dd3197bb4ec7ff78",
+      "rustSymbol": "local_ignore_reset_take_conflict",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetOutcome"
+    },
+    {
+      "id": "66f714501c41701b",
+      "rustSymbol": "local_ignore_reset_take_result",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetOutcome"
+    },
+    {
+      "id": "88a8165b0039518c",
+      "rustSymbol": "local_ignore_yaml_data_state_label",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreYamlDataState"
+    },
+    {
+      "id": "583bb255b5c8b9ef",
+      "rustSymbol": "reset_settings_cache_stats",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "reset_cache_stats"
+    },
+    {
+      "id": "81e177b3b99a1dc3",
+      "rustSymbol": "save_local_yaml_paths",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "persist_game_local_paths"
+    },
+    {
+      "id": "7a1d4610ddf2ed0c",
+      "rustSymbol": "settings_cache_clear",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "clear_cache"
+    },
+    {
+      "id": "0fb5927c6b83a48e",
+      "rustSymbol": "settings_cache_size",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "cache_stats"
+    },
+    {
+      "id": "0fcf0af39ea7b5ad",
+      "rustSymbol": "settings_cache_stats",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "cache_stats"
+    },
+    {
+      "id": "24056aa58898d14c",
+      "rustSymbol": "yaml_data_autoscan_text",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "7b8c6eb9492e1c32",
+      "rustSymbol": "yaml_data_classic_game_hints",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "b762e701c2308c31",
+      "rustSymbol": "yaml_data_classic_records_list",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "3c24543321b57b5c",
+      "rustSymbol": "yaml_data_classic_version",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "05966ef90c85cc23",
+      "rustSymbol": "yaml_data_classic_version_date",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "dfd8d8f7cbeb21d5",
+      "rustSymbol": "yaml_data_crashgen_ignore_og",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "ab77b5a709c2a9b5",
+      "rustSymbol": "yaml_data_crashgen_latest_og",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "26435fc531e77832",
+      "rustSymbol": "yaml_data_crashgen_name_field",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "2e87c5e95b5a857b",
+      "rustSymbol": "yaml_data_game_ignore_plugins",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "d7d71f9c020e0914",
+      "rustSymbol": "yaml_data_game_ignore_records",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "99206a8c09fdee2c",
+      "rustSymbol": "yaml_data_game_root_name_field",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "3e24780ccc7c3f21",
+      "rustSymbol": "yaml_data_game_version",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "d5710394d6d7f987",
+      "rustSymbol": "yaml_data_get_crashgen_ignore",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "57a6a58d8f4c1904",
+      "rustSymbol": "yaml_data_get_crashgen_name",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "eab1b7ed95e1be6f",
+      "rustSymbol": "yaml_data_get_game_root_name",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "908512331205c1b5",
+      "rustSymbol": "yaml_data_ignore_list",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "6a230c7003a1475b",
+      "rustSymbol": "yaml_data_mods_conf_count",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "f77188b181778c4f",
+      "rustSymbol": "yaml_data_mods_conf_descriptions",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "5efd2c325f9c1a13",
+      "rustSymbol": "yaml_data_mods_conf_fixes",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "8493807e8eab5ab3",
+      "rustSymbol": "yaml_data_mods_conf_has_fixes",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "824098a1b1722d6f",
+      "rustSymbol": "yaml_data_mods_conf_links",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "ee10e462939ceef7",
+      "rustSymbol": "yaml_data_mods_conf_mod_a",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "470756e70aa2cba5",
+      "rustSymbol": "yaml_data_mods_conf_mod_b",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "5a0bbfca1379bcc9",
+      "rustSymbol": "yaml_data_mods_conf_name_a",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "57fd73a3ff2bfff2",
+      "rustSymbol": "yaml_data_mods_conf_name_b",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "e63c4bedc3ac3dcb",
+      "rustSymbol": "yaml_data_mods_core_count",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "227e0eb9c09ecc8a",
+      "rustSymbol": "yaml_data_mods_core_gpus",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "f6c7a42ae8d0bff9",
+      "rustSymbol": "yaml_data_mods_core_keys",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "2e5bb798ad0b8aa4",
+      "rustSymbol": "yaml_data_mods_core_names",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "c6b2d3138d049cee",
+      "rustSymbol": "yaml_data_mods_core_values",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "7075f233e94985e1",
+      "rustSymbol": "yaml_data_mods_freq_entries",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "bf6af92be013a78a",
+      "rustSymbol": "yaml_data_mods_solu_entries",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "744a68192d559802",
+      "rustSymbol": "yaml_data_suspects_error_keys",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "97cec77a8d2e2e96",
+      "rustSymbol": "yaml_data_suspects_error_rules",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "2a710d36e6fa02c3",
+      "rustSymbol": "yaml_data_suspects_error_values",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "f24e4f874c362e59",
+      "rustSymbol": "yaml_data_suspects_stack_count_rules_for_id",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "c91ae72d650f0c51",
+      "rustSymbol": "yaml_data_suspects_stack_keys",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "0c519624cdf61bab",
+      "rustSymbol": "yaml_data_suspects_stack_rules_metadata",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "490b36f3d2d4090d",
+      "rustSymbol": "yaml_data_warn_noplugins",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "5ae5eff26e556d89",
+      "rustSymbol": "yaml_data_warn_outdated",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "47dd37d8d5f95877",
+      "rustSymbol": "yaml_data_xse_acronym",
+      "kind": "function",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "353d0963a6fdac14",
+      "rustSymbol": "ExplicitYamlDataLoad",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_explicit_yaml_data"
+    },
+    {
+      "id": "860c9e31f59961af",
+      "rustSymbol": "ExplicitYamlDataSnapshot",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataSnapshot"
+    },
+    {
+      "id": "b6007d4cc8315383",
+      "rustSymbol": "InstalledYamlDataInspection",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataInspection"
+    },
+    {
+      "id": "16e2ba0287122f6f",
+      "rustSymbol": "InstalledYamlDataInspectionOperation",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "inspect_installed_yaml_data"
+    },
+    {
+      "id": "e80c97d786e49c15",
+      "rustSymbol": "InstalledYamlDataLoadOperation",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_installed_yaml_data"
+    },
+    {
+      "id": "dbe40950823ca347",
+      "rustSymbol": "InstalledYamlDataSnapshot",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataSnapshot"
+    },
+    {
+      "id": "fd696b0479788803",
+      "rustSymbol": "LocalIgnoreRecoveryPlan",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryPlan"
+    },
+    {
+      "id": "3f1a6fda380d25bb",
+      "rustSymbol": "LocalIgnoreResetConflict",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetConflict"
+    },
+    {
+      "id": "a4bf40e5594d9afa",
+      "rustSymbol": "LocalIgnoreResetOperation",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetOutcome"
+    },
+    {
+      "id": "28b913c45be7bcb2",
+      "rustSymbol": "LocalIgnoreResetResult",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetResult"
+    },
+    {
+      "id": "9719f25c94df3c38",
+      "rustSymbol": "YamlData",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataCore"
+    },
+    {
+      "id": "5be115198cf789f5",
+      "rustSymbol": "CacheStats",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "CacheStats"
+    },
+    {
+      "id": "29c8bda868e64cf0",
+      "rustSymbol": "ExplicitYamlDataLoadErrorDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataLoadError"
+    },
+    {
+      "id": "25585cc0468a453a",
+      "rustSymbol": "ExplicitYamlDataLoadStatusDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_explicit_yaml_data"
+    },
+    {
+      "id": "fc5bd5cc414a2c56",
+      "rustSymbol": "ExplicitYamlDataPathsDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ExplicitYamlDataRequest"
+    },
+    {
+      "id": "7e6aeec3be30900e",
+      "rustSymbol": "InspectedYamlDataFileDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InspectedYamlDataFile"
+    },
+    {
+      "id": "4f20ef33a68d7bff",
+      "rustSymbol": "InstalledYamlDataDiagnosticDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataDiagnostic"
+    },
+    {
+      "id": "31053421dd71dae8",
+      "rustSymbol": "InstalledYamlDataInspectionErrorDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataInspectionError"
+    },
+    {
+      "id": "965e0b54154c8e65",
+      "rustSymbol": "InstalledYamlDataInspectionStatusDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "inspect_installed_yaml_data"
+    },
+    {
+      "id": "4b9506517c00a4db",
+      "rustSymbol": "InstalledYamlDataLoadErrorDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataLoadError"
+    },
+    {
+      "id": "985812440f95f7ad",
+      "rustSymbol": "InstalledYamlDataLoadStatusDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_installed_yaml_data"
+    },
+    {
+      "id": "e4dcff0e1be52937",
+      "rustSymbol": "LocalIgnoreResetErrorDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetError"
+    },
+    {
+      "id": "d81ba71bfa4db7d0",
+      "rustSymbol": "LocalIgnoreResetStatusDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "LocalIgnoreResetOutcome"
+    },
+    {
+      "id": "e4c0636b37aa1f97",
+      "rustSymbol": "MainYamlVersionDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "load_main_yaml_version_with_bundled_dir"
+    },
+    {
+      "id": "326a5464aeff0639",
+      "rustSymbol": "SuspectErrorRuleDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "SuspectErrorRule"
+    },
+    {
+      "id": "2462f4275406f47c",
+      "rustSymbol": "SuspectStackCountRuleDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "SuspectStackCountRule"
+    },
+    {
+      "id": "ed8cd7216e09c113",
+      "rustSymbol": "SuspectStackRuleMetadataDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "SuspectStackRule"
+    },
+    {
+      "id": "1fc343fbefc7f2e0",
+      "rustSymbol": "YamlDataContentIdentityDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataContentIdentity"
+    },
+    {
+      "id": "380c263525e94a83",
+      "rustSymbol": "YamlDataModSolutionCriteria",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ModSolutionCriteria"
+    },
+    {
+      "id": "af2958f6c983862b",
+      "rustSymbol": "YamlDataModSolutionEntry",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ModSolutionEntry"
+    },
+    {
+      "id": "955a22a24ee7f2dd",
+      "rustSymbol": "FormIdValueLookupErrorCode",
+      "kind": "enum",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookupError"
+    },
+    {
+      "id": "d2d830b8ac7fbc53",
+      "rustSymbol": "FormIdValueLookupOutcomeKind",
+      "kind": "enum",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookupOutcome"
+    },
+    {
+      "id": "34e356ed10413add",
+      "rustSymbol": "FormIdValueLookupReplyKind",
+      "kind": "enum",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookupInMemoryReply"
+    },
+    {
+      "id": "698065f32540d11b",
+      "rustSymbol": "db_pool_cache_size",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "cache_size"
+    },
+    {
+      "id": "336c985bb9964955",
+      "rustSymbol": "db_pool_clear_cache",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "clear_cache"
+    },
+    {
+      "id": "8addcd26fa221004",
+      "rustSymbol": "db_pool_close",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "close"
+    },
+    {
+      "id": "9426645f5bd4a58b",
+      "rustSymbol": "db_pool_game_table",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "get_game_table"
+    },
+    {
+      "id": "40fdaa5f74b0786f",
+      "rustSymbol": "db_pool_get_entries_batch",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "get_entries_batch"
+    },
+    {
+      "id": "830b80633d19d947",
+      "rustSymbol": "db_pool_get_entries_batch_typed",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "get_entries_batch"
+    },
+    {
+      "id": "9429287d2a83b2c4",
+      "rustSymbol": "db_pool_get_entry",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "get_entry"
+    },
+    {
+      "id": "d9af7a7e92f0b398",
+      "rustSymbol": "db_pool_get_entry_typed",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "get_entry"
+    },
+    {
+      "id": "2bc26dd58119a478",
+      "rustSymbol": "db_pool_initialize",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "initialize"
+    },
+    {
+      "id": "fe4f5a5b3c8d38b6",
+      "rustSymbol": "db_pool_is_available",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "is_available"
+    },
+    {
+      "id": "47cb6b65171178ba",
+      "rustSymbol": "db_pool_new",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "DatabasePool"
+    },
+    {
+      "id": "f4288dd77f48c72f",
+      "rustSymbol": "formid_value_lookup_construction_result",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookup"
+    },
+    {
+      "id": "0d69b0b22b9fbde8",
+      "rustSymbol": "formid_value_lookup_disabled_new",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "disabled"
+    },
+    {
+      "id": "d3d9018357b7889d",
+      "rustSymbol": "formid_value_lookup_in_memory_new",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "in_memory"
+    },
+    {
+      "id": "c69d1717bf7d1c64",
+      "rustSymbol": "formid_value_lookup_lookup",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "lookup"
+    },
+    {
+      "id": "95bf308a567246e7",
+      "rustSymbol": "formid_value_lookup_lookup_batch",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "lookup_batch"
+    },
+    {
+      "id": "4150711535568f88",
+      "rustSymbol": "formid_value_lookup_shared_pool_new",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "shared_pool"
+    },
+    {
+      "id": "815a782f66901232",
+      "rustSymbol": "formid_value_lookup_sqlite_new",
+      "kind": "function",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "sqlite"
+    },
+    {
+      "id": "dddc8330ff698837",
+      "rustSymbol": "DbPool",
+      "kind": "opaque",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "DatabasePool"
+    },
+    {
+      "id": "dca796d041e6d369",
+      "rustSymbol": "FormIdValueLookup",
+      "kind": "opaque",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookup"
+    },
+    {
+      "id": "866877a98c3624dc",
+      "rustSymbol": "FormIdEntryDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "DatabasePool"
+    },
+    {
+      "id": "360ff525def88b92",
+      "rustSymbol": "FormIdValueLookupBatchExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookup"
+    },
+    {
+      "id": "5c08976f3b42149e",
+      "rustSymbol": "FormIdValueLookupBatchInputDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookup"
+    },
+    {
+      "id": "b3e18bf9899c7c68",
+      "rustSymbol": "FormIdValueLookupConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookup"
+    },
+    {
+      "id": "c004995b34b6c45c",
+      "rustSymbol": "FormIdValueLookupErrorDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookupError"
+    },
+    {
+      "id": "97d4c71e6760fe72",
+      "rustSymbol": "FormIdValueLookupExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookup"
+    },
+    {
+      "id": "42c6d7d6f9e0dea4",
+      "rustSymbol": "FormIdValueLookupInMemoryConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookup"
+    },
+    {
+      "id": "3b7621f5bf49007c",
+      "rustSymbol": "FormIdValueLookupInMemoryEntryDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookupEntry"
+    },
+    {
+      "id": "e6e6b1b967769d27",
+      "rustSymbol": "FormIdValueLookupKeyDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookup"
+    },
+    {
+      "id": "ae86867785f1b30d",
+      "rustSymbol": "FormIdValueLookupOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookupOutcome"
+    },
+    {
+      "id": "572c98266d404834",
+      "rustSymbol": "backup_manager_create",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "create_backup"
+    },
+    {
+      "id": "e634facb1dfa09cf",
+      "rustSymbol": "backup_manager_exists",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "backup_exists"
+    },
+    {
+      "id": "d712dc77c40be28c",
+      "rustSymbol": "backup_manager_new",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "BackupManager"
+    },
+    {
+      "id": "668ccd61b6def77c",
+      "rustSymbol": "backup_manager_remove",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "remove_backup"
+    },
+    {
+      "id": "a69e68a10525da92",
+      "rustSymbol": "backup_manager_restore",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "restore_backup"
+    },
+    {
+      "id": "525f265ed13a5b79",
+      "rustSymbol": "calculate_file_similarity",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "calculate_similarity"
+    },
+    {
+      "id": "a0c197477ec619ba",
+      "rustSymbol": "discover_report_files",
+      "kind": "function",
+      "bridgeModule": "files",
+      "unmappedReason": "Bridge-owned AUTOSCAN report discovery and modification-time sorting helper implemented with std::fs; no project Rust core symbol owns this behavior."
+    },
+    {
+      "id": "7cac550435b163e0",
+      "rustSymbol": "game_files_backup",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "backup"
+    },
+    {
+      "id": "c4809f59822838b9",
+      "rustSymbol": "game_files_manager_new",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "GameFilesManager"
+    },
+    {
+      "id": "2b0ef3efe34ed59f",
+      "rustSymbol": "game_files_remove",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "remove"
+    },
+    {
+      "id": "c0c130fd973c9c62",
+      "rustSymbol": "game_files_restore",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "restore"
+    },
+    {
+      "id": "0508354fbb86e6ed",
+      "rustSymbol": "hash_cache_clear",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "clear_cache"
+    },
+    {
+      "id": "066dfacfc13f2844",
+      "rustSymbol": "hash_cache_size",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "cache_size"
+    },
+    {
+      "id": "2c51e41f9c630c28",
+      "rustSymbol": "hash_cache_stats",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "cache_stats"
+    },
+    {
+      "id": "1462d027a7cba8dd",
+      "rustSymbol": "log_collector_collect_all",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "collect_all"
+    },
+    {
+      "id": "acf327fd1cc5bdc2",
+      "rustSymbol": "log_collector_collect_crash_logs",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "collect_crash_logs"
+    },
+    {
+      "id": "8d5f7aa4b18d4e1f",
+      "rustSymbol": "log_collector_new",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "LogCollector"
+    },
+    {
+      "id": "e3994ba433157302",
+      "rustSymbol": "log_collector_new_for_scan",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "new_for_scan"
+    },
+    {
+      "id": "593bc31a2e6e946e",
+      "rustSymbol": "read_file_with_encoding",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "read_file"
+    },
+    {
+      "id": "85a0993cf6b6c9bf",
+      "rustSymbol": "read_report_file",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "read_file"
+    },
+    {
+      "id": "f8228a618afe7c5e",
+      "rustSymbol": "reset_hash_cache_stats",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "reset_cache_stats"
+    },
+    {
+      "id": "f6e214ca909e6484",
+      "rustSymbol": "resolve_targeted_inputs",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "resolve_targeted_inputs"
+    },
+    {
+      "id": "1b8ea71ffef356b6",
+      "rustSymbol": "write_file_string",
+      "kind": "function",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "write_file"
+    },
+    {
+      "id": "ad281c6da3ef9e21",
+      "rustSymbol": "CxxBackupManager",
+      "kind": "opaque",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "BackupManager"
+    },
+    {
+      "id": "663e41f8b7c8e06b",
+      "rustSymbol": "CxxGameFilesManager",
+      "kind": "opaque",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "GameFilesManager"
+    },
+    {
+      "id": "168db9095a927ded",
+      "rustSymbol": "CxxLogCollector",
+      "kind": "opaque",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "LogCollector"
+    },
+    {
+      "id": "79758f9465821426",
+      "rustSymbol": "CacheStats",
+      "kind": "struct",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "CacheStats"
+    },
+    {
+      "id": "4d50dc66f06f4349",
+      "rustSymbol": "TargetedResolutionDto",
+      "kind": "struct",
+      "bridgeModule": "files",
+      "ownerModule": "file_io",
+      "rustCrate": "classic-file-io-core",
+      "coreRustSymbol": "TargetedResolution"
+    },
+    {
+      "id": "8079b22313359649",
+      "rustSymbol": "check_restricted_path",
+      "kind": "function",
+      "bridgeModule": "game",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "is_restricted_path"
+    },
+    {
+      "id": "a52ce294384eee2c",
+      "rustSymbol": "detect_xse_version_string",
+      "kind": "function",
+      "bridgeModule": "game",
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "detect_xse_version"
+    },
+    {
+      "id": "b2ef7e82ec676f1a",
+      "rustSymbol": "extract_pe_version_string",
+      "kind": "function",
+      "bridgeModule": "game",
+      "ownerModule": "version",
+      "rustCrate": "classic-version-core",
+      "coreRustSymbol": "extract_pe_version"
+    },
+    {
+      "id": "0db733da878a6b77",
+      "rustSymbol": "find_game_path",
+      "kind": "function",
+      "bridgeModule": "game",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "find_game_path"
+    },
+    {
+      "id": "3ede3b6812f645bb",
+      "rustSymbol": "is_xse_installed_check",
+      "kind": "function",
+      "bridgeModule": "game",
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "is_xse_installed"
+    },
+    {
+      "id": "770d9538e2edcfa1",
+      "rustSymbol": "parse_game_version",
+      "kind": "function",
+      "bridgeModule": "game",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "parse"
+    },
+    {
+      "id": "ef0c70d7c9e34cd5",
+      "rustSymbol": "validate_path",
+      "kind": "function",
+      "bridgeModule": "game",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "is_valid_path"
+    },
+    {
+      "id": "b76c250f7ff0c815",
+      "rustSymbol": "version_registry_get_all_count",
+      "kind": "function",
+      "bridgeModule": "game",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_all"
+    },
+    {
+      "id": "e149b1e1b376458b",
+      "rustSymbol": "version_registry_get_all_ids",
+      "kind": "function",
+      "bridgeModule": "game",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_all"
+    },
+    {
+      "id": "fb140bd2bff08658",
+      "rustSymbol": "version_registry_get_by_id",
+      "kind": "function",
+      "bridgeModule": "game",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_by_id"
+    },
+    {
+      "id": "6fe0011abbccb86a",
+      "rustSymbol": "version_registry_get_crashgen_config",
+      "kind": "function",
+      "bridgeModule": "game",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_crashgen_for_version"
+    },
+    {
+      "id": "ec8a805f7df79178",
+      "rustSymbol": "version_registry_get_crashgen_configs",
+      "kind": "function",
+      "bridgeModule": "game",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_crashgen_versions"
+    },
+    {
+      "id": "eaa1d3e716de57dd",
+      "rustSymbol": "version_registry_get_xse_config",
+      "kind": "function",
+      "bridgeModule": "game",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "XseConfig"
+    },
+    {
+      "id": "d752ad0fce3bad32",
+      "rustSymbol": "version_registry_match_version",
+      "kind": "function",
+      "bridgeModule": "game",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "match_version"
+    },
+    {
+      "id": "448faab48e89fafb",
+      "rustSymbol": "CrashgenConfigDto",
+      "kind": "struct",
+      "bridgeModule": "game",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "CrashgenConfig"
+    },
+    {
+      "id": "d1b0f340e22c3997",
+      "rustSymbol": "GameVersionDto",
+      "kind": "struct",
+      "bridgeModule": "game",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "GameVersion"
+    },
+    {
+      "id": "e6e363c7d77f3068",
+      "rustSymbol": "MatchResultDto",
+      "kind": "struct",
+      "bridgeModule": "game",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "MatchResult"
+    },
+    {
+      "id": "e4dc25aa68d9392d",
+      "rustSymbol": "VersionInfoDto",
+      "kind": "struct",
+      "bridgeModule": "game",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "VersionInfo"
+    },
+    {
+      "id": "331c8fce40f2de72",
+      "rustSymbol": "XseConfigDto",
+      "kind": "struct",
+      "bridgeModule": "game",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "XseConfig"
+    },
+    {
+      "id": "2c624a0ad743bab6",
+      "rustSymbol": "markdown_to_html",
+      "kind": "function",
+      "bridgeModule": "markdown",
+      "unmappedReason": "Bridge-owned Markdown-to-HTML presentation helper built on pulldown-cmark; no project Rust core symbol owns this CXX/Qt transport behavior."
+    },
+    {
+      "id": "5feb28dc0ac98182",
+      "rustSymbol": "normalize_markdown",
+      "kind": "function",
+      "bridgeModule": "markdown",
+      "unmappedReason": "Bridge-owned CLASSIC report normalization helper for CXX/Qt Markdown presentation; no project Rust core symbol owns this behavior."
+    },
+    {
+      "id": "9d00aa992ec8d24e",
+      "rustSymbol": "init_logging",
+      "kind": "function",
+      "bridgeModule": "message",
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "init"
+    },
+    {
+      "id": "5963705f0fe47784",
+      "rustSymbol": "log_debug",
+      "kind": "function",
+      "bridgeModule": "message",
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "debug"
+    },
+    {
+      "id": "4aa8e25c9b047279",
+      "rustSymbol": "log_error",
+      "kind": "function",
+      "bridgeModule": "message",
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "error"
+    },
+    {
+      "id": "1df692abdc91370c",
+      "rustSymbol": "log_info",
+      "kind": "function",
+      "bridgeModule": "message",
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "info"
+    },
+    {
+      "id": "810e88fc7a340d77",
+      "rustSymbol": "log_startup_acceleration_status",
+      "kind": "function",
+      "bridgeModule": "message",
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "log_startup_acceleration_status"
+    },
+    {
+      "id": "93108031235dad9f",
+      "rustSymbol": "log_startup_binding_contract_failed",
+      "kind": "function",
+      "bridgeModule": "message",
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "log_startup_binding_contract_failed"
+    },
+    {
+      "id": "f00aef7eae80c452",
+      "rustSymbol": "log_startup_binding_contract_validated",
+      "kind": "function",
+      "bridgeModule": "message",
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "log_startup_binding_contract_validated"
+    },
+    {
+      "id": "fa62f5bb81c0d21e",
+      "rustSymbol": "log_trace",
+      "kind": "function",
+      "bridgeModule": "message",
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "trace"
+    },
+    {
+      "id": "c442f4cab4a21cb1",
+      "rustSymbol": "log_warning",
+      "kind": "function",
+      "bridgeModule": "message",
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "coreRustSymbol": "warning"
+    },
+    {
+      "id": "12499068ea3118fb",
+      "rustSymbol": "backup_create_timestamped",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "create_backup"
+    },
+    {
+      "id": "31c8949e2bfdacaf",
+      "rustSymbol": "backup_list_existing",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "list_versions"
+    },
+    {
+      "id": "26c83f9c366e11ce",
+      "rustSymbol": "check_restricted_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "is_restricted_path"
+    },
+    {
+      "id": "616cd4e4697c377e",
+      "rustSymbol": "detect_fallout4_docs_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "find_docs_path"
+    },
+    {
+      "id": "bf56cb23a9a4c33b",
+      "rustSymbol": "detect_fallout4_game_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "find_game_path"
+    },
+    {
+      "id": "250ec3783388f0b4",
+      "rustSymbol": "docs_checker_run_all_checks",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "run_all_checks"
+    },
+    {
+      "id": "ba316345b137172b",
+      "rustSymbol": "docs_checker_validate_ini_file",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "validate_ini_file"
+    },
+    {
+      "id": "ba8eea7df3e21c2f",
+      "rustSymbol": "find_game_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "find_game_path"
+    },
+    {
+      "id": "3e7173a2014af233",
+      "rustSymbol": "is_restricted_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "is_restricted_path"
+    },
+    {
+      "id": "18b69f0fbebc68bc",
+      "rustSymbol": "is_valid_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "is_valid_path"
+    },
+    {
+      "id": "b1292e6711b8c02f",
+      "rustSymbol": "parse_xse_log",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "parse_xse_log"
+    },
+    {
+      "id": "67cdcd293768260c",
+      "rustSymbol": "path_validate_custom_scan",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "validate_custom_scan_path"
+    },
+    {
+      "id": "05e39e517d1d52d7",
+      "rustSymbol": "path_validate_exists",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "validate_path_exists"
+    },
+    {
+      "id": "cda253fce9192d69",
+      "rustSymbol": "path_validate_is_directory",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "validate_is_directory"
+    },
+    {
+      "id": "92a0085674e7c6c0",
+      "rustSymbol": "path_validate_is_file",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "validate_is_file"
+    },
+    {
+      "id": "cff13ceeb2ccbf58",
+      "rustSymbol": "path_validate_required_files",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "validate_required_files"
+    },
+    {
+      "id": "2cd440ef71f6e18d",
+      "rustSymbol": "resolve_fallout4_exe_name",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "resolve_registry_version_info"
+    },
+    {
+      "id": "5318454026bb9a08",
+      "rustSymbol": "validate_path",
+      "kind": "function",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "is_valid_path"
+    },
+    {
+      "id": "0e07d936b2a180bb",
+      "rustSymbol": "IniCheckResultDto",
+      "kind": "struct",
+      "bridgeModule": "path",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "coreRustSymbol": "IniCheckResult"
+    },
+    {
+      "id": "1e32a6af317a1a05",
+      "rustSymbol": "perf_clear_metrics",
+      "kind": "function",
+      "bridgeModule": "perf",
+      "ownerModule": "perf",
+      "rustCrate": "classic-perf-core",
+      "coreRustSymbol": "clear_metrics"
+    },
+    {
+      "id": "c54fc5f0aaa38dac",
+      "rustSymbol": "perf_get_operation_average",
+      "kind": "function",
+      "bridgeModule": "perf",
+      "ownerModule": "perf",
+      "rustCrate": "classic-perf-core",
+      "coreRustSymbol": "get_summary"
+    },
+    {
+      "id": "34c276ef0854d166",
+      "rustSymbol": "perf_get_operation_count",
+      "kind": "function",
+      "bridgeModule": "perf",
+      "ownerModule": "perf",
+      "rustCrate": "classic-perf-core",
+      "coreRustSymbol": "get_summary"
+    },
+    {
+      "id": "cad43f6a47d24b68",
+      "rustSymbol": "perf_get_summary",
+      "kind": "function",
+      "bridgeModule": "perf",
+      "ownerModule": "perf",
+      "rustCrate": "classic-perf-core",
+      "coreRustSymbol": "get_summary"
+    },
+    {
+      "id": "4a95ea2335786d28",
+      "rustSymbol": "perf_record_timing",
+      "kind": "function",
+      "bridgeModule": "perf",
+      "ownerModule": "perf",
+      "rustCrate": "classic-perf-core",
+      "coreRustSymbol": "record_timing"
+    },
+    {
+      "id": "5dab0d5bde8625d2",
+      "rustSymbol": "registry_clear_all",
+      "kind": "function",
+      "bridgeModule": "registry",
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "clear_all"
+    },
+    {
+      "id": "77b0845ef43c93bd",
+      "rustSymbol": "registry_get_bool",
+      "kind": "function",
+      "bridgeModule": "registry",
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "get"
+    },
+    {
+      "id": "c2f6ab4b536b5048",
+      "rustSymbol": "registry_get_game",
+      "kind": "function",
+      "bridgeModule": "registry",
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "get_game"
+    },
+    {
+      "id": "9add6c9c98f5757f",
+      "rustSymbol": "registry_get_i32",
+      "kind": "function",
+      "bridgeModule": "registry",
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "get"
+    },
+    {
+      "id": "5802612afa59b272",
+      "rustSymbol": "registry_get_string",
+      "kind": "function",
+      "bridgeModule": "registry",
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "get"
+    },
+    {
+      "id": "6f449d41ad1928ed",
+      "rustSymbol": "registry_is_gui_mode",
+      "kind": "function",
+      "bridgeModule": "registry",
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "is_gui_mode"
+    },
+    {
+      "id": "0669dd57c46f1f6c",
+      "rustSymbol": "registry_is_registered",
+      "kind": "function",
+      "bridgeModule": "registry",
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "is_registered"
+    },
+    {
+      "id": "b592f71cc1fd2e42",
+      "rustSymbol": "registry_key_game",
+      "kind": "function",
+      "bridgeModule": "registry",
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "GAME"
+    },
+    {
+      "id": "3e31f3113029e6b5",
+      "rustSymbol": "registry_key_is_gui_mode",
+      "kind": "function",
+      "bridgeModule": "registry",
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "IS_GUI_MODE"
+    },
+    {
+      "id": "a0bc7e5ba8d68686",
+      "rustSymbol": "registry_set_bool",
+      "kind": "function",
+      "bridgeModule": "registry",
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "register"
+    },
+    {
+      "id": "f575cb39f9442655",
+      "rustSymbol": "registry_set_game",
+      "kind": "function",
+      "bridgeModule": "registry",
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "set_game"
+    },
+    {
+      "id": "241ace22ae8e7afa",
+      "rustSymbol": "registry_set_i32",
+      "kind": "function",
+      "bridgeModule": "registry",
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "register"
+    },
+    {
+      "id": "50692b14d6258f80",
+      "rustSymbol": "registry_set_string",
+      "kind": "function",
+      "bridgeModule": "registry",
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "register"
+    },
+    {
+      "id": "ebd8e8a6d1633829",
+      "rustSymbol": "registry_unregister",
+      "kind": "function",
+      "bridgeModule": "registry",
+      "ownerModule": "registry",
+      "rustCrate": "classic-registry-core",
+      "coreRustSymbol": "unregister"
+    },
+    {
+      "id": "e0835029077faf11",
+      "rustSymbol": "init_runtime",
+      "kind": "function",
+      "bridgeModule": "runtime",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
+      "coreRustSymbol": "get_runtime"
+    },
+    {
+      "id": "a4648549d0405311",
+      "rustSymbol": "is_runtime_active",
+      "kind": "function",
+      "bridgeModule": "runtime",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
+      "coreRustSymbol": "get_runtime"
+    },
+    {
+      "id": "b0a1036b892934c2",
+      "rustSymbol": "shutdown_runtime",
+      "kind": "function",
+      "bridgeModule": "runtime",
+      "unmappedReason": "CXX API-symmetry no-op; the shared LazyLock runtime has no public core shutdown operation and lives for the process lifetime."
+    },
+    {
+      "id": "7fcf8be2f8d9060d",
+      "rustSymbol": "CheckType",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "CheckType"
+    },
+    {
+      "id": "d085560129c0184c",
+      "rustSymbol": "EnbConfigResult",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "EnbConfigResult"
+    },
+    {
+      "id": "730a860079a4d20b",
+      "rustSymbol": "EnbResult",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "EnbResult"
+    },
+    {
+      "id": "d0636e436245da31",
+      "rustSymbol": "IssueSeverity",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "IssueSeverity"
+    },
+    {
+      "id": "8ebe0b5d73b2d5a5",
+      "rustSymbol": "TomlIssueSeverity",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "TomlIssueSeverity"
+    },
+    {
+      "id": "8cec4e60e88b3126",
+      "rustSymbol": "WryeSeverity",
+      "kind": "enum",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "WryeSeverity"
+    },
+    {
+      "id": "c2d88f97e660941f",
+      "rustSymbol": "ba2_get_snd_frmt_for_archive",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "scan_archive"
+    },
+    {
+      "id": "69804ddb991c9894",
+      "rustSymbol": "ba2_get_tex_dims_for_archive",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "scan_archive"
+    },
+    {
+      "id": "063d86c932c21210",
+      "rustSymbol": "ba2_get_tex_frmt_for_archive",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "scan_archive"
+    },
+    {
+      "id": "d0ad6e52f88a788d",
+      "rustSymbol": "ba2_get_xse_files_for_archive",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "scan_archive"
+    },
+    {
+      "id": "6f8055797c607b03",
+      "rustSymbol": "ba2_scan_archive_summary",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "scan_archive"
+    },
+    {
+      "id": "5fdd2c76ec1d62d2",
+      "rustSymbol": "crashgen_checker_check",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "check"
+    },
+    {
+      "id": "74f4720eb2c3d9d1",
+      "rustSymbol": "crashgen_checker_get_issues",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "check"
+    },
+    {
+      "id": "a0b7b74ca9eb8e4a",
+      "rustSymbol": "crashgen_orchestrator_check_summary",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "check"
+    },
+    {
+      "id": "f79d6ed4a4843260",
+      "rustSymbol": "crashgen_orchestrator_get_installed_plugins",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "check"
+    },
+    {
+      "id": "eec34db48beaf639",
+      "rustSymbol": "crashgen_orchestrator_get_issues",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "check"
+    },
+    {
+      "id": "3579592d25c9540d",
+      "rustSymbol": "enb_checker_validate",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "validate"
+    },
+    {
+      "id": "67d52d0e3e5715b7",
+      "rustSymbol": "ini_validator_detect_all_issues_for_root",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "detect_all_issues"
+    },
+    {
+      "id": "dad771a5ac5d7783",
+      "rustSymbol": "ini_validator_validate_inis",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "validate_inis"
+    },
+    {
+      "id": "164f9907a9bad5e6",
+      "rustSymbol": "integrity_run_all_checks",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "run_all_checks"
+    },
+    {
+      "id": "f476636ba97cee6c",
+      "rustSymbol": "run_game_setup_intake_from_user_settings",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "run"
+    },
+    {
+      "id": "ce2b902774c4ab1d",
+      "rustSymbol": "wrye_parse_html_rows",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "parse"
+    },
+    {
+      "id": "ba593c60f4921ab7",
+      "rustSymbol": "Ba2IssuesSummaryDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "BA2Issues"
+    },
+    {
+      "id": "f99d4f29385dda09",
+      "rustSymbol": "CrashgenCheckResultDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "check"
+    },
+    {
+      "id": "1403d85def1ae0ef",
+      "rustSymbol": "CrashgenReportSummaryDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "CrashgenReport"
+    },
+    {
+      "id": "bf1aa3d058515301",
+      "rustSymbol": "EnbValidationResultDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "EnbValidationResult"
+    },
+    {
+      "id": "17ae6c60e6c3bbd6",
+      "rustSymbol": "GameSetupIntakeDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "GameSetupIntakeResult"
+    },
+    {
+      "id": "6c105c01ea5f0d3c",
+      "rustSymbol": "GameSetupPathUpdateDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "GameSetupPathUpdate"
+    },
+    {
+      "id": "8fd138371890a42d",
+      "rustSymbol": "IniConfigIssueDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "ConfigIssue"
+    },
+    {
+      "id": "ec3568d08ff543ed",
+      "rustSymbol": "IntegrityCheckResultDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "IntegrityCheckResult"
+    },
+    {
+      "id": "61815dc13da0e187",
+      "rustSymbol": "TomlConfigIssueDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "TomlConfigIssue"
+    },
+    {
+      "id": "45d754712dfa50dc",
+      "rustSymbol": "WryeIssueRowDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "coreRustSymbol": "WryeIssue"
+    },
+    {
+      "id": "ec6f769e1fa773a7",
+      "rustSymbol": "AnalyzerErrorCode",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "AnalyzerErrorCode"
+    },
+    {
+      "id": "af3dafea3acc6f3c",
+      "rustSymbol": "AnalyzerKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "AnalyzerKind"
+    },
+    {
+      "id": "85ecdba27cb0e319",
+      "rustSymbol": "AutoscanReportPlacement",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "AutoscanReportPlacement"
+    },
+    {
+      "id": "dc625dd379172967",
+      "rustSymbol": "CrashSuspectFindingKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectFindingKind"
+    },
+    {
+      "id": "8d09ade750ccd944",
+      "rustSymbol": "CrashgenConfigLayout",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ConfigLayout"
+    },
+    {
+      "id": "ae5e2640e3a9f7bc",
+      "rustSymbol": "CrashgenExpectationOutcomeKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "OutcomeKind"
+    },
+    {
+      "id": "48978a1988cae0c4",
+      "rustSymbol": "CrashgenExpectationSeverity",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "RuleSeverity"
+    },
+    {
+      "id": "265e1c864e00bf37",
+      "rustSymbol": "FormIDFindingLookupReplyKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookupInMemoryReply"
+    },
+    {
+      "id": "fcec1e0fdd22e089",
+      "rustSymbol": "FormIDValueLookupStatus",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDValueLookupStatus"
+    },
+    {
+      "id": "961e055bf0a35267",
+      "rustSymbol": "ModGuidanceCriteriaKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ModSolutionCriteria"
+    },
+    {
+      "id": "1dd49731cac9d8b9",
+      "rustSymbol": "ModGuidanceMatchState",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceMatchState"
+    },
+    {
+      "id": "d8f7976d67cc2ff2",
+      "rustSymbol": "ScanRunContractDiscoverySource",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanDiscoverySource"
+    },
+    {
+      "id": "51ac768463d220fb",
+      "rustSymbol": "ScanRunContractEventKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Event"
+    },
+    {
+      "id": "2d58772196446cdf",
+      "rustSymbol": "ScanRunContractInfrastructureErrorStage",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "InfrastructureErrorStage"
+    },
+    {
+      "id": "d73ec2ef99cf2f5c",
+      "rustSymbol": "ScanRunContractLogDisposition",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LogDisposition"
+    },
+    {
+      "id": "0d5a50d174756fd5",
+      "rustSymbol": "ScanRunContractLogFailureStage",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LogFailureStage"
+    },
+    {
+      "id": "55062b4069b3a08c",
+      "rustSymbol": "ScanRunContractProgressPhase",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ScanProgressPhase"
+    },
+    {
+      "id": "5d861f1371811b6e",
+      "rustSymbol": "ScanRunContractResumeErrorKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ResumeErrorKind"
+    },
+    {
+      "id": "6fac94d2ef62d67d",
+      "rustSymbol": "ScanRunContractStatus",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanRunStatus"
+    },
+    {
+      "id": "4f8ff71acf6e2763",
+      "rustSymbol": "ScanRunDisplaySegmentKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_presentation",
+      "rustCrate": "classic-scan-presentation",
+      "coreRustSymbol": "DisplaySegment"
+    },
+    {
+      "id": "2a505bf704804de4",
+      "rustSymbol": "ScanRunDisplaySeverity",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_presentation",
+      "rustCrate": "classic-scan-presentation",
+      "coreRustSymbol": "DisplaySeverity"
+    },
+    {
+      "id": "17a9ae976a21c5f7",
+      "rustSymbol": "ScanRunGameId",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
+      "coreRustSymbol": "GameId"
+    },
+    {
+      "id": "db9a2cfb2c4ea16e",
+      "rustSymbol": "ScanRunInstalledYamlDataDiagnosticKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "InstalledYamlDataRunDiagnosticKind"
+    },
+    {
+      "id": "785fc3aab2cb7556",
+      "rustSymbol": "ScanRunInstalledYamlDataProvenance",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataProvenance"
+    },
+    {
+      "id": "48e45574328d0baf",
+      "rustSymbol": "ScanRunInstalledYamlDataRole",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataRole"
+    },
+    {
+      "id": "1ca5c72cad0943dd",
+      "rustSymbol": "ScanRunLocalIgnoreRecoveryDecision",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LocalIgnoreRecoveryDecision"
+    },
+    {
+      "id": "82770c04cc35ca65",
+      "rustSymbol": "ScanRunLocalIgnoreResetFailureStage",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LocalIgnoreResetFailureStage"
+    },
+    {
+      "id": "1ad54c3b19d79960",
+      "rustSymbol": "ScanRunLocalIgnoreYamlDataState",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LocalIgnoreRunState"
+    },
+    {
+      "id": "768db92e85831061",
+      "rustSymbol": "crash_suspect_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalyzer"
+    },
+    {
+      "id": "b2938d1534829ea4",
+      "rustSymbol": "crash_suspect_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalyzer"
+    },
+    {
+      "id": "a52417d5f9e83cc9",
+      "rustSymbol": "crash_suspect_analyzer_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalyzer"
+    },
+    {
+      "id": "50ad3eff99e57376",
+      "rustSymbol": "crashgen_settings_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalyzer"
+    },
+    {
+      "id": "6e3ae84672f1f96b",
+      "rustSymbol": "crashgen_settings_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalyzer"
+    },
+    {
+      "id": "65319264323580ea",
+      "rustSymbol": "crashgen_settings_analyzer_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalyzer"
+    },
+    {
+      "id": "997880f5a0bc006d",
+      "rustSymbol": "detect_crash_pattern",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LogParser"
+    },
+    {
+      "id": "57a72189be1829d2",
+      "rustSymbol": "detect_vr_log",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "detect_vr_log"
+    },
+    {
+      "id": "689dceccfd9be6f8",
+      "rustSymbol": "formid_finding_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalyzer"
+    },
+    {
+      "id": "7d25ad92f2c615d5",
+      "rustSymbol": "formid_finding_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalyzer"
+    },
+    {
+      "id": "6ea8c0bd04ed0292",
+      "rustSymbol": "formid_finding_analyzer_disabled_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalyzer"
+    },
+    {
+      "id": "404672c761345c3a",
+      "rustSymbol": "formid_finding_analyzer_in_memory_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalyzer"
+    },
+    {
+      "id": "fdc0f6289d855f5c",
+      "rustSymbol": "formid_finding_analyzer_sqlite_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalyzer"
+    },
+    {
+      "id": "01c3e73e182b287b",
+      "rustSymbol": "mod_guidance_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalyzer"
+    },
+    {
+      "id": "3ae13a1cf0a920a7",
+      "rustSymbol": "mod_guidance_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalyzer"
+    },
+    {
+      "id": "8e998a3a3c59e66b",
+      "rustSymbol": "mod_guidance_analyzer_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalyzer"
+    },
+    {
+      "id": "ded80043dbedb369",
+      "rustSymbol": "named_record_finding_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalyzer"
+    },
+    {
+      "id": "ee18a8096bfe511f",
+      "rustSymbol": "named_record_finding_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalyzer"
+    },
+    {
+      "id": "fed8112c3cf307c7",
+      "rustSymbol": "named_record_finding_analyzer_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalyzer"
+    },
+    {
+      "id": "21d3f385eae475d7",
+      "rustSymbol": "on_scan_run_event",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "unmappedReason": "Foreign C++ ScanRunObserver callback declaration used only to transport serialized Rust events across CXX; it is not a Rust core symbol."
+    },
+    {
+      "id": "a480a5d10a01a815",
+      "rustSymbol": "papyrus_analyze_full",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PapyrusAnalyzer"
+    },
+    {
+      "id": "a41132de3ba754ad",
+      "rustSymbol": "papyrus_analyzer_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PapyrusAnalyzer"
+    },
+    {
+      "id": "00b3615f572fe030",
+      "rustSymbol": "papyrus_check_updates",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PapyrusAnalyzer"
+    },
+    {
+      "id": "77d802abd118295b",
+      "rustSymbol": "papyrus_log_exists",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PapyrusAnalyzer"
+    },
+    {
+      "id": "db3f53b518f9a4f4",
+      "rustSymbol": "papyrus_reset",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PapyrusAnalyzer"
+    },
+    {
+      "id": "610a788c7852f628",
+      "rustSymbol": "papyrus_start_monitoring",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PapyrusAnalyzer"
+    },
+    {
+      "id": "aa6e69d7d60eb97b",
+      "rustSymbol": "plugin_evidence_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalyzer"
+    },
+    {
+      "id": "c7d2c667f19e6ea6",
+      "rustSymbol": "plugin_evidence_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalyzer"
+    },
+    {
+      "id": "f5cefbf986abfcbe",
+      "rustSymbol": "plugin_evidence_analyzer_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalyzer"
+    },
+    {
+      "id": "923b1638b9731c37",
+      "rustSymbol": "scan_run_cancellation_cancel",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Cancellation"
+    },
+    {
+      "id": "90e001f80354e716",
+      "rustSymbol": "scan_run_cancellation_is_cancelled",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Cancellation"
+    },
+    {
+      "id": "47ab0d08f55f9a74",
+      "rustSymbol": "scan_run_cancellation_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Cancellation"
+    },
+    {
+      "id": "3e200e21dc680fbe",
+      "rustSymbol": "scan_run_continuation_abandon",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanRunContinuation"
+    },
+    {
+      "id": "1473c74ad462f005",
+      "rustSymbol": "scan_run_continuation_resume",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanRunContinuation"
+    },
+    {
+      "id": "f1a23f880846dde0",
+      "rustSymbol": "scan_run_contract_execute",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "execute"
+    },
+    {
+      "id": "8b7e216f62dd5d3b",
+      "rustSymbol": "scan_run_contract_execution_has_continuation",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanRunContinuation"
+    },
+    {
+      "id": "bcba7f5d14da68c4",
+      "rustSymbol": "scan_run_contract_execution_take_continuation",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanRunContinuation"
+    },
+    {
+      "id": "db795bbb11e180e8",
+      "rustSymbol": "scan_run_contract_execution_take_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "RunResult"
+    },
+    {
+      "id": "e48cf5838f378baf",
+      "rustSymbol": "scan_run_infrastructure_error_stage_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "InfrastructureErrorStage"
+    },
+    {
+      "id": "78b3cc5fa73a4c33",
+      "rustSymbol": "scan_run_installed_yaml_data_diagnostic_kind_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "InstalledYamlDataRunDiagnosticKind"
+    },
+    {
+      "id": "dd0f5440c631a842",
+      "rustSymbol": "scan_run_installed_yaml_data_provenance_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InstalledYamlDataProvenance"
+    },
+    {
+      "id": "3e7dcba09e694224",
+      "rustSymbol": "scan_run_local_ignore_reset_failure_stage_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LocalIgnoreResetFailureStage"
+    },
+    {
+      "id": "e339f7882fe08cf9",
+      "rustSymbol": "scan_run_local_ignore_yaml_data_state_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LocalIgnoreRunState"
+    },
+    {
+      "id": "10d97d2dc9c9c401",
+      "rustSymbol": "scan_run_log_disposition_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LogDisposition"
+    },
+    {
+      "id": "594f2973e02fe0ce",
+      "rustSymbol": "scan_run_log_failure_stage_label",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LogFailureStage"
+    },
+    {
+      "id": "ff0c442b4af6143e",
+      "rustSymbol": "scan_run_request_standard",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Request"
+    },
+    {
+      "id": "76006ede9dfe9790",
+      "rustSymbol": "scan_run_request_standard_with_fcx",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Request"
+    },
+    {
+      "id": "8551cdd2dd6c4917",
+      "rustSymbol": "scan_run_request_targeted",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Request"
+    },
+    {
+      "id": "420c8577cd769536",
+      "rustSymbol": "scan_run_request_targeted_with_fcx",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Request"
+    },
+    {
+      "id": "771e00e31d2bd5c2",
+      "rustSymbol": "scan_run_unsolved_logs_leave_in_place",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "StandardUnsolvedLogsIntent"
+    },
+    {
+      "id": "8aeac5013aa69e9b",
+      "rustSymbol": "scan_run_unsolved_logs_move_to_configured_or_default",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "StandardUnsolvedLogsIntent"
+    },
+    {
+      "id": "02f4a2242c9b36f5",
+      "rustSymbol": "scan_run_unsolved_logs_move_to_custom",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "StandardUnsolvedLogsIntent"
+    },
+    {
+      "id": "d4db63b323df9d90",
+      "rustSymbol": "CxxCrashSuspectAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalyzer"
+    },
+    {
+      "id": "4703b74efa2672a7",
+      "rustSymbol": "CxxCrashgenSettingsAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalyzer"
+    },
+    {
+      "id": "bf67a6d66d028b53",
+      "rustSymbol": "CxxFormIDFindingAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalyzer"
+    },
+    {
+      "id": "22546314349a5a8a",
+      "rustSymbol": "CxxModGuidanceAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalyzer"
+    },
+    {
+      "id": "a3bba0a791a308d8",
+      "rustSymbol": "CxxNamedRecordFindingAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalyzer"
+    },
+    {
+      "id": "19f1b50474db40e6",
+      "rustSymbol": "CxxPapyrusAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PapyrusAnalyzer"
+    },
+    {
+      "id": "19fef74c8d0d7844",
+      "rustSymbol": "CxxPluginEvidenceAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalyzer"
+    },
+    {
+      "id": "7e171291b252d3dd",
+      "rustSymbol": "ScanRunCancellation",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Cancellation"
+    },
+    {
+      "id": "841c557115efd105",
+      "rustSymbol": "ScanRunContinuation",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanRunContinuation"
+    },
+    {
+      "id": "20927c22fed83137",
+      "rustSymbol": "ScanRunContractExecution",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "RunResult"
+    },
+    {
+      "id": "9d43dc52d6749684",
+      "rustSymbol": "ScanRunObserver",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "unmappedReason": "Foreign C++ observer interface borrowed by the CXX adapter; the Rust core Observer trait is implemented by a separate bridge-local adapter, not by this C++ type."
+    },
+    {
+      "id": "a899cfded87e21d4",
+      "rustSymbol": "ScanRunRequest",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Request"
+    },
+    {
+      "id": "4f70a780c6f389a6",
+      "rustSymbol": "ScanRunUnsolvedLogs",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "StandardUnsolvedLogsIntent"
+    },
+    {
+      "id": "7460d2a3d9eb44fb",
+      "rustSymbol": "AnalyzerErrorDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "AnalyzerError"
+    },
+    {
+      "id": "6b5d8730417eec6c",
+      "rustSymbol": "CrashSuspectAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalysisResult"
+    },
+    {
+      "id": "41b540d0979d96c6",
+      "rustSymbol": "CrashSuspectAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalysisInput"
+    },
+    {
+      "id": "7fff3b0fc48c72c8",
+      "rustSymbol": "CrashSuspectAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalysisResult"
+    },
+    {
+      "id": "59985695352b9928",
+      "rustSymbol": "CrashSuspectAnalyzerConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalyzer"
+    },
+    {
+      "id": "4fb21f2411542b83",
+      "rustSymbol": "CrashSuspectAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectAnalyzer"
+    },
+    {
+      "id": "4d08241bfb685ecb",
+      "rustSymbol": "CrashSuspectFindingDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashSuspectFinding"
+    },
+    {
+      "id": "762ec9ed13896eb0",
+      "rustSymbol": "CrashSuspectMainErrorRuleDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "SuspectErrorRule"
+    },
+    {
+      "id": "f8a00f8f64f325b5",
+      "rustSymbol": "CrashSuspectStackCountRuleDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "SuspectStackCountRule"
+    },
+    {
+      "id": "e7da5285f6b077f8",
+      "rustSymbol": "CrashSuspectStackRuleDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "SuspectStackRule"
+    },
+    {
+      "id": "9b4543106d933b14",
+      "rustSymbol": "CrashgenExpectationOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenExpectationOutcome"
+    },
+    {
+      "id": "7e45bc7ac1be0f8e",
+      "rustSymbol": "CrashgenSettingDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "CrashgenSettingsSnapshot"
+    },
+    {
+      "id": "ce187e85df00ac6b",
+      "rustSymbol": "CrashgenSettingsAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalysisResult"
+    },
+    {
+      "id": "6d94354720a39a71",
+      "rustSymbol": "CrashgenSettingsAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalysisInput"
+    },
+    {
+      "id": "7fa662ff3e46b0c5",
+      "rustSymbol": "CrashgenSettingsAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalysisResult"
+    },
+    {
+      "id": "2b468bc86eb00370",
+      "rustSymbol": "CrashgenSettingsAnalyzerConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalyzer"
+    },
+    {
+      "id": "d75f50d970f14b4d",
+      "rustSymbol": "CrashgenSettingsAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashgenSettingsAnalyzer"
+    },
+    {
+      "id": "6944744ebbb7e4de",
+      "rustSymbol": "DisabledSettingNoticeDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "DisabledSettingNotice"
+    },
+    {
+      "id": "0ea85cd7a4b6a5fb",
+      "rustSymbol": "FcxIssueDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ConfigIssue"
+    },
+    {
+      "id": "6e77a9e1d9541360",
+      "rustSymbol": "FormIDFindingAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalysisResult"
+    },
+    {
+      "id": "48f6fbdd9235bd22",
+      "rustSymbol": "FormIDFindingAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalysisInput"
+    },
+    {
+      "id": "a3856cf8f6be5926",
+      "rustSymbol": "FormIDFindingAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalysisResult"
+    },
+    {
+      "id": "172a534212badf25",
+      "rustSymbol": "FormIDFindingAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFindingAnalyzer"
+    },
+    {
+      "id": "c3aea1f2c53cfc93",
+      "rustSymbol": "FormIDFindingDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDFinding"
+    },
+    {
+      "id": "70f4c969d985e22e",
+      "rustSymbol": "FormIDFindingLookupEntryDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "coreRustSymbol": "FormIdValueLookupEntry"
+    },
+    {
+      "id": "16758b137ae088f8",
+      "rustSymbol": "FormIDPluginDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "FormIDPlugin"
+    },
+    {
+      "id": "fe3157d10e6b8468",
+      "rustSymbol": "ImportantModGuidanceDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ImportantModGuidance"
+    },
+    {
+      "id": "69b1449c33eeaab1",
+      "rustSymbol": "ModConflictGuidanceDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModConflictGuidance"
+    },
+    {
+      "id": "c6b830591749db47",
+      "rustSymbol": "ModGuidanceAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalysisResult"
+    },
+    {
+      "id": "508d6e3b22ee63e7",
+      "rustSymbol": "ModGuidanceAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalysisInput"
+    },
+    {
+      "id": "46a48b1b36ce4822",
+      "rustSymbol": "ModGuidanceAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalysisResult"
+    },
+    {
+      "id": "f3580339444423d5",
+      "rustSymbol": "ModGuidanceAnalyzerConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalyzer"
+    },
+    {
+      "id": "c80002d8a3e7b3a7",
+      "rustSymbol": "ModGuidanceAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalyzer"
+    },
+    {
+      "id": "45cf99e3f023bb5a",
+      "rustSymbol": "ModGuidanceConflictConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ModConflictEntry"
+    },
+    {
+      "id": "6aa94f829e72f06c",
+      "rustSymbol": "ModGuidanceImportantModConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "CoreModEntry"
+    },
+    {
+      "id": "ed60b8f11bb8599e",
+      "rustSymbol": "ModGuidancePluginDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModGuidanceAnalysisInput"
+    },
+    {
+      "id": "6375a8f52b907c74",
+      "rustSymbol": "ModGuidanceSolutionConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "ModSolutionEntry"
+    },
+    {
+      "id": "847e1a3f99e995fc",
+      "rustSymbol": "ModSolutionGuidanceDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ModSolutionGuidance"
+    },
+    {
+      "id": "f8945bac678ecaa0",
+      "rustSymbol": "NamedRecordFindingAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalysisResult"
+    },
+    {
+      "id": "3d55e037871f72a3",
+      "rustSymbol": "NamedRecordFindingAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalysisInput"
+    },
+    {
+      "id": "c37a62fb49f26295",
+      "rustSymbol": "NamedRecordFindingAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalysisResult"
+    },
+    {
+      "id": "fea1f9e52eb0eb49",
+      "rustSymbol": "NamedRecordFindingAnalyzerConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalyzer"
+    },
+    {
+      "id": "156eb8732e58b00d",
+      "rustSymbol": "NamedRecordFindingAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFindingAnalyzer"
+    },
+    {
+      "id": "2b0ac3bc94081e21",
+      "rustSymbol": "NamedRecordFindingDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "NamedRecordFinding"
+    },
+    {
+      "id": "668e1b029522e8b3",
+      "rustSymbol": "PapyrusStatsDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PapyrusStats"
+    },
+    {
+      "id": "9c82ff3b30e1c2d1",
+      "rustSymbol": "PluginEvidenceAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalysisResult"
+    },
+    {
+      "id": "997085eb0ecef6fe",
+      "rustSymbol": "PluginEvidenceAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalysisInput"
+    },
+    {
+      "id": "94a5ec11a8b1a70b",
+      "rustSymbol": "PluginEvidenceAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalysisResult"
+    },
+    {
+      "id": "11d94ca071c64892",
+      "rustSymbol": "PluginEvidenceAnalyzerConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalyzer"
+    },
+    {
+      "id": "5aa7722a75cca7e7",
+      "rustSymbol": "PluginEvidenceAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidenceAnalyzer"
+    },
+    {
+      "id": "54f9de9ccb9d0060",
+      "rustSymbol": "PluginEvidenceDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "PluginEvidence"
+    },
+    {
+      "id": "7f21c3f07683bec8",
+      "rustSymbol": "ScanRunConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Configuration"
+    },
+    {
+      "id": "2188ae79d262bd02",
+      "rustSymbol": "ScanRunContractDiscoveryResult",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanDiscoveryResult"
+    },
+    {
+      "id": "8fc4ea858ed62e22",
+      "rustSymbol": "ScanRunContractEvent",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "Event"
+    },
+    {
+      "id": "24f1a81c7250876f",
+      "rustSymbol": "ScanRunContractExecutionResult",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "RunResult"
+    },
+    {
+      "id": "28360bc4ad49662b",
+      "rustSymbol": "ScanRunContractInfrastructureError",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "InfrastructureError"
+    },
+    {
+      "id": "8d16b68e65cb409c",
+      "rustSymbol": "ScanRunContractLogFailure",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LogFailure"
+    },
+    {
+      "id": "893c36f80ef68c51",
+      "rustSymbol": "ScanRunContractLogResult",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LogResult"
+    },
+    {
+      "id": "6f699e1d4081f7e3",
+      "rustSymbol": "ScanRunContractRejectedInput",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanRejectedInput"
+    },
+    {
+      "id": "70d603c217c3cd76",
+      "rustSymbol": "ScanRunContractResumeError",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "ResumeError"
+    },
+    {
+      "id": "0d53fcc05979fa65",
+      "rustSymbol": "ScanRunContractRunResult",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "RunResult"
+    },
+    {
+      "id": "a7294d8a252b0b2e",
+      "rustSymbol": "ScanRunContractSetupResult",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanSetupResult"
+    },
+    {
+      "id": "95a8829b439c6f88",
+      "rustSymbol": "ScanRunDisplayLine",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_presentation",
+      "rustCrate": "classic-scan-presentation",
+      "coreRustSymbol": "DisplayLine"
+    },
+    {
+      "id": "96859cdfda9f3705",
+      "rustSymbol": "ScanRunDisplaySegment",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_presentation",
+      "rustCrate": "classic-scan-presentation",
+      "coreRustSymbol": "DisplaySegment"
+    },
+    {
+      "id": "bed961986b7dfb6e",
+      "rustSymbol": "ScanRunInspectedYamlDataFileDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "InspectedYamlDataFile"
+    },
+    {
+      "id": "bf911e575ada1446",
+      "rustSymbol": "ScanRunInstalledYamlDataDiagnosticDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "InstalledYamlDataRunDiagnostic"
+    },
+    {
+      "id": "453cd25252d2362f",
+      "rustSymbol": "ScanRunInstalledYamlDataRunDataDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "InstalledYamlDataRunData"
+    },
+    {
+      "id": "e0e0fec08acd4c5b",
+      "rustSymbol": "ScanRunLocalIgnoreResetRunDataDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "LocalIgnoreResetRunData"
+    },
+    {
+      "id": "92ccebfd8d784717",
+      "rustSymbol": "ScanRunRecoveryDecisionDescription",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_presentation",
+      "rustCrate": "classic-scan-presentation",
+      "coreRustSymbol": "RecoveryDecisionDescription"
+    },
+    {
+      "id": "54164d0fad3f13e3",
+      "rustSymbol": "ScanRunRecoveryPrompt",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scan_presentation",
+      "rustCrate": "classic-scan-presentation",
+      "coreRustSymbol": "RecoveryPrompt"
+    },
+    {
+      "id": "9b28bab3cd0970b5",
+      "rustSymbol": "ScanRunSetupCheckDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanSetupCheck"
+    },
+    {
+      "id": "f2145ca368ac9cbd",
+      "rustSymbol": "ScanRunSetupContextDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanSetupContext"
+    },
+    {
+      "id": "8ce956fd6e9c6003",
+      "rustSymbol": "ScanRunSetupPathUpdateDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "CrashLogScanSetupPathUpdate"
+    },
+    {
+      "id": "f4fe5d9760a8767f",
+      "rustSymbol": "ScanRunStandardSourceDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "StandardCrashLogScanSource"
+    },
+    {
+      "id": "596a3783149095bf",
+      "rustSymbol": "ScanRunTargetedSourceDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "TargetedCrashLogScanSource"
+    },
+    {
+      "id": "cce056c122024147",
+      "rustSymbol": "ScanRunYamlDataContentIdentityDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "coreRustSymbol": "YamlDataContentIdentity"
+    },
+    {
+      "id": "944ab5475ec76ef8",
+      "rustSymbol": "YamlFile",
+      "kind": "enum",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "YamlFile"
+    },
+    {
+      "id": "0b5a4ad5368e8a02",
+      "rustSymbol": "settings_cache_keys",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "cache_keys"
+    },
+    {
+      "id": "8157906174d19c79",
+      "rustSymbol": "settings_cache_size",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "cache_size"
+    },
+    {
+      "id": "a514d3953ef4f930",
+      "rustSymbol": "settings_cache_stats",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "cache_stats"
+    },
+    {
+      "id": "311251adf834665c",
+      "rustSymbol": "settings_clear_cache",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "clear_cache"
+    },
+    {
+      "id": "e31a74d851e93942",
+      "rustSymbol": "settings_coerce_value",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "coerce_setting_value"
+    },
+    {
+      "id": "4564cea4680b2678",
+      "rustSymbol": "settings_invalidate",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "invalidate"
+    },
+    {
+      "id": "8ae656d87f7c75d9",
+      "rustSymbol": "settings_is_cached",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "is_cached"
+    },
+    {
+      "id": "ae510a6e96cf2b0e",
+      "rustSymbol": "settings_load_async_blocking",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "load_settings_async"
+    },
+    {
+      "id": "84fee06859b0a2af",
+      "rustSymbol": "settings_load_batch_async_blocking",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "load_batch_async"
+    },
+    {
+      "id": "ccf2092ef6a7af97",
+      "rustSymbol": "settings_load_batch_sync",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "load_batch_sync"
+    },
+    {
+      "id": "8a23d6d46fbc41e8",
+      "rustSymbol": "settings_load_sync",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "load_settings_sync"
+    },
+    {
+      "id": "914acb0d0c76351f",
+      "rustSymbol": "settings_reset_cache_stats",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "reset_cache_stats"
+    },
+    {
+      "id": "727754cf675669f7",
+      "rustSymbol": "settings_validate_value",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "validate_setting_value"
+    },
+    {
+      "id": "79201417da3a7764",
+      "rustSymbol": "user_settings_apply_migration",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "apply"
+    },
+    {
+      "id": "e076f2617c474b29",
+      "rustSymbol": "user_settings_commit_bootstrap",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "commit"
+    },
+    {
+      "id": "38462bb98e2fb110",
+      "rustSymbol": "user_settings_commit_frontend_geometry_transition",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "commit_frontend_geometry_transition"
+    },
+    {
+      "id": "e2ad1a7f27fb5f5a",
+      "rustSymbol": "user_settings_commit_update",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "commit"
+    },
+    {
+      "id": "c420901386dcb35c",
+      "rustSymbol": "user_settings_gui_published_defaults",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "published_defaults"
+    },
+    {
+      "id": "3ae5a012f30378dd",
+      "rustSymbol": "user_settings_import_legacy_tui_state",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "import_legacy_tui_state"
+    },
+    {
+      "id": "b8852a8a7ccc1741",
+      "rustSymbol": "user_settings_legacy_tui_import_outcome",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "LegacyTuiStateImportOutcome"
+    },
+    {
+      "id": "684181a2023cb151",
+      "rustSymbol": "user_settings_migration_apply_outcome",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsMigrationApplyOutcome"
+    },
+    {
+      "id": "142913a8b27dd2d5",
+      "rustSymbol": "user_settings_open_crash_log_scan_settings",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "CrashLogScanSettings"
+    },
+    {
+      "id": "8a63df003627ca8b",
+      "rustSymbol": "user_settings_open_frontend_state",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "FrontendState"
+    },
+    {
+      "id": "be7beecfe544998c",
+      "rustSymbol": "user_settings_open_game_setup_settings",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "GameSetupSettings"
+    },
+    {
+      "id": "99865408ab0b4232",
+      "rustSymbol": "user_settings_open_gui_settings",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettings"
+    },
+    {
+      "id": "ba33f05b060305af",
+      "rustSymbol": "user_settings_open_update_preferences",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UpdatePreferences"
+    },
+    {
+      "id": "ceb7da066f8d0590",
+      "rustSymbol": "user_settings_plan_migration",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "plan_migration"
+    },
+    {
+      "id": "f114c6437912ff97",
+      "rustSymbol": "user_settings_preview_bootstrap",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "preview_bootstrap"
+    },
+    {
+      "id": "03a8fd971064fde1",
+      "rustSymbol": "user_settings_preview_update",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "preview_update"
+    },
+    {
+      "id": "08917ee3d237e40b",
+      "rustSymbol": "user_settings_restore_legacy_tui_import",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "restore"
+    },
+    {
+      "id": "d1781f505576ec4d",
+      "rustSymbol": "user_settings_restore_migration",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "restore"
+    },
+    {
+      "id": "c4407f3d73622218",
+      "rustSymbol": "user_settings_reverse_migration_plan",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "reverse_in_memory"
+    },
+    {
+      "id": "867131bd442e6121",
+      "rustSymbol": "yaml_file_as_str",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "as_str"
+    },
+    {
+      "id": "580f6717bd5ba7bb",
+      "rustSymbol": "yaml_file_description",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "description"
+    },
+    {
+      "id": "6d0d03498a2bb1b0",
+      "rustSymbol": "yaml_ops_cache_size",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "yaml_cache_stats"
+    },
+    {
+      "id": "219c62a477ca8380",
+      "rustSymbol": "yaml_ops_cache_stats",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "yaml_cache_stats"
+    },
+    {
+      "id": "5896777bf0f69809",
+      "rustSymbol": "yaml_ops_clear_cache",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "clear_cache"
+    },
+    {
+      "id": "dbdde37b38282be1",
+      "rustSymbol": "yaml_ops_dump",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "dump_yaml"
+    },
+    {
+      "id": "c269a555b9dde1d8",
+      "rustSymbol": "yaml_ops_get_setting_value",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "get_setting"
+    },
+    {
+      "id": "b2f3b4c4f10970ef",
+      "rustSymbol": "yaml_ops_get_string",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "get_string_value"
+    },
+    {
+      "id": "5decd278e9b58daf",
+      "rustSymbol": "yaml_ops_get_vec",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "get_vec_value"
+    },
+    {
+      "id": "96ca042960ccb2c9",
+      "rustSymbol": "yaml_ops_has_document",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "YamlOperations"
+    },
+    {
+      "id": "f457a8a59811bca3",
+      "rustSymbol": "yaml_ops_load_file",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "load_yaml_file"
+    },
+    {
+      "id": "3e9ed67ac8950a25",
+      "rustSymbol": "yaml_ops_new",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "new"
+    },
+    {
+      "id": "3ebf1fc5db56922e",
+      "rustSymbol": "yaml_ops_parse",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "parse_yaml"
+    },
+    {
+      "id": "94a2e92d425a7c4b",
+      "rustSymbol": "yaml_ops_save_file",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "save_yaml_file"
+    },
+    {
+      "id": "4138a9eeef265811",
+      "rustSymbol": "yaml_ops_set_bool_setting",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "set_setting"
+    },
+    {
+      "id": "1794e03a2a355763",
+      "rustSymbol": "yaml_ops_set_integer_setting",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "set_setting"
+    },
+    {
+      "id": "1949aadb1704dc02",
+      "rustSymbol": "yaml_ops_set_string_setting",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "set_setting"
+    },
+    {
+      "id": "377caa356b71e76d",
+      "rustSymbol": "yaml_ops_set_vec_setting",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "set_setting"
+    },
+    {
+      "id": "7badbce78c203270",
+      "rustSymbol": "LegacyTuiStateImportHandle",
+      "kind": "opaque",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "import_legacy_tui_state"
+    },
+    {
+      "id": "630aada96fe224e1",
+      "rustSymbol": "UserSettingsMigrationApplyHandle",
+      "kind": "opaque",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "apply"
+    },
+    {
+      "id": "4c363ee3786a32b3",
+      "rustSymbol": "YamlOps",
+      "kind": "opaque",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "YamlOperations"
+    },
+    {
+      "id": "17d1eef26108ac8d",
+      "rustSymbol": "CrashLogScanSettingsDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "CrashLogScanSettings"
+    },
+    {
+      "id": "af22cdd14c9a5cf1",
+      "rustSymbol": "FormIdDatabasePathDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "CrashLogScanSettings"
+    },
+    {
+      "id": "ee10cbce2e652a9a",
+      "rustSymbol": "FrontendStateDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "FrontendState"
+    },
+    {
+      "id": "5bf9e83ee7c33813",
+      "rustSymbol": "GameSetupSettingsDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "GameSetupSettings"
+    },
+    {
+      "id": "6d15af291eab196a",
+      "rustSymbol": "GuiSettingsSnapshotDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettings"
+    },
+    {
+      "id": "b91ef2da139516c2",
+      "rustSymbol": "LegacyTuiStateImportOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "LegacyTuiStateImportOutcome"
+    },
+    {
+      "id": "1b78824669cf8026",
+      "rustSymbol": "LegacyTuiStateImportRestoreOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "LegacyTuiStateImportRestoreOutcome"
+    },
+    {
+      "id": "310d1c205c55a783",
+      "rustSymbol": "SettingsCacheStats",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "CacheStats"
+    },
+    {
+      "id": "f78d79a6ed011c75",
+      "rustSymbol": "SettingsCoercedValue",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "CoercedValue"
+    },
+    {
+      "id": "615d61776d653242",
+      "rustSymbol": "UpdatePreferencesDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UpdatePreferences"
+    },
+    {
+      "id": "54e7a4cc156c5504",
+      "rustSymbol": "UserSettingsCommitResultDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsCommitOutcome"
+    },
+    {
+      "id": "0b2551f3acc13938",
+      "rustSymbol": "UserSettingsDiagnosticDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "Diagnostic"
+    },
+    {
+      "id": "9d40cb5a9aea78c0",
+      "rustSymbol": "UserSettingsMigrationApplyOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsMigrationApplyOutcome"
+    },
+    {
+      "id": "c7e58b7da3dde86d",
+      "rustSymbol": "UserSettingsMigrationChangeDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "MigrationChange"
+    },
+    {
+      "id": "45e78cb86f84aa12",
+      "rustSymbol": "UserSettingsMigrationPlanningOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "MigrationPlanningOutcome"
+    },
+    {
+      "id": "351a1f899d3760aa",
+      "rustSymbol": "UserSettingsMigrationReceiptDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsMigrationReceipt"
+    },
+    {
+      "id": "96a863c46ca1a913",
+      "rustSymbol": "UserSettingsMigrationRestoreOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsMigrationRestoreOutcome"
+    },
+    {
+      "id": "1a848f887399dc55",
+      "rustSymbol": "UserSettingsUpdateDiagnosticDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UpdateDiagnostic"
+    },
+    {
+      "id": "3aa44f3905210d92",
+      "rustSymbol": "UserSettingsUpdateDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsUpdate"
+    },
+    {
+      "id": "2d703c9e9dfcfbde",
+      "rustSymbol": "UserSettingsUpdateFieldDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsUpdateField"
+    },
+    {
+      "id": "8e77def1f30afb1a",
+      "rustSymbol": "UserSettingsUpdatePreviewDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsUpdatePreview"
+    },
+    {
+      "id": "5893592284b575c4",
+      "rustSymbol": "UserSettingsWindowGeometryUpdateDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "UserSettingsUpdate"
+    },
+    {
+      "id": "519937ab9742360f",
+      "rustSymbol": "WindowGeometryDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "coreRustSymbol": "WindowGeometry"
+    },
+    {
+      "id": "2aebfbea63f0f869",
+      "rustSymbol": "YamlCacheStatsDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "YamlCacheStats"
+    },
+    {
+      "id": "24c217dbe9791c8b",
+      "rustSymbol": "YamlValue",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "ownerModule": "settings",
+      "rustCrate": "classic-settings-core",
+      "coreRustSymbol": "get_setting"
+    },
+    {
+      "id": "d04a85fb7225176b",
+      "rustSymbol": "GameId",
+      "kind": "enum",
+      "bridgeModule": "shared",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
+      "coreRustSymbol": "GameId"
+    },
+    {
+      "id": "e5c87d8b488cc983",
+      "rustSymbol": "game_id_as_str",
+      "kind": "function",
+      "bridgeModule": "shared",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
+      "coreRustSymbol": "as_str"
+    },
+    {
+      "id": "43170371baf7eb95",
+      "rustSymbol": "string_map_contains",
+      "kind": "function",
+      "bridgeModule": "types",
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringMap transport wrapper; no project Rust core symbol owns this helper."
+    },
+    {
+      "id": "728a8c257cb744a0",
+      "rustSymbol": "string_map_get",
+      "kind": "function",
+      "bridgeModule": "types",
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringMap transport wrapper; no project Rust core symbol owns this helper."
+    },
+    {
+      "id": "081d894ab034a74e",
+      "rustSymbol": "string_map_is_empty",
+      "kind": "function",
+      "bridgeModule": "types",
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringMap transport wrapper; no project Rust core symbol owns this helper."
+    },
+    {
+      "id": "a69eaec534143467",
+      "rustSymbol": "string_map_keys",
+      "kind": "function",
+      "bridgeModule": "types",
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringMap transport wrapper; no project Rust core symbol owns this helper."
+    },
+    {
+      "id": "ad342c1d98c14d3e",
+      "rustSymbol": "string_map_len",
+      "kind": "function",
+      "bridgeModule": "types",
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringMap transport wrapper; no project Rust core symbol owns this helper."
+    },
+    {
+      "id": "f05b307ac6ad388e",
+      "rustSymbol": "string_map_values",
+      "kind": "function",
+      "bridgeModule": "types",
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringMap transport wrapper; no project Rust core symbol owns this helper."
+    },
+    {
+      "id": "4d2f2f96139b81a4",
+      "rustSymbol": "string_vec_map_contains",
+      "kind": "function",
+      "bridgeModule": "types",
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringVecMap transport wrapper; no project Rust core symbol owns this helper."
+    },
+    {
+      "id": "759e3005b388a292",
+      "rustSymbol": "string_vec_map_get",
+      "kind": "function",
+      "bridgeModule": "types",
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringVecMap transport wrapper; no project Rust core symbol owns this helper."
+    },
+    {
+      "id": "4a274b7e62581001",
+      "rustSymbol": "string_vec_map_is_empty",
+      "kind": "function",
+      "bridgeModule": "types",
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringVecMap transport wrapper; no project Rust core symbol owns this helper."
+    },
+    {
+      "id": "0784638d48d0218e",
+      "rustSymbol": "string_vec_map_keys",
+      "kind": "function",
+      "bridgeModule": "types",
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringVecMap transport wrapper; no project Rust core symbol owns this helper."
+    },
+    {
+      "id": "348e54bedb9a7f34",
+      "rustSymbol": "string_vec_map_len",
+      "kind": "function",
+      "bridgeModule": "types",
+      "unmappedReason": "CXX-only accessor for the bridge-owned StringVecMap transport wrapper; no project Rust core symbol owns this helper."
+    },
+    {
+      "id": "ab070ea9a79b012d",
+      "rustSymbol": "StringMap",
+      "kind": "opaque",
+      "bridgeModule": "types",
+      "unmappedReason": "CXX-only opaque wrapper for IndexMap<String, String>; no project Rust core type owns this transport."
+    },
+    {
+      "id": "0f279da34178477c",
+      "rustSymbol": "StringVecMap",
+      "kind": "opaque",
+      "bridgeModule": "types",
+      "unmappedReason": "CXX-only opaque wrapper for IndexMap<String, Vec<String>>; no project Rust core type owns this transport."
+    },
+    {
+      "id": "20888c90002f9464",
+      "rustSymbol": "check_app_notification",
+      "kind": "function",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "check_app_notification"
+    },
+    {
+      "id": "5b0f082531a28c27",
+      "rustSymbol": "github_check_for_updates",
+      "kind": "function",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "get_latest_release"
+    },
+    {
+      "id": "db4d594c980a264a",
+      "rustSymbol": "github_has_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "has_update"
+    },
+    {
+      "id": "0eeee967af4cfa2d",
+      "rustSymbol": "yaml_apply_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "apply_yaml_update_with_decision"
+    },
+    {
+      "id": "ce26959df3d010dd",
+      "rustSymbol": "yaml_check_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "check_yaml_update"
+    },
+    {
+      "id": "fea7ac727c06be80",
+      "rustSymbol": "yaml_data_apply_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "apply_yaml_data_update_with_decision"
+    },
+    {
+      "id": "6332111bd05c50fe",
+      "rustSymbol": "yaml_data_check_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "check_yaml_data_update"
+    },
+    {
+      "id": "621b9554c0305916",
+      "rustSymbol": "yaml_data_rollback_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "rollback_yaml_data_update"
+    },
+    {
+      "id": "9b1acfc60be56622",
+      "rustSymbol": "yaml_rollback_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "rollback_yaml_update"
+    },
+    {
+      "id": "f0ae26428d3c795b",
+      "rustSymbol": "ApprovedUpdateDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "ApprovedUpdate"
+    },
+    {
+      "id": "0fd15da635276348",
+      "rustSymbol": "NotificationStatusDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "NotificationStatus"
+    },
+    {
+      "id": "fdf05d86cfb41258",
+      "rustSymbol": "UpdateCheckResult",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "GithubRelease"
+    },
+    {
+      "id": "992cf44bfb2981ed",
+      "rustSymbol": "YamlApplyRequestDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "apply_yaml_update_with_decision"
+    },
+    {
+      "id": "8aef2c1cfc7c97cf",
+      "rustSymbol": "YamlClientSchemaEntryDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "ClientSchemaEntry"
+    },
+    {
+      "id": "c7d8aa1ee5aed27e",
+      "rustSymbol": "YamlRollbackOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "RollbackOutcome"
+    },
+    {
+      "id": "6e14533e9d595fd3",
+      "rustSymbol": "YamlRollbackReportDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "rollback_yaml_data_update"
+    },
+    {
+      "id": "ee8abce557bf4560",
+      "rustSymbol": "YamlUpdateFileDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "YamlManifestFile"
+    },
+    {
+      "id": "c77712b2140e1ebe",
+      "rustSymbol": "YamlUpdateFileOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "FileInstallOutcome"
+    },
+    {
+      "id": "7d9f8579b4faec8a",
+      "rustSymbol": "YamlUpdateReportDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "YamlUpdateReport"
+    },
+    {
+      "id": "10e249f28357e5aa",
+      "rustSymbol": "YamlUpdateStatusDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "YamlUpdateStatus"
+    },
+    {
+      "id": "b44331b1502123ea",
+      "rustSymbol": "Fallout4Version",
+      "kind": "enum",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "Fallout4Version"
+    },
+    {
+      "id": "5dae9f5dc26da915",
+      "rustSymbol": "fallout4_version_as_str",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "as_str"
+    },
+    {
+      "id": "3a21b9406bb4c3cf",
+      "rustSymbol": "fallout4_version_docs_folder_name",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "docs_folder_name"
+    },
+    {
+      "id": "3dfc84f544e66a6b",
+      "rustSymbol": "fallout4_version_exe_name",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "exe_name"
+    },
+    {
+      "id": "48a6955582f0fca2",
+      "rustSymbol": "fallout4_version_is_standard",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "is_standard"
+    },
+    {
+      "id": "e8b952340bdccfbf",
+      "rustSymbol": "fallout4_version_is_vr",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "is_vr"
+    },
+    {
+      "id": "6ae0917b1c2a9661",
+      "rustSymbol": "fallout4_version_registry_id",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "registry_id"
+    },
+    {
+      "id": "9c9e99ae498e0e45",
+      "rustSymbol": "fallout4_version_steam_app_id",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "steam_app_id"
+    },
+    {
+      "id": "76de962f36a6993c",
+      "rustSymbol": "is_null_version",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "NULL_VERSION"
+    },
+    {
+      "id": "9d82340dd1a34d6b",
+      "rustSymbol": "parse_game_version",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "parse"
+    },
+    {
+      "id": "c982b74740f8ee3d",
+      "rustSymbol": "version_registry_get_all_count",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_all"
+    },
+    {
+      "id": "3837aef1f9dcf5d3",
+      "rustSymbol": "version_registry_get_all_for_game",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_all"
+    },
+    {
+      "id": "adebe347a211dda5",
+      "rustSymbol": "version_registry_get_all_ids",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_all"
+    },
+    {
+      "id": "931c3651f7130049",
+      "rustSymbol": "version_registry_get_by_id",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_by_id"
+    },
+    {
+      "id": "a2cca2c61a1dfd3a",
+      "rustSymbol": "version_registry_get_crashgen_config",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_crashgen_for_version"
+    },
+    {
+      "id": "768bf40c78fc5667",
+      "rustSymbol": "version_registry_get_crashgen_configs",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "get_crashgen_versions"
+    },
+    {
+      "id": "c9980a87fd7f20d4",
+      "rustSymbol": "version_registry_get_xse_config",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "XseConfig"
+    },
+    {
+      "id": "647471140dada0d8",
+      "rustSymbol": "version_registry_match_version",
+      "kind": "function",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "match_version"
+    },
+    {
+      "id": "a3896f08d956320e",
+      "rustSymbol": "CrashgenConfigDto",
+      "kind": "struct",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "CrashgenConfig"
+    },
+    {
+      "id": "69f123ef2717bdbe",
+      "rustSymbol": "GameVersionDto",
+      "kind": "struct",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "GameVersion"
+    },
+    {
+      "id": "008b083968da62f2",
+      "rustSymbol": "MatchResultDto",
+      "kind": "struct",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "MatchResult"
+    },
+    {
+      "id": "aa5ac3996d1f24e9",
+      "rustSymbol": "VersionInfoDto",
+      "kind": "struct",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "VersionInfo"
+    },
+    {
+      "id": "6e53840a0f9ef5b7",
+      "rustSymbol": "XseConfigDto",
+      "kind": "struct",
+      "bridgeModule": "version_registry",
+      "ownerModule": "version_registry",
+      "rustCrate": "classic-version-registry-core",
+      "coreRustSymbol": "XseConfig"
+    },
+    {
+      "id": "56c2a9c53f62ef8b",
+      "rustSymbol": "ModSite",
+      "kind": "enum",
+      "bridgeModule": "web",
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "ModSite"
+    },
+    {
+      "id": "7aefe345782399f3",
+      "rustSymbol": "WebGameId",
+      "kind": "enum",
+      "bridgeModule": "web",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
+      "coreRustSymbol": "GameId"
+    },
+    {
+      "id": "b9ec3ba45bfbad24",
+      "rustSymbol": "extract_domain_string",
+      "kind": "function",
+      "bridgeModule": "web",
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "extract_domain"
+    },
+    {
+      "id": "0950f5414356da6a",
+      "rustSymbol": "is_valid_url",
+      "kind": "function",
+      "bridgeModule": "web",
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "is_valid_url"
+    },
+    {
+      "id": "7d9536f46f7a602a",
+      "rustSymbol": "mod_site_base_url",
+      "kind": "function",
+      "bridgeModule": "web",
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "base_url"
+    },
+    {
+      "id": "0474e9d9d4c830e0",
+      "rustSymbol": "mod_site_game_url",
+      "kind": "function",
+      "bridgeModule": "web",
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "game_url"
+    },
+    {
+      "id": "1c07ae6197b62a4e",
+      "rustSymbol": "mod_site_name",
+      "kind": "function",
+      "bridgeModule": "web",
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "name"
+    },
+    {
+      "id": "18ea0cfdb5e17d7f",
+      "rustSymbol": "validate_url_string",
+      "kind": "function",
+      "bridgeModule": "web",
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "validate_url"
+    },
+    {
+      "id": "e2dce70adc9aba7a",
+      "rustSymbol": "web_build_url_with_query",
+      "kind": "function",
+      "bridgeModule": "web",
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "build_url_with_query"
+    },
+    {
+      "id": "746d496c15af12af",
+      "rustSymbol": "web_get_user_agent",
+      "kind": "function",
+      "bridgeModule": "web",
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "get_user_agent"
+    },
+    {
+      "id": "5920a39e7197ac87",
+      "rustSymbol": "web_get_user_agent_with_suffix",
+      "kind": "function",
+      "bridgeModule": "web",
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "get_user_agent_with_suffix"
+    },
+    {
+      "id": "3f5f11c3df34c621",
+      "rustSymbol": "web_join_url",
+      "kind": "function",
+      "bridgeModule": "web",
+      "ownerModule": "web",
+      "rustCrate": "classic-web-core",
+      "coreRustSymbol": "join_url"
+    },
+    {
+      "id": "7c4723bac8969140",
+      "rustSymbol": "XseType",
+      "kind": "enum",
+      "bridgeModule": "xse",
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "XseType"
+    },
+    {
+      "id": "2396a15798a0b0b7",
+      "rustSymbol": "detect_xse_version",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "detect_xse_version"
+    },
+    {
+      "id": "ecd913c0bf62192f",
+      "rustSymbol": "detect_xse_version_string",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "detect_xse_version"
+    },
+    {
+      "id": "622499dfe357e2f2",
+      "rustSymbol": "is_xse_installed",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "is_xse_installed"
+    },
+    {
+      "id": "866ec46b5dbb24ca",
+      "rustSymbol": "is_xse_installed_check",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "is_xse_installed"
+    },
+    {
+      "id": "d6aeb07b6b9d96e1",
+      "rustSymbol": "resolve_xse_folder_for_scan",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "resolve_xse_folder_for_scan"
+    },
+    {
+      "id": "fed1f3c1692a2596",
+      "rustSymbol": "xse_get_dll_prefix",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "dll_prefix"
+    },
+    {
+      "id": "d7059d6d8a7ad764",
+      "rustSymbol": "xse_get_info",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "get_xse_info"
+    },
+    {
+      "id": "fc1c537a29272570",
+      "rustSymbol": "xse_get_loader_name",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "loader_name"
+    },
+    {
+      "id": "faedc73b20514c24",
+      "rustSymbol": "xse_get_type_from_game_id",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "from_game_id"
+    },
+    {
+      "id": "3fea903f299b7e61",
+      "rustSymbol": "XseInfoDto",
+      "kind": "struct",
+      "bridgeModule": "xse",
+      "ownerModule": "xse",
+      "rustCrate": "classic-xse-core",
+      "coreRustSymbol": "XseInfo"
+    }
+  ]
+}

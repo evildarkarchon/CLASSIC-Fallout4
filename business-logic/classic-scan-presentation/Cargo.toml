@@ -1,0 +1,37 @@
+[package]
+name = "classic-scan-presentation"
+version = "9.1.0"
+edition = "2024"
+rust-version = "1.96.0"
+publish = false
+authors = ["CLASSIC Development Team"]
+description = "Crash Log Scan Run Display Content for CLASSIC"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+crate-type = ["rlib"] # Pure Rust library ONLY - no PyO3
+
+[dependencies]
+# One-way edges only. `classic-scanlog-core` must never depend on this crate:
+# its `scan_run` and `scan_run::contract` modules already form a cycle, and a
+# back edge from here would add a third participant to it.
+classic-scanlog-core = { path = "../classic-scanlog-core" }
+classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
+# The scan-run contract exposes Installed YAML Data types it does not re-export,
+# so naming them requires the owning crate directly. `classic-tui` carries the
+# same dependency for the same reason.
+classic-config-core = { path = "../classic-config-core" }
+
+[dev-dependencies]
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+temp-env = "0.3.6"
+tempfile = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

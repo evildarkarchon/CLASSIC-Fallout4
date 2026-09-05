@@ -1,0 +1,72 @@
+# Evidence Migration Ledger
+
+> **Diagnostic only.** This ledger classifies migration targets and does **not** grant compliance, runtime coverage, or permission to remove a gate.
+
+- Obligations: **3,271**
+- Named retained analyzers: **20**
+- Documented policy exceptions: **1**
+
+## Target dispositions
+
+| Classification | Obligations |
+| --- | ---: |
+| `negative_analyzer` | 207 |
+| `policy_exception` | 1 |
+| `runtime_verifiable` | 2,646 |
+| `structural_analyzer` | 417 |
+
+## Migration states
+
+| State | Obligations |
+| --- | ---: |
+| `blocking` | 625 |
+| `retired` | 55 |
+| `shadow` | 2,591 |
+
+Retired Crash Log Scan Run policy targets record removal of legacy positive proof only. Executable conformance and retained analyzers remain blocking; this diagnostic ledger never establishes a passing execution.
+
+## Current evidence sources
+
+| Source kind | Occurrences |
+| --- | ---: |
+| `consumer_source_audit` | 58 |
+| `display_content_consumer_audit` | 3 |
+| `display_content_source_audit` | 11 |
+| `parity_row` | 2,776 |
+| `policy_exception` | 1 |
+| `runtime_registry_claim` | 67 |
+| `rust_enum_inventory_audit` | 15 |
+| `scan_run_contract_variant` | 73 |
+| `scan_run_variant_policy` | 73 |
+| `shared_runtime_source_audit` | 1 |
+| `source_audit` | 189 |
+| `user_settings_source_audit` | 4 |
+
+## Retained analyzers
+
+- `consumer-source-audit:test_mainwindow_geometry:negative` (negative): `classic-gui/tests/test_mainwindow_geometry.cpp`
+- `consumer-source-audit:test_scan_settings_wiring:negative` (negative): `classic-gui/tests/test_scan_settings_wiring.cpp`
+- `consumer-source-audit:test_scan_settings_wiring:structural` (structural): `classic-gui/tests/test_scan_settings_wiring.cpp`
+- `consumer-source-audit:test_yaml_update_wiring:negative` (negative): `classic-gui/tests/test_yaml_update_wiring.cpp`
+- `consumer-source-audit:test_yaml_update_wiring:structural` (structural): `classic-gui/tests/test_yaml_update_wiring.cpp`
+- `cxx-source-parity` (structural): `tools/cxx_api_parity/check_parity_gate.py`, `docs/implementation/cxx_api_parity/baseline/parity_contract.json`
+- `display-content-ownership-cli` (negative): `classic-cli/tests/test_display_label_audit.cpp`
+- `display-content-ownership-gui` (negative): `classic-gui/tests/test_display_label_audit.cpp`
+- `display-content-ownership-node` (negative): `node-bindings/classic-node/__test__/display_label_audit.spec.ts`
+- `display-content-ownership-python-cli` (negative): `python-bindings/tests/test_classic_py_cli_display_label_audit.py`
+- `display-content-ownership-tui` (negative): `ui-applications/classic-tui/tests/shared_runtime_audit.rs`
+- `node-source-and-declaration-parity` (structural): `tools/node_api_parity/check_parity_gate.py`, `tools/node_api_parity/check_dts_freshness.py`, `docs/implementation/node_api_parity/baseline/parity_contract.json`
+- `python-source-and-stub-parity` (structural): `tools/python_api_parity/check_parity_gate.py`, `validate_stubs.py`, `docs/implementation/python_api_parity/baseline/parity_contract.json`
+- `scan-run-contract-validator` (structural): `tools/binding_compliance/scan_run_contract.py`, `tests/fixtures/crash_log_scan_run/manifest.json`
+- `scan-run-forbidden-export-audit` (negative): `tools/binding_compliance/scan_run_contract.py`
+- `scan-run-local-ignore-reset-internal-faults` (structural): `tools/binding_compliance/scan_run_contract.py`, `tests/fixtures/crash_log_scan_run/manifest.json`, `business-logic/classic-durable-publication/src/publication_fault.rs`, `business-logic/classic-config-core/src/installed_yaml_data_reset_fault.rs`, `business-logic/classic-config-core/src/installed_yaml_data_tests.rs`, `business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs`, `cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs`, `node-bindings/classic-node/src/scan_run_tests.rs`, `python-bindings/classic-scanlog-py/src/scan_run_tests.rs`
+- `scan-run-rust-enum-inventory` (structural): `tools/binding_compliance/scan_run_contract.py`
+- `scan-run-structured-failure-internal-faults` (structural): `tools/binding_compliance/scan_run_contract.py`, `tests/fixtures/crash_log_scan_run/manifest.json`, `business-logic/classic-scanlog-core/src/scan_run_test_support.rs`, `business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs`, `cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs`, `node-bindings/classic-node/src/scan_run_tests.rs`, `python-bindings/classic-scanlog-py/src/scan_run_tests.rs`
+- `tui-shared-runtime-ownership` (structural): `ui-applications/classic-tui/tests/shared_runtime_audit.rs`
+- `user-settings-exclusive-ownership` (negative): `tools/user_settings_ownership/check.py`
+
+## Policy exceptions
+
+- `cxx-classic-resource-core-transitive-access` (cxx): classic-resource-core has no dedicated CXX bridge; C++ reaches its behavior transitively through classic-file-io-core. See `docs/api/binding-parity-policy.md`.
+
+The JSON artifact is the complete occurrence ledger. Runtime entries advance only when objective executable or retained-analyzer evidence independently justifies the ratchet state; ledger text alone can never do so.

@@ -4496,6 +4496,100 @@ export interface JsScanRunDiscoveryResult {
   searchedLocations: Array<string>
 }
 
+/**
+ * One line of Crash Log Scan Run Display Content.
+ *
+ * A consumer concatenates `segments` in order and never reorders within a line.
+ * It may reorder, group, or omit whole lines. It must not re-derive a Display
+ * Label already carried in a `Label` segment, and must not re-decide a
+ * `Count`'s noun.
+ */
+export interface JsScanRunDisplayLine {
+  /** How gravely this line should read. */
+  severity: JsScanRunDisplaySeverity
+  /** The line's content, in reading order. */
+  segments: Array<JsScanRunDisplaySegment>
+}
+
+/**
+ * One typed piece of a Crash Log Scan Run display line.
+ *
+ * The six-variant Rust segment crosses flattened: a kind tag plus one field per
+ * payload shape, with the fields the kind does not use left empty. Read only the
+ * field `kind` selects.
+ *
+ * The flattening is the C++ bridge's, field for field, rather than a
+ * Node-idiomatic shape with optional payloads. One flattening across every
+ * binding is what lets a wording fix reach all of them without three separate
+ * readings of the same segment, and it is what the parity baselines pin.
+ */
+export interface JsScanRunDisplaySegment {
+  /** Selects which of the fields below carries this segment's payload. */
+  kind: JsScanRunDisplaySegmentKind
+  /**
+   * Payload for `Text`, `Label`, `Name`, and `Emphasis`. For `Count` this is
+   * the noun Rust already resolved to agree with `count`, so no consumer
+   * re-decides pluralization and no user reads "1 logs". Empty for `Path`.
+   */
+  text: string
+  /**
+   * Payload for `Path`, whole and untruncated. Truncation is the consumer's
+   * choice. Empty otherwise.
+   */
+  path: string
+  /**
+   * Payload for `Count`. Zero otherwise.
+   *
+   * Widened to `i64` for the same reason a log result's processing time is:
+   * JavaScript has no `u64`, and this surface saturates rather than wrapping.
+   */
+  count: number
+}
+
+/**
+ * Which payload field of a [`JsScanRunDisplaySegment`] carries its value.
+ *
+ * Mirrors the variant set of `classic_scan_presentation::DisplaySegment`. The
+ * taxonomy is fixed at six kinds for its first version: each addition touches
+ * three binding parity baselines, so growth must be a deliberate decision.
+ */
+export declare const enum JsScanRunDisplaySegmentKind {
+  /** Fixed Rust-owned prose, carried in `text`. */
+  Text = 'Text',
+  /** A Display Label, carried in `text`. */
+  Label = 'Label',
+  /** A quantity in `count` beside the noun Rust resolved for it in `text`. */
+  Count = 'Count',
+  /** A filesystem path, carried in `path`. */
+  Path = 'Path',
+  /** The name of a domain entity that is not a path, carried in `text`. */
+  Name = 'Name',
+  /** A value set apart from the prose around it, carried in `text`. */
+  Emphasis = 'Emphasis'
+}
+
+/**
+ * How gravely one Crash Log Scan Run display line should read.
+ *
+ * A consumer maps this onto its own styling. Rust never names a colour, a text
+ * attribute, or a widget — a plain, pipeable frontend may map every severity
+ * onto nothing at all and still be correct.
+ *
+ * Mirrors `classic_scan_presentation::DisplaySeverity` exhaustively.
+ */
+export declare const enum JsScanRunDisplaySeverity {
+  /** Neutral fact about the run. */
+  Info = 'Info',
+  /** Worth noticing, but nothing failed. */
+  Notice = 'Notice',
+  /** Something is wrong or incomplete and may need attention. */
+  Warning = 'Warning',
+  /** Something failed. */
+  Failure = 'Failure',
+  /** Something completed as intended. */
+  Success = 'Success'
+}
+
 /** One tagged serialized observer event. */
 export interface JsScanRunEvent {
   kind: 'discovery_completed' | 'effective_concurrency_selected' | 'log_queued' | 'log_started' | 'log_phase' | 'log_finished'
@@ -4504,12 +4598,35 @@ export interface JsScanRunEvent {
   log?: JsScanRunLogEvent
   phase?: 'setup' | 'parse' | 'analyze' | 'finalize'
   disposition?: 'succeeded' | 'failed' | 'cancelled_before_start'
+  /**
+   * What this event says, in Rust's words.
+   *
+   * Rendered inline in the observer adapter before the event reaches
+   * JavaScript, so a consumer that shows progress states it in the same words
+   * every other frontend does. One event can produce more than one line — a
+   * discovery that rejected some of its targeted inputs states the rejection
+   * separately.
+   *
+   * Unlike the optional fields above, this is never defaulted by `kind`: every
+   * event kind renders. A consumer that shows only some kinds omits whole
+   * lines, which the adapter contract allows.
+   */
+  displayLines: Array<JsScanRunDisplayLine>
 }
 
 /** Failed final operation envelope with adapter-only observation failure data. */
 export interface JsScanRunFailure {
   error: JsScanRunInfrastructureError
   observerError?: string
+  /**
+   * What this failure says, in Rust's words.
+   *
+   * The stage reads as its Display Label here, never as the Vocabulary Token
+   * `error.stage` still publishes. That split is the point: a user should not
+   * have to know that `formid_database_access` means "FormID database access",
+   * and a consumer should never match on the sentence.
+   */
+  displayLines: Array<JsScanRunDisplayLine>
 }
 
 /** Typed run-wide infrastructure failure. */
@@ -4618,6 +4735,47 @@ export interface JsScanRunLogResult {
   suspectCount: number
 }
 
+/**
+ * One Local Ignore recovery decision, named and explained, with its availability
+ * attached.
+ *
+ * `available` travels here rather than as a separate flag beside the prompt, which
+ * is what makes honouring it take no separate lookup. A consumer must not offer a
+ * decision for which it is false: Rust still fails safely and touches nothing on
+ * disk, but the attempt spends the one-shot continuation, so the user is left with
+ * no scan and no second attempt. Two native frontends made exactly that mistake
+ * while the fact lived beside the prompt instead of on the decision.
+ */
+export interface JsScanRunRecoveryDecisionDescription {
+  /** The decision to hand back to `scanRunResume`. */
+  decision: JsScanRunLocalIgnoreRecoveryDecision
+  /** The decision's Display Label. */
+  label: string
+  /** What choosing it will actually do, concatenated in order like any other line. */
+  description: Array<JsScanRunDisplaySegment>
+  /** Whether this run can honor the decision. */
+  available: boolean
+}
+
+/**
+ * The Rust-owned content of a Local Ignore recovery prompt.
+ *
+ * `lines` state why the run paused and what is being decided about; `decisions`
+ * lists every decision the continuation contract accepts. The affordance beside a
+ * description is the consumer's own, as is the order it presents them in and what
+ * kind of surface asks the question. The descriptions themselves are not.
+ *
+ * Backing out appears nowhere here. `JsScanRunLocalIgnoreRecoveryDecision` has
+ * exactly two variants by design, and abandonment is spelled as the absence of a
+ * decision through `scanRunAbandon`.
+ */
+export interface JsScanRunRecoveryPrompt {
+  /** Why the run paused and what is being decided about, in reading order. */
+  lines: Array<JsScanRunDisplayLine>
+  /** One description per recovery decision, in the contract's variant order. */
+  decisions: Array<JsScanRunRecoveryDecisionDescription>
+}
+
 /** JavaScript-compatible Targeted input rejection. */
 export interface JsScanRunRejectedInput {
   path: string
@@ -4690,6 +4848,31 @@ export interface JsScanRunStandardSource {
 export interface JsScanRunSuccess {
   result: JsScanRunResult
   observerError?: string
+  /**
+   * What this run says, in Rust's words.
+   *
+   * Rendered while the Rust run result was still live, because JavaScript
+   * receives a projected copy and cannot render from the Rust value later. A
+   * consumer states the run from these lines rather than composing sentences
+   * of its own; `result` stays the machine-facing surface it matches on.
+   *
+   * `scanRunExecute` and `scanRunResume` resolve the same envelope, so this
+   * one field covers the initial run and the continuation resume alike.
+   */
+  displayLines: Array<JsScanRunDisplayLine>
+  /**
+   * What to ask the user, and which answers this run can honor.
+   *
+   * Present only when `result.status` is `local_ignore_recovery_required`, which
+   * is also exactly when the run retains a continuation to answer with. Absent
+   * rather than empty, because a run with nothing to ask has no prompt rather
+   * than an empty one — and `undefined` is what a JavaScript consumer already
+   * reads as "not present" everywhere else on this surface.
+   *
+   * Rendered here for the reason `displayLines` is: JavaScript receives a
+   * projected copy of the run and cannot render from the Rust value later.
+   */
+  recoveryPrompt?: JsScanRunRecoveryPrompt
 }
 
 /** Targeted discovery inputs for one request. */
@@ -5873,6 +6056,23 @@ export declare function scanAllBa2Archives(rootPath: string): Array<JsBa2ScanRes
 export declare function scanModInis(gameRoot: string, gameName: string): JsModIniScanResult
 
 /**
+ * Abandons one retained Crash Log Scan Run without applying either recovery decision.
+ *
+ * Requests cancellation on `cancellation` and then claims the continuation, resolving with the
+ * ordinary post-discovery cancelled envelope. No backup is taken, nothing is published, and the
+ * malformed Local Ignore file is left exactly as it was. Prefer this over cancelling and then
+ * calling [`scan_run_resume`] with a placeholder decision: that sequence is what this replaces,
+ * and getting its ordering wrong spends the one-shot continuation on a real recovery attempt.
+ *
+ * `cancellation` is left cancelled afterwards, which is what abandoning the run means. Replay and
+ * concurrent double consumption reject with JavaScript error code
+ * `scan_run_continuation_consumed`, exactly as [`scan_run_resume`] does. The recovery-plan and
+ * infrastructure failures resume can reject with are unreachable here, because cancellation
+ * short-circuits ahead of every stage that produces them.
+ */
+export declare function scanRunAbandon(continuation: ScanRunContinuation, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
+
+/**
  * Executes one final-contract request with optional serialized observation.
  *
  * The observer is non-controlling. If it throws or cannot be delivered, the
@@ -5880,7 +6080,7 @@ export declare function scanModInis(gameRoot: string, gameName: string): JsModIn
  * controls whether that adapter failure also uses the separate cancellation
  * control to request safe stopping.
  */
-export declare function scanRunExecute(request: ScanRunRequest, cancellation: ScanRunCancellation, observer?: (event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
+export declare function scanRunExecute(request: ScanRunRequest, cancellation: ScanRunCancellation, observer?: (event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
 
 /**
  * Returns the human-facing Display Label for one infrastructure stage token.
@@ -5979,7 +6179,7 @@ export declare function scanRunLogFailureStageLabel(token: string): string
  * reject with their stable codes plus applicable identity, path, and publication-stage metadata.
  * Infrastructure failures retain the same resolved envelope used by [`scan_run_execute`].
  */
-export declare function scanRunResume(continuation: ScanRunContinuation, decision: JsScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
+export declare function scanRunResume(continuation: ScanRunContinuation, decision: JsScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
 
 /**
  * Convenience function to scan for unpacked files.

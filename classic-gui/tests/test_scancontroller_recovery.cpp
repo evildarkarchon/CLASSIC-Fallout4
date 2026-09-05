@@ -3,6 +3,7 @@
 #include <QtTest/QtTest>
 
 #include "controllers/scancontroller.h"
+#include "recoverypromptfixture.h"
 
 #include <functional>
 
@@ -58,7 +59,7 @@ void ScanControllerRecoveryTests::missing_prompt_resolves_to_cancel()
 
     const auto prompt = controller.makeLocalIgnoreRecoveryPrompt();
 
-    QCOMPARE(prompt(QStringLiteral("malformed")), Choice::Cancel);
+    QCOMPARE(prompt(classic::gui::test::recoveryPresentation()), Choice::Cancel);
 }
 
 void ScanControllerRecoveryTests::configured_prompt_returns_each_typed_decision_data()
@@ -77,17 +78,25 @@ void ScanControllerRecoveryTests::configured_prompt_returns_each_typed_decision(
     // not reach; ScanController null-checks both, so nullptr keeps the cases independent.
     ScanController controller(nullptr, nullptr);
 
-    QString seenMessage;
-    controller.setLocalIgnoreRecoveryPrompt([&seenMessage, choiceValue](const QString& message) {
-        seenMessage = message;
-        return static_cast<Choice>(choiceValue);
-    });
+    classic::gui::ScanRunLocalIgnoreRecoveryPresentation seen;
+    controller.setLocalIgnoreRecoveryPrompt(
+        [&seen, choiceValue](const classic::gui::ScanRunLocalIgnoreRecoveryPresentation& recovery) {
+            seen = recovery;
+            return static_cast<Choice>(choiceValue);
+        });
 
     const auto prompt = controller.makeLocalIgnoreRecoveryPrompt();
-    const auto choice = prompt(QStringLiteral("Local Ignore YAML Data is malformed."));
+    const auto choice = prompt(classic::gui::test::recoveryPresentation(false));
 
     QCOMPARE(static_cast<int>(choice), choiceValue);
-    QCOMPARE(seenMessage, QStringLiteral("Local Ignore YAML Data is malformed."));
+    QCOMPARE(seen.message, QStringLiteral("Local Ignore YAML Data is malformed."));
+    // The controller marshals the run's question; it must not substitute one of its own. Every
+    // decision arrives, and the availability on each is the run's answer rather than the
+    // controller's.
+    QCOMPARE(seen.decisions.size(), 2);
+    QVERIFY(seen.decisions[0].available);
+    QCOMPARE(seen.decisions[1].decision, classic::scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault);
+    QVERIFY(!seen.decisions[1].available);
 }
 
 void ScanControllerRecoveryTests::worker_thread_request_is_answered_on_the_gui_thread()
@@ -97,22 +106,32 @@ void ScanControllerRecoveryTests::worker_thread_request_is_answered_on_the_gui_t
     ScanController controller(nullptr, nullptr);
 
     QThread* promptThread = nullptr;
-    controller.setLocalIgnoreRecoveryPrompt([&promptThread](const QString&) {
-        promptThread = QThread::currentThread();
-        return Choice::ResetToDefault;
-    });
+    classic::gui::ScanRunLocalIgnoreRecoveryPresentation seen;
+    controller.setLocalIgnoreRecoveryPrompt(
+        [&promptThread, &seen](const classic::gui::ScanRunLocalIgnoreRecoveryPresentation& recovery) {
+            promptThread = QThread::currentThread();
+            seen = recovery;
+            return Choice::ResetToDefault;
+        });
 
     const auto prompt = controller.makeLocalIgnoreRecoveryPrompt();
     QThread* callerThread = nullptr;
     const Choice choice = runOffGuiThread([&prompt, &callerThread]() {
         callerThread = QThread::currentThread();
-        return prompt(QStringLiteral("malformed"));
+        return prompt(classic::gui::test::recoveryPresentation(false));
     });
 
     QCOMPARE(choice, Choice::ResetToDefault);
     QVERIFY2(callerThread != nullptr && callerThread != QThread::currentThread(),
              "the prompt must have been requested from a worker thread");
     QCOMPARE(promptThread, QThread::currentThread());
+    // The whole presentation is captured by value into the queued lambda, so every described
+    // decision — and the availability attached to each — has to survive the hop to the GUI thread
+    // intact. A dialog that offered the withheld decision here would be offering it on a run that
+    // already reported it cannot succeed.
+    QCOMPARE(seen.decisions.size(), 2);
+    QVERIFY(!seen.decisions[1].available);
+    QCOMPARE(seen.decisions[1].description, QStringLiteral("what resetting does"));
 }
 
 void ScanControllerRecoveryTests::destroyed_controller_resolves_to_cancel()
@@ -120,13 +139,14 @@ void ScanControllerRecoveryTests::destroyed_controller_resolves_to_cancel()
     classic::gui::ScanRunLocalIgnoreRecoveryPrompt prompt;
     {
         ScanController controller(nullptr, nullptr);
-        controller.setLocalIgnoreRecoveryPrompt([](const QString&) { return Choice::ResetToDefault; });
+        controller.setLocalIgnoreRecoveryPrompt(
+            [](const classic::gui::ScanRunLocalIgnoreRecoveryPresentation&) { return Choice::ResetToDefault; });
         prompt = controller.makeLocalIgnoreRecoveryPrompt();
     }
 
     // The QPointer capture goes null with the controller, so a late worker request cannot reach a
     // dangling object and cannot answer with the destructive decision the prompt used to return.
-    QCOMPARE(prompt(QStringLiteral("malformed")), Choice::Cancel);
+    QCOMPARE(prompt(classic::gui::test::recoveryPresentation()), Choice::Cancel);
 }
 
 QTEST_MAIN(ScanControllerRecoveryTests)
