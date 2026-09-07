@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-07T20:40:37.965801+00:00",
+  "generated_at_utc": "2026-09-07T21:53:56.833813+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,26 +7,28 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 1032,
-    "runtime_verified_total": 996,
-    "receipt_required_total": 7,
-    "structural_analyzer_total": 29,
+    "tracked_surface_total": 1033,
+    "runtime_verified_total": 987,
+    "receipt_required_total": 16,
+    "structural_analyzer_total": 30,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 909,
+    "tier1_contract_total": 910,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
   "registryMismatches": [],
   "perOwnerModule": {
     "aux": {
-      "runtime_verified": 166,
-      "total": 166
+      "runtime_verified": 157,
+      "total": 166,
+      "receipt_required": 8,
+      "structural_analyzer": 1
     },
     "config": {
       "runtime_verified": 123,
-      "total": 125,
-      "receipt_required": 2
+      "total": 126,
+      "receipt_required": 3
     },
     "database": {
       "runtime_verified": 23,
@@ -5543,15 +5545,11 @@
       "ownerModule": "aux",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "FileIOCore",
       "bindingIdentifier": "JsFileIO",
-      "coverageId": "node-tier1-aux",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "aux-tier1-parity",
-      "fixtureRefs": [],
-      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "file-operations"
     },
     {
       "trackedId": "contract:aux-phase4a-js-file-operation-result",
@@ -5594,15 +5592,11 @@
       "ownerModule": "aux",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "structural_analyzer",
       "rustSymbol": "Message",
       "bindingIdentifier": "JsMessage",
-      "coverageId": "node-tier1-aux",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "aux-tier1-parity",
-      "fixtureRefs": [],
-      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
+      "verificationMode": "source-declaration-analysis",
+      "conformanceFamily": "message-operations"
     },
     {
       "trackedId": "contract:aux-phase4a-js-message-target",
@@ -5764,15 +5758,11 @@
       "ownerModule": "aux",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "Message",
       "bindingIdentifier": "createMessage",
-      "coverageId": "node-tier1-aux",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "aux-tier1-parity",
-      "fixtureRefs": [],
-      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "message-operations"
     },
     {
       "trackedId": "contract:aux-phase4a-detect-encoding",
@@ -5798,15 +5788,11 @@
       "ownerModule": "aux",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "format_log_message",
       "bindingIdentifier": "formatMessage",
-      "coverageId": "node-tier1-aux",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "aux-tier1-parity",
-      "fixtureRefs": [],
-      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "message-operations"
     },
     {
       "trackedId": "contract:aux-phase4a-generate-ignore-file",
@@ -5985,15 +5971,11 @@
       "ownerModule": "aux",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "is_valid_path",
       "bindingIdentifier": "isValidPath",
-      "coverageId": "node-tier1-aux",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "aux-tier1-parity",
-      "fixtureRefs": [],
-      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "path-operations"
     },
     {
       "trackedId": "contract:aux-phase4a-join-paths",
@@ -6002,15 +5984,11 @@
       "ownerModule": "aux",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "join_paths",
       "bindingIdentifier": "joinPaths",
-      "coverageId": "node-tier1-aux",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "aux-tier1-parity",
-      "fixtureRefs": [],
-      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "path-normalization"
     },
     {
       "trackedId": "contract:aux-phase4a-load-batch-async",
@@ -6053,15 +6031,11 @@
       "ownerModule": "aux",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "normalize_path",
       "bindingIdentifier": "normalizePath",
-      "coverageId": "node-tier1-aux",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "aux-tier1-parity",
-      "fixtureRefs": [],
-      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "path-normalization"
     },
     {
       "trackedId": "contract:aux-phase4a-normalize-string",
@@ -6308,15 +6282,11 @@
       "ownerModule": "aux",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "validate_paths_batch",
       "bindingIdentifier": "validatePathsBatch",
-      "coverageId": "node-tier1-aux",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "aux-tier1-parity",
-      "fixtureRefs": [],
-      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "path-normalization"
     },
     {
       "trackedId": "contract:aux-phase4a-validate-required-files",
@@ -6325,15 +6295,11 @@
       "ownerModule": "aux",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "validate_required_files",
       "bindingIdentifier": "validateRequiredFiles",
-      "coverageId": "node-tier1-aux",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "aux-tier1-parity",
-      "fixtureRefs": [],
-      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "path-operations"
     },
     {
       "trackedId": "contract:aux-phase4b-github-client",
@@ -16308,6 +16274,19 @@
       "bindingIdentifier": "loadInstalledYamlData",
       "verificationMode": "execution-receipt-required",
       "conformanceFamily": "installed-yaml-data"
+    },
+    {
+      "trackedId": "contract:config.explicit_yaml_data.loadExplicitYamlData",
+      "trackedType": "contract_row",
+      "contractId": "config.explicit_yaml_data.loadExplicitYamlData",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "receipt_required",
+      "rustSymbol": "load_explicit_yaml_data",
+      "bindingIdentifier": "loadExplicitYamlData",
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "config-operations"
     },
     {
       "trackedId": "binding:JsFrontendPreferences",

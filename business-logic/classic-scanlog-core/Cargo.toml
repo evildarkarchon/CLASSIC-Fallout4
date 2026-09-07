@@ -79,6 +79,8 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+classic-path-core = { path = "../classic-path-core" }
+classic-message-core = { path = "../classic-message-core" }
 tempfile = { workspace = true }
 criterion = { version = "0.6.0", features = ["html_reports"] }
 sqlx = { workspace = true }

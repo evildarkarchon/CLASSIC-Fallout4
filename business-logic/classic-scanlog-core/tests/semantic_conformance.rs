@@ -27,6 +27,13 @@ mod installed_yaml_data;
 #[path = "semantic_conformance/vocabulary.rs"]
 mod vocabulary;
 
+#[path = "semantic_conformance/config_operations.rs"]
+mod config_operations;
+#[path = "semantic_conformance/file_operations.rs"]
+mod file_operations;
+#[path = "semantic_conformance/path_message_operations.rs"]
+mod path_message_operations;
+
 /// Rejects malformed runner inputs without confusing them with domain errors.
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
@@ -413,6 +420,19 @@ fn execute(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
             return Err(invalid("installed YAML action does not match fixture operation").into());
         }
         return installed_yaml_data::execute(&fixture);
+    }
+    match plan["familyId"].as_str() {
+        Some("config-operations") => return config_operations::execute(&fixture),
+        Some("file-operations") => {
+            if scenario["action"] != format!("file-operations.{}", text(&fixture["operation"])?) {
+                return Err(invalid("file action does not match fixture operation").into());
+            }
+            return file_operations::observe(&fixture);
+        }
+        Some("path-operations" | "path-normalization" | "message-operations") => {
+            return path_message_operations::execute(&text(&plan["familyId"])?, &fixture);
+        }
+        _ => { /* Focused analyzers use their existing dispatch below. */ }
     }
     analyze(
         &text(&plan["familyId"])?,

@@ -36,6 +36,9 @@ SUPPORTED_FAMILIES = (
     "installed-yaml-data",
     "config-vocabulary",
     "scan-run-vocabulary",
+    "config-operations",
+    "file-operations",
+    "path-operations",
 )
 
 
@@ -94,6 +97,15 @@ def _cxx_source_paths(
             repo_root / "business-logic/classic-scanlog-core/src",
             repo_root / "business-logic/classic-database-core/src",
             repo_root / "business-logic/classic-config-core/src",
+            repo_root / "business-logic/classic-file-io-core/src",
+            repo_root / "business-logic/classic-path-core/src",
+            repo_root / "foundation/classic-shared-core/src",
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_config_operations_conformance.h",
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_file_operations_conformance.h",
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_path_operations_conformance.h",
         )
     if family == "autoscan-report":
         paths += (repo_root / "business-logic/classic-scangame-core/src",)

@@ -18,6 +18,11 @@ FAMILY_ENFORCEMENT = MappingProxyType(
         "plugin-evidence": "blocking",
         "config-vocabulary": "blocking",
         "scan-run-vocabulary": "blocking",
+        "config-operations": "blocking",
+        "file-operations": "blocking",
+        "path-operations": "blocking",
+        "path-normalization": "blocking",
+        "message-operations": "blocking",
     }
 )
 

@@ -32,6 +32,8 @@ Autoscan Report output requires blocking same-revision receipts across Rust, Nod
 
 Config and scan-run Vocabulary labels use executable token-to-label receipts, while the scan-run pack compares full typed Display Content. The [Vocabulary and Display Content evidence map](docs/implementation/vocabulary_display_conformance_equivalence.md) records independent expected wording, source token inventories, the shared provenance accessor, and the duplicated JavaScript tests retired after equivalent observations passed.
 
+Config loading, text file I/O, path validation/normalization, and message formatting now have separate blocking operation packs. Their [equivalence map](docs/implementation/config_file_path_message_conformance_equivalence.md) records exact effects, errors, binding applicability, and retained evidence.
+
 For older historical context, see [CLASSIC - Readme.pdf](CLASSIC%20-%20Readme.pdf).
 
 Nexus Mods: <https://www.nexusmods.com/fallout4/mods/56255>

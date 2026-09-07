@@ -32,6 +32,11 @@ def test_repository_workflows_keep_every_promoted_execution_blocking() -> None:
         "autoscan-report",
         "config-vocabulary",
         "scan-run-vocabulary",
+        "config-operations",
+        "file-operations",
+        "path-operations",
+        "path-normalization",
+        "message-operations",
     ),
 )
 @pytest.mark.parametrize(
@@ -50,6 +55,9 @@ def test_every_focused_family_adapter_is_a_required_blocking_step(
     workflow: str,
 ) -> None:
     """Removing any single family/adapter cannot borrow another family's gate."""
+
+    if participant == "cxx" and family in {"path-normalization", "message-operations"}:
+        pytest.skip("These public operations have no CXX source mapping")
 
     workflow_root = tmp_path / ".github/workflows"
     workflow_root.parent.mkdir(parents=True)

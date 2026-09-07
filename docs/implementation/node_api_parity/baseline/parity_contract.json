@@ -2882,7 +2882,8 @@
       "ownerModule": "aux",
       "rustSymbol": "FileIOCore",
       "nodeExport": "JsFileIO",
-      "nodeKind": "class"
+      "nodeKind": "class",
+      "rustCrate": "classic-file-io-core"
     },
     {
       "id": "aux-phase4a-js-file-operation-result",
@@ -2906,7 +2907,8 @@
       "ownerModule": "aux",
       "rustSymbol": "Message",
       "nodeExport": "JsMessage",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "rustCrate": "classic-message-core"
     },
     {
       "id": "aux-phase4a-js-message-target",
@@ -2986,7 +2988,8 @@
       "ownerModule": "aux",
       "rustSymbol": "Message",
       "nodeExport": "createMessage",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-message-core"
     },
     {
       "id": "aux-phase4a-detect-encoding",
@@ -3002,7 +3005,8 @@
       "ownerModule": "aux",
       "rustSymbol": "format_log_message",
       "nodeExport": "formatMessage",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-message-core"
     },
     {
       "id": "aux-phase4a-generate-ignore-file",
@@ -3091,7 +3095,8 @@
       "ownerModule": "aux",
       "rustSymbol": "is_valid_path",
       "nodeExport": "isValidPath",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-path-core"
     },
     {
       "id": "aux-phase4a-join-paths",
@@ -3256,7 +3261,8 @@
       "ownerModule": "aux",
       "rustSymbol": "validate_required_files",
       "nodeExport": "validateRequiredFiles",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-path-core"
     },
     {
       "id": "aux-phase4b-github-client",
@@ -8101,6 +8107,17 @@
       "nodeExport": "loadInstalledYamlData",
       "nodeKind": "function",
       "nodeArity": 1
+    },
+    {
+      "id": "config.explicit_yaml_data.loadExplicitYamlData",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "load_explicit_yaml_data",
+      "rustKind": "function",
+      "nodeExport": "loadExplicitYamlData",
+      "nodeKind": "function",
+      "nodeArity": 3
     }
   ]
 }

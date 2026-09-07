@@ -237,6 +237,71 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Python config-operations conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family config-operations --participant python --artifact-root tools/binding_compliance/artifacts/config-operations
+
+      - name: Upload Python config-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-config-operations-conformance
+          path: tools/binding_compliance/artifacts/config-operations/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python file-operations conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family file-operations --participant python --artifact-root tools/binding_compliance/artifacts/file-operations
+
+      - name: Upload Python file-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-file-operations-conformance
+          path: tools/binding_compliance/artifacts/file-operations/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python path-operations conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family path-operations --participant python --artifact-root tools/binding_compliance/artifacts/path-operations
+
+      - name: Upload Python path-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-path-operations-conformance
+          path: tools/binding_compliance/artifacts/path-operations/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python path-normalization conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family path-normalization --participant python --artifact-root tools/binding_compliance/artifacts/path-normalization
+
+      - name: Upload Python path-normalization conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-path-normalization-conformance
+          path: tools/binding_compliance/artifacts/path-normalization/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python message-operations conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family message-operations --participant python --artifact-root tools/binding_compliance/artifacts/message-operations
+
+      - name: Upload Python message-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-message-operations-conformance
+          path: tools/binding_compliance/artifacts/message-operations/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run Python scan-run-vocabulary conformance
         if: ${{ !cancelled() }}
         run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family scan-run-vocabulary --participant python --artifact-root tools/binding_compliance/artifacts/scan-run-vocabulary

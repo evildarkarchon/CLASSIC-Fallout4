@@ -4,6 +4,8 @@
 // hosted by the CLI build but does not link or compile any frontend source.
 
 #include "classic_cxx_bridge/config.h"
+#include "classic_cxx_bridge/files.h"
+#include "classic_cxx_bridge/path.h"
 #include "classic_cxx_bridge/database.h"
 #include "classic_cxx_bridge/scanner.h"
 #include "classic_cxx_bridge/settings.h"
@@ -1878,6 +1880,9 @@ json execute_scenario(const json& plan, const json& scenario) {
 
 #include "classic_cxx_installed_yaml_data_conformance.h"
 #include "classic_cxx_semantic_conformance.h"
+#include "classic_cxx_config_operations_conformance.h"
+#include "classic_cxx_file_operations_conformance.h"
+#include "classic_cxx_path_operations_conformance.h"
 #include "classic_cxx_user_settings_conformance.h"
 #include "classic_cxx_vocabulary_conformance.h"
 
@@ -1889,6 +1894,9 @@ json scenario_receipt(const json& plan, const json& scenario) {
                     {"capabilityIds", scenario.at("capabilityIds")},
                     {"observation", is_vocabulary_family(plan.at("familyId")) ? execute_vocabulary_scenario(plan, scenario)
                                     : is_semantic_family(plan.at("familyId")) ? execute_semantic_scenario(plan, scenario)
+                                    : plan.at("familyId") == "config-operations" ? execute_config_operations_scenario(plan, scenario)
+                                    : plan.at("familyId") == "file-operations" ? execute_file_operations(plan, scenario)
+                                    : plan.at("familyId") == "path-operations" ? execute_path_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "installed-yaml-data"
                                         ? execute_installed_yaml_data_scenario(plan, scenario)
                                     : plan.at("familyId") == "user-settings"
@@ -1909,6 +1917,8 @@ void validate_plan(const json& plan) {
     if (!plan.is_object() || plan.at("schemaVersion") != 1 ||
         (plan.at("familyId") != "crash-log-scan-run" && plan.at("familyId") != "user-settings" &&
          plan.at("familyId") != "installed-yaml-data" && plan.at("familyId") != "autoscan-report" &&
+         plan.at("familyId") != "config-operations" && plan.at("familyId") != "file-operations" &&
+         plan.at("familyId") != "path-operations" &&
          !is_semantic_family(plan.at("familyId")) && !is_vocabulary_family(plan.at("familyId")))) {
         throw RunnerError("unsupported CXX conformance run plan");
     }

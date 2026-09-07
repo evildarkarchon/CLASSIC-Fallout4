@@ -788,7 +788,13 @@ def derive_row_coverage(
     trusted_analyzers: Mapping[str, str] = retained_analyzers or {}
     row_results: list[RowCoverage] = []
     failures: list[CoverageFailure] = []
+    from .families.operation_scope import is_retained_operation
+
     for row in selected_parity_rows:
+        # Partial class migrations leave known unrelated methods with their
+        # existing tests; an unknown method has no disposition and fails below.
+        if is_retained_operation(policy.family_id, row):
+            continue
         canonical_capability_ids = tuple(
             candidate_id
             for candidate_id, symbols in sorted(capabilities.items())

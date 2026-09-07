@@ -1,0 +1,9 @@
+{
+  "operation": "write-text",
+  "path": "output.txt",
+  "files": {
+    "output.txt": "old",
+    "sentinel.txt": "keep"
+  },
+  "content": ""
+}

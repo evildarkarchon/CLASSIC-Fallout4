@@ -330,3 +330,15 @@ applicable `forbiddenExports` surface before removing it. This keeps a later
 compatibility shim or stale generated artifact from silently restoring the
 second execution path.
 
+
+## Config, file, path, and message operation packs
+
+The five blocking packs `config-operations`, `file-operations`, `path-operations`,
+`path-normalization`, and `message-operations` use the semantic launcher above.
+All require Rust, Node, and Python receipts. The first three additionally require
+CXX receipts and JUnit on MSVC and clang-cl; the latter two have no corresponding
+CXX public export. Their domain shapes preserve values, successful misses,
+structured failures, exact file effects, and narrowly normalized temporary paths.
+Existing registry and positive evidence remain available; migrated rows require
+receipts. See the [operation equivalence map](../implementation/config_file_path_message_conformance_equivalence.md)
+for precise coverage, fixtures, retained class methods, and commands.

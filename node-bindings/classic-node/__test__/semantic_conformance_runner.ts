@@ -4,9 +4,12 @@ import { dirname, join, resolve } from "node:path";
 import * as classic from "../index.js";
 import { observeInstalledYaml } from "./installed_yaml_conformance.js";
 import { observeVocabulary } from "./vocabulary_conformance.js";
+import { observeConfigOperations } from "./config_operations_conformance.js";
+import { observeFileOperations } from "./file_operations_conformance.js";
+import { observePathMessage } from "./path_message_conformance.js";
 
 type JsonObject = Record<string, any>;
-const families = ["crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary"];
+const families = ["crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary", "config-operations", "file-operations", "path-operations", "path-normalization", "message-operations"];
 
 /** Reject malformed invocation objects before invoking native operations. */
 function object(value: unknown, label: string): JsonObject {
@@ -40,9 +43,16 @@ async function loadPlan(path: string): Promise<JsonObject> {
       if (!Array.isArray(scenario[key])) throw new Error(`${key} must be an array`);
       scenario[key].forEach((value: unknown) => string(value, key));
     }
-    const actions = ["config-vocabulary", "scan-run-vocabulary"].includes(plan.familyId) ? ["vocabulary.resolve"]
+    const operationActions: Record<string, string[]> = {
+      "config-operations": ["config-operations.load-explicit"],
+      "file-operations": ["file-operations.read-text", "file-operations.write-text"],
+      "path-operations": ["path-operations.validate"],
+      "path-normalization": ["path-normalization.resolve"],
+      "message-operations": ["message-operations.format"],
+    };
+    const actions = operationActions[plan.familyId] ?? (["config-vocabulary", "scan-run-vocabulary"].includes(plan.familyId) ? ["vocabulary.resolve"]
       : plan.familyId === "installed-yaml-data" ? ["installed-yaml-data.inspect", "installed-yaml-data.load"]
-      : plan.familyId === "formid-lookup" ? ["formid-lookup.lookup"] : [`${plan.familyId}.analyze`];
+      : plan.familyId === "formid-lookup" ? ["formid-lookup.lookup"] : [`${plan.familyId}.analyze`]);
     if (!actions.includes(scenario.action)) throw new Error("unsupported semantic action");
     object(scenario.input, "scenario.input");
   }
@@ -183,6 +193,12 @@ async function executeScenario(plan: JsonObject, scenario: JsonObject): Promise<
     if (scenario.action !== `installed-yaml-data.${fixture.operation}`) throw new Error("installed-data action disagrees with fixture operation");
     return observeInstalledYaml(fixture);
   }
+  if (plan.familyId === "config-operations") return observeConfigOperations(fixture);
+  if (plan.familyId === "file-operations") {
+    if (scenario.action !== `file-operations.${fixture.operation}`) throw new Error("file action disagrees with fixture operation");
+    return observeFileOperations(fixture);
+  }
+  if (["path-operations", "path-normalization", "message-operations"].includes(plan.familyId)) return observePathMessage(plan.familyId, fixture);
   return analyze(plan.familyId, fixture);
 }
 

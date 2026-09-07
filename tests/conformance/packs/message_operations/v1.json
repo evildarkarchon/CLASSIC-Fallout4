@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 1,
+  "familyId": "message-operations",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-message-core"
+  },
+  "fixtureRoot": "tests/fixtures/message_operations_conformance",
+  "fixtures": {
+    "info": "info.json",
+    "warning": "warning.json",
+    "error": "error.json",
+    "success": "success.json",
+    "progress": "progress.json",
+    "debug": "debug.json",
+    "critical": "critical.json"
+  },
+  "capabilities": [
+    {
+      "id": "message-operations.format",
+      "rustSymbols": [
+        "Message",
+        "format_log_message",
+        "create_message",
+        "format_message"
+      ],
+      "observationFamilies": [
+        "message"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "info",
+      "action": "message-operations.format",
+      "capabilityIds": [
+        "message-operations.format"
+      ],
+      "fixtureRefs": [
+        "info"
+      ],
+      "input": {
+        "fixtureRef": "info"
+      },
+      "expected": {
+        "type": "Info",
+        "target": "All",
+        "content": "Tier1 message [ok]",
+        "details": null,
+        "title": null,
+        "formatted": "Tier1 message [ok]"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "warning",
+      "action": "message-operations.format",
+      "capabilityIds": [
+        "message-operations.format"
+      ],
+      "fixtureRefs": [
+        "warning"
+      ],
+      "input": {
+        "fixtureRef": "warning"
+      },
+      "expected": {
+        "type": "Warning",
+        "target": "Gui",
+        "content": "Caution",
+        "details": "Reason",
+        "title": null,
+        "formatted": "Caution\nDetails: Reason"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "error",
+      "action": "message-operations.format",
+      "capabilityIds": [
+        "message-operations.format"
+      ],
+      "fixtureRefs": [
+        "error"
+      ],
+      "input": {
+        "fixtureRef": "error"
+      },
+      "expected": {
+        "type": "Error",
+        "target": "Console",
+        "content": "Failure",
+        "details": "",
+        "title": null,
+        "formatted": "Failure\nDetails: "
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "success",
+      "action": "message-operations.format",
+      "capabilityIds": [
+        "message-operations.format"
+      ],
+      "fixtureRefs": [
+        "success"
+      ],
+      "input": {
+        "fixtureRef": "success"
+      },
+      "expected": {
+        "type": "Success",
+        "target": "All",
+        "content": "Réussi ✅",
+        "details": "完了",
+        "title": null,
+        "formatted": "Réussi ✅\nDetails: 完了"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "progress",
+      "action": "message-operations.format",
+      "capabilityIds": [
+        "message-operations.format"
+      ],
+      "fixtureRefs": [
+        "progress"
+      ],
+      "input": {
+        "fixtureRef": "progress"
+      },
+      "expected": {
+        "type": "Progress",
+        "target": "Console",
+        "content": "",
+        "details": null,
+        "title": null,
+        "formatted": ""
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "debug",
+      "action": "message-operations.format",
+      "capabilityIds": [
+        "message-operations.format"
+      ],
+      "fixtureRefs": [
+        "debug"
+      ],
+      "input": {
+        "fixtureRef": "debug"
+      },
+      "expected": {
+        "type": "Debug",
+        "target": "LogOnly",
+        "content": "line one\nline two",
+        "details": null,
+        "title": null,
+        "formatted": "line one\nline two"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "critical",
+      "action": "message-operations.format",
+      "capabilityIds": [
+        "message-operations.format"
+      ],
+      "fixtureRefs": [
+        "critical"
+      ],
+      "input": {
+        "fixtureRef": "critical"
+      },
+      "expected": {
+        "type": "Critical",
+        "target": "Gui",
+        "content": "Critical",
+        "details": "first\nsecond",
+        "title": null,
+        "formatted": "Critical\nDetails: first\nsecond"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

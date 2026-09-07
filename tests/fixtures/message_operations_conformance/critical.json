@@ -1,0 +1,8 @@
+{
+  "request": {
+    "type": "Critical",
+    "target": "Gui",
+    "content": "Critical",
+    "details": "first\nsecond"
+  }
+}

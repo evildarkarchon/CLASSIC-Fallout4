@@ -22,6 +22,11 @@ FAMILIES = {
     "installed-yaml-data",
     "config-vocabulary",
     "scan-run-vocabulary",
+    "config-operations",
+    "file-operations",
+    "path-operations",
+    "path-normalization",
+    "message-operations",
 }
 
 
@@ -92,6 +97,16 @@ def _load_plan(path: Path) -> Mapping[str, Any]:
         )
         if plan["familyId"] in {"config-vocabulary", "scan-run-vocabulary"}:
             actions = {"vocabulary.resolve"}
+        actions = {
+            "config-operations": {"config-operations.load-explicit"},
+            "file-operations": {
+                "file-operations.read-text",
+                "file-operations.write-text",
+            },
+            "path-operations": {"path-operations.validate"},
+            "path-normalization": {"path-normalization.resolve"},
+            "message-operations": {"message-operations.format"},
+        }.get(plan["familyId"], actions)
         if scenario.get("action") not in actions:
             raise RunnerContractError("unsupported semantic action")
         _mapping(scenario.get("input"), "scenario.input")
@@ -381,6 +396,24 @@ def _execute_scenario(
                 "installed-data action disagrees with fixture operation"
             )
         return observe_installed_yaml(fixture)
+    if plan["familyId"] == "config-operations":
+        from config_operations_conformance import observe_config_operations
+
+        return observe_config_operations(fixture)
+    if plan["familyId"] == "file-operations":
+        from file_operations_conformance import observe_file_operations
+
+        if scenario["action"] != f"file-operations.{fixture['operation']}":
+            raise RunnerContractError("file action disagrees with fixture operation")
+        return observe_file_operations(fixture)
+    if plan["familyId"] in {
+        "path-operations",
+        "path-normalization",
+        "message-operations",
+    }:
+        from path_message_conformance import observe_path_message
+
+        return observe_path_message(plan["familyId"], fixture)
     if plan["familyId"] == "formid-lookup":
         return asyncio.run(_lookup(fixture))
     import classic_scanlog

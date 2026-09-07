@@ -1,0 +1,8 @@
+{
+  "operation": "load-explicit",
+  "files": {
+    "main.yaml": "schema_version: \"2.0\"\nCLASSIC_Info:\n  version: \"9.0.0\"\n  version_date: \"2026-02-25\"\ncatch_log_records:\n  - \"LAND\"\nCLASSIC_Interface:\n  autoscan_text_Fallout4: \"Autoscan Fallout 4\"\n",
+    "game.yaml": "schema_version: \"1.0\"\nGame_Info:\n  XSE_Acronym: \"F4SE\"\n  GameVersion: \"1.10.163\"\n  GameVersionNEW: \"1.10.984\"\n  CRASHGEN_LatestVer: \"1.37.0\"\n  CRASHGEN_LogName: \"Buffout 4\"\n  Main_Root_Name: \"Fallout4\"\nWarnings_CRASHGEN:\n  Warn_NOPlugins: \"No plugins found\"\n  Warn_Outdated: \"Outdated\"\nCrashlog_Plugins_Exclude: []\nCrashlog_Records_Exclude: []\nCrashlog_Error_Check: []\nCrashlog_Stack_Check: []\nMods_CONF: []\nMods_CORE: []\nMods_FREQ: []\nMods_SOLU: []\n",
+    "ignore.yaml": "CLASSIC_Ignore_Fallout4:\r\n  - \"IgnoreItem1\"\r\n"
+  }
+}

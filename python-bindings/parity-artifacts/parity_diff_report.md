@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-09-07T20:40:38.432277+00:00`
-- Tier-1 contract rows: **1227**
-- Tier-1 matched: **1226**
+- Generated: `2026-09-07T22:03:39.008183+00:00`
+- Tier-1 contract rows: **1228**
+- Tier-1 matched: **1227**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -521,10 +521,10 @@
 | `path.lib.PathValidator.check_write_permissions` | `path` | `GamePathFinder` | `classic_path.PathValidator.check_write_permissions` | `matched` |
 | `path.lib.PathValidator.is_restricted_path` | `path` | `GamePathFinder` | `classic_path.PathValidator.is_restricted_path` | `matched` |
 | `path.lib.PathValidator.is_valid_executable_path` | `path` | `GamePathFinder` | `classic_path.PathValidator.is_valid_executable_path` | `matched` |
-| `path.lib.PathValidator.is_valid_path` | `path` | `GamePathFinder` | `classic_path.PathValidator.is_valid_path` | `matched` |
+| `path.lib.PathValidator.is_valid_path` | `path` | `is_valid_path` | `classic_path.PathValidator.is_valid_path` | `matched` |
 | `path.lib.PathValidator.validate_custom_scan_path` | `path` | `GamePathFinder` | `classic_path.PathValidator.validate_custom_scan_path` | `matched` |
 | `path.lib.PathValidator.validate_path_with_permissions` | `path` | `GamePathFinder` | `classic_path.PathValidator.validate_path_with_permissions` | `matched` |
-| `path.lib.PathValidator.validate_required_files` | `path` | `GamePathFinder` | `classic_path.PathValidator.validate_required_files` | `matched` |
+| `path.lib.PathValidator.validate_required_files` | `path` | `validate_required_files` | `classic_path.PathValidator.validate_required_files` | `matched` |
 | `path.lib.PathValidator.validate_settings_path` | `path` | `GamePathFinder` | `classic_path.PathValidator.validate_settings_path` | `matched` |
 | `path.lib.PathValidator.validate_settings_paths` | `path` | `GamePathFinder` | `classic_path.PathValidator.validate_settings_paths` | `matched` |
 | `path.lib.ValidationError@rust` | `path` | `ValidationError` | `classic_path.BackupManager` | `matched` |
@@ -539,7 +539,7 @@
 | `path.lib.has_read_permission@rust` | `path` | `has_read_permission` | `classic_path.BackupManager` | `matched` |
 | `path.lib.has_write_permission@rust` | `path` | `has_write_permission` | `classic_path.BackupManager` | `matched` |
 | `path.lib.is_restricted_path@rust` | `path` | `is_restricted_path` | `classic_path.BackupManager` | `matched` |
-| `path.lib.is_valid_path@rust` | `path` | `is_valid_path` | `classic_path.BackupManager` | `matched` |
+| `path.lib.is_valid_path@rust` | `path` | `is_valid_path` | `classic_path.PathValidator.is_valid_path` | `matched` |
 | `path.lib.parse_steam_library@rust` | `path` | `parse_steam_library` | `classic_path.BackupManager` | `matched` |
 | `path.lib.parse_xse_log@rust` | `path` | `parse_xse_log` | `classic_path.BackupManager` | `matched` |
 | `path.lib.query_game_registry@rust` | `path` | `query_game_registry` | `classic_path.BackupManager` | `matched` |
@@ -550,7 +550,7 @@
 | `path.lib.validate_is_file@rust` | `path` | `validate_is_file` | `classic_path.BackupManager` | `matched` |
 | `path.lib.validate_path_exists@rust` | `path` | `validate_path_exists` | `classic_path.BackupManager` | `matched` |
 | `path.lib.validate_path_with_permissions@rust` | `path` | `validate_path_with_permissions` | `classic_path.BackupManager` | `matched` |
-| `path.lib.validate_required_files@rust` | `path` | `validate_required_files` | `classic_path.BackupManager` | `matched` |
+| `path.lib.validate_required_files@rust` | `path` | `validate_required_files` | `classic_path.PathValidator.validate_required_files` | `matched` |
 | `path.lib.validate_settings_path@rust` | `path` | `validate_settings_path` | `classic_path.BackupManager` | `matched` |
 | `path.lib.validate_settings_paths@rust` | `path` | `validate_settings_paths` | `classic_path.BackupManager` | `matched` |
 | `perf.lib.MetricsSummary` | `perf` | `MetricsSummary` | `classic_perf.MetricsSummary` | `matched` |
@@ -1239,6 +1239,7 @@
 | `scangame.setup.normalize_game_setup_version_selection` | `scangame` | `normalize_game_setup_version_selection` | `classic_scangame.normalize_game_setup_version_selection` | `matched` |
 | `config.installed_yaml_data.inspect_installed_yaml_data` | `config` | `inspect_installed_yaml_data` | `classic_config.inspect_installed_yaml_data` | `matched` |
 | `config.installed_yaml_data.load_installed_yaml_data` | `config` | `load_installed_yaml_data` | `classic_config.load_installed_yaml_data` | `matched` |
+| `config.explicit_yaml_data.load_explicit_yaml_data` | `config` | `load_explicit_yaml_data` | `classic_config.load_explicit_yaml_data` | `matched` |
 
 ## Gap Counts By Owner/Tier
 

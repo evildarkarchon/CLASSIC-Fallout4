@@ -53,6 +53,7 @@ corrosion_add_cxxbridge(classic_cxx_bridge
         scanner.rs
         database.rs
         files.rs
+        path.rs
         scangame.rs
         game.rs
         xse.rs

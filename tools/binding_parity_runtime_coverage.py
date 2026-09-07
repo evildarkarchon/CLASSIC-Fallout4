@@ -9,8 +9,25 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from binding_compliance.conformance.coverage import SourceParityRow
+from binding_compliance.conformance.families.config_operations import (
+    CONFIG_OPERATIONS_COVERAGE_POLICY,
+)
+from binding_compliance.conformance.families.file_operations import (
+    FILE_OPERATIONS_COVERAGE_POLICY,
+)
 from binding_compliance.conformance.families.installed_yaml_data import (
     INSTALLED_YAML_DATA_COVERAGE_POLICY,
+)
+from binding_compliance.conformance.families.message_operations import (
+    message_operations_coverage_policy,
+)
+from binding_compliance.conformance.families.operation_scope import (
+    is_retained_operation,
+)
+from binding_compliance.conformance.families.path_operations import (
+    path_normalization_coverage_policy,
+    path_operations_coverage_policy,
 )
 from binding_compliance.conformance.families.user_settings import (
     USER_SETTINGS_COVERAGE_POLICY,
@@ -259,6 +276,11 @@ def build_coverage_summary(
         for crate, policy in (
             ("classic-user-settings-core", USER_SETTINGS_COVERAGE_POLICY),
             ("classic-config-core", INSTALLED_YAML_DATA_COVERAGE_POLICY),
+            ("classic-config-core", CONFIG_OPERATIONS_COVERAGE_POLICY),
+            ("classic-file-io-core", FILE_OPERATIONS_COVERAGE_POLICY),
+            ("classic-path-core", path_operations_coverage_policy()),
+            ("classic-shared-core", path_normalization_coverage_policy()),
+            ("classic-message-core", message_operations_coverage_policy()),
         )
         for predicate in policy.predicates
         for symbol in predicate.rust_symbols
@@ -277,6 +299,23 @@ def build_coverage_summary(
         if migrated is None:
             continue
         mapping, family_id = migrated
+        operation = None
+        if binding == "python" and mapping.get("pythonKind") == "method":
+            export = mapping.get("pythonExportPath", "")
+            owner, _, method = export.rpartition(".")
+            operation = method if owner == mapping.get("rustSymbol") else export
+        row = SourceParityRow(
+            obligation_id=str(mapping["id"]),
+            participant_id=binding,
+            mapping_origin="canonical_rust",
+            rust_crate=mapping.get("rustCrate"),
+            rust_symbol=mapping.get("rustSymbol"),
+            artifact="",
+            locator="",
+            runtime_operation=operation,
+        )
+        if is_retained_operation(family_id, row):
+            continue
         if item.get("bindingIdentifier") is not None:
             migrated_identifiers.add(item["bindingIdentifier"])
         # Receipt obligations must not inherit a legacy test pointer or prose

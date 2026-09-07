@@ -1123,6 +1123,23 @@ def load_and_validate_pack(repo_root: Path, pack_path: Path) -> ValidatedPack:
     _validate_identities(pack)
     fixture_root, fixtures = _validate_fixtures(pack, root)
     _validate_normalization(pack)
+    if pack["familyId"] in {
+        "path-operations",
+        "path-normalization",
+        "message-operations",
+    }:
+        from .families.message_operations import validate_message_operations_pack
+        from .families.path_operations import validate_path_operations_pack
+
+        validator = (
+            validate_message_operations_pack
+            if pack["familyId"] == "message-operations"
+            else validate_path_operations_pack
+        )
+        try:
+            validator(pack, root)
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            raise PackValidationError(f"invalid operation pack: {error}") from error
     oracle_paths: tuple[Path, ...] = ()
     oracle_sources: tuple[tuple[str, bytes], ...] = ()
     if pack["familyId"] in {"config-vocabulary", "scan-run-vocabulary"}:

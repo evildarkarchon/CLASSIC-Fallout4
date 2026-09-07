@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "familyId": "config-operations",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-config-core"
+  },
+  "fixtureRoot": "tests/fixtures/config_operations",
+  "fixtures": {
+    "tier1-fields": "tier1-fields.json",
+    "malformed-main": "malformed-main.json",
+    "missing-ignore": "missing-ignore.json"
+  },
+  "capabilities": [
+    {
+      "id": "config-operations.load-explicit",
+      "rustSymbols": [
+        "load_explicit_yaml_data"
+      ],
+      "observationFamilies": [
+        "values",
+        "errors",
+        "durable-effects"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "tier1-fields",
+      "action": "config-operations.load-explicit",
+      "capabilityIds": [
+        "config-operations.load-explicit"
+      ],
+      "fixtureRefs": [
+        "tier1-fields"
+      ],
+      "input": {
+        "fixtureRef": "tier1-fields"
+      },
+      "expected": {
+        "result": {
+          "classicVersion": "9.0.0",
+          "xseAcronym": "F4SE",
+          "crashgenName": "Buffout 4",
+          "gameVersion": "1.10.163",
+          "ignoreList": [
+            "IgnoreItem1"
+          ]
+        },
+        "error": null,
+        "files": [
+          {
+            "path": "game.yaml",
+            "content": "schema_version: \"1.0\"\nGame_Info:\n  XSE_Acronym: \"F4SE\"\n  GameVersion: \"1.10.163\"\n  GameVersionNEW: \"1.10.984\"\n  CRASHGEN_LatestVer: \"1.37.0\"\n  CRASHGEN_LogName: \"Buffout 4\"\n  Main_Root_Name: \"Fallout4\"\nWarnings_CRASHGEN:\n  Warn_NOPlugins: \"No plugins found\"\n  Warn_Outdated: \"Outdated\"\nCrashlog_Plugins_Exclude: []\nCrashlog_Records_Exclude: []\nCrashlog_Error_Check: []\nCrashlog_Stack_Check: []\nMods_CONF: []\nMods_CORE: []\nMods_FREQ: []\nMods_SOLU: []\n"
+          },
+          {
+            "path": "ignore.yaml",
+            "content": "CLASSIC_Ignore_Fallout4:\r\n  - \"IgnoreItem1\"\r\n"
+          },
+          {
+            "path": "main.yaml",
+            "content": "schema_version: \"2.0\"\nCLASSIC_Info:\n  version: \"9.0.0\"\n  version_date: \"2026-02-25\"\ncatch_log_records:\n  - \"LAND\"\nCLASSIC_Interface:\n  autoscan_text_Fallout4: \"Autoscan Fallout 4\"\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "malformed-main",
+      "action": "config-operations.load-explicit",
+      "capabilityIds": [
+        "config-operations.load-explicit"
+      ],
+      "fixtureRefs": [
+        "malformed-main"
+      ],
+      "input": {
+        "fixtureRef": "malformed-main"
+      },
+      "expected": {
+        "result": null,
+        "error": {
+          "code": "parse",
+          "role": "main",
+          "path": "main.yaml"
+        },
+        "files": [
+          {
+            "path": "game.yaml",
+            "content": "schema_version: \"1.0\"\nGame_Info:\n  XSE_Acronym: \"F4SE\"\n  GameVersion: \"1.10.163\"\n  GameVersionNEW: \"1.10.984\"\n  CRASHGEN_LatestVer: \"1.37.0\"\n  CRASHGEN_LogName: \"Buffout 4\"\n  Main_Root_Name: \"Fallout4\"\nWarnings_CRASHGEN:\n  Warn_NOPlugins: \"No plugins found\"\n  Warn_Outdated: \"Outdated\"\nCrashlog_Plugins_Exclude: []\nCrashlog_Records_Exclude: []\nCrashlog_Error_Check: []\nCrashlog_Stack_Check: []\nMods_CONF: []\nMods_CORE: []\nMods_FREQ: []\nMods_SOLU: []\n"
+          },
+          {
+            "path": "ignore.yaml",
+            "content": "CLASSIC_Ignore_Fallout4:\r\n  - \"IgnoreItem1\"\r\n"
+          },
+          {
+            "path": "main.yaml",
+            "content": "{ invalid: yaml: content: }}}"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "missing-ignore",
+      "action": "config-operations.load-explicit",
+      "capabilityIds": [
+        "config-operations.load-explicit"
+      ],
+      "fixtureRefs": [
+        "missing-ignore"
+      ],
+      "input": {
+        "fixtureRef": "missing-ignore"
+      },
+      "expected": {
+        "result": null,
+        "error": {
+          "code": "read",
+          "role": "local_ignore",
+          "path": "ignore.yaml"
+        },
+        "files": [
+          {
+            "path": "game.yaml",
+            "content": "schema_version: \"1.0\"\nGame_Info:\n  XSE_Acronym: \"F4SE\"\n  GameVersion: \"1.10.163\"\n  GameVersionNEW: \"1.10.984\"\n  CRASHGEN_LatestVer: \"1.37.0\"\n  CRASHGEN_LogName: \"Buffout 4\"\n  Main_Root_Name: \"Fallout4\"\nWarnings_CRASHGEN:\n  Warn_NOPlugins: \"No plugins found\"\n  Warn_Outdated: \"Outdated\"\nCrashlog_Plugins_Exclude: []\nCrashlog_Records_Exclude: []\nCrashlog_Error_Check: []\nCrashlog_Stack_Check: []\nMods_CONF: []\nMods_CORE: []\nMods_FREQ: []\nMods_SOLU: []\n"
+          },
+          {
+            "path": "main.yaml",
+            "content": "schema_version: \"2.0\"\nCLASSIC_Info:\n  version: \"9.0.0\"\n  version_date: \"2026-02-25\"\ncatch_log_records:\n  - \"LAND\"\nCLASSIC_Interface:\n  autoscan_text_Fallout4: \"Autoscan Fallout 4\"\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

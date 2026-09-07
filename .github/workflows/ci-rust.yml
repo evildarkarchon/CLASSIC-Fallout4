@@ -310,6 +310,71 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Rust config-operations conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family config-operations --participant rust --artifact-root tools/binding_compliance/artifacts/config-operations
+
+      - name: Upload Rust config-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-config-operations-conformance
+          path: tools/binding_compliance/artifacts/config-operations/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust file-operations conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family file-operations --participant rust --artifact-root tools/binding_compliance/artifacts/file-operations
+
+      - name: Upload Rust file-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-file-operations-conformance
+          path: tools/binding_compliance/artifacts/file-operations/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust path-operations conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family path-operations --participant rust --artifact-root tools/binding_compliance/artifacts/path-operations
+
+      - name: Upload Rust path-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-path-operations-conformance
+          path: tools/binding_compliance/artifacts/path-operations/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust path-normalization conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family path-normalization --participant rust --artifact-root tools/binding_compliance/artifacts/path-normalization
+
+      - name: Upload Rust path-normalization conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-path-normalization-conformance
+          path: tools/binding_compliance/artifacts/path-normalization/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust message-operations conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family message-operations --participant rust --artifact-root tools/binding_compliance/artifacts/message-operations
+
+      - name: Upload Rust message-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-message-operations-conformance
+          path: tools/binding_compliance/artifacts/message-operations/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run Rust scan-run-vocabulary conformance
         if: ${{ !cancelled() }}
         run: python tools/binding_compliance/run_semantic_conformance.py --family scan-run-vocabulary --participant rust --artifact-root tools/binding_compliance/artifacts/scan-run-vocabulary

@@ -1,9 +1,9 @@
 # Python Runtime Coverage Summary
 
-- Generated: `2026-09-07T20:40:38.439780+00:00`
-- Tracked surfaces: **1670**
-- Runtime verified: **1640**
-- Requiring executable receipts: **30**
+- Generated: `2026-09-07T22:03:39.017609+00:00`
+- Tracked surfaces: **1671**
+- Runtime verified: **1620**
+- Requiring executable receipts: **51**
 - Retained structural analysis: **0**
 - Contract mapped only: **0**
 - Newly uncovered: **0**
@@ -13,18 +13,18 @@
 
 | Owner Module | Runtime Verified | Receipt Required | Structural | Contract Mapped | Newly Uncovered | Total |
 |---|---:|---:|---:|---:|---:|---:|
-| `config` | 99 | 2 | 0 | 0 | 0 | 101 |
+| `config` | 99 | 3 | 0 | 0 | 0 | 102 |
 | `database` | 56 | 0 | 0 | 0 | 0 | 56 |
-| `file_io` | 93 | 0 | 0 | 0 | 0 | 93 |
-| `message` | 45 | 0 | 0 | 0 | 0 | 45 |
-| `path` | 72 | 0 | 0 | 0 | 0 | 72 |
+| `file_io` | 87 | 6 | 0 | 0 | 0 | 93 |
+| `message` | 36 | 9 | 0 | 0 | 0 | 45 |
+| `path` | 68 | 4 | 0 | 0 | 0 | 72 |
 | `perf` | 10 | 0 | 0 | 0 | 0 | 10 |
 | `registry` | 20 | 0 | 0 | 0 | 0 | 20 |
 | `resource` | 36 | 0 | 0 | 0 | 0 | 36 |
 | `scangame` | 158 | 0 | 0 | 0 | 0 | 158 |
 | `scanlog` | 544 | 0 | 0 | 0 | 0 | 544 |
 | `settings` | 65 | 0 | 0 | 0 | 0 | 65 |
-| `shared` | 67 | 0 | 0 | 0 | 0 | 67 |
+| `shared` | 66 | 1 | 0 | 0 | 0 | 67 |
 | `update` | 10 | 0 | 0 | 0 | 0 | 10 |
 | `user_settings` | 179 | 28 | 0 | 0 | 0 | 207 |
 | `version` | 15 | 0 | 0 | 0 | 0 | 15 |

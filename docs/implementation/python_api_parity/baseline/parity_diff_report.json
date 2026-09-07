@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-09-07T20:40:38.432277+00:00",
+  "generated_at_utc": "2026-09-07T22:03:39.008183+00:00",
   "summary": {
-    "tier1_contract_total": 1227,
-    "tier1_matched": 1226,
+    "tier1_contract_total": 1228,
+    "tier1_matched": 1227,
     "tier1_missing_rust": 0,
     "tier1_missing_python": 0,
     "tier1_signature_mismatch": 0,
@@ -7651,14 +7651,14 @@
       "tier": "tier1",
       "owner_module": "path",
       "squad": "Squad F (perf/message/path/version/web/update)",
-      "rust_symbol": "GamePathFinder",
+      "rust_symbol": "is_valid_path",
       "python_module": "classic_path",
       "python_export": "PathValidator.is_valid_path",
       "python_export_path": "PathValidator.is_valid_path",
       "status": "matched",
       "expected_python_kind": "method",
       "actual_python_kind": "method",
-      "expected_python_arity": null,
+      "expected_python_arity": 1,
       "actual_python_arity": 1
     },
     {
@@ -7696,14 +7696,14 @@
       "tier": "tier1",
       "owner_module": "path",
       "squad": "Squad F (perf/message/path/version/web/update)",
-      "rust_symbol": "GamePathFinder",
+      "rust_symbol": "validate_required_files",
       "python_module": "classic_path",
       "python_export": "PathValidator.validate_required_files",
       "python_export_path": "PathValidator.validate_required_files",
       "status": "matched",
       "expected_python_kind": "method",
       "actual_python_kind": "method",
-      "expected_python_arity": null,
+      "expected_python_arity": 2,
       "actual_python_arity": 2
     },
     {
@@ -7923,13 +7923,13 @@
       "squad": "Squad F (perf/message/path/version/web/update)",
       "rust_symbol": "is_valid_path",
       "python_module": "classic_path",
-      "python_export": "BackupManager",
-      "python_export_path": "BackupManager",
+      "python_export": "PathValidator.is_valid_path",
+      "python_export_path": "PathValidator.is_valid_path",
       "status": "matched",
-      "expected_python_kind": "class",
-      "actual_python_kind": "class",
-      "expected_python_arity": null,
-      "actual_python_arity": null
+      "expected_python_kind": "method",
+      "actual_python_kind": "method",
+      "expected_python_arity": 1,
+      "actual_python_arity": 1
     },
     {
       "id": "path.lib.parse_steam_library@rust",
@@ -8088,13 +8088,13 @@
       "squad": "Squad F (perf/message/path/version/web/update)",
       "rust_symbol": "validate_required_files",
       "python_module": "classic_path",
-      "python_export": "BackupManager",
-      "python_export_path": "BackupManager",
+      "python_export": "PathValidator.validate_required_files",
+      "python_export_path": "PathValidator.validate_required_files",
       "status": "matched",
-      "expected_python_kind": "class",
-      "actual_python_kind": "class",
-      "expected_python_arity": null,
-      "actual_python_arity": null
+      "expected_python_kind": "method",
+      "actual_python_kind": "method",
+      "expected_python_arity": 2,
+      "actual_python_arity": 2
     },
     {
       "id": "path.lib.validate_settings_path@rust",
@@ -18416,6 +18416,21 @@
       "actual_python_kind": "function",
       "expected_python_arity": 4,
       "actual_python_arity": 4
+    },
+    {
+      "id": "config.explicit_yaml_data.load_explicit_yaml_data",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "load_explicit_yaml_data",
+      "python_module": "classic_config",
+      "python_export": "load_explicit_yaml_data",
+      "python_export_path": "load_explicit_yaml_data",
+      "status": "matched",
+      "expected_python_kind": "function",
+      "actual_python_kind": "function",
+      "expected_python_arity": 3,
+      "actual_python_arity": 3
     }
   ],
   "gaps": [],

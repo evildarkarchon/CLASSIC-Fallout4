@@ -5270,10 +5270,11 @@
       "tier": "tier1",
       "ownerModule": "path",
       "rustCrate": "classic-path-core",
-      "rustSymbol": "GamePathFinder",
+      "rustSymbol": "is_valid_path",
       "pythonModule": "classic_path",
       "pythonExportPath": "PathValidator.is_valid_path",
-      "pythonKind": "method"
+      "pythonKind": "method",
+      "pythonArity": 1
     },
     {
       "id": "path.lib.PathValidator.validate_custom_scan_path",
@@ -5300,10 +5301,11 @@
       "tier": "tier1",
       "ownerModule": "path",
       "rustCrate": "classic-path-core",
-      "rustSymbol": "GamePathFinder",
+      "rustSymbol": "validate_required_files",
       "pythonModule": "classic_path",
       "pythonExportPath": "PathValidator.validate_required_files",
-      "pythonKind": "method"
+      "pythonKind": "method",
+      "pythonArity": 2
     },
     {
       "id": "path.lib.PathValidator.validate_settings_path",
@@ -5452,8 +5454,9 @@
       "rustCrate": "classic-path-core",
       "rustSymbol": "is_valid_path",
       "pythonModule": "classic_path",
-      "pythonExportPath": "BackupManager",
-      "pythonKind": "class"
+      "pythonExportPath": "PathValidator.is_valid_path",
+      "pythonKind": "method",
+      "pythonArity": 1
     },
     {
       "id": "path.lib.parse_steam_library@rust",
@@ -5562,8 +5565,9 @@
       "rustCrate": "classic-path-core",
       "rustSymbol": "validate_required_files",
       "pythonModule": "classic_path",
-      "pythonExportPath": "BackupManager",
-      "pythonKind": "class"
+      "pythonExportPath": "PathValidator.validate_required_files",
+      "pythonKind": "method",
+      "pythonArity": 2
     },
     {
       "id": "path.lib.validate_settings_path@rust",
@@ -12624,6 +12628,17 @@
       "pythonExportPath": "load_installed_yaml_data",
       "pythonKind": "function",
       "pythonArity": 4
+    },
+    {
+      "id": "config.explicit_yaml_data.load_explicit_yaml_data",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "load_explicit_yaml_data",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "load_explicit_yaml_data",
+      "pythonKind": "function",
+      "pythonArity": 3
     }
   ]
 }

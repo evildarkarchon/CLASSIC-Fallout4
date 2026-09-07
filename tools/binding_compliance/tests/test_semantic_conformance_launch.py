@@ -6,8 +6,10 @@ import shutil
 from pathlib import Path
 
 import pytest
-from conformance.adapters.prepare_cxx_conformance import prepare_cxx_run
-from run_semantic_conformance import SUPPORTED_FAMILIES
+from conformance.adapters.prepare_cxx_conformance import (
+    SUPPORTED_FAMILIES,
+    prepare_cxx_run,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 

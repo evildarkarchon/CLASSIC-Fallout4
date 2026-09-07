@@ -1,10 +1,10 @@
 # Node Runtime Coverage Summary
 
-- Generated: `2026-09-07T20:40:37.965801+00:00`
-- Tracked surfaces: **1032**
-- Runtime verified: **996**
-- Requiring executable receipts: **7**
-- Retained structural analysis: **29**
+- Generated: `2026-09-07T21:53:56.833813+00:00`
+- Tracked surfaces: **1033**
+- Runtime verified: **987**
+- Requiring executable receipts: **16**
+- Retained structural analysis: **30**
 - Contract mapped only: **0**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
@@ -13,8 +13,8 @@
 
 | Owner Module | Runtime Verified | Receipt Required | Structural | Contract Mapped | Newly Uncovered | Total |
 |---|---:|---:|---:|---:|---:|---:|
-| `aux` | 166 | 0 | 0 | 0 | 0 | 166 |
-| `config` | 123 | 2 | 0 | 0 | 0 | 125 |
+| `aux` | 157 | 8 | 1 | 0 | 0 | 166 |
+| `config` | 123 | 3 | 0 | 0 | 0 | 126 |
 | `database` | 23 | 0 | 0 | 0 | 0 | 23 |
 | `file_io` | 24 | 0 | 0 | 0 | 0 | 24 |
 | `message` | 9 | 0 | 0 | 0 | 0 | 9 |

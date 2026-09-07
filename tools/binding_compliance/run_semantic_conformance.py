@@ -26,6 +26,11 @@ SUPPORTED_FAMILIES = (
     "installed-yaml-data",
     "config-vocabulary",
     "scan-run-vocabulary",
+    "config-operations",
+    "file-operations",
+    "path-operations",
+    "path-normalization",
+    "message-operations",
 )
 
 _COMMON_SOURCES = (
@@ -37,6 +42,10 @@ _COMMON_SOURCES = (
     REPO_ROOT / "business-logic/classic-config-core/src",
     REPO_ROOT / "business-logic/classic-durable-publication/src",
     REPO_ROOT / "foundation/classic-vocabulary/src",
+    REPO_ROOT / "foundation/classic-shared-core/src",
+    REPO_ROOT / "business-logic/classic-file-io-core/src",
+    REPO_ROOT / "business-logic/classic-path-core/src",
+    REPO_ROOT / "business-logic/classic-message-core/src",
 )
 PARTICIPANT_COMMANDS = {
     "rust": ParticipantCommand(
@@ -68,6 +77,12 @@ PARTICIPANT_COMMANDS = {
             REPO_ROOT
             / "node-bindings/classic-node/__test__/installed_yaml_conformance.ts",
             REPO_ROOT / "node-bindings/classic-node/__test__/vocabulary_conformance.ts",
+            REPO_ROOT
+            / "node-bindings/classic-node/__test__/config_operations_conformance.ts",
+            REPO_ROOT
+            / "node-bindings/classic-node/__test__/file_operations_conformance.ts",
+            REPO_ROOT
+            / "node-bindings/classic-node/__test__/path_message_conformance.ts",
             REPO_ROOT / "node-bindings/classic-node/src",
             REPO_ROOT / "node-bindings/classic-node/package.json",
             *_COMMON_SOURCES,
@@ -87,6 +102,13 @@ PARTICIPANT_COMMANDS = {
             REPO_ROOT / "python-bindings/tests/semantic_conformance_runner.py",
             REPO_ROOT / "python-bindings/tests/installed_yaml_conformance.py",
             REPO_ROOT / "python-bindings/tests/vocabulary_conformance.py",
+            REPO_ROOT / "python-bindings/tests/config_operations_conformance.py",
+            REPO_ROOT / "python-bindings/tests/file_operations_conformance.py",
+            REPO_ROOT / "python-bindings/tests/path_message_conformance.py",
+            REPO_ROOT / "python-bindings/classic-file-io-py/src",
+            REPO_ROOT / "python-bindings/classic-path-py/src",
+            REPO_ROOT / "python-bindings/classic-message-py/src",
+            REPO_ROOT / "foundation/classic-shared-py/src",
             REPO_ROOT / "python-bindings/classic-config-py/src",
             REPO_ROOT / "python-bindings/classic-scanlog-py/src",
             REPO_ROOT / "python-bindings/classic-database-py/src",
