@@ -37,6 +37,9 @@ def test_repository_workflows_keep_every_promoted_execution_blocking() -> None:
         "path-operations",
         "path-normalization",
         "message-operations",
+        "database-operations",
+        "version-registry",
+        "scan-game",
     ),
 )
 @pytest.mark.parametrize(

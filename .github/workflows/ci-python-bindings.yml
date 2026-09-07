@@ -263,6 +263,45 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Python database-operations conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family database-operations --participant python --artifact-root tools/binding_compliance/artifacts/database-operations
+
+      - name: Upload Python database-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-database-operations-conformance
+          path: tools/binding_compliance/artifacts/database-operations/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python version-registry conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family version-registry --participant python --artifact-root tools/binding_compliance/artifacts/version-registry
+
+      - name: Upload Python version-registry conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-version-registry-conformance
+          path: tools/binding_compliance/artifacts/version-registry/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python scan-game conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family scan-game --participant python --artifact-root tools/binding_compliance/artifacts/scan-game
+
+      - name: Upload Python scan-game conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-scan-game-conformance
+          path: tools/binding_compliance/artifacts/scan-game/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run Python path-operations conformance
         if: ${{ !cancelled() }}
         run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family path-operations --participant python --artifact-root tools/binding_compliance/artifacts/path-operations

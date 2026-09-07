@@ -21,6 +21,7 @@ from .failures import FailureKind
 from .families.autoscan_report import AUTOSCAN_REPORT_COVERAGE_POLICY
 from .families.config_operations import CONFIG_OPERATIONS_COVERAGE_POLICY
 from .families.crash_log_scan_run import CRASH_LOG_SCAN_RUN_COVERAGE_POLICY
+from .families.database_operations import DATABASE_OPERATIONS_COVERAGE_POLICY
 from .families.file_operations import FILE_OPERATIONS_COVERAGE_POLICY
 from .families.installed_yaml_data import INSTALLED_YAML_DATA_COVERAGE_POLICY
 from .families.message_operations import message_operations_coverage_policy
@@ -28,8 +29,10 @@ from .families.path_operations import (
     path_normalization_coverage_policy,
     path_operations_coverage_policy,
 )
+from .families.scan_game import SCAN_GAME_COVERAGE_POLICY
 from .families.semantic_analysis import SEMANTIC_ANALYSIS_COVERAGE_POLICIES
 from .families.user_settings import USER_SETTINGS_COVERAGE_POLICY
+from .families.version_registry import VERSION_REGISTRY_COVERAGE_POLICY
 from .families.vocabulary import vocabulary_coverage_policies
 from .packs import (
     MaterializationError,
@@ -60,6 +63,9 @@ FAMILY_COVERAGE_POLICIES: Mapping[str, FamilyCoveragePolicy] = {
     USER_SETTINGS_COVERAGE_POLICY.family_id: USER_SETTINGS_COVERAGE_POLICY,
     INSTALLED_YAML_DATA_COVERAGE_POLICY.family_id: INSTALLED_YAML_DATA_COVERAGE_POLICY,
     CONFIG_OPERATIONS_COVERAGE_POLICY.family_id: CONFIG_OPERATIONS_COVERAGE_POLICY,
+    DATABASE_OPERATIONS_COVERAGE_POLICY.family_id: DATABASE_OPERATIONS_COVERAGE_POLICY,
+    VERSION_REGISTRY_COVERAGE_POLICY.family_id: VERSION_REGISTRY_COVERAGE_POLICY,
+    SCAN_GAME_COVERAGE_POLICY.family_id: SCAN_GAME_COVERAGE_POLICY,
     FILE_OPERATIONS_COVERAGE_POLICY.family_id: FILE_OPERATIONS_COVERAGE_POLICY,
     "path-operations": path_operations_coverage_policy(),
     "path-normalization": path_normalization_coverage_policy(),

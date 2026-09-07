@@ -1,0 +1,508 @@
+{
+  "schemaVersion": 1,
+  "familyId": "scan-game",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scangame-core"
+  },
+  "fixtureRoot": "tests/fixtures/scan_game_conformance",
+  "fixtures": {
+    "ini-empty": "ini-empty.json",
+    "ini-particle-warning": "ini-particle-warning.json",
+    "ini-particle-corrected": "ini-particle-corrected.json",
+    "ini-game-notice": "ini-game-notice.json",
+    "ini-other-game": "ini-other-game.json",
+    "enb-absent": "enb-absent.json",
+    "enb-partial": "enb-partial.json",
+    "enb-complete": "enb-complete.json",
+    "enb-config-directory": "enb-config-directory.json"
+  },
+  "capabilities": [
+    {
+      "id": "scan-game.validate-ini",
+      "rustSymbols": [
+        "IniValidator",
+        "validate_inis",
+        "detect_all_issues"
+      ],
+      "observationFamilies": [
+        "game-check-results"
+      ]
+    },
+    {
+      "id": "scan-game.validate-enb",
+      "rustSymbols": [
+        "EnbChecker",
+        "validate"
+      ],
+      "observationFamilies": [
+        "game-check-results"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "ini-empty",
+      "action": "scan-game.validate-ini",
+      "capabilityIds": [
+        "scan-game.validate-ini"
+      ],
+      "fixtureRefs": [
+        "ini-empty"
+      ],
+      "input": {
+        "fixtureRef": "ini-empty"
+      },
+      "expected": {
+        "operation": "validate-ini",
+        "game": "Fallout4",
+        "result": {
+          "report": "",
+          "issues": []
+        },
+        "beforeFiles": [
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [],
+        "directories": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "ini-particle-warning",
+      "action": "scan-game.validate-ini",
+      "capabilityIds": [
+        "scan-game.validate-ini"
+      ],
+      "fixtureRefs": [
+        "ini-particle-warning"
+      ],
+      "input": {
+        "fixtureRef": "ini-particle-warning"
+      },
+      "expected": {
+        "operation": "validate-ini",
+        "game": "Fallout4",
+        "result": {
+          "report": "",
+          "issues": [
+            {
+              "filePath": "Data/EPO.ini",
+              "section": "Particles",
+              "setting": "iMaxDesired",
+              "currentValue": "6000",
+              "recommendedValue": "5000",
+              "description": "High particle count can cause performance issues and crashes.",
+              "severity": "Warning"
+            }
+          ]
+        },
+        "beforeFiles": [
+          {
+            "path": "Data/EPO.ini",
+            "content": "[Particles]\niMaxDesired=6000\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "Data/EPO.ini",
+            "content": "[Particles]\niMaxDesired=6000\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [
+          "Data"
+        ],
+        "directories": [
+          "Data"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "ini-particle-corrected",
+      "action": "scan-game.validate-ini",
+      "capabilityIds": [
+        "scan-game.validate-ini"
+      ],
+      "fixtureRefs": [
+        "ini-particle-corrected"
+      ],
+      "input": {
+        "fixtureRef": "ini-particle-corrected"
+      },
+      "expected": {
+        "operation": "validate-ini",
+        "game": "Fallout4",
+        "result": {
+          "report": "",
+          "issues": []
+        },
+        "beforeFiles": [
+          {
+            "path": "Data/EPO.ini",
+            "content": "[Particles]\niMaxDesired=5000\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "Data/EPO.ini",
+            "content": "[Particles]\niMaxDesired=5000\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [
+          "Data"
+        ],
+        "directories": [
+          "Data"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "ini-game-notice",
+      "action": "scan-game.validate-ini",
+      "capabilityIds": [
+        "scan-game.validate-ini"
+      ],
+      "fixtureRefs": [
+        "ini-game-notice"
+      ],
+      "input": {
+        "fixtureRef": "ini-game-notice"
+      },
+      "expected": {
+        "operation": "validate-ini",
+        "game": "Fallout4",
+        "result": {
+          "report": "[!] NOTICE: <ROOT>/Fallout4.ini contains the *sStartingConsoleCommand* setting.\nIn rare cases, this setting can slow down the initial game startup time for some players.\nYou can test your initial startup time difference by removing this setting from the INI file.\n-----\n",
+          "issues": []
+        },
+        "beforeFiles": [
+          {
+            "path": "Fallout4.ini",
+            "content": "[General]\nsStartingConsoleCommand=cl off\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "Fallout4.ini",
+            "content": "[General]\nsStartingConsoleCommand=cl off\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [],
+        "directories": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "ini-other-game",
+      "action": "scan-game.validate-ini",
+      "capabilityIds": [
+        "scan-game.validate-ini"
+      ],
+      "fixtureRefs": [
+        "ini-other-game"
+      ],
+      "input": {
+        "fixtureRef": "ini-other-game"
+      },
+      "expected": {
+        "operation": "validate-ini",
+        "game": "Fallout4VR",
+        "result": {
+          "report": "",
+          "issues": []
+        },
+        "beforeFiles": [
+          {
+            "path": "Fallout4.ini",
+            "content": "[General]\nsStartingConsoleCommand=cl off\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "Fallout4.ini",
+            "content": "[General]\nsStartingConsoleCommand=cl off\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [],
+        "directories": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "enb-absent",
+      "action": "scan-game.validate-enb",
+      "capabilityIds": [
+        "scan-game.validate-enb"
+      ],
+      "fixtureRefs": [
+        "enb-absent"
+      ],
+      "input": {
+        "fixtureRef": "enb-absent"
+      },
+      "expected": {
+        "operation": "validate-enb",
+        "game": "Fallout4",
+        "result": {
+          "binaries": "NotInstalled",
+          "config": "NotFound"
+        },
+        "beforeFiles": [
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [],
+        "directories": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "enb-partial",
+      "action": "scan-game.validate-enb",
+      "capabilityIds": [
+        "scan-game.validate-enb"
+      ],
+      "fixtureRefs": [
+        "enb-partial"
+      ],
+      "input": {
+        "fixtureRef": "enb-partial"
+      },
+      "expected": {
+        "operation": "validate-enb",
+        "game": "Fallout4",
+        "result": {
+          "binaries": "Partial",
+          "config": "NotFound"
+        },
+        "beforeFiles": [
+          {
+            "path": "d3d11.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "d3d11.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [],
+        "directories": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "enb-complete",
+      "action": "scan-game.validate-enb",
+      "capabilityIds": [
+        "scan-game.validate-enb"
+      ],
+      "fixtureRefs": [
+        "enb-complete"
+      ],
+      "input": {
+        "fixtureRef": "enb-complete"
+      },
+      "expected": {
+        "operation": "validate-enb",
+        "game": "Fallout4",
+        "result": {
+          "binaries": "Present",
+          "config": "Valid"
+        },
+        "beforeFiles": [
+          {
+            "path": "d3d11.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "d3dcompiler_46e.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "enbseries.ini",
+            "content": "[GLOBAL]\nUseEffect=true\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "d3d11.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "d3dcompiler_46e.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "enbseries.ini",
+            "content": "[GLOBAL]\nUseEffect=true\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [],
+        "directories": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "enb-config-directory",
+      "action": "scan-game.validate-enb",
+      "capabilityIds": [
+        "scan-game.validate-enb"
+      ],
+      "fixtureRefs": [
+        "enb-config-directory"
+      ],
+      "input": {
+        "fixtureRef": "enb-config-directory"
+      },
+      "expected": {
+        "operation": "validate-enb",
+        "game": "Fallout4",
+        "result": {
+          "binaries": "Present",
+          "config": "Unreadable"
+        },
+        "beforeFiles": [
+          {
+            "path": "d3d11.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "d3dcompiler_46e.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "d3d11.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "d3dcompiler_46e.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [
+          "enbseries.ini"
+        ],
+        "directories": [
+          "enbseries.ini"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

@@ -332,6 +332,45 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Node database-operations conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family database-operations --participant node --artifact-root tools/binding_compliance/artifacts/database-operations
+
+      - name: Upload Node database-operations conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-database-operations-conformance
+          path: tools/binding_compliance/artifacts/database-operations/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node version-registry conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family version-registry --participant node --artifact-root tools/binding_compliance/artifacts/version-registry
+
+      - name: Upload Node version-registry conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-version-registry-conformance
+          path: tools/binding_compliance/artifacts/version-registry/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node scan-game conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family scan-game --participant node --artifact-root tools/binding_compliance/artifacts/scan-game
+
+      - name: Upload Node scan-game conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-scan-game-conformance
+          path: tools/binding_compliance/artifacts/scan-game/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run Node path-operations conformance
         if: matrix.runtime == 'node' && !cancelled()
         run: python tools/binding_compliance/run_semantic_conformance.py --family path-operations --participant node --artifact-root tools/binding_compliance/artifacts/path-operations

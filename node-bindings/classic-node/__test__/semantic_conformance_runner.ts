@@ -1,3 +1,6 @@
+import { observeDatabaseOperations } from "./database_operations_conformance.js";
+import { observeVersionRegistry } from "./version_registry_conformance.js";
+import { observeScanGame } from "./scan_game_conformance.js";
 import { randomUUID } from "node:crypto";
 import { lstat, mkdir, open, readFile, rename, rm } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
@@ -9,7 +12,7 @@ import { observeFileOperations } from "./file_operations_conformance.js";
 import { observePathMessage } from "./path_message_conformance.js";
 
 type JsonObject = Record<string, any>;
-const families = ["crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary", "config-operations", "file-operations", "path-operations", "path-normalization", "message-operations"];
+const families = ["crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary", "config-operations", "file-operations", "path-operations", "path-normalization", "message-operations", "database-operations", "version-registry", "scan-game"];
 
 /** Reject malformed invocation objects before invoking native operations. */
 function object(value: unknown, label: string): JsonObject {
@@ -49,6 +52,9 @@ async function loadPlan(path: string): Promise<JsonObject> {
       "path-operations": ["path-operations.validate"],
       "path-normalization": ["path-normalization.resolve"],
       "message-operations": ["message-operations.format"],
+      "database-operations": ["database-operations.pool"],
+      "version-registry": ["version-registry.query"],
+      "scan-game": ["scan-game.validate-ini", "scan-game.validate-enb"],
     };
     const actions = operationActions[plan.familyId] ?? (["config-vocabulary", "scan-run-vocabulary"].includes(plan.familyId) ? ["vocabulary.resolve"]
       : plan.familyId === "installed-yaml-data" ? ["installed-yaml-data.inspect", "installed-yaml-data.load"]
@@ -194,6 +200,9 @@ async function executeScenario(plan: JsonObject, scenario: JsonObject): Promise<
     return observeInstalledYaml(fixture);
   }
   if (plan.familyId === "config-operations") return observeConfigOperations(fixture);
+  if (plan.familyId === "database-operations") return observeDatabaseOperations(fixture);
+  if (plan.familyId === "version-registry") return observeVersionRegistry(fixture);
+  if (plan.familyId === "scan-game") return observeScanGame(fixture);
   if (plan.familyId === "file-operations") {
     if (scenario.action !== `file-operations.${fixture.operation}`) throw new Error("file action disagrees with fixture operation");
     return observeFileOperations(fixture);

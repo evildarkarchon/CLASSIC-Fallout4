@@ -13,6 +13,9 @@ from binding_compliance.conformance.coverage import SourceParityRow
 from binding_compliance.conformance.families.config_operations import (
     CONFIG_OPERATIONS_COVERAGE_POLICY,
 )
+from binding_compliance.conformance.families.database_operations import (
+    DATABASE_OPERATIONS_COVERAGE_POLICY,
+)
 from binding_compliance.conformance.families.file_operations import (
     FILE_OPERATIONS_COVERAGE_POLICY,
 )
@@ -29,8 +32,12 @@ from binding_compliance.conformance.families.path_operations import (
     path_normalization_coverage_policy,
     path_operations_coverage_policy,
 )
+from binding_compliance.conformance.families.scan_game import SCAN_GAME_COVERAGE_POLICY
 from binding_compliance.conformance.families.user_settings import (
     USER_SETTINGS_COVERAGE_POLICY,
+)
+from binding_compliance.conformance.families.version_registry import (
+    VERSION_REGISTRY_COVERAGE_POLICY,
 )
 from parity_artifact_io import stable_id_hash, write_json  # noqa: F401
 
@@ -277,6 +284,9 @@ def build_coverage_summary(
             ("classic-user-settings-core", USER_SETTINGS_COVERAGE_POLICY),
             ("classic-config-core", INSTALLED_YAML_DATA_COVERAGE_POLICY),
             ("classic-config-core", CONFIG_OPERATIONS_COVERAGE_POLICY),
+            ("classic-database-core", DATABASE_OPERATIONS_COVERAGE_POLICY),
+            ("classic-version-registry-core", VERSION_REGISTRY_COVERAGE_POLICY),
+            ("classic-scangame-core", SCAN_GAME_COVERAGE_POLICY),
             ("classic-file-io-core", FILE_OPERATIONS_COVERAGE_POLICY),
             ("classic-path-core", path_operations_coverage_policy()),
             ("classic-shared-core", path_normalization_coverage_policy()),
@@ -300,6 +310,11 @@ def build_coverage_summary(
             continue
         mapping, family_id = migrated
         operation = None
+        if family_id in {"database-operations", "version-registry", "scan-game"}:
+            if binding == "node" and mapping.get("nodeKind") == "function":
+                operation = mapping.get("nodeExport")
+            elif binding == "python" and mapping.get("pythonKind") == "function":
+                operation = mapping.get("pythonExportPath")
         if binding == "python" and mapping.get("pythonKind") == "method":
             export = mapping.get("pythonExportPath", "")
             owner, _, method = export.rpartition(".")

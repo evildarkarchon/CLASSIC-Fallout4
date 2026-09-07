@@ -12,6 +12,76 @@ from ..coverage import SourceParityRow
 # Keep participant and class identity explicit: similarly named unrelated methods
 # must never inherit a disposition from this phase-one migration.
 _RETAINED = {
+    (
+        "version-registry",
+        "classic-version-registry-core",
+        "VersionInfo",
+        "python",
+    ): frozenset(
+        {
+            "__eq__",
+            "__hash__",
+            "get_compatible_crashgens",
+            "get_crashgen_for_version",
+            "get_crashgen_version_strings",
+            "is_compatible_with",
+        }
+    ),
+    (
+        "version-registry",
+        "classic-version-registry-core",
+        "VersionRegistry",
+        "python",
+    ): frozenset(
+        {
+            "__init__",
+            "get_address_library_filename",
+            "get_all",
+            "get_all_exe_hashes",
+            "get_all_for_game",
+            "get_all_script_hashes",
+            "get_by_short_name",
+            "get_by_version",
+            "get_correct_versions",
+            "get_crashgen_configs",
+            "get_crashgen_for_version",
+            "get_crashgen_versions",
+            "get_script_hashes_for_version",
+            "get_wrong_versions",
+            "match_version_string",
+        }
+    ),
+    (
+        "database-operations",
+        "classic-database-core",
+        "DatabasePool",
+        "python",
+    ): frozenset(
+        {
+            "get_cache_capacity",
+            "get_cache_cleanup_interval",
+            "get_cache_cleanup_threshold",
+            "get_max_connections",
+            "get_stats",
+            "optimize",
+            "rebalance_connections",
+            "recalculate_max_connections",
+            "set_cache_capacity",
+            "set_cache_cleanup_interval",
+            "set_cache_cleanup_threshold",
+            "set_cache_ttl",
+            "set_game_table",
+            "set_max_connections",
+            "get_batch_cache_ttl",
+            "get_default_cache_cleanup_threshold",
+            "get_default_cache_ttl",
+            "get_default_query_cache_capacity",
+            "get_max_cache_ttl",
+        }
+    ),
+    ("scan-game", "classic-scangame-core", "EnbChecker", "python"): frozenset(
+        {"format_message"}
+    ),
     ("file-operations", "classic-file-io-core", "FileIOCore", "python"): frozenset(
         {
             "append_file",

@@ -34,6 +34,8 @@ Config and scan-run Vocabulary labels use executable token-to-label receipts, wh
 
 Config loading, text file I/O, path validation/normalization, and message formatting now have separate blocking operation packs. Their [equivalence map](docs/implementation/config_file_path_message_conformance_equivalence.md) records exact effects, errors, binding applicability, and retained evidence.
 
+Database pool lookups, Version Registry metadata/matching, and Scan Game INI/ENB checks require blocking receipts through Rust, Node, Python, and CXX on both compilers. Their [equivalence map](docs/implementation/database_version_scangame_conformance_equivalence.md) records controlled fixtures, unchanged disk contents, stable failures, and the precise operations that retain their existing tests.
+
 For older historical context, see [CLASSIC - Readme.pdf](CLASSIC%20-%20Readme.pdf).
 
 Nexus Mods: <https://www.nexusmods.com/fallout4/mods/56255>

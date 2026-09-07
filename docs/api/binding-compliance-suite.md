@@ -342,3 +342,18 @@ structured failures, exact file effects, and narrowly normalized temporary paths
 Existing registry and positive evidence remain available; migrated rows require
 receipts. See the [operation equivalence map](../implementation/config_file_path_message_conformance_equivalence.md)
 for precise coverage, fixtures, retained class methods, and commands.
+
+## Database, Version Registry, and Scan Game packs
+
+`database-operations`, `version-registry`, and `scan-game` are blocking semantic
+families using the same launcher. All require Rust, Node, Python, and native CXX
+receipts; CXX additionally requires MSVC and clang-cl JUnit/attempt evidence.
+Owned SQLite bytes, fixture-seeded version metadata, and disposable INI/ENB
+directories replace contributor-machine state. Observations preserve each
+domain's public results, misses, errors, and exact durable effects.
+
+The [same-revision evidence map](../implementation/database_version_scangame_conformance_equivalence.md)
+lists executed operations and retained diagnostics. Existing suites run before
+the receipt jobs at the same checkout. Migrated rows require actual receipts;
+frozen unrelated methods retain their original evidence without granting credit
+to newly added operations. No frontend consumer obligation is introduced.

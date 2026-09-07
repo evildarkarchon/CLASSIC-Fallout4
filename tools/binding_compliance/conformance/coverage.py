@@ -344,6 +344,21 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
             # method and type mappings. Read the public binding operation so a
             # new class method or bridge alias cannot inherit existing credit.
             runtime_operation = None
+            # These operation packs migrate portions of aggregate class mappings.
+            # Preserve free-function identity so unrelated and future exports
+            # cannot borrow the class carrier's executed observation.
+            if raw_row.get("rustCrate") in {
+                "classic-database-core",
+                "classic-version-registry-core",
+                "classic-scangame-core",
+            }:
+                if participant_id == "node" and raw_row.get("nodeKind") == "function":
+                    runtime_operation = raw_row.get("nodeExport")
+                elif (
+                    participant_id == "python"
+                    and raw_row.get("pythonKind") == "function"
+                ):
+                    runtime_operation = raw_row.get("pythonExportPath")
             # Label functions map to their enum owner. Keep the exported function
             # identity too, so a future resolver cannot borrow an existing call.
             if rust_symbol in vocabulary_symbols:

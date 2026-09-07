@@ -3,6 +3,29 @@ use std::fs;
 use std::path::Path;
 use tempfile::TempDir;
 
+/// The root-based public bridge must load INIs before returning structured findings.
+#[test]
+fn ini_root_detection_loads_values_and_leaves_game_files_unchanged() {
+    let root = TempDir::new().expect("game fixture");
+    let path = root.path().join("EPO.ini");
+    let bytes = "[Particles]\niMaxDesired=6000\n";
+    fs::write(&path, bytes).expect("particle fixture");
+
+    let issues =
+        ini_validator_detect_all_issues_for_root("Fallout4", &root.path().to_string_lossy());
+
+    assert_eq!(
+        issues.len(),
+        1,
+        "uncached validation must still find the particle warning"
+    );
+    assert_eq!(issues[0].file_path, path.to_string_lossy());
+    assert_eq!(issues[0].setting, "iMaxDesired");
+    assert_eq!(issues[0].current_value, "6000");
+    assert_eq!(issues[0].recommended_value, "5000");
+    assert_eq!(fs::read_to_string(path).expect("unchanged fixture"), bytes);
+}
+
 // ── Game Setup Intake tests ───────────────────────────────────────────────
 
 fn write_valid_fallout4_docs_inis(docs_root: &Path) {

@@ -1,0 +1,9 @@
+{
+  "operation": "match",
+  "registryYaml": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n",
+  "request": {
+    "version": "1.10.163",
+    "game": "Fallout4",
+    "isVr": false
+  }
+}

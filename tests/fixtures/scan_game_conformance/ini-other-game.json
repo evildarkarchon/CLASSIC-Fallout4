@@ -1,0 +1,9 @@
+{
+  "operation": "validate-ini",
+  "game": "Fallout4VR",
+  "files": {
+    "sentinel.txt": "unchanged\n",
+    "Fallout4.ini": "[General]\nsStartingConsoleCommand=cl off\n"
+  },
+  "directories": []
+}

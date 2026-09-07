@@ -1,0 +1,259 @@
+{
+  "schemaVersion": 1,
+  "familyId": "version-registry",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-version-registry-core"
+  },
+  "fixtureRoot": "tests/fixtures/version_registry_conformance",
+  "fixtures": {
+    "metadata": "metadata.json",
+    "missing-id": "missing-id.json",
+    "exact": "exact.json",
+    "vr-exact": "vr-exact.json",
+    "vr-filter": "vr-filter.json",
+    "unknown-game": "unknown-game.json",
+    "invalid-version": "invalid-version.json"
+  },
+  "capabilities": [
+    {
+      "id": "version-registry.query",
+      "rustSymbols": [
+        "get_by_id",
+        "match_version",
+        "VersionInfo",
+        "MatchResult",
+        "VersionRegistry"
+      ],
+      "observationFamilies": [
+        "values",
+        "errors"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "metadata",
+      "action": "version-registry.query",
+      "capabilityIds": [
+        "version-registry.query"
+      ],
+      "fixtureRefs": [
+        "metadata"
+      ],
+      "input": {
+        "fixtureRef": "metadata"
+      },
+      "expected": {
+        "result": {
+          "id": "CONFORMANCE_STANDARD",
+          "version": "1.10.163.0",
+          "shortName": "Fixture Standard",
+          "game": "Fallout4",
+          "docsName": "FixtureDocs",
+          "steamId": 12345,
+          "isVr": false
+        },
+        "error": null,
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "missing-id",
+      "action": "version-registry.query",
+      "capabilityIds": [
+        "version-registry.query"
+      ],
+      "fixtureRefs": [
+        "missing-id"
+      ],
+      "input": {
+        "fixtureRef": "missing-id"
+      },
+      "expected": {
+        "result": null,
+        "error": null,
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "exact",
+      "action": "version-registry.query",
+      "capabilityIds": [
+        "version-registry.query"
+      ],
+      "fixtureRefs": [
+        "exact"
+      ],
+      "input": {
+        "fixtureRef": "exact"
+      },
+      "expected": {
+        "result": {
+          "matchedId": "CONFORMANCE_STANDARD",
+          "confidence": "exact",
+          "message": "Exact match: Fixture Standard Edition (CONFORMANCE_STANDARD)"
+        },
+        "error": null,
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "vr-exact",
+      "action": "version-registry.query",
+      "capabilityIds": [
+        "version-registry.query"
+      ],
+      "fixtureRefs": [
+        "vr-exact"
+      ],
+      "input": {
+        "fixtureRef": "vr-exact"
+      },
+      "expected": {
+        "result": {
+          "matchedId": "CONFORMANCE_VR",
+          "confidence": "exact",
+          "message": "Exact match: Fixture VR Edition (CONFORMANCE_VR)"
+        },
+        "error": null,
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "vr-filter",
+      "action": "version-registry.query",
+      "capabilityIds": [
+        "version-registry.query"
+      ],
+      "fixtureRefs": [
+        "vr-filter"
+      ],
+      "input": {
+        "fixtureRef": "vr-filter"
+      },
+      "expected": {
+        "result": {
+          "matchedId": "CONFORMANCE_VR",
+          "confidence": "nearest",
+          "message": "Version 1.10.163.0 matched to nearest: Fixture VR Edition (distance: 8091)"
+        },
+        "error": null,
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "unknown-game",
+      "action": "version-registry.query",
+      "capabilityIds": [
+        "version-registry.query"
+      ],
+      "fixtureRefs": [
+        "unknown-game"
+      ],
+      "input": {
+        "fixtureRef": "unknown-game"
+      },
+      "expected": {
+        "result": {
+          "matchedId": null,
+          "confidence": "unknown",
+          "message": "No matching version found for 1.10.163.0 (game: UnknownGame, VR: false)"
+        },
+        "error": null,
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid-version",
+      "action": "version-registry.query",
+      "capabilityIds": [
+        "version-registry.query"
+      ],
+      "fixtureRefs": [
+        "invalid-version"
+      ],
+      "input": {
+        "fixtureRef": "invalid-version"
+      },
+      "expected": {
+        "result": null,
+        "error": {
+          "code": "invalid_version"
+        },
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

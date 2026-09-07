@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-07T21:53:56.833813+00:00",
+  "generated_at_utc": "2026-09-07T22:24:20.084435+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -8,8 +8,8 @@
   },
   "summary": {
     "tracked_surface_total": 1033,
-    "runtime_verified_total": 987,
-    "receipt_required_total": 16,
+    "runtime_verified_total": 981,
+    "receipt_required_total": 22,
     "structural_analyzer_total": 30,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
@@ -20,9 +20,9 @@
   "registryMismatches": [],
   "perOwnerModule": {
     "aux": {
-      "runtime_verified": 157,
+      "runtime_verified": 153,
       "total": 166,
-      "receipt_required": 8,
+      "receipt_required": 12,
       "structural_analyzer": 1
     },
     "config": {
@@ -85,8 +85,9 @@
       "total": 13
     },
     "version_registry": {
-      "runtime_verified": 74,
-      "total": 74
+      "receipt_required": 2,
+      "total": 74,
+      "runtime_verified": 72
     },
     "web": {
       "runtime_verified": 15,
@@ -4457,17 +4458,11 @@
       "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "VersionInfo",
       "bindingIdentifier": "getVersionById",
-      "coverageId": "node-tier1-version-registry",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-registry-tier1-parity",
-      "fixtureRefs": [
-        "versionRegistryCases"
-      ],
-      "notes": null
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "version-registry"
     },
     {
       "trackedId": "contract:version-registry-get-by-version",
@@ -4590,17 +4585,11 @@
       "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "MatchResult",
       "bindingIdentifier": "matchVersion",
-      "coverageId": "node-tier1-version-registry",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "version-registry-tier1-parity",
-      "fixtureRefs": [
-        "versionRegistryCases"
-      ],
-      "notes": null
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "version-registry"
     },
     {
       "trackedId": "contract:version-registry-address-lib-filename",
@@ -6427,15 +6416,11 @@
       "ownerModule": "aux",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "DatabasePool",
       "bindingIdentifier": "JsDatabasePool",
-      "coverageId": "node-tier1-aux",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "aux-tier1-parity",
-      "fixtureRefs": [],
-      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "database-operations"
     },
     {
       "trackedId": "contract:aux-phase4b-js-duplicate-group",
@@ -6461,15 +6446,11 @@
       "ownerModule": "aux",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "EnbChecker",
       "bindingIdentifier": "JsEnbChecker",
-      "coverageId": "node-tier1-aux",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "aux-tier1-parity",
-      "fixtureRefs": [],
-      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "scan-game"
     },
     {
       "trackedId": "contract:aux-phase4b-js-enb-result",
@@ -6580,15 +6561,11 @@
       "ownerModule": "aux",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "IniValidator",
       "bindingIdentifier": "JsIniValidator",
-      "coverageId": "node-tier1-aux",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "aux-tier1-parity",
-      "fixtureRefs": [],
-      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "scan-game"
     },
     {
       "trackedId": "contract:aux-phase4b-js-integrity-check-result",
@@ -6971,15 +6948,11 @@
       "ownerModule": "aux",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "validate",
       "bindingIdentifier": "checkEnb",
-      "coverageId": "node-tier1-aux",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "aux-tier1-parity",
-      "fixtureRefs": [],
-      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "scan-game"
     },
     {
       "trackedId": "contract:aux-phase4b-check-for-updates",

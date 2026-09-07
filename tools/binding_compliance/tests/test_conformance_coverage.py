@@ -27,6 +27,45 @@ from conformance.receipts import ScenarioValidationResult
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
+def test_operation_family_free_functions_keep_their_public_identity(
+    tmp_path: Path,
+) -> None:
+    """New owner-mapped free functions cannot borrow an aggregate class receipt."""
+    for participant in ("cxx", "node", "python"):
+        path = (
+            tmp_path
+            / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
+        )
+        path.parent.mkdir(parents=True)
+        rows = (
+            []
+            if participant == "cxx"
+            else [
+                {
+                    "id": "future-operation",
+                    "rustCrate": "classic-database-core",
+                    "rustSymbol": "DatabasePool",
+                    **(
+                        {"nodeKind": "function", "nodeExport": "futureOperation"}
+                        if participant == "node"
+                        else {
+                            "pythonKind": "function",
+                            "pythonExportPath": "future_operation",
+                        }
+                    ),
+                }
+            ]
+        )
+        path.write_text(
+            json.dumps({"entries" if participant == "cxx" else "tier1Mappings": rows})
+        )
+    rows = load_source_parity_rows(tmp_path)
+    assert {row.participant_id: row.runtime_operation for row in rows} == {
+        "node": "futureOperation",
+        "python": "future_operation",
+    }
+
+
 def _pack() -> dict[str, object]:
     """Return a small validated-pack-shaped capability inventory."""
 

@@ -27,6 +27,9 @@ FAMILIES = {
     "path-operations",
     "path-normalization",
     "message-operations",
+    "database-operations",
+    "version-registry",
+    "scan-game",
 }
 
 
@@ -106,6 +109,9 @@ def _load_plan(path: Path) -> Mapping[str, Any]:
             "path-operations": {"path-operations.validate"},
             "path-normalization": {"path-normalization.resolve"},
             "message-operations": {"message-operations.format"},
+            "database-operations": {"database-operations.pool"},
+            "version-registry": {"version-registry.query"},
+            "scan-game": {"scan-game.validate-ini", "scan-game.validate-enb"},
         }.get(plan["familyId"], actions)
         if scenario.get("action") not in actions:
             raise RunnerContractError("unsupported semantic action")
@@ -396,6 +402,18 @@ def _execute_scenario(
                 "installed-data action disagrees with fixture operation"
             )
         return observe_installed_yaml(fixture)
+    if plan["familyId"] == "database-operations":
+        from database_operations_conformance import observe_database_operations
+
+        return observe_database_operations(fixture)
+    if plan["familyId"] == "version-registry":
+        from version_registry_conformance import observe_version_registry
+
+        return observe_version_registry(fixture)
+    if plan["familyId"] == "scan-game":
+        from scan_game_conformance import observe_scan_game
+
+        return observe_scan_game(fixture)
     if plan["familyId"] == "config-operations":
         from config_operations_conformance import observe_config_operations
 

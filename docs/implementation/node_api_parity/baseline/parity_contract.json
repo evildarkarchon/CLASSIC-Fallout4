@@ -2383,7 +2383,8 @@
       "rustSymbol": "VersionInfo",
       "nodeExport": "getVersionById",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-get-by-version",
@@ -2446,7 +2447,8 @@
       "rustSymbol": "MatchResult",
       "nodeExport": "matchVersion",
       "nodeKind": "function",
-      "nodeArity": 3
+      "nodeArity": 3,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-address-lib-filename",

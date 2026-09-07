@@ -7,6 +7,9 @@
 #include "classic_cxx_bridge/files.h"
 #include "classic_cxx_bridge/path.h"
 #include "classic_cxx_bridge/database.h"
+#include "classic_cxx_bridge/version_registry.h"
+#include "classic_cxx_bridge/game.h"
+#include "classic_cxx_bridge/scangame.h"
 #include "classic_cxx_bridge/scanner.h"
 #include "classic_cxx_bridge/settings.h"
 
@@ -16,6 +19,7 @@
 #include <array>
 #include <atomic>
 #include <charconv>
+#include <cctype>
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
@@ -1881,7 +1885,10 @@ json execute_scenario(const json& plan, const json& scenario) {
 #include "classic_cxx_installed_yaml_data_conformance.h"
 #include "classic_cxx_semantic_conformance.h"
 #include "classic_cxx_config_operations_conformance.h"
+#include "classic_cxx_database_operations_conformance.h"
+#include "classic_cxx_version_registry_conformance.h"
 #include "classic_cxx_file_operations_conformance.h"
+#include "classic_cxx_scan_game_conformance.h"
 #include "classic_cxx_path_operations_conformance.h"
 #include "classic_cxx_user_settings_conformance.h"
 #include "classic_cxx_vocabulary_conformance.h"
@@ -1896,6 +1903,9 @@ json scenario_receipt(const json& plan, const json& scenario) {
                                     : is_semantic_family(plan.at("familyId")) ? execute_semantic_scenario(plan, scenario)
                                     : plan.at("familyId") == "config-operations" ? execute_config_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "file-operations" ? execute_file_operations(plan, scenario)
+                                    : plan.at("familyId") == "database-operations" ? execute_database_operations_scenario(plan, scenario)
+                                    : plan.at("familyId") == "version-registry" ? execute_version_registry_scenario(plan, scenario)
+                                    : plan.at("familyId") == "scan-game" ? execute_scan_game(plan, scenario)
                                     : plan.at("familyId") == "path-operations" ? execute_path_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "installed-yaml-data"
                                         ? execute_installed_yaml_data_scenario(plan, scenario)
@@ -1919,6 +1929,8 @@ void validate_plan(const json& plan) {
          plan.at("familyId") != "installed-yaml-data" && plan.at("familyId") != "autoscan-report" &&
          plan.at("familyId") != "config-operations" && plan.at("familyId") != "file-operations" &&
          plan.at("familyId") != "path-operations" &&
+         plan.at("familyId") != "database-operations" && plan.at("familyId") != "version-registry" &&
+         plan.at("familyId") != "scan-game" &&
          !is_semantic_family(plan.at("familyId")) && !is_vocabulary_family(plan.at("familyId")))) {
         throw RunnerError("unsupported CXX conformance run plan");
     }

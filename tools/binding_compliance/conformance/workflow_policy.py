@@ -160,13 +160,19 @@ _EXECUTION_POLICIES += tuple(
         "scan-run-vocabulary",
         "config-operations",
         "file-operations",
+        "database-operations",
+        "version-registry",
+        "scan-game",
         "path-operations",
         "path-normalization",
         "message-operations",
     )
     for policy in _EXECUTION_POLICIES[:7]
     if policy.participant_id in {"rust", "node", "python", "cxx"}
-    and not (family in {"path-normalization", "message-operations"} and policy.participant_id == "cxx")
+    and not (
+        family in {"path-normalization", "message-operations"}
+        and policy.participant_id == "cxx"
+    )
 )
 # Autoscan Reports use the shared scan-run launcher while retaining the same
 # four semantic adapters and separate diagnostics as the focused families.
@@ -188,7 +194,7 @@ _EXECUTION_POLICIES += tuple(
 )
 # The CLI job retains its original suite and the bounded family launches.
 _EXECUTION_POLICIES = tuple(
-    replace(policy, job_timeout_minutes=315) if policy.job_id == "cli-tests" else policy
+    replace(policy, job_timeout_minutes=360) if policy.job_id == "cli-tests" else policy
     for policy in _EXECUTION_POLICIES
 )
 

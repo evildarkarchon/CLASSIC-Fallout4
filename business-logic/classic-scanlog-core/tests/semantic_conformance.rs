@@ -29,10 +29,16 @@ mod vocabulary;
 
 #[path = "semantic_conformance/config_operations.rs"]
 mod config_operations;
+#[path = "semantic_conformance/database_operations.rs"]
+mod database_operations;
 #[path = "semantic_conformance/file_operations.rs"]
 mod file_operations;
 #[path = "semantic_conformance/path_message_operations.rs"]
 mod path_message_operations;
+#[path = "semantic_conformance/scan_game.rs"]
+mod scan_game;
+#[path = "semantic_conformance/version_registry.rs"]
+mod version_registry;
 
 /// Rejects malformed runner inputs without confusing them with domain errors.
 fn invalid(message: &str) -> io::Error {
@@ -423,6 +429,9 @@ fn execute(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
     }
     match plan["familyId"].as_str() {
         Some("config-operations") => return config_operations::execute(&fixture),
+        Some("database-operations") => return database_operations::execute(&fixture),
+        Some("version-registry") => return version_registry::execute(&fixture),
+        Some("scan-game") => return scan_game::observe(&fixture),
         Some("file-operations") => {
             if scenario["action"] != format!("file-operations.{}", text(&fixture["operation"])?) {
                 return Err(invalid("file action does not match fixture operation").into());

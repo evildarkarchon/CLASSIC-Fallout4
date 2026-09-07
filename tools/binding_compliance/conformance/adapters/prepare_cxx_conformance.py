@@ -38,6 +38,9 @@ SUPPORTED_FAMILIES = (
     "scan-run-vocabulary",
     "config-operations",
     "file-operations",
+    "database-operations",
+    "version-registry",
+    "scan-game",
     "path-operations",
 )
 
@@ -93,9 +96,17 @@ def _cxx_source_paths(
             / "classic-cli/tests/conformance/classic_cxx_semantic_conformance.h",
             repo_root
             / "classic-cli/tests/conformance/classic_cxx_installed_yaml_data_conformance.h",
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_database_operations_conformance.h",
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_version_registry_conformance.h",
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_scan_game_conformance.h",
             repo_root / "cpp-bindings/classic-cpp-bridge/src",
             repo_root / "business-logic/classic-scanlog-core/src",
             repo_root / "business-logic/classic-database-core/src",
+            repo_root / "business-logic/classic-version-registry-core/src",
+            repo_root / "business-logic/classic-scangame-core/src",
             repo_root / "business-logic/classic-config-core/src",
             repo_root / "business-logic/classic-file-io-core/src",
             repo_root / "business-logic/classic-path-core/src",
@@ -107,8 +118,6 @@ def _cxx_source_paths(
             repo_root
             / "classic-cli/tests/conformance/classic_cxx_path_operations_conformance.h",
         )
-    if family == "autoscan-report":
-        paths += (repo_root / "business-logic/classic-scangame-core/src",)
     return paths
 
 

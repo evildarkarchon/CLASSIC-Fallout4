@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-07T22:03:39.017609+00:00",
+  "generated_at_utc": "2026-09-07T22:27:56.676152+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
@@ -7,8 +7,8 @@
   },
   "summary": {
     "tracked_surface_total": 1671,
-    "runtime_verified_total": 1620,
-    "receipt_required_total": 51,
+    "runtime_verified_total": 1597,
+    "receipt_required_total": 74,
     "structural_analyzer_total": 0,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
@@ -24,8 +24,9 @@
       "receipt_required": 3
     },
     "database": {
-      "runtime_verified": 56,
-      "total": 56
+      "runtime_verified": 47,
+      "total": 56,
+      "receipt_required": 9
     },
     "file_io": {
       "runtime_verified": 87,
@@ -55,8 +56,9 @@
       "total": 36
     },
     "scangame": {
-      "runtime_verified": 158,
-      "total": 158
+      "runtime_verified": 149,
+      "total": 158,
+      "receipt_required": 9
     },
     "scanlog": {
       "runtime_verified": 544,
@@ -85,8 +87,9 @@
       "total": 15
     },
     "version_registry": {
-      "runtime_verified": 112,
-      "total": 112
+      "runtime_verified": 107,
+      "total": 112,
+      "receipt_required": 5
     },
     "web": {
       "runtime_verified": 23,
@@ -5354,15 +5357,11 @@
       "ownerModule": "database",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "DatabasePool",
       "bindingIdentifier": "classic_database.DatabasePool",
-      "coverageId": "python-tier1-database",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "database-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "database-operations"
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.__init__",
@@ -5371,15 +5370,11 @@
       "ownerModule": "database",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "DatabasePool",
       "bindingIdentifier": "classic_database.DatabasePool.__init__",
-      "coverageId": "python-tier1-database",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "database-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "database-operations"
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.clear_cache",
@@ -5388,15 +5383,11 @@
       "ownerModule": "database",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "DatabasePool",
       "bindingIdentifier": "classic_database.DatabasePool.clear_cache",
-      "coverageId": "python-tier1-database",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "database-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "database-operations"
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.close",
@@ -5405,15 +5396,11 @@
       "ownerModule": "database",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "DatabasePool",
       "bindingIdentifier": "classic_database.DatabasePool.close",
-      "coverageId": "python-tier1-database",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "database-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "database-operations"
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.get_cache_capacity",
@@ -5473,15 +5460,11 @@
       "ownerModule": "database",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "DatabasePool",
       "bindingIdentifier": "classic_database.DatabasePool.get_entries_batch",
-      "coverageId": "python-tier1-database",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "database-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "database-operations"
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.get_entry",
@@ -5490,15 +5473,11 @@
       "ownerModule": "database",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "DatabasePool",
       "bindingIdentifier": "classic_database.DatabasePool.get_entry",
-      "coverageId": "python-tier1-database",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "database-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "database-operations"
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.get_game_table",
@@ -5507,15 +5486,11 @@
       "ownerModule": "database",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "DatabasePool",
       "bindingIdentifier": "classic_database.DatabasePool.get_game_table",
-      "coverageId": "python-tier1-database",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "database-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "database-operations"
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.get_max_connections",
@@ -5558,15 +5533,11 @@
       "ownerModule": "database",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "DatabasePool",
       "bindingIdentifier": "classic_database.DatabasePool.initialize",
-      "coverageId": "python-tier1-database",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "database-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "database-operations"
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.is_available",
@@ -5575,15 +5546,11 @@
       "ownerModule": "database",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "DatabasePool",
       "bindingIdentifier": "classic_database.DatabasePool.is_available",
-      "coverageId": "python-tier1-database",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "database-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "database-operations"
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.optimize",
@@ -11466,15 +11433,11 @@
       "ownerModule": "scangame",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "EnbChecker",
       "bindingIdentifier": "classic_scangame.EnbChecker",
-      "coverageId": "python-tier1-scangame",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "scangame-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "scan-game"
     },
     {
       "trackedId": "contract:scangame.enb.EnbChecker.__init__",
@@ -11483,15 +11446,11 @@
       "ownerModule": "scangame",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "EnbChecker",
       "bindingIdentifier": "classic_scangame.EnbChecker.__init__",
-      "coverageId": "python-tier1-scangame",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "scangame-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "scan-game"
     },
     {
       "trackedId": "contract:scangame.enb.EnbChecker.check_binaries",
@@ -11500,15 +11459,11 @@
       "ownerModule": "scangame",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "EnbChecker",
       "bindingIdentifier": "classic_scangame.EnbChecker.check_binaries",
-      "coverageId": "python-tier1-scangame",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "scangame-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "scan-game"
     },
     {
       "trackedId": "contract:scangame.enb.EnbChecker.check_config",
@@ -11517,15 +11472,11 @@
       "ownerModule": "scangame",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "EnbChecker",
       "bindingIdentifier": "classic_scangame.EnbChecker.check_config",
-      "coverageId": "python-tier1-scangame",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "scangame-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "scan-game"
     },
     {
       "trackedId": "contract:scangame.enb.EnbChecker.format_message",
@@ -11551,15 +11502,11 @@
       "ownerModule": "scangame",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "EnbChecker",
       "bindingIdentifier": "classic_scangame.EnbChecker.validate",
-      "coverageId": "python-tier1-scangame",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "scangame-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "scan-game"
     },
     {
       "trackedId": "contract:scangame.enb.EnbConfigResult",
@@ -11755,15 +11702,11 @@
       "ownerModule": "scangame",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "IniValidator",
       "bindingIdentifier": "classic_scangame.IniValidator",
-      "coverageId": "python-tier1-scangame",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "scangame-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "scan-game"
     },
     {
       "trackedId": "contract:scangame.ini.IniValidator.__init__",
@@ -11772,15 +11715,11 @@
       "ownerModule": "scangame",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "IniValidator",
       "bindingIdentifier": "classic_scangame.IniValidator.__init__",
-      "coverageId": "python-tier1-scangame",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "scangame-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "scan-game"
     },
     {
       "trackedId": "contract:scangame.ini.IniValidator.detect_all_issues",
@@ -11789,15 +11728,11 @@
       "ownerModule": "scangame",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "IniValidator",
       "bindingIdentifier": "classic_scangame.IniValidator.detect_all_issues",
-      "coverageId": "python-tier1-scangame",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "scangame-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "scan-game"
     },
     {
       "trackedId": "contract:scangame.ini.IniValidator.validate_inis",
@@ -11806,15 +11741,11 @@
       "ownerModule": "scangame",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "IniValidator",
       "bindingIdentifier": "classic_scangame.IniValidator.validate_inis",
-      "coverageId": "python-tier1-scangame",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "scangame-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "scan-game"
     },
     {
       "trackedId": "contract:scangame.ini.IssueSeverity",
@@ -19142,15 +19073,11 @@
       "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "VersionRegistry",
       "bindingIdentifier": "classic_version_registry.VersionRegistry",
-      "coverageId": "python-tier1-version-registry",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
-      "testCaseId": "version-registry-tier1-smoke",
-      "fixtureRefs": [],
-      "notes": null
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "version-registry"
     },
     {
       "trackedId": "contract:version-registry-game-version-class",
@@ -19261,15 +19188,11 @@
       "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "VersionRegistry",
       "bindingIdentifier": "classic_version_registry.VersionRegistry.get_by_id",
-      "coverageId": "python-tier1-version-registry",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
-      "testCaseId": "version-registry-tier1-smoke",
-      "fixtureRefs": [],
-      "notes": null
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "version-registry"
     },
     {
       "trackedId": "contract:version-registry-get-by-short-name",
@@ -19448,15 +19371,11 @@
       "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "MatchResult",
       "bindingIdentifier": "classic_version_registry.MatchResult",
-      "coverageId": "python-tier1-version-registry",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
-      "testCaseId": "version-registry-tier1-smoke",
-      "fixtureRefs": [],
-      "notes": null
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "version-registry"
     },
     {
       "trackedId": "contract:version-registry-match-version",
@@ -19465,15 +19384,11 @@
       "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "VersionRegistry",
       "bindingIdentifier": "classic_version_registry.VersionRegistry.match_version",
-      "coverageId": "python-tier1-version-registry",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
-      "testCaseId": "version-registry-tier1-smoke",
-      "fixtureRefs": [],
-      "notes": null
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "version-registry"
     },
     {
       "trackedId": "contract:version-registry-match-version-string",
@@ -19533,15 +19448,11 @@
       "ownerModule": "version_registry",
       "tier": "tier1",
       "status": "matched",
-      "classification": "runtime_verified",
+      "classification": "receipt_required",
       "rustSymbol": "VersionInfo",
       "bindingIdentifier": "classic_version_registry.VersionInfo",
-      "coverageId": "python-tier1-version-registry",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
-      "testCaseId": "version-registry-tier1-smoke",
-      "fixtureRefs": [],
-      "notes": null
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "version-registry"
     },
     {
       "trackedId": "contract:version.lib.PeVersionError@rust",

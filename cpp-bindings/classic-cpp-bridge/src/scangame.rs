@@ -211,7 +211,8 @@ fn ini_validator_validate_inis(game_name: &str, game_root: &str) -> Result<Strin
 
 /// Scan a game root for INI config files and return all structured issues.
 ///
-/// Returns empty Vec on empty game_root or if no config files are found.
+/// Loads readable INIs before detecting issues, retaining the core validator's
+/// skip-malformed-file policy. Returns empty Vec on an empty root or scan failure.
 fn ini_validator_detect_all_issues_for_root(
     game_name: &str,
     game_root: &str,
@@ -219,7 +220,11 @@ fn ini_validator_detect_all_issues_for_root(
     if game_root.is_empty() {
         return Vec::new();
     }
-    let validator = IniValidator::new(game_name);
+    let mut validator = IniValidator::new(game_name);
+    // Detection reads the validator cache; a path map alone contains no setting values.
+    if validator.validate_inis(Path::new(game_root)).is_err() {
+        return Vec::new();
+    }
     let config_files: HashMap<String, PathBuf> =
         match validator.scan_config_files(Path::new(game_root)) {
             Ok(map) => map,
