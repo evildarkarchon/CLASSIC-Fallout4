@@ -156,6 +156,8 @@ _EXECUTION_POLICIES += tuple(
         "named-record",
         "plugin-evidence",
         "installed-yaml-data",
+        "config-vocabulary",
+        "scan-run-vocabulary",
     )
     for policy in _EXECUTION_POLICIES[:7]
     if policy.participant_id in {"rust", "node", "python", "cxx"}

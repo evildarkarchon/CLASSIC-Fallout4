@@ -292,6 +292,76 @@ def _scenario_by_id(pack: dict[str, object], scenario_id: str) -> dict[str, obje
     )
 
 
+@pytest.mark.parametrize(
+    "field,value",
+    [("kind", "label"), ("text", "changed"), ("path", "unexpected"), ("count", 1)],
+)
+def test_recovery_display_transport_requires_every_frozen_segment_field(
+    field: str, value: object
+) -> None:
+    """A copied severity cannot earn recovery coverage after any segment payload drifts."""
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    scenario = _scenario_by_id(pack, "proceed-without-ignore-recovery")
+    for location, fact in (
+        ("prompt", "scan-run.recovery.initial-prompt"),
+        ("replay", "scan-run.recovery.proceed-replay-rejected"),
+    ):
+        assert fact in derive_observed_fact_ids(
+            pack, scenario, scenario["expected"], CRASH_LOG_SCAN_RUN_COVERAGE_POLICY
+        )
+        changed = copy.deepcopy(scenario["expected"])
+        carrier = (
+            changed["initial"]["recoveryPrompt"]
+            if location == "prompt"
+            else changed["replays"][0]["error"]
+        )
+        assert "displayContent" in carrier, (
+            "public recovery observations must preserve full Display Content"
+        )
+        carrier["displayContent"][0]["segments"][0][field] = value
+        assert fact not in derive_observed_fact_ids(
+            pack, scenario, changed, CRASH_LOG_SCAN_RUN_COVERAGE_POLICY
+        )
+
+
+def test_request_validation_display_transport_requires_ordered_complete_segments() -> (
+    None
+):
+    """The public validation error carries exact prose, label, and diagnostic payloads."""
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    scenario = _scenario_by_id(pack, "request-validation-failure")
+    assert "scan-run.failure.request-validation" in derive_observed_fact_ids(
+        pack, scenario, scenario["expected"], CRASH_LOG_SCAN_RUN_COVERAGE_POLICY
+    )
+    changed = copy.deepcopy(scenario["expected"])
+    assert "displayContent" in changed, (
+        "public validation errors must preserve full Display Content"
+    )
+    changed["displayContent"][0]["segments"].reverse()
+    assert "scan-run.failure.request-validation" not in derive_observed_fact_ids(
+        pack, scenario, changed, CRASH_LOG_SCAN_RUN_COVERAGE_POLICY
+    )
+
+
+def test_recovery_decision_description_transport_requires_all_payload_fields() -> None:
+    """Description payloads cannot drift while the prompt retains the correct label."""
+    pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
+    scenario = _scenario_by_id(pack, "proceed-without-ignore-recovery")
+    for field, value in (
+        ("kind", "name"),
+        ("text", "changed"),
+        ("path", "unexpected"),
+        ("count", 1),
+    ):
+        changed = copy.deepcopy(scenario["expected"])
+        changed["initial"]["recoveryPrompt"]["decisions"][0]["description"][0][
+            field
+        ] = value
+        assert "scan-run.recovery.initial-prompt" not in derive_observed_fact_ids(
+            pack, scenario, changed, CRASH_LOG_SCAN_RUN_COVERAGE_POLICY
+        )
+
+
 def _assert_semantic_mutations_lose_facts(
     pack: dict[str, object],
     scenario_id: str,

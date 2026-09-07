@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -245,6 +246,11 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
     trustworthy closed row inventory.
     """
 
+    from .families.vocabulary import VOCABULARY_OPERATIONS
+
+    vocabulary_symbols = {
+        spec.symbol for specs in VOCABULARY_OPERATIONS.values() for spec in specs
+    }
     root = repo_root.resolve()
     rows: list[SourceParityRow] = []
     for participant_id, relative_path in _PARITY_CONTRACTS.items():
@@ -338,6 +344,20 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
             # method and type mappings. Read the public binding operation so a
             # new class method or bridge alias cannot inherit existing credit.
             runtime_operation = None
+            # Label functions map to their enum owner. Keep the exported function
+            # identity too, so a future resolver cannot borrow an existing call.
+            if rust_symbol in vocabulary_symbols:
+                if participant_id == "node" and raw_row.get("nodeKind") == "function":
+                    export = raw_row.get("nodeExport")
+                    if isinstance(export, str):
+                        runtime_operation = re.sub(
+                            r"(?<!^)(?=[A-Z])", "_", export
+                        ).lower()
+                elif (
+                    participant_id == "python"
+                    and raw_row.get("pythonKind") == "function"
+                ):
+                    runtime_operation = raw_row.get("pythonExportPath")
             if participant_id == "python" and raw_row.get("pythonKind") == "method":
                 export = raw_row.get("pythonExportPath")
                 if not isinstance(export, str):

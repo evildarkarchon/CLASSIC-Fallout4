@@ -1218,22 +1218,6 @@ def test_observer_failure_is_adapter_data_and_can_request_safe_cancellation(
     assert execution.result.logs[0].disposition == "cancelled_before_start"
 
 
-def test_scan_run_display_labels_carry_the_settled_descriptive_wording() -> None:
-    """The twin surfaces the wording the configuration crate settled."""
-
-    import classic_scanlog
-
-    label = classic_scanlog.scan_run_installed_yaml_data_diagnostic_kind_label
-    assert label("parse") == "parse failure"
-    assert label("read") == "read failure"
-    assert label("missing") == "missing candidate"
-    assert label("cache_unavailable") == "update cache unavailable"
-    assert (
-        classic_scanlog.scan_run_local_ignore_yaml_data_state_label("generated")
-        == "generated from selected Main defaults"
-    )
-
-
 def test_scan_run_display_labels_match_the_configuration_surface() -> None:
     """The run surface and the configuration surface return the same prose.
 
@@ -1256,33 +1240,15 @@ def test_scan_run_display_labels_match_the_configuration_surface() -> None:
         ) == classic_config.local_ignore_yaml_data_state_label(token)
 
 
-def test_recovery_required_state_supplies_its_own_display_label() -> None:
-    """The one state with no configuration counterpart owns both of its forms."""
+def test_configuration_rejects_the_run_only_recovery_required_state() -> None:
+    """The run-owned recovery state has no configuration vocabulary counterpart."""
 
     import classic_config
-    import classic_scanlog
 
-    assert (
-        classic_scanlog.scan_run_local_ignore_yaml_data_state_label("recovery_required")
-        == "recovery required"
-    )
-    # The asymmetry, from the other side: the configuration surface does not
-    # know this token at all, which is why the twin cannot delegate it.
+    # The configuration surface does not know this token, which is why the
+    # run-owned twin cannot delegate this particular state's naming.
     with pytest.raises(ValueError):
         classic_config.local_ignore_yaml_data_state_label("recovery_required")
-
-
-def test_scan_run_display_label_uses_glossary_capitalization_for_domain_terms() -> None:
-    """`Local Ignore` is a domain term, so no token transform could derive it."""
-
-    import classic_scanlog
-
-    assert (
-        classic_scanlog.scan_run_installed_yaml_data_diagnostic_kind_label(
-            "local_ignore_reset"
-        )
-        == "Local Ignore reset"
-    )
 
 
 def test_every_token_a_real_run_publishes_resolves_to_a_label(
@@ -1337,54 +1303,14 @@ def test_every_token_a_real_run_publishes_resolves_to_a_label(
             assert classic_scanlog.scan_run_log_failure_stage_label(failure.stage)
 
 
-def test_run_owned_scan_run_display_labels_reach_python() -> None:
-    """The four run-owned vocabularies resolve to the prose the frontends render.
-
-    These are the labels a mechanical transform of the token could not produce,
-    plus the one case where label and token deliberately coincide. Quoted as
-    literals because that is the one thing a derived expectation cannot prove:
-    reading the answer back out of the core would pass just as happily if the
-    core had lowercased them.
-    """
-
-    import classic_scanlog
-
-    assert (
-        classic_scanlog.scan_run_log_failure_stage_label("unsolved_logs_finalization")
-        == "Unsolved Logs finalization"
-    )
-    assert (
-        classic_scanlog.scan_run_infrastructure_error_stage_label(
-            "formid_database_access"
-        )
-        == "FormID database access"
-    )
-    assert (
-        classic_scanlog.scan_run_infrastructure_error_stage_label("internal_invariant")
-        == "internal invariant validation"
-    )
-    assert (
-        classic_scanlog.scan_run_log_disposition_label("cancelled_before_start")
-        == "cancelled before start"
-    )
-    # Deliberately its own token: this vocabulary mirrors the workspace's shared
-    # durable-publication stages, which name ordinary steps rather than domain
-    # terms. Pinned so a contributor who "fixes" it has to read why first.
-    for token in ("create", "write", "flush", "sync", "publish"):
-        assert (
-            classic_scanlog.scan_run_local_ignore_reset_failure_stage_label(token)
-            == token
-        )
-
-
 def test_run_owned_display_labels_have_no_configuration_counterpart() -> None:
     """No :mod:`classic_config` function answers for a run-owned vocabulary.
 
     The two twin resolvers deliberately agree with a configuration counterpart,
     and a reader could reasonably assume the same of the three checked below.
-    It is not true: the run crate is the only definition site for their prose,
-    which is why the twin tests compare two surfaces and the run-owned ones
-    compare against a literal.
+    It is not true: the run crate is the only definition site for their prose.
+    The public vocabulary receipts check their wording independently, while
+    this test rejects a second owner appearing on the configuration surface.
 
     The fourth run-surface resolver added alongside them --
     ``scan_run_local_ignore_reset_failure_stage_label`` -- is deliberately

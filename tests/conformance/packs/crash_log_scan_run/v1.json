@@ -3615,6 +3615,37 @@
             "path": "Failures/crash-request-validation-AUTOSCAN.md",
             "kind": "missing"
           }
+        ],
+        "displayContent": [
+          {
+            "severity": "failure",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Crash Log Scan Run failed during",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "request validation",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "max_concurrent must be greater than zero when supplied",
+                "path": "",
+                "count": 0
+              }
+            ]
+          }
         ]
       },
       "normalization": {
@@ -4146,16 +4177,45 @@
               {
                 "available": true,
                 "decision": "proceed_without_ignore",
-                "label": "Proceed Without Ignore"
+                "label": "Proceed Without Ignore",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
               },
               {
                 "available": true,
                 "decision": "reset_to_default",
-                "label": "Reset To Default"
+                "label": "Reset To Default",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
               }
             ],
             "displaySeverities": [
               "warning"
+            ],
+            "displayContent": [
+              {
+                "severity": "warning",
+                "segments": [
+                  {
+                    "kind": "text",
+                    "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
+              }
             ]
           },
           "run": {
@@ -4177,7 +4237,31 @@
                 "notice"
               ],
               "kind": "scan_run_continuation_consumed",
-              "message": "Crash Log Scan Run continuation was already consumed"
+              "message": "Crash Log Scan Run continuation was already consumed",
+              "displayContent": [
+                {
+                  "severity": "failure",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Crash Log Scan recovery failed - this recovery decision was already applied",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "severity": "notice",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Start the Crash Log Scan again to retry.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
             },
             "operation": "resume"
           }
@@ -4478,16 +4562,45 @@
               {
                 "available": true,
                 "decision": "proceed_without_ignore",
-                "label": "Proceed Without Ignore"
+                "label": "Proceed Without Ignore",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
               },
               {
                 "available": true,
                 "decision": "reset_to_default",
-                "label": "Reset To Default"
+                "label": "Reset To Default",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
               }
             ],
             "displaySeverities": [
               "warning"
+            ],
+            "displayContent": [
+              {
+                "severity": "warning",
+                "segments": [
+                  {
+                    "kind": "text",
+                    "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
+              }
             ]
           },
           "run": {
@@ -4509,7 +4622,31 @@
                 "notice"
               ],
               "kind": "scan_run_continuation_consumed",
-              "message": "Crash Log Scan Run continuation was already consumed"
+              "message": "Crash Log Scan Run continuation was already consumed",
+              "displayContent": [
+                {
+                  "severity": "failure",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Crash Log Scan recovery failed - this recovery decision was already applied",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "severity": "notice",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Start the Crash Log Scan again to retry.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
             },
             "operation": "resume"
           }
@@ -4715,12 +4852,12 @@
               "fixtureRef": "validCrashLog",
               "path": "Recovery/reset-conflict-late.log"
             },
-          {
-            "fixtureRef": "localIgnoreYaml",
-            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
-          }
-        ],
-        "replays": [
+            {
+              "fixtureRef": "localIgnoreYaml",
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+            }
+          ],
+          "replays": [
             {
               "operation": "resume",
               "decision": "reset-to-default"
@@ -4831,16 +4968,45 @@
               {
                 "available": true,
                 "decision": "proceed_without_ignore",
-                "label": "Proceed Without Ignore"
+                "label": "Proceed Without Ignore",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
               },
               {
                 "available": true,
                 "decision": "reset_to_default",
-                "label": "Reset To Default"
+                "label": "Reset To Default",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
               }
             ],
             "displaySeverities": [
               "warning"
+            ],
+            "displayContent": [
+              {
+                "severity": "warning",
+                "segments": [
+                  {
+                    "kind": "text",
+                    "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
+              }
             ]
           },
           "run": {
@@ -4862,7 +5028,31 @@
                 "notice"
               ],
               "kind": "scan_run_continuation_consumed",
-              "message": "Crash Log Scan Run continuation was already consumed"
+              "message": "Crash Log Scan Run continuation was already consumed",
+              "displayContent": [
+                {
+                  "severity": "failure",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Crash Log Scan recovery failed - this recovery decision was already applied",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "severity": "notice",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Start the Crash Log Scan again to retry.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
             },
             "operation": "resume"
           }
@@ -4969,12 +5159,12 @@
               "fixtureRef": "validCrashLog",
               "path": "Recovery/reset-operational-late.log"
             },
-          {
-            "fixtureRef": "validCrashLog",
-            "path": "CLASSIC Backup"
-          }
-        ],
-        "replays": [
+            {
+              "fixtureRef": "validCrashLog",
+              "path": "CLASSIC Backup"
+            }
+          ],
+          "replays": [
             {
               "operation": "resume",
               "decision": "reset-to-default"
@@ -5085,16 +5275,45 @@
               {
                 "available": true,
                 "decision": "proceed_without_ignore",
-                "label": "Proceed Without Ignore"
+                "label": "Proceed Without Ignore",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
               },
               {
                 "available": true,
                 "decision": "reset_to_default",
-                "label": "Reset To Default"
+                "label": "Reset To Default",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
               }
             ],
             "displaySeverities": [
               "warning"
+            ],
+            "displayContent": [
+              {
+                "severity": "warning",
+                "segments": [
+                  {
+                    "kind": "text",
+                    "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
+              }
             ]
           },
           "run": {
@@ -5116,7 +5335,31 @@
                 "notice"
               ],
               "kind": "scan_run_continuation_consumed",
-              "message": "Crash Log Scan Run continuation was already consumed"
+              "message": "Crash Log Scan Run continuation was already consumed",
+              "displayContent": [
+                {
+                  "severity": "failure",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Crash Log Scan recovery failed - this recovery decision was already applied",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "severity": "notice",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Start the Crash Log Scan again to retry.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
             },
             "operation": "resume"
           }
@@ -5337,16 +5580,45 @@
               {
                 "available": true,
                 "decision": "proceed_without_ignore",
-                "label": "Proceed Without Ignore"
+                "label": "Proceed Without Ignore",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
               },
               {
                 "available": true,
                 "decision": "reset_to_default",
-                "label": "Reset To Default"
+                "label": "Reset To Default",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
               }
             ],
             "displaySeverities": [
               "warning"
+            ],
+            "displayContent": [
+              {
+                "severity": "warning",
+                "segments": [
+                  {
+                    "kind": "text",
+                    "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
+              }
             ]
           },
           "run": {
@@ -5368,7 +5640,31 @@
                 "notice"
               ],
               "kind": "scan_run_continuation_consumed",
-              "message": "Crash Log Scan Run continuation was already consumed"
+              "message": "Crash Log Scan Run continuation was already consumed",
+              "displayContent": [
+                {
+                  "severity": "failure",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Crash Log Scan recovery failed - this recovery decision was already applied",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "severity": "notice",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Start the Crash Log Scan again to retry.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
             },
             "operation": "resume"
           }
@@ -5629,16 +5925,45 @@
               {
                 "available": true,
                 "decision": "proceed_without_ignore",
-                "label": "Proceed Without Ignore"
+                "label": "Proceed Without Ignore",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
               },
               {
                 "available": true,
                 "decision": "reset_to_default",
-                "label": "Reset To Default"
+                "label": "Reset To Default",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
               }
             ],
             "displaySeverities": [
               "warning"
+            ],
+            "displayContent": [
+              {
+                "severity": "warning",
+                "segments": [
+                  {
+                    "kind": "text",
+                    "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
+              }
             ]
           },
           "run": {
@@ -5660,7 +5985,31 @@
                 "notice"
               ],
               "kind": "scan_run_continuation_consumed",
-              "message": "Crash Log Scan Run continuation was already consumed"
+              "message": "Crash Log Scan Run continuation was already consumed",
+              "displayContent": [
+                {
+                  "severity": "failure",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Crash Log Scan recovery failed - this recovery decision was already applied",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "severity": "notice",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Start the Crash Log Scan again to retry.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
             },
             "operation": "resume"
           }
@@ -5969,16 +6318,45 @@
               {
                 "available": true,
                 "decision": "proceed_without_ignore",
-                "label": "Proceed Without Ignore"
+                "label": "Proceed Without Ignore",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
               },
               {
                 "available": true,
                 "decision": "reset_to_default",
-                "label": "Reset To Default"
+                "label": "Reset To Default",
+                "description": [
+                  {
+                    "kind": "text",
+                    "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
               }
             ],
             "displaySeverities": [
               "warning"
+            ],
+            "displayContent": [
+              {
+                "severity": "warning",
+                "segments": [
+                  {
+                    "kind": "text",
+                    "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                    "path": "",
+                    "count": 0
+                  }
+                ]
+              }
             ]
           },
           "run": {
@@ -6000,7 +6378,31 @@
                 "notice"
               ],
               "kind": "scan_run_continuation_consumed",
-              "message": "Crash Log Scan Run continuation was already consumed"
+              "message": "Crash Log Scan Run continuation was already consumed",
+              "displayContent": [
+                {
+                  "severity": "failure",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Crash Log Scan recovery failed - this recovery decision was already applied",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "severity": "notice",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Start the Crash Log Scan again to retry.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
             },
             "operation": "abandon"
           },
@@ -6012,7 +6414,31 @@
                 "notice"
               ],
               "kind": "scan_run_continuation_consumed",
-              "message": "Crash Log Scan Run continuation was already consumed"
+              "message": "Crash Log Scan Run continuation was already consumed",
+              "displayContent": [
+                {
+                  "severity": "failure",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Crash Log Scan recovery failed - this recovery decision was already applied",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                },
+                {
+                  "severity": "notice",
+                  "segments": [
+                    {
+                      "kind": "text",
+                      "text": "Start the Crash Log Scan again to retry.",
+                      "path": "",
+                      "count": 0
+                    }
+                  ]
+                }
+              ]
             },
             "operation": "resume"
           }
@@ -6084,19 +6510,47 @@
     }
   ],
   "consumerObligations": [
-    { "id": "cli.display-content-delivery" },
-    { "id": "cli.stream-selection" },
-    { "id": "cli.exit-code-routing" },
-    { "id": "cli.recovery-interaction" },
-    { "id": "gui.worker-dispatch" },
-    { "id": "gui.path-links" },
-    { "id": "gui.recovery-interaction" },
-    { "id": "gui.model-updates" },
-    { "id": "gui.display-content-delivery" },
-    { "id": "tui.display-content-delivery" },
-    { "id": "tui.ordering" },
-    { "id": "tui.styling-categories" },
-    { "id": "tui.recovery-interaction" },
-    { "id": "tui.cancellation" }
+    {
+      "id": "cli.display-content-delivery"
+    },
+    {
+      "id": "cli.stream-selection"
+    },
+    {
+      "id": "cli.exit-code-routing"
+    },
+    {
+      "id": "cli.recovery-interaction"
+    },
+    {
+      "id": "gui.worker-dispatch"
+    },
+    {
+      "id": "gui.path-links"
+    },
+    {
+      "id": "gui.recovery-interaction"
+    },
+    {
+      "id": "gui.model-updates"
+    },
+    {
+      "id": "gui.display-content-delivery"
+    },
+    {
+      "id": "tui.display-content-delivery"
+    },
+    {
+      "id": "tui.ordering"
+    },
+    {
+      "id": "tui.styling-categories"
+    },
+    {
+      "id": "tui.recovery-interaction"
+    },
+    {
+      "id": "tui.cancellation"
+    }
   ]
 }

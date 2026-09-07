@@ -24,6 +24,8 @@ SUPPORTED_FAMILIES = (
     "named-record",
     "plugin-evidence",
     "installed-yaml-data",
+    "config-vocabulary",
+    "scan-run-vocabulary",
 )
 
 _COMMON_SOURCES = (
@@ -33,6 +35,8 @@ _COMMON_SOURCES = (
     REPO_ROOT / "business-logic/classic-scanlog-core/Cargo.toml",
     REPO_ROOT / "business-logic/classic-database-core/src",
     REPO_ROOT / "business-logic/classic-config-core/src",
+    REPO_ROOT / "business-logic/classic-durable-publication/src",
+    REPO_ROOT / "foundation/classic-vocabulary/src",
 )
 PARTICIPANT_COMMANDS = {
     "rust": ParticipantCommand(
@@ -63,6 +67,7 @@ PARTICIPANT_COMMANDS = {
             / "node-bindings/classic-node/__test__/semantic_conformance_runner.ts",
             REPO_ROOT
             / "node-bindings/classic-node/__test__/installed_yaml_conformance.ts",
+            REPO_ROOT / "node-bindings/classic-node/__test__/vocabulary_conformance.ts",
             REPO_ROOT / "node-bindings/classic-node/src",
             REPO_ROOT / "node-bindings/classic-node/package.json",
             *_COMMON_SOURCES,
@@ -81,6 +86,7 @@ PARTICIPANT_COMMANDS = {
         source_paths=(
             REPO_ROOT / "python-bindings/tests/semantic_conformance_runner.py",
             REPO_ROOT / "python-bindings/tests/installed_yaml_conformance.py",
+            REPO_ROOT / "python-bindings/tests/vocabulary_conformance.py",
             REPO_ROOT / "python-bindings/classic-config-py/src",
             REPO_ROOT / "python-bindings/classic-scanlog-py/src",
             REPO_ROOT / "python-bindings/classic-database-py/src",

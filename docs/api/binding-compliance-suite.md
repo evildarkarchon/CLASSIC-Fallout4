@@ -273,6 +273,22 @@ Treat new drift, stale generated artifacts, stale baselines, missing runtime cov
 
 ## Crash Log Scan Run Contract Changes
 
+The `config-vocabulary` and `scan-run-vocabulary` v1 packs cover ten public
+resolver selectors, including the CXX scanner provenance alias that shares the
+config accessor in Node and Python. Source-owned tokens determine the complete
+input inventory; expected wording remains independently authored in the packs.
+Each adapter invokes the real public resolver for known and unknown inputs.
+Use `run_semantic_conformance.py --family <family> --participant <adapter>` for
+Rust, Node, and Python, and the approved CXX conformance wrapper with each
+required compiler. The [Vocabulary and Display Content evidence map](../implementation/vocabulary_display_conformance_equivalence.md)
+records validation, exact retirement scope, and the retained internal tests.
+
+The scan-run pack also compares complete ordered Display Content: severity and
+every segment's kind, text, path, and count, including inactive fields and the
+count noun selected by Rust. Its current cases cover 84 lines, all five
+severities, and five emitted segment kinds. The unproduced `Name` kind remains
+an explicit retained disposition and grants no semantic receipt credit.
+
 `tests/fixtures/crash_log_scan_run/manifest.json` is the machine-readable owner for normalized cross-interface expectations. Paths are compared relative to each runner's temporary root; processing timings and exact concurrent event interleavings are deliberately excluded. Discovery, Rust-selected effective concurrency, serialized event variants, discovery-order outcomes, structured failures, Installed YAML Data and reset metadata, valid/generated/malformed/repaired Local Ignore behavior, retained-snapshot continuation resume, reset conflict/operational outcomes, both reset cancellation boundaries, replay, byte-exact backup, durable artifact presence, and report-byte stability remain contractual.
 
 Separately, `tests/conformance/packs/crash_log_scan_run/v1.json` owns the

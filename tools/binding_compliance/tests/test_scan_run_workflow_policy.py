@@ -30,6 +30,8 @@ def test_repository_workflows_keep_every_promoted_execution_blocking() -> None:
         "named-record",
         "plugin-evidence",
         "autoscan-report",
+        "config-vocabulary",
+        "scan-run-vocabulary",
     ),
 )
 @pytest.mark.parametrize(

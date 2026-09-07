@@ -224,6 +224,32 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Python config-vocabulary conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family config-vocabulary --participant python --artifact-root tools/binding_compliance/artifacts/config-vocabulary
+
+      - name: Upload Python config-vocabulary conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-config-vocabulary-conformance
+          path: tools/binding_compliance/artifacts/config-vocabulary/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python scan-run-vocabulary conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family scan-run-vocabulary --participant python --artifact-root tools/binding_compliance/artifacts/scan-run-vocabulary
+
+      - name: Upload Python scan-run-vocabulary conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-scan-run-vocabulary-conformance
+          path: tools/binding_compliance/artifacts/scan-run-vocabulary/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run Python autoscan-report conformance
         if: ${{ !cancelled() }}
         run: uv run --project python-bindings python tools/binding_compliance/run_scan_run_conformance.py --family autoscan-report --participant python --artifact-root tools/binding_compliance/artifacts/autoscan-report

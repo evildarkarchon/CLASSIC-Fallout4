@@ -297,6 +297,32 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Rust config-vocabulary conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family config-vocabulary --participant rust --artifact-root tools/binding_compliance/artifacts/config-vocabulary
+
+      - name: Upload Rust config-vocabulary conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-config-vocabulary-conformance
+          path: tools/binding_compliance/artifacts/config-vocabulary/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust scan-run-vocabulary conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family scan-run-vocabulary --participant rust --artifact-root tools/binding_compliance/artifacts/scan-run-vocabulary
+
+      - name: Upload Rust scan-run-vocabulary conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-scan-run-vocabulary-conformance
+          path: tools/binding_compliance/artifacts/scan-run-vocabulary/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run Rust autoscan-report conformance
         if: ${{ !cancelled() }}
         run: python tools/binding_compliance/run_scan_run_conformance.py --family autoscan-report --participant rust --artifact-root tools/binding_compliance/artifacts/autoscan-report

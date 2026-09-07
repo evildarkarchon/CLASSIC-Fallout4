@@ -20,6 +20,8 @@ FAMILIES = {
     "named-record",
     "plugin-evidence",
     "installed-yaml-data",
+    "config-vocabulary",
+    "scan-run-vocabulary",
 }
 
 
@@ -88,6 +90,8 @@ def _load_plan(path: Path) -> Mapping[str, Any]:
                 else {f"{plan['familyId']}.analyze"}
             )
         )
+        if plan["familyId"] in {"config-vocabulary", "scan-run-vocabulary"}:
+            actions = {"vocabulary.resolve"}
         if scenario.get("action") not in actions:
             raise RunnerContractError("unsupported semantic action")
         _mapping(scenario.get("input"), "scenario.input")
@@ -358,6 +362,10 @@ def _execute_scenario(
     plan: Mapping[str, Any], scenario: Mapping[str, Any]
 ) -> dict[str, Any]:
     """Read only a declared fixture and invoke its real public operation."""
+    if plan["familyId"] in {"config-vocabulary", "scan-run-vocabulary"}:
+        from vocabulary_conformance import observe_vocabulary
+
+        return observe_vocabulary(plan["familyId"], scenario["input"])
     reference = _string(scenario["input"].get("fixtureRef"), "fixtureRef")
     if reference not in scenario["fixtureRefs"]:
         raise RunnerContractError("fixtureRef is not declared by scenario")

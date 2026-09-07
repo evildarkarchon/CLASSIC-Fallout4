@@ -555,21 +555,27 @@ std::string_view segment_kind_token(scanner::ScanRunDisplaySegmentKind value) {
     throw RunnerError("unrecognized CXX display segment kind");
 }
 
+/// Serializes all ordered payload fields for lines and recovery decision descriptions.
+json serialize_display_segments(const rust::Vec<scanner::ScanRunDisplaySegment>& source, const fs::path& root) {
+    json segments = json::array();
+    for (const auto& segment : source) {
+        std::string path = owned_string(segment.path);
+        if (!path.empty()) {
+            path = relative_path(root, fs::path(path));
+        }
+        segments.push_back(json{{"kind", segment_kind_token(segment.kind)},
+                                {"text", owned_string(segment.text)},
+                                {"path", path},
+                                {"count", segment.count}});
+    }
+    return segments;
+}
+
 /// Serializes frozen Display Content while preserving every unused carrier field.
 json serialize_display(const rust::Vec<scanner::ScanRunDisplayLine>& lines, const fs::path& root) {
     json result = json::array();
     for (const auto& line : lines) {
-        json segments = json::array();
-        for (const auto& segment : line.segments) {
-            std::string path = owned_string(segment.path);
-            if (!path.empty()) {
-                path = relative_path(root, fs::path(path));
-            }
-            segments.push_back(json{{"kind", segment_kind_token(segment.kind)},
-                                    {"text", owned_string(segment.text)},
-                                    {"path", path},
-                                    {"count", segment.count}});
-        }
+        auto segments = serialize_display_segments(line.segments, root);
         result.push_back(json{{"severity", severity_token(line.severity)}, {"segments", std::move(segments)}});
     }
     return result;
@@ -1346,9 +1352,11 @@ json project_local_ignore_phase(const scanner::ScanRunContractExecutionResult& e
         for (const auto& decision : execution.recovery_prompt.decisions) {
             decisions.push_back(json{{"decision", recovery_decision_token(decision.decision)},
                                      {"label", owned_string(decision.label)},
+                                     {"description", serialize_display_segments(decision.description, root)},
                                      {"available", decision.available}});
         }
         prompt = json{{"displaySeverities", display_severities(execution.recovery_prompt.lines)},
+                      {"displayContent", serialize_display(execution.recovery_prompt.lines, root)},
                       {"decisions", std::move(decisions)}};
     }
 
@@ -1447,7 +1455,7 @@ rust::Box<scanner::ScanRunContractExecution> run_continuation_action(const scann
 }
 
 /// Projects one typed consumed-continuation replay through the public CXX presentation envelope.
-json project_replay(const json& action, const scanner::ScanRunContractExecutionResult& execution) {
+json project_replay(const json& action, const scanner::ScanRunContractExecutionResult& execution, const fs::path& root) {
     if (execution.has_result || execution.has_error || !execution.has_resume_error) {
         throw RunnerError("a replayed continuation action unexpectedly succeeded");
     }
@@ -1460,6 +1468,7 @@ json project_replay(const json& action, const scanner::ScanRunContractExecutionR
                 {"decision", std::move(decision)},
                 {"error", json{{"kind", owned_string(execution.resume_error.code)},
                                {"message", owned_string(execution.resume_error.message)},
+                               {"displayContent", serialize_display(execution.display_lines, root)},
                                {"displaySeverities", display_severities(execution.display_lines)}}}};
 }
 
@@ -1536,13 +1545,19 @@ json project_failure_observation(const scanner::ScanRunContractExecutionResult& 
         if (execution.has_result) {
             throw RunnerError("failure-profile CXX scan returned both result and infrastructure error");
         }
-        return json{
+        json observation{
             {"infrastructureError",
              json{{"stage", infrastructure_failure_stage_token(execution.error.stage)},
                   {"messageNonEmpty", !owned_string(execution.error.message).empty()},
                   {"path", execution.error.has_path ? path_carrier(root, fs::path(owned_string(execution.error.path)))
                                                     : json(nullptr)}}},
             {"durableEffects", durable_effects}};
+        // Validation owns deterministic prose; OS-dependent diagnostics keep
+        // their typed-fact coverage without claiming exact wording coverage.
+        if (execution.error.stage == scanner::ScanRunContractInfrastructureErrorStage::RequestValidation) {
+            observation["displayContent"] = serialize_display(execution.display_lines, root);
+        }
+        return observation;
     }
     if (!execution.has_result) {
         throw RunnerError("failure-profile CXX scan returned no result or infrastructure error");
@@ -1830,7 +1845,7 @@ json execute_scenario(const json& plan, const json& scenario) {
         for (const auto& action : flow.value("replays", json::array())) {
             auto replay_operation = run_continuation_action(*continuation, action, *cancellation, nullptr);
             const auto replay_execution = scanner::scan_run_contract_execution_take_result(*replay_operation);
-            replays.push_back(project_replay(action, replay_execution));
+            replays.push_back(project_replay(action, replay_execution, temporary.path()));
         }
         return json{
             {"initial", initial},
@@ -1864,6 +1879,7 @@ json execute_scenario(const json& plan, const json& scenario) {
 #include "classic_cxx_installed_yaml_data_conformance.h"
 #include "classic_cxx_semantic_conformance.h"
 #include "classic_cxx_user_settings_conformance.h"
+#include "classic_cxx_vocabulary_conformance.h"
 
 /// Executes one planned case while retaining runner failures as receipt evidence.
 json scenario_receipt(const json& plan, const json& scenario) {
@@ -1871,7 +1887,8 @@ json scenario_receipt(const json& plan, const json& scenario) {
         return json{{"id", scenario.at("id")},
                     {"executionStatus", "completed"},
                     {"capabilityIds", scenario.at("capabilityIds")},
-                    {"observation", is_semantic_family(plan.at("familyId")) ? execute_semantic_scenario(plan, scenario)
+                    {"observation", is_vocabulary_family(plan.at("familyId")) ? execute_vocabulary_scenario(plan, scenario)
+                                    : is_semantic_family(plan.at("familyId")) ? execute_semantic_scenario(plan, scenario)
                                     : plan.at("familyId") == "installed-yaml-data"
                                         ? execute_installed_yaml_data_scenario(plan, scenario)
                                     : plan.at("familyId") == "user-settings"
@@ -1892,7 +1909,7 @@ void validate_plan(const json& plan) {
     if (!plan.is_object() || plan.at("schemaVersion") != 1 ||
         (plan.at("familyId") != "crash-log-scan-run" && plan.at("familyId") != "user-settings" &&
          plan.at("familyId") != "installed-yaml-data" && plan.at("familyId") != "autoscan-report" &&
-         !is_semantic_family(plan.at("familyId")))) {
+         !is_semantic_family(plan.at("familyId")) && !is_vocabulary_family(plan.at("familyId")))) {
         throw RunnerError("unsupported CXX conformance run plan");
     }
     const json& participant = plan.at("participant");

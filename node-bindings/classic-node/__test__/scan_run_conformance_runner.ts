@@ -579,7 +579,13 @@ function displayContent(
 ): JsonObject[] {
   return lines.map((line) => ({
     severity: normalizedToken(line.severity),
-    segments: line.segments.map((segment) => ({
+    segments: displaySegments(line.segments, root),
+  }));
+}
+
+/** Preserve every payload field in both ordered lines and decision descriptions. */
+function displaySegments(segments: JsScanRunDisplayLine["segments"], root: string): JsonObject[] {
+  return segments.map((segment) => ({
       kind: normalizedToken(segment.kind),
       text: segment.text,
       path:
@@ -587,8 +593,7 @@ function displayContent(
           ? ""
           : relativePath(root, segment.path, "display segment path"),
       count: requireInteger(segment.count, "display segment count"),
-    })),
-  }));
+    }));
 }
 
 /** Serialize unexpected FCX setup data so a non-null regression stays visible. */
@@ -1238,12 +1243,14 @@ function displaySeverities(lines: JsScanRunDisplayLine[]): string[] {
 }
 
 /** Project the stable decision labels and availability from a public recovery prompt. */
-function compactRecoveryPrompt(prompt: JsScanRunRecoveryPrompt): JsonObject {
+function compactRecoveryPrompt(prompt: JsScanRunRecoveryPrompt, root: string): JsonObject {
   return {
     displaySeverities: displaySeverities(prompt.lines),
+    displayContent: displayContent(prompt.lines, root),
     decisions: prompt.decisions.map((decision) => ({
       decision: normalizedToken(decision.decision),
       label: decision.label,
+      description: displaySegments(decision.description, root),
       available: decision.available,
     })),
   };
@@ -1291,7 +1298,7 @@ async function localIgnorePhase(
     recoveryPrompt:
       recoveryPrompt === undefined
         ? null
-        : compactRecoveryPrompt(recoveryPrompt),
+        : compactRecoveryPrompt(recoveryPrompt, root),
   };
 }
 
@@ -1438,6 +1445,7 @@ async function waitForResetCriticalSection(root: string): Promise<boolean> {
 function replayError(
   action: ContinuationActionInput,
   error: unknown,
+  root: string,
 ): JsonObject {
   const value = requireObject(error, "continuation replay error");
   const kind = requireString(
@@ -1465,6 +1473,7 @@ function replayError(
           ? error.message
           : requireString(value.message, "continuation replay error message"),
       displaySeverities: severities,
+      displayContent: displayContent(lines as JsScanRunDisplayLine[], root),
     },
   };
 }
@@ -1600,7 +1609,7 @@ async function continuationObservation(
       if (error instanceof RunnerContractError) {
         throw error;
       }
-      replays.push(replayError(action, error));
+      replays.push(replayError(action, error, root));
     }
   }
 
@@ -1771,6 +1780,8 @@ async function failureObservation(
   const effects = await observedDurableEffects(input, root);
   if ("error" in execution) {
     return {
+      // Only validation diagnostics have portable exact prose across operating systems.
+      ...(execution.error.stage === "request_validation" ? { displayContent: displayContent(execution.displayLines, root) } : {}),
       infrastructureError: {
         stage: execution.error.stage,
         messageNonEmpty: execution.error.message.length > 0,

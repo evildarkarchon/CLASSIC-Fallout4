@@ -8,7 +8,8 @@
 use classic_config_core::{InspectedYamlDataFile, YamlDataContentIdentity};
 use classic_scan_presentation::{
     DisplayLine, DisplaySegment, DisplaySeverity, RecoveryPrompt, render_event,
-    render_local_ignore_recovery, render_resume_error, render_run_result,
+    render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
+    render_run_result,
 };
 use classic_scanlog_core::CrashLogScanFacts;
 use classic_scanlog_core::scan_run::contract;
@@ -594,7 +595,7 @@ fn execute_continuation_flow(
                 Ok(_) => Err(
                     invalid_data("a replayed continuation action unexpectedly succeeded").into(),
                 ),
-                Err(error) => Ok(project_replay_error(action, &error)),
+                Err(error) => project_replay_error(root, action, &error),
             }
         })
         .collect::<RunnerResult<Vec<_>>>()?;
@@ -872,14 +873,20 @@ fn project_failure_infrastructure_observation(
     input: &ScenarioInput,
     error: &contract::InfrastructureError,
 ) -> RunnerResult<Value> {
-    Ok(json!({
+    let mut observation = json!({
         "infrastructureError": {
             "stage": error.stage.as_str(),
             "messageNonEmpty": !error.message.is_empty(),
             "path": error.path.as_ref().map(|path| path_carrier(root, path)).transpose()?,
         },
         "durableEffects": project_observed_effects(root, &input.observed_paths)?,
-    }))
+    });
+    // Request validation owns portable prose; OS failures retain their typed
+    // facts without pretending that platform diagnostic text is frozen.
+    if error.stage == contract::InfrastructureErrorStage::RequestValidation {
+        observation["displayContent"] = project_display(root, &render_infrastructure_error(error))?;
+    }
+    Ok(observation)
 }
 
 /// Projects a completed run whose stable evidence is its per-log structured failures.
@@ -1268,33 +1275,39 @@ fn project_local_ignore_phase(
         "logs": logs,
         "events": project_compact_events(result, events)?,
         "continuationAvailable": continuation_available,
-        "recoveryPrompt": recovery_prompt.map(project_recovery_prompt),
+        "recoveryPrompt": recovery_prompt.map(|prompt| project_recovery_prompt(root, prompt)).transpose()?,
     }))
 }
 
-/// Projects the public recovery prompt, including decision labels and availability.
-fn project_recovery_prompt(prompt: &RecoveryPrompt) -> Value {
+/// Projects complete public recovery lines, descriptions, labels, and availability.
+fn project_recovery_prompt(root: &Path, prompt: &RecoveryPrompt) -> RunnerResult<Value> {
     let decisions = prompt
         .decisions
         .iter()
         .map(|decision| {
-            json!({
+            Ok(json!({
                 "decision": decision.decision.as_str(),
                 "label": decision.label,
+                "description": decision.description.iter().map(|segment| project_segment(root, segment)).collect::<RunnerResult<Vec<_>>>()?,
                 "available": decision.available,
-            })
+            }))
         })
-        .collect::<Vec<_>>();
+        .collect::<RunnerResult<Vec<_>>>()?;
     let display_severities = display_severities(&prompt.lines);
-    json!({
+    Ok(json!({
         "displaySeverities": display_severities,
+        "displayContent": project_display(root, &prompt.lines)?,
         "decisions": decisions,
-    })
+    }))
 }
 
 /// Projects one typed consumed-continuation replay through the public presentation seam.
-fn project_replay_error(action: ContinuationActionInput, error: &contract::ResumeError) -> Value {
-    json!({
+fn project_replay_error(
+    root: &Path,
+    action: ContinuationActionInput,
+    error: &contract::ResumeError,
+) -> RunnerResult<Value> {
+    Ok(json!({
         "operation": match action.operation {
             ContinuationOperationInput::Resume => "resume",
             ContinuationOperationInput::Abandon => "abandon",
@@ -1304,8 +1317,9 @@ fn project_replay_error(action: ContinuationActionInput, error: &contract::Resum
             "kind": error.kind().as_str(),
             "message": error.to_string(),
             "displaySeverities": display_severities(&render_resume_error(error)),
+            "displayContent": project_display(root, &render_resume_error(error))?,
         },
-    })
+    }))
 }
 
 /// Projects one typed terminal resume rejection without retaining OS-dependent prose.

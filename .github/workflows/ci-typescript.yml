@@ -293,6 +293,32 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Node config-vocabulary conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family config-vocabulary --participant node --artifact-root tools/binding_compliance/artifacts/config-vocabulary
+
+      - name: Upload Node config-vocabulary conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-config-vocabulary-conformance
+          path: tools/binding_compliance/artifacts/config-vocabulary/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node scan-run-vocabulary conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family scan-run-vocabulary --participant node --artifact-root tools/binding_compliance/artifacts/scan-run-vocabulary
+
+      - name: Upload Node scan-run-vocabulary conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-scan-run-vocabulary-conformance
+          path: tools/binding_compliance/artifacts/scan-run-vocabulary/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run Node autoscan-report conformance
         if: matrix.runtime == 'node' && !cancelled()
         run: python tools/binding_compliance/run_scan_run_conformance.py --family autoscan-report --participant node --artifact-root tools/binding_compliance/artifacts/autoscan-report

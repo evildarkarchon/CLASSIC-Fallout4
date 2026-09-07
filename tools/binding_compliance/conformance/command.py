@@ -23,6 +23,7 @@ from .families.crash_log_scan_run import CRASH_LOG_SCAN_RUN_COVERAGE_POLICY
 from .families.installed_yaml_data import INSTALLED_YAML_DATA_COVERAGE_POLICY
 from .families.semantic_analysis import SEMANTIC_ANALYSIS_COVERAGE_POLICIES
 from .families.user_settings import USER_SETTINGS_COVERAGE_POLICY
+from .families.vocabulary import vocabulary_coverage_policies
 from .packs import (
     MaterializationError,
     PackValidationError,
@@ -52,6 +53,7 @@ FAMILY_COVERAGE_POLICIES: Mapping[str, FamilyCoveragePolicy] = {
     USER_SETTINGS_COVERAGE_POLICY.family_id: USER_SETTINGS_COVERAGE_POLICY,
     INSTALLED_YAML_DATA_COVERAGE_POLICY.family_id: INSTALLED_YAML_DATA_COVERAGE_POLICY,
     **SEMANTIC_ANALYSIS_COVERAGE_POLICIES,
+    **vocabulary_coverage_policies(Path(__file__).resolve().parents[3]),
 }
 
 _CXX_LOCAL_ENVIRONMENT_OUTPUT_MARKERS = (

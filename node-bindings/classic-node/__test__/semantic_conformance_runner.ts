@@ -3,9 +3,10 @@ import { lstat, mkdir, open, readFile, rename, rm } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import * as classic from "../index.js";
 import { observeInstalledYaml } from "./installed_yaml_conformance.js";
+import { observeVocabulary } from "./vocabulary_conformance.js";
 
 type JsonObject = Record<string, any>;
-const families = ["crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data"];
+const families = ["crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary"];
 
 /** Reject malformed invocation objects before invoking native operations. */
 function object(value: unknown, label: string): JsonObject {
@@ -39,7 +40,8 @@ async function loadPlan(path: string): Promise<JsonObject> {
       if (!Array.isArray(scenario[key])) throw new Error(`${key} must be an array`);
       scenario[key].forEach((value: unknown) => string(value, key));
     }
-    const actions = plan.familyId === "installed-yaml-data" ? ["installed-yaml-data.inspect", "installed-yaml-data.load"]
+    const actions = ["config-vocabulary", "scan-run-vocabulary"].includes(plan.familyId) ? ["vocabulary.resolve"]
+      : plan.familyId === "installed-yaml-data" ? ["installed-yaml-data.inspect", "installed-yaml-data.load"]
       : plan.familyId === "formid-lookup" ? ["formid-lookup.lookup"] : [`${plan.familyId}.analyze`];
     if (!actions.includes(scenario.action)) throw new Error("unsupported semantic action");
     object(scenario.input, "scenario.input");
@@ -170,6 +172,9 @@ async function analyze(family: string, fixture: JsonObject): Promise<JsonObject>
 
 /** Read exclusively the declared input fixture and observe the selected native operation. */
 async function executeScenario(plan: JsonObject, scenario: JsonObject): Promise<JsonObject> {
+  if (["config-vocabulary", "scan-run-vocabulary"].includes(plan.familyId)) {
+    return observeVocabulary(plan.familyId, scenario.input);
+  }
   const reference = string(scenario.input.fixtureRef, "fixtureRef");
   if (!scenario.fixtureRefs.includes(reference)) throw new Error("fixtureRef is not declared by scenario");
   const fixture = object(JSON.parse(await readFile(string(plan.fixtures[reference], "fixture path"), "utf8")), "fixture");

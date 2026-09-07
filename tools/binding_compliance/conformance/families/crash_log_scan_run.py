@@ -41,19 +41,96 @@ _COMPACT_SUCCESS_TRACE = (
 )
 _RECOVERY_PROMPT = {
     "displaySeverities": ["warning"],
+    "displayContent": [
+        {
+            "severity": "warning",
+            "segments": [
+                {
+                    "kind": "text",
+                    "text": "Your Local Ignore file is malformed, so this Crash Log Scan is paused until you choose how to continue.",
+                    "path": "",
+                    "count": 0,
+                }
+            ],
+        }
+    ],
     "decisions": [
         {
             "decision": "proceed_without_ignore",
             "label": "Proceed Without Ignore",
+            "description": [
+                {
+                    "kind": "text",
+                    "text": "Scan now with an empty ignore list. Your malformed Local Ignore file is left exactly as it is, and this choice applies to this scan only.",
+                    "path": "",
+                    "count": 0,
+                }
+            ],
             "available": True,
         },
         {
             "decision": "reset_to_default",
             "label": "Reset To Default",
+            "description": [
+                {
+                    "kind": "text",
+                    "text": "Back up your malformed Local Ignore file byte-exactly, replace it with the selected Main defaults, then scan.",
+                    "path": "",
+                    "count": 0,
+                }
+            ],
             "available": True,
         },
     ],
 }
+
+# These independently authored carriers pin the public transport of the canonical
+# presentation goldens; adapters receive input plans without any expected prose.
+_CONSUMED_REPLAY_DISPLAY = [
+    {
+        "severity": "failure",
+        "segments": [
+            {
+                "kind": "text",
+                "text": "Crash Log Scan recovery failed - this recovery decision was already applied",
+                "path": "",
+                "count": 0,
+            }
+        ],
+    },
+    {
+        "severity": "notice",
+        "segments": [
+            {
+                "kind": "text",
+                "text": "Start the Crash Log Scan again to retry.",
+                "path": "",
+                "count": 0,
+            }
+        ],
+    },
+]
+_REQUEST_VALIDATION_DISPLAY = [
+    {
+        "severity": "failure",
+        "segments": [
+            {
+                "kind": "text",
+                "text": "Crash Log Scan Run failed during",
+                "path": "",
+                "count": 0,
+            },
+            {"kind": "label", "text": "request validation", "path": "", "count": 0},
+            {"kind": "text", "text": "-", "path": "", "count": 0},
+            {
+                "kind": "emphasis",
+                "text": "max_concurrent must be greater than zero when supplied",
+                "path": "",
+                "count": 0,
+            },
+        ],
+    }
+]
 
 
 def _mapping(value: object) -> Mapping[str, Any] | None:
@@ -407,6 +484,7 @@ def _consumed_replay(value: object, operation: str, decision: str | None) -> boo
         and error.get("message")
         == "Crash Log Scan Run continuation was already consumed"
         and error.get("displaySeverities") == ["failure", "notice"]
+        and error.get("displayContent") == _CONSUMED_REPLAY_DISPLAY
     )
 
 
@@ -1610,7 +1688,9 @@ def _infrastructure_failure_matches(
 def _request_validation_failure(observation: Mapping[str, Any]) -> bool:
     """Recognize zero-concurrency rejection and its absence of durable output."""
 
-    return _infrastructure_failure_matches(
+    return observation.get(
+        "displayContent"
+    ) == _REQUEST_VALIDATION_DISPLAY and _infrastructure_failure_matches(
         observation,
         stage="request_validation",
         path=None,

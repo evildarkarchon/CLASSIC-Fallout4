@@ -12,7 +12,7 @@
 param(
     [ValidateSet("msvc", "clang-cl")]
     [string]$Compiler = "msvc",
-    [ValidateSet("crash-log-scan-run", "autoscan-report", "user-settings", "crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data")]
+    [ValidateSet("crash-log-scan-run", "autoscan-report", "user-settings", "crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary")]
     [string]$Family = "crash-log-scan-run",
     [string]$ArtifactRoot = "tools/binding_compliance/artifacts"
 )

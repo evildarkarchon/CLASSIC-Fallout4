@@ -1125,6 +1125,17 @@ def load_and_validate_pack(repo_root: Path, pack_path: Path) -> ValidatedPack:
     _validate_normalization(pack)
     oracle_paths: tuple[Path, ...] = ()
     oracle_sources: tuple[tuple[str, bytes], ...] = ()
+    if pack["familyId"] in {"config-vocabulary", "scan-run-vocabulary"}:
+        from .families.vocabulary import validate_vocabulary_pack
+
+        try:
+            oracle_paths = validate_vocabulary_pack(pack, root)
+            oracle_sources = tuple(
+                (path.relative_to(root).as_posix(), path.read_bytes())
+                for path in oracle_paths
+            )
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            raise PackValidationError(f"invalid Vocabulary pack: {error}") from error
     if pack["familyId"] == "user-settings":
         from .families.user_settings import (
             compile_compatibility_expectations,

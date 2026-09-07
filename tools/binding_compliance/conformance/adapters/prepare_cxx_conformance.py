@@ -34,6 +34,8 @@ SUPPORTED_FAMILIES = (
     "named-record",
     "plugin-evidence",
     "installed-yaml-data",
+    "config-vocabulary",
+    "scan-run-vocabulary",
 )
 
 
@@ -43,6 +45,10 @@ def _cxx_source_paths(
     """Return current native runner and core inputs bound into source identity."""
 
     paths = (
+        repo_root
+        / "classic-cli/tests/conformance/classic_cxx_vocabulary_conformance.h",
+        repo_root / "foundation/classic-vocabulary/src",
+        repo_root / "business-logic/classic-durable-publication/src",
         SCRIPT_PATH,
         repo_root
         / "tools"

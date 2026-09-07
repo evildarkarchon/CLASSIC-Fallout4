@@ -1,0 +1,395 @@
+{
+  "schemaVersion": 1,
+  "familyId": "scan-run-vocabulary",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scanlog-core"
+  },
+  "fixtureRoot": "tests/conformance/packs/scan_run_vocabulary",
+  "fixtures": {},
+  "capabilities": [
+    {
+      "id": "vocabulary.resolve",
+      "rustSymbols": [
+        "InstalledYamlDataRunDiagnosticKind",
+        "LocalIgnoreRunState",
+        "LogDisposition",
+        "LogFailureStage",
+        "InfrastructureErrorStage",
+        "LocalIgnoreResetFailureStage"
+      ],
+      "observationFamilies": [
+        "vocabulary"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "scan-run-installed-yaml-data-diagnostic-kind-label",
+      "action": "vocabulary.resolve",
+      "capabilityIds": [
+        "vocabulary.resolve"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "operation": "scan_run_installed_yaml_data_diagnostic_kind_label",
+        "tokens": [
+          "cache_unavailable",
+          "missing",
+          "read",
+          "invalid_utf8",
+          "parse",
+          "invalid_schema",
+          "incompatible_schema",
+          "invalid_role_data",
+          "local_ignore_generated",
+          "local_ignore_reset",
+          "not_a_real_token"
+        ]
+      },
+      "expected": {
+        "operation": "scan_run_installed_yaml_data_diagnostic_kind_label",
+        "entries": [
+          {
+            "token": "cache_unavailable",
+            "label": "update cache unavailable",
+            "rejected": false
+          },
+          {
+            "token": "missing",
+            "label": "missing candidate",
+            "rejected": false
+          },
+          {
+            "token": "read",
+            "label": "read failure",
+            "rejected": false
+          },
+          {
+            "token": "invalid_utf8",
+            "label": "invalid UTF-8",
+            "rejected": false
+          },
+          {
+            "token": "parse",
+            "label": "parse failure",
+            "rejected": false
+          },
+          {
+            "token": "invalid_schema",
+            "label": "invalid schema",
+            "rejected": false
+          },
+          {
+            "token": "incompatible_schema",
+            "label": "incompatible schema",
+            "rejected": false
+          },
+          {
+            "token": "invalid_role_data",
+            "label": "invalid role data",
+            "rejected": false
+          },
+          {
+            "token": "local_ignore_generated",
+            "label": "Local Ignore generated",
+            "rejected": false
+          },
+          {
+            "token": "local_ignore_reset",
+            "label": "Local Ignore reset",
+            "rejected": false
+          },
+          {
+            "token": "not_a_real_token",
+            "label": null,
+            "rejected": true
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "scan-run-local-ignore-yaml-data-state-label",
+      "action": "vocabulary.resolve",
+      "capabilityIds": [
+        "vocabulary.resolve"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "operation": "scan_run_local_ignore_yaml_data_state_label",
+        "tokens": [
+          "existing",
+          "generated",
+          "recovery_required",
+          "proceed_without_ignore",
+          "reset_to_default",
+          "not_a_real_token"
+        ]
+      },
+      "expected": {
+        "operation": "scan_run_local_ignore_yaml_data_state_label",
+        "entries": [
+          {
+            "token": "existing",
+            "label": "existing",
+            "rejected": false
+          },
+          {
+            "token": "generated",
+            "label": "generated from selected Main defaults",
+            "rejected": false
+          },
+          {
+            "token": "recovery_required",
+            "label": "recovery required",
+            "rejected": false
+          },
+          {
+            "token": "proceed_without_ignore",
+            "label": "proceeded without ignore entries",
+            "rejected": false
+          },
+          {
+            "token": "reset_to_default",
+            "label": "reset to default",
+            "rejected": false
+          },
+          {
+            "token": "not_a_real_token",
+            "label": null,
+            "rejected": true
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "scan-run-log-disposition-label",
+      "action": "vocabulary.resolve",
+      "capabilityIds": [
+        "vocabulary.resolve"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "operation": "scan_run_log_disposition_label",
+        "tokens": [
+          "succeeded",
+          "failed",
+          "cancelled_before_start",
+          "not_a_real_token"
+        ]
+      },
+      "expected": {
+        "operation": "scan_run_log_disposition_label",
+        "entries": [
+          {
+            "token": "succeeded",
+            "label": "succeeded",
+            "rejected": false
+          },
+          {
+            "token": "failed",
+            "label": "failed",
+            "rejected": false
+          },
+          {
+            "token": "cancelled_before_start",
+            "label": "cancelled before start",
+            "rejected": false
+          },
+          {
+            "token": "not_a_real_token",
+            "label": null,
+            "rejected": true
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "scan-run-log-failure-stage-label",
+      "action": "vocabulary.resolve",
+      "capabilityIds": [
+        "vocabulary.resolve"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "operation": "scan_run_log_failure_stage_label",
+        "tokens": [
+          "analysis",
+          "report_write",
+          "unsolved_logs_finalization",
+          "not_a_real_token"
+        ]
+      },
+      "expected": {
+        "operation": "scan_run_log_failure_stage_label",
+        "entries": [
+          {
+            "token": "analysis",
+            "label": "analysis",
+            "rejected": false
+          },
+          {
+            "token": "report_write",
+            "label": "report write",
+            "rejected": false
+          },
+          {
+            "token": "unsolved_logs_finalization",
+            "label": "Unsolved Logs finalization",
+            "rejected": false
+          },
+          {
+            "token": "not_a_real_token",
+            "label": null,
+            "rejected": true
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "scan-run-infrastructure-error-stage-label",
+      "action": "vocabulary.resolve",
+      "capabilityIds": [
+        "vocabulary.resolve"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "operation": "scan_run_infrastructure_error_stage_label",
+        "tokens": [
+          "request_validation",
+          "discovery",
+          "intake",
+          "formid_database_access",
+          "initialization",
+          "internal_invariant",
+          "not_a_real_token"
+        ]
+      },
+      "expected": {
+        "operation": "scan_run_infrastructure_error_stage_label",
+        "entries": [
+          {
+            "token": "request_validation",
+            "label": "request validation",
+            "rejected": false
+          },
+          {
+            "token": "discovery",
+            "label": "discovery",
+            "rejected": false
+          },
+          {
+            "token": "intake",
+            "label": "intake",
+            "rejected": false
+          },
+          {
+            "token": "formid_database_access",
+            "label": "FormID database access",
+            "rejected": false
+          },
+          {
+            "token": "initialization",
+            "label": "initialization",
+            "rejected": false
+          },
+          {
+            "token": "internal_invariant",
+            "label": "internal invariant validation",
+            "rejected": false
+          },
+          {
+            "token": "not_a_real_token",
+            "label": null,
+            "rejected": true
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "scan-run-local-ignore-reset-failure-stage-label",
+      "action": "vocabulary.resolve",
+      "capabilityIds": [
+        "vocabulary.resolve"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "operation": "scan_run_local_ignore_reset_failure_stage_label",
+        "tokens": [
+          "create",
+          "write",
+          "flush",
+          "sync",
+          "publish",
+          "not_a_real_token"
+        ]
+      },
+      "expected": {
+        "operation": "scan_run_local_ignore_reset_failure_stage_label",
+        "entries": [
+          {
+            "token": "create",
+            "label": "create",
+            "rejected": false
+          },
+          {
+            "token": "write",
+            "label": "write",
+            "rejected": false
+          },
+          {
+            "token": "flush",
+            "label": "flush",
+            "rejected": false
+          },
+          {
+            "token": "sync",
+            "label": "sync",
+            "rejected": false
+          },
+          {
+            "token": "publish",
+            "label": "publish",
+            "rejected": false
+          },
+          {
+            "token": "not_a_real_token",
+            "label": null,
+            "rejected": true
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

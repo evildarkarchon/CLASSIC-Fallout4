@@ -380,23 +380,24 @@ def _display_content(lines: object, root: Path) -> list[dict[str, Any]]:
 
     serialized = []
     for line in lines:
-        segments = []
-        for segment in line.segments:
-            segment_path = str(segment.path)
-            if segment_path:
-                segment_path = _relative_path(
-                    root, segment_path, "display segment path"
-                )
-            segments.append(
-                {
-                    "kind": str(segment.kind),
-                    "text": str(segment.text),
-                    "path": segment_path,
-                    "count": int(segment.count),
-                }
-            )
+        segments = _display_segments(line.segments, root)
         serialized.append({"severity": str(line.severity), "segments": segments})
     return serialized
+
+
+def _display_segments(segments: object, root: Path) -> list[dict[str, Any]]:
+    """Preserve all ordered segment fields in lines and recovery descriptions."""
+    return [
+        {
+            "kind": str(segment.kind),
+            "text": str(segment.text),
+            "path": ""
+            if not str(segment.path)
+            else _relative_path(root, str(segment.path), "display segment path"),
+            "count": int(segment.count),
+        }
+        for segment in segments
+    ]
 
 
 def _serialize_setup(setup: object | None, root: Path) -> object | None:
@@ -800,7 +801,7 @@ def _failure_observation(
             raise RunnerContractError(
                 "public scan operation returned both a result and an error"
             )
-        return {
+        observation = {
             "infrastructureError": {
                 "stage": str(error.stage),
                 "messageNonEmpty": bool(error.message),
@@ -810,6 +811,13 @@ def _failure_observation(
             },
             "durableEffects": effects,
         }
+        # Validation prose is deterministic; other failure profiles retain their
+        # typed facts because operating-system diagnostic strings are not frozen.
+        if str(error.stage) == "request_validation":
+            observation["displayContent"] = _display_content(
+                execution.display_lines, root
+            )
+        return observation
     if result is None:
         raise RunnerContractError("public scan operation returned no result or error")
     return {
@@ -1195,15 +1203,19 @@ def _recovery_decision(classic_scanlog: Any, token: object, label: str) -> Any:
     raise RunnerContractError(f"{label} is not a supported recovery decision")
 
 
-def _project_recovery_prompt(classic_scanlog: Any, prompt: Any) -> dict[str, Any]:
-    """Project prompt severities plus public decision labels and availability."""
+def _project_recovery_prompt(
+    classic_scanlog: Any, prompt: Any, root: Path
+) -> dict[str, Any]:
+    """Project complete prompt lines and decision descriptions with public labels."""
 
     return {
         "displaySeverities": [str(line.severity) for line in prompt.lines],
+        "displayContent": _display_content(prompt.lines, root),
         "decisions": [
             {
                 "decision": _decision_token(classic_scanlog, decision.decision),
                 "label": str(decision.label),
+                "description": _display_segments(decision.description, root),
                 "available": bool(decision.available),
             }
             for decision in prompt.decisions
@@ -1246,7 +1258,7 @@ def _local_ignore_phase(
         "continuationAvailable": continuation_available,
         "recoveryPrompt": None
         if recovery_prompt is None
-        else _project_recovery_prompt(classic_scanlog, recovery_prompt),
+        else _project_recovery_prompt(classic_scanlog, recovery_prompt, root),
     }
 
 
@@ -1322,7 +1334,7 @@ def _run_continuation_action(
 
 
 def _project_replay_error(
-    raw_action: object, label: str, error: Exception
+    raw_action: object, label: str, error: Exception, root: Path
 ) -> dict[str, Any]:
     """Project a typed consumed-continuation rejection without adapter-only prose."""
 
@@ -1341,6 +1353,7 @@ def _project_replay_error(
             "kind": kind,
             "message": str(error),
             "displaySeverities": [str(line.severity) for line in display_lines],
+            "displayContent": _display_content(display_lines, root),
         },
     }
 
@@ -1564,7 +1577,9 @@ def _execute_continuation_flow(
                 None,
             )
         except Exception as error:  # noqa: BLE001 - typed rejection is receipt data.
-            replay_observations.append(_project_replay_error(replay, label, error))
+            replay_observations.append(
+                _project_replay_error(replay, label, error, root)
+            )
         else:
             raise RunnerContractError(
                 f"{label} unexpectedly consumed a continuation more than once"

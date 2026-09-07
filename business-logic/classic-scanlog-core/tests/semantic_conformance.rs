@@ -24,6 +24,9 @@ type RunnerResult<T> = Result<T, Box<dyn Error + Send + Sync>>;
 #[path = "semantic_conformance/installed_yaml_data.rs"]
 mod installed_yaml_data;
 
+#[path = "semantic_conformance/vocabulary.rs"]
+mod vocabulary;
+
 /// Rejects malformed runner inputs without confusing them with domain errors.
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
@@ -391,6 +394,9 @@ fn lookup_fixture(c: &Value, r: &Value, warmup: Option<&Value>) -> RunnerResult<
 fn execute(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
     if scenario.get("expected").is_some() {
         return Err(invalid("input plan exposed expectations").into());
+    }
+    if vocabulary::is_family(&plan["familyId"]) {
+        return vocabulary::execute(&text(&plan["familyId"])?, scenario);
     }
     let reference = &scenario["input"]["fixtureRef"];
     if !scenario["fixtureRefs"]

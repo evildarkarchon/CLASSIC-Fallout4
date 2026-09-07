@@ -6,7 +6,6 @@ use classic_config_core::{
 use classic_scan_presentation::{
     DisplayLine, DisplaySegment, DisplaySeverity, RecoveryDecisionDescription, RecoveryPrompt,
     render_event, render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
-    render_run_result,
 };
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
@@ -740,25 +739,6 @@ fn every_run_owned_scan_run_token_resolves_to_the_core_display_label() {
     );
 }
 
-#[test]
-/// A label a frontend could not have derived from the token reaches Python.
-fn glossary_capitalization_survives_the_python_boundary() {
-    // The two labels in this change that a mechanical transform of the token
-    // could not produce. Quoted as literals deliberately: this is the one thing
-    // a derived expectation cannot prove, since deriving it from `label()`
-    // would pass just as happily if the core had lowercased both.
-    assert_eq!(
-        scan_run_log_failure_stage_label("unsolved_logs_finalization")
-            .expect("a published token must resolve"),
-        "Unsolved Logs finalization"
-    );
-    assert_eq!(
-        scan_run_infrastructure_error_stage_label("formid_database_access")
-            .expect("a published token must resolve"),
-        "FormID database access"
-    );
-}
-
 // --- Display Content ------------------------------------------------------
 //
 // These tests pin the *flattening*, never a sentence. Wording is pinned once, in
@@ -909,37 +889,6 @@ fn an_event_carries_the_lines_the_renderer_produced() {
             .map(|line| (line.severity.clone(), line.segments.len()))
             .collect::<Vec<_>>(),
     );
-}
-
-#[test]
-/// A completed run's envelope carries the lines rendered from that run.
-fn an_execution_carries_the_lines_rendered_from_its_run() {
-    Python::initialize();
-    Python::attach(|py| {
-        let facts = || contract::RunResult {
-            status: CrashLogScanRunStatus::Completed,
-            discovery: Some(discovery()),
-            setup: None,
-            installed_yaml_data: None,
-            continuation: None,
-            effective_concurrency: Some(2),
-            message: None,
-            total: 1,
-            succeeded: 1,
-            failed: 0,
-            cancelled: 0,
-            logs: Vec::new(),
-        };
-        let expected = display_lines_to_py(&render_run_result(&facts()));
-        let execution = super::success_execution(py, facts(), None).expect("envelope should build");
-
-        assert!(!expected.is_empty(), "a completed run must say something");
-        assert_eq!(execution.display_lines.len(), expected.len());
-        assert_eq!(
-            execution.display_lines[0].segments[0].kind,
-            expected[0].segments[0].kind,
-        );
-    });
 }
 
 #[test]

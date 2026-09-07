@@ -30,6 +30,8 @@ Installed YAML Data inspection and preparation also require blocking receipts ac
 
 Autoscan Report output requires blocking same-revision receipts across Rust, Node, Python, and CXX on both compiler instances. The [Autoscan Report evidence map](docs/implementation/autoscan_report_conformance_equivalence.md) connects the original empty, populated, and FCX goldens to exact persisted bytes, typed Display Content, and durable effects. The original goldens and focused owner diagnostics remain required.
 
+Config and scan-run Vocabulary labels use executable token-to-label receipts, while the scan-run pack compares full typed Display Content. The [Vocabulary and Display Content evidence map](docs/implementation/vocabulary_display_conformance_equivalence.md) records independent expected wording, source token inventories, the shared provenance accessor, and the duplicated JavaScript tests retired after equivalent observations passed.
+
 For older historical context, see [CLASSIC - Readme.pdf](CLASSIC%20-%20Readme.pdf).
 
 Nexus Mods: <https://www.nexusmods.com/fallout4/mods/56255>

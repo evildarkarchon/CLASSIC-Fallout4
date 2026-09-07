@@ -16,6 +16,8 @@ FAMILY_ENFORCEMENT = MappingProxyType(
         "formid-lookup": "blocking",
         "named-record": "blocking",
         "plugin-evidence": "blocking",
+        "config-vocabulary": "blocking",
+        "scan-run-vocabulary": "blocking",
     }
 )
 

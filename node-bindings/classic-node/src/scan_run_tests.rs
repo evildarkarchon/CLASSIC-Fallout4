@@ -799,23 +799,6 @@ fn an_enormous_count_saturates_at_the_javascript_boundary() {
 }
 
 #[test]
-/// The resolved success envelope says what the run says.
-fn the_success_envelope_carries_the_runs_display_lines() {
-    let envelope = success_envelope(completed_run_result(), None);
-    let expected = display_lines_to_js(&render_run_result(&completed_run_result()));
-    assert!(
-        !envelope.display_lines.is_empty(),
-        "a terminal result always states its outcome"
-    );
-    assert_display_lines_match(&envelope.display_lines, &expected);
-    // The machine-facing half is untouched: a consumer still matches on the token.
-    assert_eq!(
-        envelope.result.status,
-        CrashLogScanRunStatus::Completed.as_str()
-    );
-}
-
-#[test]
 /// The resolved failure envelope says what the failure says, without losing the token.
 fn the_failure_envelope_carries_the_failures_display_lines() {
     // Every stage, because the stage is the one part of an infrastructure failure
@@ -854,45 +837,6 @@ fn the_failure_envelope_carries_the_failures_display_lines() {
                 stage.as_str()
             );
         }
-    }
-}
-
-#[test]
-/// Every observed event says what it says, in Rust's words.
-fn every_event_kind_carries_its_display_lines() {
-    // `Vec` rather than an array so the variants can differ in shape; built twice
-    // because `render_event` borrows and `event_to_js` consumes.
-    let build = || -> Vec<contract::Event> {
-        vec![
-            contract::Event::DiscoveryCompleted(CrashLogScanDiscoveryResult {
-                source: CrashLogScanDiscoverySource::Standard,
-                accepted_logs: vec![PathBuf::from("C:/logs/crash.log")],
-                rejected_inputs: vec![],
-                searched_locations: vec![PathBuf::from("C:/logs")],
-            }),
-            contract::Event::EffectiveConcurrencySelected {
-                effective_concurrency: 3,
-            },
-            contract::Event::LogQueued(log_event()),
-            contract::Event::LogStarted(log_event()),
-            contract::Event::LogPhase {
-                log: log_event(),
-                phase: ScanProgressPhase::Parse,
-            },
-            contract::Event::LogFinished {
-                log: log_event(),
-                disposition: LogDisposition::Succeeded,
-            },
-        ]
-    };
-    for (event, rendered) in build().into_iter().zip(build()) {
-        let expected = display_lines_to_js(&render_event(&rendered));
-        let projected = event_to_js(event);
-        assert!(
-            !projected.display_lines.is_empty(),
-            "every event kind renders; a consumer may omit whole lines, but none arrive absent"
-        );
-        assert_display_lines_match(&projected.display_lines, &expected);
     }
 }
 
@@ -1000,25 +944,6 @@ fn the_replay_rejection_keeps_its_published_code_and_message() {
     assert_eq!(
         projection.message,
         "Crash Log Scan Run continuation was already consumed"
-    );
-}
-
-#[test]
-/// A label a frontend could not have derived from the token reaches JavaScript.
-fn glossary_capitalization_survives_the_javascript_boundary() {
-    // The two labels in this change that a mechanical transform of the token
-    // could not produce. Quoted as literals deliberately: this is the one thing
-    // a derived expectation cannot prove, since deriving it from `label()`
-    // would pass just as happily if the core had lowercased both.
-    assert_eq!(
-        scan_run_log_failure_stage_label("unsolved_logs_finalization".to_string())
-            .expect("a published token must resolve"),
-        "Unsolved Logs finalization"
-    );
-    assert_eq!(
-        scan_run_infrastructure_error_stage_label("formid_database_access".to_string())
-            .expect("a published token must resolve"),
-        "FormID database access"
     );
 }
 

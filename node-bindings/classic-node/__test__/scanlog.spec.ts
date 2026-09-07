@@ -17,22 +17,13 @@ import {
   ScanRunRequest,
   ScanRunUnsolvedLogs,
   JsGameId,
-  JsInstalledYamlDataDiagnosticKind,
-  JsLocalIgnoreYamlDataState,
   JsScanRunDisplaySegmentKind,
   JsScanRunDisplaySeverity,
   JsScanRunInstalledYamlDataDiagnosticKind,
   JsScanRunLocalIgnoreRecoveryDecision,
   JsScanRunLocalIgnoreState,
-  installedYamlDataDiagnosticKindLabel,
-  localIgnoreYamlDataStateLabel,
   scanRunExecute,
   scanRunInfrastructureErrorStageLabel,
-  scanRunInstalledYamlDataDiagnosticKindLabel,
-  scanRunLocalIgnoreResetFailureStageLabel,
-  scanRunLocalIgnoreYamlDataStateLabel,
-  scanRunLogDispositionLabel,
-  scanRunLogFailureStageLabel,
   scanRunResume,
   scanRunAbandon,
   parseLogSegments,
@@ -1888,123 +1879,6 @@ describe("scanlog Plan 2 promotion: parseXseLog", () => {
       expect(result === null || typeof result === "string").toBe(true);
     } catch (e) {
       expect(e).toBeInstanceOf(Error);
-    }
-  });
-});
-
-describe("scanlog: Crash Log Scan Run Display Labels", () => {
-  // These pin the strings a JavaScript consumer actually receives. The Rust
-  // sibling module proves each label equals the core's, so what is left to
-  // check here is that the projection survives the N-API boundary, and that the
-  // wording the configuration crate settled reaches this surface too - these
-  // two enums are contract-stability twins that delegate their naming to it.
-  test("the settled wordings reach JavaScript through the twin", () => {
-    expect(
-      scanRunInstalledYamlDataDiagnosticKindLabel(JsScanRunInstalledYamlDataDiagnosticKind.Parse),
-    ).toBe("parse failure");
-    expect(
-      scanRunInstalledYamlDataDiagnosticKindLabel(JsScanRunInstalledYamlDataDiagnosticKind.Read),
-    ).toBe("read failure");
-    expect(
-      scanRunInstalledYamlDataDiagnosticKindLabel(JsScanRunInstalledYamlDataDiagnosticKind.Missing),
-    ).toBe("missing candidate");
-    expect(
-      scanRunInstalledYamlDataDiagnosticKindLabel(
-        JsScanRunInstalledYamlDataDiagnosticKind.CacheUnavailable,
-      ),
-    ).toBe("update cache unavailable");
-    expect(scanRunLocalIgnoreYamlDataStateLabel(JsScanRunLocalIgnoreState.Generated)).toBe(
-      "generated from selected Main defaults",
-    );
-  });
-
-  test("the recovery-required state supplies its own label", () => {
-    // The one variant with no configuration counterpart, so its prose is the
-    // run contract's own rather than delegated.
-    expect(scanRunLocalIgnoreYamlDataStateLabel(JsScanRunLocalIgnoreState.RecoveryRequired)).toBe(
-      "recovery required",
-    );
-  });
-
-  test("the twin returns the same prose as the configuration surface", () => {
-    // Both project the same core vocabulary, so a divergence here means one of
-    // the two stopped delegating. Comparing the two surfaces rather than
-    // restating a literal is what makes this check rather than record.
-    expect(
-      scanRunInstalledYamlDataDiagnosticKindLabel(JsScanRunInstalledYamlDataDiagnosticKind.Parse),
-    ).toBe(installedYamlDataDiagnosticKindLabel(JsInstalledYamlDataDiagnosticKind.Parse));
-    expect(scanRunLocalIgnoreYamlDataStateLabel(JsScanRunLocalIgnoreState.Generated)).toBe(
-      localIgnoreYamlDataStateLabel(JsLocalIgnoreYamlDataState.Generated),
-    );
-  });
-
-  test("Local Ignore keeps its glossary capitalization", () => {
-    expect(
-      scanRunInstalledYamlDataDiagnosticKindLabel(
-        JsScanRunInstalledYamlDataDiagnosticKind.LocalIgnoreReset,
-      ),
-    ).toBe("Local Ignore reset");
-  });
-
-  test("every enum member resolves to a non-empty label", () => {
-    // Iterated rather than listed: a variant added later is covered without
-    // anyone remembering to extend this test, and an empty label is exactly the
-    // "renders as nothing" failure the naming contract exists to prevent.
-    for (const kind of Object.values(JsScanRunInstalledYamlDataDiagnosticKind)) {
-      expect(scanRunInstalledYamlDataDiagnosticKindLabel(kind)).not.toBe("");
-    }
-    for (const state of Object.values(JsScanRunLocalIgnoreState)) {
-      expect(scanRunLocalIgnoreYamlDataStateLabel(state)).not.toBe("");
-    }
-  });
-});
-
-describe("scanlog: Crash Log Scan Run token Display Labels", () => {
-  // The four vocabularies the run crate publishes as bare token strings rather
-  // than as `string_enum` types. Their resolvers therefore take a `string`, and
-  // these tests pin what that difference costs a JavaScript consumer: an
-  // unknown token throws here, where an unknown `string_enum` member cannot
-  // exist. Exhaustive per-variant coverage lives in the Rust sibling module,
-  // which can iterate the core's `VARIANTS`; JavaScript cannot see that list.
-  test("a label a frontend could not have derived from the token reaches JavaScript", () => {
-    // The two labels in this change that no mechanical transform of the token
-    // could produce, which is the whole reason a label crosses this seam at all
-    // instead of being camelCased out of the token on the JavaScript side.
-    expect(scanRunLogFailureStageLabel("unsolved_logs_finalization")).toBe(
-      "Unsolved Logs finalization",
-    );
-    expect(scanRunInfrastructureErrorStageLabel("formid_database_access")).toBe(
-      "FormID database access",
-    );
-  });
-
-  test("a token whose label is only a respelling still resolves", () => {
-    expect(scanRunLogDispositionLabel("cancelled_before_start")).toBe("cancelled before start");
-    expect(scanRunInfrastructureErrorStageLabel("internal_invariant")).toBe(
-      "internal invariant validation",
-    );
-  });
-
-  test("the reset failure stage labels are deliberately their own tokens", () => {
-    // Not an oversight: this vocabulary mirrors the workspace's shared durable
-    // publication stages, which name ordinary steps rather than domain terms.
-    // Pinned so that a contributor who "fixes" it has to read why first.
-    for (const token of ["create", "write", "flush", "sync", "publish"]) {
-      expect(scanRunLocalIgnoreResetFailureStageLabel(token)).toBe(token);
-    }
-  });
-
-  test("an unknown token throws rather than resolving to a placeholder", () => {
-    // Reachable here in a way it is not for the two `string_enum` twins above.
-    // Returning "" would surface as a blank cell in a frontend with nothing to
-    // diagnose it by.
-    for (const resolve of [
-      scanRunLogDispositionLabel,
-      scanRunLogFailureStageLabel,
-      scanRunInfrastructureErrorStageLabel,
-      scanRunLocalIgnoreResetFailureStageLabel,
-    ]) {
-      expect(() => resolve("not_a_real_token")).toThrow();
     }
   });
 });
