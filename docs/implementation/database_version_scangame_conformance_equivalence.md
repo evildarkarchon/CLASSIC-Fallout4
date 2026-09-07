@@ -77,6 +77,6 @@ tests; Python passed 529, Bun 1,035, and Node 17. The retained CLI wrapper passe
 with two preexisting inapplicable CXX combinations skipped. All three parity
 gates, declaration freshness, TypeScript contracts, Python stubs (zero warnings),
 Rust formatting/Clippy, and Python lint checks passed. Independent standards and
-specification reviews found no blocking findings; consolidating repeated test
-setup remains an optional maintenance suggestion. These local results do not
-claim a run of GitHub Actions for the unpublished commit.
+specification reviews found no blocking findings. Repeated receipt-test setup is
+now shared, with domain assertions retained in their original tests. These local
+results do not claim a run of GitHub Actions for the unpublished commit.

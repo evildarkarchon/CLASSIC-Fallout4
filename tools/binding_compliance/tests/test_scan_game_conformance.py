@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import copy
 import json
-import shutil
-import subprocess
 from dataclasses import replace
 from pathlib import Path
 
@@ -18,6 +16,7 @@ from conformance.coverage import (
 from conformance.families.scan_game import SCAN_GAME_COVERAGE_POLICY
 from conformance.packs import load_and_validate_pack, materialize_run_plan
 from conformance.receipts import validate_prepared_run
+from receipt_test_support import prepare_receipt_case
 
 ROOT = Path(__file__).resolve().parents[3]
 PACK = Path("tests/conformance/packs/scan_game/v1.json")
@@ -68,61 +67,12 @@ def test_scan_game_receipts_reject_stale_partial_or_mutated_evidence(
     tmp_path: Path, participant: str
 ) -> None:
     """Central validation binds real source rows to complete, invocation-owned receipts."""
-    (tmp_path / PACK).parent.mkdir(parents=True)
-    shutil.copyfile(ROOT / PACK, tmp_path / PACK)
-    fixtures = Path("tests/fixtures/scan_game_conformance")
-    shutil.copytree(ROOT / fixtures, tmp_path / fixtures)
-    for arguments in (
-        ("init",),
-        ("config", "user.email", "conformance@example.invalid"),
-        ("config", "user.name", "Conformance Tests"),
-        ("add", "."),
-        ("commit", "-m", "fixture"),
-    ):
-        subprocess.run(
-            ["git", "-C", str(tmp_path), *arguments], check=True, capture_output=True
-        )
-    pack = load_and_validate_pack(tmp_path, PACK)
-    document = pack.document()
-    run = materialize_run_plan(
-        pack,
-        participant_id=participant,
-        participant_role="semantic-adapter",
-        execution_instance_id=participant,
-        source_paths=(PACK,),
+    pack, run, receipt = prepare_receipt_case(
+        ROOT, tmp_path, PACK, participant, runner_id="scan-game-boundary-test"
     )
+    document = pack.document()
     plan = run.document()
     assert all("expected" not in scenario for scenario in plan["scenarios"])
-    receipt = {
-        key: plan[key]
-        for key in (
-            "schemaVersion",
-            "familyId",
-            "familyVersion",
-            "expectationDigest",
-            "invocation",
-            "participant",
-        )
-    }
-    receipt["runner"] = {
-        "id": "scan-game-boundary-test",
-        "version": 1,
-        "platform": "windows",
-        "toolchain": participant,
-    }
-    # Synthetic receipts exercise the trusted central boundary; native runners
-    # receive the input-only plan and never have these authored expectations.
-    receipt["scenarios"] = [
-        {
-            "id": scenario["id"],
-            "executionStatus": "completed",
-            "capabilityIds": scenario["capabilityIds"],
-            "observation": scenario["expected"],
-            "failure": None,
-        }
-        for scenario in document["scenarios"]
-    ]
-    run.receipt_path.write_text(json.dumps(receipt))
     policy = SCAN_GAME_COVERAGE_POLICY
     report = validate_prepared_run(pack, run, coverage_policy=policy)
     assert not report.failures
