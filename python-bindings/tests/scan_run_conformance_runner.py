@@ -59,8 +59,10 @@ def _load_plan(path: Path) -> Mapping[str, Any]:
             f"cannot read conformance run plan: {error}"
         ) from error
     plan = _require_mapping(document, "run plan")
-    if plan.get("familyId") != "crash-log-scan-run":
-        raise RunnerContractError("run plan family must be crash-log-scan-run")
+    if plan.get("familyId") not in {"crash-log-scan-run", "autoscan-report"}:
+        raise RunnerContractError(
+            "run plan family must be crash-log-scan-run or autoscan-report"
+        )
     participant = _require_mapping(plan.get("participant"), "run plan participant")
     if participant != {
         "id": "python",
@@ -168,7 +170,11 @@ def _materialize_scenario_inputs(
         _copy_declared_fixture(plan, scenario, item, root, f"installationData[{index}]")
 
     intent = inputs.get("intent")
-    input_field = "logInputs" if intent == "standard" else "targetedInputs"
+    input_field = (
+        "logInputs"
+        if intent == "standard" or inputs.get("observationProfile") == "autoscan-report"
+        else "targetedInputs"
+    )
     log_inputs = _require_sequence(
         inputs.get(input_field), f"scenario input {input_field}"
     )
@@ -290,6 +296,20 @@ def _build_request(
         unsolved_logs_destination=None,
         max_concurrent=max_concurrent,
     )
+    setup_context = None
+    if inputs.get("setupContext") is not None:
+        context = _require_mapping(inputs.get("setupContext"), "setupContext")
+        paths = {}
+        for field, argument in (
+            ("gameRoot", "game_root"),
+            ("documentsRoot", "docs_root"),
+            ("executable", "game_exe_path"),
+        ):
+            carrier = _require_mapping(context.get(field), f"setupContext.{field}")
+            paths[argument] = str(
+                _runtime_path(root, carrier.get("path"), f"setupContext.{field}.path")
+            )
+        setup_context = classic_scanlog.ScanRunSetupContext(**paths)
     intent = inputs.get("intent")
     if intent == "standard":
         standard = _require_mapping(inputs.get("standardSource"), "standardSource")
@@ -329,6 +349,10 @@ def _build_request(
             raise RunnerContractError(
                 "Standard scenario unsolvedLogs must be leave-in-place or move-to-custom"
             )
+        if setup_context is not None:
+            return classic_scanlog.ScanRunRequest.standard_with_fcx(
+                configuration, source, movement, setup_context
+            )
         return classic_scanlog.ScanRunRequest.standard(configuration, source, movement)
     if intent == "targeted":
         targeted = _require_sequence(inputs.get("targetedInputs"), "targetedInputs")
@@ -343,6 +367,10 @@ def _build_request(
             for index, item in enumerate(targeted)
         ]
         source = classic_scanlog.ScanRunTargetedSource(inputs=paths)
+        if setup_context is not None:
+            return classic_scanlog.ScanRunRequest.targeted_with_fcx(
+                configuration, source, setup_context
+            )
         return classic_scanlog.ScanRunRequest.targeted(configuration, source)
     raise RunnerContractError("scenario intent must be standard or targeted")
 
@@ -942,6 +970,94 @@ def _observation(
         "events": _events(callbacks, root),
         "displayContent": _display_content(execution.display_lines, root),
         "durableEffects": _durable_effects(result.logs, root),
+    }
+
+
+def _autoscan_report_observation(
+    execution: Any, inputs: Mapping[str, Any], root: Path
+) -> dict[str, Any]:
+    """Observe public report results and exact durable bytes without normalization."""
+
+    import classic_scanlog
+
+    result = _result_or_raise(execution)
+    reports = []
+    known_files = set()
+    for log in result.logs:
+        if log.autoscan_report is None:
+            continue
+        relative = _relative_path(root, log.autoscan_report, "durable Autoscan Report")
+        content = _runtime_path(root, relative, "durable Autoscan Report").read_bytes()
+        reports.append(
+            {"path": relative, "bytesHex": content.hex(), **_identity_from_bytes(content)}
+        )
+        known_files.add(relative)
+
+    input_paths = set()
+    for field in ("installationData", "logInputs"):
+        for index, raw_item in enumerate(_require_sequence(inputs.get(field), field)):
+            item = _require_mapping(raw_item, f"{field}[{index}]")
+            if item.get("fixtureRef") is not None:
+                path = _runtime_path(root, item.get("path"), f"{field}[{index}].path")
+                input_paths.add(_relative_path(root, path, "durable input"))
+    input_files = [
+        {
+            "path": path,
+            **_identity_from_bytes(_runtime_path(root, path, "durable input").read_bytes()),
+        }
+        for path in sorted(input_paths)
+    ]
+    known_files.update(input_paths)
+    unexpected_files = sorted(
+        path.relative_to(root).as_posix()
+        for path in root.rglob("*")
+        if path.is_file() and path.relative_to(root).as_posix() not in known_files
+    )
+    forbidden = []
+    for index, raw_path in enumerate(
+        _require_sequence(inputs.get("forbiddenEffectPaths", []), "forbiddenEffectPaths")
+    ):
+        path = _runtime_path(root, raw_path, f"forbiddenEffectPaths[{index}]")
+        forbidden.append(
+            {"path": _relative_path(root, path, "forbidden report effect"), "exists": path.exists()}
+        )
+    logs = _log_results(result.logs, root)
+    for projected, log in zip(logs, result.logs, strict=True):
+        projected.update(
+            dispositionLabel=classic_scanlog.scan_run_log_disposition_label(
+                str(log.disposition)
+            ),
+            formidCount=int(log.formid_count),
+            pluginCount=int(log.plugin_count),
+            suspectCount=int(log.suspect_count),
+        )
+    return {
+        "executionRoot": str(root),
+        "semanticInputs": {
+            "game": inputs.get("game"),
+            "gameVersion": inputs.get("gameVersion"),
+            "showFormidValues": bool(inputs.get("showFormidValues")),
+            "simplifyLogs": bool(inputs.get("simplifyLogs")),
+            "fcxMode": inputs.get("setupContext") is not None,
+        },
+        "run": {
+            "status": str(result.status),
+            "message": result.message,
+            "total": int(result.total),
+            "succeeded": int(result.succeeded),
+            "failed": int(result.failed),
+            "cancelled": int(result.cancelled),
+            "effectiveConcurrency": result.effective_concurrency,
+            "setupPresent": result.setup is not None,
+        },
+        "logs": logs,
+        "displayContent": _display_content(execution.display_lines, root),
+        "durableEffects": {
+            "reports": reports,
+            "forbiddenPaths": forbidden,
+            "inputFiles": input_files,
+            "unexpectedFiles": unexpected_files,
+        },
     }
 
 
@@ -1556,6 +1672,8 @@ def _execute_scenario(
                 )
             if profile == "base":
                 return _observation(execution, callbacks, root)
+            if profile == "autoscan-report":
+                return _autoscan_report_observation(execution, inputs, root)
             if profile == "failure":
                 return _failure_observation(execution, inputs, root)
             if profile == "local-ignore":
@@ -1575,7 +1693,7 @@ def _execute_scenario(
                     root,
                 )
             raise RunnerContractError(
-                "observationProfile must be base, failure, local-ignore, or lifecycle"
+                "observationProfile must be base, failure, local-ignore, lifecycle, or autoscan-report"
             )
 
 

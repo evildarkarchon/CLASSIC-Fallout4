@@ -7,6 +7,7 @@ from types import MappingProxyType
 FAMILY_ENFORCEMENT = MappingProxyType(
     {
         "crash-log-scan-run": "blocking",
+        "autoscan-report": "blocking",
         "user-settings": "blocking",
         "installed-yaml-data": "blocking",
         "crash-suspect": "blocking",

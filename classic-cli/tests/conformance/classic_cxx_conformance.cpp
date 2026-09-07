@@ -25,6 +25,7 @@
 #include <map>
 #include <mutex>
 #include <optional>
+#include <set>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -1043,6 +1044,14 @@ const json& materialize_inputs(const json& plan, const json& scenario, const fs:
         copy_fixture(plan, scenario, placement, root, "installationData[" + std::to_string(index++) + "]");
     }
     const std::string intent = input.at("intent").get<std::string>();
+    if (intent == "targeted" && input.value("observationProfile", "base") == "autoscan-report") {
+        // Report plans separate disk fixtures from Targeted discovery selections so one
+        // frozen crash-log corpus can exercise either public request intent.
+        index = 0;
+        for (const auto& placement : input.at("logInputs")) {
+            copy_fixture(plan, scenario, placement, root, "logInputs[" + std::to_string(index++) + "]");
+        }
+    }
     const std::string input_field = intent == "standard" ? "logInputs" : "targetedInputs";
     index = 0;
     for (const auto& placement : input.at(input_field)) {
@@ -1108,7 +1117,7 @@ void append_local_ignore_padding(const json& input, const fs::path& root) {
     }
 }
 
-/// Builds the shared CXX request entirely from one input-only scenario.
+/// Builds the shared CXX request from input-only data, selecting FCX when setup facts are present.
 rust::Box<scanner::ScanRunRequest> build_request(const json& input, const fs::path& root) {
     if (input.at("game") != "fallout4") {
         throw RunnerError("base CXX scenario game must be fallout4");
@@ -1127,6 +1136,22 @@ rust::Box<scanner::ScanRunRequest> build_request(const json& input, const fs::pa
     configuration.has_max_concurrent = true;
     configuration.max_concurrent = input.at("maxConcurrent").get<std::size_t>();
 
+    std::optional<scanner::ScanRunSetupContextDto> setup_context;
+    if (input.contains("setupContext") && !input.at("setupContext").is_null()) {
+        const json& setup = input.at("setupContext");
+        setup_context.emplace();
+        setup_context->has_game_root = true;
+        setup_context->game_root = runtime_path(root, setup.at("gameRoot").at("path"), "gameRoot.path").string();
+        setup_context->has_docs_root = true;
+        setup_context->docs_root =
+            runtime_path(root, setup.at("documentsRoot").at("path"), "documentsRoot.path").string();
+        setup_context->has_game_exe_path = true;
+        // Portable plan separators must become native request-path separators before
+        // Rust renders setup diagnostics; durable report bytes stay untouched.
+        setup_context->game_exe_path =
+            runtime_path(root, setup.at("executable").at("path"), "executable.path").make_preferred().string();
+    }
+
     const std::string intent = input.at("intent").get<std::string>();
     if (intent == "standard") {
         const json& raw_source = input.at("standardSource");
@@ -1143,6 +1168,9 @@ rust::Box<scanner::ScanRunRequest> build_request(const json& input, const fs::pa
                 throw RunnerError("unsolvedLogsPath requires move-to-custom");
             }
             const auto movement = scanner::scan_run_unsolved_logs_leave_in_place();
+            if (setup_context.has_value()) {
+                return scanner::scan_run_request_standard_with_fcx(configuration, source, *movement, *setup_context);
+            }
             return scanner::scan_run_request_standard(configuration, source, *movement);
         }
         if (unsolved_logs == "move-to-custom") {
@@ -1153,6 +1181,9 @@ rust::Box<scanner::ScanRunRequest> build_request(const json& input, const fs::pa
             const std::string destination =
                 runtime_path(root, input.at("unsolvedLogsPath").at("path"), "unsolvedLogsPath.path").string();
             const auto movement = scanner::scan_run_unsolved_logs_move_to_custom(destination);
+            if (setup_context.has_value()) {
+                return scanner::scan_run_request_standard_with_fcx(configuration, source, *movement, *setup_context);
+            }
             return scanner::scan_run_request_standard(configuration, source, *movement);
         }
         throw RunnerError("unsupported Standard unsolvedLogs intent: " + unsolved_logs);
@@ -1160,6 +1191,9 @@ rust::Box<scanner::ScanRunRequest> build_request(const json& input, const fs::pa
     scanner::ScanRunTargetedSourceDto source{};
     for (const auto& raw_input : input.at("targetedInputs")) {
         source.inputs.push_back(runtime_path(root, raw_input.at("path"), "targetedInputs path").string());
+    }
+    if (setup_context.has_value()) {
+        return scanner::scan_run_request_targeted_with_fcx(configuration, source, *setup_context);
     }
     return scanner::scan_run_request_targeted(configuration, source);
 }
@@ -1574,6 +1608,130 @@ json project_observation(const scanner::ScanRunContractExecutionResult& executio
                       {"unsolvedLogs", json{{"path", "Unsolved Logs"}, {"exists", fs::exists(unsolved_logs)}}}}}};
 }
 
+/// Encodes raw report bytes without newline, encoding, path, or timing normalization.
+std::string autoscan_bytes_hex(std::span<const std::uint8_t> bytes) {
+    constexpr std::string_view HEX = "0123456789abcdef";
+    std::string result;
+    result.reserve(bytes.size() * 2);
+    for (const auto byte : bytes) {
+        result.push_back(HEX[byte >> 4U]);
+        result.push_back(HEX[byte & 0x0fU]);
+    }
+    return result;
+}
+
+/// Reads a required durable file, rejecting directories and missing or unreadable evidence.
+std::vector<std::uint8_t> autoscan_file_bytes(const fs::path& path) {
+    if (!fs::is_regular_file(path)) {
+        throw RunnerError("Autoscan Report evidence is not a regular file: " + path.string());
+    }
+    std::ifstream stream(path, std::ios::binary);
+    if (!stream) {
+        throw RunnerError("cannot open Autoscan Report evidence: " + path.string());
+    }
+    std::vector<std::uint8_t> bytes{std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>()};
+    if (stream.bad()) {
+        throw RunnerError("cannot read Autoscan Report evidence: " + path.string());
+    }
+    return bytes;
+}
+
+/// Observes immutable inputs and unlisted files after the public operation has completed.
+json autoscan_input_effects(const json& input, const fs::path& root, const json& reports) {
+    std::set<std::string> declared_paths;
+    for (const auto field : {"installationData", "logInputs", "targetedInputs"}) {
+        for (const auto& placement : input.value(field, json::array())) {
+            if (placement.contains("fixtureRef")) {
+                declared_paths.insert(relative_path(root, runtime_path(root, placement.at("path"), field)));
+            }
+        }
+    }
+    json inputs = json::array();
+    for (const auto& path : declared_paths) {
+        const auto bytes = autoscan_file_bytes(root / path);
+        json evidence = exact_identity(bytes);
+        evidence["path"] = path;
+        inputs.push_back(std::move(evidence));
+    }
+    for (const auto& report : reports) {
+        declared_paths.insert(report.at("path").get<std::string>());
+    }
+    std::set<std::string> unexpected;
+    for (const auto& entry : fs::recursive_directory_iterator(root)) {
+        if (entry.is_regular_file()) {
+            const auto path = relative_path(root, entry.path());
+            if (!declared_paths.contains(path)) {
+                unexpected.insert(path);
+            }
+        }
+    }
+    return json{{"inputFiles", std::move(inputs)}, {"unexpectedFiles", unexpected}};
+}
+
+/// Projects the public terminal result and exact disk bytes for central golden comparison.
+json project_autoscan_report_observation(const scanner::ScanRunContractExecutionResult& execution, const fs::path& root,
+                                         const json& input) {
+    if (execution.has_error) {
+        throw RunnerError("Autoscan Report CXX scan returned infrastructure error: " +
+                          owned_string(execution.error.message));
+    }
+    if (execution.has_resume_error) {
+        throw RunnerError("Autoscan Report CXX scan returned resume error: " +
+                          owned_string(execution.resume_error.message));
+    }
+    if (!execution.has_result) {
+        throw RunnerError("Autoscan Report CXX scan returned no terminal result");
+    }
+    const auto& result = execution.result;
+    json logs = json::array();
+    json reports = json::array();
+    for (const auto& log : result.logs) {
+        json observed_log = serialize_log(log, root);
+        observed_log["dispositionLabel"] = owned_string(scanner::scan_run_log_disposition_label(log.disposition));
+        observed_log["formidCount"] = log.formid_count;
+        observed_log["pluginCount"] = log.plugin_count;
+        observed_log["suspectCount"] = log.suspect_count;
+        logs.push_back(std::move(observed_log));
+        if (log.has_autoscan_report) {
+            const fs::path report(owned_string(log.autoscan_report));
+            const auto bytes = autoscan_file_bytes(report);
+            // Only the central comparator may normalize report bytes; the receipt preserves
+            // exactly what the public operation wrote so adapters cannot hide rendering drift.
+            json evidence = exact_identity(bytes);
+            evidence["path"] = relative_path(root, report);
+            evidence["bytesHex"] = autoscan_bytes_hex(bytes);
+            reports.push_back(std::move(evidence));
+        }
+    }
+    json forbidden = json::array();
+    for (const auto& relative : input.value("forbiddenEffectPaths", json::array())) {
+        const auto path = runtime_path(root, relative, "forbiddenEffectPaths entry");
+        forbidden.push_back(json{{"path", relative_path(root, path)}, {"exists", fs::exists(path)}});
+    }
+    json durable = autoscan_input_effects(input, root, reports);
+    durable["reports"] = std::move(reports);
+    durable["forbiddenPaths"] = std::move(forbidden);
+    return json{
+        {"executionRoot", root.string()},
+        {"semanticInputs", json{{"game", input.at("game")},
+                                {"gameVersion", input.at("gameVersion")},
+                                {"showFormidValues", input.at("showFormidValues")},
+                                {"simplifyLogs", input.at("simplifyLogs")},
+                                {"fcxMode", input.contains("setupContext") && !input.at("setupContext").is_null()}}},
+        {"run", json{{"status", status_token(result.status)},
+                     {"message", result.has_message ? json(owned_string(result.message)) : json(nullptr)},
+                     {"total", result.total},
+                     {"succeeded", result.succeeded},
+                     {"failed", result.failed},
+                     {"cancelled", result.cancelled},
+                     {"effectiveConcurrency",
+                      result.has_effective_concurrency ? json(result.effective_concurrency) : json(nullptr)},
+                     {"setupPresent", result.has_setup}}},
+        {"logs", std::move(logs)},
+        {"displayContent", serialize_display(execution.display_lines, root)},
+        {"durableEffects", std::move(durable)}};
+}
+
 /// Executes one scenario through the generated public CXX bridge.
 json execute_scenario(const json& plan, const json& scenario) {
     const std::string invocation_id = plan.at("invocation").at("id").get<std::string>();
@@ -1694,8 +1852,11 @@ json execute_scenario(const json& plan, const json& scenario) {
     if (profile == "failure") {
         return project_failure_observation(execution, temporary.path(), input);
     }
+    if (profile == "autoscan-report") {
+        return project_autoscan_report_observation(execution, temporary.path(), input);
+    }
     if (profile != "base") {
-        throw RunnerError("observationProfile must be base, local-ignore, lifecycle, or failure");
+        throw RunnerError("observationProfile must be base, local-ignore, lifecycle, failure, or autoscan-report");
     }
     return project_observation(execution, observer, temporary.path());
 }
@@ -1730,7 +1891,8 @@ json scenario_receipt(const json& plan, const json& scenario) {
 void validate_plan(const json& plan) {
     if (!plan.is_object() || plan.at("schemaVersion") != 1 ||
         (plan.at("familyId") != "crash-log-scan-run" && plan.at("familyId") != "user-settings" &&
-         plan.at("familyId") != "installed-yaml-data" && !is_semantic_family(plan.at("familyId")))) {
+         plan.at("familyId") != "installed-yaml-data" && plan.at("familyId") != "autoscan-report" &&
+         !is_semantic_family(plan.at("familyId")))) {
         throw RunnerError("unsupported CXX conformance run plan");
     }
     const json& participant = plan.at("participant");

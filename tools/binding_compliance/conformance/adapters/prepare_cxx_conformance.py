@@ -24,6 +24,7 @@ PACK_RELATIVE_PATH = Path("tests/conformance/packs/crash_log_scan_run/v1.json")
 DEFAULT_ARTIFACT_ROOT = Path("tools/binding_compliance/artifacts")
 SUPPORTED_COMPILERS = ("msvc", "clang-cl")
 SUPPORTED_FAMILIES = (
+    "autoscan-report",
     "crash-log-scan-run",
     "user-settings",
     "crash-suspect",
@@ -88,6 +89,8 @@ def _cxx_source_paths(
             repo_root / "business-logic/classic-database-core/src",
             repo_root / "business-logic/classic-config-core/src",
         )
+    if family == "autoscan-report":
+        paths += (repo_root / "business-logic/classic-scangame-core/src",)
     return paths
 
 

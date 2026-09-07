@@ -56,6 +56,14 @@ does not weaken or retire those checks.
 
 See [`binding-compliance-suite.md`](binding-compliance-suite.md).
 
+Autoscan Report output also has a blocking semantic family across Rust, Node,
+Python, and CXX on MSVC and clang-cl. Fresh same-revision receipts compare
+actual persisted bytes with the original immutable goldens, typed Display
+Content, and durable filesystem effects. Existing owner goldens and focused
+assembly diagnostics remain required. This family adds no public assembly API
+or frontend layout contract; see the
+[Autoscan Report evidence map](../implementation/autoscan_report_conformance_equivalence.md).
+
 ---
 
 ## Lower-Level Gate Ownership

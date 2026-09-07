@@ -18,6 +18,7 @@ from .coverage import (
     load_source_parity_rows,
 )
 from .failures import FailureKind
+from .families.autoscan_report import AUTOSCAN_REPORT_COVERAGE_POLICY
 from .families.crash_log_scan_run import CRASH_LOG_SCAN_RUN_COVERAGE_POLICY
 from .families.installed_yaml_data import INSTALLED_YAML_DATA_COVERAGE_POLICY
 from .families.semantic_analysis import SEMANTIC_ANALYSIS_COVERAGE_POLICIES
@@ -46,6 +47,7 @@ class ConformanceCommandError(ValueError):
 # Domain slices register repository-owned predicate policies here as they land.
 # An absent policy leaves coverage unresolved and therefore cannot pass a scope.
 FAMILY_COVERAGE_POLICIES: Mapping[str, FamilyCoveragePolicy] = {
+    AUTOSCAN_REPORT_COVERAGE_POLICY.family_id: AUTOSCAN_REPORT_COVERAGE_POLICY,
     CRASH_LOG_SCAN_RUN_COVERAGE_POLICY.family_id: CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
     USER_SETTINGS_COVERAGE_POLICY.family_id: USER_SETTINGS_COVERAGE_POLICY,
     INSTALLED_YAML_DATA_COVERAGE_POLICY.family_id: INSTALLED_YAML_DATA_COVERAGE_POLICY,

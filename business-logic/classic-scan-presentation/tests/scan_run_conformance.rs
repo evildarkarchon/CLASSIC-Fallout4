@@ -13,13 +13,14 @@ use classic_scan_presentation::{
 use classic_scanlog_core::CrashLogScanFacts;
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::scan_run::{
-    StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
+    CrashLogScanSetupContext, StandardCrashLogScanSource, StandardUnsolvedLogsIntent,
+    TargetedCrashLogScanSource,
 };
 use classic_shared_core::{GameId, get_runtime};
 use classic_vocabulary::Vocabulary;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::error::Error;
 use std::ffi::OsString;
 use std::fs::{self, File};
@@ -107,6 +108,16 @@ struct ScenarioInput {
     standard_source: Option<StandardSourceInput>,
     unsolved_logs: Option<UnsolvedLogsInput>,
     unsolved_logs_path: Option<PathInput>,
+    setup_context: Option<SetupContextInput>,
+}
+
+/// Scenario-relative FCX installation paths supplied to the public request factory.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SetupContextInput {
+    game_root: PathInput,
+    documents_root: PathInput,
+    executable: PathInput,
 }
 
 /// Observation projection selected by the input-only plan.
@@ -118,6 +129,7 @@ enum ObservationProfile {
     Failure,
     LocalIgnore,
     Lifecycle,
+    AutoscanReport,
 }
 
 /// Input-only controls for one initial scan execution boundary.
@@ -337,7 +349,10 @@ fn execute_and_publish(plan_path: &Path, output_path: &Path) -> RunnerResult<()>
 /// Rejects a plan intended for another schema, family, or adapter participant.
 fn validate_plan_header(plan: &RunPlan) -> RunnerResult<()> {
     if plan.schema_version != 1
-        || plan.family_id != "crash-log-scan-run"
+        || !matches!(
+            plan.family_id.as_str(),
+            "crash-log-scan-run" | "autoscan-report"
+        )
         || plan.family_version != 1
         || plan.participant.id != "rust"
         || plan.participant.role != "semantic-adapter"
@@ -472,6 +487,9 @@ fn execute_scenario(
     }
     match scenario.input.observation_profile {
         ObservationProfile::Base => project_observation(scenario_root.path(), &result, &events),
+        ObservationProfile::AutoscanReport => {
+            project_autoscan_report_observation(scenario_root.path(), &scenario.input, &result)
+        }
         ObservationProfile::Failure => {
             project_failure_result_observation(scenario_root.path(), &scenario.input, &result)
         }
@@ -796,16 +814,28 @@ fn build_request(input: &ScenarioInput, root: &Path) -> RunnerResult<contract::R
                 unsolved_logs,
             ))
         }
-        ScanIntentInput::Targeted => Ok(contract::Request::targeted(
-            configuration,
-            TargetedCrashLogScanSource {
+        ScanIntentInput::Targeted => {
+            let source = TargetedCrashLogScanSource {
                 inputs: input
                     .targeted_inputs
                     .iter()
                     .map(|targeted| join_relative(root, &targeted.path))
                     .collect::<RunnerResult<Vec<_>>>()?,
-            },
-        )),
+            };
+            match &input.setup_context {
+                Some(setup) => Ok(contract::Request::targeted_with_fcx(
+                    configuration,
+                    source,
+                    CrashLogScanSetupContext {
+                        game_root: Some(join_relative(root, &setup.game_root.path)?),
+                        docs_root: Some(join_relative(root, &setup.documents_root.path)?),
+                        game_exe_path: Some(join_relative(root, &setup.executable.path)?),
+                        xse_log_path: None,
+                    },
+                )),
+                None => Ok(contract::Request::targeted(configuration, source)),
+            }
+        }
     }
 }
 
@@ -975,6 +1005,133 @@ fn project_observation(
             },
         },
     }))
+}
+
+/// Observes complete Autoscan Report bytes and typed presentation without consulting an oracle.
+fn project_autoscan_report_observation(
+    root: &Path,
+    input: &ScenarioInput,
+    result: &contract::RunResult,
+) -> RunnerResult<Value> {
+    let logs = result
+        .logs
+        .iter()
+        .map(|log| {
+            let mut observation = project_log(root, log)?;
+            observation["formidCount"] = json!(log.formid_count);
+            observation["dispositionLabel"] = json!(log.disposition.label());
+            observation["pluginCount"] = json!(log.plugin_count);
+            observation["suspectCount"] = json!(log.suspect_count);
+            Ok(observation)
+        })
+        .collect::<RunnerResult<Vec<_>>>()?;
+    let reports = result
+        .logs
+        .iter()
+        .filter_map(|log| log.autoscan_report.as_ref())
+        .map(|path| {
+            let bytes = fs::read(path)?;
+            let identity = YamlDataContentIdentity::from_bytes(&bytes);
+            // Preserve bytes verbatim: only the central oracle expands platform-dependent paths.
+            let bytes_hex = bytes
+                .iter()
+                .map(|byte| format!("{byte:02x}"))
+                .collect::<String>();
+            Ok(json!({
+                "path": relative_path(root, path)?,
+                "bytesHex": bytes_hex,
+                "sha256": identity.sha256_hex(),
+                "byteLength": bytes.len(),
+            }))
+        })
+        .collect::<RunnerResult<Vec<_>>>()?;
+    let forbidden_paths = input
+        .forbidden_effect_paths
+        .iter()
+        .map(|path| {
+            let absolute = join_relative(root, path)?;
+            Ok(json!({"path": path, "exists": absolute.try_exists()?}))
+        })
+        .collect::<RunnerResult<Vec<_>>>()?;
+    let input_paths = input
+        .installation_data
+        .iter()
+        .chain(&input.log_inputs)
+        .map(|placement| placement.path.clone())
+        .collect::<BTreeSet<_>>();
+    let input_files = input_paths
+        .iter()
+        .map(|path| {
+            let bytes = fs::read(join_relative(root, path)?)?;
+            let identity = YamlDataContentIdentity::from_bytes(&bytes);
+            Ok(json!({
+                "path": path,
+                "sha256": identity.sha256_hex(),
+                "byteLength": bytes.len(),
+            }))
+        })
+        .collect::<RunnerResult<Vec<_>>>()?;
+    let mut allowed_paths = input_paths;
+    for log in &result.logs {
+        if let Some(path) = &log.autoscan_report {
+            allowed_paths.insert(relative_path(root, path)?);
+        }
+    }
+    let mut observed_files = BTreeSet::new();
+    collect_scenario_files(root, root, &mut observed_files)?;
+    let unexpected_files = observed_files
+        .difference(&allowed_paths)
+        .collect::<Vec<_>>();
+    let game = match input.game {
+        GameInput::Fallout4 => "fallout4",
+        GameInput::Fallout4Vr => "fallout4vr",
+    };
+    Ok(json!({
+        "executionRoot": root.to_str().ok_or_else(|| invalid_data("execution root is not valid UTF-8"))?,
+        "semanticInputs": {
+            "game": game,
+            "gameVersion": input.game_version,
+            "showFormidValues": input.show_formid_values,
+            "simplifyLogs": input.simplify_logs,
+            "fcxMode": input.setup_context.is_some(),
+        },
+        "run": {
+            "status": result.status.as_str(),
+            "message": result.message,
+            "total": result.total,
+            "succeeded": result.succeeded,
+            "failed": result.failed,
+            "cancelled": result.cancelled,
+            "effectiveConcurrency": result.effective_concurrency,
+            "setupPresent": result.setup.is_some(),
+        },
+        "logs": logs,
+        "displayContent": project_display(root, &render_run_result(result))?,
+        "durableEffects": {
+            "reports": reports,
+            "forbiddenPaths": forbidden_paths,
+            "inputFiles": input_files,
+            "unexpectedFiles": unexpected_files,
+        },
+    }))
+}
+
+/// Enumerates durable files beneath the scenario root to expose unlisted scan side effects.
+fn collect_scenario_files(
+    root: &Path,
+    directory: &Path,
+    files: &mut BTreeSet<String>,
+) -> RunnerResult<()> {
+    for entry in fs::read_dir(directory)? {
+        let entry = entry?;
+        let path = entry.path();
+        if entry.file_type()?.is_dir() {
+            collect_scenario_files(root, &path, files)?;
+        } else {
+            files.insert(relative_path(root, &path)?);
+        }
+    }
+    Ok(())
 }
 
 /// Projects cancellation lifecycle facts without duplicating happy-path presentation data.

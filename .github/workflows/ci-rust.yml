@@ -297,6 +297,19 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Rust autoscan-report conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_scan_run_conformance.py --family autoscan-report --participant rust --artifact-root tools/binding_compliance/artifacts/autoscan-report
+
+      - name: Upload Rust autoscan-report conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-autoscan-report-conformance
+          path: tools/binding_compliance/artifacts/autoscan-report/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run TUI Crash Log Scan Run consumer conformance
         if: ${{ !cancelled() }}
         run: python tools/binding_compliance/run_scan_run_consumer_conformance.py --participant tui

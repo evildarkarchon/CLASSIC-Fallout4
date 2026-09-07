@@ -37,6 +37,7 @@ _internal/
 !sample_logs/*.log
 *.log
 *.db
+!tests/fixtures/autoscan_report_goldens/formids.db
 *Local.yaml
 CLASSIC Backup/
 CLASSIC GFS Report.md

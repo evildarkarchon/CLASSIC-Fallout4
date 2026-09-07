@@ -10,7 +10,7 @@ import signal
 import subprocess
 import sys
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -249,6 +249,22 @@ def run_participant(
 
     command = command or PARTICIPANT_COMMANDS[participant_id]
     pack = load_and_validate_pack(REPO_ROOT, pack_path)
+    if pack.document()["familyId"] == "autoscan-report":
+        # Report bytes depend on contribution assembly, database lookups and FCX
+        # setup as well as scan orchestration; bind those owners into freshness.
+        command = replace(
+            command,
+            source_paths=command.source_paths
+            + tuple(
+                REPO_ROOT / "business-logic" / crate / "src"
+                for crate in (
+                    "classic-scanlog-core",
+                    "classic-config-core",
+                    "classic-database-core",
+                    "classic-scangame-core",
+                )
+            ),
+        )
     prepared = materialize_run_plan(
         pack,
         participant_id=participant_id,
@@ -306,6 +322,11 @@ def build_argument_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--artifact-root", type=Path, default=DEFAULT_ARTIFACT_ROOT)
     parser.add_argument("--timeout-seconds", type=int, default=1_200)
+    parser.add_argument(
+        "--family",
+        choices=("crash-log-scan-run", "autoscan-report"),
+        default="crash-log-scan-run",
+    )
     return parser
 
 
@@ -318,6 +339,10 @@ def main(argv: list[str] | None = None) -> int:
             args.participant,
             artifact_root=args.artifact_root,
             timeout_seconds=args.timeout_seconds,
+            pack_path=REPO_ROOT
+            / "tests/conformance/packs"
+            / args.family.replace("-", "_")
+            / "v1.json",
         )
     except (ConformanceCommandError, PackValidationError, ValueError) as error:
         print(f"Crash Log Scan Run conformance launch failed: {error}", file=sys.stderr)

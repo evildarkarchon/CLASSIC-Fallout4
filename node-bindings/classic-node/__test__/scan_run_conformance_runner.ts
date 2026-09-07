@@ -24,6 +24,7 @@ import type {
   JsScanRunLogResult,
   JsScanRunRecoveryPrompt,
   JsScanRunResult,
+  JsScanRunSetupContext,
   JsScanRunSuccess,
   ScanRunCancellation,
   ScanRunContinuation,
@@ -59,7 +60,12 @@ interface StandardSourceInput {
 
 /** Inputs shared by both frozen Crash Log Scan Run scenarios. */
 interface CommonScenarioInput {
-  observationProfile?: "failure" | "local-ignore" | "lifecycle";
+  observationProfile?: "failure" | "local-ignore" | "lifecycle" | "autoscan-report";
+  setupContext?: {
+    gameRoot: PathInput;
+    documentsRoot: PathInput;
+    executable: PathInput;
+  };
   installationData: FixturePathInput[];
   directoryInputs?: PathInput[];
   observedPaths?: PathInput[];
@@ -120,6 +126,7 @@ interface StandardScenarioInput extends CommonScenarioInput {
 interface TargetedScenarioInput extends CommonScenarioInput {
   intent: "targeted";
   targetedInputs: FixturePathInput[];
+  logInputs?: FixturePathInput[];
 }
 
 type ScenarioInput = StandardScenarioInput | TargetedScenarioInput;
@@ -241,9 +248,12 @@ async function loadRunPlan(path: string): Promise<RunPlan> {
   }
 
   const plan = requireObject(parsed, "run plan");
-  if (plan.schemaVersion !== 1 || plan.familyId !== "crash-log-scan-run") {
+  if (
+    plan.schemaVersion !== 1 ||
+    (plan.familyId !== "crash-log-scan-run" && plan.familyId !== "autoscan-report")
+  ) {
     throw new RunnerContractError(
-      "run plan must be Crash Log Scan Run schema version 1",
+      "run plan must be Crash Log Scan Run or Autoscan Report schema version 1",
     );
   }
   const participant = requireObject(plan.participant, "run plan participant");
@@ -375,8 +385,10 @@ async function materializeScenarioInputs(
     );
   }
 
-  const logInputs =
-    input.intent === "standard" ? input.logInputs : input.targetedInputs;
+  // Report plans keep fixture materialization separate from public targeted paths.
+  const logInputs = input.observationProfile === "autoscan-report"
+    ? input.logInputs ?? []
+    : input.intent === "standard" ? input.logInputs : input.targetedInputs;
   for (const [index, item] of logInputs.entries()) {
     await copyDeclaredFixture(
       plan,
@@ -499,6 +511,20 @@ async function buildRequest(input: ScenarioInput, root: string) {
     formidDatabasePaths: configuredPaths(root, input.formidDatabasePaths),
     maxConcurrent: requireInteger(input.maxConcurrent, "maxConcurrent"),
   };
+  const setupContext: JsScanRunSetupContext | undefined =
+    input.setupContext === undefined
+      ? undefined
+      : {
+          gameRoot: runtimePath(
+            root, input.setupContext.gameRoot.path, "setupContext.gameRoot.path",
+          ),
+          docsRoot: runtimePath(
+            root, input.setupContext.documentsRoot.path, "setupContext.documentsRoot.path",
+          ),
+          gameExePath: runtimePath(
+            root, input.setupContext.executable.path, "setupContext.executable.path",
+          ),
+        };
 
   if (input.intent === "standard") {
     let unsolvedLogs;
@@ -517,29 +543,33 @@ async function buildRequest(input: ScenarioInput, root: string) {
         "Standard scenario unsolvedLogs must be leave-in-place or move-to-custom",
       );
     }
-    return classic.ScanRunRequest.standard(
-      configuration,
-      {
-        baseDirectory: runtimePath(
-          root,
-          input.standardSource.baseDirectory.path,
-          "baseDirectory.path",
-        ),
-        configuredDocumentsRoot: runtimePath(
-          root,
-          input.standardSource.configuredDocumentsRoot.path,
-          "configuredDocumentsRoot.path",
-        ),
-      },
-      unsolvedLogs,
-    );
+    const source = {
+      baseDirectory: runtimePath(
+        root,
+        input.standardSource.baseDirectory.path,
+        "baseDirectory.path",
+      ),
+      configuredDocumentsRoot: runtimePath(
+        root,
+        input.standardSource.configuredDocumentsRoot.path,
+        "configuredDocumentsRoot.path",
+      ),
+    };
+    return setupContext === undefined
+      ? classic.ScanRunRequest.standard(configuration, source, unsolvedLogs)
+      : classic.ScanRunRequest.standardWithFcx(
+          configuration, source, unsolvedLogs, setupContext,
+        );
   }
 
-  return classic.ScanRunRequest.targeted(configuration, {
+  const source = {
     inputs: input.targetedInputs.map((item, index) =>
       runtimePath(root, item.path, `targetedInputs[${index}].path`),
     ),
-  });
+  };
+  return setupContext === undefined
+    ? classic.ScanRunRequest.targeted(configuration, source)
+    : classic.ScanRunRequest.targetedWithFcx(configuration, source, setupContext);
 }
 
 /** Serialize frozen Display Content while preserving every ordered carrier field. */
@@ -1639,6 +1669,97 @@ async function observation(
   };
 }
 
+/** List every durable file beneath the isolated runtime for side-effect attribution. */
+async function runtimeFiles(root: string, directory = root): Promise<string[]> {
+  const paths: string[] = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) {
+      paths.push(...await runtimeFiles(root, path));
+    } else if (entry.isFile()) {
+      paths.push(relativePath(root, path, "runtime file"));
+    }
+  }
+  return paths.sort();
+}
+
+/** Observe public report results and exact durable bytes without normalization. */
+async function autoscanReportObservation(
+  execution: JsScanRunSuccess | JsScanRunFailure,
+  input: ScenarioInput,
+  root: string,
+): Promise<JsonObject> {
+  const classic = await import("../index.js");
+  const success = requireSuccessfulExecution(execution, "Autoscan Report run");
+  const result = success.result;
+  const reports: JsonObject[] = [];
+  const knownFiles = new Set<string>();
+  for (const log of result.logs) {
+    if (log.autoscanReport === undefined) {
+      continue;
+    }
+    const path = relativePath(root, log.autoscanReport, "durable Autoscan Report");
+    const bytes = await readFile(runtimePath(root, path, "durable Autoscan Report"));
+    reports.push({ path, bytesHex: bytes.toString("hex"), ...fileIdentity(bytes) });
+    knownFiles.add(path);
+  }
+  const logInputs = input.logInputs ?? [];
+  const inputPaths = new Set<string>();
+  for (const item of [...input.installationData, ...logInputs]) {
+    if (item.fixtureRef !== undefined) {
+      const absolute = runtimePath(root, item.path, "durable input path");
+      inputPaths.add(relativePath(root, absolute, "durable input"));
+    }
+  }
+  const inputFiles: JsonObject[] = [];
+  for (const path of [...inputPaths].sort()) {
+    inputFiles.push({
+      path,
+      ...fileIdentity(await readFile(runtimePath(root, path, "durable input"))),
+    });
+    knownFiles.add(path);
+  }
+  const unexpectedFiles = (await runtimeFiles(root)).filter(path => !knownFiles.has(path));
+  const forbiddenPaths: JsonObject[] = [];
+  for (const [index, path] of (input.forbiddenEffectPaths ?? []).entries()) {
+    const absolute = runtimePath(root, path, `forbiddenEffectPaths[${index}]`);
+    forbiddenPaths.push({
+      path: relativePath(root, absolute, "forbidden report effect"),
+      exists: await pathExists(absolute),
+    });
+  }
+  return {
+    executionRoot: root,
+    semanticInputs: {
+      game: input.game,
+      gameVersion: input.gameVersion,
+      showFormidValues: input.showFormidValues,
+      simplifyLogs: input.simplifyLogs,
+      fcxMode: input.setupContext !== undefined,
+    },
+    run: {
+      status: result.status,
+      message: result.message ?? null,
+      total: requireInteger(result.total, "run total"),
+      succeeded: requireInteger(result.succeeded, "run succeeded"),
+      failed: requireInteger(result.failed, "run failed"),
+      cancelled: requireInteger(result.cancelled, "run cancelled"),
+      effectiveConcurrency: result.effectiveConcurrency === undefined
+        ? null : requireInteger(result.effectiveConcurrency, "effective concurrency"),
+      setupPresent: result.setup !== undefined,
+    },
+    logs: logResults(result.logs, root).map((log, index) => ({
+      ...log,
+      dispositionLabel: classic.scanRunLogDispositionLabel(result.logs[index].disposition),
+      formidCount: requireInteger(result.logs[index].formidCount, "log FormID count"),
+      pluginCount: requireInteger(result.logs[index].pluginCount, "log plugin count"),
+      suspectCount: requireInteger(result.logs[index].suspectCount, "log suspect count"),
+    })),
+    displayContent: displayContent(success.displayLines, root),
+    durableEffects: { reports, forbiddenPaths, inputFiles, unexpectedFiles },
+  };
+}
+
 /** Project public typed failures as completed semantic evidence with declared artifacts. */
 async function failureObservation(
   execution: Awaited<
@@ -1845,6 +1966,9 @@ async function executeScenario(
     );
     if (input.observationProfile === "failure") {
       return await failureObservation(execution, input, root);
+    }
+    if (input.observationProfile === "autoscan-report") {
+      return await autoscanReportObservation(execution, input, root);
     }
     if (input.continuationFlow !== undefined) {
       if (input.observationProfile !== "local-ignore") {

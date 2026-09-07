@@ -160,7 +160,25 @@ _EXECUTION_POLICIES += tuple(
     for policy in _EXECUTION_POLICIES[:7]
     if policy.participant_id in {"rust", "node", "python", "cxx"}
 )
-# The CLI job retains its original suite and now reserves ten bounded launches.
+# Autoscan Reports use the shared scan-run launcher while retaining the same
+# four semantic adapters and separate diagnostics as the focused families.
+_EXECUTION_POLICIES += tuple(
+    replace(
+        policy,
+        launcher_marker=(
+            f"run_scan_run_conformance.py --family autoscan-report --participant {policy.participant_id}"
+            if policy.participant_id != "cxx"
+            else "run_cxx_conformance.ps1 -Family autoscan-report -Compiler ${{ matrix.compiler }}"
+        ),
+        artifact_marker=(
+            f"name: {policy.participant_id}-autoscan-report-conformance"
+            + ("-${{ matrix.compiler }}" if policy.participant_id == "cxx" else "")
+        ),
+    )
+    for policy in _EXECUTION_POLICIES[:7]
+    if policy.participant_id in {"rust", "node", "python", "cxx"}
+)
+# The CLI job retains its original suite and the bounded family launches.
 _EXECUTION_POLICIES = tuple(
     replace(policy, job_timeout_minutes=270) if policy.job_id == "cli-tests" else policy
     for policy in _EXECUTION_POLICIES

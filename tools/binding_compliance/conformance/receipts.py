@@ -679,8 +679,15 @@ def validate_prepared_run(
             )
             continue
         try:
+            expected_values = expected_scenario["expected"]
+            if pack_document["familyId"] == "autoscan-report":
+                from .families.autoscan_report import expand_report_expectation
+
+                expected_values = expand_report_expectation(
+                    expected_values, actual_scenario["observation"]
+                )
             expected_observation, actual_observation = normalize_observations(
-                expected_scenario["expected"],
+                expected_values,
                 actual_scenario["observation"],
                 expected_scenario["normalization"],
                 fixture_root=Path(plan["fixtureRoot"]),

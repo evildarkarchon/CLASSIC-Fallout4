@@ -293,6 +293,19 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Node autoscan-report conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_scan_run_conformance.py --family autoscan-report --participant node --artifact-root tools/binding_compliance/artifacts/autoscan-report
+
+      - name: Upload Node autoscan-report conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-autoscan-report-conformance
+          path: tools/binding_compliance/artifacts/autoscan-report/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Upload Node Crash Log Scan Run conformance diagnostics
         if: matrix.runtime == 'node' && always()
         uses: actions/upload-artifact@v6

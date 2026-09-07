@@ -1157,6 +1157,19 @@ def load_and_validate_pack(repo_root: Path, pack_path: Path) -> ValidatedPack:
             (path.relative_to(root).as_posix(), path.read_bytes())
             for path in oracle_paths
         )
+    if pack["familyId"] == "autoscan-report":
+        from .families.autoscan_report import compile_report_expectations
+
+        try:
+            pack, oracle_paths = compile_report_expectations(pack, fixture_root)
+            oracle_sources = tuple(
+                (path.relative_to(root).as_posix(), path.read_bytes())
+                for path in oracle_paths
+            )
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            raise PackValidationError(
+                f"invalid Autoscan Report oracle: {error}"
+            ) from error
     canonical = json.dumps(
         pack,
         ensure_ascii=False,

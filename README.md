@@ -28,6 +28,8 @@ Crash Suspect, Crashgen Settings, Mod Guidance, FormID lookup, Named Record, and
 
 Installed YAML Data inspection and preparation also require blocking receipts across those adapters. The [Installed YAML Data evidence map](docs/implementation/installed_yaml_data_conformance_equivalence.md) covers source precedence, rejected-candidate diagnostics, exact-byte identities, retained snapshots, legacy Local Ignore adoption, and unavailable recovery defaults. Existing scan-run recovery and focused filesystem tests remain blocking.
 
+Autoscan Report output requires blocking same-revision receipts across Rust, Node, Python, and CXX on both compiler instances. The [Autoscan Report evidence map](docs/implementation/autoscan_report_conformance_equivalence.md) connects the original empty, populated, and FCX goldens to exact persisted bytes, typed Display Content, and durable effects. The original goldens and focused owner diagnostics remain required.
+
 For older historical context, see [CLASSIC - Readme.pdf](CLASSIC%20-%20Readme.pdf).
 
 Nexus Mods: <https://www.nexusmods.com/fallout4/mods/56255>

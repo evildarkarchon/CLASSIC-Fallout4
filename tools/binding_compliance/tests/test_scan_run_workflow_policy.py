@@ -29,6 +29,7 @@ def test_repository_workflows_keep_every_promoted_execution_blocking() -> None:
         "formid-lookup",
         "named-record",
         "plugin-evidence",
+        "autoscan-report",
     ),
 )
 @pytest.mark.parametrize(
@@ -56,6 +57,8 @@ def test_every_focused_family_adapter_is_a_required_blocking_step(
     marker = (
         f"run_cxx_conformance.ps1 -Family {family} -Compiler"
         if participant == "cxx"
+        else f"run_scan_run_conformance.py --family {family} --participant {participant}"
+        if family == "autoscan-report"
         else f"run_semantic_conformance.py --family {family} --participant {participant}"
     )
     assert source.count(marker) == 1

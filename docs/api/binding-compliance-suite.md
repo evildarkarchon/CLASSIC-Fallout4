@@ -83,6 +83,31 @@ withhold those expectations, and validated observations appear only under
 jobs are blocking for this family, while their artifacts remain available even
 when execution or validation fails.
 
+## Autoscan Report Blocking Execution
+
+`tests/conformance/packs/autoscan_report/v1.json` selects the original empty,
+populated, and FCX golden cases. The central validator reads their immutable
+expected Markdown; adapters receive only inputs and return actual persisted
+bytes, digest, length, typed Display Content, and durable effects. Neither
+adapter output nor a generated replacement oracle can establish expectations.
+
+```powershell
+python tools/binding_compliance/run_scan_run_conformance.py --family autoscan-report --participant rust
+python tools/binding_compliance/run_scan_run_conformance.py --family autoscan-report --participant node
+uv run --project python-bindings python tools/binding_compliance/run_scan_run_conformance.py --family autoscan-report --participant python
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family autoscan-report -Compiler msvc
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family autoscan-report -Compiler clang-cl
+```
+
+Run each adapter's retained build prerequisites first. All three scenarios and
+both CXX compiler instances require fresh same-revision receipts; missing or
+failed evidence remains blocking alongside existing gates. Only FCX path
+tokens expand on the expectation side; actual report bytes remain exact. The
+[evidence map](../implementation/autoscan_report_conformance_equivalence.md)
+records the original oracle, database fixture, source-preservation checks, and
+retained owner diagnostics. Frontend transport and layout remain under their
+existing consumer obligations.
+
 ## Installed YAML Data Blocking Execution
 
 `tests/conformance/packs/installed_yaml_data/v1.json` owns fifteen public
