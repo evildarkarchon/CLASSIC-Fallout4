@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "familyId": "game-identity",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-shared-core"
+  },
+  "fixtureRoot": "tests/fixtures/game_identity_conformance",
+  "fixtures": {
+    "stable": "stable.json"
+  },
+  "capabilities": [
+    {
+      "id": "game-identity.observe",
+      "rustSymbols": [
+        "GameId",
+        "as_str"
+      ],
+      "observationFamilies": [
+        "game-identity"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "stable",
+      "action": "game-identity.observe",
+      "capabilityIds": [
+        "game-identity.observe"
+      ],
+      "fixtureRefs": [
+        "stable"
+      ],
+      "input": {
+        "fixtureRef": "stable"
+      },
+      "expected": {
+        "tokens": [
+          "Fallout4",
+          "Fallout4VR",
+          "Skyrim",
+          "Starfield"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

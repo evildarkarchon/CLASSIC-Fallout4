@@ -1,0 +1,13 @@
+{
+  "files": {
+    "input.yaml": "answer: 42\n---\nanswer: 7\n",
+    "second.yaml": "enabled: true\n"
+  },
+  "request": {
+    "single": "input.yaml",
+    "batch": [
+      "input.yaml",
+      "second.yaml"
+    ]
+  }
+}

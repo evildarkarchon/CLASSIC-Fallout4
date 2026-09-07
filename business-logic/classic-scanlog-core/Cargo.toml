@@ -79,6 +79,13 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+classic-xse-core = { path = "../classic-xse-core" }
+classic-perf-core = { path = "../classic-perf-core" }
+classic-registry-core = { path = "../classic-registry-core" }
+classic-web-core = { path = "../classic-web-core" }
+classic-resource-core = { path = "../classic-resource-core" }
+classic-version-core = { path = "../classic-version-core" }
+classic-update-core = { path = "../classic-update-core" }
 classic-path-core = { path = "../classic-path-core" }
 classic-message-core = { path = "../classic-message-core" }
 tempfile = { workspace = true }

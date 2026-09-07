@@ -1,0 +1,16 @@
+{
+  "request": {
+    "url": "https://EXAMPLE.com/base",
+    "path": "child",
+    "params": [
+      [
+        "q",
+        "two words"
+      ],
+      [
+        "tag",
+        "a&b"
+      ]
+    ]
+  }
+}

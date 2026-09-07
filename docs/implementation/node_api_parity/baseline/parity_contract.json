@@ -2140,17 +2140,19 @@
       "id": "config-load-settings-sync",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "load_settings_sync",
       "nodeExport": "loadSettingsSync",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "config-load-settings-async",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "load_settings_async",
       "nodeExport": "loadSettingsAsync",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "config-get-cached",
@@ -2164,9 +2166,10 @@
       "id": "config-is-cached",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "is_cached",
       "nodeExport": "isCached",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "config-invalidate-settings",
@@ -2647,10 +2650,11 @@
       "id": "version-registry-promote-compare-versions",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "GameVersion",
+      "rustSymbol": "compare_versions",
       "nodeExport": "compareVersions",
       "nodeKind": "function",
-      "nodeArity": 2
+      "nodeArity": 2,
+      "rustCrate": "classic-version-core"
     },
     {
       "id": "version-registry-promote-detect-xse-version",
@@ -2692,10 +2696,11 @@
       "id": "version-registry-promote-format-version",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "GameVersion",
+      "rustSymbol": "format_version",
       "nodeExport": "formatVersion",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-core"
     },
     {
       "id": "version-registry-promote-get-address-lib-info",
@@ -2791,10 +2796,11 @@
       "id": "version-registry-promote-parse-version",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "VersionRegistryError",
+      "rustSymbol": "parse_version",
       "nodeExport": "parseVersion",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-core"
     },
     {
       "id": "version-registry-promote-registry-get-game-version",
@@ -2817,10 +2823,11 @@
       "id": "version-registry-promote-try-parse-version",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "GameVersion",
+      "rustSymbol": "try_parse_version",
       "nodeExport": "tryParseVersion",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-core"
     },
     {
       "id": "aux-phase4a-backup-manager",
@@ -2981,6 +2988,7 @@
       "tier": "tier1",
       "ownerModule": "aux",
       "rustSymbol": "clear_metrics",
+      "rustCrate": "classic-perf-core",
       "nodeExport": "clearAllMetrics",
       "nodeKind": "function"
     },
@@ -2998,6 +3006,7 @@
       "tier": "tier1",
       "ownerModule": "aux",
       "rustSymbol": "EncodingDetector",
+      "rustCrate": "classic-file-io-core",
       "nodeExport": "detectEncoding",
       "nodeKind": "function"
     },
@@ -3023,6 +3032,7 @@
       "tier": "tier1",
       "ownerModule": "aux",
       "rustSymbol": "get_summary",
+      "rustCrate": "classic-perf-core",
       "nodeExport": "getMetricsSummary",
       "nodeKind": "function"
     },
@@ -3031,6 +3041,7 @@
       "tier": "tier1",
       "ownerModule": "aux",
       "rustSymbol": "get_runtime",
+      "rustCrate": "classic-shared-core",
       "nodeExport": "getRuntimeInfo",
       "nodeKind": "function"
     },
@@ -3047,6 +3058,7 @@
       "tier": "tier1",
       "ownerModule": "aux",
       "rustSymbol": "FileHasher",
+      "rustCrate": "classic-file-io-core",
       "nodeExport": "hashFile",
       "nodeKind": "function"
     },
@@ -3055,6 +3067,7 @@
       "tier": "tier1",
       "ownerModule": "aux",
       "rustSymbol": "FileHasher",
+      "rustCrate": "classic-file-io-core",
       "nodeExport": "hashFilesParallel",
       "nodeKind": "function"
     },
@@ -3080,6 +3093,7 @@
       "tier": "tier1",
       "ownerModule": "aux",
       "rustSymbol": "get_runtime",
+      "rustCrate": "classic-shared-core",
       "nodeExport": "isRuntimeAvailable",
       "nodeKind": "function"
     },
@@ -3115,7 +3129,8 @@
       "ownerModule": "aux",
       "rustSymbol": "load_batch_async",
       "nodeExport": "loadBatchAsync",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "aux-phase4a-load-batch-sync",
@@ -3123,7 +3138,8 @@
       "ownerModule": "aux",
       "rustSymbol": "load_batch_sync",
       "nodeExport": "loadBatchSync",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "aux-phase4a-normalize-path",
@@ -3173,6 +3189,7 @@
       "tier": "tier1",
       "ownerModule": "aux",
       "rustSymbol": "record_timing",
+      "rustCrate": "classic-perf-core",
       "nodeExport": "recordTimingMetric",
       "nodeKind": "function"
     },
@@ -3181,6 +3198,7 @@
       "tier": "tier1",
       "ownerModule": "aux",
       "rustSymbol": "clear_all",
+      "rustCrate": "classic-registry-core",
       "nodeExport": "registryClear",
       "nodeKind": "function"
     },
@@ -3189,6 +3207,7 @@
       "tier": "tier1",
       "ownerModule": "aux",
       "rustSymbol": "get",
+      "rustCrate": "classic-registry-core",
       "nodeExport": "registryGet",
       "nodeKind": "function"
     },
@@ -3205,6 +3224,7 @@
       "tier": "tier1",
       "ownerModule": "aux",
       "rustSymbol": "unregister",
+      "rustCrate": "classic-registry-core",
       "nodeExport": "registryRemove",
       "nodeKind": "function"
     },
@@ -3213,6 +3233,7 @@
       "tier": "tier1",
       "ownerModule": "aux",
       "rustSymbol": "register",
+      "rustCrate": "classic-registry-core",
       "nodeExport": "registrySet",
       "nodeKind": "function"
     },

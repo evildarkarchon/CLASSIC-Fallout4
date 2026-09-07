@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "familyId": "xse-operations",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-xse-core"
+  },
+  "fixtureRoot": "tests/fixtures/xse_operations_conformance",
+  "fixtures": {
+    "missing": "missing.json",
+    "loader-only": "loader-only.json",
+    "detected": "detected.json"
+  },
+  "capabilities": [
+    {
+      "id": "xse-operations.inspect",
+      "rustSymbols": [
+        "XseType",
+        "loader_name",
+        "dll_prefix",
+        "detect_xse_version",
+        "is_xse_installed",
+        "get_xse_info"
+      ],
+      "observationFamilies": [
+        "values"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "missing",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "missing"
+      ],
+      "input": {
+        "fixtureRef": "missing"
+      },
+      "expected": {
+        "typeName": "F4SE",
+        "loaderName": "f4se_loader.exe",
+        "dllPrefix": "f4se_",
+        "installed": false,
+        "version": null,
+        "info": {
+          "typeName": "F4SE",
+          "installed": false,
+          "version": null
+        },
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "loader-only",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "loader-only"
+      ],
+      "input": {
+        "fixtureRef": "loader-only"
+      },
+      "expected": {
+        "typeName": "F4SE",
+        "loaderName": "f4se_loader.exe",
+        "dllPrefix": "f4se_",
+        "installed": true,
+        "version": null,
+        "info": {
+          "typeName": "F4SE",
+          "installed": true,
+          "version": null
+        },
+        "files": [
+          {
+            "path": "f4se_loader.exe",
+            "hex": ""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "detected",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "detected"
+      ],
+      "input": {
+        "fixtureRef": "detected"
+      },
+      "expected": {
+        "typeName": "F4SE",
+        "loaderName": "f4se_loader.exe",
+        "dllPrefix": "f4se_",
+        "installed": true,
+        "version": "1.10.163",
+        "info": {
+          "typeName": "F4SE",
+          "installed": true,
+          "version": "1.10.163"
+        },
+        "files": [
+          {
+            "path": "f4se_1_10_163.dll",
+            "hex": ""
+          },
+          {
+            "path": "f4se_loader.exe",
+            "hex": ""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

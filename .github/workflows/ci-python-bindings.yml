@@ -341,6 +341,149 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Python file-fingerprint conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family file-fingerprint --participant python --artifact-root tools/binding_compliance/artifacts/file-fingerprint
+
+      - name: Upload Python file-fingerprint conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-file-fingerprint-conformance
+          path: tools/binding_compliance/artifacts/file-fingerprint/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python performance conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family performance --participant python --artifact-root tools/binding_compliance/artifacts/performance
+
+      - name: Upload Python performance conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-performance-conformance
+          path: tools/binding_compliance/artifacts/performance/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python update-decisions conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family update-decisions --participant python --artifact-root tools/binding_compliance/artifacts/update-decisions
+
+      - name: Upload Python update-decisions conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-update-decisions-conformance
+          path: tools/binding_compliance/artifacts/update-decisions/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python string-operations conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family string-operations --participant python --artifact-root tools/binding_compliance/artifacts/string-operations
+
+      - name: Upload Python string-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-string-operations-conformance
+          path: tools/binding_compliance/artifacts/string-operations/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python registry-operations conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family registry-operations --participant python --artifact-root tools/binding_compliance/artifacts/registry-operations
+
+      - name: Upload Python registry-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-registry-operations-conformance
+          path: tools/binding_compliance/artifacts/registry-operations/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python web-operations conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family web-operations --participant python --artifact-root tools/binding_compliance/artifacts/web-operations
+
+      - name: Upload Python web-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-web-operations-conformance
+          path: tools/binding_compliance/artifacts/web-operations/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python resource-operations conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family resource-operations --participant python --artifact-root tools/binding_compliance/artifacts/resource-operations
+
+      - name: Upload Python resource-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-resource-operations-conformance
+          path: tools/binding_compliance/artifacts/resource-operations/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python version-operations conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family version-operations --participant python --artifact-root tools/binding_compliance/artifacts/version-operations
+
+      - name: Upload Python version-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-version-operations-conformance
+          path: tools/binding_compliance/artifacts/version-operations/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python xse-operations conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family xse-operations --participant python --artifact-root tools/binding_compliance/artifacts/xse-operations
+
+      - name: Upload Python xse-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-xse-operations-conformance
+          path: tools/binding_compliance/artifacts/xse-operations/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python game-identity conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family game-identity --participant python --artifact-root tools/binding_compliance/artifacts/game-identity
+
+      - name: Upload Python game-identity conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-game-identity-conformance
+          path: tools/binding_compliance/artifacts/game-identity/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python settings-load conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family settings-load --participant python --artifact-root tools/binding_compliance/artifacts/settings-load
+
+      - name: Upload Python settings-load conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-settings-load-conformance
+          path: tools/binding_compliance/artifacts/settings-load/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run Python scan-run-vocabulary conformance
         if: ${{ !cancelled() }}
         run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family scan-run-vocabulary --participant python --artifact-root tools/binding_compliance/artifacts/scan-run-vocabulary

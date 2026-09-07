@@ -1,0 +1,9 @@
+{
+  "files": {
+    "empty.yaml": ""
+  },
+  "request": {
+    "single": "empty.yaml",
+    "batch": []
+  }
+}

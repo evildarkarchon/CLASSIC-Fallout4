@@ -40,6 +40,23 @@ mod scan_game;
 #[path = "semantic_conformance/version_registry.rs"]
 mod version_registry;
 
+#[path = "semantic_conformance/aux_operations.rs"]
+mod aux_operations;
+#[path = "semantic_conformance/file_fingerprint.rs"]
+mod file_fingerprint;
+#[path = "semantic_conformance/performance.rs"]
+mod performance;
+#[path = "semantic_conformance/settings_load.rs"]
+mod settings_load;
+#[path = "semantic_conformance/shared_identity.rs"]
+mod shared_identity;
+#[path = "semantic_conformance/shared_registry.rs"]
+mod shared_registry;
+#[path = "semantic_conformance/update_decisions.rs"]
+mod update_decisions;
+#[path = "semantic_conformance/xse_operations.rs"]
+mod xse_operations;
+
 /// Rejects malformed runner inputs without confusing them with domain errors.
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
@@ -428,6 +445,20 @@ fn execute(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
         return installed_yaml_data::execute(&fixture);
     }
     match plan["familyId"].as_str() {
+        Some("file-fingerprint") => return file_fingerprint::execute(&fixture),
+        Some("settings-load") => return settings_load::execute(&fixture),
+        Some("xse-operations") => return xse_operations::execute(&fixture),
+        Some("game-identity" | "runtime-access") => {
+            return shared_identity::execute(&text(&plan["familyId"])?, &fixture);
+        }
+        Some("performance") => return performance::execute(&fixture),
+        Some("update-decisions") => return update_decisions::execute(&fixture),
+        Some("string-operations" | "registry-operations") => {
+            return shared_registry::execute(&text(&plan["familyId"])?, &fixture);
+        }
+        Some("web-operations" | "resource-operations" | "version-operations") => {
+            return aux_operations::execute(&text(&plan["familyId"])?, &fixture);
+        }
         Some("config-operations") => return config_operations::execute(&fixture),
         Some("database-operations") => return database_operations::execute(&fixture),
         Some("version-registry") => return version_registry::execute(&fixture),

@@ -1,0 +1,228 @@
+{
+  "schemaVersion": 1,
+  "familyId": "file-fingerprint",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-file-io-core"
+  },
+  "fixtureRoot": "tests/fixtures/file_fingerprint_conformance",
+  "fixtures": {
+    "ascii": "ascii.json",
+    "empty": "empty.json",
+    "legacy": "legacy.json",
+    "missing": "missing.json"
+  },
+  "capabilities": [
+    {
+      "id": "file-fingerprint.inspect",
+      "rustSymbols": [
+        "FileHasher",
+        "EncodingDetector"
+      ],
+      "observationFamilies": [
+        "file-fingerprint"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "ascii",
+      "action": "file-fingerprint.inspect",
+      "capabilityIds": [
+        "file-fingerprint.inspect"
+      ],
+      "fixtureRefs": [
+        "ascii"
+      ],
+      "input": {
+        "fixtureRef": "ascii"
+      },
+      "expected": {
+        "hash": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+        "error": null,
+        "encoding": "UTF-8",
+        "batch": {
+          "payload.bin": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        },
+        "map": {
+          "payload.bin": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        },
+        "cache": {
+          "hits": 1,
+          "misses": 1,
+          "size": 1
+        },
+        "reset": {
+          "hits": 0,
+          "misses": 0,
+          "size": 1
+        },
+        "cleared": {
+          "hits": 0,
+          "misses": 0,
+          "size": 0
+        },
+        "files": [
+          {
+            "path": "payload.bin",
+            "bytes": [
+              97,
+              98,
+              99
+            ]
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "empty",
+      "action": "file-fingerprint.inspect",
+      "capabilityIds": [
+        "file-fingerprint.inspect"
+      ],
+      "fixtureRefs": [
+        "empty"
+      ],
+      "input": {
+        "fixtureRef": "empty"
+      },
+      "expected": {
+        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "error": null,
+        "encoding": "UTF-8",
+        "batch": {
+          "payload.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "map": {
+          "payload.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "cache": {
+          "hits": 1,
+          "misses": 1,
+          "size": 1
+        },
+        "reset": {
+          "hits": 0,
+          "misses": 0,
+          "size": 1
+        },
+        "cleared": {
+          "hits": 0,
+          "misses": 0,
+          "size": 0
+        },
+        "files": [
+          {
+            "path": "payload.bin",
+            "bytes": []
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "legacy",
+      "action": "file-fingerprint.inspect",
+      "capabilityIds": [
+        "file-fingerprint.inspect"
+      ],
+      "fixtureRefs": [
+        "legacy"
+      ],
+      "input": {
+        "fixtureRef": "legacy"
+      },
+      "expected": {
+        "hash": "e3ded7e2601bce2075f1bc3e0a8dbb5cd7a8ffebf2fbd68a585c77db3251f0e8",
+        "error": null,
+        "encoding": "windows-1252",
+        "batch": {
+          "payload.bin": "e3ded7e2601bce2075f1bc3e0a8dbb5cd7a8ffebf2fbd68a585c77db3251f0e8"
+        },
+        "map": {
+          "payload.bin": "e3ded7e2601bce2075f1bc3e0a8dbb5cd7a8ffebf2fbd68a585c77db3251f0e8"
+        },
+        "cache": {
+          "hits": 1,
+          "misses": 1,
+          "size": 1
+        },
+        "reset": {
+          "hits": 0,
+          "misses": 0,
+          "size": 1
+        },
+        "cleared": {
+          "hits": 0,
+          "misses": 0,
+          "size": 0
+        },
+        "files": [
+          {
+            "path": "payload.bin",
+            "bytes": [
+              128,
+              233
+            ]
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "missing",
+      "action": "file-fingerprint.inspect",
+      "capabilityIds": [
+        "file-fingerprint.inspect"
+      ],
+      "fixtureRefs": [
+        "missing"
+      ],
+      "input": {
+        "fixtureRef": "missing"
+      },
+      "expected": {
+        "hash": null,
+        "error": "not_found",
+        "encoding": null,
+        "batch": {},
+        "map": {},
+        "cache": {
+          "hits": 0,
+          "misses": 2,
+          "size": 0
+        },
+        "reset": {
+          "hits": 0,
+          "misses": 0,
+          "size": 0
+        },
+        "cleared": {
+          "hits": 0,
+          "misses": 0,
+          "size": 0
+        },
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

@@ -1,6 +1,6 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-09-07T21:52:30.748727+00:00`
+- Generated: `2026-09-07T23:44:28.757675+00:00`
 - Tier-1 contract rows: **910**
 - Tier-1 matched: **903**
 - Tier-1 missing Rust: **0**
@@ -224,10 +224,10 @@
 | `config-get-max-cache-ttl` | `config` | `config` | `getMaxCacheTtl` | `matched` |
 | `config-generate-local-yaml` | `config` | `config` | `generateLocalYaml` | `matched` |
 | `config-settings-cache-stats-interface` | `config` | `config` | `SettingsCacheStats` | `matched` |
-| `config-load-settings-sync` | `config` | `config` | `loadSettingsSync` | `matched` |
-| `config-load-settings-async` | `config` | `config` | `loadSettingsAsync` | `matched` |
+| `config-load-settings-sync` | `config` | `load_settings_sync` | `loadSettingsSync` | `matched` |
+| `config-load-settings-async` | `config` | `load_settings_async` | `loadSettingsAsync` | `matched` |
 | `config-get-cached` | `config` | `config` | `getCached` | `matched` |
-| `config-is-cached` | `config` | `config` | `isCached` | `matched` |
+| `config-is-cached` | `config` | `is_cached` | `isCached` | `matched` |
 | `config-invalidate-settings` | `config` | `config` | `invalidateSettings` | `matched` |
 | `config-clear-settings-cache` | `config` | `config` | `clearSettingsCache` | `matched` |
 | `config-settings-cache-size` | `config` | `config` | `settingsCacheSize` | `matched` |
@@ -283,12 +283,12 @@
 | `version-registry-promote-xse-version` | `version_registry` | `XseConfig` | `XseVersion` | `matched` |
 | `version-registry-promote-check-crashgen-config` | `version_registry` | `Result` | `checkCrashgenConfig` | `matched` |
 | `version-registry-promote-check-crashgen-full` | `version_registry` | `Result` | `checkCrashgenFull` | `matched` |
-| `version-registry-promote-compare-versions` | `version_registry` | `GameVersion` | `compareVersions` | `matched` |
+| `version-registry-promote-compare-versions` | `version_registry` | `compare_versions` | `compareVersions` | `matched` |
 | `version-registry-promote-detect-xse-version` | `version_registry` | `XseConfig` | `detectXseVersion` | `matched` |
 | `version-registry-promote-extract-all-versions` | `version_registry` | `GameVersion` | `extractAllVersions` | `matched` |
 | `version-registry-promote-extract-version-from-filename` | `version_registry` | `GameVersion` | `extractVersionFromFilename` | `matched` |
 | `version-registry-promote-extract-version-from-log` | `version_registry` | `GameVersion` | `extractVersionFromLog` | `matched` |
-| `version-registry-promote-format-version` | `version_registry` | `GameVersion` | `formatVersion` | `matched` |
+| `version-registry-promote-format-version` | `version_registry` | `format_version` | `formatVersion` | `matched` |
 | `version-registry-promote-get-address-lib-info` | `version_registry` | `CompatibleRange` | `getAddressLibInfo` | `matched` |
 | `version-registry-promote-get-all-fallout4-versions` | `version_registry` | `VersionRegistry` | `getAllFallout4Versions` | `matched` |
 | `version-registry-promote-get-classic-version` | `version_registry` | `VersionRegistry` | `getClassicVersion` | `matched` |
@@ -299,10 +299,10 @@
 | `version-registry-promote-get-version` | `version_registry` | `VersionRegistry` | `getVersion` | `matched` |
 | `version-registry-promote-get-version-registry` | `version_registry` | `get_version_registry` | `getVersionRegistry` | `matched` |
 | `version-registry-promote-is-known-fallout4-version` | `version_registry` | `GameVersion` | `isKnownFallout4Version` | `matched` |
-| `version-registry-promote-parse-version` | `version_registry` | `VersionRegistryError` | `parseVersion` | `matched` |
+| `version-registry-promote-parse-version` | `version_registry` | `parse_version` | `parseVersion` | `matched` |
 | `version-registry-promote-registry-get-game-version` | `version_registry` | `VersionRegistry` | `registryGetGameVersion` | `matched` |
 | `version_registry.MatchConfidence@rust` | `version_registry` | `MatchConfidence@rust` | `None` | `matched` |
-| `version-registry-promote-try-parse-version` | `version_registry` | `GameVersion` | `tryParseVersion` | `matched` |
+| `version-registry-promote-try-parse-version` | `version_registry` | `try_parse_version` | `tryParseVersion` | `matched` |
 | `aux-phase4a-backup-manager` | `aux` | `BackupManager` | `BackupManager` | `matched` |
 | `aux-phase4a-docs-path-finder` | `aux` | `DocsPathFinder` | `DocsPathFinder` | `matched` |
 | `aux-phase4a-documents-checker` | `aux` | `DocumentsChecker` | `DocumentsChecker` | `matched` |

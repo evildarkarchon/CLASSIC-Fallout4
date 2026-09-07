@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "familyId": "web-operations",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-web-core"
+  },
+  "fixtureRoot": "tests/fixtures/web_operations_conformance",
+  "fixtures": {
+    "https-query": "https-query.json",
+    "invalid-scheme": "invalid-scheme.json",
+    "invalid-url": "invalid-url.json"
+  },
+  "capabilities": [
+    {
+      "id": "web-operations.observe",
+      "rustSymbols": [
+        "is_valid_url",
+        "validate_url",
+        "extract_domain",
+        "join_url",
+        "build_url_with_query"
+      ],
+      "observationFamilies": [
+        "url-resolution"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "https-query",
+      "action": "web-operations.observe",
+      "capabilityIds": [
+        "web-operations.observe"
+      ],
+      "fixtureRefs": [
+        "https-query"
+      ],
+      "input": {
+        "fixtureRef": "https-query"
+      },
+      "expected": {
+        "valid": true,
+        "validated": {
+          "value": "https://example.com/base",
+          "error": null
+        },
+        "domain": {
+          "value": "example.com",
+          "error": null
+        },
+        "joined": {
+          "value": "https://example.com/child",
+          "error": null
+        },
+        "query": {
+          "value": "https://example.com/base?q=two+words&tag=a%26b",
+          "error": null
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid-scheme",
+      "action": "web-operations.observe",
+      "capabilityIds": [
+        "web-operations.observe"
+      ],
+      "fixtureRefs": [
+        "invalid-scheme"
+      ],
+      "input": {
+        "fixtureRef": "invalid-scheme"
+      },
+      "expected": {
+        "valid": false,
+        "validated": {
+          "value": null,
+          "error": "Invalid URL scheme: ftp (expected http or https)"
+        },
+        "domain": {
+          "value": null,
+          "error": "Invalid URL scheme: ftp (expected http or https)"
+        },
+        "joined": {
+          "value": null,
+          "error": "Invalid URL scheme: ftp (expected http or https)"
+        },
+        "query": {
+          "value": null,
+          "error": "Invalid URL scheme: ftp (expected http or https)"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid-url",
+      "action": "web-operations.observe",
+      "capabilityIds": [
+        "web-operations.observe"
+      ],
+      "fixtureRefs": [
+        "invalid-url"
+      ],
+      "input": {
+        "fixtureRef": "invalid-url"
+      },
+      "expected": {
+        "valid": false,
+        "validated": {
+          "value": null,
+          "error": "URL parse error: relative URL without a base"
+        },
+        "domain": {
+          "value": null,
+          "error": "URL parse error: relative URL without a base"
+        },
+        "joined": {
+          "value": null,
+          "error": "URL parse error: relative URL without a base"
+        },
+        "query": {
+          "value": null,
+          "error": "URL parse error: relative URL without a base"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

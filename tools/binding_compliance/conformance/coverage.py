@@ -344,14 +344,47 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
             # method and type mappings. Read the public binding operation so a
             # new class method or bridge alias cannot inherit existing credit.
             runtime_operation = None
+            if (
+                participant_id == "node"
+                and raw_row.get("rustCrate") == "classic-file-io-core"
+                and rust_symbol in {"FileHasher", "EncodingDetector"}
+                and raw_row.get("nodeKind") == "function"
+            ):
+                # Aggregate hash/encoding owners must not credit an unexecuted alias.
+                runtime_operation = raw_row.get("nodeExport")
             # These operation packs migrate portions of aggregate class mappings.
             # Preserve free-function identity so unrelated and future exports
             # cannot borrow the class carrier's executed observation.
-            if raw_row.get("rustCrate") in {
-                "classic-database-core",
-                "classic-version-registry-core",
-                "classic-scangame-core",
-            }:
+            if (
+                raw_row.get("rustCrate")
+                in {
+                    "classic-database-core",
+                    "classic-version-registry-core",
+                    "classic-scangame-core",
+                    "classic-settings-core",
+                    "classic-perf-core",
+                    "classic-update-core",
+                    "classic-xse-core",
+                    "classic-registry-core",
+                }
+                or (
+                    raw_row.get("rustCrate") == "classic-shared-core"
+                    and rust_symbol
+                    in {
+                        "StringProcessor",
+                        "intern",
+                        "normalize_string",
+                        "process_batch",
+                        "GameId",
+                        "as_str",
+                        "get_runtime",
+                    }
+                )
+                or (
+                    raw_row.get("rustCrate") == "classic-file-io-core"
+                    and rust_symbol in {"FileHasher", "EncodingDetector"}
+                )
+            ):
                 if participant_id == "node" and raw_row.get("nodeKind") == "function":
                     runtime_operation = raw_row.get("nodeExport")
                 elif (
@@ -361,7 +394,13 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
                     runtime_operation = raw_row.get("pythonExportPath")
             # Label functions map to their enum owner. Keep the exported function
             # identity too, so a future resolver cannot borrow an existing call.
-            if rust_symbol in vocabulary_symbols:
+            # Aux constructors also map to shared class carriers; preserve their
+            # exported operation so a new factory cannot borrow constructor credit.
+            if rust_symbol in vocabulary_symbols or raw_row.get("rustCrate") in {
+                "classic-web-core",
+                "classic-resource-core",
+                "classic-version-core",
+            }:
                 if participant_id == "node" and raw_row.get("nodeKind") == "function":
                     export = raw_row.get("nodeExport")
                     if isinstance(export, str):

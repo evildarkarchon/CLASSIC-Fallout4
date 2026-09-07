@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "familyId": "runtime-access",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-shared-core"
+  },
+  "fixtureRoot": "tests/fixtures/runtime_access_conformance",
+  "fixtures": {
+    "stable": "stable.json"
+  },
+  "capabilities": [
+    {
+      "id": "runtime-access.observe",
+      "rustSymbols": [
+        "get_runtime"
+      ],
+      "observationFamilies": [
+        "runtime-access"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "stable",
+      "action": "runtime-access.observe",
+      "capabilityIds": [
+        "runtime-access.observe"
+      ],
+      "fixtureRefs": [
+        "stable"
+      ],
+      "input": {
+        "fixtureRef": "stable"
+      },
+      "expected": {
+        "available": [
+          true,
+          true
+        ],
+        "diagnosticsAvailable": [
+          true,
+          true
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

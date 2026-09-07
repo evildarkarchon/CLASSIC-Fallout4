@@ -365,3 +365,12 @@ lists executed operations and retained diagnostics. Existing suites run before
 the receipt jobs at the same checkout. Migrated rows require actual receipts;
 frozen unrelated methods retain their original evidence without granting credit
 to newly added operations. No frontend consumer obligation is introduced.
+
+## Auxiliary, performance, and shared operation packs
+
+Auxiliary, performance, shared utilities, registry, and generic settings now
+also have blocking domain packs. The [owner operation evidence map](../implementation/aux_perf_shared_conformance_equivalence.md)
+lists their public observations, applicable adapters, transport limitations,
+and retained analyzers. Each pack uses the same authenticated semantic launcher;
+native participants require both MSVC and clang-cl. Existing registry evidence
+remains available until its final cleanup.

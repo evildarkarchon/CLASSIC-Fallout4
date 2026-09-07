@@ -166,13 +166,34 @@ _EXECUTION_POLICIES += tuple(
         "path-operations",
         "path-normalization",
         "message-operations",
+        "file-fingerprint",
+        "performance",
+        "update-decisions",
+        "string-operations",
+        "registry-operations",
+        "web-operations",
+        "resource-operations",
+        "version-operations",
+        "xse-operations",
+        "game-identity",
+        "runtime-access",
+        "settings-load",
     )
     for policy in _EXECUTION_POLICIES[:7]
     if policy.participant_id in {"rust", "node", "python", "cxx"}
     and not (
-        family in {"path-normalization", "message-operations"}
+        family
+        in {
+            "path-normalization",
+            "message-operations",
+            "file-fingerprint",
+            "string-operations",
+            "resource-operations",
+            "version-operations",
+        }
         and policy.participant_id == "cxx"
     )
+    and not (family == "runtime-access" and policy.participant_id == "python")
 )
 # Autoscan Reports use the shared scan-run launcher while retaining the same
 # four semantic adapters and separate diagnostics as the focused families.

@@ -24,6 +24,14 @@ PACK_RELATIVE_PATH = Path("tests/conformance/packs/crash_log_scan_run/v1.json")
 DEFAULT_ARTIFACT_ROOT = Path("tools/binding_compliance/artifacts")
 SUPPORTED_COMPILERS = ("msvc", "clang-cl")
 SUPPORTED_FAMILIES = (
+    "settings-load",
+    "registry-operations",
+    "web-operations",
+    "performance",
+    "update-decisions",
+    "xse-operations",
+    "game-identity",
+    "runtime-access",
     "autoscan-report",
     "crash-log-scan-run",
     "user-settings",
@@ -51,6 +59,26 @@ def _cxx_source_paths(
     """Return current native runner and core inputs bound into source identity."""
 
     paths = (
+        repo_root
+        / "classic-cli/tests/conformance/classic_cxx_settings_load_conformance.h",
+        repo_root / "business-logic/classic-settings-core/src",
+        *(
+            repo_root
+            / "classic-cli/tests/conformance"
+            / ("classic_cxx_" + name + "_conformance.h")
+            for name in (
+                "registry",
+                "aux_operations",
+                "performance",
+                "update_decisions",
+                "xse_operations",
+                "shared_identity",
+            )
+        ),
+        *(
+            repo_root / "business-logic" / ("classic-" + name + "-core/src")
+            for name in ("registry", "web", "perf", "update", "xse")
+        ),
         repo_root
         / "classic-cli/tests/conformance/classic_cxx_vocabulary_conformance.h",
         repo_root / "foundation/classic-vocabulary/src",

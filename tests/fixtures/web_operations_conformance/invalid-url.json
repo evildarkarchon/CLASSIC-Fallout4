@@ -1,0 +1,16 @@
+{
+  "request": {
+    "url": "not a url",
+    "path": "child",
+    "params": [
+      [
+        "q",
+        "two words"
+      ],
+      [
+        "tag",
+        "a&b"
+      ]
+    ]
+  }
+}

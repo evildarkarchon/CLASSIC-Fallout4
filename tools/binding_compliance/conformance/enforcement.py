@@ -26,6 +26,18 @@ FAMILY_ENFORCEMENT = MappingProxyType(
         "path-operations": "blocking",
         "path-normalization": "blocking",
         "message-operations": "blocking",
+        "file-fingerprint": "blocking",
+        "performance": "blocking",
+        "update-decisions": "blocking",
+        "string-operations": "blocking",
+        "registry-operations": "blocking",
+        "web-operations": "blocking",
+        "resource-operations": "blocking",
+        "version-operations": "blocking",
+        "xse-operations": "blocking",
+        "game-identity": "blocking",
+        "runtime-access": "blocking",
+        "settings-load": "blocking",
     }
 )
 

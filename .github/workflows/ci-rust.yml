@@ -414,6 +414,162 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Rust file-fingerprint conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family file-fingerprint --participant rust --artifact-root tools/binding_compliance/artifacts/file-fingerprint
+
+      - name: Upload Rust file-fingerprint conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-file-fingerprint-conformance
+          path: tools/binding_compliance/artifacts/file-fingerprint/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust performance conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family performance --participant rust --artifact-root tools/binding_compliance/artifacts/performance
+
+      - name: Upload Rust performance conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-performance-conformance
+          path: tools/binding_compliance/artifacts/performance/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust update-decisions conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family update-decisions --participant rust --artifact-root tools/binding_compliance/artifacts/update-decisions
+
+      - name: Upload Rust update-decisions conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-update-decisions-conformance
+          path: tools/binding_compliance/artifacts/update-decisions/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust string-operations conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family string-operations --participant rust --artifact-root tools/binding_compliance/artifacts/string-operations
+
+      - name: Upload Rust string-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-string-operations-conformance
+          path: tools/binding_compliance/artifacts/string-operations/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust registry-operations conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family registry-operations --participant rust --artifact-root tools/binding_compliance/artifacts/registry-operations
+
+      - name: Upload Rust registry-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-registry-operations-conformance
+          path: tools/binding_compliance/artifacts/registry-operations/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust web-operations conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family web-operations --participant rust --artifact-root tools/binding_compliance/artifacts/web-operations
+
+      - name: Upload Rust web-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-web-operations-conformance
+          path: tools/binding_compliance/artifacts/web-operations/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust resource-operations conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family resource-operations --participant rust --artifact-root tools/binding_compliance/artifacts/resource-operations
+
+      - name: Upload Rust resource-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-resource-operations-conformance
+          path: tools/binding_compliance/artifacts/resource-operations/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust version-operations conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family version-operations --participant rust --artifact-root tools/binding_compliance/artifacts/version-operations
+
+      - name: Upload Rust version-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-version-operations-conformance
+          path: tools/binding_compliance/artifacts/version-operations/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust xse-operations conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family xse-operations --participant rust --artifact-root tools/binding_compliance/artifacts/xse-operations
+
+      - name: Upload Rust xse-operations conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-xse-operations-conformance
+          path: tools/binding_compliance/artifacts/xse-operations/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust game-identity conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family game-identity --participant rust --artifact-root tools/binding_compliance/artifacts/game-identity
+
+      - name: Upload Rust game-identity conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-game-identity-conformance
+          path: tools/binding_compliance/artifacts/game-identity/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust runtime-access conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family runtime-access --participant rust --artifact-root tools/binding_compliance/artifacts/runtime-access
+
+      - name: Upload Rust runtime-access conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-runtime-access-conformance
+          path: tools/binding_compliance/artifacts/runtime-access/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Rust settings-load conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family settings-load --participant rust --artifact-root tools/binding_compliance/artifacts/settings-load
+
+      - name: Upload Rust settings-load conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-settings-load-conformance
+          path: tools/binding_compliance/artifacts/settings-load/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run Rust scan-run-vocabulary conformance
         if: ${{ !cancelled() }}
         run: python tools/binding_compliance/run_semantic_conformance.py --family scan-run-vocabulary --participant rust --artifact-root tools/binding_compliance/artifacts/scan-run-vocabulary

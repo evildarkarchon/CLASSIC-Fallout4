@@ -13,6 +13,17 @@ from pathlib import Path
 from typing import Any
 
 FAMILIES = {
+    "settings-load",
+    "xse-operations",
+    "game-identity",
+    "file-fingerprint",
+    "performance",
+    "update-decisions",
+    "string-operations",
+    "registry-operations",
+    "web-operations",
+    "resource-operations",
+    "version-operations",
     "crash-suspect",
     "crashgen-settings",
     "mod-guidance",
@@ -108,6 +119,17 @@ def _load_plan(path: Path) -> Mapping[str, Any]:
             },
             "path-operations": {"path-operations.validate"},
             "path-normalization": {"path-normalization.resolve"},
+            "file-fingerprint": {"file-fingerprint.inspect"},
+            "settings-load": {"settings-load.execute"},
+            "xse-operations": {"xse-operations.inspect"},
+            "game-identity": {"game-identity.observe"},
+            "performance": {"performance.metrics"},
+            "update-decisions": {"update-decisions.compare"},
+            "string-operations": {"string-operations.execute"},
+            "registry-operations": {"registry-operations.execute"},
+            "web-operations": {"web-operations.observe"},
+            "resource-operations": {"resource-operations.observe"},
+            "version-operations": {"version-operations.observe"},
             "message-operations": {"message-operations.format"},
             "database-operations": {"database-operations.pool"},
             "version-registry": {"version-registry.query"},
@@ -414,6 +436,42 @@ def _execute_scenario(
         from scan_game_conformance import observe_scan_game
 
         return observe_scan_game(fixture)
+    if plan["familyId"] == "file-fingerprint":
+        from file_fingerprint_conformance import observe_file_fingerprint
+
+        return observe_file_fingerprint(fixture)
+    if plan["familyId"] == "settings-load":
+        from settings_load_conformance import observe_settings_load
+
+        return observe_settings_load(fixture)
+    if plan["familyId"] == "xse-operations":
+        from xse_operations_conformance import observe_xse_operations
+
+        return observe_xse_operations(fixture)
+    if plan["familyId"] == "game-identity":
+        from shared_identity_conformance import observe_shared_identity
+
+        return observe_shared_identity(plan["familyId"], fixture)
+    if plan["familyId"] == "performance":
+        from performance_conformance import observe_performance
+
+        return observe_performance(fixture)
+    if plan["familyId"] == "update-decisions":
+        from update_decisions_conformance import observe_update_decisions
+
+        return observe_update_decisions(fixture)
+    if plan["familyId"] in {"string-operations", "registry-operations"}:
+        from shared_registry_conformance import observe_shared_registry
+
+        return observe_shared_registry(plan["familyId"], fixture)
+    if plan["familyId"] in {
+        "web-operations",
+        "resource-operations",
+        "version-operations",
+    }:
+        from aux_operations_conformance import observe_aux_operations
+
+        return observe_aux_operations(plan["familyId"], fixture)
     if plan["familyId"] == "config-operations":
         from config_operations_conformance import observe_config_operations
 

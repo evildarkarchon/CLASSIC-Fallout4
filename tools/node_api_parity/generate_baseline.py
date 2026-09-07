@@ -192,6 +192,60 @@ NODE_PHASE3_SYMBOL_ROUTE: dict[str, dict[str, str]] = {
 }
 
 
+# Explicit exports avoid attributing ambiguous names such as `get` by symbol
+# alone. These routes follow the direct core calls in Node src/shared.rs and
+# src/fileio.rs, preserving the distinct registry, performance and file owners.
+EXECUTABLE_AUX_CRATES = {
+    "detectEncoding": "classic-file-io-core",
+    "hashFile": "classic-file-io-core",
+    "hashFilesParallel": "classic-file-io-core",
+    "getRuntimeInfo": "classic-shared-core",
+    "isRuntimeAvailable": "classic-shared-core",
+    "registrySet": "classic-registry-core",
+    "registryGet": "classic-registry-core",
+    "registryRemove": "classic-registry-core",
+    "registryClear": "classic-registry-core",
+    "recordTimingMetric": "classic-perf-core",
+    "getMetricsSummary": "classic-perf-core",
+    "clearAllMetrics": "classic-perf-core",
+}
+
+
+def enrich_executable_aux_owners(contract: dict[str, Any]) -> dict[str, Any]:
+    """Persist source-backed crate identity for executable retained aux rows."""
+    for mapping in contract.get("tier1Mappings", []):
+        crate = EXECUTABLE_AUX_CRATES.get(mapping.get("nodeExport"))
+        if crate is not None:
+            mapping["rustCrate"] = crate
+        # These pre-existing exports call version.rs directly, not the Version
+        # Registry carriers historically used by the promoted smoke inventory.
+        # Preserve row IDs/owners so retained registry evidence remains intact.
+        version_symbol = {
+            "parseVersion": "parse_version",
+            "tryParseVersion": "try_parse_version",
+            "compareVersions": "compare_versions",
+            "formatVersion": "format_version",
+        }.get(mapping.get("nodeExport"))
+        if version_symbol is not None:
+            mapping["rustCrate"] = "classic-version-core"
+            mapping["rustSymbol"] = version_symbol
+    # settings.rs delegates these exports to the generic settings cache, not
+    # classic-config-core's explicit application YAML loader.
+    settings_routes = {
+        "loadSettingsSync": "load_settings_sync",
+        "loadSettingsAsync": "load_settings_async",
+        "loadBatchSync": "load_batch_sync",
+        "loadBatchAsync": "load_batch_async",
+        "isCached": "is_cached",
+    }
+    for mapping in contract.get("tier1Mappings", []):
+        symbol = settings_routes.get(mapping.get("nodeExport"))
+        if symbol is not None:
+            mapping["rustCrate"] = "classic-settings-core"
+            mapping["rustSymbol"] = symbol
+    return contract
+
+
 def normalize_phase3_node_contract(contract: dict[str, Any]) -> dict[str, Any]:
     """Reparent retired constants proxy rows to surviving owners."""
     retired_owner = "const" + "ants"
@@ -220,7 +274,7 @@ def normalize_phase3_node_contract(contract: dict[str, Any]) -> dict[str, Any]:
         mapping["ownerModule"] = route["ownerModule"]
         mapping["rustCrate"] = route["rustCrate"]
 
-    return contract
+    return enrich_executable_aux_owners(contract)
 
 
 def normalize_phase3_node_runtime_registry(
@@ -722,7 +776,9 @@ def main() -> int:
     contract_path = repo_root / args.contract
     output_dir = repo_root / args.output_dir
 
-    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    contract = enrich_executable_aux_owners(
+        json.loads(contract_path.read_text(encoding="utf-8"))
+    )
     tier1_mappings: list[dict[str, Any]] = contract["tier1Mappings"]
     # Phase 4 Plan 2: @rust proxy rows only have Rust symbols; strip the
     # suffix for tier1 rust-set tracking and skip proxy rows in the node-side

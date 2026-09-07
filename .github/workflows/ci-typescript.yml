@@ -410,6 +410,162 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Node file-fingerprint conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family file-fingerprint --participant node --artifact-root tools/binding_compliance/artifacts/file-fingerprint
+
+      - name: Upload Node file-fingerprint conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-file-fingerprint-conformance
+          path: tools/binding_compliance/artifacts/file-fingerprint/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node performance conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family performance --participant node --artifact-root tools/binding_compliance/artifacts/performance
+
+      - name: Upload Node performance conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-performance-conformance
+          path: tools/binding_compliance/artifacts/performance/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node update-decisions conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family update-decisions --participant node --artifact-root tools/binding_compliance/artifacts/update-decisions
+
+      - name: Upload Node update-decisions conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-update-decisions-conformance
+          path: tools/binding_compliance/artifacts/update-decisions/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node string-operations conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family string-operations --participant node --artifact-root tools/binding_compliance/artifacts/string-operations
+
+      - name: Upload Node string-operations conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-string-operations-conformance
+          path: tools/binding_compliance/artifacts/string-operations/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node registry-operations conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family registry-operations --participant node --artifact-root tools/binding_compliance/artifacts/registry-operations
+
+      - name: Upload Node registry-operations conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-registry-operations-conformance
+          path: tools/binding_compliance/artifacts/registry-operations/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node web-operations conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family web-operations --participant node --artifact-root tools/binding_compliance/artifacts/web-operations
+
+      - name: Upload Node web-operations conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-web-operations-conformance
+          path: tools/binding_compliance/artifacts/web-operations/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node resource-operations conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family resource-operations --participant node --artifact-root tools/binding_compliance/artifacts/resource-operations
+
+      - name: Upload Node resource-operations conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-resource-operations-conformance
+          path: tools/binding_compliance/artifacts/resource-operations/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node version-operations conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family version-operations --participant node --artifact-root tools/binding_compliance/artifacts/version-operations
+
+      - name: Upload Node version-operations conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-version-operations-conformance
+          path: tools/binding_compliance/artifacts/version-operations/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node xse-operations conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family xse-operations --participant node --artifact-root tools/binding_compliance/artifacts/xse-operations
+
+      - name: Upload Node xse-operations conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-xse-operations-conformance
+          path: tools/binding_compliance/artifacts/xse-operations/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node game-identity conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family game-identity --participant node --artifact-root tools/binding_compliance/artifacts/game-identity
+
+      - name: Upload Node game-identity conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-game-identity-conformance
+          path: tools/binding_compliance/artifacts/game-identity/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node runtime-access conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family runtime-access --participant node --artifact-root tools/binding_compliance/artifacts/runtime-access
+
+      - name: Upload Node runtime-access conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-runtime-access-conformance
+          path: tools/binding_compliance/artifacts/runtime-access/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Node settings-load conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family settings-load --participant node --artifact-root tools/binding_compliance/artifacts/settings-load
+
+      - name: Upload Node settings-load conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-settings-load-conformance
+          path: tools/binding_compliance/artifacts/settings-load/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run Node scan-run-vocabulary conformance
         if: matrix.runtime == 'node' && !cancelled()
         run: python tools/binding_compliance/run_semantic_conformance.py --family scan-run-vocabulary --participant node --artifact-root tools/binding_compliance/artifacts/scan-run-vocabulary

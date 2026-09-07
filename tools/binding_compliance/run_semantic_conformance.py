@@ -17,6 +17,18 @@ from run_scan_run_conformance import (
 from run_scan_run_conformance import run_participant as run_prepared_participant
 
 SUPPORTED_FAMILIES = (
+    "settings-load",
+    "xse-operations",
+    "game-identity",
+    "runtime-access",
+    "file-fingerprint",
+    "performance",
+    "update-decisions",
+    "string-operations",
+    "registry-operations",
+    "web-operations",
+    "resource-operations",
+    "version-operations",
     "crash-suspect",
     "crashgen-settings",
     "mod-guidance",
@@ -37,6 +49,14 @@ SUPPORTED_FAMILIES = (
 )
 
 _COMMON_SOURCES = (
+    REPO_ROOT / "business-logic/classic-settings-core/src",
+    REPO_ROOT / "business-logic/classic-xse-core/src",
+    REPO_ROOT / "business-logic/classic-perf-core/src",
+    REPO_ROOT / "business-logic/classic-registry-core/src",
+    REPO_ROOT / "business-logic/classic-web-core/src",
+    REPO_ROOT / "business-logic/classic-resource-core/src",
+    REPO_ROOT / "business-logic/classic-version-core/src",
+    REPO_ROOT / "business-logic/classic-update-core/src",
     Path(__file__).resolve(),
     REPO_ROOT / "tools/binding_compliance/run_scan_run_conformance.py",
     REPO_ROOT / "business-logic/classic-scanlog-core/src",
@@ -94,6 +114,24 @@ PARTICIPANT_COMMANDS = {
             / "node-bindings/classic-node/__test__/version_registry_conformance.ts",
             REPO_ROOT / "node-bindings/classic-node/__test__/scan_game_conformance.ts",
             REPO_ROOT / "node-bindings/classic-node/src",
+            REPO_ROOT
+            / "node-bindings/classic-node/__test__/settings_load_conformance.ts",
+            REPO_ROOT
+            / "node-bindings/classic-node/__test__/xse_operations_conformance.ts",
+            REPO_ROOT
+            / "node-bindings/classic-node/__test__/shared_identity_conformance.ts",
+            *(
+                REPO_ROOT
+                / "node-bindings/classic-node/__test__"
+                / (module + "_conformance.ts")
+                for module in (
+                    "file_fingerprint",
+                    "performance",
+                    "update_decisions",
+                    "shared_registry",
+                    "aux_operations",
+                )
+            ),
             REPO_ROOT / "node-bindings/classic-node/package.json",
             *_COMMON_SOURCES,
         ),
@@ -119,6 +157,32 @@ PARTICIPANT_COMMANDS = {
             REPO_ROOT / "python-bindings/tests/version_registry_conformance.py",
             REPO_ROOT / "python-bindings/tests/scan_game_conformance.py",
             REPO_ROOT / "python-bindings/classic-file-io-py/src",
+            REPO_ROOT / "python-bindings/classic-settings-py/src",
+            REPO_ROOT / "python-bindings/tests/settings_load_conformance.py",
+            REPO_ROOT / "python-bindings/classic-xse-py/src",
+            REPO_ROOT / "python-bindings/tests/xse_operations_conformance.py",
+            REPO_ROOT / "python-bindings/tests/shared_identity_conformance.py",
+            *(
+                REPO_ROOT / "python-bindings/tests" / (module + "_conformance.py")
+                for module in (
+                    "file_fingerprint",
+                    "performance",
+                    "update_decisions",
+                    "shared_registry",
+                    "aux_operations",
+                )
+            ),
+            *(
+                REPO_ROOT / "python-bindings" / ("classic-" + owner + "-py/src")
+                for owner in (
+                    "perf",
+                    "registry",
+                    "web",
+                    "resource",
+                    "version",
+                    "update",
+                )
+            ),
             REPO_ROOT / "python-bindings/classic-path-py/src",
             REPO_ROOT / "python-bindings/classic-message-py/src",
             REPO_ROOT / "foundation/classic-shared-py/src",

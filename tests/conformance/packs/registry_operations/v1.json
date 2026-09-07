@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "familyId": "registry-operations",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-registry-core"
+  },
+  "fixtureRoot": "tests/fixtures/registry_operations_conformance",
+  "fixtures": {
+    "typed-values": "typed-values.json",
+    "sentinel-values-after-reuse": "sentinel-values-after-reuse.json"
+  },
+  "capabilities": [
+    {
+      "id": "registry-operations.execute",
+      "rustSymbols": [
+        "register",
+        "get",
+        "unregister",
+        "clear_all",
+        "is_registered"
+      ],
+      "observationFamilies": [
+        "registry-operations"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "typed-values",
+      "action": "registry-operations.execute",
+      "capabilityIds": [
+        "registry-operations.execute"
+      ],
+      "fixtureRefs": [
+        "typed-values"
+      ],
+      "input": {
+        "fixtureRef": "typed-values"
+      },
+      "expected": {
+        "initiallyPresent": false,
+        "stored": {
+          "stringValue": "Crème / Fallout4",
+          "boolValue": true,
+          "intValue": 42
+        },
+        "replacement": "Skyrim",
+        "afterRemovePresent": false,
+        "afterClearPresent": false
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "sentinel-values-after-reuse",
+      "action": "registry-operations.execute",
+      "capabilityIds": [
+        "registry-operations.execute"
+      ],
+      "fixtureRefs": [
+        "sentinel-values-after-reuse"
+      ],
+      "input": {
+        "fixtureRef": "sentinel-values-after-reuse"
+      },
+      "expected": {
+        "initiallyPresent": false,
+        "stored": {
+          "stringValue": "",
+          "boolValue": false,
+          "intValue": -1
+        },
+        "replacement": "Restored",
+        "afterRemovePresent": false,
+        "afterClearPresent": false
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

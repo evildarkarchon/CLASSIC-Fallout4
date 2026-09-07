@@ -1123,6 +1123,36 @@ def load_and_validate_pack(repo_root: Path, pack_path: Path) -> ValidatedPack:
     _validate_identities(pack)
     fixture_root, fixtures = _validate_fixtures(pack, root)
     _validate_normalization(pack)
+    from .families.aux_operations import validate_aux_operations_pack
+    from .families.file_fingerprint import validate_file_fingerprint_pack
+    from .families.performance import validate_performance_pack
+    from .families.settings_load import validate_settings_load_pack
+    from .families.shared_identity import validate_pack as validate_shared_identity_pack
+    from .families.shared_registry import validate_pack as validate_shared_registry_pack
+    from .families.update_decisions import validate_update_decisions_pack
+    from .families.xse_operations import validate_xse_operations_pack
+
+    owner_validators = {
+        "file-fingerprint": validate_file_fingerprint_pack,
+        "performance": validate_performance_pack,
+        "update-decisions": validate_update_decisions_pack,
+        "xse-operations": validate_xse_operations_pack,
+        "settings-load": validate_settings_load_pack,
+        "game-identity": validate_shared_identity_pack,
+        "runtime-access": validate_shared_identity_pack,
+        "string-operations": validate_shared_registry_pack,
+        "registry-operations": validate_shared_registry_pack,
+        "web-operations": validate_aux_operations_pack,
+        "resource-operations": validate_aux_operations_pack,
+        "version-operations": validate_aux_operations_pack,
+    }
+    if pack["familyId"] in owner_validators:
+        try:
+            owner_validators[pack["familyId"]](pack, root)
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            raise PackValidationError(
+                f"invalid owner operation pack: {error}"
+            ) from error
     if pack["familyId"] in {
         "path-operations",
         "path-normalization",

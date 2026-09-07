@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "familyId": "update-decisions",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-update-core"
+  },
+  "fixtureRoot": "tests/fixtures/update_decisions_conformance",
+  "fixtures": {
+    "newer": "newer.json",
+    "same": "same.json",
+    "older": "older.json",
+    "prerelease": "prerelease.json"
+  },
+  "capabilities": [
+    {
+      "id": "update-decisions.compare",
+      "rustSymbols": [
+        "GithubClient",
+        "has_update"
+      ],
+      "observationFamilies": [
+        "values"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "newer",
+      "action": "update-decisions.compare",
+      "capabilityIds": [
+        "update-decisions.compare"
+      ],
+      "fixtureRefs": [
+        "newer"
+      ],
+      "input": {
+        "fixtureRef": "newer"
+      },
+      "expected": {
+        "hasUpdate": true,
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "same",
+      "action": "update-decisions.compare",
+      "capabilityIds": [
+        "update-decisions.compare"
+      ],
+      "fixtureRefs": [
+        "same"
+      ],
+      "input": {
+        "fixtureRef": "same"
+      },
+      "expected": {
+        "hasUpdate": false,
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "older",
+      "action": "update-decisions.compare",
+      "capabilityIds": [
+        "update-decisions.compare"
+      ],
+      "fixtureRefs": [
+        "older"
+      ],
+      "input": {
+        "fixtureRef": "older"
+      },
+      "expected": {
+        "hasUpdate": false,
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "prerelease",
+      "action": "update-decisions.compare",
+      "capabilityIds": [
+        "update-decisions.compare"
+      ],
+      "fixtureRefs": [
+        "prerelease"
+      ],
+      "input": {
+        "fixtureRef": "prerelease"
+      },
+      "expected": {
+        "hasUpdate": true,
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

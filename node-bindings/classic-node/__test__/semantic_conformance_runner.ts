@@ -1,4 +1,12 @@
 import { observeDatabaseOperations } from "./database_operations_conformance.js";
+import { observeFileFingerprint } from "./file_fingerprint_conformance.js";
+import { observePerformance } from "./performance_conformance.js";
+import { observeUpdateDecisions } from "./update_decisions_conformance.js";
+import { observeSharedRegistry } from "./shared_registry_conformance.js";
+import { observeAuxOperations } from "./aux_operations_conformance.js";
+import { observeXseOperations } from "./xse_operations_conformance.js";
+import { observeSharedIdentity } from "./shared_identity_conformance.js";
+import { observeSettingsLoad } from "./settings_load_conformance.js";
 import { observeVersionRegistry } from "./version_registry_conformance.js";
 import { observeScanGame } from "./scan_game_conformance.js";
 import { randomUUID } from "node:crypto";
@@ -12,7 +20,7 @@ import { observeFileOperations } from "./file_operations_conformance.js";
 import { observePathMessage } from "./path_message_conformance.js";
 
 type JsonObject = Record<string, any>;
-const families = ["crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary", "config-operations", "file-operations", "path-operations", "path-normalization", "message-operations", "database-operations", "version-registry", "scan-game"];
+const families = ["settings-load", "xse-operations", "game-identity", "runtime-access", "file-fingerprint", "performance", "update-decisions", "string-operations", "registry-operations", "web-operations", "resource-operations", "version-operations", "crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary", "config-operations", "file-operations", "path-operations", "path-normalization", "message-operations", "database-operations", "version-registry", "scan-game"];
 
 /** Reject malformed invocation objects before invoking native operations. */
 function object(value: unknown, label: string): JsonObject {
@@ -47,6 +55,18 @@ async function loadPlan(path: string): Promise<JsonObject> {
       scenario[key].forEach((value: unknown) => string(value, key));
     }
     const operationActions: Record<string, string[]> = {
+      "settings-load": ["settings-load.execute"],
+      "xse-operations": ["xse-operations.inspect"],
+      "game-identity": ["game-identity.observe"],
+      "runtime-access": ["runtime-access.observe"],
+      "file-fingerprint": ["file-fingerprint.inspect"],
+      "performance": ["performance.metrics"],
+      "update-decisions": ["update-decisions.compare"],
+      "string-operations": ["string-operations.execute"],
+      "registry-operations": ["registry-operations.execute"],
+      "web-operations": ["web-operations.observe"],
+      "resource-operations": ["resource-operations.observe"],
+      "version-operations": ["version-operations.observe"],
       "config-operations": ["config-operations.load-explicit"],
       "file-operations": ["file-operations.read-text", "file-operations.write-text"],
       "path-operations": ["path-operations.validate"],
@@ -203,6 +223,14 @@ async function executeScenario(plan: JsonObject, scenario: JsonObject): Promise<
   if (plan.familyId === "database-operations") return observeDatabaseOperations(fixture);
   if (plan.familyId === "version-registry") return observeVersionRegistry(fixture);
   if (plan.familyId === "scan-game") return observeScanGame(fixture);
+  if (plan.familyId === "file-fingerprint") return observeFileFingerprint(fixture);
+  if (plan.familyId === "settings-load") return observeSettingsLoad(fixture);
+  if (plan.familyId === "xse-operations") return observeXseOperations(fixture);
+  if (["game-identity", "runtime-access"].includes(plan.familyId)) return observeSharedIdentity(plan.familyId, fixture);
+  if (plan.familyId === "performance") return observePerformance(fixture);
+  if (plan.familyId === "update-decisions") return observeUpdateDecisions(fixture);
+  if (["string-operations", "registry-operations"].includes(plan.familyId)) return observeSharedRegistry(plan.familyId, fixture);
+  if (["web-operations", "resource-operations", "version-operations"].includes(plan.familyId)) return observeAuxOperations(plan.familyId, fixture);
   if (plan.familyId === "file-operations") {
     if (scenario.action !== `file-operations.${fixture.operation}`) throw new Error("file action disagrees with fixture operation");
     return observeFileOperations(fixture);

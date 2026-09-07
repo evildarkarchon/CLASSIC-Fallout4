@@ -12,6 +12,31 @@ from ..coverage import SourceParityRow
 # Keep participant and class identity explicit: similarly named unrelated methods
 # must never inherit a disposition from this phase-one migration.
 _RETAINED = {
+    # Binding-only representation/equality helpers retain their existing focused
+    # smoke assertions; resource classification facts do not prove Python repr.
+    (
+        "resource-operations",
+        "classic-resource-core",
+        "ResourceType",
+        "python",
+    ): frozenset({"__repr__", "__str__", "__eq__"}),
+    (
+        "resource-operations",
+        "classic-resource-core",
+        "ResourceInfo",
+        "python",
+    ): frozenset({"__repr__", "__str__"}),
+    ("update-decisions", "classic-update-core", "GithubClient", "python"): frozenset(
+        {"get_all_releases", "get_latest_release", "repo_url"}
+    ),
+    ("xse-operations", "classic-xse-core", "XseType", "python"): frozenset(
+        {"__eq__", "__repr__", "__str__", "f4sevr", "sfse", "skse", "skse64", "sksevr"}
+    ),
+    # The token pack observes the shared cross-adapter as_str surface. Python's
+    # other GameId methods have no matching Node/CXX public operations.
+    ("game-identity", "classic-shared-core", "GameId", "python"): frozenset(
+        {"__eq__", "__hash__", "__repr__", "__str__", "exe_name", "is_vr"}
+    ),
     (
         "version-registry",
         "classic-version-registry-core",
@@ -122,6 +147,21 @@ _RETAINED = {
 
 def is_retained_operation(family_id: str, row: SourceParityRow) -> bool:
     """Identify a previously known deferred method without granting runtime credit."""
+    # These exact existing carriers belong to different bridge operations;
+    # a shared::GameId token read must not claim config/scanner/web execution.
+    # Node's display-name helper likewise has no shared-core token equivalent.
+    if (
+        family_id == "game-identity"
+        and row.rust_crate == "classic-shared-core"
+        and row.obligation_id
+        in {
+            "parity:cxx:0f1ce653765981f0",
+            "parity:cxx:17a9ae976a21c5f7",
+            "parity:cxx:7aefe345782399f3",
+            "parity:node:aux-phase4c-get-game-name",
+        }
+    ):
+        return True
     return (
         row.mapping_origin == "canonical_rust"
         and row.runtime_operation
