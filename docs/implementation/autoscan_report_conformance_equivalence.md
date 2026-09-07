@@ -1,5 +1,7 @@
 # Autoscan Report conformance equivalence
 
+> Subsequent retirement: the [issue #211 evidence map](fixture_evidence_retirement.md) records migrated registry claims removed after this promotion. Canonical owner goldens and focused diagnostics remain.
+
 Issue #207 adds the blocking `autoscan-report` family at
 `tests/conformance/packs/autoscan_report/v1.json`. It reuses the existing
 `tests/fixtures/autoscan_report_goldens/` corpus through complete public Crash

@@ -1,5 +1,7 @@
 # Focused semantic conformance equivalence
 
+> Subsequent retirement: [issue #211 evidence map](fixture_evidence_retirement.md) records the migrated registry claims and duplicate positives removed after this promotion. The evidence retained below describes the original migration boundary; focused diagnostics remain unless explicitly listed in that retirement map.
+
 Issue #205 promotes six independent v1 families to blocking receipt enforcement:
 Crash Suspect, Crashgen Settings, Mod Guidance, FormID lookup, Named Record, and
 Plugin Evidence. Each family keeps its domain observations and invokes its

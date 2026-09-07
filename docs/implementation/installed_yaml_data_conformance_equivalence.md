@@ -1,5 +1,7 @@
 # Installed YAML Data conformance equivalence
 
+> Subsequent retirement: the [issue #211 evidence map](fixture_evidence_retirement.md) records migrated registry claims removed after this promotion. The retained evidence below describes the original migration boundary; focused diagnostics remain.
+
 Issue #206 adds blocking receipts for the config-owned Installed YAML Data
 inspection and preparation operations. The source-owned pack is
 `tests/conformance/packs/installed_yaml_data/v1.json`; the independent inputs are

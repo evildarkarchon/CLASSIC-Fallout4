@@ -1,5 +1,13 @@
 # Binding Compliance Suite
 
+Migrated fixture-backed selector hashes, test pointers, and positive registry
+claims are retired after blocking pack promotion. Mixed selectors retain explicit
+unmigrated IDs; shared loaders and focused diagnostics remain. Metadata summaries
+distinguish receipt obligations from residual legacy claims. Only authenticated
+executed receipts contribute migrated runtime coverage. See the
+[issue #211 retirement evidence map](../implementation/fixture_evidence_retirement.md)
+for exact deletions and retained boundaries.
+
 The binding compliance suite is the canonical binding gate for day-to-day validation and CI policy. It maps the documented binding parity policy into explicit executable requirements, then records which lower-level gate or static check proves each requirement.
 
 Run the source-level CI profile from the repo root:

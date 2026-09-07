@@ -1,5 +1,7 @@
 # Database, Version Registry, and Scan Game conformance equivalence
 
+> Subsequent retirement: the [issue #211 evidence map](fixture_evidence_retirement.md) records migrated registry claims and duplicate positives removed after this promotion. The retained evidence below describes the original migration boundary; focused diagnostics remain unless explicitly listed in that retirement map.
+
 Issue #210 migrates deterministic operations into the executable umbrella from
 #185. Expectations are authored in the versioned packs; adapters receive only
 fixture references and input actions. No existing evidence is retired.

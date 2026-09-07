@@ -10,6 +10,9 @@ from pathlib import Path
 from typing import Any
 
 from binding_compliance.conformance.coverage import SourceParityRow
+from binding_compliance.conformance.families.autoscan_report import (
+    AUTOSCAN_REPORT_COVERAGE_POLICY,
+)
 from binding_compliance.conformance.families.config_operations import (
     CONFIG_OPERATIONS_COVERAGE_POLICY,
 )
@@ -33,11 +36,17 @@ from binding_compliance.conformance.families.path_operations import (
     path_operations_coverage_policy,
 )
 from binding_compliance.conformance.families.scan_game import SCAN_GAME_COVERAGE_POLICY
+from binding_compliance.conformance.families.semantic_analysis import (
+    SEMANTIC_ANALYSIS_COVERAGE_POLICIES,
+)
 from binding_compliance.conformance.families.user_settings import (
     USER_SETTINGS_COVERAGE_POLICY,
 )
 from binding_compliance.conformance.families.version_registry import (
     VERSION_REGISTRY_COVERAGE_POLICY,
+)
+from binding_compliance.conformance.families.vocabulary import (
+    vocabulary_coverage_policies,
 )
 from parity_artifact_io import stable_id_hash, write_json  # noqa: F401
 
@@ -291,6 +300,27 @@ def build_coverage_summary(
             ("classic-path-core", path_operations_coverage_policy()),
             ("classic-shared-core", path_normalization_coverage_policy()),
             ("classic-message-core", message_operations_coverage_policy()),
+            ("classic-scanlog-core", AUTOSCAN_REPORT_COVERAGE_POLICY),
+            *(
+                (
+                    "classic-database-core"
+                    if family == "formid-lookup"
+                    else "classic-scanlog-core",
+                    policy,
+                )
+                for family, policy in SEMANTIC_ANALYSIS_COVERAGE_POLICIES.items()
+            ),
+            *(
+                (
+                    "classic-config-core"
+                    if family == "config-vocabulary"
+                    else "classic-scanlog-core",
+                    policy,
+                )
+                for family, policy in vocabulary_coverage_policies(
+                    Path(__file__).resolve().parents[1]
+                ).items()
+            ),
         )
         for predicate in policy.predicates
         for symbol in predicate.rust_symbols
@@ -337,13 +367,13 @@ def build_coverage_summary(
         # claim, even when an old registry is supplied by a caller.
         for key in ("coverageId", "testSuite", "testCaseId", "fixtureRefs", "notes"):
             item.pop(key, None)
-        structural = binding == "node" and mapping.get("nodeKind") in {
-            "interface",
-            "type",
-            "const_enum",
-        }
+        structural = binding == "node" and (
+            not mapping.get("nodeExport")
+            or mapping.get("nodeKind") in {"interface", "type", "const_enum"}
+        )
         # This is a delegation label, never an execution claim. The retained
         # source/declaration checks still own erased TypeScript declarations.
+        # Rust-only mappings likewise cannot establish Node runtime execution.
         item["classification"] = (
             "structural_analyzer" if structural else "receipt_required"
         )
@@ -452,7 +482,7 @@ def render_coverage_summary_markdown(summary_payload: dict[str, Any]) -> str:
         "",
         f"- Generated: `{summary_payload['generated_at_utc']}`",
         f"- Tracked surfaces: **{summary['tracked_surface_total']}**",
-        f"- Runtime verified: **{summary['runtime_verified_total']}**",
+        f"- Unmigrated legacy registry claims: **{summary['runtime_verified_total']}**",
         f"- Requiring executable receipts: **{summary.get('receipt_required_total', 0)}**",
         f"- Retained structural analysis: **{summary.get('structural_analyzer_total', 0)}**",
         f"- Contract mapped only: **{summary['contract_mapped_total']}**",
@@ -461,7 +491,7 @@ def render_coverage_summary_markdown(summary_payload: dict[str, Any]) -> str:
         "",
         "## Per-owner totals",
         "",
-        "| Owner Module | Runtime Verified | Receipt Required | Structural | Contract Mapped | Newly Uncovered | Total |",
+        "| Owner Module | Legacy Claims | Receipt Required | Structural | Contract Mapped | Newly Uncovered | Total |",
         "|---|---:|---:|---:|---:|---:|---:|",
     ]
     for owner_module, counts in summary_payload["perOwnerModule"].items():
@@ -481,6 +511,7 @@ def render_coverage_summary_markdown(summary_payload: dict[str, Any]) -> str:
         (
             "",
             "Detailed tracked-surface diagnostics are in the JSON summary artifact.",
+            "Migrated execution coverage comes only from validated conformance receipts; this metadata summary does not report execution success.",
             "",
         )
     )

@@ -5,14 +5,14 @@
   "shadowTargetPolicy": "A shadow runtime target may name its planned family while scenario and observation IDs remain null. Only executed receipts may justify a later state.",
   "retirementPolicy": "Retired Crash Log Scan Run policy targets record removal of legacy positive proof only. Executable conformance and retained analyzers remain blocking; this diagnostic ledger never establishes a passing execution.",
   "sourceSummary": {
-    "total": 3277,
+    "total": 3273,
     "byKind": {
       "consumer_source_audit": 58,
       "display_content_consumer_audit": 3,
       "display_content_source_audit": 11,
       "parity_row": 2782,
       "policy_exception": 1,
-      "runtime_registry_claim": 67,
+      "runtime_registry_claim": 63,
       "rust_enum_inventory_audit": 15,
       "scan_run_contract_variant": 73,
       "scan_run_variant_policy": 73,
@@ -23,20 +23,20 @@
     "byClassification": {
       "negative_analyzer": 207,
       "policy_exception": 1,
-      "runtime_verifiable": 2652,
+      "runtime_verifiable": 2648,
       "structural_analyzer": 417
     },
     "byMigrationState": {
       "blocking": 625,
       "retired": 55,
-      "shadow": 2597
+      "shadow": 2593
     },
     "byParticipant": {
       "cli": 4,
       "cxx": 698,
       "gui": 60,
-      "node": 991,
-      "python": 1332,
+      "node": 989,
+      "python": 1330,
       "python-cli": 5,
       "rust": 180,
       "shared": 4,
@@ -69067,7 +69067,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/13#coverageId=node-tier1-config-installed-yaml-load-runtime"
+        "locator": "/entries/11#coverageId=node-tier1-config-installed-yaml-load-runtime"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69091,7 +69091,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/21#coverageId=node-tier1-database"
+        "locator": "/entries/19#coverageId=node-tier1-database"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69115,7 +69115,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/22#coverageId=node-tier1-file-io"
+        "locator": "/entries/20#coverageId=node-tier1-file-io"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69139,7 +69139,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/23#coverageId=node-tier1-message"
+        "locator": "/entries/21#coverageId=node-tier1-message"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69163,7 +69163,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/24#coverageId=node-tier1-path"
+        "locator": "/entries/22#coverageId=node-tier1-path"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69187,7 +69187,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/25#coverageId=node-tier1-perf"
+        "locator": "/entries/23#coverageId=node-tier1-perf"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69211,7 +69211,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/26#coverageId=node-tier1-registry"
+        "locator": "/entries/24#coverageId=node-tier1-registry"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69235,7 +69235,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/27#coverageId=node-tier1-scangame"
+        "locator": "/entries/25#coverageId=node-tier1-scangame"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69331,7 +69331,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/11#coverageId=node-tier1-scanlog-formid-finding-analyzer-runtime"
+        "locator": "/entries/9#coverageId=node-tier1-scanlog-formid-finding-analyzer-runtime"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69375,59 +69375,11 @@
       ]
     },
     {
-      "id": "runtime-claim:node:node-tier1-scanlog-named-record-finding-analyzer-runtime",
-      "sourceKind": "runtime_registry_claim",
-      "source": {
-        "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/10#coverageId=node-tier1-scanlog-named-record-finding-analyzer-runtime"
-      },
-      "participant": "node",
-      "mappingOrigin": "legacy_registry_claim",
-      "classification": "runtime_verifiable",
-      "target": {
-        "familyId": "scanlog",
-        "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
-      },
-      "retainedAnalyzerIds": [
-        "node-source-and-declaration-parity"
-      ],
-      "migrationState": "shadow",
-      "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
-      ]
-    },
-    {
-      "id": "runtime-claim:node:node-tier1-scanlog-plugin-evidence-analyzer-runtime",
-      "sourceKind": "runtime_registry_claim",
-      "source": {
-        "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/9#coverageId=node-tier1-scanlog-plugin-evidence-analyzer-runtime"
-      },
-      "participant": "node",
-      "mappingOrigin": "legacy_registry_claim",
-      "classification": "runtime_verifiable",
-      "target": {
-        "familyId": "scanlog",
-        "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
-      },
-      "retainedAnalyzerIds": [
-        "node-source-and-declaration-parity"
-      ],
-      "migrationState": "shadow",
-      "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
-      ]
-    },
-    {
       "id": "runtime-claim:node:node-tier1-settings",
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/28#coverageId=node-tier1-settings"
+        "locator": "/entries/26#coverageId=node-tier1-settings"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69451,7 +69403,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/29#coverageId=node-tier1-shared"
+        "locator": "/entries/27#coverageId=node-tier1-shared"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69475,7 +69427,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/30#coverageId=node-tier1-update"
+        "locator": "/entries/28#coverageId=node-tier1-update"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69523,7 +69475,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/33#coverageId=node-tier1-version"
+        "locator": "/entries/31#coverageId=node-tier1-version"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69571,7 +69523,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/31#coverageId=node-tier1-web"
+        "locator": "/entries/29#coverageId=node-tier1-web"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69595,7 +69547,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/32#coverageId=node-tier1-xse"
+        "locator": "/entries/30#coverageId=node-tier1-xse"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69619,7 +69571,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/15#coverageId=node-tier2-aux-application-dir-runtime"
+        "locator": "/entries/13#coverageId=node-tier2-aux-application-dir-runtime"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69643,7 +69595,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/17#coverageId=node-tier2-aux-cache-runtime"
+        "locator": "/entries/15#coverageId=node-tier2-aux-cache-runtime"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69667,7 +69619,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/16#coverageId=node-tier2-aux-runtime"
+        "locator": "/entries/14#coverageId=node-tier2-aux-runtime"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69691,7 +69643,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/14#coverageId=node-tier2-config-game-local-runtime"
+        "locator": "/entries/12#coverageId=node-tier2-config-game-local-runtime"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69715,7 +69667,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/12#coverageId=node-tier2-config-runtime"
+        "locator": "/entries/10#coverageId=node-tier2-config-runtime"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69739,7 +69691,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/18#coverageId=node-tier2-scanlog-cli-runtime"
+        "locator": "/entries/16#coverageId=node-tier2-scanlog-cli-runtime"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69763,7 +69715,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/20#coverageId=node-tier2-scanlog-local-ignore-abandonment-runtime"
+        "locator": "/entries/18#coverageId=node-tier2-scanlog-local-ignore-abandonment-runtime"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69787,7 +69739,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/19#coverageId=node-tier2-scanlog-local-ignore-recovery-runtime"
+        "locator": "/entries/17#coverageId=node-tier2-scanlog-local-ignore-recovery-runtime"
       },
       "participant": "node",
       "mappingOrigin": "legacy_registry_claim",
@@ -69907,7 +69859,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/23#coverageId=python-tier1-database"
+        "locator": "/entries/21#coverageId=python-tier1-database"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -69931,7 +69883,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/18#coverageId=python-tier1-file_io"
+        "locator": "/entries/16#coverageId=python-tier1-file_io"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -69955,7 +69907,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/22#coverageId=python-tier1-message"
+        "locator": "/entries/20#coverageId=python-tier1-message"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -69979,7 +69931,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/21#coverageId=python-tier1-path"
+        "locator": "/entries/19#coverageId=python-tier1-path"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70003,7 +69955,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/30#coverageId=python-tier1-perf"
+        "locator": "/entries/28#coverageId=python-tier1-perf"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70027,7 +69979,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/27#coverageId=python-tier1-registry"
+        "locator": "/entries/25#coverageId=python-tier1-registry"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70051,7 +70003,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/24#coverageId=python-tier1-resource"
+        "locator": "/entries/22#coverageId=python-tier1-resource"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70075,7 +70027,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/20#coverageId=python-tier1-scangame"
+        "locator": "/entries/18#coverageId=python-tier1-scangame"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70171,7 +70123,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/14#coverageId=python-tier1-scanlog-final-run-contract"
+        "locator": "/entries/12#coverageId=python-tier1-scanlog-final-run-contract"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70195,7 +70147,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/9#coverageId=python-tier1-scanlog-formid-finding-analyzer"
+        "locator": "/entries/8#coverageId=python-tier1-scanlog-formid-finding-analyzer"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70239,59 +70191,11 @@
       ]
     },
     {
-      "id": "runtime-claim:python:python-tier1-scanlog-named-record-finding-analyzer",
-      "sourceKind": "runtime_registry_claim",
-      "source": {
-        "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/10#coverageId=python-tier1-scanlog-named-record-finding-analyzer"
-      },
-      "participant": "python",
-      "mappingOrigin": "legacy_registry_claim",
-      "classification": "runtime_verifiable",
-      "target": {
-        "familyId": "scanlog",
-        "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
-      },
-      "retainedAnalyzerIds": [
-        "python-source-and-stub-parity"
-      ],
-      "migrationState": "shadow",
-      "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
-      ]
-    },
-    {
-      "id": "runtime-claim:python:python-tier1-scanlog-plugin-evidence-analyzer",
-      "sourceKind": "runtime_registry_claim",
-      "source": {
-        "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/8#coverageId=python-tier1-scanlog-plugin-evidence-analyzer"
-      },
-      "participant": "python",
-      "mappingOrigin": "legacy_registry_claim",
-      "classification": "runtime_verifiable",
-      "target": {
-        "familyId": "scanlog",
-        "scenarioId": null,
-        "observationOrAssertion": null,
-        "evidenceRole": "semantic_adapter"
-      },
-      "retainedAnalyzerIds": [
-        "python-source-and-stub-parity"
-      ],
-      "migrationState": "shadow",
-      "stateEvidence": [
-        "Phase 0 records the target disposition only; no executable receipt exists."
-      ]
-    },
-    {
       "id": "runtime-claim:python:python-tier1-scanlog-wave1-promoted",
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/11#coverageId=python-tier1-scanlog-wave1-promoted"
+        "locator": "/entries/9#coverageId=python-tier1-scanlog-wave1-promoted"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70315,7 +70219,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/32#coverageId=python-tier1-scanlog-wave10-residuals"
+        "locator": "/entries/30#coverageId=python-tier1-scanlog-wave10-residuals"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70339,7 +70243,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/12#coverageId=python-tier1-scanlog-wave2-promoted"
+        "locator": "/entries/10#coverageId=python-tier1-scanlog-wave2-promoted"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70363,7 +70267,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/13#coverageId=python-tier1-scanlog-wave3a-promoted"
+        "locator": "/entries/11#coverageId=python-tier1-scanlog-wave3a-promoted"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70387,7 +70291,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/26#coverageId=python-tier1-settings"
+        "locator": "/entries/24#coverageId=python-tier1-settings"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70411,7 +70315,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/17#coverageId=python-tier1-shared"
+        "locator": "/entries/15#coverageId=python-tier1-shared"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70435,7 +70339,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/31#coverageId=python-tier1-update"
+        "locator": "/entries/29#coverageId=python-tier1-update"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70483,7 +70387,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/29#coverageId=python-tier1-version"
+        "locator": "/entries/27#coverageId=python-tier1-version"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70507,7 +70411,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/15#coverageId=python-tier1-version-registry"
+        "locator": "/entries/13#coverageId=python-tier1-version-registry"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70531,7 +70435,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/19#coverageId=python-tier1-version-registry-plan07-promoted"
+        "locator": "/entries/17#coverageId=python-tier1-version-registry-plan07-promoted"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70555,7 +70459,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/28#coverageId=python-tier1-web"
+        "locator": "/entries/26#coverageId=python-tier1-web"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70579,7 +70483,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/25#coverageId=python-tier1-xse"
+        "locator": "/entries/23#coverageId=python-tier1-xse"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",
@@ -70603,7 +70507,7 @@
       "sourceKind": "runtime_registry_claim",
       "source": {
         "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "locator": "/entries/16#coverageId=python-tier2-config-runtime"
+        "locator": "/entries/14#coverageId=python-tier2-config-runtime"
       },
       "participant": "python",
       "mappingOrigin": "legacy_registry_claim",

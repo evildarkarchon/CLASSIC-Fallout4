@@ -1026,7 +1026,6 @@ describe("runtime coverage metadata", () => {
       bindingIdentifiers.has("JsLocalIgnoreResetPublicationStage"),
     ).toBe(true);
     expect(bindingIdentifiers.has("JsLocalIgnoreResetStatus")).toBe(true);
-    expect(bindingIdentifiers.has("loadInstalledYamlData")).toBe(true);
   });
 });
 

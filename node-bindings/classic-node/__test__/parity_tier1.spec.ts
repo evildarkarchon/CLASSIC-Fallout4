@@ -28,18 +28,12 @@ import {
   clearHashCache,
   validateSettingsPath,
   validateSettingsPaths,
-  normalizePath,
-  joinPaths,
   validatePathsBatch,
   isRuntimeAvailable,
   getRuntimeInfo,
   clearAllMetrics,
   recordTimingMetric,
   getMetricsSummary,
-  createMessage,
-  formatMessage,
-  JsMessageType,
-  JsMessageTarget,
   JsFileIO,
   detectEncoding,
   getHashCacheStats,
@@ -259,14 +253,6 @@ describe("Tier-1 parity fixture suites", () => {
   if (activeCoverageCases.has("aux-tier1-parity")) {
     describe("aux foundation parity", () => {
     test("shared runtime/path/metrics APIs keep stable callable shape", () => {
-      const normalized = normalizePath(".");
-      expect(typeof normalized).toBe("string");
-      expect(normalized.length).toBeGreaterThan(0);
-
-      const joined = joinPaths(["C:\\", "Games", "Fallout4"]);
-      expect(joined.includes("Games")).toBe(true);
-      expect(joined.includes("Fallout4")).toBe(true);
-
       const batch = validatePathsBatch([".", "Z:\\nonexistent\\classic-tier1"]);
       expect(batch["."]).toBe(true);
       expect(batch["Z:\\nonexistent\\classic-tier1"]).toBe(false);
@@ -280,17 +266,6 @@ describe("Tier-1 parity fixture suites", () => {
       recordTimingMetric("tier1_aux_metrics", 12.5);
       const summary = getMetricsSummary();
       expect(summary.timings.tier1_aux_metrics.count).toBe(1);
-    });
-
-    test("message APIs preserve enum and formatting semantics", () => {
-      const message = createMessage(
-        JsMessageType.Info,
-        "Tier1 message [ok]",
-        JsMessageTarget.All,
-      );
-      expect(message.messageType).toBe("Info");
-      expect(message.target).toBe("All");
-      expect(formatMessage(message).includes("Tier1 message")).toBe(true);
     });
 
     test("settings batch APIs remain stable in sync + async modes", async () => {

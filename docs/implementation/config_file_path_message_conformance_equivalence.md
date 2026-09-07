@@ -1,5 +1,7 @@
 # Config, file, path, and message conformance equivalence
 
+> Subsequent retirement: the [issue #211 evidence map](fixture_evidence_retirement.md) records migrated registry claims and duplicate positives removed after this promotion. The retained evidence below describes the original migration boundary; focused diagnostics remain unless explicitly listed in that retirement map.
+
 Issue #209 promotes five operation packs to blocking receipt enforcement. Each
 pack invokes existing public APIs and compares independently authored domain
 observations. Shared path normalization has its own pack because its Rust owner
