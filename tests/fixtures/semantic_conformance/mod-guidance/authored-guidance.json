@@ -43,7 +43,7 @@
         "description": "Installed authored description",
         "gpu": null,
         "gpuMismatchWarning": null,
-        "exclude": null
+        "exclude": ["exception.esp"]
       },
       {
         "detect": "missing.dll",
@@ -60,6 +60,14 @@
         "gpu": "nvidia",
         "gpuMismatchWarning": "Authored GPU mismatch warning",
         "exclude": null
+      },
+      {
+        "detect": "excluded.dll",
+        "name": "Excluded",
+        "description": "Must not appear",
+        "gpu": null,
+        "gpuMismatchWarning": null,
+        "exclude": ["alpha.esp"]
       }
     ]
   },

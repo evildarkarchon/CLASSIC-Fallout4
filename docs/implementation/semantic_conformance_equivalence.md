@@ -33,6 +33,12 @@ observations.
 | `named-record` | Counted named records, clean input after prior use, invalid configuration | Ordered names/counts, successful empty findings, typed configuration failure |
 | `plugin-evidence` | Counted plugin evidence, clean input after prior use, invalid configuration | Ordered plugin/count observations, successful empty evidence, typed configuration failure |
 
+The Mod Guidance authored-guidance fixture also exercises non-null plugin
+exclusions: a nonmatching exclusion preserves installed-mod guidance, while a
+matching exclusion suppresses the excluded mod. Its expected findings stay
+explicit in the pack, so dropping exclusions or decoding their shared array
+carrier incorrectly fails the same public-operation receipt comparison.
+
 The families make no frontend consumer claim: their applicable denominator is
 the four semantic adapters, with CXX represented by both `windows-msvc` and
 `windows-clang-cl`. Existing Crash Log Scan Run and User Settings consumer

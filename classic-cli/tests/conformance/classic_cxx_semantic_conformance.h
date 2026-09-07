@@ -324,7 +324,8 @@ json execute_semantic_fixture(const std::string& family, const json& fixture) {
                 entry.gpu_mismatch_warning = v.at("gpuMismatchWarning").get<std::string>();
             entry.has_exclude_when_plugin_any = !v.at("exclude").is_null();
             if (entry.has_exclude_when_plugin_any)
-                entry.exclude_when_plugin_any = semantic_strings(v.at("exclude").at("pluginAny"));
+                // Shared fixtures carry the plugin list directly; the DTO encodes PluginAny.
+                entry.exclude_when_plugin_any = semantic_strings(v.at("exclude"));
             config.important_mods.push_back(std::move(entry));
         }
         auto analyzer = scanner::mod_guidance_analyzer_new(std::move(config));
