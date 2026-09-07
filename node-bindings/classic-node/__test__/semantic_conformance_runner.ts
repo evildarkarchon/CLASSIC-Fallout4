@@ -2,9 +2,10 @@ import { randomUUID } from "node:crypto";
 import { lstat, mkdir, open, readFile, rename, rm } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import * as classic from "../index.js";
+import { observeInstalledYaml } from "./installed_yaml_conformance.js";
 
 type JsonObject = Record<string, any>;
-const families = ["crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence"];
+const families = ["crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data"];
 
 /** Reject malformed invocation objects before invoking native operations. */
 function object(value: unknown, label: string): JsonObject {
@@ -38,7 +39,8 @@ async function loadPlan(path: string): Promise<JsonObject> {
       if (!Array.isArray(scenario[key])) throw new Error(`${key} must be an array`);
       scenario[key].forEach((value: unknown) => string(value, key));
     }
-    const actions = plan.familyId === "formid-lookup" ? ["formid-lookup.lookup"] : [`${plan.familyId}.analyze`];
+    const actions = plan.familyId === "installed-yaml-data" ? ["installed-yaml-data.inspect", "installed-yaml-data.load"]
+      : plan.familyId === "formid-lookup" ? ["formid-lookup.lookup"] : [`${plan.familyId}.analyze`];
     if (!actions.includes(scenario.action)) throw new Error("unsupported semantic action");
     object(scenario.input, "scenario.input");
   }
@@ -172,6 +174,10 @@ async function executeScenario(plan: JsonObject, scenario: JsonObject): Promise<
   if (!scenario.fixtureRefs.includes(reference)) throw new Error("fixtureRef is not declared by scenario");
   const fixture = object(JSON.parse(await readFile(string(plan.fixtures[reference], "fixture path"), "utf8")), "fixture");
   if ("expected" in fixture) throw new Error("input fixture contains expectations");
+  if (plan.familyId === "installed-yaml-data") {
+    if (scenario.action !== `installed-yaml-data.${fixture.operation}`) throw new Error("installed-data action disagrees with fixture operation");
+    return observeInstalledYaml(fixture);
+  }
   return analyze(plan.familyId, fixture);
 }
 

@@ -1,0 +1,12 @@
+{
+  "operation": "inspect",
+  "game": "Fallout4",
+  "selectedGameVersion": "OG",
+  "files": {
+    "installation/CLASSIC Data/databases/CLASSIC Main.yaml": "schema_version: \"2.0\"\nCLASSIC_Info:\n  version: \"9.1.0\"\n  version_date: \"2026-07-17\"\n  default_ignorefile: |\n    CLASSIC_Ignore_Fallout4:\n      - SelectedMainDefault.dll\nCLASSIC_Interface:\n  autoscan_text_Fallout4: \"Bundled autoscan\"\ncatch_log_records: []\n",
+    "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml": "schema_version: \"1.0\"\nGame_Info:\n  Main_Root_Name: \"Fallout 4\"\n  XSE_Acronym: \"F4SE\"\n  GameVersion: \"1.10.163\"\nCrashlog_Error_Check: []\nCrashlog_Stack_Check: []\nMods_FREQ: []\nMods_SOLU: []\n",
+    "installation/CLASSIC Data/CLASSIC Ignore.yaml": "CLASSIC_Ignore_Fallout4:\r\n  - ExistingUserEntry.dll\r\n",
+    "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml": "[unterminated\n",
+    "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml.prev": "schema_version: \"2.0\"\nCLASSIC_Info:\n  version: \"9.1.0\"\n  version_date: \"2026-07-17\"\n  default_ignorefile: |\n    CLASSIC_Ignore_Fallout4:\n      - SelectedMainDefault.dll\nCLASSIC_Interface:\n  autoscan_text_Fallout4: \"Bundled autoscan\"\ncatch_log_records: []\n"
+  }
+}

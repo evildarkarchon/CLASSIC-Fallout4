@@ -32,6 +32,7 @@ SUPPORTED_FAMILIES = (
     "formid-lookup",
     "named-record",
     "plugin-evidence",
+    "installed-yaml-data",
 )
 
 
@@ -80,6 +81,8 @@ def _cxx_source_paths(
         paths += (
             repo_root
             / "classic-cli/tests/conformance/classic_cxx_semantic_conformance.h",
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_installed_yaml_data_conformance.h",
             repo_root / "cpp-bindings/classic-cpp-bridge/src",
             repo_root / "business-logic/classic-scanlog-core/src",
             repo_root / "business-logic/classic-database-core/src",

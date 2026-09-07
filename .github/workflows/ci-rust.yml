@@ -284,6 +284,19 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Rust installed-yaml-data conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family installed-yaml-data --participant rust --artifact-root tools/binding_compliance/artifacts/installed-yaml-data
+
+      - name: Upload Rust installed-yaml-data conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-installed-yaml-data-conformance
+          path: tools/binding_compliance/artifacts/installed-yaml-data/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run TUI Crash Log Scan Run consumer conformance
         if: ${{ !cancelled() }}
         run: python tools/binding_compliance/run_scan_run_consumer_conformance.py --participant tui

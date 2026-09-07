@@ -23,6 +23,7 @@ SUPPORTED_FAMILIES = (
     "formid-lookup",
     "named-record",
     "plugin-evidence",
+    "installed-yaml-data",
 )
 
 _COMMON_SOURCES = (
@@ -49,6 +50,8 @@ PARTICIPANT_COMMANDS = {
         source_paths=(
             REPO_ROOT
             / "business-logic/classic-scanlog-core/tests/semantic_conformance.rs",
+            REPO_ROOT
+            / "business-logic/classic-scanlog-core/tests/semantic_conformance",
             *_COMMON_SOURCES,
         ),
     ),
@@ -58,6 +61,8 @@ PARTICIPANT_COMMANDS = {
         source_paths=(
             REPO_ROOT
             / "node-bindings/classic-node/__test__/semantic_conformance_runner.ts",
+            REPO_ROOT
+            / "node-bindings/classic-node/__test__/installed_yaml_conformance.ts",
             REPO_ROOT / "node-bindings/classic-node/src",
             REPO_ROOT / "node-bindings/classic-node/package.json",
             *_COMMON_SOURCES,
@@ -75,6 +80,8 @@ PARTICIPANT_COMMANDS = {
         working_directory=REPO_ROOT,
         source_paths=(
             REPO_ROOT / "python-bindings/tests/semantic_conformance_runner.py",
+            REPO_ROOT / "python-bindings/tests/installed_yaml_conformance.py",
+            REPO_ROOT / "python-bindings/classic-config-py/src",
             REPO_ROOT / "python-bindings/classic-scanlog-py/src",
             REPO_ROOT / "python-bindings/classic-database-py/src",
             *_COMMON_SOURCES,

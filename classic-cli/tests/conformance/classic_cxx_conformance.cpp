@@ -3,6 +3,7 @@
 // Bridge-only semantic conformance participant. This executable is
 // hosted by the CLI build but does not link or compile any frontend source.
 
+#include "classic_cxx_bridge/config.h"
 #include "classic_cxx_bridge/database.h"
 #include "classic_cxx_bridge/scanner.h"
 #include "classic_cxx_bridge/settings.h"
@@ -18,6 +19,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <initializer_list>
 #include <iostream>
 #include <iterator>
 #include <map>
@@ -236,13 +238,13 @@ std::optional<std::string> read_environment(std::string_view name) {
 /// Temporarily isolates cache lookup and current-directory state for one run.
 class RuntimeEnvironment final {
 public:
-    /// Redirects user cache paths beneath the fresh scenario root.
-    explicit RuntimeEnvironment(const fs::path& root)
+    /// Redirects user cache paths beneath the fresh scenario root using the family's fixture directory name.
+    explicit RuntimeEnvironment(const fs::path& root, std::string_view cache_name = "isolated-cache")
         : previous_directory_(fs::current_path()) {
         for (const auto name : {"LOCALAPPDATA", "XDG_CACHE_HOME"}) {
             previous_environment_.emplace(name, read_environment(name));
         }
-        const auto cache = root / "isolated-cache";
+        const auto cache = root / cache_name;
         fs::create_directories(cache);
         set_environment("LOCALAPPDATA", cache.string());
         set_environment("XDG_CACHE_HOME", cache.string());
@@ -1698,6 +1700,7 @@ json execute_scenario(const json& plan, const json& scenario) {
     return project_observation(execution, observer, temporary.path());
 }
 
+#include "classic_cxx_installed_yaml_data_conformance.h"
 #include "classic_cxx_semantic_conformance.h"
 #include "classic_cxx_user_settings_conformance.h"
 
@@ -1708,6 +1711,8 @@ json scenario_receipt(const json& plan, const json& scenario) {
                     {"executionStatus", "completed"},
                     {"capabilityIds", scenario.at("capabilityIds")},
                     {"observation", is_semantic_family(plan.at("familyId")) ? execute_semantic_scenario(plan, scenario)
+                                    : plan.at("familyId") == "installed-yaml-data"
+                                        ? execute_installed_yaml_data_scenario(plan, scenario)
                                     : plan.at("familyId") == "user-settings"
                                         ? execute_user_settings_scenario(plan, scenario)
                                         : execute_scenario(plan, scenario)},
@@ -1725,7 +1730,7 @@ json scenario_receipt(const json& plan, const json& scenario) {
 void validate_plan(const json& plan) {
     if (!plan.is_object() || plan.at("schemaVersion") != 1 ||
         (plan.at("familyId") != "crash-log-scan-run" && plan.at("familyId") != "user-settings" &&
-         !is_semantic_family(plan.at("familyId")))) {
+         plan.at("familyId") != "installed-yaml-data" && !is_semantic_family(plan.at("familyId")))) {
         throw RunnerError("unsupported CXX conformance run plan");
     }
     const json& participant = plan.at("participant");

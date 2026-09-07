@@ -2,7 +2,7 @@
 
 > **Diagnostic only.** This ledger classifies migration targets and does **not** grant compliance, runtime coverage, or permission to remove a gate.
 
-- Obligations: **3,271**
+- Obligations: **3,275**
 - Named retained analyzers: **20**
 - Documented policy exceptions: **1**
 
@@ -12,7 +12,7 @@
 | --- | ---: |
 | `negative_analyzer` | 207 |
 | `policy_exception` | 1 |
-| `runtime_verifiable` | 2,646 |
+| `runtime_verifiable` | 2,650 |
 | `structural_analyzer` | 417 |
 
 ## Migration states
@@ -21,7 +21,7 @@
 | --- | ---: |
 | `blocking` | 625 |
 | `retired` | 55 |
-| `shadow` | 2,591 |
+| `shadow` | 2,595 |
 
 Retired Crash Log Scan Run policy targets record removal of legacy positive proof only. Executable conformance and retained analyzers remain blocking; this diagnostic ledger never establishes a passing execution.
 
@@ -32,7 +32,7 @@ Retired Crash Log Scan Run policy targets record removal of legacy positive proo
 | `consumer_source_audit` | 58 |
 | `display_content_consumer_audit` | 3 |
 | `display_content_source_audit` | 11 |
-| `parity_row` | 2,776 |
+| `parity_row` | 2,780 |
 | `policy_exception` | 1 |
 | `runtime_registry_claim` | 67 |
 | `rust_enum_inventory_audit` | 15 |

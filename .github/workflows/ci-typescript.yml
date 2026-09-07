@@ -280,6 +280,19 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Node installed-yaml-data conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family installed-yaml-data --participant node --artifact-root tools/binding_compliance/artifacts/installed-yaml-data
+
+      - name: Upload Node installed-yaml-data conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-installed-yaml-data-conformance
+          path: tools/binding_compliance/artifacts/installed-yaml-data/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Upload Node Crash Log Scan Run conformance diagnostics
         if: matrix.runtime == 'node' && always()
         uses: actions/upload-artifact@v6

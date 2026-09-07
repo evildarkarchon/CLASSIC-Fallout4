@@ -12602,6 +12602,28 @@
       "pythonModule": "classic_scangame",
       "pythonExportPath": "normalize_game_setup_version_selection",
       "pythonKind": "function"
+    },
+    {
+      "id": "config.installed_yaml_data.inspect_installed_yaml_data",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "inspect_installed_yaml_data",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "inspect_installed_yaml_data",
+      "pythonKind": "function",
+      "pythonArity": 2
+    },
+    {
+      "id": "config.installed_yaml_data.load_installed_yaml_data",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "load_installed_yaml_data",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "load_installed_yaml_data",
+      "pythonKind": "function",
+      "pythonArity": 4
     }
   ]
 }

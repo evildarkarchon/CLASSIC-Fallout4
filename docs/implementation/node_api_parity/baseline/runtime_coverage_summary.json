@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-05T02:48:07.894484+00:00",
+  "generated_at_utc": "2026-09-07T20:40:37.965801+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,13 +7,13 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 1031,
-    "runtime_verified_total": 997,
-    "receipt_required_total": 5,
+    "tracked_surface_total": 1032,
+    "runtime_verified_total": 996,
+    "receipt_required_total": 7,
     "structural_analyzer_total": 29,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 907,
+    "tier1_contract_total": 909,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -24,8 +24,9 @@
       "total": 166
     },
     "config": {
-      "runtime_verified": 124,
-      "total": 124
+      "runtime_verified": 123,
+      "total": 125,
+      "receipt_required": 2
     },
     "database": {
       "runtime_verified": 23,
@@ -16283,6 +16284,32 @@
       "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
+      "trackedId": "contract:config.installed_yaml_data.inspectInstalledYamlData",
+      "trackedType": "contract_row",
+      "contractId": "config.installed_yaml_data.inspectInstalledYamlData",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "receipt_required",
+      "rustSymbol": "inspect_installed_yaml_data",
+      "bindingIdentifier": "inspectInstalledYamlData",
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "installed-yaml-data"
+    },
+    {
+      "trackedId": "contract:config.installed_yaml_data.loadInstalledYamlData",
+      "trackedType": "contract_row",
+      "contractId": "config.installed_yaml_data.loadInstalledYamlData",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "receipt_required",
+      "rustSymbol": "load_installed_yaml_data",
+      "bindingIdentifier": "loadInstalledYamlData",
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "installed-yaml-data"
+    },
+    {
       "trackedId": "binding:JsFrontendPreferences",
       "trackedType": "registry_only",
       "ownerModule": "user_settings",
@@ -17782,25 +17809,6 @@
       "classification": "runtime_verified",
       "rustSymbol": null,
       "bindingIdentifier": "LocalIgnoreRecoveryPlan",
-      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
-      "verificationMode": "direct_call",
-      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
-      "testCaseId": "installed-yaml-data-loading-runtime",
-      "fixtureRefs": [],
-      "wave": null,
-      "owner": null,
-      "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
-    },
-    {
-      "trackedId": "binding:loadInstalledYamlData",
-      "trackedType": "registry_only",
-      "ownerModule": "config",
-      "tier": "tier1",
-      "gapType": "registry_only",
-      "classification": "runtime_verified",
-      "rustSymbol": null,
-      "bindingIdentifier": "loadInstalledYamlData",
       "coverageId": "node-tier1-config-installed-yaml-load-runtime",
       "verificationMode": "direct_call",
       "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",

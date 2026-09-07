@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-08-05T12:39:09.263704+00:00",
+  "generated_at_utc": "2026-09-07T20:40:38.432277+00:00",
   "summary": {
-    "tier1_contract_total": 1225,
-    "tier1_matched": 1224,
+    "tier1_contract_total": 1227,
+    "tier1_matched": 1226,
     "tier1_missing_rust": 0,
     "tier1_missing_python": 0,
     "tier1_signature_mismatch": 0,
@@ -18386,6 +18386,36 @@
       "actual_python_kind": "function",
       "expected_python_arity": null,
       "actual_python_arity": 1
+    },
+    {
+      "id": "config.installed_yaml_data.inspect_installed_yaml_data",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "inspect_installed_yaml_data",
+      "python_module": "classic_config",
+      "python_export": "inspect_installed_yaml_data",
+      "python_export_path": "inspect_installed_yaml_data",
+      "status": "matched",
+      "expected_python_kind": "function",
+      "actual_python_kind": "function",
+      "expected_python_arity": 2,
+      "actual_python_arity": 2
+    },
+    {
+      "id": "config.installed_yaml_data.load_installed_yaml_data",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "load_installed_yaml_data",
+      "python_module": "classic_config",
+      "python_export": "load_installed_yaml_data",
+      "python_export_path": "load_installed_yaml_data",
+      "status": "matched",
+      "expected_python_kind": "function",
+      "actual_python_kind": "function",
+      "expected_python_arity": 4,
+      "actual_python_arity": 4
     }
   ],
   "gaps": [],

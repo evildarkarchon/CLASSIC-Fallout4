@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-08-05T12:39:09.263704+00:00`
-- Tier-1 contract rows: **1225**
-- Tier-1 matched: **1224**
+- Generated: `2026-09-07T20:40:38.432277+00:00`
+- Tier-1 contract rows: **1227**
+- Tier-1 matched: **1226**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -1237,6 +1237,8 @@
 | `scangame.setup.run_game_setup_intake_from_user_settings` | `scangame` | `from_user_settings` | `classic_scangame.run_game_setup_intake_from_user_settings` | `matched` |
 | `scangame.setup.game_setup_needs_path_detection` | `scangame` | `game_setup_needs_path_detection` | `classic_scangame.game_setup_needs_path_detection` | `matched` |
 | `scangame.setup.normalize_game_setup_version_selection` | `scangame` | `normalize_game_setup_version_selection` | `classic_scangame.normalize_game_setup_version_selection` | `matched` |
+| `config.installed_yaml_data.inspect_installed_yaml_data` | `config` | `inspect_installed_yaml_data` | `classic_config.inspect_installed_yaml_data` | `matched` |
+| `config.installed_yaml_data.load_installed_yaml_data` | `config` | `load_installed_yaml_data` | `classic_config.load_installed_yaml_data` | `matched` |
 
 ## Gap Counts By Owner/Tier
 

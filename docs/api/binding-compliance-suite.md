@@ -83,6 +83,28 @@ withhold those expectations, and validated observations appear only under
 jobs are blocking for this family, while their artifacts remain available even
 when execution or validation fails.
 
+## Installed YAML Data Blocking Execution
+
+`tests/conformance/packs/installed_yaml_data/v1.json` owns fifteen public
+inspection/preparation scenarios with input-only JSON fixtures. Every semantic
+adapter runs the same cases, and CXX requires both compiler instances. The
+[evidence map](../implementation/installed_yaml_data_conformance_equivalence.md)
+records exact scope and retained tests, including scan-owned recovery facts.
+
+```powershell
+python tools/binding_compliance/run_semantic_conformance.py --family installed-yaml-data --participant rust --artifact-root tools/binding_compliance/artifacts/installed-yaml-data
+python tools/binding_compliance/run_semantic_conformance.py --family installed-yaml-data --participant node --artifact-root tools/binding_compliance/artifacts/installed-yaml-data
+uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family installed-yaml-data --participant python --artifact-root tools/binding_compliance/artifacts/installed-yaml-data
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family installed-yaml-data -Compiler msvc -ArtifactRoot tools/binding_compliance/artifacts/installed-yaml-data
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family installed-yaml-data -Compiler clang-cl -ArtifactRoot tools/binding_compliance/artifacts/installed-yaml-data
+```
+
+Run the retained build prerequisites before invoking an adapter, including the
+Python `uv sync --project python-bindings --inexact` and Rust extension rebuild.
+The shared launcher requires a fresh authenticated plan and completed receipt
+for every scenario. Source mappings for the migrated Node/Python entrypoints
+delegate to `receipt_required`; registry claims cannot report them as executed.
+
 ## User Settings Blocking Execution
 
 `tests/conformance/packs/user_settings/v1.json` selects opening and operation cases from

@@ -1,26 +1,27 @@
 {
-  "generated_at_utc": "2026-09-05T02:48:18.792215+00:00",
+  "generated_at_utc": "2026-09-07T20:40:38.439780+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
     "runtime_registry": "python-bindings/tests/fixtures/runtime_coverage_registry.json"
   },
   "summary": {
-    "tracked_surface_total": 1669,
-    "runtime_verified_total": 1641,
-    "receipt_required_total": 28,
+    "tracked_surface_total": 1670,
+    "runtime_verified_total": 1640,
+    "receipt_required_total": 30,
     "structural_analyzer_total": 0,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 1225,
+    "tier1_contract_total": 1227,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
   "registryMismatches": [],
   "perOwnerModule": {
     "config": {
-      "runtime_verified": 100,
-      "total": 100
+      "runtime_verified": 99,
+      "total": 101,
+      "receipt_required": 2
     },
     "database": {
       "runtime_verified": 56,
@@ -22169,6 +22170,32 @@
       "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
+      "trackedId": "contract:config.installed_yaml_data.inspect_installed_yaml_data",
+      "trackedType": "contract_row",
+      "contractId": "config.installed_yaml_data.inspect_installed_yaml_data",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "receipt_required",
+      "rustSymbol": "inspect_installed_yaml_data",
+      "bindingIdentifier": "classic_config.inspect_installed_yaml_data",
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "installed-yaml-data"
+    },
+    {
+      "trackedId": "contract:config.installed_yaml_data.load_installed_yaml_data",
+      "trackedType": "contract_row",
+      "contractId": "config.installed_yaml_data.load_installed_yaml_data",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "receipt_required",
+      "rustSymbol": "load_installed_yaml_data",
+      "bindingIdentifier": "classic_config.load_installed_yaml_data",
+      "verificationMode": "execution-receipt-required",
+      "conformanceFamily": "installed-yaml-data"
+    },
+    {
       "trackedId": "binding:classic_user_settings.user_settings_published_defaults",
       "trackedType": "registry_only",
       "ownerModule": "user_settings",
@@ -23266,25 +23293,6 @@
       "owner": null,
       "deferReason": null,
       "notes": "Per-class smoke tests for the promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent). YamlData.__init__ and create_yamldata were dropped by the Installed YAML Data cutover: the positional directory constructor and its functional alias bypassed Rust-owned selection, and their smoke rows are now contraction guards asserting both are absent."
-    },
-    {
-      "trackedId": "binding:classic_config.load_installed_yaml_data",
-      "trackedType": "registry_only",
-      "ownerModule": "config",
-      "tier": "tier1",
-      "gapType": "registry_only",
-      "classification": "runtime_verified",
-      "rustSymbol": null,
-      "bindingIdentifier": "classic_config.load_installed_yaml_data",
-      "coverageId": "python-tier1-config-installed-yaml-data-load",
-      "verificationMode": "contract_test",
-      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
-      "testCaseId": "installed-yaml-data-load-contract",
-      "fixtureRefs": [],
-      "wave": null,
-      "owner": null,
-      "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata, one-shot mutation-free proceed behavior for every malformed shape, durable Reset To Default success metadata, typed conflict without overwrite, the complete reset error hierarchy, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadOutcome",

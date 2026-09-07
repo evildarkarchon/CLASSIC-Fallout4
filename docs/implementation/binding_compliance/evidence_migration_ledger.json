@@ -5,12 +5,12 @@
   "shadowTargetPolicy": "A shadow runtime target may name its planned family while scenario and observation IDs remain null. Only executed receipts may justify a later state.",
   "retirementPolicy": "Retired Crash Log Scan Run policy targets record removal of legacy positive proof only. Executable conformance and retained analyzers remain blocking; this diagnostic ledger never establishes a passing execution.",
   "sourceSummary": {
-    "total": 3271,
+    "total": 3275,
     "byKind": {
       "consumer_source_audit": 58,
       "display_content_consumer_audit": 3,
       "display_content_source_audit": 11,
-      "parity_row": 2776,
+      "parity_row": 2780,
       "policy_exception": 1,
       "runtime_registry_claim": 67,
       "rust_enum_inventory_audit": 15,
@@ -23,20 +23,20 @@
     "byClassification": {
       "negative_analyzer": 207,
       "policy_exception": 1,
-      "runtime_verifiable": 2646,
+      "runtime_verifiable": 2650,
       "structural_analyzer": 417
     },
     "byMigrationState": {
       "blocking": 625,
       "retired": 55,
-      "shadow": 2591
+      "shadow": 2595
     },
     "byParticipant": {
       "cli": 4,
       "cxx": 698,
       "gui": 60,
-      "node": 988,
-      "python": 1329,
+      "node": 990,
+      "python": 1331,
       "python-cli": 5,
       "rust": 180,
       "shared": 4,
@@ -22835,6 +22835,30 @@
       ]
     },
     {
+      "id": "parity:node:config.installed_yaml_data.inspectInstalledYamlData",
+      "sourceKind": "parity_row",
+      "source": {
+        "artifact": "docs/implementation/node_api_parity/baseline/parity_contract.json",
+        "locator": "/tier1Mappings/907#id=config.installed_yaml_data.inspectInstalledYamlData"
+      },
+      "participant": "node",
+      "mappingOrigin": "canonical_rust",
+      "classification": "runtime_verifiable",
+      "target": {
+        "familyId": "config",
+        "scenarioId": null,
+        "observationOrAssertion": null,
+        "evidenceRole": "semantic_adapter"
+      },
+      "retainedAnalyzerIds": [
+        "node-source-and-declaration-parity"
+      ],
+      "migrationState": "shadow",
+      "stateEvidence": [
+        "Phase 0 records the target disposition only; no executable receipt exists."
+      ]
+    },
+    {
       "id": "parity:node:config.installed_yaml_data.installedYamlDataDiagnosticKindLabel",
       "sourceKind": "parity_row",
       "source": {
@@ -22864,6 +22888,30 @@
       "source": {
         "artifact": "docs/implementation/node_api_parity/baseline/parity_contract.json",
         "locator": "/tier1Mappings/187#id=config.installed_yaml_data.installedYamlDataProvenanceLabel"
+      },
+      "participant": "node",
+      "mappingOrigin": "canonical_rust",
+      "classification": "runtime_verifiable",
+      "target": {
+        "familyId": "config",
+        "scenarioId": null,
+        "observationOrAssertion": null,
+        "evidenceRole": "semantic_adapter"
+      },
+      "retainedAnalyzerIds": [
+        "node-source-and-declaration-parity"
+      ],
+      "migrationState": "shadow",
+      "stateEvidence": [
+        "Phase 0 records the target disposition only; no executable receipt exists."
+      ]
+    },
+    {
+      "id": "parity:node:config.installed_yaml_data.loadInstalledYamlData",
+      "sourceKind": "parity_row",
+      "source": {
+        "artifact": "docs/implementation/node_api_parity/baseline/parity_contract.json",
+        "locator": "/tier1Mappings/908#id=config.installed_yaml_data.loadInstalledYamlData"
       },
       "participant": "node",
       "mappingOrigin": "canonical_rust",
@@ -39736,6 +39784,30 @@
       ]
     },
     {
+      "id": "parity:python:config.installed_yaml_data.inspect_installed_yaml_data",
+      "sourceKind": "parity_row",
+      "source": {
+        "artifact": "docs/implementation/python_api_parity/baseline/parity_contract.json",
+        "locator": "/tier1Mappings/1225#id=config.installed_yaml_data.inspect_installed_yaml_data"
+      },
+      "participant": "python",
+      "mappingOrigin": "canonical_rust",
+      "classification": "runtime_verifiable",
+      "target": {
+        "familyId": "config",
+        "scenarioId": null,
+        "observationOrAssertion": null,
+        "evidenceRole": "semantic_adapter"
+      },
+      "retainedAnalyzerIds": [
+        "python-source-and-stub-parity"
+      ],
+      "migrationState": "shadow",
+      "stateEvidence": [
+        "Phase 0 records the target disposition only; no executable receipt exists."
+      ]
+    },
+    {
       "id": "parity:python:config.installed_yaml_data.installed_yaml_data_diagnostic_kind_label",
       "sourceKind": "parity_row",
       "source": {
@@ -39765,6 +39837,30 @@
       "source": {
         "artifact": "docs/implementation/python_api_parity/baseline/parity_contract.json",
         "locator": "/tier1Mappings/226#id=config.installed_yaml_data.installed_yaml_data_provenance_label"
+      },
+      "participant": "python",
+      "mappingOrigin": "canonical_rust",
+      "classification": "runtime_verifiable",
+      "target": {
+        "familyId": "config",
+        "scenarioId": null,
+        "observationOrAssertion": null,
+        "evidenceRole": "semantic_adapter"
+      },
+      "retainedAnalyzerIds": [
+        "python-source-and-stub-parity"
+      ],
+      "migrationState": "shadow",
+      "stateEvidence": [
+        "Phase 0 records the target disposition only; no executable receipt exists."
+      ]
+    },
+    {
+      "id": "parity:python:config.installed_yaml_data.load_installed_yaml_data",
+      "sourceKind": "parity_row",
+      "source": {
+        "artifact": "docs/implementation/python_api_parity/baseline/parity_contract.json",
+        "locator": "/tier1Mappings/1226#id=config.installed_yaml_data.load_installed_yaml_data"
       },
       "participant": "python",
       "mappingOrigin": "canonical_rust",

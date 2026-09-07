@@ -19,6 +19,7 @@ FAMILIES = {
     "formid-lookup",
     "named-record",
     "plugin-evidence",
+    "installed-yaml-data",
 }
 
 
@@ -77,11 +78,15 @@ def _load_plan(path: Path) -> Mapping[str, Any]:
             for item in _array(scenario.get(key), key):
                 _string(item, key)
         actions = (
-            {
-                "formid-lookup.lookup",
-            }
-            if plan["familyId"] == "formid-lookup"
-            else {f"{plan['familyId']}.analyze"}
+            {"installed-yaml-data.inspect", "installed-yaml-data.load"}
+            if plan["familyId"] == "installed-yaml-data"
+            else (
+                {
+                    "formid-lookup.lookup",
+                }
+                if plan["familyId"] == "formid-lookup"
+                else {f"{plan['familyId']}.analyze"}
+            )
         )
         if scenario.get("action") not in actions:
             raise RunnerContractError("unsupported semantic action")
@@ -360,6 +365,14 @@ def _execute_scenario(
     fixture = _mapping(json.loads(source.read_text(encoding="utf-8")), "fixture")
     if "expected" in fixture:
         raise RunnerContractError("input fixture contains expectations")
+    if plan["familyId"] == "installed-yaml-data":
+        from installed_yaml_conformance import observe_installed_yaml
+
+        if scenario["action"] != f"installed-yaml-data.{fixture['operation']}":
+            raise RunnerContractError(
+                "installed-data action disagrees with fixture operation"
+            )
+        return observe_installed_yaml(fixture)
     if plan["familyId"] == "formid-lookup":
         return asyncio.run(_lookup(fixture))
     import classic_scanlog

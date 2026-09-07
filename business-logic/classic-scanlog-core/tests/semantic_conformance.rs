@@ -21,6 +21,9 @@ use tempfile::NamedTempFile;
 
 type RunnerResult<T> = Result<T, Box<dyn Error + Send + Sync>>;
 
+#[path = "semantic_conformance/installed_yaml_data.rs"]
+mod installed_yaml_data;
+
 /// Rejects malformed runner inputs without confusing them with domain errors.
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
@@ -399,6 +402,12 @@ fn execute(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
     }
     let fixture: Value =
         serde_json::from_slice(&fs::read(text(&plan["fixtures"][text(reference)?])?)?)?;
+    if plan["familyId"] == "installed-yaml-data" {
+        if scenario["action"] != format!("installed-yaml-data.{}", text(&fixture["operation"])?) {
+            return Err(invalid("installed YAML action does not match fixture operation").into());
+        }
+        return installed_yaml_data::execute(&fixture);
+    }
     analyze(
         &text(&plan["familyId"])?,
         &fixture["configuration"],

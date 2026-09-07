@@ -19,6 +19,7 @@ from .coverage import (
 )
 from .failures import FailureKind
 from .families.crash_log_scan_run import CRASH_LOG_SCAN_RUN_COVERAGE_POLICY
+from .families.installed_yaml_data import INSTALLED_YAML_DATA_COVERAGE_POLICY
 from .families.semantic_analysis import SEMANTIC_ANALYSIS_COVERAGE_POLICIES
 from .families.user_settings import USER_SETTINGS_COVERAGE_POLICY
 from .packs import (
@@ -47,6 +48,7 @@ class ConformanceCommandError(ValueError):
 FAMILY_COVERAGE_POLICIES: Mapping[str, FamilyCoveragePolicy] = {
     CRASH_LOG_SCAN_RUN_COVERAGE_POLICY.family_id: CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,
     USER_SETTINGS_COVERAGE_POLICY.family_id: USER_SETTINGS_COVERAGE_POLICY,
+    INSTALLED_YAML_DATA_COVERAGE_POLICY.family_id: INSTALLED_YAML_DATA_COVERAGE_POLICY,
     **SEMANTIC_ANALYSIS_COVERAGE_POLICIES,
 }
 

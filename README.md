@@ -26,6 +26,8 @@ User Settings opening, typed snapshots, caller-controlled bootstrap, update prev
 
 Crash Suspect, Crashgen Settings, Mod Guidance, FormID lookup, Named Record, and Plugin Evidence also require blocking semantic receipts through Rust, Node, Python, and CXX on both MSVC and clang-cl. Their [focused equivalence map](docs/implementation/semantic_conformance_equivalence.md) records shared fixture ownership and retained diagnostic tests. Existing registry entries and positive evidence remain in place during this migration.
 
+Installed YAML Data inspection and preparation also require blocking receipts across those adapters. The [Installed YAML Data evidence map](docs/implementation/installed_yaml_data_conformance_equivalence.md) covers source precedence, rejected-candidate diagnostics, exact-byte identities, retained snapshots, legacy Local Ignore adoption, and unavailable recovery defaults. Existing scan-run recovery and focused filesystem tests remain blocking.
+
 For older historical context, see [CLASSIC - Readme.pdf](CLASSIC%20-%20Readme.pdf).
 
 Nexus Mods: <https://www.nexusmods.com/fallout4/mods/56255>

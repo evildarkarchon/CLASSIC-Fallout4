@@ -580,8 +580,8 @@ def test_live_parity_loader_preserves_canonical_metadata_and_occurrences() -> No
         for participant in ("cxx", "node", "python")
     } == {
         "cxx": 644,
-        "node": 907,
-        "python": 1_225,
+        "node": 909,
+        "python": 1_227,
     }
     obligation_ids = [row.obligation_id for row in rows]
     assert len(obligation_ids) == len(set(obligation_ids))

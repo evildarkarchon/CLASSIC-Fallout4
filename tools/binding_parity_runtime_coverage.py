@@ -9,6 +9,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from binding_compliance.conformance.families.installed_yaml_data import (
+    INSTALLED_YAML_DATA_COVERAGE_POLICY,
+)
 from binding_compliance.conformance.families.user_settings import (
     USER_SETTINGS_COVERAGE_POLICY,
 )
@@ -251,22 +254,29 @@ def build_coverage_summary(
             _surface_row_from_contract(binding, contract_lookup, contract_row)
         )
 
-    settings_symbols = {
-        symbol
-        for predicate in USER_SETTINGS_COVERAGE_POLICY.predicates
+    migrated_symbols = {
+        (crate, symbol): policy.family_id
+        for crate, policy in (
+            ("classic-user-settings-core", USER_SETTINGS_COVERAGE_POLICY),
+            ("classic-config-core", INSTALLED_YAML_DATA_COVERAGE_POLICY),
+        )
+        for predicate in policy.predicates
         for symbol in predicate.rust_symbols
     }
-    settings_rows = {
-        row["id"]: row
+    migrated_rows = {
+        row["id"]: (
+            row,
+            migrated_symbols[(row.get("rustCrate"), row.get("rustSymbol"))],
+        )
         for row in contract.get("tier1Mappings", [])
-        if row.get("rustCrate") == "classic-user-settings-core"
-        and row.get("rustSymbol") in settings_symbols
+        if (row.get("rustCrate"), row.get("rustSymbol")) in migrated_symbols
     }
     migrated_identifiers: set[str] = set()
     for item in tracked_surface:
-        mapping = settings_rows.get(item.get("contractId"))
-        if mapping is None:
+        migrated = migrated_rows.get(item.get("contractId"))
+        if migrated is None:
             continue
+        mapping, family_id = migrated
         if item.get("bindingIdentifier") is not None:
             migrated_identifiers.add(item["bindingIdentifier"])
         # Receipt obligations must not inherit a legacy test pointer or prose
@@ -283,7 +293,7 @@ def build_coverage_summary(
         item["classification"] = (
             "structural_analyzer" if structural else "receipt_required"
         )
-        item["conformanceFamily"] = "user-settings"
+        item["conformanceFamily"] = family_id
         item["verificationMode"] = (
             "source-declaration-analysis"
             if structural

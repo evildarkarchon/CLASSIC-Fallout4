@@ -1,9 +1,9 @@
 # Python Runtime Coverage Summary
 
-- Generated: `2026-09-05T02:48:18.792215+00:00`
-- Tracked surfaces: **1669**
-- Runtime verified: **1641**
-- Requiring executable receipts: **28**
+- Generated: `2026-09-07T20:40:38.439780+00:00`
+- Tracked surfaces: **1670**
+- Runtime verified: **1640**
+- Requiring executable receipts: **30**
 - Retained structural analysis: **0**
 - Contract mapped only: **0**
 - Newly uncovered: **0**
@@ -13,7 +13,7 @@
 
 | Owner Module | Runtime Verified | Receipt Required | Structural | Contract Mapped | Newly Uncovered | Total |
 |---|---:|---:|---:|---:|---:|---:|
-| `config` | 100 | 0 | 0 | 0 | 0 | 100 |
+| `config` | 99 | 2 | 0 | 0 | 0 | 101 |
 | `database` | 56 | 0 | 0 | 0 | 0 | 56 |
 | `file_io` | 93 | 0 | 0 | 0 | 0 | 93 |
 | `message` | 45 | 0 | 0 | 0 | 0 | 45 |
