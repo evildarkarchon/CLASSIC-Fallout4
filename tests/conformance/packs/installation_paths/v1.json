@@ -13,6 +13,7 @@
   "capabilities": [
     {
       "id": "installation-paths.inspect",
+      "operationScoped": true,
       "rustSymbols": [
         "GamePathFinder",
         "find_game_path",

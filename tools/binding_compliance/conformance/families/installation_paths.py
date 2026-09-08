@@ -153,6 +153,7 @@ INSTALLATION_PATHS_COVERAGE_POLICY = FamilyCoveragePolicy(
                     "path_validate_exists",
                     "path_validate_is_directory",
                     "path_validate_is_file",
+                    "path_validate_required_files",
                     "removeReadonly",
                     "remove_readonly",
                     "isValidPath",

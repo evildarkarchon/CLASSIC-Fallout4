@@ -57,6 +57,32 @@ def test_installation_paths_require_all_applicable_adapters():
     assert enforcement_for_family("installation-paths") == "blocking"
 
 
+def test_installation_receipt_covers_only_the_invoked_cxx_validators(tmp_path):
+    """An added shared validator must not enroll unexecuted bridge aliases."""
+    pack, run, _ = prepare_receipt_case(
+        ROOT, tmp_path, PACK, "cxx", runner_id="installation-validator-scope"
+    )
+    report = validate_prepared_run(pack, run, coverage_policy=POLICY)
+    assert not report.failures
+    coverage = derive_row_coverage(
+        pack.document(),
+        load_source_parity_rows(ROOT),
+        POLICY,
+        (report,),
+        scope_participant_id="cxx",
+        retained_analyzers=load_retained_analyzer_kinds(ROOT),
+    )
+    assert not coverage.failures
+    assert any(
+        predicate.covers_runtime_operation("path_validate_required_files")
+        for predicate in POLICY.predicates
+    )
+    assert all(
+        not predicate.covers_runtime_operation("validate_path")
+        for predicate in POLICY.predicates
+    )
+
+
 @pytest.mark.parametrize("mutation", ("missing-executable", "escape", "metadata"))
 def test_installation_fixture_rejects_discovery_fallback(tmp_path, mutation):
     """Invalid caches or metadata fail before invoking any host-sensitive method."""
@@ -133,6 +159,12 @@ def test_installation_row_coverage_does_not_credit_unexecuted_methods(
         obligation_id="parity:" + participant + ":future-finder",
         runtime_operation="future_discovery_method",
     )
-    assert derive_row_coverage(
-        pack.document(), (*rows, future), POLICY, [report], **arguments
+    # A scoped family excludes unimplemented siblings; the full owner inventory
+    # must still require independent proof for every newly exported method.
+    full_owner = pack.document()
+    for capability in full_owner["capabilities"]:
+        capability.pop("operationScoped", None)
+    failures = derive_row_coverage(
+        full_owner, (*rows, future), POLICY, [report], **arguments
     ).failures
+    assert future.obligation_id in {failure.obligation_id for failure in failures}

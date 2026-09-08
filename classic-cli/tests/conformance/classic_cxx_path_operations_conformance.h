@@ -46,9 +46,10 @@ json execute_path_operations_scenario(const json& plan, const json& scenario) {
     const auto relative = request.at("path").get<std::string>();
     const auto path = path_operation_owned(root, relative).string();
     const bool exists = classic::path::is_valid_path(path);
-    // The compatibility alias is a separate public obligation; observe both
-    // calls so it cannot silently diverge while borrowing the primary result.
-    if (classic::path::validate_path(path) != exists)
+    // Compatibility aliases in both namespaces are separate public obligations;
+    // observe each so neither can diverge while borrowing the primary result.
+    if (classic::path::validate_path(path) != exists ||
+        classic::game::validate_path(path) != exists)
         throw RunnerError("path compatibility alias disagrees with is_valid_path");
     json error = nullptr;
     const auto required = semantic_strings(request.at("requiredFiles"));

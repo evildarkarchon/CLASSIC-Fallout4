@@ -32,6 +32,42 @@ from conformance.receipts import validate_prepared_run
 ROOT = Path(__file__).resolve().parents[3]
 
 
+def test_same_named_validator_in_a_new_bridge_namespace_cannot_borrow_proof(tmp_path):
+    """Public namespace identity matters even when core owner and function name match."""
+    from receipt_test_support import prepare_receipt_case
+
+    pack, run, _ = prepare_receipt_case(
+        ROOT,
+        tmp_path,
+        Path("tests/conformance/packs/path_operations/v1.json"),
+        "cxx",
+        runner_id="namespace-scope-regression",
+    )
+    policy = path_operations_coverage_policy()
+    report = validate_prepared_run(pack, run, coverage_policy=policy)
+    assert not report.failures
+    rows = load_source_parity_rows(ROOT)
+    original = next(
+        row for row in rows if row.obligation_id == "parity:cxx:5318454026bb9a08"
+    )
+    future = replace(
+        original,
+        obligation_id="parity:cxx:new-namespace-validate-path",
+        locator="/entries/new-namespace",
+    )
+    coverage = derive_row_coverage(
+        pack.document(),
+        (*rows, future),
+        policy,
+        (report,),
+        scope_participant_id="cxx",
+        retained_analyzers=load_retained_analyzer_kinds(ROOT),
+    )
+    assert [failure.obligation_id for failure in coverage.failures] == [
+        future.obligation_id
+    ]
+
+
 def test_message_mutation_and_routing_methods_have_executable_ownership() -> None:
     """Mutation, title builders, enum values and routing decisions have real calls."""
     policy = message_operations_coverage_policy()

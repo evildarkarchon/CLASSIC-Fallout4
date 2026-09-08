@@ -164,6 +164,22 @@ def path_operations_coverage_policy() -> FamilyCoveragePolicy:
                 rust_symbols=(symbol,),
                 matches=partial(_validation_variant, variant),
                 runtime_operations=(None, operation, *aliases),
+                # CXX can export the same name in several namespaces. Exact
+                # source identities prevent a new namespace from borrowing proof.
+                binding_obligation_ids={
+                    "is_valid_path": (
+                        "parity:cxx:ef0c70d7c9e34cd5",
+                        "parity:cxx:18b69f0fbebc68bc",
+                        "parity:cxx:5318454026bb9a08",
+                        "parity:node:aux-phase4a-is-valid-path",
+                        "parity:python:path.lib.PathValidator.is_valid_path",
+                    ),
+                    "validate_required_files": (
+                        "parity:cxx:cff13ceeb2ccbf58",
+                        "parity:node:aux-phase4a-validate-required-files",
+                        "parity:python:path.lib.PathValidator.validate_required_files",
+                    ),
+                }[operation],
             )
             for operation, capability, symbol, aliases in (
                 (
