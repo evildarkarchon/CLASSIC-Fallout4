@@ -52,6 +52,8 @@ from .families.version_registry_details import VERSION_REGISTRY_DETAILS_COVERAGE
 from .families.version_registry_values import VERSION_REGISTRY_VALUES_COVERAGE_POLICY
 from .families.version_values import version_values_coverage_policy
 from .families.vocabulary import vocabulary_coverage_policies
+from .families.xse_folder import XSE_FOLDER_COVERAGE_POLICY
+from .families.installation_paths import INSTALLATION_PATHS_COVERAGE_POLICY
 from .families.xse_operations import XSE_OPERATIONS_COVERAGE_POLICY
 from .packs import (
     MaterializationError,
@@ -82,6 +84,8 @@ FAMILY_COVERAGE_POLICIES: Mapping[str, FamilyCoveragePolicy] = {
     "update-decisions": UPDATE_DECISIONS_COVERAGE_POLICY,
     "update-services": UPDATE_SERVICES_COVERAGE_POLICY,
     "xse-operations": XSE_OPERATIONS_COVERAGE_POLICY,
+    "xse-folder": XSE_FOLDER_COVERAGE_POLICY,
+    "installation-paths": INSTALLATION_PATHS_COVERAGE_POLICY,
     "settings-load": settings_load_coverage_policy(),
     "settings-yaml": settings_yaml_coverage_policy(),
     "settings-yaml-batch": settings_yaml_batch_coverage_policy(),

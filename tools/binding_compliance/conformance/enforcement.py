@@ -53,6 +53,8 @@ FAMILY_ENFORCEMENT = MappingProxyType(
         "version-pe": "blocking",
         "version-pe-path": "blocking",
         "xse-operations": "blocking",
+        "xse-folder": "blocking",
+        "installation-paths": "blocking",
         "game-identity": "blocking",
         "runtime-access": "blocking",
         "settings-load": "blocking",

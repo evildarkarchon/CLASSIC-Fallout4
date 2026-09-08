@@ -19,6 +19,7 @@ FAMILIES = {
     "settings-cached-docs",
     "version-registry-details",
     "xse-operations",
+    "installation-paths",
     "game-identity",
     "file-fingerprint",
     "performance",
@@ -147,6 +148,7 @@ def _load_plan(path: Path) -> Mapping[str, Any]:
             "settings-cached-docs": {"settings-cached-docs.observe"},
             "version-registry-details": {"version-registry-details.execute"},
             "xse-operations": {"xse-operations.inspect"},
+            "installation-paths": {"installation-paths.inspect"},
             "game-identity": {"game-identity.observe"},
             "performance": {"performance.metrics"},
             "update-decisions": {"update-decisions.compare"},
@@ -523,6 +525,10 @@ def _execute_scenario(
         from settings_load_conformance import observe_settings_load
 
         return observe_settings_load(fixture)
+    if plan["familyId"] == "installation-paths":
+        from installation_paths_conformance import observe_installation_paths
+
+        return observe_installation_paths(fixture)
     if plan["familyId"] == "xse-operations":
         from xse_operations_conformance import observe_xse_operations
 

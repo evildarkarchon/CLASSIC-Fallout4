@@ -385,3 +385,13 @@ lists each pack's exact participant set and transport contract. Source-derived
 applicability does not enroll absent binding methods, and method-level facts
 cannot be borrowed by newly added aliases. These additions retain existing
 runtime evidence; expanding a family does not expand its earlier retirement set.
+
+## XSE and installation-dependent evidence
+
+`xse-operations` is blocking across Rust, CXX (MSVC and clang-cl), Node, and Python. Eighteen scenarios observe all six extender types in missing, loader-only, and detected states. Each uses a disposable directory and records the final file bytes; constructor coverage requires the corresponding variant observation.
+
+`xse-folder` is blocking for Rust and CXX, the public adapters that expose `resolve_xse_folder_for_scan`. Six scenarios exercise Local.yaml precedence, configured documents fallback, VR folder naming, and fail-soft malformed/missing local data. They initialize the Version Registry from fixed fixture metadata and reject inputs that could enter host discovery. Run it with `run_semantic_conformance.py --family xse-folder --participant rust`, or the CXX launcher with `-Family xse-folder -Compiler msvc` (and `clang-cl`).
+
+`installation-paths` is blocking across all four adapters and both CXX compilers. Its two directory layouts exercise validated cached game/documents lookup and ordered missing-INI reports, including paths with spaces, while checking the complete unchanged file and directory inventory.
+
+The [installation discovery evidence boundary](../implementation/installation_discovery_conformance_equivalence.md) distinguishes cached-path/checker execution from the named retained `installation-discovery-source-boundary` analyzer. Platform registry and home-directory fallback have no public injected provider; structural evidence makes no runtime discovery claim. Existing focused diagnostics remain in place, and passing receipts stay untracked.

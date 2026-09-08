@@ -184,6 +184,8 @@ When `-Compiler clang-cl` is selected, the scripts also pass clang-cl to Cargo `
 
 GitHub Actions workflows:
 
+Binding conformance includes controlled XSE and installation-path scenarios. See the [binding compliance guide](docs/api/binding-compliance-suite.md) for executable coverage and retained platform-discovery evidence.
+
 - `ci-cpp.yml` - C++ CLI/GUI build and test pipeline on `windows-latest` for MSVC and clang-cl
 - `ci-rust.yml` - Rust format/lint/build/test
 - `ci-typescript.yml` - Node bindings parity gates + Bun/Node runtime tests

@@ -12,7 +12,7 @@
 param(
     [ValidateSet("msvc", "clang-cl")]
     [string]$Compiler = "msvc",
-    [ValidateSet("game-version-parse", "fallout4-identity", "fallout4-paths", "settings-yaml", "settings-validation", "registry-game", "registry-gui", "version-pe", "settings-load", "registry-operations", "web-operations", "performance", "update-decisions", "update-services", "xse-operations", "game-identity", "runtime-access", "crash-log-scan-run", "autoscan-report", "user-settings", "crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary", "config-operations", "file-operations", "path-operations", "database-operations", "version-registry", "scan-game")]
+    [ValidateSet("game-version-parse", "fallout4-identity", "fallout4-paths", "settings-yaml", "settings-validation", "registry-game", "registry-gui", "version-pe", "settings-load", "registry-operations", "web-operations", "performance", "update-decisions", "update-services", "xse-operations", "xse-folder", "installation-paths", "game-identity", "runtime-access", "crash-log-scan-run", "autoscan-report", "user-settings", "crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary", "config-operations", "file-operations", "path-operations", "database-operations", "version-registry", "scan-game")]
     [string]$Family = "crash-log-scan-run",
     [string]$ArtifactRoot = "tools/binding_compliance/artifacts"
 )

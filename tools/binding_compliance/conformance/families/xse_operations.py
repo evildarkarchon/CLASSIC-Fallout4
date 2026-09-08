@@ -1,5 +1,6 @@
 """XSE metadata/detection facts with no discovery or typed-error overclaim."""
 
+import json
 from functools import partial
 
 from ..coverage import CoveragePredicate, FamilyCoveragePolicy
@@ -37,6 +38,15 @@ _EXPECTED = {
     },
 }
 
+# Retain the original F4SE facts while requiring each other constructor's own evidence.
+for _variant in ("F4SEVR", "SKSE", "SKSE64", "SKSEVR", "SFSE"):
+    for _state in ("missing", "loader-only", "detected"):
+        _EXPECTED[f"{_variant.lower()}-{_state}"] = json.loads(
+            json.dumps(_EXPECTED[_state])
+            .replace("F4SE", _variant)
+            .replace("f4se", _variant.lower())
+        )
+
 
 def _matches(kind, observation):
     """Require exact metadata, absence/version values and unchanged fixture inventory."""
@@ -68,7 +78,7 @@ XSE_OPERATIONS_COVERAGE_POLICY = FamilyCoveragePolicy(
                 None,
                 "parse_xse_type",
                 "parseXseType",
-                "f4se",
+                _EXPECTED[kind]["typeName"].lower(),
                 "as_str",
                 "loader_name",
                 "dll_prefix",
@@ -94,9 +104,7 @@ XSE_OPERATIONS_COVERAGE_POLICY = FamilyCoveragePolicy(
 
 
 def validate_xse_operations_pack(document, root):
-    """Restrict seeded filenames to the known hermetic F4SE fixture vocabulary."""
-    import json
-
+    """Restrict seeded filenames to the known hermetic per-variant fixture vocabulary."""
     paths = []
     for case in document["scenarios"]:
         reference = case["input"].get("fixtureRef")
@@ -117,14 +125,24 @@ def validate_xse_operations_pack(document, root):
                 "XSE expectation requires exact metadata and byte inventory"
             )
         if (
-            set(fixture) != {"files"}
+            set(fixture) not in ({"files"}, {"files", "kind"})
+            or fixture.get("kind", "F4SE")
+            not in {"F4SE", "F4SEVR", "SKSE", "SKSE64", "SKSEVR", "SFSE"}
             or not isinstance(fixture["files"], list)
             or any(
-                name not in ("f4se_loader.exe", "f4se_1_10_163.dll")
+                name
+                not in (
+                    f"{fixture.get('kind', 'F4SE').lower()}_loader.exe",
+                    f"{fixture.get('kind', 'F4SE').lower()}_1_10_163.dll",
+                )
                 for name in fixture["files"]
             )
             or len(set(fixture["files"])) != len(fixture["files"])
         ):
             raise ValueError("XSE fixture contains unsupported filenames")
+        if case["expected"]["typeName"] != fixture.get("kind", "F4SE") or case[
+            "expected"
+        ]["files"] != [{"path": name, "hex": ""} for name in sorted(fixture["files"])]:
+            raise ValueError("XSE fixture and expected variant/inventory disagree")
         paths.append(path)
     return tuple(paths)

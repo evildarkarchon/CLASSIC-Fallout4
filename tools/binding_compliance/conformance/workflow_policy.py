@@ -193,6 +193,8 @@ _EXECUTION_POLICIES += tuple(
         "version-pe",
         "version-pe-path",
         "xse-operations",
+        "xse-folder",
+        "installation-paths",
         "game-identity",
         "runtime-access",
         "settings-load",
@@ -219,6 +221,7 @@ _EXECUTION_POLICIES += tuple(
         family in {"version-extraction", "version-f4se", "version-pe-path"}
         and policy.participant_id == "cxx"
     )
+    and not (family == "xse-folder" and policy.participant_id in {"node", "python"})
     and not (family == "version-f4se" and policy.participant_id == "node")
     and not (
         family in {"settings-cached-docs", "version-registry-details"}

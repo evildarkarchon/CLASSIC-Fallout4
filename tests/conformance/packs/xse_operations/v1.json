@@ -9,7 +9,22 @@
   "fixtures": {
     "missing": "missing.json",
     "loader-only": "loader-only.json",
-    "detected": "detected.json"
+    "detected": "detected.json",
+    "f4sevr-missing": "f4sevr-missing.json",
+    "f4sevr-loader-only": "f4sevr-loader-only.json",
+    "f4sevr-detected": "f4sevr-detected.json",
+    "skse-missing": "skse-missing.json",
+    "skse-loader-only": "skse-loader-only.json",
+    "skse-detected": "skse-detected.json",
+    "skse64-missing": "skse64-missing.json",
+    "skse64-loader-only": "skse64-loader-only.json",
+    "skse64-detected": "skse64-detected.json",
+    "sksevr-missing": "sksevr-missing.json",
+    "sksevr-loader-only": "sksevr-loader-only.json",
+    "sksevr-detected": "sksevr-detected.json",
+    "sfse-missing": "sfse-missing.json",
+    "sfse-loader-only": "sfse-loader-only.json",
+    "sfse-detected": "sfse-detected.json"
   },
   "capabilities": [
     {
@@ -125,6 +140,541 @@
           },
           {
             "path": "f4se_loader.exe",
+            "hex": ""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "f4sevr-missing",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "f4sevr-missing"
+      ],
+      "input": {
+        "fixtureRef": "f4sevr-missing"
+      },
+      "expected": {
+        "typeName": "F4SEVR",
+        "loaderName": "f4sevr_loader.exe",
+        "dllPrefix": "f4sevr_",
+        "installed": false,
+        "version": null,
+        "info": {
+          "typeName": "F4SEVR",
+          "installed": false,
+          "version": null
+        },
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "f4sevr-loader-only",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "f4sevr-loader-only"
+      ],
+      "input": {
+        "fixtureRef": "f4sevr-loader-only"
+      },
+      "expected": {
+        "typeName": "F4SEVR",
+        "loaderName": "f4sevr_loader.exe",
+        "dllPrefix": "f4sevr_",
+        "installed": true,
+        "version": null,
+        "info": {
+          "typeName": "F4SEVR",
+          "installed": true,
+          "version": null
+        },
+        "files": [
+          {
+            "path": "f4sevr_loader.exe",
+            "hex": ""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "f4sevr-detected",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "f4sevr-detected"
+      ],
+      "input": {
+        "fixtureRef": "f4sevr-detected"
+      },
+      "expected": {
+        "typeName": "F4SEVR",
+        "loaderName": "f4sevr_loader.exe",
+        "dllPrefix": "f4sevr_",
+        "installed": true,
+        "version": "1.10.163",
+        "info": {
+          "typeName": "F4SEVR",
+          "installed": true,
+          "version": "1.10.163"
+        },
+        "files": [
+          {
+            "path": "f4sevr_1_10_163.dll",
+            "hex": ""
+          },
+          {
+            "path": "f4sevr_loader.exe",
+            "hex": ""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "skse-missing",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "skse-missing"
+      ],
+      "input": {
+        "fixtureRef": "skse-missing"
+      },
+      "expected": {
+        "typeName": "SKSE",
+        "loaderName": "skse_loader.exe",
+        "dllPrefix": "skse_",
+        "installed": false,
+        "version": null,
+        "info": {
+          "typeName": "SKSE",
+          "installed": false,
+          "version": null
+        },
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "skse-loader-only",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "skse-loader-only"
+      ],
+      "input": {
+        "fixtureRef": "skse-loader-only"
+      },
+      "expected": {
+        "typeName": "SKSE",
+        "loaderName": "skse_loader.exe",
+        "dllPrefix": "skse_",
+        "installed": true,
+        "version": null,
+        "info": {
+          "typeName": "SKSE",
+          "installed": true,
+          "version": null
+        },
+        "files": [
+          {
+            "path": "skse_loader.exe",
+            "hex": ""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "skse-detected",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "skse-detected"
+      ],
+      "input": {
+        "fixtureRef": "skse-detected"
+      },
+      "expected": {
+        "typeName": "SKSE",
+        "loaderName": "skse_loader.exe",
+        "dllPrefix": "skse_",
+        "installed": true,
+        "version": "1.10.163",
+        "info": {
+          "typeName": "SKSE",
+          "installed": true,
+          "version": "1.10.163"
+        },
+        "files": [
+          {
+            "path": "skse_1_10_163.dll",
+            "hex": ""
+          },
+          {
+            "path": "skse_loader.exe",
+            "hex": ""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "skse64-missing",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "skse64-missing"
+      ],
+      "input": {
+        "fixtureRef": "skse64-missing"
+      },
+      "expected": {
+        "typeName": "SKSE64",
+        "loaderName": "skse64_loader.exe",
+        "dllPrefix": "skse64_",
+        "installed": false,
+        "version": null,
+        "info": {
+          "typeName": "SKSE64",
+          "installed": false,
+          "version": null
+        },
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "skse64-loader-only",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "skse64-loader-only"
+      ],
+      "input": {
+        "fixtureRef": "skse64-loader-only"
+      },
+      "expected": {
+        "typeName": "SKSE64",
+        "loaderName": "skse64_loader.exe",
+        "dllPrefix": "skse64_",
+        "installed": true,
+        "version": null,
+        "info": {
+          "typeName": "SKSE64",
+          "installed": true,
+          "version": null
+        },
+        "files": [
+          {
+            "path": "skse64_loader.exe",
+            "hex": ""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "skse64-detected",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "skse64-detected"
+      ],
+      "input": {
+        "fixtureRef": "skse64-detected"
+      },
+      "expected": {
+        "typeName": "SKSE64",
+        "loaderName": "skse64_loader.exe",
+        "dllPrefix": "skse64_",
+        "installed": true,
+        "version": "1.10.163",
+        "info": {
+          "typeName": "SKSE64",
+          "installed": true,
+          "version": "1.10.163"
+        },
+        "files": [
+          {
+            "path": "skse64_1_10_163.dll",
+            "hex": ""
+          },
+          {
+            "path": "skse64_loader.exe",
+            "hex": ""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "sksevr-missing",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "sksevr-missing"
+      ],
+      "input": {
+        "fixtureRef": "sksevr-missing"
+      },
+      "expected": {
+        "typeName": "SKSEVR",
+        "loaderName": "sksevr_loader.exe",
+        "dllPrefix": "sksevr_",
+        "installed": false,
+        "version": null,
+        "info": {
+          "typeName": "SKSEVR",
+          "installed": false,
+          "version": null
+        },
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "sksevr-loader-only",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "sksevr-loader-only"
+      ],
+      "input": {
+        "fixtureRef": "sksevr-loader-only"
+      },
+      "expected": {
+        "typeName": "SKSEVR",
+        "loaderName": "sksevr_loader.exe",
+        "dllPrefix": "sksevr_",
+        "installed": true,
+        "version": null,
+        "info": {
+          "typeName": "SKSEVR",
+          "installed": true,
+          "version": null
+        },
+        "files": [
+          {
+            "path": "sksevr_loader.exe",
+            "hex": ""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "sksevr-detected",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "sksevr-detected"
+      ],
+      "input": {
+        "fixtureRef": "sksevr-detected"
+      },
+      "expected": {
+        "typeName": "SKSEVR",
+        "loaderName": "sksevr_loader.exe",
+        "dllPrefix": "sksevr_",
+        "installed": true,
+        "version": "1.10.163",
+        "info": {
+          "typeName": "SKSEVR",
+          "installed": true,
+          "version": "1.10.163"
+        },
+        "files": [
+          {
+            "path": "sksevr_1_10_163.dll",
+            "hex": ""
+          },
+          {
+            "path": "sksevr_loader.exe",
+            "hex": ""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "sfse-missing",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "sfse-missing"
+      ],
+      "input": {
+        "fixtureRef": "sfse-missing"
+      },
+      "expected": {
+        "typeName": "SFSE",
+        "loaderName": "sfse_loader.exe",
+        "dllPrefix": "sfse_",
+        "installed": false,
+        "version": null,
+        "info": {
+          "typeName": "SFSE",
+          "installed": false,
+          "version": null
+        },
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "sfse-loader-only",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "sfse-loader-only"
+      ],
+      "input": {
+        "fixtureRef": "sfse-loader-only"
+      },
+      "expected": {
+        "typeName": "SFSE",
+        "loaderName": "sfse_loader.exe",
+        "dllPrefix": "sfse_",
+        "installed": true,
+        "version": null,
+        "info": {
+          "typeName": "SFSE",
+          "installed": true,
+          "version": null
+        },
+        "files": [
+          {
+            "path": "sfse_loader.exe",
+            "hex": ""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "sfse-detected",
+      "action": "xse-operations.inspect",
+      "capabilityIds": [
+        "xse-operations.inspect"
+      ],
+      "fixtureRefs": [
+        "sfse-detected"
+      ],
+      "input": {
+        "fixtureRef": "sfse-detected"
+      },
+      "expected": {
+        "typeName": "SFSE",
+        "loaderName": "sfse_loader.exe",
+        "dllPrefix": "sfse_",
+        "installed": true,
+        "version": "1.10.163",
+        "info": {
+          "typeName": "SFSE",
+          "installed": true,
+          "version": "1.10.163"
+        },
+        "files": [
+          {
+            "path": "sfse_1_10_163.dll",
+            "hex": ""
+          },
+          {
+            "path": "sfse_loader.exe",
             "hex": ""
           }
         ]

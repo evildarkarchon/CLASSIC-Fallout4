@@ -23,6 +23,8 @@ SUPPORTED_FAMILIES = (
     "settings-cached-docs",
     "version-registry-details",
     "xse-operations",
+    "xse-folder",
+    "installation-paths",
     "game-identity",
     "runtime-access",
     "file-fingerprint",
@@ -157,6 +159,7 @@ PARTICIPANT_COMMANDS = {
                     "version_extended",
                     "version_values",
                     "settings_extended",
+                    "installation_paths",
                 )
             ),
             REPO_ROOT / "node-bindings/classic-node/package.json",
@@ -203,6 +206,7 @@ PARTICIPANT_COMMANDS = {
                     "version_extended",
                     "version_values",
                     "settings_extended",
+                    "installation_paths",
                 )
             ),
             *(

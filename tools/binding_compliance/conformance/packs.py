@@ -1141,6 +1141,8 @@ def load_and_validate_pack(repo_root: Path, pack_path: Path) -> ValidatedPack:
     from .families.update_decisions import validate_update_decisions_pack
     from .families.update_services import validate_update_services_pack
     from .families.version_values import validate_version_values_pack
+    from .families.xse_folder import validate_xse_folder_pack
+    from .families.installation_paths import validate_installation_paths_pack
     from .families.xse_operations import validate_xse_operations_pack
 
     owner_validators = {
@@ -1169,6 +1171,8 @@ def load_and_validate_pack(repo_root: Path, pack_path: Path) -> ValidatedPack:
         "update-decisions": validate_update_decisions_pack,
         "update-services": validate_update_services_pack,
         "xse-operations": validate_xse_operations_pack,
+        "xse-folder": validate_xse_folder_pack,
+        "installation-paths": validate_installation_paths_pack,
         "settings-load": validate_settings_load_pack,
         "settings-yaml": validate_settings_yaml_pack,
         "settings-yaml-batch": validate_settings_yaml_batch_pack,

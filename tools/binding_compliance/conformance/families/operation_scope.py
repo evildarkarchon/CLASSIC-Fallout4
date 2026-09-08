@@ -12,6 +12,31 @@ from ..coverage import SourceParityRow
 # Keep participant and class identity explicit: similarly named unrelated methods
 # must never inherit a disposition from this phase-one migration.
 _RETAINED = {
+    # Cached-path conformance observes lookup/validation and missing INI reports;
+    # these exact other existing methods retain their focused local runtime tests.
+    ("installation-paths", "classic-path-core", "DocsPathFinder", "python"): frozenset(
+        {"set_steam_app_id", "validate_ini_files"}
+    ),
+    (
+        "installation-paths",
+        "classic-path-core",
+        "DocumentsChecker",
+        "python",
+    ): frozenset({"check_onedrive_in_path", "validate_ini_file"}),
+    ("installation-paths", "classic-path-core", "GamePathFinder", "python"): frozenset(
+        {
+            "parse_xse_log",
+            "PathValidator.check_drive_exists",
+            "PathValidator.check_read_permissions",
+            "PathValidator.check_write_permissions",
+            "PathValidator.is_restricted_path",
+            "PathValidator.is_valid_executable_path",
+            "PathValidator.validate_custom_scan_path",
+            "PathValidator.validate_path_with_permissions",
+            "PathValidator.validate_settings_path",
+            "PathValidator.validate_settings_paths",
+        }
+    ),
     # Common site metadata executes constructors/name/base_url; Python display
     # and equality methods keep their focused binding tests as evidence.
     ("web-operations", "classic-web-core", "ModSite", "python"): frozenset(
@@ -64,7 +89,7 @@ _RETAINED = {
         {"get_all_releases", "get_latest_release", "repo_url"}
     ),
     ("xse-operations", "classic-xse-core", "XseType", "python"): frozenset(
-        {"__eq__", "__repr__", "__str__", "f4sevr", "sfse", "skse", "skse64", "sksevr"}
+        {"__eq__", "__repr__", "__str__"}
     ),
     # The token pack observes the shared cross-adapter as_str surface. Python's
     # other GameId methods have no matching Node/CXX public operations.
@@ -209,6 +234,13 @@ _RETAINED = {
 
 def is_retained_operation(family_id: str, row: SourceParityRow) -> bool:
     """Identify a previously known deferred method without granting runtime credit."""
+    # The legacy PathValidator carrier maps to GamePathFinder but no finder
+    # instance can prove that unrelated Python namespace's behavior.
+    if (
+        family_id == "installation-paths"
+        and row.obligation_id == "parity:python:path.lib.PathValidator"
+    ):
+        return True
     # These exact existing carriers belong to different bridge operations;
     # a shared::GameId token read must not claim config/scanner/web execution.
     # Node's display-name helper likewise has no shared-core token equivalent.

@@ -252,6 +252,19 @@ NEGATIVE_CONSUMER_CASES = frozenset(
 
 BASE_ANALYZER_CATALOG: tuple[dict[str, Any], ...] = (
     {
+        "id": "installation-discovery-source-boundary",
+        "evidenceKind": "structural",
+        "paths": [
+            "python-bindings/tests/test_installation_discovery_source_audit.py",
+            "business-logic/classic-xse-core/src/lib.rs",
+            "business-logic/classic-path-core/src/docs_path.rs",
+            "business-logic/classic-path-core/src/game_path.rs",
+            "business-logic/classic-path-core/src/platform/windows.rs",
+            "python-bindings/classic-path-py/src/lib.rs",
+        ],
+        "blockingWorkflow": WORKFLOW_BLOCKING_OWNERS["python-cli"],
+    },
+    {
         "id": "cxx-source-parity",
         "evidenceKind": "structural",
         "paths": [
@@ -1209,6 +1222,34 @@ def _consumer_source_audit_obligations(repo_root: Path) -> list[dict[str, Any]]:
     return obligations
 
 
+def _installation_discovery_obligations(repo_root: Path) -> list[dict[str, Any]]:
+    """Assign non-injectable platform discovery to its explicit source analyzer."""
+    artifact = Path("python-bindings/tests/test_installation_discovery_source_audit.py")
+    source = _read_text(repo_root, artifact)
+    cases = (
+        "test_valid_cached_paths_return_before_platform_discovery",
+        "test_platform_discovery_retains_native_owner_delegation",
+        "test_discovery_smoke_requires_explicit_paths_and_propagates_failures",
+    )
+    obligations = []
+    for case in cases:
+        if f"def {case}(" not in source:
+            raise LedgerValidationError(f"installation discovery analyzer lost {case}")
+        obligations.append(
+            _analyzer_obligation(
+                obligation_id=f"installation-discovery-audit:{case}",
+                source_kind="source_audit",
+                artifact=artifact,
+                locator=case,
+                participant="python",
+                mapping_origin="source_inventory_audit",
+                classification="structural_analyzer",
+                analyzer_id="installation-discovery-source-boundary",
+            )
+        )
+    return obligations
+
+
 def discover_current_obligations(repo_root: Path) -> tuple[dict[str, Any], ...]:
     """Discover every Phase 0 evidence obligation from the live tracked sources.
 
@@ -1225,6 +1266,7 @@ def discover_current_obligations(repo_root: Path) -> tuple[dict[str, Any], ...]:
         + _display_content_audit_obligations(root)
         + _user_settings_source_audit_obligations(root)
         + _consumer_source_audit_obligations(root)
+        + _installation_discovery_obligations(root)
         + [_policy_exception_obligation(root)]
     )
     counts = Counter(entry["id"] for entry in obligations)

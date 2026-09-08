@@ -708,6 +708,46 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run native CXX installation-paths conformance
+        if: ${{ !cancelled() }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family installation-paths -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/installation-paths
+
+      - name: Upload native CXX installation-paths conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cxx-installation-paths-conformance-${{ matrix.compiler }}
+          path: |
+            tools/binding_compliance/artifacts/installation-paths/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
+            tools/binding_compliance/artifacts/installation-paths/cxx/windows-${{ matrix.compiler }}/**/receipt.json
+            tools/binding_compliance/artifacts/installation-paths/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
+            tools/binding_compliance/artifacts/installation-paths/cxx/windows-${{ matrix.compiler }}/**/attempt.json
+            tools/binding_compliance/artifacts/installation-paths/cxx/windows-${{ matrix.compiler }}/**/stdout.log
+            tools/binding_compliance/artifacts/installation-paths/cxx/windows-${{ matrix.compiler }}/**/stderr.log
+            tools/binding_compliance/artifacts/installation-paths/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run native CXX xse-folder conformance
+        if: ${{ !cancelled() }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family xse-folder -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/xse-folder
+
+      - name: Upload native CXX xse-folder conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cxx-xse-folder-conformance-${{ matrix.compiler }}
+          path: |
+            tools/binding_compliance/artifacts/xse-folder/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
+            tools/binding_compliance/artifacts/xse-folder/cxx/windows-${{ matrix.compiler }}/**/receipt.json
+            tools/binding_compliance/artifacts/xse-folder/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
+            tools/binding_compliance/artifacts/xse-folder/cxx/windows-${{ matrix.compiler }}/**/attempt.json
+            tools/binding_compliance/artifacts/xse-folder/cxx/windows-${{ matrix.compiler }}/**/stdout.log
+            tools/binding_compliance/artifacts/xse-folder/cxx/windows-${{ matrix.compiler }}/**/stderr.log
+            tools/binding_compliance/artifacts/xse-folder/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run native CXX game-identity conformance
         if: ${{ !cancelled() }}
         run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family game-identity -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/game-identity

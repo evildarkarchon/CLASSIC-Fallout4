@@ -6,9 +6,26 @@ use std::fs;
 
 /// Inspect one fresh fixture directory without consulting installed game state.
 pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
-    if fixture.as_object().is_none_or(|object| object.len() != 1) {
+    if fixture.as_object().is_none_or(|object| {
+        !object.contains_key("files") || object.keys().any(|key| key != "files" && key != "kind")
+    }) {
         return Err(invalid("unsupported XSE fixture").into());
     }
+    let variant = fixture
+        .get("kind")
+        .map(text)
+        .transpose()?
+        .unwrap_or_else(|| "F4SE".to_owned());
+    let kind = match variant.as_str() {
+        "F4SE" => XseType::F4SE,
+        "F4SEVR" => XseType::F4SEVR,
+        "SKSE" => XseType::SKSE,
+        "SKSE64" => XseType::SKSE64,
+        "SKSEVR" => XseType::SKSEVR,
+        "SFSE" => XseType::SFSE,
+        _ => return Err(invalid("unsupported XSE variant").into()),
+    };
+    let dll = format!("{}_1_10_163.dll", variant.to_lowercase());
     let files = fixture["files"]
         .as_array()
         .ok_or_else(|| invalid("files must be an array"))?;
@@ -16,13 +33,12 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
     let root = temporary.path();
     for value in files {
         let name = text(value)?;
-        if !matches!(name.as_str(), "f4se_loader.exe" | "f4se_1_10_163.dll") {
+        if name != kind.loader_name() && name != dll {
             return Err(invalid("unsupported XSE filename").into());
         }
         fs::write(root.join(name), b"")?;
     }
-    let kind = XseType::F4SE;
-    let version = match detect_xse_version(&root.join("f4se_loader.exe"), kind) {
+    let version = match detect_xse_version(&root.join(kind.loader_name()), kind) {
         Ok(version) => Some(version.to_string()),
         Err(XseError::NotFound(_) | XseError::VersionDetectionFailed(_)) => None,
         Err(error) => return Err(error.into()),

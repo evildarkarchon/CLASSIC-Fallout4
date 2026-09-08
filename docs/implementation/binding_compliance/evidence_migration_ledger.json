@@ -5,7 +5,7 @@
   "shadowTargetPolicy": "A shadow runtime target may name its planned family while scenario and observation IDs remain null. Only executed receipts may justify a later state.",
   "retirementPolicy": "Retired Crash Log Scan Run policy targets record removal of legacy positive proof only. Executable conformance and retained analyzers remain blocking; this diagnostic ledger never establishes a passing execution.",
   "sourceSummary": {
-    "total": 3275,
+    "total": 3278,
     "byKind": {
       "consumer_source_audit": 58,
       "display_content_consumer_audit": 3,
@@ -17,17 +17,17 @@
       "scan_run_contract_variant": 73,
       "scan_run_variant_policy": 73,
       "shared_runtime_source_audit": 1,
-      "source_audit": 189,
+      "source_audit": 192,
       "user_settings_source_audit": 4
     },
     "byClassification": {
       "negative_analyzer": 207,
       "policy_exception": 1,
       "runtime_verifiable": 2650,
-      "structural_analyzer": 417
+      "structural_analyzer": 420
     },
     "byMigrationState": {
-      "blocking": 625,
+      "blocking": 628,
       "retired": 55,
       "shadow": 2595
     },
@@ -36,7 +36,7 @@
       "cxx": 699,
       "gui": 60,
       "node": 991,
-      "python": 1329,
+      "python": 1332,
       "python-cli": 5,
       "rust": 180,
       "shared": 4,
@@ -161,6 +161,22 @@
       "blockingWorkflow": {
         "path": ".github/workflows/ci-rust.yml",
         "commandMarker": "cargo test --workspace --release"
+      }
+    },
+    {
+      "id": "installation-discovery-source-boundary",
+      "evidenceKind": "structural",
+      "paths": [
+        "python-bindings/tests/test_installation_discovery_source_audit.py",
+        "business-logic/classic-xse-core/src/lib.rs",
+        "business-logic/classic-path-core/src/docs_path.rs",
+        "business-logic/classic-path-core/src/game_path.rs",
+        "business-logic/classic-path-core/src/platform/windows.rs",
+        "python-bindings/classic-path-py/src/lib.rs"
+      ],
+      "blockingWorkflow": {
+        "path": ".github/workflows/ci-python-bindings.yml",
+        "commandMarker": "python -m pytest python-bindings/tests -q"
       }
     },
     {
@@ -1912,6 +1928,81 @@
       "migrationState": "blocking",
       "stateEvidence": [
         "The retained display-content-ownership-tui analyzer already fails its blocking workflow."
+      ]
+    },
+    {
+      "id": "installation-discovery-audit:test_discovery_smoke_requires_explicit_paths_and_propagates_failures",
+      "sourceKind": "source_audit",
+      "source": {
+        "artifact": "python-bindings/tests/test_installation_discovery_source_audit.py",
+        "locator": "test_discovery_smoke_requires_explicit_paths_and_propagates_failures"
+      },
+      "participant": "python",
+      "mappingOrigin": "source_inventory_audit",
+      "classification": "structural_analyzer",
+      "target": {
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "test_discovery_smoke_requires_explicit_paths_and_propagates_failures",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "installation-discovery-source-boundary"
+      },
+      "retainedAnalyzerIds": [
+        "installation-discovery-source-boundary"
+      ],
+      "migrationState": "blocking",
+      "stateEvidence": [
+        "The retained installation-discovery-source-boundary analyzer already fails its blocking workflow."
+      ]
+    },
+    {
+      "id": "installation-discovery-audit:test_platform_discovery_retains_native_owner_delegation",
+      "sourceKind": "source_audit",
+      "source": {
+        "artifact": "python-bindings/tests/test_installation_discovery_source_audit.py",
+        "locator": "test_platform_discovery_retains_native_owner_delegation"
+      },
+      "participant": "python",
+      "mappingOrigin": "source_inventory_audit",
+      "classification": "structural_analyzer",
+      "target": {
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "test_platform_discovery_retains_native_owner_delegation",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "installation-discovery-source-boundary"
+      },
+      "retainedAnalyzerIds": [
+        "installation-discovery-source-boundary"
+      ],
+      "migrationState": "blocking",
+      "stateEvidence": [
+        "The retained installation-discovery-source-boundary analyzer already fails its blocking workflow."
+      ]
+    },
+    {
+      "id": "installation-discovery-audit:test_valid_cached_paths_return_before_platform_discovery",
+      "sourceKind": "source_audit",
+      "source": {
+        "artifact": "python-bindings/tests/test_installation_discovery_source_audit.py",
+        "locator": "test_valid_cached_paths_return_before_platform_discovery"
+      },
+      "participant": "python",
+      "mappingOrigin": "source_inventory_audit",
+      "classification": "structural_analyzer",
+      "target": {
+        "familyId": null,
+        "scenarioId": null,
+        "observationOrAssertion": "test_valid_cached_paths_return_before_platform_discovery",
+        "evidenceRole": "structural_analyzer",
+        "analyzerId": "installation-discovery-source-boundary"
+      },
+      "retainedAnalyzerIds": [
+        "installation-discovery-source-boundary"
+      ],
+      "migrationState": "blocking",
+      "stateEvidence": [
+        "The retained installation-discovery-source-boundary analyzer already fails its blocking workflow."
       ]
     },
     {

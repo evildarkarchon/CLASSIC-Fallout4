@@ -68,6 +68,10 @@ mod version_extended;
 mod version_values;
 #[path = "semantic_conformance/xse_operations.rs"]
 mod xse_operations;
+#[path = "semantic_conformance/xse_folder.rs"]
+mod xse_folder;
+#[path = "semantic_conformance/installation_paths.rs"]
+mod installation_paths;
 
 /// Rejects malformed runner inputs without confusing them with domain errors.
 fn invalid(message: &str) -> io::Error {
@@ -476,6 +480,8 @@ fn execute(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
         Some("settings-load" | "settings-yaml" | "settings-yaml-batch") => {
             return settings_load::execute(&fixture);
         }
+        Some("xse-folder") => return xse_folder::execute(&fixture),
+        Some("installation-paths") => return installation_paths::execute(&fixture),
         Some("xse-operations") => return xse_operations::execute(&fixture),
         Some("game-identity" | "runtime-access") => {
             return shared_identity::execute(&text(&plan["familyId"])?, &fixture);

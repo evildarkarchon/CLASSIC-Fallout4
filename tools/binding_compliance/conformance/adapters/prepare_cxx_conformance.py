@@ -39,6 +39,8 @@ SUPPORTED_FAMILIES = (
     "update-decisions",
     "update-services",
     "xse-operations",
+    "xse-folder",
+    "installation-paths",
     "game-identity",
     "runtime-access",
     "autoscan-report",
@@ -86,6 +88,8 @@ def _cxx_source_paths(
                 "update_decisions",
                 "update_services",
                 "xse_operations",
+                "xse_folder",
+                "installation_paths",
                 "shared_identity",
             )
         ),

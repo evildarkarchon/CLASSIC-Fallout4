@@ -5,6 +5,7 @@ import { observeUpdateDecisions } from "./update_decisions_conformance.js";
 import { observeUpdateServices } from "./update_services_conformance.js";
 import { observeSharedRegistry } from "./shared_registry_conformance.js";
 import { observeAuxOperations } from "./aux_operations_conformance.js";
+import { observeInstallationPaths } from "./installation_paths_conformance.js";
 import { observeXseOperations } from "./xse_operations_conformance.js";
 import { observeSharedIdentity } from "./shared_identity_conformance.js";
 import { observeSettingsLoad } from "./settings_load_conformance.js";
@@ -27,7 +28,7 @@ import { observeSettingsExtended } from "./settings_extended_conformance";
 
 import { observeVersionValues } from "./version_values_conformance";
 
-const families = ["game-version-parse", "game-version-distance", "fallout4-identity", "settings-yaml-batch", "settings-yaml", "settings-cached-docs", "version-registry-details", "version-extraction", "version-pe", "version-pe-path", "registry-game", "registry-paths", "settings-load", "xse-operations", "game-identity", "runtime-access", "file-fingerprint", "performance", "update-decisions", "string-operations", "registry-operations", "web-operations", "resource-operations", "version-operations", "crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary", "config-operations", "file-operations", "path-operations", "path-normalization", "message-operations", "database-operations", "version-registry", "scan-game"];
+const families = ["game-version-parse", "game-version-distance", "fallout4-identity", "settings-yaml-batch", "settings-yaml", "settings-cached-docs", "version-registry-details", "version-extraction", "version-pe", "version-pe-path", "registry-game", "registry-paths", "settings-load", "xse-operations", "installation-paths", "game-identity", "runtime-access", "file-fingerprint", "performance", "update-decisions", "string-operations", "registry-operations", "web-operations", "resource-operations", "version-operations", "crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary", "config-operations", "file-operations", "path-operations", "path-normalization", "message-operations", "database-operations", "version-registry", "scan-game"];
 
 families.push("update-services");
 
@@ -75,6 +76,7 @@ async function loadPlan(path: string): Promise<JsonObject> {
       "version-registry-details": ["version-registry-details.execute"],
 
       "xse-operations": ["xse-operations.inspect"],
+      "installation-paths": ["installation-paths.inspect"],
       "game-identity": ["game-identity.observe"],
       "runtime-access": ["runtime-access.observe"],
       "file-fingerprint": ["file-fingerprint.inspect"],
@@ -253,6 +255,7 @@ async function executeScenario(plan: JsonObject, scenario: JsonObject): Promise<
   if (["game-version-parse", "game-version-distance", "fallout4-identity"].includes(plan.familyId)) return observeVersionValues(plan.familyId, fixture);
   if (plan.familyId === "settings-cached-docs") return observeSettingsExtended(plan.familyId, fixture);
   if (["settings-load", "settings-yaml", "settings-yaml-batch"].includes(plan.familyId)) return observeSettingsLoad(fixture);
+  if (plan.familyId === "installation-paths") return observeInstallationPaths(fixture);
   if (plan.familyId === "xse-operations") return observeXseOperations(fixture);
   if (["game-identity", "runtime-access"].includes(plan.familyId)) return observeSharedIdentity(plan.familyId, fixture);
   if (plan.familyId === "performance") return observePerformance(fixture);

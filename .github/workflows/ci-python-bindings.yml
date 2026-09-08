@@ -731,6 +731,19 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Python installation-paths conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family installation-paths --participant python --artifact-root tools/binding_compliance/artifacts/installation-paths
+
+      - name: Upload Python installation-paths conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-installation-paths-conformance
+          path: tools/binding_compliance/artifacts/installation-paths/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run Python game-identity conformance
         if: ${{ !cancelled() }}
         run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family game-identity --participant python --artifact-root tools/binding_compliance/artifacts/game-identity

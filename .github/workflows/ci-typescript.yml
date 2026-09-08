@@ -696,6 +696,19 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Node installation-paths conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family installation-paths --participant node --artifact-root tools/binding_compliance/artifacts/installation-paths
+
+      - name: Upload Node installation-paths conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-installation-paths-conformance
+          path: tools/binding_compliance/artifacts/installation-paths/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run Node game-identity conformance
         if: matrix.runtime == 'node' && !cancelled()
         run: python tools/binding_compliance/run_semantic_conformance.py --family game-identity --participant node --artifact-root tools/binding_compliance/artifacts/game-identity

@@ -1906,7 +1906,9 @@ json execute_scenario(const json& plan, const json& scenario) {
 #include "classic_cxx_config_operations_conformance.h"
 #include "classic_cxx_database_operations_conformance.h"
 #include "classic_cxx_version_registry_conformance.h"
+#include "classic_cxx_xse_folder_conformance.h"
 #include "classic_cxx_file_operations_conformance.h"
+#include "classic_cxx_installation_paths_conformance.h"
 #include "classic_cxx_scan_game_conformance.h"
 #include "classic_cxx_path_operations_conformance.h"
 #include "classic_cxx_user_settings_conformance.h"
@@ -1930,6 +1932,8 @@ json scenario_receipt(const json& plan, const json& scenario) {
                                       : plan.at("familyId") == "registry-operations" ? execute_registry_operations_scenario(plan, scenario)
                                     : (plan.at("familyId") == "game-version-parse" || plan.at("familyId") == "fallout4-identity" || plan.at("familyId") == "fallout4-paths") ? execute_version_values_scenario(plan, scenario)
                                       : (plan.at("familyId") == "web-operations" || plan.at("familyId") == "version-pe") ? execute_aux_operations_scenario(plan, scenario)
+                                    : plan.at("familyId") == "installation-paths" ? execute_installation_paths_scenario(plan, scenario)
+                                    : plan.at("familyId") == "xse-folder" ? execute_xse_folder_scenario(plan, scenario)
                                     : plan.at("familyId") == "xse-operations" ? execute_xse_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "performance" ? execute_performance_scenario(plan, scenario)
                                     : plan.at("familyId") == "update-services" ? execute_update_services_scenario(plan, scenario)
@@ -1961,7 +1965,7 @@ void validate_plan(const json& plan) {
          plan.at("familyId") != "path-operations" &&
            plan.at("familyId") != "version-pe" && plan.at("familyId") != "game-version-parse" && plan.at("familyId") != "fallout4-identity" && plan.at("familyId") != "fallout4-paths" &&
            plan.at("familyId") != "registry-game" && plan.at("familyId") != "registry-gui" &&
-           plan.at("familyId") != "registry-operations" && plan.at("familyId") != "web-operations" && plan.at("familyId") != "xse-operations" &&
+           plan.at("familyId") != "registry-operations" && plan.at("familyId") != "web-operations" && plan.at("familyId") != "xse-operations" && plan.at("familyId") != "xse-folder" && plan.at("familyId") != "installation-paths" &&
          plan.at("familyId") != "performance" && plan.at("familyId") != "update-decisions" && plan.at("familyId") != "update-services" &&
          plan.at("familyId") != "game-identity" && plan.at("familyId") != "runtime-access" &&
          plan.at("familyId") != "settings-load" &&

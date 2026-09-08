@@ -2874,7 +2874,8 @@
       "ownerModule": "aux",
       "rustSymbol": "DocsPathFinder",
       "nodeExport": "DocsPathFinder",
-      "nodeKind": "class"
+      "nodeKind": "class",
+      "rustCrate": "classic-path-core"
     },
     {
       "id": "aux-phase4a-documents-checker",
@@ -2882,7 +2883,8 @@
       "ownerModule": "aux",
       "rustSymbol": "DocumentsChecker",
       "nodeExport": "DocumentsChecker",
-      "nodeKind": "class"
+      "nodeKind": "class",
+      "rustCrate": "classic-path-core"
     },
     {
       "id": "aux-phase4a-game-path-finder",
@@ -2890,7 +2892,8 @@
       "ownerModule": "aux",
       "rustSymbol": "GamePathFinder",
       "nodeExport": "GamePathFinder",
-      "nodeKind": "class"
+      "nodeKind": "class",
+      "rustCrate": "classic-path-core"
     },
     {
       "id": "aux-phase4a-js-backup-info",

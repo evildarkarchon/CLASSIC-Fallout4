@@ -8,11 +8,14 @@ def observe_xse_operations(fixture):
     """Use only fixed local filenames and normalize public absence sentinels."""
     import classic_xse
 
+    variant = fixture.get("kind", "F4SE")
     if (
-        set(fixture) != {"files"}
+        set(fixture) not in ({"files"}, {"files", "kind"})
+        or variant not in {"F4SE", "F4SEVR", "SKSE", "SKSE64", "SKSEVR", "SFSE"}
         or not isinstance(fixture["files"], list)
         or any(
-            name not in ("f4se_loader.exe", "f4se_1_10_163.dll")
+            name
+            not in (f"{variant.lower()}_loader.exe", f"{variant.lower()}_1_10_163.dll")
             for name in fixture["files"]
         )
     ):
@@ -21,12 +24,12 @@ def observe_xse_operations(fixture):
         root = Path(directory)
         for name in fixture["files"]:
             (root / name).write_bytes(b"")
-        kind = classic_xse.XseType.f4se()
-        if classic_xse.parse_xse_type("f4se").as_str() != kind.as_str():
+        kind = getattr(classic_xse.XseType, variant.lower())()
+        if classic_xse.parse_xse_type(variant).as_str() != kind.as_str():
             raise ValueError("XSE constructor and parser disagree")
         try:
             detected = classic_xse.detect_xse_version(
-                str(root / "f4se_loader.exe"), kind
+                str(root / kind.loader_name()), kind
             )
             version = ".".join(map(str, detected))
         except OSError as error:

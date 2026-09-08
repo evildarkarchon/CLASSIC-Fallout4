@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "familyId": "installation-paths",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-path-core"
+  },
+  "fixtureRoot": "tests/fixtures/installation_paths_conformance",
+  "fixtures": {
+    "cached": "cached.json",
+    "cached-spaces": "cached-spaces.json"
+  },
+  "capabilities": [
+    {
+      "id": "installation-paths.inspect",
+      "rustSymbols": [
+        "GamePathFinder",
+        "find_game_path",
+        "DocsPathFinder",
+        "find_docs_path",
+        "DocumentsChecker",
+        "run_all_checks"
+      ],
+      "observationFamilies": [
+        "installation-results"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "cached",
+      "action": "installation-paths.inspect",
+      "capabilityIds": [
+        "installation-paths.inspect"
+      ],
+      "fixtureRefs": [
+        "cached"
+      ],
+      "input": {
+        "fixtureRef": "cached"
+      },
+      "expected": {
+        "gamePath": "game",
+        "docsPath": "docs",
+        "checks": [
+          "❌ CAUTION: Fallout4.ini file is missing from your documents folder!\nYou need to run the game at least once with Fallout4Launcher.exe.\nThis will create files and INI settings required for the game to run.\n-----",
+          "❌ WARNING: Fallout4Custom.ini is missing.\nArchive Invalidation / Loose Files setting is not enabled.\nThis setting is required for mods to work properly.\n-----",
+          "❌ CAUTION: Fallout4Prefs.ini file is missing from your documents folder!\n-----"
+        ],
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: FO4_OG\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: Fallout4\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: FO4_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n      xse:\n        acronym: F4SEVR\n        full_name: Fixture VR Extender\n        compatible_version: \"0.6.23\"\n        loader: f4sevr_loader.exe\n        file_count: 0\n        script_hashes: {}\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: FO4_OG\n"
+          },
+          {
+            "path": "game/Fallout4.exe",
+            "content": "owned executable marker"
+          }
+        ],
+        "directories": [
+          "docs",
+          "game"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "cached-spaces",
+      "action": "installation-paths.inspect",
+      "capabilityIds": [
+        "installation-paths.inspect"
+      ],
+      "fixtureRefs": [
+        "cached-spaces"
+      ],
+      "input": {
+        "fixtureRef": "cached-spaces"
+      },
+      "expected": {
+        "gamePath": "Game Folder",
+        "docsPath": "Docs Folder",
+        "checks": [
+          "❌ CAUTION: Fallout4.ini file is missing from your documents folder!\nYou need to run the game at least once with Fallout4Launcher.exe.\nThis will create files and INI settings required for the game to run.\n-----",
+          "❌ WARNING: Fallout4Custom.ini is missing.\nArchive Invalidation / Loose Files setting is not enabled.\nThis setting is required for mods to work properly.\n-----",
+          "❌ CAUTION: Fallout4Prefs.ini file is missing from your documents folder!\n-----"
+        ],
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: FO4_OG\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: Fallout4\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: FO4_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n      xse:\n        acronym: F4SEVR\n        full_name: Fixture VR Extender\n        compatible_version: \"0.6.23\"\n        loader: f4sevr_loader.exe\n        file_count: 0\n        script_hashes: {}\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: FO4_OG\n"
+          },
+          {
+            "path": "Game Folder/Fallout4.exe",
+            "content": "owned executable marker"
+          }
+        ],
+        "directories": [
+          "Docs Folder",
+          "Game Folder"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

@@ -2,8 +2,8 @@
 
 > **Diagnostic only.** This ledger classifies migration targets and does **not** grant compliance, runtime coverage, or permission to remove a gate.
 
-- Obligations: **3,275**
-- Named retained analyzers: **20**
+- Obligations: **3,278**
+- Named retained analyzers: **21**
 - Documented policy exceptions: **1**
 
 ## Target dispositions
@@ -13,13 +13,13 @@
 | `negative_analyzer` | 207 |
 | `policy_exception` | 1 |
 | `runtime_verifiable` | 2,650 |
-| `structural_analyzer` | 417 |
+| `structural_analyzer` | 420 |
 
 ## Migration states
 
 | State | Obligations |
 | --- | ---: |
-| `blocking` | 625 |
+| `blocking` | 628 |
 | `retired` | 55 |
 | `shadow` | 2,595 |
 
@@ -39,7 +39,7 @@ Retired Crash Log Scan Run policy targets record removal of legacy positive proo
 | `scan_run_contract_variant` | 73 |
 | `scan_run_variant_policy` | 73 |
 | `shared_runtime_source_audit` | 1 |
-| `source_audit` | 189 |
+| `source_audit` | 192 |
 | `user_settings_source_audit` | 4 |
 
 ## Retained analyzers
@@ -55,6 +55,7 @@ Retired Crash Log Scan Run policy targets record removal of legacy positive proo
 - `display-content-ownership-node` (negative): `node-bindings/classic-node/__test__/display_label_audit.spec.ts`
 - `display-content-ownership-python-cli` (negative): `python-bindings/tests/test_classic_py_cli_display_label_audit.py`
 - `display-content-ownership-tui` (negative): `ui-applications/classic-tui/tests/shared_runtime_audit.rs`
+- `installation-discovery-source-boundary` (structural): `python-bindings/tests/test_installation_discovery_source_audit.py`, `business-logic/classic-xse-core/src/lib.rs`, `business-logic/classic-path-core/src/docs_path.rs`, `business-logic/classic-path-core/src/game_path.rs`, `business-logic/classic-path-core/src/platform/windows.rs`, `python-bindings/classic-path-py/src/lib.rs`
 - `node-source-and-declaration-parity` (structural): `tools/node_api_parity/check_parity_gate.py`, `tools/node_api_parity/check_dts_freshness.py`, `docs/implementation/node_api_parity/baseline/parity_contract.json`
 - `python-source-and-stub-parity` (structural): `tools/python_api_parity/check_parity_gate.py`, `validate_stubs.py`, `docs/implementation/python_api_parity/baseline/parity_contract.json`
 - `scan-run-contract-validator` (structural): `tools/binding_compliance/scan_run_contract.py`, `tests/fixtures/crash_log_scan_run/manifest.json`

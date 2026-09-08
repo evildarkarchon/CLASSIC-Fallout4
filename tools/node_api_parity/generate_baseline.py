@@ -196,6 +196,10 @@ NODE_PHASE3_SYMBOL_ROUTE: dict[str, dict[str, str]] = {
 # alone. These routes follow the direct core calls in Node src/shared.rs and
 # src/fileio.rs, preserving the distinct registry, performance and file owners.
 EXECUTABLE_AUX_CRATES = {
+    # src/path.rs stores each public class directly over this Rust core owner.
+    "DocsPathFinder": "classic-path-core",
+    "DocumentsChecker": "classic-path-core",
+    "GamePathFinder": "classic-path-core",
     "detectEncoding": "classic-file-io-core",
     "hashFile": "classic-file-io-core",
     "hashFilesParallel": "classic-file-io-core",

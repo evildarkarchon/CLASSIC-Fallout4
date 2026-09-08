@@ -90,3 +90,69 @@ def test_xse_byte_inventory_rejects_modified_and_additional_files():
         assert not derive_observed_fact_ids(
             document, scenario, changed, XSE_OPERATIONS_COVERAGE_POLICY
         )
+
+
+def test_all_six_xse_variants_have_detection_evidence():
+    """Every public constructor needs its own variant-specific metadata and detection facts."""
+    document = load_and_validate_pack(ROOT, PACK).document()
+    names = {"F4SE", "F4SEVR", "SKSE", "SKSE64", "SKSEVR", "SFSE"}
+    for name in names:
+        scenarios = [
+            case
+            for case in document["scenarios"]
+            if case["expected"]["typeName"] == name
+        ]
+        assert {case["expected"]["version"] for case in scenarios} == {None, "1.10.163"}
+        for scenario in scenarios:
+            facts = derive_observed_fact_ids(
+                document, scenario, scenario["expected"], XSE_OPERATIONS_COVERAGE_POLICY
+            )
+            assert facts
+            predicates = [
+                item
+                for item in XSE_OPERATIONS_COVERAGE_POLICY.predicates
+                if item.id in facts
+            ]
+            assert any(
+                item.covers_runtime_operation(name.lower()) for item in predicates
+            )
+            assert all(
+                not item.covers_runtime_operation(other.lower())
+                for item in predicates
+                for other in names - {name}
+            )
+
+
+def test_variant_fixture_cannot_claim_another_variant_or_unsafe_filename(tmp_path):
+    """Variant selection must agree with exact metadata and its safe filename vocabulary."""
+    import copy
+    import json
+
+    import pytest
+    from conformance.families.xse_operations import validate_xse_operations_pack
+
+    document = load_and_validate_pack(ROOT, PACK).document()
+    scenario = next(
+        case for case in document["scenarios"] if case["id"] == "skse64-detected"
+    )
+    document["scenarios"] = [scenario]
+    path = tmp_path / document["fixtureRoot"] / document["fixtures"][scenario["id"]]
+    path.parent.mkdir(parents=True)
+    valid = {"kind": "SKSE64", "files": ["skse64_1_10_163.dll", "skse64_loader.exe"]}
+    for invalid in (
+        dict(valid, kind="F4SE"),
+        dict(valid, kind="../SKSE64"),
+        dict(valid, files=["../skse64_loader.exe"]),
+        dict(valid, files=["f4se_loader.exe"]),
+        dict(valid, files=["skse64_loader.exe", "skse64_loader.exe"]),
+        dict(valid, files=[]),
+    ):
+        path.write_text(json.dumps(invalid))
+        with pytest.raises(ValueError):
+            validate_xse_operations_pack(document, tmp_path)
+    path.write_text(json.dumps(valid))
+    changed = copy.deepcopy(document)
+    changed["scenarios"][0]["expected"]["typeName"] = "SKSEVR"
+    with pytest.raises(ValueError):
+        validate_xse_operations_pack(changed, tmp_path)
+    assert validate_xse_operations_pack(document, tmp_path) == (path.resolve(),)
