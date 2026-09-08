@@ -2,6 +2,8 @@
 // Private User Settings observations share the enclosing runner's receipt,
 // fixture materialization, path, and digest utilities. No frontend is linked.
 
+#include "classic_cxx_user_settings_defaults_conformance.h"
+
 /// Reads exact source bytes so public revision and retained content can be checked independently.
 std::vector<std::uint8_t> settings_source_bytes(const fs::path& path) {
     std::ifstream input(path, std::ios::binary);
@@ -102,7 +104,9 @@ json execute_user_settings_open_scenario(const json& plan, const json& scenario)
     const json before = settings_tree_snapshot(temporary.path());
     // The aggregate is a public bridge DTO projected from one Rust open, so
     // every selected typed group describes the same retained source revision.
-    const auto snapshot = classic::settings::user_settings_open_gui_settings(temporary.path().string());
+    auto snapshot = classic::settings::user_settings_open_gui_settings(temporary.path().string());
+    // Exercise the standalone Game Setup entry point; selected fields below observe its result.
+    snapshot.game_setup = classic::settings::user_settings_open_game_setup_settings(temporary.path().string());
     const auto& update = snapshot.update_preferences;
     const std::string source_path = owned_string(update.source_path);
     const bool has_source = !source_path.empty();
@@ -180,16 +184,111 @@ json settings_operation_tree(const fs::path& root) {
 /// Forwards the pack's requested typed values without duplicating Rust validation or defaults.
 classic::settings::UserSettingsUpdateDto settings_requested_update(const json& requested) {
     classic::settings::UserSettingsUpdateDto update{};
+    if (requested.contains("/UI/window_geometry/main_tab/maximized")) {
+        classic::settings::UserSettingsWindowGeometryUpdateDto geometry{};
+        geometry.tab = "main_tab";
+        geometry.maximized = requested.at("/UI/window_geometry/main_tab/maximized").get<bool>();
+        geometry.width = requested.at("/UI/window_geometry/main_tab/width").get<std::int64_t>();
+        geometry.height = requested.at("/UI/window_geometry/main_tab/height").get<std::int64_t>();
+        update.window_geometry_updates.push_back(std::move(geometry));
+    }
+    if (requested.contains("/UI/tui/active_tab")) {
+        update.has_tui_remembered_state = true;
+        update.tui_active_tab = requested.at("/UI/tui/active_tab").get<std::int64_t>();
+        update.tui_results_panel_width = requested.at("/UI/tui/results_panel_width").get<std::int64_t>();
+        update.tui_sort_ascending = requested.at("/UI/tui/sort_ascending").get<bool>();
+    }
     for (const auto& [field, value] : requested.items()) {
+        if (field == "/UI/window_geometry/main_tab/maximized" || field == "/UI/window_geometry/main_tab/width" ||
+            field == "/UI/window_geometry/main_tab/height" || field == "/UI/tui/active_tab" ||
+            field == "/UI/tui/results_panel_width" || field == "/UI/tui/sort_ascending")
+            continue;
         if (field == "/CLASSIC_Settings/Update Check") {
             update.has_update_check = true;
             update.update_check = value.get<bool>();
+        } else if (field == "/CLASSIC_Settings/Update Source") {
+            update.has_update_source = true;
+            update.update_source = value.get<std::string>();
+        } else if (field == "/UI/preferences/auto_switch_after_scan") {
+            update.has_auto_switch_after_scan = true;
+            update.auto_switch_after_scan = value.get<bool>();
+        } else if (field == "/CLASSIC_Settings/Managed Game") {
+            update.has_managed_game = true;
+            update.managed_game = value.get<std::string>();
+        } else if (field == "/CLASSIC_Settings/Game Version") {
+            update.has_game_version_selection = true;
+            update.game_version_selection = value.get<std::string>();
+        } else if (field == "/CLASSIC_Settings/Game Folder Path") {
+            update.has_game_root = true;
+            update.has_game_root_value = !value.is_null();
+            if (!value.is_null())
+                update.game_root = value.get<std::string>();
+        } else if (field == "/CLASSIC_Settings/Game EXE Path") {
+            update.has_game_executable = true;
+            update.has_game_executable_value = !value.is_null();
+            if (!value.is_null())
+                update.game_executable = value.get<std::string>();
+        } else if (field == "/CLASSIC_Settings/Documents Folder Path") {
+            update.has_documents_root = true;
+            update.has_documents_root_value = !value.is_null();
+            if (!value.is_null())
+                update.documents_root = value.get<std::string>();
+        } else if (field == "/CLASSIC_Settings/INI Folder Path") {
+            update.has_ini_folder = true;
+            update.has_ini_folder_value = !value.is_null();
+            if (!value.is_null())
+                update.ini_folder = value.get<std::string>();
+        } else if (field == "/CLASSIC_Settings/MODS Folder Path") {
+            update.has_mods_folder = true;
+            update.has_mods_folder_value = !value.is_null();
+            if (!value.is_null())
+                update.mods_folder = value.get<std::string>();
+        } else if (field == "/CLASSIC_Settings/FCX Mode") {
+            update.has_fcx_mode = true;
+            update.fcx_mode = value.get<bool>();
+        } else if (field == "/CLASSIC_Settings/Simplify Logs") {
+            update.has_simplify_logs = true;
+            update.simplify_logs = value.get<bool>();
+        } else if (field == "/CLASSIC_Settings/Show Statistics") {
+            update.has_show_statistics = true;
+            update.show_statistics = value.get<bool>();
+        } else if (field == "/CLASSIC_Settings/Show FormID Values") {
+            update.has_formid_value_lookup = true;
+            update.formid_value_lookup = value.get<bool>();
+        } else if (field == "/CLASSIC_Settings/FormID Databases") {
+            update.has_formid_databases = true;
+            for (const auto& [game, paths] : value.items()) {
+                update.formid_database_games.push_back(game);
+                for (const auto& path : paths) {
+                    classic::settings::FormIdDatabasePathDto row{};
+                    row.game = game;
+                    row.path = path.get<std::string>();
+                    update.formid_database_paths.push_back(std::move(row));
+                }
+            }
+        } else if (field == "/CLASSIC_Settings/Move Unsolved Logs") {
+            update.has_move_unsolved_logs = true;
+            update.move_unsolved_logs = value.get<bool>();
+        } else if (field == "/CLASSIC_Settings/Unsolved Logs Destination") {
+            update.has_unsolved_logs_destination = true;
+            update.has_unsolved_logs_destination_value = !value.is_null();
+            if (!value.is_null())
+                update.unsolved_logs_destination = value.get<std::string>();
+        } else if (field == "/CLASSIC_Settings/SCAN Custom Path") {
+            update.has_custom_scan_input = true;
+            update.has_custom_scan_input_value = !value.is_null();
+            if (!value.is_null())
+                update.custom_scan_input = value.get<std::string>();
+        } else if (field == "/CLASSIC_Settings/Papyrus Log Path") {
+            update.has_papyrus_log_path = true;
+            update.has_papyrus_log_path_value = !value.is_null();
+            if (!value.is_null())
+                update.papyrus_log_path = value.get<std::string>();
         } else if (field == "/CLASSIC_Settings/Max Concurrent Scans") {
             update.has_max_concurrent_scans = true;
             update.max_concurrent_scans = value.get<std::int64_t>();
-        } else {
+        } else
             throw RunnerError("unsupported requested User Settings field: " + field);
-        }
     }
     return update;
 }
@@ -204,6 +303,14 @@ json settings_operation_preview(const classic::settings::UserSettingsUpdatePrevi
             value = field.bool_value;
         } else if (kind == "u32") {
             value = field.u32_value;
+        } else if (kind == "string" || kind == "optional_string") {
+            value = field.has_string_value ? json(owned_string(field.string_value)) : json(nullptr);
+        } else if (kind == "formid_databases") {
+            value = json::object();
+            for (const auto& game : preview.formid_database_games)
+                value[owned_string(game)] = json::array();
+            for (const auto& row : preview.formid_database_paths)
+                value[owned_string(row.game)].push_back(owned_string(row.path));
         } else {
             throw RunnerError("unsupported observed User Settings field kind: " + kind);
         }
@@ -468,8 +575,125 @@ json execute_user_settings_migration_scenario(const json& plan, const json& scen
                 {"finalTree", settings_operation_tree(root)}};
 }
 
+/// Commit a native geometry transition and verify the returned revision against final bytes.
+json execute_user_settings_geometry(const json& plan, const json& scenario) {
+    TemporaryDirectory temporary(plan.at("invocation").at("id").get<std::string>(),
+                                 scenario.at("id").get<std::string>());
+    const auto& root = temporary.path();
+    for (const auto& item : scenario.at("input").at("installationData"))
+        copy_fixture(plan, scenario, item, root, "installationData");
+    const auto initial = classic::settings::user_settings_open_gui_settings(root.string());
+    if (scenario.at("input").at("blockLock").get<bool>())
+        fs::create_directory(root / "CLASSIC Settings.yaml.commit.lock");
+    classic::settings::UserSettingsWindowGeometryUpdateDto update{};
+    update.tab = "main_tab";
+    update.width = 900;
+    update.height = 650;
+    update.maximized = false;
+    json transition;
+    try {
+        const auto outcome = classic::settings::user_settings_commit_frontend_geometry_transition(
+            root.string(), initial.update_preferences.revision, update);
+        if (owned_string(outcome.status) != "committed")
+            throw RunnerError("unexpected geometry outcome");
+        transition = json{
+            {"status", "committed"},
+            {"code", nullptr},
+            {"hasMessage", nullptr},
+            {"revisionMatches", owned_string(outcome.revision) ==
+                                    "sha256:" + Sha256::digest(settings_source_bytes(root / "CLASSIC Settings.yaml"))}};
+    } catch (const rust::Error& error) {
+        const std::string message = error.what();
+        const auto split = message.find(": ");
+        if (split == std::string::npos)
+            throw RunnerError("geometry error has no stable code prefix");
+        transition = json{{"status", "error"},
+                          {"code", message.substr(0, split)},
+                          {"hasMessage", message.size() > split + 2},
+                          {"revisionMatches", nullptr}};
+    }
+    const auto current = classic::settings::user_settings_open_gui_settings(root.string());
+    const auto geometry = settings_selected_view(current, json::array({"main_tab"})).at("main_tab");
+    const auto final_tree = settings_tree_snapshot(root);
+    json files = json::array();
+    for (const auto& [path, item] : final_tree.items())
+        files.push_back(json{{"path", path}, {"kind", item.at("kind")}});
+    return json{{"transition", transition}, {"geometry", geometry}, {"files", files}};
+}
+
+/// Observe the native import handle and restore its verified base while retaining exact files.
+json execute_user_settings_legacy_import(const json& plan, const json& scenario) {
+    TemporaryDirectory temporary(plan.at("invocation").at("id").get<std::string>(),
+                                 scenario.at("id").get<std::string>());
+    const auto& root = temporary.path();
+    for (const auto& item : scenario.at("input").at("installationData"))
+        copy_fixture(plan, scenario, item, root, "installationData");
+    const auto original = settings_source_bytes(root / "CLASSIC Settings.yaml"),
+               legacy = settings_source_bytes(root / "state.json");
+    const auto handle =
+        classic::settings::user_settings_import_legacy_tui_state(root.string(), (root / "state.json").string());
+    const auto outcome = classic::settings::user_settings_legacy_tui_import_outcome(*handle);
+    if (owned_string(outcome.status) != "applied")
+        throw RunnerError("legacy import has no applied receipt");
+    const auto published = settings_source_bytes(root / "CLASSIC Settings.yaml"),
+               backup = settings_source_bytes(fs::path(owned_string(outcome.backup_path)));
+    const auto current = classic::settings::user_settings_open_gui_settings(root.string());
+    const auto& tui = current.frontend_state;
+    const auto optional = [](const rust::String& text) -> json {
+        return text.empty() ? json(nullptr) : json(owned_string(text));
+    };
+    json observed{
+        {"status", owned_string(outcome.status)},
+        {"sourcePath", relative_path(root, fs::path(owned_string(outcome.source_path)))},
+        {"backupPath", relative_path(root, fs::path(owned_string(outcome.backup_path)))},
+        {"settingsPath", relative_path(root, fs::path(owned_string(outcome.settings_path)))},
+        {"settingsBackupPath", outcome.has_settings_backup_path
+                                   ? json(relative_path(root, fs::path(owned_string(outcome.settings_backup_path))))
+                                   : json(nullptr)},
+        {"sourceRevisionMatches", owned_string(outcome.source_revision) == "sha256:" + Sha256::digest(legacy)},
+        {"backupRevisionMatches",
+         owned_string(outcome.backup_revision) == "sha256:" + Sha256::digest(backup) && backup == legacy},
+        {"baseRevisionMatches", owned_string(outcome.base_settings_revision) == "sha256:" + Sha256::digest(original)},
+        {"publishedRevisionMatches",
+         owned_string(outcome.published_settings_revision) == "sha256:" + Sha256::digest(published)},
+        {"inapplicable", json{{"classification", optional(outcome.classification)},
+                              {"revision", optional(outcome.revision)},
+                              {"expectedRevision", optional(outcome.expected_revision)},
+                              {"actualRevision", optional(outcome.actual_revision)}}},
+        {"tui", json{{"activeTab", tui.tui_active_tab},
+                     {"resultsPanelWidth", tui.tui_results_panel_width},
+                     {"sortAscending", tui.tui_sort_ascending},
+                     {"origins", json::array({owned_string(tui.tui_active_tab_origin),
+                                              owned_string(tui.tui_results_panel_width_origin),
+                                              owned_string(tui.tui_sort_ascending_origin)})}}}};
+    const auto restored = classic::settings::user_settings_restore_legacy_tui_import(root.string(), *handle);
+    json restoration{{"status", owned_string(restored.status)},
+                     {"revisionMatches", owned_string(restored.revision) == "sha256:" + Sha256::digest(original) &&
+                                             settings_source_bytes(root / "CLASSIC Settings.yaml") == original},
+                     {"expectedRevision", optional(restored.expected_revision)},
+                     {"actualRevision", optional(restored.actual_revision)}};
+    std::map<std::string, json> ordered;
+    for (const auto& entry : fs::recursive_directory_iterator(root)) {
+        if (entry.is_regular_file()) {
+            auto path = relative_path(root, entry.path());
+            ordered[path] = json{{"path", path}, {"bytesHex", settings_bytes_hex(settings_source_bytes(entry.path()))}};
+        }
+    }
+    json files = json::array();
+    for (const auto& [path, value] : ordered)
+        files.push_back(value);
+    return json{{"import", observed}, {"restore", restoration}, {"files", files}};
+}
+
 /// Dispatches input-only User Settings scenarios to their public API observations.
 json execute_user_settings_scenario(const json& plan, const json& scenario) {
+    if (scenario.at("action") == "user-settings.legacy-import")
+        return execute_user_settings_legacy_import(plan, scenario);
+    if (scenario.at("action") == "user-settings.geometry")
+        return execute_user_settings_geometry(plan, scenario);
+    if (scenario.at("action") == "user-settings.defaults") {
+        return settings_defaults_projection();
+    }
     if (scenario.at("action") == "user-settings.migrate") {
         return execute_user_settings_migration_scenario(plan, scenario);
     }

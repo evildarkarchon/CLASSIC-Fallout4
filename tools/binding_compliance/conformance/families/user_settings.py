@@ -12,10 +12,18 @@ from typing import Any
 
 from ..compare import NormalizationError, exact_differences
 from ..coverage import CoveragePredicate, FamilyCoveragePolicy
+from .user_settings_defaults import DEFAULTS_PREDICATE, DEFAULTS_PROJECTION_PREDICATE
+from .user_settings_geometry import GEOMETRY_PREDICATES
+from .user_settings_legacy_import import LEGACY_IMPORT_PREDICATE, compile_legacy_import
 from .user_settings_migration import (
     compile_migrations,
     migration_predicates,
     normalize_migration,
+)
+from .user_settings_updates import (
+    UPDATE_FIELD_ORDER,
+    grouped_setter_predicates,
+    setter_predicates,
 )
 
 _DEFAULT_FIELDS = {
@@ -158,6 +166,7 @@ def compile_compatibility_expectations(
         }
     _compile_operations(result, oracle, fixture_root)
     compile_migrations(result, oracle, fixture_root)
+    compile_legacy_import(result, fixture_root)
     return result
 
 
@@ -340,10 +349,7 @@ def _compile_operations(
     fixture_ids = {
         filename: reference for reference, filename in pack["fixtures"].items()
     }
-    field_order = (
-        "/CLASSIC_Settings/Update Check",
-        "/CLASSIC_Settings/Max Concurrent Scans",
-    )
+    field_order = UPDATE_FIELD_ORDER
     for scenario in scenarios:
         if set(scenario["expected"]) != {"operationScenario"}:
             raise ValueError(
@@ -547,6 +553,16 @@ def _update_projection(observation: Mapping[str, Any]) -> bool:
     return isinstance(view, Mapping) and type(view.get("update_check")) is bool
 
 
+def _game_setup_projection(observation: Mapping[str, Any]) -> bool:
+    """Require the public Game Setup mods-root value selected by the corpus."""
+    view = observation.get("view")
+    return (
+        isinstance(view, Mapping)
+        and "mods_folder" in view
+        and (view["mods_folder"] is None or isinstance(view["mods_folder"], str))
+    )
+
+
 def _scan_projection(observation: Mapping[str, Any]) -> bool:
     """Require the observed game-version, movement, and concurrency projection."""
 
@@ -612,7 +628,7 @@ def _accepted_fields(observation: Mapping[str, Any]) -> bool:
         isinstance(field, Mapping)
         and set(field) == {"fieldPath", "value"}
         and isinstance(field["fieldPath"], str)
-        and type(field["value"]) in (bool, int)
+        and (field["value"] is None or type(field["value"]) in (bool, int, str, dict))
         for field in fields
     )
 
@@ -737,6 +753,21 @@ def _operation_predicates() -> tuple[CoveragePredicate, ...]:
 USER_SETTINGS_COVERAGE_POLICY = FamilyCoveragePolicy(
     family_id="user-settings",
     predicates=(
+        DEFAULTS_PREDICATE,
+        DEFAULTS_PROJECTION_PREDICATE,
+        *GEOMETRY_PREDICATES,
+        LEGACY_IMPORT_PREDICATE,
+        *setter_predicates(),
+        *grouped_setter_predicates(),
+        CoveragePredicate(
+            "user-settings.game-setup",
+            "user-settings.open",
+            "user-settings.open",
+            "projection",
+            ("GameSetupSettings",),
+            _game_setup_projection,
+            runtime_operations=("user_settings_open_game_setup_settings",),
+        ),
         *_operation_predicates(),
         *migration_predicates(),
         CoveragePredicate(

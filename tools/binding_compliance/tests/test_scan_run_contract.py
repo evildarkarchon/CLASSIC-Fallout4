@@ -29,6 +29,19 @@ def test_live_scan_run_contract_manifest_is_complete() -> None:
     validate_manifest(REPO_ROOT, manifest)
 
 
+def test_forbidden_export_inventory_keeps_live_sources_after_metadata_retirement() -> None:
+    """Retired metadata is absent while declarations and source contracts stay checked."""
+    surfaces = load_manifest(REPO_ROOT)["forbiddenExports"]
+    paths = {entry["path"] for entries in surfaces.values() for entry in entries}
+    assert not any("runtime_coverage_registry" in path for path in paths)
+    assert {
+        "node-bindings/classic-node/index.d.ts",
+        "docs/implementation/node_api_parity/baseline/parity_contract.json",
+        "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+        "docs/implementation/python_api_parity/baseline/parity_contract.json",
+    } <= paths
+
+
 def test_forbidden_legacy_export_fails_closed(tmp_path: Path) -> None:
     """A removed execution seam cannot reappear in a supported adapter."""
 

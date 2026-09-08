@@ -276,7 +276,7 @@ Check these in order:
 Useful follow-up artifacts:
 
 - [`node-bindings/classic-node/parity-artifacts/parity_diff_report.md`](../../node-bindings/classic-node/parity-artifacts/parity_diff_report.md)
-- [`node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md`](../../node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md)
+- [Binding Compliance Suite](binding-compliance-suite.md) authenticates executable receipts; source parity reports do not certify runtime coverage.
 - [`node-bindings/classic-node/parity-artifacts/tier1_gate_report.md`](../../node-bindings/classic-node/parity-artifacts/tier1_gate_report.md)
 
 ## Python checklist
@@ -291,7 +291,7 @@ Check these in order:
 Useful follow-up artifacts:
 
 - [`python-bindings/parity-artifacts/parity_diff_report.md`](../../python-bindings/parity-artifacts/parity_diff_report.md)
-- [`python-bindings/parity-artifacts/runtime_coverage_summary.md`](../../python-bindings/parity-artifacts/runtime_coverage_summary.md)
+- [Binding Compliance Suite](binding-compliance-suite.md) authenticates executable receipts; source parity reports do not certify runtime coverage.
 - [`python-bindings/parity-artifacts/tier1_gate_report.md`](../../python-bindings/parity-artifacts/tier1_gate_report.md)
 - [`python-bindings/parity-artifacts/stub_validation_report.json`](../../python-bindings/parity-artifacts/stub_validation_report.json)
 
@@ -308,7 +308,7 @@ Node keeps binding-local parity artifacts in [`node-bindings/classic-node/parity
 Current source-backed examples:
 
 - [`node-bindings/classic-node/parity-artifacts/tier1_gate_report.md`](../../node-bindings/classic-node/parity-artifacts/tier1_gate_report.md) records the current Tier-1 matched, missing, and signature-mismatch totals
-- [`node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md`](../../node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md) records the current tracked-surface, runtime-verified, and newly-uncovered totals
+- [Binding Compliance Suite](binding-compliance-suite.md) authenticates executable receipts; source parity reports do not certify runtime coverage.
 
 See [`docs/api/binding-parity-policy.md`](binding-parity-policy.md) for gate refresh policy.
 
@@ -319,7 +319,7 @@ Python keeps binding-local parity artifacts in [`python-bindings/parity-artifact
 Current source-backed examples:
 
 - [`python-bindings/parity-artifacts/tier1_gate_report.md`](../../python-bindings/parity-artifacts/tier1_gate_report.md) records the current Tier-1 matched, missing, and signature-mismatch totals
-- [`python-bindings/parity-artifacts/runtime_coverage_summary.md`](../../python-bindings/parity-artifacts/runtime_coverage_summary.md) records the current tracked-surface, runtime-verified, and newly-uncovered totals
+- [Binding Compliance Suite](binding-compliance-suite.md) authenticates executable receipts; source parity reports do not certify runtime coverage.
 - [`python-bindings/parity-artifacts/stub_validation_report.json`](../../python-bindings/parity-artifacts/stub_validation_report.json) is the direct stub-consistency artifact produced by the current validation workflow
 
 See [`docs/api/binding-parity-policy.md`](binding-parity-policy.md) for gate refresh policy.

@@ -21,8 +21,12 @@ FAMILIES = {
     "xse-operations",
     "installation-paths",
     "game-identity",
+    "runtime-access",
     "file-fingerprint",
     "performance",
+    "performance-timers",
+    "message-logging",
+    "update-rejection",
     "update-decisions",
     "update-services",
     "string-operations",
@@ -56,13 +60,33 @@ FAMILIES = {
     "config-vocabulary",
     "scan-run-vocabulary",
     "config-operations",
+    "yaml-source-values",
+    "xse-plugin-validation",
+    "path-backups",
+    "game-integrity",
+    "game-orchestration",
+    "game-setup-intake",
     "file-operations",
+    "file-generation",
+    "mod-ini",
+    "wrye-report",
+    "log-collection",
+    "crash-pattern",
+    "formid-finding",
+    "ba2-scan",
+    "unpacked-scan",
+    "crashgen-check",
     "path-operations",
     "path-normalization",
     "message-operations",
     "database-operations",
     "version-registry",
     "scan-game",
+    "dds-header",
+    "yaml-file-values",
+    "shared-performance",
+    "log-parsing",
+    "papyrus-monitor",
 }
 
 
@@ -134,7 +158,21 @@ def _load_plan(path: Path) -> Mapping[str, Any]:
         if plan["familyId"] in {"config-vocabulary", "scan-run-vocabulary"}:
             actions = {"vocabulary.resolve"}
         actions = {
-            "config-operations": {"config-operations.load-explicit"},
+            "config-operations": {
+                "config-operations.clear-cache",
+                "config-operations.load-explicit",
+                "config-operations.main-version",
+                "config-operations.persist-local",
+            },
+            "yaml-source-values": {"yaml-source-values.matrix"},
+            "xse-plugin-validation": {"xse-plugin-validation.check"},
+            "path-backups": {"path-backups.versioned"},
+            "game-integrity": {"game-integrity.basic", "game-integrity.options"},
+            "game-orchestration": {"game-orchestration.composed"},
+            "game-setup-intake": {
+                "game-setup-intake.run",
+                "game-setup-intake.normalize",
+            },
             "file-operations": {
                 "file-operations.read-text",
                 "file-operations.write-text",
@@ -149,8 +187,25 @@ def _load_plan(path: Path) -> Mapping[str, Any]:
             "version-registry-details": {"version-registry-details.execute"},
             "xse-operations": {"xse-operations.inspect"},
             "installation-paths": {"installation-paths.inspect"},
-            "game-identity": {"game-identity.observe"},
+            "game-identity": {
+                "game-identity.observe",
+                "game-identity.metadata",
+                "game-identity.details",
+            },
+            "runtime-access": {"runtime-access.observe"},
+            "update-rejection": {
+                "update-rejection.latest",
+                "update-rejection.all",
+                "update-rejection.notification",
+                "update-rejection.metadata",
+            },
             "performance": {"performance.metrics"},
+            "performance-timers": {"performance-timers.observe"},
+            "message-logging": {
+                "message-logging.basic",
+                "message-logging.extended",
+                "message-logging.format",
+            },
             "update-decisions": {"update-decisions.compare"},
             "update-services": {"update-services.notification"},
             "string-operations": {"string-operations.execute"},
@@ -175,14 +230,44 @@ def _load_plan(path: Path) -> Mapping[str, Any]:
             "version-pe": {"version-pe.observe"},
             "version-pe-path": {"version-pe-path.observe"},
             "message-operations": {"message-operations.format"},
-            "database-operations": {"database-operations.pool"},
+            "database-operations": {
+                "database-operations.pool",
+                "database-operations.cache-defaults",
+            },
             "version-registry": {
                 "version-registry.query",
                 "version-registry.enumerate",
                 "version-registry.crashgen",
                 "version-registry.xse",
             },
-            "scan-game": {"scan-game.validate-ini", "scan-game.validate-enb"},
+            "scan-game": {
+                "scan-game.validate-ini",
+                "scan-game.validate-enb",
+                "scan-game.process-logs",
+                "scan-game.assemble-reports",
+            },
+            "dds-header": {"dds-header.parse", "dds-header.files"},
+            "yaml-file-values": {"yaml-file-values.observe"},
+            "shared-performance": {"shared-performance.observe"},
+            "log-parsing": {
+                "log-parsing.patterns",
+                "log-parsing.parser",
+                "log-parsing.formids",
+                "log-parsing.plugins",
+                "log-parsing.records",
+                "log-parsing.gpu",
+                "log-parsing.crashgen-version",
+            },
+            "papyrus-monitor": {"papyrus-monitor.observe"},
+            "file-generation": {"file-generation.generate"},
+            "mod-ini": {"mod-ini.cache", "mod-ini.scan", "mod-ini.duplicates"},
+            "wrye-report": {"wrye-report.format"},
+            "log-collection": {"log-collection.collect"},
+            "crash-pattern": {"crash-pattern.classify", "crash-pattern.vr"},
+            "formid-finding": {"formid-finding.analyze", "formid-finding.sqlite"},
+            "ba2-scan": {"ba2-scan.full"},
+            "unpacked-scan": {"unpacked-scan.scan"},
+            "crashgen-check": {"crashgen-check.check"},
         }.get(plan["familyId"], actions)
         if scenario.get("action") not in actions:
             raise RunnerContractError("unsupported semantic action")
@@ -489,6 +574,62 @@ def _execute_scenario(
         from scan_game_conformance import observe_scan_game
 
         return observe_scan_game(fixture)
+    if plan["familyId"] == "yaml-file-values":
+        from yaml_file_values_conformance import observe_yaml_file_values
+
+        return observe_yaml_file_values(fixture)
+    if plan["familyId"] == "shared-performance":
+        from shared_performance_conformance import observe_shared_performance
+
+        return observe_shared_performance(fixture)
+    if plan["familyId"] == "dds-header":
+        from dds_header_conformance import observe_dds_header
+
+        return observe_dds_header(fixture)
+    if plan["familyId"] == "log-parsing":
+        from log_parsing_conformance import observe_log_parsing
+
+        return observe_log_parsing(fixture)
+    if plan["familyId"] == "file-generation":
+        from file_generation_conformance import observe_file_generation
+
+        return observe_file_generation(fixture)
+    if plan["familyId"] == "mod-ini":
+        from mod_ini_conformance import observe_mod_ini
+
+        return observe_mod_ini(fixture)
+    if plan["familyId"] == "wrye-report":
+        from wrye_report_conformance import observe_wrye_report
+
+        return observe_wrye_report(fixture)
+    if plan["familyId"] == "log-collection":
+        from log_collection_conformance import observe_log_collection
+
+        return observe_log_collection(fixture)
+    if plan["familyId"] == "crash-pattern":
+        from crash_pattern_conformance import observe_crash_pattern
+
+        return observe_crash_pattern(fixture)
+    if plan["familyId"] == "formid-finding":
+        from formid_finding_conformance import observe_formid_finding
+
+        return observe_formid_finding(fixture)
+    if plan["familyId"] == "ba2-scan":
+        from ba2_scan_conformance import observe_ba2_scan
+
+        return observe_ba2_scan(fixture)
+    if plan["familyId"] == "unpacked-scan":
+        from unpacked_scan_conformance import observe_unpacked_scan
+
+        return observe_unpacked_scan(fixture)
+    if plan["familyId"] == "crashgen-check":
+        from crashgen_check_conformance import observe_crashgen_check
+
+        return observe_crashgen_check(fixture)
+    if plan["familyId"] == "papyrus-monitor":
+        from papyrus_monitor_conformance import observe_papyrus_monitor
+
+        return observe_papyrus_monitor(fixture)
     if plan["familyId"] == "file-fingerprint":
         from file_fingerprint_conformance import observe_file_fingerprint
 
@@ -533,7 +674,7 @@ def _execute_scenario(
         from xse_operations_conformance import observe_xse_operations
 
         return observe_xse_operations(fixture)
-    if plan["familyId"] == "game-identity":
+    if plan["familyId"] in {"game-identity", "runtime-access"}:
         from shared_identity_conformance import observe_shared_identity
 
         return observe_shared_identity(plan["familyId"], fixture)
@@ -541,6 +682,18 @@ def _execute_scenario(
         from performance_conformance import observe_performance
 
         return observe_performance(fixture)
+    if plan["familyId"] == "performance-timers":
+        from performance_conformance import observe_timers
+
+        return observe_timers(fixture)
+    if plan["familyId"] == "update-rejection":
+        from update_rejection_conformance import observe_update_rejection
+
+        return observe_update_rejection(fixture)
+    if plan["familyId"] == "message-logging":
+        from message_logging_conformance import observe_message_logging
+
+        return observe_message_logging(fixture)
     if plan["familyId"] == "update-services":
         from update_services_conformance import observe_update_services
 
@@ -569,6 +722,30 @@ def _execute_scenario(
         from config_operations_conformance import observe_config_operations
 
         return observe_config_operations(fixture)
+    if plan["familyId"] == "yaml-source-values":
+        from yaml_source_values_conformance import observe_yaml_sources
+
+        return observe_yaml_sources(fixture)
+    if plan["familyId"] == "xse-plugin-validation":
+        from xse_plugin_validation_conformance import observe_xse_plugins
+
+        return observe_xse_plugins(fixture)
+    if plan["familyId"] == "path-backups":
+        from path_backups_conformance import observe_path_backups
+
+        return observe_path_backups(fixture)
+    if plan["familyId"] == "game-integrity":
+        from game_integrity_conformance import observe_integrity
+
+        return observe_integrity(fixture)
+    if plan["familyId"] == "game-orchestration":
+        from game_orchestration_conformance import observe_orchestration
+
+        return observe_orchestration(fixture)
+    if plan["familyId"] == "game-setup-intake":
+        from game_setup_intake_conformance import observe_setup
+
+        return observe_setup(fixture)
     if plan["familyId"] == "file-operations":
         from file_operations_conformance import observe_file_operations
 

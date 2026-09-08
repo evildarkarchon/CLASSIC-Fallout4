@@ -74,7 +74,6 @@ class SettingsCacheStats(TypedDict):
 
 class YamlFile:
     Main: YamlFile
-    Settings: YamlFile
     Ignore: YamlFile
     Game: YamlFile
     GameLocal: YamlFile

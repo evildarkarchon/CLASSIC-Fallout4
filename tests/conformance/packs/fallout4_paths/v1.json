@@ -11,8 +11,17 @@
   },
   "capabilities": [
     {
+      "id": "fallout4-paths.config-exe",
+      "operationScoped": true,
+      "rustCrate": "classic-config-core",
+      "rustSymbols": ["resolve_registry_version_info"],
+      "observationFamilies": ["value-results"]
+    },
+    {
       "id": "fallout4-paths.observe",
+      "operationScoped": true,
       "rustSymbols": [
+        "Fallout4Version",
         "as_str",
         "docs_folder_name",
         "is_standard",
@@ -28,6 +37,7 @@
       "id": "all",
       "action": "fallout4-paths.observe",
       "capabilityIds": [
+        "fallout4-paths.config-exe",
         "fallout4-paths.observe"
       ],
       "fixtureRefs": [

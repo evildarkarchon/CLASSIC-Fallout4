@@ -7,14 +7,25 @@
   },
   "fixtureRoot": "tests/fixtures/web_operations_conformance",
   "fixtures": {
+    "game-routes": "game-routes.json",
     "https-query": "https-query.json",
     "invalid-scheme": "invalid-scheme.json",
     "invalid-url": "invalid-url.json"
   },
   "capabilities": [
     {
+      "id": "web-operations.routes",
+      "operationScoped": true,
+      "rustSymbols": ["game_url"],
+      "observationFamilies": ["game-routes"]
+    },
+    {
       "id": "web-operations.observe",
       "rustSymbols": [
+        "name",
+        "base_url",
+        "USER_AGENT_PREFIX",
+        "CLASSIC_VERSION",
         "is_valid_url",
         "validate_url",
         "extract_domain",
@@ -30,6 +41,13 @@
     }
   ],
   "scenarios": [
+    {
+      "id": "game-routes", "action": "web-operations.routes",
+      "capabilityIds": ["web-operations.routes"],
+      "fixtureRefs": ["game-routes"], "input": {"fixtureRef": "game-routes"},
+      "expected": {"urls": ["https://www.nexusmods.com/fallout4", "https://bethesda.net/mods", "https://www.moddb.com/games"]},
+      "normalization": {"excludedPaths": [], "rootRelativePaths": false, "unorderedPaths": []}
+    },
     {
       "id": "https-query",
       "action": "web-operations.observe",

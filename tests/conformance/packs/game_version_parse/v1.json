@@ -7,6 +7,7 @@
   },
   "fixtureRoot": "tests/fixtures/version_values_conformance",
   "fixtures": {
+    "game-version-parse-null": "game-version-parse-null.json",
     "game-version-parse-three": "game-version-parse-three.json",
     "game-version-parse-four": "game-version-parse-four.json",
     "game-version-parse-invalid": "game-version-parse-invalid.json",
@@ -16,6 +17,7 @@
     {
       "id": "game-version-parse.observe",
       "rustSymbols": [
+        "NULL_VERSION",
         "parse",
         "GameVersion"
       ],
@@ -25,6 +27,13 @@
     }
   ],
   "scenarios": [
+    {
+      "id": "null-version", "action": "game-version-parse.observe",
+      "capabilityIds": ["game-version-parse.observe"],
+      "fixtureRefs": ["game-version-parse-null"], "input": {"fixtureRef": "game-version-parse-null"},
+      "expected": {"parsed": "0.0.0.0"},
+      "normalization": {"excludedPaths": [], "rootRelativePaths": false, "unorderedPaths": []}
+    },
     {
       "id": "three",
       "action": "game-version-parse.observe",

@@ -1925,10 +1925,11 @@ export declare function detectConfigDuplicates(rootPath: string): Array<JsDuplic
  *
  * Analyzes the log header for known crash patterns (e.g., "ACCESS_VIOLATION",
  * "STACK_OVERFLOW", "STACK_BUFFER_OVERRUN"). Returns the pattern name if
- * detected, or `undefined` if no known pattern is found.
+ * detected, or `null` if no known pattern is found. The shared Rust core scans
+ * only the first 30 lines and recognizes case-insensitive hexadecimal aliases.
  *
  * @param content - The crash log content to analyze.
- * @returns The crash pattern name, or `undefined` if none detected.
+ * @returns The crash pattern name, or `null` if none detected.
  */
 export declare function detectCrashPattern(content: string): string | null
 
@@ -2528,6 +2529,12 @@ export declare function hasUpdate(currentVersion: string, latestVersion: string)
  * the stable core code in `error.code` and human-readable context in `error.message`.
  */
 export declare function importLegacyTuiStateIntoUserSettings(classicRoot: string, legacyStatePath: string): JsLegacyTuiStateImportOutcome
+
+/**
+ * Initialize the process logger explicitly, honoring RUST_LOG and preserving an existing logger.
+ * Repeated calls are safe; importing the binding does not initialize logging.
+ */
+export declare function initLogging(): void
 
 /**
  * Inspect update-eligible Main and game YAML Data for one CLASSIC installation.

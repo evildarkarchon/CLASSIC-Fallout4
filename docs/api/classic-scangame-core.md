@@ -70,6 +70,12 @@ This crate exposes public modules directly and also re-exports most contributor-
 - `config` - lower-level duplicate config-file detector
 - `ini` - standalone INI validator APIs used less often than `mod_ini`
 
+`ConfigDuplicateDetector::scan_directory` publishes the same groups returned by
+`get_duplicates`. Canonical files follow sorted path order, hashes are reused
+only within one scan, and a new or failed scan cannot expose stale groups from
+the previous directory contents. Node and Python detector methods delegate to
+this state, so object results and returned duplicate maps now agree.
+
 ### Root re-exports
 
 `lib.rs` re-exports the main integration types, including:

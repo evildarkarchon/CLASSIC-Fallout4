@@ -1,0 +1,17 @@
+{
+  "files": {
+    "BodySlide/source.png": "ignored source",
+    "textures/loose.png": "loose texture",
+    "textures/sample.dds": "DDS path only",
+    "sound/music.mp3": "audio",
+    "scripts/f4se.pex": "script",
+    "meshes/previs.uvd": "previs",
+    "meshes/precombine_oc.nif": "precombine"
+  },
+  "directories": [
+    "meshes/AnimationFileData"
+  ],
+  "scripts": [
+    "f4se.pex"
+  ]
+}

@@ -14,7 +14,9 @@
   "capabilities": [
     {
       "id": "game-version-order.observe",
+      "operationScoped": true,
       "rustSymbols": [
+        "GameVersion",
         "same_major"
       ],
       "observationFamilies": [

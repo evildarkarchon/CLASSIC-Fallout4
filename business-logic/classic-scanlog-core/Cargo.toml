@@ -79,6 +79,8 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+# Setup conformance exercises the typed settings-to-intake conversion directly.
+classic-user-settings-core = { path = "../classic-user-settings-core" }
 classic-xse-core = { path = "../classic-xse-core" }
 classic-perf-core = { path = "../classic-perf-core" }
 classic-registry-core = { path = "../classic-registry-core" }

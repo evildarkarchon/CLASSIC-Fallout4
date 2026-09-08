@@ -46,6 +46,16 @@ fn inventory(root: &Path, directory: &Path) -> RunnerResult<Vec<Value>> {
 
 /// Run native pool operations; cleanup precedes byte observation even on a native failure.
 pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
+    if fixture == &json!({"operation":"cache-defaults"}) {
+        use classic_database_core::{
+            BATCH_CACHE_TTL_SECS, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS,
+            DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, DEFAULT_CACHE_TTL_SECS,
+            DEFAULT_QUERY_CACHE_CAPACITY, MAX_CACHE_TTL_SECS,
+        };
+        return Ok(
+            json!({"defaultTtl":DEFAULT_CACHE_TTL_SECS, "batchTtl":BATCH_CACHE_TTL_SECS, "maximumTtl":MAX_CACHE_TTL_SECS, "capacity":DEFAULT_QUERY_CACHE_CAPACITY, "cleanupThreshold":DEFAULT_CACHE_CLEANUP_OP_THRESHOLD, "cleanupInterval":DEFAULT_CACHE_CLEANUP_INTERVAL_SECS}),
+        );
+    }
     if fixture["operation"] != "pool"
         || fixture.as_object().is_none_or(|object| {
             object.len() != 3
@@ -98,7 +108,11 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
                     .collect::<Vec<_>>()
             );
         }
+        let cache_size = pool.cache_size();
         observation["cleared"] = json!(pool.clear_cache(false));
+        if observation["cleared"] != json!(cache_size) {
+            return Err(invalid("cache size disagrees with removed entries").into());
+        }
         observation["afterClear"] = json!(pool.clear_cache(false));
         Ok(())
     });

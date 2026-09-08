@@ -79,6 +79,7 @@ define_exceptions!(
 // Import all wrapper modules
 /// Conversion helpers for `CoreModExclude` ↔ Python dict round-tripping.
 pub mod core_mod_convert;
+pub mod crash_pattern;
 pub mod crash_suspect_analyzer;
 /// Crashgen settings rule parsing helpers for Python inputs.
 pub mod crashgen_rules;
@@ -101,6 +102,7 @@ pub mod scan_run;
 pub mod version;
 
 // Re-export all public types
+pub use crash_pattern::detect_crash_pattern;
 pub use crash_suspect_analyzer::{
     PyCrashSuspectAnalysisInput, PyCrashSuspectAnalysisResult, PyCrashSuspectAnalyzer,
     PyCrashSuspectFinding, PyCrashSuspectFindingKind, PyCrashSuspectMainErrorRule,
@@ -279,6 +281,7 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Parser
     m.add_class::<PyLogParser>()?;
     m.add_class::<parser::ScanOutput>()?;
+    m.add_function(wrap_pyfunction!(detect_crash_pattern, m)?)?;
 
     // FormID analysis
     m.add_class::<PyRustFormIDAnalyzer>()?;

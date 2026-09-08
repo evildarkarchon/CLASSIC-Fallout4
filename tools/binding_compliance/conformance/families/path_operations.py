@@ -170,7 +170,7 @@ def path_operations_coverage_policy() -> FamilyCoveragePolicy:
                     "is_valid_path",
                     "path-operations.validate",
                     "is_valid_path",
-                    ("validate_path", "PathValidator.is_valid_path"),
+                    ("validate_path", "PathValidator.is_valid_path", "isValidPath"),
                 ),
                 (
                     "validate_required_files",
@@ -179,6 +179,7 @@ def path_operations_coverage_policy() -> FamilyCoveragePolicy:
                     (
                         "path_validate_required_files",
                         "PathValidator.validate_required_files",
+                        "validateRequiredFiles",
                     ),
                 ),
             )
@@ -199,11 +200,29 @@ def path_normalization_coverage_policy() -> FamilyCoveragePolicy:
                 observation_family="path-resolution",
                 rust_symbols=("PathHandler", operation),
                 matches=_resolution_observation,
-                runtime_operations=(None, operation, "new")
+                runtime_operations=(
+                    None,
+                    operation,
+                    "new",
+                    "__init__",
+                    "cache_stats",
+                    "cache_metrics",
+                    "clear_cache",
+                    "cleanup_cache",
+                    "get_filename",
+                    "get_extension",
+                    "get_parent",
+                    "split_path",
+                    "split_path_fast",
+                    "is_absolute",
+                    "to_absolute",
+                    "common_prefix",
+                )
                 if operation == "normalize_path"
                 else (
                     None,
                     operation,
+                    "validate_paths_batch_fast",
                 ),
             )
             for operation in ("normalize_path", "join_paths", "validate_paths_batch")

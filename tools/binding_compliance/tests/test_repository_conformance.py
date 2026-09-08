@@ -1,8 +1,82 @@
 """Repository conformance must account for all packs and source parity rows."""
 
+import shutil
 from pathlib import Path
 
 import pytest
+
+
+def test_downloaded_receipts_preserve_separate_immutable_plan_pairs(
+    tmp_path: Path,
+) -> None:
+    """Artifact-name directories must not overwrite different participant runs."""
+    from conformance.repository import discover_repository_receipts
+
+    expected = []
+    for artifact in ("rust-family-conformance", "node-family-conformance"):
+        directory = tmp_path / "downloads" / artifact / "invocation"
+        directory.mkdir(parents=True)
+        (directory / "run_plan.json").write_text("{}", encoding="utf-8")
+        receipt = directory / "receipt.json"
+        receipt.write_text("{}", encoding="utf-8")
+        expected.append(receipt)
+    (tmp_path / "downloads" / "binding_compliance_report.json").write_text("{}")
+    assert discover_repository_receipts(tmp_path, Path("downloads")) == tuple(
+        sorted(expected)
+    )
+
+
+@pytest.mark.parametrize("damage", ("empty", "no-plan", "outside"))
+def test_downloaded_receipt_discovery_fails_closed(tmp_path: Path, damage: str) -> None:
+    """Empty, incomplete, or out-of-repository artifacts cannot become inputs."""
+    from conformance.command import ConformanceCommandError
+    from conformance.repository import discover_repository_receipts
+
+    directory = tmp_path / "downloads"
+    directory.mkdir()
+    if damage == "no-plan":
+        (directory / "receipt.json").write_text("{}", encoding="utf-8")
+    if damage == "outside":
+        directory = tmp_path.parent
+    with pytest.raises(ConformanceCommandError):
+        discover_repository_receipts(tmp_path, directory)
+
+
+@pytest.mark.parametrize("changed_source", (False, True))
+def test_downloaded_plan_remains_immutable_and_bound_to_source(
+    tmp_path: Path, changed_source: bool
+) -> None:
+    """Artifact relocation preserves authenticatable plans but cannot hide source changes."""
+    from conformance.packs import MaterializationError, load_prepared_run
+    from conformance.receipts import validate_prepared_run
+    from conformance.repository import discover_repository_receipts
+    from receipt_test_support import prepare_receipt_case
+
+    pack_path = Path("tests/conformance/packs/file_fingerprint/v1.json")
+    pack, run, _ = prepare_receipt_case(
+        Path(__file__).resolve().parents[3],
+        tmp_path,
+        pack_path,
+        "node",
+        runner_id="artifact-relocation-test",
+    )
+    original = run.run_plan_path.read_bytes()
+    download = tmp_path / "downloaded" / "node-file-fingerprint-conformance"
+    shutil.copytree(run.artifact_dir, download)
+    (receipt,) = discover_repository_receipts(tmp_path, Path("downloaded"))
+    if changed_source:
+        with (tmp_path / pack_path).open("a", encoding="utf-8") as source:
+            source.write("\n")
+        with pytest.raises(MaterializationError, match="source identity"):
+            load_prepared_run(
+                pack, receipt.parent / "run_plan.json", receipt_path=receipt
+            )
+    else:
+        moved = load_prepared_run(
+            pack, receipt.parent / "run_plan.json", receipt_path=receipt
+        )
+        assert not validate_prepared_run(pack, moved).failures
+    assert (receipt.parent / "run_plan.json").read_bytes() == original
 
 
 def test_empty_receipts_report_missing_families_and_runtime_rows() -> None:

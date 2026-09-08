@@ -20,18 +20,38 @@ from .coverage import (
 from .failures import FailureKind
 from .families.autoscan_report import AUTOSCAN_REPORT_COVERAGE_POLICY
 from .families.aux_operations import aux_operations_coverage_policy
+from .families.ba2_scan import BA2_SCAN_COVERAGE_POLICY
 from .families.config_operations import CONFIG_OPERATIONS_COVERAGE_POLICY
 from .families.crash_log_scan_run import CRASH_LOG_SCAN_RUN_COVERAGE_POLICY
+from .families.crash_pattern import CRASH_PATTERN_COVERAGE_POLICY
+from .families.crashgen_check import CRASHGEN_CHECK_COVERAGE_POLICY
 from .families.database_operations import DATABASE_OPERATIONS_COVERAGE_POLICY
+from .families.dds_header import DDS_HEADER_COVERAGE_POLICY
+from .families.file_backups import FILE_BACKUPS_COVERAGE_POLICY
 from .families.file_fingerprint import FILE_FINGERPRINT_COVERAGE_POLICY
+from .families.file_generation import FILE_GENERATION_COVERAGE_POLICY
 from .families.file_operations import FILE_OPERATIONS_COVERAGE_POLICY
+from .families.formid_finding import FORMID_FINDING_COVERAGE_POLICY
+from .families.game_integrity import GAME_INTEGRITY_COVERAGE_POLICY
+from .families.game_orchestration import GAME_ORCHESTRATION_COVERAGE_POLICY
+from .families.game_setup_intake import GAME_SETUP_INTAKE_COVERAGE_POLICY
+from .families.hash_cache_controls import HASH_CACHE_CONTROLS_COVERAGE_POLICY
+from .families.installation_paths import INSTALLATION_PATHS_COVERAGE_POLICY
 from .families.installed_yaml_data import INSTALLED_YAML_DATA_COVERAGE_POLICY
+from .families.interface_helpers import interface_coverage_policy
+from .families.log_collection import LOG_COLLECTION_COVERAGE_POLICY
+from .families.log_parsing import LOG_PARSING_COVERAGE_POLICY
+from .families.message_logging import MESSAGE_LOGGING_COVERAGE_POLICY
 from .families.message_operations import message_operations_coverage_policy
+from .families.mod_ini import MOD_INI_COVERAGE_POLICY
+from .families.papyrus_monitor import PAPYRUS_MONITOR_COVERAGE_POLICY
+from .families.path_backups import PATH_BACKUPS_COVERAGE_POLICY
 from .families.path_operations import (
     path_normalization_coverage_policy,
     path_operations_coverage_policy,
 )
 from .families.performance import PERFORMANCE_COVERAGE_POLICY
+from .families.performance_timers import PERFORMANCE_TIMERS_COVERAGE_POLICY
 from .families.registry_accessors import coverage_policy as registry_accessor_policy
 from .families.registry_keys import REGISTRY_KEYS_COVERAGE_POLICY
 from .families.scan_game import SCAN_GAME_COVERAGE_POLICY
@@ -43,8 +63,11 @@ from .families.settings_load import (
     settings_yaml_coverage_policy,
 )
 from .families.shared_identity import coverage_policy as shared_identity_coverage_policy
+from .families.shared_performance import SHARED_PERFORMANCE_COVERAGE_POLICY
 from .families.shared_registry import coverage_policy as shared_registry_coverage_policy
+from .families.unpacked_scan import UNPACKED_SCAN_COVERAGE_POLICY
 from .families.update_decisions import UPDATE_DECISIONS_COVERAGE_POLICY
+from .families.update_rejection import UPDATE_REJECTION_COVERAGE_POLICY
 from .families.update_services import UPDATE_SERVICES_COVERAGE_POLICY
 from .families.user_settings import USER_SETTINGS_COVERAGE_POLICY
 from .families.version_registry import VERSION_REGISTRY_COVERAGE_POLICY
@@ -52,9 +75,14 @@ from .families.version_registry_details import VERSION_REGISTRY_DETAILS_COVERAGE
 from .families.version_registry_values import VERSION_REGISTRY_VALUES_COVERAGE_POLICY
 from .families.version_values import version_values_coverage_policy
 from .families.vocabulary import vocabulary_coverage_policies
+from .families.windows_platform_paths import WINDOWS_PLATFORM_PATHS_POLICY
+from .families.wrye_report import WRYE_REPORT_COVERAGE_POLICY
 from .families.xse_folder import XSE_FOLDER_COVERAGE_POLICY
-from .families.installation_paths import INSTALLATION_PATHS_COVERAGE_POLICY
 from .families.xse_operations import XSE_OPERATIONS_COVERAGE_POLICY
+from .families.xse_plugin_validation import XSE_PLUGIN_VALIDATION_COVERAGE_POLICY
+from .families.yaml_file_values import YAML_FILE_VALUES_COVERAGE_POLICY
+from .families.yaml_source_values import YAML_SOURCE_VALUES_COVERAGE_POLICY
+from .families.yaml_update_operations import YAML_UPDATE_OPERATIONS_COVERAGE_POLICY
 from .packs import (
     MaterializationError,
     PackValidationError,
@@ -79,8 +107,27 @@ class ConformanceCommandError(ValueError):
 # Domain slices register repository-owned predicate policies here as they land.
 # An absent policy leaves coverage unresolved and therefore cannot pass a scope.
 FAMILY_COVERAGE_POLICIES: Mapping[str, FamilyCoveragePolicy] = {
+    "file-generation": FILE_GENERATION_COVERAGE_POLICY,
+    "mod-ini": MOD_INI_COVERAGE_POLICY,
+    "wrye-report": WRYE_REPORT_COVERAGE_POLICY,
+    "log-collection": LOG_COLLECTION_COVERAGE_POLICY,
+    "crash-pattern": CRASH_PATTERN_COVERAGE_POLICY,
+    "formid-finding": FORMID_FINDING_COVERAGE_POLICY,
+    "ba2-scan": BA2_SCAN_COVERAGE_POLICY,
+    "unpacked-scan": UNPACKED_SCAN_COVERAGE_POLICY,
+    "hash-cache-controls": HASH_CACHE_CONTROLS_COVERAGE_POLICY,
+    "crashgen-check": CRASHGEN_CHECK_COVERAGE_POLICY,
+    "dds-header": DDS_HEADER_COVERAGE_POLICY,
+    "log-parsing": LOG_PARSING_COVERAGE_POLICY,
+    "papyrus-monitor": PAPYRUS_MONITOR_COVERAGE_POLICY,
     "file-fingerprint": FILE_FINGERPRINT_COVERAGE_POLICY,
     "performance": PERFORMANCE_COVERAGE_POLICY,
+    "performance-timers": PERFORMANCE_TIMERS_COVERAGE_POLICY,
+    "message-logging": MESSAGE_LOGGING_COVERAGE_POLICY,
+    "markdown-rendering": interface_coverage_policy("markdown-rendering"),
+    "report-discovery": interface_coverage_policy("report-discovery"),
+    "windows-platform-paths": WINDOWS_PLATFORM_PATHS_POLICY,
+    "update-rejection": UPDATE_REJECTION_COVERAGE_POLICY,
     "update-decisions": UPDATE_DECISIONS_COVERAGE_POLICY,
     "update-services": UPDATE_SERVICES_COVERAGE_POLICY,
     "xse-operations": XSE_OPERATIONS_COVERAGE_POLICY,
@@ -141,6 +188,16 @@ FAMILY_COVERAGE_POLICIES: Mapping[str, FamilyCoveragePolicy] = {
     USER_SETTINGS_COVERAGE_POLICY.family_id: USER_SETTINGS_COVERAGE_POLICY,
     INSTALLED_YAML_DATA_COVERAGE_POLICY.family_id: INSTALLED_YAML_DATA_COVERAGE_POLICY,
     CONFIG_OPERATIONS_COVERAGE_POLICY.family_id: CONFIG_OPERATIONS_COVERAGE_POLICY,
+    YAML_SOURCE_VALUES_COVERAGE_POLICY.family_id: YAML_SOURCE_VALUES_COVERAGE_POLICY,
+    YAML_FILE_VALUES_COVERAGE_POLICY.family_id: YAML_FILE_VALUES_COVERAGE_POLICY,
+    SHARED_PERFORMANCE_COVERAGE_POLICY.family_id: SHARED_PERFORMANCE_COVERAGE_POLICY,
+    FILE_BACKUPS_COVERAGE_POLICY.family_id: FILE_BACKUPS_COVERAGE_POLICY,
+    XSE_PLUGIN_VALIDATION_COVERAGE_POLICY.family_id: XSE_PLUGIN_VALIDATION_COVERAGE_POLICY,
+    PATH_BACKUPS_COVERAGE_POLICY.family_id: PATH_BACKUPS_COVERAGE_POLICY,
+    GAME_INTEGRITY_COVERAGE_POLICY.family_id: GAME_INTEGRITY_COVERAGE_POLICY,
+    GAME_ORCHESTRATION_COVERAGE_POLICY.family_id: GAME_ORCHESTRATION_COVERAGE_POLICY,
+    GAME_SETUP_INTAKE_COVERAGE_POLICY.family_id: GAME_SETUP_INTAKE_COVERAGE_POLICY,
+    YAML_UPDATE_OPERATIONS_COVERAGE_POLICY.family_id: YAML_UPDATE_OPERATIONS_COVERAGE_POLICY,
     DATABASE_OPERATIONS_COVERAGE_POLICY.family_id: DATABASE_OPERATIONS_COVERAGE_POLICY,
     VERSION_REGISTRY_COVERAGE_POLICY.family_id: VERSION_REGISTRY_COVERAGE_POLICY,
     SCAN_GAME_COVERAGE_POLICY.family_id: SCAN_GAME_COVERAGE_POLICY,

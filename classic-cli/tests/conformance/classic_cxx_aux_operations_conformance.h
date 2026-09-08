@@ -29,6 +29,15 @@ json execute_aux_operations_scenario(const json& plan, const json& scenario) {
     std::ifstream stream(plan.at("fixtures").at(reference).get<std::string>(), std::ios::binary);
     const auto fixture = json::parse(stream);
     const auto& request = fixture.at("request");
+    if (request.value("operation", "") == "game-routes") {
+        if (request.at("game") != "Fallout4") throw RunnerError("unsupported routing game");
+        auto urls = json::array();
+        for (const auto site : {classic::web::ModSite::NexusMods, classic::web::ModSite::BethesdaNet,
+                               classic::web::ModSite::ModDB}) {
+            urls.push_back(std::string(classic::web::mod_site_game_url(site, classic::web::WebGameId::Fallout4)));
+        }
+        return json{{"urls", urls}};
+    }
     if (request.value("operation", "") == "pe-extract") {
         TemporaryDirectory temporary(plan.at("invocation").at("id").get<std::string>(),
                                      scenario.at("id").get<std::string>());

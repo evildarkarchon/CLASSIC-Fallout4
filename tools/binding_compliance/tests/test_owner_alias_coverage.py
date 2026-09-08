@@ -2,13 +2,13 @@
 
 import copy
 import json
-import shutil
 from pathlib import Path
 
 import pytest
 from conformance.command import FAMILY_COVERAGE_POLICIES
 from conformance.coverage import load_source_parity_rows
 from conformance.packs import load_and_validate_pack
+from receipt_test_support import copy_source_inventory
 
 ROOT = Path(__file__).resolve().parents[3]
 
@@ -41,12 +41,7 @@ def test_source_loaded_alias_cannot_borrow_owner_receipt(
         for capability in pack["capabilities"]
         for symbol in capability["rustSymbols"]
     }
-    for adapter in ("cxx", "node", "python"):
-        relative = Path(
-            f"docs/implementation/{adapter}_api_parity/baseline/parity_contract.json"
-        )
-        (tmp_path / relative).parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(ROOT / relative, tmp_path / relative)
+    copy_source_inventory(ROOT, tmp_path)
     path = (
         tmp_path
         / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"

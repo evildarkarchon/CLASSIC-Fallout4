@@ -12,7 +12,9 @@
   "capabilities": [
     {
       "id": "version-registry-values.execute",
+      "operationScoped": true,
       "rustSymbols": [
+        "VersionInfo",
         "CompatibleRange",
         "get_compatible_crashgens",
         "is_compatible_with"

@@ -2,7 +2,6 @@
 
 import copy
 import json
-import shutil
 from dataclasses import replace
 from pathlib import Path
 
@@ -17,9 +16,36 @@ from conformance.families.aux_operations import (
     validate_aux_operations_pack,
 )
 from conformance.receipts import validate_prepared_run
-from receipt_test_support import prepare_receipt_case
+from receipt_test_support import copy_source_inventory, prepare_receipt_case
 
 ROOT = Path(__file__).resolve().parents[3]
+
+
+def test_web_game_routing_obligates_only_adapters_with_the_public_operation():
+    """URL routing cannot enroll Python or hide changed route observations."""
+    from conformance.applicability import derive_applicability
+    from conformance.coverage import derive_observed_fact_ids
+    from conformance.packs import load_and_validate_pack
+
+    document = load_and_validate_pack(
+        ROOT, Path("tests/conformance/packs/web_operations/v1.json")
+    ).document()
+    route = next(
+        (s for s in document["scenarios"] if s["action"] == "web-operations.routes"),
+        None,
+    )
+    assert route is not None
+    matrix = derive_applicability(document, load_source_parity_rows(ROOT))
+    assert {p.id for p in matrix.participants if route["id"] in p.scenario_ids} == {
+        "rust",
+        "node",
+        "cxx",
+    }
+    policy = aux_operations_coverage_policy("web-operations")
+    assert derive_observed_fact_ids(document, route, route["expected"], policy)
+    changed = copy.deepcopy(route["expected"])
+    changed["urls"][0] = "https://wrong.invalid"
+    assert not derive_observed_fact_ids(document, route, changed, policy)
 
 
 @pytest.mark.parametrize("participant", ["rust", "node", "python"])
@@ -71,6 +97,23 @@ def test_auxiliary_fixture_and_predicate_contract(family: str) -> None:
     for path in paths:
         assert "expected" not in json.loads(path.read_text())
     policy = aux_operations_coverage_policy(family)
+    if family == "web-operations":
+        from retirement_readiness import candidate_predicates
+
+        rows = load_source_parity_rows(ROOT)
+        for obligation in (
+            "parity:cxx:7d9536f46f7a602a",
+            "parity:cxx:1c07ae6197b62a4e",
+            "parity:node:aux-phase4b-get-mod-site-name",
+            "parity:node:aux-phase4b-get-mod-site-url",
+            "parity:node:aux-phase4b-get-user-agent-prefix",
+            "parity:node:version-registry-promote-get-classic-version",
+            "parity:python:web.lib.ModSite.__eq__",
+            "parity:python:web.lib.ModSite.__str__",
+            "parity:python:web.lib.ModSite.__repr__",
+        ):
+            row = next(row for row in rows if row.obligation_id == obligation)
+            assert candidate_predicates(row, pack, policy), obligation
     for predicate in policy.predicates:
         matched = [
             case["expected"]
@@ -193,12 +236,7 @@ def test_source_loaded_resource_alias_cannot_borrow_class_carrier(
     pack, run, _ = prepare_receipt_case(
         ROOT, tmp_path, relative, participant, runner_id="aux-alias-test"
     )
-    for adapter in ("cxx", "node", "python"):
-        contract = Path(
-            f"docs/implementation/{adapter}_api_parity/baseline/parity_contract.json"
-        )
-        (tmp_path / contract).parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(ROOT / contract, tmp_path / contract)
+    copy_source_inventory(ROOT, tmp_path)
     contract = (
         tmp_path
         / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"

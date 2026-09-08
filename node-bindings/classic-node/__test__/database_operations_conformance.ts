@@ -19,6 +19,12 @@ async function databaseFiles(root: string, directory = root): Promise<JsonObject
 
 /** Traverse the public pool, retaining empty hits, ordered misses, and native open failures. */
 export async function observeDatabaseOperations(fixture: JsonObject): Promise<JsonObject> {
+  if (Object.keys(fixture).join() === "operation" && fixture.operation === "cache-defaults") {
+    const result = { defaultTtl: classic.getDefaultCacheTtl(), batchTtl: classic.getBatchCacheTtl(), maximumTtl: classic.getMaxCacheTtl(), capacity: classic.getDefaultQueryCacheCapacity(), cleanupThreshold: classic.getDefaultCacheCleanupThreshold(), cleanupInterval: classic.getDefaultCacheCleanupInterval() };
+    const constants = { defaultTtl: classic.DEFAULT_CACHE_TTL, batchTtl: classic.BATCH_CACHE_TTL, maximumTtl: classic.MAX_CACHE_TTL, capacity: classic.DEFAULT_QUERY_CACHE_CAPACITY, cleanupThreshold: classic.DEFAULT_CACHE_CLEANUP_THRESHOLD, cleanupInterval: classic.DEFAULT_CACHE_CLEANUP_INTERVAL };
+    if (JSON.stringify(result) !== JSON.stringify(constants)) throw new Error("cache getter values disagree with exported constants");
+    return result;
+  }
   if (Object.keys(fixture).sort().join() !== "databaseHex,operation,queries" || fixture.operation !== "pool") throw new Error("unsupported database operation fixture");
   if (!Array.isArray(fixture.queries) || fixture.queries.some((pair: any) => !Array.isArray(pair) || pair.length !== 2 || pair.some((value: any) => typeof value !== "string"))) throw new Error("database queries require string pairs");
   const root = await mkdtemp(join(tmpdir(), "classic-database-conformance-"));

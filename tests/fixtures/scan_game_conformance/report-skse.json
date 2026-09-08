@@ -1,0 +1,20 @@
+{
+  "operation": "assemble-reports",
+  "xse": "SKSE",
+  "unpacked": {
+    "xse_file": [
+      "  - z.pex\n",
+      "  - a.pex\n",
+      "  - z.pex\n"
+    ],
+    "tex_frmt": [],
+    "unknown": [
+      "hidden"
+    ]
+  },
+  "archived": {
+    "xse_file": [
+      "  - scripts.ba2\n"
+    ]
+  }
+}

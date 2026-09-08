@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "familyId": "file-generation",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-file-io-core"
+  },
+  "fixtureRoot": "tests/fixtures/file_generation",
+  "fixtures": {
+    "create": "create.json",
+    "preserve": "preserve.json"
+  },
+  "capabilities": [
+    {
+      "id": "file-generation.generate",
+      "rustSymbols": [
+        "FileGenerator",
+        "FileGeneratorConfig",
+        "generate_ignore_file",
+        "generate_local_yaml"
+      ],
+      "observationFamilies": [
+        "generated-files"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "create",
+      "action": "file-generation.generate",
+      "capabilityIds": [
+        "file-generation.generate"
+      ],
+      "fixtureRefs": [
+        "create"
+      ],
+      "input": {
+        "fixtureRef": "create"
+      },
+      "expected": {
+        "paths": [
+          "CLASSIC Ignore.yaml",
+          "CLASSIC Data/CLASSIC Fallout4 Local.yaml"
+        ],
+        "before": [
+          {
+            "path": "sentinel.txt",
+            "content": "keep"
+          }
+        ],
+        "generated": [
+          true,
+          true
+        ],
+        "existing": [
+          false,
+          false
+        ],
+        "standalone": [
+          false,
+          false
+        ],
+        "files": [
+          {
+            "path": "CLASSIC Data/CLASSIC Fallout4 Local.yaml",
+            "content": "local: true\n"
+          },
+          {
+            "path": "CLASSIC Ignore.yaml",
+            "content": "ignore: true\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "keep"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "preserve",
+      "action": "file-generation.generate",
+      "capabilityIds": [
+        "file-generation.generate"
+      ],
+      "fixtureRefs": [
+        "preserve"
+      ],
+      "input": {
+        "fixtureRef": "preserve"
+      },
+      "expected": {
+        "paths": [
+          "CLASSIC Ignore.yaml",
+          "CLASSIC Data/CLASSIC Fallout4VR Local.yaml"
+        ],
+        "before": [
+          {
+            "path": "CLASSIC Data/CLASSIC Fallout4VR Local.yaml",
+            "content": "existing bytes\n"
+          },
+          {
+            "path": "CLASSIC Ignore.yaml",
+            "content": "existing bytes\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "keep"
+          }
+        ],
+        "generated": [
+          false,
+          false
+        ],
+        "existing": [
+          false,
+          false
+        ],
+        "standalone": [
+          false,
+          false
+        ],
+        "files": [
+          {
+            "path": "CLASSIC Data/CLASSIC Fallout4VR Local.yaml",
+            "content": "existing bytes\n"
+          },
+          {
+            "path": "CLASSIC Ignore.yaml",
+            "content": "existing bytes\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "keep"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

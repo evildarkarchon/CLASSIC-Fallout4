@@ -21,6 +21,8 @@
       "id": "formid-lookup.lookup",
       "rustSymbols": [
         "FormIdValueLookup",
+        "FormIdValueLookupEntry",
+        "FormIdValueLookupInMemoryReply",
         "FormIdValueLookupOutcome",
         "FormIdValueLookupError",
         "disabled",
@@ -33,7 +35,8 @@
       "observationFamilies": [
         "semantic-result",
         "structured-error"
-      ]
+      ],
+      "operationScoped": true
     }
   ],
   "scenarios": [

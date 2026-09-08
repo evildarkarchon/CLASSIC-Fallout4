@@ -22,6 +22,7 @@ from conformance.families.settings_load import (
 )
 from conformance.packs import load_and_validate_pack, materialize_run_plan
 from conformance.receipts import validate_prepared_run
+from receipt_test_support import copy_source_inventory
 
 ROOT = Path(__file__).resolve().parents[3]
 
@@ -69,6 +70,11 @@ def test_settings_load_receipts_fail_closed_at_public_coverage_seam(
     original = _pack(family)
     for relative in (pack_path.parent, Path(original["fixtureRoot"])):
         shutil.copytree(ROOT / relative, tmp_path / relative)
+    if any(
+        capability.get("operationScoped", False)
+        for capability in original["capabilities"]
+    ):
+        copy_source_inventory(ROOT, tmp_path)
     for args in (
         ("init",),
         ("config", "user.email", "conformance@example.invalid"),
@@ -164,9 +170,14 @@ def test_settings_load_receipts_fail_closed_at_public_coverage_seam(
                 runtime_operation="future_public_method",
                 required_evidence_kind="runtime",
             )
+            # A family scope excludes unimplemented siblings; the full owner
+            # denominator must still reject every newly exported operation.
+            full_owner = copy.deepcopy(document)
+            for capability in full_owner["capabilities"]:
+                capability.pop("operationScoped", None)
             assert derive_row_coverage(
-                document,
-                (*rows, future),
+                full_owner,
+                (future,),
                 policy,
                 (report,),
                 scope_participant_id=participant.id,

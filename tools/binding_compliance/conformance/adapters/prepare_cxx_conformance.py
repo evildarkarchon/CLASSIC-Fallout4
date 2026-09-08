@@ -24,6 +24,12 @@ PACK_RELATIVE_PATH = Path("tests/conformance/packs/crash_log_scan_run/v1.json")
 DEFAULT_ARTIFACT_ROOT = Path("tools/binding_compliance/artifacts")
 SUPPORTED_COMPILERS = ("msvc", "clang-cl")
 SUPPORTED_FAMILIES = (
+    "markdown-rendering",
+    "report-discovery",
+    "yaml-file-values",
+    "yaml-file-values",
+    "message-logging",
+    "update-rejection",
     "settings-load",
     "settings-yaml",
     "settings-validation",
@@ -56,10 +62,23 @@ SUPPORTED_FAMILIES = (
     "config-vocabulary",
     "scan-run-vocabulary",
     "config-operations",
+    "file-backups",
+    "path-backups",
+    "game-integrity",
+    "game-setup-intake",
+    "yaml-update-operations",
     "file-operations",
     "database-operations",
     "version-registry",
     "scan-game",
+    "papyrus-monitor",
+    "wrye-report",
+    "log-collection",
+    "crash-pattern",
+    "formid-finding",
+    "ba2-scan",
+    "hash-cache-controls",
+    "crashgen-check",
     "path-operations",
 )
 
@@ -70,6 +89,9 @@ def _cxx_source_paths(
     """Return current native runner and core inputs bound into source identity."""
 
     paths = (
+        # Directory expansion fingerprints newly included helpers automatically;
+        # a manually maintained filename list must not leave native code unhashed.
+        repo_root / "classic-cli/tests/conformance",
         repo_root
         / "classic-cli/tests/conformance/classic_cxx_settings_load_conformance.h",
         repo_root
@@ -149,12 +171,15 @@ def _cxx_source_paths(
             / "classic-cli/tests/conformance/classic_cxx_version_registry_conformance.h",
             repo_root
             / "classic-cli/tests/conformance/classic_cxx_scan_game_conformance.h",
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_papyrus_monitor_conformance.h",
             repo_root / "cpp-bindings/classic-cpp-bridge/src",
             repo_root / "business-logic/classic-scanlog-core/src",
             repo_root / "business-logic/classic-database-core/src",
             repo_root / "business-logic/classic-version-registry-core/src",
             repo_root / "business-logic/classic-scangame-core/src",
             repo_root / "business-logic/classic-config-core/src",
+            repo_root / "business-logic/classic-user-settings-core/src",
             repo_root / "business-logic/classic-file-io-core/src",
             repo_root / "business-logic/classic-path-core/src",
             repo_root / "foundation/classic-shared-core/src",

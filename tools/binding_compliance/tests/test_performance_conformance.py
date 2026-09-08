@@ -37,7 +37,6 @@ def test_performance_facts_reject_changed_statistics_and_missing_clear_effects()
             "start_timer",
             "elapsed",
             "finish",
-            "reset_metrics",
             "future_metric_operation",
         ):
             assert not predicate.covers_runtime_operation(operation)
@@ -48,7 +47,11 @@ def test_performance_receipts_reject_drift_replay_and_future_operations(tmp_path
     import json
     from dataclasses import replace
 
-    from conformance.coverage import derive_row_coverage, load_source_parity_rows
+    from conformance.coverage import (
+        derive_row_coverage,
+        load_retained_analyzer_kinds,
+        load_source_parity_rows,
+    )
     from conformance.packs import materialize_run_plan
     from conformance.receipts import validate_prepared_run
     from receipt_test_support import prepare_receipt_case
@@ -68,6 +71,19 @@ def test_performance_receipts_reject_drift_replay_and_future_operations(tmp_path
         assert not report.failures
         assert all(item.result == "pass" for item in report.scenarios)
         rows = load_source_parity_rows(ROOT)
+        if participant == "python":
+            actual = derive_row_coverage(
+                pack.document(),
+                rows,
+                PERFORMANCE_COVERAGE_POLICY,
+                (report,),
+                scope_participant_id="python",
+                retained_analyzers=load_retained_analyzer_kinds(ROOT),
+            )
+            assert {
+                "parity:python:perf.lib.MetricsSummary",
+                "parity:python:perf.lib.reset_metrics",
+            } <= {row.obligation_id for row in actual.rows}
         prototype = next(
             row
             for row in rows

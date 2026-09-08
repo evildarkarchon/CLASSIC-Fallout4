@@ -28,6 +28,227 @@ from conformance.receipts import ScenarioValidationResult
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
+def test_unreachable_opaque_map_accessors_have_negative_ownership() -> None:
+    """No legal CXX producer exists; this disposition never asserts executed access."""
+    row = next(
+        row
+        for row in load_source_parity_rows(REPO_ROOT)
+        if row.obligation_id == "parity:cxx:728a8c257cb744a0"
+    )
+    assert row.required_evidence_kind == "negative"
+    assert row.retained_analyzer_id == "cxx-opaque-map-reachability"
+
+
+def test_node_package_version_has_its_narrow_structural_analyzer() -> None:
+    """Only the verified compile-time metadata getter gets this permanent owner."""
+    row = next(
+        row
+        for row in load_source_parity_rows(REPO_ROOT)
+        if row.obligation_id == "parity:node:version-registry-promote-get-version"
+    )
+    assert row.mapping_origin == "binding_only"
+    assert row.required_evidence_kind == "structural"
+    assert row.retained_analyzer_id == "node-package-metadata"
+
+
+def test_legacy_tui_import_is_in_all_exporting_source_inventories() -> None:
+    """A shipped import API cannot disappear from receipt applicability."""
+    rows = [
+        row
+        for row in load_source_parity_rows(REPO_ROOT)
+        if row.rust_symbol == "import_legacy_tui_state"
+    ]
+    assert {row.participant_id for row in rows} == {"cxx", "node", "python"}
+
+
+def test_python_binding_namespaces_are_structural_only_without_constructor(
+    tmp_path: Path,
+) -> None:
+    """A static namespace is a declaration; a separately exported constructor is runtime."""
+    crate = tmp_path / "python-bindings/classic-binding-py"
+    (crate / "src").mkdir(parents=True)
+    (crate / "binding.pyi").write_text(
+        "class Namespace: ...\nclass Object:\n    def __init__(self) -> None: ...\n"
+    )
+    (crate / "src/lib.rs").write_text(
+        "#[pyclass]\npub struct Namespace {}\n#[pyclass]\npub struct Object {}\n#[pymethods]\nimpl Object { #[new] pub fn new() -> Self { Self {} } }\nfn register(m: Module) { m.add_class::<Namespace>(); m.add_class::<Object>(); }\n"
+    )
+    rows = [
+        {
+            "id": "namespace",
+            "pythonModule": "binding",
+            "pythonExportPath": "Namespace",
+            "pythonKind": "class",
+            "rustSymbol": None,
+            "unmappedReason": "Namespace of free functions",
+        },
+        {
+            "id": "class",
+            "pythonModule": "binding",
+            "pythonExportPath": "Object",
+            "pythonKind": "class",
+            "rustSymbol": None,
+            "unmappedReason": "Wrapper-owned object",
+        },
+        {
+            "id": "ctor",
+            "pythonModule": "binding",
+            "pythonExportPath": "Object.__init__",
+            "pythonKind": "method",
+            "rustSymbol": None,
+            "unmappedReason": "Wrapper constructor",
+        },
+    ]
+    for participant in ("cxx", "node", "python"):
+        path = (
+            tmp_path
+            / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
+        )
+        path.parent.mkdir(parents=True)
+        path.write_text(
+            json.dumps(
+                {
+                    "entries" if participant == "cxx" else "tier1Mappings": rows
+                    if participant == "python"
+                    else []
+                }
+            )
+        )
+    namespace, wrapper, constructor = load_source_parity_rows(tmp_path)
+    assert namespace.required_evidence_kind == "structural"
+    assert namespace.retained_analyzer_id == "python-source-and-stub-parity"
+    assert (
+        wrapper.required_evidence_kind
+        == constructor.required_evidence_kind
+        == "runtime"
+    )
+
+
+def test_cxx_declarations_have_structural_owners_but_calls_require_execution(
+    tmp_path: Path,
+) -> None:
+    """Generated type declarations have no callable behavior to substitute for getters."""
+    for participant in ("cxx", "node", "python"):
+        path = (
+            tmp_path
+            / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
+        )
+        path.parent.mkdir(parents=True)
+        rows = (
+            [
+                {
+                    "id": kind,
+                    "kind": kind,
+                    "rustCrate": "example-core",
+                    "coreRustSymbol": "Owner",
+                    "rustSymbol": "owner_get" if kind == "function" else "Owner",
+                }
+                for kind in ("struct", "enum", "opaque", "function")
+            ]
+            if participant == "cxx"
+            else []
+        )
+        path.write_text(
+            json.dumps({"entries" if participant == "cxx" else "tier1Mappings": rows})
+        )
+    *declarations, operation = load_source_parity_rows(tmp_path)
+    assert all(
+        row.required_evidence_kind == "structural"
+        and row.retained_analyzer_id == "cxx-source-parity"
+        for row in declarations
+    )
+    assert operation.required_evidence_kind == "runtime"
+    assert operation.retained_analyzer_id is None
+
+
+def test_main_yaml_version_loader_is_in_every_exporting_binding_inventory() -> None:
+    """Public loaders cannot escape applicability through an absent parity row."""
+    rows = [
+        row
+        for row in load_source_parity_rows(REPO_ROOT)
+        if row.rust_symbol == "load_main_yaml_version_with_bundled_dir"
+    ]
+    assert {row.participant_id for row in rows} == {"cxx", "node", "python"}
+
+
+def test_user_settings_properties_keep_public_operation_identity() -> None:
+    """Property getters must not borrow aggregate class-carrier credit."""
+    row = next(
+        row
+        for row in load_source_parity_rows(REPO_ROOT)
+        if row.obligation_id == "parity:python:user_settings.update_check_accessor"
+    )
+    assert row.rust_symbol == "UpdatePreferences"
+    assert row.runtime_operation == "update_check"
+
+
+def test_python_source_references_require_an_independent_export_anchor(
+    tmp_path: Path,
+) -> None:
+    """Synthetic Rust references retain source proof without retiring real calls."""
+    common = {
+        "rustCrate": "classic-example-core",
+        "pythonModule": "classic_example",
+        "pythonKind": "class",
+    }
+    python_rows = [
+        {
+            **common,
+            "id": "owner.Anchor",
+            "rustSymbol": "Anchor",
+            "pythonExportPath": "Anchor",
+        },
+        {
+            **common,
+            "id": "owner.InternalHelper@rust",
+            "rustSymbol": "InternalHelper",
+            "pythonExportPath": "Anchor",
+        },
+        {
+            **common,
+            "id": "owner.ActualExport@rust",
+            "rustSymbol": "ActualExport",
+            "pythonExportPath": "ActualExport",
+        },
+        {
+            **common,
+            "id": "owner.Anchor.future_method",
+            "rustSymbol": "Anchor",
+            "pythonExportPath": "Anchor.future_method",
+            "pythonKind": "method",
+        },
+        {
+            **common,
+            "id": "owner.Unknown@rust",
+            "rustSymbol": "Unknown",
+            "pythonExportPath": "MissingAnchor",
+        },
+    ]
+    for participant in ("cxx", "node", "python"):
+        path = (
+            tmp_path
+            / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
+        )
+        path.parent.mkdir(parents=True)
+        path.write_text(
+            json.dumps(
+                {
+                    "entries" if participant == "cxx" else "tier1Mappings": python_rows
+                    if participant == "python"
+                    else []
+                }
+            )
+        )
+    anchor, reference, actual, future, missing = load_source_parity_rows(tmp_path)
+    assert reference.required_evidence_kind == "structural"
+    assert reference.mapping_origin == "rust_only"
+    assert reference.retained_analyzer_id == "python-source-and-stub-parity"
+    assert all(
+        row.required_evidence_kind == "runtime"
+        for row in (anchor, actual, future, missing)
+    )
+
+
 def test_operation_family_free_functions_keep_their_public_identity(
     tmp_path: Path,
 ) -> None:
@@ -65,6 +286,54 @@ def test_operation_family_free_functions_keep_their_public_identity(
         "node": "futureOperation",
         "python": "future_operation",
     }
+
+
+def test_node_source_only_rows_have_structural_ownership(tmp_path: Path) -> None:
+    """Source-only declarations need no Node execution; real exports still do."""
+    for participant in ("cxx", "node", "python"):
+        path = (
+            tmp_path
+            / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
+        )
+        path.parent.mkdir(parents=True)
+        rows = (
+            [
+                {
+                    "id": "source-only",
+                    "rustCrate": "classic-example-core",
+                    "rustSymbol": "future_operation@rust",
+                    "nodeKind": "function",
+                },
+                {
+                    "id": "future-export",
+                    "rustCrate": "classic-example-core",
+                    "rustSymbol": "future_operation",
+                    "nodeKind": "function",
+                    "nodeExport": "futureOperation",
+                },
+                {
+                    "id": "binding-only-export",
+                    "nodeKind": "function",
+                    "nodeExport": "bindingOnlyOperation",
+                    "unmappedReason": "Binding convenience operation",
+                },
+            ]
+            if participant == "node"
+            else []
+        )
+        path.write_text(
+            json.dumps({"entries" if participant == "cxx" else "tier1Mappings": rows})
+        )
+
+    source_only, exported, binding_only = load_source_parity_rows(tmp_path)
+    assert source_only.mapping_origin == "rust_only"
+    assert source_only.required_evidence_kind == "structural"
+    assert source_only.retained_analyzer_id == "node-source-and-declaration-parity"
+    assert exported.mapping_origin == "canonical_rust"
+    assert binding_only.mapping_origin == "binding_only"
+    for row in (exported, binding_only):
+        assert row.required_evidence_kind == "runtime"
+        assert row.retained_analyzer_id is None
 
 
 def _pack() -> dict[str, object]:
@@ -619,14 +888,24 @@ def test_live_parity_loader_preserves_canonical_metadata_and_occurrences() -> No
         participant: sum(row.participant_id == participant for row in rows)
         for participant in ("cxx", "node", "python")
     } == {
-        "cxx": 645,
-        "node": 911,
-        "python": 1_226,
+        participant: len(
+            json.loads(
+                (
+                    REPO_ROOT
+                    / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
+                ).read_text(encoding="utf-8")
+            )["entries" if participant == "cxx" else "tier1Mappings"]
+        )
+        for participant in ("cxx", "node", "python")
     }
     obligation_ids = [row.obligation_id for row in rows]
     assert len(obligation_ids) == len(set(obligation_ids))
     assert any(":occurrence:1" in obligation_id for obligation_id in obligation_ids)
-    assert sum(row.required_evidence_kind == "structural" for row in rows) == 309
+    assert {row.required_evidence_kind for row in rows} == {
+        "structural",
+        "negative",
+        "runtime",
+    }
     cxx_canonical = next(
         row
         for row in rows

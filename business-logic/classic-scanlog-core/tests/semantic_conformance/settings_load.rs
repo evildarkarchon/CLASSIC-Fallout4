@@ -270,6 +270,11 @@ fn execute_yaml(fixture: &Value) -> RunnerResult<Value> {
     let mut files = serde_json::Map::new();
     inventory(temporary.path(), temporary.path(), &mut files)?;
     ops.clear_cache();
+    ops.load_yaml_file(&path)?;
+    if settings::yaml_cache_stats().size != 1 {
+        return Err(invalid("global clear fixture did not populate YAML cache").into());
+    }
+    settings::clear_global_yaml_cache();
     Ok(
         json!({"before": before, "after": after, "persisted": persisted, "files": files, "cache": {"hits": stats.hits - initial.hits, "misses": stats.misses - initial.misses, "size": stats.size, "afterClear": settings::yaml_cache_stats().size}}),
     )

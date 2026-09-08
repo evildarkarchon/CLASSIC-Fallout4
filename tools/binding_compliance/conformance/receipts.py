@@ -607,7 +607,13 @@ def validate_prepared_run(
             )
         except PolicyExceptionError as error:
             policy_exception_error = str(error)
+    # The immutable plan's scenario set has already been rederived from current
+    # source applicability. A scoped adapter owes that set, not other adapters'
+    # unsupported operations; unexpected receipt rows were rejected above.
+    planned_scenario_ids = {scenario["id"] for scenario in plan["scenarios"]}
     for expected_scenario in pack_document["scenarios"]:
+        if expected_scenario["id"] not in planned_scenario_ids:
+            continue
         scenario_id = expected_scenario["id"]
         actual_scenario = receipt_scenarios.get(scenario_id)
         if actual_scenario is None:

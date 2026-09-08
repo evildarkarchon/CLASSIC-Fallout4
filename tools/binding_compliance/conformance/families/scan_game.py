@@ -92,7 +92,7 @@ def _observed(operation: str, outcome: str, observation: Mapping[str, Any]) -> b
     return not result["report"] and not result["issues"]
 
 
-SCAN_GAME_COVERAGE_POLICY = FamilyCoveragePolicy(
+_VALIDATOR_POLICY = FamilyCoveragePolicy(
     "scan-game",
     tuple(
         CoveragePredicate(
@@ -100,9 +100,21 @@ SCAN_GAME_COVERAGE_POLICY = FamilyCoveragePolicy(
             capability_id=f"scan-game.{operation}",
             action=f"scan-game.{operation}",
             observation_family="game-check-results",
-            rust_symbols=("IniValidator", "validate_inis", "detect_all_issues")
+            rust_symbols=(
+                "IniValidator",
+                "validate_inis",
+                "detect_all_issues",
+                "ConfigIssue",
+                "IssueSeverity",
+            )
             if operation == "validate-ini"
-            else ("EnbChecker", "validate"),
+            else (
+                "EnbChecker",
+                "validate",
+                "EnbValidationResult",
+                "EnbResult",
+                "EnbConfigResult",
+            ),
             matches=partial(_observed, operation, outcome),
             runtime_operations=(
                 None,
@@ -121,6 +133,10 @@ SCAN_GAME_COVERAGE_POLICY = FamilyCoveragePolicy(
                 "validate",
                 "checkEnb",
                 "enb_checker_validate",
+                "check_enb",
+                "format_message",
+                "is_present",
+                "is_fully_configured",
             ),
         )
         for operation, outcomes in (
@@ -136,5 +152,81 @@ SCAN_GAME_COVERAGE_POLICY = FamilyCoveragePolicy(
             ),
         )
         for outcome in outcomes
+    ),
+)
+
+
+def _logs_observed(value):
+    """Require exact report data alongside unchanged complete file inventories."""
+    return (
+        set(value)
+        == {"report", "beforeFiles", "files", "beforeDirectories", "directories"}
+        and isinstance(value["report"], str)
+        and _files(value["files"])
+        and _directories(value["directories"])
+        and value["beforeFiles"] == value["files"]
+        and value["beforeDirectories"] == value["directories"]
+    )
+
+
+def _reports_observed(value):
+    """Require full texts, native message templates, and exact combined concatenation."""
+    return (
+        set(value)
+        == {"unpacked", "archived", "combined", "unpackedMessages", "archivedMessages"}
+        and all(
+            isinstance(value[key], str) for key in ("unpacked", "archived", "combined")
+        )
+        and value["combined"] == value["unpacked"] + value["archived"]
+        and all(
+            isinstance(value[key], dict)
+            and value[key]
+            and all(
+                isinstance(lines, list) and all(isinstance(line, str) for line in lines)
+                for lines in value[key].values()
+            )
+            for key in ("unpackedMessages", "archivedMessages")
+        )
+    )
+
+
+SCAN_GAME_COVERAGE_POLICY = FamilyCoveragePolicy(
+    "scan-game",
+    _VALIDATOR_POLICY.predicates
+    + (
+        CoveragePredicate(
+            "log-processing",
+            "scan-game.process-logs",
+            "scan-game.process-logs",
+            "game-log-report",
+            ("LogProcessor", "process_logs"),
+            _logs_observed,
+            runtime_operations=(
+                None,
+                "__init__",
+                "process_logs",
+                "processGameLogs",
+                "__repr__",
+            ),
+        ),
+        CoveragePredicate(
+            "report-assembly",
+            "scan-game.assemble-reports",
+            "scan-game.assemble-reports",
+            "game-scan-report",
+            (
+                "build_archived_report",
+                "build_unpacked_report",
+                "build_combined_report",
+                "get_issue_messages",
+            ),
+            _reports_observed,
+            runtime_operations=(
+                "build_archived_report",
+                "build_unpacked_report",
+                "build_combined_scan_report",
+                "get_scan_issue_messages",
+            ),
+        ),
     ),
 )

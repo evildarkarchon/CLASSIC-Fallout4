@@ -1,6 +1,9 @@
 import { observeDatabaseOperations } from "./database_operations_conformance.js";
 import { observeFileFingerprint } from "./file_fingerprint_conformance.js";
 import { observePerformance } from "./performance_conformance.js";
+import { observeMessageLogging } from "./message_logging_conformance.js";
+import { observeUpdateRejection } from "./update_rejection_conformance.js";
+import { observeWindowsPlatformPaths } from "./windows_platform_paths_conformance.js";
 import { observeUpdateDecisions } from "./update_decisions_conformance.js";
 import { observeUpdateServices } from "./update_services_conformance.js";
 import { observeSharedRegistry } from "./shared_registry_conformance.js";
@@ -8,9 +11,22 @@ import { observeAuxOperations } from "./aux_operations_conformance.js";
 import { observeInstallationPaths } from "./installation_paths_conformance.js";
 import { observeXseOperations } from "./xse_operations_conformance.js";
 import { observeSharedIdentity } from "./shared_identity_conformance.js";
+import { observeYamlFileValues } from "./yaml_file_values_conformance.js";
 import { observeSettingsLoad } from "./settings_load_conformance.js";
 import { observeVersionRegistry } from "./version_registry_conformance.js";
 import { observeScanGame } from "./scan_game_conformance.js";
+import { observePapyrusMonitor } from "./papyrus_monitor_conformance.js";
+import { observeFileGeneration } from "./file_generation_conformance.js";
+import { observeModIni } from "./mod_ini_conformance.js";
+import { observeWryeReport } from "./wrye_report_conformance.js";
+import { observeLogCollection } from "./log_collection_conformance.js";
+import { observeLogParsing } from "./log_parsing_conformance.js";
+import { observeCrashPattern } from "./crash_pattern_conformance.js";
+import { observeDdsHeader } from "./dds_header_conformance.js";
+import { observeFormidFinding } from "./formid_finding_conformance.js";
+import { observeBa2Scan } from "./ba2_scan_conformance.js";
+import { observeUnpackedScan } from "./unpacked_scan_conformance.js";
+import { observeCrashgenCheck } from "./crashgen_check_conformance.js";
 import { randomUUID } from "node:crypto";
 import { lstat, mkdir, open, readFile, rename, rm } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
@@ -28,9 +44,22 @@ import { observeSettingsExtended } from "./settings_extended_conformance";
 
 import { observeVersionValues } from "./version_values_conformance";
 
-const families = ["game-version-parse", "game-version-distance", "fallout4-identity", "settings-yaml-batch", "settings-yaml", "settings-cached-docs", "version-registry-details", "version-extraction", "version-pe", "version-pe-path", "registry-game", "registry-paths", "settings-load", "xse-operations", "installation-paths", "game-identity", "runtime-access", "file-fingerprint", "performance", "update-decisions", "string-operations", "registry-operations", "web-operations", "resource-operations", "version-operations", "crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary", "config-operations", "file-operations", "path-operations", "path-normalization", "message-operations", "database-operations", "version-registry", "scan-game"];
+const families = ["game-version-parse", "game-version-distance", "fallout4-identity", "settings-yaml-batch", "settings-yaml", "settings-cached-docs", "version-registry-details", "version-extraction", "version-pe", "version-pe-path", "registry-game", "registry-paths", "settings-load", "xse-operations", "installation-paths", "game-identity", "runtime-access", "file-fingerprint", "performance", "update-decisions", "string-operations", "registry-operations", "web-operations", "resource-operations", "version-operations", "crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary", "config-operations", "yaml-source-values", "file-backups", "xse-plugin-validation", "path-backups", "game-integrity", "game-orchestration", "game-setup-intake", "file-operations", "path-operations", "path-normalization", "message-operations", "database-operations", "version-registry", "scan-game"];
 
-families.push("update-services");
+families.push("update-services", "message-logging", "update-rejection", "windows-platform-paths");
+families.push("papyrus-monitor");
+families.push("file-generation");
+families.push("mod-ini");
+families.push("wrye-report");
+families.push("log-collection");
+families.push("log-parsing");
+families.push("crash-pattern");
+families.push("yaml-file-values");
+families.push("dds-header");
+families.push("formid-finding");
+families.push("ba2-scan");
+families.push("unpacked-scan");
+families.push("crashgen-check");
 
 /** Reject malformed invocation objects before invoking native operations. */
 function object(value: unknown, label: string): JsonObject {
@@ -77,31 +106,54 @@ async function loadPlan(path: string): Promise<JsonObject> {
 
       "xse-operations": ["xse-operations.inspect"],
       "installation-paths": ["installation-paths.inspect"],
-      "game-identity": ["game-identity.observe"],
+      "game-identity": ["game-identity.observe", "game-identity.metadata"],
       "runtime-access": ["runtime-access.observe"],
       "file-fingerprint": ["file-fingerprint.inspect"],
       "performance": ["performance.metrics"],
+      "message-logging": ["message-logging.basic"],
+      "update-rejection": ["update-rejection.latest"],
+      "windows-platform-paths": ["windows-platform-paths.observe"],
       "update-decisions": ["update-decisions.compare"],
       "update-services": ["update-services.notification"],
       "string-operations": ["string-operations.execute"],
       "registry-operations": ["registry-operations.execute"],
       "registry-game": ["registry-game.observe"],
       "registry-paths": ["registry-paths.observe"],
-      "web-operations": ["web-operations.observe"],
+      "web-operations": ["web-operations.observe", "web-operations.routes"],
       "resource-operations": ["resource-operations.observe"],
       "version-operations": ["version-operations.observe"],
       "version-extraction": ["version-extraction.observe"],
       "version-pe": ["version-pe.observe"],
       "version-pe-path": ["version-pe-path.observe"],
 
-      "config-operations": ["config-operations.load-explicit"],
+      "config-operations": ["config-operations.load-explicit", "config-operations.main-version", "config-operations.persist-local"],
+      "yaml-source-values": ["yaml-source-values.matrix"],
+      "yaml-file-values": ["yaml-file-values.observe"],
+      "file-backups": ["file-backups.managed", "file-backups.game-files"],
+      "xse-plugin-validation": ["xse-plugin-validation.check"],
+      "path-backups": ["path-backups.versioned"],
+      "game-integrity": ["game-integrity.basic", "game-integrity.options"],
+      "game-orchestration": ["game-orchestration.composed"],
+      "game-setup-intake": ["game-setup-intake.run", "game-setup-intake.normalize"],
       "file-operations": ["file-operations.read-text", "file-operations.write-text"],
       "path-operations": ["path-operations.validate"],
       "path-normalization": ["path-normalization.resolve"],
       "message-operations": ["message-operations.format"],
-      "database-operations": ["database-operations.pool"],
+      "database-operations": ["database-operations.pool", "database-operations.cache-defaults"],
       "version-registry": ["version-registry.query", "version-registry.enumerate", "version-registry.crashgen", "version-registry.xse"],
-      "scan-game": ["scan-game.validate-ini", "scan-game.validate-enb"],
+      "scan-game": ["scan-game.validate-ini", "scan-game.validate-enb", "scan-game.process-logs"],
+      "papyrus-monitor": ["papyrus-monitor.full"],
+      "file-generation": ["file-generation.generate"],
+      "mod-ini": ["mod-ini.scan", "mod-ini.duplicates"],
+      "wrye-report": ["wrye-report.format"],
+      "log-collection": ["log-collection.collect"],
+      "log-parsing": ["log-parsing.gpu", "log-parsing.node-parser", "log-parsing.crashgen-version"],
+      "crash-pattern": ["crash-pattern.classify", "crash-pattern.vr"],
+      "dds-header": ["dds-header.validate"],
+      "formid-finding": ["formid-finding.analyze"],
+      "ba2-scan": ["ba2-scan.full"],
+      "unpacked-scan": ["unpacked-scan.scan"],
+      "crashgen-check": ["crashgen-check.check"],
     };
     const actions = operationActions[plan.familyId] ?? (["config-vocabulary", "scan-run-vocabulary"].includes(plan.familyId) ? ["vocabulary.resolve"]
       : plan.familyId === "installed-yaml-data" ? ["installed-yaml-data.inspect", "installed-yaml-data.load"]
@@ -247,9 +299,28 @@ async function executeScenario(plan: JsonObject, scenario: JsonObject): Promise<
     return observeInstalledYaml(fixture);
   }
   if (plan.familyId === "config-operations") return observeConfigOperations(fixture);
+  if (plan.familyId === "game-setup-intake") return (await import("./game_setup_intake_conformance.js")).observeSetup(fixture);
+  if (plan.familyId === "game-orchestration") return (await import("./game_orchestration_conformance.js")).observeOrchestration(fixture);
+  if (plan.familyId === "file-backups") return (await import("./file_backups_conformance.js")).observeFileBackups(fixture);
+  if (plan.familyId === "xse-plugin-validation") return (await import("./xse_plugin_validation_conformance.js")).observeXsePlugins(fixture);
+  if (plan.familyId === "path-backups") return (await import("./path_backups_conformance.js")).observePathBackups(fixture);
+  if (plan.familyId === "game-integrity") return (await import("./game_integrity_conformance.js")).observeIntegrity(fixture);
+  if (plan.familyId === "yaml-source-values") return (await import("./yaml_source_values_conformance.js")).observeYamlSources(fixture);
   if (plan.familyId === "database-operations") return observeDatabaseOperations(fixture);
   if (["version-registry", "version-registry-details"].includes(plan.familyId)) return observeVersionRegistry(fixture);
   if (plan.familyId === "scan-game") return observeScanGame(fixture);
+  if (plan.familyId === "papyrus-monitor") return observePapyrusMonitor(fixture);
+  if (plan.familyId === "file-generation") return observeFileGeneration(fixture);
+  if (plan.familyId === "mod-ini") return observeModIni(fixture);
+  if (plan.familyId === "wrye-report") return observeWryeReport(fixture);
+  if (plan.familyId === "log-collection") return observeLogCollection(fixture);
+  if (plan.familyId === "log-parsing") return observeLogParsing(fixture);
+  if (plan.familyId === "crash-pattern") return observeCrashPattern(fixture);
+  if (plan.familyId === "dds-header") return observeDdsHeader(fixture);
+  if (plan.familyId === "formid-finding") return observeFormidFinding(fixture);
+  if (plan.familyId === "ba2-scan") return observeBa2Scan(fixture);
+  if (plan.familyId === "unpacked-scan") return observeUnpackedScan(fixture);
+  if (plan.familyId === "crashgen-check") return observeCrashgenCheck(fixture);
   if (plan.familyId === "file-fingerprint") return observeFileFingerprint(fixture);
   if (["registry-game", "registry-paths"].includes(plan.familyId)) return observeRegistryAccessors(plan.familyId, fixture);
   if (["game-version-parse", "game-version-distance", "fallout4-identity"].includes(plan.familyId)) return observeVersionValues(plan.familyId, fixture);
@@ -258,6 +329,10 @@ async function executeScenario(plan: JsonObject, scenario: JsonObject): Promise<
   if (plan.familyId === "installation-paths") return observeInstallationPaths(fixture);
   if (plan.familyId === "xse-operations") return observeXseOperations(fixture);
   if (["game-identity", "runtime-access"].includes(plan.familyId)) return observeSharedIdentity(plan.familyId, fixture);
+  if (plan.familyId === "yaml-file-values") return observeYamlFileValues(fixture);
+  if (plan.familyId === "message-logging") return observeMessageLogging(fixture);
+  if (plan.familyId === "update-rejection") return observeUpdateRejection(fixture);
+  if (plan.familyId === "windows-platform-paths") return observeWindowsPlatformPaths(fixture);
   if (plan.familyId === "performance") return observePerformance(fixture);
   if (plan.familyId === "update-decisions") return observeUpdateDecisions(fixture);
   if (plan.familyId === "update-services") return observeUpdateServices(fixture, scenario.id);

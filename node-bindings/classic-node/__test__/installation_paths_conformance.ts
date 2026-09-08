@@ -1,7 +1,8 @@
-import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DocsPathFinder, DocumentsChecker, GamePathFinder } from "../index.js";
+import * as classic from "../index.js";
 
 type JsonObject = Record<string, any>;
 
@@ -42,9 +43,47 @@ export async function observeInstallationPaths(fixture: JsonObject): Promise<Jso
     process.chdir(root);
     const gameFinder = new GamePathFinder("Fallout4.exe", null, "Fallout4", false);
     const docsFinder = new DocsPathFinder("My Games/Fallout4");
+    docsFinder.setSteamAppId(12345);
     gameFinder.validateGamePath(game); docsFinder.validateDocsPath(docs);
+    const checker = new DocumentsChecker("Fallout4");
+    const checks = checker.runAllChecks(docs);
+    if (checker.checkOnedriveInPath(docs) !== null) throw new Error("owned path unexpectedly reports OneDrive");
+    ["Fallout4.ini", "Fallout4Custom.ini", "Fallout4Prefs.ini"].forEach((name, index) => {
+      const check = checker.validateIniFile(docs, name);
+      if (check.exists || check.isValid || !check.hasIssue || check.iniName !== name || check.message !== checks[index]) throw new Error("INI diagnosis disagrees with aggregate check");
+    });
+    docsFinder.validateIniFiles(docs, []);
+    let missingRejected = false;
+    try { docsFinder.validateIniFiles(docs, ["Fallout4.ini"]); } catch (error) { if (!(error instanceof Error) || !error.message.includes("Fallout4.ini")) throw error; missingRejected = true; }
+    if (!missingRejected) throw new Error("missing required INI was accepted");
+    await mkdir("validation/owned/scan", {recursive: true});
+    classic.validateCustomScanPath("validation/owned/scan");
+    classic.validateSettingsPath(game, "Game Path", ["Fallout4.exe"]);
+    classic.validateSettingsPaths(game, docs, "validation/owned/scan", "Fallout4.exe");
+    classic.checkDriveExists(root); classic.checkReadPermissions(game); classic.checkWritePermissions(game);
+    classic.validatePathWithPermissions(game, true, true);
+    if (!classic.isValidPath(game) || classic.isValidPath("missing-path")) throw new Error("path existence alias disagrees with owned tree");
+    classic.validateRequiredFiles(game, ["Fallout4.exe"]);
+    let requiredRejected = false;
+    try { classic.validateRequiredFiles(game, ["missing.ini"]); } catch (error) {
+      if (!(error instanceof Error) || !error.message.includes("missing.ini")) throw error;
+      requiredRejected = true;
+    }
+    if (!requiredRejected) throw new Error("required-files alias accepted an absent file");
+    const readonlyFile = "validation/owned/scan/readonly.txt";
+    await writeFile(readonlyFile, "retained bytes");
+    await chmod(readonlyFile, 0o444);
+    if (((await stat(readonlyFile)).mode & 0o200) !== 0) throw new Error("readonly precondition was not established");
+    classic.removeReadonly(readonlyFile);
+    if (((await stat(readonlyFile)).mode & 0o200) === 0 || await readFile(readonlyFile, "utf8") !== "retained bytes") throw new Error("readonly removal changed bytes or failed to restore write access");
+    if (classic.isRestrictedPath("validation/owned/scan") || !classic.isRestrictedPath("Windows/System32/test")) throw new Error("restricted-path classification changed");
+    if (!classic.isValidExecutablePath(`${game}/Fallout4.exe`) || classic.isValidExecutablePath("CLASSIC Main.yaml")) throw new Error("executable path classification changed");
+    await rm("validation", {recursive: true});
+    await writeFile("path-detection.log", `plugin directory = "${game}/Data/F4SE/Plugins"\n`);
+    if (classic.parseXseLog("path-detection.log") !== game) throw new Error("XSE log path extraction changed game root");
+    await rm("path-detection.log");
     return {gamePath: gameFinder.findGamePath(game, null), docsPath: docsFinder.findDocsPath(docs),
-      checks: new DocumentsChecker("Fallout4").runAllChecks(docs), ...await inventory(root)};
+      checks, ...await inventory(root)};
   } finally {
     process.chdir(previous);
     await rm(root, { recursive: true, force: true });

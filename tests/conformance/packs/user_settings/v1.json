@@ -18,7 +18,8 @@
     "newer_major_schema": "newer_major_schema.yaml",
     "gui_geometry": "gui_geometry.yaml",
     "concurrent_external_edit": "concurrent_external_edit.yaml",
-    "unsupported_older_schema": "unsupported_older_schema.yaml"
+    "unsupported_older_schema": "unsupported_older_schema.yaml",
+    "legacy_tui_state": "tui_state.json"
   },
   "capabilities": [
     {
@@ -35,7 +36,11 @@
         "CrashLogScanSettings",
         "FrontendState",
         "WindowGeometry",
-        "Diagnostic"
+        "Diagnostic",
+        "GameSetupSettings",
+        "FrontendPreferences",
+        "GuiWindowGeometry",
+        "TuiRememberedState"
       ],
       "observationFamilies": [
         "source",
@@ -55,7 +60,29 @@
         "AcceptedUserSettingsUpdate",
         "UserSettingsUpdateField",
         "UpdateDiagnostic",
-        "UserSettingsCommitOutcome"
+        "UserSettingsCommitOutcome",
+        "with_update_check",
+        "with_update_source",
+        "with_auto_switch_after_scan",
+        "with_managed_game",
+        "with_game_version_selection",
+        "with_game_root",
+        "with_game_executable",
+        "with_documents_root",
+        "with_ini_folder",
+        "with_mods_folder",
+        "with_fcx_mode",
+        "with_simplify_logs",
+        "with_show_statistics",
+        "with_formid_value_lookup",
+        "with_formid_databases",
+        "with_move_unsolved_logs",
+        "with_unsolved_logs_destination",
+        "with_custom_scan_input",
+        "with_papyrus_log_path",
+        "with_max_concurrent_scans",
+        "with_window_geometry",
+        "with_tui_remembered_state"
       ],
       "observationFamilies": [
         "projection",
@@ -78,11 +105,55 @@
         "UserSettingsMigrationApplyOutcome",
         "UserSettingsMigrationReceipt",
         "UserSettingsMigrationRestoreOutcome",
-        "UserSettingsMigrationError"
+        "UserSettingsMigrationError",
+        "restore"
       ],
       "observationFamilies": [
         "projection",
         "diagnostics",
+        "durable-effects"
+      ]
+    },
+    {
+      "id": "user-settings.defaults",
+      "rustSymbols": [
+        "published_defaults"
+      ],
+      "observationFamilies": [
+        "projection"
+      ]
+    },
+    {
+      "id": "user-settings.geometry",
+      "rustSymbols": [
+        "commit_frontend_geometry_transition",
+        "UserSettingsFrontendTransitionOutcome"
+      ],
+      "observationFamilies": [
+        "durable-effects"
+      ]
+    },
+    {
+      "id": "user-settings.geometry-error",
+      "rustSymbols": [
+        "UserSettingsCommitError",
+        "code",
+        "message"
+      ],
+      "observationFamilies": [
+        "diagnostics"
+      ]
+    },
+    {
+      "id": "user-settings.legacy-import",
+      "rustSymbols": [
+        "import_legacy_tui_state",
+        "LegacyTuiStateImportOutcome",
+        "LegacyTuiStateImportReceipt",
+        "LegacyTuiStateImportRestoreOutcome",
+        "restore"
+      ],
+      "observationFamilies": [
         "durable-effects"
       ]
     }
@@ -1576,6 +1647,289 @@
       },
       "normalization": {
         "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "published-defaults",
+      "action": "user-settings.defaults",
+      "capabilityIds": [
+        "user-settings.defaults",
+        "user-settings.open"
+      ],
+      "fixtureRefs": [],
+      "input": {},
+      "expected": {
+        "projection": {
+          "update.update_check": true,
+          "update.update_check_origin": "default",
+          "update.update_source": "GitHub",
+          "update.update_source_origin": "default",
+          "scan.fcx_mode": false,
+          "scan.fcx_mode_origin": "default",
+          "scan.simplify_logs": false,
+          "scan.simplify_logs_origin": "default",
+          "scan.show_statistics": false,
+          "scan.show_statistics_origin": "default",
+          "scan.formid_value_lookup": false,
+          "scan.formid_value_lookup_origin": "default",
+          "scan.formid_databases": {},
+          "scan.formid_databases_origin": "default",
+          "scan.move_unsolved_logs": true,
+          "scan.move_unsolved_logs_origin": "default",
+          "scan.unsolved_logs_destination": null,
+          "scan.unsolved_logs_destination_origin": "default",
+          "scan.custom_scan_input": null,
+          "scan.custom_scan_input_origin": "default",
+          "scan.game_version_selection": "auto",
+          "scan.game_version_selection_origin": "default",
+          "scan.max_concurrent_scans": 0,
+          "scan.max_concurrent_scans_origin": "default",
+          "setup.managed_game": "Fallout4",
+          "setup.managed_game_origin": "default",
+          "setup.game_version_selection": "auto",
+          "setup.game_version_selection_origin": "default",
+          "setup.game_root": null,
+          "setup.game_root_origin": "default",
+          "setup.game_executable": null,
+          "setup.game_executable_origin": "default",
+          "setup.documents_root": null,
+          "setup.documents_root_origin": "default",
+          "setup.ini_folder": null,
+          "setup.ini_folder_origin": "default",
+          "setup.mods_root": null,
+          "setup.mods_root_origin": "default",
+          "setup.custom_scan_input": null,
+          "setup.custom_scan_input_origin": "default",
+          "setup.papyrus_log": null,
+          "setup.papyrus_log_origin": "default",
+          "preferences.auto_switch_after_scan": true,
+          "preferences.auto_switch_after_scan_origin": "default",
+          "preferences.auto_refresh_interval_ms": 5000,
+          "preferences.auto_refresh_interval_ms_origin": "default",
+          "tui.active_tab": 0,
+          "tui.active_tab_origin": "default",
+          "tui.results_panel_width": 30,
+          "tui.results_panel_width_origin": "default",
+          "tui.sort_ascending": false,
+          "tui.sort_ascending_origin": "default",
+          "main_tab.maximized": false,
+          "main_tab.maximized_origin": "default",
+          "main_tab.width": 640,
+          "main_tab.width_origin": "default",
+          "main_tab.height": 500,
+          "main_tab.height_origin": "default",
+          "backups_tab.maximized": false,
+          "backups_tab.maximized_origin": "default",
+          "backups_tab.width": 750,
+          "backups_tab.width_origin": "default",
+          "backups_tab.height": 580,
+          "backups_tab.height_origin": "default",
+          "articles_tab.maximized": false,
+          "articles_tab.maximized_origin": "default",
+          "articles_tab.width": 550,
+          "articles_tab.width_origin": "default",
+          "articles_tab.height": 350,
+          "articles_tab.height_origin": "default",
+          "results_tab.maximized": false,
+          "results_tab.maximized_origin": "default",
+          "results_tab.width": 750,
+          "results_tab.width_origin": "default",
+          "results_tab.height": 450,
+          "results_tab.height_origin": "default"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "preview-all-typed-fields",
+      "action": "user-settings.update",
+      "capabilityIds": [
+        "user-settings.update"
+      ],
+      "fixtureRefs": [
+        "canonical_current_nested"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "canonical_current_nested",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "installationRootExists": true,
+        "previewMode": "update",
+        "requestedUpdate": {
+          "/CLASSIC_Settings/Update Check": false,
+          "/CLASSIC_Settings/Update Source": "Both",
+          "/UI/preferences/auto_switch_after_scan": false,
+          "/CLASSIC_Settings/Managed Game": "Fallout4",
+          "/CLASSIC_Settings/Game Version": "NextGen",
+          "/CLASSIC_Settings/Game Folder Path": "D:/Games/Fallout4",
+          "/CLASSIC_Settings/Game EXE Path": "D:/Games/Fallout4/Fallout4.exe",
+          "/CLASSIC_Settings/Documents Folder Path": "D:/Documents/Fallout4",
+          "/CLASSIC_Settings/INI Folder Path": "D:/INI",
+          "/CLASSIC_Settings/MODS Folder Path": "D:/Mods",
+          "/CLASSIC_Settings/FCX Mode": true,
+          "/CLASSIC_Settings/Simplify Logs": true,
+          "/CLASSIC_Settings/Show Statistics": true,
+          "/CLASSIC_Settings/Show FormID Values": true,
+          "/CLASSIC_Settings/FormID Databases": {
+            "Fallout4": [
+              "D:/Data/forms.db"
+            ]
+          },
+          "/CLASSIC_Settings/Move Unsolved Logs": false,
+          "/CLASSIC_Settings/Unsolved Logs Destination": "D:/Unsolved",
+          "/CLASSIC_Settings/SCAN Custom Path": "D:/CrashLogs",
+          "/CLASSIC_Settings/Papyrus Log Path": "D:/Logs/Papyrus.0.log",
+          "/CLASSIC_Settings/Max Concurrent Scans": 4,
+          "/UI/window_geometry/main_tab/maximized": false,
+          "/UI/window_geometry/main_tab/width": 900,
+          "/UI/window_geometry/main_tab/height": 650,
+          "/UI/tui/active_tab": 2,
+          "/UI/tui/results_panel_width": 44,
+          "/UI/tui/sort_ascending": true
+        },
+        "commit": false,
+        "externalEdit": null
+      },
+      "expected": {
+        "operationScenario": "preview_all_typed_fields"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "geometry-commit",
+      "action": "user-settings.geometry",
+      "capabilityIds": [
+        "user-settings.geometry"
+      ],
+      "fixtureRefs": [
+        "canonical_current_nested"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "canonical_current_nested",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "blockLock": false
+      },
+      "expected": {
+        "transition": {
+          "status": "committed",
+          "code": null,
+          "hasMessage": null,
+          "revisionMatches": true
+        },
+        "geometry": {
+          "maximized": false,
+          "width": 900,
+          "height": 650
+        },
+        "files": [
+          {
+            "path": "CLASSIC Settings.yaml",
+            "kind": "file"
+          },
+          {
+            "path": "CLASSIC Settings.yaml.commit.lock",
+            "kind": "file"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "geometry-lock-failure",
+      "action": "user-settings.geometry",
+      "capabilityIds": [
+        "user-settings.geometry",
+        "user-settings.geometry-error"
+      ],
+      "fixtureRefs": [
+        "canonical_current_nested"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "canonical_current_nested",
+            "path": "CLASSIC Settings.yaml"
+          }
+        ],
+        "blockLock": true
+      },
+      "expected": {
+        "transition": {
+          "status": "error",
+          "code": "commit_lock_open_failed",
+          "hasMessage": true,
+          "revisionMatches": null
+        },
+        "geometry": {
+          "maximized": false,
+          "width": 640,
+          "height": 500
+        },
+        "files": [
+          {
+            "path": "CLASSIC Settings.yaml",
+            "kind": "file"
+          },
+          {
+            "path": "CLASSIC Settings.yaml.commit.lock",
+            "kind": "directory"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "legacy-tui-import-restore",
+      "action": "user-settings.legacy-import",
+      "capabilityIds": [
+        "user-settings.legacy-import"
+      ],
+      "fixtureRefs": [
+        "canonical_current_nested",
+        "legacy_tui_state"
+      ],
+      "input": {
+        "installationData": [
+          {
+            "fixtureRef": "canonical_current_nested",
+            "path": "CLASSIC Settings.yaml"
+          },
+          {
+            "fixtureRef": "legacy_tui_state",
+            "path": "state.json"
+          }
+        ]
+      },
+      "expected": {
+        "legacyImportCase": "restore-existing"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
         "unorderedPaths": [],
         "excludedPaths": []
       }

@@ -9,18 +9,64 @@
   "fixtures": {
     "tier1-fields": "tier1-fields.json",
     "malformed-main": "malformed-main.json",
-    "missing-ignore": "missing-ignore.json"
+    "missing-ignore": "missing-ignore.json",
+    "main-version": "main-version.json",
+    "persist-local-create": "persist-local-create.json",
+    "persist-local-preserve": "persist-local-preserve.json",
+    "persist-local-noop": "persist-local-noop.json",
+    "clear-cache": "clear-cache.json"
   },
   "capabilities": [
     {
       "id": "config-operations.load-explicit",
       "rustSymbols": [
-        "load_explicit_yaml_data"
+        "load_explicit_yaml_data",
+        "ExplicitYamlDataSnapshot",
+        "YamlDataContentIdentity",
+        "GameDataRole"
       ],
       "observationFamilies": [
         "values",
         "errors",
         "durable-effects"
+      ]
+    },
+    {
+      "id": "config-operations.main-version",
+      "rustSymbols": [
+        "load_main_yaml_version_with_bundled_dir"
+      ],
+      "observationFamilies": [
+        "values"
+      ]
+    },
+    {
+      "id": "config-operations.yaml-values",
+      "rustSymbols": [
+        "YamlDataCore"
+      ],
+      "observationFamilies": [
+        "values"
+      ]
+    },
+    {
+      "id": "config-operations.persist-local",
+      "rustSymbols": [
+        "persist_game_local_paths"
+      ],
+      "observationFamilies": [
+        "durable-effects"
+      ]
+    },
+    {
+      "id": "config-operations.clear-cache",
+      "rustCrate": "classic-settings-core",
+      "rustSymbols": [
+        "clear_global_yaml_cache"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "values"
       ]
     }
   ],
@@ -29,7 +75,8 @@
       "id": "tier1-fields",
       "action": "config-operations.load-explicit",
       "capabilityIds": [
-        "config-operations.load-explicit"
+        "config-operations.load-explicit",
+        "config-operations.yaml-values"
       ],
       "fixtureRefs": [
         "tier1-fields"
@@ -39,13 +86,76 @@
       },
       "expected": {
         "result": {
+          "game": "Fallout4",
           "classicVersion": "9.0.0",
           "xseAcronym": "F4SE",
           "crashgenName": "Buffout 4",
           "gameVersion": "1.10.163",
           "ignoreList": [
             "IgnoreItem1"
-          ]
+          ],
+          "gameRole": "Fallout4",
+          "identities": {
+            "game.yaml": {
+              "sha256": "2f296e5f877ecf0e1c2e68e8aa36f6701f5ebffb627a11b4135ecc6f6736d032",
+              "byteLen": 450
+            },
+            "ignore.yaml": {
+              "sha256": "049cdb4e5e7c5028b7908c9d715e013729d9e038d5d10c3cbaa92ace96ddefe7",
+              "byteLen": 45
+            },
+            "main.yaml": {
+              "sha256": "f75b70dbd53d35a70684913667e44b9051ca535859d76edb9c2ebf221a266c87",
+              "byteLen": 180
+            }
+          },
+          "yamlValues": {
+            "classic_version": "9.0.0",
+            "classic_version_date": "2026-02-25",
+            "crashgen_name_field": "Buffout 4",
+            "crashgen_latest_og": "1.37.0",
+            "warn_noplugins": "No plugins found",
+            "warn_outdated": "Outdated",
+            "xse_acronym": "F4SE",
+            "autoscan_text": "Autoscan Fallout 4",
+            "game_version": "1.10.163",
+            "game_root_name_field": "Fallout4",
+            "classic_game_hints": [],
+            "classic_records_list": [
+              "LAND"
+            ],
+            "crashgen_ignore_og": [],
+            "game_ignore_plugins": [],
+            "game_ignore_records": [],
+            "ignore_list": [
+              "IgnoreItem1"
+            ],
+            "suspects_error_keys": [],
+            "suspects_error_values": [],
+            "suspects_stack_keys": [],
+            "mods_core_keys": [],
+            "mods_core_values": [],
+            "mods_core_names": [],
+            "mods_core_gpus": [],
+            "mods_conf_mod_a": [],
+            "mods_conf_mod_b": [],
+            "mods_conf_name_a": [],
+            "mods_conf_name_b": [],
+            "mods_conf_descriptions": [],
+            "mods_conf_fixes": [],
+            "mods_conf_links": [],
+            "mods_core_count": 0,
+            "mods_conf_count": 0,
+            "mods_freq_entries": 0,
+            "mods_solu_entries": 0,
+            "suspects_error_rules": 0,
+            "suspects_stack_rules_metadata": 0,
+            "mods_conf_has_fixes": [],
+            "suspects_stack_count_rules_for_id": 0,
+            "get_crashgen_name": "Buffout 4",
+            "get_game_root_name": "Fallout4",
+            "get_crashgen_ignore": []
+          }
         },
         "error": null,
         "files": [
@@ -136,6 +246,150 @@
           {
             "path": "main.yaml",
             "content": "schema_version: \"2.0\"\nCLASSIC_Info:\n  version: \"9.0.0\"\n  version_date: \"2026-02-25\"\ncatch_log_records:\n  - \"LAND\"\nCLASSIC_Interface:\n  autoscan_text_Fallout4: \"Autoscan Fallout 4\"\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "main-version",
+      "action": "config-operations.main-version",
+      "capabilityIds": [
+        "config-operations.main-version"
+      ],
+      "fixtureRefs": [
+        "main-version"
+      ],
+      "input": {
+        "fixtureRef": "main-version"
+      },
+      "expected": {
+        "result": {
+          "version": "9.1.0"
+        },
+        "error": null,
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "schema_version: \"2.0\"\nCLASSIC_Info:\n  version: \"9.1.0\"\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "persist-local-create",
+      "action": "config-operations.persist-local",
+      "capabilityIds": [
+        "config-operations.persist-local"
+      ],
+      "fixtureRefs": [
+        "persist-local-create"
+      ],
+      "input": {
+        "fixtureRef": "persist-local-create"
+      },
+      "expected": {
+        "result": null,
+        "error": null,
+        "files": [
+          {
+            "path": "local.yaml",
+            "content": "---\nGame_Info:\n  Root_Folder_Game: \"D:/Games/Fallout4\"\n  Root_Folder_Docs: \"D:/Docs\""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "persist-local-preserve",
+      "action": "config-operations.persist-local",
+      "capabilityIds": [
+        "config-operations.persist-local"
+      ],
+      "fixtureRefs": [
+        "persist-local-preserve"
+      ],
+      "input": {
+        "fixtureRef": "persist-local-preserve"
+      },
+      "expected": {
+        "result": null,
+        "error": null,
+        "files": [
+          {
+            "path": "CLASSIC Settings.yaml",
+            "content": "{malformed settings sentinel"
+          },
+          {
+            "path": "local.yaml",
+            "content": "---\nUnrelated: keep\nGame_Info:\n  Root_Folder_Docs: \"C:/Docs/Existing\"\n  Root_Folder_Game: \"D:/Games/Fallout4\""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "persist-local-noop",
+      "action": "config-operations.persist-local",
+      "capabilityIds": [
+        "config-operations.persist-local"
+      ],
+      "fixtureRefs": [
+        "persist-local-noop"
+      ],
+      "input": {
+        "fixtureRef": "persist-local-noop"
+      },
+      "expected": {
+        "result": null,
+        "error": null,
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "clear-cache",
+      "action": "config-operations.clear-cache",
+      "capabilityIds": [
+        "config-operations.clear-cache"
+      ],
+      "fixtureRefs": [
+        "clear-cache"
+      ],
+      "input": {
+        "fixtureRef": "clear-cache"
+      },
+      "expected": {
+        "result": [
+          null,
+          null
+        ],
+        "error": null,
+        "files": [
+          {
+            "path": "main.yaml",
+            "content": "sentinel: untouched\n"
           }
         ]
       },

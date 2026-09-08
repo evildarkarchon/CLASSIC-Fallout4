@@ -1,0 +1,14 @@
+{
+  "operation": "startup",
+  "trace": "fixture-trace",
+  "contract": "fixture",
+  "checked": 2,
+  "correlation": "case",
+  "missing": "fixture-binding",
+  "failureType": "fixture",
+  "hint": "retry",
+  "error": "fixture-error",
+  "active": 1,
+  "total": 2,
+  "acceleration": "fixture"
+}

@@ -136,6 +136,18 @@ def _remaining(operation: str, observation: Mapping[str, Any]) -> bool:
     )
 
 
+def _confidence_carrier(observation: Mapping[str, Any]) -> bool:
+    """Require a successful public match before crediting its confidence object."""
+    return any(_match(kind, observation) for kind in ("exact", "nearest", "unknown"))
+
+
+def _crashgen_carrier(observation: Mapping[str, Any]) -> bool:
+    """Empty/missing configurations cannot prove a returned configuration carrier."""
+    return _remaining("crashgen", observation) and bool(
+        observation["result"]["configs"]
+    )
+
+
 VERSION_REGISTRY_COVERAGE_POLICY = FamilyCoveragePolicy(
     "version-registry",
     (
@@ -206,6 +218,33 @@ VERSION_REGISTRY_COVERAGE_POLICY = FamilyCoveragePolicy(
                 runtime_operations=_MATCH_OPERATIONS,
             )
             for confidence in ("exact", "nearest", "unknown")
+        ),
+        CoveragePredicate(
+            id="version-registry.singleton",
+            capability_id="version-registry.query",
+            action="version-registry.query",
+            observation_family="values",
+            rust_symbols=("get_version_registry",),
+            matches=partial(_lookup, True),
+            runtime_operations=("get_version_registry",),
+        ),
+        CoveragePredicate(
+            id="version-registry.confidence-carrier",
+            capability_id="version-registry.query",
+            action="version-registry.query",
+            observation_family="values",
+            rust_symbols=("MatchConfidence",),
+            matches=_confidence_carrier,
+            runtime_operations=(None, "__eq__", "__hash__", "is_high_confidence"),
+        ),
+        CoveragePredicate(
+            id="version-registry.crashgen-carrier",
+            capability_id="version-registry.crashgen",
+            action="version-registry.crashgen",
+            observation_family="values",
+            rust_symbols=("CrashgenConfig",),
+            matches=_crashgen_carrier,
+            runtime_operations=(None,),
         ),
         CoveragePredicate(
             id="version-registry.invalid-version",

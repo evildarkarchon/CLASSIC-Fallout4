@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import json
+import os
 import shutil
+import subprocess
+import textwrap
 from pathlib import Path
 
 import pytest
@@ -252,4 +256,140 @@ def test_workflow_policy_rejects_weakened_topology(
     path.write_text(source.replace(needle, replacement, 1), encoding="utf-8")
 
     with pytest.raises(WorkflowPolicyError, match=message):
+        validate_scan_run_workflow_policy(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "condition,message",
+    (
+        (
+            "if: matrix.runtime == 'node' && !cancelled()",
+            "launcher must run after earlier failures unless cancelled",
+        ),
+        (
+            "if: matrix.runtime == 'node' && always()",
+            "diagnostics must upload even on failure",
+        ),
+    ),
+)
+def test_workflow_policy_rejects_conditions_with_disabled_suffix(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, condition: str, message: str
+) -> None:
+    """Keeping the approved condition as a prefix cannot disable required steps."""
+
+    required = workflow_policy._required_execution_keys(REPO_ROOT)
+    monkeypatch.setattr(workflow_policy, "_required_execution_keys", lambda _: required)
+    workflow_root = tmp_path / ".github" / "workflows"
+    workflow_root.parent.mkdir(parents=True)
+    shutil.copytree(REPO_ROOT / ".github" / "workflows", workflow_root)
+    path = workflow_root / "ci-typescript.yml"
+    source = path.read_text(encoding="utf-8")
+    assert condition in source
+    path.write_text(
+        source.replace(condition, condition + " && false"), encoding="utf-8"
+    )
+
+    with pytest.raises(WorkflowPolicyError, match=message):
+        validate_scan_run_workflow_policy(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "needle,replacement",
+    (
+        ("needs: [rust, node, python, native]", "needs: [rust, node, python]"),
+        (
+            "uses: ./.github/workflows/ci-cpp.yml",
+            "uses: owner/repo/.github/workflows/ci-cpp.yml@main",
+        ),
+        ("merge-multiple: false", "merge-multiple: true"),
+        ("pattern: '*conformance*'", "pattern: 'node-*'"),
+        ("--profile full", "--profile ci"),
+        (
+            "uses: actions/download-artifact@v8",
+            "uses: actions/download-artifact@v8\n        with:\n          run-id: 12345",
+        ),
+        (
+            "      - uses: actions/checkout@v6",
+            "      - uses: actions/checkout@v6\n        with:\n          ref: classic-next",
+        ),
+        (
+            "    name: Full Repository Conformance",
+            "    name: Full Repository Conformance\n    continue-on-error: true",
+        ),
+        ("PARTICIPANT_RESULTS: ${{ toJSON(needs) }}", "PARTICIPANT_RESULTS: '{}'"),
+    ),
+)
+def test_full_aggregation_cannot_lose_required_jobs_or_artifact_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, needle: str, replacement: str
+) -> None:
+    """Repository proof requires all same-revision jobs and unmerged current-run plans."""
+    required = workflow_policy._required_execution_keys(REPO_ROOT)
+    monkeypatch.setattr(workflow_policy, "_required_execution_keys", lambda _: required)
+    workflow_root = tmp_path / ".github" / "workflows"
+    workflow_root.parent.mkdir(parents=True)
+    shutil.copytree(REPO_ROOT / ".github" / "workflows", workflow_root)
+    path = workflow_root / "ci-binding-compliance.yml"
+    source = path.read_text(encoding="utf-8")
+    assert needle in source
+    path.write_text(source.replace(needle, replacement, 1), encoding="utf-8")
+    with pytest.raises(WorkflowPolicyError, match="full aggregation"):
+        validate_scan_run_workflow_policy(tmp_path)
+
+
+@pytest.mark.parametrize("damage", (None, "failure", "skipped", "missing"))
+def test_actual_workflow_upstream_guard_rejects_failed_or_absent_jobs(
+    damage: str | None,
+) -> None:
+    """Run the checked-in guard so a successful receipt cannot hide a native test failure."""
+    workflow = (REPO_ROOT / ".github/workflows/ci-binding-compliance.yml").read_text(
+        encoding="utf-8"
+    )
+    step = workflow_policy._step_block(
+        workflow,
+        "Require every retained participant job to pass",
+        label="upstream guard",
+    )
+    script = textwrap.dedent(step.split("        run: |\n", 1)[1])
+    results = {
+        participant: {"result": "success"}
+        for participant in ("rust", "node", "python", "native")
+    }
+    if damage == "missing":
+        del results["native"]
+    elif damage:
+        results["native"]["result"] = damage
+    process = subprocess.run(
+        ["pwsh", "-NoProfile", "-NonInteractive", "-Command", script],
+        env={**os.environ, "PARTICIPANT_RESULTS": json.dumps(results)},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert (process.returncode == 0) is (damage is None), process.stderr
+
+
+@pytest.mark.parametrize(
+    "needle,replacement",
+    (
+        ("    runs-on: windows-latest", "    runs-on: ubuntu-latest"),
+        (
+            "      - uses: actions/checkout@v6",
+            "      - uses: actions/checkout@v6\n        with:\n          path: alternate",
+        ),
+    ),
+)
+def test_receipt_producers_preserve_aggregation_checkout_layout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, needle: str, replacement: str
+) -> None:
+    """Absolute immutable fixture paths require the same Windows checkout layout."""
+    required = {("performance", "python", "python")}
+    monkeypatch.setattr(workflow_policy, "_required_execution_keys", lambda _: required)
+    workflow_root = tmp_path / ".github" / "workflows"
+    workflow_root.parent.mkdir(parents=True)
+    shutil.copytree(REPO_ROOT / ".github" / "workflows", workflow_root)
+    path = workflow_root / "ci-python-bindings.yml"
+    source = path.read_text(encoding="utf-8")
+    source = source.replace(needle, replacement)
+    path.write_text(source, encoding="utf-8")
+    with pytest.raises(WorkflowPolicyError, match="checkout layout"):
         validate_scan_run_workflow_policy(tmp_path)

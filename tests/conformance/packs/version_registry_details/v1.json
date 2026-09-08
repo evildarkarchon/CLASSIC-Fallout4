@@ -16,6 +16,7 @@
     {
       "id": "version-registry-details.execute",
       "rustSymbols": [
+        "AddressLibraryConfig",
         "VersionRegistry",
         "get_by_version",
         "get_by_short_name",

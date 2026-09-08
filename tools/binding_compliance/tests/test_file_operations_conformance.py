@@ -13,6 +13,7 @@ import pytest
 from conformance.coverage import (
     derive_observed_fact_ids,
     derive_row_coverage,
+    load_retained_analyzer_kinds,
     load_source_parity_rows,
 )
 from conformance.families.file_operations import FILE_OPERATIONS_COVERAGE_POLICY
@@ -72,7 +73,7 @@ def test_scoped_migration_retains_only_known_deferred_methods() -> None:
         for row in rows
         if row.participant_id == "python"
         and row.rust_symbol == "FileIOCore"
-        and row.runtime_operation == "read_bytes"
+        and row.runtime_operation == "read_dds_header"
     )
     assert is_retained_operation("file-operations", retained)
     for change in (
@@ -95,6 +96,9 @@ def test_file_receipts_fail_closed_and_preserve_migration_scope(
     shutil.copyfile(ROOT / PACK, tmp_path / PACK)
     fixtures = Path("tests/fixtures/file_operations")
     shutil.copytree(ROOT / fixtures, tmp_path / fixtures)
+    from receipt_test_support import copy_source_inventory
+
+    copy_source_inventory(ROOT, tmp_path)
     for arguments in (
         ("init",),
         ("config", "user.email", "conformance@example.invalid"),
@@ -152,22 +156,60 @@ def test_file_receipts_fail_closed_and_preserve_migration_scope(
     assert all(scenario.result == "pass" for scenario in report.scenarios)
     rows = load_source_parity_rows(ROOT)
     coverage = derive_row_coverage(
-        document, rows, policy, (report,), scope_participant_id=participant
+        document,
+        rows,
+        policy,
+        (report,),
+        scope_participant_id=participant,
+        retained_analyzers=load_retained_analyzer_kinds(ROOT),
     )
     assert coverage.rows
     assert not coverage.failures
-    assert all(row.evidence_kind == "executable" for row in coverage.rows)
+    assert all(
+        row.evidence_kind in {"executable", "structural"} for row in coverage.rows
+    )
     if participant == "python":
+        covered_ids = {row.obligation_id for row in coverage.rows}
+        for stream in ("PyLineStreamer", "PySyncLineStreamer"):
+            assert f"parity:python:file_io.log_collection.{stream}" in covered_ids
+        assert "parity:python:file_io.log_collection.PyLogCollector" not in covered_ids
         retained = next(
             row
             for row in rows
             if row.participant_id == "python"
             and row.rust_symbol == "FileIOCore"
-            and row.runtime_operation == "read_bytes"
+            and row.runtime_operation == "read_dds_header"
         )
         assert retained.obligation_id not in {
             row.obligation_id for row in coverage.rows
         }
+        for operation in (
+            "read_bytes",
+            "read_lines",
+            "read_file_mmap",
+            "stream_lines",
+            "stream_lines_sync",
+            "file_exists",
+            "get_file_size",
+            "get_file_info",
+            "clear_cache",
+            "py_read_multiple_files",
+            "py_walk_directory",
+            "write_bytes",
+            "write_lines",
+            "append_file",
+            "py_write_multiple_files",
+        ):
+            migrated = next(
+                row
+                for row in rows
+                if row.participant_id == "python"
+                and row.rust_symbol == "FileIOCore"
+                and row.runtime_operation == operation
+            )
+            assert migrated.obligation_id in {
+                row.obligation_id for row in coverage.rows
+            }
     prototype = next(
         row
         for row in rows
@@ -182,7 +224,12 @@ def test_file_receipts_fail_closed_and_preserve_migration_scope(
         runtime_operation="future_file_operation",
     )
     expanded = derive_row_coverage(
-        document, (*rows, added), policy, (report,), scope_participant_id=participant
+        document,
+        (*rows, added),
+        policy,
+        (report,),
+        scope_participant_id=participant,
+        retained_analyzers=load_retained_analyzer_kinds(ROOT),
     )
     assert [failure.obligation_id for failure in expanded.failures] == [
         added.obligation_id

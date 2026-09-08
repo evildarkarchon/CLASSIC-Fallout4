@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
-import { JsEnbChecker, JsIniValidator, checkEnb } from "../index.js";
+import { JsEnbChecker, JsIniValidator, JsLogProcessor, checkEnb, processGameLogs } from "../index.js";
 
 type JsonObject = Record<string, any>;
 
@@ -32,7 +32,7 @@ async function inventory(root: string, prefix = ""): Promise<{ files: JsonObject
 /** Observe public Scan Game adapters on controlled fixtures without ambient discovery. */
 export async function observeScanGame(fixture: JsonObject): Promise<JsonObject> {
   const operation = fixture.operation;
-  if (!["validate-ini", "validate-enb"].includes(operation)) throw new Error("unsupported scan game operation");
+  if (!["validate-ini", "validate-enb", "process-logs"].includes(operation)) throw new Error("unsupported scan game operation");
   const root = await mkdtemp(join(tmpdir(), "classic-scan-game-conformance-"));
   try {
     for (const path of fixture.directories) await mkdir(ownedPath(root, path), { recursive: true });
@@ -42,6 +42,13 @@ export async function observeScanGame(fixture: JsonObject): Promise<JsonObject> 
       await writeFile(target, content as string, "utf8");
     }
     const before = await inventory(root);
+    if (operation === "process-logs") {
+      const processor = new JsLogProcessor(fixture.catch, fixture.excludeFiles, fixture.excludeErrors);
+      const report = processor.processLogs(root);
+      if (processGameLogs(root, fixture.catch, fixture.excludeFiles, fixture.excludeErrors) !== report || JSON.stringify(processor.errorPatterns()) !== JSON.stringify(fixture.catch)) throw new Error("log processor public aliases disagree");
+      const after = await inventory(root);
+      return { report: report.replaceAll(root, "<ROOT>").replaceAll("\\", "/"), beforeFiles: before.files, beforeDirectories: before.directories, files: after.files, directories: after.directories };
+    }
     let result: JsonObject;
     if (operation === "validate-ini") {
       const validator = new JsIniValidator(fixture.game);

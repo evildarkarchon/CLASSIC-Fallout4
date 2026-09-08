@@ -27,17 +27,29 @@ def observe_aux_operations(family: str, fixture: Mapping[str, Any]) -> dict[str,
         import classic_web as web
 
         url = request["url"]
+        sites = []
+        for factory in (
+            web.ModSite.nexus_mods,
+            web.ModSite.bethesda_net,
+            web.ModSite.mod_db,
+        ):
+            site = factory()
+            if (
+                str(site) != site.name()
+                or repr(site) != f"ModSite.{factory.__name__}()"
+            ):
+                raise ValueError(
+                    "ModSite display methods disagree with public site identity"
+                )
+            if not site == factory() or (site == web.ModSite.nexus_mods()) != (
+                factory == web.ModSite.nexus_mods
+            ):
+                raise ValueError("ModSite equality disagrees with constructor identity")
+            sites.append({"name": site.name(), "baseUrl": site.base_url()})
         return {
             "userAgent": web.get_user_agent(),
             "userAgentWithSuffix": web.get_user_agent_with_suffix(request["suffix"]),
-            "sites": [
-                {"name": site.name(), "baseUrl": site.base_url()}
-                for site in (
-                    web.ModSite.nexus_mods(),
-                    web.ModSite.bethesda_net(),
-                    web.ModSite.mod_db(),
-                )
-            ],
+            "sites": sites,
             "valid": web.is_valid_url(url),
             "validated": _result(lambda: web.validate_url(url)),
             "domain": _result(lambda: web.extract_domain(url)),
@@ -53,20 +65,43 @@ def observe_aux_operations(family: str, fixture: Mapping[str, Any]) -> dict[str,
 
         parsed = resource.parse_resource_type(request["type"])
         info = resource.ResourceInfo(request["path"])
+        catalog = []
+        for name in request["types"]:
+            variant = getattr(resource.ResourceType, name)()
+            token = variant.as_str()
+            if str(variant) != token or repr(variant) != f"ResourceType.{token}()":
+                raise ValueError("resource type representation lost its public token")
+            if (variant == parsed) != (token == parsed.as_str()):
+                raise ValueError(
+                    "resource type equality disagrees with public identity"
+                )
+            catalog.append(token)
+
+        def observed_info(value, root=None):
+            """Verify Python representation layout against the resource's observed public fields."""
+            path, kind, size = (
+                value.path(),
+                value.resource_type().as_str(),
+                value.size(),
+            )
+            expected = f"ResourceInfo(path='{path}', type='{kind}', size={size})"
+            if str(value) != expected or repr(value) != expected:
+                raise ValueError("resource representation lost path, type, or size")
+            return {
+                "path": path
+                if root is None
+                else Path(path).relative_to(root).as_posix(),
+                "type": kind,
+                "size": size,
+            }
+
         observation = {
             "detected": resource.detect_resource_type(request["path"]).as_str(),
             "supported": resource.is_supported_resource(request["path"]),
             "parsed": parsed.as_str(),
-            "typeCatalog": [
-                getattr(resource.ResourceType, name)().as_str()
-                for name in request["types"]
-            ],
+            "typeCatalog": catalog,
             "extensions": parsed.extensions(),
-            "info": {
-                "path": info.path(),
-                "type": info.resource_type().as_str(),
-                "size": info.size(),
-            },
+            "info": observed_info(info),
         }
         with tempfile.TemporaryDirectory(
             prefix="classic-resource-conformance-"
@@ -78,11 +113,7 @@ def observe_aux_operations(family: str, fixture: Mapping[str, Any]) -> dict[str,
                 path.write_bytes(content.encode("utf-8"))
             observation["resources"] = sorted(
                 (
-                    {
-                        "path": Path(item.path()).relative_to(root).as_posix(),
-                        "type": item.resource_type().as_str(),
-                        "size": item.size(),
-                    }
+                    observed_info(item, root)
                     for item in resource.enumerate_resources(str(root), None)
                 ),
                 key=lambda item: item["path"],

@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "familyId": "game-setup-intake",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scangame-core"
+  },
+  "fixtureRoot": "tests/fixtures/game_setup_intake",
+  "fixtures": {
+    "explicit": "explicit.json",
+    "normalize": "normalize.json"
+  },
+  "capabilities": [
+    {
+      "id": "game-setup-intake.run",
+      "rustSymbols": [
+        "GameSetupIntake",
+        "GameSetupIntakeResult",
+        "from_user_settings",
+        "run"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "values"
+      ]
+    },
+    {
+      "id": "game-setup-intake.normalize",
+      "rustSymbols": [
+        "normalize_game_setup_version_selection",
+        "game_setup_needs_path_detection"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "values"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "explicit",
+      "action": "game-setup-intake.run",
+      "capabilityIds": [
+        "game-setup-intake.run"
+      ],
+      "fixtureRefs": [
+        "explicit"
+      ],
+      "input": {
+        "fixtureRef": "explicit"
+      },
+      "expected": {
+        "status": "ready",
+        "hasErrors": true,
+        "totalChecks": 11,
+        "failedChecks": 1,
+        "actionCount": 0,
+        "pathUpdateCount": 0,
+        "pathUpdates": [],
+        "gameRoot": "Game",
+        "docsRoot": "Docs",
+        "gameExecutable": "Game/Starfield.exe",
+        "reportFlags": {
+          "gameNamed": true,
+          "metadataUnsupported": true,
+          "versionWarning": true,
+          "documentsPassed": true,
+          "loaderFailed": true
+        },
+        "files": [
+          "CLASSIC Settings.yaml",
+          "Docs/Starfield.ini",
+          "Docs/StarfieldCustom.ini",
+          "Docs/StarfieldPrefs.ini",
+          "Game/Starfield.exe"
+        ],
+        "unchanged": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "normalize",
+      "action": "game-setup-intake.normalize",
+      "capabilityIds": [
+        "game-setup-intake.normalize"
+      ],
+      "fixtureRefs": [
+        "normalize"
+      ],
+      "input": {
+        "fixtureRef": "normalize"
+      },
+      "expected": {
+        "versions": [
+          "auto",
+          "Original",
+          "NextGen",
+          "AnniversaryEdition",
+          "VR",
+          "auto"
+        ],
+        "needs": [
+          [
+            true,
+            true
+          ],
+          [
+            true,
+            false
+          ],
+          [
+            false,
+            true
+          ]
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

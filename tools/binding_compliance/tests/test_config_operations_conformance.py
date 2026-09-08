@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import shutil
 import subprocess
-import sys
 from dataclasses import replace
 from pathlib import Path
 
@@ -14,6 +14,7 @@ import pytest
 from conformance.coverage import (
     derive_observed_fact_ids,
     derive_row_coverage,
+    load_retained_analyzer_kinds,
     load_source_parity_rows,
 )
 from conformance.families.config_operations import CONFIG_OPERATIONS_COVERAGE_POLICY
@@ -22,6 +23,109 @@ from conformance.receipts import validate_prepared_run
 
 ROOT = Path(__file__).resolve().parents[3]
 PACK = Path("tests/conformance/packs/config_operations/v1.json")
+
+
+def test_game_local_update_preserves_omitted_docs_and_unrelated_settings() -> None:
+    """Path persistence must observe the preserved docs field and unrelated raw settings bytes."""
+    document = load_and_validate_pack(ROOT, PACK).document()
+    scenario = next(
+        (s for s in document["scenarios"] if s["id"] == "persist-local-preserve"), None
+    )
+    assert scenario is not None
+    files = {file["path"]: file["content"] for file in scenario["expected"]["files"]}
+    assert 'Root_Folder_Docs: "C:/Docs/Existing"' in files["local.yaml"]
+    assert files["CLASSIC Settings.yaml"] == "{malformed settings sentinel"
+
+
+def test_yaml_accessors_require_complete_public_projection() -> None:
+    """Each raw-field/accessor observation must be present before a YAML view earns credit."""
+    document = load_and_validate_pack(ROOT, PACK).document()
+    scenario = document["scenarios"][0]
+    observation = copy.deepcopy(scenario["expected"])
+    assert "yamlValues" in observation["result"]
+    fact = "config-operations.yaml-values"
+    assert fact in derive_observed_fact_ids(
+        document, scenario, observation, CONFIG_OPERATIONS_COVERAGE_POLICY
+    )
+    del observation["result"]["yamlValues"]["classic_version_date"]
+    assert fact not in derive_observed_fact_ids(
+        document, scenario, observation, CONFIG_OPERATIONS_COVERAGE_POLICY
+    )
+
+
+def test_main_version_fact_requires_real_nonempty_version_result() -> None:
+    """A bundled version observation earns credit only with its complete durable envelope."""
+    document = load_and_validate_pack(ROOT, PACK).document()
+    scenario = {
+        "action": "config-operations.main-version",
+        "capabilityIds": ["config-operations.main-version"],
+    }
+    observation = {
+        "result": {"version": "9.1.0"},
+        "error": None,
+        "files": [
+            {
+                "path": "CLASSIC Main.yaml",
+                "content": 'schema_version: "2.0"\nCLASSIC_Info:\n  version: "9.1.0"\n',
+            }
+        ],
+    }
+    document["capabilities"].append(
+        {
+            "id": "config-operations.main-version",
+            "rustSymbols": ["load_main_yaml_version_with_bundled_dir"],
+            "observationFamilies": ["values"],
+        }
+    )
+    fact = "config-operations.main-version"
+    assert fact in derive_observed_fact_ids(
+        document, scenario, observation, CONFIG_OPERATIONS_COVERAGE_POLICY
+    )
+    observation["result"]["version"] = ""
+    assert fact not in derive_observed_fact_ids(
+        document, scenario, observation, CONFIG_OPERATIONS_COVERAGE_POLICY
+    )
+
+
+def test_snapshot_content_identity_cannot_claim_changed_bytes() -> None:
+    """A content identity fact must authenticate every retained YAML byte sequence."""
+    document = load_and_validate_pack(ROOT, PACK).document()
+    scenario = document["scenarios"][0]
+    observation = copy.deepcopy(scenario["expected"])
+    observation["result"]["gameRole"] = "Fallout4"
+    observation["result"]["identities"] = {
+        item["path"]: {
+            "sha256": hashlib.sha256(item["content"].encode()).hexdigest(),
+            "byteLen": len(item["content"].encode()),
+        }
+        for item in observation["files"]
+    }
+    fact = "config-operations.snapshot-identities"
+    assert fact in derive_observed_fact_ids(
+        document, scenario, observation, CONFIG_OPERATIONS_COVERAGE_POLICY
+    )
+    observation["result"]["identities"]["main.yaml"]["sha256"] = "0" * 64
+    assert fact not in derive_observed_fact_ids(
+        document, scenario, observation, CONFIG_OPERATIONS_COVERAGE_POLICY
+    )
+
+
+def test_snapshot_game_requires_observed_game_identity() -> None:
+    """Reject missing or wrong snapshot identity before crediting its CXX accessor."""
+    document = load_and_validate_pack(ROOT, PACK).document()
+    scenario = document["scenarios"][0]
+    observation = copy.deepcopy(scenario["expected"])
+    observation["result"]["game"] = "Fallout4"
+    policy = CONFIG_OPERATIONS_COVERAGE_POLICY
+    fact = "config-operations.snapshot-game"
+    assert fact in derive_observed_fact_ids(document, scenario, observation, policy)
+    for game in (None, "Skyrim", ""):
+        observation["result"]["game"] = game
+        assert fact not in derive_observed_fact_ids(
+            document, scenario, observation, policy
+        )
+    del observation["result"]["game"]
+    assert fact not in derive_observed_fact_ids(document, scenario, observation, policy)
 
 
 def test_config_operations_have_complete_observations() -> None:
@@ -57,7 +161,18 @@ def test_config_read_failure_cannot_claim_generated_ignore() -> None:
 def test_config_fact_limits_credit_to_observed_api() -> None:
     """An explicit load cannot cover unrelated loaders or configuration setters."""
     for predicate in CONFIG_OPERATIONS_COVERAGE_POLICY.predicates:
-        assert predicate.covers_runtime_operation("load_explicit_yaml_data")
+        assert any(
+            predicate.covers_runtime_operation(operation)
+            for operation in (
+                "load_explicit_yaml_data",
+                "explicit_yaml_data_snapshot_game",
+                "explicit_yaml_data_snapshot_main_identity",
+                "load_main_yaml_version",
+                "yaml_data_classic_version",
+                "persist_game_local_paths",
+                "clear_yaml_cache",
+            )
+        )
         assert not predicate.covers_runtime_operation("load_installed_yaml_data")
         assert not predicate.covers_runtime_operation("yaml_data_set_value")
 
@@ -71,6 +186,9 @@ def test_config_receipt_lifecycle_fails_closed(
     shutil.copyfile(ROOT / PACK, tmp_path / PACK)
     fixtures = Path("tests/fixtures/config_operations")
     shutil.copytree(ROOT / fixtures, tmp_path / fixtures)
+    from receipt_test_support import copy_source_inventory
+
+    copy_source_inventory(ROOT, tmp_path)
     for arguments in (
         ("init",),
         ("config", "user.email", "conformance@example.invalid"),
@@ -118,6 +236,7 @@ def test_config_receipt_lifecycle_fails_closed(
             "failure": None,
         }
         for scenario in document["scenarios"]
+        if scenario["id"] in {item["id"] for item in plan["scenarios"]}
     ]
     run.receipt_path.write_text(json.dumps(receipt))
     policy = CONFIG_OPERATIONS_COVERAGE_POLICY
@@ -126,7 +245,12 @@ def test_config_receipt_lifecycle_fails_closed(
     assert all(scenario.result == "pass" for scenario in report.scenarios)
     rows = load_source_parity_rows(ROOT)
     coverage = derive_row_coverage(
-        document, rows, policy, (report,), scope_participant_id=participant
+        document,
+        rows,
+        policy,
+        (report,),
+        scope_participant_id=participant,
+        retained_analyzers=load_retained_analyzer_kinds(ROOT),
     )
     assert coverage.rows
     assert not coverage.failures
@@ -142,7 +266,12 @@ def test_config_receipt_lifecycle_fails_closed(
         runtime_operation="future_config_operation",
     )
     expanded = derive_row_coverage(
-        document, (*rows, added), policy, (report,), scope_participant_id=participant
+        document,
+        (*rows, added),
+        policy,
+        (report,),
+        scope_participant_id=participant,
+        retained_analyzers=load_retained_analyzer_kinds(ROOT),
     )
     assert [failure.obligation_id for failure in expanded.failures] == [
         added.obligation_id
@@ -173,58 +302,3 @@ def test_config_receipt_lifecycle_fails_closed(
     )
     other.receipt_path.write_text(json.dumps(receipt))
     assert validate_prepared_run(pack, other, coverage_policy=policy).failures
-
-
-@pytest.mark.parametrize("binding", ("node", "python"))
-def test_legacy_registry_cannot_grant_config_runtime_coverage(
-    tmp_path: Path, binding: str
-) -> None:
-    """Legacy green suite labels never substitute for explicit-loader receipts."""
-    registry_path = (
-        "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json"
-        if binding == "node"
-        else "python-bindings/tests/fixtures/runtime_coverage_registry.json"
-    )
-    registry = json.loads((ROOT / registry_path).read_text())
-    for entry in registry["entries"]:
-        if entry.get("ownerModule") == "config":
-            entry.update(
-                classification="runtime_verified",
-                testSuite="claimed-suite",
-                testCaseId="claimed-pass",
-                notes="Optimistic registry claim",
-            )
-    path = tmp_path / "registry.json"
-    path.write_text(json.dumps(registry))
-    completed = subprocess.run(
-        [
-            sys.executable,
-            str(ROOT / f"tools/{binding}_api_parity/generate_baseline.py"),
-            "--repo-root",
-            str(ROOT),
-            "--runtime-registry",
-            str(path),
-            "--output-dir",
-            str(tmp_path / "generated"),
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    assert completed.returncode == 0, completed.stdout + completed.stderr
-    summary = json.loads(
-        (tmp_path / "generated/runtime_coverage_summary.json").read_text()
-    )
-    migrated = [
-        row
-        for row in summary["trackedSurface"]
-        if row.get("conformanceFamily") == "config-operations"
-    ]
-    assert migrated
-    assert all(row["classification"] == "receipt_required" for row in migrated)
-    assert all(
-        not {"coverageId", "testSuite", "testCaseId", "fixtureRefs", "notes"}
-        & row.keys()
-        for row in migrated
-    )
-    assert {row["rustSymbol"] for row in migrated} == {"load_explicit_yaml_data"}

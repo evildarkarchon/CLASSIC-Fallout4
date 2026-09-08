@@ -28,13 +28,21 @@
         "structured-error"
       ]
     }
+    ,{
+      "id": "crashgen-settings.config-carriers",
+      "rustCrate": "classic-config-core",
+      "rustSymbols": ["RuleSeverity", "AutoscanReportPlacement", "OutcomeKind"],
+      "operationScoped": true,
+      "observationFamilies": ["semantic-result"]
+    }
   ],
   "scenarios": [
     {
       "id": "authored-guidance",
       "action": "crashgen-settings.analyze",
       "capabilityIds": [
-        "crashgen-settings.analyze"
+        "crashgen-settings.analyze",
+        "crashgen-settings.config-carriers"
       ],
       "fixtureRefs": [
         "authored_guidance"

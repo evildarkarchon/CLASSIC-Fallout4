@@ -20,6 +20,7 @@ from conformance.coverage import (
 from conformance.enforcement import enforcement_for_family
 from conformance.packs import load_and_validate_pack, materialize_run_plan
 from conformance.receipts import validate_prepared_run
+from receipt_test_support import copy_source_inventory
 
 ROOT = Path(__file__).resolve().parents[3]
 FAMILIES = (
@@ -30,6 +31,45 @@ FAMILIES = (
     "named-record",
     "plugin-evidence",
 )
+
+
+def test_lookup_memory_carriers_are_owned_only_by_executed_memory_scenarios() -> None:
+    """Disabled and SQLite lookups cannot claim construction of in-memory entries."""
+    policy = FAMILY_COVERAGE_POLICIES["formid-lookup"]
+    carriers = {"FormIdValueLookupEntry", "FormIdValueLookupInMemoryReply"}
+    hit = next(
+        predicate
+        for predicate in policy.predicates
+        if predicate.id == "formid-lookup.hit.entries"
+    )
+    assert carriers <= set(hit.rust_symbols)
+    assert hit.covers_runtime_operation("__init__")
+    for predicate in policy.predicates:
+        if predicate.id not in {
+            "formid-lookup.hit.entries",
+            "formid-lookup.batch-hit-miss.entries",
+        }:
+            assert not carriers.intersection(predicate.rust_symbols)
+
+
+@pytest.mark.parametrize(
+    "family", ("crash-suspect", "mod-guidance", "crashgen-settings")
+)
+def test_semantic_config_carriers_have_exact_supporting_owner_selectors(
+    family: str,
+) -> None:
+    """Cross-crate support credit names exact constructed/projected Python exports."""
+    policy = FAMILY_COVERAGE_POLICIES[family]
+    support = [
+        predicate
+        for predicate in policy.predicates
+        if predicate.capability_id == family + ".config-carriers"
+    ]
+    assert support
+    assert all(
+        predicate.binding_obligation_ids and predicate.runtime_operations
+        for predicate in support
+    )
 
 
 @pytest.mark.parametrize("family", FAMILIES)
@@ -123,6 +163,7 @@ def test_semantic_receipts_cover_only_their_executed_rows(
     (tmp_path / pack_path).parent.mkdir(parents=True)
     shutil.copyfile(ROOT / pack_path, tmp_path / pack_path)
     shutil.copytree(ROOT / fixture_path, tmp_path / fixture_path)
+    copy_source_inventory(ROOT, tmp_path)
     for args in (
         ("init",),
         ("config", "user.email", "conformance@example.invalid"),
@@ -203,18 +244,38 @@ def test_semantic_receipts_cover_only_their_executed_rows(
                 prototype,
                 obligation_id="parity:test:new-method",
                 runtime_operation="future_adapter",
+                required_evidence_kind="runtime",
+                retained_analyzer_id=None,
             )
+            full_owner = pack.document()
+            for capability in full_owner["capabilities"]:
+                capability.pop("operationScoped", None)
+            # Full owner expansion also includes existing wrappers exercised by
+            # sibling families. The new callable must add its own unresolved row.
+            baseline_failures = {
+                failure.obligation_id
+                for failure in derive_row_coverage(
+                    full_owner,
+                    rows,
+                    policy,
+                    (report,),
+                    scope_participant_id=participant,
+                    retained_analyzers=load_retained_analyzer_kinds(ROOT),
+                ).failures
+            }
             expanded = derive_row_coverage(
-                pack.document(),
+                full_owner,
                 (*rows, added_method),
                 policy,
                 (report,),
                 scope_participant_id=participant,
                 retained_analyzers=load_retained_analyzer_kinds(ROOT),
             )
-            assert [failure.obligation_id for failure in expanded.failures] == [
-                added_method.obligation_id
-            ]
+            assert [
+                failure.obligation_id
+                for failure in expanded.failures
+                if failure.obligation_id not in baseline_failures
+            ] == [added_method.obligation_id]
         if family == "mod-guidance":
             # A nonblank replacement remains a typed observation, but the pack's
             # exact comparator must reject prose different from the authored text.
@@ -241,12 +302,7 @@ def test_new_bridge_alias_cannot_borrow_an_existing_analyze_operation(
     tmp_path: Path,
 ) -> None:
     """Current source names distinguish a new function from the invoked public seam."""
-    for participant in ("cxx", "node", "python"):
-        source = Path(
-            f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
-        )
-        (tmp_path / source).parent.mkdir(parents=True)
-        shutil.copyfile(ROOT / source, tmp_path / source)
+    copy_source_inventory(ROOT, tmp_path)
     source = (
         tmp_path / "docs/implementation/cxx_api_parity/baseline/parity_contract.json"
     )

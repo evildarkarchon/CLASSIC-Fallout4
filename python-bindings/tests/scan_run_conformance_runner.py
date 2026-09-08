@@ -293,7 +293,17 @@ def _build_request(
         formid_database_paths=_configured_paths(
             root, inputs.get("formidDatabasePaths")
         ),
-        unsolved_logs_destination=None,
+        unsolved_logs_destination=(
+            str(
+                _runtime_path(
+                    root,
+                    inputs["unsolvedLogsDestination"]["path"],
+                    "unsolvedLogsDestination.path",
+                )
+            )
+            if inputs.get("unsolvedLogsDestination") is not None
+            else None
+        ),
         max_concurrent=max_concurrent,
     )
     setup_context = None
@@ -332,6 +342,10 @@ def _build_request(
         unsolved_logs = inputs.get("unsolvedLogs")
         if unsolved_logs == "leave-in-place":
             movement = classic_scanlog.ScanRunUnsolvedLogs.leave_in_place()
+        elif unsolved_logs == "move-to-configured-or-default":
+            movement = (
+                classic_scanlog.ScanRunUnsolvedLogs.move_to_configured_or_default()
+            )
         elif unsolved_logs == "move-to-custom":
             destination = _require_mapping(
                 inputs.get("unsolvedLogsPath"), "unsolvedLogsPath"
@@ -347,7 +361,7 @@ def _build_request(
             )
         else:
             raise RunnerContractError(
-                "Standard scenario unsolvedLogs must be leave-in-place or move-to-custom"
+                "Standard scenario has an unsupported unsolvedLogs policy"
             )
         if setup_context is not None:
             return classic_scanlog.ScanRunRequest.standard_with_fcx(
@@ -997,7 +1011,11 @@ def _autoscan_report_observation(
         relative = _relative_path(root, log.autoscan_report, "durable Autoscan Report")
         content = _runtime_path(root, relative, "durable Autoscan Report").read_bytes()
         reports.append(
-            {"path": relative, "bytesHex": content.hex(), **_identity_from_bytes(content)}
+            {
+                "path": relative,
+                "bytesHex": content.hex(),
+                **_identity_from_bytes(content),
+            }
         )
         known_files.add(relative)
 
@@ -1011,7 +1029,9 @@ def _autoscan_report_observation(
     input_files = [
         {
             "path": path,
-            **_identity_from_bytes(_runtime_path(root, path, "durable input").read_bytes()),
+            **_identity_from_bytes(
+                _runtime_path(root, path, "durable input").read_bytes()
+            ),
         }
         for path in sorted(input_paths)
     ]
@@ -1023,11 +1043,16 @@ def _autoscan_report_observation(
     )
     forbidden = []
     for index, raw_path in enumerate(
-        _require_sequence(inputs.get("forbiddenEffectPaths", []), "forbiddenEffectPaths")
+        _require_sequence(
+            inputs.get("forbiddenEffectPaths", []), "forbiddenEffectPaths"
+        )
     ):
         path = _runtime_path(root, raw_path, f"forbiddenEffectPaths[{index}]")
         forbidden.append(
-            {"path": _relative_path(root, path, "forbidden report effect"), "exists": path.exists()}
+            {
+                "path": _relative_path(root, path, "forbidden report effect"),
+                "exists": path.exists(),
+            }
         )
     logs = _log_results(result.logs, root)
     for projected, log in zip(logs, result.logs, strict=True):
@@ -1599,6 +1624,50 @@ def _execute_continuation_flow(
     }
 
 
+def _config_issue_values(classic_scanlog: Any) -> dict[str, Any]:
+    """Read constructed FCX payloads, including default severity and an absent section."""
+    issues = (
+        classic_scanlog.ConfigIssue(
+            "Fallout4.ini",
+            "Display",
+            "iSize W",
+            "800",
+            "1920",
+            "Use the configured width",
+        ),
+        classic_scanlog.ConfigIssue(
+            "plugins.toml",
+            None,
+            "enabled",
+            "false",
+            "true",
+            "Enable the plugin",
+            "info",
+        ),
+    )
+    fields = (
+        "file_path",
+        "section",
+        "setting",
+        "current_value",
+        "recommended_value",
+        "description",
+        "severity",
+    )
+    values = []
+    for issue in issues:
+        section = "None" if issue.section is None else f'Some("{issue.section}")'
+        if (
+            repr(issue)
+            != f"ConfigIssue(file='{issue.file_path}', section={section}, setting='{issue.setting}', current='{issue.current_value}', recommended='{issue.recommended_value}')"
+        ):
+            raise RunnerContractError(
+                "ConfigIssue representation lost constructor values"
+            )
+        values.append({field: getattr(issue, field) for field in fields})
+    return {"issues": values}
+
+
 def _execute_scenario(
     plan: Mapping[str, Any], scenario: Mapping[str, Any]
 ) -> dict[str, Any]:
@@ -1612,6 +1681,8 @@ def _execute_scenario(
             import classic_scanlog
             import classic_shared
 
+            if inputs.get("observationProfile") == "config-issue":
+                return _config_issue_values(classic_scanlog)
             request = _build_request(classic_scanlog, classic_shared, inputs, root)
             cancellation = classic_scanlog.ScanRunCancellation()
             callbacks: list[Any] = []

@@ -95,6 +95,10 @@ impl ConfigDuplicateDetector {
 
     /// Scan a directory for duplicate configuration files
     ///
+    /// Returns the same groups exposed by `get_duplicates`, with a stable
+    /// canonical path and per-scan hashes. Starting a scan invalidates previous
+    /// groups and hashes; any read or comparison failure leaves no stale groups.
+    ///
     /// # Arguments
     ///
     /// * `root_path` - Root directory to scan
@@ -114,8 +118,12 @@ impl ConfigDuplicateDetector {
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     pub fn scan_directory(&mut self, root_path: &Path) -> Result<HashMap<String, Vec<PathBuf>>> {
+        // Hashes are reusable within a scan, but a later scan may see changed
+        // files at the same paths. Failed rescans must not expose stale groups.
+        self.hash_cache.clear();
+        self.duplicate_groups.clear();
         // First pass: collect all config files
-        let config_files: Vec<(String, PathBuf)> = WalkDir::new(root_path)
+        let mut config_files: Vec<(String, PathBuf)> = WalkDir::new(root_path)
             .follow_links(false)
             .into_iter()
             .filter_map(|e| e.ok())
@@ -148,6 +156,10 @@ impl ConfigDuplicateDetector {
             })
             .collect();
 
+        // A stable encounter order makes the canonical file independent of
+        // filesystem enumeration order across binding hosts.
+        config_files.sort_by(|left, right| left.1.cmp(&right.1));
+
         // Second pass: find duplicates
         let mut file_registry: HashMap<String, PathBuf> = HashMap::new();
         let mut duplicates: HashMap<String, Vec<PathBuf>> = HashMap::new();
@@ -167,6 +179,22 @@ impl ConfigDuplicateDetector {
             }
         }
 
+        let mut groups = HashMap::new();
+        for (name, paths) in &duplicates {
+            if let Some((canonical, copies)) = paths.split_first() {
+                groups.insert(
+                    name.clone(),
+                    DuplicateGroup {
+                        canonical: canonical.clone(),
+                        duplicates: copies.to_vec(),
+                        hash: self.get_cached_hash(canonical)?,
+                    },
+                );
+            }
+        }
+        // Publish only completed results so object getters and returned maps
+        // describe the same scan even when a later file read can fail.
+        self.duplicate_groups = groups;
         Ok(duplicates)
     }
 
@@ -217,6 +245,9 @@ impl ConfigDuplicateDetector {
     }
 
     /// Get duplicate groups
+    ///
+    /// Borrows the latest completed scan's groups. A new scan clears this
+    /// view before reading files, and failures leave it empty.
     pub fn get_duplicates(&self) -> &HashMap<String, DuplicateGroup> {
         &self.duplicate_groups
     }

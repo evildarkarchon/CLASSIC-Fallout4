@@ -137,7 +137,41 @@ export async function observeInstalledYaml(fixture: JsonObject): Promise<JsonObj
       defaultIdentity: recovery.defaultLocalIgnoreIdentity == null ? null : identity(recovery.defaultLocalIgnoreIdentity, ignorePath),
       selectedGameVersion: recovery.selectedGameVersion,
     };
+    if (recovery && fixture.recoveryAction === "proceed") {
+      const proceeded = recovery.proceedWithoutIgnore();
+      observation.outcome = "proceeded";
+      observation.localIgnore = {state: token(proceeded.localIgnoreState), identity: identity(proceeded.localIgnoreIdentity, ignorePath)};
+      observation.snapshot = {classicVersion: proceeded.yamlData.classicVersion, gameRootName: proceeded.yamlData.gameRootName, ignoreList: proceeded.yamlData.ignoreList, simplifyRemoveList: proceeded.simplifyRemoveList};
+    }
+    let backupAlias: string | undefined;
+    if (recovery && fixture.recoveryAction === "reset") {
+      const outcome = await recovery.resetToDefault();
+      if (outcome.status === classic.JsLocalIgnoreResetStatus.Conflict && outcome.conflict) {
+        const conflict = outcome.conflict;
+        observation.outcome = "reset_conflict";
+        observation.recovery.decision = {status: "conflict", expectedIdentity: identity(conflict.expectedIdentity, ignorePath), actualIdentity: conflict.actualIdentity == null ? null : identity(conflict.actualIdentity, ignorePath), backupPath: conflict.backupPath == null ? null : pathCarrier(root, conflict.backupPath)};
+      } else if (outcome.status === classic.JsLocalIgnoreResetStatus.Reset && outcome.reset) {
+        const reset = outcome.reset;
+        // The timestamp/process suffix is normalized only after namespace and retained-hash verification.
+        const retainedBackupPath = pathCarrier(root, reset.backupPath);
+        if (retainedBackupPath === null) throw new Error("successful reset did not retain its backup path");
+        backupAlias = retainedBackupPath;
+        const stem = "installation/CLASSIC Backup/YAML Data/Local Ignore/CLASSIC Ignore.yaml." + reset.malformedLocalIgnoreIdentity.sha256 + ".";
+        if (!backupAlias.startsWith(stem) || !backupAlias.endsWith(".bak")) throw new Error("reset backup escaped its content-addressed namespace");
+        const backupName = "installation/CLASSIC Backup/YAML Data/Local Ignore/<backup>";
+        observation.outcome = "reset";
+        observation.recovery.decision = {status: "reset", localIgnorePath: pathCarrier(root, reset.localIgnorePath), malformedIdentity: identity(reset.malformedLocalIgnoreIdentity, ignorePath), backupIdentity: identity(reset.backupIdentity, backupName), replacementIdentity: identity(reset.replacementIdentity, ignorePath)};
+        observation.diagnostics = diagnostics(root, reset.diagnostics);
+        const resolved = reset.snapshot;
+        observation.localIgnore = {state: token(resolved.localIgnoreState), identity: identity(resolved.localIgnoreIdentity, ignorePath)};
+        observation.snapshot = {classicVersion: resolved.yamlData.classicVersion, gameRootName: resolved.yamlData.gameRootName, ignoreList: resolved.yamlData.ignoreList, simplifyRemoveList: resolved.simplifyRemoveList};
+      } else throw new Error("reset status does not select exactly one payload");
+    }
     observation.files = await fileTree(root);
+    if (backupAlias !== undefined) {
+      for (const file of observation.files) if (file.path === backupAlias) file.path = "installation/CLASSIC Backup/YAML Data/Local Ignore/<backup>";
+      observation.files.sort((a: any, b: any) => a.path.localeCompare(b.path));
+    }
     return observation;
   } finally {
     for (const [name, value] of previous) {

@@ -10,6 +10,25 @@ ROOT = Path(__file__).resolve().parents[3]
 PACK = Path("tests/conformance/packs/xse_operations/v1.json")
 
 
+def test_xse_info_methods_and_game_mapping_have_executed_predicates() -> None:
+    """Constructor, filesystem probes, display and game mapping remain explicit calls."""
+    for operation in (
+        "__init__",
+        "__repr__",
+        "__str__",
+        "__eq__",
+        "path",
+        "loader_path",
+        "check_installed",
+        "xse_get_type_from_game_id",
+        "xseTypeForGame",
+    ):
+        assert any(
+            predicate.covers_runtime_operation(operation)
+            for predicate in XSE_OPERATIONS_COVERAGE_POLICY.predicates
+        )
+
+
 def test_xse_missing_and_detected_versions_have_distinct_facts():
     """Detection sentinels cannot earn successful-version evidence."""
     document = load_and_validate_pack(ROOT, PACK).document()

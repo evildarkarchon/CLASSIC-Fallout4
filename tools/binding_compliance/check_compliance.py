@@ -13,7 +13,10 @@ from conformance.command import (  # type: ignore
     ConformanceCommandError,
     build_conformance_report_from_receipts,
 )
-from conformance.repository import build_repository_report  # type: ignore
+from conformance.repository import (  # type: ignore
+    build_repository_report,
+    discover_repository_receipts,
+)
 from suite import ComplianceSuite, write_report_files  # type: ignore
 
 
@@ -71,6 +74,11 @@ def build_argument_parser() -> argparse.ArgumentParser:
         help="Receipt path; repeat to aggregate every instance in the requested scope.",
     )
     parser.add_argument(
+        "--receipt-directory",
+        type=Path,
+        help="Full profile: recursively collect downloaded receipts with sibling plans.",
+    )
+    parser.add_argument(
         "--attempt",
         help="Companion native attempt diagnostics; never semantic evidence.",
     )
@@ -84,6 +92,8 @@ def build_argument_parser() -> argparse.ArgumentParser:
 def _argument_error(args: argparse.Namespace) -> str | None:
     """Return a profile-specific CLI contract error, if any."""
 
+    if args.receipt_directory and args.profile != "full":
+        return "--receipt-directory requires --profile full"
     if args.profile == "conformance":
         if not args.participant:
             return "--profile conformance requires --participant"
@@ -138,9 +148,12 @@ def main(argv: list[str] | None = None) -> int:
     conformance_report = None
     if args.profile == "full":
         try:
-            conformance_report = build_repository_report(
-                repo_root, tuple(Path(value) for value in args.receipt)
-            )
+            receipts = tuple(Path(value) for value in args.receipt)
+            if args.receipt_directory:
+                receipts += discover_repository_receipts(
+                    repo_root, args.receipt_directory
+                )
+            conformance_report = build_repository_report(repo_root, receipts)
         except ConformanceCommandError as exc:
             print(str(exc), file=sys.stderr)
             return 2

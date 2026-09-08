@@ -102,7 +102,9 @@ json execute_database_operations_scenario(const json& plan, const json& scenario
             }
             if (legacy_hits != typed_hits) throw RunnerError("legacy database batch disagrees with typed hits or miss omission");
         }
+        const auto cache_size = database_operations::db_pool_cache_size(*pool);
         observation["cleared"] = database_operations::db_pool_clear_cache(*pool, false);
+        if (observation["cleared"] != cache_size) throw RunnerError("cache size disagrees with removed entries");
         observation["afterClear"] = database_operations::db_pool_clear_cache(*pool, false);
     } catch (...) {
         // Release SQLite handles before TemporaryDirectory cleans its Windows files.

@@ -1,0 +1,4 @@
+{
+  "operation": "legacy",
+  "content": "Unhandled exception EXCEPTION_ACCESS_VIOLATION at 0x12345678"
+}

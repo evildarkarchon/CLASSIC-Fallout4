@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "familyId": "windows-platform-paths", "familyVersion": 1,
+  "domainOwner": {"rustCrate": "classic-path-core"},
+  "fixtureRoot": "tests/fixtures/windows_platform_paths_conformance",
+  "fixtures": {"read-only": "read-only.json"},
+  "capabilities": [{"id": "windows-platform-paths.observe", "operationScoped": true,
+    "rustSymbols": ["get_system_documents_path", "query_game_registry", "parse_steam_library"],
+    "observationFamilies": ["platform-comparison"]}],
+  "scenarios": [{"id": "read-only", "action": "windows-platform-paths.observe",
+    "capabilityIds": ["windows-platform-paths.observe"], "fixtureRefs": ["read-only"],
+    "input": {"fixtureRef": "read-only"},
+    "expected": {"documentsAgree": true, "registryMissing": true, "steamUnavailable": true},
+    "normalization": {"rootRelativePaths": false, "excludedPaths": [], "unorderedPaths": []}}],
+  "consumerObligations": []
+}

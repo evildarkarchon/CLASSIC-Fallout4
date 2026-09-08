@@ -191,6 +191,10 @@ def _validate_identities(pack: Mapping[str, Any]) -> None:
     capability_ids: list[str] = []
     for index, value in enumerate(capabilities):
         capability = _require_mapping(value, f"capabilities[{index}]")
+        if "rustCrate" in capability:
+            _validate_machine_identity(
+                capability["rustCrate"], f"capabilities[{index}].rustCrate"
+            )
         capability_ids.append(
             _validate_machine_identity(
                 capability.get("id"), f"capabilities[{index}].id"
@@ -741,6 +745,51 @@ def _create_artifact_directory(
     return resolved_invocation
 
 
+def _semantic_scenarios(
+    repo_root: Path, document: Mapping[str, Any], participant_id: str
+) -> list[dict[str, Any]]:
+    """Project opt-in operation scopes identically at preparation and readback.
+
+    Source mappings and trusted predicates determine scenario membership. An
+    adapter cannot narrow its own denominator by editing its immutable plan.
+    Families without scoped capabilities retain their original complete plans.
+    """
+    scenarios = list(document["scenarios"])
+    if not any(
+        capability.get("operationScoped", False)
+        for capability in document["capabilities"]
+    ):
+        return scenarios
+    from .applicability import derive_applicability
+    from .consumers import load_consumer_obligations
+    from .coverage import load_source_parity_rows
+
+    try:
+        matrix = derive_applicability(
+            document,
+            load_source_parity_rows(repo_root),
+            consumer_catalog=load_consumer_obligations(repo_root)
+            if document["consumerObligations"]
+            else None,
+        )
+    except ValueError as error:
+        raise MaterializationError(str(error)) from error
+    participant = next(
+        (
+            item
+            for item in matrix.participants
+            if item.id == participant_id and item.role == "semantic-adapter"
+        ),
+        None,
+    )
+    if participant is None:
+        raise MaterializationError(
+            f"semantic participant {participant_id} is not applicable to this pack"
+        )
+    selected = set(participant.scenario_ids)
+    return [scenario for scenario in scenarios if scenario["id"] in selected]
+
+
 def materialize_run_plan(
     pack: ValidatedPack,
     *,
@@ -828,7 +877,11 @@ def materialize_run_plan(
             "input": scenario["input"],
             "normalization": scenario["normalization"],
         }
-        for scenario in pack_document["scenarios"]
+        for scenario in (
+            _semantic_scenarios(pack.repo_root, pack_document, participant_id)
+            if participant_role == "semantic-adapter"
+            else pack_document["scenarios"]
+        )
     ]
     plan: dict[str, Any] = {
         "schemaVersion": 1,
@@ -976,7 +1029,13 @@ def load_prepared_run(
             "input": scenario["input"],
             "normalization": scenario["normalization"],
         }
-        for scenario in pack_document["scenarios"]
+        for scenario in (
+            _semantic_scenarios(
+                pack.repo_root, pack_document, plan["participant"]["id"]
+            )
+            if plan["participant"]["role"] == "semantic-adapter"
+            else pack_document["scenarios"]
+        )
     ]
     expected_pack_fields: dict[str, Any] = {
         "schemaVersion": 1,
@@ -1125,7 +1184,11 @@ def load_and_validate_pack(repo_root: Path, pack_path: Path) -> ValidatedPack:
     _validate_normalization(pack)
     from .families.aux_operations import validate_aux_operations_pack
     from .families.file_fingerprint import validate_file_fingerprint_pack
+    from .families.installation_paths import validate_installation_paths_pack
+    from .families.interface_helpers import validate_interface_pack
+    from .families.message_logging import validate_message_logging_pack
     from .families.performance import validate_performance_pack
+    from .families.performance_timers import validate_performance_timers_pack
     from .families.registry_accessors import (
         validate_pack as validate_registry_accessors,
     )
@@ -1139,10 +1202,11 @@ def load_and_validate_pack(repo_root: Path, pack_path: Path) -> ValidatedPack:
     from .families.shared_identity import validate_pack as validate_shared_identity_pack
     from .families.shared_registry import validate_pack as validate_shared_registry_pack
     from .families.update_decisions import validate_update_decisions_pack
+    from .families.update_rejection import validate_update_rejection_pack
     from .families.update_services import validate_update_services_pack
     from .families.version_values import validate_version_values_pack
+    from .families.windows_platform_paths import validate_windows_platform_paths
     from .families.xse_folder import validate_xse_folder_pack
-    from .families.installation_paths import validate_installation_paths_pack
     from .families.xse_operations import validate_xse_operations_pack
 
     owner_validators = {
@@ -1168,6 +1232,12 @@ def load_and_validate_pack(repo_root: Path, pack_path: Path) -> ValidatedPack:
         },
         "file-fingerprint": validate_file_fingerprint_pack,
         "performance": validate_performance_pack,
+        "performance-timers": validate_performance_timers_pack,
+        "message-logging": validate_message_logging_pack,
+        "markdown-rendering": validate_interface_pack,
+        "report-discovery": validate_interface_pack,
+        "windows-platform-paths": validate_windows_platform_paths,
+        "update-rejection": validate_update_rejection_pack,
         "update-decisions": validate_update_decisions_pack,
         "update-services": validate_update_services_pack,
         "xse-operations": validate_xse_operations_pack,

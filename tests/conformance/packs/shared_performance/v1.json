@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "familyId": "shared-performance",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-shared-core"
+  },
+  "fixtureRoot": "tests/fixtures/shared_performance",
+  "fixtures": {
+    "samples": "samples.json"
+  },
+  "capabilities": [
+    {
+      "id": "shared-performance.observe",
+      "rustSymbols": [
+        "PerformanceMetrics"
+      ],
+      "observationFamilies": [
+        "metrics"
+      ],
+      "operationScoped": true
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "controlled-metrics",
+      "action": "shared-performance.observe",
+      "capabilityIds": [
+        "shared-performance.observe"
+      ],
+      "fixtureRefs": [
+        "samples"
+      ],
+      "input": {
+        "fixtureRef": "samples"
+      },
+      "expected": {
+        "missingBefore": true,
+        "samples": {
+          "count": 2,
+          "total_ms": 300,
+          "avg_ms": 150,
+          "min_ms": 100,
+          "max_ms": 200,
+          "bytes_processed": 768,
+          "throughput": "2560.000"
+        },
+        "operations": [
+          "samples",
+          "timer"
+        ],
+        "timer": {
+          "count": 1,
+          "bytes": 32,
+          "durationValid": true
+        },
+        "emptyAfter": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

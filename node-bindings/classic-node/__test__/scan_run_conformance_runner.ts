@@ -75,6 +75,7 @@ interface CommonScenarioInput {
   showFormidValues: boolean;
   simplifyLogs: boolean;
   formidDatabasePaths: Array<string | PathInput>;
+  unsolvedLogsDestination?: PathInput;
   maxConcurrent: number;
   forbiddenEffectPaths?: string[];
   executionFlow?: ExecutionFlowInput;
@@ -118,7 +119,7 @@ interface StandardScenarioInput extends CommonScenarioInput {
   intent: "standard";
   logInputs: FixturePathInput[];
   standardSource: StandardSourceInput;
-  unsolvedLogs: "leave-in-place" | "move-to-custom";
+  unsolvedLogs: "leave-in-place" | "move-to-custom" | "move-to-configured-or-default";
   unsolvedLogsPath?: PathInput;
 }
 
@@ -509,6 +510,8 @@ async function buildRequest(input: ScenarioInput, root: string) {
     ),
     simplifyLogs: requireBoolean(input.simplifyLogs, "simplifyLogs"),
     formidDatabasePaths: configuredPaths(root, input.formidDatabasePaths),
+    unsolvedLogsDestination: input.unsolvedLogsDestination === undefined ? undefined
+      : runtimePath(root, input.unsolvedLogsDestination.path, "unsolvedLogsDestination.path"),
     maxConcurrent: requireInteger(input.maxConcurrent, "maxConcurrent"),
   };
   const setupContext: JsScanRunSetupContext | undefined =
@@ -530,6 +533,8 @@ async function buildRequest(input: ScenarioInput, root: string) {
     let unsolvedLogs;
     if (input.unsolvedLogs === "leave-in-place") {
       unsolvedLogs = classic.ScanRunUnsolvedLogs.leaveInPlace();
+    } else if (input.unsolvedLogs === "move-to-configured-or-default") {
+      unsolvedLogs = classic.ScanRunUnsolvedLogs.moveToConfiguredOrDefault();
     } else if (input.unsolvedLogs === "move-to-custom") {
       unsolvedLogs = classic.ScanRunUnsolvedLogs.moveToCustom(
         runtimePath(

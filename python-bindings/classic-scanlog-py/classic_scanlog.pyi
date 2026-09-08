@@ -220,7 +220,7 @@ class LogParser:
         """Benchmark parsing performance on given data."""
 
     def detect_vr_log(self, content: str) -> bool:
-        """Detect if a crash log is from Fallout 4 VR.
+        """Detect Fallout 4 VR or Skyrim VR executable/master-plugin markers, ignoring case.
 
         Args:
             content: Crash log content string
@@ -1802,21 +1802,6 @@ class ConfigIssue:
 # Papyrus Log Analysis
 # =============================================================================
 
-class PapyrusError(Exception):
-    """Raised on Papyrus log analysis failures.
-
-    Phase 3 Plan 04 (Wave 3a): stub mirrors the Rust
-    ``classic_scanlog_core::papyrus::PapyrusError`` enum so the parity
-    contract row can resolve ``classic_scanlog.PapyrusError`` through
-    ``classic_scanlog.pyi``. At runtime, current Papyrus error paths in
-    :class:`PapyrusAnalyzer` still raise the standard Python
-    ``FileNotFoundError`` / ``IOError`` / ``RuntimeError`` variants that
-    the PyO3 wrapper converts from the underlying Rust enum. Callers that
-    want a typed catch class can still ``except classic_scanlog.PapyrusError``
-    once a future phase wires the create_exception! macro for it.
-    """
-
-
 class PapyrusStats:
     """Statistics from Papyrus log analysis.
 
@@ -1946,6 +1931,13 @@ class PapyrusAnalyzer:
             IOError: If failed to read the file or file was truncated
 
         """
+
+def detect_crash_pattern(content: str) -> str | None:
+    """Return a stable token for a known error in the first thirty header lines.
+
+    Matching is ASCII-case-insensitive and recognizes symbolic exceptions and
+    hexadecimal aliases. Return None when no known pattern is present.
+    """
 
 def papyrus_logging(log_path: str) -> tuple[str, int]:
     """Provide convenience wrapper to analyze a Papyrus log file.

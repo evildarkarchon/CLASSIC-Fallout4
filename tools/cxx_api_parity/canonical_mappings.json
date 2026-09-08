@@ -94,6 +94,11 @@
   ],
   "entries": [
     {
+      "id": "2e2bb77c38194322", "rustSymbol": "game_id_display_name",
+      "kind": "function", "bridgeModule": "shared", "ownerModule": "shared",
+      "rustCrate": "classic-shared-core", "coreRustSymbol": "display_name"
+    },
+    {
       "id": "0f1ce653765981f0",
       "rustSymbol": "ExplicitYamlDataGameId",
       "kind": "enum",
@@ -5859,6 +5864,15 @@
       "ownerModule": "update",
       "rustCrate": "classic-update-core",
       "coreRustSymbol": "check_app_notification_configured"
+    },
+    {
+      "id": "792f70658ed4adf9",
+      "rustSymbol": "classify_crash_pattern",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "detect_crash_pattern"
     }
   ]
 }

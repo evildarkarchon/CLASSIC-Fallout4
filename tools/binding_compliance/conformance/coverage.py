@@ -13,6 +13,14 @@ from typing import TYPE_CHECKING, Any
 
 from .failures import FailureKind
 from .schema import ConformanceSchemaError, reject_duplicate_json_keys
+from .source_declarations import python_declaration_exports
+
+try:
+    from ..cxx_opaque_map_reachability import validate_cxx_opaque_map_reachability
+    from ..node_package_metadata import validate_node_package_metadata
+except ImportError:
+    from cxx_opaque_map_reachability import validate_cxx_opaque_map_reachability
+    from node_package_metadata import validate_node_package_metadata
 
 if TYPE_CHECKING:
     from .applicability import PolicyException
@@ -221,6 +229,53 @@ class FamilyCoveragePolicy:
     predicates: tuple[CoveragePredicate, ...]
 
 
+def scoped_operation_predicates(
+    capability: Mapping[str, Any], policy: FamilyCoveragePolicy | None
+) -> tuple[CoveragePredicate, ...] | None:
+    """Resolve an opt-in operation denominator from trusted family predicates.
+
+    Unscoped capabilities retain their class-wide contract. Scoped capabilities
+    require a nonempty explicit operation set; missing policies and wildcards
+    raise instead of making an applicable binding disappear.
+    """
+    if not capability.get("operationScoped", False):
+        return None
+    selected = (
+        tuple(
+            predicate
+            for predicate in policy.predicates
+            if predicate.capability_id == capability["id"]
+        )
+        if policy is not None
+        else ()
+    )
+    if not selected or any(not predicate.runtime_operations for predicate in selected):
+        raise CoverageDerivationError(
+            f"{capability['id']} requires explicit nonempty operation predicates"
+        )
+    symbols = set(capability["rustSymbols"])
+    if any(set(predicate.rust_symbols) - symbols for predicate in selected):
+        raise CoverageDerivationError(
+            "operation predicate escapes declared Rust symbols"
+        )
+    return selected
+
+
+def matches_scoped_operation(
+    row: SourceParityRow, predicates: tuple[CoveragePredicate, ...] | None
+) -> bool:
+    """Keep a row only when its public operation belongs to an opt-in scope."""
+    return predicates is None or any(
+        predicate.covers_runtime_operation(row.runtime_operation)
+        and (
+            row.obligation_id in predicate.binding_obligation_ids
+            if predicate.binding_obligation_ids
+            else row.rust_symbol in predicate.rust_symbols
+        )
+        for predicate in predicates
+    )
+
+
 @dataclass(frozen=True)
 class SourceParityRow:
     """One occurrence from a live CXX, Node, or Python parity inventory."""
@@ -253,6 +308,8 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
     }
     root = repo_root.resolve()
     rows: list[SourceParityRow] = []
+    python_declarations = python_declaration_exports(root)
+    unreachable_map_accessors: frozenset[str] | None = None
     for participant_id, relative_path in _PARITY_CONTRACTS.items():
         try:
             document = json.loads(
@@ -283,6 +340,24 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
             for raw_row in raw_rows
         ]
         totals = Counter(raw_ids)
+        # Historical @rust references anchor extra Rust declarations to an
+        # independently tracked Python export. The anchor still owns runtime
+        # proof; the extra source-reference occurrence has no separate call.
+        python_export_anchors = {
+            (
+                item.get("pythonModule"),
+                item.get("pythonExportPath"),
+                item.get("pythonKind"),
+            )
+            for item in raw_rows
+            if participant_id == "python"
+            and isinstance(item, Mapping)
+            and isinstance(item.get("id"), str)
+            and not item["id"].endswith("@rust")
+            and isinstance(item.get("pythonModule"), str)
+            and isinstance(item.get("pythonExportPath"), str)
+            and item.get("pythonKind") in {"class", "function", "method"}
+        }
         occurrences: Counter[object] = Counter()
         for index, raw_row in enumerate(raw_rows):
             if not isinstance(raw_row, Mapping):
@@ -298,18 +373,38 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
             occurrence_suffix = (
                 f":occurrence:{occurrences[row_id]}" if totals[row_id] > 1 else ""
             )
+            analyzer_override = None
             if participant_id == "cxx":
                 binding_only = isinstance(raw_row.get("unmappedReason"), str)
                 mapping_origin = "binding_only" if binding_only else "canonical_rust"
                 rust_symbol = raw_row.get("coreRustSymbol")
-                # Opaque transports and foreign C++ callbacks have no public
-                # executable Rust operation; only the retained declaration
-                # analyzer can prove their shape without inventing behavior.
-                declaration_only = binding_only and (
-                    raw_row.get("kind") != "function"
-                    or raw_row.get("blockOrigin") == "C++"
-                )
+                # CXX shared structs, enums and opaque type declarations have
+                # source shape, not callable behavior. Their exported getters,
+                # constructors and mutations remain separate runtime rows even
+                # when the declaration maps to a canonical Rust domain type.
+                declaration_only = raw_row.get("kind") in {
+                    "struct",
+                    "enum",
+                    "opaque",
+                } or (binding_only and raw_row.get("blockOrigin") == "C++")
                 required_evidence_kind = "structural" if declaration_only else "runtime"
+                if (
+                    binding_only
+                    and raw_row.get("kind") == "function"
+                    and raw_row.get("bridgeModule") == "types"
+                    and raw_row.get("sourceFile")
+                    == "cpp-bindings/classic-cpp-bridge/src/types.rs"
+                ):
+                    if unreachable_map_accessors is None:
+                        try:
+                            unreachable_map_accessors = (
+                                validate_cxx_opaque_map_reachability(root)
+                            )
+                        except (OSError, ValueError) as error:
+                            raise CoverageDerivationError(str(error)) from error
+                    if raw_row.get("rustSymbol") in unreachable_map_accessors:
+                        required_evidence_kind = "negative"
+                        analyzer_override = "cxx-opaque-map-reachability"
             else:
                 binding_only = isinstance(raw_row.get("unmappedReason"), str)
                 if participant_id == "node":
@@ -326,19 +421,84 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
                     # TypeScript erases these declaration shapes at runtime, so
                     # their blocking source/declaration analyzer is the only
                     # evidence owner that can honestly prove them.
+                    # Rust-only inventory entries likewise expose no Node call
+                    # to execute; retain their source obligation without
+                    # manufacturing a Node runtime coverage requirement.
                     required_evidence_kind = (
                         "structural"
-                        if raw_row.get("nodeKind")
+                        if mapping_origin == "rust_only"
+                        or raw_row.get("nodeKind")
                         in {"interface", "type", "const_enum"}
                         else "runtime"
                     )
+                    if (
+                        binding_only
+                        and raw_row.get("nodeExport") == "getVersion"
+                        and raw_row.get("nodeKind") == "function"
+                        and raw_row.get("nodeArity") == 0
+                    ):
+                        # This zero-argument getter has a separately verified
+                        # compile-time body; arbitrary binding functions never
+                        # inherit its structural metadata disposition.
+                        try:
+                            validate_node_package_metadata(root)
+                        except (OSError, ValueError) as error:
+                            raise CoverageDerivationError(str(error)) from error
+                        required_evidence_kind = "structural"
+                        analyzer_override = "node-package-metadata"
                 else:
-                    # Python parity emits only public binding rows or canonical
-                    # Rust mappings; it has no separate rust-only row category.
-                    mapping_origin = (
-                        "binding_only" if binding_only else "canonical_rust"
+                    explicit_rust_only = raw_row.get("pythonKind") == "rust_only"
+                    if explicit_rust_only and (
+                        binding_only
+                        or any(
+                            key in raw_row
+                            for key in (
+                                "pythonModule",
+                                "pythonExportPath",
+                                "pythonExport",
+                                "pythonArity",
+                            )
+                        )
+                    ):
+                        raise CoverageDerivationError(
+                            "Python rust_only inventory cannot claim a binding export"
+                        )
+                    # A suffix alone never retires a real export: source-only
+                    # references must also resolve to a separately tracked
+                    # module/export/kind anchor that keeps its runtime duty.
+                    source_reference = explicit_rust_only or (
+                        not binding_only
+                        and row_id.endswith("@rust")
+                        and (
+                            raw_row.get("pythonModule"),
+                            raw_row.get("pythonExportPath"),
+                            raw_row.get("pythonKind"),
+                        )
+                        in python_export_anchors
                     )
-                    required_evidence_kind = "runtime"
+                    mapping_origin = (
+                        "binding_only"
+                        if binding_only
+                        else "rust_only"
+                        if source_reference
+                        else "canonical_rust"
+                    )
+                    # A source-corroborated type without a custom constructor
+                    # has declaration shape only. Explicit constructors,
+                    # methods, properties and static factories remain runtime.
+                    namespace_only = (
+                        raw_row.get("pythonKind") == "class"
+                        and (
+                            raw_row.get("pythonModule"),
+                            raw_row.get("pythonExportPath"),
+                        )
+                        in python_declarations
+                    )
+                    required_evidence_kind = (
+                        "structural"
+                        if source_reference or namespace_only
+                        else "runtime"
+                    )
                 rust_symbol = raw_row.get("rustSymbol")
             # Python maps methods to their owning Rust type; CXX uses both
             # method and type mappings. Read the public binding operation so a
@@ -358,6 +518,10 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
             if (
                 raw_row.get("rustCrate")
                 in {
+                    "classic-config-core",
+                    "classic-scanlog-core",
+                    "classic-path-core",
+                    "classic-message-core",
                     "classic-database-core",
                     "classic-version-registry-core",
                     "classic-scangame-core",
@@ -412,11 +576,14 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
                     and raw_row.get("pythonKind") == "function"
                 ):
                     runtime_operation = raw_row.get("pythonExportPath")
-            if participant_id == "python" and raw_row.get("pythonKind") == "method":
+            if participant_id == "python" and raw_row.get("pythonKind") in {
+                "method",
+                "property",
+            }:
                 export = raw_row.get("pythonExportPath")
                 if not isinstance(export, str):
                     raise CoverageDerivationError(
-                        "Python method row has no export path"
+                        "Python method/property row has no export path"
                     )
                 owner, _, method = export.rpartition(".")
                 runtime_operation = method if owner == rust_symbol else export
@@ -446,7 +613,7 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
                     required_evidence_kind=required_evidence_kind,
                     runtime_operation=runtime_operation,
                     retained_analyzer_id=(
-                        _PARITY_ANALYZERS[participant_id]
+                        analyzer_override or _PARITY_ANALYZERS[participant_id]
                         if required_evidence_kind != "runtime"
                         else None
                     ),
@@ -713,6 +880,7 @@ def derive_row_coverage(
     if not isinstance(raw_capabilities, list):
         raise CoverageDerivationError("validated pack has no capability inventory")
     capabilities: dict[str, frozenset[str]] = {}
+    capability_crates: dict[str, str] = {}
     for raw_capability in raw_capabilities:
         if not isinstance(raw_capability, Mapping):
             raise CoverageDerivationError("validated pack capability must be an object")
@@ -723,7 +891,12 @@ def derive_row_coverage(
         capabilities[capability_id] = frozenset(
             symbol for symbol in symbols if isinstance(symbol, str)
         )
+        capability_crates[capability_id] = raw_capability.get("rustCrate", rust_crate)
 
+    scoped_operations = {
+        capability["id"]: scoped_operation_predicates(capability, policy)
+        for capability in raw_capabilities
+    }
     predicates: dict[str, CoveragePredicate] = {}
     for predicate in policy.predicates:
         if predicate.id in predicates:
@@ -853,8 +1026,9 @@ def derive_row_coverage(
             candidate_id
             for candidate_id, symbols in sorted(capabilities.items())
             if row.mapping_origin == "canonical_rust"
-            and row.rust_crate == rust_crate
+            and row.rust_crate == capability_crates[candidate_id]
             and row.rust_symbol in symbols
+            and matches_scoped_operation(row, scoped_operations[candidate_id])
         )
         explicit_predicates = explicit_predicates_by_row.get(row.obligation_id, ())
         if not canonical_capability_ids and not explicit_predicates:

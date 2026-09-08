@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-08T01:25:36.855539+00:00",
+  "generated_at_utc": "2026-09-08T07:25:37.244479+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -12239,6 +12239,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "crash_pattern",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod crash_pattern;",
+      "tier": "tier1"
+    },
+    {
       "symbol": "crash_suspect_analyzer",
       "kind": "module",
       "crate": "classic-scanlog-core",
@@ -12303,6 +12312,26 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/crashgen_registry.rs",
       "source_decl": "pub fn default_entry(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "detect_crash_pattern",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crash_pattern.rs",
+      "source_decl": "pub fn detect_crash_pattern(content: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "detect_crash_pattern",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use crash_pattern::detect_crash_pattern;",
+      "source_expr": "crash_pattern::detect_crash_pattern",
       "tier": "tier1"
     },
     {
@@ -15148,6 +15177,16 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/errors.rs",
       "source_decl": "pub fn database(message: impl Into<String>, query: Option<impl Into<String>>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "display_name",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/game_id.rs",
+      "source_decl": "pub const fn display_name(&self)",
       "tier": "tier1"
     },
     {

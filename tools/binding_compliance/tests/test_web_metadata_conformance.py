@@ -20,6 +20,8 @@ def test_web_metadata_covers_public_helpers_without_game_url_credit():
     }
     assert {"get_user_agent", "get_user_agent_with_suffix", "ModSite"} <= symbols
     for case in pack["scenarios"]:
+        if case["action"] != "web-operations.observe":
+            continue
         assert case["expected"]["userAgent"] == "CLASSIC/8.0.0"
         assert len(case["expected"]["sites"]) == 3
     site = next(
@@ -28,7 +30,7 @@ def test_web_metadata_covers_public_helpers_without_game_url_credit():
         if "ModSite" in p.rust_symbols
     )
     assert not site.covers_runtime_operation("game_url")
-    assert not site.covers_runtime_operation("__eq__")
+    assert site.covers_runtime_operation("__eq__")
 
 
 def test_web_suffix_cases_include_empty_and_unicode():
@@ -38,6 +40,8 @@ def test_web_suffix_cases_include_empty_and_unicode():
     )
     suffixes = []
     for case in pack["scenarios"]:
+        if case["action"] != "web-operations.observe":
+            continue
         request = json.loads(
             (ROOT / pack["fixtureRoot"] / pack["fixtures"][case["id"]]).read_text()
         )["request"]

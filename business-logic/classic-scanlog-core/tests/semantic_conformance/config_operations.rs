@@ -9,6 +9,9 @@ use classic_shared_core::{GameId, get_runtime};
 use serde_json::{Value, json};
 use std::{fs, path::Path};
 
+#[path = "config_yaml_values.rs"]
+mod yaml_values;
+
 /// Re-read all durable bytes after execution; the loader's read-only contract is observable.
 fn inventory(root: &Path, directory: &Path) -> RunnerResult<Vec<Value>> {
     let mut files = Vec::new();
@@ -30,8 +33,18 @@ fn inventory(root: &Path, directory: &Path) -> RunnerResult<Vec<Value>> {
 
 /// Execute one input-only fixture with disposable files and typed failure attribution.
 pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
-    if fixture["operation"] != "load-explicit"
-        || fixture.as_object().is_none_or(|value| value.len() != 2)
+    if (fixture["operation"] != "load-explicit"
+        && fixture["operation"] != "main-version"
+        && fixture["operation"] != "clear-cache"
+        && fixture["operation"] != "persist-local")
+        || fixture.as_object().is_none_or(|value| {
+            value.len()
+                != if fixture["operation"] == "persist-local" {
+                    4
+                } else {
+                    2
+                }
+        })
     {
         return Err(invalid("unsupported config operation fixture").into());
     }
@@ -41,10 +54,40 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
         .as_object()
         .ok_or_else(|| invalid("files must be an object"))?
     {
-        if !matches!(name.as_str(), "main.yaml" | "game.yaml" | "ignore.yaml") {
+        if !matches!(
+            name.as_str(),
+            "main.yaml"
+                | "game.yaml"
+                | "ignore.yaml"
+                | "CLASSIC Main.yaml"
+                | "local.yaml"
+                | "CLASSIC Settings.yaml"
+        ) {
             return Err(invalid("config fixture requires owned YAML filenames").into());
         }
         fs::write(root.join(name), text(content)?)?;
+    }
+    if fixture["operation"] == "clear-cache" {
+        classic_settings_core::clear_global_yaml_cache();
+        classic_settings_core::clear_global_yaml_cache();
+        return Ok(json!({"result": [null, null], "error": null, "files": inventory(root, root)?}));
+    }
+    if fixture["operation"] == "persist-local" {
+        get_runtime().block_on(classic_config_core::persist_game_local_paths(
+            &root.join("local.yaml"),
+            fixture["gameRoot"].as_str().map(Path::new),
+            fixture["docsRoot"].as_str().map(Path::new),
+        ))?;
+        return Ok(json!({"result": null, "error": null, "files": inventory(root, root)?}));
+    }
+    if fixture["operation"] == "main-version" {
+        // The core's injected resolver avoids mutating global process environment.
+        let version = get_runtime().block_on(
+            classic_config_core::load_main_yaml_version_with_env(Some(root), |_| None),
+        )?;
+        return Ok(
+            json!({"result": {"version": version}, "error": null, "files": inventory(root, root)?}),
+        );
     }
     let loaded = get_runtime().block_on(load_explicit_yaml_data(ExplicitYamlDataRequest {
         main_path: root.join("main.yaml"),
@@ -55,9 +98,16 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
     }));
     let (result, error) = match loaded {
         Ok(snapshot) => {
+            if snapshot.game() != GameId::Fallout4 {
+                return Err(invalid("explicit snapshot returned an unexpected game").into());
+            }
             let data = snapshot.yaml_data();
+            if snapshot.game_data_role() != classic_config_core::GameDataRole::Fallout4 {
+                return Err(invalid("explicit snapshot returned an unexpected game role").into());
+            }
+            let identity = |value: &classic_config_core::YamlDataContentIdentity| json!({"sha256": value.sha256_hex(), "byteLen": value.byte_len()});
             (
-                json!({"classicVersion": data.classic_version, "xseAcronym": data.xse_acronym, "crashgenName": data.crashgen_name, "gameVersion": data.game_version, "ignoreList": data.ignore_list}),
+                json!({"game": "Fallout4", "gameRole": "Fallout4", "yamlValues": yaml_values::observe(data), "identities": {"main.yaml": identity(snapshot.main_identity()), "game.yaml": identity(snapshot.game_identity()), "ignore.yaml": identity(snapshot.ignore_identity())}, "classicVersion": data.classic_version, "xseAcronym": data.xse_acronym, "crashgenName": data.crashgen_name, "gameVersion": data.game_version, "ignoreList": data.ignore_list}),
                 Value::Null,
             )
         }

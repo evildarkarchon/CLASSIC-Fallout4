@@ -14,6 +14,15 @@ from conformance.adapters.prepare_cxx_conformance import (
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
+def test_new_native_helpers_automatically_enter_source_identity() -> None:
+    """Adding an included helper must not require a separate fingerprint list edit."""
+    from conformance.adapters.prepare_cxx_conformance import _cxx_source_paths
+
+    assert REPO_ROOT / "classic-cli/tests/conformance" in _cxx_source_paths(
+        REPO_ROOT, "user-settings"
+    )
+
+
 @pytest.mark.parametrize("family", SUPPORTED_FAMILIES)
 def test_native_semantic_family_plans_are_fresh_and_input_only(
     tmp_path: Path,

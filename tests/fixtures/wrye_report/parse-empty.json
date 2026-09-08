@@ -1,0 +1,7 @@
+{
+  "operation": "parse",
+  "html": "<p>No sections</p>",
+  "warnings": {
+    "Missing Masters": "  Fix masters!\n"
+  }
+}

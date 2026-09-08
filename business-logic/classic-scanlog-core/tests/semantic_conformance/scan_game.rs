@@ -46,7 +46,7 @@ fn inventory(
 }
 
 /// Adds a stable complete filesystem snapshot before or after the native operation.
-fn snapshot(root: &Path, observation: &mut Value, before: bool) -> RunnerResult<()> {
+pub(super) fn snapshot(root: &Path, observation: &mut Value, before: bool) -> RunnerResult<()> {
     let mut files = Vec::new();
     let mut directories = Vec::new();
     inventory(root, root, &mut files, &mut directories)?;
@@ -64,8 +64,29 @@ fn snapshot(root: &Path, observation: &mut Value, before: bool) -> RunnerResult<
 /// Executes public INI/ENB checks using only explicit fixture files and game selection.
 pub(super) fn observe(fixture: &Value) -> RunnerResult<Value> {
     let operation = text(&fixture["operation"])?;
+    if operation == "assemble-reports" {
+        use classic_scangame_core::game_report::{ScanReportBuilder, ScanValidators};
+        use std::collections::{BTreeMap, BTreeSet};
+        let unpacked: BTreeMap<String, BTreeSet<String>> =
+            serde_json::from_value(fixture["unpacked"].clone())?;
+        let archived: BTreeMap<String, BTreeSet<String>> =
+            serde_json::from_value(fixture["archived"].clone())?;
+        let xse = text(&fixture["xse"])?;
+        let validators = ScanValidators::new();
+        let builder = ScanReportBuilder::new(&validators);
+        return Ok(
+            json!({"unpacked": builder.build_unpacked_report(&unpacked, &xse),
+            "archived": builder.build_archived_report(&archived, &xse),
+            "combined": builder.build_combined_report(&unpacked, &archived, &xse),
+            "unpackedMessages": validators.get_issue_messages(&xse, "unpacked"),
+            "archivedMessages": validators.get_issue_messages(&xse, "archived")}),
+        );
+    }
     let game = text(&fixture["game"])?;
-    if !matches!(operation.as_str(), "validate-ini" | "validate-enb") {
+    if !matches!(
+        operation.as_str(),
+        "validate-ini" | "validate-enb" | "process-logs"
+    ) {
         return Err(invalid("unsupported scan game operation").into());
     }
     let temporary = tempfile::tempdir()?;
@@ -90,6 +111,27 @@ pub(super) fn observe(fixture: &Value) -> RunnerResult<Value> {
     }
     let mut observation = json!({"operation":operation,"game":game,"result":null});
     snapshot(root, &mut observation, true)?;
+    if operation == "process-logs" {
+        let processor = classic_scangame_core::LogProcessor::new(
+            serde_json::from_value(fixture["catch"].clone())?,
+            serde_json::from_value(fixture["excludeFiles"].clone())?,
+            serde_json::from_value(fixture["excludeErrors"].clone())?,
+        )?;
+        if json!(processor.error_patterns()) != fixture["catch"] {
+            return Err(invalid("configured log patterns differ").into());
+        }
+        observation["report"] = json!(
+            processor
+                .process_logs(root)?
+                .replace(&*root.to_string_lossy(), "<ROOT>")
+                .replace('\\', "/")
+        );
+        for field in ["operation", "game", "result"] {
+            observation.as_object_mut().unwrap().remove(field);
+        }
+        snapshot(root, &mut observation, false)?;
+        return Ok(observation);
+    }
     observation["result"] = if operation == "validate-ini" {
         let mut validator = IniValidator::new(game);
         let report = validator.validate_inis(root)?;
@@ -107,6 +149,13 @@ pub(super) fn observe(fixture: &Value) -> RunnerResult<Value> {
         let result = checker.validate();
         if checker.check_binaries() != result.binaries || checker.check_config() != result.config {
             return Err(invalid("ENB public check methods disagree with validate").into());
+        }
+        if result.is_present() != (format!("{:?}", result.binaries) != "NotInstalled")
+            || result.is_fully_configured()
+                != (format!("{:?}", result.binaries) == "Present"
+                    && format!("{:?}", result.config) == "Valid")
+        {
+            return Err(invalid("ENB result queries disagree with native fields").into());
         }
         json!({"binaries":format!("{:?}",result.binaries),"config":format!("{:?}",result.config)})
     };

@@ -1,0 +1,11 @@
+{
+  "operation": "duplicates",
+  "files": {
+    "a/F4EE.ini": "[First]\nkey=1\n",
+    "b/F4EE.ini": "[First]\nkey=1\n"
+  },
+  "replacement": {
+    "path": "b/F4EE.ini",
+    "content": "[DifferentSection]\nunrelated=abcdefghijklmnopqrstuvwxyz\n"
+  }
+}

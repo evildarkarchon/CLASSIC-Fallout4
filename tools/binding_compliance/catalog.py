@@ -46,6 +46,45 @@ STATIC_PROFILES = ("static", "ci", "full", "cxx-ci", "node-ci", "python-ci")
 
 REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
     ComplianceRequirement(
+        id="cxx-opaque-map-reachability",
+        title="Opaque CXX map accessors have no exposed producer",
+        surface="cxx",
+        classification="new_check",
+        profiles=STATIC_PROFILES,
+        blocking=True,
+        summary="Checks the closed read-only map surface and rejects any new alias, factory, output, callback, or external map reference; grants no runtime behavior proof.",
+        command=CommandSpec(
+            argv=(
+                "python",
+                "tools/binding_compliance/cxx_opaque_map_reachability.py",
+                "--repo-root",
+                ".",
+            )
+        ),
+        paths=("tools/binding_compliance/cxx_opaque_map_reachability.py",),
+    ),
+    ComplianceRequirement(
+        id="node-package-metadata",
+        title="Node compile-time package metadata has a precise structural owner",
+        surface="node",
+        classification="new_check",
+        profiles=STATIC_PROFILES,
+        blocking=True,
+        summary="Validates only getVersion's exact CARGO_PKG_VERSION body, zero-argument string declaration, and Rust Cargo package version.",
+        command=CommandSpec(
+            argv=(
+                "python",
+                "tools/binding_compliance/node_package_metadata.py",
+                "--repo-root",
+                ".",
+            )
+        ),
+        paths=("tools/binding_compliance/node_package_metadata.py",),
+        proves=(
+            "A compile-time binding metadata getter does not invent a Rust core owner or runtime behavior claim.",
+        ),
+    ),
+    ComplianceRequirement(
         id="user-settings-exclusive-ownership",
         title="User Settings has one deep Rust owner",
         surface="policy",
@@ -113,7 +152,7 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         profiles=STATIC_PROFILES,
         blocking=True,
         summary=(
-            "Audits the same-revision legacy/receipt job topology, exact native "
+            "Audits the same-revision retained-check/receipt job topology, exact native "
             "execution denominator, blocking launch steps, and always-uploaded "
             "diagnostics for every Scan Run and User Settings participant and consumer."
         ),
@@ -136,39 +175,8 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         proves=(
             "Every required semantic adapter and consumer receipt runs as a blocking CI step.",
             "MSVC and clang-cl remain separate required CXX, CLI, and GUI execution instances.",
-            "Legacy evidence and promoted receipts execute from one default checkout revision.",
+            "Retained checks and executable receipts execute from one default checkout revision.",
             "Receipt plans and failure diagnostics remain available when execution fails.",
-        ),
-    ),
-    ComplianceRequirement(
-        id="evidence-migration-ledger",
-        title="Evidence migration ledger is exhaustive and classified",
-        surface="policy",
-        classification="new_check",
-        profiles=STATIC_PROFILES,
-        blocking=True,
-        summary=(
-            "Checks that every current parity, runtime-registry, Crash Log Scan Run, "
-            "and consumer/source-audit obligation has exactly one diagnostic target "
-            "disposition. The ledger cannot grant compliance or replace another gate."
-        ),
-        command=CommandSpec(
-            argv=(
-                "python",
-                "tools/binding_compliance/migration_ledger.py",
-                "--repo-root",
-                ".",
-            )
-        ),
-        paths=(
-            "tools/binding_compliance/migration_ledger.py",
-            "docs/implementation/binding_compliance/evidence_migration_ledger.json",
-            "docs/implementation/binding_compliance/evidence_migration_ledger.md",
-        ),
-        proves=(
-            "The diagnostic inventory matches every live Phase 0 obligation occurrence.",
-            "Every obligation names a runtime target, retained analyzer, or documented policy exception.",
-            "No ledger row supplies executed coverage or permits an existing gate to be removed.",
         ),
     ),
     ComplianceRequirement(
@@ -238,12 +246,12 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
     ),
     ComplianceRequirement(
         id="node-parity-gate",
-        title="Node parity and runtime coverage gate",
+        title="Node source parity gate",
         surface="node",
         classification="existing_gate",
         profiles=("ci", "full", "node-ci"),
         blocking=True,
-        summary="Runs the Node parity gate, including runtime coverage registry checks.",
+        summary="Runs the Node source/declaration parity gate and rejects stale baseline artifacts.",
         command=CommandSpec(
             argv=(
                 "python",
@@ -255,21 +263,20 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         paths=(
             "tools/node_api_parity/check_parity_gate.py",
             "docs/implementation/node_api_parity/baseline/parity_contract.json",
-            "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
         ),
         proves=(
             "Node exports in index.d.ts match the committed parity contract.",
-            "Node runtime coverage metadata covers every Tier-1 contract row.",
+            "Node source inventory retains every reviewed binding and core-only declaration.",
         ),
     ),
     ComplianceRequirement(
         id="python-parity-gate",
-        title="Python parity and runtime coverage gate",
+        title="Python source parity gate",
         surface="python",
         classification="existing_gate",
         profiles=("ci", "full", "python-ci"),
         blocking=True,
-        summary="Runs the Python parity gate, including runtime coverage registry checks.",
+        summary="Runs the Python source/stub parity gate and rejects stale baseline artifacts.",
         command=CommandSpec(
             argv=(
                 "python",
@@ -283,11 +290,10 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         paths=(
             "tools/python_api_parity/check_parity_gate.py",
             "docs/implementation/python_api_parity/baseline/parity_contract.json",
-            "python-bindings/tests/fixtures/runtime_coverage_registry.json",
         ),
         proves=(
             "Python exports and stubs mapped by the parity contract match the Rust inventory.",
-            "Python runtime coverage metadata covers every Tier-1 contract row.",
+            "Python source inventory retains every reviewed binding and core-only declaration.",
         ),
     ),
     ComplianceRequirement(
@@ -333,24 +339,6 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         ),
         proves=(
             "The top-level suite is anchored to checked-in contract artifacts instead of ad hoc scans only.",
-        ),
-    ),
-    ComplianceRequirement(
-        id="runtime-coverage-registries-present",
-        title="Runtime coverage registries are present",
-        surface="runtime_coverage",
-        classification="new_check",
-        profiles=STATIC_PROFILES,
-        blocking=True,
-        summary="Node and Python runtime coverage registries and baseline summaries are checked in.",
-        paths=(
-            "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-            "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-            "docs/implementation/node_api_parity/baseline/runtime_coverage_summary.json",
-            "docs/implementation/python_api_parity/baseline/runtime_coverage_summary.json",
-        ),
-        proves=(
-            "Node and Python lower-level gates can classify runtime-verified, mapped-only, and uncovered surfaces.",
         ),
     ),
     ComplianceRequirement(
@@ -571,11 +559,20 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         blocking=True,
         summary="Binding-related CI workflows invoke the canonical compliance command.",
         paths=(
+            ".github/workflows/ci-binding-compliance.yml",
             ".github/workflows/ci-cpp.yml",
             ".github/workflows/ci-typescript.yml",
             ".github/workflows/ci-python-bindings.yml",
         ),
         text_expectations=(
+            TextExpectation(
+                path=".github/workflows/ci-binding-compliance.yml",
+                contains=(
+                    "tools/binding_compliance/check_compliance.py",
+                    "--profile full",
+                    "--receipt-directory",
+                ),
+            ),
             TextExpectation(
                 path=".github/workflows/ci-cpp.yml",
                 contains=(

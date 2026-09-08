@@ -20,6 +20,8 @@
       "id": "message-operations.format",
       "rustSymbols": [
         "Message",
+        "MessageType",
+        "MessageTarget",
         "format_log_message",
         "create_message",
         "format_message"

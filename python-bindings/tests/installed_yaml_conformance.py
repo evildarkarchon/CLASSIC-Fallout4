@@ -128,6 +128,7 @@ def observe_installed_yaml(fixture: Mapping[str, Any]) -> dict[str, Any]:
                 "files": [],
             }
             selected = snapshot = recovery = None
+            backup_alias = None
             try:
                 if fixture["operation"] == "inspect":
                     selected = classic_config.inspect_installed_yaml_data(
@@ -202,7 +203,92 @@ def observe_installed_yaml(fixture: Mapping[str, Any]) -> dict[str, Any]:
                     else _identity(defaults, IGNORE_PATH),
                     "selectedGameVersion": recovery.selected_game_version,
                 }
+                if fixture.get("recoveryAction") == "proceed":
+                    snapshot = recovery.proceed_without_ignore()
+                    observation["outcome"] = "proceeded"
+                    observation["localIgnore"] = {
+                        "state": snapshot.local_ignore_state,
+                        "identity": _identity(
+                            snapshot.local_ignore_identity, IGNORE_PATH
+                        ),
+                    }
+                    observation["snapshot"] = {
+                        "classicVersion": snapshot.yaml_data.classic_version,
+                        "gameRootName": snapshot.yaml_data.game_root_name,
+                        "ignoreList": snapshot.yaml_data.ignore_list,
+                        "simplifyRemoveList": snapshot.simplify_remove_list,
+                    }
+                elif fixture.get("recoveryAction") == "reset":
+                    reset = recovery.reset_to_default()
+                    if reset.status == "conflict":
+                        observation["outcome"] = "reset_conflict"
+                        observation["recovery"]["decision"] = {
+                            "status": reset.status,
+                            "expectedIdentity": _identity(
+                                reset.expected_identity, IGNORE_PATH
+                            ),
+                            "actualIdentity": None
+                            if reset.actual_identity is None
+                            else _identity(reset.actual_identity, IGNORE_PATH),
+                            "backupPath": None
+                            if reset.backup_path is None
+                            else _path(root, reset.backup_path),
+                        }
+                    elif reset.status == "reset":
+                        # Normalize only the process-unique name, after validating ownership and content-addressed stem.
+                        backup_alias = _path(root, reset.backup_path)
+                        stem = (
+                            "installation/CLASSIC Backup/YAML Data/Local Ignore/CLASSIC Ignore.yaml."
+                            + reset.malformed_local_ignore_identity.sha256
+                            + "."
+                        )
+                        if not backup_alias.startswith(
+                            stem
+                        ) or not backup_alias.endswith(".bak"):
+                            raise ValueError(
+                                "reset backup is outside its owned content-addressed namespace"
+                            )
+                        backup_name = "installation/CLASSIC Backup/YAML Data/Local Ignore/<backup>"
+                        observation["outcome"] = "reset"
+                        observation["recovery"]["decision"] = {
+                            "status": reset.status,
+                            "localIgnorePath": _path(root, reset.local_ignore_path),
+                            "malformedIdentity": _identity(
+                                reset.malformed_local_ignore_identity, IGNORE_PATH
+                            ),
+                            "backupIdentity": _identity(
+                                reset.backup_identity, backup_name
+                            ),
+                            "replacementIdentity": _identity(
+                                reset.replacement_identity, IGNORE_PATH
+                            ),
+                        }
+                        observation["diagnostics"] = _diagnostics(
+                            root, reset.diagnostics
+                        )
+                        snapshot = reset.snapshot
+                        observation["localIgnore"] = {
+                            "state": snapshot.local_ignore_state,
+                            "identity": _identity(
+                                snapshot.local_ignore_identity, IGNORE_PATH
+                            ),
+                        }
+                        observation["snapshot"] = {
+                            "classicVersion": snapshot.yaml_data.classic_version,
+                            "gameRootName": snapshot.yaml_data.game_root_name,
+                            "ignoreList": snapshot.yaml_data.ignore_list,
+                            "simplifyRemoveList": snapshot.simplify_remove_list,
+                        }
+                    else:
+                        raise ValueError("unsupported native reset status")
             observation["files"] = _files(root)
+            if backup_alias is not None:
+                for file in observation["files"]:
+                    if file["path"] == backup_alias:
+                        file["path"] = (
+                            "installation/CLASSIC Backup/YAML Data/Local Ignore/<backup>"
+                        )
+                observation["files"].sort(key=lambda file: file["path"])
             return observation
         finally:
             for name, value in previous.items():

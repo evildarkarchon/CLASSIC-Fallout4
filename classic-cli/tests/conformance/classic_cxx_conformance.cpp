@@ -19,6 +19,15 @@
 #include "classic_cxx_bridge/update.h"
 #include "classic_cxx_bridge/shared.h"
 #include "classic_cxx_bridge/runtime.h"
+#include "classic_cxx_bridge/message.h"
+#include "classic_cxx_bridge/markdown.h"
+
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#include <io.h>
+#include <cstdio>
 
 #include <nlohmann/json.hpp>
 
@@ -35,6 +44,8 @@
 #include <fstream>
 #include <initializer_list>
 #include <iostream>
+#include <iomanip>
+#include <sstream>
 #include <iterator>
 #include <map>
 #include <mutex>
@@ -1156,6 +1167,11 @@ rust::Box<scanner::ScanRunRequest> build_request(const json& input, const fs::pa
     }
     configuration.has_max_concurrent = true;
     configuration.max_concurrent = input.at("maxConcurrent").get<std::size_t>();
+    if (input.contains("unsolvedLogsDestination")) {
+        configuration.has_configured_unsolved_logs_destination = true;
+        configuration.configured_unsolved_logs_destination =
+            runtime_path(root, input.at("unsolvedLogsDestination").at("path"), "unsolvedLogsDestination.path").string();
+    }
 
     std::optional<scanner::ScanRunSetupContextDto> setup_context;
     if (input.contains("setupContext") && !input.at("setupContext").is_null()) {
@@ -1189,6 +1205,13 @@ rust::Box<scanner::ScanRunRequest> build_request(const json& input, const fs::pa
                 throw RunnerError("unsolvedLogsPath requires move-to-custom");
             }
             const auto movement = scanner::scan_run_unsolved_logs_leave_in_place();
+            if (setup_context.has_value()) {
+                return scanner::scan_run_request_standard_with_fcx(configuration, source, *movement, *setup_context);
+            }
+            return scanner::scan_run_request_standard(configuration, source, *movement);
+        }
+        if (unsolved_logs == "move-to-configured-or-default") {
+            const auto movement = scanner::scan_run_unsolved_logs_move_to_configured_or_default();
             if (setup_context.has_value()) {
                 return scanner::scan_run_request_standard_with_fcx(configuration, source, *movement, *setup_context);
             }
@@ -1895,6 +1918,9 @@ json execute_scenario(const json& plan, const json& scenario) {
 #include "classic_cxx_semantic_conformance.h"
 #include "classic_cxx_aux_operations_conformance.h"
 #include "classic_cxx_version_values_conformance.h"
+#include "classic_cxx_message_logging_conformance.h"
+#include "classic_cxx_update_rejection_conformance.h"
+#include "classic_cxx_interface_helpers_conformance.h"
 #include "classic_cxx_registry_conformance.h"
 #include "classic_cxx_xse_operations_conformance.h"
 #include "classic_cxx_performance_conformance.h"
@@ -1904,14 +1930,28 @@ json execute_scenario(const json& plan, const json& scenario) {
 #include "classic_cxx_settings_load_conformance.h"
 #include "classic_cxx_settings_validation_conformance.h"
 #include "classic_cxx_config_operations_conformance.h"
+#include "classic_cxx_file_backups_conformance.h"
+#include "classic_cxx_path_backups_conformance.h"
+#include "classic_cxx_game_integrity_conformance.h"
 #include "classic_cxx_database_operations_conformance.h"
 #include "classic_cxx_version_registry_conformance.h"
 #include "classic_cxx_xse_folder_conformance.h"
 #include "classic_cxx_file_operations_conformance.h"
 #include "classic_cxx_installation_paths_conformance.h"
+#include "classic_cxx_yaml_file_values_conformance.h"
 #include "classic_cxx_scan_game_conformance.h"
+#include "classic_cxx_papyrus_monitor_conformance.h"
+#include "classic_cxx_wrye_report_conformance.h"
+#include "classic_cxx_log_collection_conformance.h"
+#include "classic_cxx_crash_pattern_conformance.h"
+#include "classic_cxx_formid_finding_conformance.h"
+#include "classic_cxx_ba2_scan_conformance.h"
+#include "classic_cxx_hash_cache_controls_conformance.h"
+#include "classic_cxx_crashgen_check_conformance.h"
 #include "classic_cxx_path_operations_conformance.h"
 #include "classic_cxx_user_settings_conformance.h"
+#include "classic_cxx_game_setup_intake_conformance.h"
+#include "classic_cxx_yaml_update_operations_conformance.h"
 #include "classic_cxx_vocabulary_conformance.h"
 
 /// Executes one planned case while retaining runner failures as receipt evidence.
@@ -1922,19 +1962,36 @@ json scenario_receipt(const json& plan, const json& scenario) {
                     {"capabilityIds", scenario.at("capabilityIds")},
                     {"observation", is_vocabulary_family(plan.at("familyId")) ? execute_vocabulary_scenario(plan, scenario)
                                     : is_semantic_family(plan.at("familyId")) ? execute_semantic_scenario(plan, scenario)
+                                    : plan.at("familyId") == "yaml-update-operations" ? execute_yaml_update_operations_scenario(plan, scenario)
+                                    : plan.at("familyId") == "game-setup-intake" ? execute_game_setup_intake_scenario(plan, scenario)
+                                    : plan.at("familyId") == "file-backups" ? execute_file_backups_scenario(plan, scenario)
+                                    : plan.at("familyId") == "path-backups" ? execute_path_backups_scenario(plan, scenario)
+                                    : plan.at("familyId") == "game-integrity" ? execute_game_integrity_scenario(plan, scenario)
                                     : plan.at("familyId") == "config-operations" ? execute_config_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "file-operations" ? execute_file_operations(plan, scenario)
                                     : plan.at("familyId") == "database-operations" ? execute_database_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "version-registry" ? execute_version_registry_scenario(plan, scenario)
                                     : plan.at("familyId") == "scan-game" ? execute_scan_game(plan, scenario)
+                                    : plan.at("familyId") == "papyrus-monitor" ? execute_papyrus_monitor(plan, scenario)
+                                    : plan.at("familyId") == "wrye-report" ? execute_wrye_report(plan, scenario)
+                                    : plan.at("familyId") == "log-collection" ? execute_log_collection(plan, scenario)
+                                    : plan.at("familyId") == "crash-pattern" ? execute_crash_pattern(plan, scenario)
+                                    : plan.at("familyId") == "formid-finding" ? execute_formid_finding(plan, scenario)
+                                    : plan.at("familyId") == "ba2-scan" ? execute_ba2_scan(plan, scenario)
+                                    : plan.at("familyId") == "hash-cache-controls" ? execute_hash_cache_controls(plan, scenario)
+                                    : plan.at("familyId") == "crashgen-check" ? execute_crashgen_check(plan, scenario)
                                     : plan.at("familyId") == "path-operations" ? execute_path_operations_scenario(plan, scenario)
                                       : (plan.at("familyId") == "registry-game" || plan.at("familyId") == "registry-gui") ? execute_registry_accessor_scenario(plan, scenario)
                                       : plan.at("familyId") == "registry-operations" ? execute_registry_operations_scenario(plan, scenario)
                                     : (plan.at("familyId") == "game-version-parse" || plan.at("familyId") == "fallout4-identity" || plan.at("familyId") == "fallout4-paths") ? execute_version_values_scenario(plan, scenario)
                                       : (plan.at("familyId") == "web-operations" || plan.at("familyId") == "version-pe") ? execute_aux_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "installation-paths" ? execute_installation_paths_scenario(plan, scenario)
+                                    : plan.at("familyId") == "yaml-file-values" ? execute_yaml_file_values_scenario(plan, scenario)
                                     : plan.at("familyId") == "xse-folder" ? execute_xse_folder_scenario(plan, scenario)
                                     : plan.at("familyId") == "xse-operations" ? execute_xse_operations_scenario(plan, scenario)
+                                    : (plan.at("familyId") == "markdown-rendering" || plan.at("familyId") == "report-discovery") ? execute_interface_helpers_scenario(plan, scenario)
+                                    : plan.at("familyId") == "message-logging" ? execute_message_logging_scenario(plan, scenario)
+                                    : plan.at("familyId") == "update-rejection" ? execute_update_rejection_scenario(plan, scenario)
                                     : plan.at("familyId") == "performance" ? execute_performance_scenario(plan, scenario)
                                     : plan.at("familyId") == "update-services" ? execute_update_services_scenario(plan, scenario)
                                     : plan.at("familyId") == "update-decisions" ? execute_update_decisions_scenario(plan, scenario)
@@ -1961,11 +2018,14 @@ void validate_plan(const json& plan) {
     if (!plan.is_object() || plan.at("schemaVersion") != 1 ||
         (plan.at("familyId") != "crash-log-scan-run" && plan.at("familyId") != "user-settings" &&
          plan.at("familyId") != "installed-yaml-data" && plan.at("familyId") != "autoscan-report" &&
+         plan.at("familyId") != "game-integrity" && plan.at("familyId") != "game-setup-intake" &&
+         plan.at("familyId") != "yaml-update-operations" && plan.at("familyId") != "path-backups" &&
+         plan.at("familyId") != "file-backups" &&
          plan.at("familyId") != "config-operations" && plan.at("familyId") != "file-operations" &&
          plan.at("familyId") != "path-operations" &&
            plan.at("familyId") != "version-pe" && plan.at("familyId") != "game-version-parse" && plan.at("familyId") != "fallout4-identity" && plan.at("familyId") != "fallout4-paths" &&
            plan.at("familyId") != "registry-game" && plan.at("familyId") != "registry-gui" &&
-           plan.at("familyId") != "registry-operations" && plan.at("familyId") != "web-operations" && plan.at("familyId") != "xse-operations" && plan.at("familyId") != "xse-folder" && plan.at("familyId") != "installation-paths" &&
+           plan.at("familyId") != "markdown-rendering" && plan.at("familyId") != "report-discovery" && plan.at("familyId") != "yaml-file-values" && plan.at("familyId") != "update-rejection" && plan.at("familyId") != "message-logging" && plan.at("familyId") != "registry-operations" && plan.at("familyId") != "web-operations" && plan.at("familyId") != "xse-operations" && plan.at("familyId") != "xse-folder" && plan.at("familyId") != "installation-paths" &&
          plan.at("familyId") != "performance" && plan.at("familyId") != "update-decisions" && plan.at("familyId") != "update-services" &&
          plan.at("familyId") != "game-identity" && plan.at("familyId") != "runtime-access" &&
          plan.at("familyId") != "settings-load" &&
@@ -1973,6 +2033,14 @@ void validate_plan(const json& plan) {
          plan.at("familyId") != "settings-validation" &&
          plan.at("familyId") != "database-operations" && plan.at("familyId") != "version-registry" &&
          plan.at("familyId") != "scan-game" &&
+         plan.at("familyId") != "papyrus-monitor" &&
+         plan.at("familyId") != "wrye-report" &&
+         plan.at("familyId") != "log-collection" &&
+         plan.at("familyId") != "crash-pattern" &&
+         plan.at("familyId") != "formid-finding" &&
+         plan.at("familyId") != "ba2-scan" &&
+         plan.at("familyId") != "hash-cache-controls" &&
+         plan.at("familyId") != "crashgen-check" &&
          !is_semantic_family(plan.at("familyId")) && !is_vocabulary_family(plan.at("familyId")))) {
         throw RunnerError("unsupported CXX conformance run plan");
     }

@@ -286,7 +286,7 @@ impl PyLogParser {
         self.inner.benchmark(&arc_lines, iterations)
     }
 
-    /// Detect if a crash log is from Fallout 4 VR.
+    /// Detect Fallout 4 VR or Skyrim VR executable/master-plugin markers, ignoring case.
     #[pyo3(name = "detect_vr_log")]
     pub fn detect_vr_log(&self, content: &str) -> bool {
         classic_scanlog_core::detect_vr_log(content)

@@ -101,6 +101,10 @@ async function observeSettingsYaml(fixture: JsonObject): Promise<JsonObject> {
       if ((await stat(file)).isFile()) files[entry] = await readFile(file, "utf8");
     }
     classic.yamlClearCache();
+    classic.yamlLoadFile(path);
+    if (classic.yamlGetCacheStats().size !== 1) throw new Error("config cache-clear fixture did not populate cache");
+    classic.clearYamlCache();
+    if (classic.yamlGetCacheStats().size !== 0) throw new Error("config alias did not clear global YAML cache");
     return { before, after, persisted, files, cache: { hits: stats.hits - initial.hits, misses: stats.misses - initial.misses, size: stats.size, afterClear: classic.yamlGetCacheStats().size } };
   } finally {
     // File and cache ownership belongs to this scenario even when a native call fails.

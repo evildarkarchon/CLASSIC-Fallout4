@@ -357,6 +357,8 @@ _SYMBOLS = {
         "PluginEvidence",
     ),
     "formid-lookup": (
+        "FormIdValueLookupEntry",
+        "FormIdValueLookupInMemoryReply",
         "FormIdValueLookup",
         "FormIdValueLookupOutcome",
         "FormIdValueLookupError",
@@ -504,6 +506,14 @@ def _policy(family: str) -> FamilyCoveragePolicy:
                     symbol for symbol in symbols if symbol != "FormIdValueLookupError"
                 )
             )
+            # Entry carriers in other Python extensions share these Rust types
+            # but require their own factory receipts; exact selectors follow below.
+            symbols = tuple(
+                symbol
+                for symbol in symbols
+                if symbol
+                not in {"FormIdValueLookupEntry", "FormIdValueLookupInMemoryReply"}
+            )
         elif error:
             symbols = ()
         elif name.startswith("empty"):
@@ -521,6 +531,102 @@ def _policy(family: str) -> FamilyCoveragePolicy:
                 rust_symbols=symbols,
                 matches=matches,
                 runtime_operations=operations,
+            )
+        )
+    if family == "formid-lookup":
+        for name in ("hit", "batch-hit-miss"):
+            source = next(
+                predicate
+                for predicate in predicates
+                if predicate.id == f"formid-lookup.{name}"
+            )
+            predicates.append(
+                CoveragePredicate(
+                    id=f"formid-lookup.{name}.entries",
+                    capability_id=capability,
+                    action=capability,
+                    observation_family="semantic-result",
+                    rust_symbols=(
+                        "FormIdValueLookupEntry",
+                        "FormIdValueLookupInMemoryReply",
+                    ),
+                    matches=source.matches,
+                    binding_obligation_ids=(
+                        "parity:python:database.formid_value_lookup.FormIdValueLookupEntry",
+                        "parity:python:database.formid_value_lookup.FormIdValueLookupEntry.__init__",
+                    ),
+                    runtime_operations=(None, "__init__"),
+                )
+            )
+    supporting = {
+        "crash-suspect": (
+            "findings",
+            "crash_suspect_analyzer",
+            (
+                ("CrashSuspectMainErrorRule", "SuspectErrorRule"),
+                ("CrashSuspectStackRule", "SuspectStackRule"),
+                ("CrashSuspectStackCountRule", "SuspectStackCountRule"),
+            ),
+        ),
+        "mod-guidance": (
+            "authored-guidance",
+            "mod_guidance_analyzer",
+            (
+                ("ModGuidanceConflictRule", "ModConflictEntry"),
+                ("ModGuidanceImportantModRule", "CoreModEntry"),
+                ("ModGuidanceSolutionRule", "ModSolutionEntry"),
+                ("ModGuidanceCriteriaKind", "ModSolutionCriteria"),
+            ),
+        ),
+        "crashgen-settings": (
+            "authored-guidance",
+            "crashgen_settings_analyzer",
+            (
+                ("AnalyzerSeverity", "RuleSeverity"),
+                ("AutoscanReportPlacement", "AutoscanReportPlacement"),
+                ("CrashgenExpectationKind", "OutcomeKind"),
+            ),
+        ),
+    }.get(family)
+    if supporting is not None:
+        scenario_name, module, carriers = supporting
+        source = next(
+            predicate
+            for predicate in predicates
+            if predicate.id == f"{family}.{scenario_name}"
+        )
+        constructors = {
+            "CrashSuspectMainErrorRule",
+            "CrashSuspectStackRule",
+            "CrashSuspectStackCountRule",
+            "ModGuidanceConflictRule",
+            "ModGuidanceImportantModRule",
+            "ModGuidanceSolutionRule",
+        }
+        # These config-owned wrappers are constructed by the input adapter or
+        # projected from actual outcomes, but unrelated config exports are not.
+        selectors = tuple(
+            f"parity:python:scanlog.{module}.{export}{suffix}"
+            for export, _ in carriers
+            for suffix in (("", ".__init__") if export in constructors else ("",))
+        )
+        predicates.append(
+            CoveragePredicate(
+                id=f"{family}.config-carriers",
+                capability_id=f"{family}.config-carriers",
+                action=capability,
+                observation_family=source.observation_family,
+                rust_symbols=tuple(symbol for _, symbol in carriers),
+                matches=source.matches,
+                binding_obligation_ids=selectors,
+                runtime_operations=(
+                    None,
+                    *(
+                        f"{export}.__init__"
+                        for export, _ in carriers
+                        if export in constructors
+                    ),
+                ),
             )
         )
     return FamilyCoveragePolicy(family, tuple(predicates))

@@ -1257,6 +1257,85 @@
         "installation_root_exists": true,
         "preview_mode": "bootstrap"
       }
+    },
+    {
+      "id": "preview_all_typed_fields",
+      "outcome": "proposed_update",
+      "source_fixture": "canonical_current_nested.yaml",
+      "disk_fixture_before": "canonical_current_nested.yaml",
+      "expected_document": "canonical_current_nested.yaml",
+      "writes_document": false,
+      "requested_update": {
+        "/CLASSIC_Settings/Update Check": false,
+        "/CLASSIC_Settings/Update Source": "Both",
+        "/UI/preferences/auto_switch_after_scan": false,
+        "/CLASSIC_Settings/Managed Game": "Fallout4",
+        "/CLASSIC_Settings/Game Version": "NextGen",
+        "/CLASSIC_Settings/Game Folder Path": "D:/Games/Fallout4",
+        "/CLASSIC_Settings/Game EXE Path": "D:/Games/Fallout4/Fallout4.exe",
+        "/CLASSIC_Settings/Documents Folder Path": "D:/Documents/Fallout4",
+        "/CLASSIC_Settings/INI Folder Path": "D:/INI",
+        "/CLASSIC_Settings/MODS Folder Path": "D:/Mods",
+        "/CLASSIC_Settings/FCX Mode": true,
+        "/CLASSIC_Settings/Simplify Logs": true,
+        "/CLASSIC_Settings/Show Statistics": true,
+        "/CLASSIC_Settings/Show FormID Values": true,
+        "/CLASSIC_Settings/FormID Databases": {
+          "Fallout4": [
+            "D:/Data/forms.db"
+          ]
+        },
+        "/CLASSIC_Settings/Move Unsolved Logs": false,
+        "/CLASSIC_Settings/Unsolved Logs Destination": "D:/Unsolved",
+        "/CLASSIC_Settings/SCAN Custom Path": "D:/CrashLogs",
+        "/CLASSIC_Settings/Papyrus Log Path": "D:/Logs/Papyrus.0.log",
+        "/CLASSIC_Settings/Max Concurrent Scans": 4,
+        "/UI/window_geometry/main_tab/maximized": false,
+        "/UI/window_geometry/main_tab/width": 900,
+        "/UI/window_geometry/main_tab/height": 650,
+        "/UI/tui/active_tab": 2,
+        "/UI/tui/results_panel_width": 44,
+        "/UI/tui/sort_ascending": true
+      },
+      "expected_preview": {
+        "/CLASSIC_Settings/Update Check": false,
+        "/CLASSIC_Settings/Update Source": "Both",
+        "/UI/preferences/auto_switch_after_scan": false,
+        "/CLASSIC_Settings/Managed Game": "Fallout4",
+        "/CLASSIC_Settings/Game Version": "NextGen",
+        "/CLASSIC_Settings/Game Folder Path": "D:/Games/Fallout4",
+        "/CLASSIC_Settings/Game EXE Path": "D:/Games/Fallout4/Fallout4.exe",
+        "/CLASSIC_Settings/Documents Folder Path": "D:/Documents/Fallout4",
+        "/CLASSIC_Settings/INI Folder Path": "D:/INI",
+        "/CLASSIC_Settings/MODS Folder Path": "D:/Mods",
+        "/CLASSIC_Settings/FCX Mode": true,
+        "/CLASSIC_Settings/Simplify Logs": true,
+        "/CLASSIC_Settings/Show Statistics": true,
+        "/CLASSIC_Settings/Show FormID Values": true,
+        "/CLASSIC_Settings/FormID Databases": {
+          "Fallout4": [
+            "D:/Data/forms.db"
+          ]
+        },
+        "/CLASSIC_Settings/Move Unsolved Logs": false,
+        "/CLASSIC_Settings/Unsolved Logs Destination": "D:/Unsolved",
+        "/CLASSIC_Settings/SCAN Custom Path": "D:/CrashLogs",
+        "/CLASSIC_Settings/Papyrus Log Path": "D:/Logs/Papyrus.0.log",
+        "/CLASSIC_Settings/Max Concurrent Scans": 4,
+        "/UI/window_geometry/main_tab/maximized": false,
+        "/UI/window_geometry/main_tab/width": 900,
+        "/UI/window_geometry/main_tab/height": 650,
+        "/UI/tui/active_tab": 2,
+        "/UI/tui/results_panel_width": 44,
+        "/UI/tui/sort_ascending": true
+      },
+      "conformance": {
+        "action": "user-settings.update",
+        "commit": false,
+        "preview_diagnostics": [],
+        "installation_root_exists": true,
+        "preview_mode": "update"
+      }
     }
   ],
   "migration_cases": {

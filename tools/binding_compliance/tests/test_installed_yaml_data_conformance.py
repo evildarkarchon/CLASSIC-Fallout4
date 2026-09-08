@@ -6,7 +6,6 @@ import copy
 import json
 import shutil
 import subprocess
-import sys
 from dataclasses import replace
 from pathlib import Path
 
@@ -24,6 +23,24 @@ from conformance.receipts import validate_prepared_run
 
 ROOT = Path(__file__).resolve().parents[3]
 PACK = Path("tests/conformance/packs/installed_yaml_data/v1.json")
+
+
+def test_recovery_plan_credit_requires_observed_metadata() -> None:
+    """Actual recovery metadata covers getters while unrelated successful loads cannot."""
+    document = load_and_validate_pack(ROOT, PACK).document()
+    policy = FAMILY_COVERAGE_POLICIES[document["familyId"]]
+    scenario = next(
+        item
+        for item in document["scenarios"]
+        if item["id"] == "recovery-plan-without-defaults"
+    )
+    facts = derive_observed_fact_ids(document, scenario, scenario["expected"], policy)
+    assert any(
+        predicate.id in facts
+        and "LocalIgnoreRecoveryPlan" in predicate.rust_symbols
+        and predicate.covers_runtime_operation("local_ignore_recovery_plan_diagnostics")
+        for predicate in policy.predicates
+    )
 
 
 def test_installed_yaml_pack_has_input_only_fixtures_and_observation_facts() -> None:
@@ -45,6 +62,7 @@ def test_installed_yaml_pack_has_input_only_fixtures_and_observation_facts() -> 
             "selectedGameVersion",
             "files",
             "mutations",
+            "recoveryAction",
         }
         assert set(fixture) >= {"operation", "game", "selectedGameVersion", "files"}
         expected = scenario["expected"]
@@ -202,61 +220,3 @@ def test_installed_yaml_receipts_fail_closed_and_cover_only_executed_operations(
     )
     other_run.receipt_path.write_text(json.dumps(receipt))
     assert validate_prepared_run(pack, other_run, coverage_policy=policy).failures
-
-
-@pytest.mark.parametrize("binding", ("node", "python"))
-def test_registry_cannot_grant_installed_yaml_runtime_coverage(
-    tmp_path: Path, binding: str
-) -> None:
-    """Optimistic legacy config selectors cannot satisfy migrated API execution."""
-    registry_path = (
-        "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json"
-        if binding == "node"
-        else "python-bindings/tests/fixtures/runtime_coverage_registry.json"
-    )
-    registry = json.loads((ROOT / registry_path).read_text())
-    for entry in registry["entries"]:
-        if entry.get("ownerModule") == "config":
-            entry.update(
-                classification="runtime_verified",
-                testSuite="claimed-suite",
-                testCaseId="claimed-pass",
-                notes="Optimistic registry claim",
-            )
-    path = tmp_path / "registry.json"
-    path.write_text(json.dumps(registry))
-    completed = subprocess.run(
-        [
-            sys.executable,
-            str(ROOT / f"tools/{binding}_api_parity/generate_baseline.py"),
-            "--repo-root",
-            str(ROOT),
-            "--runtime-registry",
-            str(path),
-            "--output-dir",
-            str(tmp_path / "generated"),
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    assert completed.returncode == 0, completed.stdout + completed.stderr
-    summary = json.loads(
-        (tmp_path / "generated/runtime_coverage_summary.json").read_text()
-    )
-    migrated = [
-        row
-        for row in summary["trackedSurface"]
-        if row.get("conformanceFamily") == "installed-yaml-data"
-    ]
-    assert migrated
-    assert all(row["classification"] == "receipt_required" for row in migrated)
-    assert all(
-        not {"coverageId", "testSuite", "testCaseId", "fixtureRefs", "notes"}
-        & row.keys()
-        for row in migrated
-    )
-    assert {row["rustSymbol"] for row in migrated} == {
-        "inspect_installed_yaml_data",
-        "load_installed_yaml_data",
-    }

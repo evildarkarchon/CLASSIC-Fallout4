@@ -44,6 +44,17 @@ pub(super) fn execute(family: &str, fixture: &Value) -> RunnerResult<Value> {
     let mut result = if family == "fallout4-identity" {
         json!({"variants":variants.iter().map(|v|json!({"isVr":v.is_vr(),"exeName":v.exe_name(),"steamAppId":v.steam_app_id()})).collect::<Vec<_>>()})
     } else if family == "fallout4-paths" {
+        for variant in variants {
+            let resolved =
+                classic_config_core::resolve_registry_version_info("Fallout4", variant.as_str())
+                    .ok_or_else(|| invalid("config version resolver returned no metadata"))?;
+            let registered = classic_version_registry_core::get_version_registry()
+                .get_by_id(variant.registry_id())
+                .ok_or_else(|| invalid("fixture registry metadata missing"))?;
+            if resolved.docs_name != registered.docs_name {
+                return Err(invalid("config resolver disagrees with registry metadata").into());
+            }
+        }
         json!({"variants":variants.iter().map(|v|json!({"token":v.as_str(),"docsName":v.docs_folder_name(),"standard":v.is_standard(),"registryId":v.registry_id()})).collect::<Vec<_>>()})
     } else {
         let copies = [

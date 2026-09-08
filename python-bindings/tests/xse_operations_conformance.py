@@ -27,6 +27,11 @@ def observe_xse_operations(fixture):
         kind = getattr(classic_xse.XseType, variant.lower())()
         if classic_xse.parse_xse_type(variant).as_str() != kind.as_str():
             raise ValueError("XSE constructor and parser disagree")
+        if str(kind) != kind.as_str() or repr(kind) != f"XseType.{variant.lower()}()":
+            raise ValueError("XSE type display disagrees with native identity")
+        for other in ("F4SE", "F4SEVR", "SKSE", "SKSE64", "SKSEVR", "SFSE"):
+            if kind.__eq__(classic_xse.parse_xse_type(other)) is not (other == variant):
+                raise ValueError("XSE equality changed type identity")
         try:
             detected = classic_xse.detect_xse_version(
                 str(root / kind.loader_name()), kind
@@ -40,6 +45,30 @@ def observe_xse_operations(fixture):
                 raise
             version = None
         info = classic_xse.get_xse_info(str(root), kind)
+        constructed = classic_xse.XseInfo(kind, str(root))
+        if (
+            constructed.installed()
+            or constructed.version() is not None
+            or constructed.xse_type().as_str() != kind.as_str()
+        ):
+            raise ValueError("XSE information constructor changed its initial state")
+        for value in (info, constructed):
+            if (
+                Path(value.path()) != root
+                or Path(value.loader_path()) != root / kind.loader_name()
+                or value.check_installed() != info.installed()
+            ):
+                raise ValueError(
+                    "XSE path/installation accessors disagree with owned files"
+                )
+            formatted_version = (
+                "Unknown"
+                if value.version() is None
+                else ".".join(map(str, value.version()))
+            )
+            display = f"XseInfo(type='{value.xse_type().as_str()}', installed={str(value.installed()).lower()}, version='{formatted_version}')"
+            if str(value) != display or repr(value) != display:
+                raise ValueError("XSE information display disagrees with public values")
         return {
             "typeName": kind.as_str(),
             "loaderName": kind.loader_name(),

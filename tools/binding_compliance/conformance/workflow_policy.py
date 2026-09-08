@@ -168,6 +168,31 @@ _EXECUTION_POLICIES += tuple(
         "scan-run-vocabulary",
         "config-operations",
         "file-operations",
+        "file-generation",
+        "yaml-source-values",
+        "yaml-file-values",
+        "mod-ini",
+        "message-logging",
+        "wrye-report",
+        "log-collection",
+        "game-integrity",
+        "game-orchestration",
+        "game-setup-intake",
+        "formid-finding",
+        "markdown-rendering",
+        "report-discovery",
+        "shared-performance",
+        "crashgen-check",
+        "xse-plugin-validation",
+        "hash-cache-controls",
+        "ba2-scan",
+        "unpacked-scan",
+        "windows-platform-paths",
+        "path-backups",
+        "file-backups",
+        "yaml-update-operations",
+        "crash-pattern",
+        "update-rejection",
         "database-operations",
         "version-registry",
         "scan-game",
@@ -175,6 +200,10 @@ _EXECUTION_POLICIES += tuple(
         "path-normalization",
         "message-operations",
         "file-fingerprint",
+        "dds-header",
+        "log-parsing",
+        "papyrus-monitor",
+        "performance-timers",
         "performance",
         "update-decisions",
         "update-services",
@@ -213,6 +242,38 @@ _EXECUTION_POLICIES += tuple(
     )
     for policy in _EXECUTION_POLICIES[:7]
     if policy.participant_id in {"rust", "node", "python", "cxx"}
+    and not (
+        family
+        in {
+            "markdown-rendering",
+            "report-discovery",
+            "yaml-update-operations",
+            "hash-cache-controls",
+        }
+        and policy.participant_id in {"node", "python"}
+    )
+    and not (
+        family == "windows-platform-paths"
+        and policy.participant_id in {"python", "cxx"}
+    )
+    and not (family == "file-backups" and policy.participant_id == "python")
+    and not (
+        family in {"unpacked-scan", "xse-plugin-validation"}
+        and policy.participant_id == "cxx"
+    )
+    and not (
+        family == "shared-performance" and policy.participant_id in {"node", "cxx"}
+    )
+    and not (
+        family
+        in {"file-generation", "yaml-source-values", "mod-ini", "game-orchestration"}
+        and policy.participant_id == "cxx"
+    )
+    and not (
+        family == "performance-timers" and policy.participant_id in {"node", "cxx"}
+    )
+    and not (family == "dds-header" and policy.participant_id == "cxx")
+    and not (family == "log-parsing" and policy.participant_id == "cxx")
     and not (
         family
         in {
@@ -262,7 +323,6 @@ _EXECUTION_POLICIES += tuple(
         }
         and policy.participant_id == "node"
     )
-    and not (family == "runtime-access" and policy.participant_id == "python")
     and not (
         family in {"registry-context", "registry-paths"}
         and policy.participant_id == "cxx"
@@ -372,6 +432,115 @@ def _step_block(job: str, marker: str, *, label: str) -> str:
     return job[start:end]
 
 
+def _has_exact_step_condition(step: str, expected: str) -> bool:
+    """Require one reviewed step condition without extra execution restrictions."""
+
+    # Matching a prefix admits `&& false`; only the YAML step key establishes
+    # execution, so comments and command strings must not satisfy this policy.
+    conditions = re.findall(r"(?m)^        (if:[^\r\n]*)$", step)
+    return [condition.rstrip() for condition in conditions] == [expected]
+
+
+def _validate_full_aggregation(repo_root: Path) -> None:
+    """Keep the repository gate bound to every current-run native participant.
+
+    Local reusable workflow references share the caller revision. Downloading
+    separate artifact directories preserves immutable receipt/plan pairs; a
+    cross-run download or a skipped retained gate cannot certify this checkout.
+    """
+    source = (repo_root / ".github/workflows/ci-binding-compliance.yml").read_text(
+        encoding="utf-8"
+    )
+    callers = {
+        "rust": ".github/workflows/ci-rust.yml",
+        "node": ".github/workflows/ci-typescript.yml",
+        "python": ".github/workflows/ci-python-bindings.yml",
+        "native": ".github/workflows/ci-cpp.yml",
+    }
+    for job_id, workflow in callers.items():
+        job = _job_block(source, job_id)
+        if not re.search(rf"(?m)^    uses: \./{re.escape(workflow)}$", job):
+            raise WorkflowPolicyError(
+                "full aggregation requires same-revision reusable jobs"
+            )
+        if re.search(r"(?m)^    (if|continue-on-error|needs):", job):
+            raise WorkflowPolicyError(
+                "full aggregation cannot skip required reusable jobs"
+            )
+        reusable = (repo_root / workflow).read_text(encoding="utf-8")
+        if not re.search(r"(?m)^  workflow_call:\s*$", reusable):
+            raise WorkflowPolicyError(
+                "full aggregation participants must support workflow_call"
+            )
+    full = _job_block(source, "full")
+    for line in (
+        "    needs: [rust, node, python, native]",
+        "    if: ${{ !cancelled() }}",
+        "    runs-on: windows-latest",
+    ):
+        if line not in full.splitlines():
+            raise WorkflowPolicyError(
+                "full aggregation must await every Windows participant"
+            )
+    if re.search(r"(?m)^    continue-on-error:", full):
+        raise WorkflowPolicyError("full aggregation must be blocking")
+    checkout = _step_block(
+        full, "uses: actions/checkout@v6", label="full aggregation checkout"
+    )
+    if re.search(r"(?m)^\s+(ref|path|repository):", checkout):
+        raise WorkflowPolicyError(
+            "full aggregation must preserve event checkout identity"
+        )
+    download = _step_block(
+        full, "uses: actions/download-artifact@v8", label="full aggregation download"
+    )
+    for line in (
+        "          pattern: '*conformance*'",
+        "          path: tools/binding_compliance/artifacts/downloaded",
+        "          merge-multiple: false",
+    ):
+        if line not in download.splitlines():
+            raise WorkflowPolicyError(
+                "full aggregation requires every unmerged receipt artifact"
+            )
+    if re.search(
+        r"(?m)^\s+(run-id|repository|github-token|name|artifact-ids):",
+        "\n".join(download.splitlines()[1:]),
+    ):
+        raise WorkflowPolicyError(
+            "full aggregation artifacts must come from the current workflow run"
+        )
+    upstream = _step_block(
+        full,
+        "Require every retained participant job to pass",
+        label="full aggregation upstream results",
+    )
+    if (
+        "          PARTICIPANT_RESULTS: ${{ toJSON(needs) }}"
+        not in upstream.splitlines()
+        or "continue-on-error:" in upstream
+        or not _has_exact_step_condition(upstream, "if: ${{ !cancelled() }}")
+    ):
+        raise WorkflowPolicyError(
+            "full aggregation must require actual upstream job results"
+        )
+    command = "python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded --output-dir tools/binding_compliance/artifacts/full"
+    launcher = _step_block(
+        full,
+        "tools/binding_compliance/check_compliance.py",
+        label="full aggregation launcher",
+    )
+    if (
+        f"        run: {command}" not in launcher.splitlines()
+        or "continue-on-error:" in launcher
+    ):
+        raise WorkflowPolicyError(
+            "full aggregation must execute the complete full profile"
+        )
+    if not _has_exact_step_condition(launcher, "if: ${{ !cancelled() }}"):
+        raise WorkflowPolicyError("full aggregation must report upstream failures")
+
+
 def validate_scan_run_workflow_policy(repo_root: Path) -> None:
     """Fail unless every promoted execution remains blocking and same-revision.
 
@@ -386,6 +555,10 @@ def validate_scan_run_workflow_policy(repo_root: Path) -> None:
         _validate_execution_denominator(root)
     except (OSError, ValueError) as error:
         errors.append(str(error))
+    try:
+        _validate_full_aggregation(root)
+    except (OSError, WorkflowPolicyError) as error:
+        errors.append(f"full aggregation: {error}")
     sources: dict[str, str] = {}
     for policy in _EXECUTION_POLICIES:
         try:
@@ -395,6 +568,10 @@ def validate_scan_run_workflow_policy(repo_root: Path) -> None:
             )
             job = _job_block(source, policy.job_id)
             label = f"{policy.workflow}:{policy.job_id}:{policy.participant_id}"
+            if "    runs-on: windows-latest" not in job.splitlines():
+                raise WorkflowPolicyError(
+                    f"{label} must preserve the Windows receipt checkout layout"
+                )
             job_condition = re.search(r"(?m)^    if:\s*(.+)\s*$", job)
             if re.search(r"(?m)^    needs:", job):
                 if (
@@ -428,6 +605,10 @@ def validate_scan_run_workflow_policy(repo_root: Path) -> None:
             if re.search(r"(?m)^\s+ref:", checkout):
                 raise WorkflowPolicyError(
                     f"{label} checkout cannot replace the event source revision"
+                )
+            if re.search(r"(?m)^\s+(path|repository):", checkout):
+                raise WorkflowPolicyError(
+                    f"{label} must preserve the default receipt checkout layout"
                 )
             if policy.matrix_marker is not None and policy.matrix_marker not in job:
                 raise WorkflowPolicyError(
@@ -470,7 +651,7 @@ def validate_scan_run_workflow_policy(repo_root: Path) -> None:
                     )
             if "continue-on-error:" in launcher:
                 raise WorkflowPolicyError(f"{label} launcher must be blocking")
-            if policy.launcher_condition not in launcher:
+            if not _has_exact_step_condition(launcher, policy.launcher_condition):
                 raise WorkflowPolicyError(
                     f"{label} launcher must run after earlier failures unless cancelled"
                 )
@@ -483,7 +664,7 @@ def validate_scan_run_workflow_policy(repo_root: Path) -> None:
                 policy.artifact_marker,
                 label=f"{label} upload",
             )
-            if policy.upload_condition not in upload:
+            if not _has_exact_step_condition(upload, policy.upload_condition):
                 raise WorkflowPolicyError(
                     f"{label} diagnostics must upload even on failure"
                 )
@@ -508,7 +689,7 @@ def validate_scan_run_workflow_policy(repo_root: Path) -> None:
         )
         if "continue-on-error:" in variant_preflight:
             raise WorkflowPolicyError("ci-rust variant preflight must be blocking")
-        if "if: ${{ !cancelled() }}" not in variant_preflight:
+        if not _has_exact_step_condition(variant_preflight, "if: ${{ !cancelled() }}"):
             raise WorkflowPolicyError(
                 "ci-rust variant preflight must run after earlier failures unless cancelled"
             )

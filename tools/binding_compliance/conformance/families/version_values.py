@@ -16,7 +16,7 @@ OPERATIONS = {
         ("semantic_distance", "GameVersion.semantic_distance", "gameVersionDistance"),
     ),
     "game-version-order": (
-        ("same_major",),
+        ("same_major", "GameVersion"),
         (
             "__eq__",
             "__lt__",
@@ -44,7 +44,7 @@ OPERATIONS = {
         ),
     ),
     "fallout4-paths": (
-        ("as_str", "docs_folder_name", "is_standard", "registry_id"),
+        ("as_str", "docs_folder_name", "is_standard", "registry_id", "Fallout4Version"),
         (
             "Fallout4Version.as_str",
             "as_str",
@@ -58,9 +58,8 @@ OPERATIONS = {
         ),
     ),
     "fallout4-metadata": (
-        ("game_version",),
+        ("game_version", "Fallout4Version"),
         (
-            None,
             "Fallout4Version.version",
             "version",
             "short_name",
@@ -211,5 +210,38 @@ def version_values_coverage_policy(family):
                 runtime_operations=operations,
                 matches=partial(_observed, family),
             ),
+        )
+        + (
+            (
+                CoveragePredicate(
+                    id="game-version-null-sentinel",
+                    capability_id="game-version-parse.observe",
+                    action="game-version-parse.observe",
+                    observation_family="value-results",
+                    rust_symbols=("NULL_VERSION",),
+                    runtime_operations=("is_null_version",),
+                    matches=lambda value: (
+                        _observed("game-version-parse", value)
+                        and isinstance(value["parsed"], str)
+                    ),
+                ),
+            )
+            if family == "game-version-parse"
+            else ()
+        )
+        + (
+            (
+                CoveragePredicate(
+                    id="fallout4-config-executable",
+                    capability_id="fallout4-paths.config-exe",
+                    action="fallout4-paths.observe",
+                    observation_family="value-results",
+                    rust_symbols=("resolve_registry_version_info",),
+                    runtime_operations=("resolve_fallout4_exe_name",),
+                    matches=partial(_observed, "fallout4-paths"),
+                ),
+            )
+            if family == "fallout4-paths"
+            else ()
         ),
     )

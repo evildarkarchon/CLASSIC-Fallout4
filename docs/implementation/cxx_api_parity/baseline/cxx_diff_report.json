@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 645,
-    "current_total": 645,
-    "matched": 645,
+    "contract_total": 647,
+    "current_total": 647,
+    "matched": 647,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -2753,6 +2753,14 @@
       "reason": "-"
     },
     {
+      "id": "792f70658ed4adf9",
+      "rustSymbol": "classify_crash_pattern",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "768db92e85831061",
       "rustSymbol": "crash_suspect_analyze",
       "kind": "function",
@@ -4523,6 +4531,14 @@
     {
       "id": "e5c87d8b488cc983",
       "rustSymbol": "game_id_as_str",
+      "kind": "function",
+      "bridgeModule": "shared",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "2e2bb77c38194322",
+      "rustSymbol": "game_id_display_name",
       "kind": "function",
       "bridgeModule": "shared",
       "status": "matched",

@@ -32,6 +32,51 @@ from conformance.receipts import validate_prepared_run
 ROOT = Path(__file__).resolve().parents[3]
 
 
+def test_message_mutation_and_routing_methods_have_executable_ownership() -> None:
+    """Mutation, title builders, enum values and routing decisions have real calls."""
+    policy = message_operations_coverage_policy()
+    for operation in (
+        "__init__",
+        "set_content",
+        "set_title",
+        "set_target",
+        "set_msg_type",
+        "set_details",
+        "with_title",
+        "__int__",
+        "name",
+        "should_display",
+        "should_display_in_cli",
+        "should_display_in_gui",
+    ):
+        assert any(
+            predicate.covers_runtime_operation(operation)
+            for predicate in policy.predicates
+        )
+
+
+def test_python_path_wrapper_methods_have_their_core_owner_and_predicates() -> None:
+    """Every foundation path wrapper operation retains its own executed boundary."""
+    rows = [
+        row
+        for row in load_source_parity_rows(ROOT)
+        if row.obligation_id.startswith("parity:python:shared.path.PathHandler")
+    ]
+    assert rows
+    assert all(
+        row.rust_crate == "classic-shared-core" and row.rust_symbol == "PathHandler"
+        for row in rows
+    )
+    policy = path_normalization_coverage_policy()
+    assert all(
+        any(
+            predicate.covers_runtime_operation(row.runtime_operation)
+            for predicate in policy.predicates
+        )
+        for row in rows
+    )
+
+
 def _pack(family: str) -> dict:
     """Load independent authored expectations from the repository pack."""
     return json.loads(
@@ -87,12 +132,12 @@ def test_unexecuted_methods_cannot_borrow_message_or_path_credit() -> None:
         path_normalization_coverage_policy(),
     ):
         for operation in (
-            "set_content",
-            "set_title",
-            "set_target",
-            "clear_cache",
-            "cache_metrics",
-            "split_path",
+            "future_set_content",
+            "future_set_title",
+            "future_set_target",
+            "future_clear_cache",
+            "future_cache_metrics",
+            "future_split_path",
         ):
             assert not any(
                 predicate.covers_runtime_operation(operation)
@@ -299,3 +344,27 @@ def test_path_message_receipts_fail_closed_at_public_coverage_seam(
                     scope_participant_id=participant.id,
                     retained_analyzers=retained,
                 ).failures, mutation
+
+
+def test_node_message_aliases_keep_their_actual_public_operation_names():
+    """Camel-case Node callables must not lose facts after correcting their source owners."""
+    from pathlib import Path
+
+    from conformance.coverage import load_source_parity_rows
+    from conformance.families.message_operations import (
+        message_operations_coverage_policy,
+    )
+    from conformance.packs import load_and_validate_pack
+    from retirement_readiness import candidate_predicates
+
+    root = Path(__file__).resolve().parents[3]
+    pack = load_and_validate_pack(
+        root, Path("tests/conformance/packs/message_operations/v1.json")
+    ).document()
+    policy = message_operations_coverage_policy()
+    for row in load_source_parity_rows(root):
+        if row.obligation_id in {
+            "parity:node:aux-phase4a-create-message",
+            "parity:node:aux-phase4a-format-message",
+        }:
+            assert candidate_predicates(row, pack, policy), row.obligation_id

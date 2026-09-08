@@ -26,6 +26,29 @@ pub(super) fn execute(family: &str, fixture: &Value) -> RunnerResult<Value> {
             .iter()
             .map(|value| processor.normalize_string(value))
             .collect();
+        for value in &values {
+            if processor.common_prefix(&[value.as_str(), value.as_str()]) != *value
+                || processor.split_lines(value)
+                    != value.lines().map(str::to_owned).collect::<Vec<_>>()
+            {
+                return Err(invalid("string helper disagrees with input text").into());
+            }
+        }
+        let distinct = values
+            .iter()
+            .collect::<std::collections::HashSet<_>>()
+            .len();
+        if processor.join_lines(&values, "|") != values.join("|")
+            || processor.pool_stats() != distinct
+        {
+            return Err(invalid("string pool or ordered join disagrees with input").into());
+        }
+        // ThreadedRodeo intentionally retains entries after the legacy clear
+        // request; verify that contract instead of assuming mutable storage.
+        processor.clear_pool();
+        if processor.pool_stats() != distinct {
+            return Err(invalid("append-only pool changed after clear request").into());
+        }
         return Ok(json!({"interned": interned, "normalized": normalized,
             "batch": processor.process_batch(&refs, StringOperation::Normalize)}));
     }

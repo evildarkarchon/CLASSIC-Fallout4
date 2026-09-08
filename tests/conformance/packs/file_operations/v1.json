@@ -19,7 +19,9 @@
       "id": "file-operations.read-text",
       "rustSymbols": [
         "FileIOCore",
-        "read_file"
+        "read_file",
+        "calculate_similarity",
+        "similarity_ratio"
       ],
       "observationFamilies": [
         "file-effects"
@@ -34,6 +36,16 @@
       "observationFamilies": [
         "file-effects"
       ]
+    },
+    {
+      "id": "file-operations.streams",
+      "rustSymbols": [
+        "LogCollector"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "file-effects"
+      ]
     }
   ],
   "scenarios": [
@@ -41,7 +53,8 @@
       "id": "read-text",
       "action": "file-operations.read-text",
       "capabilityIds": [
-        "file-operations.read-text"
+        "file-operations.read-text",
+        "file-operations.streams"
       ],
       "fixtureRefs": [
         "read-text"
@@ -65,6 +78,11 @@
             "path": "input.txt",
             "content": "hello world\n"
           }
+        ],
+        "similarity": [
+          "1.000000",
+          "0.000000",
+          "0.500000"
         ]
       },
       "normalization": {
@@ -101,6 +119,11 @@
             "path": "input.txt",
             "content": ""
           }
+        ],
+        "similarity": [
+          "1.000000",
+          "0.000000",
+          "0.500000"
         ]
       },
       "normalization": {
@@ -137,6 +160,11 @@
             "path": "sentinel.txt",
             "content": "keep"
           }
+        ],
+        "similarity": [
+          "1.000000",
+          "0.000000",
+          "0.500000"
         ]
       },
       "normalization": {

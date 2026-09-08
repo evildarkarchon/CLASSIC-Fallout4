@@ -1,0 +1,23 @@
+{
+  "operation": "stale-decision",
+  "approved": {
+    "releaseTag": "yaml-data-v-old",
+    "names": [
+      "CLASSIC Main.yaml"
+    ],
+    "digests": [
+      "0000000000000000000000000000000000000000000000000000000000000000"
+    ]
+  },
+  "service": {
+    "pages": [
+      {
+        "status": 200,
+        "body": "{\"files\":[{\"download_url\":\"https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/download/yaml-data-v-conformance/CLASSIC%20Main.yaml\",\"name\":\"CLASSIC Main.yaml\",\"schema_version\":\"2.0\",\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"size_bytes\":24}],\"manifest_version\":1,\"published_at\":\"2026-09-08T00:00:00Z\",\"release_tag\":\"yaml-data-v-conformance\",\"signatures\":[]}",
+        "headers": {}
+      }
+    ],
+    "api": []
+  },
+  "files": {}
+}

@@ -1,0 +1,25 @@
+{
+  "operation": "normalize",
+  "versions": [
+    null,
+    " OG ",
+    "next-gen",
+    "anniversary_edition",
+    "VR",
+    "garbage"
+  ],
+  "paths": [
+    [
+      null,
+      null
+    ],
+    [
+      " ",
+      "/docs"
+    ],
+    [
+      "game",
+      ""
+    ]
+  ]
+}

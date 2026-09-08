@@ -21,6 +21,20 @@ pub(super) fn execute(family: &str, fixture: &Value) -> RunnerResult<Value> {
     match family {
         "web-operations" => {
             use classic_web_core as web;
+            if request["operation"] == "game-routes" {
+                if request["game"] != "Fallout4" {
+                    return Err(invalid("unsupported routing game").into());
+                }
+                let urls = [
+                    web::ModSite::NexusMods,
+                    web::ModSite::BethesdaNet,
+                    web::ModSite::ModDB,
+                ]
+                .iter()
+                .map(|site| site.game_url(classic_shared_core::GameId::Fallout4))
+                .collect::<Vec<_>>();
+                return Ok(json!({"urls": urls}));
+            }
             let url = text(&request["url"])?;
             let path = text(&request["path"])?;
             let pairs = request["params"]

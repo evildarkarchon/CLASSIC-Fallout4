@@ -98,13 +98,21 @@ async function loadPlan(path: string): Promise<RunPlan> {
     const scenario = object(value, "scenario");
     if ("expected" in scenario) throw new Error("input-only run plan must not contain expectations");
     string(scenario.id, "scenario.id");
-    if (!["user-settings.open", "user-settings.update", "user-settings.migrate"].includes(String(scenario.action))) {
+    if (!["user-settings.open", "user-settings.update", "user-settings.migrate", "user-settings.defaults", "user-settings.geometry", "user-settings.legacy-import"].includes(String(scenario.action))) {
       throw new Error("unsupported User Settings action");
     }
     strings(scenario.capabilityIds, "scenario.capabilityIds");
     strings(scenario.fixtureRefs, "scenario.fixtureRefs");
     const input = object(scenario.input, "scenario.input");
-    if (scenario.action === "user-settings.open") {
+    if (scenario.action === "user-settings.defaults") {
+      if (Object.keys(input).length !== 0) throw new Error("defaults action has no input");
+      continue;
+    }
+    if (scenario.action === "user-settings.legacy-import") {
+      if (Object.keys(input).join() !== "installationData") throw new Error("legacy import only accepts declared installation fixtures");
+    } else if (scenario.action === "user-settings.geometry") {
+      if (typeof input.blockLock !== "boolean") throw new Error("blockLock must be boolean");
+    } else if (scenario.action === "user-settings.open") {
       strings(input.observationFields, "observationFields");
     } else if (scenario.action === "user-settings.update") {
       object(input.requestedUpdate, "requestedUpdate");
@@ -232,6 +240,9 @@ function projectView(snapshot: JsUserSettingsSnapshot, fields: string[]): JsonOb
 
 /** Dispatch explicit operations or observe the public read-only open API and its durable effects. */
 async function executeScenario(plan: RunPlan, scenario: Scenario): Promise<JsonObject> {
+  if (scenario.action === "user-settings.legacy-import") return executeLegacyImport(plan,scenario);
+  if (scenario.action === "user-settings.geometry") return executeGeometry(plan, scenario);
+  if (scenario.action === "user-settings.defaults") return (await import("./user_settings_defaults_conformance.js")).observeDefaults();
   if (scenario.action === "user-settings.migrate") return executeMigration(plan, scenario);
   if (scenario.action !== "user-settings.open") return executeOperation(plan, scenario);
   const root = resolve(await mkdtemp(join(tmpdir(), "classic-node-user-settings-")));
@@ -282,18 +293,44 @@ async function executeScenario(plan: RunPlan, scenario: Scenario): Promise<JsonO
 /** Translate centrally selected fields into public binding arguments without owning validation. */
 function requestedUpdate(fields: JsonObject): JsUserSettingsUpdate {
   const update: JsUserSettingsUpdate = {};
+  if ("/UI/window_geometry/main_tab/maximized" in fields) {
+    const maximized = fields["/UI/window_geometry/main_tab/maximized"];
+    const width = fields["/UI/window_geometry/main_tab/width"];
+    const height = fields["/UI/window_geometry/main_tab/height"];
+    if (typeof maximized !== "boolean" || typeof width !== "number" || typeof height !== "number") throw new Error("window geometry requires a boolean maximized flag and numeric dimensions");
+    update.windowGeometry = {mainTab: {maximized, width, height}};
+  }
+  if ("/UI/tui/active_tab" in fields) {
+    const activeTab = fields["/UI/tui/active_tab"];
+    const resultsPanelWidth = fields["/UI/tui/results_panel_width"];
+    const sortAscending = fields["/UI/tui/sort_ascending"];
+    if (typeof activeTab !== "number" || typeof resultsPanelWidth !== "number" || typeof sortAscending !== "boolean") throw new Error("TUI layout requires numeric tab and width values and a boolean sort flag");
+    update.tui = {activeTab, resultsPanelWidth, sortAscending};
+  }
   for (const [path, value] of Object.entries(fields)) {
-    switch (path) {
-      case "/CLASSIC_Settings/Update Check":
-        if (typeof value !== "boolean") throw new Error("Update Check input must be a boolean");
-        update.updateCheck = value;
-        break;
-      case "/CLASSIC_Settings/Max Concurrent Scans":
-        if (typeof value !== "number" || !Number.isSafeInteger(value)) throw new Error("Max Concurrent Scans input must be an integer");
-        update.maxConcurrentScans = value;
-        break;
-      default:
-        throw new Error(`unsupported requested field: ${path}`);
+    if (["/UI/window_geometry/main_tab/maximized", "/UI/window_geometry/main_tab/width", "/UI/window_geometry/main_tab/height", "/UI/tui/active_tab", "/UI/tui/results_panel_width", "/UI/tui/sort_ascending"].includes(path)) continue;
+    switch(path) {
+      case "/CLASSIC_Settings/Update Check": update.updateCheck = value as never; break;
+      case "/CLASSIC_Settings/Update Source": update.updateSource = value as never; break;
+      case "/UI/preferences/auto_switch_after_scan": update.autoSwitchAfterScan = value as never; break;
+      case "/CLASSIC_Settings/Managed Game": update.managedGame = value as never; break;
+      case "/CLASSIC_Settings/Game Version": update.gameVersionSelection = value as never; break;
+      case "/CLASSIC_Settings/Game Folder Path": update.gameRoot = value as never; break;
+      case "/CLASSIC_Settings/Game EXE Path": update.gameExecutable = value as never; break;
+      case "/CLASSIC_Settings/Documents Folder Path": update.documentsRoot = value as never; break;
+      case "/CLASSIC_Settings/INI Folder Path": update.iniFolder = value as never; break;
+      case "/CLASSIC_Settings/MODS Folder Path": update.modsFolder = value as never; break;
+      case "/CLASSIC_Settings/FCX Mode": update.fcxMode = value as never; break;
+      case "/CLASSIC_Settings/Simplify Logs": update.simplifyLogs = value as never; break;
+      case "/CLASSIC_Settings/Show Statistics": update.showStatistics = value as never; break;
+      case "/CLASSIC_Settings/Show FormID Values": update.formidValueLookup = value as never; break;
+      case "/CLASSIC_Settings/FormID Databases": update.formidDatabases = value as never; break;
+      case "/CLASSIC_Settings/Move Unsolved Logs": update.moveUnsolvedLogs = value as never; break;
+      case "/CLASSIC_Settings/Unsolved Logs Destination": update.unsolvedLogsDestination = value as never; break;
+      case "/CLASSIC_Settings/SCAN Custom Path": update.customScanInput = value as never; break;
+      case "/CLASSIC_Settings/Papyrus Log Path": update.papyrusLogPath = value as never; break;
+      case "/CLASSIC_Settings/Max Concurrent Scans": update.maxConcurrentScans = value as never; break;
+      default: throw new Error(`unsupported requested field: ${path}`);
     }
   }
   return update;
@@ -585,3 +622,47 @@ async function main(): Promise<void> {
 }
 
 void main();
+
+/** Commit a native geometry transition and authenticate its revision against published bytes. */
+async function executeGeometry(plan: RunPlan, scenario: Scenario): Promise<JsonObject> {
+  const root = resolve(await mkdtemp(join(tmpdir(), "classic-geometry-conformance-")));
+  try {
+    for (const item of scenario.input.installationData) await installFixture(plan, scenario, root, item);
+    const classic = await import("../index.js");
+    const snapshot = classic.openUserSettings(root);
+    if ((scenario.input as any).blockLock) await mkdir(join(root,"CLASSIC Settings.yaml.commit.lock"));
+    let transition: JsonObject;
+    try {
+      const outcome = classic.commitFrontendGeometryTransition(root, snapshot.revision, classic.JsGuiWindow.Main, {maximized:false,width:900,height:650});
+      if (outcome.status !== "committed") throw new Error("unexpected geometry outcome");
+      const content = await readFile(join(root,"CLASSIC Settings.yaml"));
+      transition = {status: outcome.status, code:null, hasMessage:null, revisionMatches:outcome.revision === "sha256:"+createHash("sha256").update(content).digest("hex")};
+    } catch (error: any) {
+      if (error.code !== "commit_lock_open_failed") throw error;
+      transition = {status:"error",code:error.code,hasMessage:typeof error.message === "string" && error.message.trim().length > 0,revisionMatches:null};
+    }
+    const current=classic.openUserSettings(root).frontendState.windowGeometry.mainTab;
+    const tree=await snapshotTree(root);
+    const files=[...tree.directories.map(path=>({path,kind:"directory"})),...Array.from(tree.files.keys()).map(path=>({path,kind:"file"}))].sort((a,b)=>a.path.localeCompare(b.path));
+    return {transition,geometry:{maximized:current.maximized,width:current.width,height:current.height},files};
+  } finally { await rm(root,{recursive:true,force:true}); }
+}
+
+/** Import exact retired state, read the native receipt, and restore its authenticated base. */
+async function executeLegacyImport(plan: RunPlan, scenario: Scenario): Promise<JsonObject> {
+  const root=resolve(await mkdtemp(join(tmpdir(),"classic-legacy-import-conformance-")));
+  try {
+    for (const item of scenario.input.installationData) await installFixture(plan,scenario,root,item);
+    const classic=await import("../index.js");
+    const original=await readFile(join(root,"CLASSIC Settings.yaml")), legacy=await readFile(join(root,"state.json"));
+    const outcome=classic.importLegacyTuiStateIntoUserSettings(root,join(root,"state.json"));
+    if (outcome.status!=="applied" || !outcome.receipt) throw new Error("legacy import has no applied receipt");
+    const receipt=outcome.receipt; const published=await readFile(join(root,"CLASSIC Settings.yaml"));const backup=await readFile(receipt.backupPath);
+    const sourceRevision="sha256:"+createHash("sha256").update(legacy).digest("hex"), baseRevision="sha256:"+createHash("sha256").update(original).digest("hex"), publishedRevision="sha256:"+createHash("sha256").update(published).digest("hex");
+    if (outcome.sourcePath!==receipt.sourcePath || outcome.backupPath!==receipt.backupPath || outcome.sourceRevision!==receipt.sourceRevision || outcome.backupRevision!==receipt.backupRevision || outcome.baseSettingsRevision!==receipt.baseSettingsRevision || outcome.publishedSettingsRevision!==receipt.publishedSettingsRevision) throw new Error("legacy outcome lost receipt metadata");
+    const tui=classic.openUserSettings(root).frontendState.tui;
+    const observed={status:outcome.status, sourcePath:relativePath(root,receipt.sourcePath),backupPath:relativePath(root,receipt.backupPath),settingsPath:relativePath(root,receipt.settingsPath),settingsBackupPath:receipt.settingsBackupPath==null?null:relativePath(root,receipt.settingsBackupPath),sourceRevisionMatches:receipt.sourceRevision===sourceRevision,backupRevisionMatches:receipt.backupRevision==="sha256:"+createHash("sha256").update(backup).digest("hex")&&backup.equals(legacy),baseRevisionMatches:receipt.baseSettingsRevision===baseRevision,publishedRevisionMatches:receipt.publishedSettingsRevision===publishedRevision,inapplicable:{classification:outcome.classification??null,revision:outcome.revision??null,expectedRevision:outcome.expectedRevision??null,actualRevision:outcome.actualRevision??null},tui:{activeTab:tui.activeTab,resultsPanelWidth:tui.resultsPanelWidth,sortAscending:tui.sortAscending,origins:[tui.activeTabOrigin,tui.resultsPanelWidthOrigin,tui.sortAscendingOrigin]}};
+    const restored=receipt.restore(root);const tree=await snapshotTree(root);
+    return {import:observed,restore:{status:restored.status,revisionMatches:restored.revision===baseRevision&&(await readFile(join(root,"CLASSIC Settings.yaml"))).equals(original),expectedRevision:restored.expectedRevision??null,actualRevision:restored.actualRevision??null},files:Array.from(tree.files).sort(([a],[b])=>a.localeCompare(b)).map(([path,bytes])=>({path,bytesHex:bytes.toString("hex")}))};
+  } finally {await rm(root,{recursive:true,force:true});}
+}

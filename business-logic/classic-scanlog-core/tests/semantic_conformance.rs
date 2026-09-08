@@ -21,29 +21,80 @@ use tempfile::NamedTempFile;
 
 type RunnerResult<T> = Result<T, Box<dyn Error + Send + Sync>>;
 
+#[path = "semantic_conformance/dds_header.rs"]
+mod dds_header;
+#[path = "semantic_conformance/log_parsing.rs"]
+mod log_parsing;
+#[path = "semantic_conformance/papyrus_monitor.rs"]
+mod papyrus_monitor;
+#[path = "semantic_conformance/shared_performance.rs"]
+mod shared_performance;
+#[path = "semantic_conformance/yaml_file_values.rs"]
+mod yaml_file_values;
+
 #[path = "semantic_conformance/installed_yaml_data.rs"]
 mod installed_yaml_data;
 
 #[path = "semantic_conformance/vocabulary.rs"]
 mod vocabulary;
 
+#[path = "semantic_conformance/ba2_scan.rs"]
+mod ba2_scan;
 #[path = "semantic_conformance/config_operations.rs"]
 mod config_operations;
+#[path = "semantic_conformance/crash_pattern.rs"]
+mod crash_pattern;
+#[path = "semantic_conformance/crashgen_check.rs"]
+mod crashgen_check;
 #[path = "semantic_conformance/database_operations.rs"]
 mod database_operations;
+#[path = "semantic_conformance/file_backups.rs"]
+mod file_backups;
+#[path = "semantic_conformance/file_generation.rs"]
+mod file_generation;
 #[path = "semantic_conformance/file_operations.rs"]
 mod file_operations;
+#[path = "semantic_conformance/formid_finding.rs"]
+mod formid_finding;
+#[path = "semantic_conformance/game_integrity.rs"]
+mod game_integrity;
+#[path = "semantic_conformance/game_orchestration.rs"]
+mod game_orchestration;
+#[path = "semantic_conformance/game_setup_intake.rs"]
+mod game_setup_intake;
+#[path = "semantic_conformance/hash_cache_controls.rs"]
+mod hash_cache_controls;
+#[path = "semantic_conformance/log_collection.rs"]
+mod log_collection;
+#[path = "semantic_conformance/mod_ini.rs"]
+mod mod_ini;
+#[path = "semantic_conformance/path_backups.rs"]
+mod path_backups;
 #[path = "semantic_conformance/path_message_operations.rs"]
 mod path_message_operations;
 #[path = "semantic_conformance/scan_game.rs"]
 mod scan_game;
+#[path = "semantic_conformance/unpacked_scan.rs"]
+mod unpacked_scan;
 #[path = "semantic_conformance/version_registry.rs"]
 mod version_registry;
+#[path = "semantic_conformance/wrye_report.rs"]
+mod wrye_report;
+#[path = "semantic_conformance/xse_plugin_validation.rs"]
+mod xse_plugin_validation;
+#[path = "semantic_conformance/yaml_source_values.rs"]
+mod yaml_source_values;
+#[path = "semantic_conformance/yaml_update_operations.rs"]
+mod yaml_update_operations;
 
 #[path = "semantic_conformance/aux_operations.rs"]
 mod aux_operations;
 #[path = "semantic_conformance/file_fingerprint.rs"]
 mod file_fingerprint;
+#[path = "semantic_conformance/installation_paths.rs"]
+mod installation_paths;
+#[path = "semantic_conformance/message_logging.rs"]
+mod message_logging;
 #[path = "semantic_conformance/performance.rs"]
 mod performance;
 #[path = "semantic_conformance/registry_accessors.rs"]
@@ -60,18 +111,20 @@ mod shared_identity;
 mod shared_registry;
 #[path = "semantic_conformance/update_decisions.rs"]
 mod update_decisions;
+#[path = "semantic_conformance/update_rejection.rs"]
+mod update_rejection;
 #[path = "semantic_conformance/update_services.rs"]
 mod update_services;
 #[path = "semantic_conformance/version_extended.rs"]
 mod version_extended;
 #[path = "semantic_conformance/version_values.rs"]
 mod version_values;
-#[path = "semantic_conformance/xse_operations.rs"]
-mod xse_operations;
+#[path = "semantic_conformance/windows_platform_paths.rs"]
+mod windows_platform_paths;
 #[path = "semantic_conformance/xse_folder.rs"]
 mod xse_folder;
-#[path = "semantic_conformance/installation_paths.rs"]
-mod installation_paths;
+#[path = "semantic_conformance/xse_operations.rs"]
+mod xse_operations;
 
 /// Rejects malformed runner inputs without confusing them with domain errors.
 fn invalid(message: &str) -> io::Error {
@@ -487,6 +540,10 @@ fn execute(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
             return shared_identity::execute(&text(&plan["familyId"])?, &fixture);
         }
         Some("performance") => return performance::execute(&fixture),
+        Some("performance-timers") => return performance::execute_timers(&fixture),
+        Some("message-logging") => return message_logging::observe(&fixture),
+        Some("update-rejection") => return update_rejection::observe(&fixture),
+        Some("windows-platform-paths") => return windows_platform_paths::observe(&fixture),
         Some("update-decisions") => return update_decisions::execute(&fixture),
         Some("update-services") => return update_services::execute(&fixture, scenario),
         Some("string-operations" | "registry-operations") => {
@@ -504,11 +561,36 @@ fn execute(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
             return aux_operations::execute(&text(&plan["familyId"])?, &fixture);
         }
         Some("config-operations") => return config_operations::execute(&fixture),
+        Some("yaml-source-values") => return yaml_source_values::execute(&fixture),
+        Some("file-backups") => return file_backups::execute(&fixture),
+        Some("xse-plugin-validation") => return xse_plugin_validation::execute(&fixture),
+        Some("path-backups") => return path_backups::execute(&fixture),
+        Some("game-integrity") => return game_integrity::execute(&fixture),
+        Some("game-orchestration") => return game_orchestration::execute(&fixture),
+        Some("game-setup-intake") => return game_setup_intake::execute(&fixture),
+        Some("yaml-update-operations") => {
+            return yaml_update_operations::execute(&fixture, scenario);
+        }
         Some("database-operations") => return database_operations::execute(&fixture),
         Some("version-registry" | "version-registry-details" | "version-registry-values") => {
             return version_registry::execute(&fixture);
         }
         Some("scan-game") => return scan_game::observe(&fixture),
+        Some("dds-header") => return dds_header::observe(&fixture),
+        Some("yaml-file-values") => return yaml_file_values::observe(&fixture),
+        Some("shared-performance") => return shared_performance::observe(&fixture),
+        Some("log-parsing") => return log_parsing::observe(&fixture),
+        Some("file-generation") => return file_generation::observe(&fixture),
+        Some("mod-ini") => return mod_ini::observe(&fixture),
+        Some("wrye-report") => return wrye_report::observe(&fixture),
+        Some("log-collection") => return log_collection::observe(&fixture),
+        Some("crash-pattern") => return crash_pattern::observe(&fixture),
+        Some("formid-finding") => return formid_finding::observe(&fixture),
+        Some("ba2-scan") => return ba2_scan::observe(&fixture),
+        Some("unpacked-scan") => return unpacked_scan::observe(&fixture),
+        Some("hash-cache-controls") => return hash_cache_controls::observe(&fixture),
+        Some("crashgen-check") => return crashgen_check::observe(&fixture),
+        Some("papyrus-monitor") => return papyrus_monitor::observe(&fixture),
         Some("file-operations") => {
             if scenario["action"] != format!("file-operations.{}", text(&fixture["operation"])?) {
                 return Err(invalid("file action does not match fixture operation").into());

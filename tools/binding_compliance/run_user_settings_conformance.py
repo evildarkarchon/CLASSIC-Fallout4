@@ -44,6 +44,8 @@ PARTICIPANT_COMMANDS = {
             REPO_ROOT
             / "business-logic/classic-user-settings-core/tests/open_conformance.rs",
             REPO_ROOT
+            / "business-logic/classic-user-settings-core/tests/open_conformance/defaults.rs",
+            REPO_ROOT
             / "business-logic/classic-user-settings-core/tests/compatibility_contract.rs",
             *_COMMON_SOURCES,
         ),
@@ -54,6 +56,8 @@ PARTICIPANT_COMMANDS = {
         source_paths=(
             REPO_ROOT
             / "node-bindings/classic-node/__test__/user_settings_conformance_runner.ts",
+            REPO_ROOT
+            / "node-bindings/classic-node/__test__/user_settings_defaults_conformance.ts",
             REPO_ROOT / "node-bindings/classic-node/src/user_settings.rs",
             REPO_ROOT / "node-bindings/classic-node/package.json",
             *_COMMON_SOURCES,
@@ -71,6 +75,7 @@ PARTICIPANT_COMMANDS = {
         working_directory=REPO_ROOT,
         source_paths=(
             REPO_ROOT / "python-bindings/tests/user_settings_conformance_runner.py",
+            REPO_ROOT / "python-bindings/tests/user_settings_defaults_conformance.py",
             REPO_ROOT / "python-bindings/classic-user-settings-py/src",
             *_COMMON_SOURCES,
         ),

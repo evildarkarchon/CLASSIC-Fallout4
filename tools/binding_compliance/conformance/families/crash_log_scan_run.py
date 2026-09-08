@@ -1659,7 +1659,9 @@ def _observed_effects_match(
         _path(effect) == expected_path
         and _mapping(effect) is not None
         and _mapping(effect).get("kind") == expected_kind
-        for effect, (expected_path, expected_kind) in zip(effects, expected, strict=True)
+        for effect, (expected_path, expected_kind) in zip(
+            effects, expected, strict=True
+        )
     )
 
 
@@ -1801,8 +1803,18 @@ def _unsolved_logs_finalization_failure(observation: Mapping[str, Any]) -> bool:
 
 
 _BASE_PREDICATE_FACTS = (
-    ("scan-run.status", "run-status", ("Request",), _run_status),
-    ("scan-run.discovery", "discovery", ("Request",), _discovery),
+    (
+        "scan-run.status",
+        "run-status",
+        ("Request", "Configuration", "execute", "standard", "targeted"),
+        _run_status,
+    ),
+    (
+        "scan-run.discovery",
+        "discovery",
+        ("Request", "StandardCrashLogScanSource", "TargetedCrashLogScanSource"),
+        _discovery,
+    ),
     ("scan-run.setup", "setup", ("Request",), _setup),
     (
         "scan-run.effective-concurrency",
@@ -1845,6 +1857,23 @@ _BASE_PREDICATES = tuple(
         observation_family=observation_family,
         rust_symbols=rust_symbols,
         matches=matches,
+        runtime_operations=(
+            None,
+            "scan_run_execute",
+            "scan_run_contract_execute",
+            "scanRunExecute",
+            "scan_run_request_standard",
+            "scan_run_request_targeted",
+            "ScanRunRequest.standard",
+            "ScanRunRequest.targeted",
+            "ScanRunConfiguration.__init__",
+            "ScanRunStandardSource.__init__",
+            "ScanRunTargetedSource.__init__",
+            "ScanRunUnsolvedLogs.leave_in_place",
+            "scan_run_unsolved_logs_leave_in_place",
+        )
+        if "Request" in rust_symbols
+        else None,
     )
     for fact_id, observation_family, rust_symbols, matches in _BASE_PREDICATE_FACTS
 )
@@ -1873,6 +1902,14 @@ _PRE_DISCOVERY_CANCELLATION_PREDICATES = (
         "cancellation",
         ("Cancellation",),
         _pre_discovery_cancellation_requested,
+        runtime_operations=(
+            None,
+            "scan_run_cancellation_new",
+            "scan_run_cancellation_cancel",
+            "scan_run_cancellation_is_cancelled",
+            "ScanRunCancellation.__init__",
+            "ScanRunCancellation.cancel",
+        ),
     ),
     CoveragePredicate(
         "scan-run.lifecycle.pre-discovery-forbidden-effects",
@@ -2056,6 +2093,13 @@ _GENERATED_PREDICATES = (
         "discovery",
         ("Request",),
         _generated_discovery,
+        runtime_operations=(
+            None,
+            "scan_run_execute",
+            "scan_run_contract_execute",
+            "scan_run_request_targeted",
+            "ScanRunRequest.targeted",
+        ),
     ),
     CoveragePredicate(
         "scan-run.generated.installed-yaml-data",
@@ -2125,7 +2169,7 @@ _RESUME_PREDICATES = (
         "scan-run.execute",
         "scan-run.execute",
         "installed-yaml-data",
-        ("LocalIgnoreRecoveryDecision",),
+        ("LocalIgnoreRecoveryDecision", "resume"),
         _proceed_terminal,
     ),
     CoveragePredicate(
@@ -2264,7 +2308,7 @@ _ABANDON_PREDICATES = (
         "scan-run.execute",
         "scan-run.execute",
         "log-outcomes",
-        ("CrashLogScanRunContinuation",),
+        ("CrashLogScanRunContinuation", "abandon"),
         _abandon_terminal,
     ),
     CoveragePredicate(
@@ -2293,13 +2337,148 @@ _ABANDON_PREDICATES = (
     ),
 )
 
+
+def _standard_leave_in_place(observation: Mapping[str, Any]) -> bool:
+    """Tie Standard's movement constructor to its successful retained-file effects."""
+    return (
+        _discovery(observation)
+        and observation["discovery"]["source"] == "standard"
+        and _durable_effects(observation)
+    )
+
+
+_MOVEMENT_PREDICATES = (
+    CoveragePredicate(
+        "scan-run.movement.leave-in-place",
+        "scan-run.execute",
+        "scan-run.execute",
+        "durable-effects",
+        ("StandardUnsolvedLogsIntent",),
+        _standard_leave_in_place,
+        runtime_operations=(
+            "ScanRunUnsolvedLogs.leave_in_place",
+            "scan_run_unsolved_logs_leave_in_place",
+        ),
+    ),
+    CoveragePredicate(
+        "scan-run.movement.custom",
+        "scan-run.execute",
+        "scan-run.execute",
+        "structured-failure",
+        ("StandardUnsolvedLogsIntent",),
+        _unsolved_logs_finalization_failure,
+        runtime_operations=(
+            "ScanRunUnsolvedLogs.move_to_custom",
+            "scan_run_unsolved_logs_move_to_custom",
+        ),
+    ),
+)
+
+
+# These factories execute with invalid concurrency before any installation I/O.
+# This proves their request-validation contract, not successful FCX setup.
+def _config_issue_values(observation: Mapping[str, Any]) -> bool:
+    """Require every constructed field, preserving absent sections and default severity."""
+    return observation == {
+        "issues": [
+            {
+                "file_path": "Fallout4.ini",
+                "section": "Display",
+                "setting": "iSize W",
+                "current_value": "800",
+                "recommended_value": "1920",
+                "description": "Use the configured width",
+                "severity": "warning",
+            },
+            {
+                "file_path": "plugins.toml",
+                "section": None,
+                "setting": "enabled",
+                "current_value": "false",
+                "recommended_value": "true",
+                "description": "Enable the plugin",
+                "severity": "info",
+            },
+        ]
+    }
+
+
+_FACTORY_PREDICATES = tuple(
+    CoveragePredicate(
+        f"scan-run.{intent}-fcx-validation",
+        f"scan-run.{intent}-fcx-request",
+        f"scan-run.{intent}-fcx-request",
+        "structured-failure",
+        ("Request", f"{intent}_with_fcx"),
+        _request_validation_failure,
+        runtime_operations=(
+            f"ScanRunRequest.{intent}_with_fcx",
+            f"scan_run_request_{intent}_with_fcx",
+        ),
+    )
+    for intent in ("standard", "targeted")
+) + (
+    CoveragePredicate(
+        "scan-run.config-issue-values",
+        "scan-run.config-issue",
+        "scan-run.config-issue",
+        "config-issue-values",
+        ("ConfigIssue",),
+        _config_issue_values,
+        runtime_operations=(
+            None,
+            "__init__",
+            "__repr__",
+            "file_path",
+            "section",
+            "setting",
+            "current_value",
+            "recommended_value",
+            "description",
+            "severity",
+        ),
+    ),
+    CoveragePredicate(
+        "scan-run.fcx-context",
+        "scan-run.standard-fcx-request",
+        "scan-run.standard-fcx-request",
+        "structured-failure",
+        ("CrashLogScanSetupContext",),
+        _request_validation_failure,
+        runtime_operations=(None, "ScanRunSetupContext.__init__"),
+    ),
+    CoveragePredicate(
+        "scan-run.movement.configured",
+        "scan-run.configured-movement",
+        "scan-run.configured-movement",
+        "structured-failure",
+        ("StandardUnsolvedLogsIntent",),
+        _unsolved_logs_finalization_failure,
+        runtime_operations=(
+            None,
+            "ScanRunUnsolvedLogs.move_to_configured_or_default",
+            "scan_run_unsolved_logs_move_to_configured_or_default",
+        ),
+    ),
+)
+
+
 REQUIRED_OBSERVATION_FACT_IDS = tuple(
     sorted(predicate.id for predicate in _BASE_PREDICATES)
 )
 """Every semantic fact required from both base happy-path scenarios."""
 
 REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO: Mapping[str, tuple[str, ...]] = {
-    "standard-happy-path": REQUIRED_OBSERVATION_FACT_IDS,
+    "config-issue-construction": ("scan-run.config-issue-values",),
+    "standard-fcx-request-validation": (
+        "scan-run.fcx-context",
+        "scan-run.standard-fcx-validation",
+    ),
+    "targeted-fcx-request-validation": ("scan-run.targeted-fcx-validation",),
+    "configured-unsolved-logs-finalization-failure": ("scan-run.movement.configured",),
+    "standard-happy-path": tuple(
+        sorted((*REQUIRED_OBSERVATION_FACT_IDS, "scan-run.movement.leave-in-place"))
+    ),
     "targeted-happy-path": REQUIRED_OBSERVATION_FACT_IDS,
     "pre-discovery-cancelled": tuple(
         sorted(predicate.id for predicate in _PRE_DISCOVERY_CANCELLATION_PREDICATES)
@@ -2319,6 +2498,7 @@ REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO: Mapping[str, tuple[str, ...]] = {
     "report-write-failure": ("scan-run.failure.report-write",),
     "unsolved-logs-finalization-failure": (
         "scan-run.failure.unsolved-logs-finalization",
+        "scan-run.movement.custom",
     ),
     "generated-local-ignore": tuple(
         sorted(predicate.id for predicate in _GENERATED_PREDICATES)
@@ -2409,6 +2589,8 @@ CRASH_LOG_SCAN_RUN_COVERAGE_POLICY = FamilyCoveragePolicy(
         + _GENERATED_PREDICATES
         + _RESUME_PREDICATES
         + _ABANDON_PREDICATES
+        + _MOVEMENT_PREDICATES
+        + _FACTORY_PREDICATES
     ),
 )
 """The centrally derived coverage policy for Crash Log Scan Run v1."""

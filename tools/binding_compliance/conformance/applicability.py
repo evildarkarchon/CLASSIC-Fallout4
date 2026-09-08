@@ -8,7 +8,13 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import TYPE_CHECKING
 
-from .coverage import SourceParityRow
+from .coverage import (
+    CoverageDerivationError,
+    FamilyCoveragePolicy,
+    SourceParityRow,
+    matches_scoped_operation,
+    scoped_operation_predicates,
+)
 from .schema import (
     ConformanceSchemaError,
     is_stable_machine_id,
@@ -137,6 +143,7 @@ def derive_applicability(
     execution_instances: Mapping[str, tuple[str, ...]] = DEFAULT_EXECUTION_INSTANCES,
     policy_exceptions: Sequence[PolicyException] = (),
     consumer_catalog: ConsumerObligationCatalog | None = None,
+    coverage_policy: FamilyCoveragePolicy | None = None,
 ) -> ApplicabilityMatrix:
     """Derive adapter and consumer applicability from permanent source mappings.
 
@@ -168,6 +175,7 @@ def derive_applicability(
         )
 
     capabilities: dict[str, frozenset[str]] = {}
+    capability_crates: dict[str, str] = {}
     for capability in raw_capabilities:
         if not isinstance(capability, Mapping):
             raise PolicyExceptionError("validated pack capability must be an object")
@@ -177,6 +185,36 @@ def derive_applicability(
             raise PolicyExceptionError("validated pack capability is malformed")
         capabilities[capability_id] = frozenset(
             symbol for symbol in symbols if isinstance(symbol, str)
+        )
+        capability_crates[capability_id] = capability.get("rustCrate", rust_crate)
+
+    if any(capability.get("operationScoped", False) for capability in raw_capabilities):
+        if coverage_policy is None:
+            # Resolve only centrally registered policies; scenario packs never
+            # supply caller-authored operation lists or participant activation.
+            from .command import FAMILY_COVERAGE_POLICIES
+
+            coverage_policy = FAMILY_COVERAGE_POLICIES.get(str(pack.get("familyId")))
+        if coverage_policy is not None and coverage_policy.family_id != pack.get(
+            "familyId"
+        ):
+            raise CoverageDerivationError("operation policy family does not match pack")
+    scoped_operations = {
+        capability["id"]: scoped_operation_predicates(capability, coverage_policy)
+        for capability in raw_capabilities
+    }
+    explicit_rows = {
+        row_id
+        for predicates in scoped_operations.values()
+        if predicates is not None
+        for predicate in predicates
+        for row_id in predicate.binding_obligation_ids
+    }
+    missing_rows = explicit_rows - {row.obligation_id for row in parity_rows}
+    if missing_rows:
+        raise CoverageDerivationError(
+            "operation predicates reference missing source rows: "
+            + ", ".join(sorted(missing_rows))
         )
 
     exception_scopes: set[tuple[str, str]] = set()
@@ -201,14 +239,38 @@ def derive_applicability(
         "rust": set(capabilities),
     }
     for row in parity_rows:
-        if (
-            row.mapping_origin != "canonical_rust"
-            or row.rust_crate != rust_crate
-            or row.rust_symbol is None
-        ):
+        if row.mapping_origin == "binding_only":
+            # Interface-only operations have no invented core mapping. Only an
+            # exact trusted selector plus matching public operation enrolls them.
+            if row.required_evidence_kind == "runtime":
+                for capability_id, predicates in scoped_operations.items():
+                    if (
+                        predicates is not None
+                        and any(
+                            row.obligation_id in predicate.binding_obligation_ids
+                            for predicate in predicates
+                        )
+                        and matches_scoped_operation(row, predicates)
+                    ):
+                        participant_capabilities.setdefault(
+                            row.participant_id, set()
+                        ).add(capability_id)
+            continue
+        if row.mapping_origin != "canonical_rust" or row.rust_symbol is None:
             continue
         for capability_id, symbols in capabilities.items():
-            if row.rust_symbol in symbols:
+            # Source-owned declarations cannot make a scoped semantic call
+            # applicable. Their permanent analyzers still own those rows.
+            if (
+                scoped_operations[capability_id] is not None
+                and row.required_evidence_kind != "runtime"
+            ):
+                continue
+            if (
+                row.rust_crate == capability_crates[capability_id]
+                and row.rust_symbol in symbols
+                and matches_scoped_operation(row, scoped_operations[capability_id])
+            ):
                 participant_capabilities.setdefault(row.participant_id, set()).add(
                     capability_id
                 )

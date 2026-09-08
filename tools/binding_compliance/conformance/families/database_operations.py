@@ -73,6 +73,28 @@ def _matches(kind: str, observation: Mapping[str, Any]) -> bool:
 
 _OPERATIONS = (
     None,
+    "get_cache_capacity",
+    "get_cache_cleanup_interval",
+    "get_cache_cleanup_threshold",
+    "get_max_connections",
+    "get_stats",
+    "optimize",
+    "rebalance_connections",
+    "recalculate_max_connections",
+    "set_cache_capacity",
+    "set_cache_cleanup_interval",
+    "set_cache_cleanup_threshold",
+    "set_cache_ttl",
+    "set_game_table",
+    "set_max_connections",
+    "get_batch_cache_ttl",
+    "get_default_cache_cleanup_threshold",
+    "get_default_cache_cleanup_interval",
+    "get_default_cache_ttl",
+    "get_default_query_cache_capacity",
+    "get_max_cache_ttl",
+    "db_pool_cache_size",
+    "cache_size",
     "new",
     "__init__",
     "initialize",
@@ -109,6 +131,7 @@ DATABASE_OPERATIONS_COVERAGE_POLICY = FamilyCoveragePolicy(
                 "get_game_table",
                 "clear_cache",
                 "close",
+                "cache_size",
             ),
             matches=partial(_matches, kind),
             runtime_operations=_OPERATIONS
@@ -134,5 +157,51 @@ DATABASE_OPERATIONS_COVERAGE_POLICY = FamilyCoveragePolicy(
             ("missing", "durable-effects"),
             ("invalid", "errors"),
         )
+    )
+    + (
+        CoveragePredicate(
+            id="database-operations.cache-defaults",
+            capability_id="database-operations.cache-defaults",
+            action="database-operations.cache-defaults",
+            observation_family="values",
+            rust_symbols=(
+                "DEFAULT_CACHE_TTL_SECS",
+                "BATCH_CACHE_TTL_SECS",
+                "MAX_CACHE_TTL_SECS",
+                "DEFAULT_QUERY_CACHE_CAPACITY",
+                "DEFAULT_CACHE_CLEANUP_OP_THRESHOLD",
+                "DEFAULT_CACHE_CLEANUP_INTERVAL_SECS",
+            ),
+            matches=lambda value: (
+                set(value)
+                == {
+                    "defaultTtl",
+                    "batchTtl",
+                    "maximumTtl",
+                    "capacity",
+                    "cleanupThreshold",
+                    "cleanupInterval",
+                }
+                and all(type(item) is int and item > 0 for item in value.values())
+            ),
+            runtime_operations=(
+                "DEFAULT_CACHE_CLEANUP_INTERVAL",
+                "DEFAULT_CACHE_CLEANUP_THRESHOLD",
+                "DEFAULT_QUERY_CACHE_CAPACITY",
+                None,
+                "get_default_cache_ttl",
+                "get_batch_cache_ttl",
+                "get_max_cache_ttl",
+                "get_default_query_cache_capacity",
+                "get_default_cache_cleanup_threshold",
+                "get_default_cache_cleanup_interval",
+                "getDefaultCacheTtl",
+                "getBatchCacheTtl",
+                "getMaxCacheTtl",
+                "getDefaultQueryCacheCapacity",
+                "getDefaultCacheCleanupThreshold",
+                "getDefaultCacheCleanupInterval",
+            ),
+        ),
     ),
 )

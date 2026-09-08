@@ -25,11 +25,13 @@
         "get_hashmap_value",
         "set_setting",
         "yaml_cache_stats",
-        "YamlCacheStats"
+        "YamlCacheStats",
+        "clear_global_yaml_cache"
       ],
       "observationFamilies": [
         "settings-yaml"
-      ]
+      ],
+      "operationScoped": true
     }
   ],
   "scenarios": [

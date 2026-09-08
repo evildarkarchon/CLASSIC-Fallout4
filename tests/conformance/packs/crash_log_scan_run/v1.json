@@ -32,7 +32,16 @@
         "LocalIgnoreResetFailure",
         "LocalIgnoreResetRunData",
         "Cancellation",
-        "Observer"
+        "Observer",
+        "Configuration",
+        "execute",
+        "standard",
+        "targeted",
+        "StandardCrashLogScanSource",
+        "TargetedCrashLogScanSource",
+        "StandardUnsolvedLogsIntent",
+        "resume",
+        "abandon"
       ],
       "observationFamilies": [
         "run-status",
@@ -50,6 +59,47 @@
         "replay",
         "durable-effects"
       ]
+    },
+    {
+      "id": "scan-run.standard-fcx-request",
+      "rustSymbols": [
+        "Request",
+        "CrashLogScanSetupContext",
+        "standard_with_fcx"
+      ],
+      "observationFamilies": [
+        "structured-failure"
+      ]
+    },
+    {
+      "id": "scan-run.targeted-fcx-request",
+      "rustSymbols": [
+        "Request",
+        "targeted_with_fcx"
+      ],
+      "observationFamilies": [
+        "structured-failure"
+      ]
+    },
+    {
+      "id": "scan-run.configured-movement",
+      "rustSymbols": [
+        "StandardUnsolvedLogsIntent"
+      ],
+      "observationFamilies": [
+        "structured-failure"
+      ],
+      "operationScoped": true
+    },
+    {
+      "id": "scan-run.config-issue",
+      "rustSymbols": [
+        "ConfigIssue"
+      ],
+      "observationFamilies": [
+        "config-issue-values"
+      ],
+      "operationScoped": true
     }
   ],
   "scenarios": [
@@ -6501,6 +6551,379 @@
             "total": 1
           }
         }
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "standard-fcx-request-validation",
+      "action": "scan-run.standard-fcx-request",
+      "capabilityIds": [
+        "scan-run.standard-fcx-request"
+      ],
+      "fixtureRefs": [
+        "validCrashLog"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 0,
+        "intent": "standard",
+        "observedPaths": [
+          {
+            "path": "Failures/crash-request-validation.log"
+          },
+          {
+            "path": "Failures/crash-request-validation-AUTOSCAN.md"
+          }
+        ],
+        "setupContext": {
+          "gameRoot": {
+            "path": "FCX Game"
+          },
+          "documentsRoot": {
+            "path": "FCX Documents"
+          },
+          "executable": {
+            "path": "FCX Game/Fallout4.exe"
+          }
+        },
+        "logInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Failures/crash-request-validation.log"
+          }
+        ],
+        "standardSource": {
+          "baseDirectory": {
+            "path": "Failures"
+          },
+          "configuredDocumentsRoot": {
+            "path": "FCX Documents"
+          }
+        },
+        "unsolvedLogs": "leave-in-place"
+      },
+      "expected": {
+        "infrastructureError": {
+          "stage": "request_validation",
+          "messageNonEmpty": true,
+          "path": null
+        },
+        "durableEffects": [
+          {
+            "path": "Failures/crash-request-validation.log",
+            "kind": "file"
+          },
+          {
+            "path": "Failures/crash-request-validation-AUTOSCAN.md",
+            "kind": "missing"
+          }
+        ],
+        "displayContent": [
+          {
+            "severity": "failure",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Crash Log Scan Run failed during",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "request validation",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "max_concurrent must be greater than zero when supplied",
+                "path": "",
+                "count": 0
+              }
+            ]
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "targeted-fcx-request-validation",
+      "action": "scan-run.targeted-fcx-request",
+      "capabilityIds": [
+        "scan-run.targeted-fcx-request"
+      ],
+      "fixtureRefs": [
+        "validCrashLog"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 0,
+        "intent": "targeted",
+        "targetedInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Failures/crash-request-validation.log"
+          }
+        ],
+        "observedPaths": [
+          {
+            "path": "Failures/crash-request-validation.log"
+          },
+          {
+            "path": "Failures/crash-request-validation-AUTOSCAN.md"
+          }
+        ],
+        "setupContext": {
+          "gameRoot": {
+            "path": "FCX Game"
+          },
+          "documentsRoot": {
+            "path": "FCX Documents"
+          },
+          "executable": {
+            "path": "FCX Game/Fallout4.exe"
+          }
+        }
+      },
+      "expected": {
+        "infrastructureError": {
+          "stage": "request_validation",
+          "messageNonEmpty": true,
+          "path": null
+        },
+        "durableEffects": [
+          {
+            "path": "Failures/crash-request-validation.log",
+            "kind": "file"
+          },
+          {
+            "path": "Failures/crash-request-validation-AUTOSCAN.md",
+            "kind": "missing"
+          }
+        ],
+        "displayContent": [
+          {
+            "severity": "failure",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Crash Log Scan Run failed during",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "request validation",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "max_concurrent must be greater than zero when supplied",
+                "path": "",
+                "count": 0
+              }
+            ]
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "configured-unsolved-logs-finalization-failure",
+      "action": "scan-run.configured-movement",
+      "capabilityIds": [
+        "scan-run.configured-movement"
+      ],
+      "fixtureRefs": [
+        "validCrashLog",
+        "mainYaml",
+        "gameYaml",
+        "localIgnoreYaml"
+      ],
+      "input": {
+        "observationProfile": "failure",
+        "installationData": [
+          {
+            "fixtureRef": "mainYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "gameYaml",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "localIgnoreYaml",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "standard",
+        "logInputs": [
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Failure Standard/Crash Logs/crash-finalization.log"
+          },
+          {
+            "fixtureRef": "validCrashLog",
+            "path": "Blocked Unsolved Logs"
+          }
+        ],
+        "directoryInputs": [
+          {
+            "path": "Failure Standard/Crash Logs/crash-finalization-AUTOSCAN.md"
+          }
+        ],
+        "observedPaths": [
+          {
+            "path": "Failure Standard/Crash Logs/crash-finalization.log"
+          },
+          {
+            "path": "Failure Standard/Crash Logs/crash-finalization-AUTOSCAN.md"
+          },
+          {
+            "path": "Blocked Unsolved Logs"
+          }
+        ],
+        "standardSource": {
+          "baseDirectory": {
+            "path": "Failure Standard"
+          },
+          "configuredDocumentsRoot": {
+            "path": "Failure Documents"
+          }
+        },
+        "unsolvedLogs": "move-to-configured-or-default",
+        "unsolvedLogsDestination": {
+          "path": "Blocked Unsolved Logs"
+        }
+      },
+      "expected": {
+        "status": "completed",
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "Failure Standard/Crash Logs/crash-finalization.log"
+            },
+            "autoscanReport": null,
+            "disposition": "failed",
+            "failures": [
+              {
+                "stage": "report_write",
+                "messageNonEmpty": true
+              },
+              {
+                "stage": "unsolved_logs_finalization",
+                "messageNonEmpty": true
+              }
+            ],
+            "messageNonEmpty": true,
+            "movedToUnsolvedLogs": false
+          }
+        ],
+        "durableEffects": [
+          {
+            "path": "Failure Standard/Crash Logs/crash-finalization.log",
+            "kind": "file"
+          },
+          {
+            "path": "Failure Standard/Crash Logs/crash-finalization-AUTOSCAN.md",
+            "kind": "directory"
+          },
+          {
+            "path": "Blocked Unsolved Logs",
+            "kind": "file"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": true,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "config-issue-construction",
+      "action": "scan-run.config-issue",
+      "capabilityIds": [
+        "scan-run.config-issue"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "observationProfile": "config-issue",
+        "installationData": [],
+        "game": "fallout4",
+        "gameVersion": "auto",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "targetedInputs": []
+      },
+      "expected": {
+        "issues": [
+          {
+            "file_path": "Fallout4.ini",
+            "section": "Display",
+            "setting": "iSize W",
+            "current_value": "800",
+            "recommended_value": "1920",
+            "description": "Use the configured width",
+            "severity": "warning"
+          },
+          {
+            "file_path": "plugins.toml",
+            "section": null,
+            "setting": "enabled",
+            "current_value": "false",
+            "recommended_value": "true",
+            "description": "Enable the plugin",
+            "severity": "info"
+          }
+        ]
       },
       "normalization": {
         "rootRelativePaths": true,

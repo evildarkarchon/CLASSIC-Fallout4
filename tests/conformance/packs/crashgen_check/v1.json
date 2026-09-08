@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "familyId": "crashgen-check",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scangame-core"
+  },
+  "fixtureRoot": "tests/fixtures/crashgen_check",
+  "fixtures": {
+    "missing": "missing.json",
+    "conflict": "conflict.json",
+    "configured": "configured.json"
+  },
+  "capabilities": [
+    {
+      "id": "crashgen-check.check",
+      "rustSymbols": [
+        "CrashgenChecker",
+        "CrashgenCheckOrchestrator",
+        "CrashgenReport",
+        "TomlIssueSeverity",
+        "check"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "configuration-report"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "missing",
+      "action": "crashgen-check.check",
+      "capabilityIds": [
+        "crashgen-check.check"
+      ],
+      "fixtureRefs": [
+        "missing"
+      ],
+      "input": {
+        "fixtureRef": "missing"
+      },
+      "expected": {
+        "message": "# ❌ CAUTION : BUFFOUT4 TOML SETTINGS FILE NOT FOUND! #\nPlease recheck your Buffout4 installation and delete any obsolete files.\n-----\n# [!] NOTICE : Unable to find the Buffout4 config file, settings check will be skipped. #\n  To ensure this check doesn't get skipped, Buffout4 has to be installed manually.\n  [ If you are using Mod Organizer 2, you need to run CLASSIC through a shortcut in MO2. ]\n-----\n",
+        "issues": [],
+        "name": "Buffout4",
+        "config": null,
+        "plugins": [],
+        "beforeFiles": [],
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "conflict",
+      "action": "crashgen-check.check",
+      "capabilityIds": [
+        "crashgen-check.check"
+      ],
+      "fixtureRefs": [
+        "conflict"
+      ],
+      "input": {
+        "fixtureRef": "conflict"
+      },
+      "expected": {
+        "message": "# ❌ CAUTION : The Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements parameter is set to Boolean(true) #\n FIX: Open Buffout4's TOML file and change Achievements to Boolean(false) to prevent conflicts with Buffout4.\n-----\n",
+        "issues": [
+          {
+            "path": "Buffout4.toml",
+            "section": "Patches",
+            "setting": "Achievements",
+            "current": "Boolean(true)",
+            "recommended": "Boolean(false)",
+            "description": "The Achievements Mod and/or Unlimited Survival Mode is installed. to prevent conflicts with Buffout4",
+            "severity": "Warning"
+          }
+        ],
+        "name": "Buffout4",
+        "config": "Buffout4.toml",
+        "plugins": [
+          "achievements.dll",
+          "buffout4.toml"
+        ],
+        "beforeFiles": [
+          {
+            "path": "Achievements.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "Buffout4.toml",
+            "content": "[Patches]\nAchievements = true\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "Achievements.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "Buffout4.toml",
+            "content": "[Patches]\nAchievements = true\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "configured",
+      "action": "crashgen-check.check",
+      "capabilityIds": [
+        "crashgen-check.check"
+      ],
+      "fixtureRefs": [
+        "configured"
+      ],
+      "input": {
+        "fixtureRef": "configured"
+      },
+      "expected": {
+        "message": "✔️ Achievements parameter is correctly configured in your Buffout4 settings!\n-----\n",
+        "issues": [],
+        "name": "Buffout4",
+        "config": "Buffout4.toml",
+        "plugins": [
+          "achievements.dll",
+          "buffout4.toml"
+        ],
+        "beforeFiles": [
+          {
+            "path": "Achievements.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "Buffout4.toml",
+            "content": "[Patches]\nAchievements = false\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "Achievements.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "Buffout4.toml",
+            "content": "[Patches]\nAchievements = false\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

@@ -1,18 +1,82 @@
 # Binding Compliance Suite
 
-Migrated fixture-backed selector hashes, test pointers, and positive registry
-claims are retired after blocking pack promotion. Mixed selectors retain explicit
-unmigrated IDs; metadata readers and focused diagnostics remain. Metadata summaries
-distinguish receipt obligations from residual legacy claims. Only authenticated
-executed receipts contribute migrated runtime coverage. See the
-[issue #211 retirement evidence map](../implementation/fixture_evidence_retirement.md)
-for exact deletions and retained boundaries.
+Executable conformance is the canonical runtime evidence path. Every tracked
+source occurrence requires authenticated execution, a named permanent structural
+or negative analyzer, or an explicit reviewed policy exception. The legacy
+registry claims and loaders, claim-only summaries, and migration ledger have
+been removed with their final consumers. Smoke tests register independently.
 
-Node and Python smoke tests now register independently of registry claims; the
-binding-local activation loaders are removed. The remaining JSON metadata and
-diagnostic ledger are retained because 1,657 runtime-classified source rows still
-lack executable predicates. See [retirement readiness](../implementation/binding_compliance/retirement_readiness.md).
-Metadata labels are not runtime proof.
+Only the `full` profile can report repository-wide conformance. It checks every
+required family/participant instance and retained gate against the current
+source revision. Static audit success alone is insufficient; see
+[retirement readiness](../implementation/binding_compliance/retirement_readiness.md)
+for the current fresh-execution result.
+
+The explicit Python `pythonKind: "rust_only"` disposition retains a real Rust
+symbol, crate, and source kind without claiming a Python module or export. The
+source gate rejects missing Rust owners and any Python export or arity on such a
+row. This covers the core Papyrus error enum; Python raises the documented
+standard exceptions and does not export a fictitious `PapyrusError` class.
+
+`windows-platform-paths` runs Rust and Node on Windows. It compares the native
+documents lookup to an independent read-only .NET registry query, checks a
+reserved missing game key, and executes the Windows Steam lookup's current
+not-found contract. Receipts contain equality booleans rather than host paths;
+the adapter never writes registry state. `scan-game` additionally exercises
+log filtering, excluded files, the last-50 error limit, complete report text,
+and unchanged files/directories. Its separate Rust/Python report-assembly
+scenarios compare complete templates, sorted/deduplicated issue text, and the
+combined report. The `update-rejection` metadata scenario reads the real
+`GithubClient.repo_url()` method without making a request; the other scenarios
+remain explicitly negative runtime evidence at pre-transport failure boundaries.
+
+Permanent structural evidence covers declarations that have no callable behavior:
+CXX transport declarations are owned by the blocking bridge-source analyzer;
+erased TypeScript interfaces/types and Rust-only Node inventory proxies are owned
+by the blocking source/declaration analyzer. A Rust-only proxy does not invent a
+Node export or Node execution obligation. These dispositions do not certify
+functions, constructors, properties, or methods merely because they share a type
+name. Callable and readable binding operations still need their own executed
+predicate or a separately reviewed policy exception.
+
+The one Node `getVersion()` compile-time metadata getter has a separate
+`node-package-metadata` structural owner. Its blocking analyzer verifies the
+exact zero-argument `env!("CARGO_PKG_VERSION").to_string()` Rust body, the string
+declaration, and the resolved **Rust Cargo** package version. It neither borrows
+the npm package's version nor fabricates a core owner. Changed behavior returns
+this operation to unresolved runtime work; no other binding-only function
+inherits this disposition.
+
+`cxx-opaque-map-reachability` owns a negative disposition for the eleven existing
+`StringMap`/`StringVecMap` accessor exports. Their opaque input references have no
+exposed CXX constructor or producer. The blocking analyzer checks the live closed
+surface and rejects extra aliases, return values, output parameters, callback
+references, or other exposed routes to these objects. It grants no accessor
+runtime proof; the original Rust behavior tests remain. Adding a producer
+reopens the affected runtime obligations.
+
+`message-logging` captures actual emitted native records after explicit logger
+initialization. Severity and message contents are compared exactly; environment
+timestamps and implicit bridge module targets are outside the shared record
+projection. Scoped capabilities select common logging, Python's extended logger
+methods, CXX startup events, and structured formatting from their real exports.
+Missing, duplicate, or changed records fail. Capture belongs to the test host;
+bindings expose only the normal opt-in initializer over Rust logging.
+
+`update-rejection` proves negative runtime paths through the original default
+update entry points. A synthetic newline-containing credential must produce a
+request-builder error before transport; Rust checks the native error's builder
+classification and bindings preserve the exact mapped error. Invalid installed
+versions fail notification checks before client or cache setup. These receipts
+record negative-path execution. Successful controlled-service response and
+durable-cache evidence remains owned by `update-services`.
+
+`markdown-rendering` and `report-discovery` retain `classic-cpp-bridge` as their
+interface owner. Exact binding-only selectors enroll CXX and a Rust reference
+runner inside the owning bridge unit-test modules; no public test factory or
+invented core counterpart is introduced. Goldens compare normalized Markdown,
+rendered body/envelope, report ordering, and complete file/directory snapshots.
+The existing styling and helper unit tests remain in place.
 
 The binding compliance suite is the canonical binding gate for day-to-day validation and CI policy. It maps the documented binding parity policy into explicit executable requirements, then records which lower-level gate or static check proves each requirement.
 
@@ -31,7 +95,7 @@ The command writes:
 
 | Profile | Purpose |
 | --- | --- |
-| `ci` | Canonical source-level umbrella check. Runs the C++ parity gate, Node parity/runtime-coverage gate, Python parity/runtime-coverage gate, Python stub validation, the User Settings ownership audit, the Crash Log Scan Run contract-variant check, the diagnostic evidence-migration ledger check, and static policy/artifact/docs checks. |
+| `ci` | Canonical source-level umbrella check. Runs the C++ parity gate, Node source/declaration gate, Python source/stub gate, Python stub validation, the User Settings ownership audit, the Crash Log Scan Run contract-variant check, and static policy/artifact/docs checks. |
 | `cxx-ci` | CI slice for the Windows C++ workflow. Runs the canonical suite around the CXX parity gate and shared static policy checks. |
 | `node-ci` | CI slice for the Node workflow. Runs the canonical suite around Node parity and `index.d.ts` freshness checks. |
 | `python-ci` | CI slice for the Python workflow. Runs the canonical suite around Python parity, stub validation, uv drift-guard setup, and the schema-version guard. |
@@ -42,8 +106,8 @@ The command writes:
 Use `--skip-commands` when reviewing policy mapping without invoking lower-level gates.
 Only a complete `full` run can set the suite summary's `repository_complete` to
 true. `ci` and participant slices validate their narrower scopes. Full aggregation
-currently reports the unresolved migration obligations rather than certifying
-the repository. A single family's receipts cannot complete it:
+rejects missing, stale, or mismatched receipts. A single family's receipts cannot
+complete it:
 
 ```powershell
 python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt <first-receipt> --receipt <next-receipt>
@@ -55,6 +119,56 @@ owners, and centrally validated family reports. Adding a shared scenario changes
 the adapter denominator automatically. The workflow audit independently derives
 required family/participant/compiler combinations from the tracked packs and
 source mappings, rejecting omitted CI policies.
+
+`ci-binding-compliance.yml` is the blocking repository CI entrypoint. Its four
+local reusable workflows execute the Rust, Node, Python, and native participants
+at the caller's event revision. The final **Full Repository Conformance** job
+waits for all four, requires their retained jobs to pass, downloads only artifacts
+from that workflow run into separate directories, and runs all retained `full`
+requirements. An incomplete family, compiler instance, or source-row disposition
+fails the full job even when individual adapter jobs pass.
+
+The aggregate uses the same Windows checkout layout as its producer jobs because
+immutable plans bind fixture paths as well as source contents and revision. It
+never edits a downloaded plan to fit a different checkout. Contributors can run
+the same aggregation over downloaded artifacts with:
+
+```powershell
+python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded
+```
+
+Keep each artifact's receipt beside its original `run_plan.json`. Directory
+discovery preserves independent invocations and rejects empty downloads or
+missing plans; central validation still authenticates every receipt. This command
+requires the usual built Node package, Python/uv, Rust, and native build tooling.
+
+### Capabilities scoped to public operations
+
+A capability can declare `operationScoped: true` when a scenario exercises a
+specific public operation on a Rust owner that also has unrelated methods. The
+trusted family coverage predicates supply the explicit `runtime_operations`;
+the pack does not carry adapter evidence lists. Applicability and row coverage
+use the same operation selection, in addition to the canonical Rust owner and
+symbol checks. Property access is a separate Python `property` export with its
+class-qualified name, not a callable method or a class anchor.
+
+This narrows the family's responsibility, not the repository denominator. Rows
+outside that operation selection remain in the full source inventory and need
+another executed predicate, named retained analyzer, or reviewed policy
+exception. A source-only carrier or a future unrelated method cannot inherit
+the selected operation's receipt. Capabilities that omit `operationScoped`
+retain their existing owner-wide applicability. Adding a shared scenario still
+obligates every adapter applicable to its selected capability.
+
+A supporting capability may declare `rustCrate` when the operation consumes a
+public input carrier owned by another Rust crate. Its canonical rows must match
+that declared crate and the capability's symbols; an explicit row selector cannot
+escape that ownership check. This does not change the family's `domainOwner` or
+move the main action's behavior into a binding. The adapter must actually create
+or use the supporting carrier in its observed operation. Scenario selection is
+derived before materialization and checked again at immutable-plan readback and
+receipt comparison, so adapters receive only their applicable scenarios and
+cannot remove required ones from a plan.
 
 Native launchers validate one exact instance with this receipt-only shape:
 
@@ -156,8 +270,8 @@ pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters
 Run the retained build prerequisites before invoking an adapter, including the
 Python `uv sync --project python-bindings --inexact` and Rust extension rebuild.
 The shared launcher requires a fresh authenticated plan and completed receipt
-for every scenario. Source mappings for the migrated Node/Python entrypoints
-delegate to `receipt_required`; registry claims cannot report them as executed.
+for every applicable scenario. Runtime source mappings require matching executed
+observations; the source parity gates make no runtime claim.
 
 ## User Settings Blocking Execution
 
@@ -233,13 +347,10 @@ Migrated settings rows require validated semantic receipts; registry enrollment
 cannot grant their runtime coverage. Source parity, declarations, stubs, type
 negatives, forbidden exports, and the Rust ownership audit remain blocking.
 
-The Node and Python registries no longer contain owner-wide User Settings
-selectors, selector hashes, or claims for migrated rows and identifiers.
-Explicit retained contract IDs cover only the still-unmigrated accessors,
-builders, defaults, and frontend/legacy-import semantics. Shared registry
-loaders remain for those rows and other unmigrated owners. Migrated summary
-rows omit legacy test pointers and prose claims; duplicate registry-only
-identifiers cannot restore a runtime-verified classification.
+The registry metadata and its loaders are removed. Accessors, builders,
+defaults, and frontend import behavior have applicable scenario obligations;
+source-only declarations retain named analyzer ownership. No test pointer,
+selector hash, or summary label can restore a runtime-verified claim.
 
 The Rust launcher executes `compatibility_contract` and `open_conformance` in
 one Cargo invocation, with both sources included in the invocation identity.
@@ -270,8 +381,7 @@ The suite does not replace lower-level parsers. It owns the top-level pass/fail 
 - Node: `python tools/node_api_parity/check_parity_gate.py --repo-root .` plus `bun run dts:freshness:check` in the Node CI slice.
 - Python: `python tools/python_api_parity/check_parity_gate.py --repo-root .` plus `validate_stubs.py`.
 - User Settings ownership: `python tools/user_settings_ownership/check.py --repo-root .` rejects first-party production references that reintroduce flat models, generic User Settings variants/key policies, raw `CLASSIC_Settings` interpretation outside `classic-user-settings-core`, or runtime use of the generated default mirror.
-- Crash Log Scan Run parity and contraction: `python tools/binding_compliance/scan_run_contract.py --repo-root .` validates the shared corpus under `tests/fixtures/crash_log_scan_run/` and compares its variant inventory with the Rust enums. The trusted variant policy maps every source-derived variant to a required executable scenario fact or a named retained analyzer. The inventory includes Installed YAML Data roles, provenance, diagnostic kinds, Local Ignore states, both explicit recovery decisions, resume-error kinds, and continuation/reset invariants in addition to lifecycle variants. The same manifest carries a per-surface forbidden-export inventory; the check fails if a removed orchestration, analysis-only execution, batch lifecycle, direct report-writing, resettable cancellation, or global-FCX name remains in public source, CXX parity data, Node declarations/parity/runtime coverage, or Python stubs/parity/runtime coverage. Blocking semantic and consumer receipts supply executable scenario and presentation coverage. Copied adapter acknowledgements, positive source markers, and per-scenario or presentation required-owner lists are retired.
-- Evidence migration ledger: `python tools/binding_compliance/migration_ledger.py --repo-root .` fails closed when a tracked parity row, raw runtime-registry claim, retained Crash Log Scan Run audit, or current consumer/source audit is missing, duplicated, stale, or unclassified. The check is blocking in every source-level profile because inventory drift must be classified, but the ledger and its migration states are diagnostic only: they cannot grant compliance, runtime coverage, or receipts. Retired acknowledgement and positive-marker rows no longer belong to its active inventory. The named `scan-run-local-ignore-reset-internal-faults` analyzer keeps replacement-publication and durability-unknown projection tests blocking. The separate `scan-run-structured-failure-internal-faults` analyzer retains injected analysis, FormID database access, initialization, and internal-invariant projections that have no hermetic public cross-adapter trigger; it grants no semantic-adapter coverage. The C++, Node, Python, User Settings, and Crash Log Scan Run gates above remain the executable evidence owners.
+- Crash Log Scan Run parity and contraction: `python tools/binding_compliance/scan_run_contract.py --repo-root .` validates the shared corpus under `tests/fixtures/crash_log_scan_run/` and compares its variant inventory with the Rust enums. The trusted variant policy maps every source-derived variant to a required executable scenario fact or a named retained analyzer. The inventory includes Installed YAML Data roles, provenance, diagnostic kinds, Local Ignore states, both explicit recovery decisions, resume-error kinds, and continuation/reset invariants in addition to lifecycle variants. The same manifest carries a per-surface forbidden-export inventory; the check fails if a removed orchestration, analysis-only execution, batch lifecycle, direct report-writing, resettable cancellation, or global-FCX name remains in public source, CXX parity data, Node declarations/parity, or Python stubs/parity. Blocking semantic and consumer receipts supply executable scenario and presentation coverage. Copied adapter acknowledgements, positive source markers, and per-scenario or presentation required-owner lists are retired.
 
 Existing C++, Node, and Python parity gates remain available as focused debugging commands. Do not remove or weaken them unless the compliance suite demonstrably covers the same check and the replacement is documented in the same change.
 
@@ -284,19 +394,19 @@ with `python tools/binding_compliance/run_semantic_conformance.py --family
 <family> --participant <rust|node|python>` after its native build, or use
 `tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family
 <family> -Compiler <msvc|clang-cl>`. CI retains the existing runtime suites and
-registry evidence and uploads each family's diagnostics separately. Successful
+permanent source analyzers and uploads each family's diagnostics separately. Successful
 hits, misses, disabled lookup, empty findings, authored guidance, and structured
 failures remain distinct typed observations. See the
 [equivalence map](../implementation/semantic_conformance_equivalence.md) for
 fixture ownership and retained evidence. These family slices make no new
 frontend-consumer or full-repository completeness claim.
 
-The suite reports known weak coverage instead of silently rewriting policy around it. The remaining gaps are:
-
-- C++ has no editable runtime-coverage registry equivalent to the Node and Python registries. Crash Log Scan Run, User Settings, and the six focused semantic v1 packs close their family-specific gaps with executable CXX receipts on MSVC and clang-cl; other CXX domains still rely on their source-derived parity dispositions until their own packs migrate.
-- The Crash Log Scan Run v1 report is blocking across Rust, Node, Python, both required CXX execution instances, and the separate CLI, GUI, and TUI consumer instances. Its copied acknowledgements and positive source-marker evidence have been retired. The fixture, source-inventory, negative-export, parity, declaration/stub, rebuild, runtime, and native wrapper gates remain blocking; other families have not inherited this retirement.
-- Replacement-publication failure, replacement durability uncertainty, and the non-hermetic structured-failure injections remain blocking internal fault analyzers, not semantic receipts. A deterministic public scenario may replace that classification later; a test-only public binding hook or fabricated adapter receipt may not.
-- Public enum values without a hermetic v1 scenario—such as no-log/setup terminal states, alternate Installed YAML candidate diagnostics, and custom Unsolved Logs movement—remain exact blocking dispositions under `scan-run-contract-validator`. They grant no semantic receipt credit; the variant policy prevents them, or any newly added value, from falling through to an unrelated happy-path fact.
+The suite distinguishes permanent analyzer scope from runtime proof. Internal
+replacement-publication and durability-unknown faults remain named blocking
+Rust analyzers because they lack a hermetic public adapter trigger. Source,
+declaration, stub, type, forbidden-export, Vocabulary, and ownership checks
+remain blocking. These checks cannot satisfy an unrelated runtime obligation;
+a new callable export must acquire its own applicable scenario evidence.
 
 Treat new drift, stale generated artifacts, stale baselines, missing runtime coverage, policy/source contradictions, tooling bugs, and local environment failures as separate failure classes in the structured report.
 
@@ -368,8 +478,8 @@ All require Rust, Node, and Python receipts. The first three additionally requir
 CXX receipts and JUnit on MSVC and clang-cl; the latter two have no corresponding
 CXX public export. Their domain shapes preserve values, successful misses,
 structured failures, exact file effects, and narrowly normalized temporary paths.
-Existing registry and positive evidence remain available; migrated rows require
-receipts. See the [operation equivalence map](../implementation/config_file_path_message_conformance_equivalence.md)
+Permanent source analyzers and focused runtime diagnostics remain blocking;
+runtime rows require receipts. See the [operation equivalence map](../implementation/config_file_path_message_conformance_equivalence.md)
 for precise coverage, fixtures, retained class methods, and commands.
 
 ## Database, Version Registry, and Scan Game packs
@@ -393,8 +503,8 @@ Auxiliary, performance, shared utilities, registry, and generic settings now
 also have blocking domain packs. The [owner operation evidence map](../implementation/aux_perf_shared_conformance_equivalence.md)
 lists their public observations, applicable adapters, transport limitations,
 and retained analyzers. Each pack uses the same authenticated semantic launcher;
-native participants require both MSVC and clang-cl. Existing registry evidence
-remains available until its final cleanup.
+native participants require both MSVC and clang-cl. Legacy registry metadata
+is removed; source and runtime checks retain their distinct responsibilities.
 
 ## Registry, settings, and version owners
 

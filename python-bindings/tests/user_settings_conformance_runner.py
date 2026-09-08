@@ -168,6 +168,14 @@ def _execute_scenario(
     import classic_user_settings
 
     action = scenario.get("action")
+    if action == "user-settings.defaults":
+        from user_settings_defaults_conformance import observe_defaults
+
+        return observe_defaults()
+    if action == "user-settings.legacy-import":
+        return _execute_legacy_import(plan, scenario)
+    if action == "user-settings.geometry":
+        return _execute_geometry(plan, scenario)
     if action == "user-settings.migrate":
         return _execute_migration(plan, scenario)
     if action == "user-settings.update":
@@ -234,24 +242,213 @@ def _execute_scenario(
         }
 
 
+def _execute_geometry(
+    plan: Mapping[str, Any], scenario: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Commit a real geometry transition and authenticate its resulting source revision."""
+    import classic_user_settings
+
+    with tempfile.TemporaryDirectory(
+        prefix="classic-geometry-conformance-"
+    ) as temporary:
+        root = Path(temporary).resolve()
+        inputs = _materialize_inputs(plan, scenario, root)
+        snapshot = classic_user_settings.open_user_settings(str(root))
+        if inputs["blockLock"]:
+            (root / "CLASSIC Settings.yaml.commit.lock").mkdir()
+        try:
+            outcome = snapshot.commit_frontend_geometry_transition(
+                str(root), "main_tab", False, 900, 650
+            )
+            if outcome.status != "committed":
+                raise RunnerContractError("unexpected geometry transition outcome")
+            content = (root / "CLASSIC Settings.yaml").read_bytes()
+            transition = {
+                "status": outcome.status,
+                "code": None,
+                "hasMessage": None,
+                "revisionMatches": outcome.revision
+                == "sha256:" + hashlib.sha256(content).hexdigest(),
+            }
+        except classic_user_settings.UserSettingsCommitError as error:
+            message = str(error)
+            code, separator, context = message.partition(": ")
+            if not separator:
+                raise RunnerContractError(
+                    "commit error lacks its stable code prefix"
+                ) from error
+            transition = {
+                "status": "error",
+                "code": code,
+                "hasMessage": bool(context.strip()),
+                "revisionMatches": None,
+            }
+        current = classic_user_settings.open_user_settings(
+            str(root)
+        ).frontend_state.window_geometry.main_tab
+        inventory = _tree_snapshot(root)
+        return {
+            "transition": transition,
+            "geometry": {
+                "maximized": current.maximized,
+                "width": current.width,
+                "height": current.height,
+            },
+            "files": [
+                {"path": path, "kind": "directory" if value is None else "file"}
+                for path, value in sorted(inventory.items())
+            ],
+        }
+
+
+def _execute_legacy_import(
+    plan: Mapping[str, Any], scenario: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Import dormant TUI bytes, inspect the verified receipt, and restore the exact base."""
+    import classic_user_settings
+
+    with tempfile.TemporaryDirectory(
+        prefix="classic-legacy-import-conformance-"
+    ) as temporary:
+        root = Path(temporary).resolve()
+        _materialize_inputs(plan, scenario, root)
+        original = (root / "CLASSIC Settings.yaml").read_bytes()
+        legacy = (root / "state.json").read_bytes()
+        outcome = classic_user_settings.import_legacy_tui_state_into_user_settings(
+            str(root), str(root / "state.json")
+        )
+        if outcome.status != "applied" or outcome.receipt is None:
+            raise RunnerContractError(
+                "legacy import did not produce an applied receipt"
+            )
+        receipt = outcome.receipt
+        published = (root / "CLASSIC Settings.yaml").read_bytes()
+        backup = Path(receipt.backup_path).read_bytes()
+        source_revision = "sha256:" + hashlib.sha256(legacy).hexdigest()
+        base_revision = "sha256:" + hashlib.sha256(original).hexdigest()
+        published_revision = "sha256:" + hashlib.sha256(published).hexdigest()
+        if (
+            outcome.source_path,
+            outcome.backup_path,
+            outcome.source_revision,
+            outcome.backup_revision,
+            outcome.base_settings_revision,
+            outcome.published_settings_revision,
+        ) != (
+            receipt.source_path,
+            receipt.backup_path,
+            receipt.source_revision,
+            receipt.backup_revision,
+            receipt.base_settings_revision,
+            receipt.published_settings_revision,
+        ):
+            raise RunnerContractError("legacy outcome lost receipt metadata")
+        tui = classic_user_settings.open_user_settings(str(root)).frontend_state.tui
+        observed = {
+            "status": outcome.status,
+            "sourcePath": _migration_relative_path(root, receipt.source_path),
+            "backupPath": _migration_relative_path(root, receipt.backup_path),
+            "settingsPath": _migration_relative_path(root, receipt.settings_path),
+            "settingsBackupPath": None
+            if receipt.settings_backup_path is None
+            else _migration_relative_path(root, receipt.settings_backup_path),
+            "sourceRevisionMatches": receipt.source_revision == source_revision,
+            "backupRevisionMatches": receipt.backup_revision
+            == "sha256:" + hashlib.sha256(backup).hexdigest()
+            and backup == legacy,
+            "baseRevisionMatches": receipt.base_settings_revision == base_revision,
+            "publishedRevisionMatches": receipt.published_settings_revision
+            == published_revision,
+            "inapplicable": {
+                "classification": outcome.classification,
+                "revision": outcome.revision,
+                "expectedRevision": outcome.expected_revision,
+                "actualRevision": outcome.actual_revision,
+            },
+            "tui": {
+                "activeTab": tui.active_tab,
+                "resultsPanelWidth": tui.results_panel_width,
+                "sortAscending": tui.sort_ascending,
+                "origins": [
+                    tui.active_tab_origin,
+                    tui.results_panel_width_origin,
+                    tui.sort_ascending_origin,
+                ],
+            },
+        }
+        restored = receipt.restore(str(root))
+        final = _tree_snapshot(root)
+        return {
+            "import": observed,
+            "restore": {
+                "status": restored.status,
+                "revisionMatches": restored.revision == base_revision
+                and (root / "CLASSIC Settings.yaml").read_bytes() == original,
+                "expectedRevision": restored.expected_revision,
+                "actualRevision": restored.actual_revision,
+            },
+            "files": [
+                {"path": path, "bytesHex": value.hex()}
+                for path, value in sorted(final.items())
+                if value is not None
+            ],
+        }
+
+
 def _requested_update(fields: object) -> Any:
     """Translate input selectors into public setters, leaving value policy in Rust."""
     import classic_user_settings
 
     update = classic_user_settings.UserSettingsUpdate()
-    for path, value in _mapping(fields, "requestedUpdate").items():
-        if path == "/CLASSIC_Settings/Update Check":
-            if not isinstance(value, bool):
-                raise RunnerContractError("Update Check input must be a boolean")
-            update.set_update_check(value)
-        elif path == "/CLASSIC_Settings/Max Concurrent Scans":
-            if not isinstance(value, int) or isinstance(value, bool):
-                raise RunnerContractError(
-                    "Max Concurrent Scans input must be an integer"
-                )
-            update.set_max_concurrent_scans(value)
-        else:
+    requested = _mapping(fields, "requestedUpdate")
+    if "/UI/window_geometry/main_tab/maximized" in requested:
+        update.set_window_geometry(
+            "main_tab",
+            requested["/UI/window_geometry/main_tab/maximized"],
+            requested["/UI/window_geometry/main_tab/width"],
+            requested["/UI/window_geometry/main_tab/height"],
+        )
+    if "/UI/tui/active_tab" in requested:
+        update.set_tui_remembered_state(
+            requested["/UI/tui/active_tab"],
+            requested["/UI/tui/results_panel_width"],
+            requested["/UI/tui/sort_ascending"],
+        )
+    setters = {
+        "/CLASSIC_Settings/Update Check": update.set_update_check,
+        "/CLASSIC_Settings/Update Source": update.set_update_source,
+        "/UI/preferences/auto_switch_after_scan": update.set_auto_switch_after_scan,
+        "/CLASSIC_Settings/Managed Game": update.set_managed_game,
+        "/CLASSIC_Settings/Game Version": update.set_game_version_selection,
+        "/CLASSIC_Settings/Game Folder Path": update.set_game_root,
+        "/CLASSIC_Settings/Game EXE Path": update.set_game_executable,
+        "/CLASSIC_Settings/Documents Folder Path": update.set_documents_root,
+        "/CLASSIC_Settings/INI Folder Path": update.set_ini_folder,
+        "/CLASSIC_Settings/MODS Folder Path": update.set_mods_folder,
+        "/CLASSIC_Settings/FCX Mode": update.set_fcx_mode,
+        "/CLASSIC_Settings/Simplify Logs": update.set_simplify_logs,
+        "/CLASSIC_Settings/Show Statistics": update.set_show_statistics,
+        "/CLASSIC_Settings/Show FormID Values": update.set_formid_value_lookup,
+        "/CLASSIC_Settings/FormID Databases": update.set_formid_databases,
+        "/CLASSIC_Settings/Move Unsolved Logs": update.set_move_unsolved_logs,
+        "/CLASSIC_Settings/Unsolved Logs Destination": update.set_unsolved_logs_destination,
+        "/CLASSIC_Settings/SCAN Custom Path": update.set_custom_scan_input,
+        "/CLASSIC_Settings/Papyrus Log Path": update.set_papyrus_log_path,
+        "/CLASSIC_Settings/Max Concurrent Scans": update.set_max_concurrent_scans,
+    }
+    for path, value in requested.items():
+        if path in {
+            "/UI/tui/sort_ascending",
+            "/UI/tui/active_tab",
+            "/UI/tui/results_panel_width",
+            "/UI/window_geometry/main_tab/height",
+            "/UI/window_geometry/main_tab/maximized",
+            "/UI/window_geometry/main_tab/width",
+        }:
+            continue
+        if path not in setters:
             raise RunnerContractError(f"unsupported requested field: {path}")
+        setters[path](value)
     return update
 
 

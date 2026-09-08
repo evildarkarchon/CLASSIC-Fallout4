@@ -41,6 +41,20 @@ _LOAD_SYMBOLS = (
     "InstalledYamlDataLoadRequest",
     "InstalledYamlDataLoadOutcome",
 )
+_RECOVERY_OPERATIONS = tuple(
+    "local_ignore_recovery_plan_" + suffix
+    for suffix in (
+        "diagnostics",
+        "game",
+        "game_file",
+        "game_role",
+        "has_default_local_ignore_identity",
+        "local_ignore_path",
+        "main",
+        "malformed_local_ignore_identity",
+        "selected_game_version",
+    )
+)
 _INSPECT_OPERATIONS = (
     None,
     "inspect_installed_yaml_data",
@@ -127,6 +141,7 @@ def _base(observation: Mapping[str, Any]) -> bool:
                 "incompatible_schema",
                 "invalid_role_data",
                 "local_ignore_generated",
+                "local_ignore_reset",
             }
             for item in diagnostics
         )
@@ -294,8 +309,124 @@ def _recovery(observation: Mapping[str, Any]) -> bool:
     )
 
 
+def _recovery_defaults(observation: Mapping[str, Any]) -> bool:
+    """Require a retained usable default identity without crediting any publication."""
+    plan = observation.get("recovery")
+    if not isinstance(plan, Mapping) or not _identity(plan.get("defaultIdentity")):
+        return False
+    return _recovery({**observation, "recovery": {**plan, "defaultIdentity": None}})
+
+
+def _proceeded(observation: Mapping[str, Any]) -> bool:
+    """An explicit proceed decision retains malformed bytes and yields an empty ignore list."""
+    plan = observation.get("recovery")
+    snapshot = observation.get("snapshot")
+    if (
+        not _base(observation)
+        or observation.get("outcome") != "proceeded"
+        or not isinstance(plan, Mapping)
+        or not isinstance(snapshot, Mapping)
+    ):
+        return False
+    original = {
+        **observation,
+        "outcome": "recovery_required",
+        "localIgnore": None,
+        "snapshot": None,
+    }
+    return (
+        _recovery(original)
+        and observation["localIgnore"]
+        == {"state": "proceed_without_ignore", "identity": plan["malformedIdentity"]}
+        and set(snapshot)
+        == {"classicVersion", "gameRootName", "ignoreList", "simplifyRemoveList"}
+        and snapshot["ignoreList"] == []
+    )
+
+
+def _reset(observation: Mapping[str, Any]) -> bool:
+    """A reset must preserve malformed bytes in its verified backup before replacement."""
+    if not _selection(observation) or observation.get("outcome") != "reset":
+        return False
+    plan = observation.get("recovery")
+    if not isinstance(plan, Mapping) or not isinstance(plan.get("decision"), Mapping):
+        return False
+    decision = plan["decision"]
+    malformed = plan.get("malformedIdentity")
+    replacement = plan.get("defaultIdentity")
+    if not _identity(malformed) or not _identity(replacement):
+        return False
+    backup = {
+        **malformed,
+        "path": "installation/CLASSIC Backup/YAML Data/Local Ignore/<backup>",
+    }
+    return (
+        decision
+        == {
+            "status": "reset",
+            "localIgnorePath": _IGNORE,
+            "malformedIdentity": malformed,
+            "backupIdentity": backup,
+            "replacementIdentity": replacement,
+        }
+        and backup in observation["files"]
+        and replacement in observation["files"]
+        and observation["localIgnore"]
+        == {"state": "reset_to_default", "identity": replacement}
+        and isinstance(observation["snapshot"], Mapping)
+        and observation["snapshot"].get("ignoreList") == ["SelectedMainDefault.dll"]
+    )
+
+
+def _reset_conflict(observation: Mapping[str, Any]) -> bool:
+    """A changed canonical file must remain authoritative and yield no reset snapshot."""
+    if not _selection(observation) or observation.get("outcome") != "reset_conflict":
+        return False
+    plan = observation.get("recovery")
+    if not isinstance(plan, Mapping) or not isinstance(plan.get("decision"), Mapping):
+        return False
+    decision = plan["decision"]
+    actual = decision.get("actualIdentity")
+    return (
+        set(decision) == {"status", "expectedIdentity", "actualIdentity", "backupPath"}
+        and decision["status"] == "conflict"
+        and decision["expectedIdentity"] == plan.get("malformedIdentity")
+        and _identity(actual)
+        and actual in observation["files"]
+        and actual != decision["expectedIdentity"]
+        and decision["backupPath"] is None
+        and observation["snapshot"] is None
+        and observation["localIgnore"] is None
+    )
+
+
 def _symbols_for_fact(action: str, name: str) -> tuple[str, ...]:
     """Credit only the returned result arm, never another arm's opaque carrier."""
+    if name in {"reset-retained-defaults", "reset-conflict-preserved"}:
+        return (
+            "load_installed_yaml_data",
+            "LocalIgnoreRecoveryPlan",
+            "LocalIgnoreResetOutcome",
+            "LocalIgnoreResetResult"
+            if name == "reset-retained-defaults"
+            else "LocalIgnoreResetConflict",
+        )
+    if name in {
+        "recovery-unavailable-defaults",
+        "recovery-available-defaults",
+        "proceeded-without-ignore",
+    }:
+        return (
+            "load_installed_yaml_data",
+            "InstalledYamlDataLoadOutcome",
+            "InstalledYamlDataLoadRequest",
+            "LocalIgnoreRecoveryPlan",
+            *(
+                ("InstalledYamlDataSnapshot",)
+                if name == "proceeded-without-ignore"
+                else ()
+            ),
+        )
     if action == "inspect":
         error = name in {"no-usable-source", "unsupported-game"}
         return tuple(
@@ -344,10 +475,68 @@ def _operations_for_fact(action: str, name: str) -> tuple[str | None, ...]:
         "installed_yaml_data_load",
         "installed_yaml_data_load_status",
     )
+    if name in {"reset-retained-defaults", "reset-conflict-preserved"}:
+        operations = (
+            *common,
+            "installed_yaml_data_load_take_recovery_plan",
+            *_RECOVERY_OPERATIONS,
+            "local_ignore_recovery_plan_default_local_ignore_identity",
+            "local_ignore_recovery_plan_reset_to_default",
+            "local_ignore_reset_status",
+        )
+        if name == "reset-retained-defaults":
+            return (
+                *operations,
+                "local_ignore_reset_take_result",
+                *(
+                    "local_ignore_reset_result_" + suffix
+                    for suffix in (
+                        "local_ignore_path",
+                        "backup_path",
+                        "malformed_local_ignore_identity",
+                        "backup_identity",
+                        "replacement_identity",
+                        "diagnostics",
+                        "take_snapshot",
+                    )
+                ),
+            )
+        return (
+            *operations,
+            "local_ignore_reset_take_conflict",
+            *(
+                "local_ignore_reset_conflict_" + suffix
+                for suffix in (
+                    "expected_identity",
+                    "has_actual_identity",
+                    "actual_identity",
+                    "has_backup_path",
+                    "backup_path",
+                )
+            ),
+        )
     if name == "invalid-defaults-before-write":
         return common
-    if name == "recovery-unavailable-defaults":
-        return (*common, "installed_yaml_data_load_take_recovery_plan")
+    if name in {
+        "recovery-unavailable-defaults",
+        "recovery-available-defaults",
+        "proceeded-without-ignore",
+    }:
+        return (
+            *common,
+            "installed_yaml_data_load_take_recovery_plan",
+            *_RECOVERY_OPERATIONS,
+            *(
+                ("local_ignore_recovery_plan_default_local_ignore_identity",)
+                if name == "recovery-available-defaults"
+                else ()
+            ),
+            *(
+                ("local_ignore_recovery_plan_proceed_without_ignore", *_LOAD_OPERATIONS)
+                if name == "proceeded-without-ignore"
+                else ()
+            ),
+        )
     return tuple(
         operation
         for operation in _LOAD_OPERATIONS
@@ -422,6 +611,10 @@ INSTALLED_YAML_DATA_COVERAGE_POLICY = FamilyCoveragePolicy(
             ("legacy-adoption", "load", "durable-effects", _legacy),
             ("canonical-precedence", "load", "durable-effects", _canonical),
             ("recovery-unavailable-defaults", "load", "recovery", _recovery),
+            ("recovery-available-defaults", "load", "recovery", _recovery_defaults),
+            ("proceeded-without-ignore", "load", "recovery", _proceeded),
+            ("reset-retained-defaults", "load", "durable-effects", _reset),
+            ("reset-conflict-preserved", "load", "durable-effects", _reset_conflict),
             (
                 "invalid-defaults-before-write",
                 "load",

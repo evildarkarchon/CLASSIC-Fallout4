@@ -1,0 +1,9 @@
+{
+  "operation": "extended",
+  "trace": "fixture-trace",
+  "dynamic": "fixture-dynamic",
+  "message": "fixture-message",
+  "title": "fixture-title",
+  "details": "fixture-details",
+  "invalid": "invalid"
+}

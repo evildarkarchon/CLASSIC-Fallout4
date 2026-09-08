@@ -140,7 +140,12 @@ fn normalize_report_content(source: &str) -> String {
         // use outer asterisks as decorative framing. CommonMark parses the leading
         // `*` as a list bullet marker, which is wrong. We strip the framing
         // asterisks and keep only the inner content.
-        if trimmed.starts_with("* ") && trimmed.ends_with(" *") && !trimmed.starts_with("* -") {
+        // In "* *" the framing delimiters overlap, so there is no valid inner slice.
+        if trimmed.len() >= 4
+            && trimmed.starts_with("* ")
+            && trimmed.ends_with(" *")
+            && !trimmed.starts_with("* -")
+        {
             let inner = &trimmed[2..trimmed.len() - 2];
             if !inner.is_empty() {
                 lines.push(inner.to_string());

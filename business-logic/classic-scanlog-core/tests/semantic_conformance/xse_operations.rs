@@ -26,6 +26,16 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
         _ => return Err(invalid("unsupported XSE variant").into()),
     };
     let dll = format!("{}_1_10_163.dll", variant.to_lowercase());
+    let game = match kind {
+        XseType::F4SE => Some(classic_shared_core::GameId::Fallout4),
+        XseType::F4SEVR => Some(classic_shared_core::GameId::Fallout4VR),
+        XseType::SKSE64 => Some(classic_shared_core::GameId::Skyrim),
+        XseType::SFSE => Some(classic_shared_core::GameId::Starfield),
+        _ => None,
+    };
+    if game.is_some_and(|game| XseType::from_game_id(game) != kind) {
+        return Err(invalid("XSE game mapping disagrees with fixture type").into());
+    }
     let files = fixture["files"]
         .as_array()
         .ok_or_else(|| invalid("files must be an array"))?;
@@ -45,6 +55,15 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
     };
     let info = get_xse_info(root, kind);
     let installed = is_xse_installed(root, kind);
+    let constructed = classic_xse_core::XseInfo::new(kind, root.to_path_buf());
+    if constructed.installed
+        || constructed.version.is_some()
+        || constructed.xse_type != kind
+        || constructed.check_installed() != installed
+        || constructed.loader_path() != root.join(kind.loader_name())
+    {
+        return Err(invalid("XSE constructor or path/installation accessors changed").into());
+    }
     // Snapshot bytes after every filesystem operation so unexpected writes remain visible.
     let mut inventory = Vec::new();
     for entry in fs::read_dir(root)? {

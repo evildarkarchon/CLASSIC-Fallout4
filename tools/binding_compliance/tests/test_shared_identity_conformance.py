@@ -17,8 +17,65 @@ from conformance.coverage import (
 from conformance.families.shared_identity import coverage_policy, validate_pack
 from conformance.packs import load_and_validate_pack, materialize_run_plan
 from conformance.receipts import validate_prepared_run
+from receipt_test_support import copy_source_inventory
 
 ROOT = Path(__file__).resolve().parents[3]
+
+
+def test_game_metadata_and_python_value_methods_are_source_scoped():
+    """Pretty labels use the shared getter while unavailable CXX/Node value methods stay out."""
+    document = _pack("game-identity")
+    matrix = derive_applicability(document, load_source_parity_rows(ROOT))
+    metadata = next(
+        (case for case in document["scenarios"] if case["id"] == "metadata"), None
+    )
+    assert metadata is not None
+    assert {p.id for p in matrix.participants if "metadata" in p.scenario_ids} == {
+        "rust",
+        "python",
+        "node",
+        "cxx",
+    }
+    assert {p.id for p in matrix.participants if "details" in p.scenario_ids} == {
+        "rust",
+        "python",
+    }
+    from retirement_readiness import candidate_predicates
+
+    selected = {
+        "__eq__",
+        "__hash__",
+        "__repr__",
+        "__str__",
+        "exe_name",
+        "is_vr",
+        "getGameName",
+    }
+    for row in load_source_parity_rows(ROOT):
+        if (
+            row.rust_crate == "classic-shared-core"
+            and row.rust_symbol == "GameId"
+            and row.runtime_operation in selected
+        ):
+            assert candidate_predicates(
+                row, document, coverage_policy("game-identity")
+            ), row.obligation_id
+
+
+def test_runtime_access_includes_python_and_explicit_shutdown_intent() -> None:
+    """Health diagnostics and no-op shutdown must be backed by actual calls."""
+    pack = _pack("runtime-access")
+    matrix = derive_applicability(pack, load_source_parity_rows(ROOT))
+    assert {participant.id for participant in matrix.participants} == {
+        "rust",
+        "cxx",
+        "node",
+        "python",
+    }
+    assert any(
+        "parity:cxx:b0a1036b892934c2" in predicate.binding_obligation_ids
+        for predicate in coverage_policy("runtime-access").predicates
+    )
 
 
 @pytest.mark.parametrize("family", ["game-identity", "runtime-access"])
@@ -51,7 +108,7 @@ def _pack(family: str) -> dict:
     "family,participants",
     [
         ("game-identity", {"rust", "cxx", "node", "python"}),
-        ("runtime-access", {"rust", "cxx", "node"}),
+        ("runtime-access", {"rust", "cxx", "node", "python"}),
     ],
 )
 def test_shared_identity_receipts_fail_closed_at_public_coverage_seam(
@@ -68,6 +125,11 @@ def test_shared_identity_receipts_fail_closed_at_public_coverage_seam(
     original = _pack(family)
     for relative in (pack_path.parent, Path(original["fixtureRoot"])):
         shutil.copytree(ROOT / relative, tmp_path / relative)
+    if any(
+        capability.get("operationScoped", False)
+        for capability in original["capabilities"]
+    ):
+        copy_source_inventory(ROOT, tmp_path)
     for args in (
         ("init",),
         ("config", "user.email", "conformance@example.invalid"),
@@ -85,10 +147,17 @@ def test_shared_identity_receipts_fail_closed_at_public_coverage_seam(
     retained = load_retained_analyzer_kinds(ROOT)
     matrix = derive_applicability(document, rows)
     assert {participant.id for participant in matrix.participants} == participants
-    assert all(
-        set(participant.scenario_ids) == {case["id"] for case in document["scenarios"]}
-        for participant in matrix.participants
-    )
+    if family == "runtime-access":
+        assert all(
+            set(participant.scenario_ids)
+            == {case["id"] for case in document["scenarios"]}
+            for participant in matrix.participants
+        )
+    else:
+        assert all(
+            {"stable", "metadata"} <= set(participant.scenario_ids)
+            for participant in matrix.participants
+        )
     for participant in matrix.participants:
         if participant.id == "rust":
             # Canonical Rust observations are validated in native runs; parity
@@ -133,6 +202,7 @@ def test_shared_identity_receipts_fail_closed_at_public_coverage_seam(
                     "failure": None,
                 }
                 for case in document["scenarios"]
+                if case["id"] in {item["id"] for item in plan["scenarios"]}
             ]
             run.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
             report = validate_prepared_run(pack, run, coverage_policy=policy)

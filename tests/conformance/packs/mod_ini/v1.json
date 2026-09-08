@@ -1,0 +1,301 @@
+{
+  "schemaVersion": 1,
+  "familyId": "mod-ini",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scangame-core"
+  },
+  "fixtureRoot": "tests/fixtures/mod_ini",
+  "fixtures": {
+    "cache-values": "cache-values.json",
+    "cache-empty": "cache-empty.json",
+    "scan-disabled": "scan-disabled.json",
+    "scan-enabled": "scan-enabled.json",
+    "duplicates": "duplicates.json"
+  },
+  "capabilities": [
+    {
+      "id": "mod-ini.cache",
+      "rustSymbols": [
+        "ConfigFileCache"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "ini-cache"
+      ]
+    },
+    {
+      "id": "mod-ini.scan",
+      "rustSymbols": [
+        "ModIniScanner",
+        "scan",
+        "ModIniScanResult",
+        "VsyncEntry"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "mod-scan"
+      ]
+    },
+    {
+      "id": "mod-ini.duplicates",
+      "rustSymbols": [
+        "ConfigDuplicateDetector",
+        "DuplicateGroup"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "duplicate-groups"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "cache-values",
+      "action": "mod-ini.cache",
+      "capabilityIds": [
+        "mod-ini.cache"
+      ],
+      "fixtureRefs": [
+        "cache-values"
+      ],
+      "input": {
+        "fixtureRef": "cache-values"
+      },
+      "expected": {
+        "operation": "cache",
+        "before": [
+          {
+            "path": "A/dup.ini",
+            "content": "[Settings]\nvalue=same\n"
+          },
+          {
+            "path": "B/dup.ini",
+            "content": "[Settings]\nvalue=same\n"
+          },
+          {
+            "path": "sample.ini",
+            "content": "[Settings]\nname=hello\nenabled=yes\ncount=7\nscale=2.5\n"
+          }
+        ],
+        "result": {
+          "names": [
+            "dup.ini",
+            "sample.ini"
+          ],
+          "contains": true,
+          "path": "sample.ini",
+          "name": "hello",
+          "enabled": true,
+          "count": 7,
+          "scale": "2.500",
+          "hasName": true,
+          "missing": null,
+          "duplicates": {
+            "dup.ini": [
+              "A/dup.ini",
+              "B/dup.ini"
+            ]
+          }
+        },
+        "files": [
+          {
+            "path": "A/dup.ini",
+            "content": "[Settings]\nvalue=same\n"
+          },
+          {
+            "path": "B/dup.ini",
+            "content": "[Settings]\nvalue=same\n"
+          },
+          {
+            "path": "sample.ini",
+            "content": "[Settings]\nname=hello\nenabled=yes\ncount=7\nscale=2.5\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "cache-empty",
+      "action": "mod-ini.cache",
+      "capabilityIds": [
+        "mod-ini.cache"
+      ],
+      "fixtureRefs": [
+        "cache-empty"
+      ],
+      "input": {
+        "fixtureRef": "cache-empty"
+      },
+      "expected": {
+        "operation": "cache",
+        "before": [],
+        "result": {
+          "names": [],
+          "contains": false,
+          "path": null,
+          "name": null,
+          "enabled": null,
+          "count": null,
+          "scale": null,
+          "hasName": false,
+          "missing": null,
+          "duplicates": {}
+        },
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "scan-disabled",
+      "action": "mod-ini.scan",
+      "capabilityIds": [
+        "mod-ini.scan"
+      ],
+      "fixtureRefs": [
+        "scan-disabled"
+      ],
+      "input": {
+        "fixtureRef": "scan-disabled"
+      },
+      "expected": {
+        "operation": "scan",
+        "before": [
+          {
+            "path": "enblocal.ini",
+            "content": "[ENGINE]\nForceVSync=false\n"
+          }
+        ],
+        "result": {
+          "message": "",
+          "issues": [],
+          "vsync": [],
+          "duplicates": []
+        },
+        "files": [
+          {
+            "path": "enblocal.ini",
+            "content": "[ENGINE]\nForceVSync=false\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "scan-enabled",
+      "action": "mod-ini.scan",
+      "capabilityIds": [
+        "mod-ini.scan"
+      ],
+      "fixtureRefs": [
+        "scan-enabled"
+      ],
+      "input": {
+        "fixtureRef": "scan-enabled"
+      },
+      "expected": {
+        "operation": "scan",
+        "before": [
+          {
+            "path": "enblocal.ini",
+            "content": "[ENGINE]\nForceVSync=true\n"
+          }
+        ],
+        "result": {
+          "message": "* NOTICE : VSYNC IS CURRENTLY ENABLED IN THE FOLLOWING FILES *\n<ROOT>/enblocal.ini | SETTING: ForceVSync\n",
+          "issues": [],
+          "vsync": [
+            {
+              "path": "enblocal.ini",
+              "setting": "ForceVSync"
+            }
+          ],
+          "duplicates": []
+        },
+        "files": [
+          {
+            "path": "enblocal.ini",
+            "content": "[ENGINE]\nForceVSync=true\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "duplicates",
+      "action": "mod-ini.duplicates",
+      "capabilityIds": [
+        "mod-ini.duplicates"
+      ],
+      "fixtureRefs": [
+        "duplicates"
+      ],
+      "input": {
+        "fixtureRef": "duplicates"
+      },
+      "expected": {
+        "operation": "duplicates",
+        "before": [
+          {
+            "path": "a/F4EE.ini",
+            "content": "[First]\nkey=1\n"
+          },
+          {
+            "path": "b/F4EE.ini",
+            "content": "[First]\nkey=1\n"
+          }
+        ],
+        "result": {
+          "initialGroups": [
+            {
+              "original": "a/F4EE.ini",
+              "duplicates": [
+                "b/F4EE.ini"
+              ]
+            }
+          ],
+          "initialMap": {
+            "f4ee.ini": [
+              "a/F4EE.ini",
+              "b/F4EE.ini"
+            ]
+          },
+          "afterGroups": [],
+          "afterMap": {}
+        },
+        "files": [
+          {
+            "path": "a/F4EE.ini",
+            "content": "[First]\nkey=1\n"
+          },
+          {
+            "path": "b/F4EE.ini",
+            "content": "[DifferentSection]\nunrelated=abcdefghijklmnopqrstuvwxyz\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

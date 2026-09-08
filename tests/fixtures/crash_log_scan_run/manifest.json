@@ -532,22 +532,6 @@
           "FcxResetError",
           "resolve_batch_concurrency"
         ]
-      },
-      {
-        "path": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        "symbols": [
-          "createAnalysisConfig",
-          "createAnalysisConfigFromYamlContent",
-          "processLog",
-          "processLogWithYamlContent",
-          "processLogsBatch",
-          "processLogsBatchWithYamlContent",
-          "resetFcxGlobalState",
-          "getFcxConfigIssues",
-          "writeAutoscanReport",
-          "JsAnalysisConfig",
-          "JsAnalysisResult"
-        ]
       }
     ],
     "python": [
@@ -655,17 +639,6 @@
           "GLOBAL_FCX_HANDLER",
           "fcx_handler",
           "orchestrator"
-        ]
-      },
-      {
-        "path": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        "symbols": [
-          "classic_scanlog.AnalysisConfig",
-          "classic_scanlog.AnalysisResult",
-          "classic_scanlog.CancellationToken",
-          "classic_scanlog.Orchestrator",
-          "classic_scanlog.FcxModeHandler",
-          "classic_scanlog.FcxResetError"
         ]
       }
     ]

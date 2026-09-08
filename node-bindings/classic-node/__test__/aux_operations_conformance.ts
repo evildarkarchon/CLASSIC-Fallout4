@@ -21,7 +21,18 @@ export function observeAuxOperations(family: string, fixture: JsonObject): JsonO
   const request = fixture.request;
   if (family.startsWith("version-") && request.operation) return observeVersionExtended(fixture);
   if (family === "web-operations") {
+    if (request.operation === "game-routes") {
+      if (request.game !== "Fallout4") throw new Error("Unsupported routing game");
+      return { urls: ["NexusMods", "BethesdaNet", "ModDB"].map(site =>
+        classic.getModSiteGameUrl(site as classic.JsModSite, request.game as classic.JsGameId)) };
+    }
     const url = request.url;
+    if (classic.getUserAgentPrefix() !== classic.getUserAgent().split("/")[0]) {
+      throw new Error("User agent prefix disagrees with the public user agent");
+    }
+    if (classic.getClassicVersion() !== classic.getUserAgent().split("/")[1]) {
+      throw new Error("CLASSIC version disagrees with the public user agent");
+    }
     return {
       userAgent: classic.getUserAgent(),
       userAgentWithSuffix: classic.getUserAgentWithSuffix(request.suffix),

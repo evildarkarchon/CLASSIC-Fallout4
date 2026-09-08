@@ -1,10 +1,10 @@
 //! Input-only receipt runner for public User Settings opening, updates, and migrations.
 
 use classic_user_settings_core::{
-    MigrationEndpoint, MigrationPlanningOutcome, Revision, UserSettings, UserSettingsCommitOutcome,
-    UserSettingsMigrationApplyOutcome, UserSettingsMigrationPlan, UserSettingsMigrationReceipt,
-    UserSettingsMigrationRestoreOutcome, UserSettingsUpdate, UserSettingsUpdateField,
-    UserSettingsUpdatePreview, WindowGeometry,
+    GuiWindow, MigrationEndpoint, MigrationPlanningOutcome, Revision, UserSettings,
+    UserSettingsCommitOutcome, UserSettingsMigrationApplyOutcome, UserSettingsMigrationPlan,
+    UserSettingsMigrationReceipt, UserSettingsMigrationRestoreOutcome, UserSettingsUpdate,
+    UserSettingsUpdateField, UserSettingsUpdatePreview, WindowGeometry,
 };
 use classic_vocabulary::Vocabulary;
 use serde_json::{Map, Value, json};
@@ -15,6 +15,9 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::{Component, Path, PathBuf};
 use tempfile::{NamedTempFile, tempdir};
+
+#[path = "open_conformance/defaults.rs"]
+mod defaults_conformance;
 
 type RunnerResult<T> = Result<T, Box<dyn Error + Send + Sync>>;
 
@@ -179,17 +182,99 @@ fn operation_update(input: &Value) -> RunnerResult<UserSettingsUpdate> {
         .as_object()
         .ok_or_else(|| invalid("requestedUpdate must be an object"))?;
     let mut update = UserSettingsUpdate::new();
+    if let Some(maximized) = requested.get("/UI/window_geometry/main_tab/maximized") {
+        update = update.with_window_geometry(
+            GuiWindow::Main,
+            maximized
+                .as_bool()
+                .ok_or_else(|| invalid("maximized must be bool"))?,
+            requested["/UI/window_geometry/main_tab/width"]
+                .as_i64()
+                .ok_or_else(|| invalid("width must be integer"))?,
+            requested["/UI/window_geometry/main_tab/height"]
+                .as_i64()
+                .ok_or_else(|| invalid("height must be integer"))?,
+        );
+    }
+    if let Some(active) = requested.get("/UI/tui/active_tab") {
+        update = update.with_tui_remembered_state(
+            active
+                .as_i64()
+                .ok_or_else(|| invalid("active tab must be integer"))?,
+            requested["/UI/tui/results_panel_width"]
+                .as_i64()
+                .ok_or_else(|| invalid("panel width must be integer"))?,
+            requested["/UI/tui/sort_ascending"]
+                .as_bool()
+                .ok_or_else(|| invalid("sort must be bool"))?,
+        );
+    }
     for (path, value) in requested {
+        if matches!(
+            path.as_str(),
+            "/UI/window_geometry/main_tab/maximized"
+                | "/UI/window_geometry/main_tab/width"
+                | "/UI/window_geometry/main_tab/height"
+                | "/UI/tui/active_tab"
+                | "/UI/tui/results_panel_width"
+                | "/UI/tui/sort_ascending"
+        ) {
+            continue;
+        }
         update = match path.as_str() {
-            "/CLASSIC_Settings/Update Check" => update.with_update_check(
-                value
-                    .as_bool()
-                    .ok_or_else(|| invalid("Update Check request must be boolean"))?,
+            "/CLASSIC_Settings/Update Check" => {
+                update.with_update_check(value.as_bool().ok_or_else(|| invalid("expected bool"))?)
+            }
+            "/CLASSIC_Settings/Update Source" => {
+                update.with_update_source(value.as_str().ok_or_else(|| invalid("expected string"))?)
+            }
+            "/UI/preferences/auto_switch_after_scan" => update.with_auto_switch_after_scan(
+                value.as_bool().ok_or_else(|| invalid("expected bool"))?,
             ),
+            "/CLASSIC_Settings/Managed Game" => {
+                update.with_managed_game(value.as_str().ok_or_else(|| invalid("expected string"))?)
+            }
+            "/CLASSIC_Settings/Game Version" => update.with_game_version_selection(
+                value.as_str().ok_or_else(|| invalid("expected string"))?,
+            ),
+            "/CLASSIC_Settings/Game Folder Path" => {
+                update.with_game_root(serde_json::from_value::<Option<String>>(value.clone())?)
+            }
+            "/CLASSIC_Settings/Game EXE Path" => update
+                .with_game_executable(serde_json::from_value::<Option<String>>(value.clone())?),
+            "/CLASSIC_Settings/Documents Folder Path" => {
+                update.with_documents_root(serde_json::from_value::<Option<String>>(value.clone())?)
+            }
+            "/CLASSIC_Settings/INI Folder Path" => {
+                update.with_ini_folder(serde_json::from_value::<Option<String>>(value.clone())?)
+            }
+            "/CLASSIC_Settings/MODS Folder Path" => {
+                update.with_mods_folder(serde_json::from_value::<Option<String>>(value.clone())?)
+            }
+            "/CLASSIC_Settings/FCX Mode" => {
+                update.with_fcx_mode(value.as_bool().ok_or_else(|| invalid("expected bool"))?)
+            }
+            "/CLASSIC_Settings/Simplify Logs" => {
+                update.with_simplify_logs(value.as_bool().ok_or_else(|| invalid("expected bool"))?)
+            }
+            "/CLASSIC_Settings/Show Statistics" => update
+                .with_show_statistics(value.as_bool().ok_or_else(|| invalid("expected bool"))?),
+            "/CLASSIC_Settings/Show FormID Values" => update
+                .with_formid_value_lookup(value.as_bool().ok_or_else(|| invalid("expected bool"))?),
+            "/CLASSIC_Settings/FormID Databases" => {
+                update.with_formid_databases(serde_json::from_value(value.clone())?)
+            }
+            "/CLASSIC_Settings/Move Unsolved Logs" => update
+                .with_move_unsolved_logs(value.as_bool().ok_or_else(|| invalid("expected bool"))?),
+            "/CLASSIC_Settings/Unsolved Logs Destination" => update.with_unsolved_logs_destination(
+                serde_json::from_value::<Option<String>>(value.clone())?,
+            ),
+            "/CLASSIC_Settings/SCAN Custom Path" => update
+                .with_custom_scan_input(serde_json::from_value::<Option<String>>(value.clone())?),
+            "/CLASSIC_Settings/Papyrus Log Path" => update
+                .with_papyrus_log_path(serde_json::from_value::<Option<String>>(value.clone())?),
             "/CLASSIC_Settings/Max Concurrent Scans" => update.with_max_concurrent_scans(
-                value
-                    .as_i64()
-                    .ok_or_else(|| invalid("Max Concurrent Scans request must be an integer"))?,
+                value.as_i64().ok_or_else(|| invalid("expected integer"))?,
             ),
             _ => {
                 return Err(
@@ -201,12 +286,35 @@ fn operation_update(input: &Value) -> RunnerResult<UserSettingsUpdate> {
     Ok(update)
 }
 
-/// Projects actual accepted values; unsupported public field variants fail execution visibly.
+/// Projects every actual accepted value through an exhaustive public field match.
 fn accepted_field(field: &UserSettingsUpdateField) -> RunnerResult<Value> {
     let value = match field {
+        UserSettingsUpdateField::WindowMaximized(_, value) => json!(value),
+        UserSettingsUpdateField::WindowWidth(_, value)
+        | UserSettingsUpdateField::WindowHeight(_, value) => json!(value),
+        UserSettingsUpdateField::TuiActiveTab(value) => json!(value),
+        UserSettingsUpdateField::TuiResultsPanelWidth(value) => json!(value),
+        UserSettingsUpdateField::TuiSortAscending(value) => json!(value),
         UserSettingsUpdateField::UpdateCheck(value) => json!(value),
+        UserSettingsUpdateField::UpdateSource(value) => json!(value.as_str()),
+        UserSettingsUpdateField::AutoSwitchAfterScan(value) => json!(value),
+        UserSettingsUpdateField::ManagedGame(value) => json!(value.as_str()),
+        UserSettingsUpdateField::GameVersionSelection(value) => json!(value.as_str()),
+        UserSettingsUpdateField::GameRoot(value) => json!(value),
+        UserSettingsUpdateField::GameExecutable(value) => json!(value),
+        UserSettingsUpdateField::DocumentsRoot(value) => json!(value),
+        UserSettingsUpdateField::IniFolder(value) => json!(value),
+        UserSettingsUpdateField::ModsFolder(value) => json!(value),
+        UserSettingsUpdateField::FcxMode(value) => json!(value),
+        UserSettingsUpdateField::SimplifyLogs(value) => json!(value),
+        UserSettingsUpdateField::ShowStatistics(value) => json!(value),
+        UserSettingsUpdateField::FormIdValueLookup(value) => json!(value),
+        UserSettingsUpdateField::FormIdDatabases(value) => json!(value),
+        UserSettingsUpdateField::MoveUnsolvedLogs(value) => json!(value),
+        UserSettingsUpdateField::UnsolvedLogsDestination(value) => json!(value),
+        UserSettingsUpdateField::CustomScanInput(value) => json!(value),
+        UserSettingsUpdateField::PapyrusLogPath(value) => json!(value),
         UserSettingsUpdateField::MaxConcurrentScans(value) => json!(value),
-        _ => return Err(invalid("unsupported accepted operation field").into()),
     };
     Ok(json!({"fieldPath": field.canonical_path(), "value": value}))
 }
@@ -475,6 +583,15 @@ fn execute_scenario(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
     if scenario.get("expected").is_some() {
         return Err(invalid("scenario must be an input-only User Settings action").into());
     }
+    if scenario["action"] == "user-settings.defaults" {
+        return Ok(defaults_conformance::observe());
+    }
+    if scenario["action"] == "user-settings.legacy-import" {
+        return execute_legacy_import(plan, scenario);
+    }
+    if scenario["action"] == "user-settings.geometry" {
+        return execute_geometry(plan, scenario);
+    }
     if scenario["action"] == "user-settings.update" {
         return execute_operation(plan, scenario);
     }
@@ -613,4 +730,81 @@ fn writes_user_settings_conformance_receipt() {
             .expect("the Rust User Settings conformance receipt should be published"),
         _ => panic!("both conformance launcher environment paths are required"),
     }
+}
+
+/// Commit public geometry and bind the returned revision to the actual final source bytes.
+fn execute_geometry(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
+    let root = tempdir()?;
+    for item in array(&scenario["input"]["installationData"], "installationData")? {
+        install_fixture(plan, scenario, root.path(), item)?;
+    }
+    let initial = UserSettings::open(root.path());
+    if scenario["input"]["blockLock"] == true {
+        fs::create_dir(root.path().join("CLASSIC Settings.yaml.commit.lock"))?;
+    }
+    let transition = match UserSettings::commit_frontend_geometry_transition(
+        root.path(),
+        initial.revision(),
+        GuiWindow::Main,
+        false,
+        900,
+        650,
+    ) {
+        Ok(classic_user_settings_core::UserSettingsFrontendTransitionOutcome::Committed {
+            revision,
+        }) => {
+            let content = fs::read(root.path().join("CLASSIC Settings.yaml"))?;
+            json!({"status":"committed","code":null,"hasMessage":null,"revisionMatches":revision.token()==format!("sha256:{}",migration_hex(Sha256::digest(content).as_slice()))})
+        }
+        Err(error) => {
+            json!({"status":"error","code":error.code(),"hasMessage":!error.message().trim().is_empty(),"revisionMatches":null})
+        }
+        _ => return Err(invalid("unexpected geometry outcome").into()),
+    };
+    let current = UserSettings::open(root.path());
+    let geometry = current.frontend_state().window_geometry().main_tab();
+    let files=tree(root.path())?.into_iter().map(|(path,content)|json!({"path":path.to_string_lossy().replace('\\',"/"),"kind":if content.is_some(){"file"}else{"directory"}})).collect::<Vec<_>>();
+    Ok(
+        json!({"transition":transition,"geometry":{"maximized":geometry.maximized(),"width":geometry.width(),"height":geometry.height()},"files":files}),
+    )
+}
+
+/// Import exact retired state bytes and restore the authenticated original settings base.
+fn execute_legacy_import(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
+    let root = tempdir()?;
+    for item in array(&scenario["input"]["installationData"], "installationData")? {
+        install_fixture(plan, scenario, root.path(), item)?;
+    }
+    let original = fs::read(root.path().join("CLASSIC Settings.yaml"))?;
+    let legacy = fs::read(root.path().join("state.json"))?;
+    let outcome = classic_user_settings_core::import_legacy_tui_state(
+        root.path(),
+        root.path().join("state.json"),
+    )?;
+    let classic_user_settings_core::LegacyTuiStateImportOutcome::Applied(receipt) = outcome else {
+        return Err(invalid("legacy import has no applied receipt").into());
+    };
+    let published = fs::read(root.path().join("CLASSIC Settings.yaml"))?;
+    let backup = fs::read(receipt.backup_path())?;
+    let revision =
+        |bytes: &[u8]| format!("sha256:{}", migration_hex(Sha256::digest(bytes).as_slice()));
+    let relative = |path: &Path| -> RunnerResult<String> {
+        Ok(path
+            .strip_prefix(root.path())?
+            .to_string_lossy()
+            .replace('\\', "/"))
+    };
+    let current = UserSettings::open(root.path());
+    let tui = current.frontend_state().tui();
+    let observed = json!({"status":"applied","sourcePath":relative(receipt.source_path())?,"backupPath":relative(receipt.backup_path())?,"settingsPath":relative(receipt.settings_path())?,"settingsBackupPath":receipt.settings_backup_path().map(relative).transpose()?,"sourceRevisionMatches":receipt.source_revision().token()==revision(&legacy),"backupRevisionMatches":receipt.backup_revision().token()==revision(&backup)&&backup==legacy,"baseRevisionMatches":receipt.base_settings_revision().token()==revision(&original),"publishedRevisionMatches":receipt.published_settings_revision().token()==revision(&published),"inapplicable":{"classification":null,"revision":null,"expectedRevision":null,"actualRevision":null},"tui":{"activeTab":tui.active_tab(),"resultsPanelWidth":tui.results_panel_width(),"sortAscending":tui.sort_ascending(),"origins":[tui.active_tab_origin().as_str(),tui.results_panel_width_origin().as_str(),tui.sort_ascending_origin().as_str()]}});
+    let restored = match receipt.restore(root.path())? {
+        classic_user_settings_core::LegacyTuiStateImportRestoreOutcome::Restored {
+            revision: current,
+        } => {
+            json!({"status":"restored","revisionMatches":current.token()==revision(&original)&&fs::read(root.path().join("CLASSIC Settings.yaml"))?==original,"expectedRevision":null,"actualRevision":null})
+        }
+        _ => return Err(invalid("legacy restore did not restore").into()),
+    };
+    let files=tree(root.path())?.into_iter().filter_map(|(path,bytes)|bytes.map(|bytes|json!({"path":path.to_string_lossy().replace('\\',"/"),"bytesHex":migration_hex(&bytes)}))).collect::<Vec<_>>();
+    Ok(json!({"import":observed,"restore":restored,"files":files}))
 }

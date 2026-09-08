@@ -67,6 +67,8 @@ XSE_OPERATIONS_COVERAGE_POLICY = FamilyCoveragePolicy(
             observation_family="values",
             rust_symbols=(
                 "XseType",
+                "XseInfo",
+                "from_game_id",
                 "loader_name",
                 "dll_prefix",
                 "detect_xse_version",
@@ -76,6 +78,16 @@ XSE_OPERATIONS_COVERAGE_POLICY = FamilyCoveragePolicy(
             matches=partial(_matches, kind),
             runtime_operations=(
                 None,
+                "__init__",
+                "__repr__",
+                "__str__",
+                "__eq__",
+                "xse_type",
+                "path",
+                "version",
+                "installed",
+                "check_installed",
+                "loader_path",
                 "parse_xse_type",
                 "parseXseType",
                 _EXPECTED[kind]["typeName"].lower(),
@@ -96,6 +108,11 @@ XSE_OPERATIONS_COVERAGE_POLICY = FamilyCoveragePolicy(
                 "xse_get_info",
                 "detect_xse_version_string",
                 "is_xse_installed_check",
+            )
+            + (
+                ("xse_get_type_from_game_id", "xseTypeForGame")
+                if _EXPECTED[kind]["typeName"] in {"F4SE", "F4SEVR", "SKSE64", "SFSE"}
+                else ()
             ),
         )
         for kind in _EXPECTED

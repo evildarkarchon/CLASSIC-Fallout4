@@ -265,7 +265,7 @@ def run_participant(
                 )
             ),
         )
-    if pack.document()["familyId"] == "update-services":
+    if pack.document()["familyId"] in {"update-services", "yaml-update-operations"}:
         command = replace(
             command,
             source_paths=command.source_paths
@@ -282,7 +282,7 @@ def run_participant(
     environment = os.environ.copy()
     environment["CLASSIC_CONFORMANCE_RUN_PLAN"] = str(prepared.run_plan_path)
     environment["CLASSIC_CONFORMANCE_OUTPUT"] = str(prepared.receipt_path)
-    if pack.document()["familyId"] == "update-services":
+    if pack.document()["familyId"] in {"update-services", "yaml-update-operations"}:
         command = replace(
             command,
             arguments=(

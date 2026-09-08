@@ -222,6 +222,7 @@ def settings_load_coverage_policy() -> FamilyCoveragePolicy:
 
 
 YAML_SYMBOLS = (
+    "clear_global_yaml_cache",
     "YamlOperations",
     "new",
     "parse_yaml",
@@ -237,6 +238,9 @@ YAML_SYMBOLS = (
     "YamlCacheStats",
 )
 YAML_OPERATIONS = (
+    "yamlClearCache",
+    "yamlGetCacheStats",
+    "clearYamlCache",
     None,
     "__init__",
     "parse_yaml",

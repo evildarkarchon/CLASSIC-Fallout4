@@ -15,11 +15,6 @@ from typing import Any
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from binding_parity_runtime_coverage import (
-    build_coverage_summary,
-    load_json_file,
-    render_coverage_summary_markdown,
-)
 from parity_artifact_io import (
     preserve_baseline_generated_at_all,
     write_json,
@@ -30,6 +25,7 @@ from parity_rust_surface import parse_rust_surface as _parse_rust_surface_shared
 RUST_TARGET_CRATES: dict[str, str] = {
     # Phase 1 original 10 crates (verified pre-state 2026-04-08).
     "classic-scanlog-core": "business-logic/classic-scanlog-core/src/lib.rs",
+    "classic-scan-presentation": "business-logic/classic-scan-presentation/src/lib.rs",
     "classic-config-core": "business-logic/classic-config-core/src/lib.rs",
     "classic-user-settings-core": "business-logic/classic-user-settings-core/src/lib.rs",
     "classic-version-registry-core": "business-logic/classic-version-registry-core/src/lib.rs",
@@ -65,6 +61,7 @@ RUST_TARGET_CRATES: dict[str, str] = {
 # sizing pipeline fails loud if one is missing rather than defaulting to aux.
 RUST_OWNER_BY_CRATE: dict[str, str] = {
     "classic-scanlog-core": "scanlog",
+    "classic-scan-presentation": "scanlog",
     "classic-config-core": "config",
     "classic-user-settings-core": "user_settings",
     "classic-version-registry-core": "version_registry",
@@ -326,7 +323,6 @@ def normalize_phase3_node_contract(contract: dict[str, Any]) -> dict[str, Any]:
     return enrich_executable_aux_owners(contract)
 
 
-
 def snake_to_camel(name: str) -> str:
     """Convert snake_case to camelCase."""
     chunks = name.split("_")
@@ -527,14 +523,6 @@ def generate_diff_report(
     # Strip the suffix to get the effective Rust symbol for tier1 tracking
     # (so a proxy row for `FormIDAnalyzer@rust` marks `FormIDAnalyzer` as
     # tier1-mapped for the rust_unmapped gap calculation below).
-    tier1_rust_symbols = {
-        _effective_rust_symbol(mapping["rustSymbol"]) for mapping in tier1_mappings
-    }
-    tier1_node_exports = {
-        mapping["nodeExport"]
-        for mapping in tier1_mappings
-        if mapping.get("nodeExport") is not None
-    }
 
     contract_results: list[dict[str, Any]] = []
     gaps: list[dict[str, Any]] = []
@@ -778,11 +766,6 @@ def main() -> int:
         default="docs/implementation/node_api_parity/baseline",
         help="Directory for generated output files, relative to repo root.",
     )
-    parser.add_argument(
-        "--runtime-registry",
-        default="node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        help="Path to the Node runtime coverage registry JSON, relative to repo root.",
-    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -818,32 +801,18 @@ def main() -> int:
         index_dts_rel=args.index_dts,
     )
     diff_report = generate_diff_report(contract, rust_manifest, node_manifest)
-    runtime_registry = load_json_file(repo_root / args.runtime_registry)
-    coverage_summary = build_coverage_summary(
-        binding="node",
-        contract=contract,
-        diff_report=diff_report,
-        runtime_registry=runtime_registry,
-        source_paths={
-            "contract": args.contract,
-            "runtime_registry": args.runtime_registry,
-            "index_dts": args.index_dts,
-        },
-    )
 
     # --output-dir defaults to the tracked baseline directory, so these writes
     # land straight in git. Carry each committed timestamp forward when only the
     # clock would have changed, keeping a no-op regeneration byte-identical.
-    # handoff_map.md and parity_diff_report.md follow from diff_report, and
-    # runtime_coverage_summary.md from coverage_summary, so preserving the JSON
-    # payloads stabilizes every markdown artifact too.
+    # handoff_map.md and parity_diff_report.md follow from diff_report, so
+    # preserving the JSON payload stabilizes both Markdown artifacts too.
     preserve_baseline_generated_at_all(
         output_dir,
         {
             "rust_api_surface.json": rust_manifest,
             "node_api_surface.json": node_manifest,
             "parity_diff_report.json": diff_report,
-            "runtime_coverage_summary.json": coverage_summary,
         },
     )
 
@@ -852,10 +821,6 @@ def main() -> int:
     write_json(output_dir / "parity_diff_report.json", diff_report)
     (output_dir / "parity_diff_report.md").write_text(
         render_diff_markdown(diff_report), encoding="utf-8"
-    )
-    write_json(output_dir / "runtime_coverage_summary.json", coverage_summary)
-    (output_dir / "runtime_coverage_summary.md").write_text(
-        render_coverage_summary_markdown(coverage_summary), encoding="utf-8"
     )
     (output_dir / "handoff_map.md").write_text(
         render_handoff_markdown(diff_report), encoding="utf-8"
@@ -866,8 +831,6 @@ def main() -> int:
     print(f"- {output_dir / 'node_api_surface.json'}")
     print(f"- {output_dir / 'parity_diff_report.json'}")
     print(f"- {output_dir / 'parity_diff_report.md'}")
-    print(f"- {output_dir / 'runtime_coverage_summary.json'}")
-    print(f"- {output_dir / 'runtime_coverage_summary.md'}")
     print(f"- {output_dir / 'handoff_map.md'}")
     return 0
 

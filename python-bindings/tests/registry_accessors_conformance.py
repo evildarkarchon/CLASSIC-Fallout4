@@ -20,8 +20,10 @@ def _context(registry: Any) -> dict[str, Any]:
 
 def observe_registry_accessors(family: str, fixture: dict[str, Any]) -> dict[str, Any]:
     """Invoke public accessors and always clear the dedicated process's registry."""
+    import classic_config as config
     import classic_registry as registry
 
+    original_config_dir = config.get_application_dir()
     registry.clear_all()
     try:
         request = fixture["request"]
@@ -61,6 +63,14 @@ def observe_registry_accessors(family: str, fixture: dict[str, Any]) -> dict[str
                 replacement = (
                     Path(registry.get_application_dir()).relative_to(root).as_posix()
                 )
+                # Separate extension DLLs own separate Rust statics; validate each
+                # alias in its exporting module, without assuming cross-DLL state.
+                config.set_application_dir(str(root / "first"))
+                if config.get_application_dir() != str(root / "first"):
+                    raise ValueError("config setter did not preserve first override")
+                config.set_application_dir(str(root / "second"))
+                if config.get_application_dir() != str(root / "second"):
+                    raise ValueError("config setter did not preserve replacement")
                 registry.clear_all()
                 return {
                     "initial": initial,
@@ -100,3 +110,5 @@ def observe_registry_accessors(family: str, fixture: dict[str, Any]) -> dict[str
     finally:
         # Failure cleanup prevents a later scenario inheriting process-global values.
         registry.clear_all()
+        if original_config_dir is not None:
+            config.set_application_dir(original_config_dir)

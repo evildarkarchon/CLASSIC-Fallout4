@@ -11,6 +11,7 @@ import pytest
 from conformance.coverage import (
     derive_observed_fact_ids,
     derive_row_coverage,
+    load_retained_analyzer_kinds,
     load_source_parity_rows,
 )
 from conformance.families.scan_game import SCAN_GAME_COVERAGE_POLICY
@@ -33,7 +34,21 @@ def test_scan_game_facts_require_complete_native_results_and_no_writes() -> None
                 / document["fixtures"][scenario["input"]["fixtureRef"]]
             ).read_text()
         )
-        assert set(fixture) == {"operation", "game", "files", "directories"}
+        assert "expected" not in fixture
+        if fixture["operation"] in {"validate-ini", "validate-enb"}:
+            assert set(fixture) == {"operation", "game", "files", "directories"}
+        elif fixture["operation"] == "process-logs":
+            assert set(fixture) == {
+                "operation",
+                "game",
+                "files",
+                "directories",
+                "catch",
+                "excludeFiles",
+                "excludeErrors",
+            }
+        else:
+            assert set(fixture) == {"operation", "xse", "unpacked", "archived"}
         expected = scenario["expected"]
         assert derive_observed_fact_ids(
             document, scenario, expected, SCAN_GAME_COVERAGE_POLICY
@@ -45,6 +60,8 @@ def test_scan_game_facts_require_complete_native_results_and_no_writes() -> None
                 document, scenario, changed, SCAN_GAME_COVERAGE_POLICY
             )
         for field in ("files", "directories"):
+            if field not in expected:
+                continue
             changed = copy.deepcopy(expected)
             changed[field].append(
                 {"path": "unexpected", "content": "write"}
@@ -79,11 +96,35 @@ def test_scan_game_receipts_reject_stale_partial_or_mutated_evidence(
     assert all(item.result == "pass" for item in report.scenarios)
     rows = load_source_parity_rows(ROOT)
     coverage = derive_row_coverage(
-        document, rows, policy, (report,), scope_participant_id=participant
+        document,
+        rows,
+        policy,
+        (report,),
+        scope_participant_id=participant,
+        retained_analyzers=load_retained_analyzer_kinds(ROOT),
     )
     assert coverage.rows
     assert not coverage.failures
-    assert all(row.evidence_kind == "executable" for row in coverage.rows)
+    assert all(
+        row.evidence_kind in {"executable", "structural"} for row in coverage.rows
+    )
+    if participant == "python":
+        for symbol in (
+            "EnbValidationResult",
+            "EnbResult",
+            "EnbConfigResult",
+            "ConfigIssue",
+            "IssueSeverity",
+        ):
+            carrier = next(
+                row
+                for row in rows
+                if row.participant_id == "python"
+                and row.rust_symbol == symbol
+                and row.runtime_operation is None
+                and row.mapping_origin == "canonical_rust"
+            )
+            assert carrier.obligation_id in {row.obligation_id for row in coverage.rows}
     prototype = next(
         row
         for row in rows
@@ -98,7 +139,12 @@ def test_scan_game_receipts_reject_stale_partial_or_mutated_evidence(
         runtime_operation="future_scan_game_method",
     )
     expanded = derive_row_coverage(
-        document, (*rows, added), policy, (report,), scope_participant_id=participant
+        document,
+        (*rows, added),
+        policy,
+        (report,),
+        scope_participant_id=participant,
+        retained_analyzers=load_retained_analyzer_kinds(ROOT),
     )
     assert [failure.obligation_id for failure in expanded.failures] == [
         added.obligation_id
@@ -122,7 +168,10 @@ def test_scan_game_receipts_reject_stale_partial_or_mutated_evidence(
                 policyExceptionId="invented-skip",
             )
         elif mutation == "wrong-result":
-            changed["scenarios"][-1]["observation"]["result"]["config"] = "Valid"
+            enb = next(
+                item for item in changed["scenarios"] if item["id"] == "enb-absent"
+            )
+            enb["observation"]["result"]["config"] = "Valid"
         elif mutation == "write":
             changed["scenarios"][0]["observation"]["files"].append(
                 {"path": "unexpected.txt", "content": "write"}

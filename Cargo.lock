@@ -1111,6 +1111,7 @@ dependencies = [
  "classic-settings-core",
  "classic-shared-core",
  "classic-update-core",
+ "classic-user-settings-core",
  "classic-version-core",
  "classic-version-registry-core",
  "classic-vocabulary",

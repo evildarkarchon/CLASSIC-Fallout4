@@ -1,0 +1,97 @@
+name: CI - Binding Compliance
+
+on:
+  push:
+    branches: [classic-next]
+  pull_request:
+    branches: [classic-next]
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    uses: ./.github/workflows/ci-rust.yml
+  node:
+    uses: ./.github/workflows/ci-typescript.yml
+  python:
+    uses: ./.github/workflows/ci-python-bindings.yml
+  native:
+    uses: ./.github/workflows/ci-cpp.yml
+
+  full:
+    name: Full Repository Conformance
+    needs: [rust, node, python, native]
+    if: ${{ !cancelled() }}
+    runs-on: windows-latest
+    timeout-minutes: 360
+    env:
+      RUST_BACKTRACE: 1
+      CARGO_TERM_COLOR: always
+      PYO3_PYTHON: ${{ github.workspace }}\python-bindings\.venv\Scripts\python.exe
+    steps:
+      # Reusable workflows and this default checkout share the event revision
+      # and Windows workspace layout. Immutable plans are never rewritten.
+      - uses: actions/checkout@v6
+
+      - name: Download current-run conformance artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: '*conformance*'
+          path: tools/binding_compliance/artifacts/downloaded
+          merge-multiple: false
+
+      - name: Require every retained participant job to pass
+        if: ${{ !cancelled() }}
+        env:
+          PARTICIPANT_RESULTS: ${{ toJSON(needs) }}
+        run: |
+          $results = $env:PARTICIPANT_RESULTS | ConvertFrom-Json -AsHashtable
+          if ($results.Count -ne 4 -or @($results.Values | Where-Object { $_.result -ne 'success' }).Count -ne 0) {
+            throw 'Every retained participant workflow must pass before repository conformance can pass.'
+          }
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install conformance YAML parser
+        run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
+
+      - name: Install Node dependencies
+        working-directory: node-bindings/classic-node
+        run: bun install --frozen-lockfile
+
+      - name: Build Node binding for retained runtime gates
+        working-directory: node-bindings/classic-node
+        run: bun run build
+
+      # Full runs every retained gate, including the Python sync/rebuild. Failed
+      # or missing participant receipts cannot borrow another job's success.
+      - name: Run full binding compliance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded --output-dir tools/binding_compliance/artifacts/full
+
+      - name: Upload full binding compliance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: full-binding-compliance-report
+          path: tools/binding_compliance/artifacts/full/
+          if-no-files-found: warn
+          retention-days: 7

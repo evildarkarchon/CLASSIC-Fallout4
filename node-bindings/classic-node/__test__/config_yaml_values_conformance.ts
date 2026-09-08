@@ -1,0 +1,46 @@
+/** Project public YAML fields and empty structured-collection results without YAML parsing. */
+export function yamlValues(data: any): Record<string, unknown> {
+  const values: Record<string, unknown> = {};
+  values["classic_version"] = data.classicVersion;
+  values["classic_version_date"] = data.classicVersionDate;
+  values["crashgen_name_field"] = data.crashgenName;
+  values["crashgen_latest_og"] = data.crashgenLatestOg;
+  values["warn_noplugins"] = data.warnNoplugins;
+  values["warn_outdated"] = data.warnOutdated;
+  values["xse_acronym"] = data.xseAcronym;
+  values["autoscan_text"] = data.autoscanText;
+  values["game_version"] = data.gameVersion;
+  values["game_root_name_field"] = data.gameRootName;
+  values["classic_game_hints"] = data.classicGameHints;
+  values["classic_records_list"] = data.classicRecordsList;
+  values["crashgen_ignore_og"] = data.crashgenIgnore;
+  values["game_ignore_plugins"] = data.gameIgnorePlugins;
+  values["game_ignore_records"] = data.gameIgnoreRecords;
+  values["ignore_list"] = data.ignoreList;
+  values["suspects_error_keys"] = data.suspectErrorRules.map((entry: any) => entry.id ?? "");
+  values["suspects_error_values"] = data.suspectErrorRules.map((entry: any) => entry.name ?? "");
+  values["suspects_stack_keys"] = data.suspectStackRules.map((entry: any) => entry.id ?? "");
+  values["mods_core_keys"] = data.gameModsCoreDetects;
+  values["mods_core_values"] = data.gameModsCoreDescriptions;
+  values["mods_core_names"] = data.gameModsCoreNames;
+  values["mods_core_gpus"] = data.gameModsCoreGpus;
+  values["mods_conf_mod_a"] = data.gameModsConf.map((entry: any) => entry.modA ?? "");
+  values["mods_conf_mod_b"] = data.gameModsConf.map((entry: any) => entry.modB ?? "");
+  values["mods_conf_name_a"] = data.gameModsConf.map((entry: any) => entry.nameA ?? "");
+  values["mods_conf_name_b"] = data.gameModsConf.map((entry: any) => entry.nameB ?? "");
+  values["mods_conf_descriptions"] = data.gameModsConf.map((entry: any) => entry.description ?? "");
+  values["mods_conf_fixes"] = data.gameModsConf.map((entry: any) => entry.fix ?? "");
+  values["mods_conf_links"] = data.gameModsConf.map((entry: any) => entry.link ?? "");
+  values["mods_core_count"] = data.gameModsCoreCount;
+  values["mods_conf_count"] = data.gameModsConf.length;
+  values["mods_freq_entries"] = data.gameModsFreq.length;
+  values["mods_solu_entries"] = data.gameModsSolu.length;
+  values["suspects_error_rules"] = data.suspectErrorRules.length;
+  values["suspects_stack_rules_metadata"] = data.suspectStackRules.length;
+  values.mods_conf_has_fixes = data.gameModsConf.map((entry: any) => entry.fix != null);
+  values.suspects_stack_count_rules_for_id = data.suspectStackRules.filter((entry: any) => entry.id === "absent-rule").reduce((sum: number, entry: any) => sum + entry.stackContainsAtLeast.length, 0);
+  values.get_crashgen_name = data.getCrashgenName();
+  values.get_game_root_name = data.getGameRootName();
+  values.get_crashgen_ignore = data.getCrashgenIgnore();
+  return values;
+}

@@ -6,7 +6,11 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
-from conformance.coverage import derive_row_coverage, load_source_parity_rows
+from conformance.coverage import (
+    derive_row_coverage,
+    load_retained_analyzer_kinds,
+    load_source_parity_rows,
+)
 from conformance.families.file_fingerprint import FILE_FINGERPRINT_COVERAGE_POLICY
 from conformance.packs import load_and_validate_pack
 from conformance.receipts import validate_prepared_run
@@ -44,7 +48,12 @@ def test_fingerprint_receipts_reject_lost_effects_and_new_methods(
     report = validate_prepared_run(pack, run, coverage_policy=policy)
     rows = load_source_parity_rows(ROOT)
     coverage = derive_row_coverage(
-        pack.document(), rows, policy, (report,), scope_participant_id=participant
+        pack.document(),
+        rows,
+        policy,
+        (report,),
+        scope_participant_id=participant,
+        retained_analyzers=load_retained_analyzer_kinds(ROOT),
     )
     assert coverage.rows
     assert not coverage.failures
@@ -57,6 +66,8 @@ def test_fingerprint_receipts_reject_lost_effects_and_new_methods(
         prototype,
         obligation_id="parity:future-hash-method",
         runtime_operation="future_method",
+        required_evidence_kind="runtime",
+        retained_analyzer_id=None,
     )
     expanded = derive_row_coverage(
         pack.document(),
@@ -64,6 +75,7 @@ def test_fingerprint_receipts_reject_lost_effects_and_new_methods(
         policy,
         (report,),
         scope_participant_id=participant,
+        retained_analyzers=load_retained_analyzer_kinds(ROOT),
     )
     assert [failure.obligation_id for failure in expanded.failures] == [
         future.obligation_id

@@ -31,6 +31,8 @@
       "id": "xse-operations.inspect",
       "rustSymbols": [
         "XseType",
+        "XseInfo",
+        "from_game_id",
         "loader_name",
         "dll_prefix",
         "detect_xse_version",

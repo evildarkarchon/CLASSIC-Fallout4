@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-08T01:23:04Z",
+  "generated_at_utc": "2026-09-08T07:48:54Z",
   "entries": [
     {
       "id": "0f1ce653765981f0",
@@ -7353,6 +7353,26 @@
       "coreRustSymbol": "LocalIgnoreRunState"
     },
     {
+      "id": "792f70658ed4adf9",
+      "rustSymbol": "classify_crash_pattern",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "content",
+            "type": "&str"
+          }
+        ],
+        "returnType": "String"
+      },
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "coreRustSymbol": "detect_crash_pattern"
+    },
+    {
       "id": "768db92e85831061",
       "rustSymbol": "crash_suspect_analyze",
       "kind": "function",
@@ -13625,6 +13645,26 @@
       "ownerModule": "shared",
       "rustCrate": "classic-shared-core",
       "coreRustSymbol": "as_str"
+    },
+    {
+      "id": "2e2bb77c38194322",
+      "rustSymbol": "game_id_display_name",
+      "kind": "function",
+      "bridgeModule": "shared",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/shared.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "id",
+            "type": "GameId"
+          }
+        ],
+        "returnType": "String"
+      },
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
+      "coreRustSymbol": "display_name"
     },
     {
       "id": "43170371baf7eb95",

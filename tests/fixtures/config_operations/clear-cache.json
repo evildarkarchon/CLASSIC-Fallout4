@@ -1,0 +1,6 @@
+{
+  "operation": "clear-cache",
+  "files": {
+    "main.yaml": "sentinel: untouched\n"
+  }
+}

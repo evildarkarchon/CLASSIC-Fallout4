@@ -26,6 +26,8 @@
     {
       "id": "version-registry.query",
       "rustSymbols": [
+        "get_version_registry",
+        "MatchConfidence",
         "get_by_id",
         "match_version",
         "VersionInfo",
@@ -51,6 +53,7 @@
     {
       "id": "version-registry.crashgen",
       "rustSymbols": [
+        "CrashgenConfig",
         "get_crashgen_versions",
         "get_crashgen_for_version",
         "VersionRegistry"

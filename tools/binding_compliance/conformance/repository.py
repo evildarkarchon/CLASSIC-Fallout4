@@ -18,6 +18,33 @@ from .enforcement import enforcement_for_family
 from .packs import discover_pack_paths, load_and_validate_pack
 
 
+def discover_repository_receipts(repo_root: Path, directory: Path) -> tuple[Path, ...]:
+    """Collect downloaded receipts without relocating or rewriting their plans.
+
+    Artifact-name subdirectories preserve colliding participant filenames. Empty
+    downloads, missing sibling plans, and paths escaping the checkout raise
+    ``ConformanceCommandError``; central receipt validation still authenticates
+    each plan and its source identity before any evidence can contribute.
+    """
+    root = repo_root.resolve()
+    artifact_root = _repository_path(
+        root, directory, label="receipt directory", must_exist=True
+    )
+    if not artifact_root.is_dir():
+        raise ConformanceCommandError("receipt directory must be a directory")
+    receipts = tuple(sorted(artifact_root.rglob("receipt.json")))
+    if not receipts:
+        raise ConformanceCommandError("receipt directory contains no receipts")
+    for receipt in receipts:
+        _repository_path(root, receipt, label="receipt path", must_exist=True)
+        plan = _repository_path(
+            root, receipt.parent / "run_plan.json", label="run plan", must_exist=True
+        )
+        if not receipt.is_file() or not plan.is_file():
+            raise ConformanceCommandError("receipt and sibling run plan must be files")
+    return receipts
+
+
 def build_repository_report(
     repo_root: Path, receipt_paths: Sequence[Path]
 ) -> dict[str, Any]:

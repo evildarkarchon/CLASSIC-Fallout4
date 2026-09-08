@@ -38,7 +38,10 @@ def test_value_methods_have_exact_python_applicability(tmp_path: Path) -> None:
         retained_analyzers=load_retained_analyzer_kinds(ROOT),
     )
     assert not coverage.failures
-    assert len(coverage.rows) == 6
+    assert {
+        "parity:python:version_registry.models.VersionInfo.__eq__",
+        "parity:python:version_registry.models.VersionInfo.__hash__",
+    } <= {row.obligation_id for row in coverage.rows}
     assert all(
         not predicate.covers_runtime_operation("future_value_method")
         for predicate in POLICY.predicates

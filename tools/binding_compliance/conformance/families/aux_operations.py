@@ -13,6 +13,10 @@ from ..coverage import CoveragePredicate, FamilyCoveragePolicy
 
 OPERATIONS = {
     "web-operations": (
+        ("name", ("mod_site_name", "get_mod_site_name")),
+        ("base_url", ("mod_site_base_url", "get_mod_site_url")),
+        ("USER_AGENT_PREFIX", ("get_user_agent_prefix",)),
+        ("CLASSIC_VERSION", ("get_classic_version",)),
         ("is_valid_url", ("is_valid_url",)),
         ("validate_url", ("validate_url", "validate_url_string")),
         ("extract_domain", ("extract_domain", "extract_domain_string")),
@@ -35,6 +39,9 @@ OPERATIONS = {
                 "mod_site_base_url",
                 "get_mod_site_name",
                 "get_mod_site_url",
+                "__eq__",
+                "__str__",
+                "__repr__",
             ),
         ),
     ),
@@ -45,6 +52,12 @@ OPERATIONS = {
             "ResourceType",
             (
                 "parse_resource_type",
+                "__eq__",
+                "__repr__",
+                "__str__",
+                "__eq__",
+                "__repr__",
+                "__str__",
                 "as_str",
                 "extensions",
                 "enumerate_resources",
@@ -68,6 +81,10 @@ OPERATIONS = {
                 "create_resource_info",
                 "create_resource_info_with_size",
                 "__init__",
+                "__repr__",
+                "__str__",
+                "__repr__",
+                "__str__",
                 "path",
                 "resource_type",
                 "size",
@@ -115,6 +132,17 @@ def _result(value: object) -> bool:
             and bool(value["error"])
         )
     )
+
+
+def _web_routes(value):
+    """Require exact public Fallout 4 routing for every supported mod site."""
+    return value == {
+        "urls": [
+            "https://www.nexusmods.com/fallout4",
+            "https://bethesda.net/mods",
+            "https://www.moddb.com/games",
+        ]
+    }
 
 
 def _observation(family: str, value: Mapping[str, Any]) -> bool:
@@ -264,7 +292,12 @@ def validate_aux_operations_pack(
     for scenario in document["scenarios"]:
         reference = scenario["input"].get("fixtureRef")
         if (
-            scenario["action"] != family + ".observe"
+            scenario["action"]
+            not in (
+                {"web-operations.observe", "web-operations.routes"}
+                if family == "web-operations"
+                else {family + ".observe"}
+            )
             or scenario["input"] != {"fixtureRef": reference}
             or scenario["fixtureRefs"] != [reference]
         ):
@@ -273,6 +306,13 @@ def validate_aux_operations_pack(
         if not path.is_relative_to(fixture_root):
             raise ValueError("auxiliary fixture escapes its root")
         fixture = json.loads(path.read_text(encoding="utf-8"))
+        if family == "web-operations" and scenario["action"] == "web-operations.routes":
+            if fixture != {
+                "request": {"operation": "game-routes", "game": "Fallout4"}
+            } or not _web_routes(scenario["expected"]):
+                raise ValueError("invalid web routing fixture or observation")
+            paths.append(path)
+            continue
         if family.startswith("version-") and "operation" in fixture.get("request", {}):
             from .version_extended import validate_fixture
 
@@ -365,5 +405,20 @@ def aux_operations_coverage_policy(family: str) -> FamilyCoveragePolicy:
             )
             for symbol, aliases in OPERATIONS[family]
         )
-        + tuple(predicates(family)),
+        + tuple(predicates(family))
+        + (
+            (
+                CoveragePredicate(
+                    id="web-game-routes",
+                    capability_id="web-operations.routes",
+                    action="web-operations.routes",
+                    observation_family="game-routes",
+                    rust_symbols=("game_url",),
+                    matches=_web_routes,
+                    runtime_operations=("mod_site_game_url", "get_mod_site_game_url"),
+                ),
+            )
+            if family == "web-operations"
+            else ()
+        ),
     )

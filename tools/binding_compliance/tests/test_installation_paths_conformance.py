@@ -25,6 +25,27 @@ ROOT = Path(__file__).resolve().parents[3]
 PACK = Path("tests/conformance/packs/installation_paths/v1.json")
 
 
+def test_installation_validation_calls_are_explicitly_owned() -> None:
+    """Only invoked native validation and per-file diagnostic operations get credit."""
+    for operation in (
+        "parse_xse_log",
+        "PathValidator.validate_custom_scan_path",
+        "docs_checker_validate_ini_file",
+        "validateSettingsPaths",
+        "path_validate_is_file",
+        "check_restricted_path",
+        "has_issue",
+        "removeReadonly",
+        "remove_readonly",
+        "isValidPath",
+        "validateRequiredFiles",
+    ):
+        assert any(
+            predicate.covers_runtime_operation(operation)
+            for predicate in POLICY.predicates
+        )
+
+
 def test_installation_paths_require_all_applicable_adapters():
     """Cached methods exist in every adapter, including both supported CXX instances."""
     pack = load_and_validate_pack(ROOT, PACK).document()

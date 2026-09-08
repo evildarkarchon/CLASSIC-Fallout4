@@ -21,7 +21,7 @@
           "StackSignal"
         ],
         "excludeIfStackContainsAny": [],
-        "stackContainsAtLeast": []
+        "stackContainsAtLeast": [{"substring": "StackSignal", "count": 1}]
       }
     ]
   },

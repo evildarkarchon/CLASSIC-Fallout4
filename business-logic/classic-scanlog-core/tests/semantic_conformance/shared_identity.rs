@@ -5,9 +5,26 @@ use classic_shared_core::{GameId, get_runtime};
 use serde_json::{Value, json};
 
 /// Query the public shared owner; never construct a separate Tokio runtime.
-pub(super) fn execute(family: &str, _fixture: &Value) -> RunnerResult<Value> {
+pub(super) fn execute(family: &str, fixture: &Value) -> RunnerResult<Value> {
     match family {
-        "game-identity" => Ok(json!({"tokens": GameId::all().map(|game| game.as_str())})),
+        "game-identity" => {
+            let games = GameId::all();
+            if fixture["request"]["operation"] == "metadata" {
+                return Ok(json!({"labels": games.map(|game| game.display_name())}));
+            }
+            if fixture["request"]["operation"] == "details" {
+                use std::hash::{Hash, Hasher};
+                let values = games.iter().enumerate().map(|(index, game)| {
+                    let copy: GameId = game.as_str().parse().expect("public token parses");
+                    let mut left = std::collections::hash_map::DefaultHasher::new();
+                    let mut right = std::collections::hash_map::DefaultHasher::new();
+                    game.hash(&mut left); copy.hash(&mut right);
+                    json!({"exeName": game.exe_name(), "vr": game.is_vr(), "text": game.to_string(), "repr": format!("GameId.{game:?}"), "equalCopy": *game == copy, "equalOther": *game == games[(index+1)%games.len()], "hashCopy": left.finish() == right.finish()})
+                }).collect::<Vec<_>>();
+                return Ok(json!({"games": values}));
+            }
+            Ok(json!({"tokens": games.map(|game| game.as_str())}))
+        }
         "runtime-access" => {
             let mut available = Vec::new();
             let mut diagnostics = Vec::new();

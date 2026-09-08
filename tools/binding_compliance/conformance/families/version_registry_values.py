@@ -81,5 +81,14 @@ VERSION_REGISTRY_VALUES_COVERAGE_POLICY = FamilyCoveragePolicy(
                 "CrashgenConfig.is_compatible_with",
             ),
         ),
+        CoveragePredicate(
+            id="version-registry-values.identity",
+            capability_id="version-registry-values.execute",
+            action="version-registry-values.execute",
+            observation_family="values",
+            rust_symbols=("VersionInfo",),
+            matches=_values,
+            runtime_operations=("__eq__", "__hash__"),
+        ),
     ),
 )

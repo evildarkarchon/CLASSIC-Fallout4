@@ -16,6 +16,37 @@ from conformance.packs import (
 )
 
 
+def copy_source_inventory(repo_root: Path, destination: Path) -> None:
+    """Copy parity rows and the real source needed to corroborate structural dispositions.
+
+    Native binaries and virtual environments are excluded. Tests still mutate
+    their own copies, so source-spoof and future-export checks remain isolated.
+    """
+    files = {Path("Cargo.toml"), Path("cpp-bindings/classic-cpp-bridge/build.rs")}
+    files.update(
+        Path(f"docs/implementation/{binding}_api_parity/baseline/parity_contract.json")
+        for binding in ("cxx", "node", "python")
+    )
+    files.update(
+        Path("node-bindings/classic-node") / name
+        for name in ("Cargo.toml", "index.d.ts", "src/lib.rs")
+    )
+    for base in ("python-bindings", "foundation"):
+        for crate in (repo_root / base).glob("classic-*-py"):
+            files.update(path.relative_to(repo_root) for path in crate.glob("*.pyi"))
+            files.update(
+                path.relative_to(repo_root) for path in (crate / "src").rglob("*.rs")
+            )
+    files.update(
+        path.relative_to(repo_root)
+        for path in (repo_root / "cpp-bindings/classic-cpp-bridge/src").rglob("*.rs")
+    )
+    for relative in sorted(files):
+        target = destination / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(repo_root / relative, target)
+
+
 def prepare_receipt_case(
     repo_root: Path,
     tmp_path: Path,
@@ -35,6 +66,13 @@ def prepare_receipt_case(
     shutil.copyfile(repo_root / pack_path, tmp_path / pack_path)
     fixture_path = source_pack.fixture_root.relative_to(repo_root)
     shutil.copytree(source_pack.fixture_root, tmp_path / fixture_path)
+    if any(
+        capability.get("operationScoped", False)
+        for capability in source_pack.document()["capabilities"]
+    ):
+        # Scoped plans derive participation from source inventories even in an
+        # isolated repository; copying their bytes preserves the real selection.
+        copy_source_inventory(repo_root, tmp_path)
     for arguments in (
         ("init",),
         ("config", "user.email", "conformance@example.invalid"),
@@ -82,6 +120,7 @@ def prepare_receipt_case(
             "failure": None,
         }
         for scenario in pack.document()["scenarios"]
+        if scenario["id"] in {item["id"] for item in plan["scenarios"]}
     ]
     run.receipt_path.write_text(json.dumps(receipt))
     return pack, run, receipt

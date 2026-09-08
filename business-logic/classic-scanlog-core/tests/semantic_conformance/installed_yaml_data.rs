@@ -176,6 +176,7 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
         _ => None,
     };
     let mut value = empty();
+    let mut backup_alias = None;
     match text(&fixture["operation"])?.as_str() {
         "inspect" => {
             let outcome = inspect_installed_yaml_data_with_env(
@@ -248,6 +249,40 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
                         "malformedIdentity":identity(&path,result.malformed_local_ignore_identity()),
                         "defaultIdentity":result.default_local_ignore_identity().map(|v|identity(&path,v)),
                         "selectedGameVersion":result.selected_game_version()});
+                    if fixture["recoveryAction"] == "proceed" {
+                        let snapshot = result.proceed_without_ignore();
+                        value["outcome"] = json!("proceeded");
+                        value["localIgnore"] = json!({"state": snapshot.local_ignore_state().as_str(), "identity": identity(IGNORE, snapshot.local_ignore_identity())});
+                        value["snapshot"] = json!({"classicVersion": snapshot.yaml_data().classic_version, "gameRootName": snapshot.yaml_data().game_root_name, "ignoreList": snapshot.yaml_data().ignore_list, "simplifyRemoveList": snapshot.simplify_remove_list()});
+                    } else if fixture["recoveryAction"] == "reset" {
+                        match result.reset_to_default()? {
+                            classic_config_core::LocalIgnoreResetOutcome::Conflict(conflict) => {
+                                value["outcome"] = json!("reset_conflict");
+                                value["recovery"]["decision"] = json!({"status": "conflict", "expectedIdentity": identity(IGNORE, conflict.expected_identity()), "actualIdentity": conflict.actual_identity().map(|v| identity(IGNORE, v)), "backupPath": conflict.backup_path().map(|p| relative(root,p)).transpose()?});
+                            }
+                            classic_config_core::LocalIgnoreResetOutcome::Reset(reset) => {
+                                let backup = relative(root, reset.backup_path())?;
+                                // Only the process-unique suffix is normalized, after validating retained hash ownership.
+                                let stem = format!(
+                                    "installation/CLASSIC Backup/YAML Data/Local Ignore/CLASSIC Ignore.yaml.{}.",
+                                    reset.malformed_local_ignore_identity().sha256_hex()
+                                );
+                                if !backup.starts_with(&stem) || !backup.ends_with(".bak") {
+                                    return Err(invalid(
+                                        "reset backup escaped its content-addressed namespace",
+                                    )
+                                    .into());
+                                }
+                                backup_alias = Some(backup);
+                                value["outcome"] = json!("reset");
+                                value["recovery"]["decision"] = json!({"status": "reset", "localIgnorePath": relative(root, reset.local_ignore_path())?, "malformedIdentity": identity(IGNORE, reset.malformed_local_ignore_identity()), "backupIdentity": identity("installation/CLASSIC Backup/YAML Data/Local Ignore/<backup>", reset.backup_identity()), "replacementIdentity": identity(IGNORE, reset.replacement_identity())});
+                                value["diagnostics"] = diagnostics(root, reset.diagnostics())?;
+                                let snapshot = reset.into_snapshot();
+                                value["localIgnore"] = json!({"state": snapshot.local_ignore_state().as_str(), "identity": identity(IGNORE, snapshot.local_ignore_identity())});
+                                value["snapshot"] = json!({"classicVersion": snapshot.yaml_data().classic_version, "gameRootName": snapshot.yaml_data().game_root_name, "ignoreList": snapshot.yaml_data().ignore_list, "simplifyRemoveList": snapshot.simplify_remove_list()});
+                            }
+                        }
+                    }
                 }
                 Err(InstalledYamlDataLoadError::UnsupportedGame { game }) => {
                     inspection_error(
@@ -273,6 +308,13 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
     }
     let mut durable_files = Vec::new();
     files(root, root, &mut durable_files)?;
+    if let Some(backup) = backup_alias {
+        for file in &mut durable_files {
+            if file["path"] == backup {
+                file["path"] = json!("installation/CLASSIC Backup/YAML Data/Local Ignore/<backup>");
+            }
+        }
+    }
     durable_files.sort_by(|a, b| a["path"].as_str().cmp(&b["path"].as_str()));
     value["files"] = json!(durable_files);
     Ok(value)

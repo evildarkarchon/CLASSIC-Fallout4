@@ -136,7 +136,14 @@ def compile_migrations(
         )
     if any(
         item["action"]
-        not in {"user-settings.open", "user-settings.update", "user-settings.migrate"}
+        not in {
+            "user-settings.open",
+            "user-settings.update",
+            "user-settings.migrate",
+            "user-settings.defaults",
+            "user-settings.geometry",
+            "user-settings.legacy-import",
+        }
         for item in pack["scenarios"]
     ):
         raise ValueError("unsupported User Settings scenario action")
@@ -432,6 +439,15 @@ def migration_predicates() -> tuple[CoveragePredicate, ...]:
             family,
             symbols,
             predicate,
+            runtime_operations=(
+                None,
+                "user_settings_restore_migration",
+                "restoreUserSettingsMigration",
+                "UserSettingsMigrationReceipt.restore",
+                "restore",
+            )
+            if suffix == "restore"
+            else None,
         )
         for suffix, family, symbols, predicate in (
             (
@@ -461,10 +477,9 @@ def migration_predicates() -> tuple[CoveragePredicate, ...]:
             (
                 "restore",
                 "durable-effects",
-                # CXX also maps legacy TUI import restoration to `restore`.
-                # Keep that ambiguous method under retained evidence; these
-                # receipt outcome types identify migration restoration exactly.
-                ("UserSettingsMigrationRestoreOutcome",),
+                # Explicit public operation selectors separate migration restore
+                # from the legacy TUI receipt's identically named core method.
+                ("UserSettingsMigrationRestoreOutcome", "restore"),
                 restored,
             ),
             ("error", "diagnostics", ("UserSettingsMigrationError",), failed),

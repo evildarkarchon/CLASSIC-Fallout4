@@ -29,6 +29,13 @@ loader requires ordered `Mods_CORE` sequences, so the new fixture uses that
 current contract instead of the historical Python fixture's mapping carrier.
 The old fixture remains available to its original tests.
 
+The #216 follow-up also observes `ExplicitYamlDataSnapshot.game` through each
+public adapter and checks the selected `Fallout4` identity. This supplies the
+previously absent CXX snapshot game accessor predicate and accounts for its
+observed snapshot carrier/YAML-data accessor. The four source-identity metadata
+getters remain outside this scenario with their focused bridge/core tests;
+their migration exclusions do not grant repository-wide runtime evidence.
+
 File, path, and message packs exercise the same public operation families as the
 retained Tier-1 auxiliary and infrastructure smoke tests. Their input fixtures
 are under `tests/fixtures/file_operations`, `path_operations_conformance`,

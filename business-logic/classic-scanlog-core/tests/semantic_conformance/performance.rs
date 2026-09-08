@@ -1,4 +1,4 @@
-//! Observe explicit performance samples without measuring wall-clock time.
+//! Observe explicit performance samples and measured timer lifecycle invariants.
 use super::{RunnerResult, invalid, text};
 use classic_perf_core::{clear_metrics, get_summary, record_timing};
 use serde_json::{Value, json};
@@ -20,6 +20,38 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
     // A failed observation must not leave samples for the next fixture.
     clear_metrics();
     result
+}
+
+/// Measure clock progress and exactly-once recording through both public constructors.
+pub(super) fn execute_timers(fixture: &Value) -> RunnerResult<Value> {
+    if fixture != &json!({"constructors": ["direct", "factory"]}) {
+        return Err(invalid("unsupported timer fixture").into());
+    }
+    clear_metrics();
+    let mut timers = Vec::new();
+    for constructor in ["direct", "factory"] {
+        let timer = if constructor == "direct" {
+            classic_perf_core::Timer::new(constructor)
+        } else {
+            classic_perf_core::start_timer(constructor)
+        };
+        let first = timer.elapsed();
+        // Assert progress, not a scheduler-specific elapsed duration.
+        std::thread::sleep(std::time::Duration::from_millis(2));
+        let later = timer.elapsed();
+        timer.finish();
+        let summary = get_summary();
+        let stats = summary.get(constructor);
+        timers.push(json!({
+            "constructor": constructor,
+            "advanced": first.is_finite() && later.is_finite() && first >= 0.0 && later > first,
+            "positive": stats.is_some_and(|s| s.total >= later && later > 0.0),
+            "singleSample": stats.is_some_and(|s| s.count == 1),
+            "summaryConsistent": stats.is_some_and(|s| s.total == s.average && s.total == s.min && s.total == s.max)
+        }));
+    }
+    clear_metrics();
+    Ok(json!({"timers": timers, "cleared": get_summary().is_empty()}))
 }
 
 /// Project native statistics into integer milliseconds for exact comparison.

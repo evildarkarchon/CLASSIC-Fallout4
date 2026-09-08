@@ -9,13 +9,15 @@
   "fixtures": {
     "populated": "populated.json",
     "missing": "missing.json",
-    "invalid": "invalid.json"
+    "invalid": "invalid.json",
+    "cache-defaults": "cache-defaults.json"
   },
   "capabilities": [
     {
       "id": "database-operations.pool",
       "rustSymbols": [
         "DatabasePool",
+        "cache_size",
         "initialize",
         "get_entry",
         "get_entries_batch",
@@ -29,6 +31,21 @@
         "errors",
         "durable-effects"
       ]
+    },
+    {
+      "id": "database-operations.cache-defaults",
+      "rustSymbols": [
+        "DEFAULT_CACHE_TTL_SECS",
+        "BATCH_CACHE_TTL_SECS",
+        "MAX_CACHE_TTL_SECS",
+        "DEFAULT_QUERY_CACHE_CAPACITY",
+        "DEFAULT_CACHE_CLEANUP_OP_THRESHOLD",
+        "DEFAULT_CACHE_CLEANUP_INTERVAL_SECS"
+      ],
+      "observationFamilies": [
+        "values"
+      ],
+      "operationScoped": true
     }
   ],
   "scenarios": [
@@ -50,16 +67,16 @@
         "available": true,
         "error": null,
         "single": [
-          "Alpha café",
+          "Alpha caf\u00e9",
           "",
           null,
-          "Alpha café"
+          "Alpha caf\u00e9"
         ],
         "batch": [
-          "Alpha café",
+          "Alpha caf\u00e9",
           "",
           null,
-          "Alpha café"
+          "Alpha caf\u00e9"
         ],
         "cleared": 2,
         "afterClear": 0,
@@ -141,6 +158,32 @@
             "hex": "6e6f7420612053514c6974652064617461626173650a"
           }
         ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "cache-defaults",
+      "action": "database-operations.cache-defaults",
+      "capabilityIds": [
+        "database-operations.cache-defaults"
+      ],
+      "fixtureRefs": [
+        "cache-defaults"
+      ],
+      "input": {
+        "fixtureRef": "cache-defaults"
+      },
+      "expected": {
+        "defaultTtl": 300,
+        "batchTtl": 1800,
+        "maximumTtl": 3600,
+        "capacity": 20000,
+        "cleanupThreshold": 2048,
+        "cleanupInterval": 30
       },
       "normalization": {
         "rootRelativePaths": false,

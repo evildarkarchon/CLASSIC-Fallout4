@@ -42,7 +42,7 @@ pub(crate) use papyrus::{
     CxxPapyrusAnalyzer, papyrus_analyze_full, papyrus_analyzer_new, papyrus_check_updates,
     papyrus_log_exists, papyrus_reset, papyrus_start_monitoring,
 };
-pub(crate) use util::{detect_crash_pattern, detect_vr_log};
+pub(crate) use util::{classify_crash_pattern, detect_crash_pattern, detect_vr_log};
 
 #[cxx::bridge(namespace = "classic::scanner")]
 mod ffi {
@@ -1356,6 +1356,8 @@ mod ffi {
         // Utilities
         fn detect_vr_log(content: &str) -> bool;
         fn detect_crash_pattern(content: &str) -> String;
+        /// Stable core classification token; empty means no known header pattern.
+        fn classify_crash_pattern(content: &str) -> String;
 
         // Papyrus monitoring
         type CxxPapyrusAnalyzer;

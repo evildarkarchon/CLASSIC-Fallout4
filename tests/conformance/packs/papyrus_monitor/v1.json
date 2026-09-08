@@ -1,0 +1,248 @@
+{
+  "schemaVersion": 1,
+  "familyId": "papyrus-monitor",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scanlog-core"
+  },
+  "fixtureRoot": "tests/fixtures/papyrus_monitor",
+  "fixtures": {
+    "tail": "tail.json",
+    "empty": "empty.json",
+    "missing": "missing.json",
+    "full": "full.json",
+    "full-missing": "full-missing.json"
+  },
+  "capabilities": [
+    {
+      "id": "papyrus-monitor.observe",
+      "rustSymbols": [
+        "PapyrusAnalyzer",
+        "PapyrusStats"
+      ],
+      "observationFamilies": [
+        "monitor-stages"
+      ],
+      "operationScoped": true
+    },
+    {
+      "id": "papyrus-monitor.full",
+      "rustSymbols": [
+        "PapyrusStats"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "full-stats"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "tail",
+      "action": "papyrus-monitor.observe",
+      "capabilityIds": [
+        "papyrus-monitor.observe"
+      ],
+      "fixtureRefs": [
+        "tail"
+      ],
+      "input": {
+        "fixtureRef": "tail"
+      },
+      "expected": {
+        "exists": true,
+        "error": null,
+        "initial": {
+          "dumps": 1,
+          "stacks": 1,
+          "warnings": 1,
+          "errors": 0,
+          "lines": 3,
+          "ratio": "1.000"
+        },
+        "tailStart": {
+          "dumps": 0,
+          "stacks": 0,
+          "warnings": 0,
+          "errors": 0,
+          "lines": 0,
+          "ratio": "0.000"
+        },
+        "updated": {
+          "dumps": 1,
+          "stacks": 1,
+          "warnings": 0,
+          "errors": 1,
+          "lines": 3,
+          "ratio": "1.000"
+        },
+        "idle": {
+          "dumps": 1,
+          "stacks": 1,
+          "warnings": 0,
+          "errors": 1,
+          "lines": 3,
+          "ratio": "1.000"
+        },
+        "afterReset": {
+          "dumps": 2,
+          "stacks": 2,
+          "warnings": 1,
+          "errors": 1,
+          "lines": 6,
+          "ratio": "1.000"
+        },
+        "finalContent": "Dumping Stacks\nDumping Stack\nx warning: old\nx error: new\nDumping Stacks\nDumping Stack\n"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "empty",
+      "action": "papyrus-monitor.observe",
+      "capabilityIds": [
+        "papyrus-monitor.observe"
+      ],
+      "fixtureRefs": [
+        "empty"
+      ],
+      "input": {
+        "fixtureRef": "empty"
+      },
+      "expected": {
+        "exists": true,
+        "error": null,
+        "initial": {
+          "dumps": 0,
+          "stacks": 0,
+          "warnings": 0,
+          "errors": 0,
+          "lines": 0,
+          "ratio": "0.000"
+        },
+        "tailStart": {
+          "dumps": 0,
+          "stacks": 0,
+          "warnings": 0,
+          "errors": 0,
+          "lines": 0,
+          "ratio": "0.000"
+        },
+        "updated": {
+          "dumps": 0,
+          "stacks": 0,
+          "warnings": 0,
+          "errors": 0,
+          "lines": 0,
+          "ratio": "0.000"
+        },
+        "idle": {
+          "dumps": 0,
+          "stacks": 0,
+          "warnings": 0,
+          "errors": 0,
+          "lines": 0,
+          "ratio": "0.000"
+        },
+        "afterReset": {
+          "dumps": 0,
+          "stacks": 0,
+          "warnings": 0,
+          "errors": 0,
+          "lines": 0,
+          "ratio": "0.000"
+        },
+        "finalContent": ""
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "missing",
+      "action": "papyrus-monitor.observe",
+      "capabilityIds": [
+        "papyrus-monitor.observe"
+      ],
+      "fixtureRefs": [
+        "missing"
+      ],
+      "input": {
+        "fixtureRef": "missing"
+      },
+      "expected": {
+        "exists": false,
+        "error": "missing",
+        "initial": null,
+        "tailStart": null,
+        "updated": null,
+        "idle": null,
+        "afterReset": null,
+        "finalContent": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "full",
+      "action": "papyrus-monitor.full",
+      "capabilityIds": [
+        "papyrus-monitor.full"
+      ],
+      "fixtureRefs": [
+        "full"
+      ],
+      "input": {
+        "fixtureRef": "full"
+      },
+      "expected": {
+        "stats": {
+          "dumps": 1,
+          "stacks": 1,
+          "warnings": 0,
+          "errors": 1,
+          "lines": 3
+        },
+        "error": null,
+        "content": "Dumping Stacks\nDumping Stack\nx error: hit\n"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "full-missing",
+      "action": "papyrus-monitor.full",
+      "capabilityIds": [
+        "papyrus-monitor.full"
+      ],
+      "fixtureRefs": [
+        "full-missing"
+      ],
+      "input": {
+        "fixtureRef": "full-missing"
+      },
+      "expected": {
+        "stats": null,
+        "error": "missing",
+        "content": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

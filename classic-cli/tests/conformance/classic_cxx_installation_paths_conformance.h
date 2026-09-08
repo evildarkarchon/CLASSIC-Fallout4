@@ -46,6 +46,26 @@ json execute_installation_paths_scenario(const json& plan, const json& scenario)
     const auto docs_path = owned_string(classic::path::detect_fallout4_docs_path(docs, "OG"));
     json checks = json::array();
     for (const auto& message : classic::path::docs_checker_run_all_checks(docs, "Fallout4")) checks.push_back(owned_string(message));
+    std::size_t ini_index = 0;
+    for (const auto* name : {"Fallout4.ini", "Fallout4Custom.ini", "Fallout4Prefs.ini"}) {
+        const auto check = classic::path::docs_checker_validate_ini_file(docs, "Fallout4", name);
+        if (check.exists || check.is_valid || !check.has_issue || owned_string(check.ini_name) != name || owned_string(check.message) != checks[ini_index++].get<std::string>()) throw RunnerError("per-file INI diagnosis disagrees with aggregate check");
+    }
+    fs::create_directories("validation/owned/scan");
+    classic::path::path_validate_custom_scan("validation/owned/scan");
+    classic::path::path_validate_exists(game);
+    classic::path::path_validate_is_directory(docs);
+    classic::path::path_validate_is_file(game + "/Fallout4.exe");
+    if (classic::path::is_restricted_path("validation/owned/scan") ||
+        classic::path::check_restricted_path("validation/owned/scan") ||
+        classic::game::check_restricted_path("validation/owned/scan") ||
+        !classic::path::is_restricted_path("Windows/System32/test") ||
+        !classic::path::check_restricted_path("Windows/System32/test") ||
+        !classic::game::check_restricted_path("Windows/System32/test")) throw RunnerError("restricted-path classification changed");
+    fs::remove_all("validation");
+    { std::ofstream log("path-detection.log", std::ios::binary); log << "plugin directory = \"" << game << "/Data/F4SE/Plugins\"\n"; log.close(); if (!log) throw RunnerError("cannot write owned XSE log"); }
+    if (owned_string(classic::path::parse_xse_log("path-detection.log")) != game) throw RunnerError("XSE log extraction changed game root");
+    fs::remove("path-detection.log");
     json directories = json::array();
     for (const auto& entry : fs::recursive_directory_iterator(root)) {
         if (entry.is_directory()) directories.push_back(entry.path().lexically_relative(root).generic_string());

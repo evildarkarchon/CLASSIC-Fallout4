@@ -33,6 +33,13 @@ def observe_version_registry(fixture: Mapping[str, Any]) -> dict[str, Any]:
             # Isolate first-use YAML discovery from repository/user configuration.
             os.chdir(root)
             observation = _observe(fixture, classic_version_registry.VersionRegistry())
+            if (
+                _observe(fixture, classic_version_registry.get_version_registry())
+                != observation
+            ):
+                raise ValueError(
+                    "registry constructor and singleton entry point disagree"
+                )
             files = []
             for path in sorted(root.iterdir()):
                 if path.is_symlink() or not path.is_file():
@@ -98,6 +105,15 @@ def _observe(fixture: Mapping[str, Any], registry: Any) -> dict[str, Any]:
         by_name = registry.get_by_short_name(request["shortName"])
         info = registry.get_by_id(request["id"])
         handling = registry.unknown_version_handling
+        if (
+            info is not None
+            and info.address_library is not None
+            and info.address_library.filename
+            != registry.get_address_library_filename(info.version, info.is_vr)
+        ):
+            raise ValueError(
+                "address-library carrier and public filename query disagree"
+            )
         if (
             info is not None
             and info.get_crashgen_version_strings()
@@ -224,6 +240,14 @@ def _observe(fixture: Mapping[str, Any], registry: Any) -> dict[str, Any]:
 
 def _match_result(matched: Any) -> dict[str, Any]:
     """Compare both Python matching entry points through native result fields."""
+    confidence = matched.confidence_enum
+    copy = matched.confidence_enum
+    if confidence != copy or hash(confidence) != hash(copy):
+        raise ValueError("confidence copies disagree in equality or hash")
+    if confidence.is_high_confidence() != (str(confidence) in {"exact", "range"}):
+        raise ValueError("confidence predicate disagrees with public confidence name")
+    if str(confidence) != matched.confidence:
+        raise ValueError("confidence object and public string disagree")
     return {
         "matchedId": None if matched.version_info is None else matched.version_info.id,
         "confidence": str(matched.confidence),

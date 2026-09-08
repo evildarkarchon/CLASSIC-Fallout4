@@ -1,0 +1,16 @@
+{
+  "operation": "records",
+  "lines": [
+    "Weapon Example",
+    "Weapon ignored",
+    "quiet",
+    "actorbase Player"
+  ],
+  "targets": [
+    "Weapon",
+    "ActorBase"
+  ],
+  "ignore": [
+    "ignored"
+  ]
+}

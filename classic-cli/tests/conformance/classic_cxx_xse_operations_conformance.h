@@ -18,6 +18,8 @@ json execute_xse_operations_scenario(const json& plan, const json& scenario) {
     else if (variant == "SKSEVR") { kind = classic::xse::XseType::SKSEVR; prefix = "sksevr_"; }
     else if (variant == "SFSE") { kind = classic::xse::XseType::SFSE; prefix = "sfse_"; }
     else throw RunnerError("unsupported XSE variant");
+    const auto game_id = variant == "F4SE" ? "Fallout4" : variant == "F4SEVR" ? "Fallout4VR" : variant == "SKSE64" ? "Skyrim" : variant == "SFSE" ? "Starfield" : "";
+    if (*game_id && owned_string(classic::xse::xse_get_type_from_game_id(game_id)) != variant) throw RunnerError("XSE game mapping disagrees with fixture type");
     TemporaryDirectory temporary(plan.at("invocation").at("id").get<std::string>(), scenario.at("id").get<std::string>());
     const auto& root = temporary.path();
     for (const auto& value : fixture.at("files")) {

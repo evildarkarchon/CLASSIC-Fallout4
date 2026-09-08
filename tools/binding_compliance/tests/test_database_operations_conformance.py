@@ -11,6 +11,7 @@ import pytest
 from conformance.coverage import (
     derive_observed_fact_ids,
     derive_row_coverage,
+    load_retained_analyzer_kinds,
     load_source_parity_rows,
 )
 from conformance.families.database_operations import DATABASE_OPERATIONS_COVERAGE_POLICY
@@ -20,6 +21,45 @@ from receipt_test_support import prepare_receipt_case
 
 ROOT = Path(__file__).resolve().parents[3]
 PACK = Path("tests/conformance/packs/database_operations/v1.json")
+
+
+def test_database_constants_have_an_independent_shared_observation() -> None:
+    """Cache defaults must be observed as values, not inferred from pool behavior."""
+    document = load_and_validate_pack(ROOT, PACK).document()
+    scenario = next(
+        (case for case in document["scenarios"] if case["id"] == "cache-defaults"), None
+    )
+    assert scenario is not None
+    expected = scenario["expected"]
+    assert expected == {
+        "defaultTtl": 300,
+        "batchTtl": 1800,
+        "maximumTtl": 3600,
+        "capacity": 20000,
+        "cleanupThreshold": 2048,
+        "cleanupInterval": 30,
+    }
+    assert derive_observed_fact_ids(
+        document, scenario, expected, DATABASE_OPERATIONS_COVERAGE_POLICY
+    )
+
+
+def test_database_control_methods_have_executable_fact_ownership() -> None:
+    """Pool controls and cache inspection are exercised alongside lookup effects."""
+    for operation in (
+        "set_cache_capacity",
+        "get_cache_capacity",
+        "set_game_table",
+        "get_stats",
+        "optimize",
+        "rebalance_connections",
+        "recalculate_max_connections",
+        "db_pool_cache_size",
+    ):
+        assert any(
+            predicate.covers_runtime_operation(operation)
+            for predicate in DATABASE_OPERATIONS_COVERAGE_POLICY.predicates
+        )
 
 
 def test_database_facts_require_complete_observations() -> None:
@@ -45,15 +85,9 @@ def test_database_facts_require_complete_observations() -> None:
 
 
 def test_database_fact_does_not_credit_unobserved_pool_methods() -> None:
-    """Lookup receipts never imply optimizer, setter, or statistics coverage."""
+    """Exercising current pool controls must not credit unknown future methods."""
     for predicate in DATABASE_OPERATIONS_COVERAGE_POLICY.predicates:
-        for operation in (
-            "optimize",
-            "set_game_table",
-            "get_stats",
-            "rebalance_connections",
-            "future_pool_method",
-        ):
+        for operation in ("future_pool_method",):
             assert not predicate.covers_runtime_operation(operation)
 
 
@@ -91,7 +125,12 @@ def test_database_receipt_lifecycle_fails_closed(
     assert all(scenario.result == "pass" for scenario in report.scenarios)
     rows = load_source_parity_rows(ROOT)
     coverage = derive_row_coverage(
-        document, rows, policy, (report,), scope_participant_id=participant
+        document,
+        rows,
+        policy,
+        (report,),
+        scope_participant_id=participant,
+        retained_analyzers=load_retained_analyzer_kinds(ROOT),
     )
     assert coverage.rows
     assert not coverage.failures
@@ -104,9 +143,16 @@ def test_database_receipt_lifecycle_fails_closed(
         prototype,
         obligation_id="parity:test:future-database-operation",
         runtime_operation="future_database_operation",
+        required_evidence_kind="runtime",
+        retained_analyzer_id=None,
     )
     expanded = derive_row_coverage(
-        document, (*rows, added), policy, (report,), scope_participant_id=participant
+        document,
+        (*rows, added),
+        policy,
+        (report,),
+        scope_participant_id=participant,
+        retained_analyzers=load_retained_analyzer_kinds(ROOT),
     )
     assert [failure.obligation_id for failure in expanded.failures] == [
         added.obligation_id

@@ -1,0 +1,9 @@
+{
+  "operation": "cache",
+  "files": {
+    "sample.ini": "[Settings]\nname=hello\nenabled=yes\ncount=7\nscale=2.5\n",
+    "A/dup.ini": "[Settings]\nvalue=same\n",
+    "B/dup.ini": "[Settings]\nvalue=same\n"
+  },
+  "game": "Fallout4"
+}

@@ -9,8 +9,8 @@ This file supplements `AGENTS.md`. Keep always-on architecture rules there; keep
 | Rust-only crates | `cargo fmt`, `cargo clippy`, focused `cargo test`; set `PYO3_PYTHON` first if PyO3 can build | Affected `docs/api/` pages for public contracts |
 | `classic-cli/` or `classic-gui/` | PowerShell wrappers in `Native C++ Wrappers` | Packaging/install output only when requested; CLI integration fixtures may require submodules |
 | `cpp-bindings/classic-cpp-bridge/` or Rust APIs exposed through C++ | CXX parity gate, then CLI/GUI wrapper tests for changed consumers | `docs/implementation/cxx_api_parity/baseline/`; `docs/api/cxx-parity-gate.md` |
-| `node-bindings/classic-node/` or Rust APIs exposed through Node | Node parity gate, declaration freshness, Bun and Node tests | `index.d.ts`, Node runtime coverage registry, `docs/implementation/node_api_parity/baseline/` |
-| `python-bindings/` or Rust APIs exposed through Python | Python parity gate, stub validation, rebuild, pytest | `.pyi` files, Python runtime coverage registry, `python-bindings/parity-artifacts/`, `docs/implementation/python_api_parity/baseline/` |
+| `node-bindings/classic-node/` or Rust APIs exposed through Node | Node parity gate, declaration freshness, Bun and Node tests | `index.d.ts`, shared conformance packs and receipts, `docs/implementation/node_api_parity/baseline/` |
+| `python-bindings/` or Rust APIs exposed through Python | Python parity gate, stub validation, rebuild, pytest | `.pyi` files, shared conformance packs and receipts, `python-bindings/parity-artifacts/`, `docs/implementation/python_api_parity/baseline/` |
 | `CLASSIC Data/databases/` or schema-version behavior | Schema drift guard and YAML publish validator | `docs/api/yaml-update-delivery.md` for loader, manifest, or delivery contract changes |
 | `CLASSIC Data/app-notification.yaml` or notification publish tooling | Notification source validator, dry-run harness, publish-tool tests | `docs/api/app-update-notification-delivery.md` and affected update/path/error API docs |
 | Linux or cloud validation | Rust-only subsets and source-only gates first | Note any skipped Windows/MSVC-native checks explicitly |
@@ -85,6 +85,27 @@ Use the `--group drift-guards` form when the schema drift guard or YAML publish 
 
 ## Binding Parity Workflows
 
+The canonical contributor entrypoint is the Binding Compliance Suite. Run the
+source profile first; run applicable scenario launchers against built native
+bindings; aggregate a directory containing every family and execution instance
+only when requesting repository-wide proof:
+
+```powershell
+python tools/binding_compliance/check_compliance.py --repo-root . --profile ci
+python tools/binding_compliance/run_semantic_conformance.py --family <family> --participant <rust|node|python>
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family <family> -Compiler msvc
+pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family <family> -Compiler clang-cl
+python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory <receipt-directory>
+```
+
+Use the dedicated Scan Run/User Settings/consumer launchers listed in
+`docs/api/binding-compliance-suite.md` for those packs. Missing or stale receipts
+fail the full profile; source profiles and individual family jobs cannot certify
+the repository. Preserve sibling immutable plans when moving receipt artifacts.
+The old runtime registries, their loaders, claim-only summaries, and migration
+ledger are removed. The commands below remain focused source diagnostics and
+intentional baseline refresh tools; they do not grant runtime proof.
+
 ### CXX
 
 Use this when bridge source, `cpp-bindings/classic-cpp-bridge/build.rs`, or a Rust public API exposed through the bridge changes.
@@ -120,7 +141,7 @@ bun run parity:gate:local:vsdev
 bun run shell:vsdev           # interactive VS dev shell in this directory
 ```
 
-Use `parity:gate:local` only for intentional source-backed drift; it refreshes `index.d.ts`, updates the tracked Node baseline, and verifies declaration freshness. Commit affected files under `docs/implementation/node_api_parity/baseline/`, `node-bindings/classic-node/index.d.ts`, and `node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json` when ownership changes. Do not commit `node-bindings/classic-node/parity-artifacts/` or generated `index.js`.
+Use `parity:gate:local` only for intentional source-backed drift; it refreshes `index.d.ts`, updates the tracked Node baseline, and verifies declaration freshness. Commit affected files under `docs/implementation/node_api_parity/baseline/`, `node-bindings/classic-node/index.d.ts` when source ownership changes. Do not commit `node-bindings/classic-node/parity-artifacts/` or generated `index.js`.
 
 ### Python
 
@@ -143,7 +164,7 @@ uv sync --project python-bindings --inexact --group drift-guards
 uv run --project python-bindings python tools/schema_version_gate.py --repo-root .
 ```
 
-Commit touched `.pyi` files, runtime coverage registry changes under `python-bindings/tests/fixtures/`, tracked reports under `python-bindings/parity-artifacts/`, and affected files under `docs/implementation/python_api_parity/baseline/` when generated results legitimately change.
+Commit touched `.pyi` files, shared conformance pack/adapter changes, tracked reports under `python-bindings/parity-artifacts/`, and affected files under `docs/implementation/python_api_parity/baseline/` when generated results legitimately change.
 
 ## Data Publish Workflows
 
@@ -180,6 +201,7 @@ Primary workflows:
 
 | Workflow | Purpose |
 | --- | --- |
+| `ci-binding-compliance.yml` | Blocking umbrella: same-revision reusable participant workflows, then full authenticated receipt aggregation |
 | `ci-cpp.yml` | CXX parity plus CLI and GUI build/test pipeline |
 | `ci-rust.yml` | Rust format, lint, build, and test pipeline |
 | `ci-typescript.yml` | Node parity, declaration freshness, and runtime tests |

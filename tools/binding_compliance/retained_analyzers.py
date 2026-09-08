@@ -42,6 +42,29 @@ WORKFLOW_BLOCKING_OWNERS: dict[str, dict[str, str]] = {
 
 BASE_ANALYZER_CATALOG: tuple[dict[str, Any], ...] = (
     {
+        "id": "cxx-opaque-map-reachability",
+        "evidenceKind": "negative",
+        "paths": [
+            "tools/binding_compliance/cxx_opaque_map_reachability.py",
+            "cpp-bindings/classic-cpp-bridge/src/types.rs",
+            "cpp-bindings/classic-cpp-bridge/src/types_tests.rs",
+            "cpp-bindings/classic-cpp-bridge/build.rs",
+        ],
+        "blockingRequirementId": "cxx-opaque-map-reachability",
+    },
+    {
+        "id": "node-package-metadata",
+        "evidenceKind": "structural",
+        "paths": [
+            "tools/binding_compliance/node_package_metadata.py",
+            "node-bindings/classic-node/src/lib.rs",
+            "node-bindings/classic-node/Cargo.toml",
+            "node-bindings/classic-node/index.d.ts",
+            "Cargo.toml",
+        ],
+        "blockingRequirementId": "node-package-metadata",
+    },
+    {
         "id": "installation-discovery-source-boundary",
         "evidenceKind": "structural",
         "paths": [

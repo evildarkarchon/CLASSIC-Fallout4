@@ -114,6 +114,11 @@ def _invalid(value: Mapping[str, Any]) -> bool:
     )
 
 
+def _address_carrier(value: Mapping[str, Any]) -> bool:
+    """A missing address library cannot prove its Python configuration object."""
+    return _details(value) and isinstance(value["result"]["addressLibrary"], str)
+
+
 VERSION_REGISTRY_DETAILS_COVERAGE_POLICY = FamilyCoveragePolicy(
     "version-registry-details",
     (
@@ -125,6 +130,15 @@ VERSION_REGISTRY_DETAILS_COVERAGE_POLICY = FamilyCoveragePolicy(
             rust_symbols=SYMBOLS,
             matches=_details,
             runtime_operations=OPERATIONS,
+        ),
+        CoveragePredicate(
+            id="version-registry-details.address-carrier",
+            capability_id="version-registry-details.execute",
+            action="version-registry-details.execute",
+            observation_family="values",
+            rust_symbols=("AddressLibraryConfig",),
+            matches=_address_carrier,
+            runtime_operations=(None,),
         ),
         CoveragePredicate(
             id="version-registry-details.invalid",

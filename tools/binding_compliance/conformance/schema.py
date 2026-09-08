@@ -225,10 +225,19 @@ def validate_pack_document(document: Mapping[str, Any]) -> None:
         capability = _mapping(raw_capability, label)
         _exact_keys(
             capability,
-            frozenset({"id", "rustSymbols", "observationFamilies"}),
+            frozenset({"id", "rustSymbols", "observationFamilies"})
+            | ({"operationScoped"} if "operationScoped" in capability else set())
+            | ({"rustCrate"} if "rustCrate" in capability else set()),
             label,
         )
+        if (
+            "operationScoped" in capability
+            and type(capability["operationScoped"]) is not bool
+        ):
+            raise ConformanceSchemaError(f"{label}.operationScoped must be a boolean")
         _nonempty_string(capability["id"], f"{label}.id")
+        if "rustCrate" in capability:
+            _pattern_string(capability["rustCrate"], f"{label}.rustCrate", _STABLE_ID)
         _string_array(capability["rustSymbols"], f"{label}.rustSymbols", nonempty=True)
         _string_array(
             capability["observationFamilies"],

@@ -88,6 +88,25 @@ json execute_file_operations(const json& plan, const json& scenario) {
         result["error"] = "io_error";
     }
     if (operation == "read-text") {
+        // Similarity inputs have a separate owner so read/write inventories stay exact.
+        TemporaryDirectory similarity_root(plan.at("invocation").at("id").get<std::string>(),
+                                          scenario.at("id").get<std::string>() + "-similarity");
+        const auto left = similarity_root.path() / "left.txt";
+        const auto right = similarity_root.path() / "right.txt";
+        const std::string first = "alpha\nbeta\n";
+        { std::ofstream output(left, std::ios::binary); output << first; }
+        result["similarity"] = json::array();
+        for (const auto& second : {first, std::string("gamma\ndelta\n"), std::string("alpha\ngamma\n")}) {
+            { std::ofstream output(right, std::ios::binary | std::ios::trunc); output << second; }
+            const double ratio = classic::files::calculate_file_similarity(left.string(), right.string());
+            std::ostringstream formatted;
+            formatted.imbue(std::locale::classic());
+            formatted << std::fixed << std::setprecision(6) << ratio;
+            result["similarity"].push_back(formatted.str());
+            if (file_operation_files(similarity_root.path()) != json::array({json{{"path", "left.txt"}, {"content", first}}, json{{"path", "right.txt"}, {"content", second}}})) {
+                throw RunnerError("file similarity changed source bytes");
+            }
+        }
         json alias{{"content", nullptr}, {"error", nullptr}};
         try {
             alias["content"] = owned_string(classic::files::read_report_file(target.string()));

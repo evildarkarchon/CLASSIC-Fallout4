@@ -1,0 +1,4 @@
+{
+  "mode": "sqlite-missing",
+  "databasePath": "tests/fixtures/formid_finding/missing.sqlite3"
+}

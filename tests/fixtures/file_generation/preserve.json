@@ -1,0 +1,10 @@
+{
+  "game": "Fallout4VR",
+  "ignore": "ignore: true\n",
+  "local": "local: true\n",
+  "files": {
+    "sentinel.txt": "keep",
+    "CLASSIC Ignore.yaml": "existing bytes\n",
+    "CLASSIC Data/CLASSIC Fallout4VR Local.yaml": "existing bytes\n"
+  }
+}

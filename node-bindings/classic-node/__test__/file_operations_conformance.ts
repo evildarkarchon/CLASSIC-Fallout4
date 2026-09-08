@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { JsFileIO } from "../index.js";
+import { JsFileIO, calculateFileSimilarity, calculateTextSimilarity } from "../index.js";
 
 type JsonObject = Record<string, any>;
 
@@ -48,8 +48,28 @@ export async function observeFileOperations(fixture: JsonObject): Promise<JsonOb
       result.error = "io_error";
     }
     result.files = await files(root);
+    if (operation === "read-text") result.similarity = await similarityObservation();
     return result;
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+}
+
+/** Compare native file and text APIs without allowing either to mutate source bytes. */
+async function similarityObservation(): Promise<string[]> {
+  const root = await mkdtemp(join(tmpdir(), "classic-similarity-"));
+  try {
+    const left = join(root, "left.txt"), right = join(root, "right.txt");
+    const first = "alpha\nbeta\n";
+    await writeFile(left, first);
+    const results = [];
+    for (const second of [first, "gamma\ndelta\n", "alpha\ngamma\n"]) {
+      await writeFile(right, second);
+      const result = calculateFileSimilarity(left, right);
+      if (calculateTextSimilarity(first, second) !== result) throw new Error("text similarity disagrees with native file similarity");
+      if (await readFile(left, "utf8") !== first || await readFile(right, "utf8") !== second) throw new Error("similarity changed source bytes");
+      results.push(result.toFixed(6));
+    }
+    return results;
+  } finally { await rm(root, {recursive: true, force: true}); }
 }

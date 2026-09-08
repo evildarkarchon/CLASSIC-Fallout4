@@ -2,6 +2,7 @@ import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative, sep } from "node:path";
 import * as classic from "../index.js";
+import { yamlValues } from "./config_yaml_values_conformance.js";
 
 type JsonObject = Record<string, any>;
 
@@ -19,16 +20,31 @@ async function inventory(root: string, directory = root): Promise<JsonObject[]> 
 
 /** Invoke the public explicit loader, retaining structured failures and all durable effects. */
 export async function observeConfigOperations(fixture: JsonObject): Promise<JsonObject> {
-  if (fixture.operation !== "load-explicit" || Object.keys(fixture).sort().join() !== "files,operation") {
+  if (!["load-explicit", "main-version", "persist-local"].includes(fixture.operation) || Object.keys(fixture).sort().join() !== (fixture.operation === "persist-local" ? "docsRoot,files,gameRoot,operation" : "files,operation")) {
     throw new Error("unsupported config operation fixture");
   }
   const root = await mkdtemp(join(tmpdir(), "classic-config-conformance-"));
   try {
     for (const [name, content] of Object.entries(fixture.files)) {
-      if (!["main.yaml", "game.yaml", "ignore.yaml"].includes(name) || typeof content !== "string") {
+      if (!["main.yaml", "game.yaml", "ignore.yaml", "CLASSIC Main.yaml", "local.yaml", "CLASSIC Settings.yaml"].includes(name) || typeof content !== "string") {
         throw new Error("config fixture requires owned YAML filenames and UTF-8 text");
       }
       await writeFile(join(root, name), content, "utf8");
+    }
+    if (fixture.operation === "persist-local") {
+      await classic.persistGameLocalPaths(join(root, "local.yaml"), fixture.gameRoot, fixture.docsRoot);
+      return {result: null, error: null, files: await inventory(root)};
+    }
+    if (fixture.operation === "main-version") {
+      // Own resolver inputs while this sequential adapter awaits native loading.
+      const previous = new Map(["LOCALAPPDATA", "XDG_CACHE_HOME"].map(name => [name, process.env[name]]));
+      try {
+        for (const name of previous.keys()) process.env[name] = join(root, "isolated-cache");
+        const version = await classic.loadMainYamlVersion(root);
+        return {result: {version}, error: null, files: await inventory(root)};
+      } finally {
+        for (const [name, value] of previous) { if (value === undefined) delete process.env[name]; else process.env[name] = value; }
+      }
     }
     let result: JsonObject | null = null;
     let error: JsonObject | null = null;
@@ -45,8 +61,15 @@ export async function observeConfigOperations(fixture: JsonObject): Promise<Json
       error = { code: failure.code, role: failure.yamlRole ?? null, path: failure.path == null ? null : relative(root, failure.path).split(sep).join("/") };
     }
     if (snapshot !== undefined) {
+      if (snapshot.game !== classic.JsGameId.Fallout4) throw new Error("explicit snapshot returned an unexpected game");
       const data = snapshot.yamlData;
-      result = { classicVersion: data.classicVersion, xseAcronym: data.xseAcronym, crashgenName: data.crashgenName, gameVersion: data.gameVersion, ignoreList: data.ignoreList };
+      if (snapshot.gameDataRole !== classic.JsExplicitYamlDataGameRole.Fallout4) throw new Error("explicit snapshot returned an unexpected game role");
+      result = { game: "Fallout4", classicVersion: data.classicVersion, xseAcronym: data.xseAcronym, crashgenName: data.crashgenName, gameVersion: data.gameVersion, ignoreList: data.ignoreList };
+      result.gameRole = "Fallout4";
+      result.yamlValues = yamlValues(data);
+      const fromContent = classic.createYamlDataFromContent(fixture.files["main.yaml"], fixture.files["game.yaml"], fixture.files["ignore.yaml"], "Fallout4", "auto");
+      if (JSON.stringify(yamlValues(fromContent)) !== JSON.stringify(result.yamlValues)) throw new Error("content constructor differs from retained explicit data");
+      result.identities = Object.fromEntries([["main.yaml", snapshot.mainIdentity], ["game.yaml", snapshot.gameIdentity], ["ignore.yaml", snapshot.ignoreIdentity]].map(([name, identity]: any) => [name, {sha256: identity.sha256, byteLen: Number(identity.byteLen)}]));
     }
     return { result, error, files: await inventory(root) };
   } finally {

@@ -109,6 +109,7 @@ struct ScenarioInput {
     standard_source: Option<StandardSourceInput>,
     unsolved_logs: Option<UnsolvedLogsInput>,
     unsolved_logs_path: Option<PathInput>,
+    unsolved_logs_destination: Option<PathInput>,
     setup_context: Option<SetupContextInput>,
 }
 
@@ -131,6 +132,7 @@ enum ObservationProfile {
     LocalIgnore,
     Lifecycle,
     AutoscanReport,
+    ConfigIssue,
 }
 
 /// Input-only controls for one initial scan execution boundary.
@@ -188,6 +190,7 @@ enum ScanIntentInput {
 enum UnsolvedLogsInput {
     LeaveInPlace,
     MoveToCustom,
+    MoveToConfiguredOrDefault,
 }
 
 /// A declared fixture copied to one scenario-root-relative destination.
@@ -372,6 +375,9 @@ fn execute_scenario(
     scenario: &ScenarioPlan,
 ) -> RunnerResult<Value> {
     let scenario_root = tempdir()?;
+    if scenario.input.observation_profile == ObservationProfile::ConfigIssue {
+        return Ok(config_issue_values());
+    }
     materialize_scenario(fixtures, &scenario.input, scenario_root.path())?;
     append_local_ignore_padding(&scenario.input, scenario_root.path())?;
     let request = build_request(&scenario.input, scenario_root.path())?;
@@ -487,6 +493,9 @@ fn execute_scenario(
         );
     }
     match scenario.input.observation_profile {
+        ObservationProfile::ConfigIssue => {
+            Err(invalid_data("ConfigIssue must execute before scan setup").into())
+        }
         ObservationProfile::Base => project_observation(scenario_root.path(), &result, &events),
         ObservationProfile::AutoscanReport => {
             project_autoscan_report_observation(scenario_root.path(), &scenario.input, &result)
@@ -768,7 +777,7 @@ fn build_request(input: &ScenarioInput, root: &Path) -> RunnerResult<contract::R
             .iter()
             .map(PathBuf::from)
             .collect(),
-        unsolved_logs_destination: None,
+        unsolved_logs_destination: optional_path(root, input.unsolved_logs_destination.as_ref())?,
     };
     let configuration = contract::Configuration {
         installation_root: root.to_path_buf(),
@@ -786,6 +795,9 @@ fn build_request(input: &ScenarioInput, root: &Path) -> RunnerResult<contract::R
                 .ok_or_else(|| invalid_data("Standard scenario has no standardSource"))?;
             let unsolved_logs = match input.unsolved_logs {
                 Some(UnsolvedLogsInput::LeaveInPlace) => StandardUnsolvedLogsIntent::LeaveInPlace,
+                Some(UnsolvedLogsInput::MoveToConfiguredOrDefault) => {
+                    StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault
+                }
                 Some(UnsolvedLogsInput::MoveToCustom) => {
                     let destination = input.unsolved_logs_path.as_ref().ok_or_else(|| {
                         invalid_data("move-to-custom requires an unsolvedLogsPath")
@@ -799,21 +811,32 @@ fn build_request(input: &ScenarioInput, root: &Path) -> RunnerResult<contract::R
                     return Err(invalid_data("Standard scenario has no unsolvedLogs intent").into());
                 }
             };
-            Ok(contract::Request::standard(
-                configuration,
-                StandardCrashLogScanSource {
-                    base_directory: join_relative(root, &source.base_directory.path)?,
-                    custom_scan_directory: optional_path(
-                        root,
-                        source.custom_scan_directory.as_ref(),
-                    )?,
-                    configured_documents_root: optional_path(
-                        root,
-                        source.configured_documents_root.as_ref(),
-                    )?,
-                },
-                unsolved_logs,
-            ))
+            let source = StandardCrashLogScanSource {
+                base_directory: join_relative(root, &source.base_directory.path)?,
+                custom_scan_directory: optional_path(root, source.custom_scan_directory.as_ref())?,
+                configured_documents_root: optional_path(
+                    root,
+                    source.configured_documents_root.as_ref(),
+                )?,
+            };
+            match &input.setup_context {
+                Some(setup) => Ok(contract::Request::standard_with_fcx(
+                    configuration,
+                    source,
+                    unsolved_logs,
+                    CrashLogScanSetupContext {
+                        game_root: Some(join_relative(root, &setup.game_root.path)?),
+                        docs_root: Some(join_relative(root, &setup.documents_root.path)?),
+                        game_exe_path: Some(join_relative(root, &setup.executable.path)?),
+                        xse_log_path: None,
+                    },
+                )),
+                None => Ok(contract::Request::standard(
+                    configuration,
+                    source,
+                    unsolved_logs,
+                )),
+            }
         }
         ScanIntentInput::Targeted => {
             let source = TargetedCrashLogScanSource {
@@ -838,6 +861,35 @@ fn build_request(input: &ScenarioInput, root: &Path) -> RunnerResult<contract::R
             }
         }
     }
+}
+
+/// Reads every native constructor field for sectioned and non-sectioned FCX issues.
+fn config_issue_values() -> Value {
+    let issues = [
+        classic_scanlog_core::ConfigIssue::new(
+            "Fallout4.ini".into(),
+            Some("Display".into()),
+            "iSize W".into(),
+            "800".into(),
+            "1920".into(),
+            "Use the configured width".into(),
+            "warning".into(),
+        ),
+        classic_scanlog_core::ConfigIssue::new(
+            "plugins.toml".into(),
+            None,
+            "enabled".into(),
+            "false".into(),
+            "true".into(),
+            "Enable the plugin".into(),
+            "info".into(),
+        ),
+    ];
+    json!({"issues": issues.iter().map(|issue| json!({
+        "file_path":issue.file_path, "section":issue.section, "setting":issue.setting,
+        "current_value":issue.current_value, "recommended_value":issue.recommended_value,
+        "description":issue.description, "severity":issue.severity,
+    })).collect::<Vec<_>>()})
 }
 
 /// Resolves an optional scenario path beneath its fresh root.

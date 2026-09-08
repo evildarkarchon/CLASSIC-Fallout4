@@ -1,0 +1,11 @@
+{
+  "operation": "rollback-bulk",
+  "files": {
+    "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml": "current-main\n",
+    "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml.prev": "previous-main\n"
+  },
+  "service": {
+    "pages": [],
+    "api": []
+  }
+}

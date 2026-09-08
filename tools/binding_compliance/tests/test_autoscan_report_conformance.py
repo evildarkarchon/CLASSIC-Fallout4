@@ -185,6 +185,8 @@ def test_receipts_reject_byte_display_effect_and_execution_mutations(
             prototype,
             obligation_id="parity:test:future-report-api",
             runtime_operation="future_method",
+            required_evidence_kind="runtime",
+            retained_analyzer_id=None,
         )
         expanded = derive_row_coverage(
             document,

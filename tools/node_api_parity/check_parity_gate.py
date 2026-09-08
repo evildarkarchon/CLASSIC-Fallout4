@@ -5,23 +5,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
-import sys
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from binding_parity_runtime_coverage import (
-    build_coverage_summary,
-    load_json_file,
-    render_coverage_summary_markdown,
-)
-
-from parity_artifact_io import (
-    artifacts_match,
-    preserve_baseline_generated_at_all,
-    sync_baseline_artifacts,
-)
 
 from generate_baseline import (
     _effective_rust_symbol,
@@ -30,6 +19,11 @@ from generate_baseline import (
     parse_rust_surface,
     render_diff_markdown,
     write_json,
+)
+from parity_artifact_io import (
+    artifacts_match,
+    preserve_baseline_generated_at_all,
+    sync_baseline_artifacts,
 )
 
 
@@ -254,7 +248,9 @@ def render_tier1_gate_markdown(diff_report: dict[str, Any]) -> str:
     """Render a concise Tier-1 gate report for CI diagnostics."""
     summary = diff_report["summary"]
     failing_rows = [
-        row for row in diff_report["contract_results"] if row["status"] != "matched"
+        row
+        for row in diff_report["contract_results"]
+        if row["status"] not in {"matched", "unmapped"}
     ]
 
     lines: list[str] = []
@@ -326,11 +322,6 @@ def main() -> int:
         help="Directory for generated gate artifacts, relative to repo root.",
     )
     parser.add_argument(
-        "--runtime-registry",
-        default="node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        help="Path to the Node runtime coverage registry JSON, relative to repo root.",
-    )
-    parser.add_argument(
         "--baseline-output-dir",
         default="docs/implementation/node_api_parity/baseline",
         help="Directory containing checked-in baseline artifacts, relative to repo root.",
@@ -399,18 +390,6 @@ def main() -> int:
         return 2
 
     diff_report = generate_diff_report(contract, rust_manifest, node_manifest)
-    runtime_registry = load_json_file(repo_root / args.runtime_registry)
-    coverage_summary = build_coverage_summary(
-        binding="node",
-        contract=contract,
-        diff_report=diff_report,
-        runtime_registry=runtime_registry,
-        source_paths={
-            "contract": args.contract,
-            "runtime_registry": args.runtime_registry,
-            "index_dts": args.index_dts,
-        },
-    )
 
     # Carry the committed timestamps forward on any artifact whose substance is
     # unchanged, so `--update-baseline` copies byte-identical files into the
@@ -423,7 +402,6 @@ def main() -> int:
             "rust_api_surface.json": rust_manifest,
             "node_api_surface.json": node_manifest,
             "parity_diff_report.json": diff_report,
-            "runtime_coverage_summary.json": coverage_summary,
         },
     )
 
@@ -432,10 +410,6 @@ def main() -> int:
     write_json(output_dir / "parity_diff_report.json", diff_report)
     (output_dir / "parity_diff_report.md").write_text(
         render_diff_markdown(diff_report), encoding="utf-8"
-    )
-    write_json(output_dir / "runtime_coverage_summary.json", coverage_summary)
-    (output_dir / "runtime_coverage_summary.md").write_text(
-        render_coverage_summary_markdown(coverage_summary), encoding="utf-8"
     )
     (output_dir / "tier1_gate_report.md").write_text(
         render_tier1_gate_markdown(diff_report), encoding="utf-8"
@@ -447,15 +421,12 @@ def main() -> int:
         + summary["tier1_missing_node"]
         + summary["tier1_signature_mismatch"]
     )
-    coverage_totals = coverage_summary["summary"]
 
     tracked_artifact_names = (
         "rust_api_surface.json",
         "node_api_surface.json",
         "parity_diff_report.json",
         "parity_diff_report.md",
-        "runtime_coverage_summary.json",
-        "runtime_coverage_summary.md",
     )
 
     if args.update_baseline:
@@ -472,8 +443,6 @@ def main() -> int:
     print(f"- {output_dir / 'node_api_surface.json'}")
     print(f"- {output_dir / 'parity_diff_report.json'}")
     print(f"- {output_dir / 'parity_diff_report.md'}")
-    print(f"- {output_dir / 'runtime_coverage_summary.json'}")
-    print(f"- {output_dir / 'runtime_coverage_summary.md'}")
     print(f"- {output_dir / 'tier1_gate_report.md'}")
 
     if tier1_drift_count > 0:
@@ -482,27 +451,6 @@ def main() -> int:
             f"missing_rust={summary['tier1_missing_rust']}, "
             f"missing_node={summary['tier1_missing_node']}, "
             f"signature_mismatch={summary['tier1_signature_mismatch']}"
-        )
-        return 1
-
-    if coverage_totals["tier1_missing_runtime_total"] > 0:
-        print(
-            "Tier-1 runtime coverage metadata missing for "
-            f"{coverage_totals['tier1_missing_runtime_total']} contract row(s)."
-        )
-        return 1
-
-    if coverage_totals["registry_mismatch_total"] > 0:
-        print(
-            "Node runtime coverage registry snapshot mismatch detected for "
-            f"{coverage_totals['registry_mismatch_total']} selector row(s)."
-        )
-        return 1
-
-    if coverage_totals["newly_uncovered_total"] > 0:
-        print(
-            "Newly uncovered Node surfaces detected: "
-            f"{coverage_totals['newly_uncovered_total']}"
         )
         return 1
 

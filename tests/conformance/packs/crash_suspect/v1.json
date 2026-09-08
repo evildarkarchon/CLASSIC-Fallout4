@@ -26,13 +26,21 @@
         "structured-error"
       ]
     }
+    ,{
+      "id": "crash-suspect.config-carriers",
+      "rustCrate": "classic-config-core",
+      "rustSymbols": ["SuspectErrorRule", "SuspectStackRule", "SuspectStackCountRule"],
+      "operationScoped": true,
+      "observationFamilies": ["semantic-result"]
+    }
   ],
   "scenarios": [
     {
       "id": "findings",
       "action": "crash-suspect.analyze",
       "capabilityIds": [
-        "crash-suspect.analyze"
+        "crash-suspect.analyze",
+        "crash-suspect.config-carriers"
       ],
       "fixtureRefs": [
         "findings"

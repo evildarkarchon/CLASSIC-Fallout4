@@ -10,7 +10,6 @@ from pathlib import Path
 
 import pytest
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 NODE_CHECK_PARITY_GATE = (
     REPO_ROOT / "tools" / "node_api_parity" / "check_parity_gate.py"
@@ -91,25 +90,6 @@ def minimal_diff_report(binding: str) -> dict:
     }
 
 
-def minimal_coverage_summary(binding: str) -> dict:
-    return {
-        "generated_at_utc": "2026-03-27T00:00:00+00:00",
-        "binding": binding,
-        "summary": {
-            "tracked_surface_total": 0,
-            "runtime_verified_total": 0,
-            "contract_mapped_total": 0,
-            "deferred_total": 0,
-            "newly_uncovered_total": 0,
-            "tier1_missing_runtime_total": 0,
-            "registry_mismatch_total": 0,
-        },
-        "perOwnerModule": {},
-        "trackedSurface": [],
-        "registryMismatches": [],
-    }
-
-
 @pytest.mark.parametrize(
     ("binding", "module_path", "module_name"),
     [
@@ -127,12 +107,10 @@ def test_update_baseline_flag_refreshes_stale_baseline(
     module = load_module(module_name, module_path)
 
     contract_rel = "contract.json"
-    runtime_rel = "runtime_registry.json"
     output_rel = "generated"
     baseline_rel = "baseline"
 
     write_json(tmp_path / contract_rel, {"tier1Mappings": []})
-    write_json(tmp_path / runtime_rel, {"entries": []})
 
     if binding == "node":
         index_dts_rel = "index.d.ts"
@@ -154,11 +132,6 @@ def test_update_baseline_flag_refreshes_stale_baseline(
         "generate_diff_report",
         lambda *args, **kwargs: minimal_diff_report(binding),
     )
-    monkeypatch.setattr(
-        module,
-        "build_coverage_summary",
-        lambda *args, **kwargs: minimal_coverage_summary(binding),
-    )
 
     stale_baseline = tmp_path / baseline_rel / "parity_diff_report.json"
     write_json(stale_baseline, {"generated_at_utc": "old", "summary": {"stale": True}})
@@ -171,8 +144,6 @@ def test_update_baseline_flag_refreshes_stale_baseline(
         contract_rel,
         "--output-dir",
         output_rel,
-        "--runtime-registry",
-        runtime_rel,
         "--baseline-output-dir",
         baseline_rel,
         "--update-baseline",

@@ -1,0 +1,8 @@
+{
+  "game": "Fallout4",
+  "ignore": "ignore: true\n",
+  "local": "local: true\n",
+  "files": {
+    "sentinel.txt": "keep"
+  }
+}

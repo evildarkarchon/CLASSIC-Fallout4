@@ -29,13 +29,21 @@
         "structured-error"
       ]
     }
+    ,{
+      "id": "mod-guidance.config-carriers",
+      "rustCrate": "classic-config-core",
+      "rustSymbols": ["ModConflictEntry", "CoreModEntry", "ModSolutionEntry", "ModSolutionCriteria"],
+      "operationScoped": true,
+      "observationFamilies": ["semantic-result"]
+    }
   ],
   "scenarios": [
     {
       "id": "authored-guidance",
       "action": "mod-guidance.analyze",
       "capabilityIds": [
-        "mod-guidance.analyze"
+        "mod-guidance.analyze",
+        "mod-guidance.config-carriers"
       ],
       "fixtureRefs": [
         "authored_guidance"

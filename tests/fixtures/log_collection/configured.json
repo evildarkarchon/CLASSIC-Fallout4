@@ -1,0 +1,14 @@
+{
+  "files": {
+    "base/sentinel.txt": "keep",
+    "base/crash-base.log": "base log",
+    "base/crash-base-AUTOSCAN.md": "report",
+    "xse/crash-xse.log": "xse log",
+    "custom/crash-custom.log": "custom log"
+  },
+  "later": {
+    "base/crash-later.log": "later base",
+    "xse/crash-later-xse.log": "later xse"
+  },
+  "configured": true
+}

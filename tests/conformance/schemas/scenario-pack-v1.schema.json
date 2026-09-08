@@ -42,6 +42,8 @@
         "additionalProperties": false,
         "required": ["id", "rustSymbols", "observationFamilies"],
         "properties": {
+          "operationScoped": { "type": "boolean" },
+          "rustCrate": { "$ref": "#/$defs/stableId" },
           "id": { "$ref": "#/$defs/stableId" },
           "rustSymbols": {
             "type": "array",

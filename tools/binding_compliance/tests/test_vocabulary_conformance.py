@@ -23,6 +23,7 @@ from conformance.packs import (
     materialize_run_plan,
 )
 from conformance.receipts import validate_prepared_run
+from receipt_test_support import copy_source_inventory
 
 ROOT = Path(__file__).resolve().parents[3]
 FAMILIES = ("config-vocabulary", "scan-run-vocabulary")
@@ -214,12 +215,7 @@ def test_new_vocabulary_resolver_keeps_its_public_operation_identity(
     tmp_path: Path, participant: str
 ) -> None:
     """A new exported resolver cannot inherit coverage merely by sharing an enum."""
-    for adapter in ("cxx", "node", "python"):
-        relative = Path(
-            f"docs/implementation/{adapter}_api_parity/baseline/parity_contract.json"
-        )
-        (tmp_path / relative).parent.mkdir(parents=True)
-        shutil.copyfile(ROOT / relative, tmp_path / relative)
+    copy_source_inventory(ROOT, tmp_path)
     path = (
         tmp_path
         / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"

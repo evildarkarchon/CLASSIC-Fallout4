@@ -24,15 +24,16 @@ The [Binding Compliance Suite](docs/api/binding-compliance-suite.md) documents c
 
 Repository-wide conformance requires the suite's `full` profile with receipts for
 every tracked family and applicable instance, plus all retained gates. Source-only
-profiles make narrower claims. The migration ledger remains until the
-[remaining runtime obligations](docs/implementation/binding_compliance/retirement_readiness.md)
-have evidence; missing proof fails the full profile.
+profiles make narrower claims. The legacy registry claims, loaders, claim-only
+summaries, and migration ledger are removed. Missing authenticated proof still
+fails the full profile; see [retirement readiness](docs/implementation/binding_compliance/retirement_readiness.md)
+for the current validation result.
 
 Auxiliary, performance, and shared owner operations also use blocking hermetic
 packs with independent expectations and real adapter receipts. The
 [owner operation evidence map](docs/implementation/aux_perf_shared_conformance_equivalence.md)
 records covered operations, adapter limits, and retained runtime/structural
-evidence; existing registry loaders remain available.
+evidence; runtime evidence comes from authenticated receipts.
 
 Registry, settings, and version owner packs also execute convenience accessors,
 cache and YAML operations, version extraction and synthetic PE resources against
@@ -41,7 +42,7 @@ records exact adapter applicability, transport limits, and retained checks.
 
 User Settings opening, typed snapshots, caller-controlled bootstrap, update preview/commit, and migration planning/apply/restore require executable receipts across Rust, CXX, Node, and Python. The shared compatibility oracle checks structured rejections, stale revisions, source bytes, reversible plans, exact retained backups, and durable effects, including unknown-entry preservation after commits. Maintained CLI, GUI, and TUI settings seams have separate consumer obligations. The existing corpus, Rust ownership audit, source parity, declarations, stubs, and negative checks remain blocking; registry claims alone cannot cover migrated settings rows. See the [same-revision evidence map](docs/implementation/user_settings_conformance_equivalence.md).
 
-Crash Suspect, Crashgen Settings, Mod Guidance, FormID lookup, Named Record, and Plugin Evidence also require blocking semantic receipts through Rust, Node, Python, and CXX on both MSVC and clang-cl. Their [focused equivalence map](docs/implementation/semantic_conformance_equivalence.md) records shared fixture ownership and retained diagnostic tests. Migrated fixture-backed registry claims and duplicate positive assertions are retired according to the [retirement evidence map](docs/implementation/fixture_evidence_retirement.md); unmigrated operations retain their existing evidence and shared loaders.
+Crash Suspect, Crashgen Settings, Mod Guidance, FormID lookup, Named Record, and Plugin Evidence also require blocking semantic receipts through Rust, Node, Python, and CXX on both MSVC and clang-cl. Their [focused equivalence map](docs/implementation/semantic_conformance_equivalence.md) records shared fixture ownership and retained diagnostic tests. Migrated fixture-backed registry claims and duplicate positive assertions are retired according to the [retirement evidence map](docs/implementation/fixture_evidence_retirement.md); all runtime operations now require applicable executable receipts, while named permanent analyzers retain structural and negative checks.
 
 Installed YAML Data inspection and preparation also require blocking receipts across those adapters. The [Installed YAML Data evidence map](docs/implementation/installed_yaml_data_conformance_equivalence.md) covers source precedence, rejected-candidate diagnostics, exact-byte identities, retained snapshots, legacy Local Ignore adoption, and unavailable recovery defaults. Existing scan-run recovery and focused filesystem tests remain blocking.
 
@@ -155,9 +156,13 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
-### Binding parity quick reference
+### Binding compliance quick reference
 
 ```powershell
+# From repo root: canonical source checks and complete receipt aggregation
+python tools/binding_compliance/check_compliance.py --repo-root . --profile ci
+python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded
+
 # From node-bindings/classic-node
 bun run parity:gate
 
@@ -190,7 +195,7 @@ When `-Compiler clang-cl` is selected, the scripts also pass clang-cl to Cargo `
 
 GitHub Actions workflows:
 
-Binding conformance includes controlled XSE and installation-path scenarios. See the [binding compliance guide](docs/api/binding-compliance-suite.md) for executable coverage and retained platform-discovery evidence.
+`ci-binding-compliance.yml` is the blocking umbrella workflow. It calls the four reusable participant workflows below at the same revision, then authenticates their receipts with the `full` profile and runs every retained gate. Missing executions or uncovered rows fail the aggregate; a passing participant slice cannot certify the repository. Binding conformance includes controlled XSE and installation-path scenarios. See the [binding compliance guide](docs/api/binding-compliance-suite.md) for executable coverage and retained platform-discovery evidence.
 
 - `ci-cpp.yml` - C++ CLI/GUI build and test pipeline on `windows-latest` for MSVC and clang-cl
 - `ci-rust.yml` - Rust format/lint/build/test

@@ -360,6 +360,21 @@ Reports, move failed logs, or select run concurrency.
 - `StreamingLogParser` and `StreamingIteratorParser` support bounded-memory
   parsing of large inputs.
 - `PatternMatcher` provides reusable pattern matching without starting a scan.
+- `detect_crash_pattern(content)` classifies the first 30 lines using
+  ASCII-case-insensitive symbolic exception names and hexadecimal aliases. It
+  returns a stable token (`ACCESS_VIOLATION`, `STACK_OVERFLOW`,
+  `INT_DIVIDE_BY_ZERO`, `BREAKPOINT`, `ILLEGAL_INSTRUCTION`,
+  `STACK_BUFFER_OVERRUN`, or `HEAP_CORRUPTION`), or `None`. Earlier lines win;
+  the shared source table determines priority when one line has multiple known
+  patterns. This operation classifies a known error, rather than returning the
+  complete main-error text.
+
+Node exposes that classifier as `detectCrashPattern` (`null` for no match),
+Python as `detect_crash_pattern` (`None`), and CXX as
+`classify_crash_pattern` (empty string). CXX's existing
+`detect_crash_pattern` retains its legacy full-main-error-text contract for
+compatibility. All token classification is implemented in the Rust core;
+the bindings only convert inputs and the optional result.
 
 Deprecated parsing aliases are not an alternate run seam; new code should use
 the canonical parser methods documented in source.
@@ -481,6 +496,12 @@ corpus without calling private collector or formatting helpers. See
 Papyrus inspection and small pure helpers such as VR-log and crash-pattern
 detection remain independent utilities. They do not start or partially execute
 a Crash Log Scan Run.
+
+`detect_vr_log` recognizes `Fallout4VR.exe`, `Fallout4VR.esm`, `SkyrimVR.exe`
+and `SkyrimVR.esm` case-insensitively. Node `detectVrLog`, Python
+`LogParser.detect_vr_log`, and CXX `detect_vr_log` all delegate to that core
+helper. This preserves CXX's existing Skyrim VR recognition while adding the
+same markers to Node/Python and executable/case support to CXX.
 
 ---
 

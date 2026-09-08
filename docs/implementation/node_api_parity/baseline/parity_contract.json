@@ -41,6 +41,16 @@
   },
   "tier1Mappings": [
     {
+      "id": "message-init-logging",
+      "tier": "tier1",
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "rustSymbol": "init",
+      "nodeExport": "initLogging",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
       "id": "user-settings-current-schema-version",
       "tier": "tier1",
       "ownerModule": "user_settings",
@@ -1787,7 +1797,8 @@
       "rustSymbol": "LogParser",
       "nodeExport": "parseLogSegments",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "scanlog-extract-formids",
@@ -1796,7 +1807,8 @@
       "rustSymbol": "LogParser",
       "nodeExport": "extractFormIds",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "scanlog-extract-plugins",
@@ -1805,7 +1817,8 @@
       "rustSymbol": "LogParser",
       "nodeExport": "extractPluginList",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "scanlog-detect-vr",
@@ -1814,7 +1827,8 @@
       "rustSymbol": "detect_vr_log",
       "nodeExport": "detectVrLog",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "scanlog-detect-gpu",
@@ -1823,7 +1837,8 @@
       "rustSymbol": "GpuInfo",
       "nodeExport": "detectGpuInfo",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "scanlog-parse-crashgen-version",
@@ -1832,7 +1847,8 @@
       "rustSymbol": "CrashgenVersion",
       "nodeExport": "parseCrashgenVersion",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "scanlog-crashgen-version-status",
@@ -1841,7 +1857,8 @@
       "rustSymbol": "check_crashgen_version_status",
       "nodeExport": "checkCrashgenVersionStatus",
       "nodeKind": "function",
-      "nodeArity": 2
+      "nodeArity": 2,
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "scanlog-papyrus-analysis",
@@ -1850,16 +1867,18 @@
       "rustSymbol": "PapyrusStats",
       "nodeExport": "analyzePapyrusLog",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "scanlog-detect-crash-pattern",
       "tier": "tier1",
       "ownerModule": "scanlog",
-      "rustSymbol": "PatternMatcher",
+      "rustSymbol": "detect_crash_pattern",
       "nodeExport": "detectCrashPattern",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "scanlog-crashgen-version-status-enum",
@@ -1867,7 +1886,8 @@
       "ownerModule": "scanlog",
       "rustSymbol": "CrashgenVersionStatus",
       "nodeExport": "JsCrashgenVersionStatus",
-      "nodeKind": "const_enum"
+      "nodeKind": "const_enum",
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "config-yamldata-class",
@@ -1875,7 +1895,8 @@
       "ownerModule": "config",
       "rustSymbol": "YamlDataCore",
       "nodeExport": "YamlData",
-      "nodeKind": "class"
+      "nodeKind": "class",
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "config-create-yamldata-content",
@@ -1884,7 +1905,8 @@
       "rustSymbol": "YamlDataCore",
       "nodeExport": "createYamlDataFromContent",
       "nodeKind": "function",
-      "nodeArity": 5
+      "nodeArity": 5,
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "config-clear-yaml-cache",
@@ -1893,7 +1915,8 @@
       "rustSymbol": "clear_global_yaml_cache",
       "nodeExport": "clearYamlCache",
       "nodeKind": "function",
-      "nodeArity": 0
+      "nodeArity": 0,
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "config.game_local.persistGameLocalPaths",
@@ -2020,7 +2043,8 @@
       "rustSymbol": "YamlSource",
       "nodeExport": "getYamlSourcePath",
       "nodeKind": "function",
-      "nodeArity": 2
+      "nodeArity": 2,
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "config-yaml-source-display-name",
@@ -2029,7 +2053,8 @@
       "rustSymbol": "YamlSource",
       "nodeExport": "getYamlSourceDisplayName",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "config-yaml-source-display-name-with-game",
@@ -2038,7 +2063,8 @@
       "rustSymbol": "YamlSource",
       "nodeExport": "getYamlSourceDisplayNameWithGame",
       "nodeKind": "function",
-      "nodeArity": 2
+      "nodeArity": 2,
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "config-fileio-config-interface",
@@ -2060,73 +2086,82 @@
       "id": "config-get-all-yaml-files",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "YamlSource",
+      "rustSymbol": "YamlFile",
       "nodeExport": "getAllYamlFiles",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "config-get-yaml-file-description",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "YamlSource",
+      "rustSymbol": "YamlFile",
       "nodeExport": "getYamlFileDescription",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "config-default-cache-ttl-const",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "DEFAULT_CACHE_TTL_SECS",
       "nodeExport": "DEFAULT_CACHE_TTL",
-      "nodeKind": "const"
+      "nodeKind": "const",
+      "rustCrate": "classic-database-core"
     },
     {
       "id": "config-batch-cache-ttl-const",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "BATCH_CACHE_TTL_SECS",
       "nodeExport": "BATCH_CACHE_TTL",
-      "nodeKind": "const"
+      "nodeKind": "const",
+      "rustCrate": "classic-database-core"
     },
     {
       "id": "config-max-cache-ttl-const",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "MAX_CACHE_TTL_SECS",
       "nodeExport": "MAX_CACHE_TTL",
-      "nodeKind": "const"
+      "nodeKind": "const",
+      "rustCrate": "classic-database-core"
     },
     {
       "id": "config-get-default-cache-ttl",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "DEFAULT_CACHE_TTL_SECS",
       "nodeExport": "getDefaultCacheTtl",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-database-core"
     },
     {
       "id": "config-get-batch-cache-ttl",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "BATCH_CACHE_TTL_SECS",
       "nodeExport": "getBatchCacheTtl",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-database-core"
     },
     {
       "id": "config-get-max-cache-ttl",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "MAX_CACHE_TTL_SECS",
       "nodeExport": "getMaxCacheTtl",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-database-core"
     },
     {
       "id": "config-generate-local-yaml",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "generate_local_yaml",
       "nodeExport": "generateLocalYaml",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-file-io-core"
     },
     {
       "id": "config-settings-cache-stats-interface",
@@ -2374,17 +2409,19 @@
       "id": "config-yaml-clear-cache",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "clear_global_yaml_cache",
+      "rustSymbol": "YamlOperations",
       "nodeExport": "yamlClearCache",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "config-yaml-get-cache-stats",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "clear_global_yaml_cache",
+      "rustSymbol": "yaml_cache_stats",
       "nodeExport": "yamlGetCacheStats",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "version-registry-get-by-id",
@@ -2572,9 +2609,10 @@
       "id": "version-registry-promote-js-crashgen-checker",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "VersionMatcher",
+      "rustSymbol": "CrashgenChecker",
       "nodeExport": "JsCrashgenChecker",
-      "nodeKind": "class"
+      "nodeKind": "class",
+      "rustCrate": "classic-scangame-core"
     },
     {
       "id": "version-registry-promote-js-crashgen-config",
@@ -2644,27 +2682,30 @@
       "id": "version-registry-promote-xse-version",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "XseConfig",
+      "rustSymbol": "XseVersion",
       "nodeExport": "XseVersion",
-      "nodeKind": "class"
+      "nodeKind": "class",
+      "rustCrate": "classic-path-core"
     },
     {
       "id": "version-registry-promote-check-crashgen-config",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "Result",
+      "rustSymbol": "CrashgenChecker",
       "nodeExport": "checkCrashgenConfig",
       "nodeKind": "function",
-      "nodeArity": 2
+      "nodeArity": 2,
+      "rustCrate": "classic-scangame-core"
     },
     {
       "id": "version-registry-promote-check-crashgen-full",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "Result",
+      "rustSymbol": "CrashgenChecker",
       "nodeExport": "checkCrashgenFull",
       "nodeKind": "function",
-      "nodeArity": 2
+      "nodeArity": 2,
+      "rustCrate": "classic-scangame-core"
     },
     {
       "id": "version-registry-promote-compare-versions",
@@ -2680,10 +2721,11 @@
       "id": "version-registry-promote-detect-xse-version",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "XseConfig",
+      "rustSymbol": "detect_xse_version",
       "nodeExport": "detectXseVersion",
       "nodeKind": "function",
-      "nodeArity": 2
+      "nodeArity": 2,
+      "rustCrate": "classic-xse-core"
     },
     {
       "id": "version-registry-promote-extract-all-versions",
@@ -2729,10 +2771,11 @@
       "id": "version-registry-promote-get-address-lib-info",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "CompatibleRange",
+      "rustSymbol": "AddressLibInfo",
       "nodeExport": "getAddressLibInfo",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-scangame-core"
     },
     {
       "id": "version-registry-promote-get-all-fallout4-versions",
@@ -2748,10 +2791,11 @@
       "id": "version-registry-promote-get-classic-version",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "VersionRegistry",
+      "rustSymbol": "CLASSIC_VERSION",
       "nodeExport": "getClassicVersion",
       "nodeKind": "function",
-      "nodeArity": 0
+      "nodeArity": 0,
+      "rustCrate": "classic-web-core"
     },
     {
       "id": "version-registry-promote-get-fallout4-version-info",
@@ -2796,8 +2840,9 @@
     {
       "id": "version-registry-promote-get-version",
       "tier": "tier1",
-      "ownerModule": "version_registry",
-      "rustSymbol": "VersionRegistry",
+      "ownerModule": "aux",
+      "rustSymbol": null,
+      "unmappedReason": "Binding-owned compile-time Cargo package version metadata; no Rust core counterpart.",
       "nodeExport": "getVersion",
       "nodeKind": "function",
       "nodeArity": 0
@@ -2866,7 +2911,8 @@
       "ownerModule": "aux",
       "rustSymbol": "BackupManager",
       "nodeExport": "BackupManager",
-      "nodeKind": "class"
+      "nodeKind": "class",
+      "rustCrate": "classic-path-core"
     },
     {
       "id": "aux-phase4a-docs-path-finder",
@@ -2909,7 +2955,8 @@
       "ownerModule": "aux",
       "rustSymbol": "BackupManager",
       "nodeExport": "JsBackupManager",
-      "nodeKind": "class"
+      "nodeKind": "class",
+      "rustCrate": "classic-file-io-core"
     },
     {
       "id": "aux-phase4a-js-file-generator",
@@ -2917,7 +2964,8 @@
       "ownerModule": "aux",
       "rustSymbol": "FileGenerator",
       "nodeExport": "JsFileGenerator",
-      "nodeKind": "class"
+      "nodeKind": "class",
+      "rustCrate": "classic-file-io-core"
     },
     {
       "id": "aux-phase4a-js-file-i-o",
@@ -2942,7 +2990,8 @@
       "ownerModule": "aux",
       "rustSymbol": "GameFilesManager",
       "nodeExport": "JsGameFilesManager",
-      "nodeKind": "class"
+      "nodeKind": "class",
+      "rustCrate": "classic-file-io-core"
     },
     {
       "id": "aux-phase4a-js-message",
@@ -2999,7 +3048,8 @@
       "ownerModule": "aux",
       "rustSymbol": "calculate_similarity",
       "nodeExport": "calculateFileSimilarity",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-file-io-core"
     },
     {
       "id": "aux-phase4a-check-read-permissions",
@@ -3007,7 +3057,8 @@
       "ownerModule": "aux",
       "rustSymbol": "check_read_permissions",
       "nodeExport": "checkReadPermissions",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-path-core"
     },
     {
       "id": "aux-phase4a-check-write-permissions",
@@ -3015,7 +3066,8 @@
       "ownerModule": "aux",
       "rustSymbol": "check_write_permissions",
       "nodeExport": "checkWritePermissions",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-path-core"
     },
     {
       "id": "aux-phase4a-clear-all-metrics",
@@ -3059,7 +3111,8 @@
       "ownerModule": "aux",
       "rustSymbol": "generate_ignore_file",
       "nodeExport": "generateIgnoreFile",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-file-io-core"
     },
     {
       "id": "aux-phase4a-get-metrics-summary",
@@ -3085,7 +3138,8 @@
       "ownerModule": "aux",
       "rustSymbol": "get_system_documents_path",
       "nodeExport": "getSystemDocumentsPath",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-path-core"
     },
     {
       "id": "aux-phase4a-hash-file",
@@ -3120,7 +3174,8 @@
       "ownerModule": "aux",
       "rustSymbol": "is_restricted_path",
       "nodeExport": "isRestrictedPath",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-path-core"
     },
     {
       "id": "aux-phase4a-is-runtime-available",
@@ -3135,9 +3190,10 @@
       "id": "aux-phase4a-is-valid-executable-path",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustSymbol": "is_valid_path",
+      "rustSymbol": "is_valid_executable_path",
       "nodeExport": "isValidExecutablePath",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-path-core"
     },
     {
       "id": "aux-phase4a-is-valid-path",
@@ -3199,7 +3255,8 @@
       "ownerModule": "aux",
       "rustSymbol": "parse_steam_library",
       "nodeExport": "parseSteamLibrary",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-path-core"
     },
     {
       "id": "aux-phase4a-process-string-batch",
@@ -3216,7 +3273,8 @@
       "ownerModule": "aux",
       "rustSymbol": "query_game_registry",
       "nodeExport": "queryGameRegistry",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-path-core"
     },
     {
       "id": "aux-phase4a-record-timing-metric",
@@ -3287,7 +3345,8 @@
       "ownerModule": "aux",
       "rustSymbol": "remove_readonly",
       "nodeExport": "removeReadonly",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-path-core"
     },
     {
       "id": "aux-phase4a-validate-custom-scan-path",
@@ -3295,7 +3354,8 @@
       "ownerModule": "aux",
       "rustSymbol": "validate_custom_scan_path",
       "nodeExport": "validateCustomScanPath",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-path-core"
     },
     {
       "id": "aux-phase4a-validate-path-with-permissions",
@@ -3303,7 +3363,8 @@
       "ownerModule": "aux",
       "rustSymbol": "validate_path_with_permissions",
       "nodeExport": "validatePathWithPermissions",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-path-core"
     },
     {
       "id": "aux-phase4a-validate-paths-batch",
@@ -3783,7 +3844,7 @@
       "nodeExport": "getModSiteName",
       "nodeKind": "function",
       "nodeArity": 1,
-      "rustCrate": "classic-message-core"
+      "rustCrate": "classic-web-core"
     },
     {
       "id": "aux-phase4b-get-mod-site-url",
@@ -4019,19 +4080,20 @@
       "id": "aux-phase4b-xse-type-name",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustSymbol": "as_str",
+      "rustSymbol": "XseType",
       "nodeExport": "xseTypeName",
       "nodeKind": "function",
       "nodeArity": 1,
-      "rustCrate": "classic-config-core"
+      "rustCrate": "classic-xse-core"
     },
     {
       "id": "aux-phase4c-crash-autoscan-pattern",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustSymbol": "FileIOCore",
+      "rustSymbol": "CRASH_AUTOSCAN_PATTERN",
       "nodeExport": "CRASH_AUTOSCAN_PATTERN",
-      "nodeKind": "const"
+      "nodeKind": "const",
+      "rustCrate": "classic-file-io-core"
     },
     {
       "id": "version-registry-phase4c-js-compatible-range",
@@ -4053,9 +4115,10 @@
       "id": "aux-phase4c-js-dds-analyzer-class",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustSymbol": "FileIOCore",
+      "rustSymbol": "DDSAnalyzer",
       "nodeExport": "JsDdsAnalyzer",
-      "nodeKind": "class"
+      "nodeKind": "class",
+      "rustCrate": "classic-file-io-core"
     },
     {
       "id": "aux-phase4c-js-dds-batch-result",
@@ -4103,10 +4166,11 @@
       "id": "aux-phase4c-calculate-text-similarity",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustSymbol": "calculate_similarity",
+      "rustSymbol": "similarity_ratio",
       "nodeExport": "calculateTextSimilarity",
       "nodeKind": "function",
-      "nodeArity": 2
+      "nodeArity": 2,
+      "rustCrate": "classic-file-io-core"
     },
     {
       "id": "aux-phase4c-check-drive-exists",
@@ -4719,20 +4783,16 @@
       "tier": "tier1",
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "AnalyzerError",
-      "rustKind": "struct",
-      "nodeExport": "CrashgenSettingsAnalyzer",
-      "nodeKind": "class"
+      "rustSymbol": "AnalyzerError@rust",
+      "rustKind": "struct"
     },
     {
       "id": "scanlog.analyzer.AnalyzerErrorCode",
       "tier": "tier1",
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "AnalyzerErrorCode",
-      "rustKind": "enum",
-      "nodeExport": "CrashgenSettingsAnalyzer",
-      "nodeKind": "class"
+      "rustSymbol": "AnalyzerErrorCode@rust",
+      "rustKind": "enum"
     },
     {
       "id": "scanlog.analyzer.AnalyzerKind",
@@ -4988,7 +5048,7 @@
       "id": "scanlog.patterns.CRASH_LOG_PATTERN",
       "tier": "tier1",
       "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
+      "rustCrate": "classic-file-io-core",
       "rustSymbol": "CRASH_LOG_PATTERN",
       "rustKind": "const",
       "nodeExport": "CRASH_LOG_PATTERN",
@@ -5038,7 +5098,7 @@
       "id": "scanlog.settings_validator.checkXsePlugins",
       "tier": "tier1",
       "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
+      "rustCrate": "classic-scangame-core",
       "rustSymbol": "XseChecker",
       "rustKind": "class",
       "nodeExport": "checkXsePlugins",
@@ -5048,7 +5108,7 @@
       "id": "scanlog.parser.parseXseLog",
       "tier": "tier1",
       "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
+      "rustCrate": "classic-path-core",
       "rustSymbol": "parse_xse_log",
       "rustKind": "function",
       "nodeExport": "parseXseLog",
@@ -5146,7 +5206,7 @@
       "id": "config.caches.DEFAULT_CACHE_CLEANUP_INTERVAL",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-database-core",
       "rustSymbol": "DEFAULT_CACHE_CLEANUP_INTERVAL_SECS",
       "rustKind": "const",
       "nodeExport": "DEFAULT_CACHE_CLEANUP_INTERVAL",
@@ -5156,7 +5216,7 @@
       "id": "config.caches.DEFAULT_CACHE_CLEANUP_THRESHOLD",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-database-core",
       "rustSymbol": "DEFAULT_CACHE_CLEANUP_OP_THRESHOLD",
       "rustKind": "const",
       "nodeExport": "DEFAULT_CACHE_CLEANUP_THRESHOLD",
@@ -5166,7 +5226,7 @@
       "id": "config.caches.DEFAULT_QUERY_CACHE_CAPACITY",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-database-core",
       "rustSymbol": "DEFAULT_QUERY_CACHE_CAPACITY",
       "rustKind": "const",
       "nodeExport": "DEFAULT_QUERY_CACHE_CAPACITY",
@@ -5256,7 +5316,7 @@
       "id": "config.duplicate_detector.JsConfigDuplicateDetector",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-scangame-core",
       "rustSymbol": "ConfigDuplicateDetector",
       "rustKind": "class",
       "nodeExport": "JsConfigDuplicateDetector",
@@ -5266,7 +5326,7 @@
       "id": "config.hash_cache.clearHashCache",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-file-io-core",
       "rustSymbol": "FileHasher",
       "rustKind": "function",
       "nodeExport": "clearHashCache",
@@ -5276,7 +5336,7 @@
       "id": "config.duplicate_detector.detectConfigDuplicates",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-scangame-core",
       "rustSymbol": "ConfigDuplicateDetector",
       "rustKind": "function",
       "nodeExport": "detectConfigDuplicates",
@@ -5286,7 +5346,7 @@
       "id": "config.caches.getDefaultCacheCleanupInterval",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-database-core",
       "rustSymbol": "DEFAULT_CACHE_CLEANUP_INTERVAL_SECS",
       "rustKind": "function",
       "nodeExport": "getDefaultCacheCleanupInterval",
@@ -5296,7 +5356,7 @@
       "id": "config.caches.getDefaultCacheCleanupThreshold",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-database-core",
       "rustSymbol": "DEFAULT_CACHE_CLEANUP_OP_THRESHOLD",
       "rustKind": "function",
       "nodeExport": "getDefaultCacheCleanupThreshold",
@@ -5306,7 +5366,7 @@
       "id": "config.caches.getDefaultQueryCacheCapacity",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-database-core",
       "rustSymbol": "DEFAULT_QUERY_CACHE_CAPACITY",
       "rustKind": "function",
       "nodeExport": "getDefaultQueryCacheCapacity",
@@ -5316,7 +5376,7 @@
       "id": "config.hash_cache.getHashCacheStats",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-file-io-core",
       "rustSymbol": "FileHasher",
       "rustKind": "function",
       "nodeExport": "getHashCacheStats",
@@ -5326,7 +5386,7 @@
       "id": "config.hash_cache.resetHashCacheStats",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-file-io-core",
       "rustSymbol": "FileHasher",
       "rustKind": "function",
       "nodeExport": "resetHashCacheStats",
@@ -8189,6 +8249,406 @@
       "nodeExport": "checkAppNotificationConfigured",
       "nodeKind": "function",
       "nodeArity": 5
+    },
+    {
+      "id": "config.main_yaml_version.loadMainYamlVersion",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "load_main_yaml_version_with_bundled_dir",
+      "rustKind": "function",
+      "nodeExport": "loadMainYamlVersion",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "id": "user-settings-legacy-tui-import",
+      "rustSymbol": "import_legacy_tui_state",
+      "rustKind": "function",
+      "nodeExport": "importLegacyTuiStateIntoUserSettings",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "id": "user-settings-LegacyTuiStateImportReceipt",
+      "rustSymbol": "LegacyTuiStateImportReceipt",
+      "nodeExport": "JsLegacyTuiStateImportReceipt",
+      "nodeKind": "class"
+    },
+    {
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "id": "user-settings-LegacyTuiStateImportOutcome",
+      "rustSymbol": "LegacyTuiStateImportOutcome",
+      "nodeExport": "JsLegacyTuiStateImportOutcome",
+      "nodeKind": "interface"
+    },
+    {
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "id": "user-settings-LegacyTuiStateImportRestoreOutcome",
+      "rustSymbol": "LegacyTuiStateImportRestoreOutcome",
+      "nodeExport": "JsLegacyTuiStateImportRestoreOutcome",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunRequest",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "Request",
+      "nodeExport": "ScanRunRequest",
+      "nodeKind": "class",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "enum"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunUnsolvedLogs",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "StandardUnsolvedLogsIntent",
+      "nodeExport": "ScanRunUnsolvedLogs",
+      "nodeKind": "class",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "enum"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunCancellation",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "Cancellation",
+      "nodeExport": "ScanRunCancellation",
+      "nodeKind": "class",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunContinuation",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "CrashLogScanRunContinuation",
+      "nodeExport": "ScanRunContinuation",
+      "nodeKind": "class",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.scanRunExecute",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "execute",
+      "nodeExport": "scanRunExecute",
+      "nodeKind": "function",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "function",
+      "nodeArity": 4
+    },
+    {
+      "id": "scanlog.scan_run.scanRunResume",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "resume",
+      "nodeExport": "scanRunResume",
+      "nodeKind": "function",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "function",
+      "nodeArity": 5
+    },
+    {
+      "id": "scanlog.scan_run.scanRunAbandon",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "abandon",
+      "nodeExport": "scanRunAbandon",
+      "nodeKind": "function",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "function",
+      "nodeArity": 4
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunConfiguration",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "Configuration",
+      "nodeExport": "JsScanRunConfiguration",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunStandardSource",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "StandardCrashLogScanSource",
+      "nodeExport": "JsScanRunStandardSource",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunTargetedSource",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "TargetedCrashLogScanSource",
+      "nodeExport": "JsScanRunTargetedSource",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunSetupContext",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "CrashLogScanSetupContext",
+      "nodeExport": "JsScanRunSetupContext",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunRejectedInput",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "CrashLogScanRejectedInput",
+      "nodeExport": "JsScanRunRejectedInput",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunDiscoveryResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "CrashLogScanDiscoveryResult",
+      "nodeExport": "JsScanRunDiscoveryResult",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunSetupCheck",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "CrashLogScanSetupCheck",
+      "nodeExport": "JsScanRunSetupCheck",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunSetupPathUpdate",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "CrashLogScanSetupPathUpdate",
+      "nodeExport": "JsScanRunSetupPathUpdate",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunSetupResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "CrashLogScanSetupResult",
+      "nodeExport": "JsScanRunSetupResult",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunLogFailure",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "LogFailure",
+      "nodeExport": "JsScanRunLogFailure",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunLogResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "LogResult",
+      "nodeExport": "JsScanRunLogResult",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunInstalledYamlDataDiagnostic",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "InstalledYamlDataRunDiagnostic",
+      "nodeExport": "JsScanRunInstalledYamlDataDiagnostic",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunInstalledYamlDataDiagnosticKind",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "InstalledYamlDataRunDiagnosticKind",
+      "nodeExport": "JsScanRunInstalledYamlDataDiagnosticKind",
+      "nodeKind": "const_enum",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "enum"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunLocalIgnoreState",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "LocalIgnoreRunState",
+      "nodeExport": "JsScanRunLocalIgnoreState",
+      "nodeKind": "const_enum",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "enum"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunLocalIgnoreResetRunData",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "LocalIgnoreResetRunData",
+      "nodeExport": "JsScanRunLocalIgnoreResetRunData",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunLocalIgnoreRecoveryDecision",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "LocalIgnoreRecoveryDecision",
+      "nodeExport": "JsScanRunLocalIgnoreRecoveryDecision",
+      "nodeKind": "const_enum",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "enum"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunInfrastructureError",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "InfrastructureError",
+      "nodeExport": "JsScanRunInfrastructureError",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunLogEvent",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "LogEvent",
+      "nodeExport": "JsScanRunLogEvent",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunEvent",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "Event",
+      "nodeExport": "JsScanRunEvent",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "enum"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "RunResult",
+      "nodeExport": "JsScanRunResult",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunDisplayLine",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "DisplayLine",
+      "nodeExport": "JsScanRunDisplayLine",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scan-presentation",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunDisplaySegment",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "DisplaySegment",
+      "nodeExport": "JsScanRunDisplaySegment",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scan-presentation",
+      "rustKind": "enum"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunDisplaySegmentKind",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "DisplaySegment",
+      "nodeExport": "JsScanRunDisplaySegmentKind",
+      "nodeKind": "const_enum",
+      "rustCrate": "classic-scan-presentation",
+      "rustKind": "enum"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunDisplaySeverity",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "DisplaySeverity",
+      "nodeExport": "JsScanRunDisplaySeverity",
+      "nodeKind": "const_enum",
+      "rustCrate": "classic-scan-presentation",
+      "rustKind": "enum"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunRecoveryDecisionDescription",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "RecoveryDecisionDescription",
+      "nodeExport": "JsScanRunRecoveryDecisionDescription",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scan-presentation",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunRecoveryPrompt",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "RecoveryPrompt",
+      "nodeExport": "JsScanRunRecoveryPrompt",
+      "nodeKind": "interface",
+      "rustCrate": "classic-scan-presentation",
+      "rustKind": "struct"
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunSuccess",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": null,
+      "nodeExport": "JsScanRunSuccess",
+      "nodeKind": "interface",
+      "unmappedReason": "Binding-owned result envelope combining core outcome, rendered presentation, and adapter observer failure; no single Rust core counterpart."
+    },
+    {
+      "id": "scanlog.scan_run.JsScanRunFailure",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": null,
+      "nodeExport": "JsScanRunFailure",
+      "nodeKind": "interface",
+      "unmappedReason": "Binding-owned result envelope combining core outcome, rendered presentation, and adapter observer failure; no single Rust core counterpart."
     }
   ]
 }

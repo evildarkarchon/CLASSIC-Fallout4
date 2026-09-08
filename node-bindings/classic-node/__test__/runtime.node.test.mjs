@@ -9,14 +9,8 @@ import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
 const classic = require("../index.js");
-const runtimeCoverageRegistry = JSON.parse(
-  readFileSync(new URL("./fixtures/runtime_coverage_registry.json", import.meta.url), "utf-8"),
-);
-const activeTier1Owners = new Set(
-  runtimeCoverageRegistry.entries
-    .filter((entry) => entry.tier === "tier1")
-    .map((entry) => entry.ownerModule),
-);
+// Every maintained smoke test registers independently; metadata cannot disable
+// a real runtime check or stand in for its successful execution.
 
 const MAIN_YAML = `
 schema_version: "2.0"
@@ -247,7 +241,7 @@ test("exposes only the User Settings replacement contract in Node", () => {
   }
 });
 
-if (activeTier1Owners.has("config")) {
+{
   test("runs Tier-1 config/cache APIs in Node runtime", () => {
     assert.equal(classic.DEFAULT_CACHE_TTL, classic.getDefaultCacheTtl());
     assert.equal(classic.BATCH_CACHE_TTL, classic.getBatchCacheTtl());
@@ -268,7 +262,7 @@ if (activeTier1Owners.has("config")) {
   });
 }
 
-if (activeTier1Owners.has("config")) {
+{
   test("runs Tier-1 settings cache and path validators in Node runtime", () => {
     const dir = mkdtempSync(join(tmpdir(), "classic-node-runtime-"));
     const gameDir = join(dir, "game");
@@ -310,7 +304,7 @@ if (activeTier1Owners.has("config")) {
   });
 }
 
-if (activeTier1Owners.has("version_registry")) {
+{
   test("supports optional params and stable string mappings in Node runtime", () => {
     const all = classic.getAllVersionsForGame("Fallout4");
     const vrOnly = classic.getAllVersionsForGame("Fallout4", true);
@@ -329,7 +323,7 @@ if (activeTier1Owners.has("version_registry")) {
   });
 }
 
-if (activeTier1Owners.has("aux")) {
+{
   test("runs Phase 4A aux foundation APIs in Node runtime", async () => {
     const dir = mkdtempSync(join(tmpdir(), "classic-node-aux-foundation-"));
     const settingsA = join(dir, "a.yaml");
@@ -383,7 +377,7 @@ if (activeTier1Owners.has("aux")) {
   });
 }
 
-if (activeTier1Owners.has("aux")) {
+{
   test("runs Phase 4B aux scanner stack APIs in Node runtime", async () => {
     const dir = mkdtempSync(join(tmpdir(), "classic-node-aux-scanner-stack-"));
     const logPath = join(dir, "runtime.log");
@@ -454,7 +448,7 @@ if (activeTier1Owners.has("aux")) {
   });
 }
 
-if (activeTier1Owners.has("scanlog")) {
+{
   test("runs final Standard and Targeted scan contracts in Node runtime", async () => {
     const { workspace } = createCliWorkspace();
     const configuration = {
@@ -555,7 +549,7 @@ if (activeTier1Owners.has("scanlog")) {
   });
 }
 
-if (activeTier1Owners.has("scanlog")) {
+{
   test("runs functional CLI workflow in Node runtime", () => {
     const { cliPath, logPath, workspace } = createCliWorkspace();
 
@@ -595,7 +589,7 @@ if (activeTier1Owners.has("scanlog")) {
 // node:test (not just bun:test). parseXseLog is the representative pick
 // because its string|null return surface is the most likely NAPI marshalling
 // failure point across runtimes.
-if (activeTier1Owners.has("scanlog")) {
+{
   test("scanlog Plan 2 promotion: parseXseLog + CRASH_LOG_PATTERN exercised under node:test", () => {
     // MEDIUM concern: any unexpected throw is wrapped in try/catch so the
     // suite survives with a typed-error assertion instead of a panic.
@@ -659,7 +653,7 @@ if (activeTier1Owners.has("scanlog")) {
 // Task 2 adds extractPeVersion and isValidPePath NAPI wrappers plus promotes
 // 4 version_registry entries. Per D-TEST-02 the plan adds cross-runtime tests
 // here so the symbols are exercised under node:test (not just bun:test).
-if (activeTier1Owners.has("version_registry")) {
+{
   test("version Plan 4: isValidPePath returns false for nonexistent (cross-runtime D-TEST-02)", () => {
     assert.strictEqual(classic.isValidPePath("/nonexistent/path.exe"), false);
   });
@@ -691,7 +685,7 @@ if (activeTier1Owners.has("version_registry")) {
   });
 }
 
-if (activeTier1Owners.has("config")) {
+{
   test("config Plan 3 promotion: getHashCacheStats + cache constants exercised under node:test", () => {
     // resetHashCacheStats clears counters — real-shape check.
     classic.resetHashCacheStats();

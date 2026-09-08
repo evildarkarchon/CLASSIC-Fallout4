@@ -1366,6 +1366,12 @@ describe("extractPluginList", () => {
 // ============================================================================
 
 describe("detectCrashPattern", () => {
+  test("recognizes hexadecimal aliases regardless of prefix case", () => {
+    for (const code of ["0xC0000005", "0XC0000005", "0xc0000005"]) {
+      expect(detectCrashPattern(`Unhandled exception ${code}`)).toBe("ACCESS_VIOLATION");
+    }
+    expect(detectCrashPattern("Unhandled exception 0x80000003")).toBe("BREAKPOINT");
+  });
   test("detects ACCESS_VIOLATION pattern", () => {
     const pattern = detectCrashPattern(
       'Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512',
@@ -1431,6 +1437,11 @@ describe("detectCrashPattern", () => {
 // ============================================================================
 
 describe("detectVrLog", () => {
+  test("recognizes Skyrim VR markers shared with the CXX contract", () => {
+    expect(detectVrLog("SKYRIMVR.EXE loaded")).toBe(true);
+    expect(detectVrLog("[00] SkyrimVR.esm")).toBe(true);
+    expect(detectVrLog("SkyrimSE.exe loaded")).toBe(false);
+  });
   test("returns true for VR crash log content", () => {
     expect(detectVrLog("Fallout4VR.exe v1.2.72.0")).toBe(true);
   });

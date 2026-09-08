@@ -4,6 +4,13 @@
 //! to JavaScript/TypeScript.
 
 use classic_message_core::{Message, MessageTarget, MessageType, format_log_message};
+/// Initialize the process logger explicitly, honoring RUST_LOG and preserving an existing logger.
+/// Repeated calls are safe; importing the binding does not initialize logging.
+#[napi]
+pub fn init_logging() {
+    classic_message_core::logging::init();
+}
+
 // ---------------------------------------------------------------------------
 // Enums
 // ---------------------------------------------------------------------------

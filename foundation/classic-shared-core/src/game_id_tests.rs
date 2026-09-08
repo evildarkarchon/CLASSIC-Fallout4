@@ -54,3 +54,8 @@ fn test_game_id_serialization() {
     let deserialized: GameId = serde_json::from_str(&json).unwrap();
     assert_eq!(game, deserialized);
 }
+#[test]
+fn display_names_preserve_existing_user_facing_labels() {
+    let labels = GameId::all().map(|game| game.display_name());
+    assert_eq!(labels, ["Fallout 4", "Fallout 4 VR", "Skyrim", "Starfield"]);
+}

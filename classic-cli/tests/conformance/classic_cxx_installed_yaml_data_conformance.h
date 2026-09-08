@@ -188,6 +188,7 @@ json execute_installed_yaml_data_scenario(const json& plan, const json& scenario
     }
     std::ifstream stream(plan.at("fixtures").at(reference).get<std::string>(), std::ios::binary);
     const json fixture = json::parse(stream);
+    std::optional<std::string> backup_alias;
     installed_write_files(root, fixture.at("files"));
     fs::create_directories(root / "installation");
     using G = installed_config::ExplicitYamlDataGameId;
@@ -255,7 +256,7 @@ json execute_installed_yaml_data_scenario(const json& plan, const json& scenario
             const auto snapshot = installed_config::installed_yaml_data_load_take_snapshot(std::move(pending));
             installed_snapshot(result, *snapshot, root);
         } else {
-            const auto recovery = installed_config::installed_yaml_data_load_take_recovery_plan(std::move(pending));
+            auto recovery = installed_config::installed_yaml_data_load_take_recovery_plan(std::move(pending));
             const std::string path = relative_path(
                 root,
                 fs::path(owned_string(installed_config::local_ignore_recovery_plan_local_ignore_path(*recovery))));
@@ -279,10 +280,87 @@ json execute_installed_yaml_data_scenario(const json& plan, const json& scenario
                      : json(nullptr)},
                 {"selectedGameVersion",
                  owned_string(installed_config::local_ignore_recovery_plan_selected_game_version(*recovery))}};
+            if (fixture.value("recoveryAction", "") == "proceed") {
+                const auto snapshot =
+                    installed_config::local_ignore_recovery_plan_proceed_without_ignore(std::move(recovery));
+                installed_snapshot(result, *snapshot, root);
+                result["outcome"] = "proceeded";
+            } else if (fixture.value("recoveryAction", "") == "reset") {
+                auto reset = installed_config::local_ignore_recovery_plan_reset_to_default(std::move(recovery));
+                const auto reset_status = installed_config::local_ignore_reset_status(*reset);
+                if (static_cast<int>(reset_status.has_reset) + static_cast<int>(reset_status.has_conflict) +
+                        static_cast<int>(reset_status.has_error) !=
+                    1)
+                    throw RunnerError("invalid reset result presence flags");
+                if (reset_status.has_conflict) {
+                    const auto conflict = installed_config::local_ignore_reset_take_conflict(std::move(reset));
+                    const bool has_actual =
+                        installed_config::local_ignore_reset_conflict_has_actual_identity(*conflict);
+                    const auto actual = installed_config::local_ignore_reset_conflict_actual_identity(*conflict);
+                    const bool has_backup = installed_config::local_ignore_reset_conflict_has_backup_path(*conflict);
+                    const auto backup =
+                        owned_string(installed_config::local_ignore_reset_conflict_backup_path(*conflict));
+                    if (!has_backup && !backup.empty())
+                        throw RunnerError("absent conflict backup did not use empty sentinel");
+                    if (!has_actual && (!actual.sha256.empty() || actual.byte_len != 0))
+                        throw RunnerError("absent conflict identity did not use empty sentinel");
+                    result["outcome"] = "reset_conflict";
+                    result["recovery"]["decision"] =
+                        json{{"status", "conflict"},
+                             {"expectedIdentity",
+                              installed_identity(
+                                  installed_config::local_ignore_reset_conflict_expected_identity(*conflict), path)},
+                             {"actualIdentity", has_actual ? installed_identity(actual, path) : json(nullptr)},
+                             {"backupPath", has_backup ? json(relative_path(root, fs::path(backup))) : json(nullptr)}};
+                } else if (reset_status.has_reset) {
+                    auto committed = installed_config::local_ignore_reset_take_result(std::move(reset));
+                    const auto malformed =
+                        installed_config::local_ignore_reset_result_malformed_local_ignore_identity(*committed);
+                    backup_alias = relative_path(
+                        root,
+                        fs::path(owned_string(installed_config::local_ignore_reset_result_backup_path(*committed))));
+                    // Preserve the public path relation while normalizing only the unpredictable suffix.
+                    const auto stem = "installation/CLASSIC Backup/YAML Data/Local Ignore/CLASSIC Ignore.yaml." +
+                                      owned_string(malformed.sha256) + ".";
+                    if (!backup_alias->starts_with(stem) || !backup_alias->ends_with(".bak"))
+                        throw RunnerError("reset backup escaped its content-addressed namespace");
+                    const auto backup_name = "installation/CLASSIC Backup/YAML Data/Local Ignore/<backup>";
+                    result["recovery"]["decision"] = json{
+                        {"status", "reset"},
+                        {"localIgnorePath",
+                         relative_path(
+                             root, fs::path(owned_string(
+                                       installed_config::local_ignore_reset_result_local_ignore_path(*committed))))},
+                        {"malformedIdentity", installed_identity(malformed, path)},
+                        {"backupIdentity",
+                         installed_identity(installed_config::local_ignore_reset_result_backup_identity(*committed),
+                                            backup_name)},
+                        {"replacementIdentity",
+                         installed_identity(
+                             installed_config::local_ignore_reset_result_replacement_identity(*committed), path)}};
+                    const auto reset_diagnostics = installed_diagnostics(
+                        installed_config::local_ignore_reset_result_diagnostics(*committed), root);
+                    const auto snapshot =
+                        installed_config::local_ignore_reset_result_take_snapshot(std::move(committed));
+                    installed_snapshot(result, *snapshot, root);
+                    if (result["diagnostics"] != reset_diagnostics)
+                        throw RunnerError("reset snapshot lost retained diagnostics");
+                    result["outcome"] = "reset";
+                } else {
+                    throw RunnerError("unexpected reset operational error");
+                }
+            }
         }
     } else {
         throw RunnerError("unsupported Installed YAML Data fixture operation");
     }
     result["files"] = installed_files(root);
+    if (backup_alias) {
+        for (auto& file : result["files"])
+            if (file["path"] == *backup_alias)
+                file["path"] = "installation/CLASSIC Backup/YAML Data/Local Ignore/<backup>";
+        std::sort(result["files"].begin(), result["files"].end(),
+                  [](const json& a, const json& b) { return a.at("path") < b.at("path"); });
+    }
     return result;
 }

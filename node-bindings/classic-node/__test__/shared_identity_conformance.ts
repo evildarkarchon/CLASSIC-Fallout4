@@ -3,8 +3,12 @@ import * as classic from "../index.js";
 type JsonObject = Record<string, any>;
 
 /** Observe stable public tokens or repeated shared-runtime access diagnostics. */
-export function observeSharedIdentity(family: string, _fixture: JsonObject): JsonObject {
-  if (family === "game-identity") return { tokens: classic.getAllGameIds() };
+export function observeSharedIdentity(family: string, fixture: JsonObject): JsonObject {
+  if (family === "game-identity") {
+    const games = classic.getAllGameIds();
+    if (fixture.request.operation === "metadata") return { labels: games.map(game => classic.getGameName(game)) };
+    return { tokens: games };
+  }
   if (family === "runtime-access") {
     const available: boolean[] = [];
     const diagnosticsAvailable: boolean[] = [];

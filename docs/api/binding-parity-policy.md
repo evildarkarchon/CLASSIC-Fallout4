@@ -124,13 +124,12 @@ The shared implementation is `tools/parity_artifact_io.py`; the byte-stability p
 
 ### Shared Gate Tooling
 
-Three modules under `tools/` are shared by the per-binding gates. Change them with the understanding that all three gates consume them:
+Two modules under `tools/` are shared by the per-binding gates. Change them with the understanding that all three gates consume them:
 
 | Module | Owns |
 |---|---|
 | `parity_rust_surface.py` | Parsing the public Rust surface — crate source collection, `pub use` expansion, symbol extraction |
 | `parity_artifact_io.py` | Reading, comparing, and writing artifacts — `write_json`, `stable_id_hash`, `sync_baseline_artifacts`, timestamp preservation |
-| `binding_parity_runtime_coverage.py` | Runtime coverage summaries |
 
 The Node and Python gates previously carried independent copies of the Rust parser, which let them disagree about which Rust exports exist while both reported success. They now share one parser and differ only in their **crate list** — `RUST_TARGET_CRATES` / `RUST_OWNER_BY_CRATE` stay per-gate and are passed into `parse_rust_surface()` at call time. When you add a `-core` crate that a binding depends on, add it to that binding's crate list; a crate missing from the list is invisible to that gate, and any contract row naming one of its symbols will be rejected as "not in the parsed Rust surface".
 

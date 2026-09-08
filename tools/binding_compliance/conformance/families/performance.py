@@ -75,6 +75,7 @@ PERFORMANCE_COVERAGE_POLICY = FamilyCoveragePolicy(
                     None,
                     "get_summary",
                     "clear_metrics",
+                    "reset_metrics",
                     "getMetricsSummary",
                     "clearAllMetrics",
                     "perf_clear_metrics",
@@ -86,10 +87,11 @@ PERFORMANCE_COVERAGE_POLICY = FamilyCoveragePolicy(
             (
                 "record-clear-reuse",
                 "values",
-                ("record_timing", "get_summary", "clear_metrics"),
+                ("record_timing", "get_summary", "clear_metrics", "MetricsSummary"),
                 (
                     None,
                     "record_timing",
+                    "reset_metrics",
                     "get_summary",
                     "clear_metrics",
                     "recordTimingMetric",

@@ -62,6 +62,7 @@ corrosion_add_cxxbridge(classic_cxx_bridge
         update.rs
         message.rs
         perf.rs
+        markdown.rs
 )
 
 target_include_directories(classic_cxx_bridge PUBLIC

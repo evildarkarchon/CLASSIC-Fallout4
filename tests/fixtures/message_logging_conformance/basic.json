@@ -1,0 +1,10 @@
+{
+  "operation": "basic",
+  "messages": {
+    "info": "fixture-info",
+    "warning": "fixture-warning",
+    "error": "fixture-error",
+    "debug": "fixture-debug"
+  },
+  "name": "CLASSIC"
+}

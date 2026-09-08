@@ -82,8 +82,13 @@ EXPECTED_SCENARIO_IDS = [
     "reset-pre-cancelled",
     "reset-post-critical-cancelled",
     "abandon-local-ignore-recovery",
+    "standard-fcx-request-validation",
+    "targeted-fcx-request-validation",
+    "configured-unsolved-logs-finalization-failure",
+    "config-issue-construction",
 ]
 EXPECTED_OBSERVATION_FAMILIES = {
+    "config-issue-values",
     "cancellation",
     "discovery",
     "display-content",
@@ -151,7 +156,12 @@ def test_live_pack_is_input_only_for_all_three_base_adapters(tmp_path: Path) -> 
             assert not prepared.receipt_path.exists()
             assert all("expected" not in scenario for scenario in plan["scenarios"])
             assert [scenario["id"] for scenario in plan["scenarios"]] == (
-                EXPECTED_SCENARIO_IDS
+                [
+                    name
+                    for name in EXPECTED_SCENARIO_IDS
+                    if participant_id in {"rust", "python"}
+                    or name != "config-issue-construction"
+                ]
             )
     finally:
         if artifact_root.exists():
@@ -198,7 +208,11 @@ def test_cxx_preparation_materializes_fresh_input_only_toolchain_instances(
             }
             assert all("expected" not in scenario for scenario in plan["scenarios"])
             assert [scenario["id"] for scenario in plan["scenarios"]] == (
-                EXPECTED_SCENARIO_IDS
+                [
+                    name
+                    for name in EXPECTED_SCENARIO_IDS
+                    if name != "config-issue-construction"
+                ]
             )
     finally:
         if artifact_root.exists():
@@ -500,9 +514,7 @@ def test_observer_failure_facts_fail_closed_on_mutation() -> None:
                 lambda value: value["infrastructureError"].__setitem__(
                     "path", {"path": "CLASSIC Data"}
                 ),
-                lambda value: value["durableEffects"][1].__setitem__(
-                    "kind", "file"
-                ),
+                lambda value: value["durableEffects"][1].__setitem__("kind", "file"),
             ),
         ),
         (
@@ -518,9 +530,7 @@ def test_observer_failure_facts_fail_closed_on_mutation() -> None:
                 lambda value: value["infrastructureError"]["path"].__setitem__(
                     "path", "wrong"
                 ),
-                lambda value: value["durableEffects"][0].__setitem__(
-                    "kind", "missing"
-                ),
+                lambda value: value["durableEffects"][0].__setitem__("kind", "missing"),
             ),
         ),
         (
@@ -536,18 +546,14 @@ def test_observer_failure_facts_fail_closed_on_mutation() -> None:
                 lambda value: value["infrastructureError"]["path"].__setitem__(
                     "path", "wrong"
                 ),
-                lambda value: value["durableEffects"][1].__setitem__(
-                    "kind", "file"
-                ),
+                lambda value: value["durableEffects"][1].__setitem__("kind", "file"),
             ),
         ),
         (
             "report-write-failure",
             "scan-run.failure.report-write",
             (
-                lambda value: value["logs"][0].__setitem__(
-                    "disposition", "succeeded"
-                ),
+                lambda value: value["logs"][0].__setitem__("disposition", "succeeded"),
                 lambda value: value["logs"][0]["failures"][0].__setitem__(
                     "stage", "analysis"
                 ),
@@ -557,21 +563,15 @@ def test_observer_failure_facts_fail_closed_on_mutation() -> None:
                 lambda value: value["logs"][0]["crashLog"].__setitem__(
                     "path", "wrong.log"
                 ),
-                lambda value: value["logs"][0].__setitem__(
-                    "movedToUnsolvedLogs", True
-                ),
-                lambda value: value["durableEffects"][1].__setitem__(
-                    "kind", "missing"
-                ),
+                lambda value: value["logs"][0].__setitem__("movedToUnsolvedLogs", True),
+                lambda value: value["durableEffects"][1].__setitem__("kind", "missing"),
             ),
         ),
         (
             "unsolved-logs-finalization-failure",
             "scan-run.failure.unsolved-logs-finalization",
             (
-                lambda value: value["logs"][0].__setitem__(
-                    "disposition", "succeeded"
-                ),
+                lambda value: value["logs"][0].__setitem__("disposition", "succeeded"),
                 lambda value: value["logs"][0]["failures"][1].__setitem__(
                     "stage", "analysis"
                 ),
@@ -581,12 +581,8 @@ def test_observer_failure_facts_fail_closed_on_mutation() -> None:
                 lambda value: value["logs"][0]["crashLog"].__setitem__(
                     "path", "wrong.log"
                 ),
-                lambda value: value["logs"][0].__setitem__(
-                    "movedToUnsolvedLogs", True
-                ),
-                lambda value: value["durableEffects"][2].__setitem__(
-                    "kind", "missing"
-                ),
+                lambda value: value["logs"][0].__setitem__("movedToUnsolvedLogs", True),
+                lambda value: value["durableEffects"][2].__setitem__("kind", "missing"),
             ),
         ),
     ],
@@ -866,7 +862,10 @@ def test_native_consumer_runners_fail_closed_on_identity_and_probe_failure() -> 
         / "classic_cli_consumer_conformance.cpp"
     ).read_text(encoding="utf-8")
 
-    assert 'QStringLiteral("windows-") + QStringLiteral(CLASSIC_GUI_CONFORMANCE_TOOLCHAIN)' in gui_runner
+    assert (
+        'QStringLiteral("windows-") + QStringLiteral(CLASSIC_GUI_CONFORMANCE_TOOLCHAIN)'
+        in gui_runner
+    )
     assert 'participant.value(QStringLiteral("executionInstanceId"))' in gui_runner
     assert '{"observation", json::object()}' in cli_runner
 
@@ -1215,7 +1214,13 @@ def test_complete_same_revision_pack_passes_the_full_repository_denominator(
         assert len(document["receivedExecutions"]) == 10
         assert document["missingExecutions"] == []
         assert all(
-            [scenario.id for scenario in report.scenarios] == EXPECTED_SCENARIO_IDS
+            [scenario.id for scenario in report.scenarios]
+            == [
+                name
+                for name in EXPECTED_SCENARIO_IDS
+                if report.participant["id"] in {"rust", "python"}
+                or name != "config-issue-construction"
+            ]
             for report in semantic_reports
         )
         assert {
