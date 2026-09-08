@@ -29,6 +29,7 @@ FAMILY_ENFORCEMENT = MappingProxyType(
         "file-fingerprint": "blocking",
         "performance": "blocking",
         "update-decisions": "blocking",
+        "update-services": "blocking",
         "string-operations": "blocking",
         "registry-operations": "blocking",
         "registry-game": "blocking",

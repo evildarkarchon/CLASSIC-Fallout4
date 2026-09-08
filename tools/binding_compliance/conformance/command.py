@@ -45,6 +45,7 @@ from .families.settings_load import (
 from .families.shared_identity import coverage_policy as shared_identity_coverage_policy
 from .families.shared_registry import coverage_policy as shared_registry_coverage_policy
 from .families.update_decisions import UPDATE_DECISIONS_COVERAGE_POLICY
+from .families.update_services import UPDATE_SERVICES_COVERAGE_POLICY
 from .families.user_settings import USER_SETTINGS_COVERAGE_POLICY
 from .families.version_registry import VERSION_REGISTRY_COVERAGE_POLICY
 from .families.version_registry_details import VERSION_REGISTRY_DETAILS_COVERAGE_POLICY
@@ -79,6 +80,7 @@ FAMILY_COVERAGE_POLICIES: Mapping[str, FamilyCoveragePolicy] = {
     "file-fingerprint": FILE_FINGERPRINT_COVERAGE_POLICY,
     "performance": PERFORMANCE_COVERAGE_POLICY,
     "update-decisions": UPDATE_DECISIONS_COVERAGE_POLICY,
+    "update-services": UPDATE_SERVICES_COVERAGE_POLICY,
     "xse-operations": XSE_OPERATIONS_COVERAGE_POLICY,
     "settings-load": settings_load_coverage_policy(),
     "settings-yaml": settings_yaml_coverage_policy(),

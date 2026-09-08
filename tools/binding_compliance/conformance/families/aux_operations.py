@@ -18,6 +18,25 @@ OPERATIONS = {
         ("extract_domain", ("extract_domain", "extract_domain_string")),
         ("join_url", ("join_url", "web_join_url")),
         ("build_url_with_query", ("build_url_with_query", "web_build_url_with_query")),
+        ("get_user_agent", ("get_user_agent", "web_get_user_agent")),
+        (
+            "get_user_agent_with_suffix",
+            ("get_user_agent_with_suffix", "web_get_user_agent_with_suffix"),
+        ),
+        (
+            "ModSite",
+            (
+                "name",
+                "base_url",
+                "nexus_mods",
+                "bethesda_net",
+                "mod_db",
+                "mod_site_name",
+                "mod_site_base_url",
+                "get_mod_site_name",
+                "get_mod_site_url",
+            ),
+        ),
     ),
     "resource-operations": (
         ("detect_resource_type", ("detect_resource_type",)),
@@ -102,8 +121,28 @@ def _observation(family: str, value: Mapping[str, Any]) -> bool:
     """Validate complete domain facts independently of receipt metadata."""
     if family == "web-operations":
         return (
-            set(value) == {"valid", "validated", "domain", "joined", "query"}
+            set(value)
+            == {
+                "valid",
+                "validated",
+                "domain",
+                "joined",
+                "query",
+                "userAgent",
+                "userAgentWithSuffix",
+                "sites",
+            }
             and type(value["valid"]) is bool
+            and value["userAgent"] == "CLASSIC/8.0.0"
+            and isinstance(value["userAgentWithSuffix"], str)
+            and value["userAgentWithSuffix"].startswith("CLASSIC/8.0.0 (")
+            and value["userAgentWithSuffix"].endswith(")")
+            and value["sites"]
+            == [
+                {"name": "Nexus Mods", "baseUrl": "https://www.nexusmods.com"},
+                {"name": "Bethesda.net", "baseUrl": "https://bethesda.net"},
+                {"name": "ModDB", "baseUrl": "https://www.moddb.com"},
+            ]
             and all(
                 _result(value[key])
                 for key in ("validated", "domain", "joined", "query")
@@ -246,7 +285,7 @@ def validate_aux_operations_pack(
             raise ValueError("auxiliary fixture must contain only a request")
         request = fixture["request"]
         fields = {
-            "web-operations": {"url", "path", "params"},
+            "web-operations": {"url", "path", "params", "suffix"},
             "resource-operations": {"path", "type", "validate", "types"},
             "version-operations": {"version", "other"},
         }[family]

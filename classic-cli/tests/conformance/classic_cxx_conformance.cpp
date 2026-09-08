@@ -1899,6 +1899,7 @@ json execute_scenario(const json& plan, const json& scenario) {
 #include "classic_cxx_xse_operations_conformance.h"
 #include "classic_cxx_performance_conformance.h"
 #include "classic_cxx_update_decisions_conformance.h"
+#include "classic_cxx_update_services_conformance.h"
 #include "classic_cxx_shared_identity_conformance.h"
 #include "classic_cxx_settings_load_conformance.h"
 #include "classic_cxx_settings_validation_conformance.h"
@@ -1931,6 +1932,7 @@ json scenario_receipt(const json& plan, const json& scenario) {
                                       : (plan.at("familyId") == "web-operations" || plan.at("familyId") == "version-pe") ? execute_aux_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "xse-operations" ? execute_xse_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "performance" ? execute_performance_scenario(plan, scenario)
+                                    : plan.at("familyId") == "update-services" ? execute_update_services_scenario(plan, scenario)
                                     : plan.at("familyId") == "update-decisions" ? execute_update_decisions_scenario(plan, scenario)
                                     : (plan.at("familyId") == "game-identity" || plan.at("familyId") == "runtime-access") ? execute_shared_identity_scenario(plan, scenario)
                                     : (plan.at("familyId") == "settings-load" || plan.at("familyId") == "settings-yaml") ? execute_settings_load_scenario(plan, scenario)
@@ -1960,7 +1962,7 @@ void validate_plan(const json& plan) {
            plan.at("familyId") != "version-pe" && plan.at("familyId") != "game-version-parse" && plan.at("familyId") != "fallout4-identity" && plan.at("familyId") != "fallout4-paths" &&
            plan.at("familyId") != "registry-game" && plan.at("familyId") != "registry-gui" &&
            plan.at("familyId") != "registry-operations" && plan.at("familyId") != "web-operations" && plan.at("familyId") != "xse-operations" &&
-         plan.at("familyId") != "performance" && plan.at("familyId") != "update-decisions" &&
+         plan.at("familyId") != "performance" && plan.at("familyId") != "update-decisions" && plan.at("familyId") != "update-services" &&
          plan.at("familyId") != "game-identity" && plan.at("familyId") != "runtime-access" &&
          plan.at("familyId") != "settings-load" &&
          plan.at("familyId") != "settings-yaml" &&

@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-09-08T00:56:36.324604+00:00",
+  "generated_at_utc": "2026-09-08T01:29:46.142972+00:00",
   "summary": {
-    "tier1_contract_total": 910,
-    "tier1_matched": 903,
+    "tier1_contract_total": 911,
+    "tier1_matched": 904,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
@@ -11847,6 +11847,19 @@
       "actual_node_kind": "function",
       "expected_node_arity": 3,
       "actual_node_arity": 3
+    },
+    {
+      "id": "update.notification.check_app_notification_configured",
+      "tier": "tier1",
+      "owner_module": "update",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": "check_app_notification_configured",
+      "node_export": "checkAppNotificationConfigured",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": 5,
+      "actual_node_arity": 5
     }
   ],
   "gaps": [],

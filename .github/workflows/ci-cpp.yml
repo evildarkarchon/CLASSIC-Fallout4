@@ -452,6 +452,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family update-decisions -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/update-decisions
 
+      - name: Run native CXX update-services conformance
+        if: ${{ !cancelled() }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family update-services -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/update-services
+
       - name: Upload native CXX update-decisions conformance diagnostics
         if: always()
         uses: actions/upload-artifact@v6
@@ -465,6 +469,22 @@ jobs:
             tools/binding_compliance/artifacts/update-decisions/cxx/windows-${{ matrix.compiler }}/**/stdout.log
             tools/binding_compliance/artifacts/update-decisions/cxx/windows-${{ matrix.compiler }}/**/stderr.log
             tools/binding_compliance/artifacts/update-decisions/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload native CXX update-services conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cxx-update-services-conformance-${{ matrix.compiler }}
+          path: |
+            tools/binding_compliance/artifacts/update-services/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
+            tools/binding_compliance/artifacts/update-services/cxx/windows-${{ matrix.compiler }}/**/receipt.json
+            tools/binding_compliance/artifacts/update-services/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
+            tools/binding_compliance/artifacts/update-services/cxx/windows-${{ matrix.compiler }}/**/attempt.json
+            tools/binding_compliance/artifacts/update-services/cxx/windows-${{ matrix.compiler }}/**/stdout.log
+            tools/binding_compliance/artifacts/update-services/cxx/windows-${{ matrix.compiler }}/**/stderr.log
+            tools/binding_compliance/artifacts/update-services/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
           if-no-files-found: warn
           retention-days: 7
 

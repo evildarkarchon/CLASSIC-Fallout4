@@ -8176,6 +8176,16 @@
       "nodeExport": "loadExplicitYamlData",
       "nodeKind": "function",
       "nodeArity": 3
+    },
+    {
+      "id": "update.notification.check_app_notification_configured",
+      "tier": "tier1",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "rustSymbol": "check_app_notification_configured",
+      "nodeExport": "checkAppNotificationConfigured",
+      "nodeKind": "function",
+      "nodeArity": 5
     }
   ]
 }

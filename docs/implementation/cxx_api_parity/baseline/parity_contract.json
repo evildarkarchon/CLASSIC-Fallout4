@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-15T08:22:59Z",
+  "generated_at_utc": "2026-09-08T01:23:04Z",
   "schema_version": 2,
   "entries": [
     {
@@ -13886,6 +13886,42 @@
       "ownerModule": "update",
       "rustCrate": "classic-update-core",
       "coreRustSymbol": "check_app_notification"
+    },
+    {
+      "id": "00ade685439d4829",
+      "rustSymbol": "check_app_notification_configured",
+      "kind": "function",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "owner",
+            "type": "&str"
+          },
+          {
+            "name": "repo",
+            "type": "&str"
+          },
+          {
+            "name": "installed_version",
+            "type": "&str"
+          },
+          {
+            "name": "config_json",
+            "type": "&str"
+          },
+          {
+            "name": "cache_dir",
+            "type": "&str"
+          }
+        ],
+        "returnType": "NotificationStatusDto"
+      },
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "check_app_notification_configured"
     },
     {
       "id": "5b0f082531a28c27",

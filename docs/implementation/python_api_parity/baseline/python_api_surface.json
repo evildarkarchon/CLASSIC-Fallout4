@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-07T02:52:08.530913+00:00",
+  "generated_at_utc": "2026-09-08T01:25:36.875530+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -8990,6 +8990,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-update-py/classic_update.pyi",
       "signature": "def check_app_notification( owner: str, repo: str, installed_version: str, ) -> NotificationStatus:"
+    },
+    {
+      "module": "classic_update",
+      "export": "check_app_notification_configured",
+      "export_path": "check_app_notification_configured",
+      "kind": "function",
+      "arity": 5,
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "def check_app_notification_configured(owner: str, repo: str, installed_version: str, config_json: str, cache_dir: str) -> NotificationStatus:"
     },
     {
       "module": "classic_update",

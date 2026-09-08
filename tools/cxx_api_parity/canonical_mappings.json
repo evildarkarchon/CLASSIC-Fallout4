@@ -5850,6 +5850,15 @@
       "ownerModule": "xse",
       "rustCrate": "classic-xse-core",
       "coreRustSymbol": "XseInfo"
+    },
+    {
+      "id": "00ade685439d4829",
+      "rustSymbol": "check_app_notification_configured",
+      "kind": "function",
+      "bridgeModule": "update",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "coreRustSymbol": "check_app_notification_configured"
     }
   ]
 }

@@ -268,6 +268,31 @@ fn check_app_notification(
     Ok(core_status_to_py(status))
 }
 
+/// Check with supported endpoint JSON and caller-owned cache storage.
+/// Empty cache_dir disables caching; failures use the existing typed exception hierarchy.
+#[pyfunction]
+fn check_app_notification_configured(
+    py: Python<'_>,
+    owner: &str,
+    repo: &str,
+    installed_version: &str,
+    config_json: &str,
+    cache_dir: &str,
+) -> PyResult<PyNotificationStatus> {
+    let status = block_on_notification_future(py, || async {
+        core::check_app_notification_configured(
+            owner,
+            repo,
+            installed_version,
+            config_json,
+            cache_dir,
+        )
+        .await
+    })
+    .map_err(update_error_to_py)?;
+    Ok(core_status_to_py(status))
+}
+
 pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add(
         "ClassicUpdateError",
@@ -297,5 +322,6 @@ pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyAppNotificationDisplay>()?;
     m.add_class::<PyNotificationStatus>()?;
     m.add_function(wrap_pyfunction!(check_app_notification, m)?)?;
+    m.add_function(wrap_pyfunction!(check_app_notification_configured, m)?)?;
     Ok(())
 }

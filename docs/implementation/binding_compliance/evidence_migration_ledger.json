@@ -5,14 +5,14 @@
   "shadowTargetPolicy": "A shadow runtime target may name its planned family while scenario and observation IDs remain null. Only executed receipts may justify a later state.",
   "retirementPolicy": "Retired Crash Log Scan Run policy targets record removal of legacy positive proof only. Executable conformance and retained analyzers remain blocking; this diagnostic ledger never establishes a passing execution.",
   "sourceSummary": {
-    "total": 3270,
+    "total": 3275,
     "byKind": {
       "consumer_source_audit": 58,
       "display_content_consumer_audit": 3,
       "display_content_source_audit": 11,
-      "parity_row": 2779,
+      "parity_row": 2782,
       "policy_exception": 1,
-      "runtime_registry_claim": 63,
+      "runtime_registry_claim": 65,
       "rust_enum_inventory_audit": 15,
       "scan_run_contract_variant": 73,
       "scan_run_variant_policy": 73,
@@ -23,20 +23,20 @@
     "byClassification": {
       "negative_analyzer": 207,
       "policy_exception": 1,
-      "runtime_verifiable": 2645,
+      "runtime_verifiable": 2650,
       "structural_analyzer": 417
     },
     "byMigrationState": {
       "blocking": 625,
       "retired": 55,
-      "shadow": 2590
+      "shadow": 2595
     },
     "byParticipant": {
       "cli": 4,
-      "cxx": 698,
+      "cxx": 699,
       "gui": 60,
-      "node": 989,
-      "python": 1327,
+      "node": 991,
+      "python": 1329,
       "python-cli": 5,
       "rust": 180,
       "shared": 4,
@@ -1919,13 +1919,37 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/618#id=008b083968da62f2"
+        "locator": "/entries/619#id=008b083968da62f2"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
       "classification": "runtime_verifiable",
       "target": {
         "familyId": "version_registry",
+        "scenarioId": null,
+        "observationOrAssertion": null,
+        "evidenceRole": "semantic_adapter"
+      },
+      "retainedAnalyzerIds": [
+        "cxx-source-parity"
+      ],
+      "migrationState": "shadow",
+      "stateEvidence": [
+        "Phase 0 records the target disposition only; no executable receipt exists."
+      ]
+    },
+    {
+      "id": "parity:cxx:00ade685439d4829",
+      "sourceKind": "parity_row",
+      "source": {
+        "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
+        "locator": "/entries/579#id=00ade685439d4829"
+      },
+      "participant": "cxx",
+      "mappingOrigin": "canonical_rust",
+      "classification": "runtime_verifiable",
+      "target": {
+        "familyId": "update-services",
         "scenarioId": null,
         "observationOrAssertion": null,
         "evidenceRole": "semantic_adapter"
@@ -2087,7 +2111,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/626#id=0474e9d9d4c830e0"
+        "locator": "/entries/627#id=0474e9d9d4c830e0"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -2399,7 +2423,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/624#id=0950f5414356da6a"
+        "locator": "/entries/625#id=0950f5414356da6a"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -2663,7 +2687,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/581#id=0eeee967af4cfa2d"
+        "locator": "/entries/582#id=0eeee967af4cfa2d"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -2784,7 +2808,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/588#id=0fd15da635276348"
+        "locator": "/entries/589#id=0fd15da635276348"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -2832,7 +2856,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/597#id=10e249f28357e5aa"
+        "locator": "/entries/598#id=10e249f28357e5aa"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -3312,7 +3336,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/628#id=18ea0cfdb5e17d7f"
+        "locator": "/entries/629#id=18ea0cfdb5e17d7f"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -3528,7 +3552,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/627#id=1c07ae6197b62a4e"
+        "locator": "/entries/628#id=1c07ae6197b62a4e"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -3841,7 +3865,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/634#id=2396a15798a0b0b7"
+        "locator": "/entries/635#id=2396a15798a0b0b7"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -5017,7 +5041,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/609#id=3837aef1f9dcf5d3"
+        "locator": "/entries/610#id=3837aef1f9dcf5d3"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -5065,7 +5089,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/600#id=3a21b9406bb4c3cf"
+        "locator": "/entries/601#id=3a21b9406bb4c3cf"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -5233,7 +5257,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/601#id=3dfc84f544e66a6b"
+        "locator": "/entries/602#id=3dfc84f544e66a6b"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -5473,7 +5497,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/632#id=3f5f11c3df34c621"
+        "locator": "/entries/633#id=3f5f11c3df34c621"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -5497,7 +5521,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/643#id=3fea903f299b7e61"
+        "locator": "/entries/644#id=3fea903f299b7e61"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -6097,7 +6121,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/602#id=48a6955582f0fca2"
+        "locator": "/entries/603#id=48a6955582f0fca2"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -6865,7 +6889,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/621#id=56c2a9c53f62ef8b"
+        "locator": "/entries/622#id=56c2a9c53f62ef8b"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -7129,7 +7153,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/631#id=5920a39e7197ac87"
+        "locator": "/entries/632#id=5920a39e7197ac87"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -7345,7 +7369,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/579#id=5b0f082531a28c27"
+        "locator": "/entries/580#id=5b0f082531a28c27"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -7513,7 +7537,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/599#id=5dae9f5dc26da915"
+        "locator": "/entries/600#id=5dae9f5dc26da915"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -7753,7 +7777,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/585#id=621b9554c0305916"
+        "locator": "/entries/586#id=621b9554c0305916"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -7777,7 +7801,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/636#id=622499dfe357e2f2"
+        "locator": "/entries/637#id=622499dfe357e2f2"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -7825,7 +7849,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/584#id=6332111bd05c50fe"
+        "locator": "/entries/585#id=6332111bd05c50fe"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -7897,7 +7921,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/615#id=647471140dada0d8"
+        "locator": "/entries/616#id=647471140dada0d8"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -8281,7 +8305,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/617#id=69f123ef2717bdbe"
+        "locator": "/entries/618#id=69f123ef2717bdbe"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -8353,7 +8377,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/604#id=6ae0917b1c2a9661"
+        "locator": "/entries/605#id=6ae0917b1c2a9661"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -8521,7 +8545,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/593#id=6e14533e9d595fd3"
+        "locator": "/entries/594#id=6e14533e9d595fd3"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -8569,7 +8593,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/620#id=6e53840a0f9ef5b7"
+        "locator": "/entries/621#id=6e53840a0f9ef5b7"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -9001,7 +9025,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/630#id=746d496c15af12af"
+        "locator": "/entries/631#id=746d496c15af12af"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -9145,7 +9169,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/613#id=768bf40c78fc5667"
+        "locator": "/entries/614#id=768bf40c78fc5667"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -9193,7 +9217,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/606#id=76de962f36a6993c"
+        "locator": "/entries/607#id=76de962f36a6993c"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -9481,7 +9505,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/622#id=7aefe345782399f3"
+        "locator": "/entries/623#id=7aefe345782399f3"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -9553,7 +9577,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/633#id=7c4723bac8969140"
+        "locator": "/entries/634#id=7c4723bac8969140"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -9625,7 +9649,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/625#id=7d9536f46f7a602a"
+        "locator": "/entries/626#id=7d9536f46f7a602a"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -9649,7 +9673,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/596#id=7d9f8579b4faec8a"
+        "locator": "/entries/597#id=7d9f8579b4faec8a"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -10321,7 +10345,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/637#id=866ec46b5dbb24ca"
+        "locator": "/entries/638#id=866ec46b5dbb24ca"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -10585,7 +10609,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/591#id=8aef2c1cfc7c97cf"
+        "locator": "/entries/592#id=8aef2c1cfc7c97cf"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -11113,7 +11137,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/611#id=931c3651f7130049"
+        "locator": "/entries/612#id=931c3651f7130049"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -11641,7 +11665,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/590#id=992cf44bfb2981ed"
+        "locator": "/entries/591#id=992cf44bfb2981ed"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -11761,7 +11785,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/586#id=9b1acfc60be56622"
+        "locator": "/entries/587#id=9b1acfc60be56622"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -11857,7 +11881,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/605#id=9c9e99ae498e0e45"
+        "locator": "/entries/606#id=9c9e99ae498e0e45"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -11978,7 +12002,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/607#id=9d82340dd1a34d6b"
+        "locator": "/entries/608#id=9d82340dd1a34d6b"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -12170,7 +12194,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/612#id=a2cca2c61a1dfd3a"
+        "locator": "/entries/613#id=a2cca2c61a1dfd3a"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -12218,7 +12242,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/616#id=a3896f08d956320e"
+        "locator": "/entries/617#id=a3896f08d956320e"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -12578,7 +12602,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/619#id=aa5ac3996d1f24e9"
+        "locator": "/entries/620#id=aa5ac3996d1f24e9"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -12747,7 +12771,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/610#id=adebe347a211dda5"
+        "locator": "/entries/611#id=adebe347a211dda5"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -13083,7 +13107,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/598#id=b44331b1502123ea"
+        "locator": "/entries/599#id=b44331b1502123ea"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -13299,7 +13323,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/623#id=b9ec3ba45bfbad24"
+        "locator": "/entries/624#id=b9ec3ba45bfbad24"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -14115,7 +14139,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/595#id=c77712b2140e1ebe"
+        "locator": "/entries/596#id=c77712b2140e1ebe"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -14163,7 +14187,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/592#id=c7d8aa1ee5aed27e"
+        "locator": "/entries/593#id=c7d8aa1ee5aed27e"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -14259,7 +14283,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/608#id=c982b74740f8ee3d"
+        "locator": "/entries/609#id=c982b74740f8ee3d"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -14283,7 +14307,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/614#id=c9980a87fd7f20d4"
+        "locator": "/entries/615#id=c9980a87fd7f20d4"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -14427,7 +14451,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/582#id=ce26959df3d010dd"
+        "locator": "/entries/583#id=ce26959df3d010dd"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -14763,7 +14787,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/638#id=d6aeb07b6b9d96e1"
+        "locator": "/entries/639#id=d6aeb07b6b9d96e1"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -14787,7 +14811,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/640#id=d7059d6d8a7ad764"
+        "locator": "/entries/641#id=d7059d6d8a7ad764"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -15099,7 +15123,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/580#id=db4d594c980a264a"
+        "locator": "/entries/581#id=db4d594c980a264a"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -15531,7 +15555,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/629#id=e2dce70adc9aba7a"
+        "locator": "/entries/630#id=e2dce70adc9aba7a"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -15939,7 +15963,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/603#id=e8b952340bdccfbf"
+        "locator": "/entries/604#id=e8b952340bdccfbf"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -16107,7 +16131,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/635#id=ecd913c0bf62192f"
+        "locator": "/entries/636#id=ecd913c0bf62192f"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -16251,7 +16275,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/594#id=ee8abce557bf4560"
+        "locator": "/entries/595#id=ee8abce557bf4560"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -16395,7 +16419,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/587#id=f0ae26428d3c795b"
+        "locator": "/entries/588#id=f0ae26428d3c795b"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -16995,7 +17019,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/642#id=faedc73b20514c24"
+        "locator": "/entries/643#id=faedc73b20514c24"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -17043,7 +17067,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/641#id=fc1c537a29272570"
+        "locator": "/entries/642#id=fc1c537a29272570"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -17163,7 +17187,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/589#id=fdf05d86cfb41258"
+        "locator": "/entries/590#id=fdf05d86cfb41258"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -17259,7 +17283,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/583#id=fea7ac727c06be80"
+        "locator": "/entries/584#id=fea7ac727c06be80"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -17283,7 +17307,7 @@
       "sourceKind": "parity_row",
       "source": {
         "artifact": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        "locator": "/entries/639#id=fed1f3c1692a2596"
+        "locator": "/entries/640#id=fed1f3c1692a2596"
       },
       "participant": "cxx",
       "mappingOrigin": "canonical_rust",
@@ -31791,6 +31815,30 @@
       "classification": "runtime_verifiable",
       "target": {
         "familyId": "update",
+        "scenarioId": null,
+        "observationOrAssertion": null,
+        "evidenceRole": "semantic_adapter"
+      },
+      "retainedAnalyzerIds": [
+        "node-source-and-declaration-parity"
+      ],
+      "migrationState": "shadow",
+      "stateEvidence": [
+        "Phase 0 records the target disposition only; no executable receipt exists."
+      ]
+    },
+    {
+      "id": "parity:node:update.notification.check_app_notification_configured",
+      "sourceKind": "parity_row",
+      "source": {
+        "artifact": "docs/implementation/node_api_parity/baseline/parity_contract.json",
+        "locator": "/tier1Mappings/910#id=update.notification.check_app_notification_configured"
+      },
+      "participant": "node",
+      "mappingOrigin": "canonical_rust",
+      "classification": "runtime_verifiable",
+      "target": {
+        "familyId": "update-services",
         "scenarioId": null,
         "observationOrAssertion": null,
         "evidenceRole": "semantic_adapter"
@@ -60496,6 +60544,30 @@
       ]
     },
     {
+      "id": "parity:python:update.notification.check_app_notification_configured",
+      "sourceKind": "parity_row",
+      "source": {
+        "artifact": "docs/implementation/python_api_parity/baseline/parity_contract.json",
+        "locator": "/tier1Mappings/1225#id=update.notification.check_app_notification_configured"
+      },
+      "participant": "python",
+      "mappingOrigin": "canonical_rust",
+      "classification": "runtime_verifiable",
+      "target": {
+        "familyId": "update-services",
+        "scenarioId": null,
+        "observationOrAssertion": null,
+        "evidenceRole": "semantic_adapter"
+      },
+      "retainedAnalyzerIds": [
+        "python-source-and-stub-parity"
+      ],
+      "migrationState": "shadow",
+      "stateEvidence": [
+        "Phase 0 records the target disposition only; no executable receipt exists."
+      ]
+    },
+    {
       "id": "parity:python:user_settings.accepted_base_revision_accessor",
       "sourceKind": "parity_row",
       "source": {
@@ -69711,6 +69783,30 @@
       ]
     },
     {
+      "id": "runtime-claim:node:node-update-services-configured",
+      "sourceKind": "runtime_registry_claim",
+      "source": {
+        "artifact": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
+        "locator": "/entries/32#coverageId=node-update-services-configured"
+      },
+      "participant": "node",
+      "mappingOrigin": "legacy_registry_claim",
+      "classification": "runtime_verifiable",
+      "target": {
+        "familyId": "update-services",
+        "scenarioId": null,
+        "observationOrAssertion": null,
+        "evidenceRole": "semantic_adapter"
+      },
+      "retainedAnalyzerIds": [
+        "node-source-and-declaration-parity"
+      ],
+      "migrationState": "shadow",
+      "stateEvidence": [
+        "Phase 0 records the target disposition only; no executable receipt exists."
+      ]
+    },
+    {
       "id": "runtime-claim:python:python-tier1-config",
       "sourceKind": "runtime_registry_claim",
       "source": {
@@ -70442,6 +70538,30 @@
       "classification": "runtime_verifiable",
       "target": {
         "familyId": "config",
+        "scenarioId": null,
+        "observationOrAssertion": null,
+        "evidenceRole": "semantic_adapter"
+      },
+      "retainedAnalyzerIds": [
+        "python-source-and-stub-parity"
+      ],
+      "migrationState": "shadow",
+      "stateEvidence": [
+        "Phase 0 records the target disposition only; no executable receipt exists."
+      ]
+    },
+    {
+      "id": "runtime-claim:python:python-update-services-configured",
+      "sourceKind": "runtime_registry_claim",
+      "source": {
+        "artifact": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
+        "locator": "/entries/31#coverageId=python-update-services-configured"
+      },
+      "participant": "python",
+      "mappingOrigin": "legacy_registry_claim",
+      "classification": "runtime_verifiable",
+      "target": {
+        "familyId": "update-services",
         "scenarioId": null,
         "observationOrAssertion": null,
         "evidenceRole": "semantic_adapter"

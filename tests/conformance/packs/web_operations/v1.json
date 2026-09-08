@@ -19,7 +19,10 @@
         "validate_url",
         "extract_domain",
         "join_url",
-        "build_url_with_query"
+        "build_url_with_query",
+        "get_user_agent",
+        "get_user_agent_with_suffix",
+        "ModSite"
       ],
       "observationFamilies": [
         "url-resolution"
@@ -56,7 +59,23 @@
         "query": {
           "value": "https://example.com/base?q=two+words&tag=a%26b",
           "error": null
-        }
+        },
+        "userAgent": "CLASSIC/8.0.0",
+        "userAgentWithSuffix": "CLASSIC/8.0.0 (conformance / 雪)",
+        "sites": [
+          {
+            "name": "Nexus Mods",
+            "baseUrl": "https://www.nexusmods.com"
+          },
+          {
+            "name": "Bethesda.net",
+            "baseUrl": "https://bethesda.net"
+          },
+          {
+            "name": "ModDB",
+            "baseUrl": "https://www.moddb.com"
+          }
+        ]
       },
       "normalization": {
         "rootRelativePaths": false,
@@ -93,7 +112,23 @@
         "query": {
           "value": null,
           "error": "Invalid URL scheme: ftp (expected http or https)"
-        }
+        },
+        "userAgent": "CLASSIC/8.0.0",
+        "userAgentWithSuffix": "CLASSIC/8.0.0 ()",
+        "sites": [
+          {
+            "name": "Nexus Mods",
+            "baseUrl": "https://www.nexusmods.com"
+          },
+          {
+            "name": "Bethesda.net",
+            "baseUrl": "https://bethesda.net"
+          },
+          {
+            "name": "ModDB",
+            "baseUrl": "https://www.moddb.com"
+          }
+        ]
       },
       "normalization": {
         "rootRelativePaths": false,
@@ -130,7 +165,23 @@
         "query": {
           "value": null,
           "error": "URL parse error: relative URL without a base"
-        }
+        },
+        "userAgent": "CLASSIC/8.0.0",
+        "userAgentWithSuffix": "CLASSIC/8.0.0 (Windows (test))",
+        "sites": [
+          {
+            "name": "Nexus Mods",
+            "baseUrl": "https://www.nexusmods.com"
+          },
+          {
+            "name": "Bethesda.net",
+            "baseUrl": "https://bethesda.net"
+          },
+          {
+            "name": "ModDB",
+            "baseUrl": "https://www.moddb.com"
+          }
+        ]
       },
       "normalization": {
         "rootRelativePaths": false,

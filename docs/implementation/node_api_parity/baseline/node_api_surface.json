@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-08T00:52:16.534290+00:00",
+  "generated_at_utc": "2026-09-08T01:29:46.140512+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -2282,6 +2282,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkAppNotification(options: JsCheckAppNotificationOptions): Promise<JsNotificationStatus>",
       "arity": 1
+    },
+    {
+      "export": "checkAppNotificationConfigured",
+      "kind": "function",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function checkAppNotificationConfigured(owner: string, repo: string, installedVersion: string, configJson: string, cacheDir: string): Promise<JsNotificationStatus>",
+      "arity": 5
     },
     {
       "export": "checkCrashgenConfig",

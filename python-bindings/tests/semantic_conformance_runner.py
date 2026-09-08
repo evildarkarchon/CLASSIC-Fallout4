@@ -23,6 +23,7 @@ FAMILIES = {
     "file-fingerprint",
     "performance",
     "update-decisions",
+    "update-services",
     "string-operations",
     "registry-operations",
     "registry-game",
@@ -149,6 +150,7 @@ def _load_plan(path: Path) -> Mapping[str, Any]:
             "game-identity": {"game-identity.observe"},
             "performance": {"performance.metrics"},
             "update-decisions": {"update-decisions.compare"},
+            "update-services": {"update-services.notification"},
             "string-operations": {"string-operations.execute"},
             "registry-operations": {"registry-operations.execute"},
             "registry-game": {"registry-game.observe"},
@@ -533,6 +535,10 @@ def _execute_scenario(
         from performance_conformance import observe_performance
 
         return observe_performance(fixture)
+    if plan["familyId"] == "update-services":
+        from update_services_conformance import observe_update_services
+
+        return observe_update_services(fixture, scenario["id"])
     if plan["familyId"] == "update-decisions":
         from update_decisions_conformance import observe_update_decisions
 

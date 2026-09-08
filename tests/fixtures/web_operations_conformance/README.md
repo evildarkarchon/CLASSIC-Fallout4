@@ -10,5 +10,9 @@ Failure cases preserve actual public parser and scheme errors. Rust, CXX, Node
 and Python adapters call every selected public operation, including after a
 validation error, so one successful call cannot substitute for the others.
 
-User-agent and ModSite helpers remain under their existing registry evidence;
-this pack does not assign them URL-operation execution credit.
+The same cases observe the default user agent, exact empty/Unicode/nested suffix
+formatting, and the names and base URLs of all three ModSite variants. These
+metadata values are authored in the pack and observed through each public adapter.
+Game-specific URLs and Python representation/equality helpers retain their existing
+evidence: Python has no public game-URL method, and common metadata observations
+do not claim those operations.

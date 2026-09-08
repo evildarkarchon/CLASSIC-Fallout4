@@ -188,3 +188,28 @@ For the native CLI, notification delivery is downstream of typed User Settings p
 - [`classic-update-core.md`](classic-update-core.md) — full `notification` module surface.
 - [`yaml-update-delivery.md`](yaml-update-delivery.md) — the adjacent (payload-carrying) YAML data delivery channel.
 - [`error-contract.md`](error-contract.md) — per-binding error shape conventions.
+
+
+## Supported endpoint configuration
+
+Hosts using GitHub-compatible mirrors or an explicit notification manifest can call
+`check_app_notification_configured(owner, repo, installed_version, config_json, cache_dir)`.
+Node exposes `checkAppNotificationConfigured` with the same five positional arguments;
+Python and CXX preserve the snake-case name. Return DTOs and typed failure conventions
+are identical to the default notification check. All parsing, validation, fallback,
+classification, and cache persistence remain in Rust.
+
+`config_json` is a JSON object with optional `github_api_base_url` (default
+`https://api.github.com`), `notification_pages_url` (default repository GitHub Pages
+manifest), `timeout_ms` (default 30000, inclusive range 1–300000), and `token`
+(default null). Unknown fields are rejected. URLs must use HTTP or HTTPS and cannot
+contain embedded credentials or fragments. The GitHub API root omits `/repos/...`.
+The token is explicit; this operation never loads dotenv or ambient `GITHUB_TOKEN`.
+Pages requests retain their 5-second cap and also honor a shorter configured timeout.
+Existing default entry points retain their endpoint and credential behavior.
+
+An empty cache directory disables cache reads and writes. A nonempty directory is
+caller-owned storage for the existing manifest body, ETag, and fallback marker;
+cache behavior is otherwise unchanged. Configuration failures precede network I/O.
+Rust callers may construct `UpdateEndpointConfig` directly and use
+`GithubClient::with_endpoint_config` when reusing a client for release operations.

@@ -47,6 +47,8 @@ Config loading, text file I/O, path validation/normalization, and message format
 
 Database pool lookups, Version Registry metadata/matching, and Scan Game INI/ENB checks require blocking receipts through Rust, Node, Python, and CXX on both compilers. Their [equivalence map](docs/implementation/database_version_scangame_conformance_equivalence.md) records controlled fixtures, unchanged disk contents, stable failures, and the precise operations that retain their existing tests.
 
+Configured notification checks use blocking controlled-service receipts across Rust, CXX, Node and Python, covering failures, timeouts and exact cache effects without internet access. Web receipts also observe user agents and all common ModSite metadata. The [update and web evidence map](docs/implementation/update_web_conformance_equivalence.md) records these obligations and the existing evidence retained for other update operations.
+
 For older historical context, see [CLASSIC - Readme.pdf](CLASSIC%20-%20Readme.pdf).
 
 Nexus Mods: <https://www.nexusmods.com/fallout4/mods/56255>

@@ -12,6 +12,11 @@ from ..coverage import SourceParityRow
 # Keep participant and class identity explicit: similarly named unrelated methods
 # must never inherit a disposition from this phase-one migration.
 _RETAINED = {
+    # Common site metadata executes constructors/name/base_url; Python display
+    # and equality methods keep their focused binding tests as evidence.
+    ("web-operations", "classic-web-core", "ModSite", "python"): frozenset(
+        {"__eq__", "__repr__", "__str__"}
+    ),
     # Parsing does not claim binding-only comparison/hash methods; existing
     # focused binding tests remain their evidence owner.
     (

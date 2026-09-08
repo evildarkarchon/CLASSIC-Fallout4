@@ -20,7 +20,7 @@ json aux_web_result(Operation operation) {
     }
 }
 
-/// Execute URL validation, domain extraction and composition from an input-only fixture.
+/// Execute URL validation, composition, user-agent and site helpers from an input-only fixture.
 json execute_aux_operations_scenario(const json& plan, const json& scenario) {
     const auto reference = scenario.at("input").at("fixtureRef").get<std::string>();
     const auto& references = scenario.at("fixtureRefs");
@@ -58,7 +58,16 @@ json execute_aux_operations_scenario(const json& plan, const json& scenario) {
         keys.emplace_back(pair.at(0).get<std::string>());
         values.emplace_back(pair.at(1).get<std::string>());
     }
+    auto sites = json::array();
+    for (const auto site : {classic::web::ModSite::NexusMods, classic::web::ModSite::BethesdaNet,
+                            classic::web::ModSite::ModDB}) {
+        sites.push_back(json{{"name", std::string(classic::web::mod_site_name(site))},
+                             {"baseUrl", std::string(classic::web::mod_site_base_url(site))}});
+    }
     return json{
+        {"userAgent", std::string(classic::web::web_get_user_agent())},
+        {"userAgentWithSuffix", std::string(classic::web::web_get_user_agent_with_suffix(request.at("suffix").get<std::string>()))},
+        {"sites", sites},
         {"valid", classic::web::is_valid_url(url)},
         {"validated", aux_web_result([&] { return classic::web::validate_url_string(url); })},
         {"domain", aux_web_result([&] { return classic::web::extract_domain_string(url); })},

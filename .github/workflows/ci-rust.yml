@@ -444,12 +444,25 @@ jobs:
         if: ${{ !cancelled() }}
         run: python tools/binding_compliance/run_semantic_conformance.py --family update-decisions --participant rust --artifact-root tools/binding_compliance/artifacts/update-decisions
 
+      - name: Run Rust update-services conformance
+        if: ${{ !cancelled() }}
+        run: python tools/binding_compliance/run_semantic_conformance.py --family update-services --participant rust --artifact-root tools/binding_compliance/artifacts/update-services
+
       - name: Upload Rust update-decisions conformance diagnostics
         if: always()
         uses: actions/upload-artifact@v6
         with:
           name: rust-update-decisions-conformance
           path: tools/binding_compliance/artifacts/update-decisions/rust/rust/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload Rust update-services conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: rust-update-services-conformance
+          path: tools/binding_compliance/artifacts/update-services/rust/rust/
           if-no-files-found: warn
           retention-days: 7
 

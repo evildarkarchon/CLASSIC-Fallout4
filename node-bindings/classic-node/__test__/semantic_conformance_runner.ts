@@ -2,6 +2,7 @@ import { observeDatabaseOperations } from "./database_operations_conformance.js"
 import { observeFileFingerprint } from "./file_fingerprint_conformance.js";
 import { observePerformance } from "./performance_conformance.js";
 import { observeUpdateDecisions } from "./update_decisions_conformance.js";
+import { observeUpdateServices } from "./update_services_conformance.js";
 import { observeSharedRegistry } from "./shared_registry_conformance.js";
 import { observeAuxOperations } from "./aux_operations_conformance.js";
 import { observeXseOperations } from "./xse_operations_conformance.js";
@@ -27,6 +28,8 @@ import { observeSettingsExtended } from "./settings_extended_conformance";
 import { observeVersionValues } from "./version_values_conformance";
 
 const families = ["game-version-parse", "game-version-distance", "fallout4-identity", "settings-yaml-batch", "settings-yaml", "settings-cached-docs", "version-registry-details", "version-extraction", "version-pe", "version-pe-path", "registry-game", "registry-paths", "settings-load", "xse-operations", "game-identity", "runtime-access", "file-fingerprint", "performance", "update-decisions", "string-operations", "registry-operations", "web-operations", "resource-operations", "version-operations", "crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary", "config-operations", "file-operations", "path-operations", "path-normalization", "message-operations", "database-operations", "version-registry", "scan-game"];
+
+families.push("update-services");
 
 /** Reject malformed invocation objects before invoking native operations. */
 function object(value: unknown, label: string): JsonObject {
@@ -77,6 +80,7 @@ async function loadPlan(path: string): Promise<JsonObject> {
       "file-fingerprint": ["file-fingerprint.inspect"],
       "performance": ["performance.metrics"],
       "update-decisions": ["update-decisions.compare"],
+      "update-services": ["update-services.notification"],
       "string-operations": ["string-operations.execute"],
       "registry-operations": ["registry-operations.execute"],
       "registry-game": ["registry-game.observe"],
@@ -253,6 +257,7 @@ async function executeScenario(plan: JsonObject, scenario: JsonObject): Promise<
   if (["game-identity", "runtime-access"].includes(plan.familyId)) return observeSharedIdentity(plan.familyId, fixture);
   if (plan.familyId === "performance") return observePerformance(fixture);
   if (plan.familyId === "update-decisions") return observeUpdateDecisions(fixture);
+  if (plan.familyId === "update-services") return observeUpdateServices(fixture, scenario.id);
   if (["string-operations", "registry-operations"].includes(plan.familyId)) return observeSharedRegistry(plan.familyId, fixture);
   if (["web-operations", "resource-operations", "version-operations", "version-extraction", "version-pe", "version-pe-path"].includes(plan.familyId)) return observeAuxOperations(plan.familyId, fixture);
   if (plan.familyId === "file-operations") {

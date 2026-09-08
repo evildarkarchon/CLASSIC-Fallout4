@@ -1655,6 +1655,12 @@ export declare function calculateTextSimilarity(text1: string, text2: string): n
 export declare function checkAppNotification(options: JsCheckAppNotificationOptions): Promise<JsNotificationStatus>
 
 /**
+ * Check a notification with supported endpoint JSON and caller-owned cache storage.
+ * Empty cacheDir disables caching; errors retain the notification error-code contract.
+ */
+export declare function checkAppNotificationConfigured(owner: string, repo: string, installedVersion: string, configJson: string, cacheDir: string): Promise<JsNotificationStatus>
+
+/**
  * Convenience function to check crashgen config without creating an instance.
  *
  * @param pluginsPath - Path to plugins directory.

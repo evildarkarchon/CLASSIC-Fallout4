@@ -169,6 +169,7 @@ _EXECUTION_POLICIES += tuple(
         "file-fingerprint",
         "performance",
         "update-decisions",
+        "update-services",
         "string-operations",
         "registry-operations",
         "registry-game",

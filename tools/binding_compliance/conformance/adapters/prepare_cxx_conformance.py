@@ -37,6 +37,7 @@ SUPPORTED_FAMILIES = (
     "web-operations",
     "performance",
     "update-decisions",
+    "update-services",
     "xse-operations",
     "game-identity",
     "runtime-access",
@@ -83,6 +84,7 @@ def _cxx_source_paths(
                 "aux_operations",
                 "performance",
                 "update_decisions",
+                "update_services",
                 "xse_operations",
                 "shared_identity",
             )
@@ -96,6 +98,7 @@ def _cxx_source_paths(
         repo_root / "foundation/classic-vocabulary/src",
         repo_root / "business-logic/classic-durable-publication/src",
         SCRIPT_PATH,
+        repo_root / "tools/binding_compliance/controlled_update_service.py",
         repo_root
         / "tools"
         / "binding_compliance"

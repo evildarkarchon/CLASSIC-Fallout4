@@ -126,6 +126,7 @@ pub struct GithubClient {
     repo: String,
     client: Client,
     base_url: String,
+    request_timeout: Duration,
     /// Optional authentication token for increased rate limits.
     token: Option<String>,
 }
@@ -193,6 +194,7 @@ impl GithubClient {
             owner: owner.into(),
             repo: repo.into(),
             client,
+            request_timeout: Self::API_TIMEOUT,
             base_url: Self::GITHUB_API_BASE.to_string(),
             token,
         })
@@ -230,6 +232,7 @@ impl GithubClient {
             owner: owner.into(),
             repo: repo.into(),
             client,
+            request_timeout: Self::API_TIMEOUT,
             base_url: Self::GITHUB_API_BASE.to_string(),
             token: token.filter(|t| !t.is_empty()),
         })
@@ -257,9 +260,38 @@ impl GithubClient {
             owner: owner.into(),
             repo: repo.into(),
             client,
+            request_timeout: Self::API_TIMEOUT,
             base_url: base_url.into(),
             token: token.filter(|t| !t.is_empty()),
         })
+    }
+
+    /// Create a client for a supported alternate endpoint with explicit credentials.
+    /// Configuration is validated before creating the client; no environment or dotenv is read.
+    pub fn with_endpoint_config(
+        owner: impl Into<String>,
+        repo: impl Into<String>,
+        config: &crate::endpoints::UpdateEndpointConfig,
+    ) -> Result<Self> {
+        config.validate()?;
+        let request_timeout = Duration::from_millis(config.timeout_ms);
+        let client = Client::builder()
+            .timeout(request_timeout)
+            .user_agent(format!("CLASSIC-Update/{}", env!("CARGO_PKG_VERSION")))
+            .build()?;
+        Ok(Self {
+            owner: owner.into(),
+            repo: repo.into(),
+            client,
+            request_timeout,
+            base_url: config.github_api_base_url.trim_end_matches('/').to_string(),
+            token: config.token.clone().filter(|token| !token.is_empty()),
+        })
+    }
+
+    /// Cap per-channel timeouts by the caller's configured request budget.
+    pub(crate) fn capped_timeout(&self, channel_timeout: Duration) -> Duration {
+        self.request_timeout.min(channel_timeout)
     }
 
     /// Returns the underlying `reqwest::Client` so sibling modules (namely

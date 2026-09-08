@@ -440,12 +440,25 @@ jobs:
         if: matrix.runtime == 'node' && !cancelled()
         run: python tools/binding_compliance/run_semantic_conformance.py --family update-decisions --participant node --artifact-root tools/binding_compliance/artifacts/update-decisions
 
+      - name: Run Node update-services conformance
+        if: matrix.runtime == 'node' && !cancelled()
+        run: python tools/binding_compliance/run_semantic_conformance.py --family update-services --participant node --artifact-root tools/binding_compliance/artifacts/update-services
+
       - name: Upload Node update-decisions conformance diagnostics
         if: matrix.runtime == 'node' && always()
         uses: actions/upload-artifact@v6
         with:
           name: node-update-decisions-conformance
           path: tools/binding_compliance/artifacts/update-decisions/node/node/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload Node update-services conformance diagnostics
+        if: matrix.runtime == 'node' && always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-update-services-conformance
+          path: tools/binding_compliance/artifacts/update-services/node/node/
           if-no-files-found: warn
           retention-days: 7
 

@@ -95,8 +95,8 @@ def test_discovery_freezes_every_current_evidence_source() -> None:
     obligations = discover_current_obligations(REPO_ROOT)
 
     assert Counter(entry["sourceKind"] for entry in obligations) == {
-        "parity_row": 2_779,
-        "runtime_registry_claim": 63,
+        "parity_row": 2_782,
+        "runtime_registry_claim": 65,
         "scan_run_contract_variant": 73,
         "scan_run_variant_policy": 73,
         "source_audit": 189,
@@ -169,7 +169,11 @@ def test_binding_only_rows_and_cxx_policy_exception_remain_explicit() -> None:
         if "unmappedReason" not in row:
             assert obligation["mappingOrigin"] == "canonical_rust"
             assert obligation["classification"] == "runtime_verifiable"
-            assert obligation["target"]["familyId"] == row["ownerModule"]
+            assert obligation["target"]["familyId"] == (
+                "update-services"
+                if row["coreRustSymbol"] == "check_app_notification_configured"
+                else row["ownerModule"]
+            )
             continue
 
         assert obligation["mappingOrigin"] == "binding_only"
@@ -327,7 +331,7 @@ def test_generated_ledger_is_deterministic_and_non_evidentiary() -> None:
 
     assert first == second
     assert first["diagnosticOnly"] is True
-    assert first["sourceSummary"]["total"] == 3_270
+    assert first["sourceSummary"]["total"] == 3_275
     assert "coverage" not in first
     assert "receipts" not in first
     validate_ledger_entries(first, discover_current_obligations(REPO_ROOT))
@@ -340,7 +344,7 @@ def test_markdown_summary_warns_that_the_ledger_grants_no_compliance() -> None:
 
     assert "Diagnostic only" in markdown
     assert "does **not** grant compliance" in markdown
-    assert "3,270" in markdown
+    assert "3,275" in markdown
     assert "Executable conformance and retained analyzers remain blocking" in markdown
 
 
@@ -394,3 +398,11 @@ def test_artifact_check_rejects_a_removed_obligation(tmp_path: Path) -> None:
 
     with pytest.raises(LedgerValidationError, match="missing obligations"):
         check_ledger_artifacts(REPO_ROOT, ledger_path, summary_path)
+
+
+def test_configured_notification_has_narrow_service_family() -> None:
+    """Only the new notification operation maps to the controlled service family."""
+    obligations = discover_current_obligations(REPO_ROOT)
+    selected = [entry for entry in obligations if entry["target"]["familyId"] == "update-services"]
+    assert len(selected) == 5
+    assert {entry["participant"] for entry in selected} == {"cxx", "node", "python"}

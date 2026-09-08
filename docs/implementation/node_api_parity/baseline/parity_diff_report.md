@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-09-08T00:56:36.324604+00:00`
-- Tier-1 contract rows: **910**
-- Tier-1 matched: **903**
+- Generated: `2026-09-08T01:29:46.142972+00:00`
+- Tier-1 contract rows: **911**
+- Tier-1 matched: **904**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -922,6 +922,7 @@
 | `config.installed_yaml_data.inspectInstalledYamlData` | `config` | `inspect_installed_yaml_data` | `inspectInstalledYamlData` | `matched` |
 | `config.installed_yaml_data.loadInstalledYamlData` | `config` | `load_installed_yaml_data` | `loadInstalledYamlData` | `matched` |
 | `config.explicit_yaml_data.loadExplicitYamlData` | `config` | `load_explicit_yaml_data` | `loadExplicitYamlData` | `matched` |
+| `update.notification.check_app_notification_configured` | `update` | `check_app_notification_configured` | `checkAppNotificationConfigured` | `matched` |
 
 ## Gap Counts By Owner/Tier
 

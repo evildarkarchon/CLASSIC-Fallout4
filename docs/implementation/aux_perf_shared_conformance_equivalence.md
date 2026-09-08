@@ -11,7 +11,7 @@ new CI steps; this change does not retire their evidence.
 | `file-fingerprint` | file-io | SHA-256 vectors, batch success filtering, encoding, missing file, cache counters/reset/clear, unchanged bytes | Rust, Node, Python |
 | `performance` | perf | Supplied timing samples, complete summaries, clear and reuse | Rust, CXX, Node, Python |
 | `update-decisions` | update | Valid version upgrade/equality/downgrade/prerelease decisions | Rust, CXX, Node, Python |
-| `web-operations` | web | URL validation, domain extraction, joining, query parameters, errors | Rust, CXX, Node, Python |
+| `web-operations` | web | URL validation, domain extraction, joining, query parameters, errors, user agents and all ModSite names/base URLs | Rust, CXX, Node, Python |
 | `resource-operations` | resource | Type catalog, constructors, enumeration, counts, validation errors, unchanged files | Rust, Node, Python |
 | `version-operations` | version | Parsing, optional parsing, comparison, formatting, invalid text | Rust, Node, Python |
 | `xse-operations` | xse | F4SE metadata, absent/loader-only/version-DLL detection, unchanged files | Rust, CXX, Node, Python |
@@ -29,6 +29,10 @@ runtime diagnostics belong to the separately inventoried `classic-shared-py`
 owner and are not credited as a core runtime operation.
 
 ## Determinism and transport limits
+
+Issue #214 extends web metadata and adds configured notification service coverage;
+see the [update/web evidence map](update_web_conformance_equivalence.md) for its
+controlled listener, cache observations and retained operation boundaries.
 
 All files live beneath disposable invocation-owned directories. No scenario
 contacts GitHub, searches the user's registry, discovers an installed game, or

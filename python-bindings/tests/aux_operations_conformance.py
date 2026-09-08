@@ -28,6 +28,16 @@ def observe_aux_operations(family: str, fixture: Mapping[str, Any]) -> dict[str,
 
         url = request["url"]
         return {
+            "userAgent": web.get_user_agent(),
+            "userAgentWithSuffix": web.get_user_agent_with_suffix(request["suffix"]),
+            "sites": [
+                {"name": site.name(), "baseUrl": site.base_url()}
+                for site in (
+                    web.ModSite.nexus_mods(),
+                    web.ModSite.bethesda_net(),
+                    web.ModSite.mod_db(),
+                )
+            ],
             "valid": web.is_valid_url(url),
             "validated": _result(lambda: web.validate_url(url)),
             "domain": _result(lambda: web.extract_domain(url)),

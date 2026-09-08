@@ -707,6 +707,14 @@ def _policy_exception_obligation(repo_root: Path) -> dict[str, Any]:
     }
 
 
+def _parity_family(row: Mapping[str, Any]) -> str:
+    """Assign only the configured notification operation to update-services."""
+
+    if (row.get("coreRustSymbol") or row.get("rustSymbol")) == "check_app_notification_configured":
+        return "update-services"
+    return str(row.get("ownerModule") or "unowned")
+
+
 def _parity_obligations(repo_root: Path) -> list[dict[str, Any]]:
     """Discover and classify every tracked CXX, Node, and Python parity row."""
 
@@ -796,7 +804,7 @@ def _parity_obligations(repo_root: Path) -> list[dict[str, Any]]:
                         locator=locator,
                         participant=participant,
                         mapping_origin="canonical_rust",
-                        family_id=str(row["ownerModule"]),
+                        family_id=_parity_family(row),
                         retained_analyzer_ids=(analyzer_id,),
                     )
                 )
@@ -839,7 +847,7 @@ def _parity_obligations(repo_root: Path) -> list[dict[str, Any]]:
                     locator=locator,
                     participant=participant,
                     mapping_origin=mapping_origin,
-                    family_id=str(row.get("ownerModule") or "unowned"),
+                    family_id=_parity_family(row),
                     retained_analyzer_ids=(analyzer_id,),
                 )
             )
@@ -868,7 +876,8 @@ def _runtime_registry_obligations(repo_root: Path) -> list[dict[str, Any]]:
                     locator=f"/entries/{index}#coverageId={coverage_id}",
                     participant=participant,
                     mapping_origin="legacy_registry_claim",
-                    family_id=str(entry.get("ownerModule") or "unowned"),
+                    family_id=("update-services" if coverage_id == f"{participant}-update-services-configured"
+                               else str(entry.get("ownerModule") or "unowned")),
                     retained_analyzer_ids=(ANALYZER_IDS[participant],),
                 )
             )

@@ -33,11 +33,13 @@ pub(super) fn execute(family: &str, fixture: &Value) -> RunnerResult<Value> {
                 .iter()
                 .map(|(key, value)| (key.as_str(), value.as_str()))
                 .collect::<Vec<_>>();
-            Ok(
-                json!({"valid": web::is_valid_url(&url), "validated": result(web::validate_url(&url)),
+            Ok(json!({"userAgent": web::get_user_agent(),
+                "userAgentWithSuffix": web::get_user_agent_with_suffix(&text(&request["suffix"])?),
+                "sites": ([web::ModSite::NexusMods, web::ModSite::BethesdaNet, web::ModSite::ModDB]
+                    .iter().map(|site| json!({"name": site.name(), "baseUrl": site.base_url()})).collect::<Vec<_>>()),
+                "valid": web::is_valid_url(&url), "validated": result(web::validate_url(&url)),
                 "domain": result(web::extract_domain(&url)), "joined": result(web::join_url(&url, &path)),
-                "query": result(web::build_url_with_query(&url, &borrowed))}),
-            )
+                "query": result(web::build_url_with_query(&url, &borrowed))}))
         }
         "resource-operations" => {
             use classic_resource_core as resource;

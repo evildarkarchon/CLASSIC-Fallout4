@@ -1053,16 +1053,18 @@
       "classification": "runtime_verified",
       "ownerModule": "update",
       "tier": "tier1",
-      "contractSelector": {
-        "ownerModule": "update",
-        "tier": "tier1"
-      },
-      "contractCount": 6,
-      "contractIdsHash": "f6eab258a4b47a270ea35201938cda956571a29844d44061296e48f4c9400d10",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "update-tier1-parity",
-      "fixtureRefs": []
+      "fixtureRefs": [],
+      "contractIds": [
+        "update.GithubAsset@rust",
+        "update.GithubClient@rust",
+        "update.GithubRelease@rust",
+        "update.UpdateError@rust",
+        "update.VERSION@rust",
+        "update.github@rust"
+      ]
     },
     {
       "coverageId": "node-tier1-web",
@@ -1114,6 +1116,19 @@
         "versionRegistryCases"
       ],
       "notes": "Covers rust-only version-core proxy rows grouped with the existing version-registry parity smoke suite after Phase 3 redistribution moved NULL_VERSION ownership out of the retired constants owner."
+    },
+    {
+      "coverageId": "node-update-services-configured",
+      "classification": "runtime_verified",
+      "ownerModule": "update",
+      "tier": "tier1",
+      "contractIds": [
+        "update.notification.check_app_notification_configured"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/update_services_conformance.ts",
+      "testCaseId": "update-services-configured-notification",
+      "notes": "Executed by the blocking update-services conformance family against controlled HTTP routes."
     }
   ]
 }

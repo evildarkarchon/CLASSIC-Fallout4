@@ -1,0 +1,9 @@
+{
+  "installedVersion": "bad",
+  "timeoutMs": 3000,
+  "checks": 1,
+  "service": {
+    "pages": [],
+    "api": []
+  }
+}

@@ -1584,14 +1584,20 @@
       "verificationMode": "direct_call",
       "ownerModule": "update",
       "tier": "tier1",
-      "contractSelector": {
-        "ownerModule": "update",
-        "tier": "tier1"
-      },
-      "contractCount": 10,
-      "contractIdsHash": "b22849974bb596d0bead117814580140d5d6b13f7cd0744baf7b87c432dbcfbc",
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "update-residuals-smoke"
+      "testCaseId": "update-residuals-smoke",
+      "contractIds": [
+        "update.github.GithubAsset",
+        "update.github.GithubClient",
+        "update.github.GithubClient.__init__",
+        "update.github.GithubClient.get_all_releases",
+        "update.github.GithubClient.get_latest_release",
+        "update.github.GithubClient.has_update",
+        "update.github.GithubClient.repo_url",
+        "update.github.GithubRelease",
+        "update.github.UpdateError@rust",
+        "update.github.github@rust"
+      ]
     },
     {
       "coverageId": "python-tier1-scanlog-wave10-residuals",
@@ -1610,6 +1616,19 @@
       ],
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scanlog-method-residuals"
+    },
+    {
+      "coverageId": "python-update-services-configured",
+      "classification": "runtime_verified",
+      "ownerModule": "update",
+      "tier": "tier1",
+      "contractIds": [
+        "update.notification.check_app_notification_configured"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/update_services_conformance.py",
+      "testCaseId": "update-services-configured-notification",
+      "notes": "Executed by the blocking update-services conformance family against controlled HTTP routes."
     }
   ]
 }

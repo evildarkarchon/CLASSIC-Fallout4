@@ -1,8 +1,8 @@
 # Node Runtime Coverage Summary
 
-- Generated: `2026-09-08T00:56:36.336081+00:00`
-- Tracked surfaces: **1002**
-- Unmigrated legacy registry claims: **910**
+- Generated: `2026-09-08T01:29:46.160021+00:00`
+- Tracked surfaces: **1003**
+- Unmigrated legacy registry claims: **911**
 - Requiring executable receipts: **37**
 - Retained structural analysis: **55**
 - Contract mapped only: **0**
@@ -25,7 +25,7 @@
 | `scanlog` | 136 | 11 | 23 | 0 | 0 | 170 |
 | `settings` | 45 | 0 | 0 | 0 | 0 | 45 |
 | `shared` | 10 | 0 | 0 | 0 | 0 | 10 |
-| `update` | 6 | 0 | 0 | 0 | 0 | 6 |
+| `update` | 7 | 0 | 0 | 0 | 0 | 7 |
 | `user_settings` | 153 | 5 | 29 | 0 | 0 | 187 |
 | `version` | 13 | 0 | 0 | 0 | 0 | 13 |
 | `version_registry` | 72 | 2 | 0 | 0 | 0 | 74 |

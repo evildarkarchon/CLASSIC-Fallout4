@@ -1,0 +1,417 @@
+{
+  "schemaVersion": 1,
+  "familyId": "update-services",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-update-core"
+  },
+  "fixtureRoot": "tests/fixtures/update_services_conformance",
+  "fixtures": {
+    "available": "available.json",
+    "current": "current.json",
+    "deprecated": "deprecated.json",
+    "cache-revalidation": "cache-revalidation.json",
+    "malformed": "malformed.json",
+    "protocol-error": "protocol-error.json",
+    "timeout": "timeout.json",
+    "unsupported": "unsupported.json",
+    "invalid-installed": "invalid-installed.json",
+    "absent": "absent.json"
+  },
+  "capabilities": [
+    {
+      "id": "update-services.notification",
+      "rustSymbols": [
+        "check_app_notification_configured"
+      ],
+      "observationFamilies": [
+        "notification-result"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "available",
+      "action": "update-services.notification",
+      "capabilityIds": [
+        "update-services.notification"
+      ],
+      "fixtureRefs": [
+        "available"
+      ],
+      "input": {
+        "fixtureRef": "available"
+      },
+      "expected": {
+        "results": [
+          {
+            "status": {
+              "classification": "update_available",
+              "latestVersion": "9.2.0",
+              "publishedAt": "2026-09-01T00:00:00Z",
+              "minSupportedVersion": "9.0.0",
+              "display": {
+                "title": "Update available",
+                "body": "Fixture release notes",
+                "ctaUrl": "https://example.invalid/releases/v9.2.0"
+              },
+              "parseError": null
+            },
+            "error": null
+          }
+        ],
+        "files": [
+          {
+            "path": "cache/manifest-latest.json",
+            "hex": "7b226d616e69666573745f76657273696f6e223a22312e30222c2272656c656173655f746167223a2276392e322e30222c226c61746573745f76657273696f6e223a22392e322e30222c227075626c69736865645f6174223a22323032362d30392d30315430303a30303a30305a222c226d696e5f737570706f727465645f76657273696f6e223a22392e302e30222c22646973706c6179223a7b227469746c65223a2255706461746520617661696c61626c65222c22626f6479223a22466978747572652072656c65617365206e6f746573222c226374615f75726c223a2268747470733a2f2f6578616d706c652e696e76616c69642f72656c65617365732f76392e322e30227d7d"
+          },
+          {
+            "path": "cache/manifest.etag",
+            "hex": "22666978747572652d763122"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "current",
+      "action": "update-services.notification",
+      "capabilityIds": [
+        "update-services.notification"
+      ],
+      "fixtureRefs": [
+        "current"
+      ],
+      "input": {
+        "fixtureRef": "current"
+      },
+      "expected": {
+        "results": [
+          {
+            "status": {
+              "classification": "up_to_date",
+              "latestVersion": "9.2.0",
+              "publishedAt": "2026-09-01T00:00:00Z",
+              "minSupportedVersion": "9.0.0",
+              "display": {
+                "title": "Update available",
+                "body": "Fixture release notes",
+                "ctaUrl": "https://example.invalid/releases/v9.2.0"
+              },
+              "parseError": null
+            },
+            "error": null
+          }
+        ],
+        "files": [
+          {
+            "path": "cache/manifest-latest.json",
+            "hex": "7b226d616e69666573745f76657273696f6e223a22312e30222c2272656c656173655f746167223a2276392e322e30222c226c61746573745f76657273696f6e223a22392e322e30222c227075626c69736865645f6174223a22323032362d30392d30315430303a30303a30305a222c226d696e5f737570706f727465645f76657273696f6e223a22392e302e30222c22646973706c6179223a7b227469746c65223a2255706461746520617661696c61626c65222c22626f6479223a22466978747572652072656c65617365206e6f746573222c226374615f75726c223a2268747470733a2f2f6578616d706c652e696e76616c69642f72656c65617365732f76392e322e30227d7d"
+          },
+          {
+            "path": "cache/manifest.etag",
+            "hex": "22666978747572652d763122"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "deprecated",
+      "action": "update-services.notification",
+      "capabilityIds": [
+        "update-services.notification"
+      ],
+      "fixtureRefs": [
+        "deprecated"
+      ],
+      "input": {
+        "fixtureRef": "deprecated"
+      },
+      "expected": {
+        "results": [
+          {
+            "status": {
+              "classification": "deprecated_client",
+              "latestVersion": "9.2.0",
+              "publishedAt": "2026-09-01T00:00:00Z",
+              "minSupportedVersion": "9.0.0",
+              "display": {
+                "title": "Update available",
+                "body": "Fixture release notes",
+                "ctaUrl": "https://example.invalid/releases/v9.2.0"
+              },
+              "parseError": null
+            },
+            "error": null
+          }
+        ],
+        "files": [
+          {
+            "path": "cache/manifest-latest.json",
+            "hex": "7b226d616e69666573745f76657273696f6e223a22312e30222c2272656c656173655f746167223a2276392e322e30222c226c61746573745f76657273696f6e223a22392e322e30222c227075626c69736865645f6174223a22323032362d30392d30315430303a30303a30305a222c226d696e5f737570706f727465645f76657273696f6e223a22392e302e30222c22646973706c6179223a7b227469746c65223a2255706461746520617661696c61626c65222c22626f6479223a22466978747572652072656c65617365206e6f746573222c226374615f75726c223a2268747470733a2f2f6578616d706c652e696e76616c69642f72656c65617365732f76392e322e30227d7d"
+          },
+          {
+            "path": "cache/manifest.etag",
+            "hex": "22666978747572652d763122"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "cache-revalidation",
+      "action": "update-services.notification",
+      "capabilityIds": [
+        "update-services.notification"
+      ],
+      "fixtureRefs": [
+        "cache-revalidation"
+      ],
+      "input": {
+        "fixtureRef": "cache-revalidation"
+      },
+      "expected": {
+        "results": [
+          {
+            "status": {
+              "classification": "update_available",
+              "latestVersion": "9.2.0",
+              "publishedAt": "2026-09-01T00:00:00Z",
+              "minSupportedVersion": "9.0.0",
+              "display": {
+                "title": "Update available",
+                "body": "Fixture release notes",
+                "ctaUrl": "https://example.invalid/releases/v9.2.0"
+              },
+              "parseError": null
+            },
+            "error": null
+          },
+          {
+            "status": {
+              "classification": "update_available",
+              "latestVersion": "9.2.0",
+              "publishedAt": "2026-09-01T00:00:00Z",
+              "minSupportedVersion": "9.0.0",
+              "display": {
+                "title": "Update available",
+                "body": "Fixture release notes",
+                "ctaUrl": "https://example.invalid/releases/v9.2.0"
+              },
+              "parseError": null
+            },
+            "error": null
+          }
+        ],
+        "files": [
+          {
+            "path": "cache/manifest-latest.json",
+            "hex": "7b226d616e69666573745f76657273696f6e223a22312e30222c2272656c656173655f746167223a2276392e322e30222c226c61746573745f76657273696f6e223a22392e322e30222c227075626c69736865645f6174223a22323032362d30392d30315430303a30303a30305a222c226d696e5f737570706f727465645f76657273696f6e223a22392e302e30222c22646973706c6179223a7b227469746c65223a2255706461746520617661696c61626c65222c22626f6479223a22466978747572652072656c65617365206e6f746573222c226374615f75726c223a2268747470733a2f2f6578616d706c652e696e76616c69642f72656c65617365732f76392e322e30227d7d"
+          },
+          {
+            "path": "cache/manifest.etag",
+            "hex": "22666978747572652d763122"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "malformed",
+      "action": "update-services.notification",
+      "capabilityIds": [
+        "update-services.notification"
+      ],
+      "fixtureRefs": [
+        "malformed"
+      ],
+      "input": {
+        "fixtureRef": "malformed"
+      },
+      "expected": {
+        "results": [
+          {
+            "status": null,
+            "error": {
+              "code": "fetch_failed"
+            }
+          }
+        ],
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "protocol-error",
+      "action": "update-services.notification",
+      "capabilityIds": [
+        "update-services.notification"
+      ],
+      "fixtureRefs": [
+        "protocol-error"
+      ],
+      "input": {
+        "fixtureRef": "protocol-error"
+      },
+      "expected": {
+        "results": [
+          {
+            "status": null,
+            "error": {
+              "code": "fetch_failed"
+            }
+          }
+        ],
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "timeout",
+      "action": "update-services.notification",
+      "capabilityIds": [
+        "update-services.notification"
+      ],
+      "fixtureRefs": [
+        "timeout"
+      ],
+      "input": {
+        "fixtureRef": "timeout"
+      },
+      "expected": {
+        "results": [
+          {
+            "status": null,
+            "error": {
+              "code": "fetch_failed"
+            }
+          }
+        ],
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "unsupported",
+      "action": "update-services.notification",
+      "capabilityIds": [
+        "update-services.notification"
+      ],
+      "fixtureRefs": [
+        "unsupported"
+      ],
+      "input": {
+        "fixtureRef": "unsupported"
+      },
+      "expected": {
+        "results": [
+          {
+            "status": null,
+            "error": {
+              "code": "unsupported_version"
+            }
+          }
+        ],
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid-installed",
+      "action": "update-services.notification",
+      "capabilityIds": [
+        "update-services.notification"
+      ],
+      "fixtureRefs": [
+        "invalid-installed"
+      ],
+      "input": {
+        "fixtureRef": "invalid-installed"
+      },
+      "expected": {
+        "results": [
+          {
+            "status": null,
+            "error": {
+              "code": "installed_version"
+            }
+          }
+        ],
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "absent",
+      "action": "update-services.notification",
+      "capabilityIds": [
+        "update-services.notification"
+      ],
+      "fixtureRefs": [
+        "absent"
+      ],
+      "input": {
+        "fixtureRef": "absent"
+      },
+      "expected": {
+        "results": [
+          {
+            "status": {
+              "classification": "not_published",
+              "latestVersion": "",
+              "publishedAt": "",
+              "minSupportedVersion": null,
+              "display": null,
+              "parseError": null
+            },
+            "error": null
+          }
+        ],
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

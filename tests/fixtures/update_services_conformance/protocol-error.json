@@ -1,0 +1,21 @@
+{
+  "installedVersion": "9.1.0",
+  "timeoutMs": 3000,
+  "checks": 1,
+  "service": {
+    "pages": [
+      {
+        "status": 503,
+        "body": "",
+        "headers": {}
+      }
+    ],
+    "api": [
+      {
+        "status": 503,
+        "body": "",
+        "headers": {}
+      }
+    ]
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-06T10:02:46.306048+00:00",
+  "generated_at_utc": "2026-09-08T01:25:36.855539+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -16694,6 +16694,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "UpdateEndpointConfig",
+      "kind": "reexport",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub use endpoints::{UpdateEndpointConfig, check_app_notification_configured};",
+      "source_expr": "endpoints::UpdateEndpointConfig",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UpdateEndpointConfig",
+      "kind": "struct",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/endpoints.rs",
+      "source_decl": "pub struct UpdateEndpointConfig",
+      "tier": "tier1"
+    },
+    {
       "symbol": "UpdateError",
       "kind": "enum",
       "crate": "classic-update-core",
@@ -16898,6 +16917,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "check_app_notification_configured",
+      "kind": "function",
+      "arity": 5,
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/endpoints.rs",
+      "source_decl": "pub async fn check_app_notification_configured(\n    owner: &str,\n    repo: &str,\n    installed_version: &str,\n    config_json: &str,\n    cache_dir: &str,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_app_notification_configured",
+      "kind": "reexport",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub use endpoints::{UpdateEndpointConfig, check_app_notification_configured};",
+      "source_expr": "endpoints::check_app_notification_configured",
+      "tier": "tier1"
+    },
+    {
       "symbol": "check_app_notification_with",
       "kind": "function",
       "arity": 4,
@@ -17045,6 +17084,15 @@
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/yaml_update.rs",
       "source_decl": "pub const fn enabled()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "endpoints",
+      "kind": "module",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub mod endpoints;",
       "tier": "tier1"
     },
     {
@@ -17352,6 +17400,16 @@
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/yaml_update.rs",
       "source_decl": "pub fn with_bundled_yaml_dir(mut self, dir: PathBuf)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_endpoint_config",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/github.rs",
+      "source_decl": "pub fn with_endpoint_config(\n        owner: impl Into<String>,\n        repo: impl Into<String>,\n        config: &crate::endpoints::UpdateEndpointConfig,\n    )",
       "tier": "tier1"
     },
     {

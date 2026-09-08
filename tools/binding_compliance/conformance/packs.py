@@ -1139,6 +1139,7 @@ def load_and_validate_pack(repo_root: Path, pack_path: Path) -> ValidatedPack:
     from .families.shared_identity import validate_pack as validate_shared_identity_pack
     from .families.shared_registry import validate_pack as validate_shared_registry_pack
     from .families.update_decisions import validate_update_decisions_pack
+    from .families.update_services import validate_update_services_pack
     from .families.version_values import validate_version_values_pack
     from .families.xse_operations import validate_xse_operations_pack
 
@@ -1166,6 +1167,7 @@ def load_and_validate_pack(repo_root: Path, pack_path: Path) -> ValidatedPack:
         "file-fingerprint": validate_file_fingerprint_pack,
         "performance": validate_performance_pack,
         "update-decisions": validate_update_decisions_pack,
+        "update-services": validate_update_services_pack,
         "xse-operations": validate_xse_operations_pack,
         "settings-load": validate_settings_load_pack,
         "settings-yaml": validate_settings_yaml_pack,

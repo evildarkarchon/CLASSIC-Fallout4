@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 644,
-    "current_total": 644,
-    "matched": 644,
+    "contract_total": 645,
+    "current_total": 645,
+    "matched": 645,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -4635,6 +4635,14 @@
     {
       "id": "20888c90002f9464",
       "rustSymbol": "check_app_notification",
+      "kind": "function",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "00ade685439d4829",
+      "rustSymbol": "check_app_notification_configured",
       "kind": "function",
       "bridgeModule": "update",
       "status": "matched",

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-08T00:56:36.336081+00:00",
+  "generated_at_utc": "2026-09-08T01:29:46.160021+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,13 +7,13 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 1002,
-    "runtime_verified_total": 910,
+    "tracked_surface_total": 1003,
+    "runtime_verified_total": 911,
     "receipt_required_total": 37,
     "structural_analyzer_total": 55,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 910,
+    "tier1_contract_total": 911,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -75,8 +75,8 @@
       "total": 10
     },
     "update": {
-      "runtime_verified": 6,
-      "total": 6
+      "runtime_verified": 7,
+      "total": 7
     },
     "user_settings": {
       "runtime_verified": 153,
@@ -16030,6 +16030,23 @@
       "bindingIdentifier": "loadExplicitYamlData",
       "conformanceFamily": "config-operations",
       "verificationMode": "execution-receipt-required"
+    },
+    {
+      "trackedId": "contract:update.notification.check_app_notification_configured",
+      "trackedType": "contract_row",
+      "contractId": "update.notification.check_app_notification_configured",
+      "ownerModule": "update",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "check_app_notification_configured",
+      "bindingIdentifier": "checkAppNotificationConfigured",
+      "coverageId": "node-update-services-configured",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/update_services_conformance.ts",
+      "testCaseId": "update-services-configured-notification",
+      "fixtureRefs": [],
+      "notes": "Executed by the blocking update-services conformance family against controlled HTTP routes."
     },
     {
       "trackedId": "binding:JsFrontendPreferences",

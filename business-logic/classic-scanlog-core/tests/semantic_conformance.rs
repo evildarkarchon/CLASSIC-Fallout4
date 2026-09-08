@@ -60,6 +60,8 @@ mod shared_identity;
 mod shared_registry;
 #[path = "semantic_conformance/update_decisions.rs"]
 mod update_decisions;
+#[path = "semantic_conformance/update_services.rs"]
+mod update_services;
 #[path = "semantic_conformance/version_extended.rs"]
 mod version_extended;
 #[path = "semantic_conformance/version_values.rs"]
@@ -480,6 +482,7 @@ fn execute(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
         }
         Some("performance") => return performance::execute(&fixture),
         Some("update-decisions") => return update_decisions::execute(&fixture),
+        Some("update-services") => return update_services::execute(&fixture, scenario),
         Some("string-operations" | "registry-operations") => {
             return shared_registry::execute(&text(&plan["familyId"])?, &fixture);
         }

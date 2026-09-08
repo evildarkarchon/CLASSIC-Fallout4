@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-09-08T00:57:34.409492+00:00`
-- Tier-1 contract rows: **1225**
-- Tier-1 matched: **1224**
+- Generated: `2026-09-08T01:30:09.944040+00:00`
+- Tier-1 contract rows: **1226**
+- Tier-1 matched: **1225**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -1237,6 +1237,7 @@
 | `config.installed_yaml_data.inspect_installed_yaml_data` | `config` | `inspect_installed_yaml_data` | `classic_config.inspect_installed_yaml_data` | `matched` |
 | `config.installed_yaml_data.load_installed_yaml_data` | `config` | `load_installed_yaml_data` | `classic_config.load_installed_yaml_data` | `matched` |
 | `config.explicit_yaml_data.load_explicit_yaml_data` | `config` | `load_explicit_yaml_data` | `classic_config.load_explicit_yaml_data` | `matched` |
+| `update.notification.check_app_notification_configured` | `update` | `check_app_notification_configured` | `classic_update.check_app_notification_configured` | `matched` |
 
 ## Gap Counts By Owner/Tier
 

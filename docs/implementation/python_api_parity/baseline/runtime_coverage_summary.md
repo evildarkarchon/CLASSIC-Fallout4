@@ -1,8 +1,8 @@
 # Python Runtime Coverage Summary
 
-- Generated: `2026-09-08T00:57:34.422416+00:00`
-- Tracked surfaces: **1547**
-- Unmigrated legacy registry claims: **1402**
+- Generated: `2026-09-08T01:30:09.962807+00:00`
+- Tracked surfaces: **1548**
+- Unmigrated legacy registry claims: **1403**
 - Requiring executable receipts: **145**
 - Retained structural analysis: **0**
 - Contract mapped only: **0**
@@ -25,7 +25,7 @@
 | `scanlog` | 386 | 59 | 0 | 0 | 0 | 445 |
 | `settings` | 63 | 0 | 0 | 0 | 0 | 63 |
 | `shared` | 66 | 1 | 0 | 0 | 0 | 67 |
-| `update` | 10 | 0 | 0 | 0 | 0 | 10 |
+| `update` | 11 | 0 | 0 | 0 | 0 | 11 |
 | `user_settings` | 179 | 28 | 0 | 0 | 0 | 207 |
 | `version` | 15 | 0 | 0 | 0 | 0 | 15 |
 | `version_registry` | 107 | 5 | 0 | 0 | 0 | 112 |

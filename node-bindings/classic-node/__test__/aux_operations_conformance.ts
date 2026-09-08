@@ -23,6 +23,12 @@ export function observeAuxOperations(family: string, fixture: JsonObject): JsonO
   if (family === "web-operations") {
     const url = request.url;
     return {
+      userAgent: classic.getUserAgent(),
+      userAgentWithSuffix: classic.getUserAgentWithSuffix(request.suffix),
+      sites: ["NexusMods", "BethesdaNet", "ModDB"].map(site => ({
+        name: classic.getModSiteName(site as classic.JsModSite),
+        baseUrl: classic.getModSiteUrl(site as classic.JsModSite),
+      })),
       valid: classic.isValidUrl(url),
       validated: result(() => classic.validateUrl(url)),
       domain: result(() => classic.extractDomain(url)),

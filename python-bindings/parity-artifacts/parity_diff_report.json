@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-09-08T00:57:34.409492+00:00",
+  "generated_at_utc": "2026-09-08T01:30:09.944040+00:00",
   "summary": {
-    "tier1_contract_total": 1225,
-    "tier1_matched": 1224,
+    "tier1_contract_total": 1226,
+    "tier1_matched": 1225,
     "tier1_missing_rust": 0,
     "tier1_missing_python": 0,
     "tier1_signature_mismatch": 0,
@@ -18386,6 +18386,21 @@
       "actual_python_kind": "function",
       "expected_python_arity": 3,
       "actual_python_arity": 3
+    },
+    {
+      "id": "update.notification.check_app_notification_configured",
+      "tier": "tier1",
+      "owner_module": "update",
+      "squad": "Squad F (perf/message/path/version/web/update)",
+      "rust_symbol": "check_app_notification_configured",
+      "python_module": "classic_update",
+      "python_export": "check_app_notification_configured",
+      "python_export_path": "check_app_notification_configured",
+      "status": "matched",
+      "expected_python_kind": "function",
+      "actual_python_kind": "function",
+      "expected_python_arity": null,
+      "actual_python_arity": 5
     }
   ],
   "gaps": [],

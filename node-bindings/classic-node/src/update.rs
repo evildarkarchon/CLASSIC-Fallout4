@@ -1008,6 +1008,35 @@ pub async fn check_app_notification(
         .map_err(notification_error_to_napi)
 }
 
+/// Check a notification with supported endpoint JSON and caller-owned cache storage.
+/// Empty cacheDir disables caching; errors retain the notification error-code contract.
+#[napi]
+pub async fn check_app_notification_configured(
+    owner: String,
+    repo: String,
+    installed_version: String,
+    config_json: String,
+    cache_dir: String,
+) -> napi::Result<JsNotificationStatus> {
+    let result = classic_shared_core::get_runtime()
+        .handle()
+        .spawn(async move {
+            core::check_app_notification_configured(
+                &owner,
+                &repo,
+                &installed_version,
+                &config_json,
+                &cache_dir,
+            )
+            .await
+        })
+        .await
+        .map_err(runtime_join_error)?;
+    result
+        .map(core_notification_status_to_js)
+        .map_err(notification_error_to_napi)
+}
+
 /// Swap the cached YAML file with its `.prev` sibling (if any).
 ///
 /// Returns `rolledBack: false` with no exception when the file has no
