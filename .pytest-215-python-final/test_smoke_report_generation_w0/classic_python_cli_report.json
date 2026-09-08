@@ -1,0 +1,157 @@
+{
+  "coveredExports": [
+    "FileHasher.hash_file",
+    "PathValidator.is_valid_path",
+    "ScanRunCancellation",
+    "ScanRunLogResult.autoscan_report",
+    "ScanRunRequest.targeted",
+    "bindings.list",
+    "format_version",
+    "load_main_yaml_version",
+    "parse_version",
+    "scan_run_execute"
+  ],
+  "delegatedGates": [],
+  "environment": {
+    "fixtureRoot": "D:\\repos\\CLASSIC-Fallout4\\sample_logs\\FO4",
+    "python": "D:\\repos\\CLASSIC-Fallout4\\python-bindings\\.venv\\Scripts\\python.exe",
+    "repoRoot": "D:\\repos\\CLASSIC-Fallout4"
+  },
+  "failureClassifications": [
+    "local-environment-failure",
+    "missing-runtime-coverage",
+    "policy-source-contradiction",
+    "stale-generated-artifact",
+    "true-binding-compliance-gap"
+  ],
+  "profile": "smoke",
+  "scenarioResults": [
+    {
+      "commandLine": [
+        "classic-py",
+        "bindings",
+        "list",
+        "--json"
+      ],
+      "coveredExports": [
+        "bindings.list"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "failureClassifications": [],
+      "id": "bindings-list",
+      "owner": "classic_py_cli",
+      "status": "passed",
+      "summary": "17/17 bindings importable"
+    },
+    {
+      "commandLine": [
+        "classic-py",
+        "version",
+        "parse",
+        "1.10.163.0"
+      ],
+      "coveredExports": [
+        "parse_version",
+        "format_version"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "failureClassifications": [],
+      "id": "version-parse",
+      "owner": "classic_version",
+      "status": "passed",
+      "summary": "1.10.163.0 -> v1.10.163"
+    },
+    {
+      "commandLine": [
+        "classic-py",
+        "config",
+        "main-version"
+      ],
+      "coveredExports": [
+        "load_main_yaml_version"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "failureClassifications": [],
+      "id": "config-main-version",
+      "owner": "classic_config",
+      "status": "passed",
+      "summary": "CLASSIC main YAML version: 9.1.0"
+    },
+    {
+      "commandLine": [
+        "classic-py",
+        "path",
+        "validate",
+        "python-bindings/tests/fixtures"
+      ],
+      "coveredExports": [
+        "PathValidator.is_valid_path"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "failureClassifications": [],
+      "id": "path-validate-fixture",
+      "owner": "classic_path",
+      "status": "passed",
+      "summary": "Path is valid: D:\\repos\\CLASSIC-Fallout4\\python-bindings\\tests\\fixtures"
+    },
+    {
+      "commandLine": [
+        "classic-py",
+        "file",
+        "hash",
+        "Cargo.toml"
+      ],
+      "coveredExports": [
+        "FileHasher.hash_file"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "failureClassifications": [],
+      "id": "file-hash",
+      "owner": "classic_file_io",
+      "status": "passed",
+      "summary": "Cargo.toml aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "commandLine": [
+        "classic-py",
+        "scan",
+        "logs",
+        "--path",
+        "python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log"
+      ],
+      "coveredExports": [
+        "ScanRunRequest.targeted",
+        "ScanRunCancellation",
+        "scan_run_execute",
+        "ScanRunLogResult.autoscan_report"
+      ],
+      "data": {
+        "failedLogs": 0,
+        "failures": [],
+        "processedLogs": 1,
+        "reportEvidence": [
+          {
+            "logPath": "D:\\repos\\CLASSIC-Fallout4\\python-bindings\\tests\\fixtures\\scanlogs\\addictol-newer-than-floor.log",
+            "outdatedWarningPresent": false,
+            "validVersionLine": "*You have a valid version of Addictol!*"
+          }
+        ],
+        "scanPath": "D:\\repos\\CLASSIC-Fallout4\\python-bindings\\tests\\fixtures\\scanlogs\\addictol-newer-than-floor.log",
+        "successfulLogs": 1
+      },
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "failureClassifications": [],
+      "id": "scanlog-addictol-newer-than-floor",
+      "owner": "classic_scanlog",
+      "status": "passed",
+      "summary": "Crash Log Scan Run completed"
+    }
+  ],
+  "schemaVersion": "1.0"
+}

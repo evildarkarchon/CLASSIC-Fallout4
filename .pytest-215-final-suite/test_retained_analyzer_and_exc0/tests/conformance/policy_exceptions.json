@@ -1,0 +1,1 @@
+{"schemaVersion": 1, "exceptions": [{"id": "cxx-example-exception", "capabilityId": "example.execute", "participantId": "cxx", "rationale": "The example is intentionally absent from CXX.", "policyPage": "docs/policy.md"}]}

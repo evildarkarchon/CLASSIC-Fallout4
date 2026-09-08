@@ -1,0 +1,1 @@
+{"schemaVersion": 1, "families": [{"familyId": "example-family", "consumers": [{"id": "cli", "executionInstanceIds": ["windows-msvc"], "sourcePaths": ["classic-cli/src/main.cpp"], "obligations": [{"id": "cli.stream-selection", "scenarioIds": ["base-case"], "expected": {"stdout": true, "stderr": false}}]}]}]}

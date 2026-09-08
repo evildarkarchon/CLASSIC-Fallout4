@@ -1,0 +1,8 @@
+schema_version: "2.0"
+CLASSIC_Info:
+  version: "9.0.0"
+  version_date: "2026-02-25"
+  default_ignorefile: |
+    CLASSIC_Ignore_Fallout4: []
+catch_log_records:
+  - "LAND"

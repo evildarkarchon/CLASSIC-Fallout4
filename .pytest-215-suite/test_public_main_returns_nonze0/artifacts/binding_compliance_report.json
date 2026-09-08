@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "profile": "conformance",
+  "repoRoot": "D:\\repos\\CLASSIC-Fallout4\\.pytest-215-suite\\test_public_main_returns_nonze0",
+  "summary": {
+    "result": "fail",
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "blocking_failed": 0,
+    "coverage_gaps": 0,
+    "skipped": 0,
+    "blocking_conformance_coverage_gaps": 0
+  },
+  "requirements": [],
+  "gaps": [],
+  "conformance": {
+    "schemaVersion": 1,
+    "enforcement": "blocking",
+    "result": "fail",
+    "failures": [
+      {
+        "kind": "missing_receipt"
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "generated_at_utc": "2026-03-27T00:00:00+00:00",
+  "summary": {
+    "tier1_contract_total": 0,
+    "tier1_matched": 0,
+    "tier1_missing_rust": 0,
+    "tier1_signature_mismatch": 0,
+    "total_gaps": 0,
+    "tier1_missing_python": 0
+  },
+  "contract_results": [],
+  "gaps": [],
+  "gap_counts_by_owner_tier": {}
+}

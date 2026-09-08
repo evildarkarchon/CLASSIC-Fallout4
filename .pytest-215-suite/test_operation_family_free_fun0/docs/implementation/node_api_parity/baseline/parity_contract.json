@@ -1,0 +1,1 @@
+{"tier1Mappings": [{"id": "future-operation", "rustCrate": "classic-database-core", "rustSymbol": "DatabasePool", "nodeKind": "function", "nodeExport": "futureOperation"}]}

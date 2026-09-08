@@ -1,0 +1,355 @@
+name: Benchmarks
+
+# IMPORTANT: Configure branch protection for main:
+# - Require status checks to pass before merging
+# - Required check: "Run Benchmarks" (this workflow's job name)
+# - This ensures PRs with performance regressions cannot merge
+#
+# To configure: Repository Settings > Branches > Branch protection rules
+# 1. Add rule for "main"
+# 2. Enable "Require status checks to pass before merging"
+# 3. Select "Run Benchmarks" from status checks list
+
+on:
+  push:
+    branches: [main]
+  # `main` stays in this list even though day-to-day work targets
+  # `classic-next`: the comment above documents "Run Benchmarks" as a required
+  # check for `main`, and GitHub never starts a workflow for a PR whose base
+  # branch is absent here. Dropping `main` would leave that required check
+  # permanently pending on every release PR into `main`.
+  pull_request:
+    types: [ready_for_review]
+    branches: [main, classic-next]
+
+# Prevent parallel runs for the same PR
+concurrency:
+  group: benchmarks-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  BENCH_MODE: quick
+  CARGO_TERM_COLOR: always
+  PYTHON_VERSION: "3.12"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: windows-latest
+    timeout-minutes: 60
+    # Skip if PR is still draft (ready_for_review won't fire for drafts anyway, but safety check)
+    if: github.event_name == 'push' || !github.event.pull_request.draft
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache cargo registry
+        uses: actions/cache@v5
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v5
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-index-
+
+      - name: Cache cargo build
+        uses: actions/cache@v5
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('foundation/**/*.rs', 'business-logic/**/*.rs', 'cpp-bindings/**/*.rs', 'node-bindings/**/*.rs', 'python-bindings/**/*.rs', 'ui-applications/**/*.rs') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}-
+            ${{ runner.os }}-cargo-bench-
+
+      - name: Install critcmp
+        run: cargo install critcmp --locked
+
+      - name: Restore baseline cache
+        id: baseline-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: target/criterion/baseline
+          key: criterion-baseline-${{ runner.os }}-dummy
+          restore-keys: criterion-baseline-${{ runner.os }}
+
+      - name: Check baseline exists
+        id: baseline-check
+        shell: bash
+        run: |
+          if [ -d "target/criterion/baseline" ]; then
+            echo "baseline_exists=true" >> $GITHUB_OUTPUT
+            echo "Baseline found - comparison will be performed"
+          else
+            echo "baseline_exists=false" >> $GITHUB_OUTPUT
+            echo "::warning::No baseline found - skipping comparison. Run benchmarks on main branch first."
+          fi
+
+      - name: Run benchmarks
+        run: cargo bench -- --save-baseline current
+
+      - name: Copy current to baseline (main only)
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          if [ -d "target/criterion/current" ]; then
+            rm -rf target/criterion/baseline
+            cp -r target/criterion/current target/criterion/baseline
+          fi
+
+      - name: Save baseline cache (main only)
+        if: github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v5
+        with:
+          path: target/criterion/baseline
+          key: criterion-baseline-${{ runner.os }}-${{ github.sha }}
+
+      - name: Install yq for YAML parsing
+        if: github.event_name == 'pull_request' && steps.baseline-check.outputs.baseline_exists == 'true'
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/mikefarah/yq/releases/latest/download/yq_windows_amd64.exe" -OutFile "$env:USERPROFILE\yq.exe"
+          echo "$env:USERPROFILE" | Out-File -Append -FilePath $env:GITHUB_PATH
+
+      - name: Compare against baseline
+        if: github.event_name == 'pull_request' && steps.baseline-check.outputs.baseline_exists == 'true'
+        id: compare
+        shell: bash
+        run: |
+          critcmp baseline current > comparison.txt 2>&1 || true
+          critcmp baseline current --export > comparison.json 2>&1 || true
+          echo "=== Benchmark Comparison ==="
+          cat comparison.txt
+          echo "==========================="
+
+      - name: Analyze thresholds
+        if: github.event_name == 'pull_request' && steps.baseline-check.outputs.baseline_exists == 'true'
+        id: analyze
+        shell: bash
+        run: |
+          # Read default thresholds from config file
+          CONFIG_FILE="benchmark-config.yaml"
+          if [ -f "$CONFIG_FILE" ]; then
+            WARN_THRESHOLD=$(yq '.defaults.warning_threshold' "$CONFIG_FILE")
+            FAIL_THRESHOLD=$(yq '.defaults.failure_threshold' "$CONFIG_FILE")
+            echo "Loaded thresholds from config: warn=${WARN_THRESHOLD}%, fail=${FAIL_THRESHOLD}%"
+          else
+            echo "::warning::Config file not found, using hardcoded defaults"
+            WARN_THRESHOLD=5
+            FAIL_THRESHOLD=10
+          fi
+
+          if [ ! -f comparison.json ]; then
+            echo "status=skipped" >> $GITHUB_OUTPUT
+            echo "summary=No comparison data available" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Initialize counters
+          has_failure=false
+          has_warning=false
+          warnings_md=""
+          failures_md=""
+          improvements_md=""
+
+          # Functions to get thresholds (with override support)
+          get_warn_threshold() {
+            local name="$1"
+            local override=$(yq ".overrides[\"$name\"].warning_threshold // \"\"" "$CONFIG_FILE" 2>/dev/null)
+            if [ -n "$override" ] && [ "$override" != "null" ]; then
+              echo "$override"
+            else
+              echo "$WARN_THRESHOLD"
+            fi
+          }
+
+          get_fail_threshold() {
+            local name="$1"
+            local override=$(yq ".overrides[\"$name\"].failure_threshold // \"\"" "$CONFIG_FILE" 2>/dev/null)
+            if [ -n "$override" ] && [ "$override" != "null" ]; then
+              echo "$override"
+            else
+              echo "$FAIL_THRESHOLD"
+            fi
+          }
+
+          # Parse each benchmark result
+          while IFS= read -r line; do
+            name=$(echo "$line" | jq -r '.name // empty')
+            if [ -z "$name" ]; then continue; fi
+
+            bench_warn=$(get_warn_threshold "$name")
+            bench_fail=$(get_fail_threshold "$name")
+
+            change=$(echo "$line" | jq -r '.comparison.mean.percentage_change // 0')
+            current_time=$(echo "$line" | jq -r '.current.mean.estimate // "N/A"')
+            baseline_time=$(echo "$line" | jq -r '.baseline.mean.estimate // "N/A"')
+
+            change_int=${change%.*}
+            abs_change=${change_int#-}
+
+            if [ "$change_int" -gt "$bench_fail" ]; then
+              has_failure=true
+              failures_md="${failures_md}| ${name} | +${change_int}% | ${current_time} | ${baseline_time} |"$'\n'
+            elif [ "$change_int" -gt "$bench_warn" ]; then
+              has_warning=true
+              warnings_md="${warnings_md}| ${name} | +${change_int}% | ${current_time} | ${baseline_time} |"$'\n'
+            elif [ "$change_int" -lt "-$bench_warn" ]; then
+              improvements_md="${improvements_md}| ${name} | ${change_int}% | ${current_time} | ${baseline_time} |"$'\n'
+            fi
+          done < <(jq -c '.benchmarks[]' comparison.json 2>/dev/null || echo "")
+
+          # Set outputs
+          echo "has_failure=$has_failure" >> $GITHUB_OUTPUT
+          echo "has_warning=$has_warning" >> $GITHUB_OUTPUT
+
+          if [ "$has_failure" = "true" ]; then
+            echo "status=failure" >> $GITHUB_OUTPUT
+          elif [ "$has_warning" = "true" ]; then
+            echo "status=warning" >> $GITHUB_OUTPUT
+          else
+            echo "status=success" >> $GITHUB_OUTPUT
+          fi
+
+          # Save markdown tables for PR comment (used by 17-03)
+          echo "$failures_md" > failures.md
+          echo "$warnings_md" > warnings.md
+          echo "$improvements_md" > improvements.md
+
+      - name: Check for bypass label
+        if: github.event_name == 'pull_request'
+        id: check-label
+        shell: bash
+        run: |
+          labels='${{ toJSON(github.event.pull_request.labels.*.name) }}'
+          if echo "$labels" | jq -e 'map(select(. == "perf-regression-accepted")) | length > 0' > /dev/null 2>&1; then
+            echo "bypass=true" >> $GITHUB_OUTPUT
+            echo "::notice::Regression accepted via perf-regression-accepted label"
+          else
+            echo "bypass=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Find existing comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '<!-- benchmark-results -->'
+
+      - name: Build PR comment body
+        if: github.event_name == 'pull_request'
+        id: comment-body
+        shell: bash
+        run: |
+          {
+            echo '<!-- benchmark-results -->'
+            echo '## Benchmark Results'
+            echo ''
+            echo "**Commit:** ${{ github.event.pull_request.head.sha }}"
+            echo "**Baseline:** main branch"
+            echo "**Mode:** quick (50 samples)"
+            echo ''
+
+            if [ "${{ steps.baseline-check.outputs.baseline_exists }}" != "true" ]; then
+              echo '> [!WARNING]'
+              echo '> No baseline found. Comparison skipped.'
+              echo '> Baseline will be established when this PR merges to main.'
+            else
+              status="${{ steps.analyze.outputs.status }}"
+              case "$status" in
+                failure) echo '> [!CAUTION]' && echo '> Performance regressions detected (>10%)' ;;
+                warning) echo '> [!WARNING]' && echo '> Performance warnings detected (5-10%)' ;;
+                success) echo '> [!TIP]' && echo '> No significant performance changes detected' ;;
+                *) echo '> [!NOTE]' && echo '> Comparison status: '"$status" ;;
+              esac
+
+              echo ''
+
+              if [ -s failures.md ]; then
+                echo '### Regressions (>10%)'
+                echo ''
+                echo '| Benchmark | Change | Current | Baseline |'
+                echo '|-----------|--------|---------|----------|'
+                cat failures.md
+                echo ''
+              fi
+
+              if [ -s warnings.md ]; then
+                echo '### Warnings (5-10%)'
+                echo ''
+                echo '| Benchmark | Change | Current | Baseline |'
+                echo '|-----------|--------|---------|----------|'
+                cat warnings.md
+                echo ''
+              fi
+
+              if [ -s improvements.md ]; then
+                echo '### Improvements'
+                echo ''
+                echo '| Benchmark | Change | Current | Baseline |'
+                echo '|-----------|--------|---------|----------|'
+                cat improvements.md
+                echo ''
+              fi
+
+              if [ ! -s failures.md ] && [ ! -s warnings.md ] && [ ! -s improvements.md ]; then
+                echo 'All benchmarks within threshold (no changes >5%).'
+                echo ''
+              fi
+            fi
+
+            echo '---'
+            echo '*Benchmarks run on GitHub Actions. Results may vary due to shared infrastructure.*'
+            echo '*To accept regressions, add label `perf-regression-accepted` with justification.*'
+          } > comment.md
+
+          body=$(cat comment.md)
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$body" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Post or update PR comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.comment-body.outputs.body }}
+          edit-mode: replace
+
+      - name: Fail on regression
+        if: |
+          github.event_name == 'pull_request' &&
+          steps.analyze.outputs.has_failure == 'true' &&
+          steps.check-label.outputs.bypass != 'true'
+        shell: bash
+        run: |
+          echo "::error::Performance regression detected (>10%)"
+          echo ""
+          echo "One or more benchmarks showed significant regression."
+          echo "Options:"
+          echo "  1. Fix the performance regression"
+          echo "  2. Add label 'perf-regression-accepted' with justification comment"
+          echo ""
+          echo "See the PR comment for detailed benchmark results."
+          exit 1
