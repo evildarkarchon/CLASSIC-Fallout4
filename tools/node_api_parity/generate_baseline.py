@@ -225,6 +225,10 @@ def enrich_executable_aux_owners(contract: dict[str, Any]) -> dict[str, Any]:
             "tryParseVersion": "try_parse_version",
             "compareVersions": "compare_versions",
             "formatVersion": "format_version",
+            "extractVersionFromFilename": "extract_version_from_filename",
+            "extractVersionFromLog": "extract_version_from_log",
+            "extractAllVersions": "extract_all_versions",
+            "isKnownFallout4Version": "is_known_fallout4_version",
         }.get(mapping.get("nodeExport"))
         if version_symbol is not None:
             mapping["rustCrate"] = "classic-version-core"
@@ -237,11 +241,53 @@ def enrich_executable_aux_owners(contract: dict[str, Any]) -> dict[str, Any]:
         "loadBatchSync": "load_batch_sync",
         "loadBatchAsync": "load_batch_async",
         "isCached": "is_cached",
+        "getCached": "get_cached",
+        "invalidateSettings": "invalidate",
+        "clearSettingsCache": "clear_cache",
+        "settingsCacheSize": "cache_size",
+        "settingsCacheKeys": "cache_keys",
+        "getSettingsCacheStats": "cache_stats",
+        "resetSettingsCacheStats": "reset_cache_stats",
     }
     for mapping in contract.get("tier1Mappings", []):
         symbol = settings_routes.get(mapping.get("nodeExport"))
         if symbol is not None:
             mapping["rustCrate"] = "classic-settings-core"
+            mapping["rustSymbol"] = symbol
+    return enrich_version_registry_owners(contract)
+
+
+def enrich_version_registry_owners(contract: dict[str, Any]) -> dict[str, Any]:
+    """Attribute executed registry exports to their actual core methods, preserving row IDs."""
+    routes = {
+        "parseGameVersion": "parse",
+        "gameVersionDistance": "semantic_distance",
+        "getAllFallout4Versions": "Fallout4Version",
+        "getFallout4VersionInfo": "Fallout4Version",
+        "getVersionByVersionString": "get_by_version",
+        "getVersionByShortName": "get_by_short_name",
+        "getAllVersions": "get_all",
+        "getAllVersionsForGame": "get_all_for_game",
+        "getCorrectVersions": "get_correct_versions",
+        "getWrongVersions": "get_wrong_versions",
+        "getAddressLibraryFilename": "get_address_library_filename",
+        "getCrashgenVersions": "get_crashgen_versions",
+        "getCrashgenVersionStrings": "get_crashgen_version_strings",
+        "getCrashgenForVersion": "get_crashgen_for_version",
+        # These public wrappers project multiple registry fields; their exact
+        # runtime operation still scopes executable credit below the class owner.
+        "getAllExeHashes": "VersionRegistry",
+        "getAllScriptHashes": "VersionRegistry",
+        "getScriptHashesForVersion": "VersionRegistry",
+        "getUnknownVersionHandling": "unknown_version_handling",
+        "getUnknownVersionDefault": "UnknownVersionHandling",
+        "getVersionRegistry": "VersionRegistry",
+        "isVersionCompatible": "VersionRegistry",
+    }
+    for mapping in contract.get("tier1Mappings", []):
+        symbol = routes.get(mapping.get("nodeExport"))
+        if symbol is not None:
+            mapping["rustCrate"] = "classic-version-registry-core"
             mapping["rustSymbol"] = symbol
     return contract
 
@@ -377,6 +423,7 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
         target_crates=RUST_TARGET_CRATES,
         owner_by_crate=RUST_OWNER_BY_CRATE,
     )
+
 
 def infer_node_owner(name: str, tier1_owner_map: dict[str, str]) -> str:
     """Infer owner module for a Node export."""

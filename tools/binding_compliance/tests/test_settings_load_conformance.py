@@ -16,6 +16,8 @@ from conformance.coverage import (
 )
 from conformance.families.settings_load import (
     settings_load_coverage_policy,
+    settings_yaml_batch_coverage_policy,
+    settings_yaml_coverage_policy,
     validate_settings_load_pack,
 )
 from conformance.packs import load_and_validate_pack, materialize_run_plan
@@ -49,6 +51,8 @@ def _pack(family: str) -> dict:
     "family,participants",
     [
         ("settings-load", {"rust", "cxx", "node", "python"}),
+        ("settings-yaml", {"rust", "cxx", "node", "python"}),
+        ("settings-yaml-batch", {"rust", "node"}),
     ],
 )
 def test_settings_load_receipts_fail_closed_at_public_coverage_seam(
@@ -77,7 +81,11 @@ def test_settings_load_receipts_fail_closed_at_public_coverage_seam(
         )
     pack = load_and_validate_pack(tmp_path, pack_path)
     document = pack.document()
-    policy = settings_load_coverage_policy()
+    policy = {
+        "settings-load": settings_load_coverage_policy,
+        "settings-yaml": settings_yaml_coverage_policy,
+        "settings-yaml-batch": settings_yaml_batch_coverage_policy,
+    }[family]()
     rows = load_source_parity_rows(ROOT)
     retained = load_retained_analyzer_kinds(ROOT)
     matrix = derive_applicability(document, rows)
@@ -174,7 +182,12 @@ def test_settings_load_receipts_fail_closed_at_public_coverage_seam(
                 changed = copy.deepcopy(receipt)
                 if mutation == "changed":
                     observation = changed["scenarios"][0]["observation"]
-                    observation["sync"]["count"] = 999
+                    if family == "settings-load":
+                        observation["sync"]["count"] = 999
+                    elif family == "settings-yaml":
+                        observation["persisted"]["name"] = "corrupted"
+                    else:
+                        observation["ordered"].reverse()
                 elif mutation == "missing-scenario":
                     changed["scenarios"].pop()
                 elif mutation == "skipped":
@@ -196,3 +209,59 @@ def test_settings_load_receipts_fail_closed_at_public_coverage_seam(
                     scope_participant_id=participant.id,
                     retained_analyzers=retained,
                 ).failures, mutation
+
+
+def test_settings_cache_lifecycle_is_required_for_credit() -> None:
+    """Removing invalidation or cache statistics invalidates executable evidence."""
+    pack = _pack("settings-load")
+    predicate = settings_load_coverage_policy().predicates[0]
+    observed = pack["scenarios"][0]["expected"]
+    assert "cacheState" in observed["sync"]
+    for field in (
+        "keys",
+        "size",
+        "invalidated",
+        "invalidatedAgain",
+        "afterInvalidate",
+        "stats",
+        "resetStats",
+    ):
+        changed = copy.deepcopy(observed)
+        del changed["sync"]["cacheState"][field]
+        assert not predicate.matches(changed)
+
+
+def test_settings_yaml_persistence_and_cache_facts_are_required() -> None:
+    """The YAML receipt must retain mutation, persisted bytes and cache reuse."""
+    from conformance.families.settings_load import (
+        settings_yaml_coverage_policy,
+        validate_settings_yaml_pack,
+    )
+
+    pack = _pack("settings-yaml")
+    assert validate_settings_yaml_pack(pack, ROOT)
+    for predicate in settings_yaml_coverage_policy().predicates:
+        observation = pack["scenarios"][0]["expected"]
+        assert predicate.matches(observation)
+        for key in ("before", "after", "persisted", "files", "cache"):
+            changed = copy.deepcopy(observation)
+            del changed[key]
+            assert not predicate.matches(changed)
+
+
+def test_settings_yaml_batch_requires_order_and_typed_results() -> None:
+    """An adapter cannot replace ordered entries or omit a batch result."""
+    from conformance.families.settings_load import (
+        settings_yaml_batch_coverage_policy,
+        validate_settings_yaml_batch_pack,
+    )
+
+    pack = _pack("settings-yaml-batch")
+    assert validate_settings_yaml_batch_pack(pack, ROOT)
+    predicate = settings_yaml_batch_coverage_policy().predicates[0]
+    observed = pack["scenarios"][0]["expected"]
+    assert predicate.matches(observed)
+    for key in ("before", "ordered", "vectors", "after"):
+        changed = copy.deepcopy(observed)
+        del changed[key]
+        assert not predicate.matches(changed)

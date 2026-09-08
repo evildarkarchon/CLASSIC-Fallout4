@@ -1126,18 +1126,53 @@ def load_and_validate_pack(repo_root: Path, pack_path: Path) -> ValidatedPack:
     from .families.aux_operations import validate_aux_operations_pack
     from .families.file_fingerprint import validate_file_fingerprint_pack
     from .families.performance import validate_performance_pack
-    from .families.settings_load import validate_settings_load_pack
+    from .families.registry_accessors import (
+        validate_pack as validate_registry_accessors,
+    )
+    from .families.registry_keys import validate_registry_keys_pack
+    from .families.settings_extended import validate_settings_extended_pack
+    from .families.settings_load import (
+        validate_settings_load_pack,
+        validate_settings_yaml_batch_pack,
+        validate_settings_yaml_pack,
+    )
     from .families.shared_identity import validate_pack as validate_shared_identity_pack
     from .families.shared_registry import validate_pack as validate_shared_registry_pack
     from .families.update_decisions import validate_update_decisions_pack
+    from .families.version_values import validate_version_values_pack
     from .families.xse_operations import validate_xse_operations_pack
 
     owner_validators = {
+        **{
+            f: validate_version_values_pack
+            for f in (
+                "game-version-parse",
+                "game-version-distance",
+                "game-version-order",
+                "fallout4-identity",
+                "fallout4-paths",
+                "fallout4-metadata",
+            )
+        },
+        **{
+            family: validate_registry_accessors
+            for family in (
+                "registry-game",
+                "registry-gui",
+                "registry-context",
+                "registry-paths",
+            )
+        },
         "file-fingerprint": validate_file_fingerprint_pack,
         "performance": validate_performance_pack,
         "update-decisions": validate_update_decisions_pack,
         "xse-operations": validate_xse_operations_pack,
         "settings-load": validate_settings_load_pack,
+        "settings-yaml": validate_settings_yaml_pack,
+        "settings-yaml-batch": validate_settings_yaml_batch_pack,
+        "registry-keys": validate_registry_keys_pack,
+        "settings-validation": validate_settings_extended_pack,
+        "settings-cached-docs": validate_settings_extended_pack,
         "game-identity": validate_shared_identity_pack,
         "runtime-access": validate_shared_identity_pack,
         "string-operations": validate_shared_registry_pack,
@@ -1145,6 +1180,10 @@ def load_and_validate_pack(repo_root: Path, pack_path: Path) -> ValidatedPack:
         "web-operations": validate_aux_operations_pack,
         "resource-operations": validate_aux_operations_pack,
         "version-operations": validate_aux_operations_pack,
+        "version-extraction": validate_aux_operations_pack,
+        "version-f4se": validate_aux_operations_pack,
+        "version-pe": validate_aux_operations_pack,
+        "version-pe-path": validate_aux_operations_pack,
     }
     if pack["familyId"] in owner_validators:
         try:

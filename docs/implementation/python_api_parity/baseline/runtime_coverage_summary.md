@@ -1,8 +1,8 @@
 # Python Runtime Coverage Summary
 
-- Generated: `2026-09-07T23:00:04.039657+00:00`
-- Tracked surfaces: **1550**
-- Unmigrated legacy registry claims: **1405**
+- Generated: `2026-09-08T00:57:34.422416+00:00`
+- Tracked surfaces: **1547**
+- Unmigrated legacy registry claims: **1402**
 - Requiring executable receipts: **145**
 - Retained structural analysis: **0**
 - Contract mapped only: **0**
@@ -19,11 +19,11 @@
 | `message` | 36 | 9 | 0 | 0 | 0 | 45 |
 | `path` | 68 | 4 | 0 | 0 | 0 | 72 |
 | `perf` | 10 | 0 | 0 | 0 | 0 | 10 |
-| `registry` | 20 | 0 | 0 | 0 | 0 | 20 |
+| `registry` | 19 | 0 | 0 | 0 | 0 | 19 |
 | `resource` | 36 | 0 | 0 | 0 | 0 | 36 |
 | `scangame` | 149 | 9 | 0 | 0 | 0 | 158 |
 | `scanlog` | 386 | 59 | 0 | 0 | 0 | 445 |
-| `settings` | 65 | 0 | 0 | 0 | 0 | 65 |
+| `settings` | 63 | 0 | 0 | 0 | 0 | 63 |
 | `shared` | 66 | 1 | 0 | 0 | 0 | 67 |
 | `update` | 10 | 0 | 0 | 0 | 0 | 10 |
 | `user_settings` | 179 | 28 | 0 | 0 | 0 | 207 |

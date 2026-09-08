@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "familyId": "settings-yaml",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-settings-core"
+  },
+  "fixtureRoot": "tests/fixtures/settings_yaml_conformance",
+  "fixtures": {
+    "lifecycle": "lifecycle.json"
+  },
+  "capabilities": [
+    {
+      "id": "settings-yaml.execute",
+      "rustSymbols": [
+        "YamlOperations",
+        "new",
+        "parse_yaml",
+        "dump_yaml",
+        "load_yaml_file",
+        "save_yaml_file",
+        "get_setting",
+        "get_string_value",
+        "get_vec_value",
+        "get_hashmap_value",
+        "set_setting",
+        "yaml_cache_stats",
+        "YamlCacheStats"
+      ],
+      "observationFamilies": [
+        "settings-yaml"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "lifecycle",
+      "action": "settings-yaml.execute",
+      "capabilityIds": [
+        "settings-yaml.execute"
+      ],
+      "fixtureRefs": [
+        "lifecycle"
+      ],
+      "input": {
+        "fixtureRef": "lifecycle"
+      },
+      "expected": {
+        "before": {
+          "name": "original",
+          "missing": "fallback",
+          "items": [
+            "alpha",
+            "beta"
+          ],
+          "mapping": {
+            "left": "west",
+            "right": "east"
+          }
+        },
+        "after": {
+          "name": "revised",
+          "ready": true,
+          "size": 7,
+          "values": [
+            "gamma",
+            "delta"
+          ]
+        },
+        "persisted": {
+          "name": "revised",
+          "ready": true,
+          "size": 7,
+          "values": [
+            "gamma",
+            "delta"
+          ]
+        },
+        "files": {
+          "saved.yaml": "---\nitems:\n  - alpha\n  - beta\nmapping:\n  left: west\n  right: east\nname: revised\nready: true\nsize: 7\nvalues:\n  - gamma\n  - delta"
+        },
+        "cache": {
+          "hits": 1,
+          "misses": 1,
+          "size": 1,
+          "afterClear": 0
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

@@ -171,13 +171,34 @@ _EXECUTION_POLICIES += tuple(
         "update-decisions",
         "string-operations",
         "registry-operations",
+        "registry-game",
+        "registry-gui",
+        "registry-context",
+        "registry-keys",
+        "game-version-parse",
+        "game-version-distance",
+        "game-version-order",
+        "fallout4-identity",
+        "fallout4-paths",
+        "fallout4-metadata",
+        "version-registry-values",
+        "settings-yaml-batch",
+        "registry-paths",
         "web-operations",
         "resource-operations",
         "version-operations",
+        "version-extraction",
+        "version-f4se",
+        "version-pe",
+        "version-pe-path",
         "xse-operations",
         "game-identity",
         "runtime-access",
         "settings-load",
+        "settings-yaml",
+        "settings-validation",
+        "settings-cached-docs",
+        "version-registry-details",
     )
     for policy in _EXECUTION_POLICIES[:7]
     if policy.participant_id in {"rust", "node", "python", "cxx"}
@@ -193,7 +214,51 @@ _EXECUTION_POLICIES += tuple(
         }
         and policy.participant_id == "cxx"
     )
+    and not (
+        family in {"version-extraction", "version-f4se", "version-pe-path"}
+        and policy.participant_id == "cxx"
+    )
+    and not (family == "version-f4se" and policy.participant_id == "node")
+    and not (
+        family in {"settings-cached-docs", "version-registry-details"}
+        and policy.participant_id == "cxx"
+    )
+    and not (family == "settings-validation" and policy.participant_id == "node")
+    and not (
+        family in {"registry-keys", "settings-yaml-batch"}
+        and policy.participant_id == "cxx"
+    )
+    and not (family == "registry-keys" and policy.participant_id == "node")
+    and not (family == "settings-yaml-batch" and policy.participant_id == "python")
+    and not (
+        family
+        in {
+            "fallout4-metadata",
+            "game-version-order",
+            "version-registry-values",
+            "game-version-distance",
+        }
+        and policy.participant_id == "cxx"
+    )
+    and not (
+        family
+        in {
+            "fallout4-metadata",
+            "fallout4-paths",
+            "game-version-order",
+            "version-registry-values",
+        }
+        and policy.participant_id == "node"
+    )
     and not (family == "runtime-access" and policy.participant_id == "python")
+    and not (
+        family in {"registry-context", "registry-paths"}
+        and policy.participant_id == "cxx"
+    )
+    and not (
+        family in {"registry-context", "registry-gui"}
+        and policy.participant_id == "node"
+    )
 )
 # Autoscan Reports use the shared scan-run launcher while retaining the same
 # four semantic adapters and separate diagnostics as the focused families.

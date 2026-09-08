@@ -2158,9 +2158,10 @@
       "id": "config-get-cached",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "get_cached",
       "nodeExport": "getCached",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "config-is-cached",
@@ -2175,49 +2176,55 @@
       "id": "config-invalidate-settings",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "invalidate",
       "nodeExport": "invalidateSettings",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "config-clear-settings-cache",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "clear_cache",
       "nodeExport": "clearSettingsCache",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "config-settings-cache-size",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "cache_size",
       "nodeExport": "settingsCacheSize",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "config-settings-cache-keys",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "cache_keys",
       "nodeExport": "settingsCacheKeys",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "config-get-settings-cache-stats",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "cache_stats",
       "nodeExport": "getSettingsCacheStats",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "config-reset-settings-cache-stats",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "reset_cache_stats",
       "nodeExport": "resetSettingsCacheStats",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "config-validate-settings-path",
@@ -2393,55 +2400,61 @@
       "id": "version-registry-get-by-version",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "VersionInfo",
+      "rustSymbol": "get_by_version",
       "nodeExport": "getVersionByVersionString",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-get-by-short-name",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "VersionInfo",
+      "rustSymbol": "get_by_short_name",
       "nodeExport": "getVersionByShortName",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-get-all",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "VersionRegistry",
+      "rustSymbol": "get_all",
       "nodeExport": "getAllVersions",
       "nodeKind": "function",
-      "nodeArity": 0
+      "nodeArity": 0,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-get-all-for-game",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "VersionRegistry",
+      "rustSymbol": "get_all_for_game",
       "nodeExport": "getAllVersionsForGame",
       "nodeKind": "function",
-      "nodeArity": 2
+      "nodeArity": 2,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-get-correct-versions",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "VersionRegistry",
+      "rustSymbol": "get_correct_versions",
       "nodeExport": "getCorrectVersions",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-get-wrong-versions",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "VersionRegistry",
+      "rustSymbol": "get_wrong_versions",
       "nodeExport": "getWrongVersions",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-match-version",
@@ -2457,64 +2470,71 @@
       "id": "version-registry-address-lib-filename",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "VersionRegistry",
+      "rustSymbol": "get_address_library_filename",
       "nodeExport": "getAddressLibraryFilename",
       "nodeKind": "function",
-      "nodeArity": 2
+      "nodeArity": 2,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-crashgen-versions",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "CrashgenConfig",
+      "rustSymbol": "get_crashgen_versions",
       "nodeExport": "getCrashgenVersions",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-crashgen-version-strings",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "CrashgenConfig",
+      "rustSymbol": "get_crashgen_version_strings",
       "nodeExport": "getCrashgenVersionStrings",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-crashgen-for-version",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "CrashgenConfig",
+      "rustSymbol": "get_crashgen_for_version",
       "nodeExport": "getCrashgenForVersion",
       "nodeKind": "function",
-      "nodeArity": 2
+      "nodeArity": 2,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-is-compatible",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "GameVersion",
+      "rustSymbol": "VersionRegistry",
       "nodeExport": "isVersionCompatible",
       "nodeKind": "function",
-      "nodeArity": 2
+      "nodeArity": 2,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-parse-version",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "GameVersion",
+      "rustSymbol": "parse",
       "nodeExport": "parseGameVersion",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-version-distance",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "GameVersion",
+      "rustSymbol": "semantic_distance",
       "nodeExport": "gameVersionDistance",
       "nodeKind": "function",
-      "nodeArity": 2
+      "nodeArity": 2,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-promote-fallout4-version-info",
@@ -2669,28 +2689,31 @@
       "id": "version-registry-promote-extract-all-versions",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "GameVersion",
+      "rustSymbol": "extract_all_versions",
       "nodeExport": "extractAllVersions",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-core"
     },
     {
       "id": "version-registry-promote-extract-version-from-filename",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "GameVersion",
+      "rustSymbol": "extract_version_from_filename",
       "nodeExport": "extractVersionFromFilename",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-core"
     },
     {
       "id": "version-registry-promote-extract-version-from-log",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "GameVersion",
+      "rustSymbol": "extract_version_from_log",
       "nodeExport": "extractVersionFromLog",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-core"
     },
     {
       "id": "version-registry-promote-format-version",
@@ -2715,10 +2738,11 @@
       "id": "version-registry-promote-get-all-fallout4-versions",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "VersionRegistry",
+      "rustSymbol": "Fallout4Version",
       "nodeExport": "getAllFallout4Versions",
       "nodeKind": "function",
-      "nodeArity": 0
+      "nodeArity": 0,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-promote-get-classic-version",
@@ -2733,37 +2757,41 @@
       "id": "version-registry-promote-get-fallout4-version-info",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "VersionInfo",
+      "rustSymbol": "Fallout4Version",
       "nodeExport": "getFallout4VersionInfo",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-promote-get-script-hashes-for-version",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "XseConfig",
+      "rustSymbol": "VersionRegistry",
       "nodeExport": "getScriptHashesForVersion",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-promote-get-unknown-version-default",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "UnknownVersionStrategy",
+      "rustSymbol": "UnknownVersionHandling",
       "nodeExport": "getUnknownVersionDefault",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-promote-get-unknown-version-handling",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "LogLevel",
+      "rustSymbol": "unknown_version_handling",
       "nodeExport": "getUnknownVersionHandling",
       "nodeKind": "function",
-      "nodeArity": 0
+      "nodeArity": 0,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-promote-get-version",
@@ -2778,19 +2806,21 @@
       "id": "version-registry-promote-get-version-registry",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "get_version_registry",
+      "rustSymbol": "VersionRegistry",
       "nodeExport": "getVersionRegistry",
       "nodeKind": "function",
-      "nodeArity": 2
+      "nodeArity": 2,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-promote-is-known-fallout4-version",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "GameVersion",
+      "rustSymbol": "is_known_fallout4_version",
       "nodeExport": "isKnownFallout4Version",
       "nodeKind": "function",
-      "nodeArity": 1
+      "nodeArity": 1,
+      "rustCrate": "classic-version-core"
     },
     {
       "id": "version-registry-promote-parse-version",
@@ -2806,10 +2836,11 @@
       "id": "version-registry-promote-registry-get-game-version",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "VersionRegistry",
+      "rustSymbol": "get",
       "nodeExport": "registryGetGameVersion",
       "nodeKind": "function",
-      "nodeArity": 0
+      "nodeArity": 0,
+      "rustCrate": "classic-registry-core"
     },
     {
       "id": "version_registry.MatchConfidence@rust",
@@ -3217,7 +3248,8 @@
       "ownerModule": "aux",
       "rustSymbol": "get_game",
       "nodeExport": "registryGetGame",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-registry-core"
     },
     {
       "id": "aux-phase4a-registry-remove",
@@ -3243,7 +3275,8 @@
       "ownerModule": "aux",
       "rustSymbol": "set_game",
       "nodeExport": "registrySetGame",
-      "nodeKind": "function"
+      "nodeKind": "function",
+      "rustCrate": "classic-registry-core"
     },
     {
       "id": "aux-phase4a-remove-readonly",
@@ -4086,10 +4119,11 @@
       "id": "version-registry-phase4c-get-all-exe-hashes",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "get_version_registry",
+      "rustSymbol": "VersionRegistry",
       "nodeExport": "getAllExeHashes",
       "nodeKind": "function",
-      "nodeArity": 2
+      "nodeArity": 2,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "aux-phase4c-get-all-game-ids",
@@ -4105,10 +4139,11 @@
       "id": "version-registry-phase4c-get-all-script-hashes",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "get_version_registry",
+      "rustSymbol": "VersionRegistry",
       "nodeExport": "getAllScriptHashes",
       "nodeKind": "function",
-      "nodeArity": 2
+      "nodeArity": 2,
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "aux-phase4c-get-game-name",

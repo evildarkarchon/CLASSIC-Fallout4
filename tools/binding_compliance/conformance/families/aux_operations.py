@@ -65,6 +65,17 @@ OPERATIONS = {
         ("format_version", ("format_version",)),
     ),
 }
+OPERATIONS.update(
+    {
+        family: ()
+        for family in [
+            "version-extraction",
+            "version-f4se",
+            "version-pe",
+            "version-pe-path",
+        ]
+    }
+)
 OBSERVATIONS = {
     "web-operations": "url-resolution",
     "resource-operations": "resource-classification",
@@ -223,6 +234,12 @@ def validate_aux_operations_pack(
         if not path.is_relative_to(fixture_root):
             raise ValueError("auxiliary fixture escapes its root")
         fixture = json.loads(path.read_text(encoding="utf-8"))
+        if family.startswith("version-") and "operation" in fixture.get("request", {}):
+            from .version_extended import validate_fixture
+
+            validate_fixture(fixture, scenario["expected"])
+            paths.append(path)
+            continue
         if set(fixture) != (
             {"request", "files"} if family == "resource-operations" else {"request"}
         ) or not isinstance(fixture["request"], Mapping):
@@ -293,6 +310,8 @@ def _operation_observation(
 
 def aux_operations_coverage_policy(family: str) -> FamilyCoveragePolicy:
     """Attribute actual operation observations to canonical public Rust symbols."""
+    from .version_extended import predicates
+
     return FamilyCoveragePolicy(
         family,
         tuple(
@@ -306,5 +325,6 @@ def aux_operations_coverage_policy(family: str) -> FamilyCoveragePolicy:
                 runtime_operations=(None, *aliases),
             )
             for symbol, aliases in OPERATIONS[family]
-        ),
+        )
+        + tuple(predicates(family)),
     )

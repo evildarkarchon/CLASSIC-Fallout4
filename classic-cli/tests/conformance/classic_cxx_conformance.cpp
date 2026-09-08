@@ -1894,12 +1894,14 @@ json execute_scenario(const json& plan, const json& scenario) {
 #include "classic_cxx_installed_yaml_data_conformance.h"
 #include "classic_cxx_semantic_conformance.h"
 #include "classic_cxx_aux_operations_conformance.h"
+#include "classic_cxx_version_values_conformance.h"
 #include "classic_cxx_registry_conformance.h"
 #include "classic_cxx_xse_operations_conformance.h"
 #include "classic_cxx_performance_conformance.h"
 #include "classic_cxx_update_decisions_conformance.h"
 #include "classic_cxx_shared_identity_conformance.h"
 #include "classic_cxx_settings_load_conformance.h"
+#include "classic_cxx_settings_validation_conformance.h"
 #include "classic_cxx_config_operations_conformance.h"
 #include "classic_cxx_database_operations_conformance.h"
 #include "classic_cxx_version_registry_conformance.h"
@@ -1923,13 +1925,16 @@ json scenario_receipt(const json& plan, const json& scenario) {
                                     : plan.at("familyId") == "version-registry" ? execute_version_registry_scenario(plan, scenario)
                                     : plan.at("familyId") == "scan-game" ? execute_scan_game(plan, scenario)
                                     : plan.at("familyId") == "path-operations" ? execute_path_operations_scenario(plan, scenario)
-                                    : plan.at("familyId") == "registry-operations" ? execute_registry_operations_scenario(plan, scenario)
-                                    : plan.at("familyId") == "web-operations" ? execute_aux_operations_scenario(plan, scenario)
+                                      : (plan.at("familyId") == "registry-game" || plan.at("familyId") == "registry-gui") ? execute_registry_accessor_scenario(plan, scenario)
+                                      : plan.at("familyId") == "registry-operations" ? execute_registry_operations_scenario(plan, scenario)
+                                    : (plan.at("familyId") == "game-version-parse" || plan.at("familyId") == "fallout4-identity" || plan.at("familyId") == "fallout4-paths") ? execute_version_values_scenario(plan, scenario)
+                                      : (plan.at("familyId") == "web-operations" || plan.at("familyId") == "version-pe") ? execute_aux_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "xse-operations" ? execute_xse_operations_scenario(plan, scenario)
                                     : plan.at("familyId") == "performance" ? execute_performance_scenario(plan, scenario)
                                     : plan.at("familyId") == "update-decisions" ? execute_update_decisions_scenario(plan, scenario)
                                     : (plan.at("familyId") == "game-identity" || plan.at("familyId") == "runtime-access") ? execute_shared_identity_scenario(plan, scenario)
-                                    : plan.at("familyId") == "settings-load" ? execute_settings_load_scenario(plan, scenario)
+                                    : (plan.at("familyId") == "settings-load" || plan.at("familyId") == "settings-yaml") ? execute_settings_load_scenario(plan, scenario)
+                                    : plan.at("familyId") == "settings-validation" ? execute_settings_validation_scenario(plan, scenario)
                                     : plan.at("familyId") == "installed-yaml-data"
                                         ? execute_installed_yaml_data_scenario(plan, scenario)
                                     : plan.at("familyId") == "user-settings"
@@ -1952,10 +1957,14 @@ void validate_plan(const json& plan) {
          plan.at("familyId") != "installed-yaml-data" && plan.at("familyId") != "autoscan-report" &&
          plan.at("familyId") != "config-operations" && plan.at("familyId") != "file-operations" &&
          plan.at("familyId") != "path-operations" &&
-         plan.at("familyId") != "registry-operations" && plan.at("familyId") != "web-operations" && plan.at("familyId") != "xse-operations" &&
+           plan.at("familyId") != "version-pe" && plan.at("familyId") != "game-version-parse" && plan.at("familyId") != "fallout4-identity" && plan.at("familyId") != "fallout4-paths" &&
+           plan.at("familyId") != "registry-game" && plan.at("familyId") != "registry-gui" &&
+           plan.at("familyId") != "registry-operations" && plan.at("familyId") != "web-operations" && plan.at("familyId") != "xse-operations" &&
          plan.at("familyId") != "performance" && plan.at("familyId") != "update-decisions" &&
          plan.at("familyId") != "game-identity" && plan.at("familyId") != "runtime-access" &&
          plan.at("familyId") != "settings-load" &&
+         plan.at("familyId") != "settings-yaml" &&
+         plan.at("familyId") != "settings-validation" &&
          plan.at("familyId") != "database-operations" && plan.at("familyId") != "version-registry" &&
          plan.at("familyId") != "scan-game" &&
          !is_semantic_family(plan.at("familyId")) && !is_vocabulary_family(plan.at("familyId")))) {

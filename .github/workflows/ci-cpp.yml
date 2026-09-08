@@ -488,6 +488,166 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run native CXX game-version-parse conformance
+        if: ${{ !cancelled() }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family game-version-parse -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/game-version-parse
+
+      - name: Upload native CXX game-version-parse conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cxx-game-version-parse-conformance-${{ matrix.compiler }}
+          path: |
+            tools/binding_compliance/artifacts/game-version-parse/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
+            tools/binding_compliance/artifacts/game-version-parse/cxx/windows-${{ matrix.compiler }}/**/receipt.json
+            tools/binding_compliance/artifacts/game-version-parse/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
+            tools/binding_compliance/artifacts/game-version-parse/cxx/windows-${{ matrix.compiler }}/**/attempt.json
+            tools/binding_compliance/artifacts/game-version-parse/cxx/windows-${{ matrix.compiler }}/**/stdout.log
+            tools/binding_compliance/artifacts/game-version-parse/cxx/windows-${{ matrix.compiler }}/**/stderr.log
+            tools/binding_compliance/artifacts/game-version-parse/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run native CXX fallout4-identity conformance
+        if: ${{ !cancelled() }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family fallout4-identity -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/fallout4-identity
+
+      - name: Upload native CXX fallout4-identity conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cxx-fallout4-identity-conformance-${{ matrix.compiler }}
+          path: |
+            tools/binding_compliance/artifacts/fallout4-identity/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
+            tools/binding_compliance/artifacts/fallout4-identity/cxx/windows-${{ matrix.compiler }}/**/receipt.json
+            tools/binding_compliance/artifacts/fallout4-identity/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
+            tools/binding_compliance/artifacts/fallout4-identity/cxx/windows-${{ matrix.compiler }}/**/attempt.json
+            tools/binding_compliance/artifacts/fallout4-identity/cxx/windows-${{ matrix.compiler }}/**/stdout.log
+            tools/binding_compliance/artifacts/fallout4-identity/cxx/windows-${{ matrix.compiler }}/**/stderr.log
+            tools/binding_compliance/artifacts/fallout4-identity/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run native CXX fallout4-paths conformance
+        if: ${{ !cancelled() }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family fallout4-paths -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/fallout4-paths
+
+      - name: Upload native CXX fallout4-paths conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cxx-fallout4-paths-conformance-${{ matrix.compiler }}
+          path: |
+            tools/binding_compliance/artifacts/fallout4-paths/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
+            tools/binding_compliance/artifacts/fallout4-paths/cxx/windows-${{ matrix.compiler }}/**/receipt.json
+            tools/binding_compliance/artifacts/fallout4-paths/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
+            tools/binding_compliance/artifacts/fallout4-paths/cxx/windows-${{ matrix.compiler }}/**/attempt.json
+            tools/binding_compliance/artifacts/fallout4-paths/cxx/windows-${{ matrix.compiler }}/**/stdout.log
+            tools/binding_compliance/artifacts/fallout4-paths/cxx/windows-${{ matrix.compiler }}/**/stderr.log
+            tools/binding_compliance/artifacts/fallout4-paths/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run native CXX registry-game conformance
+        if: ${{ !cancelled() }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family registry-game -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/registry-game
+
+      - name: Upload native CXX registry-game conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cxx-registry-game-conformance-${{ matrix.compiler }}
+          path: |
+            tools/binding_compliance/artifacts/registry-game/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
+            tools/binding_compliance/artifacts/registry-game/cxx/windows-${{ matrix.compiler }}/**/receipt.json
+            tools/binding_compliance/artifacts/registry-game/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
+            tools/binding_compliance/artifacts/registry-game/cxx/windows-${{ matrix.compiler }}/**/attempt.json
+            tools/binding_compliance/artifacts/registry-game/cxx/windows-${{ matrix.compiler }}/**/stdout.log
+            tools/binding_compliance/artifacts/registry-game/cxx/windows-${{ matrix.compiler }}/**/stderr.log
+            tools/binding_compliance/artifacts/registry-game/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run native CXX registry-gui conformance
+        if: ${{ !cancelled() }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family registry-gui -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/registry-gui
+
+      - name: Upload native CXX registry-gui conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cxx-registry-gui-conformance-${{ matrix.compiler }}
+          path: |
+            tools/binding_compliance/artifacts/registry-gui/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
+            tools/binding_compliance/artifacts/registry-gui/cxx/windows-${{ matrix.compiler }}/**/receipt.json
+            tools/binding_compliance/artifacts/registry-gui/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
+            tools/binding_compliance/artifacts/registry-gui/cxx/windows-${{ matrix.compiler }}/**/attempt.json
+            tools/binding_compliance/artifacts/registry-gui/cxx/windows-${{ matrix.compiler }}/**/stdout.log
+            tools/binding_compliance/artifacts/registry-gui/cxx/windows-${{ matrix.compiler }}/**/stderr.log
+            tools/binding_compliance/artifacts/registry-gui/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run native CXX version-pe conformance
+        if: ${{ !cancelled() }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family version-pe -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/version-pe
+
+      - name: Upload native CXX version-pe conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cxx-version-pe-conformance-${{ matrix.compiler }}
+          path: |
+            tools/binding_compliance/artifacts/version-pe/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
+            tools/binding_compliance/artifacts/version-pe/cxx/windows-${{ matrix.compiler }}/**/receipt.json
+            tools/binding_compliance/artifacts/version-pe/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
+            tools/binding_compliance/artifacts/version-pe/cxx/windows-${{ matrix.compiler }}/**/attempt.json
+            tools/binding_compliance/artifacts/version-pe/cxx/windows-${{ matrix.compiler }}/**/stdout.log
+            tools/binding_compliance/artifacts/version-pe/cxx/windows-${{ matrix.compiler }}/**/stderr.log
+            tools/binding_compliance/artifacts/version-pe/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run native CXX settings-yaml conformance
+        if: ${{ !cancelled() }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family settings-yaml -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/settings-yaml
+
+      - name: Upload native CXX settings-yaml conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cxx-settings-yaml-conformance-${{ matrix.compiler }}
+          path: |
+            tools/binding_compliance/artifacts/settings-yaml/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
+            tools/binding_compliance/artifacts/settings-yaml/cxx/windows-${{ matrix.compiler }}/**/receipt.json
+            tools/binding_compliance/artifacts/settings-yaml/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
+            tools/binding_compliance/artifacts/settings-yaml/cxx/windows-${{ matrix.compiler }}/**/attempt.json
+            tools/binding_compliance/artifacts/settings-yaml/cxx/windows-${{ matrix.compiler }}/**/stdout.log
+            tools/binding_compliance/artifacts/settings-yaml/cxx/windows-${{ matrix.compiler }}/**/stderr.log
+            tools/binding_compliance/artifacts/settings-yaml/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run native CXX settings-validation conformance
+        if: ${{ !cancelled() }}
+        run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family settings-validation -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/settings-validation
+
+      - name: Upload native CXX settings-validation conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cxx-settings-validation-conformance-${{ matrix.compiler }}
+          path: |
+            tools/binding_compliance/artifacts/settings-validation/cxx/windows-${{ matrix.compiler }}/**/run_plan.json
+            tools/binding_compliance/artifacts/settings-validation/cxx/windows-${{ matrix.compiler }}/**/receipt.json
+            tools/binding_compliance/artifacts/settings-validation/cxx/windows-${{ matrix.compiler }}/**/ctest.junit.xml
+            tools/binding_compliance/artifacts/settings-validation/cxx/windows-${{ matrix.compiler }}/**/attempt.json
+            tools/binding_compliance/artifacts/settings-validation/cxx/windows-${{ matrix.compiler }}/**/stdout.log
+            tools/binding_compliance/artifacts/settings-validation/cxx/windows-${{ matrix.compiler }}/**/stderr.log
+            tools/binding_compliance/artifacts/settings-validation/cxx/windows-${{ matrix.compiler }}/**/binding_compliance_report.*
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run native CXX web-operations conformance
         if: ${{ !cancelled() }}
         run: pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family web-operations -Compiler ${{ matrix.compiler }} -ArtifactRoot tools/binding_compliance/artifacts/web-operations

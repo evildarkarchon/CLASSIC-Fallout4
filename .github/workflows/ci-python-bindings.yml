@@ -406,6 +406,266 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Run Python version-registry-values conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family version-registry-values --participant python --artifact-root tools/binding_compliance/artifacts/version-registry-values
+
+      - name: Upload Python version-registry-values conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-version-registry-values-conformance
+          path: tools/binding_compliance/artifacts/version-registry-values/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python game-version-parse conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family game-version-parse --participant python --artifact-root tools/binding_compliance/artifacts/game-version-parse
+
+      - name: Upload Python game-version-parse conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-game-version-parse-conformance
+          path: tools/binding_compliance/artifacts/game-version-parse/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python game-version-distance conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family game-version-distance --participant python --artifact-root tools/binding_compliance/artifacts/game-version-distance
+
+      - name: Upload Python game-version-distance conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-game-version-distance-conformance
+          path: tools/binding_compliance/artifacts/game-version-distance/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python game-version-order conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family game-version-order --participant python --artifact-root tools/binding_compliance/artifacts/game-version-order
+
+      - name: Upload Python game-version-order conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-game-version-order-conformance
+          path: tools/binding_compliance/artifacts/game-version-order/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python fallout4-identity conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family fallout4-identity --participant python --artifact-root tools/binding_compliance/artifacts/fallout4-identity
+
+      - name: Upload Python fallout4-identity conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-fallout4-identity-conformance
+          path: tools/binding_compliance/artifacts/fallout4-identity/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python fallout4-paths conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family fallout4-paths --participant python --artifact-root tools/binding_compliance/artifacts/fallout4-paths
+
+      - name: Upload Python fallout4-paths conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-fallout4-paths-conformance
+          path: tools/binding_compliance/artifacts/fallout4-paths/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python fallout4-metadata conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family fallout4-metadata --participant python --artifact-root tools/binding_compliance/artifacts/fallout4-metadata
+
+      - name: Upload Python fallout4-metadata conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-fallout4-metadata-conformance
+          path: tools/binding_compliance/artifacts/fallout4-metadata/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python registry-keys conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family registry-keys --participant python --artifact-root tools/binding_compliance/artifacts/registry-keys
+
+      - name: Upload Python registry-keys conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-registry-keys-conformance
+          path: tools/binding_compliance/artifacts/registry-keys/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python registry-game conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family registry-game --participant python --artifact-root tools/binding_compliance/artifacts/registry-game
+
+      - name: Upload Python registry-game conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-registry-game-conformance
+          path: tools/binding_compliance/artifacts/registry-game/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python registry-gui conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family registry-gui --participant python --artifact-root tools/binding_compliance/artifacts/registry-gui
+
+      - name: Upload Python registry-gui conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-registry-gui-conformance
+          path: tools/binding_compliance/artifacts/registry-gui/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python registry-context conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family registry-context --participant python --artifact-root tools/binding_compliance/artifacts/registry-context
+
+      - name: Upload Python registry-context conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-registry-context-conformance
+          path: tools/binding_compliance/artifacts/registry-context/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python registry-paths conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family registry-paths --participant python --artifact-root tools/binding_compliance/artifacts/registry-paths
+
+      - name: Upload Python registry-paths conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-registry-paths-conformance
+          path: tools/binding_compliance/artifacts/registry-paths/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python version-extraction conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family version-extraction --participant python --artifact-root tools/binding_compliance/artifacts/version-extraction
+
+      - name: Upload Python version-extraction conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-version-extraction-conformance
+          path: tools/binding_compliance/artifacts/version-extraction/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python version-f4se conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family version-f4se --participant python --artifact-root tools/binding_compliance/artifacts/version-f4se
+
+      - name: Upload Python version-f4se conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-version-f4se-conformance
+          path: tools/binding_compliance/artifacts/version-f4se/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python version-pe conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family version-pe --participant python --artifact-root tools/binding_compliance/artifacts/version-pe
+
+      - name: Upload Python version-pe conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-version-pe-conformance
+          path: tools/binding_compliance/artifacts/version-pe/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python version-pe-path conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family version-pe-path --participant python --artifact-root tools/binding_compliance/artifacts/version-pe-path
+
+      - name: Upload Python version-pe-path conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-version-pe-path-conformance
+          path: tools/binding_compliance/artifacts/version-pe-path/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python settings-yaml conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family settings-yaml --participant python --artifact-root tools/binding_compliance/artifacts/settings-yaml
+
+      - name: Upload Python settings-yaml conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-settings-yaml-conformance
+          path: tools/binding_compliance/artifacts/settings-yaml/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python settings-validation conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family settings-validation --participant python --artifact-root tools/binding_compliance/artifacts/settings-validation
+
+      - name: Upload Python settings-validation conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-settings-validation-conformance
+          path: tools/binding_compliance/artifacts/settings-validation/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python settings-cached-docs conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family settings-cached-docs --participant python --artifact-root tools/binding_compliance/artifacts/settings-cached-docs
+
+      - name: Upload Python settings-cached-docs conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-settings-cached-docs-conformance
+          path: tools/binding_compliance/artifacts/settings-cached-docs/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Run Python version-registry-details conformance
+        if: ${{ !cancelled() }}
+        run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family version-registry-details --participant python --artifact-root tools/binding_compliance/artifacts/version-registry-details
+
+      - name: Upload Python version-registry-details conformance diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-version-registry-details-conformance
+          path: tools/binding_compliance/artifacts/version-registry-details/python/python/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run Python web-operations conformance
         if: ${{ !cancelled() }}
         run: uv run --project python-bindings python tools/binding_compliance/run_semantic_conformance.py --family web-operations --participant python --artifact-root tools/binding_compliance/artifacts/web-operations

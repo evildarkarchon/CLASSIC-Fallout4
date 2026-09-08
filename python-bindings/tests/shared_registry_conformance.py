@@ -34,6 +34,8 @@ def observe_shared_registry(family: str, fixture: Mapping[str, Any]) -> dict[str
         }
         registry.register("conformance.stringValue", request["replacement"])
         replacement = registry.get("conformance.stringValue")
+        registry.register(registry.Keys.GAME_VERSION, request["gameVersion"])
+        game_version = registry.get(registry.Keys.GAME_VERSION)
         registry.unregister("conformance.stringValue")
         after_remove = registry.is_registered("conformance.stringValue")
         registry.clear_all()
@@ -46,6 +48,7 @@ def observe_shared_registry(family: str, fixture: Mapping[str, Any]) -> dict[str
             "replacement": replacement,
             "afterRemovePresent": after_remove,
             "afterClearPresent": after_clear,
+            "gameVersion": game_version,
         }
     finally:
         registry.clear_all()

@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "familyId": "version-extraction",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-version-core"
+  },
+  "fixtureRoot": "tests/fixtures/version_operations_conformance",
+  "fixtures": {
+    "extract-ordered": "extract-ordered.json",
+    "extract-empty": "extract-empty.json",
+    "known-fallout4-known": "known-fallout4-known.json",
+    "known-fallout4-unknown": "known-fallout4-unknown.json"
+  },
+  "capabilities": [
+    {
+      "id": "version-extraction.observe",
+      "rustSymbols": [
+        "extract_version_from_filename",
+        "extract_version_from_log",
+        "extract_all_versions",
+        "is_known_fallout4_version"
+      ],
+      "observationFamilies": [
+        "version-extract",
+        "version-known-fallout4"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "extract-ordered",
+      "action": "version-extraction.observe",
+      "capabilityIds": [
+        "version-extraction.observe"
+      ],
+      "fixtureRefs": [
+        "extract-ordered"
+      ],
+      "input": {
+        "fixtureRef": "extract-ordered"
+      },
+      "expected": {
+        "filename": "1.2.3",
+        "log": "1.10.163",
+        "all": [
+          "1.10.163",
+          "0.6.23",
+          "1.10.163"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "extract-empty",
+      "action": "version-extraction.observe",
+      "capabilityIds": [
+        "version-extraction.observe"
+      ],
+      "fixtureRefs": [
+        "extract-empty"
+      ],
+      "input": {
+        "fixtureRef": "extract-empty"
+      },
+      "expected": {
+        "filename": null,
+        "log": null,
+        "all": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "known-fallout4-known",
+      "action": "version-extraction.observe",
+      "capabilityIds": [
+        "version-extraction.observe"
+      ],
+      "fixtureRefs": [
+        "known-fallout4-known"
+      ],
+      "input": {
+        "fixtureRef": "known-fallout4-known"
+      },
+      "expected": {
+        "known-fallout4": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "known-fallout4-unknown",
+      "action": "version-extraction.observe",
+      "capabilityIds": [
+        "version-extraction.observe"
+      ],
+      "fixtureRefs": [
+        "known-fallout4-unknown"
+      ],
+      "input": {
+        "fixtureRef": "known-fallout4-unknown"
+      },
+      "expected": {
+        "known-fallout4": false
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

@@ -26,10 +26,33 @@ YAML parser wording are not part of this common error contract; the error kind
 and source path remain observable. Fixtures and expectations are separate, and
 the receipt runner never receives expected values.
 
-Coverage is restricted to the five listed operations. Cache clearing is exercised
-for isolation and observed effects but does not enroll every unrelated
-`clear_cache` alias. YAML operation classes, merging, schema validation, cache
-performance metrics and other settings APIs retain their existing evidence.
+The loader observations additionally retain cache keys and size, successful and
+repeated invalidation, cache statistics, and statistics reset. Entries are refilled
+before clearing so invalidation cannot make the clear assertion vacuous. The CXX
+config aliases execute alongside their settings counterparts and must agree.
+
+The cached-document pack inventories every remaining file after its final public
+cache read. It compares exact replacement bytes, so a cached-value getter cannot
+silently write the stale document back to disk or create an extra file.
+
+The `settings-yaml` family executes YAML construction, parsing, typed getters,
+string/bool/integer/vector mutation, dump/parse round trips, atomic file saves,
+reloads, and cache reuse/clear. Saved bytes remain part of the common result.
+Python's map accessor and CXX's individual mapped-string accessors project the
+same authored mapping. Only the methods actually called are enrolled.
+
+The `settings-yaml-batch` family executes batch get/set, ordered string maps and
+string-vector maps in Rust and Node. Entry order is retained as an array, missing
+batch keys stay absent, and non-string vector members are filtered by the core.
+Python has no public batch/ordered-map counterparts. Two old `@rust` contract
+rows incorrectly mapped these methods to the `YamlCacheStats` TypedDict; those
+fictitious mappings were removed while preserving the real class mapping and
+the Rust source inventory. The Python baseline generator reads that canonical
+contract directly and does not regenerate the removed mappings. No production
+binding was removed and no policy exception substitutes for executable evidence.
+
+Merging, schema and other raw Rust exports without public adapter counterparts
+retain their existing source inventory; these packs do not claim to execute them.
 
 Five retained Node mapping IDs are preserved while correcting their canonical
 Rust metadata from old `config`/`aux` carrier labels to the actual settings-core

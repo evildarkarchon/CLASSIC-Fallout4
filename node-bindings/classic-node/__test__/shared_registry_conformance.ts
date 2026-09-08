@@ -22,11 +22,13 @@ export function observeSharedRegistry(family: string, fixture: JsonObject): Json
       boolValue: classic.registryGet("conformance.boolValue"), intValue: classic.registryGet("conformance.intValue") };
     classic.registrySet("conformance.stringValue", request.replacement);
     const replacement = classic.registryGet("conformance.stringValue");
+    classic.registrySet("gamevars_version", request.gameVersion);
+    const gameVersion = classic.registryGetGameVersion();
     classic.registryRemove("conformance.stringValue");
     const afterRemovePresent = classic.registryGet("conformance.stringValue") !== null;
     classic.registryClear();
     const afterClearPresent = classic.registryGet("conformance.boolValue") !== null || classic.registryGet("conformance.intValue") !== null;
-    return { initiallyPresent, stored, replacement, afterRemovePresent, afterClearPresent };
+    return { initiallyPresent, stored, replacement, afterRemovePresent, afterClearPresent, gameVersion };
   } finally {
     classic.registryClear();
   }

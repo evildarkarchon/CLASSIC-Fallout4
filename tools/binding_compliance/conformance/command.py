@@ -32,14 +32,24 @@ from .families.path_operations import (
     path_operations_coverage_policy,
 )
 from .families.performance import PERFORMANCE_COVERAGE_POLICY
+from .families.registry_accessors import coverage_policy as registry_accessor_policy
+from .families.registry_keys import REGISTRY_KEYS_COVERAGE_POLICY
 from .families.scan_game import SCAN_GAME_COVERAGE_POLICY
 from .families.semantic_analysis import SEMANTIC_ANALYSIS_COVERAGE_POLICIES
-from .families.settings_load import settings_load_coverage_policy
+from .families.settings_extended import settings_extended_coverage_policy
+from .families.settings_load import (
+    settings_load_coverage_policy,
+    settings_yaml_batch_coverage_policy,
+    settings_yaml_coverage_policy,
+)
 from .families.shared_identity import coverage_policy as shared_identity_coverage_policy
 from .families.shared_registry import coverage_policy as shared_registry_coverage_policy
 from .families.update_decisions import UPDATE_DECISIONS_COVERAGE_POLICY
 from .families.user_settings import USER_SETTINGS_COVERAGE_POLICY
 from .families.version_registry import VERSION_REGISTRY_COVERAGE_POLICY
+from .families.version_registry_details import VERSION_REGISTRY_DETAILS_COVERAGE_POLICY
+from .families.version_registry_values import VERSION_REGISTRY_VALUES_COVERAGE_POLICY
+from .families.version_values import version_values_coverage_policy
 from .families.vocabulary import vocabulary_coverage_policies
 from .families.xse_operations import XSE_OPERATIONS_COVERAGE_POLICY
 from .packs import (
@@ -71,6 +81,35 @@ FAMILY_COVERAGE_POLICIES: Mapping[str, FamilyCoveragePolicy] = {
     "update-decisions": UPDATE_DECISIONS_COVERAGE_POLICY,
     "xse-operations": XSE_OPERATIONS_COVERAGE_POLICY,
     "settings-load": settings_load_coverage_policy(),
+    "settings-yaml": settings_yaml_coverage_policy(),
+    "settings-yaml-batch": settings_yaml_batch_coverage_policy(),
+    "registry-keys": REGISTRY_KEYS_COVERAGE_POLICY,
+    "version-registry-details": VERSION_REGISTRY_DETAILS_COVERAGE_POLICY,
+    "version-registry-values": VERSION_REGISTRY_VALUES_COVERAGE_POLICY,
+    **{
+        f: version_values_coverage_policy(f)
+        for f in (
+            "game-version-parse",
+            "game-version-distance",
+            "game-version-order",
+            "fallout4-identity",
+            "fallout4-paths",
+            "fallout4-metadata",
+        )
+    },
+    **{
+        f: settings_extended_coverage_policy(f)
+        for f in ("settings-validation", "settings-cached-docs")
+    },
+    **{
+        family: registry_accessor_policy(family)
+        for family in (
+            "registry-game",
+            "registry-gui",
+            "registry-context",
+            "registry-paths",
+        )
+    },
     **{
         family: shared_identity_coverage_policy(family)
         for family in ("game-identity", "runtime-access")
@@ -81,7 +120,15 @@ FAMILY_COVERAGE_POLICIES: Mapping[str, FamilyCoveragePolicy] = {
     },
     **{
         family: aux_operations_coverage_policy(family)
-        for family in ("web-operations", "resource-operations", "version-operations")
+        for family in (
+            "web-operations",
+            "resource-operations",
+            "version-operations",
+            "version-extraction",
+            "version-f4se",
+            "version-pe",
+            "version-pe-path",
+        )
     },
     AUTOSCAN_REPORT_COVERAGE_POLICY.family_id: AUTOSCAN_REPORT_COVERAGE_POLICY,
     CRASH_LOG_SCAN_RUN_COVERAGE_POLICY.family_id: CRASH_LOG_SCAN_RUN_COVERAGE_POLICY,

@@ -25,7 +25,15 @@ DEFAULT_ARTIFACT_ROOT = Path("tools/binding_compliance/artifacts")
 SUPPORTED_COMPILERS = ("msvc", "clang-cl")
 SUPPORTED_FAMILIES = (
     "settings-load",
+    "settings-yaml",
+    "settings-validation",
     "registry-operations",
+    "version-pe",
+    "game-version-parse",
+    "fallout4-identity",
+    "fallout4-paths",
+    "registry-game",
+    "registry-gui",
     "web-operations",
     "performance",
     "update-decisions",
@@ -61,6 +69,10 @@ def _cxx_source_paths(
     paths = (
         repo_root
         / "classic-cli/tests/conformance/classic_cxx_settings_load_conformance.h",
+        repo_root
+        / "classic-cli/tests/conformance/classic_cxx_settings_validation_conformance.h",
+        repo_root
+        / "classic-cli/tests/conformance/classic_cxx_version_values_conformance.h",
         repo_root / "business-logic/classic-settings-core/src",
         *(
             repo_root

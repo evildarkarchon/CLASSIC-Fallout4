@@ -13,7 +13,14 @@
     "vr-exact": "vr-exact.json",
     "vr-filter": "vr-filter.json",
     "unknown-game": "unknown-game.json",
-    "invalid-version": "invalid-version.json"
+    "invalid-version": "invalid-version.json",
+    "enumerate-standard": "enumerate-standard.json",
+    "enumerate-empty": "enumerate-empty.json",
+    "crashgen-present": "crashgen-present.json",
+    "crashgen-missing": "crashgen-missing.json",
+    "crashgen-version-missing": "crashgen-version-missing.json",
+    "xse-present": "xse-present.json",
+    "xse-missing": "xse-missing.json"
   },
   "capabilities": [
     {
@@ -28,6 +35,38 @@
       "observationFamilies": [
         "values",
         "errors"
+      ]
+    },
+    {
+      "id": "version-registry.enumerate",
+      "rustSymbols": [
+        "get_all",
+        "get_all_for_game",
+        "VersionRegistry"
+      ],
+      "observationFamilies": [
+        "values"
+      ]
+    },
+    {
+      "id": "version-registry.crashgen",
+      "rustSymbols": [
+        "get_crashgen_versions",
+        "get_crashgen_for_version",
+        "VersionRegistry"
+      ],
+      "observationFamilies": [
+        "values"
+      ]
+    },
+    {
+      "id": "version-registry.xse",
+      "rustSymbols": [
+        "XseConfig",
+        "VersionInfo"
+      ],
+      "observationFamilies": [
+        "values"
       ]
     }
   ],
@@ -58,7 +97,7 @@
         "files": [
           {
             "path": "CLASSIC Main.yaml",
-            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
           }
         ]
       },
@@ -86,7 +125,7 @@
         "files": [
           {
             "path": "CLASSIC Main.yaml",
-            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
           }
         ]
       },
@@ -118,7 +157,7 @@
         "files": [
           {
             "path": "CLASSIC Main.yaml",
-            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
           }
         ]
       },
@@ -150,7 +189,7 @@
         "files": [
           {
             "path": "CLASSIC Main.yaml",
-            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
           }
         ]
       },
@@ -182,7 +221,7 @@
         "files": [
           {
             "path": "CLASSIC Main.yaml",
-            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
           }
         ]
       },
@@ -214,7 +253,7 @@
         "files": [
           {
             "path": "CLASSIC Main.yaml",
-            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
           }
         ]
       },
@@ -244,7 +283,259 @@
         "files": [
           {
             "path": "CLASSIC Main.yaml",
-            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "enumerate-standard",
+      "action": "version-registry.enumerate",
+      "capabilityIds": [
+        "version-registry.enumerate"
+      ],
+      "fixtureRefs": [
+        "enumerate-standard"
+      ],
+      "input": {
+        "fixtureRef": "enumerate-standard"
+      },
+      "expected": {
+        "result": {
+          "ids": [
+            "CONFORMANCE_STANDARD",
+            "CONFORMANCE_VR"
+          ],
+          "count": 2,
+          "filteredIds": [
+            "CONFORMANCE_STANDARD"
+          ]
+        },
+        "error": null,
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "enumerate-empty",
+      "action": "version-registry.enumerate",
+      "capabilityIds": [
+        "version-registry.enumerate"
+      ],
+      "fixtureRefs": [
+        "enumerate-empty"
+      ],
+      "input": {
+        "fixtureRef": "enumerate-empty"
+      },
+      "expected": {
+        "result": {
+          "ids": [
+            "CONFORMANCE_STANDARD",
+            "CONFORMANCE_VR"
+          ],
+          "count": 2,
+          "filteredIds": []
+        },
+        "error": null,
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "crashgen-present",
+      "action": "version-registry.crashgen",
+      "capabilityIds": [
+        "version-registry.crashgen"
+      ],
+      "fixtureRefs": [
+        "crashgen-present"
+      ],
+      "input": {
+        "fixtureRef": "crashgen-present"
+      },
+      "expected": {
+        "result": {
+          "configs": [
+            {
+              "version": "1.2.3",
+              "name": "Fixture Crashgen",
+              "acronym": "FCG",
+              "dllFile": "fixture.dll",
+              "description": "Fixture diagnostics",
+              "downloadUrl": "https://example.invalid/crashgen"
+            }
+          ],
+          "selected": {
+            "version": "1.2.3",
+            "name": "Fixture Crashgen",
+            "acronym": "FCG",
+            "dllFile": "fixture.dll",
+            "description": "Fixture diagnostics",
+            "downloadUrl": "https://example.invalid/crashgen"
+          }
+        },
+        "error": null,
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "crashgen-missing",
+      "action": "version-registry.crashgen",
+      "capabilityIds": [
+        "version-registry.crashgen"
+      ],
+      "fixtureRefs": [
+        "crashgen-missing"
+      ],
+      "input": {
+        "fixtureRef": "crashgen-missing"
+      },
+      "expected": {
+        "result": {
+          "configs": [],
+          "selected": null
+        },
+        "error": null,
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "crashgen-version-missing",
+      "action": "version-registry.crashgen",
+      "capabilityIds": [
+        "version-registry.crashgen"
+      ],
+      "fixtureRefs": [
+        "crashgen-version-missing"
+      ],
+      "input": {
+        "fixtureRef": "crashgen-version-missing"
+      },
+      "expected": {
+        "result": {
+          "configs": [
+            {
+              "version": "1.2.3",
+              "name": "Fixture Crashgen",
+              "acronym": "FCG",
+              "dllFile": "fixture.dll",
+              "description": "Fixture diagnostics",
+              "downloadUrl": "https://example.invalid/crashgen"
+            }
+          ],
+          "selected": null
+        },
+        "error": null,
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "xse-present",
+      "action": "version-registry.xse",
+      "capabilityIds": [
+        "version-registry.xse"
+      ],
+      "fixtureRefs": [
+        "xse-present"
+      ],
+      "input": {
+        "fixtureRef": "xse-present"
+      },
+      "expected": {
+        "result": {
+          "acronym": "F4SE",
+          "fullName": "Fixture Extender",
+          "compatibleVersion": "0.6.23",
+          "loader": "fixture_loader.exe",
+          "fileCount": 1
+        },
+        "error": null,
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "xse-missing",
+      "action": "version-registry.xse",
+      "capabilityIds": [
+        "version-registry.xse"
+      ],
+      "fixtureRefs": [
+        "xse-missing"
+      ],
+      "input": {
+        "fixtureRef": "xse-missing"
+      },
+      "expected": {
+        "result": null,
+        "error": null,
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
           }
         ]
       },

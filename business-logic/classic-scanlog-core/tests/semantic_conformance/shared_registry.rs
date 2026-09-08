@@ -55,6 +55,8 @@ pub(super) fn execute(family: &str, fixture: &Value) -> RunnerResult<Value> {
         "intValue": registry::get::<_, i32>("conformance.intValue")});
     registry::register("conformance.stringValue", text(&request["replacement"])?);
     let replacement = registry::get::<_, String>("conformance.stringValue");
+    registry::register(registry::Keys::GAME_VERSION, text(&request["gameVersion"])?);
+    let game_version = registry::get::<_, String>(registry::Keys::GAME_VERSION);
     registry::unregister("conformance.stringValue");
     let after_remove = registry::is_registered("conformance.stringValue");
     registry::clear_all();
@@ -62,6 +64,6 @@ pub(super) fn execute(family: &str, fixture: &Value) -> RunnerResult<Value> {
         || registry::is_registered("conformance.intValue");
     Ok(
         json!({"initiallyPresent": initially_present, "stored": stored, "replacement": replacement,
-        "afterRemovePresent": after_remove, "afterClearPresent": after_clear}),
+        "afterRemovePresent": after_remove, "afterClearPresent": after_clear, "gameVersion": game_version}),
     )
 }

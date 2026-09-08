@@ -47,7 +47,8 @@
         },
         "replacement": "Skyrim",
         "afterRemovePresent": false,
-        "afterClearPresent": false
+        "afterClearPresent": false,
+        "gameVersion": "NextGen"
       },
       "normalization": {
         "rootRelativePaths": false,
@@ -76,7 +77,8 @@
         },
         "replacement": "Restored",
         "afterRemovePresent": false,
-        "afterClearPresent": false
+        "afterClearPresent": false,
+        "gameVersion": ""
       },
       "normalization": {
         "rootRelativePaths": false,

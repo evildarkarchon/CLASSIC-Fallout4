@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "familyId": "registry-paths",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-registry-core"
+  },
+  "fixtureRoot": "tests/fixtures/registry_paths_conformance",
+  "fixtures": {
+    "populated": "populated.json"
+  },
+  "capabilities": [
+    {
+      "id": "registry-paths.observe",
+      "rustSymbols": [
+        "set_application_dir",
+        "get_application_dir"
+      ],
+      "observationFamilies": [
+        "registry-state"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "populated",
+      "action": "registry-paths.observe",
+      "capabilityIds": [
+        "registry-paths.observe"
+      ],
+      "fixtureRefs": [
+        "populated"
+      ],
+      "input": {
+        "fixtureRef": "populated"
+      },
+      "expected": {
+        "initial": null,
+        "path": "first",
+        "replacement": "second",
+        "afterClear": null,
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

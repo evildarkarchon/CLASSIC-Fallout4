@@ -1,0 +1,4 @@
+{
+  "request": {},
+  "registryYaml": "Version_Registry:\n  versions:\n    - id: FO4_OG\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: OG\n      display_name: Fixture OG\n      docs_name: FixtureDocs\n      steam_id: 7\n      is_vr: false\n      priority: 1\n    - id: FO4_NG\n      game: Fallout4\n      version: \"1.10.984\"\n      short_name: NG\n      display_name: Fixture NG\n      docs_name: FixtureDocs\n      steam_id: 7\n      is_vr: false\n      priority: 1\n    - id: FO4_AE\n      game: Fallout4\n      version: \"1.11.137\"\n      short_name: AE\n      display_name: Fixture AE\n      docs_name: FixtureDocs\n      steam_id: 7\n      is_vr: false\n      priority: 1\n    - id: FO4_VR\n      game: Fallout4\n      version: \"1.2.72\"\n      short_name: VR\n      display_name: Fixture VR\n      docs_name: FixtureDocs\n      steam_id: 7\n      is_vr: true\n      priority: 1\n"
+}

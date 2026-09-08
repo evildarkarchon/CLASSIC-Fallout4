@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "familyId": "settings-cached-docs",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-settings-core"
+  },
+  "fixtureRoot": "tests/fixtures/settings_cached_docs_conformance",
+  "fixtures": {
+    "nested": "nested.json",
+    "empty": "empty.json"
+  },
+  "capabilities": [
+    {
+      "id": "settings-cached-docs.observe",
+      "rustSymbols": [
+        "get_cached"
+      ],
+      "observationFamilies": [
+        "cached-documents"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "nested",
+      "action": "settings-cached-docs.observe",
+      "capabilityIds": [
+        "settings-cached-docs.observe"
+      ],
+      "fixtureRefs": [
+        "nested"
+      ],
+      "input": {
+        "fixtureRef": "nested"
+      },
+      "expected": {
+        "before": null,
+        "cached": [
+          {
+            "name": "caf\u00e9",
+            "enabled": true,
+            "count": 7,
+            "items": [
+              "a",
+              "b"
+            ],
+            "optional": null
+          },
+          "second"
+        ],
+        "afterFileChange": [
+          {
+            "name": "caf\u00e9",
+            "enabled": true,
+            "count": 7,
+            "items": [
+              "a",
+              "b"
+            ],
+            "optional": null
+          },
+          "second"
+        ],
+        "afterInvalidate": null,
+        "files": {
+          "input.yaml": "changed: true\n"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "empty",
+      "action": "settings-cached-docs.observe",
+      "capabilityIds": [
+        "settings-cached-docs.observe"
+      ],
+      "fixtureRefs": [
+        "empty"
+      ],
+      "input": {
+        "fixtureRef": "empty"
+      },
+      "expected": {
+        "before": null,
+        "cached": [],
+        "afterFileChange": [],
+        "afterInvalidate": null,
+        "files": {
+          "input.yaml": "changed: true\n"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

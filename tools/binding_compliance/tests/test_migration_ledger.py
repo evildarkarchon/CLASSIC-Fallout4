@@ -95,7 +95,7 @@ def test_discovery_freezes_every_current_evidence_source() -> None:
     obligations = discover_current_obligations(REPO_ROOT)
 
     assert Counter(entry["sourceKind"] for entry in obligations) == {
-        "parity_row": 2_782,
+        "parity_row": 2_779,
         "runtime_registry_claim": 63,
         "scan_run_contract_variant": 73,
         "scan_run_variant_policy": 73,
@@ -327,7 +327,7 @@ def test_generated_ledger_is_deterministic_and_non_evidentiary() -> None:
 
     assert first == second
     assert first["diagnosticOnly"] is True
-    assert first["sourceSummary"]["total"] == 3_273
+    assert first["sourceSummary"]["total"] == 3_270
     assert "coverage" not in first
     assert "receipts" not in first
     validate_ledger_entries(first, discover_current_obligations(REPO_ROOT))
@@ -340,7 +340,7 @@ def test_markdown_summary_warns_that_the_ledger_grants_no_compliance() -> None:
 
     assert "Diagnostic only" in markdown
     assert "does **not** grant compliance" in markdown
-    assert "3,273" in markdown
+    assert "3,270" in markdown
     assert "Executable conformance and retained analyzers remain blocking" in markdown
 
 

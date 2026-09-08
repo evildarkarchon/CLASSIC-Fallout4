@@ -1,6 +1,6 @@
 # Node Runtime Coverage Summary
 
-- Generated: `2026-09-07T23:44:28.769553+00:00`
+- Generated: `2026-09-08T00:56:36.336081+00:00`
 - Tracked surfaces: **1002**
 - Unmigrated legacy registry claims: **910**
 - Requiring executable receipts: **37**

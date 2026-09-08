@@ -12,6 +12,35 @@ from ..coverage import SourceParityRow
 # Keep participant and class identity explicit: similarly named unrelated methods
 # must never inherit a disposition from this phase-one migration.
 _RETAINED = {
+    # Parsing does not claim binding-only comparison/hash methods; existing
+    # focused binding tests remain their evidence owner.
+    (
+        "game-version-parse",
+        "classic-version-registry-core",
+        "GameVersion",
+        "python",
+    ): frozenset({"__eq__", "__ge__", "__gt__", "__hash__", "__le__", "__lt__"}),
+    # Common identity includes only the metadata also exported by Node.
+    (
+        "fallout4-identity",
+        "classic-version-registry-core",
+        "Fallout4Version",
+        "python",
+    ): frozenset(
+        {
+            "__eq__",
+            "__hash__",
+            "__repr__",
+            "__str__",
+            "display_name",
+            "docs_folder_name",
+            "from_str",
+            "is_standard",
+            "registry_id",
+            "short_name",
+            "xse_acronym",
+        }
+    ),
     # Binding-only representation/equality helpers retain their existing focused
     # smoke assertions; resource classification facts do not prove Python repr.
     (
@@ -59,20 +88,48 @@ _RETAINED = {
         "python",
     ): frozenset(
         {
-            "__init__",
             "get_address_library_filename",
-            "get_all",
             "get_all_exe_hashes",
-            "get_all_for_game",
             "get_all_script_hashes",
             "get_by_short_name",
             "get_by_version",
             "get_correct_versions",
-            "get_crashgen_configs",
-            "get_crashgen_for_version",
             "get_crashgen_versions",
             "get_script_hashes_for_version",
             "get_wrong_versions",
+        }
+    ),
+    # These exact query methods execute in the extended Node/Python registry
+    # pack; they cannot borrow facts from the common CXX-compatible query pack.
+    (
+        "version-registry",
+        "classic-version-registry-core",
+        "VersionRegistry",
+        "node",
+    ): frozenset(
+        {
+            "getAllExeHashes",
+            "getAllScriptHashes",
+            "getScriptHashesForVersion",
+            "getVersionRegistry",
+            "isVersionCompatible",
+        }
+    ),
+    # The complementary common pack owns metadata, enumeration, configuration
+    # and matching; no unknown future method receives an automatic disposition.
+    (
+        "version-registry-details",
+        "classic-version-registry-core",
+        "VersionRegistry",
+        "python",
+    ): frozenset(
+        {
+            "get_by_id",
+            "get_all",
+            "get_all_for_game",
+            "get_crashgen_configs",
+            "get_crashgen_for_version",
+            "match_version",
             "match_version_string",
         }
     ),

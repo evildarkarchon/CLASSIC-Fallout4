@@ -46,6 +46,24 @@ json version_registry_match(const Match& matched) {
                               {"confidence", confidence}, {"message", message}}}, {"error", nullptr}};
 }
 
+/// Preserve all common crash-generator metadata and its empty missing sentinel.
+template <typename Config>
+json version_registry_crashgen(const Config& config) {
+    if (config.version.empty()) return nullptr;
+    return json{{"version", owned_string(config.version)}, {"name", owned_string(config.name)},
+        {"acronym", owned_string(config.acronym)}, {"dllFile", owned_string(config.dll_file)},
+        {"description", owned_string(config.description)}, {"downloadUrl", owned_string(config.download_url)}};
+}
+
+/// Preserve every public extender field and the native found flag.
+template <typename Config>
+json version_registry_xse(const Config& config) {
+    if (!config.found) return nullptr;
+    return json{{"acronym", owned_string(config.acronym)}, {"fullName", owned_string(config.full_name)},
+        {"compatibleVersion", owned_string(config.compatible_version)}, {"loader", owned_string(config.loader)},
+        {"fileCount", config.file_count}};
+}
+
 /// Execute promoted and legacy public operations and inventory all fixture bytes.
 json execute_version_registry_scenario(const json& plan, const json& scenario) {
     const auto reference = scenario.at("input").at("fixtureRef").get<std::string>();
@@ -56,7 +74,7 @@ json execute_version_registry_scenario(const json& plan, const json& scenario) {
     std::ifstream stream(plan.at("fixtures").at(reference).get<std::string>(), std::ios::binary);
     const json fixture = json::parse(stream);
     const auto operation = fixture.at("operation").get<std::string>();
-    if (fixture.size() != 3 || (operation != "lookup" && operation != "match")) {
+    if (fixture.size() != 3 || (operation != "lookup" && operation != "match" && operation != "enumerate" && operation != "crashgen" && operation != "xse")) {
         throw RunnerError("unsupported version registry fixture");
     }
     TemporaryDirectory temporary(plan.at("invocation").at("id").get<std::string>(), scenario.at("id").get<std::string>());
@@ -71,7 +89,33 @@ json execute_version_registry_scenario(const json& plan, const json& scenario) {
     const auto& request = fixture.at("request");
     json observation;
     json legacy;
-    if (operation == "lookup") {
+    if (operation == "enumerate") {
+        json ids = json::array();
+        json old_ids = json::array();
+        for (const auto& id : classic::version_registry::version_registry_get_all_ids()) ids.push_back(owned_string(id));
+        for (const auto& id : classic::game::version_registry_get_all_ids()) old_ids.push_back(owned_string(id));
+        std::sort(ids.begin(), ids.end());
+        std::sort(old_ids.begin(), old_ids.end());
+        json filtered = json::array();
+        for (const auto& info : classic::version_registry::version_registry_get_all_for_game(request.at("game").get<std::string>(), request.at("isVr").get<bool>())) filtered.push_back(owned_string(info.id));
+        std::sort(filtered.begin(), filtered.end());
+        observation = json{{"result", {{"ids", ids}, {"count", classic::version_registry::version_registry_get_all_count()}, {"filteredIds", filtered}}}, {"error", nullptr}};
+        // The legacy namespace exposes enumeration/count, but no filtered query.
+        legacy = json{{"result", {{"ids", old_ids}, {"count", classic::game::version_registry_get_all_count()}, {"filteredIds", filtered}}}, {"error", nullptr}};
+    } else if (operation == "crashgen") {
+        const auto id = request.at("id").get<std::string>();
+        const auto version = request.at("version").get<std::string>();
+        json configs = json::array();
+        json old_configs = json::array();
+        for (const auto& config : classic::version_registry::version_registry_get_crashgen_configs(id)) configs.push_back(version_registry_crashgen(config));
+        for (const auto& config : classic::game::version_registry_get_crashgen_configs(id)) old_configs.push_back(version_registry_crashgen(config));
+        observation = json{{"result", {{"configs", configs}, {"selected", version_registry_crashgen(classic::version_registry::version_registry_get_crashgen_config(id, version))}}}, {"error", nullptr}};
+        legacy = json{{"result", {{"configs", old_configs}, {"selected", version_registry_crashgen(classic::game::version_registry_get_crashgen_config(id, version))}}}, {"error", nullptr}};
+    } else if (operation == "xse") {
+        const auto id = request.at("id").get<std::string>();
+        observation = json{{"result", version_registry_xse(classic::version_registry::version_registry_get_xse_config(id))}, {"error", nullptr}};
+        legacy = json{{"result", version_registry_xse(classic::game::version_registry_get_xse_config(id))}, {"error", nullptr}};
+    } else if (operation == "lookup") {
         const auto id = request.at("id").get<std::string>();
         observation = json{{"result", version_registry_metadata(classic::version_registry::version_registry_get_by_id(id))}, {"error", nullptr}};
         legacy = json{{"result", version_registry_metadata(classic::game::version_registry_get_by_id(id))}, {"error", nullptr}};

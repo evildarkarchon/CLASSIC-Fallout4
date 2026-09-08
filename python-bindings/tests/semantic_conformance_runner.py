@@ -14,6 +14,10 @@ from typing import Any
 
 FAMILIES = {
     "settings-load",
+    "settings-yaml",
+    "settings-validation",
+    "settings-cached-docs",
+    "version-registry-details",
     "xse-operations",
     "game-identity",
     "file-fingerprint",
@@ -21,9 +25,25 @@ FAMILIES = {
     "update-decisions",
     "string-operations",
     "registry-operations",
+    "registry-game",
+    "registry-gui",
+    "registry-context",
+    "registry-keys",
+    "game-version-parse",
+    "game-version-distance",
+    "game-version-order",
+    "fallout4-identity",
+    "fallout4-paths",
+    "fallout4-metadata",
+    "version-registry-values",
+    "registry-paths",
     "web-operations",
     "resource-operations",
     "version-operations",
+    "version-extraction",
+    "version-f4se",
+    "version-pe",
+    "version-pe-path",
     "crash-suspect",
     "crashgen-settings",
     "mod-guidance",
@@ -121,18 +141,43 @@ def _load_plan(path: Path) -> Mapping[str, Any]:
             "path-normalization": {"path-normalization.resolve"},
             "file-fingerprint": {"file-fingerprint.inspect"},
             "settings-load": {"settings-load.execute"},
+            "settings-yaml": {"settings-yaml.execute"},
+            "settings-validation": {"settings-validation.observe"},
+            "settings-cached-docs": {"settings-cached-docs.observe"},
+            "version-registry-details": {"version-registry-details.execute"},
             "xse-operations": {"xse-operations.inspect"},
             "game-identity": {"game-identity.observe"},
             "performance": {"performance.metrics"},
             "update-decisions": {"update-decisions.compare"},
             "string-operations": {"string-operations.execute"},
             "registry-operations": {"registry-operations.execute"},
+            "registry-game": {"registry-game.observe"},
+            "registry-gui": {"registry-gui.observe"},
+            "registry-context": {"registry-context.observe"},
+            "registry-keys": {"registry-keys.observe"},
+            "version-registry-values": {"version-registry-values.execute"},
+            "game-version-parse": {"game-version-parse.observe"},
+            "game-version-distance": {"game-version-distance.observe"},
+            "game-version-order": {"game-version-order.observe"},
+            "fallout4-identity": {"fallout4-identity.observe"},
+            "fallout4-paths": {"fallout4-paths.observe"},
+            "fallout4-metadata": {"fallout4-metadata.observe"},
+            "registry-paths": {"registry-paths.observe"},
             "web-operations": {"web-operations.observe"},
             "resource-operations": {"resource-operations.observe"},
             "version-operations": {"version-operations.observe"},
+            "version-extraction": {"version-extraction.observe"},
+            "version-f4se": {"version-f4se.observe"},
+            "version-pe": {"version-pe.observe"},
+            "version-pe-path": {"version-pe-path.observe"},
             "message-operations": {"message-operations.format"},
             "database-operations": {"database-operations.pool"},
-            "version-registry": {"version-registry.query"},
+            "version-registry": {
+                "version-registry.query",
+                "version-registry.enumerate",
+                "version-registry.crashgen",
+                "version-registry.xse",
+            },
             "scan-game": {"scan-game.validate-ini", "scan-game.validate-enb"},
         }.get(plan["familyId"], actions)
         if scenario.get("action") not in actions:
@@ -428,7 +473,11 @@ def _execute_scenario(
         from database_operations_conformance import observe_database_operations
 
         return observe_database_operations(fixture)
-    if plan["familyId"] == "version-registry":
+    if plan["familyId"] in {
+        "version-registry",
+        "version-registry-details",
+        "version-registry-values",
+    }:
         from version_registry_conformance import observe_version_registry
 
         return observe_version_registry(fixture)
@@ -440,7 +489,35 @@ def _execute_scenario(
         from file_fingerprint_conformance import observe_file_fingerprint
 
         return observe_file_fingerprint(fixture)
-    if plan["familyId"] == "settings-load":
+    if plan["familyId"] in {
+        "registry-paths",
+        "registry-context",
+        "registry-gui",
+        "registry-game",
+    }:
+        from registry_accessors_conformance import observe_registry_accessors
+
+        return observe_registry_accessors(plan["familyId"], fixture)
+    if plan["familyId"] in {
+        "fallout4-paths",
+        "game-version-parse",
+        "fallout4-identity",
+        "fallout4-metadata",
+        "game-version-distance",
+        "game-version-order",
+    }:
+        from version_values_conformance import observe_version_values
+
+        return observe_version_values(plan["familyId"], fixture)
+    if plan["familyId"] == "registry-keys":
+        from registry_keys_conformance import observe_registry_keys
+
+        return observe_registry_keys(fixture)
+    if plan["familyId"] in {"settings-validation", "settings-cached-docs"}:
+        from settings_extended_conformance import observe_settings_extended
+
+        return observe_settings_extended(plan["familyId"], fixture)
+    if plan["familyId"] in {"settings-load", "settings-yaml"}:
         from settings_load_conformance import observe_settings_load
 
         return observe_settings_load(fixture)
@@ -468,6 +545,10 @@ def _execute_scenario(
         "web-operations",
         "resource-operations",
         "version-operations",
+        "version-extraction",
+        "version-f4se",
+        "version-pe",
+        "version-pe-path",
     }:
         from aux_operations_conformance import observe_aux_operations
 

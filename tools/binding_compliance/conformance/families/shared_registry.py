@@ -46,6 +46,7 @@ def _registry_observed(value: Mapping[str, Any]) -> bool:
         "replacement",
         "afterRemovePresent",
         "afterClearPresent",
+        "gameVersion",
     }:
         return False
     stored = value["stored"]
@@ -55,6 +56,7 @@ def _registry_observed(value: Mapping[str, Any]) -> bool:
             for key in ("initiallyPresent", "afterRemovePresent", "afterClearPresent")
         )
         and isinstance(value["replacement"], str)
+        and isinstance(value["gameVersion"], str)
         and isinstance(stored, dict)
         and set(stored) == {"stringValue", "boolValue", "intValue"}
         and isinstance(stored["stringValue"], str)
@@ -97,7 +99,15 @@ def validate_pack(document: Mapping[str, Any], root: Path) -> tuple[Path, ...]:
             )
         else:
             valid = (
-                set(request) == {"stringValue", "boolValue", "intValue", "replacement"}
+                set(request)
+                == {
+                    "stringValue",
+                    "boolValue",
+                    "intValue",
+                    "replacement",
+                    "gameVersion",
+                }
+                and isinstance(request["gameVersion"], str)
                 and isinstance(request["stringValue"], str)
                 and isinstance(request["replacement"], str)
                 and type(request["boolValue"]) is bool
@@ -135,6 +145,7 @@ def coverage_policy(family: str) -> FamilyCoveragePolicy:
             "is_registered",
             "registrySet",
             "registryGet",
+            "registryGetGameVersion",
             "registryRemove",
             "registryClear",
             "registry_set_string",

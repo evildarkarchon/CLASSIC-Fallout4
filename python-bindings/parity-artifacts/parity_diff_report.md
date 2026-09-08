@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-09-07T22:03:39.008183+00:00`
-- Tier-1 contract rows: **1228**
-- Tier-1 matched: **1227**
+- Generated: `2026-09-08T00:57:34.409492+00:00`
+- Tier-1 contract rows: **1225**
+- Tier-1 matched: **1224**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -250,7 +250,7 @@
 | `version_registry.lib.Fallout4Version.__repr__` | `version_registry` | `Fallout4Version` | `classic_version_registry.Fallout4Version.__repr__` | `matched` |
 | `version_registry.lib.Fallout4Version.__str__` | `version_registry` | `Fallout4Version` | `classic_version_registry.Fallout4Version.__str__` | `matched` |
 | `version_registry.lib.Fallout4Version.all` | `version_registry` | `Fallout4Version` | `classic_version_registry.Fallout4Version.all` | `matched` |
-| `version_registry.lib.Fallout4Version.as_str` | `version_registry` | `Fallout4Version` | `classic_version_registry.Fallout4Version.as_str` | `matched` |
+| `version_registry.lib.Fallout4Version.as_str` | `version_registry` | `as_str` | `classic_version_registry.Fallout4Version.as_str` | `matched` |
 | `version_registry.lib.Fallout4Version.display_name` | `version_registry` | `Fallout4Version` | `classic_version_registry.Fallout4Version.display_name` | `matched` |
 | `version_registry.lib.Fallout4Version.docs_folder_name` | `version_registry` | `Fallout4Version` | `classic_version_registry.Fallout4Version.docs_folder_name` | `matched` |
 | `version_registry.lib.Fallout4Version.exe_name` | `version_registry` | `Fallout4Version` | `classic_version_registry.Fallout4Version.exe_name` | `matched` |
@@ -260,7 +260,7 @@
 | `version_registry.lib.Fallout4Version.registry_id` | `version_registry` | `Fallout4Version` | `classic_version_registry.Fallout4Version.registry_id` | `matched` |
 | `version_registry.lib.Fallout4Version.short_name` | `version_registry` | `Fallout4Version` | `classic_version_registry.Fallout4Version.short_name` | `matched` |
 | `version_registry.lib.Fallout4Version.steam_app_id` | `version_registry` | `Fallout4Version` | `classic_version_registry.Fallout4Version.steam_app_id` | `matched` |
-| `version_registry.lib.Fallout4Version.version` | `version_registry` | `Fallout4Version` | `classic_version_registry.Fallout4Version.version` | `matched` |
+| `version_registry.lib.Fallout4Version.version` | `version_registry` | `game_version` | `classic_version_registry.Fallout4Version.version` | `matched` |
 | `version_registry.lib.Fallout4Version.xse_acronym` | `version_registry` | `Fallout4Version` | `classic_version_registry.Fallout4Version.xse_acronym` | `matched` |
 | `shared.lib.GameId` | `shared` | `GameId` | `classic_shared.GameId` | `matched` |
 | `shared.lib.GameId.__eq__` | `shared` | `GameId` | `classic_shared.GameId.__eq__` | `matched` |
@@ -569,7 +569,6 @@
 | `registry.lib.get_application_dir` | `registry` | `get_application_dir` | `classic_registry.get_application_dir` | `matched` |
 | `registry.lib.get_game` | `registry` | `get_game` | `classic_registry.get_game` | `matched` |
 | `registry.lib.get_game_path_gui` | `registry` | `get_game_path_gui` | `classic_registry.get_game_path_gui` | `matched` |
-| `registry.lib.get_game_version@rust` | `registry` | `get_game_version` | `classic_registry.Keys` | `matched` |
 | `registry.lib.get_game_version_string` | `registry` | `get_game_version_string` | `classic_registry.get_game_version_string` | `matched` |
 | `registry.lib.get_local_dir` | `registry` | `get_local_dir` | `classic_registry.get_local_dir` | `matched` |
 | `registry.lib.get_manual_docs_gui` | `registry` | `get_manual_docs_gui` | `classic_registry.get_manual_docs_gui` | `matched` |
@@ -1115,16 +1114,16 @@
 | `version_registry.models.CompatibleRange.contains` | `version_registry` | `CompatibleRange` | `classic_version_registry.CompatibleRange.contains` | `matched` |
 | `version_registry.models.CompatibleRange@rust` | `version_registry` | `CompatibleRange` | `classic_version_registry.CompatibleRange` | `matched` |
 | `version_registry.models.CrashgenConfig` | `version_registry` | `CrashgenConfig` | `classic_version_registry.CrashgenConfig` | `matched` |
-| `version_registry.models.CrashgenConfig.is_compatible_with` | `version_registry` | `CrashgenConfig` | `classic_version_registry.CrashgenConfig.is_compatible_with` | `matched` |
+| `version_registry.models.CrashgenConfig.is_compatible_with` | `version_registry` | `is_compatible_with` | `classic_version_registry.CrashgenConfig.is_compatible_with` | `matched` |
 | `version_registry.models.CrashgenConfig@rust` | `version_registry` | `CrashgenConfig` | `classic_version_registry.CrashgenConfig` | `matched` |
 | `version_registry.models.LogLevel@rust` | `version_registry` | `LogLevel` | `classic_version_registry.UnknownVersionHandling` | `matched` |
 | `version_registry.models.UnknownVersionStrategy@rust` | `version_registry` | `UnknownVersionStrategy` | `classic_version_registry.UnknownVersionHandling` | `matched` |
 | `version_registry.models.VersionInfo.__eq__` | `version_registry` | `VersionInfo` | `classic_version_registry.VersionInfo.__eq__` | `matched` |
 | `version_registry.models.VersionInfo.__hash__` | `version_registry` | `VersionInfo` | `classic_version_registry.VersionInfo.__hash__` | `matched` |
-| `version_registry.models.VersionInfo.get_compatible_crashgens` | `version_registry` | `VersionInfo` | `classic_version_registry.VersionInfo.get_compatible_crashgens` | `matched` |
-| `version_registry.models.VersionInfo.get_crashgen_for_version` | `version_registry` | `VersionInfo` | `classic_version_registry.VersionInfo.get_crashgen_for_version` | `matched` |
-| `version_registry.models.VersionInfo.get_crashgen_version_strings` | `version_registry` | `VersionInfo` | `classic_version_registry.VersionInfo.get_crashgen_version_strings` | `matched` |
-| `version_registry.models.VersionInfo.is_compatible_with` | `version_registry` | `VersionInfo` | `classic_version_registry.VersionInfo.is_compatible_with` | `matched` |
+| `version_registry.models.VersionInfo.get_compatible_crashgens` | `version_registry` | `get_compatible_crashgens` | `classic_version_registry.VersionInfo.get_compatible_crashgens` | `matched` |
+| `version_registry.models.VersionInfo.get_crashgen_for_version` | `version_registry` | `get_crashgen_for_version` | `classic_version_registry.VersionInfo.get_crashgen_for_version` | `matched` |
+| `version_registry.models.VersionInfo.get_crashgen_version_strings` | `version_registry` | `get_crashgen_version_strings` | `classic_version_registry.VersionInfo.get_crashgen_version_strings` | `matched` |
+| `version_registry.models.VersionInfo.is_compatible_with` | `version_registry` | `is_compatible_with` | `classic_version_registry.VersionInfo.is_compatible_with` | `matched` |
 | `version_registry.models.XseConfig` | `version_registry` | `XseConfig` | `classic_version_registry.XseConfig` | `matched` |
 | `version_registry.models.XseConfig@rust` | `version_registry` | `XseConfig` | `classic_version_registry.XseConfig` | `matched` |
 | `version_registry.registry.VersionRegistry.__init__` | `version_registry` | `VersionRegistry` | `classic_version_registry.VersionRegistry.__init__` | `matched` |
@@ -1135,8 +1134,8 @@
 | `version_registry.version.GameVersion.__init__` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion.__init__` | `matched` |
 | `version_registry.version.GameVersion.__le__` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion.__le__` | `matched` |
 | `version_registry.version.GameVersion.__lt__` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion.__lt__` | `matched` |
-| `version_registry.version.GameVersion.same_major` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion.same_major` | `matched` |
-| `version_registry.version.GameVersion.semantic_distance` | `version_registry` | `GameVersion` | `classic_version_registry.GameVersion.semantic_distance` | `matched` |
+| `version_registry.version.GameVersion.same_major` | `version_registry` | `same_major` | `classic_version_registry.GameVersion.same_major` | `matched` |
+| `version_registry.version.GameVersion.semantic_distance` | `version_registry` | `semantic_distance` | `classic_version_registry.GameVersion.semantic_distance` | `matched` |
 | `web.lib.CLASSIC_VERSION@rust` | `web` | `CLASSIC_VERSION` | `classic_web.ModSite` | `matched` |
 | `web.lib.ModSite` | `web` | `ModSite` | `classic_web.ModSite` | `matched` |
 | `web.lib.ModSite.__eq__` | `web` | `ModSite` | `classic_web.ModSite.__eq__` | `matched` |
@@ -1214,9 +1213,7 @@
 | `yaml.lib.dump_yaml@rust` | `settings` | `dump_yaml` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.get_cache_stats@rust` | `settings` | `get_cache_stats` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.get_hashmap_value@rust` | `settings` | `get_hashmap_value` | `classic_settings.YamlCacheStats` | `matched` |
-| `yaml.lib.get_indexmap_value@rust` | `settings` | `get_indexmap_value` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.get_setting@rust` | `settings` | `get_setting` | `classic_settings.YamlCacheStats` | `matched` |
-| `yaml.lib.get_settings_batch@rust` | `settings` | `get_settings_batch` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.get_string_value@rust` | `settings` | `get_string_value` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.get_vec_value@rust` | `settings` | `get_vec_value` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.is_cache_enabled@rust` | `settings` | `is_cache_enabled` | `classic_settings.YamlCacheStats` | `matched` |

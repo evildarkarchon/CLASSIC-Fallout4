@@ -374,3 +374,14 @@ lists their public observations, applicable adapters, transport limitations,
 and retained analyzers. Each pack uses the same authenticated semantic launcher;
 native participants require both MSVC and clang-cl. Existing registry evidence
 remains available until its final cleanup.
+
+## Registry, settings, and version owners
+
+Additional blocking packs exercise registry accessors and keys, YAML lifecycle
+and ordered batch operations, cache retrieval, typed settings validation, version
+extraction, synthetic PE resources, and Version Registry queries. The
+[owner evidence map](../implementation/registry_settings_version_conformance_equivalence.md)
+lists each pack's exact participant set and transport contract. Source-derived
+applicability does not enroll absent binding methods, and method-level facts
+cannot be borrowed by newly added aliases. These additions retain existing
+runtime evidence; expanding a family does not expand its earlier retirement set.

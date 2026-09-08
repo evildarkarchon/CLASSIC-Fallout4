@@ -20,7 +20,13 @@
         "load_settings_async",
         "load_batch_sync",
         "load_batch_async",
-        "is_cached"
+        "is_cached",
+        "invalidate",
+        "clear_cache",
+        "cache_size",
+        "cache_keys",
+        "cache_stats",
+        "reset_cache_stats"
       ],
       "observationFamilies": [
         "settings-load"
@@ -49,7 +55,34 @@
           ],
           "afterClear": [
             false
-          ]
+          ],
+          "cacheState": {
+            "keys": [
+              "conformance.single"
+            ],
+            "size": 1,
+            "invalidated": [
+              true
+            ],
+            "invalidatedAgain": [
+              false
+            ],
+            "afterInvalidate": 0,
+            "stats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 1,
+              "bounded": true
+            },
+            "resetStats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            }
+          }
         },
         "async": {
           "count": 2,
@@ -59,7 +92,34 @@
           ],
           "afterClear": [
             false
-          ]
+          ],
+          "cacheState": {
+            "keys": [
+              "conformance.single"
+            ],
+            "size": 1,
+            "invalidated": [
+              true
+            ],
+            "invalidatedAgain": [
+              false
+            ],
+            "afterInvalidate": 0,
+            "stats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 1,
+              "bounded": true
+            },
+            "resetStats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            }
+          }
         },
         "batchSync": {
           "count": 2,
@@ -71,7 +131,37 @@
           "afterClear": [
             false,
             false
-          ]
+          ],
+          "cacheState": {
+            "keys": [
+              "input.yaml",
+              "second.yaml"
+            ],
+            "size": 2,
+            "invalidated": [
+              true,
+              true
+            ],
+            "invalidatedAgain": [
+              false,
+              false
+            ],
+            "afterInvalidate": 0,
+            "stats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 2,
+              "bounded": true
+            },
+            "resetStats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            }
+          }
         },
         "batchAsync": {
           "count": 2,
@@ -83,7 +173,37 @@
           "afterClear": [
             false,
             false
-          ]
+          ],
+          "cacheState": {
+            "keys": [
+              "input.yaml",
+              "second.yaml"
+            ],
+            "size": 2,
+            "invalidated": [
+              true,
+              true
+            ],
+            "invalidatedAgain": [
+              false,
+              false
+            ],
+            "afterInvalidate": 0,
+            "stats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 2,
+              "bounded": true
+            },
+            "resetStats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            }
+          }
         },
         "files": {
           "input.yaml": "answer: 42\n---\nanswer: 7\n",
@@ -117,7 +237,34 @@
           ],
           "afterClear": [
             false
-          ]
+          ],
+          "cacheState": {
+            "keys": [
+              "conformance.single"
+            ],
+            "size": 1,
+            "invalidated": [
+              true
+            ],
+            "invalidatedAgain": [
+              false
+            ],
+            "afterInvalidate": 0,
+            "stats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 1,
+              "bounded": true
+            },
+            "resetStats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            }
+          }
         },
         "async": {
           "count": 0,
@@ -127,19 +274,88 @@
           ],
           "afterClear": [
             false
-          ]
+          ],
+          "cacheState": {
+            "keys": [
+              "conformance.single"
+            ],
+            "size": 1,
+            "invalidated": [
+              true
+            ],
+            "invalidatedAgain": [
+              false
+            ],
+            "afterInvalidate": 0,
+            "stats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 1,
+              "bounded": true
+            },
+            "resetStats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            }
+          }
         },
         "batchSync": {
           "count": 0,
           "error": null,
           "cached": [],
-          "afterClear": []
+          "afterClear": [],
+          "cacheState": {
+            "keys": [],
+            "size": 0,
+            "invalidated": [],
+            "invalidatedAgain": [],
+            "afterInvalidate": 0,
+            "stats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            },
+            "resetStats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            }
+          }
         },
         "batchAsync": {
           "count": 0,
           "error": null,
           "cached": [],
-          "afterClear": []
+          "afterClear": [],
+          "cacheState": {
+            "keys": [],
+            "size": 0,
+            "invalidated": [],
+            "invalidatedAgain": [],
+            "afterInvalidate": 0,
+            "stats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            },
+            "resetStats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            }
+          }
         },
         "files": {
           "empty.yaml": ""
@@ -175,7 +391,32 @@
           ],
           "afterClear": [
             false
-          ]
+          ],
+          "cacheState": {
+            "keys": [],
+            "size": 0,
+            "invalidated": [
+              false
+            ],
+            "invalidatedAgain": [
+              false
+            ],
+            "afterInvalidate": 0,
+            "stats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            },
+            "resetStats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            }
+          }
         },
         "async": {
           "count": null,
@@ -188,7 +429,32 @@
           ],
           "afterClear": [
             false
-          ]
+          ],
+          "cacheState": {
+            "keys": [],
+            "size": 0,
+            "invalidated": [
+              false
+            ],
+            "invalidatedAgain": [
+              false
+            ],
+            "afterInvalidate": 0,
+            "stats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            },
+            "resetStats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            }
+          }
         },
         "batchSync": {
           "count": null,
@@ -203,7 +469,34 @@
           "afterClear": [
             false,
             false
-          ]
+          ],
+          "cacheState": {
+            "keys": [],
+            "size": 0,
+            "invalidated": [
+              false,
+              false
+            ],
+            "invalidatedAgain": [
+              false,
+              false
+            ],
+            "afterInvalidate": 0,
+            "stats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            },
+            "resetStats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            }
+          }
         },
         "batchAsync": {
           "count": null,
@@ -218,7 +511,34 @@
           "afterClear": [
             false,
             false
-          ]
+          ],
+          "cacheState": {
+            "keys": [],
+            "size": 0,
+            "invalidated": [
+              false,
+              false
+            ],
+            "invalidatedAgain": [
+              false,
+              false
+            ],
+            "afterInvalidate": 0,
+            "stats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            },
+            "resetStats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            }
+          }
         },
         "files": {
           "valid.yaml": "value: 9\n"
@@ -254,7 +574,32 @@
           ],
           "afterClear": [
             false
-          ]
+          ],
+          "cacheState": {
+            "keys": [],
+            "size": 0,
+            "invalidated": [
+              false
+            ],
+            "invalidatedAgain": [
+              false
+            ],
+            "afterInvalidate": 0,
+            "stats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            },
+            "resetStats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            }
+          }
         },
         "async": {
           "count": null,
@@ -267,7 +612,32 @@
           ],
           "afterClear": [
             false
-          ]
+          ],
+          "cacheState": {
+            "keys": [],
+            "size": 0,
+            "invalidated": [
+              false
+            ],
+            "invalidatedAgain": [
+              false
+            ],
+            "afterInvalidate": 0,
+            "stats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            },
+            "resetStats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            }
+          }
         },
         "batchSync": {
           "count": null,
@@ -282,7 +652,34 @@
           "afterClear": [
             false,
             false
-          ]
+          ],
+          "cacheState": {
+            "keys": [],
+            "size": 0,
+            "invalidated": [
+              false,
+              false
+            ],
+            "invalidatedAgain": [
+              false,
+              false
+            ],
+            "afterInvalidate": 0,
+            "stats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            },
+            "resetStats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            }
+          }
         },
         "batchAsync": {
           "count": null,
@@ -297,7 +694,34 @@
           "afterClear": [
             false,
             false
-          ]
+          ],
+          "cacheState": {
+            "keys": [],
+            "size": 0,
+            "invalidated": [
+              false,
+              false
+            ],
+            "invalidatedAgain": [
+              false,
+              false
+            ],
+            "afterInvalidate": 0,
+            "stats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            },
+            "resetStats": {
+              "hits": 0,
+              "misses": 0,
+              "hitRateZero": true,
+              "size": 0,
+              "bounded": true
+            }
+          }
         },
         "files": {
           "valid.yaml": "value: 9\n",

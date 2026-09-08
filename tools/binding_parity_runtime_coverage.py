@@ -56,6 +56,22 @@ VALID_CLASSIFICATIONS = {
     "newly_uncovered",
 }
 
+# #211 retired only these Version Registry rows. Extending the live family in
+# #213 must not silently retire the old runtime tests for newly executed methods;
+# their same-revision evidence remains required until a separate retirement.
+_RETIRED_VERSION_REGISTRY_ROWS = {
+    "node": frozenset({"version-registry-get-by-id", "version-registry-match-version"}),
+    "python": frozenset(
+        {
+            "version-registry-class",
+            "version-registry-get-by-id",
+            "version-registry-match-result-class",
+            "version-registry-match-version",
+            "version-registry-version-info-class",
+        }
+    ),
+}
+
 
 def load_json_file(path: Path) -> dict[str, Any]:
     """Load a JSON file or return an empty registry shape when absent."""
@@ -339,6 +355,11 @@ def build_coverage_summary(
         if migrated is None:
             continue
         mapping, family_id = migrated
+        if (
+            family_id == "version-registry"
+            and mapping["id"] not in _RETIRED_VERSION_REGISTRY_ROWS[binding]
+        ):
+            continue
         operation = None
         if family_id in {"database-operations", "version-registry", "scan-game"}:
             if binding == "node" and mapping.get("nodeKind") == "function":

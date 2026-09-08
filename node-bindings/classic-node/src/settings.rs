@@ -556,23 +556,28 @@ pub fn yaml_set_settings_batch(content: String, settings: serde_json::Value) -> 
 
 /// Extract an order-preserving string-to-string map from YAML using dot-notation key path.
 ///
-/// Internally uses `IndexMap` to preserve YAML key order, then serializes to a JSON object
-/// (which serde_json preserves insertion order for).
+/// Inserts the core `IndexMap` entries directly into a JavaScript object. Non-index
+/// string keys preserve YAML source order; integer-index keys follow JavaScript enumeration rules.
 ///
 /// @param content - Raw YAML string.
 /// @param keyPath - Dot-notation key path.
-/// @returns A Record<string, string> preserving YAML source order.
-#[napi]
-pub fn yaml_get_indexmap_value(content: String, key_path: String) -> Result<serde_json::Value> {
+/// @returns A Record<string, string> preserving source order for non-index keys.
+#[napi(ts_return_type = "any")]
+pub fn yaml_get_indexmap_value<'env>(
+    env: Env,
+    content: String,
+    key_path: String,
+) -> Result<Object<'env>> {
     let ops = YamlOperations::new();
     let yaml = ops.parse_yaml(&content).map_err(yaml_err_to_napi)?;
     let imap = ops.get_indexmap_value(&yaml, &key_path);
 
-    let mut map = serde_json::Map::new();
+    // serde_json's default map sorts keys, so crossing through it loses the core's order.
+    let mut map = Object::new(&env)?;
     for (k, v) in &imap {
-        map.insert(k.clone(), serde_json::Value::String(v.clone()));
+        map.set_named_property(k, v.clone())?;
     }
-    Ok(serde_json::Value::Object(map))
+    Ok(map)
 }
 
 /// Extract a map where values are arrays of strings from YAML using dot-notation key path.

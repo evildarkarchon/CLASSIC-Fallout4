@@ -25,7 +25,9 @@ CXX's missing-value sentinels. Explicit presence checks establish absence in
 Rust/CXX/Python. Node has no public presence query, so its public null-returning
 `registryGet` establishes absence for these exclusively non-null values. The
 pack does not claim cross-language object identity, arbitrary object transport,
-convenience getters or application-directory ownership.
+convenience getters or application-directory ownership. Those operations now
+have separate [registry owner packs](registry_settings_version_conformance_equivalence.md),
+with exact method and key observations and their own adapter applicability.
 
 Game token coverage uses exact source row selectors. It exercises the shared
 CXX `GameId` and `game_id_as_str`, Node `getAllGameIds`, and Python `GameId.as_str`.

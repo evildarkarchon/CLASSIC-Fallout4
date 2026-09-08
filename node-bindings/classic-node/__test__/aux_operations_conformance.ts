@@ -1,3 +1,4 @@
+import { observeVersionExtended } from "./version_extended_conformance";
 import * as classic from "../index.js";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readdirSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -18,6 +19,7 @@ function result(operation: () => string): JsonObject {
 /** Exercise pure public binding operations using only the materialized input request. */
 export function observeAuxOperations(family: string, fixture: JsonObject): JsonObject {
   const request = fixture.request;
+  if (family.startsWith("version-") && request.operation) return observeVersionExtended(fixture);
   if (family === "web-operations") {
     const url = request.url;
     return {

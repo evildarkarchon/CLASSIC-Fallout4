@@ -1513,8 +1513,8 @@
         "ownerModule": "settings",
         "tier": "tier1"
       },
-      "contractCount": 65,
-      "contractIdsHash": "b5a94140f0b729cfc4dae8a8f353d31ec453f112952b85e200707e1f40e327bc",
+      "contractCount": 63,
+      "contractIdsHash": "410c03a73f980e7367b008bfb95f73c20c0a7a0d032cfa7b83410340bb297537",
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "settings-residuals-smoke"
     },
@@ -1528,8 +1528,8 @@
         "ownerModule": "registry",
         "tier": "tier1"
       },
-      "contractCount": 20,
-      "contractIdsHash": "ea1cd78a10bd6405d6c2588809898adf17873ad8bc7514a7ca5c55fe3c66068d",
+      "contractCount": 19,
+      "contractIdsHash": "d73eb1703d015362c5414204c56c002b496bc5705bc81c0a820a0b486b58f25e",
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "registry-residuals-smoke"
     },

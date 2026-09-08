@@ -6378,12 +6378,12 @@ export declare function yamlGetHashmapVecValue(content: string, keyPath: string)
 /**
  * Extract an order-preserving string-to-string map from YAML using dot-notation key path.
  *
- * Internally uses `IndexMap` to preserve YAML key order, then serializes to a JSON object
- * (which serde_json preserves insertion order for).
+ * Inserts the core `IndexMap` entries directly into a JavaScript object. Non-index
+ * string keys preserve YAML source order; integer-index keys follow JavaScript enumeration rules.
  *
  * @param content - Raw YAML string.
  * @param keyPath - Dot-notation key path.
- * @returns A Record<string, string> preserving YAML source order.
+ * @returns A Record<string, string> preserving source order for non-index keys.
  */
 export declare function yamlGetIndexmapValue(content: string, keyPath: string): any
 

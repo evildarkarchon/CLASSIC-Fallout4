@@ -1,5 +1,7 @@
 # Version Registry conformance fixtures
 
+Issue #213 adds enumeration, extender metadata, and crash-generator list/selection scenarios. The shared seed includes real XSE and crash-generator metadata, while absent entries and missing selected versions test explicit absence. All fixtures retain identical YAML for isolated singleton initialization; exact post-call file inventories forbid unintended writes.
+
 These input-only fixtures stage identical `CLASSIC Main.yaml` bytes in an owned
 temporary directory before the first public Version Registry call. Each family
 participant runs serially in a fresh process: the public Rust `OnceLock` therefore

@@ -46,6 +46,12 @@ mod aux_operations;
 mod file_fingerprint;
 #[path = "semantic_conformance/performance.rs"]
 mod performance;
+#[path = "semantic_conformance/registry_accessors.rs"]
+mod registry_accessors;
+#[path = "semantic_conformance/registry_keys.rs"]
+mod registry_keys;
+#[path = "semantic_conformance/settings_extended.rs"]
+mod settings_extended;
 #[path = "semantic_conformance/settings_load.rs"]
 mod settings_load;
 #[path = "semantic_conformance/shared_identity.rs"]
@@ -54,6 +60,10 @@ mod shared_identity;
 mod shared_registry;
 #[path = "semantic_conformance/update_decisions.rs"]
 mod update_decisions;
+#[path = "semantic_conformance/version_extended.rs"]
+mod version_extended;
+#[path = "semantic_conformance/version_values.rs"]
+mod version_values;
 #[path = "semantic_conformance/xse_operations.rs"]
 mod xse_operations;
 
@@ -445,8 +455,25 @@ fn execute(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
         return installed_yaml_data::execute(&fixture);
     }
     match plan["familyId"].as_str() {
+        Some(
+            "game-version-parse"
+            | "game-version-distance"
+            | "game-version-order"
+            | "fallout4-identity"
+            | "fallout4-paths"
+            | "fallout4-metadata",
+        ) => return version_values::execute(&text(&plan["familyId"])?, &fixture),
+        Some("registry-keys") => return registry_keys::execute(&fixture),
         Some("file-fingerprint") => return file_fingerprint::execute(&fixture),
-        Some("settings-load") => return settings_load::execute(&fixture),
+        Some("registry-game" | "registry-gui" | "registry-context" | "registry-paths") => {
+            return registry_accessors::execute(&text(&plan["familyId"])?, &fixture);
+        }
+        Some("settings-validation" | "settings-cached-docs") => {
+            return settings_extended::execute(&text(&plan["familyId"])?, &fixture);
+        }
+        Some("settings-load" | "settings-yaml" | "settings-yaml-batch") => {
+            return settings_load::execute(&fixture);
+        }
         Some("xse-operations") => return xse_operations::execute(&fixture),
         Some("game-identity" | "runtime-access") => {
             return shared_identity::execute(&text(&plan["familyId"])?, &fixture);
@@ -456,12 +483,22 @@ fn execute(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
         Some("string-operations" | "registry-operations") => {
             return shared_registry::execute(&text(&plan["familyId"])?, &fixture);
         }
-        Some("web-operations" | "resource-operations" | "version-operations") => {
+        Some(
+            "web-operations"
+            | "resource-operations"
+            | "version-operations"
+            | "version-extraction"
+            | "version-f4se"
+            | "version-pe"
+            | "version-pe-path",
+        ) => {
             return aux_operations::execute(&text(&plan["familyId"])?, &fixture);
         }
         Some("config-operations") => return config_operations::execute(&fixture),
         Some("database-operations") => return database_operations::execute(&fixture),
-        Some("version-registry") => return version_registry::execute(&fixture),
+        Some("version-registry" | "version-registry-details" | "version-registry-values") => {
+            return version_registry::execute(&fixture);
+        }
         Some("scan-game") => return scan_game::observe(&fixture),
         Some("file-operations") => {
             if scenario["action"] != format!("file-operations.{}", text(&fixture["operation"])?) {

@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "familyId": "version-registry-values",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-version-registry-core"
+  },
+  "fixtureRoot": "tests/fixtures/version_registry_values_conformance",
+  "fixtures": {
+    "inclusive-bounds": "inclusive-bounds.json"
+  },
+  "capabilities": [
+    {
+      "id": "version-registry-values.execute",
+      "rustSymbols": [
+        "CompatibleRange",
+        "get_compatible_crashgens",
+        "is_compatible_with"
+      ],
+      "observationFamilies": [
+        "values"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "inclusive-bounds",
+      "action": "version-registry-values.execute",
+      "capabilityIds": [
+        "version-registry-values.execute"
+      ],
+      "fixtureRefs": [
+        "inclusive-bounds"
+      ],
+      "input": {
+        "fixtureRef": "inclusive-bounds"
+      },
+      "expected": {
+        "result": {
+          "range": [
+            "1.10.160.0",
+            "1.10.170.0"
+          ],
+          "contains": [
+            false,
+            true,
+            true,
+            true,
+            false
+          ],
+          "versionCompatible": [
+            false,
+            true,
+            true,
+            true,
+            false
+          ],
+          "crashgenCompatible": [
+            false,
+            false,
+            true,
+            false,
+            false
+          ],
+          "compatibleCrashgens": [
+            [],
+            [],
+            [
+              "1.2.3"
+            ],
+            [],
+            []
+          ],
+          "defaultCrashgens": [
+            "1.2.3"
+          ],
+          "versions": [
+            "1.2.3"
+          ],
+          "selected": "1.2.3",
+          "missing": null,
+          "equalClone": true,
+          "differentId": false,
+          "hashClone": true
+        },
+        "error": null,
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: CONFORMANCE_STANDARD\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      compatible_range:\n        min: \"1.10.160\"\n        max: \"1.10.170\"\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          compatible_range:\n            min: \"1.10.162\"\n            max: \"1.10.164\"\n          download_url: https://example.invalid/crashgen\n    - id: CONFORMANCE_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: CONFORMANCE_STANDARD\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

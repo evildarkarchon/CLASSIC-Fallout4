@@ -11,6 +11,7 @@ import pytest
 from conformance.coverage import (
     derive_observed_fact_ids,
     derive_row_coverage,
+    load_retained_analyzer_kinds,
     load_source_parity_rows,
 )
 from conformance.families.version_registry import VERSION_REGISTRY_COVERAGE_POLICY
@@ -65,9 +66,24 @@ def test_version_registry_fixtures_seed_one_isolated_registry() -> None:
 def test_version_registry_credit_stays_at_executed_operations() -> None:
     """Lookup and matching cannot prove unrelated registry enumeration or mutation."""
     for predicate in VERSION_REGISTRY_COVERAGE_POLICY.predicates:
+        if predicate.action != "version-registry.query":
+            continue
         assert not predicate.covers_runtime_operation("get_all")
         assert not predicate.covers_runtime_operation("get_all_for_game")
         assert not predicate.covers_runtime_operation("get_crashgen_versions")
+        assert not predicate.covers_runtime_operation("future_registry_operation")
+
+
+def test_remaining_registry_queries_have_separate_executable_facts() -> None:
+    """Enumeration and configuration lookups cannot borrow metadata lookup credit."""
+    document = load_and_validate_pack(ROOT, PACK).document()
+    actions = {scenario["action"] for scenario in document["scenarios"]}
+    assert {
+        "version-registry.enumerate",
+        "version-registry.crashgen",
+        "version-registry.xse",
+    } <= actions
+    for predicate in VERSION_REGISTRY_COVERAGE_POLICY.predicates:
         assert not predicate.covers_runtime_operation("future_registry_operation")
 
 
@@ -88,7 +104,12 @@ def test_version_registry_receipt_lifecycle_fails_closed(
     assert all(scenario.result == "pass" for scenario in report.scenarios)
     rows = load_source_parity_rows(ROOT)
     coverage = derive_row_coverage(
-        document, rows, policy, (report,), scope_participant_id=participant
+        document,
+        rows,
+        policy,
+        (report,),
+        scope_participant_id=participant,
+        retained_analyzers=load_retained_analyzer_kinds(ROOT),
     )
     assert coverage.rows
     assert not coverage.failures
@@ -105,7 +126,12 @@ def test_version_registry_receipt_lifecycle_fails_closed(
         runtime_operation="future_registry_operation",
     )
     expanded = derive_row_coverage(
-        document, (*rows, added), policy, (report,), scope_participant_id=participant
+        document,
+        (*rows, added),
+        policy,
+        (report,),
+        scope_participant_id=participant,
+        retained_analyzers=load_retained_analyzer_kinds(ROOT),
     )
     assert [failure.obligation_id for failure in expanded.failures] == [
         added.obligation_id

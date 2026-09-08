@@ -15,6 +15,9 @@ fn result<T: std::fmt::Display, E: std::fmt::Display>(value: Result<T, E>) -> Va
 /// Execute fixture-selected owner operations without access to authored expectations.
 pub(super) fn execute(family: &str, fixture: &Value) -> RunnerResult<Value> {
     let request = &fixture["request"];
+    if family.starts_with("version-") && request.get("operation").is_some() {
+        return super::version_extended::execute(fixture);
+    }
     match family {
         "web-operations" => {
             use classic_web_core as web;

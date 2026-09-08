@@ -1,6 +1,6 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-09-07T23:44:28.757675+00:00`
+- Generated: `2026-09-08T00:56:36.324604+00:00`
 - Tier-1 contract rows: **910**
 - Tier-1 matched: **903**
 - Tier-1 missing Rust: **0**
@@ -226,14 +226,14 @@
 | `config-settings-cache-stats-interface` | `config` | `config` | `SettingsCacheStats` | `matched` |
 | `config-load-settings-sync` | `config` | `load_settings_sync` | `loadSettingsSync` | `matched` |
 | `config-load-settings-async` | `config` | `load_settings_async` | `loadSettingsAsync` | `matched` |
-| `config-get-cached` | `config` | `config` | `getCached` | `matched` |
+| `config-get-cached` | `config` | `get_cached` | `getCached` | `matched` |
 | `config-is-cached` | `config` | `is_cached` | `isCached` | `matched` |
-| `config-invalidate-settings` | `config` | `config` | `invalidateSettings` | `matched` |
-| `config-clear-settings-cache` | `config` | `config` | `clearSettingsCache` | `matched` |
-| `config-settings-cache-size` | `config` | `config` | `settingsCacheSize` | `matched` |
-| `config-settings-cache-keys` | `config` | `config` | `settingsCacheKeys` | `matched` |
-| `config-get-settings-cache-stats` | `config` | `config` | `getSettingsCacheStats` | `matched` |
-| `config-reset-settings-cache-stats` | `config` | `config` | `resetSettingsCacheStats` | `matched` |
+| `config-invalidate-settings` | `config` | `invalidate` | `invalidateSettings` | `matched` |
+| `config-clear-settings-cache` | `config` | `clear_cache` | `clearSettingsCache` | `matched` |
+| `config-settings-cache-size` | `config` | `cache_size` | `settingsCacheSize` | `matched` |
+| `config-settings-cache-keys` | `config` | `cache_keys` | `settingsCacheKeys` | `matched` |
+| `config-get-settings-cache-stats` | `config` | `cache_stats` | `getSettingsCacheStats` | `matched` |
+| `config-reset-settings-cache-stats` | `config` | `reset_cache_stats` | `resetSettingsCacheStats` | `matched` |
 | `config-validate-settings-path` | `path` | `validate_settings_path` | `validateSettingsPath` | `matched` |
 | `config-validate-settings-paths` | `path` | `validate_settings_paths` | `validateSettingsPaths` | `matched` |
 | `config-yaml-document-class` | `config` | `YamlOperations` | `YamlDocument` | `matched` |
@@ -253,20 +253,20 @@
 | `config-yaml-clear-cache` | `config` | `clear_global_yaml_cache` | `yamlClearCache` | `matched` |
 | `config-yaml-get-cache-stats` | `config` | `clear_global_yaml_cache` | `yamlGetCacheStats` | `matched` |
 | `version-registry-get-by-id` | `version_registry` | `VersionInfo` | `getVersionById` | `matched` |
-| `version-registry-get-by-version` | `version_registry` | `VersionInfo` | `getVersionByVersionString` | `matched` |
-| `version-registry-get-by-short-name` | `version_registry` | `VersionInfo` | `getVersionByShortName` | `matched` |
-| `version-registry-get-all` | `version_registry` | `VersionRegistry` | `getAllVersions` | `matched` |
-| `version-registry-get-all-for-game` | `version_registry` | `VersionRegistry` | `getAllVersionsForGame` | `matched` |
-| `version-registry-get-correct-versions` | `version_registry` | `VersionRegistry` | `getCorrectVersions` | `matched` |
-| `version-registry-get-wrong-versions` | `version_registry` | `VersionRegistry` | `getWrongVersions` | `matched` |
+| `version-registry-get-by-version` | `version_registry` | `get_by_version` | `getVersionByVersionString` | `matched` |
+| `version-registry-get-by-short-name` | `version_registry` | `get_by_short_name` | `getVersionByShortName` | `matched` |
+| `version-registry-get-all` | `version_registry` | `get_all` | `getAllVersions` | `matched` |
+| `version-registry-get-all-for-game` | `version_registry` | `get_all_for_game` | `getAllVersionsForGame` | `matched` |
+| `version-registry-get-correct-versions` | `version_registry` | `get_correct_versions` | `getCorrectVersions` | `matched` |
+| `version-registry-get-wrong-versions` | `version_registry` | `get_wrong_versions` | `getWrongVersions` | `matched` |
 | `version-registry-match-version` | `version_registry` | `MatchResult` | `matchVersion` | `matched` |
-| `version-registry-address-lib-filename` | `version_registry` | `VersionRegistry` | `getAddressLibraryFilename` | `matched` |
-| `version-registry-crashgen-versions` | `version_registry` | `CrashgenConfig` | `getCrashgenVersions` | `matched` |
-| `version-registry-crashgen-version-strings` | `version_registry` | `CrashgenConfig` | `getCrashgenVersionStrings` | `matched` |
-| `version-registry-crashgen-for-version` | `version_registry` | `CrashgenConfig` | `getCrashgenForVersion` | `matched` |
-| `version-registry-is-compatible` | `version_registry` | `GameVersion` | `isVersionCompatible` | `matched` |
-| `version-registry-parse-version` | `version_registry` | `GameVersion` | `parseGameVersion` | `matched` |
-| `version-registry-version-distance` | `version_registry` | `GameVersion` | `gameVersionDistance` | `matched` |
+| `version-registry-address-lib-filename` | `version_registry` | `get_address_library_filename` | `getAddressLibraryFilename` | `matched` |
+| `version-registry-crashgen-versions` | `version_registry` | `get_crashgen_versions` | `getCrashgenVersions` | `matched` |
+| `version-registry-crashgen-version-strings` | `version_registry` | `get_crashgen_version_strings` | `getCrashgenVersionStrings` | `matched` |
+| `version-registry-crashgen-for-version` | `version_registry` | `get_crashgen_for_version` | `getCrashgenForVersion` | `matched` |
+| `version-registry-is-compatible` | `version_registry` | `VersionRegistry` | `isVersionCompatible` | `matched` |
+| `version-registry-parse-version` | `version_registry` | `parse` | `parseGameVersion` | `matched` |
+| `version-registry-version-distance` | `version_registry` | `semantic_distance` | `gameVersionDistance` | `matched` |
 | `version-registry-promote-fallout4-version-info` | `version_registry` | `VersionInfo` | `Fallout4VersionInfo` | `matched` |
 | `version-registry-promote-js-address-lib-info` | `version_registry` | `AddressLibFormat` | `JsAddressLibInfo` | `matched` |
 | `version-registry-promote-js-address-library-config` | `version_registry` | `AddressLibraryConfig` | `JsAddressLibraryConfig` | `matched` |
@@ -285,22 +285,22 @@
 | `version-registry-promote-check-crashgen-full` | `version_registry` | `Result` | `checkCrashgenFull` | `matched` |
 | `version-registry-promote-compare-versions` | `version_registry` | `compare_versions` | `compareVersions` | `matched` |
 | `version-registry-promote-detect-xse-version` | `version_registry` | `XseConfig` | `detectXseVersion` | `matched` |
-| `version-registry-promote-extract-all-versions` | `version_registry` | `GameVersion` | `extractAllVersions` | `matched` |
-| `version-registry-promote-extract-version-from-filename` | `version_registry` | `GameVersion` | `extractVersionFromFilename` | `matched` |
-| `version-registry-promote-extract-version-from-log` | `version_registry` | `GameVersion` | `extractVersionFromLog` | `matched` |
+| `version-registry-promote-extract-all-versions` | `version_registry` | `extract_all_versions` | `extractAllVersions` | `matched` |
+| `version-registry-promote-extract-version-from-filename` | `version_registry` | `extract_version_from_filename` | `extractVersionFromFilename` | `matched` |
+| `version-registry-promote-extract-version-from-log` | `version_registry` | `extract_version_from_log` | `extractVersionFromLog` | `matched` |
 | `version-registry-promote-format-version` | `version_registry` | `format_version` | `formatVersion` | `matched` |
 | `version-registry-promote-get-address-lib-info` | `version_registry` | `CompatibleRange` | `getAddressLibInfo` | `matched` |
-| `version-registry-promote-get-all-fallout4-versions` | `version_registry` | `VersionRegistry` | `getAllFallout4Versions` | `matched` |
+| `version-registry-promote-get-all-fallout4-versions` | `version_registry` | `Fallout4Version` | `getAllFallout4Versions` | `matched` |
 | `version-registry-promote-get-classic-version` | `version_registry` | `VersionRegistry` | `getClassicVersion` | `matched` |
-| `version-registry-promote-get-fallout4-version-info` | `version_registry` | `VersionInfo` | `getFallout4VersionInfo` | `matched` |
-| `version-registry-promote-get-script-hashes-for-version` | `version_registry` | `XseConfig` | `getScriptHashesForVersion` | `matched` |
-| `version-registry-promote-get-unknown-version-default` | `version_registry` | `UnknownVersionStrategy` | `getUnknownVersionDefault` | `matched` |
-| `version-registry-promote-get-unknown-version-handling` | `version_registry` | `LogLevel` | `getUnknownVersionHandling` | `matched` |
+| `version-registry-promote-get-fallout4-version-info` | `version_registry` | `Fallout4Version` | `getFallout4VersionInfo` | `matched` |
+| `version-registry-promote-get-script-hashes-for-version` | `version_registry` | `VersionRegistry` | `getScriptHashesForVersion` | `matched` |
+| `version-registry-promote-get-unknown-version-default` | `version_registry` | `UnknownVersionHandling` | `getUnknownVersionDefault` | `matched` |
+| `version-registry-promote-get-unknown-version-handling` | `version_registry` | `unknown_version_handling` | `getUnknownVersionHandling` | `matched` |
 | `version-registry-promote-get-version` | `version_registry` | `VersionRegistry` | `getVersion` | `matched` |
-| `version-registry-promote-get-version-registry` | `version_registry` | `get_version_registry` | `getVersionRegistry` | `matched` |
-| `version-registry-promote-is-known-fallout4-version` | `version_registry` | `GameVersion` | `isKnownFallout4Version` | `matched` |
+| `version-registry-promote-get-version-registry` | `version_registry` | `VersionRegistry` | `getVersionRegistry` | `matched` |
+| `version-registry-promote-is-known-fallout4-version` | `version_registry` | `is_known_fallout4_version` | `isKnownFallout4Version` | `matched` |
 | `version-registry-promote-parse-version` | `version_registry` | `parse_version` | `parseVersion` | `matched` |
-| `version-registry-promote-registry-get-game-version` | `version_registry` | `VersionRegistry` | `registryGetGameVersion` | `matched` |
+| `version-registry-promote-registry-get-game-version` | `version_registry` | `get` | `registryGetGameVersion` | `matched` |
 | `version_registry.MatchConfidence@rust` | `version_registry` | `MatchConfidence@rust` | `None` | `matched` |
 | `version-registry-promote-try-parse-version` | `version_registry` | `try_parse_version` | `tryParseVersion` | `matched` |
 | `aux-phase4a-backup-manager` | `aux` | `BackupManager` | `BackupManager` | `matched` |
@@ -442,9 +442,9 @@
 | `version-registry-phase4c-js-match-result` | `version_registry` | `MatchResult` | `JsMatchResult` | `matched` |
 | `aux-phase4c-calculate-text-similarity` | `aux` | `calculate_similarity` | `calculateTextSimilarity` | `matched` |
 | `aux-phase4c-check-drive-exists` | `aux` | `check_drive_exists` | `checkDriveExists` | `matched` |
-| `version-registry-phase4c-get-all-exe-hashes` | `version_registry` | `get_version_registry` | `getAllExeHashes` | `matched` |
+| `version-registry-phase4c-get-all-exe-hashes` | `version_registry` | `VersionRegistry` | `getAllExeHashes` | `matched` |
 | `aux-phase4c-get-all-game-ids` | `aux` | `GameId` | `getAllGameIds` | `matched` |
-| `version-registry-phase4c-get-all-script-hashes` | `version_registry` | `get_version_registry` | `getAllScriptHashes` | `matched` |
+| `version-registry-phase4c-get-all-script-hashes` | `version_registry` | `VersionRegistry` | `getAllScriptHashes` | `matched` |
 | `aux-phase4c-get-game-name` | `aux` | `GameId` | `getGameName` | `matched` |
 | `scanlog.settings_validator.ConfigIssue@rust` | `scanlog` | `ConfigIssue@rust` | `None` | `matched` |
 | `scanlog.crashgen_registry.CrashgenEntry@rust` | `scanlog` | `CrashgenEntry@rust` | `None` | `matched` |

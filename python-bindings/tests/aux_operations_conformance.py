@@ -19,6 +19,10 @@ def _result(operation: Callable[[], str]) -> dict[str, Any]:
 def observe_aux_operations(family: str, fixture: Mapping[str, Any]) -> dict[str, Any]:
     """Call only public operations using authored inputs, never pack expectations."""
     request = fixture["request"]
+    if family.startswith("version-") and "operation" in request:
+        from version_extended_conformance import observe_version_extended
+
+        return observe_version_extended(fixture)
     if family == "web-operations":
         import classic_web as web
 

@@ -74,6 +74,7 @@ def _invalid(observation: Mapping[str, Any]) -> bool:
 
 _LOOKUP_OPERATIONS = (
     None,
+    "__init__",
     "get_by_id",
     "get_version_by_id",
     "getVersionById",
@@ -82,12 +83,106 @@ _LOOKUP_OPERATIONS = (
 _MATCH_OPERATIONS = (
     None,
     "match_version",
+    "match_version_string",
     "matchVersion",
     "version_registry_match_version",
 )
+
+
+def _configuration(value: object, keys: set[str]) -> bool:
+    """Require every transported configuration field without guessing absent values."""
+    return (
+        isinstance(value, Mapping)
+        and set(value) == keys
+        and all(isinstance(item, str) for item in value.values())
+    )
+
+
+def _remaining(operation: str, observation: Mapping[str, Any]) -> bool:
+    """Keep enumeration and configuration facts separate from metadata lookup."""
+    if not _complete(observation) or observation["error"] is not None:
+        return False
+    result = observation["result"]
+    if operation == "xse":
+        return result is None or (
+            isinstance(result, Mapping)
+            and set(result)
+            == {"acronym", "fullName", "compatibleVersion", "loader", "fileCount"}
+            and type(result["fileCount"]) is int
+            and result["fileCount"] >= 0
+            and all(
+                isinstance(value, str)
+                for key, value in result.items()
+                if key != "fileCount"
+            )
+        )
+    if not isinstance(result, Mapping):
+        return False
+    if operation == "enumerate":
+        return set(result) == {"ids", "count", "filteredIds"} and (
+            type(result["count"]) is int
+            and isinstance(result["ids"], list)
+            and isinstance(result["filteredIds"], list)
+            and result["count"] == len(result["ids"])
+            and all(
+                isinstance(item, str) for item in result["ids"] + result["filteredIds"]
+            )
+        )
+    keys = {"version", "name", "acronym", "dllFile", "description", "downloadUrl"}
+    return set(result) == {"configs", "selected"} and (
+        isinstance(result["configs"], list)
+        and all(_configuration(item, keys) for item in result["configs"])
+        and (result["selected"] is None or _configuration(result["selected"], keys))
+    )
+
+
 VERSION_REGISTRY_COVERAGE_POLICY = FamilyCoveragePolicy(
     "version-registry",
     (
+        *(
+            CoveragePredicate(
+                id="version-registry." + operation,
+                capability_id="version-registry." + operation,
+                action="version-registry." + operation,
+                observation_family="values",
+                rust_symbols=symbols,
+                matches=partial(_remaining, operation),
+                runtime_operations=operations,
+            )
+            for operation, symbols, operations in (
+                (
+                    "enumerate",
+                    ("get_all", "get_all_for_game", "VersionRegistry"),
+                    (
+                        "get_all",
+                        "get_all_for_game",
+                        "getAllVersions",
+                        "getAllVersionsForGame",
+                        "version_registry_get_all_ids",
+                        "version_registry_get_all_count",
+                        "version_registry_get_all_for_game",
+                    ),
+                ),
+                (
+                    "crashgen",
+                    (
+                        "get_crashgen_versions",
+                        "get_crashgen_for_version",
+                        "VersionRegistry",
+                    ),
+                    (
+                        "get_crashgen_configs",
+                        "get_crashgen_for_version",
+                        "VersionInfo.get_crashgen_for_version",
+                        "getCrashgenVersions",
+                        "getCrashgenForVersion",
+                        "version_registry_get_crashgen_configs",
+                        "version_registry_get_crashgen_config",
+                    ),
+                ),
+                ("xse", ("XseConfig",), (None, "version_registry_get_xse_config")),
+            )
+        ),
         *(
             CoveragePredicate(
                 id="version-registry." + name,

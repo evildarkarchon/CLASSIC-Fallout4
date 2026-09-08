@@ -28,6 +28,11 @@ packs with independent expectations and real adapter receipts. The
 records covered operations, adapter limits, and retained runtime/structural
 evidence; existing registry loaders remain available.
 
+Registry, settings, and version owner packs also execute convenience accessors,
+cache and YAML operations, version extraction and synthetic PE resources against
+test-owned state. Their [evidence map](docs/implementation/registry_settings_version_conformance_equivalence.md)
+records exact adapter applicability, transport limits, and retained checks.
+
 User Settings opening, typed snapshots, caller-controlled bootstrap, update preview/commit, and migration planning/apply/restore require executable receipts across Rust, CXX, Node, and Python. The shared compatibility oracle checks structured rejections, stale revisions, source bytes, reversible plans, exact retained backups, and durable effects, including unknown-entry preservation after commits. Maintained CLI, GUI, and TUI settings seams have separate consumer obligations. The existing corpus, Rust ownership audit, source parity, declarations, stubs, and negative checks remain blocking; registry claims alone cannot cover migrated settings rows. See the [same-revision evidence map](docs/implementation/user_settings_conformance_equivalence.md).
 
 Crash Suspect, Crashgen Settings, Mod Guidance, FormID lookup, Named Record, and Plugin Evidence also require blocking semantic receipts through Rust, Node, Python, and CXX on both MSVC and clang-cl. Their [focused equivalence map](docs/implementation/semantic_conformance_equivalence.md) records shared fixture ownership and retained diagnostic tests. Migrated fixture-backed registry claims and duplicate positive assertions are retired according to the [retirement evidence map](docs/implementation/fixture_evidence_retirement.md); unmigrated operations retain their existing evidence and shared loaders.

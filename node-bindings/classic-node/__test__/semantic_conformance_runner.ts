@@ -20,7 +20,13 @@ import { observeFileOperations } from "./file_operations_conformance.js";
 import { observePathMessage } from "./path_message_conformance.js";
 
 type JsonObject = Record<string, any>;
-const families = ["settings-load", "xse-operations", "game-identity", "runtime-access", "file-fingerprint", "performance", "update-decisions", "string-operations", "registry-operations", "web-operations", "resource-operations", "version-operations", "crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary", "config-operations", "file-operations", "path-operations", "path-normalization", "message-operations", "database-operations", "version-registry", "scan-game"];
+import { observeRegistryAccessors } from "./registry_accessors_conformance";
+
+import { observeSettingsExtended } from "./settings_extended_conformance";
+
+import { observeVersionValues } from "./version_values_conformance";
+
+const families = ["game-version-parse", "game-version-distance", "fallout4-identity", "settings-yaml-batch", "settings-yaml", "settings-cached-docs", "version-registry-details", "version-extraction", "version-pe", "version-pe-path", "registry-game", "registry-paths", "settings-load", "xse-operations", "game-identity", "runtime-access", "file-fingerprint", "performance", "update-decisions", "string-operations", "registry-operations", "web-operations", "resource-operations", "version-operations", "crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary", "config-operations", "file-operations", "path-operations", "path-normalization", "message-operations", "database-operations", "version-registry", "scan-game"];
 
 /** Reject malformed invocation objects before invoking native operations. */
 function object(value: unknown, label: string): JsonObject {
@@ -56,6 +62,15 @@ async function loadPlan(path: string): Promise<JsonObject> {
     }
     const operationActions: Record<string, string[]> = {
       "settings-load": ["settings-load.execute"],
+      "settings-yaml": ["settings-yaml.execute"],
+      "game-version-parse": ["game-version-parse.observe"],
+      "game-version-distance": ["game-version-distance.observe"],
+      "fallout4-identity": ["fallout4-identity.observe"],
+
+      "settings-yaml-batch": ["settings-yaml-batch.execute"],
+      "settings-cached-docs": ["settings-cached-docs.observe"],
+      "version-registry-details": ["version-registry-details.execute"],
+
       "xse-operations": ["xse-operations.inspect"],
       "game-identity": ["game-identity.observe"],
       "runtime-access": ["runtime-access.observe"],
@@ -64,16 +79,22 @@ async function loadPlan(path: string): Promise<JsonObject> {
       "update-decisions": ["update-decisions.compare"],
       "string-operations": ["string-operations.execute"],
       "registry-operations": ["registry-operations.execute"],
+      "registry-game": ["registry-game.observe"],
+      "registry-paths": ["registry-paths.observe"],
       "web-operations": ["web-operations.observe"],
       "resource-operations": ["resource-operations.observe"],
       "version-operations": ["version-operations.observe"],
+      "version-extraction": ["version-extraction.observe"],
+      "version-pe": ["version-pe.observe"],
+      "version-pe-path": ["version-pe-path.observe"],
+
       "config-operations": ["config-operations.load-explicit"],
       "file-operations": ["file-operations.read-text", "file-operations.write-text"],
       "path-operations": ["path-operations.validate"],
       "path-normalization": ["path-normalization.resolve"],
       "message-operations": ["message-operations.format"],
       "database-operations": ["database-operations.pool"],
-      "version-registry": ["version-registry.query"],
+      "version-registry": ["version-registry.query", "version-registry.enumerate", "version-registry.crashgen", "version-registry.xse"],
       "scan-game": ["scan-game.validate-ini", "scan-game.validate-enb"],
     };
     const actions = operationActions[plan.familyId] ?? (["config-vocabulary", "scan-run-vocabulary"].includes(plan.familyId) ? ["vocabulary.resolve"]
@@ -221,16 +242,19 @@ async function executeScenario(plan: JsonObject, scenario: JsonObject): Promise<
   }
   if (plan.familyId === "config-operations") return observeConfigOperations(fixture);
   if (plan.familyId === "database-operations") return observeDatabaseOperations(fixture);
-  if (plan.familyId === "version-registry") return observeVersionRegistry(fixture);
+  if (["version-registry", "version-registry-details"].includes(plan.familyId)) return observeVersionRegistry(fixture);
   if (plan.familyId === "scan-game") return observeScanGame(fixture);
   if (plan.familyId === "file-fingerprint") return observeFileFingerprint(fixture);
-  if (plan.familyId === "settings-load") return observeSettingsLoad(fixture);
+  if (["registry-game", "registry-paths"].includes(plan.familyId)) return observeRegistryAccessors(plan.familyId, fixture);
+  if (["game-version-parse", "game-version-distance", "fallout4-identity"].includes(plan.familyId)) return observeVersionValues(plan.familyId, fixture);
+  if (plan.familyId === "settings-cached-docs") return observeSettingsExtended(plan.familyId, fixture);
+  if (["settings-load", "settings-yaml", "settings-yaml-batch"].includes(plan.familyId)) return observeSettingsLoad(fixture);
   if (plan.familyId === "xse-operations") return observeXseOperations(fixture);
   if (["game-identity", "runtime-access"].includes(plan.familyId)) return observeSharedIdentity(plan.familyId, fixture);
   if (plan.familyId === "performance") return observePerformance(fixture);
   if (plan.familyId === "update-decisions") return observeUpdateDecisions(fixture);
   if (["string-operations", "registry-operations"].includes(plan.familyId)) return observeSharedRegistry(plan.familyId, fixture);
-  if (["web-operations", "resource-operations", "version-operations"].includes(plan.familyId)) return observeAuxOperations(plan.familyId, fixture);
+  if (["web-operations", "resource-operations", "version-operations", "version-extraction", "version-pe", "version-pe-path"].includes(plan.familyId)) return observeAuxOperations(plan.familyId, fixture);
   if (plan.familyId === "file-operations") {
     if (scenario.action !== `file-operations.${fixture.operation}`) throw new Error("file action disagrees with fixture operation");
     return observeFileOperations(fixture);
