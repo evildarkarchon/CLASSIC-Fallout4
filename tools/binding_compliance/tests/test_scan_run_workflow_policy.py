@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 
 import pytest
+from conformance import workflow_policy
 from conformance.workflow_policy import (
     WorkflowPolicyError,
     validate_scan_run_workflow_policy,
@@ -18,6 +19,64 @@ def test_repository_workflows_keep_every_promoted_execution_blocking() -> None:
     """Legacy and receipt gates dual-run while diagnostics always upload."""
 
     validate_scan_run_workflow_policy(REPO_ROOT)
+
+
+@pytest.mark.parametrize(
+    "participant", ("rust", "cxx", "node", "python", "cli", "gui", "tui")
+)
+def test_policy_catalog_cannot_omit_a_required_participant(
+    monkeypatch: pytest.MonkeyPatch, participant: str
+) -> None:
+    """Deleting audit entries cannot silently remove native CI obligations."""
+
+    monkeypatch.setattr(
+        workflow_policy,
+        "_EXECUTION_POLICIES",
+        tuple(
+            policy
+            for policy in workflow_policy._EXECUTION_POLICIES
+            if policy.participant_id != participant
+        ),
+    )
+    with pytest.raises(
+        WorkflowPolicyError, match="missing required execution policies"
+    ):
+        validate_scan_run_workflow_policy(REPO_ROOT)
+
+
+def test_new_applicable_execution_automatically_requires_ci_policy(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An expanded shared denominator cannot borrow an existing family's gate."""
+
+    required = workflow_policy._required_execution_keys(REPO_ROOT)
+    required.add(("new-shared-family", "cxx", "windows-msvc"))
+    monkeypatch.setattr(workflow_policy, "_required_execution_keys", lambda _: required)
+    with pytest.raises(WorkflowPolicyError, match="new-shared-family"):
+        validate_scan_run_workflow_policy(REPO_ROOT)
+
+
+def test_native_policy_cannot_drop_compiler_denominator(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Removing a matrix from the audit must fail even if workflow text remains."""
+
+    from dataclasses import replace
+
+    monkeypatch.setattr(
+        workflow_policy,
+        "_EXECUTION_POLICIES",
+        tuple(
+            replace(policy, matrix_marker=None)
+            if policy.participant_id == "cxx"
+            else policy
+            for policy in workflow_policy._EXECUTION_POLICIES
+        ),
+    )
+    with pytest.raises(
+        WorkflowPolicyError, match="missing required execution policies"
+    ):
+        validate_scan_run_workflow_policy(REPO_ROOT)
 
 
 @pytest.mark.parametrize(

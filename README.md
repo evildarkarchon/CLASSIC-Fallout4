@@ -22,6 +22,12 @@ See the [Workspace Migration Matrix](docs/workspace-migration-matrix.md) for old
 
 The [Binding Compliance Suite](docs/api/binding-compliance-suite.md) documents contributor validation. Crash Log Scan Run coverage uses blocking executable adapter and frontend receipts. Its copied acknowledgement lists and positive source markers are retired; fixture expectations, Rust variant inventory checks, negative export audits, and internal fault analyzers remain required.
 
+Repository-wide conformance requires the suite's `full` profile with receipts for
+every tracked family and applicable instance, plus all retained gates. Source-only
+profiles make narrower claims. The migration ledger remains until the
+[remaining runtime obligations](docs/implementation/binding_compliance/retirement_readiness.md)
+have evidence; missing proof fails the full profile.
+
 Auxiliary, performance, and shared owner operations also use blocking hermetic
 packs with independent expectations and real adapter receipts. The
 [owner operation evidence map](docs/implementation/aux_perf_shared_conformance_equivalence.md)

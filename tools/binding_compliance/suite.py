@@ -154,6 +154,21 @@ class ComplianceSuite:
             # Promoted executable evidence is conjunctive with every retained
             # legacy gate until the later retirement change removes that gate.
             summary["result"] = "fail"
+        summary["repository_complete"] = False
+        if self.profile == "full":
+            # A release/backstop claim needs executed receipts and every retained
+            # gate. A source-only or deliberately skipped run cannot certify it.
+            complete = (
+                self.conformance_report is not None
+                and self.conformance_report.get("repositoryComplete") is True
+                and self.conformance_report.get("result") == "pass"
+                and summary["result"] == "pass"
+                and not summary["skipped"]
+                and not summary["coverage_gaps"]
+            )
+            summary["repository_complete"] = complete
+            if not complete:
+                summary["result"] = "fail"
         report = {
             "schemaVersion": 1,
             "profile": self.profile,

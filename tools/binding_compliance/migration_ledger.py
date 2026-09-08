@@ -15,12 +15,20 @@ from typing import Any
 
 # Support both package imports in tests and direct execution from this directory.
 try:
-    from .catalog import REQUIREMENTS
     from .conformance.variant_policy import CRASH_LOG_SCAN_RUN_VARIANT_TARGETS
+    from .retained_analyzers import (
+        BASE_ANALYZER_CATALOG,
+        BLOCKING_REQUIREMENT_IDS,
+        WORKFLOW_BLOCKING_OWNERS,
+    )
 except ImportError:
-    from catalog import REQUIREMENTS  # type: ignore[no-redef]
     from conformance.variant_policy import (  # type: ignore[no-redef]
         CRASH_LOG_SCAN_RUN_VARIANT_TARGETS,
+    )
+    from retained_analyzers import (  # type: ignore[no-redef]
+        BASE_ANALYZER_CATALOG,
+        BLOCKING_REQUIREMENT_IDS,
+        WORKFLOW_BLOCKING_OWNERS,
     )
 
 VALID_CLASSIFICATIONS = frozenset(
@@ -54,33 +62,6 @@ DEFAULT_LEDGER_PATH = Path(
 DEFAULT_SUMMARY_PATH = Path(
     "docs/implementation/binding_compliance/evidence_migration_ledger.md"
 )
-BLOCKING_REQUIREMENT_IDS = frozenset(
-    requirement.id for requirement in REQUIREMENTS if requirement.blocking
-)
-
-WORKFLOW_BLOCKING_OWNERS: dict[str, dict[str, str]] = {
-    "cli": {
-        "path": ".github/workflows/ci-cpp.yml",
-        "commandMarker": "classic-cli/build_cli.ps1 -Test",
-    },
-    "gui": {
-        "path": ".github/workflows/ci-cpp.yml",
-        "commandMarker": "classic-gui/build_gui.ps1",
-    },
-    "node": {
-        "path": ".github/workflows/ci-typescript.yml",
-        "commandMarker": "bun run test:bun",
-    },
-    "python-cli": {
-        "path": ".github/workflows/ci-python-bindings.yml",
-        "commandMarker": "python -m pytest python-bindings/tests -q",
-    },
-    "tui": {
-        "path": ".github/workflows/ci-rust.yml",
-        "commandMarker": "cargo test --workspace --release",
-    },
-}
-
 ANALYZER_IDS = {
     "cxx": "cxx-source-parity",
     "node": "node-source-and-declaration-parity",
@@ -248,114 +229,6 @@ NEGATIVE_CONSUMER_CASES = frozenset(
         "mainwindow_preserves_legacy_settings_on_failed_migration",
         "settings_dialog_check_slot_calls_first_party_bridge_helper",
     }
-)
-
-BASE_ANALYZER_CATALOG: tuple[dict[str, Any], ...] = (
-    {
-        "id": "installation-discovery-source-boundary",
-        "evidenceKind": "structural",
-        "paths": [
-            "python-bindings/tests/test_installation_discovery_source_audit.py",
-            "business-logic/classic-xse-core/src/lib.rs",
-            "business-logic/classic-path-core/src/docs_path.rs",
-            "business-logic/classic-path-core/src/game_path.rs",
-            "business-logic/classic-path-core/src/platform/windows.rs",
-            "python-bindings/classic-path-py/src/lib.rs",
-        ],
-        "blockingWorkflow": WORKFLOW_BLOCKING_OWNERS["python-cli"],
-    },
-    {
-        "id": "cxx-source-parity",
-        "evidenceKind": "structural",
-        "paths": [
-            "tools/cxx_api_parity/check_parity_gate.py",
-            "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
-        ],
-        "blockingRequirementId": "cxx-parity-gate",
-    },
-    {
-        "id": "node-source-and-declaration-parity",
-        "evidenceKind": "structural",
-        "paths": [
-            "tools/node_api_parity/check_parity_gate.py",
-            "tools/node_api_parity/check_dts_freshness.py",
-            "docs/implementation/node_api_parity/baseline/parity_contract.json",
-        ],
-        "blockingRequirementId": "node-parity-gate",
-    },
-    {
-        "id": "python-source-and-stub-parity",
-        "evidenceKind": "structural",
-        "paths": [
-            "tools/python_api_parity/check_parity_gate.py",
-            "validate_stubs.py",
-            "docs/implementation/python_api_parity/baseline/parity_contract.json",
-        ],
-        "blockingRequirementId": "python-parity-gate",
-    },
-    {
-        "id": "scan-run-contract-validator",
-        "evidenceKind": "structural",
-        "paths": [
-            "tools/binding_compliance/scan_run_contract.py",
-            "tests/fixtures/crash_log_scan_run/manifest.json",
-        ],
-        "blockingRequirementId": "scan-run-contract-variants",
-    },
-    {
-        "id": "scan-run-forbidden-export-audit",
-        "evidenceKind": "negative",
-        "paths": ["tools/binding_compliance/scan_run_contract.py"],
-        "blockingRequirementId": "scan-run-contract-variants",
-    },
-    {
-        "id": "scan-run-rust-enum-inventory",
-        "evidenceKind": "structural",
-        "paths": ["tools/binding_compliance/scan_run_contract.py"],
-        "blockingRequirementId": "scan-run-contract-variants",
-    },
-    {
-        "id": "scan-run-local-ignore-reset-internal-faults",
-        "evidenceKind": "structural",
-        "paths": [
-            "tools/binding_compliance/scan_run_contract.py",
-            "tests/fixtures/crash_log_scan_run/manifest.json",
-            "business-logic/classic-durable-publication/src/publication_fault.rs",
-            "business-logic/classic-config-core/src/installed_yaml_data_reset_fault.rs",
-            "business-logic/classic-config-core/src/installed_yaml_data_tests.rs",
-            "business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs",
-            "cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs",
-            "node-bindings/classic-node/src/scan_run_tests.rs",
-            "python-bindings/classic-scanlog-py/src/scan_run_tests.rs",
-        ],
-        "blockingRequirementId": "scan-run-contract-variants",
-    },
-    {
-        "id": "scan-run-structured-failure-internal-faults",
-        "evidenceKind": "structural",
-        "paths": [
-            "tools/binding_compliance/scan_run_contract.py",
-            "tests/fixtures/crash_log_scan_run/manifest.json",
-            "business-logic/classic-scanlog-core/src/scan_run_test_support.rs",
-            "business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs",
-            "cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs",
-            "node-bindings/classic-node/src/scan_run_tests.rs",
-            "python-bindings/classic-scanlog-py/src/scan_run_tests.rs",
-        ],
-        "blockingRequirementId": "scan-run-contract-variants",
-    },
-    {
-        "id": "tui-shared-runtime-ownership",
-        "evidenceKind": "structural",
-        "paths": ["ui-applications/classic-tui/tests/shared_runtime_audit.rs"],
-        "blockingWorkflow": WORKFLOW_BLOCKING_OWNERS["tui"],
-    },
-    {
-        "id": "user-settings-exclusive-ownership",
-        "evidenceKind": "negative",
-        "paths": ["tools/user_settings_ownership/check.py"],
-        "blockingRequirementId": "user-settings-exclusive-ownership",
-    },
 )
 
 
@@ -723,7 +596,9 @@ def _policy_exception_obligation(repo_root: Path) -> dict[str, Any]:
 def _parity_family(row: Mapping[str, Any]) -> str:
     """Assign only the configured notification operation to update-services."""
 
-    if (row.get("coreRustSymbol") or row.get("rustSymbol")) == "check_app_notification_configured":
+    if (
+        row.get("coreRustSymbol") or row.get("rustSymbol")
+    ) == "check_app_notification_configured":
         return "update-services"
     return str(row.get("ownerModule") or "unowned")
 
@@ -889,8 +764,11 @@ def _runtime_registry_obligations(repo_root: Path) -> list[dict[str, Any]]:
                     locator=f"/entries/{index}#coverageId={coverage_id}",
                     participant=participant,
                     mapping_origin="legacy_registry_claim",
-                    family_id=("update-services" if coverage_id == f"{participant}-update-services-configured"
-                               else str(entry.get("ownerModule") or "unowned")),
+                    family_id=(
+                        "update-services"
+                        if coverage_id == f"{participant}-update-services-configured"
+                        else str(entry.get("ownerModule") or "unowned")
+                    ),
                     retained_analyzer_ids=(ANALYZER_IDS[participant],),
                 )
             )

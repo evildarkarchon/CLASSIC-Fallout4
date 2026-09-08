@@ -2,11 +2,17 @@
 
 Migrated fixture-backed selector hashes, test pointers, and positive registry
 claims are retired after blocking pack promotion. Mixed selectors retain explicit
-unmigrated IDs; shared loaders and focused diagnostics remain. Metadata summaries
+unmigrated IDs; metadata readers and focused diagnostics remain. Metadata summaries
 distinguish receipt obligations from residual legacy claims. Only authenticated
 executed receipts contribute migrated runtime coverage. See the
 [issue #211 retirement evidence map](../implementation/fixture_evidence_retirement.md)
 for exact deletions and retained boundaries.
+
+Node and Python smoke tests now register independently of registry claims; the
+binding-local activation loaders are removed. The remaining JSON metadata and
+diagnostic ledger are retained because 1,657 runtime-classified source rows still
+lack executable predicates. See [retirement readiness](../implementation/binding_compliance/retirement_readiness.md).
+Metadata labels are not runtime proof.
 
 The binding compliance suite is the canonical binding gate for day-to-day validation and CI policy. It maps the documented binding parity policy into explicit executable requirements, then records which lower-level gate or static check proves each requirement.
 
@@ -30,10 +36,25 @@ The command writes:
 | `node-ci` | CI slice for the Node workflow. Runs the canonical suite around Node parity and `index.d.ts` freshness checks. |
 | `python-ci` | CI slice for the Python workflow. Runs the canonical suite around Python parity, stub validation, uv drift-guard setup, and the schema-version guard. |
 | `conformance` | Receipt-only native-job validation for one participant or execution instance. Requires `--participant` and repeatable `--receipt`; CXX also requires companion `--attempt` and `--junit` diagnostics. |
-| `full` | Local release/backstop profile. Adds Bun/Node runtime tests, the Python PyO3 rebuild, and Python smoke tests. Repeatable `--receipt` inputs produce a full-repository aggregation whose centrally selected family enforcement is conjunctive with the retained gates. |
-| `static` | Policy, docs, artifact presence, and known-gap reporting without external commands. |
+| `full` | Repository backstop. Adds Bun/Node runtime tests, the Python PyO3 rebuild, and Python smoke tests. Repeatable `--receipt` inputs must cover every tracked family and applicable execution instance. Every source parity row needs executed evidence or a named retained analyzer/policy exception. Missing receipts, unresolved rows, or skipped retained gates fail. |
+| `static` | Policy, docs, and artifact checks; command-backed requirements still run unless `--skip-commands` is supplied. It makes no repository conformance claim. |
 
-Use `--skip-commands` when reviewing policy mapping without invoking lower-level gates. Use `--fail-on-gaps` when maintainers are ready to turn known non-blocking coverage gaps into blocking failures.
+Use `--skip-commands` when reviewing policy mapping without invoking lower-level gates.
+Only a complete `full` run can set the suite summary's `repository_complete` to
+true. `ci` and participant slices validate their narrower scopes. Full aggregation
+currently reports the unresolved migration obligations rather than certifying
+the repository. A single family's receipts cannot complete it:
+
+```powershell
+python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt <first-receipt> --receipt <next-receipt>
+```
+
+Pass every family and instance's receipt, with its sibling immutable plan. The
+`conformance` section lists missing families, uncovered rows, retained analyzer
+owners, and centrally validated family reports. Adding a shared scenario changes
+the adapter denominator automatically. The workflow audit independently derives
+required family/participant/compiler combinations from the tracked packs and
+source mappings, rejecting omitted CI policies.
 
 Native launchers validate one exact instance with this receipt-only shape:
 

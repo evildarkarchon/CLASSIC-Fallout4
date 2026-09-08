@@ -6,6 +6,11 @@ import re
 from dataclasses import dataclass, replace
 from pathlib import Path
 
+from .applicability import derive_applicability, load_policy_exceptions
+from .consumers import load_consumer_obligations
+from .coverage import load_source_parity_rows
+from .packs import discover_pack_paths, load_and_validate_pack
+
 
 class WorkflowPolicyError(ValueError):
     """Raised when tracked CI no longer runs the promoted receipt denominator."""
@@ -21,6 +26,7 @@ class WorkflowExecutionPolicy:
     legacy_marker: str
     launcher_marker: str
     artifact_marker: str
+    family_id: str = "crash-log-scan-run"
     launcher_condition: str = "if: ${{ !cancelled() }}"
     upload_condition: str = "if: always()"
     matrix_marker: str | None = None
@@ -104,6 +110,7 @@ _EXECUTION_POLICIES = (
 _EXECUTION_POLICIES += tuple(
     replace(
         policy,
+        family_id="user-settings",
         launcher_marker=(
             policy.launcher_marker.replace(
                 "run_scan_run_conformance.py", "run_user_settings_conformance.py"
@@ -138,6 +145,7 @@ _EXECUTION_POLICIES += tuple(
 _EXECUTION_POLICIES += tuple(
     replace(
         policy,
+        family_id=family,
         launcher_marker=(
             f"run_semantic_conformance.py --family {family} --participant {policy.participant_id}"
             if policy.participant_id != "cxx"
@@ -269,6 +277,7 @@ _EXECUTION_POLICIES += tuple(
 _EXECUTION_POLICIES += tuple(
     replace(
         policy,
+        family_id="autoscan-report",
         launcher_marker=(
             f"run_scan_run_conformance.py --family autoscan-report --participant {policy.participant_id}"
             if policy.participant_id != "cxx"
@@ -287,6 +296,55 @@ _EXECUTION_POLICIES = tuple(
     replace(policy, job_timeout_minutes=360) if policy.job_id == "cli-tests" else policy
     for policy in _EXECUTION_POLICIES
 )
+
+
+def _required_execution_keys(repo_root: Path) -> set[tuple[str, str, str]]:
+    """Derive every required family, adapter and compiler from tracked contracts.
+
+    Workflow markers describe how CI executes a participant; they cannot define
+    which participants are required, or new source mappings could silently skip CI.
+    """
+
+    rows = load_source_parity_rows(repo_root)
+    exceptions = load_policy_exceptions(repo_root)
+    consumers = load_consumer_obligations(repo_root)
+    required: set[tuple[str, str, str]] = set()
+    for path in discover_pack_paths(repo_root):
+        document = load_and_validate_pack(repo_root, path).document()
+        matrix = derive_applicability(
+            document, rows, policy_exceptions=exceptions, consumer_catalog=consumers
+        )
+        required.update(
+            (document["familyId"], participant.id, instance)
+            for participant in matrix.participants
+            for instance in participant.execution_instance_ids
+        )
+    if not required:
+        raise WorkflowPolicyError("required execution denominator is empty")
+    return required
+
+
+def _validate_execution_denominator(repo_root: Path) -> None:
+    """Reject missing or duplicate CI policies for source-derived executions."""
+
+    required = _required_execution_keys(repo_root)
+    enforced: set[tuple[str, str, str]] = set()
+    for policy in _EXECUTION_POLICIES:
+        instances = (
+            ("windows-clang-cl", "windows-msvc")
+            if policy.matrix_marker == "compiler: [msvc, clang-cl]"
+            else (policy.participant_id,)
+        )
+        for instance in instances:
+            key = (policy.family_id, policy.participant_id, instance)
+            if key in enforced:
+                raise WorkflowPolicyError(f"duplicate required execution policy: {key}")
+            enforced.add(key)
+    missing = required - enforced
+    if missing:
+        raise WorkflowPolicyError(
+            f"missing required execution policies: {sorted(missing)}"
+        )
 
 
 def _job_block(source: str, job_id: str) -> str:
@@ -324,6 +382,10 @@ def validate_scan_run_workflow_policy(repo_root: Path) -> None:
 
     root = repo_root.resolve()
     errors: list[str] = []
+    try:
+        _validate_execution_denominator(root)
+    except (OSError, ValueError) as error:
+        errors.append(str(error))
     sources: dict[str, str] = {}
     for policy in _EXECUTION_POLICIES:
         try:

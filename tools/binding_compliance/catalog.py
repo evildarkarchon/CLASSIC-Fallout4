@@ -354,15 +354,17 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         ),
     ),
     ComplianceRequirement(
-        id="cxx-runtime-coverage-gap",
-        title="C++ runtime coverage registry gap",
+        id="repository-receipt-coverage",
+        title="Repository receipt coverage engine is present",
         surface="runtime_coverage",
-        classification="coverage_gap",
+        classification="new_check",
         profiles=STATIC_PROFILES,
-        blocking=False,
-        summary="The CXX parity gate is source-only and has no dedicated runtime coverage registry.",
-        gaps=(
-            "C++ bridge runtime behavior is still covered by CLI/GUI wrapper tests rather than a CXX runtime coverage registry equivalent to Node/Python.",
+        blocking=True,
+        summary="Full-profile aggregation requires every family, native instance, and source parity row; file presence alone is not runtime proof.",
+        paths=(
+            "tools/binding_compliance/conformance/repository.py",
+            "tools/binding_compliance/conformance/coverage.py",
+            "tools/binding_compliance/retained_analyzers.py",
         ),
     ),
     ComplianceRequirement(
@@ -433,7 +435,9 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
                 "--locked",
             )
         ),
-        proves=("Python parity, schema drift, and stub validation tools are available.",),
+        proves=(
+            "Python parity, schema drift, and stub validation tools are available.",
+        ),
     ),
     ComplianceRequirement(
         id="python-schema-version-drift",
@@ -456,7 +460,9 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
             )
         ),
         paths=("tools/schema_version_gate.py",),
-        proves=("Binding validation is not hiding schema contract drift that Python smoke tests import.",),
+        proves=(
+            "Binding validation is not hiding schema contract drift that Python smoke tests import.",
+        ),
     ),
     ComplianceRequirement(
         id="python-bindings-rebuild",
@@ -467,8 +473,21 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         blocking=True,
         summary="Builds and installs every PyO3 binding crate into python-bindings/.venv.",
         command=CommandSpec(
-            argv=("pwsh", "-ExecutionPolicy", "Bypass", "-File", "rebuild_rust.ps1", "-Target", "python"),
-            env=(("PYO3_PYTHON", "{repo_root}\\python-bindings\\.venv\\Scripts\\python.exe"),),
+            argv=(
+                "pwsh",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "rebuild_rust.ps1",
+                "-Target",
+                "python",
+            ),
+            env=(
+                (
+                    "PYO3_PYTHON",
+                    "{repo_root}\\python-bindings\\.venv\\Scripts\\python.exe",
+                ),
+            ),
         ),
         proves=("Python runtime smoke tests import freshly built PyO3 modules.",),
     ),
@@ -516,7 +535,9 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
                 ),
             ),
         ),
-        proves=("Known per-binding error shape divergence is documented rather than normalized away.",),
+        proves=(
+            "Known per-binding error shape divergence is documented rather than normalized away.",
+        ),
     ),
     ComplianceRequirement(
         id="docs-canonical-command",
@@ -537,7 +558,9 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
                 ),
             ),
         ),
-        proves=("Contributors can find the top-level replacement command without reading CI YAML.",),
+        proves=(
+            "Contributors can find the top-level replacement command without reading CI YAML.",
+        ),
     ),
     ComplianceRequirement(
         id="ci-canonical-command",
@@ -555,18 +578,29 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         text_expectations=(
             TextExpectation(
                 path=".github/workflows/ci-cpp.yml",
-                contains=("tools/binding_compliance/check_compliance.py", "--profile cxx-ci"),
+                contains=(
+                    "tools/binding_compliance/check_compliance.py",
+                    "--profile cxx-ci",
+                ),
             ),
             TextExpectation(
                 path=".github/workflows/ci-typescript.yml",
-                contains=("tools/binding_compliance/check_compliance.py", "--profile node-ci"),
+                contains=(
+                    "tools/binding_compliance/check_compliance.py",
+                    "--profile node-ci",
+                ),
             ),
             TextExpectation(
                 path=".github/workflows/ci-python-bindings.yml",
-                contains=("tools/binding_compliance/check_compliance.py", "--profile python-ci"),
+                contains=(
+                    "tools/binding_compliance/check_compliance.py",
+                    "--profile python-ci",
+                ),
             ),
         ),
-        proves=("CI policy now flows through the umbrella suite while old gates remain diagnostic subcommands.",),
+        proves=(
+            "CI policy now flows through the umbrella suite while old gates remain diagnostic subcommands.",
+        ),
     ),
 )
 

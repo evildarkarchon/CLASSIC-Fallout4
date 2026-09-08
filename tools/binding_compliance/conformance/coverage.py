@@ -117,12 +117,12 @@ def load_retained_analyzer_kinds(repo_root: Path) -> RetainedAnalyzerCatalog:
     """
 
     try:
-        from ..migration_ledger import (  # type: ignore[import-not-found]
+        from ..retained_analyzers import (  # type: ignore[import-not-found]
             BASE_ANALYZER_CATALOG,
             BLOCKING_REQUIREMENT_IDS,
         )
     except ImportError:
-        from migration_ledger import (  # type: ignore[import-not-found,no-redef]
+        from retained_analyzers import (  # type: ignore[import-not-found,no-redef]
             BASE_ANALYZER_CATALOG,
             BLOCKING_REQUIREMENT_IDS,
         )

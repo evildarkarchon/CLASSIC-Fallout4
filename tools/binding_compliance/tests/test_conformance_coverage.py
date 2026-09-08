@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from dataclasses import replace
 from pathlib import Path
 
@@ -635,9 +636,13 @@ def test_live_parity_loader_preserves_canonical_metadata_and_occurrences() -> No
     assert cxx_canonical.rust_symbol
 
 
-def test_retained_analyzers_resolve_only_from_current_blocking_owners() -> None:
-    """The permanent catalog exposes kinds without reading ledger row state."""
+def test_retained_analyzers_resolve_only_from_current_blocking_owners(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Permanent analyzer ownership remains available after ledger removal."""
 
+    monkeypatch.setitem(sys.modules, "migration_ledger", None)
+    monkeypatch.setitem(sys.modules, "tools.binding_compliance.migration_ledger", None)
     analyzers = load_retained_analyzer_kinds(REPO_ROOT)
 
     assert analyzers["cxx-source-parity"] == "structural"

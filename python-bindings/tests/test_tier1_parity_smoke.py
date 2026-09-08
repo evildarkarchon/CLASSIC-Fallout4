@@ -1,4 +1,4 @@
-"""Registry-driven runtime parity smoke tests for maintained Python bindings."""
+"""Independent runtime parity smoke tests for maintained Python bindings."""
 
 from __future__ import annotations
 
@@ -8,15 +8,11 @@ from typing import Any, cast
 
 import pytest
 
-from .fixtures.runtime_coverage_registry import get_runtime_coverage_case_ids
 from .fixtures.tier1_parity_fixtures import (
     PARITY_GAME_YAML,
     PARITY_IGNORE_YAML,
     PARITY_MAIN_YAML,
 )
-
-
-THIS_SUITE = "python-bindings/tests/test_tier1_parity_smoke.py"
 
 
 def test_imports_and_versions() -> None:
@@ -328,17 +324,6 @@ def _run_cache_helpers_tier2_smoke(
     assert cleared_stats["size"] == 0
 
 
-CASE_RUNNERS = {
-    "config-tier1-smoke": _run_config_tier1_smoke,
-    "scanlog-tier1-smoke": _run_scanlog_tier1_smoke,
-    "version-registry-tier1-smoke": _run_version_registry_tier1_smoke,
-    "config-tier2-smoke": _run_config_tier2_smoke,
-    "cache-helpers-tier2-smoke": _run_cache_helpers_tier2_smoke,
-    "scanlog-tier2-smoke": _run_scanlog_tier2_smoke,
-    "version-registry-tier2-smoke": _run_version_registry_tier2_smoke,
-}
-
-
 def test_application_dir_override(tmp_path: Path) -> None:
     """Independent application-local YAML helpers expose the registry override."""
     import classic_config
@@ -353,15 +338,6 @@ def test_application_dir_override(tmp_path: Path) -> None:
     # Restore the original override so other tests are unaffected
     if app_dir is not None:
         classic_config.set_application_dir(app_dir)
-
-
-def _run_application_dir_override(
-    tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
-) -> None:
-    test_application_dir_override(tmp_path)
-
-
-CASE_RUNNERS["application-dir-override"] = _run_application_dir_override
 
 
 def test_parse_segments_parallel_deprecation_warning() -> None:
@@ -411,8 +387,23 @@ def test_obsolete_report_fragment_surface_is_not_exported() -> None:
     assert not [name for name in obsolete_exports if hasattr(classic_scanlog, name)]
 
 
-@pytest.mark.parametrize("case_id", get_runtime_coverage_case_ids(THIS_SUITE))
-def test_runtime_coverage_registry_cases(
-    case_id: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+def test_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run the retained YAML constructor checks independently of coverage metadata."""
+    _run_config_tier1_smoke(tmp_path, monkeypatch)
+
+
+def test_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run retained scan-log assertions even when no coverage claim is present."""
+    _run_scanlog_tier1_smoke(tmp_path, monkeypatch)
+
+
+def test_version_registry_tier1_smoke(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    CASE_RUNNERS[case_id](tmp_path, monkeypatch)
+    """Run the retained version queries independently of coverage metadata."""
+    _run_version_registry_tier1_smoke(tmp_path, monkeypatch)
+
+
+def test_config_tier2_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep independent checks for the remaining YAML display fields."""
+    _run_config_tier2_smoke(tmp_path, monkeypatch)

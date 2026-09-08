@@ -35,10 +35,6 @@ import {
   loadExplicitYamlData,
   loadInstalledYamlData,
 } from "../index.js";
-import { getRuntimeCoverageEntries } from "./fixtures/runtime_coverage_registry";
-
-const THIS_SUITE =
-  "node-bindings/classic-node/__test__/config.spec.ts";
 
 // ============================================================================
 // Test Fixtures
@@ -1006,26 +1002,6 @@ describe("Installed YAML Data loading", () => {
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
-  });
-});
-
-describe("runtime coverage metadata", () => {
-  test("tracks Installed YAML Data, application directory, and Game Local adapters", () => {
-    const bindingIdentifiers = new Set(
-      getRuntimeCoverageEntries(THIS_SUITE).flatMap(
-        (entry) => entry.bindingIdentifiers ?? [],
-      ),
-    );
-
-    expect(bindingIdentifiers.has("getApplicationDir")).toBe(true);
-    expect(bindingIdentifiers.has("setApplicationDir")).toBe(true);
-    expect(bindingIdentifiers.has("persistGameLocalPaths")).toBe(true);
-    expect(bindingIdentifiers.has("LocalIgnoreRecoveryPlan")).toBe(true);
-    expect(bindingIdentifiers.has("JsLocalIgnoreResetOutcome")).toBe(true);
-    expect(
-      bindingIdentifiers.has("JsLocalIgnoreResetPublicationStage"),
-    ).toBe(true);
-    expect(bindingIdentifiers.has("JsLocalIgnoreResetStatus")).toBe(true);
   });
 });
 

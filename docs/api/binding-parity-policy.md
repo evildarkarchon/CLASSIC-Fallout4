@@ -44,6 +44,13 @@ python tools/binding_compliance/check_compliance.py --repo-root . --profile ci
 
 The suite owns the top-level pass/fail result, policy mapping, structured report, and known-gap report. The surface-specific gates below remain available as lower-level checks and focused debugging commands.
 
+The `ci` result is source-level validation. Only `--profile full` with all family
+receipts and executed retained gates can certify repository-wide conformance.
+Full aggregation counts every source parity occurrence and fails on missing
+families or uncovered runtime rows. Registry metadata never supplies that proof.
+The remaining migration gaps are recorded in the
+[retirement readiness audit](../implementation/binding_compliance/retirement_readiness.md).
+
 Crash Log Scan Run and User Settings have blocking executable conformance obligations. Rust,
 Node, Python, CXX on both MSVC and clang-cl, CLI and GUI on both compiler legs,
 and TUI must emit current same-revision receipts for their exact applicable

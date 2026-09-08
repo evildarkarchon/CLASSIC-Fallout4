@@ -13,6 +13,7 @@ from conformance.command import (  # type: ignore
     ConformanceCommandError,
     build_conformance_report_from_receipts,
 )
+from conformance.repository import build_repository_report  # type: ignore
 from suite import ComplianceSuite, write_report_files  # type: ignore
 
 
@@ -135,7 +136,15 @@ def main(argv: list[str] | None = None) -> int:
         parser.error(argument_error)
 
     conformance_report = None
-    if args.profile == "conformance" or (args.profile == "full" and args.receipt):
+    if args.profile == "full":
+        try:
+            conformance_report = build_repository_report(
+                repo_root, tuple(Path(value) for value in args.receipt)
+            )
+        except ConformanceCommandError as exc:
+            print(str(exc), file=sys.stderr)
+            return 2
+    elif args.profile == "conformance":
         try:
             conformance_report = build_conformance_report_from_receipts(
                 repo_root,

@@ -85,15 +85,6 @@ import {
   configSourceCases,
   versionRegistryCases,
 } from "./fixtures/tier1_parity.fixtures";
-import { getRuntimeCoverageEntries } from "./fixtures/runtime_coverage_registry";
-
-const THIS_SUITE =
-  "node-bindings/classic-node/__test__/parity_tier1.spec.ts";
-const activeCoverageCases = new Set(
-  getRuntimeCoverageEntries(THIS_SUITE)
-    .map((entry) => entry.testCaseId)
-    .filter((testCaseId): testCaseId is string => Boolean(testCaseId)),
-);
 
 function expectErrorWithMessage(err: unknown): void {
   expect(err).toBeDefined();
@@ -102,8 +93,7 @@ function expectErrorWithMessage(err: unknown): void {
 }
 
 describe("Tier-1 parity fixture suites", () => {
-  if (activeCoverageCases.has("config-tier1-parity")) {
-    describe("config parity", () => {
+  describe("config parity", () => {
     test("createYamlDataFromContent returns stable Tier-1 fields", () => {
       const data = createYamlDataFromContent(
         PARITY_MAIN_YAML,
@@ -247,11 +237,9 @@ describe("Tier-1 parity fixture suites", () => {
         rmSync(dir, { recursive: true, force: true });
       }
     });
-    });
-  }
+  });
 
-  if (activeCoverageCases.has("aux-tier1-parity")) {
-    describe("aux foundation parity", () => {
+  describe("aux foundation parity", () => {
     test("shared runtime/path/metrics APIs keep stable callable shape", () => {
       const batch = validatePathsBatch([".", "Z:\\nonexistent\\classic-tier1"]);
       expect(batch["."]).toBe(true);
@@ -340,11 +328,9 @@ describe("Tier-1 parity fixture suites", () => {
         rmSync(dir, { recursive: true, force: true });
       }
     });
-    });
-  }
+  });
 
-  if (activeCoverageCases.has("scangame-tier1-parity")) {
-    describe("scangame parity", () => {
+  describe("scangame parity", () => {
     test("setup intake forwards configured executable path for non-default basenames", () => {
       const dir = mkdtempSync(join(tmpdir(), "classic-tier1-setup-"));
       const gameRoot = join(dir, "Fallout4");
@@ -380,11 +366,9 @@ describe("Tier-1 parity fixture suites", () => {
         rmSync(dir, { recursive: true, force: true });
       }
     });
-    });
-  }
+  });
 
-  if (activeCoverageCases.has("aux-tier1-parity")) {
-    describe("aux scanner stack parity", () => {
+  describe("aux scanner stack parity", () => {
     test("database/resource/xse/web/update APIs keep stable callable shape", async () => {
       const pool = new JsDatabasePool("Fallout4");
       expect(pool.getGameTable()).toBe("Fallout4");
@@ -442,11 +426,9 @@ describe("Tier-1 parity fixture suites", () => {
         rmSync(dir, { recursive: true, force: true });
       }
     });
-    });
-  }
+  });
 
-  if (activeCoverageCases.has("version-registry-tier1-parity")) {
-    describe("version registry parity", () => {
+  describe("version registry parity", () => {
     for (const fixture of versionRegistryCases) {
       test(`getVersionById parity: ${fixture.id}`, () => {
         const info = getVersionById(fixture.versionId);
@@ -477,6 +459,5 @@ describe("Tier-1 parity fixture suites", () => {
         expectErrorWithMessage(err);
       }
     });
-    });
-  }
+  });
 });

@@ -15,6 +15,40 @@ from catalog import (  # type: ignore
 from suite import ComplianceSuite, RequirementResult, build_summary  # type: ignore
 
 
+def test_full_profile_requires_repository_receipts(tmp_path: Path) -> None:
+    """Passing source checks alone cannot establish repository conformance."""
+    report = ComplianceSuite(repo_root=tmp_path, profile="full", requirements=()).run()
+    assert report["summary"]["result"] == "fail"
+    assert report["summary"]["repository_complete"] is False
+
+
+def test_full_profile_cannot_skip_retained_commands(tmp_path: Path) -> None:
+    """Receipt success cannot compensate for an unexecuted retained gate."""
+    requirement = ComplianceRequirement(
+        id="retained",
+        title="Retained",
+        surface="policy",
+        classification="existing_gate",
+        profiles=("full",),
+        blocking=True,
+        summary="Retained analyzer",
+        command=CommandSpec(argv=("python", "check.py")),
+    )
+    report = ComplianceSuite(
+        repo_root=tmp_path,
+        profile="full",
+        requirements=(requirement,),
+        skip_commands=True,
+        conformance_report={
+            "enforcement": "blocking",
+            "result": "pass",
+            "repositoryComplete": True,
+        },
+    ).run()
+    assert report["summary"]["result"] == "fail"
+    assert report["summary"]["repository_complete"] is False
+
+
 def test_build_summary_keeps_gap_reporting_non_blocking_by_default() -> None:
     results = [
         RequirementResult(

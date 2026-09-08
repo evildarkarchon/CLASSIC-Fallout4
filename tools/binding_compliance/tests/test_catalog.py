@@ -20,13 +20,16 @@ def test_catalog_maps_policy_to_all_required_surfaces() -> None:
     assert expected_surfaces <= {requirement.surface for requirement in REQUIREMENTS}
 
 
-def test_catalog_classifies_existing_checks_and_known_gaps() -> None:
+def test_catalog_requires_receipt_coverage_instead_of_a_registry_gap() -> None:
+    """CXX has executable receipts; an absent registry is no longer a gap."""
     classifications = {requirement.classification for requirement in REQUIREMENTS}
     assert {
         "existing_gate",
         "new_check",
-        "coverage_gap",
     } <= classifications
+    requirements = {requirement.id: requirement for requirement in REQUIREMENTS}
+    assert "cxx-runtime-coverage-gap" not in requirements
+    assert requirements["repository-receipt-coverage"].blocking
 
 
 def test_ci_profile_reuses_lower_level_binding_gates() -> None:

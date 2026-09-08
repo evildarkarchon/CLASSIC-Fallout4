@@ -22,7 +22,6 @@ from binding_parity_runtime_coverage import (
 )
 from parity_artifact_io import (
     preserve_baseline_generated_at_all,
-    stable_id_hash,
     write_json,
 )
 from parity_rust_surface import build_lookup
@@ -326,43 +325,6 @@ def normalize_phase3_node_contract(contract: dict[str, Any]) -> dict[str, Any]:
 
     return enrich_executable_aux_owners(contract)
 
-
-def normalize_phase3_node_runtime_registry(
-    runtime_registry: dict[str, Any], contract: dict[str, Any]
-) -> dict[str, Any]:
-    """Update selector-based runtime coverage metadata after Phase 3 reparenting."""
-    retired_owner = "const" + "ants"
-    entries = [
-        entry
-        for entry in runtime_registry.get("entries", [])
-        if entry.get("coverageId") != "node-tier1-constants"
-        and entry.get("ownerModule") != retired_owner
-    ]
-
-    tier1_rows = contract.get("tier1Mappings", [])
-    grouped_ids: dict[str, list[str]] = {
-        "version_registry": [],
-        "settings": [],
-        "shared": [],
-    }
-    for row in tier1_rows:
-        owner = row.get("ownerModule")
-        if row.get("tier") == "tier1" and owner in grouped_ids:
-            grouped_ids[owner].append(row["id"])
-
-    for entry in entries:
-        selector = entry.get("contractSelector")
-        if not isinstance(selector, dict):
-            continue
-        owner = selector.get("ownerModule")
-        if owner not in grouped_ids:
-            continue
-        entry["ownerModule"] = owner
-        entry["contractCount"] = len(grouped_ids[owner])
-        entry["contractIdsHash"] = stable_id_hash(grouped_ids[owner])
-
-    runtime_registry["entries"] = entries
-    return runtime_registry
 
 
 def snake_to_camel(name: str) -> str:
