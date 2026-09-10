@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "familyId": "game-version-parse",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-version-registry-core"
+  },
+  "fixtureRoot": "tests/fixtures/version_values_conformance",
+  "fixtures": {
+    "game-version-parse-null": "game-version-parse-null.json",
+    "game-version-parse-three": "game-version-parse-three.json",
+    "game-version-parse-four": "game-version-parse-four.json",
+    "game-version-parse-invalid": "game-version-parse-invalid.json",
+    "game-version-parse-overflow": "game-version-parse-overflow.json"
+  },
+  "capabilities": [
+    {
+      "id": "game-version-parse.observe",
+      "rustSymbols": [
+        "NULL_VERSION",
+        "parse",
+        "GameVersion"
+      ],
+      "observationFamilies": [
+        "value-results"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "null-version", "action": "game-version-parse.observe",
+      "capabilityIds": ["game-version-parse.observe"],
+      "fixtureRefs": ["game-version-parse-null"], "input": {"fixtureRef": "game-version-parse-null"},
+      "expected": {"parsed": "0.0.0.0"},
+      "normalization": {"excludedPaths": [], "rootRelativePaths": false, "unorderedPaths": []}
+    },
+    {
+      "id": "three",
+      "action": "game-version-parse.observe",
+      "capabilityIds": [
+        "game-version-parse.observe"
+      ],
+      "fixtureRefs": [
+        "game-version-parse-three"
+      ],
+      "input": {
+        "fixtureRef": "game-version-parse-three"
+      },
+      "expected": {
+        "parsed": "1.10.163.0"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "four",
+      "action": "game-version-parse.observe",
+      "capabilityIds": [
+        "game-version-parse.observe"
+      ],
+      "fixtureRefs": [
+        "game-version-parse-four"
+      ],
+      "input": {
+        "fixtureRef": "game-version-parse-four"
+      },
+      "expected": {
+        "parsed": "1.2.3.4"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid",
+      "action": "game-version-parse.observe",
+      "capabilityIds": [
+        "game-version-parse.observe"
+      ],
+      "fixtureRefs": [
+        "game-version-parse-invalid"
+      ],
+      "input": {
+        "fixtureRef": "game-version-parse-invalid"
+      },
+      "expected": {
+        "parsed": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "overflow",
+      "action": "game-version-parse.observe",
+      "capabilityIds": [
+        "game-version-parse.observe"
+      ],
+      "fixtureRefs": [
+        "game-version-parse-overflow"
+      ],
+      "input": {
+        "fixtureRef": "game-version-parse-overflow"
+      },
+      "expected": {
+        "parsed": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

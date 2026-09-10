@@ -1,0 +1,17 @@
+{
+  "installedVersion": "9.1.0",
+  "timeoutMs": 150,
+  "checks": 1,
+  "service": {
+    "pages": [
+      {
+        "stall": true
+      }
+    ],
+    "api": [
+      {
+        "stall": true
+      }
+    ]
+  }
+}

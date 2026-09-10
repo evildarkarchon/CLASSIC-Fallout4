@@ -1,0 +1,1222 @@
+{
+  "schemaVersion": 1,
+  "familyId": "ba2-scan",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scangame-core"
+  },
+  "fixtureRoot": "tests/fixtures/ba2_scan",
+  "fixtures": {
+    "full-empty": "full-empty.json",
+    "full-sound": "full-sound.json",
+    "full-script": "full-script.json",
+    "full-dimensions": "full-dimensions.json",
+    "full-format": "full-format.json",
+    "bridge-empty": "bridge-empty.json",
+    "bridge-sound": "bridge-sound.json",
+    "bridge-script": "bridge-script.json",
+    "bridge-dimensions": "bridge-dimensions.json",
+    "bridge-format": "bridge-format.json"
+  },
+  "capabilities": [
+    {
+      "id": "ba2-scan.full",
+      "rustSymbols": [
+        "BA2Scanner",
+        "BA2Issues",
+        "scan_archives_batch"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "archive-issues"
+      ]
+    },
+    {
+      "id": "ba2-scan.bridge",
+      "rustSymbols": [
+        "scan_archive"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "archive-issues"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "full-empty",
+      "action": "ba2-scan.full",
+      "capabilityIds": [
+        "ba2-scan.full"
+      ],
+      "fixtureRefs": [
+        "full-empty"
+      ],
+      "input": {
+        "fixtureRef": "full-empty"
+      },
+      "expected": {
+        "issues": {
+          "dimensions": [],
+          "formats": [],
+          "sounds": [],
+          "scripts": []
+        },
+        "bytes": [
+          66,
+          84,
+          68,
+          88,
+          1,
+          0,
+          0,
+          0,
+          71,
+          78,
+          82,
+          76,
+          0,
+          0,
+          0,
+          0,
+          24,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "found": [
+          "fixture.ba2"
+        ],
+        "batch": [
+          [
+            "fixture.ba2",
+            {
+              "dimensions": [],
+              "formats": [],
+              "sounds": [],
+              "scripts": []
+            }
+          ]
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "full-sound",
+      "action": "ba2-scan.full",
+      "capabilityIds": [
+        "ba2-scan.full"
+      ],
+      "fixtureRefs": [
+        "full-sound"
+      ],
+      "input": {
+        "fixtureRef": "full-sound"
+      },
+      "expected": {
+        "issues": {
+          "dimensions": [],
+          "formats": [],
+          "sounds": [
+            "  - MP3 : fixture.ba2 > sound\\test.mp3\n"
+          ],
+          "scripts": []
+        },
+        "bytes": [
+          66,
+          84,
+          68,
+          88,
+          1,
+          0,
+          0,
+          0,
+          71,
+          78,
+          82,
+          76,
+          1,
+          0,
+          0,
+          0,
+          64,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16,
+          161,
+          59,
+          249,
+          109,
+          112,
+          51,
+          0,
+          153,
+          52,
+          172,
+          62,
+          0,
+          1,
+          16,
+          0,
+          60,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          13,
+          240,
+          173,
+          186,
+          100,
+          97,
+          116,
+          97,
+          14,
+          0,
+          115,
+          111,
+          117,
+          110,
+          100,
+          92,
+          116,
+          101,
+          115,
+          116,
+          46,
+          109,
+          112,
+          51
+        ],
+        "found": [
+          "fixture.ba2"
+        ],
+        "batch": [
+          [
+            "fixture.ba2",
+            {
+              "dimensions": [],
+              "formats": [],
+              "sounds": [
+                "  - MP3 : fixture.ba2 > sound\\test.mp3\n"
+              ],
+              "scripts": []
+            }
+          ]
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "full-script",
+      "action": "ba2-scan.full",
+      "capabilityIds": [
+        "ba2-scan.full"
+      ],
+      "fixtureRefs": [
+        "full-script"
+      ],
+      "input": {
+        "fixtureRef": "full-script"
+      },
+      "expected": {
+        "issues": {
+          "dimensions": [],
+          "formats": [],
+          "sounds": [],
+          "scripts": [
+            "  - fixture.ba2\n"
+          ]
+        },
+        "bytes": [
+          66,
+          84,
+          68,
+          88,
+          1,
+          0,
+          0,
+          0,
+          71,
+          78,
+          82,
+          76,
+          1,
+          0,
+          0,
+          0,
+          64,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          113,
+          90,
+          229,
+          4,
+          112,
+          101,
+          120,
+          0,
+          64,
+          72,
+          114,
+          64,
+          0,
+          1,
+          16,
+          0,
+          60,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          13,
+          240,
+          173,
+          186,
+          100,
+          97,
+          116,
+          97,
+          16,
+          0,
+          115,
+          99,
+          114,
+          105,
+          112,
+          116,
+          115,
+          92,
+          102,
+          52,
+          115,
+          101,
+          46,
+          112,
+          101,
+          120
+        ],
+        "found": [
+          "fixture.ba2"
+        ],
+        "batch": [
+          [
+            "fixture.ba2",
+            {
+              "dimensions": [],
+              "formats": [],
+              "sounds": [],
+              "scripts": [
+                "  - fixture.ba2\n"
+              ]
+            }
+          ]
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "full-dimensions",
+      "action": "ba2-scan.full",
+      "capabilityIds": [
+        "ba2-scan.full"
+      ],
+      "fixtureRefs": [
+        "full-dimensions"
+      ],
+      "input": {
+        "fixtureRef": "full-dimensions"
+      },
+      "expected": {
+        "issues": {
+          "dimensions": [
+            "  - 7x5 : fixture.ba2 > textures\\test.dds"
+          ],
+          "formats": [],
+          "sounds": [],
+          "scripts": []
+        },
+        "bytes": [
+          66,
+          84,
+          68,
+          88,
+          1,
+          0,
+          0,
+          0,
+          68,
+          88,
+          49,
+          48,
+          1,
+          0,
+          0,
+          0,
+          88,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16,
+          161,
+          59,
+          249,
+          100,
+          100,
+          115,
+          0,
+          127,
+          102,
+          165,
+          192,
+          0,
+          1,
+          24,
+          0,
+          5,
+          0,
+          7,
+          0,
+          1,
+          77,
+          0,
+          0,
+          72,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          13,
+          240,
+          173,
+          186,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          17,
+          0,
+          116,
+          101,
+          120,
+          116,
+          117,
+          114,
+          101,
+          115,
+          92,
+          116,
+          101,
+          115,
+          116,
+          46,
+          100,
+          100,
+          115
+        ],
+        "found": [
+          "fixture.ba2"
+        ],
+        "batch": [
+          [
+            "fixture.ba2",
+            {
+              "dimensions": [
+                "  - 7x5 : fixture.ba2 > textures\\test.dds"
+              ],
+              "formats": [],
+              "sounds": [],
+              "scripts": []
+            }
+          ]
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "full-format",
+      "action": "ba2-scan.full",
+      "capabilityIds": [
+        "ba2-scan.full"
+      ],
+      "fixtureRefs": [
+        "full-format"
+      ],
+      "input": {
+        "fixtureRef": "full-format"
+      },
+      "expected": {
+        "issues": {
+          "dimensions": [],
+          "formats": [
+            "  - PNG : fixture.ba2 > textures\\test.png\n"
+          ],
+          "sounds": [],
+          "scripts": []
+        },
+        "bytes": [
+          66,
+          84,
+          68,
+          88,
+          1,
+          0,
+          0,
+          0,
+          68,
+          88,
+          49,
+          48,
+          1,
+          0,
+          0,
+          0,
+          88,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16,
+          161,
+          59,
+          249,
+          112,
+          110,
+          103,
+          0,
+          127,
+          102,
+          165,
+          192,
+          0,
+          1,
+          24,
+          0,
+          5,
+          0,
+          7,
+          0,
+          1,
+          77,
+          0,
+          0,
+          72,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          13,
+          240,
+          173,
+          186,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          17,
+          0,
+          116,
+          101,
+          120,
+          116,
+          117,
+          114,
+          101,
+          115,
+          92,
+          116,
+          101,
+          115,
+          116,
+          46,
+          112,
+          110,
+          103
+        ],
+        "found": [
+          "fixture.ba2"
+        ],
+        "batch": [
+          [
+            "fixture.ba2",
+            {
+              "dimensions": [],
+              "formats": [
+                "  - PNG : fixture.ba2 > textures\\test.png\n"
+              ],
+              "sounds": [],
+              "scripts": []
+            }
+          ]
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "bridge-empty",
+      "action": "ba2-scan.bridge",
+      "capabilityIds": [
+        "ba2-scan.bridge"
+      ],
+      "fixtureRefs": [
+        "bridge-empty"
+      ],
+      "input": {
+        "fixtureRef": "bridge-empty"
+      },
+      "expected": {
+        "issues": {
+          "dimensions": [],
+          "formats": [],
+          "sounds": [],
+          "scripts": []
+        },
+        "bytes": [
+          66,
+          84,
+          68,
+          88,
+          1,
+          0,
+          0,
+          0,
+          71,
+          78,
+          82,
+          76,
+          0,
+          0,
+          0,
+          0,
+          24,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "bridge-sound",
+      "action": "ba2-scan.bridge",
+      "capabilityIds": [
+        "ba2-scan.bridge"
+      ],
+      "fixtureRefs": [
+        "bridge-sound"
+      ],
+      "input": {
+        "fixtureRef": "bridge-sound"
+      },
+      "expected": {
+        "issues": {
+          "dimensions": [],
+          "formats": [],
+          "sounds": [
+            "  - MP3 : fixture.ba2 > sound\\test.mp3\n"
+          ],
+          "scripts": []
+        },
+        "bytes": [
+          66,
+          84,
+          68,
+          88,
+          1,
+          0,
+          0,
+          0,
+          71,
+          78,
+          82,
+          76,
+          1,
+          0,
+          0,
+          0,
+          64,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16,
+          161,
+          59,
+          249,
+          109,
+          112,
+          51,
+          0,
+          153,
+          52,
+          172,
+          62,
+          0,
+          1,
+          16,
+          0,
+          60,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          13,
+          240,
+          173,
+          186,
+          100,
+          97,
+          116,
+          97,
+          14,
+          0,
+          115,
+          111,
+          117,
+          110,
+          100,
+          92,
+          116,
+          101,
+          115,
+          116,
+          46,
+          109,
+          112,
+          51
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "bridge-script",
+      "action": "ba2-scan.bridge",
+      "capabilityIds": [
+        "ba2-scan.bridge"
+      ],
+      "fixtureRefs": [
+        "bridge-script"
+      ],
+      "input": {
+        "fixtureRef": "bridge-script"
+      },
+      "expected": {
+        "issues": {
+          "dimensions": [],
+          "formats": [],
+          "sounds": [],
+          "scripts": [
+            "  - fixture.ba2\n"
+          ]
+        },
+        "bytes": [
+          66,
+          84,
+          68,
+          88,
+          1,
+          0,
+          0,
+          0,
+          71,
+          78,
+          82,
+          76,
+          1,
+          0,
+          0,
+          0,
+          64,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          113,
+          90,
+          229,
+          4,
+          112,
+          101,
+          120,
+          0,
+          64,
+          72,
+          114,
+          64,
+          0,
+          1,
+          16,
+          0,
+          60,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          4,
+          0,
+          0,
+          0,
+          13,
+          240,
+          173,
+          186,
+          100,
+          97,
+          116,
+          97,
+          16,
+          0,
+          115,
+          99,
+          114,
+          105,
+          112,
+          116,
+          115,
+          92,
+          102,
+          52,
+          115,
+          101,
+          46,
+          112,
+          101,
+          120
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "bridge-dimensions",
+      "action": "ba2-scan.bridge",
+      "capabilityIds": [
+        "ba2-scan.bridge"
+      ],
+      "fixtureRefs": [
+        "bridge-dimensions"
+      ],
+      "input": {
+        "fixtureRef": "bridge-dimensions"
+      },
+      "expected": {
+        "issues": {
+          "dimensions": [
+            "  - 7x5 : fixture.ba2 > textures\\test.dds"
+          ],
+          "formats": [],
+          "sounds": [],
+          "scripts": []
+        },
+        "bytes": [
+          66,
+          84,
+          68,
+          88,
+          1,
+          0,
+          0,
+          0,
+          68,
+          88,
+          49,
+          48,
+          1,
+          0,
+          0,
+          0,
+          88,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16,
+          161,
+          59,
+          249,
+          100,
+          100,
+          115,
+          0,
+          127,
+          102,
+          165,
+          192,
+          0,
+          1,
+          24,
+          0,
+          5,
+          0,
+          7,
+          0,
+          1,
+          77,
+          0,
+          0,
+          72,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          13,
+          240,
+          173,
+          186,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          17,
+          0,
+          116,
+          101,
+          120,
+          116,
+          117,
+          114,
+          101,
+          115,
+          92,
+          116,
+          101,
+          115,
+          116,
+          46,
+          100,
+          100,
+          115
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "bridge-format",
+      "action": "ba2-scan.bridge",
+      "capabilityIds": [
+        "ba2-scan.bridge"
+      ],
+      "fixtureRefs": [
+        "bridge-format"
+      ],
+      "input": {
+        "fixtureRef": "bridge-format"
+      },
+      "expected": {
+        "issues": {
+          "dimensions": [],
+          "formats": [
+            "  - PNG : fixture.ba2 > textures\\test.png\n"
+          ],
+          "sounds": [],
+          "scripts": []
+        },
+        "bytes": [
+          66,
+          84,
+          68,
+          88,
+          1,
+          0,
+          0,
+          0,
+          68,
+          88,
+          49,
+          48,
+          1,
+          0,
+          0,
+          0,
+          88,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16,
+          161,
+          59,
+          249,
+          112,
+          110,
+          103,
+          0,
+          127,
+          102,
+          165,
+          192,
+          0,
+          1,
+          24,
+          0,
+          5,
+          0,
+          7,
+          0,
+          1,
+          77,
+          0,
+          0,
+          72,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          13,
+          240,
+          173,
+          186,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          17,
+          0,
+          116,
+          101,
+          120,
+          116,
+          117,
+          114,
+          101,
+          115,
+          92,
+          116,
+          101,
+          115,
+          116,
+          46,
+          112,
+          110,
+          103
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

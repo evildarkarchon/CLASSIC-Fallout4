@@ -15,14 +15,8 @@ from typing import Any
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from binding_parity_runtime_coverage import (
-    build_coverage_summary,
-    load_json_file,
-    render_coverage_summary_markdown,
-)
 from parity_artifact_io import (
     preserve_baseline_generated_at_all,
-    stable_id_hash,
     write_json,
 )
 from parity_rust_surface import build_lookup
@@ -31,6 +25,7 @@ from parity_rust_surface import parse_rust_surface as _parse_rust_surface_shared
 RUST_TARGET_CRATES: dict[str, str] = {
     # Phase 1 original 10 crates (verified pre-state 2026-04-08).
     "classic-scanlog-core": "business-logic/classic-scanlog-core/src/lib.rs",
+    "classic-scan-presentation": "business-logic/classic-scan-presentation/src/lib.rs",
     "classic-config-core": "business-logic/classic-config-core/src/lib.rs",
     "classic-user-settings-core": "business-logic/classic-user-settings-core/src/lib.rs",
     "classic-version-registry-core": "business-logic/classic-version-registry-core/src/lib.rs",
@@ -66,6 +61,7 @@ RUST_TARGET_CRATES: dict[str, str] = {
 # sizing pipeline fails loud if one is missing rather than defaulting to aux.
 RUST_OWNER_BY_CRATE: dict[str, str] = {
     "classic-scanlog-core": "scanlog",
+    "classic-scan-presentation": "scanlog",
     "classic-config-core": "config",
     "classic-user-settings-core": "user_settings",
     "classic-version-registry-core": "version_registry",
@@ -192,6 +188,110 @@ NODE_PHASE3_SYMBOL_ROUTE: dict[str, dict[str, str]] = {
 }
 
 
+# Explicit exports avoid attributing ambiguous names such as `get` by symbol
+# alone. These routes follow the direct core calls in Node src/shared.rs and
+# src/fileio.rs, preserving the distinct registry, performance and file owners.
+EXECUTABLE_AUX_CRATES = {
+    # src/path.rs stores each public class directly over this Rust core owner.
+    "DocsPathFinder": "classic-path-core",
+    "DocumentsChecker": "classic-path-core",
+    "GamePathFinder": "classic-path-core",
+    "detectEncoding": "classic-file-io-core",
+    "hashFile": "classic-file-io-core",
+    "hashFilesParallel": "classic-file-io-core",
+    "getRuntimeInfo": "classic-shared-core",
+    "isRuntimeAvailable": "classic-shared-core",
+    "registrySet": "classic-registry-core",
+    "registryGet": "classic-registry-core",
+    "registryRemove": "classic-registry-core",
+    "registryClear": "classic-registry-core",
+    "recordTimingMetric": "classic-perf-core",
+    "getMetricsSummary": "classic-perf-core",
+    "clearAllMetrics": "classic-perf-core",
+}
+
+
+def enrich_executable_aux_owners(contract: dict[str, Any]) -> dict[str, Any]:
+    """Persist source-backed crate identity for executable retained aux rows."""
+    for mapping in contract.get("tier1Mappings", []):
+        crate = EXECUTABLE_AUX_CRATES.get(mapping.get("nodeExport"))
+        if crate is not None:
+            mapping["rustCrate"] = crate
+        # These pre-existing exports call version.rs directly, not the Version
+        # Registry carriers historically used by the promoted smoke inventory.
+        # Preserve row IDs/owners so retained registry evidence remains intact.
+        version_symbol = {
+            "parseVersion": "parse_version",
+            "tryParseVersion": "try_parse_version",
+            "compareVersions": "compare_versions",
+            "formatVersion": "format_version",
+            "extractVersionFromFilename": "extract_version_from_filename",
+            "extractVersionFromLog": "extract_version_from_log",
+            "extractAllVersions": "extract_all_versions",
+            "isKnownFallout4Version": "is_known_fallout4_version",
+        }.get(mapping.get("nodeExport"))
+        if version_symbol is not None:
+            mapping["rustCrate"] = "classic-version-core"
+            mapping["rustSymbol"] = version_symbol
+    # settings.rs delegates these exports to the generic settings cache, not
+    # classic-config-core's explicit application YAML loader.
+    settings_routes = {
+        "loadSettingsSync": "load_settings_sync",
+        "loadSettingsAsync": "load_settings_async",
+        "loadBatchSync": "load_batch_sync",
+        "loadBatchAsync": "load_batch_async",
+        "isCached": "is_cached",
+        "getCached": "get_cached",
+        "invalidateSettings": "invalidate",
+        "clearSettingsCache": "clear_cache",
+        "settingsCacheSize": "cache_size",
+        "settingsCacheKeys": "cache_keys",
+        "getSettingsCacheStats": "cache_stats",
+        "resetSettingsCacheStats": "reset_cache_stats",
+    }
+    for mapping in contract.get("tier1Mappings", []):
+        symbol = settings_routes.get(mapping.get("nodeExport"))
+        if symbol is not None:
+            mapping["rustCrate"] = "classic-settings-core"
+            mapping["rustSymbol"] = symbol
+    return enrich_version_registry_owners(contract)
+
+
+def enrich_version_registry_owners(contract: dict[str, Any]) -> dict[str, Any]:
+    """Attribute executed registry exports to their actual core methods, preserving row IDs."""
+    routes = {
+        "parseGameVersion": "parse",
+        "gameVersionDistance": "semantic_distance",
+        "getAllFallout4Versions": "Fallout4Version",
+        "getFallout4VersionInfo": "Fallout4Version",
+        "getVersionByVersionString": "get_by_version",
+        "getVersionByShortName": "get_by_short_name",
+        "getAllVersions": "get_all",
+        "getAllVersionsForGame": "get_all_for_game",
+        "getCorrectVersions": "get_correct_versions",
+        "getWrongVersions": "get_wrong_versions",
+        "getAddressLibraryFilename": "get_address_library_filename",
+        "getCrashgenVersions": "get_crashgen_versions",
+        "getCrashgenVersionStrings": "get_crashgen_version_strings",
+        "getCrashgenForVersion": "get_crashgen_for_version",
+        # These public wrappers project multiple registry fields; their exact
+        # runtime operation still scopes executable credit below the class owner.
+        "getAllExeHashes": "VersionRegistry",
+        "getAllScriptHashes": "VersionRegistry",
+        "getScriptHashesForVersion": "VersionRegistry",
+        "getUnknownVersionHandling": "unknown_version_handling",
+        "getUnknownVersionDefault": "UnknownVersionHandling",
+        "getVersionRegistry": "VersionRegistry",
+        "isVersionCompatible": "VersionRegistry",
+    }
+    for mapping in contract.get("tier1Mappings", []):
+        symbol = routes.get(mapping.get("nodeExport"))
+        if symbol is not None:
+            mapping["rustCrate"] = "classic-version-registry-core"
+            mapping["rustSymbol"] = symbol
+    return contract
+
+
 def normalize_phase3_node_contract(contract: dict[str, Any]) -> dict[str, Any]:
     """Reparent retired constants proxy rows to surviving owners."""
     retired_owner = "const" + "ants"
@@ -220,45 +320,7 @@ def normalize_phase3_node_contract(contract: dict[str, Any]) -> dict[str, Any]:
         mapping["ownerModule"] = route["ownerModule"]
         mapping["rustCrate"] = route["rustCrate"]
 
-    return contract
-
-
-def normalize_phase3_node_runtime_registry(
-    runtime_registry: dict[str, Any], contract: dict[str, Any]
-) -> dict[str, Any]:
-    """Update selector-based runtime coverage metadata after Phase 3 reparenting."""
-    retired_owner = "const" + "ants"
-    entries = [
-        entry
-        for entry in runtime_registry.get("entries", [])
-        if entry.get("coverageId") != "node-tier1-constants"
-        and entry.get("ownerModule") != retired_owner
-    ]
-
-    tier1_rows = contract.get("tier1Mappings", [])
-    grouped_ids: dict[str, list[str]] = {
-        "version_registry": [],
-        "settings": [],
-        "shared": [],
-    }
-    for row in tier1_rows:
-        owner = row.get("ownerModule")
-        if row.get("tier") == "tier1" and owner in grouped_ids:
-            grouped_ids[owner].append(row["id"])
-
-    for entry in entries:
-        selector = entry.get("contractSelector")
-        if not isinstance(selector, dict):
-            continue
-        owner = selector.get("ownerModule")
-        if owner not in grouped_ids:
-            continue
-        entry["ownerModule"] = owner
-        entry["contractCount"] = len(grouped_ids[owner])
-        entry["contractIdsHash"] = stable_id_hash(grouped_ids[owner])
-
-    runtime_registry["entries"] = entries
-    return runtime_registry
+    return enrich_executable_aux_owners(contract)
 
 
 def snake_to_camel(name: str) -> str:
@@ -323,6 +385,7 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
         target_crates=RUST_TARGET_CRATES,
         owner_by_crate=RUST_OWNER_BY_CRATE,
     )
+
 
 def infer_node_owner(name: str, tier1_owner_map: dict[str, str]) -> str:
     """Infer owner module for a Node export."""
@@ -460,14 +523,6 @@ def generate_diff_report(
     # Strip the suffix to get the effective Rust symbol for tier1 tracking
     # (so a proxy row for `FormIDAnalyzer@rust` marks `FormIDAnalyzer` as
     # tier1-mapped for the rust_unmapped gap calculation below).
-    tier1_rust_symbols = {
-        _effective_rust_symbol(mapping["rustSymbol"]) for mapping in tier1_mappings
-    }
-    tier1_node_exports = {
-        mapping["nodeExport"]
-        for mapping in tier1_mappings
-        if mapping.get("nodeExport") is not None
-    }
 
     contract_results: list[dict[str, Any]] = []
     gaps: list[dict[str, Any]] = []
@@ -711,18 +766,15 @@ def main() -> int:
         default="docs/implementation/node_api_parity/baseline",
         help="Directory for generated output files, relative to repo root.",
     )
-    parser.add_argument(
-        "--runtime-registry",
-        default="node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-        help="Path to the Node runtime coverage registry JSON, relative to repo root.",
-    )
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
     contract_path = repo_root / args.contract
     output_dir = repo_root / args.output_dir
 
-    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    contract = enrich_executable_aux_owners(
+        json.loads(contract_path.read_text(encoding="utf-8"))
+    )
     tier1_mappings: list[dict[str, Any]] = contract["tier1Mappings"]
     # Phase 4 Plan 2: @rust proxy rows only have Rust symbols; strip the
     # suffix for tier1 rust-set tracking and skip proxy rows in the node-side
@@ -749,32 +801,18 @@ def main() -> int:
         index_dts_rel=args.index_dts,
     )
     diff_report = generate_diff_report(contract, rust_manifest, node_manifest)
-    runtime_registry = load_json_file(repo_root / args.runtime_registry)
-    coverage_summary = build_coverage_summary(
-        binding="node",
-        contract=contract,
-        diff_report=diff_report,
-        runtime_registry=runtime_registry,
-        source_paths={
-            "contract": args.contract,
-            "runtime_registry": args.runtime_registry,
-            "index_dts": args.index_dts,
-        },
-    )
 
     # --output-dir defaults to the tracked baseline directory, so these writes
     # land straight in git. Carry each committed timestamp forward when only the
     # clock would have changed, keeping a no-op regeneration byte-identical.
-    # handoff_map.md and parity_diff_report.md follow from diff_report, and
-    # runtime_coverage_summary.md from coverage_summary, so preserving the JSON
-    # payloads stabilizes every markdown artifact too.
+    # handoff_map.md and parity_diff_report.md follow from diff_report, so
+    # preserving the JSON payload stabilizes both Markdown artifacts too.
     preserve_baseline_generated_at_all(
         output_dir,
         {
             "rust_api_surface.json": rust_manifest,
             "node_api_surface.json": node_manifest,
             "parity_diff_report.json": diff_report,
-            "runtime_coverage_summary.json": coverage_summary,
         },
     )
 
@@ -783,10 +821,6 @@ def main() -> int:
     write_json(output_dir / "parity_diff_report.json", diff_report)
     (output_dir / "parity_diff_report.md").write_text(
         render_diff_markdown(diff_report), encoding="utf-8"
-    )
-    write_json(output_dir / "runtime_coverage_summary.json", coverage_summary)
-    (output_dir / "runtime_coverage_summary.md").write_text(
-        render_coverage_summary_markdown(coverage_summary), encoding="utf-8"
     )
     (output_dir / "handoff_map.md").write_text(
         render_handoff_markdown(diff_report), encoding="utf-8"
@@ -797,8 +831,6 @@ def main() -> int:
     print(f"- {output_dir / 'node_api_surface.json'}")
     print(f"- {output_dir / 'parity_diff_report.json'}")
     print(f"- {output_dir / 'parity_diff_report.md'}")
-    print(f"- {output_dir / 'runtime_coverage_summary.json'}")
-    print(f"- {output_dir / 'runtime_coverage_summary.md'}")
     print(f"- {output_dir / 'handoff_map.md'}")
     return 0
 

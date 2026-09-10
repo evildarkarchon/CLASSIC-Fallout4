@@ -35,12 +35,53 @@ pub enum InstalledYamlDataRole {
     Game,
 }
 
-impl std::fmt::Display for InstalledYamlDataRole {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Vocabulary for InstalledYamlDataRole {
+    const VARIANTS: &'static [Self] = &[Self::Main, Self::Game];
+
+    /// These tokens are frozen. They are the exact strings the Python and Node
+    /// surfaces already publish from two separate hand-written tables, so
+    /// respelling one here breaks every consumer of both at once. Note that they
+    /// are *not* what this type's [`std::fmt::Display`] has ever rendered: that
+    /// form is the Display Label below, and the two disagree on `Main`.
+    fn as_str(self) -> &'static str {
         match self {
-            Self::Main => formatter.write_str("Main"),
-            Self::Game => formatter.write_str("game"),
+            Self::Main => "main",
+            Self::Game => "game",
         }
+    }
+
+    /// The wording this type's [`std::fmt::Display`] already produced, preserved
+    /// byte for byte because it is composed into user-facing prose — the
+    /// `no usable Installed YAML Data source for {role}` load errors below, and
+    /// the parse and empty-file labels in `parse_candidate`.
+    ///
+    /// The asymmetric capitalization is deliberate rather than an oversight, and
+    /// is the clearest case in this crate for why a label cannot be derived from
+    /// its token: `Main` names the global Main YAML Data, a glossary domain term,
+    /// while `game` is the ordinary adjective in `selected-game YAML Data`.
+    ///
+    /// The Qt GUI writes `Game` from a ternary of its own in the same diagnostic
+    /// position where the TUI prints this label, so the two frontends already
+    /// disagree here. Adopting the contract does not fix that on its own — the
+    /// GUI has no accessor to call yet — but it does give the fix somewhere to
+    /// come from.
+    fn label(self) -> &'static str {
+        match self {
+            Self::Main => "Main",
+            Self::Game => "game",
+        }
+    }
+}
+
+impl std::fmt::Display for InstalledYamlDataRole {
+    /// Renders the Display Label rather than the Vocabulary Token.
+    ///
+    /// The opposite of what `InfrastructureErrorStage` does in the Crash Log Scan
+    /// Run contract, and for the opposite reason: every consumer of this `Display`
+    /// splices it into a sentence a person reads, so rendering `main` here would
+    /// put an identifier where prose belongs.
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(Vocabulary::label(*self))
     }
 }
 

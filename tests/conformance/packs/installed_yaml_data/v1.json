@@ -1,0 +1,1545 @@
+{
+  "schemaVersion": 1,
+  "familyId": "installed-yaml-data",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-config-core"
+  },
+  "fixtureRoot": "tests/fixtures/installed_yaml_data_conformance",
+  "fixtures": {
+    "updated_main_bundled_game": "updated-main-bundled-game.json",
+    "previous_selected_read_only": "previous-selected-read-only.json",
+    "invalid_canonical_blocks_previous": "invalid-canonical-blocks-previous.json",
+    "invalid_previous_falls_back": "invalid-previous-falls-back.json",
+    "independent_rejected_candidates": "independent-rejected-candidates.json",
+    "invalid_schema_falls_back": "invalid-schema-falls-back.json",
+    "missing_main_no_usable_source": "missing-main-no-usable-source.json",
+    "unsupported_game_before_io": "unsupported-game-before-io.json",
+    "vr_uses_fallout4_data": "vr-uses-fallout4-data.json",
+    "inspection_ignores_malformed_local": "inspection-ignores-malformed-local.json",
+    "ready_snapshot_retains_original_bytes": "ready-snapshot-retains-original-bytes.json",
+    "legacy_ignore_adopted_byte_for_byte": "legacy-ignore-adopted-byte-for-byte.json",
+    "canonical_ignore_wins_over_legacy": "canonical-ignore-wins-over-legacy.json",
+    "recovery_plan_without_defaults": "recovery-plan-without-defaults.json",
+    "missing_ignore_invalid_defaults": "missing-ignore-invalid-defaults.json",
+    "proceed_without_ignore": "proceed-without-ignore.json",
+    "recovery_plan_with_defaults": "recovery-plan-with-defaults.json",
+    "reset_retained_defaults": "reset-retained-defaults.json",
+    "reset_preserves_concurrent_edit": "reset-preserves-concurrent-edit.json"
+  },
+  "capabilities": [
+    {
+      "id": "installed-yaml-data.inspect",
+      "rustSymbols": [
+        "inspect_installed_yaml_data",
+        "InstalledYamlDataInspection",
+        "InstalledYamlDataInspectionError",
+        "InstalledYamlDataInspectionRequest"
+      ],
+      "observationFamilies": [
+        "selection",
+        "diagnostics",
+        "durable-effects"
+      ]
+    },
+    {
+      "id": "installed-yaml-data.load",
+      "rustSymbols": [
+        "load_installed_yaml_data",
+        "InstalledYamlDataSnapshot",
+        "InstalledYamlDataLoadError",
+        "InstalledYamlDataLoadRequest",
+        "InstalledYamlDataLoadOutcome",
+        "LocalIgnoreRecoveryPlan",
+        "LocalIgnoreResetOutcome",
+        "LocalIgnoreResetResult",
+        "LocalIgnoreResetConflict"
+      ],
+      "observationFamilies": [
+        "selection",
+        "snapshot",
+        "recovery",
+        "durable-effects"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "updated-main-bundled-game",
+      "action": "installed-yaml-data.inspect",
+      "capabilityIds": [
+        "installed-yaml-data.inspect"
+      ],
+      "fixtureRefs": [
+        "updated_main_bundled_game"
+      ],
+      "input": {
+        "fixtureRef": "updated_main_bundled_game"
+      },
+      "expected": {
+        "outcome": "inspected",
+        "game": "Fallout4",
+        "gameDataRole": "Fallout4",
+        "main": {
+          "role": "main",
+          "provenance": "updated",
+          "schemaVersion": "2.0",
+          "identity": {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml",
+            "sha256": "a9841ae194ecefbfe47a5a7bd62fae5fb59a388b3eacb41b0afa301633ca7ed7",
+            "byteLength": 255
+          }
+        },
+        "gameFile": {
+          "role": "game",
+          "provenance": "bundled",
+          "schemaVersion": "1.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          }
+        },
+        "localIgnore": null,
+        "recovery": null,
+        "snapshot": null,
+        "diagnostics": [],
+        "error": null,
+        "files": [
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml",
+            "sha256": "a9841ae194ecefbfe47a5a7bd62fae5fb59a388b3eacb41b0afa301633ca7ed7",
+            "byteLength": 255
+          },
+          {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "8876f72865dba00b7a7bf3dac0081d383a9b85053e5935d551e03b228d6e4743",
+            "byteLength": 53
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "previous-selected-read-only",
+      "action": "installed-yaml-data.inspect",
+      "capabilityIds": [
+        "installed-yaml-data.inspect"
+      ],
+      "fixtureRefs": [
+        "previous_selected_read_only"
+      ],
+      "input": {
+        "fixtureRef": "previous_selected_read_only"
+      },
+      "expected": {
+        "outcome": "inspected",
+        "game": "Fallout4",
+        "gameDataRole": "Fallout4",
+        "main": {
+          "role": "main",
+          "provenance": "previous",
+          "schemaVersion": "2.0",
+          "identity": {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml.prev",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        },
+        "gameFile": {
+          "role": "game",
+          "provenance": "bundled",
+          "schemaVersion": "1.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          }
+        },
+        "localIgnore": null,
+        "recovery": null,
+        "snapshot": null,
+        "diagnostics": [],
+        "error": null,
+        "files": [
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml.prev",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          },
+          {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "8876f72865dba00b7a7bf3dac0081d383a9b85053e5935d551e03b228d6e4743",
+            "byteLength": 53
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid-canonical-blocks-previous",
+      "action": "installed-yaml-data.inspect",
+      "capabilityIds": [
+        "installed-yaml-data.inspect"
+      ],
+      "fixtureRefs": [
+        "invalid_canonical_blocks_previous"
+      ],
+      "input": {
+        "fixtureRef": "invalid_canonical_blocks_previous"
+      },
+      "expected": {
+        "outcome": "inspected",
+        "game": "Fallout4",
+        "gameDataRole": "Fallout4",
+        "main": {
+          "role": "main",
+          "provenance": "bundled",
+          "schemaVersion": "2.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        },
+        "gameFile": {
+          "role": "game",
+          "provenance": "bundled",
+          "schemaVersion": "1.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          }
+        },
+        "localIgnore": null,
+        "recovery": null,
+        "snapshot": null,
+        "diagnostics": [
+          {
+            "role": "main",
+            "candidate": "updated",
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml",
+            "kind": "parse"
+          }
+        ],
+        "error": null,
+        "files": [
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml",
+            "sha256": "d121b49f105e59b2bda226541485f998d81c1b3af219d79fb0ce8c60bcc1293c",
+            "byteLength": 14
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml.prev",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          },
+          {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "8876f72865dba00b7a7bf3dac0081d383a9b85053e5935d551e03b228d6e4743",
+            "byteLength": 53
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid-previous-falls-back",
+      "action": "installed-yaml-data.inspect",
+      "capabilityIds": [
+        "installed-yaml-data.inspect"
+      ],
+      "fixtureRefs": [
+        "invalid_previous_falls_back"
+      ],
+      "input": {
+        "fixtureRef": "invalid_previous_falls_back"
+      },
+      "expected": {
+        "outcome": "inspected",
+        "game": "Fallout4",
+        "gameDataRole": "Fallout4",
+        "main": {
+          "role": "main",
+          "provenance": "bundled",
+          "schemaVersion": "2.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        },
+        "gameFile": {
+          "role": "game",
+          "provenance": "bundled",
+          "schemaVersion": "1.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          }
+        },
+        "localIgnore": null,
+        "recovery": null,
+        "snapshot": null,
+        "diagnostics": [
+          {
+            "role": "main",
+            "candidate": "previous",
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml.prev",
+            "kind": "parse"
+          }
+        ],
+        "error": null,
+        "files": [
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml.prev",
+            "sha256": "d121b49f105e59b2bda226541485f998d81c1b3af219d79fb0ce8c60bcc1293c",
+            "byteLength": 14
+          },
+          {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "8876f72865dba00b7a7bf3dac0081d383a9b85053e5935d551e03b228d6e4743",
+            "byteLength": 53
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "independent-rejected-candidates",
+      "action": "installed-yaml-data.inspect",
+      "capabilityIds": [
+        "installed-yaml-data.inspect"
+      ],
+      "fixtureRefs": [
+        "independent_rejected_candidates"
+      ],
+      "input": {
+        "fixtureRef": "independent_rejected_candidates"
+      },
+      "expected": {
+        "outcome": "inspected",
+        "game": "Fallout4",
+        "gameDataRole": "Fallout4",
+        "main": {
+          "role": "main",
+          "provenance": "bundled",
+          "schemaVersion": "2.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        },
+        "gameFile": {
+          "role": "game",
+          "provenance": "bundled",
+          "schemaVersion": "1.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          }
+        },
+        "localIgnore": null,
+        "recovery": null,
+        "snapshot": null,
+        "diagnostics": [
+          {
+            "role": "main",
+            "candidate": "updated",
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml",
+            "kind": "incompatible_schema"
+          },
+          {
+            "role": "game",
+            "candidate": "updated",
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Fallout4.yaml",
+            "kind": "invalid_role_data"
+          }
+        ],
+        "error": null,
+        "files": [
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Fallout4.yaml",
+            "sha256": "7307cee2d34ce30c43ed59bd7fdb57440647eea36e461316a727d63bd6283dd7",
+            "byteLength": 36
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml",
+            "sha256": "f3291d018482ec57680267a5d37b76eed2caa974c2e0a6ffcb5e9462c471f8bc",
+            "byteLength": 256
+          },
+          {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "8876f72865dba00b7a7bf3dac0081d383a9b85053e5935d551e03b228d6e4743",
+            "byteLength": 53
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid-schema-falls-back",
+      "action": "installed-yaml-data.inspect",
+      "capabilityIds": [
+        "installed-yaml-data.inspect"
+      ],
+      "fixtureRefs": [
+        "invalid_schema_falls_back"
+      ],
+      "input": {
+        "fixtureRef": "invalid_schema_falls_back"
+      },
+      "expected": {
+        "outcome": "inspected",
+        "game": "Fallout4",
+        "gameDataRole": "Fallout4",
+        "main": {
+          "role": "main",
+          "provenance": "bundled",
+          "schemaVersion": "2.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        },
+        "gameFile": {
+          "role": "game",
+          "provenance": "bundled",
+          "schemaVersion": "1.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          }
+        },
+        "localIgnore": null,
+        "recovery": null,
+        "snapshot": null,
+        "diagnostics": [
+          {
+            "role": "main",
+            "candidate": "updated",
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml",
+            "kind": "invalid_schema"
+          }
+        ],
+        "error": null,
+        "files": [
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml",
+            "sha256": "f9d08c49dba5b12a80944e40868562f01151a9edb161b5606826700b75cb2871",
+            "byteLength": 233
+          },
+          {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "8876f72865dba00b7a7bf3dac0081d383a9b85053e5935d551e03b228d6e4743",
+            "byteLength": 53
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "missing-main-no-usable-source",
+      "action": "installed-yaml-data.inspect",
+      "capabilityIds": [
+        "installed-yaml-data.inspect"
+      ],
+      "fixtureRefs": [
+        "missing_main_no_usable_source"
+      ],
+      "input": {
+        "fixtureRef": "missing_main_no_usable_source"
+      },
+      "expected": {
+        "outcome": "error",
+        "game": null,
+        "gameDataRole": null,
+        "main": null,
+        "gameFile": null,
+        "localIgnore": null,
+        "recovery": null,
+        "snapshot": null,
+        "diagnostics": [
+          {
+            "role": "main",
+            "candidate": "bundled",
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "kind": "missing"
+          }
+        ],
+        "error": {
+          "code": "no_usable_source",
+          "role": "main"
+        },
+        "files": [
+          {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "8876f72865dba00b7a7bf3dac0081d383a9b85053e5935d551e03b228d6e4743",
+            "byteLength": 53
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "unsupported-game-before-io",
+      "action": "installed-yaml-data.inspect",
+      "capabilityIds": [
+        "installed-yaml-data.inspect"
+      ],
+      "fixtureRefs": [
+        "unsupported_game_before_io"
+      ],
+      "input": {
+        "fixtureRef": "unsupported_game_before_io"
+      },
+      "expected": {
+        "outcome": "error",
+        "game": null,
+        "gameDataRole": null,
+        "main": null,
+        "gameFile": null,
+        "localIgnore": null,
+        "recovery": null,
+        "snapshot": null,
+        "diagnostics": [],
+        "error": {
+          "code": "unsupported_game",
+          "role": null
+        },
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "vr-uses-fallout4-data",
+      "action": "installed-yaml-data.inspect",
+      "capabilityIds": [
+        "installed-yaml-data.inspect"
+      ],
+      "fixtureRefs": [
+        "vr_uses_fallout4_data"
+      ],
+      "input": {
+        "fixtureRef": "vr_uses_fallout4_data"
+      },
+      "expected": {
+        "outcome": "inspected",
+        "game": "Fallout4VR",
+        "gameDataRole": "Fallout4",
+        "main": {
+          "role": "main",
+          "provenance": "bundled",
+          "schemaVersion": "2.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        },
+        "gameFile": {
+          "role": "game",
+          "provenance": "bundled",
+          "schemaVersion": "1.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          }
+        },
+        "localIgnore": null,
+        "recovery": null,
+        "snapshot": null,
+        "diagnostics": [],
+        "error": null,
+        "files": [
+          {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "8876f72865dba00b7a7bf3dac0081d383a9b85053e5935d551e03b228d6e4743",
+            "byteLength": 53
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "inspection-ignores-malformed-local",
+      "action": "installed-yaml-data.inspect",
+      "capabilityIds": [
+        "installed-yaml-data.inspect"
+      ],
+      "fixtureRefs": [
+        "inspection_ignores_malformed_local"
+      ],
+      "input": {
+        "fixtureRef": "inspection_ignores_malformed_local"
+      },
+      "expected": {
+        "outcome": "inspected",
+        "game": "Fallout4",
+        "gameDataRole": "Fallout4",
+        "main": {
+          "role": "main",
+          "provenance": "bundled",
+          "schemaVersion": "2.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        },
+        "gameFile": {
+          "role": "game",
+          "provenance": "bundled",
+          "schemaVersion": "1.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          }
+        },
+        "localIgnore": null,
+        "recovery": null,
+        "snapshot": null,
+        "diagnostics": [],
+        "error": null,
+        "files": [
+          {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11",
+            "byteLength": 39
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "ready-snapshot-retains-original-bytes",
+      "action": "installed-yaml-data.load",
+      "capabilityIds": [
+        "installed-yaml-data.load"
+      ],
+      "fixtureRefs": [
+        "ready_snapshot_retains_original_bytes"
+      ],
+      "input": {
+        "fixtureRef": "ready_snapshot_retains_original_bytes"
+      },
+      "expected": {
+        "outcome": "ready",
+        "game": "Fallout4",
+        "gameDataRole": "Fallout4",
+        "main": {
+          "role": "main",
+          "provenance": "bundled",
+          "schemaVersion": "2.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        },
+        "gameFile": {
+          "role": "game",
+          "provenance": "bundled",
+          "schemaVersion": "1.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          }
+        },
+        "localIgnore": {
+          "state": "existing",
+          "identity": {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "8876f72865dba00b7a7bf3dac0081d383a9b85053e5935d551e03b228d6e4743",
+            "byteLength": 53
+          }
+        },
+        "recovery": null,
+        "snapshot": {
+          "classicVersion": "9.1.0",
+          "gameRootName": "Fallout 4",
+          "ignoreList": [
+            "ExistingUserEntry.dll"
+          ],
+          "simplifyRemoveList": []
+        },
+        "diagnostics": [],
+        "error": null,
+        "files": [
+          {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "558e0bbb050f3263a15c62d86421bb191246554fbdfc1ae476a1387f25cd0241",
+            "byteLength": 48
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "9fbb9584d34a3398ae03b202b7de18b0c83818884e861c2c59cfc3a9100aaa3f",
+            "byteLength": 192
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "fbb4fd9ec6e5a951e2b20e32ba646c0787a9882b3e7f98a7d3da4bd9487f5617",
+            "byteLength": 256
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "legacy-ignore-adopted-byte-for-byte",
+      "action": "installed-yaml-data.load",
+      "capabilityIds": [
+        "installed-yaml-data.load"
+      ],
+      "fixtureRefs": [
+        "legacy_ignore_adopted_byte_for_byte"
+      ],
+      "input": {
+        "fixtureRef": "legacy_ignore_adopted_byte_for_byte"
+      },
+      "expected": {
+        "outcome": "ready",
+        "game": "Fallout4",
+        "gameDataRole": "Fallout4",
+        "main": {
+          "role": "main",
+          "provenance": "bundled",
+          "schemaVersion": "2.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        },
+        "gameFile": {
+          "role": "game",
+          "provenance": "bundled",
+          "schemaVersion": "1.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          }
+        },
+        "localIgnore": {
+          "state": "existing",
+          "identity": {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "8876f72865dba00b7a7bf3dac0081d383a9b85053e5935d551e03b228d6e4743",
+            "byteLength": 53
+          }
+        },
+        "recovery": null,
+        "snapshot": {
+          "classicVersion": "9.1.0",
+          "gameRootName": "Fallout 4",
+          "ignoreList": [
+            "ExistingUserEntry.dll"
+          ],
+          "simplifyRemoveList": []
+        },
+        "diagnostics": [
+          {
+            "role": null,
+            "candidate": null,
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "kind": "local_ignore_generated"
+          }
+        ],
+        "error": null,
+        "files": [
+          {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "8876f72865dba00b7a7bf3dac0081d383a9b85053e5935d551e03b228d6e4743",
+            "byteLength": 53
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          },
+          {
+            "path": "installation/CLASSIC Ignore.yaml",
+            "sha256": "8876f72865dba00b7a7bf3dac0081d383a9b85053e5935d551e03b228d6e4743",
+            "byteLength": 53
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "canonical-ignore-wins-over-legacy",
+      "action": "installed-yaml-data.load",
+      "capabilityIds": [
+        "installed-yaml-data.load"
+      ],
+      "fixtureRefs": [
+        "canonical_ignore_wins_over_legacy"
+      ],
+      "input": {
+        "fixtureRef": "canonical_ignore_wins_over_legacy"
+      },
+      "expected": {
+        "outcome": "ready",
+        "game": "Fallout4",
+        "gameDataRole": "Fallout4",
+        "main": {
+          "role": "main",
+          "provenance": "bundled",
+          "schemaVersion": "2.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        },
+        "gameFile": {
+          "role": "game",
+          "provenance": "bundled",
+          "schemaVersion": "1.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          }
+        },
+        "localIgnore": {
+          "state": "existing",
+          "identity": {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "8876f72865dba00b7a7bf3dac0081d383a9b85053e5935d551e03b228d6e4743",
+            "byteLength": 53
+          }
+        },
+        "recovery": null,
+        "snapshot": {
+          "classicVersion": "9.1.0",
+          "gameRootName": "Fallout 4",
+          "ignoreList": [
+            "ExistingUserEntry.dll"
+          ],
+          "simplifyRemoveList": []
+        },
+        "diagnostics": [],
+        "error": null,
+        "files": [
+          {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "8876f72865dba00b7a7bf3dac0081d383a9b85053e5935d551e03b228d6e4743",
+            "byteLength": 53
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          },
+          {
+            "path": "installation/CLASSIC Ignore.yaml",
+            "sha256": "b568441598c87eea86b02ead196260d420b4e47ff7dda7ea86998e942d929bbb",
+            "byteLength": 47
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "recovery-plan-without-defaults",
+      "action": "installed-yaml-data.load",
+      "capabilityIds": [
+        "installed-yaml-data.load"
+      ],
+      "fixtureRefs": [
+        "recovery_plan_without_defaults"
+      ],
+      "input": {
+        "fixtureRef": "recovery_plan_without_defaults"
+      },
+      "expected": {
+        "outcome": "recovery_required",
+        "game": "Fallout4",
+        "gameDataRole": "Fallout4",
+        "main": {
+          "role": "main",
+          "provenance": "bundled",
+          "schemaVersion": "2.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "a1cc5332af4aeaaf0ddf8c8f4f151c5c445657ada5e2823b45ccf1a135c3bcde",
+            "byteLength": 170
+          }
+        },
+        "gameFile": {
+          "role": "game",
+          "provenance": "bundled",
+          "schemaVersion": "1.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          }
+        },
+        "localIgnore": null,
+        "recovery": {
+          "localIgnorePath": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+          "malformedIdentity": {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11",
+            "byteLength": 39
+          },
+          "defaultIdentity": null,
+          "selectedGameVersion": "OG"
+        },
+        "snapshot": null,
+        "diagnostics": [
+          {
+            "role": null,
+            "candidate": null,
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "kind": "parse"
+          }
+        ],
+        "error": null,
+        "files": [
+          {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11",
+            "byteLength": 39
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "a1cc5332af4aeaaf0ddf8c8f4f151c5c445657ada5e2823b45ccf1a135c3bcde",
+            "byteLength": 170
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "missing-ignore-invalid-defaults",
+      "action": "installed-yaml-data.load",
+      "capabilityIds": [
+        "installed-yaml-data.load"
+      ],
+      "fixtureRefs": [
+        "missing_ignore_invalid_defaults"
+      ],
+      "input": {
+        "fixtureRef": "missing_ignore_invalid_defaults"
+      },
+      "expected": {
+        "outcome": "error",
+        "game": null,
+        "gameDataRole": null,
+        "main": null,
+        "gameFile": null,
+        "localIgnore": null,
+        "recovery": null,
+        "snapshot": null,
+        "diagnostics": [],
+        "error": {
+          "code": "local_ignore_default_invalid",
+          "role": null
+        },
+        "files": [
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "a1cc5332af4aeaaf0ddf8c8f4f151c5c445657ada5e2823b45ccf1a135c3bcde",
+            "byteLength": 170
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "proceed-without-ignore",
+      "action": "installed-yaml-data.load",
+      "capabilityIds": [
+        "installed-yaml-data.load"
+      ],
+      "fixtureRefs": [
+        "proceed_without_ignore"
+      ],
+      "input": {
+        "fixtureRef": "proceed_without_ignore"
+      },
+      "expected": {
+        "outcome": "proceeded",
+        "game": "Fallout4",
+        "gameDataRole": "Fallout4",
+        "main": {
+          "role": "main",
+          "provenance": "bundled",
+          "schemaVersion": "2.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "a1cc5332af4aeaaf0ddf8c8f4f151c5c445657ada5e2823b45ccf1a135c3bcde",
+            "byteLength": 170
+          }
+        },
+        "gameFile": {
+          "role": "game",
+          "provenance": "bundled",
+          "schemaVersion": "1.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          }
+        },
+        "localIgnore": {
+          "state": "proceed_without_ignore",
+          "identity": {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11",
+            "byteLength": 39
+          }
+        },
+        "recovery": {
+          "localIgnorePath": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+          "malformedIdentity": {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11",
+            "byteLength": 39
+          },
+          "defaultIdentity": null,
+          "selectedGameVersion": "OG"
+        },
+        "snapshot": {
+          "classicVersion": "9.1.0",
+          "gameRootName": "Fallout 4",
+          "ignoreList": [],
+          "simplifyRemoveList": []
+        },
+        "diagnostics": [
+          {
+            "role": null,
+            "candidate": null,
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "kind": "parse"
+          }
+        ],
+        "error": null,
+        "files": [
+          {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11",
+            "byteLength": 39
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "a1cc5332af4aeaaf0ddf8c8f4f151c5c445657ada5e2823b45ccf1a135c3bcde",
+            "byteLength": 170
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "recovery-plan-with-defaults",
+      "action": "installed-yaml-data.load",
+      "capabilityIds": [
+        "installed-yaml-data.load"
+      ],
+      "fixtureRefs": [
+        "recovery_plan_with_defaults"
+      ],
+      "input": {
+        "fixtureRef": "recovery_plan_with_defaults"
+      },
+      "expected": {
+        "outcome": "recovery_required",
+        "game": "Fallout4",
+        "gameDataRole": "Fallout4",
+        "main": {
+          "role": "main",
+          "provenance": "bundled",
+          "schemaVersion": "2.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        },
+        "gameFile": {
+          "role": "game",
+          "provenance": "bundled",
+          "schemaVersion": "1.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          }
+        },
+        "localIgnore": null,
+        "recovery": {
+          "localIgnorePath": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+          "malformedIdentity": {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11",
+            "byteLength": 39
+          },
+          "defaultIdentity": {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "935d2b794df05e14ac8af7079e1c1d9fc7d0690da3517114f80b18bddaaf02ba",
+            "byteLength": 53
+          },
+          "selectedGameVersion": "OG"
+        },
+        "snapshot": null,
+        "diagnostics": [
+          {
+            "role": null,
+            "candidate": null,
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "kind": "parse"
+          }
+        ],
+        "error": null,
+        "files": [
+          {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11",
+            "byteLength": 39
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "reset-retained-defaults",
+      "action": "installed-yaml-data.load",
+      "capabilityIds": [
+        "installed-yaml-data.load"
+      ],
+      "fixtureRefs": [
+        "reset_retained_defaults"
+      ],
+      "input": {
+        "fixtureRef": "reset_retained_defaults"
+      },
+      "expected": {
+        "outcome": "reset",
+        "game": "Fallout4",
+        "gameDataRole": "Fallout4",
+        "main": {
+          "role": "main",
+          "provenance": "bundled",
+          "schemaVersion": "2.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        },
+        "gameFile": {
+          "role": "game",
+          "provenance": "bundled",
+          "schemaVersion": "1.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          }
+        },
+        "localIgnore": {
+          "state": "reset_to_default",
+          "identity": {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "935d2b794df05e14ac8af7079e1c1d9fc7d0690da3517114f80b18bddaaf02ba",
+            "byteLength": 53
+          }
+        },
+        "recovery": {
+          "localIgnorePath": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+          "malformedIdentity": {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11",
+            "byteLength": 39
+          },
+          "defaultIdentity": {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "935d2b794df05e14ac8af7079e1c1d9fc7d0690da3517114f80b18bddaaf02ba",
+            "byteLength": 53
+          },
+          "selectedGameVersion": "OG",
+          "decision": {
+            "status": "reset",
+            "localIgnorePath": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "malformedIdentity": {
+              "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11",
+              "byteLength": 39
+            },
+            "backupIdentity": {
+              "path": "installation/CLASSIC Backup/YAML Data/Local Ignore/<backup>",
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11",
+              "byteLength": 39
+            },
+            "replacementIdentity": {
+              "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+              "sha256": "935d2b794df05e14ac8af7079e1c1d9fc7d0690da3517114f80b18bddaaf02ba",
+              "byteLength": 53
+            }
+          }
+        },
+        "snapshot": {
+          "classicVersion": "9.1.0",
+          "gameRootName": "Fallout 4",
+          "ignoreList": [
+            "SelectedMainDefault.dll"
+          ],
+          "simplifyRemoveList": []
+        },
+        "diagnostics": [
+          {
+            "role": null,
+            "candidate": null,
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "kind": "parse"
+          },
+          {
+            "role": null,
+            "candidate": null,
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "kind": "local_ignore_reset"
+          }
+        ],
+        "error": null,
+        "files": [
+          {
+            "path": "installation/.classic-local-ignore-reset.lock",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "byteLength": 0
+          },
+          {
+            "path": "installation/CLASSIC Backup/YAML Data/Local Ignore/<backup>",
+            "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11",
+            "byteLength": 39
+          },
+          {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "935d2b794df05e14ac8af7079e1c1d9fc7d0690da3517114f80b18bddaaf02ba",
+            "byteLength": 53
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "reset-preserves-concurrent-edit",
+      "action": "installed-yaml-data.load",
+      "capabilityIds": [
+        "installed-yaml-data.load"
+      ],
+      "fixtureRefs": [
+        "reset_preserves_concurrent_edit"
+      ],
+      "input": {
+        "fixtureRef": "reset_preserves_concurrent_edit"
+      },
+      "expected": {
+        "outcome": "reset_conflict",
+        "game": "Fallout4",
+        "gameDataRole": "Fallout4",
+        "main": {
+          "role": "main",
+          "provenance": "bundled",
+          "schemaVersion": "2.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        },
+        "gameFile": {
+          "role": "game",
+          "provenance": "bundled",
+          "schemaVersion": "1.0",
+          "identity": {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          }
+        },
+        "localIgnore": null,
+        "recovery": {
+          "localIgnorePath": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+          "malformedIdentity": {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11",
+            "byteLength": 39
+          },
+          "defaultIdentity": {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "935d2b794df05e14ac8af7079e1c1d9fc7d0690da3517114f80b18bddaaf02ba",
+            "byteLength": 53
+          },
+          "selectedGameVersion": "OG",
+          "decision": {
+            "status": "conflict",
+            "expectedIdentity": {
+              "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+              "sha256": "7f6069e760bd534446c062534a54d3766e42ca7841a0d485a2d9af3e42c0cc11",
+              "byteLength": 39
+            },
+            "actualIdentity": {
+              "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+              "sha256": "2146d7c668e0ea62ce2c78455089477172b5e5c87b914e0dbcb8050bb38653de",
+              "byteLength": 48
+            },
+            "backupPath": null
+          }
+        },
+        "snapshot": null,
+        "diagnostics": [
+          {
+            "role": null,
+            "candidate": null,
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "kind": "parse"
+          }
+        ],
+        "error": null,
+        "files": [
+          {
+            "path": "installation/.classic-local-ignore-reset.lock",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "byteLength": 0
+          },
+          {
+            "path": "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            "sha256": "2146d7c668e0ea62ce2c78455089477172b5e5c87b914e0dbcb8050bb38653de",
+            "byteLength": 48
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "sha256": "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08",
+            "byteLength": 189
+          },
+          {
+            "path": "installation/CLASSIC Data/databases/CLASSIC Main.yaml",
+            "sha256": "98598d49fc128c24f2c872c4911a2445fde1fd9fb2cd93913a535c7ed9c6c333",
+            "byteLength": 255
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

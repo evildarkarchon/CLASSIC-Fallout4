@@ -1,0 +1,16 @@
+{
+  "operation": "formids",
+  "lines": [
+    "Form ID: 0x01000001",
+    "Form ID: 0xFF000001",
+    "Form ID: 0x00000000"
+  ],
+  "ids": [
+    "01000001",
+    "0x00000000",
+    "bad-id"
+  ],
+  "plugins": {
+    "1": "Example.esp"
+  }
+}

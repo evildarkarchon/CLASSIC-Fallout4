@@ -120,6 +120,7 @@ fn concurrent_commits_allow_one_publication_and_report_one_revision_conflict() {
 }
 
 #[test]
+/// An already-stale accepted update must preserve the full installation, including lock absence.
 fn stale_commit_leaves_a_newer_external_document_byte_for_byte_unchanged() {
     let root = tempfile::tempdir().unwrap();
     let path = root.path().join("CLASSIC Settings.yaml");
@@ -145,6 +146,11 @@ fn stale_commit_leaves_a_newer_external_document_byte_for_byte_unchanged() {
         UserSettingsCommitOutcome::Conflict { .. }
     ));
     assert_eq!(std::fs::read(&path).unwrap(), external.as_bytes());
+    assert_eq!(
+        std::fs::read_dir(root.path()).unwrap().count(),
+        1,
+        "a known-stale commit must not create a lock file or other durable entries"
+    );
 }
 
 #[test]

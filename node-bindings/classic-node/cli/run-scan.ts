@@ -1,8 +1,18 @@
 import { existsSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
+// `const enum` members are inlined by tsc and the import is erased, so naming these
+// here costs no runtime require of `../index.js`. That matters: this CLI resolves
+// the binding at run time through `loadClassicNode`, because `dist/cli/` sits at a
+// different depth than the source it was compiled from.
+import {
+	JsScanRunDisplaySegmentKind,
+	JsScanRunDisplaySeverity,
+} from "../index.js";
 import type {
 	JsGameId,
 	JsScanRunConfiguration,
+	JsScanRunDisplayLine,
+	JsScanRunDisplaySegment,
 	JsScanRunEvent,
 } from "../index.js";
 import type {
@@ -127,6 +137,13 @@ function pluralSuffix(count: number): "" | "s" {
 	return count === 1 ? "" : "s";
 }
 
+/**
+ * Formats a count this CLI owns, choosing the noun form itself.
+ *
+ * One caller remains: the report-write failure tally, which is an aggregate over
+ * per-log outcomes that Rust does not count. Every other count this command prints
+ * now arrives as a `Count` segment whose noun Rust already agreed with its value.
+ */
 function formatPluralizedCount(
 	count: number | undefined,
 	singularLabel: string,
@@ -137,6 +154,75 @@ function formatPluralizedCount(
 
 function hasPositiveCount(count: number | undefined): boolean {
 	return countOrZero(count) > 0;
+}
+
+/**
+ * Renders one typed segment by reading only the field its `kind` selects.
+ *
+ * Every branch is a read rather than a decision. The one branch that composes,
+ * `Count`, prints the value beside the noun Rust already resolved to agree with it
+ * — it never re-decides that noun, which is what stops a user ever reading
+ * "1 logs".
+ */
+export function renderDisplaySegment(segment: JsScanRunDisplaySegment): string {
+	switch (segment.kind) {
+		case JsScanRunDisplaySegmentKind.Count:
+			return `${segment.count} ${segment.text}`;
+		case JsScanRunDisplaySegmentKind.Path:
+			// Whole and untruncated. Truncating is a choice this frontend declines to
+			// make: its output is meant to be piped, and a shortened path is not one a
+			// later command can open.
+			return segment.path;
+		default:
+			return segment.text;
+	}
+}
+
+/**
+ * Concatenates a line's segments in reading order, separated by single spaces.
+ *
+ * Segments are never reordered within a line. Styling and capitalization are both
+ * the empty choice, matching the native C++ CLI: this output is meant to be piped,
+ * so it gains no escape sequences, and a line-initial Display Label reaches the
+ * user in the vocabulary's own casing rather than in a second copy of the wording.
+ */
+export function renderDisplayLine(line: JsScanRunDisplayLine): string {
+	return line.segments.map(renderDisplaySegment).join(" ");
+}
+
+/**
+ * Prints what Rust said, routing each line to a stream by the severity Rust gave it.
+ *
+ * The cut falls at `Warning` rather than `Failure` because a run paused awaiting a
+ * Local Ignore decision carries that severity and belongs on stderr, where this
+ * command has always reported it. Severity reaches no further than the stream
+ * choice — Rust names no colour, and this frontend adds none.
+ */
+function printDisplayLines(lines: readonly JsScanRunDisplayLine[]): void {
+	for (const line of lines) {
+		const text = renderDisplayLine(line);
+		const isSevere =
+			line.severity === JsScanRunDisplaySeverity.Warning ||
+			line.severity === JsScanRunDisplaySeverity.Failure;
+		if (isSevere) {
+			console.error(text);
+		} else {
+			console.log(text);
+		}
+	}
+}
+
+/**
+ * Reduces a rendered block to the one line that states its outcome.
+ *
+ * Used only where a single string is required — the JSON summary's `message` and a
+ * thrown fatal — because every render entry point opens on the line that states the
+ * outcome. Returns an empty string for an empty block, which a caller treats as
+ * "Rust said nothing" rather than substituting prose of its own.
+ */
+function displayStatusLine(lines: readonly JsScanRunDisplayLine[]): string {
+	const first = lines[0];
+	return first ? renderDisplayLine(first) : "";
 }
 
 function calculateScanSpeed(
@@ -161,18 +247,19 @@ function printOptionalPluralizedCount(
 	console.log(`  ${label}:   ${formatPluralizedCount(count, singularLabel)}`);
 }
 
+/**
+ * Prints the totals this process measured, under a header this frontend owns.
+ *
+ * Scanned and errored counts used to head this block and are gone: Rust states both
+ * in the lines printed above it, and repeating them here would be a second account
+ * of the same run. What remains is the two aggregates over per-log outcomes that
+ * the contract does not tally, and the two facts derived from a clock it does not
+ * carry.
+ */
 function printHumanSummary(summary: JsonSummary): void {
-	const shouldPrintScanErrors = hasPositiveCount(summary.scanErrors);
-    const shouldPrintReportFailures = hasPositiveCount(summary.reportFailures);
+	const shouldPrintReportFailures = hasPositiveCount(summary.reportFailures);
 
 	console.log("\nScan Complete");
-	console.log(`  Scanned:  ${formatPluralizedCount(summary.logsFound, "log")}`);
-	printOptionalPluralizedCount(
-		"Errors",
-		summary.scanErrors,
-		"log",
-		shouldPrintScanErrors,
-	);
 	console.log(`  Reports:  ${countOrZero(summary.reportsWritten)} written`);
 	printOptionalPluralizedCount(
 		"Failed",
@@ -299,23 +386,22 @@ export async function runCli(
 					unsolvedLogs,
 				);
 		const cancellation = new classicNode.ScanRunCancellation();
+		// Which event kinds earn a durable console line is this frontend's choice and
+		// is unchanged: the two that describe the run about to happen. Omitting whole
+		// lines is what an adapter may do; rewording them is not, so the two it does
+		// show are now Rust's lines rather than sentences composed here.
 		const observeScanRun = (event: JsScanRunEvent): void => {
 			if (options.json) {
 				return;
 			}
-			if (event.kind === "discovery_completed" && event.discovery) {
-				console.log(
-					`Found ${formatPluralizedCount(event.discovery.acceptedLogs.length, "crash log")}\n`,
-				);
-			} else if (
-				event.kind === "effective_concurrency_selected" &&
-				event.effectiveConcurrency !== undefined
+			if (
+				event.kind !== "discovery_completed" &&
+				event.kind !== "effective_concurrency_selected"
 			) {
-				const concurrency = event.effectiveConcurrency;
-				console.log(
-					`Scanning with ${concurrency} worker thread${concurrency === 1 ? "" : "s"}\n`,
-				);
+				return;
 			}
+			printDisplayLines(event.displayLines);
+			console.log("");
 		};
 		const execution = await classicNode.scanRunExecute(
 			request,
@@ -324,11 +410,25 @@ export async function runCli(
 			false,
 		);
 		if ("error" in execution) {
-			const pathSuffix = execution.error.path
-				? ` (${execution.error.path})`
-				: "";
+			// Stated in Rust's words. This used to read `${stage}: ${message}`, which
+			// printed a Vocabulary Token where a sentence belongs — a user was told the
+			// run failed during `formid_database_access` rather than during FormID
+			// database access. The token is machine-facing identity and still rides on
+			// `execution.error.stage` for anything that matches on it.
+			//
+			// Joined into one string rather than printed line by line because this path
+			// throws, and the catch below owns how a fatal reaches the user in both
+			// output modes. The rendered block always opens on the failure headline.
+			const rendered = execution.displayLines.map(renderDisplayLine);
 			throw new Error(
-				`${execution.error.stage}: ${execution.error.message}${pathSuffix}`,
+				rendered.length > 0
+					? rendered.join(" - ")
+					: // Unreachable through the binding: both failure renderers always
+						// produce a headline. Guarded anyway, because the alternative is
+						// exiting 2 in silence, which reads as the process dying rather
+						// than as a run that failed. This sentence reports a broken
+						// binding promise, not anything a run said, so it stays ours.
+						"Crash Log Scan Run failed without describing the failure",
 			);
 		}
 		if (execution.observerError) {
@@ -336,8 +436,14 @@ export async function runCli(
 		}
 		const scanResult = execution.result;
 		const results = scanResult.logs;
+		// What the run says, for whichever branch below claims it. Rust states the
+		// outcome, the Installed YAML Data block, and the per-log lines; the branches
+		// keep only their exit codes, their JSON shape, and the totals this process
+		// measured.
+		const runMessage =
+			scanResult.message ?? displayStatusLine(execution.displayLines);
 		if (scanResult.status === "setup_failed") {
-			const setupMessage = scanResult.message ?? "Crash Log Scan setup failed";
+			const setupMessage = runMessage;
 			const summary: JsonSummary = {
 				mode: "scan",
 				exitCode: 1,
@@ -357,7 +463,7 @@ export async function runCli(
 			if (options.json) {
 				emitJson(summary);
 			} else {
-				console.error(setupMessage);
+				printDisplayLines(execution.displayLines);
 			}
 			return { exitCode: summary.exitCode, fatal: setupMessage };
 		}
@@ -368,9 +474,7 @@ export async function runCli(
 		// "0 logs" — indistinguishable from a healthy scan of an empty folder — while the real
 		// cause was a malformed CLASSIC Ignore.yaml that nothing had told the user about.
 		if (scanResult.status === "local_ignore_recovery_required") {
-			const recoveryMessage = scanResult.message ??
-				"Local Ignore YAML Data is malformed and requires a recovery decision " +
-					"(reset to default, or proceed without ignore) before crash logs can be scanned.";
+			const recoveryMessage = runMessage;
 			const summary: JsonSummary = {
 				mode: "scan",
 				exitCode: 1,
@@ -390,16 +494,18 @@ export async function runCli(
 			if (options.json) {
 				emitJson(summary);
 			} else {
-				console.error(recoveryMessage);
+				printDisplayLines(execution.displayLines);
 			}
 			return { exitCode: summary.exitCode, fatal: recoveryMessage };
 		}
 
 		if (scanResult.status === "no_crash_logs_found") {
-			const noLogsMessage = scanResult.message ??
-				(scanPath
-					? `No crash logs found in: ${process.cwd()} or ${scanPath}`
-					: `No crash logs found in: ${process.cwd()}`);
+			// The searched locations used to be spelled out here from `process.cwd()`
+			// and the configured scan path, which meant this command decided both the
+			// sentence and which directories it named. Rust's discovery block states
+			// them, from the paths discovery actually searched rather than from the two
+			// this command happened to pass in.
+			const noLogsMessage = runMessage;
 			const summary: JsonSummary = {
 				mode: "scan",
 				exitCode: 0,
@@ -418,7 +524,7 @@ export async function runCli(
 			if (options.json) {
 				emitJson(summary);
 			} else {
-				console.log(noLogsMessage);
+				printDisplayLines(execution.displayLines);
 			}
 			return { exitCode: 0 };
 		}
@@ -456,6 +562,9 @@ export async function runCli(
 		if (options.json) {
 			emitJson(summary);
 		} else {
+			// Rust's account of the run first, this process's measurements after. The
+			// order is this frontend's; the words in the first block are not.
+			printDisplayLines(execution.displayLines);
 			printHumanSummary(summary);
 		}
 

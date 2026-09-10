@@ -1,0 +1,8 @@
+{
+  "operation": "validate-ini",
+  "game": "Fallout4",
+  "files": {
+    "sentinel.txt": "unchanged\n"
+  },
+  "directories": []
+}

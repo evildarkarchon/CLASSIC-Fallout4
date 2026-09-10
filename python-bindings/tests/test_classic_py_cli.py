@@ -57,12 +57,81 @@ def _install_user_settings_fake(
     monkeypatch.setitem(sys.modules, "classic_user_settings", module)
 
 
+def _fake_display_lines(status: str) -> list[types.SimpleNamespace]:
+    """Return flattened display lines shaped as the binding publishes them.
+
+    Deliberately not real wording. Wording is pinned once in
+    `classic-scan-presentation`; restating a sentence here would be a second copy
+    of it. What these fixtures stand in for is the *shape* -- a severity plus
+    ordered segments, each filling only the field its kind selects -- so a test
+    can prove the CLI printed what it was handed without pinning what that was.
+    """
+
+    return [
+        types.SimpleNamespace(
+            severity="info",
+            segments=[
+                types.SimpleNamespace(kind="text", text="Crash Log Scan Run", path="", count=0),
+                types.SimpleNamespace(kind="label", text=status, path="", count=0),
+            ],
+        ),
+        types.SimpleNamespace(
+            severity="info",
+            segments=[
+                types.SimpleNamespace(kind="count", text="logs", path="", count=2),
+                types.SimpleNamespace(kind="text", text="scanned", path="", count=0),
+            ],
+        ),
+    ]
+
+
+def _fake_recovery_prompt(*, reset_available: bool) -> types.SimpleNamespace:
+    """Return a recovery prompt shaped as the binding publishes one.
+
+    Deliberately not real wording, for the reason :func:`_fake_display_lines` is not:
+    the sentences are pinned once in `classic-scan-presentation`, and a fixture that
+    reused them would still pass if the CLI ignored its argument and printed a
+    hard-coded copy.
+
+    Both decisions are carried whether or not the run can honor them, exactly as the
+    binding carries them, so the filtering under test is the CLI's own.
+    """
+
+    return types.SimpleNamespace(
+        lines=[
+            types.SimpleNamespace(
+                severity="warning",
+                segments=[types.SimpleNamespace(kind="text", text="why the run paused", path="", count=0)],
+            )
+        ],
+        decisions=[
+            types.SimpleNamespace(
+                decision="ScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore",
+                label="Proceed Without Ignore",
+                description=[
+                    types.SimpleNamespace(kind="text", text="what proceeding does", path="", count=0)
+                ],
+                available=True,
+            ),
+            types.SimpleNamespace(
+                decision="ScanRunLocalIgnoreRecoveryDecision.ResetToDefault",
+                label="Reset To Default",
+                description=[
+                    types.SimpleNamespace(kind="text", text="what resetting does", path="", count=0)
+                ],
+                available=reset_available,
+            ),
+        ],
+    )
+
+
 def _install_final_scan_run_fake(
     fake: types.ModuleType,
     make_logs: object,
     *,
     status: str = "completed",
     message: str | None = None,
+    recovery_prompt: object | None = None,
 ) -> None:
     """Attach a selectable final request/execution result to a fake scanlog module."""
 
@@ -108,7 +177,13 @@ def _install_final_scan_run_fake(
             cancelled=cancelled,
             logs=logs,
         )
-        return types.SimpleNamespace(result=result, error=None, observer_error=None)
+        return types.SimpleNamespace(
+            result=result,
+            error=None,
+            observer_error=None,
+            display_lines=_fake_display_lines(status),
+            recovery_prompt=recovery_prompt,
+        )
 
     fake.ScanRunConfiguration = ScanRunConfiguration
     fake.ScanRunTargetedSource = ScanRunTargetedSource
@@ -361,6 +436,71 @@ def test_scan_logs_reports_unsuccessful_terminal_statuses(
     }
     assert payload["data"]["result"]["status"] == status
     assert payload["data"]["result"]["installedYamlData"] is None
+    # A run that carries no prompt gets no prompt payload, and a binding older than
+    # this CLI publishes no `recovery_prompt` attribute at all.
+    assert "recoveryPrompt" not in payload["data"]
+
+
+@pytest.mark.parametrize("reset_available", [True, False])
+def test_scan_logs_states_a_paused_run_in_rusts_words(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    reset_available: bool,
+) -> None:
+    """A paused run is terminal here, but never unexplained.
+
+    `scan logs` is CI-oriented and never prompts, so it resumes nothing and touches no
+    file. What it does do is state Rust's question and describe every decision an
+    interactive frontend would offer -- in Rust's words, never its own.
+    """
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+
+    fake = types.ModuleType("classic_scanlog")
+    fake.__version__ = "test"
+    _install_final_scan_run_fake(
+        fake,
+        lambda _configuration, _paths: [],
+        status="local_ignore_recovery_required",
+        message="terminal local_ignore_recovery_required",
+        recovery_prompt=_fake_recovery_prompt(reset_available=reset_available),
+    )
+    monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
+    _install_user_settings_fake(monkeypatch)
+
+    code = main(["--json", "scan", "logs", "--path", str(tmp_path)])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 1
+    assert payload["success"] is False
+    prompt = payload["data"]["recoveryPrompt"]
+    assert prompt["lines"] == ["why the run paused"]
+
+    proceed = {
+        "decision": "ScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore",
+        "label": "Proceed Without Ignore",
+        "description": "what proceeding does",
+    }
+    reset = {
+        "decision": "ScanRunLocalIgnoreRecoveryDecision.ResetToDefault",
+        "label": "Reset To Default",
+        "description": "what resetting does",
+    }
+    # Withheld rather than listed-and-caveated. This CLI answers nothing itself, but a
+    # consumer reading this payload to drive its own prompt would repeat the two native
+    # frontends' bug if an unavailable decision appeared here.
+    assert prompt["decisions"] == ([proceed, reset] if reset_available else [proceed])
+
+    # The plain stream is where `text_lines` surfaces; the JSON envelope carries the
+    # structured projection above instead. Both have to state the question, so the
+    # decisions are asserted on each.
+    assert main(["scan", "logs", "--path", str(tmp_path)]) == 1
+    rendered = capsys.readouterr().out
+    assert "why the run paused" in rendered
+    assert "Proceed Without Ignore - what proceeding does" in rendered
+    assert ("Reset To Default - what resetting does" in rendered) is reset_available
 
 
 def test_scan_logs_consumes_final_result_and_event_contract(
@@ -790,3 +930,254 @@ def test_product_stubs_and_scan_commands_are_registered() -> None:
     assert completed.returncode == 0
     assert "logs" in completed.stdout
     assert "game" in completed.stdout
+
+
+# --- Display Content renderer conformance ----------------------------------
+#
+# Thin by design. Wording is pinned once, in `classic-scan-presentation`; what
+# this frontend owes is narrower -- that it did not reword what Rust handed it.
+# Every fixture below is fabricated rather than taken from a real run, because
+# what is under test is the renderer, not which segments a given run produces.
+
+
+def _segment(kind: str, *, text: str = "", path: str = "", count: int = 0) -> types.SimpleNamespace:
+    """Build one flattened display segment as the binding publishes it."""
+
+    return types.SimpleNamespace(kind=kind, text=text, path=path, count=count)
+
+
+def _line(*segments: types.SimpleNamespace, severity: str = "info") -> types.SimpleNamespace:
+    """Build one display line from already-flattened segments."""
+
+    return types.SimpleNamespace(severity=severity, segments=list(segments))
+
+
+def test_display_segments_render_in_reading_order() -> None:
+    """Segments concatenate in the order Rust emitted them, never reordered."""
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.display import render_display_line
+
+    rendered = render_display_line(
+        _line(
+            _segment("text", text="Crash Log Scan Run"),
+            _segment("label", text="completed"),
+            _segment("emphasis", text="with warnings"),
+        )
+    )
+
+    assert rendered == "Crash Log Scan Run completed with warnings"
+
+
+def test_a_count_prints_the_noun_rust_resolved() -> None:
+    """The renderer prints Rust's noun beside the value and never re-decides it.
+
+    Both grammatical numbers are asserted because that is the only way to prove
+    the noun travelled rather than being derived: a renderer that appended its
+    own "s" would pass the plural case alone.
+    """
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.display import render_display_line
+
+    singular = render_display_line(_line(_segment("count", text="log", count=1)))
+    plural = render_display_line(_line(_segment("count", text="logs", count=2)))
+
+    assert singular == "1 log"
+    assert plural == "2 logs"
+
+
+def test_a_path_segment_renders_whole() -> None:
+    """A path reaches the user complete; truncation would be this CLI's to invent."""
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.display import render_display_line
+
+    rendered = render_display_line(
+        _line(
+            _segment("text", text="wrote"),
+            _segment("path", path="C:/Crash Logs/crash-2026-01-01-AUTOSCAN.md"),
+        )
+    )
+
+    assert rendered == "wrote C:/Crash Logs/crash-2026-01-01-AUTOSCAN.md"
+
+
+def test_an_unrenderable_segment_leaves_no_gap_in_the_line() -> None:
+    """A segment this CLI cannot render is dropped, not joined as an empty string.
+
+    Only a kind newer than this frontend can reach that state -- the taxonomy is
+    frozen at six and the binding ships beside the CLI. It is pinned anyway
+    because the failure is invisible: a doubled space reads as a typo in Rust's
+    wording rather than as a frontend that met a kind it did not know.
+    """
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.display import render_display_line
+
+    rendered = render_display_line(
+        _line(
+            _segment("text", text="before"),
+            _segment("quantity", count=4),
+            _segment("text", text="after"),
+        )
+    )
+
+    assert rendered == "before after"
+
+
+def test_display_lines_render_one_string_per_line_in_order() -> None:
+    """Whole lines keep Rust's order; this CLI reorders and groups nothing."""
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.display import render_display_lines
+
+    rendered = render_display_lines(
+        [
+            _line(_segment("text", text="first"), severity="failure"),
+            _line(_segment("text", text="second"), severity="info"),
+        ]
+    )
+
+    assert rendered == ["first", "second"]
+
+
+def test_scan_logs_prints_the_runs_lines_and_composes_no_summary(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Text output is the run's rendered lines, not a sentence written here."""
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+
+    fake = types.ModuleType("classic_scanlog")
+    fake.__version__ = "test"
+    _install_final_scan_run_fake(fake, lambda _configuration, _paths: [])
+    monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
+    _install_user_settings_fake(monkeypatch)
+
+    code = main(["scan", "logs", "--path", str(tmp_path)])
+    printed = capsys.readouterr().out.splitlines()
+
+    assert code == 0
+    assert printed == ["Crash Log Scan Run completed", "2 logs scanned"]
+    # The two sentences this frontend used to write about a completed run. Asserted
+    # as absences because that is the drift itself, not merely its absence today.
+    assert "Scanlog binding completed" not in "\n".join(printed)
+    assert "succeeded," not in "\n".join(printed)
+
+
+def test_scan_logs_states_an_infrastructure_failure_in_rusts_words(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A stage reaches the user as prose while the token stays in the payload.
+
+    This is the exact drift #170's problem statement records against this CLI: a
+    user was told a run ``failed during formid_database_access``. The token still
+    reaches a consumer on ``error.stage``; it simply is not a sentence any more.
+    """
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+
+    fake = types.ModuleType("classic_scanlog")
+    fake.__version__ = "test"
+    _install_final_scan_run_fake(fake, lambda _configuration, _paths: [])
+
+    def failing_execute(*_args: object, **_kwargs: object) -> object:
+        return types.SimpleNamespace(
+            result=None,
+            error=types.SimpleNamespace(
+                stage="formid_database_access",
+                message="database is locked",
+                path=None,
+            ),
+            observer_error=None,
+            display_lines=[
+                _line(
+                    _segment("text", text="Crash Log Scan Run failed during"),
+                    _segment("label", text="FormID database access"),
+                    severity="failure",
+                )
+            ],
+        )
+
+    fake.scan_run_execute = failing_execute
+    monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
+    _install_user_settings_fake(monkeypatch)
+
+    code = main(["--json", "scan", "logs", "--path", str(tmp_path)])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 1
+    assert payload["summary"] == "Crash Log Scan Run failed during FormID database access"
+    assert "formid_database_access" not in payload["summary"]
+    assert payload["error"]["stage"] == "formid_database_access"
+    assert payload["error"]["message"] == "database is locked"
+
+
+def test_scan_logs_json_output_carries_no_display_content(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Display Content stays out of the payload a consumer matches on."""
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+
+    fake = types.ModuleType("classic_scanlog")
+    fake.__version__ = "test"
+
+    def observing_execute(
+        request: object,
+        cancellation: object,
+        observer: object | None = None,
+        cancel_on_observer_error: bool = False,
+    ) -> object:
+        assert callable(observer)
+        observer(
+            types.SimpleNamespace(
+                kind="effective_concurrency_selected",
+                effective_concurrency=3,
+                discovery=None,
+                log=None,
+                phase=None,
+                disposition=None,
+                display_lines=[_line(_segment("text", text="scanning with"))],
+            )
+        )
+        return types.SimpleNamespace(
+            result=types.SimpleNamespace(
+                status="completed",
+                message=None,
+                effective_concurrency=3,
+                total=0,
+                succeeded=0,
+                failed=0,
+                cancelled=0,
+                logs=[],
+            ),
+            error=None,
+            observer_error=None,
+            display_lines=_fake_display_lines("completed"),
+        )
+
+    _install_final_scan_run_fake(fake, lambda _configuration, _paths: [])
+    fake.scan_run_execute = observing_execute
+    monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
+    _install_user_settings_fake(monkeypatch)
+
+    code = main(["--json", "scan", "logs", "--path", str(tmp_path)])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert payload["data"]["events"] == [
+        {"kind": "effective_concurrency_selected", "effectiveConcurrency": 3}
+    ]
+    assert "displayLines" not in json.dumps(payload)
+    assert "display_lines" not in json.dumps(payload)

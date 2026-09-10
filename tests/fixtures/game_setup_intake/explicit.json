@@ -1,0 +1,10 @@
+{
+  "operation": "run",
+  "files": {
+    "CLASSIC Settings.yaml": "schema_version: '1.0'\nCLASSIC_Settings:\n  Managed Game: Starfield\n  Game Version: Original\n  Game Folder Path: '<ROOT>/Game'\n  Game EXE Path: '<ROOT>/Game/Starfield.exe'\n  Documents Folder Path: '<ROOT>/Docs'\n",
+    "Game/Starfield.exe": "not a PE executable\n",
+    "Docs/Starfield.ini": "[General]\n",
+    "Docs/StarfieldPrefs.ini": "[General]\n",
+    "Docs/StarfieldCustom.ini": "[Archive]\nbInvalidateOlderFiles=1\nsResourceDataDirsFinal=\n"
+  }
+}

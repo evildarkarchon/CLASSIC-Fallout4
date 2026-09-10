@@ -1,0 +1,11 @@
+{
+  "operation": "validate-enb",
+  "game": "Fallout4",
+  "files": {
+    "sentinel.txt": "unchanged\n",
+    "d3d11.dll": "fixture",
+    "d3dcompiler_46e.dll": "fixture",
+    "enbseries.ini": "[GLOBAL]\nUseEffect=true\n"
+  },
+  "directories": []
+}

@@ -1,0 +1,13 @@
+{
+  "files": {
+    "valid.yaml": "value: 9\n",
+    "broken.yaml": "value: [\n"
+  },
+  "request": {
+    "single": "broken.yaml",
+    "batch": [
+      "valid.yaml",
+      "broken.yaml"
+    ]
+  }
+}

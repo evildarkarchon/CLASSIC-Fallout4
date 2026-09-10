@@ -89,3 +89,7 @@ pub mod xse;
 
 #[cfg(not(windows))]
 pub const CPP_BRIDGE_UNAVAILABLE: &str = "classic-cpp-bridge is only available on Windows targets";
+
+#[cfg(test)]
+#[path = "lib_tests.rs"]
+mod tests;

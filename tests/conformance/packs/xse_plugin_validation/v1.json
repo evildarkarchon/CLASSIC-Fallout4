@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "familyId": "xse-plugin-validation",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scangame-core"
+  },
+  "fixtureRoot": "tests/fixtures/xse_plugin_validation",
+  "fixtures": {
+    "Original": "Original.json",
+    "NextGen": "NextGen.json",
+    "Vr": "Vr.json"
+  },
+  "capabilities": [
+    {
+      "id": "xse-plugin-validation.check",
+      "rustSymbols": [
+        "XseChecker",
+        "AddressLibInfo"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "values"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "original",
+      "action": "xse-plugin-validation.check",
+      "capabilityIds": [
+        "xse-plugin-validation.check"
+      ],
+      "fixtureRefs": [
+        "Original"
+      ],
+      "input": {
+        "fixtureRef": "Original"
+      },
+      "expected": {
+        "info": {
+          "version": "Original",
+          "filename": "version-1-10-163-0.bin",
+          "description": "Fallout 4 Original (OG)",
+          "url": "https://www.nexusmods.com/fallout4/mods/47327?tab=files"
+        },
+        "result": "CorrectVersion",
+        "message": "\u2714\ufe0f You have the correct version of the Address Library file!\n-----\n",
+        "beforeFiles": {
+          "version-1-10-163-0.bin": "fixture bytes\n",
+          "sentinel.txt": "keep\n"
+        },
+        "files": {
+          "version-1-10-163-0.bin": "fixture bytes\n",
+          "sentinel.txt": "keep\n"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "nextgen",
+      "action": "xse-plugin-validation.check",
+      "capabilityIds": [
+        "xse-plugin-validation.check"
+      ],
+      "fixtureRefs": [
+        "NextGen"
+      ],
+      "input": {
+        "fixtureRef": "NextGen"
+      },
+      "expected": {
+        "info": {
+          "version": "NextGen",
+          "filename": "version-1-10-984-0.bin",
+          "description": "Fallout 4 Next-Gen (NG)",
+          "url": "https://www.nexusmods.com/fallout4/mods/47327?tab=files"
+        },
+        "result": "CorrectVersion",
+        "message": "\u2714\ufe0f You have the correct version of the Address Library file!\n-----\n",
+        "beforeFiles": {
+          "version-1-10-984-0.bin": "fixture bytes\n",
+          "sentinel.txt": "keep\n"
+        },
+        "files": {
+          "version-1-10-984-0.bin": "fixture bytes\n",
+          "sentinel.txt": "keep\n"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "vr",
+      "action": "xse-plugin-validation.check",
+      "capabilityIds": [
+        "xse-plugin-validation.check"
+      ],
+      "fixtureRefs": [
+        "Vr"
+      ],
+      "input": {
+        "fixtureRef": "Vr"
+      },
+      "expected": {
+        "info": {
+          "version": "Vr",
+          "filename": "version-1-2-72-0.csv",
+          "description": "Fallout 4 VR (VR)",
+          "url": "https://www.nexusmods.com/fallout4/mods/64879?tab=files"
+        },
+        "result": "CorrectVersion",
+        "message": "\u2714\ufe0f You have the correct version of the Address Library file!\n-----\n",
+        "beforeFiles": {
+          "version-1-2-72-0.csv": "fixture bytes\n",
+          "sentinel.txt": "keep\n"
+        },
+        "files": {
+          "version-1-2-72-0.csv": "fixture bytes\n",
+          "sentinel.txt": "keep\n"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

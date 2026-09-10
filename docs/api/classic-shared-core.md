@@ -108,11 +108,13 @@ Important methods and traits:
 - `exe_name() -> &'static str`
 - `is_vr() -> bool`
 - `all() -> [GameId; 4]`
+- `display_name() -> &'static str` - Rust-owned user-facing names: `Fallout 4`, `Fallout 4 VR`, `Skyrim`, and `Starfield`
 - `Display`, `FromStr`, `Serialize`, `Deserialize`, `Clone`, `Copy`, `Hash`
 
 Behavior worth knowing:
 
 - `exe_name()` hardcodes the expected executable per supported game
+- Node `getGameName`, Python `GameId.display_name`, and CXX `game_id_display_name` delegate to the same display-name method. Stable serialization tokens continue to come from `as_str()`.
 - `is_vr()` is only true for `Fallout4VR`
 - `FromStr` is exact and case-sensitive; it accepts only the variant names shown above
 

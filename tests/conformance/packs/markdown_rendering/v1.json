@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "familyId": "markdown-rendering",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-cpp-bridge"
+  },
+  "fixtureRoot": "tests/fixtures/markdown_rendering_conformance",
+  "fixtures": {
+    "quirks": "quirks.json",
+    "escaping": "escaping.json",
+    "empty": "empty.json",
+    "empty-frame": "empty-frame.json"
+  },
+  "capabilities": [
+    {
+      "id": "markdown-rendering.observe",
+      "operationScoped": true,
+      "rustSymbols": [
+        "markdown_to_html",
+        "normalize_markdown"
+      ],
+      "observationFamilies": [
+        "interface-output"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "quirks",
+      "action": "markdown-rendering.observe",
+      "capabilityIds": [
+        "markdown-rendering.observe"
+      ],
+      "fixtureRefs": [
+        "quirks"
+      ],
+      "input": {
+        "fixtureRef": "quirks"
+      },
+      "expected": {
+        "normalized": "**Alert**\n\n-----\n\n## Details\n\n- alpha\n- beta",
+        "htmlBody": "<p><strong>Alert</strong></p>\n<hr />\n<h2>Details</h2>\n<ul>\n<li>alpha</li>\n<li>beta</li>\n</ul>\n",
+        "documentComplete": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    },
+    {
+      "id": "escaping",
+      "action": "markdown-rendering.observe",
+      "capabilityIds": [
+        "markdown-rendering.observe"
+      ],
+      "fixtureRefs": [
+        "escaping"
+      ],
+      "input": {
+        "fixtureRef": "escaping"
+      },
+      "expected": {
+        "normalized": "## Encoded\n\nA < B & C.\n\n`x < y`",
+        "htmlBody": "<h2>Encoded</h2>\n<p>A &lt; B &amp; C.</p>\n<p><code>x &lt; y</code></p>\n",
+        "documentComplete": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    },
+    {
+      "id": "empty",
+      "action": "markdown-rendering.observe",
+      "capabilityIds": [
+        "markdown-rendering.observe"
+      ],
+      "fixtureRefs": [
+        "empty"
+      ],
+      "input": {
+        "fixtureRef": "empty"
+      },
+      "expected": {
+        "normalized": "",
+        "htmlBody": "",
+        "documentComplete": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    },
+    {
+      "id": "empty-frame",
+      "action": "markdown-rendering.observe",
+      "capabilityIds": [
+        "markdown-rendering.observe"
+      ],
+      "fixtureRefs": [
+        "empty-frame"
+      ],
+      "input": {
+        "fixtureRef": "empty-frame"
+      },
+      "expected": {
+        "normalized": "* *",
+        "htmlBody": "<ul>\n<li>\n<ul>\n<li></li>\n</ul>\n</li>\n</ul>\n",
+        "documentComplete": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

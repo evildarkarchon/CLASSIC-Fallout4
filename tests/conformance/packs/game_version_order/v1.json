@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "familyId": "game-version-order",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-version-registry-core"
+  },
+  "fixtureRoot": "tests/fixtures/version_values_conformance",
+  "fixtures": {
+    "game-version-order-equal": "game-version-order-equal.json",
+    "game-version-order-build": "game-version-order-build.json",
+    "game-version-order-major": "game-version-order-major.json"
+  },
+  "capabilities": [
+    {
+      "id": "game-version-order.observe",
+      "operationScoped": true,
+      "rustSymbols": [
+        "GameVersion",
+        "same_major"
+      ],
+      "observationFamilies": [
+        "value-results"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "equal",
+      "action": "game-version-order.observe",
+      "capabilityIds": [
+        "game-version-order.observe"
+      ],
+      "fixtureRefs": [
+        "game-version-order-equal"
+      ],
+      "input": {
+        "fixtureRef": "game-version-order-equal"
+      },
+      "expected": {
+        "equal": true,
+        "less": false,
+        "lessEqual": true,
+        "greater": false,
+        "greaterEqual": true,
+        "sameMajor": true,
+        "hashEqualCopy": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "build",
+      "action": "game-version-order.observe",
+      "capabilityIds": [
+        "game-version-order.observe"
+      ],
+      "fixtureRefs": [
+        "game-version-order-build"
+      ],
+      "input": {
+        "fixtureRef": "game-version-order-build"
+      },
+      "expected": {
+        "equal": false,
+        "less": true,
+        "lessEqual": true,
+        "greater": false,
+        "greaterEqual": false,
+        "sameMajor": true,
+        "hashEqualCopy": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "major",
+      "action": "game-version-order.observe",
+      "capabilityIds": [
+        "game-version-order.observe"
+      ],
+      "fixtureRefs": [
+        "game-version-order-major"
+      ],
+      "input": {
+        "fixtureRef": "game-version-order-major"
+      },
+      "expected": {
+        "equal": false,
+        "less": false,
+        "lessEqual": false,
+        "greater": true,
+        "greaterEqual": true,
+        "sameMajor": false,
+        "hashEqualCopy": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

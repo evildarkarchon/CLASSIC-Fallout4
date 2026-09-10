@@ -1,0 +1,7 @@
+{
+  "kind": "SKSE",
+  "files": [
+    "skse_1_10_163.dll",
+    "skse_loader.exe"
+  ]
+}

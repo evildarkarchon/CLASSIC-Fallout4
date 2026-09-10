@@ -1,0 +1,298 @@
+{
+  "schemaVersion": 1,
+  "familyId": "file-operations",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-file-io-core"
+  },
+  "fixtureRoot": "tests/fixtures/file_operations",
+  "fixtures": {
+    "read-text": "read-text.json",
+    "read-empty": "read-empty.json",
+    "read-missing": "read-missing.json",
+    "write-new": "write-new.json",
+    "write-replace": "write-replace.json",
+    "write-missing-parent": "write-missing-parent.json"
+  },
+  "capabilities": [
+    {
+      "id": "file-operations.read-text",
+      "rustSymbols": [
+        "FileIOCore",
+        "read_file",
+        "calculate_similarity",
+        "similarity_ratio"
+      ],
+      "observationFamilies": [
+        "file-effects"
+      ]
+    },
+    {
+      "id": "file-operations.write-text",
+      "rustSymbols": [
+        "FileIOCore",
+        "write_file"
+      ],
+      "observationFamilies": [
+        "file-effects"
+      ]
+    },
+    {
+      "id": "file-operations.streams",
+      "rustSymbols": [
+        "LogCollector"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "file-effects"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "read-text",
+      "action": "file-operations.read-text",
+      "capabilityIds": [
+        "file-operations.read-text",
+        "file-operations.streams"
+      ],
+      "fixtureRefs": [
+        "read-text"
+      ],
+      "input": {
+        "fixtureRef": "read-text"
+      },
+      "expected": {
+        "operation": "read-text",
+        "path": "input.txt",
+        "content": "hello world\n",
+        "error": null,
+        "beforeFiles": [
+          {
+            "path": "input.txt",
+            "content": "hello world\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "input.txt",
+            "content": "hello world\n"
+          }
+        ],
+        "similarity": [
+          "1.000000",
+          "0.000000",
+          "0.500000"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "read-empty",
+      "action": "file-operations.read-text",
+      "capabilityIds": [
+        "file-operations.read-text"
+      ],
+      "fixtureRefs": [
+        "read-empty"
+      ],
+      "input": {
+        "fixtureRef": "read-empty"
+      },
+      "expected": {
+        "operation": "read-text",
+        "path": "input.txt",
+        "content": "",
+        "error": null,
+        "beforeFiles": [
+          {
+            "path": "input.txt",
+            "content": ""
+          }
+        ],
+        "files": [
+          {
+            "path": "input.txt",
+            "content": ""
+          }
+        ],
+        "similarity": [
+          "1.000000",
+          "0.000000",
+          "0.500000"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "read-missing",
+      "action": "file-operations.read-text",
+      "capabilityIds": [
+        "file-operations.read-text"
+      ],
+      "fixtureRefs": [
+        "read-missing"
+      ],
+      "input": {
+        "fixtureRef": "read-missing"
+      },
+      "expected": {
+        "operation": "read-text",
+        "path": "missing.txt",
+        "content": null,
+        "error": "io_error",
+        "beforeFiles": [
+          {
+            "path": "sentinel.txt",
+            "content": "keep"
+          }
+        ],
+        "files": [
+          {
+            "path": "sentinel.txt",
+            "content": "keep"
+          }
+        ],
+        "similarity": [
+          "1.000000",
+          "0.000000",
+          "0.500000"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "write-new",
+      "action": "file-operations.write-text",
+      "capabilityIds": [
+        "file-operations.write-text"
+      ],
+      "fixtureRefs": [
+        "write-new"
+      ],
+      "input": {
+        "fixtureRef": "write-new"
+      },
+      "expected": {
+        "operation": "write-text",
+        "path": "output.txt",
+        "content": null,
+        "error": null,
+        "beforeFiles": [
+          {
+            "path": "sentinel.txt",
+            "content": "keep"
+          }
+        ],
+        "files": [
+          {
+            "path": "output.txt",
+            "content": "hello world\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "keep"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "write-replace",
+      "action": "file-operations.write-text",
+      "capabilityIds": [
+        "file-operations.write-text"
+      ],
+      "fixtureRefs": [
+        "write-replace"
+      ],
+      "input": {
+        "fixtureRef": "write-replace"
+      },
+      "expected": {
+        "operation": "write-text",
+        "path": "output.txt",
+        "content": null,
+        "error": null,
+        "beforeFiles": [
+          {
+            "path": "output.txt",
+            "content": "old"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "keep"
+          }
+        ],
+        "files": [
+          {
+            "path": "output.txt",
+            "content": ""
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "keep"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "write-missing-parent",
+      "action": "file-operations.write-text",
+      "capabilityIds": [
+        "file-operations.write-text"
+      ],
+      "fixtureRefs": [
+        "write-missing-parent"
+      ],
+      "input": {
+        "fixtureRef": "write-missing-parent"
+      },
+      "expected": {
+        "operation": "write-text",
+        "path": "absent/output.txt",
+        "content": null,
+        "error": "io_error",
+        "beforeFiles": [
+          {
+            "path": "sentinel.txt",
+            "content": "keep"
+          }
+        ],
+        "files": [
+          {
+            "path": "sentinel.txt",
+            "content": "keep"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "familyId": "version-pe-path",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-version-core"
+  },
+  "fixtureRoot": "tests/fixtures/version_operations_conformance",
+  "fixtures": {
+    "pe-path-valid": "pe-path-valid.json",
+    "pe-path-malformed": "pe-path-malformed.json",
+    "pe-path-missing": "pe-path-missing.json",
+    "pe-path-extension": "pe-path-extension.json"
+  },
+  "capabilities": [
+    {
+      "id": "version-pe-path.observe",
+      "rustSymbols": [
+        "is_valid_executable_path"
+      ],
+      "observationFamilies": [
+        "version-pe-path"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "pe-path-valid",
+      "action": "version-pe-path.observe",
+      "capabilityIds": [
+        "version-pe-path.observe"
+      ],
+      "fixtureRefs": [
+        "pe-path-valid"
+      ],
+      "input": {
+        "fixtureRef": "pe-path-valid"
+      },
+      "expected": {
+        "validPath": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "pe-path-malformed",
+      "action": "version-pe-path.observe",
+      "capabilityIds": [
+        "version-pe-path.observe"
+      ],
+      "fixtureRefs": [
+        "pe-path-malformed"
+      ],
+      "input": {
+        "fixtureRef": "pe-path-malformed"
+      },
+      "expected": {
+        "validPath": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "pe-path-missing",
+      "action": "version-pe-path.observe",
+      "capabilityIds": [
+        "version-pe-path.observe"
+      ],
+      "fixtureRefs": [
+        "pe-path-missing"
+      ],
+      "input": {
+        "fixtureRef": "pe-path-missing"
+      },
+      "expected": {
+        "validPath": false
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "pe-path-extension",
+      "action": "version-pe-path.observe",
+      "capabilityIds": [
+        "version-pe-path.observe"
+      ],
+      "fixtureRefs": [
+        "pe-path-extension"
+      ],
+      "input": {
+        "fixtureRef": "pe-path-extension"
+      },
+      "expected": {
+        "validPath": false
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

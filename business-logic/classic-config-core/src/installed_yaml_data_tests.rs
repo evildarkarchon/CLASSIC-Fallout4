@@ -2369,6 +2369,11 @@ fn no_config_display_label_looks_like_a_vocabulary_token() {
             LocalIgnoreYamlDataState::VARIANTS
                 .iter()
                 .map(|variant| variant.label()),
+        )
+        .chain(
+            InstalledYamlDataRole::VARIANTS
+                .iter()
+                .map(|variant| variant.label()),
         );
     for label in labels {
         assert!(
@@ -2376,4 +2381,63 @@ fn no_config_display_label_looks_like_a_vocabulary_token() {
             "Display Label `{label}` looks like a Vocabulary Token"
         );
     }
+}
+
+#[test]
+fn installed_yaml_data_role_satisfies_the_vocabulary_contract() {
+    assert_vocabulary_conformance::<InstalledYamlDataRole>();
+}
+
+#[test]
+fn every_installed_yaml_data_role_variant_is_listed_for_iteration() {
+    assert_eq!(InstalledYamlDataRole::VARIANTS.len(), 2);
+}
+
+#[test]
+fn installed_yaml_data_role_tokens_are_the_frozen_published_spelling() {
+    // This enum never had a token method, so these are not a respelling of one -
+    // they are the exact strings the Python and Node surfaces already publish
+    // from their own hand-written tables, adopted here so those tables can be
+    // deleted without moving a single byte on either surface.
+    assert_eq!(InstalledYamlDataRole::Main.as_str(), "main");
+    assert_eq!(InstalledYamlDataRole::Game.as_str(), "game");
+}
+
+#[test]
+fn every_installed_yaml_data_role_label_stays_distinct_from_its_token() {
+    // The per-variant shape of the infrastructure-stage test in the TUI, applied
+    // where this crate can assert it: exhaustive over `VARIANTS` rather than over
+    // a literal table, so a variant added later is covered from the day it lands.
+    //
+    // The negative half is what carries the weight. `Main` is the variant whose
+    // two forms differ, and they differ only by case, which is exactly the
+    // difference a mechanical derivation would erase - so asserting the label is
+    // not the token catches a future contributor who decides the two forms are
+    // redundant. `Game` is pinned as a known equality for the same reason the
+    // provenance labels are: `game` is already the right word in both roles.
+    for role in InstalledYamlDataRole::VARIANTS.iter().copied() {
+        let token = Vocabulary::as_str(role);
+        let label = role.label();
+        match role {
+            InstalledYamlDataRole::Main => assert_ne!(
+                label, token,
+                "the Main role's Display Label should keep its glossary capitalization"
+            ),
+            InstalledYamlDataRole::Game => assert_eq!(
+                label, token,
+                "the game role's two forms are deliberately the same word"
+            ),
+        }
+    }
+}
+
+#[test]
+fn the_installed_yaml_data_role_display_renders_the_label_not_the_token() {
+    // `Display` is spliced into user-facing prose - the `no usable Installed YAML
+    // Data source for {role}` load errors, and `parse_candidate`'s parse and
+    // empty-file labels - so it must render the Display Label. Adopting the
+    // contract left this output byte-identical; this pins that, because routing
+    // `Display` through `as_str` instead would silently downcase `Main`.
+    assert_eq!(InstalledYamlDataRole::Main.to_string(), "Main");
+    assert_eq!(InstalledYamlDataRole::Game.to_string(), "game");
 }

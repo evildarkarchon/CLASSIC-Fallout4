@@ -1,0 +1,12 @@
+{
+  "files": {
+    "valid.yaml": "value: 9\n"
+  },
+  "request": {
+    "single": "missing.yaml",
+    "batch": [
+      "valid.yaml",
+      "missing.yaml"
+    ]
+  }
+}

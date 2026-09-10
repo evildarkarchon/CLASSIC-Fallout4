@@ -1,0 +1,8 @@
+{
+  "operation": "write-text",
+  "path": "output.txt",
+  "files": {
+    "sentinel.txt": "keep"
+  },
+  "content": "hello world\n"
+}

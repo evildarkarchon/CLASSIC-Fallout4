@@ -1,4 +1,4 @@
-"""Validate the shared Crash Log Scan Run fixture and variant acknowledgements."""
+"""Validate Crash Log Scan Run fixtures, source inventory, and forbidden exports."""
 
 from __future__ import annotations
 
@@ -9,12 +9,16 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from conformance.families.crash_log_scan_run import (
+    REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO,
+)
+from conformance.variant_policy import CRASH_LOG_SCAN_RUN_VARIANT_TARGETS
 
 MANIFEST_PATH = Path("tests/fixtures/crash_log_scan_run/manifest.json")
 
 
 class ManifestValidationError(ValueError):
-    """Raised when scan-run fixture or adapter evidence is incomplete."""
+    """Raised when scan-run fixtures, source inventory, or export constraints are invalid."""
 
 
 def load_manifest(repo_root: Path) -> dict[str, Any]:
@@ -275,66 +279,31 @@ def _validate_rust_inventory(
             )
 
 
-def _validate_evidence(repo_root: Path, owner: str, evidence: object) -> None:
-    """Require every evidence path and marker declared by one owner to exist."""
+def _validate_variant_evidence_policy(variants: set[str]) -> None:
+    """Require every source variant to name one real fact or retained analyzer."""
 
-    if not isinstance(evidence, list) or not evidence:
-        raise ManifestValidationError(f"{owner} must declare evidence")
-    for entry in evidence:
-        if not isinstance(entry, dict):
-            raise ManifestValidationError(f"{owner} evidence entries must be objects")
-        path = entry.get("path")
-        markers = _require_string_list(
-            entry.get("contains"), f"{owner} evidence markers"
+    policy_variants = set(CRASH_LOG_SCAN_RUN_VARIANT_TARGETS)
+    missing = variants - policy_variants
+    stale = policy_variants - variants
+    if missing or stale:
+        raise ManifestValidationError(
+            "Crash Log Scan Run variant evidence policy differs: "
+            f"missing={sorted(missing)}, stale={sorted(stale)}"
         )
-        if not isinstance(path, str):
-            raise ManifestValidationError(f"{owner} evidence path must be a string")
-        evidence_path = repo_root / path
-        try:
-            text = evidence_path.read_text(encoding="utf-8")
-        except OSError as error:
+    for variant, target in CRASH_LOG_SCAN_RUN_VARIANT_TARGETS.items():
+        if target.retained_analyzer_id is not None:
+            if target.scenario_id is not None:
+                raise ManifestValidationError(
+                    f"retained variant {variant} cannot claim an executable scenario"
+                )
+            continue
+        scenario_facts = REQUIRED_OBSERVATION_FACT_IDS_BY_SCENARIO.get(
+            target.scenario_id or ""
+        )
+        if scenario_facts is None or target.assertion_id not in scenario_facts:
             raise ManifestValidationError(
-                f"Cannot read {owner} evidence {evidence_path}: {error}"
-            ) from error
-        absent = [marker for marker in markers if marker not in text]
-        if absent:
-            raise ManifestValidationError(
-                f"{owner} evidence {path} is missing markers: {', '.join(absent)}"
+                f"variant {variant} references no required executable scenario fact"
             )
-
-
-def _validate_scenarios(repo_root: Path, manifest: dict[str, Any]) -> None:
-    """Validate executable scenario and frontend-presentation evidence."""
-
-    for group_name in ("scenarios", "presentations"):
-        group = manifest.get(group_name)
-        if not isinstance(group, dict) or not group:
-            raise ManifestValidationError(f"{group_name} must be a non-empty object")
-        for scenario_id, scenario in group.items():
-            if not isinstance(scenario, dict):
-                raise ManifestValidationError(
-                    f"{group_name}.{scenario_id} must be an object"
-                )
-            required = _require_string_list(
-                scenario.get("requiredOwners"),
-                f"{group_name}.{scenario_id}.requiredOwners",
-            )
-            evidence = scenario.get("evidence")
-            if not isinstance(evidence, dict):
-                raise ManifestValidationError(
-                    f"{group_name}.{scenario_id}.evidence must be an object"
-                )
-            missing = set(required) - set(evidence)
-            extra = set(evidence) - set(required)
-            if missing or extra:
-                raise ManifestValidationError(
-                    f"{group_name}.{scenario_id} evidence owners differ: "
-                    f"missing={sorted(missing)}, extra={sorted(extra)}"
-                )
-            for owner, entries in evidence.items():
-                _validate_evidence(
-                    repo_root, f"{group_name}.{scenario_id}.{owner}", entries
-                )
 
 
 def _validate_failure_fixtures(manifest: dict[str, Any], variants: set[str]) -> None:
@@ -500,30 +469,10 @@ def _validate_reset_fixture_contract(
                 "fixtures.installedYamlData.resetOutcomes."
                 f"{field} must be {expected!r}"
             )
-    scenarios = manifest.get("scenarios")
-    if not isinstance(scenarios, dict):
-        raise ManifestValidationError("scenarios must be an object")
-    reset_scenario = scenarios.get("reset_to_default_continuation")
-    if not isinstance(reset_scenario, dict):
-        raise ManifestValidationError(
-            "scenarios.reset_to_default_continuation must be an object"
-        )
-    reset_owners = set(
-        _require_string_list(
-            reset_scenario.get("requiredOwners"),
-            "scenarios.reset_to_default_continuation.requiredOwners",
-        )
-    )
-    required_owners = {"rust", "cxx", "node", "python"}
-    if reset_owners != required_owners:
-        raise ManifestValidationError(
-            "scenarios.reset_to_default_continuation.requiredOwners "
-            f"must be {sorted(required_owners)}"
-        )
 
 
 def validate_manifest(repo_root: Path, manifest: dict[str, Any]) -> None:
-    """Validate fixtures, Rust inventory, adapter acknowledgements, and evidence."""
+    """Validate independent fixtures, Rust inventory, variant targets, and export constraints."""
 
     if manifest.get("schemaVersion") != 1:
         raise ManifestValidationError("schemaVersion must be 1")
@@ -536,33 +485,11 @@ def validate_manifest(repo_root: Path, manifest: dict[str, Any]) -> None:
     # Inventory is checked first so a new Rust variant reports directly even if a
     # contributor is still assembling the rest of its cross-interface evidence.
     _validate_rust_inventory(repo_root, manifest, variants)
+    _validate_variant_evidence_policy(variants)
 
     supported = _require_string_list(
         manifest.get("supportedAdapters"), "supportedAdapters"
     )
-    adapters = manifest.get("adapters")
-    if not isinstance(adapters, dict):
-        raise ManifestValidationError("adapters must be an object")
-    if set(adapters) != set(supported):
-        raise ManifestValidationError("adapters must exactly match supportedAdapters")
-    for adapter in supported:
-        entry = adapters[adapter]
-        if not isinstance(entry, dict):
-            raise ManifestValidationError(f"{adapter} adapter entry must be an object")
-        acknowledged = set(
-            _require_string_list(
-                entry.get("acknowledgedVariants"),
-                f"{adapter}.acknowledgedVariants",
-            )
-        )
-        missing = variants - acknowledged
-        stale = acknowledged - variants
-        if missing or stale:
-            raise ManifestValidationError(
-                f"{adapter} variant acknowledgements differ: "
-                f"missing={sorted(missing)}, stale={sorted(stale)}"
-            )
-        _validate_evidence(repo_root, adapter, entry.get("evidence"))
 
     fixture_files = _require_string_list(manifest.get("fixtureFiles"), "fixtureFiles")
     missing_fixtures = [
@@ -574,7 +501,6 @@ def validate_manifest(repo_root: Path, manifest: dict[str, Any]) -> None:
         )
     _validate_reset_fixture_contract(repo_root, manifest)
     _validate_failure_fixtures(manifest, variants)
-    _validate_scenarios(repo_root, manifest)
     forbidden_exports = manifest.get("forbiddenExports")
     if not isinstance(forbidden_exports, dict) or set(forbidden_exports) != set(
         supported
@@ -582,7 +508,7 @@ def validate_manifest(repo_root: Path, manifest: dict[str, Any]) -> None:
         raise ManifestValidationError(
             "forbiddenExports must exactly match supportedAdapters"
         )
-    # Run the contraction audit after positive contract checks so malformed
+    # Run the contraction audit after inventory and fixture checks so malformed
     # variant or fixture changes retain their more specific diagnostics.
     _validate_forbidden_exports(repo_root, forbidden_exports)
 

@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "familyId": "fallout4-identity",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-version-registry-core"
+  },
+  "fixtureRoot": "tests/fixtures/version_values_conformance",
+  "fixtures": {
+    "fallout4-identity-all": "fallout4-identity-all.json"
+  },
+  "capabilities": [
+    {
+      "id": "fallout4-identity.observe",
+      "rustSymbols": [
+        "Fallout4Version",
+        "is_vr",
+        "exe_name",
+        "steam_app_id"
+      ],
+      "observationFamilies": [
+        "value-results"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "all",
+      "action": "fallout4-identity.observe",
+      "capabilityIds": [
+        "fallout4-identity.observe"
+      ],
+      "fixtureRefs": [
+        "fallout4-identity-all"
+      ],
+      "input": {
+        "fixtureRef": "fallout4-identity-all"
+      },
+      "expected": {
+        "variants": [
+          {
+            "isVr": false,
+            "exeName": "Fallout4.exe",
+            "steamAppId": 377160
+          },
+          {
+            "isVr": false,
+            "exeName": "Fallout4.exe",
+            "steamAppId": 377160
+          },
+          {
+            "isVr": false,
+            "exeName": "Fallout4.exe",
+            "steamAppId": 377160
+          },
+          {
+            "isVr": true,
+            "exeName": "Fallout4VR.exe",
+            "steamAppId": 611660
+          }
+        ],
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: FO4_OG\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: OG\n      display_name: Fixture OG\n      docs_name: FixtureDocs\n      steam_id: 7\n      is_vr: false\n      priority: 1\n    - id: FO4_NG\n      game: Fallout4\n      version: \"1.10.984\"\n      short_name: NG\n      display_name: Fixture NG\n      docs_name: FixtureDocs\n      steam_id: 7\n      is_vr: false\n      priority: 1\n    - id: FO4_AE\n      game: Fallout4\n      version: \"1.11.137\"\n      short_name: AE\n      display_name: Fixture AE\n      docs_name: FixtureDocs\n      steam_id: 7\n      is_vr: false\n      priority: 1\n    - id: FO4_VR\n      game: Fallout4\n      version: \"1.2.72\"\n      short_name: VR\n      display_name: Fixture VR\n      docs_name: FixtureDocs\n      steam_id: 7\n      is_vr: true\n      priority: 1\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

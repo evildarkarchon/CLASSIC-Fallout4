@@ -143,7 +143,7 @@ Relevant Node artifacts/checks:
 
 - [`node-bindings/classic-node/parity-artifacts/tier1_gate_report.md`](../../node-bindings/classic-node/parity-artifacts/tier1_gate_report.md)
 - [`node-bindings/classic-node/parity-artifacts/parity_diff_report.md`](../../node-bindings/classic-node/parity-artifacts/parity_diff_report.md)
-- [`node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md`](../../node-bindings/classic-node/parity-artifacts/runtime_coverage_summary.md)
+- [Binding Compliance Suite](binding-compliance-suite.md) authenticates executable receipts; source parity reports do not certify runtime coverage.
 
 When Python `.pyi` files change, the important checks are:
 
@@ -161,7 +161,7 @@ Relevant Python artifacts/checks:
 
 - [`python-bindings/parity-artifacts/tier1_gate_report.md`](../../python-bindings/parity-artifacts/tier1_gate_report.md)
 - [`python-bindings/parity-artifacts/parity_diff_report.md`](../../python-bindings/parity-artifacts/parity_diff_report.md)
-- [`python-bindings/parity-artifacts/runtime_coverage_summary.md`](../../python-bindings/parity-artifacts/runtime_coverage_summary.md)
+- [Binding Compliance Suite](binding-compliance-suite.md) authenticates executable receipts; source parity reports do not certify runtime coverage.
 - [`python-bindings/parity-artifacts/stub_validation_report.json`](../../python-bindings/parity-artifacts/stub_validation_report.json)
 
 If multiple surfaces refresh in one change, run all relevant workflows.

@@ -1,0 +1,7 @@
+{
+  "version": "NextGen",
+  "files": {
+    "version-1-10-984-0.bin": "fixture bytes\n",
+    "sentinel.txt": "keep\n"
+  }
+}

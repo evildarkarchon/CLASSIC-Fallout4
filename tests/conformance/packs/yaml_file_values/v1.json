@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "familyId": "yaml-file-values",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-settings-core"
+  },
+  "fixtureRoot": "tests/fixtures/yaml_file_values",
+  "fixtures": {
+    "empty": "empty.json"
+  },
+  "capabilities": [
+    {
+      "id": "yaml-file-values.observe",
+      "rustSymbols": [
+        "YamlFile",
+        "as_str",
+        "description"
+      ],
+      "observationFamilies": [
+        "values"
+      ],
+      "operationScoped": true
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "all-kinds",
+      "action": "yaml-file-values.observe",
+      "capabilityIds": [
+        "yaml-file-values.observe"
+      ],
+      "fixtureRefs": [
+        "empty"
+      ],
+      "input": {
+        "fixtureRef": "empty"
+      },
+      "expected": {
+        "kinds": [
+          {
+            "token": "Main",
+            "description": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "token": "Ignore",
+            "description": "CLASSIC Ignore.yaml"
+          },
+          {
+            "token": "Game",
+            "description": "CLASSIC Data/databases/CLASSIC {Game}.yaml"
+          },
+          {
+            "token": "GameLocal",
+            "description": "CLASSIC Data/CLASSIC {Game} Local.yaml"
+          },
+          {
+            "token": "Test",
+            "description": "tests/test_settings.yaml"
+          },
+          {
+            "token": "Cache",
+            "description": "User config dir/CLASSIC/cache.yaml"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

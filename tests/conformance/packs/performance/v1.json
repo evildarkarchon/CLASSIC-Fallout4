@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "familyId": "performance",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-perf-core"
+  },
+  "fixtureRoot": "tests/fixtures/performance_conformance",
+  "fixtures": {
+    "empty": "empty.json",
+    "record-clear-reuse": "record-clear-reuse.json"
+  },
+  "capabilities": [
+    {
+      "id": "performance.metrics",
+      "rustSymbols": [
+        "MetricsSummary",
+        "record_timing",
+        "get_summary",
+        "clear_metrics"
+      ],
+      "observationFamilies": [
+        "values",
+        "durable-effects"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "empty",
+      "action": "performance.metrics",
+      "capabilityIds": [
+        "performance.metrics"
+      ],
+      "fixtureRefs": [
+        "empty"
+      ],
+      "input": {
+        "fixtureRef": "empty"
+      },
+      "expected": {
+        "snapshots": [
+          {},
+          {}
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "record-clear-reuse",
+      "action": "performance.metrics",
+      "capabilityIds": [
+        "performance.metrics"
+      ],
+      "fixtureRefs": [
+        "record-clear-reuse"
+      ],
+      "input": {
+        "fixtureRef": "record-clear-reuse"
+      },
+      "expected": {
+        "snapshots": [
+          {},
+          {
+            "scan": {
+              "count": 2,
+              "totalMs": 500,
+              "averageMs": 250,
+              "minMs": 125,
+              "maxMs": 375
+            },
+            "zero": {
+              "count": 1,
+              "totalMs": 0,
+              "averageMs": 0,
+              "minMs": 0,
+              "maxMs": 0
+            }
+          },
+          {},
+          {
+            "scan": {
+              "count": 1,
+              "totalMs": 1000,
+              "averageMs": 1000,
+              "minMs": 1000,
+              "maxMs": 1000
+            }
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

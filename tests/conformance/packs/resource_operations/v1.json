@@ -1,0 +1,323 @@
+{
+  "schemaVersion": 1,
+  "familyId": "resource-operations",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-resource-core"
+  },
+  "fixtureRoot": "tests/fixtures/resource_operations_conformance",
+  "fixtures": {
+    "plugin": "plugin.json",
+    "texture": "texture.json",
+    "unsupported": "unsupported.json"
+  },
+  "capabilities": [
+    {
+      "id": "resource-operations.observe",
+      "rustSymbols": [
+        "detect_resource_type",
+        "is_supported_resource",
+        "ResourceType",
+        "extensions",
+        "ResourceInfo",
+        "enumerate_resources",
+        "count_resources_by_type",
+        "validate_resource"
+      ],
+      "observationFamilies": [
+        "resource-classification"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "plugin",
+      "action": "resource-operations.observe",
+      "capabilityIds": [
+        "resource-operations.observe"
+      ],
+      "fixtureRefs": [
+        "plugin"
+      ],
+      "input": {
+        "fixtureRef": "plugin"
+      },
+      "expected": {
+        "detected": "plugin",
+        "supported": true,
+        "parsed": "plugin",
+        "extensions": [
+          "esp",
+          "esm",
+          "esl"
+        ],
+        "info": {
+          "path": "mods/A.ESP",
+          "type": "plugin",
+          "size": 0
+        },
+        "resources": [
+          {
+            "path": "mods/A.esp",
+            "type": "plugin",
+            "size": 6
+          },
+          {
+            "path": "textures/body.dds",
+            "type": "texture",
+            "size": 4
+          }
+        ],
+        "counts": [
+          {
+            "type": "plugin",
+            "count": 1
+          },
+          {
+            "type": "texture",
+            "count": 1
+          }
+        ],
+        "validation": [
+          {
+            "path": "mods/A.esp",
+            "error": null
+          },
+          {
+            "path": "missing.dds",
+            "error": "not_found"
+          }
+        ],
+        "typeCatalog": [
+          "texture",
+          "mesh",
+          "script",
+          "plugin",
+          "sound",
+          "animation",
+          "interface",
+          "strings",
+          "archive",
+          "config",
+          "other"
+        ],
+        "sizedInfo": {
+          "path": "mods/A.esp",
+          "type": "plugin",
+          "size": 6
+        },
+        "files": [
+          {
+            "path": "mods/A.esp",
+            "hex": "706c7567696e"
+          },
+          {
+            "path": "notes.unknown",
+            "hex": "69676e6f726564"
+          },
+          {
+            "path": "textures/body.dds",
+            "hex": "44445320"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "texture",
+      "action": "resource-operations.observe",
+      "capabilityIds": [
+        "resource-operations.observe"
+      ],
+      "fixtureRefs": [
+        "texture"
+      ],
+      "input": {
+        "fixtureRef": "texture"
+      },
+      "expected": {
+        "detected": "texture",
+        "supported": true,
+        "parsed": "texture",
+        "extensions": [
+          "dds",
+          "png",
+          "jpg",
+          "tga"
+        ],
+        "info": {
+          "path": "textures/body.dds",
+          "type": "texture",
+          "size": 0
+        },
+        "resources": [
+          {
+            "path": "mods/A.esp",
+            "type": "plugin",
+            "size": 6
+          },
+          {
+            "path": "textures/body.dds",
+            "type": "texture",
+            "size": 4
+          }
+        ],
+        "counts": [
+          {
+            "type": "plugin",
+            "count": 1
+          },
+          {
+            "type": "texture",
+            "count": 1
+          }
+        ],
+        "validation": [
+          {
+            "path": "mods/A.esp",
+            "error": null
+          },
+          {
+            "path": "missing.dds",
+            "error": "not_found"
+          }
+        ],
+        "typeCatalog": [
+          "texture",
+          "mesh",
+          "script",
+          "plugin",
+          "sound",
+          "animation",
+          "interface",
+          "strings",
+          "archive",
+          "config",
+          "other"
+        ],
+        "sizedInfo": {
+          "path": "mods/A.esp",
+          "type": "plugin",
+          "size": 6
+        },
+        "files": [
+          {
+            "path": "mods/A.esp",
+            "hex": "706c7567696e"
+          },
+          {
+            "path": "notes.unknown",
+            "hex": "69676e6f726564"
+          },
+          {
+            "path": "textures/body.dds",
+            "hex": "44445320"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "unsupported",
+      "action": "resource-operations.observe",
+      "capabilityIds": [
+        "resource-operations.observe"
+      ],
+      "fixtureRefs": [
+        "unsupported"
+      ],
+      "input": {
+        "fixtureRef": "unsupported"
+      },
+      "expected": {
+        "detected": "other",
+        "supported": false,
+        "parsed": "other",
+        "extensions": [],
+        "info": {
+          "path": "notes.unknown",
+          "type": "other",
+          "size": 0
+        },
+        "resources": [
+          {
+            "path": "mods/A.esp",
+            "type": "plugin",
+            "size": 6
+          },
+          {
+            "path": "textures/body.dds",
+            "type": "texture",
+            "size": 4
+          }
+        ],
+        "counts": [
+          {
+            "type": "plugin",
+            "count": 1
+          },
+          {
+            "type": "texture",
+            "count": 1
+          }
+        ],
+        "validation": [
+          {
+            "path": "mods/A.esp",
+            "error": null
+          },
+          {
+            "path": "missing.dds",
+            "error": "not_found"
+          }
+        ],
+        "typeCatalog": [
+          "texture",
+          "mesh",
+          "script",
+          "plugin",
+          "sound",
+          "animation",
+          "interface",
+          "strings",
+          "archive",
+          "config",
+          "other"
+        ],
+        "sizedInfo": {
+          "path": "mods/A.esp",
+          "type": "plugin",
+          "size": 6
+        },
+        "files": [
+          {
+            "path": "mods/A.esp",
+            "hex": "706c7567696e"
+          },
+          {
+            "path": "notes.unknown",
+            "hex": "69676e6f726564"
+          },
+          {
+            "path": "textures/body.dds",
+            "hex": "44445320"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

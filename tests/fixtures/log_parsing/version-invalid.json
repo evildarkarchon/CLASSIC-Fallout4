@@ -1,0 +1,7 @@
+{
+  "operation": "crashgen-version",
+  "version": "garbage",
+  "supported": [
+    "1.28.0"
+  ]
+}

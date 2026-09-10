@@ -1,0 +1,227 @@
+{
+  "schemaVersion": 1,
+  "familyId": "unpacked-scan",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scangame-core"
+  },
+  "fixtureRoot": "tests/fixtures/unpacked_scan",
+  "fixtures": {
+    "mixed": "mixed.json",
+    "dds-only": "dds-only.json",
+    "empty": "empty.json"
+  },
+  "capabilities": [
+    {
+      "id": "unpacked-scan.scan",
+      "rustSymbols": [
+        "UnpackedScanner",
+        "UnpackedIssues",
+        "scan_directory"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "unpacked-issues"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "mixed",
+      "action": "unpacked-scan.scan",
+      "capabilityIds": [
+        "unpacked-scan.scan"
+      ],
+      "fixtureRefs": [
+        "mixed"
+      ],
+      "input": {
+        "fixtureRef": "mixed"
+      },
+      "expected": {
+        "beforeFiles": [
+          {
+            "path": "BodySlide/source.png",
+            "content": "ignored source"
+          },
+          {
+            "path": "meshes/precombine_oc.nif",
+            "content": "precombine"
+          },
+          {
+            "path": "meshes/previs.uvd",
+            "content": "previs"
+          },
+          {
+            "path": "scripts/f4se.pex",
+            "content": "script"
+          },
+          {
+            "path": "sound/music.mp3",
+            "content": "audio"
+          },
+          {
+            "path": "textures/loose.png",
+            "content": "loose texture"
+          },
+          {
+            "path": "textures/sample.dds",
+            "content": "DDS path only"
+          }
+        ],
+        "beforeDirectories": [
+          "BodySlide",
+          "meshes",
+          "meshes/AnimationFileData",
+          "scripts",
+          "sound",
+          "textures"
+        ],
+        "issues": {
+          "animation": [
+            "  - meshes\n"
+          ],
+          "formats": [
+            "  - PNG : textures/loose.png\n"
+          ],
+          "sounds": [
+            "  - MP3 : sound/music.mp3\n"
+          ],
+          "scripts": [
+            "  - scripts\n"
+          ],
+          "previs": [
+            "  - meshes\n"
+          ],
+          "dds": [
+            "textures/sample.dds"
+          ]
+        },
+        "files": [
+          {
+            "path": "BodySlide/source.png",
+            "content": "ignored source"
+          },
+          {
+            "path": "meshes/precombine_oc.nif",
+            "content": "precombine"
+          },
+          {
+            "path": "meshes/previs.uvd",
+            "content": "previs"
+          },
+          {
+            "path": "scripts/f4se.pex",
+            "content": "script"
+          },
+          {
+            "path": "sound/music.mp3",
+            "content": "audio"
+          },
+          {
+            "path": "textures/loose.png",
+            "content": "loose texture"
+          },
+          {
+            "path": "textures/sample.dds",
+            "content": "DDS path only"
+          }
+        ],
+        "directories": [
+          "BodySlide",
+          "meshes",
+          "meshes/AnimationFileData",
+          "scripts",
+          "sound",
+          "textures"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "dds-only",
+      "action": "unpacked-scan.scan",
+      "capabilityIds": [
+        "unpacked-scan.scan"
+      ],
+      "fixtureRefs": [
+        "dds-only"
+      ],
+      "input": {
+        "fixtureRef": "dds-only"
+      },
+      "expected": {
+        "beforeFiles": [
+          {
+            "path": "textures/sample.dds",
+            "content": "DDS path only"
+          }
+        ],
+        "beforeDirectories": [
+          "textures"
+        ],
+        "issues": {
+          "animation": [],
+          "formats": [],
+          "sounds": [],
+          "scripts": [],
+          "previs": [],
+          "dds": [
+            "textures/sample.dds"
+          ]
+        },
+        "files": [
+          {
+            "path": "textures/sample.dds",
+            "content": "DDS path only"
+          }
+        ],
+        "directories": [
+          "textures"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "empty",
+      "action": "unpacked-scan.scan",
+      "capabilityIds": [
+        "unpacked-scan.scan"
+      ],
+      "fixtureRefs": [
+        "empty"
+      ],
+      "input": {
+        "fixtureRef": "empty"
+      },
+      "expected": {
+        "beforeFiles": [],
+        "beforeDirectories": [],
+        "issues": {
+          "animation": [],
+          "formats": [],
+          "sounds": [],
+          "scripts": [],
+          "previs": [],
+          "dds": []
+        },
+        "files": [],
+        "directories": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

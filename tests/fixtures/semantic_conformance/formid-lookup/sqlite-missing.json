@@ -1,0 +1,8 @@
+{
+  "configuration": {
+    "mode": "sqlite-missing",
+    "databasePath": "tests/fixtures/semantic_conformance/formid-lookup/missing-formids.sqlite3",
+    "gameTable": "Fallout4"
+  },
+  "request": {}
+}

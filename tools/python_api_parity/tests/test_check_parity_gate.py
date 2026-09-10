@@ -31,9 +31,7 @@ def test_tier1_contract_total_matches_checked_in_diff_report() -> None:
     contract = json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
     diff = json.loads(DIFF_REPORT_PATH.read_text(encoding="utf-8"))
 
-    assert diff["summary"]["tier1_contract_total"] == len(
-        contract["tier1Mappings"]
-    ), (
+    assert diff["summary"]["tier1_contract_total"] == len(contract["tier1Mappings"]), (
         "parity_diff_report.json::summary.tier1_contract_total must match "
         "parity_contract.json::tier1Mappings"
     )
@@ -65,10 +63,6 @@ def test_python_gate_defaults_use_repo_root_paths() -> None:
         REPO_ROOT / "tools" / "python_api_parity" / "check_parity_gate.py"
     ).read_text(encoding="utf-8")
     assert 'default="python-bindings/parity-artifacts"' in source
-    assert (
-        'default="python-bindings/tests/fixtures/runtime_coverage_registry.json"'
-        in source
-    )
     assert "ClassicLib-rs/python-bindings" not in source
     assert '"rust_api_surface.json",' in source
     assert '"python_api_surface.json",' in source

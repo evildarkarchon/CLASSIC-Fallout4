@@ -1,0 +1,47 @@
+{
+  "consumerCoverage": null,
+  "coverage": {
+    "executionEvidence": [
+      {
+        "executionInstanceId": "rust",
+        "participantId": "rust"
+      }
+    ],
+    "failures": [],
+    "familyId": "path-normalization",
+    "preparedEvidenceDigest": "sha256:e9552fc10238245713789f5eb92a156fd0928c8b95bac9002d5b9afe611038de",
+    "result": "pass",
+    "rows": []
+  },
+  "enforcement": "blocking",
+  "failures": [
+    {
+      "executionInstanceId": "rust",
+      "kind": "semantic_conformance_mismatch",
+      "message": "prepared invocation did not pass current receipt validation",
+      "participantId": "rust"
+    }
+  ],
+  "familyId": "path-normalization",
+  "missingExecutions": [],
+  "receivedExecutions": [
+    {
+      "executionInstanceId": "rust",
+      "participantId": "rust"
+    }
+  ],
+  "repositoryComplete": false,
+  "requiredExecutions": [
+    {
+      "executionInstanceId": "rust",
+      "participantId": "rust"
+    }
+  ],
+  "result": "fail",
+  "schemaVersion": 1,
+  "scope": {
+    "executionInstanceId": "rust",
+    "kind": "execution-instance",
+    "participantId": "rust"
+  }
+}

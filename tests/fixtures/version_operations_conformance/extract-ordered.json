@@ -1,0 +1,7 @@
+{
+  "request": {
+    "operation": "extract",
+    "filename": "Mod-v1.2.3.4.esp",
+    "content": "Version: 1.10.163.0\nv0.6.23 then 1.10.163"
+  }
+}

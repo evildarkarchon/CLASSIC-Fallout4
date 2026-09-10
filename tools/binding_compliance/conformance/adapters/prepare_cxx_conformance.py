@@ -1,0 +1,275 @@
+#!/usr/bin/env python3
+"""Prepare one fresh input-only semantic family plan for native CXX."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+SCRIPT_PATH = Path(__file__).resolve()
+DEFAULT_REPO_ROOT = SCRIPT_PATH.parents[4]
+sys.path.insert(0, str(DEFAULT_REPO_ROOT / "tools" / "binding_compliance"))
+
+from conformance.packs import (
+    MaterializationError,
+    MaterializedRun,
+    PackValidationError,
+    load_and_validate_pack,
+    materialize_run_plan,
+)
+
+PACK_RELATIVE_PATH = Path("tests/conformance/packs/crash_log_scan_run/v1.json")
+DEFAULT_ARTIFACT_ROOT = Path("tools/binding_compliance/artifacts")
+SUPPORTED_COMPILERS = ("msvc", "clang-cl")
+SUPPORTED_FAMILIES = (
+    "markdown-rendering",
+    "report-discovery",
+    "yaml-file-values",
+    "yaml-file-values",
+    "message-logging",
+    "update-rejection",
+    "settings-load",
+    "settings-yaml",
+    "settings-validation",
+    "registry-operations",
+    "version-pe",
+    "game-version-parse",
+    "fallout4-identity",
+    "fallout4-paths",
+    "registry-game",
+    "registry-gui",
+    "web-operations",
+    "performance",
+    "update-decisions",
+    "update-services",
+    "xse-operations",
+    "xse-folder",
+    "installation-paths",
+    "game-identity",
+    "runtime-access",
+    "autoscan-report",
+    "crash-log-scan-run",
+    "user-settings",
+    "crash-suspect",
+    "crashgen-settings",
+    "mod-guidance",
+    "formid-lookup",
+    "named-record",
+    "plugin-evidence",
+    "installed-yaml-data",
+    "config-vocabulary",
+    "scan-run-vocabulary",
+    "config-operations",
+    "file-backups",
+    "path-backups",
+    "game-integrity",
+    "game-setup-intake",
+    "yaml-update-operations",
+    "file-operations",
+    "database-operations",
+    "version-registry",
+    "scan-game",
+    "papyrus-monitor",
+    "wrye-report",
+    "log-collection",
+    "crash-pattern",
+    "formid-finding",
+    "ba2-scan",
+    "hash-cache-controls",
+    "crashgen-check",
+    "path-operations",
+)
+
+
+def _cxx_source_paths(
+    repo_root: Path, family: str = "crash-log-scan-run"
+) -> tuple[Path, ...]:
+    """Return current native runner and core inputs bound into source identity."""
+
+    paths = (
+        # Directory expansion fingerprints newly included helpers automatically;
+        # a manually maintained filename list must not leave native code unhashed.
+        repo_root / "classic-cli/tests/conformance",
+        repo_root
+        / "classic-cli/tests/conformance/classic_cxx_settings_load_conformance.h",
+        repo_root
+        / "classic-cli/tests/conformance/classic_cxx_settings_validation_conformance.h",
+        repo_root
+        / "classic-cli/tests/conformance/classic_cxx_version_values_conformance.h",
+        repo_root / "business-logic/classic-settings-core/src",
+        *(
+            repo_root
+            / "classic-cli/tests/conformance"
+            / ("classic_cxx_" + name + "_conformance.h")
+            for name in (
+                "registry",
+                "aux_operations",
+                "performance",
+                "update_decisions",
+                "update_services",
+                "xse_operations",
+                "xse_folder",
+                "installation_paths",
+                "shared_identity",
+            )
+        ),
+        *(
+            repo_root / "business-logic" / ("classic-" + name + "-core/src")
+            for name in ("registry", "web", "perf", "update", "xse")
+        ),
+        repo_root
+        / "classic-cli/tests/conformance/classic_cxx_vocabulary_conformance.h",
+        repo_root / "foundation/classic-vocabulary/src",
+        repo_root / "business-logic/classic-durable-publication/src",
+        SCRIPT_PATH,
+        repo_root / "tools/binding_compliance/controlled_update_service.py",
+        repo_root
+        / "tools"
+        / "binding_compliance"
+        / "conformance"
+        / "adapters"
+        / "run_cxx_conformance.ps1",
+        repo_root / "classic-cli" / "CMakeLists.txt",
+        repo_root / "classic-cli" / "build_cli.ps1",
+        repo_root / "classic-cli" / "vcpkg.json",
+        repo_root
+        / "classic-cli"
+        / "tests"
+        / "conformance"
+        / "classic_cxx_conformance.cpp",
+        repo_root
+        / "classic-cli"
+        / "tests"
+        / "conformance"
+        / "classic_cxx_user_settings_conformance.h",
+        repo_root / "cpp-bindings" / "classic-cpp-bridge" / "src" / "scanner.rs",
+        repo_root
+        / "cpp-bindings"
+        / "classic-cpp-bridge"
+        / "include"
+        / "classic_cxx_bridge"
+        / "scan_run_observer.h",
+        repo_root / "business-logic" / "classic-scanlog-core" / "src" / "scan_run",
+        repo_root / "business-logic" / "classic-scan-presentation" / "src",
+    )
+    if family == "user-settings":
+        paths += (
+            repo_root / "cpp-bindings" / "classic-cpp-bridge" / "src" / "settings.rs",
+            repo_root / "business-logic" / "classic-user-settings-core" / "src",
+        )
+    elif family != "crash-log-scan-run":
+        paths += (
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_semantic_conformance.h",
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_installed_yaml_data_conformance.h",
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_database_operations_conformance.h",
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_version_registry_conformance.h",
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_scan_game_conformance.h",
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_papyrus_monitor_conformance.h",
+            repo_root / "cpp-bindings/classic-cpp-bridge/src",
+            repo_root / "business-logic/classic-scanlog-core/src",
+            repo_root / "business-logic/classic-database-core/src",
+            repo_root / "business-logic/classic-version-registry-core/src",
+            repo_root / "business-logic/classic-scangame-core/src",
+            repo_root / "business-logic/classic-config-core/src",
+            repo_root / "business-logic/classic-user-settings-core/src",
+            repo_root / "business-logic/classic-file-io-core/src",
+            repo_root / "business-logic/classic-path-core/src",
+            repo_root / "foundation/classic-shared-core/src",
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_config_operations_conformance.h",
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_file_operations_conformance.h",
+            repo_root
+            / "classic-cli/tests/conformance/classic_cxx_path_operations_conformance.h",
+        )
+    return paths
+
+
+def prepare_cxx_run(
+    repo_root: Path,
+    *,
+    compiler: str,
+    artifact_root: Path = DEFAULT_ARTIFACT_ROOT,
+    family: str = "crash-log-scan-run",
+) -> MaterializedRun:
+    """Materialize one CXX execution-instance plan in a fresh artifact directory.
+
+    ``compiler`` selects the supported Windows/MSVC-ABI execution instance and
+    ``family`` selects the trusted repository pack. The
+    returned receipt path is reserved but intentionally absent until native C++
+    traverses the generated bridge and publishes its observations.
+    """
+
+    if compiler not in SUPPORTED_COMPILERS:
+        raise ValueError(
+            "CXX conformance compiler must be one of: " + ", ".join(SUPPORTED_COMPILERS)
+        )
+    if family not in SUPPORTED_FAMILIES:
+        raise ValueError("unsupported CXX conformance family: " + family)
+    root = repo_root.resolve(strict=True)
+    pack_path = Path("tests/conformance/packs") / family.replace("-", "_") / "v1.json"
+    pack = load_and_validate_pack(root, root / pack_path)
+    return materialize_run_plan(
+        pack,
+        participant_id="cxx",
+        participant_role="semantic-adapter",
+        execution_instance_id=f"windows-{compiler}",
+        source_paths=_cxx_source_paths(root, family),
+        artifact_root=artifact_root,
+    )
+
+
+def build_argument_parser() -> argparse.ArgumentParser:
+    """Build the private preparation command used by the PowerShell launcher."""
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--repo-root", type=Path, default=DEFAULT_REPO_ROOT)
+    parser.add_argument("--compiler", choices=SUPPORTED_COMPILERS, required=True)
+    parser.add_argument(
+        "--family", choices=SUPPORTED_FAMILIES, default="crash-log-scan-run"
+    )
+    parser.add_argument("--artifact-root", type=Path, default=DEFAULT_ARTIFACT_ROOT)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Prepare the invocation and print absolute launcher-owned paths as JSON."""
+
+    args = build_argument_parser().parse_args(argv)
+    try:
+        prepared = prepare_cxx_run(
+            args.repo_root,
+            compiler=args.compiler,
+            artifact_root=args.artifact_root,
+            family=args.family,
+        )
+        plan = prepared.document()
+    except (OSError, MaterializationError, PackValidationError, ValueError) as error:
+        print(f"CXX conformance preparation failed: {error}")
+        return 1
+    print(
+        json.dumps(
+            {
+                "artifactDir": str(prepared.artifact_dir),
+                "runPlanPath": str(prepared.run_plan_path),
+                "receiptPath": str(prepared.receipt_path),
+                "invocationId": plan["invocation"]["id"],
+                "sourceIdentity": plan["invocation"]["sourceIdentity"],
+                "executionInstanceId": plan["participant"]["executionInstanceId"],
+            },
+            sort_keys=True,
+        )
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

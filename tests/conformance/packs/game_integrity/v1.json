@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "familyId": "game-integrity",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scangame-core"
+  },
+  "fixtureRoot": "tests/fixtures/game_integrity",
+  "fixtures": {
+    "valid": "valid.json",
+    "missing": "missing.json",
+    "optional-warnings": "optional-warnings.json"
+  },
+  "capabilities": [
+    {
+      "id": "game-integrity.basic",
+      "rustSymbols": [
+        "GameIntegrityChecker",
+        "run_all_checks",
+        "CheckType",
+        "IntegrityCheckResult"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "values"
+      ]
+    },
+    {
+      "id": "game-integrity.options",
+      "rustSymbols": [
+        "IntegrityConfig"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "values"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "valid",
+      "action": "game-integrity.basic",
+      "capabilityIds": [
+        "game-integrity.basic"
+      ],
+      "fixtureRefs": [
+        "valid"
+      ],
+      "input": {
+        "fixtureRef": "valid"
+      },
+      "expected": {
+        "checks": [
+          {
+            "isValid": true,
+            "message": "\u2714\ufe0f You have the latest version of Fallout 4! \n-----\n",
+            "checkType": "ExecutableVersion"
+          },
+          {
+            "isValid": true,
+            "message": "\u2714\ufe0f Your Fallout 4 game files are installed outside of the Program Files folder! \n-----\n",
+            "checkType": "InstallationLocation"
+          }
+        ],
+        "report": "\u2714\ufe0f You have the latest version of Fallout 4! \n-----\n\u2714\ufe0f Your Fallout 4 game files are installed outside of the Program Files folder! \n-----\n",
+        "files": [
+          {
+            "path": "game/Fallout4.exe",
+            "content": "known executable fixture\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "missing",
+      "action": "game-integrity.basic",
+      "capabilityIds": [
+        "game-integrity.basic"
+      ],
+      "fixtureRefs": [
+        "missing"
+      ],
+      "input": {
+        "fixtureRef": "missing"
+      },
+      "expected": {
+        "checks": [
+          {
+            "isValid": false,
+            "message": "Game executable not found",
+            "checkType": "ExecutableVersion"
+          },
+          {
+            "isValid": false,
+            "message": "",
+            "checkType": "InstallationLocation"
+          }
+        ],
+        "report": "Game executable not found",
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "optional-warnings",
+      "action": "game-integrity.options",
+      "capabilityIds": [
+        "game-integrity.options"
+      ],
+      "fixtureRefs": [
+        "optional-warnings"
+      ],
+      "input": {
+        "fixtureRef": "optional-warnings"
+      },
+      "expected": {
+        "checks": [
+          {
+            "isValid": false,
+            "message": "\ud83d\udc80 CAUTION : YOUR Fallout 4 GAME / EXE VERSION IS OUT OF DATE \n-----\n",
+            "checkType": "ExecutableVersion"
+          },
+          {
+            "isValid": false,
+            "message": "Move this install",
+            "checkType": "InstallationLocation"
+          }
+        ],
+        "report": "\ud83d\udc80 CAUTION : YOUR Fallout 4 GAME / EXE VERSION IS OUT OF DATE \n-----\nMove this install",
+        "files": [
+          {
+            "path": "Program Files/Fallout4.exe",
+            "content": "known executable fixture\n"
+          },
+          {
+            "path": "steam_api.ini",
+            "content": "legacy"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

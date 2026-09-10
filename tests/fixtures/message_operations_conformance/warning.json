@@ -1,0 +1,8 @@
+{
+  "request": {
+    "type": "Warning",
+    "target": "Gui",
+    "content": "Caution",
+    "details": "Reason"
+  }
+}

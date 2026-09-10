@@ -9,14 +9,8 @@ import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
 const classic = require("../index.js");
-const runtimeCoverageRegistry = JSON.parse(
-  readFileSync(new URL("./fixtures/runtime_coverage_registry.json", import.meta.url), "utf-8"),
-);
-const activeTier1Owners = new Set(
-  runtimeCoverageRegistry.entries
-    .filter((entry) => entry.tier === "tier1")
-    .map((entry) => entry.ownerModule),
-);
+// Every maintained smoke test registers independently; metadata cannot disable
+// a real runtime check or stand in for its successful execution.
 
 const MAIN_YAML = `
 schema_version: "2.0"
@@ -232,11 +226,6 @@ test("exposes only the User Settings replacement contract in Node", () => {
   try {
     assert.equal(classic.ClassicConfigJs, undefined);
     assert.equal(classic.createDefaultConfig, undefined);
-    assert.equal(typeof classic.openUserSettings, "function");
-    assert.equal(typeof classic.previewUserSettingsUpdate, "function");
-    assert.equal(typeof classic.commitUserSettingsUpdate, "function");
-    assert.equal(typeof classic.planUserSettingsMigration, "function");
-    assert.equal(typeof classic.applyUserSettingsMigration, "function");
 
     const snapshot = classic.openUserSettings(root);
     assert.equal(snapshot.classification, "missing");
@@ -252,7 +241,7 @@ test("exposes only the User Settings replacement contract in Node", () => {
   }
 });
 
-if (activeTier1Owners.has("config")) {
+{
   test("runs Tier-1 config/cache APIs in Node runtime", () => {
     assert.equal(classic.DEFAULT_CACHE_TTL, classic.getDefaultCacheTtl());
     assert.equal(classic.BATCH_CACHE_TTL, classic.getBatchCacheTtl());
@@ -273,7 +262,7 @@ if (activeTier1Owners.has("config")) {
   });
 }
 
-if (activeTier1Owners.has("config")) {
+{
   test("runs Tier-1 settings cache and path validators in Node runtime", () => {
     const dir = mkdtempSync(join(tmpdir(), "classic-node-runtime-"));
     const gameDir = join(dir, "game");
@@ -315,7 +304,7 @@ if (activeTier1Owners.has("config")) {
   });
 }
 
-if (activeTier1Owners.has("version_registry")) {
+{
   test("supports optional params and stable string mappings in Node runtime", () => {
     const all = classic.getAllVersionsForGame("Fallout4");
     const vrOnly = classic.getAllVersionsForGame("Fallout4", true);
@@ -334,7 +323,7 @@ if (activeTier1Owners.has("version_registry")) {
   });
 }
 
-if (activeTier1Owners.has("aux")) {
+{
   test("runs Phase 4A aux foundation APIs in Node runtime", async () => {
     const dir = mkdtempSync(join(tmpdir(), "classic-node-aux-foundation-"));
     const settingsA = join(dir, "a.yaml");
@@ -388,7 +377,7 @@ if (activeTier1Owners.has("aux")) {
   });
 }
 
-if (activeTier1Owners.has("aux")) {
+{
   test("runs Phase 4B aux scanner stack APIs in Node runtime", async () => {
     const dir = mkdtempSync(join(tmpdir(), "classic-node-aux-scanner-stack-"));
     const logPath = join(dir, "runtime.log");
@@ -459,7 +448,7 @@ if (activeTier1Owners.has("aux")) {
   });
 }
 
-if (activeTier1Owners.has("scanlog")) {
+{
   test("runs final Standard and Targeted scan contracts in Node runtime", async () => {
     const { workspace } = createCliWorkspace();
     const configuration = {
@@ -474,6 +463,7 @@ if (activeTier1Owners.has("scanlog")) {
 
     try {
       const standardEvents = [];
+      const eventDisplayLineCounts = [];
       const standardRequest = classic.ScanRunRequest.standard(
         configuration,
         { baseDirectory: join(workspace, "incoming") },
@@ -484,6 +474,7 @@ if (activeTier1Owners.has("scanlog")) {
         new classic.ScanRunCancellation(),
         (event) => {
           standardEvents.push(event.kind);
+          eventDisplayLineCounts.push(event.displayLines.length);
         },
       );
 
@@ -504,6 +495,33 @@ if (activeTier1Owners.has("scanlog")) {
       assert.equal(discoveredLogPath.endsWith("crash-2026-03-06-12-00-00.log"), true);
       assert.equal(standardEvents.includes("discovery_completed"), true);
       assert.equal(standardEvents.includes("effective_concurrency_selected"), true);
+
+      // Display Content reaches the Node runtime as well as Bun. Kept to the
+      // shape rather than the wording: the sentences are pinned once in Rust,
+      // and restating one here would be a second copy of it. What matters under
+      // this runtime is that the lines arrive at all and that a segment's kind
+      // still selects which field to read.
+      assert.equal(standardExecution.displayLines.length > 0, true);
+      assert.equal(
+        eventDisplayLineCounts.every((count) => count > 0),
+        true,
+        "every observed event states something",
+      );
+      const standardSegments = standardExecution.displayLines.flatMap(
+        (line) => line.segments,
+      );
+      for (const segment of standardSegments) {
+        if (segment.kind === "Path") {
+          assert.equal(segment.text, "");
+          assert.equal(segment.count, 0);
+        } else if (segment.kind === "Count") {
+          assert.equal(segment.path, "");
+          assert.notEqual(segment.text, "");
+        } else {
+          assert.equal(segment.path, "");
+          assert.equal(segment.count, 0);
+        }
+      }
 
       const missingPath = join(workspace, "missing-crash.log");
       const targetedRequest = classic.ScanRunRequest.targeted(
@@ -531,7 +549,7 @@ if (activeTier1Owners.has("scanlog")) {
   });
 }
 
-if (activeTier1Owners.has("scanlog")) {
+{
   test("runs functional CLI workflow in Node runtime", () => {
     const { cliPath, logPath, workspace } = createCliWorkspace();
 
@@ -571,7 +589,7 @@ if (activeTier1Owners.has("scanlog")) {
 // node:test (not just bun:test). parseXseLog is the representative pick
 // because its string|null return surface is the most likely NAPI marshalling
 // failure point across runtimes.
-if (activeTier1Owners.has("scanlog")) {
+{
   test("scanlog Plan 2 promotion: parseXseLog + CRASH_LOG_PATTERN exercised under node:test", () => {
     // MEDIUM concern: any unexpected throw is wrapped in try/catch so the
     // suite survives with a typed-error assertion instead of a panic.
@@ -635,7 +653,7 @@ if (activeTier1Owners.has("scanlog")) {
 // Task 2 adds extractPeVersion and isValidPePath NAPI wrappers plus promotes
 // 4 version_registry entries. Per D-TEST-02 the plan adds cross-runtime tests
 // here so the symbols are exercised under node:test (not just bun:test).
-if (activeTier1Owners.has("version_registry")) {
+{
   test("version Plan 4: isValidPePath returns false for nonexistent (cross-runtime D-TEST-02)", () => {
     assert.strictEqual(classic.isValidPePath("/nonexistent/path.exe"), false);
   });
@@ -667,7 +685,7 @@ if (activeTier1Owners.has("version_registry")) {
   });
 }
 
-if (activeTier1Owners.has("config")) {
+{
   test("config Plan 3 promotion: getHashCacheStats + cache constants exercised under node:test", () => {
     // resetHashCacheStats clears counters — real-shape check.
     classic.resetHashCacheStats();

@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "familyId": "version-pe",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-version-core"
+  },
+  "fixtureRoot": "tests/fixtures/version_operations_conformance",
+  "fixtures": {
+    "pe-extract-valid": "pe-extract-valid.json",
+    "pe-extract-malformed": "pe-extract-malformed.json",
+    "pe-extract-missing": "pe-extract-missing.json",
+    "pe-extract-extension": "pe-extract-extension.json"
+  },
+  "capabilities": [
+    {
+      "id": "version-pe.observe",
+      "rustSymbols": [
+        "extract_pe_version"
+      ],
+      "observationFamilies": [
+        "version-pe-extract"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "pe-extract-valid",
+      "action": "version-pe.observe",
+      "capabilityIds": [
+        "version-pe.observe"
+      ],
+      "fixtureRefs": [
+        "pe-extract-valid"
+      ],
+      "input": {
+        "fixtureRef": "pe-extract-valid"
+      },
+      "expected": {
+        "peVersion": "1.10.163.7"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "pe-extract-malformed",
+      "action": "version-pe.observe",
+      "capabilityIds": [
+        "version-pe.observe"
+      ],
+      "fixtureRefs": [
+        "pe-extract-malformed"
+      ],
+      "input": {
+        "fixtureRef": "pe-extract-malformed"
+      },
+      "expected": {
+        "peVersion": ""
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "pe-extract-missing",
+      "action": "version-pe.observe",
+      "capabilityIds": [
+        "version-pe.observe"
+      ],
+      "fixtureRefs": [
+        "pe-extract-missing"
+      ],
+      "input": {
+        "fixtureRef": "pe-extract-missing"
+      },
+      "expected": {
+        "peVersion": ""
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "pe-extract-extension",
+      "action": "version-pe.observe",
+      "capabilityIds": [
+        "version-pe.observe"
+      ],
+      "fixtureRefs": [
+        "pe-extract-extension"
+      ],
+      "input": {
+        "fixtureRef": "pe-extract-extension"
+      },
+      "expected": {
+        "peVersion": ""
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

@@ -1,0 +1,21 @@
+{
+  "directories": [
+    "game"
+  ],
+  "files": {
+    "game/Fallout4.exe": "stub\n"
+  },
+  "request": {
+    "base": "game",
+    "components": [
+      "missing",
+      "..",
+      "future.log"
+    ],
+    "validatePaths": [
+      "game",
+      "game/Fallout4.exe",
+      "absent"
+    ]
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "familyId": "fallout4-metadata",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-version-registry-core"
+  },
+  "fixtureRoot": "tests/fixtures/version_values_conformance",
+  "fixtures": {
+    "fallout4-metadata-all": "fallout4-metadata-all.json"
+  },
+  "capabilities": [
+    {
+      "id": "fallout4-metadata.observe",
+      "operationScoped": true,
+      "rustSymbols": [
+        "Fallout4Version",
+        "game_version"
+      ],
+      "observationFamilies": [
+        "value-results"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "all",
+      "action": "fallout4-metadata.observe",
+      "capabilityIds": [
+        "fallout4-metadata.observe"
+      ],
+      "fixtureRefs": [
+        "fallout4-metadata-all"
+      ],
+      "input": {
+        "fixtureRef": "fallout4-metadata-all"
+      },
+      "expected": {
+        "variants": [
+          {
+            "version": "1.10.163.0",
+            "shortName": "OG",
+            "xse": "F4SE",
+            "displayName": "Fallout 4 Original",
+            "repr": "Fallout4Version.Original",
+            "text": "Original",
+            "equalCopy": true,
+            "hashEqualCopy": true
+          },
+          {
+            "version": "1.10.984.0",
+            "shortName": "NG",
+            "xse": "F4SE",
+            "displayName": "Fallout 4 Next-Gen",
+            "repr": "Fallout4Version.NextGen",
+            "text": "NextGen",
+            "equalCopy": true,
+            "hashEqualCopy": true
+          },
+          {
+            "version": "1.11.137.0",
+            "shortName": "AE",
+            "xse": "F4SE",
+            "displayName": "Fallout 4 Anniversary Edition",
+            "repr": "Fallout4Version.AnniversaryEdition",
+            "text": "AnniversaryEdition",
+            "equalCopy": true,
+            "hashEqualCopy": true
+          },
+          {
+            "version": "1.2.72.0",
+            "shortName": "VR",
+            "xse": "F4SEVR",
+            "displayName": "Fallout 4 VR",
+            "repr": "Fallout4Version.VR",
+            "text": "VR",
+            "equalCopy": true,
+            "hashEqualCopy": true
+          }
+        ],
+        "aliases": [
+          "Original",
+          "NextGen",
+          "AnniversaryEdition",
+          "VR",
+          null
+        ],
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: FO4_OG\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: OG\n      display_name: Fixture OG\n      docs_name: FixtureDocs\n      steam_id: 7\n      is_vr: false\n      priority: 1\n    - id: FO4_NG\n      game: Fallout4\n      version: \"1.10.984\"\n      short_name: NG\n      display_name: Fixture NG\n      docs_name: FixtureDocs\n      steam_id: 7\n      is_vr: false\n      priority: 1\n    - id: FO4_AE\n      game: Fallout4\n      version: \"1.11.137\"\n      short_name: AE\n      display_name: Fixture AE\n      docs_name: FixtureDocs\n      steam_id: 7\n      is_vr: false\n      priority: 1\n    - id: FO4_VR\n      game: Fallout4\n      version: \"1.2.72\"\n      short_name: VR\n      display_name: Fixture VR\n      docs_name: FixtureDocs\n      steam_id: 7\n      is_vr: true\n      priority: 1\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

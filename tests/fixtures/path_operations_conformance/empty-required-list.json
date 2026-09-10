@@ -1,0 +1,12 @@
+{
+  "directories": [
+    "game"
+  ],
+  "files": {
+    "game/Fallout4.exe": "stub\n"
+  },
+  "request": {
+    "path": "game",
+    "requiredFiles": []
+  }
+}

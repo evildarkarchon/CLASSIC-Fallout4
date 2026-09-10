@@ -25,6 +25,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 // Public utility modules and the final Crash Log Scan Run contract.
 pub mod analyzer;
 pub(crate) mod autoscan_report_contribution_collector;
+pub mod crash_pattern;
 pub mod crash_suspect_analyzer;
 pub mod crashgen_registry;
 pub mod crashgen_settings_analyzer;
@@ -56,6 +57,7 @@ pub mod version;
 
 // Re-export key types for convenience
 pub use analyzer::{AnalyzerError, AnalyzerErrorCode, AnalyzerKind, AnalyzerResult};
+pub use crash_pattern::detect_crash_pattern;
 pub use crash_suspect_analyzer::{
     CrashSuspectAnalysisInput, CrashSuspectAnalysisResult, CrashSuspectAnalyzer,
     CrashSuspectFinding, CrashSuspectFindingKind,
@@ -108,11 +110,23 @@ pub use version::{
     check_crashgen_version_status_with_exceptions, crashgen_version_gen,
 };
 
-/// Detect if a crash log is from Fallout 4 VR.
+/// Detect supported Bethesda VR executable or master-plugin markers in a crash log.
 ///
-/// Checks for the presence of Fallout4VR.exe or Fallout4VR.esm
-/// in the log content, case-insensitively.
+/// Recognizes Fallout4VR.exe, Fallout4VR.esm, SkyrimVR.exe and SkyrimVR.esm
+/// case-insensitively. Shared ownership preserves the legacy CXX Skyrim marker
+/// while giving every binding the same executable and casing behavior.
 pub fn detect_vr_log(content: &str) -> bool {
     let lower = content.to_lowercase();
-    lower.contains("fallout4vr.exe") || lower.contains("fallout4vr.esm")
+    [
+        "fallout4vr.exe",
+        "fallout4vr.esm",
+        "skyrimvr.exe",
+        "skyrimvr.esm",
+    ]
+    .iter()
+    .any(|marker| lower.contains(marker))
 }
+
+#[cfg(test)]
+#[path = "lib_tests.rs"]
+mod tests;

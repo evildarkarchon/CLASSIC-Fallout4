@@ -63,13 +63,7 @@ static STRING_PROCESSOR: LazyLock<StringProcessor> = LazyLock::new(StringProcess
 /// Returns names like "Fallout 4", "Fallout 4 VR", "Skyrim", "Starfield".
 #[napi]
 pub fn get_game_name(id: JsGameId) -> String {
-    let core_id = js_to_core_game_id(&id);
-    match core_id {
-        GameId::Fallout4 => "Fallout 4".to_string(),
-        GameId::Fallout4VR => "Fallout 4 VR".to_string(),
-        GameId::Skyrim => "Skyrim".to_string(),
-        GameId::Starfield => "Starfield".to_string(),
-    }
+    js_to_core_game_id(&id).display_name().to_string()
 }
 
 /// Get all supported game identifiers.

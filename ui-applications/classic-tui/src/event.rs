@@ -39,15 +39,26 @@ impl App {
                 },
                 // Cancel is the only dismissal, and no key implies a decision the user did not
                 // make: Enter is deliberately not bound, so nothing can authorize a durable reset.
+                // Every decision key is guarded on the availability core attached to that decision,
+                // not on a flag read once and remembered. The overlay omits an unavailable choice,
+                // and an unlisted key must not be able to spend the one-shot continuation on a
+                // decision that cannot succeed. Guarding both keys the same way is deliberate:
+                // Proceed Without Ignore is unconditionally available today, so its guard costs
+                // nothing, and a decision added later arrives gated instead of silently ungated.
                 Overlay::LocalIgnoreRecovery => match key.code {
-                    KeyCode::Char('p') | KeyCode::Char('P') => self.accept_local_ignore_recovery(
-                        LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-                    ),
-                    // Ignored outright when the contract says this run has no defaults to publish.
-                    // The overlay omits the choice in that case, and an unlisted key must not be
-                    // able to spend the one-shot continuation on a decision that cannot succeed.
+                    KeyCode::Char('p') | KeyCode::Char('P')
+                        if self.local_ignore_decision_available(
+                            LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                        ) =>
+                    {
+                        self.accept_local_ignore_recovery(
+                            LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                        );
+                    }
                     KeyCode::Char('r') | KeyCode::Char('R')
-                        if self.local_ignore_reset_available() =>
+                        if self.local_ignore_decision_available(
+                            LocalIgnoreRecoveryDecision::ResetToDefault,
+                        ) =>
                     {
                         self.accept_local_ignore_recovery(
                             LocalIgnoreRecoveryDecision::ResetToDefault,

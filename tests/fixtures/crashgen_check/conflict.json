@@ -1,0 +1,7 @@
+{
+  "operation": "check",
+  "files": {
+    "Buffout4.toml": "[Patches]\nAchievements = true\n",
+    "Achievements.dll": "fixture"
+  }
+}

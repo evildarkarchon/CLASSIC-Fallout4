@@ -1,0 +1,8 @@
+{
+  "request": {
+    "type": "Progress",
+    "target": "Console",
+    "content": "",
+    "details": null
+  }
+}

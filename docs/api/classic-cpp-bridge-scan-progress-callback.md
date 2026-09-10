@@ -20,6 +20,13 @@ non-cloneable `ScanRunContinuation`. Call
 `ResetToDefault`, then take that
 operation's result envelope. Resume emits post-discovery events only.
 
+`scan_run_continuation_abandon(...)` claims the same continuation without a
+decision, for a user who backs out. It takes an observer for signature symmetry
+with resume — so one adapter can be wired to both — but emits **nothing**:
+cancellation short-circuits ahead of every stage that produces an event, which
+is also why nothing on disk is touched. A frontend must therefore not treat
+"observed no event" as a delivery failure on this path.
+
 There is no CXX batch-scan callback, orchestration object, prepared-run entry
 point, resettable scan token, or direct report-writing operation. Native
 frontends construct a tagged request and consume the same Rust-owned lifecycle
@@ -68,6 +75,26 @@ ignored.
 
 Progress phases are `Setup`, `Parse`, `Analyze`, and `Finalize`. Finished
 dispositions are `Succeeded`, `Failed`, and `CancelledBeforeStart`.
+
+`display_lines` is the one field the tag does not select: every event kind
+renders, so it is always populated. It carries what this event *says*, in Rust's
+words, already rendered inline on the observer callback before the event crossed
+the bridge — there is no later opportunity, because the C++ observer receives a
+projected copy and never holds the Rust event.
+
+A single event can produce more than one line. A `DiscoveryCompleted` that
+refused some of its targeted inputs states the refusal separately, so a consumer
+can style or suppress it without losing the acceptance count.
+
+An observer that shows only some event kinds omits whole lines, which the adapter
+contract allows; rewording the ones it keeps is what it may not do. `classic-cli`
+omits `LogQueued` and `LogPhase` for exactly this reason — its progress display
+already covers both.
+
+The line and segment shape, the six segment kinds, and the rules a consumer must
+follow are documented once, under "Display Content on the envelope" in
+[`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoints.md).
+The same `ScanRunDisplayLine` type is used here.
 
 `discovery_index` refers to the accepted-log sequence emitted by
 `DiscoveryCompleted`. It is not necessarily the original Targeted input index:

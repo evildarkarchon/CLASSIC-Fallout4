@@ -1,0 +1,13 @@
+{
+  "exe": "Program Files/Fallout4.exe",
+  "files": {
+    "Program Files/Fallout4.exe": "known executable fixture\n",
+    "steam_api.ini": "legacy"
+  },
+  "hashes": [
+    "de26ed2c8db45745027274e5dd55691a5d10e3490370d1cb169f7fe132d336fc"
+  ],
+  "rootName": "Fallout 4",
+  "steamIni": "steam_api.ini",
+  "rootWarn": "Move this install"
+}

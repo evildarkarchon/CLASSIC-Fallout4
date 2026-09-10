@@ -1,0 +1,4 @@
+{
+  "operation": "node-parser",
+  "content": "[Compatibility]\nFeature=true\nSYSTEM SPECS:\nGPU #1: Nvidia Fixture\nPROBABLE CALL STACK:\nFormID: 0x12345678\nMODULES:\nFixture.dll\nPLUGINS:\n[00] Fallout4.esm"
+}

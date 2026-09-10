@@ -44,7 +44,32 @@ python tools/binding_compliance/check_compliance.py --repo-root . --profile ci
 
 The suite owns the top-level pass/fail result, policy mapping, structured report, and known-gap report. The surface-specific gates below remain available as lower-level checks and focused debugging commands.
 
+The `ci` result is source-level validation. Only `--profile full` with all family
+receipts and executed retained gates can certify repository-wide conformance.
+Full aggregation counts every source parity occurrence and fails on missing
+families or uncovered runtime rows. Registry metadata never supplies that proof.
+The remaining migration gaps are recorded in the
+[retirement readiness audit](../implementation/binding_compliance/retirement_readiness.md).
+
+Crash Log Scan Run and User Settings have blocking executable conformance obligations. Rust,
+Node, Python, CXX on both MSVC and clang-cl, CLI and GUI on both compiler legs,
+and TUI must emit current same-revision receipts for their exact applicable
+scopes. Central validation requires the full scenario and observation-family
+denominator plus every source-owned consumer obligation. Missing, skipped,
+stale, malformed, duplicate, or semantically mismatched evidence fails the
+applicable workflow. These receipts run conjunctively with the source parity,
+declaration/stub, runtime, Rust-variant, and native wrapper gates; promotion
+does not weaken or retire those checks.
+
 See [`binding-compliance-suite.md`](binding-compliance-suite.md).
+
+Autoscan Report output also has a blocking semantic family across Rust, Node,
+Python, and CXX on MSVC and clang-cl. Fresh same-revision receipts compare
+actual persisted bytes with the original immutable goldens, typed Display
+Content, and durable filesystem effects. Existing owner goldens and focused
+assembly diagnostics remain required. This family adds no public assembly API
+or frontend layout contract; see the
+[Autoscan Report evidence map](../implementation/autoscan_report_conformance_equivalence.md).
 
 ---
 
@@ -99,13 +124,12 @@ The shared implementation is `tools/parity_artifact_io.py`; the byte-stability p
 
 ### Shared Gate Tooling
 
-Three modules under `tools/` are shared by the per-binding gates. Change them with the understanding that all three gates consume them:
+Two modules under `tools/` are shared by the per-binding gates. Change them with the understanding that all three gates consume them:
 
 | Module | Owns |
 |---|---|
 | `parity_rust_surface.py` | Parsing the public Rust surface — crate source collection, `pub use` expansion, symbol extraction |
 | `parity_artifact_io.py` | Reading, comparing, and writing artifacts — `write_json`, `stable_id_hash`, `sync_baseline_artifacts`, timestamp preservation |
-| `binding_parity_runtime_coverage.py` | Runtime coverage summaries |
 
 The Node and Python gates previously carried independent copies of the Rust parser, which let them disagree about which Rust exports exist while both reported success. They now share one parser and differ only in their **crate list** — `RUST_TARGET_CRATES` / `RUST_OWNER_BY_CRATE` stay per-gate and are passed into `parse_rust_surface()` at call time. When you add a `-core` crate that a binding depends on, add it to that binding's crate list; a crate missing from the list is invisible to that gate, and any contract row naming one of its symbols will be rejected as "not in the parsed Rust surface".
 

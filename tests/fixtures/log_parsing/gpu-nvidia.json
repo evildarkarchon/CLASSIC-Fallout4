@@ -1,0 +1,8 @@
+{
+  "operation": "gpu",
+  "vendor": "nvidia",
+  "lines": [
+    "GPU #1: Nvidia GeForce Fixture",
+    "GPU #2: Intel Fixture"
+  ]
+}

@@ -15,6 +15,11 @@ This crate is a small YAML settings utility layer with two distinct responsibili
 
 It also exposes a public `validators` module for generic string-to-type validation and coercion.
 
+The Node `yamlGetIndexmapValue` adapter preserves the core map's insertion order
+for ordinary string keys by inserting them directly into its returned JavaScript
+object. JavaScript enumerates integer-index keys numerically, so that language
+rule still applies to numeric-looking YAML keys.
+
 This crate does not interpret raw User Settings key paths or own the `CLASSIC Settings.yaml` schema. That contract belongs exclusively to [`classic-user-settings-core`](classic-user-settings-core.md).
 
 Reference: [`AGENTS.md`](../../AGENTS.md).

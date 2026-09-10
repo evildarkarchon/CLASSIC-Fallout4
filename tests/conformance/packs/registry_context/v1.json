@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "familyId": "registry-context",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-registry-core"
+  },
+  "fixtureRoot": "tests/fixtures/registry_context_conformance",
+  "fixtures": {
+    "populated": "populated.json",
+    "empty-after-reuse": "empty-after-reuse.json"
+  },
+  "capabilities": [
+    {
+      "id": "registry-context.observe",
+      "rustSymbols": [
+        "get_yaml_cache",
+        "get_manual_docs_gui",
+        "get_game_path_gui",
+        "get_local_dir",
+        "is_version_auto_detected",
+        "is_xse_valid",
+        "is_enb_present",
+        "get_game_version_string"
+      ],
+      "observationFamilies": [
+        "registry-state"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "populated",
+      "action": "registry-context.observe",
+      "capabilityIds": [
+        "registry-context.observe"
+      ],
+      "fixtureRefs": [
+        "populated"
+      ],
+      "input": {
+        "fixtureRef": "populated"
+      },
+      "expected": {
+        "initial": {
+          "yamlCache": null,
+          "manualDocs": null,
+          "gamePath": null,
+          "autoDetected": false,
+          "xseValid": false,
+          "enbPresent": false,
+          "version": "auto"
+        },
+        "stored": {
+          "yamlCache": "Cr\u00e8me / Fallout4",
+          "manualDocs": "Cr\u00e8me / Fallout4",
+          "gamePath": "Cr\u00e8me / Fallout4",
+          "autoDetected": true,
+          "xseValid": true,
+          "enbPresent": true,
+          "version": "NextGen"
+        },
+        "afterClear": {
+          "yamlCache": null,
+          "manualDocs": null,
+          "gamePath": null,
+          "autoDetected": false,
+          "xseValid": false,
+          "enbPresent": false,
+          "version": "auto"
+        },
+        "localDir": "local",
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "empty-after-reuse",
+      "action": "registry-context.observe",
+      "capabilityIds": [
+        "registry-context.observe"
+      ],
+      "fixtureRefs": [
+        "empty-after-reuse"
+      ],
+      "input": {
+        "fixtureRef": "empty-after-reuse"
+      },
+      "expected": {
+        "initial": {
+          "yamlCache": null,
+          "manualDocs": null,
+          "gamePath": null,
+          "autoDetected": false,
+          "xseValid": false,
+          "enbPresent": false,
+          "version": "auto"
+        },
+        "stored": {
+          "yamlCache": "",
+          "manualDocs": "",
+          "gamePath": "",
+          "autoDetected": true,
+          "xseValid": true,
+          "enbPresent": true,
+          "version": "NextGen"
+        },
+        "afterClear": {
+          "yamlCache": null,
+          "manualDocs": null,
+          "gamePath": null,
+          "autoDetected": false,
+          "xseValid": false,
+          "enbPresent": false,
+          "version": "auto"
+        },
+        "localDir": "local",
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

@@ -1,0 +1,7 @@
+{
+  "kind": "SKSE64",
+  "files": [
+    "skse64_1_10_163.dll",
+    "skse64_loader.exe"
+  ]
+}

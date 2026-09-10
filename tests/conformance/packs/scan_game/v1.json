@@ -1,0 +1,949 @@
+{
+  "schemaVersion": 1,
+  "familyId": "scan-game",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scangame-core"
+  },
+  "fixtureRoot": "tests/fixtures/scan_game_conformance",
+  "fixtures": {
+    "ini-empty": "ini-empty.json",
+    "ini-particle-warning": "ini-particle-warning.json",
+    "ini-particle-corrected": "ini-particle-corrected.json",
+    "ini-game-notice": "ini-game-notice.json",
+    "ini-other-game": "ini-other-game.json",
+    "enb-absent": "enb-absent.json",
+    "enb-partial": "enb-partial.json",
+    "enb-complete": "enb-complete.json",
+    "enb-config-directory": "enb-config-directory.json",
+    "log-filtered": "log-filtered.json",
+    "log-tail": "log-tail.json",
+    "log-clean": "log-clean.json",
+    "report-f4se": "report-f4se.json",
+    "report-skse": "report-skse.json"
+  },
+  "capabilities": [
+    {
+      "id": "scan-game.validate-ini",
+      "rustSymbols": [
+        "IniValidator",
+        "validate_inis",
+        "detect_all_issues",
+        "ConfigIssue",
+        "IssueSeverity"
+      ],
+      "observationFamilies": [
+        "game-check-results"
+      ]
+    },
+    {
+      "id": "scan-game.validate-enb",
+      "rustSymbols": [
+        "EnbChecker",
+        "validate",
+        "EnbValidationResult",
+        "EnbResult",
+        "EnbConfigResult"
+      ],
+      "observationFamilies": [
+        "game-check-results"
+      ]
+    },
+    {
+      "id": "scan-game.process-logs",
+      "operationScoped": true,
+      "rustSymbols": [
+        "LogProcessor",
+        "process_logs"
+      ],
+      "observationFamilies": [
+        "game-log-report"
+      ]
+    },
+    {
+      "id": "scan-game.assemble-reports",
+      "operationScoped": true,
+      "rustSymbols": [
+        "build_archived_report",
+        "build_unpacked_report",
+        "build_combined_report",
+        "get_issue_messages"
+      ],
+      "observationFamilies": [
+        "game-scan-report"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "ini-empty",
+      "action": "scan-game.validate-ini",
+      "capabilityIds": [
+        "scan-game.validate-ini"
+      ],
+      "fixtureRefs": [
+        "ini-empty"
+      ],
+      "input": {
+        "fixtureRef": "ini-empty"
+      },
+      "expected": {
+        "operation": "validate-ini",
+        "game": "Fallout4",
+        "result": {
+          "report": "",
+          "issues": []
+        },
+        "beforeFiles": [
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [],
+        "directories": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "ini-particle-warning",
+      "action": "scan-game.validate-ini",
+      "capabilityIds": [
+        "scan-game.validate-ini"
+      ],
+      "fixtureRefs": [
+        "ini-particle-warning"
+      ],
+      "input": {
+        "fixtureRef": "ini-particle-warning"
+      },
+      "expected": {
+        "operation": "validate-ini",
+        "game": "Fallout4",
+        "result": {
+          "report": "",
+          "issues": [
+            {
+              "filePath": "Data/EPO.ini",
+              "section": "Particles",
+              "setting": "iMaxDesired",
+              "currentValue": "6000",
+              "recommendedValue": "5000",
+              "description": "High particle count can cause performance issues and crashes.",
+              "severity": "Warning"
+            }
+          ]
+        },
+        "beforeFiles": [
+          {
+            "path": "Data/EPO.ini",
+            "content": "[Particles]\niMaxDesired=6000\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "Data/EPO.ini",
+            "content": "[Particles]\niMaxDesired=6000\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [
+          "Data"
+        ],
+        "directories": [
+          "Data"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "ini-particle-corrected",
+      "action": "scan-game.validate-ini",
+      "capabilityIds": [
+        "scan-game.validate-ini"
+      ],
+      "fixtureRefs": [
+        "ini-particle-corrected"
+      ],
+      "input": {
+        "fixtureRef": "ini-particle-corrected"
+      },
+      "expected": {
+        "operation": "validate-ini",
+        "game": "Fallout4",
+        "result": {
+          "report": "",
+          "issues": []
+        },
+        "beforeFiles": [
+          {
+            "path": "Data/EPO.ini",
+            "content": "[Particles]\niMaxDesired=5000\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "Data/EPO.ini",
+            "content": "[Particles]\niMaxDesired=5000\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [
+          "Data"
+        ],
+        "directories": [
+          "Data"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "ini-game-notice",
+      "action": "scan-game.validate-ini",
+      "capabilityIds": [
+        "scan-game.validate-ini"
+      ],
+      "fixtureRefs": [
+        "ini-game-notice"
+      ],
+      "input": {
+        "fixtureRef": "ini-game-notice"
+      },
+      "expected": {
+        "operation": "validate-ini",
+        "game": "Fallout4",
+        "result": {
+          "report": "[!] NOTICE: <ROOT>/Fallout4.ini contains the *sStartingConsoleCommand* setting.\nIn rare cases, this setting can slow down the initial game startup time for some players.\nYou can test your initial startup time difference by removing this setting from the INI file.\n-----\n",
+          "issues": []
+        },
+        "beforeFiles": [
+          {
+            "path": "Fallout4.ini",
+            "content": "[General]\nsStartingConsoleCommand=cl off\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "Fallout4.ini",
+            "content": "[General]\nsStartingConsoleCommand=cl off\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [],
+        "directories": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "ini-other-game",
+      "action": "scan-game.validate-ini",
+      "capabilityIds": [
+        "scan-game.validate-ini"
+      ],
+      "fixtureRefs": [
+        "ini-other-game"
+      ],
+      "input": {
+        "fixtureRef": "ini-other-game"
+      },
+      "expected": {
+        "operation": "validate-ini",
+        "game": "Fallout4VR",
+        "result": {
+          "report": "",
+          "issues": []
+        },
+        "beforeFiles": [
+          {
+            "path": "Fallout4.ini",
+            "content": "[General]\nsStartingConsoleCommand=cl off\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "Fallout4.ini",
+            "content": "[General]\nsStartingConsoleCommand=cl off\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [],
+        "directories": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "enb-absent",
+      "action": "scan-game.validate-enb",
+      "capabilityIds": [
+        "scan-game.validate-enb"
+      ],
+      "fixtureRefs": [
+        "enb-absent"
+      ],
+      "input": {
+        "fixtureRef": "enb-absent"
+      },
+      "expected": {
+        "operation": "validate-enb",
+        "game": "Fallout4",
+        "result": {
+          "binaries": "NotInstalled",
+          "config": "NotFound"
+        },
+        "beforeFiles": [
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [],
+        "directories": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "enb-partial",
+      "action": "scan-game.validate-enb",
+      "capabilityIds": [
+        "scan-game.validate-enb"
+      ],
+      "fixtureRefs": [
+        "enb-partial"
+      ],
+      "input": {
+        "fixtureRef": "enb-partial"
+      },
+      "expected": {
+        "operation": "validate-enb",
+        "game": "Fallout4",
+        "result": {
+          "binaries": "Partial",
+          "config": "NotFound"
+        },
+        "beforeFiles": [
+          {
+            "path": "d3d11.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "d3d11.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [],
+        "directories": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "enb-complete",
+      "action": "scan-game.validate-enb",
+      "capabilityIds": [
+        "scan-game.validate-enb"
+      ],
+      "fixtureRefs": [
+        "enb-complete"
+      ],
+      "input": {
+        "fixtureRef": "enb-complete"
+      },
+      "expected": {
+        "operation": "validate-enb",
+        "game": "Fallout4",
+        "result": {
+          "binaries": "Present",
+          "config": "Valid"
+        },
+        "beforeFiles": [
+          {
+            "path": "d3d11.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "d3dcompiler_46e.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "enbseries.ini",
+            "content": "[GLOBAL]\nUseEffect=true\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "d3d11.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "d3dcompiler_46e.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "enbseries.ini",
+            "content": "[GLOBAL]\nUseEffect=true\n"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [],
+        "directories": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "enb-config-directory",
+      "action": "scan-game.validate-enb",
+      "capabilityIds": [
+        "scan-game.validate-enb"
+      ],
+      "fixtureRefs": [
+        "enb-config-directory"
+      ],
+      "input": {
+        "fixtureRef": "enb-config-directory"
+      },
+      "expected": {
+        "operation": "validate-enb",
+        "game": "Fallout4",
+        "result": {
+          "binaries": "Present",
+          "config": "Unreadable"
+        },
+        "beforeFiles": [
+          {
+            "path": "d3d11.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "d3dcompiler_46e.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "d3d11.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "d3dcompiler_46e.dll",
+            "content": "fixture"
+          },
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ],
+        "beforeDirectories": [
+          "enbseries.ini"
+        ],
+        "directories": [
+          "enbseries.ini"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "log-filtered",
+      "action": "scan-game.process-logs",
+      "capabilityIds": [
+        "scan-game.process-logs"
+      ],
+      "fixtureRefs": [
+        "log-filtered"
+      ],
+      "input": {
+        "fixtureRef": "log-filtered"
+      },
+      "expected": {
+        "report": "[!] CAUTION : THE FOLLOWING LOG FILE REPORTS ONE OR MORE ERRORS!\n[ Errors do not necessarily mean that the mod is not working. ]\n\nLOG PATH > <ROOT>/active.log\n\nERROR > ERROR first\nERROR > FaTaL last\n\n* TOTAL NUMBER OF DETECTED LOG ERRORS * : 2\n",
+        "beforeFiles": [
+          {
+            "path": "active.log",
+            "content": "ok\nERROR first\nerror ignored noise\nFaTaL last\n"
+          },
+          {
+            "path": "crash-excluded.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "ignored.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "nested/hidden.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "notes.txt",
+            "content": "error excluded\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "active.log",
+            "content": "ok\nERROR first\nerror ignored noise\nFaTaL last\n"
+          },
+          {
+            "path": "crash-excluded.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "ignored.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "nested/hidden.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "notes.txt",
+            "content": "error excluded\n"
+          }
+        ],
+        "beforeDirectories": [
+          "empty",
+          "nested"
+        ],
+        "directories": [
+          "empty",
+          "nested"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    },
+    {
+      "id": "log-tail",
+      "action": "scan-game.process-logs",
+      "capabilityIds": [
+        "scan-game.process-logs"
+      ],
+      "fixtureRefs": [
+        "log-tail"
+      ],
+      "input": {
+        "fixtureRef": "log-tail"
+      },
+      "expected": {
+        "report": "[!] CAUTION : THE FOLLOWING LOG FILE REPORTS ONE OR MORE ERRORS!\n[ Errors do not necessarily mean that the mod is not working. ]\n\nLOG PATH > <ROOT>/active.log\n[ Showing last 50 of 53 total errors ]\n\nERROR > error 03\nERROR > error 04\nERROR > error 05\nERROR > error 06\nERROR > error 07\nERROR > error 08\nERROR > error 09\nERROR > error 10\nERROR > error 11\nERROR > error 12\nERROR > error 13\nERROR > error 14\nERROR > error 15\nERROR > error 16\nERROR > error 17\nERROR > error 18\nERROR > error 19\nERROR > error 20\nERROR > error 21\nERROR > error 22\nERROR > error 23\nERROR > error 24\nERROR > error 25\nERROR > error 26\nERROR > error 27\nERROR > error 28\nERROR > error 29\nERROR > error 30\nERROR > error 31\nERROR > error 32\nERROR > error 33\nERROR > error 34\nERROR > error 35\nERROR > error 36\nERROR > error 37\nERROR > error 38\nERROR > error 39\nERROR > error 40\nERROR > error 41\nERROR > error 42\nERROR > error 43\nERROR > error 44\nERROR > error 45\nERROR > error 46\nERROR > error 47\nERROR > error 48\nERROR > error 49\nERROR > error 50\nERROR > error 51\nERROR > error 52\n\n* TOTAL NUMBER OF DETECTED LOG ERRORS * : 53\n",
+        "beforeFiles": [
+          {
+            "path": "active.log",
+            "content": "error 00\nerror 01\nerror 02\nerror 03\nerror 04\nerror 05\nerror 06\nerror 07\nerror 08\nerror 09\nerror 10\nerror 11\nerror 12\nerror 13\nerror 14\nerror 15\nerror 16\nerror 17\nerror 18\nerror 19\nerror 20\nerror 21\nerror 22\nerror 23\nerror 24\nerror 25\nerror 26\nerror 27\nerror 28\nerror 29\nerror 30\nerror 31\nerror 32\nerror 33\nerror 34\nerror 35\nerror 36\nerror 37\nerror 38\nerror 39\nerror 40\nerror 41\nerror 42\nerror 43\nerror 44\nerror 45\nerror 46\nerror 47\nerror 48\nerror 49\nerror 50\nerror 51\nerror 52\n"
+          },
+          {
+            "path": "crash-excluded.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "ignored.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "nested/hidden.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "notes.txt",
+            "content": "error excluded\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "active.log",
+            "content": "error 00\nerror 01\nerror 02\nerror 03\nerror 04\nerror 05\nerror 06\nerror 07\nerror 08\nerror 09\nerror 10\nerror 11\nerror 12\nerror 13\nerror 14\nerror 15\nerror 16\nerror 17\nerror 18\nerror 19\nerror 20\nerror 21\nerror 22\nerror 23\nerror 24\nerror 25\nerror 26\nerror 27\nerror 28\nerror 29\nerror 30\nerror 31\nerror 32\nerror 33\nerror 34\nerror 35\nerror 36\nerror 37\nerror 38\nerror 39\nerror 40\nerror 41\nerror 42\nerror 43\nerror 44\nerror 45\nerror 46\nerror 47\nerror 48\nerror 49\nerror 50\nerror 51\nerror 52\n"
+          },
+          {
+            "path": "crash-excluded.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "ignored.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "nested/hidden.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "notes.txt",
+            "content": "error excluded\n"
+          }
+        ],
+        "beforeDirectories": [
+          "empty",
+          "nested"
+        ],
+        "directories": [
+          "empty",
+          "nested"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    },
+    {
+      "id": "log-clean",
+      "action": "scan-game.process-logs",
+      "capabilityIds": [
+        "scan-game.process-logs"
+      ],
+      "fixtureRefs": [
+        "log-clean"
+      ],
+      "input": {
+        "fixtureRef": "log-clean"
+      },
+      "expected": {
+        "report": "",
+        "beforeFiles": [
+          {
+            "path": "active.log",
+            "content": "ok\nerror ignored noise\n"
+          },
+          {
+            "path": "crash-excluded.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "ignored.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "nested/hidden.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "notes.txt",
+            "content": "error excluded\n"
+          }
+        ],
+        "files": [
+          {
+            "path": "active.log",
+            "content": "ok\nerror ignored noise\n"
+          },
+          {
+            "path": "crash-excluded.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "ignored.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "nested/hidden.log",
+            "content": "error excluded\n"
+          },
+          {
+            "path": "notes.txt",
+            "content": "error excluded\n"
+          }
+        ],
+        "beforeDirectories": [
+          "empty",
+          "nested"
+        ],
+        "directories": [
+          "empty",
+          "nested"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    },
+    {
+      "id": "report-f4se",
+      "action": "scan-game.assemble-reports",
+      "capabilityIds": [
+        "scan-game.assemble-reports"
+      ],
+      "fixtureRefs": [
+        "report-f4se"
+      ],
+      "input": {
+        "fixtureRef": "report-f4se"
+      },
+      "expected": {
+        "unpacked": "=================== MOD FILES SCAN ====================\n========= RESULTS FROM UNPACKED / LOOSE FILES =========\n\n**[!] FOLDERS CONTAIN COPIES OF *F4SE* SCRIPT FILES [!]**\n[>] Any mods with copies of original Script Extender files\n  may cause script related problems or crashes.\n\n  - a.pex\n  - z.pex\n",
+        "archived": "\n========== RESULTS FROM ARCHIVED / BA2 FILES ==========\n\n**[!] BA2 ARCHIVES CONTAIN COPIES OF *F4SE* SCRIPT FILES [!]**\n[>] Any mods with copies of original Script Extender files\n  may cause script related problems or crashes.\n\n  - scripts.ba2\n",
+        "combined": "=================== MOD FILES SCAN ====================\n========= RESULTS FROM UNPACKED / LOOSE FILES =========\n\n**[!] FOLDERS CONTAIN COPIES OF *F4SE* SCRIPT FILES [!]**\n[>] Any mods with copies of original Script Extender files\n  may cause script related problems or crashes.\n\n  - a.pex\n  - z.pex\n\n========== RESULTS FROM ARCHIVED / BA2 FILES ==========\n\n**[!] BA2 ARCHIVES CONTAIN COPIES OF *F4SE* SCRIPT FILES [!]**\n[>] Any mods with copies of original Script Extender files\n  may cause script related problems or crashes.\n\n  - scripts.ba2\n",
+        "unpackedMessages": {
+          "tex_dims": [
+            "\n**[!] DDS DIMENSIONS ARE NOT DIVISIBLE BY 2 [!]**\n",
+            "[>] Any mods that have texture files with incorrect dimensions\n",
+            "  are very likely to cause a *Texture (DDS) Crash*. For further details,\n",
+            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n"
+          ],
+          "tex_frmt": [
+            "\n**[?] TEXTURE FILES HAVE INCORRECT FORMAT, SHOULD BE DDS [?]**\n",
+            "[>] Any files with an incorrect file format will not work.\n",
+            "  Mod authors should convert these files to their proper game format.\n",
+            "  If possible, notify the original mod authors about these problems.\n\n"
+          ],
+          "snd_frmt": [
+            "\n**[?] SOUND FILES HAVE INCORRECT FORMAT, SHOULD BE XWM OR WAV [?]**\n",
+            "[>] Any files with an incorrect file format will not work.\n",
+            "  Mod authors should convert these files to their proper game format.\n",
+            "  If possible, notify the original mod authors about these problems.\n\n"
+          ],
+          "xse_file": [
+            "\n**[!] FOLDERS CONTAIN COPIES OF *F4SE* SCRIPT FILES [!]**\n",
+            "[>] Any mods with copies of original Script Extender files\n",
+            "  may cause script related problems or crashes.\n\n"
+          ],
+          "previs": [
+            "\n**[!] FOLDERS CONTAIN LOOSE PRECOMBINE / PREVIS FILES [!]**\n",
+            "[>] Any mods that contain custom precombine/previs files\n",
+            "  should load after the PRP.esp plugin from Previs Repair Pack (PRP).\n",
+            "  Otherwise, see if there is a PRP patch available for these mods.\n\n"
+          ],
+          "animdata": [
+            "\n**[?] FOLDERS CONTAIN CUSTOM ANIMATION FILE DATA [?]**\n",
+            "[>] Any mods that have their own custom Animation File Data\n",
+            "  may rarely cause an *Animation Corruption Crash*. For further details,\n",
+            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n"
+          ],
+          "cleanup": [
+            "\n**[i] DOCUMENTATION FILES MOVED TO 'CLASSIC Backup\\Cleaned Files' [i]**\n"
+          ]
+        },
+        "archivedMessages": {
+          "tex_dims": [
+            "\n**[!] DDS DIMENSIONS ARE NOT DIVISIBLE BY 2 [!]**\n",
+            "[>] Any mods that have texture files with incorrect dimensions\n",
+            "  are very likely to cause a *Texture (DDS) Crash*. For further details,\n",
+            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n"
+          ],
+          "tex_frmt": [
+            "\n**[?] TEXTURE FILES HAVE INCORRECT FORMAT, SHOULD BE DDS [?]**\n",
+            "[>] Any files with an incorrect file format will not work.\n",
+            "  Mod authors should convert these files to their proper game format.\n",
+            "  If possible, notify the original mod authors about these problems.\n\n"
+          ],
+          "snd_frmt": [
+            "\n**[?] SOUND FILES HAVE INCORRECT FORMAT, SHOULD BE XWM OR WAV [?]**\n",
+            "[>] Any files with an incorrect file format will not work.\n",
+            "  Mod authors should convert these files to their proper game format.\n",
+            "  If possible, notify the original mod authors about these problems.\n\n"
+          ],
+          "xse_file": [
+            "\n**[!] BA2 ARCHIVES CONTAIN COPIES OF *F4SE* SCRIPT FILES [!]**\n",
+            "[>] Any mods with copies of original Script Extender files\n",
+            "  may cause script related problems or crashes.\n\n"
+          ],
+          "ba2_frmt": [
+            "\n**[?] BA2 ARCHIVES HAVE INCORRECT FORMAT, SHOULD BE BTDX-GNRL OR BTDX-DX10 [?]**\n",
+            "[>] Any files with an incorrect file format will not work.\n",
+            "  Mod authors should convert these files to their proper game format.\n",
+            "  If possible, notify the original mod authors about these problems.\n\n"
+          ]
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    },
+    {
+      "id": "report-skse",
+      "action": "scan-game.assemble-reports",
+      "capabilityIds": [
+        "scan-game.assemble-reports"
+      ],
+      "fixtureRefs": [
+        "report-skse"
+      ],
+      "input": {
+        "fixtureRef": "report-skse"
+      },
+      "expected": {
+        "unpacked": "=================== MOD FILES SCAN ====================\n========= RESULTS FROM UNPACKED / LOOSE FILES =========\n\n**[!] FOLDERS CONTAIN COPIES OF *SKSE* SCRIPT FILES [!]**\n[>] Any mods with copies of original Script Extender files\n  may cause script related problems or crashes.\n\n  - a.pex\n  - z.pex\n",
+        "archived": "\n========== RESULTS FROM ARCHIVED / BA2 FILES ==========\n\n**[!] BA2 ARCHIVES CONTAIN COPIES OF *SKSE* SCRIPT FILES [!]**\n[>] Any mods with copies of original Script Extender files\n  may cause script related problems or crashes.\n\n  - scripts.ba2\n",
+        "combined": "=================== MOD FILES SCAN ====================\n========= RESULTS FROM UNPACKED / LOOSE FILES =========\n\n**[!] FOLDERS CONTAIN COPIES OF *SKSE* SCRIPT FILES [!]**\n[>] Any mods with copies of original Script Extender files\n  may cause script related problems or crashes.\n\n  - a.pex\n  - z.pex\n\n========== RESULTS FROM ARCHIVED / BA2 FILES ==========\n\n**[!] BA2 ARCHIVES CONTAIN COPIES OF *SKSE* SCRIPT FILES [!]**\n[>] Any mods with copies of original Script Extender files\n  may cause script related problems or crashes.\n\n  - scripts.ba2\n",
+        "unpackedMessages": {
+          "tex_dims": [
+            "\n**[!] DDS DIMENSIONS ARE NOT DIVISIBLE BY 2 [!]**\n",
+            "[>] Any mods that have texture files with incorrect dimensions\n",
+            "  are very likely to cause a *Texture (DDS) Crash*. For further details,\n",
+            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n"
+          ],
+          "tex_frmt": [
+            "\n**[?] TEXTURE FILES HAVE INCORRECT FORMAT, SHOULD BE DDS [?]**\n",
+            "[>] Any files with an incorrect file format will not work.\n",
+            "  Mod authors should convert these files to their proper game format.\n",
+            "  If possible, notify the original mod authors about these problems.\n\n"
+          ],
+          "snd_frmt": [
+            "\n**[?] SOUND FILES HAVE INCORRECT FORMAT, SHOULD BE XWM OR WAV [?]**\n",
+            "[>] Any files with an incorrect file format will not work.\n",
+            "  Mod authors should convert these files to their proper game format.\n",
+            "  If possible, notify the original mod authors about these problems.\n\n"
+          ],
+          "xse_file": [
+            "\n**[!] FOLDERS CONTAIN COPIES OF *SKSE* SCRIPT FILES [!]**\n",
+            "[>] Any mods with copies of original Script Extender files\n",
+            "  may cause script related problems or crashes.\n\n"
+          ],
+          "previs": [
+            "\n**[!] FOLDERS CONTAIN LOOSE PRECOMBINE / PREVIS FILES [!]**\n",
+            "[>] Any mods that contain custom precombine/previs files\n",
+            "  should load after the PRP.esp plugin from Previs Repair Pack (PRP).\n",
+            "  Otherwise, see if there is a PRP patch available for these mods.\n\n"
+          ],
+          "animdata": [
+            "\n**[?] FOLDERS CONTAIN CUSTOM ANIMATION FILE DATA [?]**\n",
+            "[>] Any mods that have their own custom Animation File Data\n",
+            "  may rarely cause an *Animation Corruption Crash*. For further details,\n",
+            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n"
+          ],
+          "cleanup": [
+            "\n**[i] DOCUMENTATION FILES MOVED TO 'CLASSIC Backup\\Cleaned Files' [i]**\n"
+          ]
+        },
+        "archivedMessages": {
+          "tex_dims": [
+            "\n**[!] DDS DIMENSIONS ARE NOT DIVISIBLE BY 2 [!]**\n",
+            "[>] Any mods that have texture files with incorrect dimensions\n",
+            "  are very likely to cause a *Texture (DDS) Crash*. For further details,\n",
+            "  read the *How To Read Crash Logs.pdf* included with the CLASSIC exe.\n\n"
+          ],
+          "tex_frmt": [
+            "\n**[?] TEXTURE FILES HAVE INCORRECT FORMAT, SHOULD BE DDS [?]**\n",
+            "[>] Any files with an incorrect file format will not work.\n",
+            "  Mod authors should convert these files to their proper game format.\n",
+            "  If possible, notify the original mod authors about these problems.\n\n"
+          ],
+          "snd_frmt": [
+            "\n**[?] SOUND FILES HAVE INCORRECT FORMAT, SHOULD BE XWM OR WAV [?]**\n",
+            "[>] Any files with an incorrect file format will not work.\n",
+            "  Mod authors should convert these files to their proper game format.\n",
+            "  If possible, notify the original mod authors about these problems.\n\n"
+          ],
+          "xse_file": [
+            "\n**[!] BA2 ARCHIVES CONTAIN COPIES OF *SKSE* SCRIPT FILES [!]**\n",
+            "[>] Any mods with copies of original Script Extender files\n",
+            "  may cause script related problems or crashes.\n\n"
+          ],
+          "ba2_frmt": [
+            "\n**[?] BA2 ARCHIVES HAVE INCORRECT FORMAT, SHOULD BE BTDX-GNRL OR BTDX-DX10 [?]**\n",
+            "[>] Any files with an incorrect file format will not work.\n",
+            "  Mod authors should convert these files to their proper game format.\n",
+            "  If possible, notify the original mod authors about these problems.\n\n"
+          ]
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

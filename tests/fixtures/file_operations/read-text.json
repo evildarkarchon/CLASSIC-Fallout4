@@ -1,0 +1,7 @@
+{
+  "operation": "read-text",
+  "path": "input.txt",
+  "files": {
+    "input.txt": "hello world\n"
+  }
+}

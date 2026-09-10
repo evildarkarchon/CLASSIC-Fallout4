@@ -228,3 +228,11 @@ _Avoid_: name, enum name, serialized name, stage name, wire value
 **Display Label**:
 The human-facing prose naming one variant of a CLASSIC domain concept, capitalized as this glossary capitalizes the domain terms it contains. It is presentation only, is never parsed, and may be reworded without changing a Vocabulary Token.
 _Avoid_: name, stage name, user message, enum string, Vocabulary Token
+
+**Display Content**:
+What a CLASSIC domain surface says to a person: which display lines exist, what each line states, and which Display Labels, counts, paths, and names it carries. Every embedded value stays a typed value rather than text spliced into a sentence, so a frontend receives the same statement of the same facts no matter which medium renders it. Display Content decides wording, not appearance.
+_Avoid_: presentation, rendering, formatted output, message string, view model
+
+**Display Layout**:
+How one frontend arranges and styles Display Content in its own medium: the ordering and grouping of display lines, section headers, colour and emphasis, truncation and wrapping, widget choice, and the interaction affordances offered alongside a decision. Display Layout may drop or reorder what it shows, but it never rewords Display Content and never re-derives a Display Label of its own.
+_Avoid_: presentation, formatting, styling, theming, view model

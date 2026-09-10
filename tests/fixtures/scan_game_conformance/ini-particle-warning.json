@@ -1,0 +1,9 @@
+{
+  "operation": "validate-ini",
+  "game": "Fallout4",
+  "files": {
+    "sentinel.txt": "unchanged\n",
+    "Data/EPO.ini": "[Particles]\niMaxDesired=6000\n"
+  },
+  "directories": []
+}

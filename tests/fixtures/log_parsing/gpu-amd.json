@@ -1,0 +1,7 @@
+{
+  "operation": "gpu",
+  "vendor": "AMD",
+  "lines": [
+    "GPU #1: AMD Radeon Fixture"
+  ]
+}

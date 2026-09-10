@@ -13,6 +13,14 @@ It also owns the structured startup-contract logging helpers now used from bridg
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 
+Logger installation is explicit in every binding: Rust `logging::init()`, C++
+`classic::message::init_logging()`, Python `classic_message.init_logging()`, and
+Node `initLogging()` all use the same Rust initializer. Set `RUST_LOG` before the
+first call to choose the filter. Repeated calls preserve an already-installed
+logger; importing a binding or constructing a `Logger` does not install one.
+The initializer enables Rust log records on stderr and does not replace the
+host's existing logging backend.
+
 ---
 
 ## Purpose And Scope

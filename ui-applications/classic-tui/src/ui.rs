@@ -1,15 +1,34 @@
 use ratatui::Frame;
 use ratatui::layout::{Alignment, Constraint, Layout, Position, Rect};
 use ratatui::style::{Modifier, Style};
-use ratatui::text::Line;
+use ratatui::text::{Line, Text};
 use ratatui::widgets::{Block, BorderType, Borders, Gauge, Paragraph, Tabs, Wrap};
 
+use crate::PresentedLine;
 use crate::app::{App, ClickAreas, Overlay, TabIndex};
 use crate::tabs::articles_tab::{ArticlesTabRenderData, render_articles_tab};
 use crate::tabs::backup_tab::{BackupTabRenderData, render_backup_tab};
 use crate::tabs::main_tab::{MainFocus, MainTabRenderData, render_main_tab};
 use crate::tabs::results_tab::{ResultsTabRenderData, render_results_tab};
 use crate::theme;
+
+/// Styles core-rendered display lines by severity, one colour per whole line.
+///
+/// Severity is the only thing core says about how a line should read, and colour is this
+/// frontend's answer to it — a CLI answering "plain text" to every severity would be equally
+/// correct. Nothing about the words changes either way, which is the point: a failure stands out
+/// without being reworded.
+fn severity_styled(lines: &[PresentedLine]) -> Text<'static> {
+    Text::from(
+        lines
+            .iter()
+            .map(|line| {
+                Line::from(line.text.clone())
+                    .style(Style::default().fg(theme::severity_color(line.severity)))
+            })
+            .collect::<Vec<_>>(),
+    )
+}
 
 impl App {
     pub fn render(&mut self, frame: &mut Frame<'_>) {
@@ -130,8 +149,14 @@ impl App {
             self.scan_status.clone()
         };
 
+        // A Crash Log Scan Run colours this row by the severity core gave its line; anything else
+        // that wrote here — a backup outcome, a clipboard result — has no severity and stays
+        // neutral. That is what lets a failed run stand out without its wording changing.
+        let status_colour = self
+            .scan_status_severity()
+            .map_or(theme::TEXT_PRIMARY, theme::severity_color);
         frame.render_widget(
-            Paragraph::new(status_text).style(Style::default().fg(theme::TEXT_PRIMARY)),
+            Paragraph::new(status_text).style(Style::default().fg(status_colour)),
             status_text_area,
         );
 
@@ -165,38 +190,44 @@ impl App {
         let y = area.y + (area.height.saturating_sub(height)) / 2;
         let overlay_area = Rect::new(x, y, width, height);
 
-        let (title, body): (&str, String) = match overlay {
+        let (title, body): (&str, Text<'static>) = match overlay {
             Overlay::About => (
                 "About",
                 "CLASSIC\nCrash Log Auto Scanner & Setup Integrity Checker\n\nVersion 9.0.0\n\nPress Esc to close"
-                    .to_string(),
+                    .into(),
             ),
             Overlay::Help => (
                 "Help",
                 "F5: Crash Scan | F6: Game Scan | F7: Papyrus | F8: Last Scan\nCtrl+O: Settings | 1-4: Switch Tabs | Q: Quit\n\nTab/Shift+Tab: Focus navigation\nPress Esc to close"
-                    .to_string(),
+                    .into(),
             ),
             Overlay::Settings => (
                 "Settings",
-                self.settings_overlay_text(),
+                self.settings_overlay_text().into(),
             ),
-            Overlay::ScanSummary => ("Last Crash Log Scan Run", self.scan_run_summary_text()),
+            // The two scan-run overlays are the only ones carrying core severities, so they are the
+            // only ones styled per line. Everything else here is this frontend's own text with no
+            // severity to honour.
+            Overlay::ScanSummary => (
+                "Last Crash Log Scan Run",
+                severity_styled(&self.scan_run_summary_lines()),
+            ),
             Overlay::LocalIgnoreRecovery => (
                 "Local Ignore Recovery Required",
-                self.local_ignore_recovery_text(),
+                severity_styled(&self.local_ignore_recovery_lines()),
             ),
             Overlay::ConfirmRemoveBackup(backup_type) => {
                 let text = format!(
                     "Remove {} backup?\n\nThis will delete all backed up files permanently.\n\nPress Enter to confirm, Esc to cancel",
                     backup_type.display_name()
                 );
-                ("Confirm Remove", text)
+                ("Confirm Remove", text.into())
             }
             Overlay::ConfirmDeleteReport(filename) => {
                 let text = format!(
                     "Delete {filename}?\n\nThis report will be permanently removed.\n\nPress Enter to confirm, Esc to cancel"
                 );
-                ("Confirm Delete", text)
+                ("Confirm Delete", text.into())
             }
         };
 

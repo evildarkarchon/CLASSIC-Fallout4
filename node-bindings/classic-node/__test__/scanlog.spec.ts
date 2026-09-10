@@ -17,21 +17,15 @@ import {
   ScanRunRequest,
   ScanRunUnsolvedLogs,
   JsGameId,
-  JsInstalledYamlDataDiagnosticKind,
-  JsLocalIgnoreYamlDataState,
+  JsScanRunDisplaySegmentKind,
+  JsScanRunDisplaySeverity,
   JsScanRunInstalledYamlDataDiagnosticKind,
   JsScanRunLocalIgnoreRecoveryDecision,
   JsScanRunLocalIgnoreState,
-  installedYamlDataDiagnosticKindLabel,
-  localIgnoreYamlDataStateLabel,
   scanRunExecute,
   scanRunInfrastructureErrorStageLabel,
-  scanRunInstalledYamlDataDiagnosticKindLabel,
-  scanRunLocalIgnoreResetFailureStageLabel,
-  scanRunLocalIgnoreYamlDataStateLabel,
-  scanRunLogDispositionLabel,
-  scanRunLogFailureStageLabel,
   scanRunResume,
+  scanRunAbandon,
   parseLogSegments,
   extractFormIds,
   extractPluginList,
@@ -46,6 +40,7 @@ import {
   parseXseLog,
   type JsGpuInfo,
   type JsScanRunConfiguration,
+  type JsScanRunDisplayLine,
   type JsScanRunEvent,
   type JsLogErrorEntry,
   type JsLogSegments,
@@ -271,6 +266,58 @@ const requireScanRunFailure = (execution: ScanRunExecution): ScanRunFailure => {
     throw new Error(`Expected scan failure, received ${execution.result.status}`);
   }
   return execution;
+};
+
+// ----------------------------------------------------------------------------
+// Display Content helpers
+//
+// Wording is pinned once, in the Rust presentation crate. Nothing below restates
+// a sentence: these check the shape a segment arrives in and the separation
+// between what a consumer reads and what it matches on.
+// ----------------------------------------------------------------------------
+
+const KNOWN_SEVERITIES: readonly JsScanRunDisplaySeverity[] = [
+  JsScanRunDisplaySeverity.Info,
+  JsScanRunDisplaySeverity.Notice,
+  JsScanRunDisplaySeverity.Warning,
+  JsScanRunDisplaySeverity.Failure,
+  JsScanRunDisplaySeverity.Success,
+];
+
+/// Every string a run said, in reading order, across every line.
+const spokenText = (lines: readonly JsScanRunDisplayLine[]): string[] =>
+  lines.flatMap((line) => line.segments.map((segment) => segment.text));
+
+/// Asserts each segment fills exactly the fields its kind selects and no others.
+///
+/// The unused fields are empty rather than absent because the flattening is the
+/// C++ bridge's, unchanged. Checking it against a real run rather than a
+/// fabricated line is what makes it a statement about the seam.
+const expectWellFormedDisplayLines = (lines: readonly JsScanRunDisplayLine[]): void => {
+  expect(lines.length).toBeGreaterThan(0);
+  for (const line of lines) {
+    expect(KNOWN_SEVERITIES).toContain(line.severity);
+    expect(line.segments.length).toBeGreaterThan(0);
+    for (const segment of line.segments) {
+      switch (segment.kind) {
+        case JsScanRunDisplaySegmentKind.Path:
+          expect(segment.path).not.toBe("");
+          expect(segment.text).toBe("");
+          expect(segment.count).toBe(0);
+          break;
+        case JsScanRunDisplaySegmentKind.Count:
+          // The noun rides in `text`, already agreeing with `count`. A consumer
+          // prints the two side by side and never re-decides the form.
+          expect(segment.text).not.toBe("");
+          expect(segment.path).toBe("");
+          break;
+        default:
+          expect(segment.path).toBe("");
+          expect(segment.count).toBe(0);
+          break;
+      }
+    }
+  }
 };
 
 // ============================================================================
@@ -503,6 +550,97 @@ describe("final Crash Log Scan Run contract", () => {
     }
   });
 
+  test("states the run and every event in Rust's words without displacing a token", async () => {
+    const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.standard;
+    const root = writeSharedScanRunDataRoot("classic-node-scan-run-display-lines");
+    const events: JsScanRunEvent[] = [];
+
+    try {
+      for (const log of fixture.logs) {
+        writeSharedScanRunLog(root, log);
+      }
+
+      const execution = await scanRunExecute(
+        ScanRunRequest.standard(
+          scanRunConfiguration(root, { maxConcurrent: fixture.maxConcurrent }),
+          { baseDirectory: root, configuredDocumentsRoot: join(root, "Docs") },
+          ScanRunUnsolvedLogs.leaveInPlace(),
+        ),
+        new ScanRunCancellation(),
+        (event) => {
+          events.push(event);
+          return false;
+        },
+      );
+      const success = requireScanRunSuccess(execution);
+
+      expectWellFormedDisplayLines(success.displayLines);
+
+      // Every event kind renders. A consumer may omit whole lines, but none
+      // arrive with nothing to say, which is what lets a frontend show progress
+      // without composing a sentence of its own.
+      expect(events.length).toBeGreaterThan(0);
+      for (const event of events) {
+        expectWellFormedDisplayLines(event.displayLines);
+      }
+
+      // The machine-facing surface is untouched: a script still matches on the
+      // status token, and the token is still a token rather than a sentence.
+      // Whether the token *leaks into* prose is asserted on the infrastructure
+      // failure below instead, because several run statuses have a Display Label
+      // that legitimately equals their token — `completed` is one — so finding
+      // the string in a line proves nothing here.
+      expect(success.result.status).toBe("completed");
+      expect(success.result.status).toMatch(/^[a-z][a-z0-9_]*$/);
+
+      // Every Autoscan Report the run wrote travels as a `Path` segment, whole
+      // and untruncated. That is the whole reason a path is typed as a path
+      // rather than as text: a frontend can link to the file without parsing a
+      // sentence for it, and a plain one can print it and lose nothing.
+      const spokenPaths = success.displayLines
+        .flatMap((line) => line.segments)
+        .filter((segment) => segment.kind === JsScanRunDisplaySegmentKind.Path)
+        .map((segment) => segment.path);
+      const writtenReports = success.result.logs.map((log) => log.autoscanReport);
+      expect(writtenReports.length).toBeGreaterThan(0);
+      for (const report of writtenReports) {
+        expect(report).toBeDefined();
+        expect(spokenPaths).toContain(report!);
+      }
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("states an infrastructure failure as its Display Label beside the token", async () => {
+    const root = writeScanRunDataRoot("classic-node-scan-run-display-failure");
+
+    try {
+      const failure = requireScanRunFailure(
+        await scanRunExecute(
+          ScanRunRequest.targeted(
+            scanRunConfiguration(root, { maxConcurrent: 0 }),
+            { inputs: [MISSING_LOG_PATH] },
+          ),
+          new ScanRunCancellation(),
+        ),
+      );
+
+      expectWellFormedDisplayLines(failure.displayLines);
+
+      // Derived from the binding's own label accessor rather than quoted, so
+      // this asserts the split rather than a second copy of the wording: the
+      // token stays on the DTO, the label is what a user reads.
+      const stage = failure.error.stage;
+      const label = scanRunInfrastructureErrorStageLabel(stage);
+      const spoken = spokenText(failure.displayLines);
+      expect(spoken).toContain(label);
+      expect(spoken).not.toContain(stage);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("returns generated Local Ignore diagnostics as run-level data", async () => {
     const root = writeSharedScanRunDataRoot("classic-node-scan-run-generated-ignore");
     const crashLog = writeSharedScanRunLog(root, "generated-ignore.log");
@@ -551,11 +689,31 @@ describe("final Crash Log Scan Run contract", () => {
       const baselineReport = readFileSync(baseline.logs[0]!.autoscanReport!);
       writeFileSync(ignorePath, fixture.malformedLocalIgnore);
       const initialEvents: JsScanRunEvent[] = [];
-      const initial = requireScanRunSuccess(
+      const initialEnvelope = requireScanRunSuccess(
         await scanRunExecute(request, new ScanRunCancellation(), initialEvents.push.bind(initialEvents)),
-      ).result;
+      );
+      const initial = initialEnvelope.result;
 
       expect(initial.status).toBe("local_ignore_recovery_required");
+      // The prompt reaches JavaScript from a real paused run, with each decision
+      // carrying its own availability. This fixture's Main YAML retains a usable
+      // default, so both are offered; the withheld case is proven in the Rust
+      // renderer's own tests, which can vary that fact without a second fixture.
+      expect(initialEnvelope.recoveryPrompt).toBeDefined();
+      expect(initialEnvelope.recoveryPrompt!.lines.length).toBeGreaterThan(0);
+      expect(
+        initialEnvelope.recoveryPrompt!.decisions.map((description) => [
+          description.decision,
+          description.available,
+        ]),
+      ).toEqual([
+        [JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore, true],
+        [JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault, true],
+      ]);
+      for (const description of initialEnvelope.recoveryPrompt!.decisions) {
+        expect(description.label.length).toBeGreaterThan(0);
+        expect(description.description.length).toBeGreaterThan(0);
+      }
       expect(initial.installedYamlData?.localIgnoreState).toBe(
         JsScanRunLocalIgnoreState.RecoveryRequired,
       );
@@ -571,14 +729,25 @@ describe("final Crash Log Scan Run contract", () => {
         "invalid: [unterminated",
       );
       const resumedEvents: JsScanRunEvent[] = [];
-      const resumed = requireScanRunSuccess(
+      const resumedEnvelope = requireScanRunSuccess(
         await scanRunResume(
           continuation!,
           JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
           new ScanRunCancellation(),
           resumedEvents.push.bind(resumedEvents),
         ),
-      ).result;
+      );
+      const resumed = resumedEnvelope.result;
+
+      // A resumed run says what it did, in the same words an unpaused one would.
+      // `scanRunExecute` and `scanRunResume` resolve the same envelope, so this is
+      // the one field covering both — but only a real resume proves it arrives.
+      expectWellFormedDisplayLines(resumedEnvelope.displayLines);
+      for (const event of resumedEvents) {
+        expectWellFormedDisplayLines(event.displayLines);
+      }
+      // The decision has been made, so there is nothing left to ask.
+      expect(resumedEnvelope.recoveryPrompt).toBeUndefined();
 
       expect(resumed.status).toBe("completed");
       expect(resumed.discovery).toEqual(initial.discovery);
@@ -600,6 +769,78 @@ describe("final Crash Log Scan Run contract", () => {
           new ScanRunCancellation(),
         ),
       ).rejects.toMatchObject({ code: "scan_run_continuation_consumed" });
+
+      // A rejected resume carries what it says alongside its stable code, so a
+      // consumer reporting the replay does not have to write the sentence.
+      const replay = await scanRunResume(
+        continuation!,
+        JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+        new ScanRunCancellation(),
+      ).catch((error: unknown) => error as { displayLines: JsScanRunDisplayLine[] });
+      expectWellFormedDisplayLines(replay.displayLines);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("abandoning a paused run returns the cancelled result and touches nothing", async () => {
+    const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.installedYamlData;
+    const root = writeSharedScanRunDataRoot("classic-node-scan-run-ignore-abandon");
+    const crashLog = writeSharedScanRunLog(root, fixture.input);
+    const ignorePath = join(root, "CLASSIC Data", "CLASSIC Ignore.yaml");
+    const request = ScanRunRequest.targeted(scanRunConfiguration(root), { inputs: [crashLog] });
+
+    try {
+      writeFileSync(ignorePath, fixture.malformedLocalIgnore);
+      const initial = requireScanRunSuccess(
+        await scanRunExecute(request, new ScanRunCancellation()),
+      ).result;
+      expect(initial.status).toBe("local_ignore_recovery_required");
+      const continuation = initial.continuation;
+      expect(continuation).toBeDefined();
+
+      // One control spans the paused run and its abandonment, as a real frontend's does.
+      // `scanRunAbandon` is what cancels it; nothing here asks for cancellation first.
+      const cancellation = new ScanRunCancellation();
+      expect(cancellation.isCancelled).toBe(false);
+      const abandonedEvents: JsScanRunEvent[] = [];
+      const abandonedEnvelope = requireScanRunSuccess(
+        await scanRunAbandon(
+          continuation!,
+          cancellation,
+          abandonedEvents.push.bind(abandonedEvents),
+        ),
+      );
+      const abandoned = abandonedEnvelope.result;
+
+      expect(abandoned.status).toBe("cancelled");
+      expect(abandoned.cancelled).toBe(abandoned.total);
+      expect(abandoned.discovery).toEqual(initial.discovery);
+      expect(abandoned.logs.every((log) => log.disposition === "cancelled_before_start")).toBe(true);
+      // `autoscanReport` is optional on this surface, so an unwritten report is absent rather
+      // than null. Nothing was analyzed, so nothing carries one.
+      expect(abandoned.logs.every((log) => log.autoscanReport === undefined)).toBe(true);
+      expect(abandonedEvents).toEqual([]);
+      expect(cancellation.isCancelled).toBe(true);
+      // A cancelled run still describes itself, so a consumer never writes the sentence.
+      expectWellFormedDisplayLines(abandonedEnvelope.displayLines);
+      // Nothing on disk moved: the malformed file the user was asked about is byte-identical
+      // and no backup directory was created, because no recovery stage ever ran.
+      expect(readFileSync(ignorePath, "utf8")).toBe(fixture.malformedLocalIgnore);
+      expect(existsSync(join(root, "CLASSIC Backup"))).toBe(false);
+
+      // The claim is shared with resume, so a spent continuation closes both seams.
+      await expect(scanRunAbandon(continuation!, new ScanRunCancellation())).rejects.toMatchObject({
+        code: "scan_run_continuation_consumed",
+      });
+      await expect(
+        scanRunResume(
+          continuation!,
+          JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+          new ScanRunCancellation(),
+        ),
+      ).rejects.toMatchObject({ code: "scan_run_continuation_consumed" });
+      expect(readFileSync(ignorePath, "utf8")).toBe(fixture.malformedLocalIgnore);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -1125,6 +1366,12 @@ describe("extractPluginList", () => {
 // ============================================================================
 
 describe("detectCrashPattern", () => {
+  test("recognizes hexadecimal aliases regardless of prefix case", () => {
+    for (const code of ["0xC0000005", "0XC0000005", "0xc0000005"]) {
+      expect(detectCrashPattern(`Unhandled exception ${code}`)).toBe("ACCESS_VIOLATION");
+    }
+    expect(detectCrashPattern("Unhandled exception 0x80000003")).toBe("BREAKPOINT");
+  });
   test("detects ACCESS_VIOLATION pattern", () => {
     const pattern = detectCrashPattern(
       'Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512',
@@ -1190,6 +1437,11 @@ describe("detectCrashPattern", () => {
 // ============================================================================
 
 describe("detectVrLog", () => {
+  test("recognizes Skyrim VR markers shared with the CXX contract", () => {
+    expect(detectVrLog("SKYRIMVR.EXE loaded")).toBe(true);
+    expect(detectVrLog("[00] SkyrimVR.esm")).toBe(true);
+    expect(detectVrLog("SkyrimSE.exe loaded")).toBe(false);
+  });
   test("returns true for VR crash log content", () => {
     expect(detectVrLog("Fallout4VR.exe v1.2.72.0")).toBe(true);
   });
@@ -1638,123 +1890,6 @@ describe("scanlog Plan 2 promotion: parseXseLog", () => {
       expect(result === null || typeof result === "string").toBe(true);
     } catch (e) {
       expect(e).toBeInstanceOf(Error);
-    }
-  });
-});
-
-describe("scanlog: Crash Log Scan Run Display Labels", () => {
-  // These pin the strings a JavaScript consumer actually receives. The Rust
-  // sibling module proves each label equals the core's, so what is left to
-  // check here is that the projection survives the N-API boundary, and that the
-  // wording the configuration crate settled reaches this surface too - these
-  // two enums are contract-stability twins that delegate their naming to it.
-  test("the settled wordings reach JavaScript through the twin", () => {
-    expect(
-      scanRunInstalledYamlDataDiagnosticKindLabel(JsScanRunInstalledYamlDataDiagnosticKind.Parse),
-    ).toBe("parse failure");
-    expect(
-      scanRunInstalledYamlDataDiagnosticKindLabel(JsScanRunInstalledYamlDataDiagnosticKind.Read),
-    ).toBe("read failure");
-    expect(
-      scanRunInstalledYamlDataDiagnosticKindLabel(JsScanRunInstalledYamlDataDiagnosticKind.Missing),
-    ).toBe("missing candidate");
-    expect(
-      scanRunInstalledYamlDataDiagnosticKindLabel(
-        JsScanRunInstalledYamlDataDiagnosticKind.CacheUnavailable,
-      ),
-    ).toBe("update cache unavailable");
-    expect(scanRunLocalIgnoreYamlDataStateLabel(JsScanRunLocalIgnoreState.Generated)).toBe(
-      "generated from selected Main defaults",
-    );
-  });
-
-  test("the recovery-required state supplies its own label", () => {
-    // The one variant with no configuration counterpart, so its prose is the
-    // run contract's own rather than delegated.
-    expect(scanRunLocalIgnoreYamlDataStateLabel(JsScanRunLocalIgnoreState.RecoveryRequired)).toBe(
-      "recovery required",
-    );
-  });
-
-  test("the twin returns the same prose as the configuration surface", () => {
-    // Both project the same core vocabulary, so a divergence here means one of
-    // the two stopped delegating. Comparing the two surfaces rather than
-    // restating a literal is what makes this check rather than record.
-    expect(
-      scanRunInstalledYamlDataDiagnosticKindLabel(JsScanRunInstalledYamlDataDiagnosticKind.Parse),
-    ).toBe(installedYamlDataDiagnosticKindLabel(JsInstalledYamlDataDiagnosticKind.Parse));
-    expect(scanRunLocalIgnoreYamlDataStateLabel(JsScanRunLocalIgnoreState.Generated)).toBe(
-      localIgnoreYamlDataStateLabel(JsLocalIgnoreYamlDataState.Generated),
-    );
-  });
-
-  test("Local Ignore keeps its glossary capitalization", () => {
-    expect(
-      scanRunInstalledYamlDataDiagnosticKindLabel(
-        JsScanRunInstalledYamlDataDiagnosticKind.LocalIgnoreReset,
-      ),
-    ).toBe("Local Ignore reset");
-  });
-
-  test("every enum member resolves to a non-empty label", () => {
-    // Iterated rather than listed: a variant added later is covered without
-    // anyone remembering to extend this test, and an empty label is exactly the
-    // "renders as nothing" failure the naming contract exists to prevent.
-    for (const kind of Object.values(JsScanRunInstalledYamlDataDiagnosticKind)) {
-      expect(scanRunInstalledYamlDataDiagnosticKindLabel(kind)).not.toBe("");
-    }
-    for (const state of Object.values(JsScanRunLocalIgnoreState)) {
-      expect(scanRunLocalIgnoreYamlDataStateLabel(state)).not.toBe("");
-    }
-  });
-});
-
-describe("scanlog: Crash Log Scan Run token Display Labels", () => {
-  // The four vocabularies the run crate publishes as bare token strings rather
-  // than as `string_enum` types. Their resolvers therefore take a `string`, and
-  // these tests pin what that difference costs a JavaScript consumer: an
-  // unknown token throws here, where an unknown `string_enum` member cannot
-  // exist. Exhaustive per-variant coverage lives in the Rust sibling module,
-  // which can iterate the core's `VARIANTS`; JavaScript cannot see that list.
-  test("a label a frontend could not have derived from the token reaches JavaScript", () => {
-    // The two labels in this change that no mechanical transform of the token
-    // could produce, which is the whole reason a label crosses this seam at all
-    // instead of being camelCased out of the token on the JavaScript side.
-    expect(scanRunLogFailureStageLabel("unsolved_logs_finalization")).toBe(
-      "Unsolved Logs finalization",
-    );
-    expect(scanRunInfrastructureErrorStageLabel("formid_database_access")).toBe(
-      "FormID database access",
-    );
-  });
-
-  test("a token whose label is only a respelling still resolves", () => {
-    expect(scanRunLogDispositionLabel("cancelled_before_start")).toBe("cancelled before start");
-    expect(scanRunInfrastructureErrorStageLabel("internal_invariant")).toBe(
-      "internal invariant validation",
-    );
-  });
-
-  test("the reset failure stage labels are deliberately their own tokens", () => {
-    // Not an oversight: this vocabulary mirrors the workspace's shared durable
-    // publication stages, which name ordinary steps rather than domain terms.
-    // Pinned so that a contributor who "fixes" it has to read why first.
-    for (const token of ["create", "write", "flush", "sync", "publish"]) {
-      expect(scanRunLocalIgnoreResetFailureStageLabel(token)).toBe(token);
-    }
-  });
-
-  test("an unknown token throws rather than resolving to a placeholder", () => {
-    // Reachable here in a way it is not for the two `string_enum` twins above.
-    // Returning "" would surface as a blank cell in a frontend with nothing to
-    // diagnose it by.
-    for (const resolve of [
-      scanRunLogDispositionLabel,
-      scanRunLogFailureStageLabel,
-      scanRunInfrastructureErrorStageLabel,
-      scanRunLocalIgnoreResetFailureStageLabel,
-    ]) {
-      expect(() => resolve("not_a_real_token")).toThrow();
     }
   });
 });

@@ -17,7 +17,7 @@ If your environment does not support project skills, read the reference file nex
 
 ### Issue tracker
 
-Issues and PRDs are tracked in GitHub Issues for this repo; external PRs are not a triage request surface. See `docs/agents/issue-tracker.md`.
+Issues and PRDs are tracked as local Markdown under `.scratch/<feature>/`. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

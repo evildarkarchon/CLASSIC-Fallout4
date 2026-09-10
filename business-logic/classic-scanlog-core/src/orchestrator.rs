@@ -41,6 +41,7 @@ use classic_file_io_core::FileIOCore;
 use classic_version_registry_core::{
     CrashgenConfig, GameVersion as RegistryGameVersion, VersionInfo, get_version_registry,
 };
+use classic_vocabulary::Vocabulary;
 use indexmap::IndexMap;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
@@ -58,6 +59,50 @@ pub enum ScanProgressPhase {
     Analyze,
     /// Report composition and result finalization.
     Finalize,
+}
+
+impl Vocabulary for ScanProgressPhase {
+    const VARIANTS: &'static [Self] = &[Self::Setup, Self::Parse, Self::Analyze, Self::Finalize];
+
+    /// These tokens are frozen. This type never had a token method of its own —
+    /// the Python and Node surfaces each wrote the same four strings out by hand,
+    /// and the C++ bridge maps to a mirrored enum — so these are the spellings
+    /// both binding surfaces already publish rather than new identifiers.
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Setup => "setup",
+            Self::Parse => "parse",
+            Self::Analyze => "analyze",
+            Self::Finalize => "finalize",
+        }
+    }
+
+    /// The present participle, because the only place a phase is ever shown is a
+    /// progress line describing work in flight. This settles the widest wording
+    /// divergence of the four enums adopted here: the TUI renders `Preparing`,
+    /// `Parsing`, `Analyzing`, `Finalizing`, while the Qt GUI renders `setup`,
+    /// `parse`, `analysis`, `finalization` — verb stems for the first two and
+    /// nouns for the last two. The participle wins because it is the only form
+    /// that reads grammatically in the sentence both frontends build around it:
+    /// `Parsing crash.log`, not `parse crash.log` or `analysis crash.log`.
+    ///
+    /// Lower case, like every other label in this workspace that contains no
+    /// glossary domain term. The TUI already upper-cases a sentence-initial label
+    /// at the point of use, which is where that capitalization rule belongs; it
+    /// does the same for a per-log disposition.
+    ///
+    /// `Setup` is the one label that is more than a respelling of its token: the
+    /// phase covers reading the file and preparing shared context, and `preparing`
+    /// also keeps it from reading as the unrelated FCX Mode setup validation that
+    /// `CrashLogScanRunStatus::SetupFailed` names.
+    fn label(self) -> &'static str {
+        match self {
+            Self::Setup => "preparing",
+            Self::Parse => "parsing",
+            Self::Analyze => "analyzing",
+            Self::Finalize => "finalizing",
+        }
+    }
 }
 
 struct ScanAnalysisContext {

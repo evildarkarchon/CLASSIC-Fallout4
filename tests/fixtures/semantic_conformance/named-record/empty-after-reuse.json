@@ -1,0 +1,22 @@
+{
+  "configuration": {
+    "targetRecords": [
+      "ActorBase"
+    ],
+    "ignoreRecords": [
+      "System"
+    ]
+  },
+  "request": {
+    "crashLines": [
+      "unrelated"
+    ]
+  },
+  "warmupRequest": {
+    "crashLines": [
+      "ActorBase_Player",
+      "ActorBase_System",
+      "ActorBase_Player"
+    ]
+  }
+}

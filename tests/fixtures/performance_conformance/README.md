@@ -1,0 +1,3 @@
+# Performance conformance fixtures
+
+Authored durations use exact binary-fraction seconds: 125 ms, 375 ms, zero, and 1000 ms. Two scan samples produce count 2, total 500 ms, average 250 ms, minimum 125 ms, maximum 375 ms. A second label tests independent aggregation; clear removes both labels, and reuse starts count at one. Empty clear is idempotent. No timer or wall-clock calls occur. Receipts convert native seconds/milliseconds to integer milliseconds only when exactly integral; no rounding or timing tolerance hides differences. Global metrics are isolated by a dedicated serial runner and cleared on entry and exit. Timer lifecycle and reset aliases remain owned by existing tests.

@@ -3,7 +3,7 @@
 Covers 35 promoted contract rows:
   - 34 deferred version_registry backlog entries (10 rust-only @rust-suffixed +
     24 python-only dunder/method entries)
-  - 1 Tier-2 runtime-verified migration (GameVersion.semantic_distance)
+  - GameVersion.semantic_distance behavior
 
 R1 HIGH: fixture-backed construction — every promoted class is either
 constructed directly (GameVersion, VersionRegistry) or fetched via the
@@ -28,10 +28,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 import classic_version_registry
-
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RUST_API_SURFACE = (
@@ -106,7 +103,7 @@ def test_game_version_comparison_dunders() -> None:
 
     # __eq__
     assert a == b
-    assert not (a == c)
+    assert not (a == c)  # noqa: SIM201 -- Exercise __eq__ returning false, not __ne__.
 
     # ordering
     assert a < c
@@ -123,7 +120,7 @@ def test_game_version_comparison_dunders() -> None:
 
 
 def test_game_version_semantic_distance() -> None:
-    """GameVersion.semantic_distance — Tier-2 runtime-verified migration.
+    """GameVersion.semantic_distance returns the native weighted distance.
 
     Covers contract rows:
       - version_registry.version.GameVersion.semantic_distance (Tier-2 migration)

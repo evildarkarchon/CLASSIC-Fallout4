@@ -1,0 +1,10 @@
+{
+  "configuration": {
+    "mode": "shared-pool",
+    "gameTable": "Fallout4"
+  },
+  "request": {
+    "formid": "000800",
+    "plugin": "SomeMod.esp"
+  }
+}

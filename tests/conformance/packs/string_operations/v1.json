@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "familyId": "string-operations",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-shared-core"
+  },
+  "fixtureRoot": "tests/fixtures/string_operations_conformance",
+  "fixtures": {
+    "unicode-and-duplicates": "unicode-and-duplicates.json",
+    "empty-after-reuse": "empty-after-reuse.json"
+  },
+  "capabilities": [
+    {
+      "id": "string-operations.execute",
+      "rustSymbols": [
+        "StringProcessor",
+        "intern",
+        "normalize_string",
+        "process_batch"
+      ],
+      "observationFamilies": [
+        "string-operations"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "unicode-and-duplicates",
+      "action": "string-operations.execute",
+      "capabilityIds": [
+        "string-operations.execute"
+      ],
+      "fixtureRefs": [
+        "unicode-and-duplicates"
+      ],
+      "input": {
+        "fixtureRef": "unicode-and-duplicates"
+      },
+      "expected": {
+        "interned": [
+          "  HELLO\t World  ",
+          "ÉCOLE ABC",
+          "repeat",
+          "repeat",
+          "\t\n"
+        ],
+        "normalized": [
+          "hello world",
+          "École abc",
+          "repeat",
+          "repeat",
+          ""
+        ],
+        "batch": [
+          "hello world",
+          "École abc",
+          "repeat",
+          "repeat",
+          ""
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "empty-after-reuse",
+      "action": "string-operations.execute",
+      "capabilityIds": [
+        "string-operations.execute"
+      ],
+      "fixtureRefs": [
+        "empty-after-reuse"
+      ],
+      "input": {
+        "fixtureRef": "empty-after-reuse"
+      },
+      "expected": {
+        "interned": [],
+        "normalized": [],
+        "batch": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

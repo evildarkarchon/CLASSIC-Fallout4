@@ -1,0 +1,18 @@
+{
+  "command": [
+    "uv",
+    "run",
+    "--project",
+    "python-bindings",
+    "python",
+    "python-bindings/tests/semantic_conformance_runner.py"
+  ],
+  "exitCode": 0,
+  "launchError": null,
+  "participantId": "python",
+  "schemaVersion": 1,
+  "stderr": "",
+  "stdout": "",
+  "timedOut": false,
+  "workingDirectory": "."
+}

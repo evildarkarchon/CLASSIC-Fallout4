@@ -311,10 +311,11 @@ public:
     explicit RecordingRecoveryPrompt(CliLocalIgnoreRecoveryChoice choice) noexcept
         : choice_(choice) {}
 
-    /// Retains the offered recovery lines and answers with the configured choice.
-    CliLocalIgnoreRecoveryChoice operator()(const std::vector<CliScanRunMessage>& details) {
+    /// Retains the offered recovery presentation and answers with the configured choice.
+    CliLocalIgnoreRecoveryChoice operator()(const CliLocalIgnoreRecoveryPresentation& recovery) {
         invocations_ += 1;
-        details_ = message_text(details);
+        details_ = message_text(recovery.details);
+        decisions_ = recovery.decisions;
         return choice_;
     }
 
@@ -324,10 +325,29 @@ public:
     /// Returns the recovery facts presented with the most recent question.
     [[nodiscard]] const std::vector<std::string>& details() const noexcept { return details_; }
 
+    /// Returns every decision the most recent question described, available or not.
+    [[nodiscard]] const std::vector<CliLocalIgnoreRecoveryDecisionOption>& decisions() const noexcept {
+        return decisions_;
+    }
+
+    /// Returns whether the most recent question offered one decision as one this run can honor.
+    ///
+    /// Reads the availability attached to the decision itself, which is the whole point of the
+    /// shape: a caller asking this question cannot answer it from anything but the decision.
+    [[nodiscard]] bool offered(scanner::ScanRunLocalIgnoreRecoveryDecision decision) const noexcept {
+        for (const auto& option : decisions_) {
+            if (option.decision == decision) {
+                return option.available;
+            }
+        }
+        return false;
+    }
+
 private:
     CliLocalIgnoreRecoveryChoice choice_;
     std::size_t invocations_ = 0;
     std::vector<std::string> details_;
+    std::vector<CliLocalIgnoreRecoveryDecisionOption> decisions_;
 };
 
 } // namespace
@@ -930,8 +950,8 @@ TEST_CASE("CLI Proceed Without Ignore resumes the retained discovery once", "[cl
     RecordingRecoveryPrompt prompt(CliLocalIgnoreRecoveryChoice::ProceedWithoutIgnore);
     CliScanRunCancellation cancellation(false);
     const auto outcome = execute_cli_scan_run(*request, cancellation, nullptr,
-                                              [&prompt](const std::vector<CliScanRunMessage>& details) {
-                                                  return prompt(details);
+                                              [&prompt](const CliLocalIgnoreRecoveryPresentation& recovery) {
+                                                  return prompt(recovery);
                                               });
 
     REQUIRE(prompt.invocations() == 1);
@@ -948,13 +968,19 @@ TEST_CASE("CLI Proceed Without Ignore resumes the retained discovery once", "[cl
 
     const auto& logs = outcome.execution.result.logs;
     REQUIRE(logs.size() == fixture::TARGETED_ACCEPTED.size());
+    // Anchored on each log's own path rather than on a section header, because the header the CLI
+    // used to print above these lines is gone: the per-log outcomes now arrive inside the block Rust
+    // renders, and there is no structure in a flat sequence for the CLI to caption a sub-range of.
+    // What still has to hold is the ordering, which is what this ever tested.
     const auto lines = message_text(present_cli_scan_run_execution(outcome.execution, 1.0).messages);
-    std::size_t previous = line_index(lines, "Results (discovery order):");
-    REQUIRE(previous < lines.size());
+    std::size_t previous = 0;
     for (std::size_t index = 0; index < logs.size(); ++index) {
         REQUIRE(logs[index].discovery_index == index);
         const auto position = line_index(lines, fs::path(std::string(logs[index].crash_log)).filename().string());
-        REQUIRE(position > previous);
+        REQUIRE(position < lines.size());
+        if (index > 0) {
+            REQUIRE(position > previous);
+        }
         previous = position;
     }
 }
@@ -972,11 +998,24 @@ TEST_CASE("CLI Reset To Default resumes with durable backup metadata", "[cli][sc
     RecordingRecoveryPrompt prompt(CliLocalIgnoreRecoveryChoice::ResetToDefault);
     CliScanRunCancellation cancellation(false);
     const auto outcome = execute_cli_scan_run(*request, cancellation, nullptr,
-                                              [&prompt](const std::vector<CliScanRunMessage>& details) {
-                                                  return prompt(details);
+                                              [&prompt](const CliLocalIgnoreRecoveryPresentation& recovery) {
+                                                  return prompt(recovery);
                                               });
 
     REQUIRE(prompt.invocations() == 1);
+    // End-to-end proof that the described decisions survive the bridge rather than defaulting: this
+    // fixture's Main YAML Data does retain a usable default, and the reset below is what proves the
+    // availability attached to that decision was true. Both decisions are described whether or not
+    // they can be honored, which is what lets a frontend explain an absence it is about to create.
+    REQUIRE(prompt.decisions().size() == 2);
+    REQUIRE(prompt.offered(scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault));
+    REQUIRE(prompt.offered(scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore));
+    // Every word beside the decision came from Rust, so the label is Rust's Display Label rather
+    // than any spelling this frontend once used.
+    for (const auto& option : prompt.decisions()) {
+        REQUIRE_FALSE(option.label.empty());
+        REQUIRE_FALSE(option.description.empty());
+    }
     REQUIRE(outcome.execution.has_result);
     REQUIRE(outcome.execution.result.status == scanner::ScanRunContractStatus::Completed);
     const auto& installed = outcome.execution.result.installed_yaml_data;
@@ -986,13 +1025,13 @@ TEST_CASE("CLI Reset To Default resumes with durable backup metadata", "[cli][sc
             fixture::MALFORMED_LOCAL_IGNORE);
     REQUIRE(read_file_bytes(ignore_path) != fixture::MALFORMED_LOCAL_IGNORE);
 
+    // Anchored on the reset's own durable facts rather than on the sentences around them: the
+    // backup path and the two content identities are data the DTO carries, so this keeps testing
+    // that the receipt reached the user without pinning wording the presentation crate already pins.
     const auto lines = message_text(present_cli_scan_run_execution(outcome.execution, 1.0).messages);
-    REQUIRE(line_index(lines, "Local Ignore: reset to default") < lines.size());
-    REQUIRE(line_index(lines, "Local Ignore backup:") < lines.size());
-    // `Local Ignore reset`, not `local ignore reset`: the diagnostic kind's
-    // Display Label capitalizes the domain term, and the CLI now renders the
-    // configuration crate's wording rather than its own.
-    REQUIRE(line_index(lines, "Local Ignore reset") < lines.size());
+    REQUIRE(line_index(lines, std::string(installed.local_ignore_reset.backup_path)) < lines.size());
+    REQUIRE(line_index(lines, std::string(installed.local_ignore_reset.backup_identity.sha256)) < lines.size());
+    REQUIRE(line_index(lines, std::string(installed.local_ignore_reset.replacement_identity.sha256)) < lines.size());
 }
 
 TEST_CASE("CLI cancellation at the recovery prompt mutates nothing", "[cli][scan-run][local-ignore]") {
@@ -1008,8 +1047,8 @@ TEST_CASE("CLI cancellation at the recovery prompt mutates nothing", "[cli][scan
     RecordingRecoveryPrompt prompt(CliLocalIgnoreRecoveryChoice::Cancel);
     CliScanRunCancellation cancellation(false);
     const auto outcome = execute_cli_scan_run(*request, cancellation, nullptr,
-                                              [&prompt](const std::vector<CliScanRunMessage>& details) {
-                                                  return prompt(details);
+                                              [&prompt](const CliLocalIgnoreRecoveryPresentation& recovery) {
+                                                  return prompt(recovery);
                                               });
 
     REQUIRE(prompt.invocations() == 1);
@@ -1026,6 +1065,68 @@ TEST_CASE("CLI cancellation at the recovery prompt mutates nothing", "[cli][scan
     REQUIRE(present_cli_scan_run_execution(outcome.execution, 1.0).exit_code == 130);
 }
 
+TEST_CASE("CXX abandonment claims the continuation without deciding or observing",
+          "[bridge][scan-run][local-ignore]") {
+    // The C++ half of the shared abandonment operation. The Rust-side bridge test cannot cover the
+    // observer at all — `ScanRunObserver` is a C++ virtual class Rust has no way to implement — so
+    // "an abandoned run emits nothing" is only assertable from here.
+    TemporaryDirectory temporary;
+    copy_shared_yaml_tree(temporary.path());
+    const auto log = copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT);
+    const auto ignore_path = temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
+    malform_local_ignore(temporary.path());
+
+    scanner::ScanRunTargetedSourceDto source{};
+    source.inputs.push_back(log.string());
+    const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
+    auto initial_operation =
+        scanner::scan_run_contract_execute(*request, *scanner::scan_run_cancellation_new(), nullptr);
+    const auto initial = scanner::scan_run_contract_execution_take_result(*initial_operation);
+    REQUIRE(initial.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
+    auto continuation = scanner::scan_run_contract_execution_take_continuation(*initial_operation);
+
+    // One control spans the paused run and its abandonment, as both native frontends' does.
+    // `scan_run_continuation_abandon` is what cancels it; nothing here cancels first.
+    auto cancellation = scanner::scan_run_cancellation_new();
+    REQUIRE_FALSE(scanner::scan_run_cancellation_is_cancelled(*cancellation));
+    const RecordingObserver observer;
+    auto abandon_operation = scanner::scan_run_continuation_abandon(*continuation, *cancellation, &observer);
+    const auto abandoned = scanner::scan_run_contract_execution_take_result(*abandon_operation);
+
+    REQUIRE(abandoned.has_result);
+    REQUIRE(abandoned.result.status == scanner::ScanRunContractStatus::Cancelled);
+    REQUIRE(abandoned.result.has_discovery);
+    REQUIRE(abandoned.result.logs.size() == 1);
+    REQUIRE(abandoned.result.logs[0].disposition ==
+            scanner::ScanRunContractLogDisposition::CancelledBeforeStart);
+    REQUIRE_FALSE(abandoned.result.logs[0].has_autoscan_report);
+    // Cancellation short-circuits ahead of every stage that emits, so no event can reach C++.
+    REQUIRE(observer.count() == 0);
+    REQUIRE(scanner::scan_run_cancellation_is_cancelled(*cancellation));
+    // A cancelled run still describes itself; the frontends render these rather than composing a
+    // cancellation sentence of their own.
+    REQUIRE_FALSE(abandoned.display_lines.empty());
+    // Neither the backup nor the replacement half of the reset was reached.
+    REQUIRE(read_file_bytes(ignore_path) == fixture::MALFORMED_LOCAL_IGNORE);
+    REQUIRE_FALSE(fs::exists(temporary.path() / "CLASSIC Backup"));
+
+    // The one-shot claim is shared with resume, so a spent continuation closes both seams. Reset To
+    // Default is the decision that could have written to disk had the claim survived.
+    auto replay_operation =
+        scanner::scan_run_continuation_abandon(*continuation, *scanner::scan_run_cancellation_new(), nullptr);
+    const auto replay = scanner::scan_run_contract_execution_take_result(*replay_operation);
+    REQUIRE(replay.has_resume_error);
+    REQUIRE(std::string(replay.resume_error.code) == fixture::RESET_CONSUMED_CODE);
+    auto replay_resume_operation = scanner::scan_run_continuation_resume(
+        *continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+        *scanner::scan_run_cancellation_new(), nullptr);
+    const auto replay_resume = scanner::scan_run_contract_execution_take_result(*replay_resume_operation);
+    REQUIRE(replay_resume.has_resume_error);
+    REQUIRE(std::string(replay_resume.resume_error.code) == fixture::RESET_CONSUMED_CODE);
+    REQUIRE(read_file_bytes(ignore_path) == fixture::MALFORMED_LOCAL_IGNORE);
+    REQUIRE_FALSE(fs::exists(temporary.path() / "CLASSIC Backup"));
+}
+
 TEST_CASE("CLI surfaces a typed reset conflict raised while the user decided", "[cli][scan-run][local-ignore]") {
     TemporaryDirectory temporary;
     copy_shared_yaml_tree(temporary.path());
@@ -1038,7 +1139,8 @@ TEST_CASE("CLI surfaces a typed reset conflict raised while the user decided", "
 
     CliScanRunCancellation cancellation(false);
     const auto outcome =
-        execute_cli_scan_run(*request, cancellation, nullptr, [&ignore_path](const std::vector<CliScanRunMessage>&) {
+        execute_cli_scan_run(*request, cancellation, nullptr,
+                             [&ignore_path](const CliLocalIgnoreRecoveryPresentation&) {
             // The malformed file is repaired externally while the question is on screen.
             std::ofstream changed(ignore_path, std::ios::binary | std::ios::trunc);
             changed << "CLASSIC_Ignore_Fallout4: []\n";
@@ -1054,8 +1156,15 @@ TEST_CASE("CLI surfaces a typed reset conflict raised while the user decided", "
     const auto presentation = present_cli_scan_run_execution(outcome.execution, 1.0);
     const auto lines = message_text(presentation.messages);
     REQUIRE(presentation.exit_code == 2);
-    REQUIRE(line_index(lines, "Crash Log Scan recovery failed") == 0);
-    REQUIRE(line_index(lines, "Expected identity: sha256") < lines.size());
-    REQUIRE(line_index(lines, "Actual identity: sha256") < lines.size());
+    // Anchored on the two content identities rather than on the prose around them. Those are data
+    // the DTO carries, so this stays a test that the conflict's actionable facts reached the user
+    // even after a rewording — and the wording itself is pinned once, in the presentation crate,
+    // rather than a second time here.
+    REQUIRE_FALSE(lines.empty());
+    REQUIRE(line_index(lines, std::string(outcome.execution.resume_error.expected_identity.sha256)) < lines.size());
+    REQUIRE(line_index(lines, std::string(outcome.execution.resume_error.actual_identity.sha256)) < lines.size());
+    for (const auto& message : presentation.messages) {
+        REQUIRE(message.error);
+    }
     REQUIRE(read_file_bytes(ignore_path) == "CLASSIC_Ignore_Fallout4: []\n");
 }

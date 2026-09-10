@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "familyId": "game-version-distance",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-version-registry-core"
+  },
+  "fixtureRoot": "tests/fixtures/version_values_conformance",
+  "fixtures": {
+    "game-version-distance-weighted": "game-version-distance-weighted.json",
+    "game-version-distance-build-only": "game-version-distance-build-only.json",
+    "game-version-distance-reverse": "game-version-distance-reverse.json"
+  },
+  "capabilities": [
+    {
+      "id": "game-version-distance.observe",
+      "rustSymbols": [
+        "semantic_distance"
+      ],
+      "observationFamilies": [
+        "value-results"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "weighted",
+      "action": "game-version-distance.observe",
+      "capabilityIds": [
+        "game-version-distance.observe"
+      ],
+      "fixtureRefs": [
+        "game-version-distance-weighted"
+      ],
+      "input": {
+        "fixtureRef": "game-version-distance-weighted"
+      },
+      "expected": {
+        "distance": 1002003
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "build-only",
+      "action": "game-version-distance.observe",
+      "capabilityIds": [
+        "game-version-distance.observe"
+      ],
+      "fixtureRefs": [
+        "game-version-distance-build-only"
+      ],
+      "input": {
+        "fixtureRef": "game-version-distance-build-only"
+      },
+      "expected": {
+        "distance": 0
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "reverse",
+      "action": "game-version-distance.observe",
+      "capabilityIds": [
+        "game-version-distance.observe"
+      ],
+      "fixtureRefs": [
+        "game-version-distance-reverse"
+      ],
+      "input": {
+        "fixtureRef": "game-version-distance-reverse"
+      },
+      "expected": {
+        "distance": 1002003
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

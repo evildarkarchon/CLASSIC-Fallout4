@@ -443,6 +443,26 @@ fn notification_error_dto(error: &UpdateError) -> ffi::NotificationStatusDto {
     }
 }
 
+/// Check with supported endpoint configuration and caller-owned cache storage.
+fn check_app_notification_configured(
+    owner: &str,
+    repo: &str,
+    installed_version: &str,
+    config_json: &str,
+    cache_dir: &str,
+) -> ffi::NotificationStatusDto {
+    match get_runtime().block_on(classic_update_core::check_app_notification_configured(
+        owner,
+        repo,
+        installed_version,
+        config_json,
+        cache_dir,
+    )) {
+        Ok(status) => notification_status_to_dto(&status),
+        Err(error) => notification_error_dto(&error),
+    }
+}
+
 fn check_app_notification(
     owner: &str,
     repo: &str,
@@ -736,6 +756,15 @@ mod ffi {
         /// and unusual hosts. Native first-party callers should use
         /// [`yaml_data_rollback_update`] so Rust owns the target list.
         fn yaml_rollback_update(file_name: &str) -> YamlRollbackOutcomeDto;
+
+        /// Use supported endpoint JSON and explicit cache storage (empty disables caching).
+        fn check_app_notification_configured(
+            owner: &str,
+            repo: &str,
+            installed_version: &str,
+            config_json: &str,
+            cache_dir: &str,
+        ) -> NotificationStatusDto;
 
         /// Check for a published CLASSIC binary-release notification.
         ///

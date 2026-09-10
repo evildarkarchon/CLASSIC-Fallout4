@@ -25,6 +25,17 @@ impl GameId {
         }
     }
 
+    /// Return the user-facing game name used by every frontend and binding.
+    #[must_use]
+    pub const fn display_name(&self) -> &'static str {
+        match self {
+            Self::Fallout4 => "Fallout 4",
+            Self::Fallout4VR => "Fallout 4 VR",
+            Self::Skyrim => "Skyrim",
+            Self::Starfield => "Starfield",
+        }
+    }
+
     /// Return the default executable name for this game.
     #[must_use]
     pub const fn exe_name(&self) -> &'static str {

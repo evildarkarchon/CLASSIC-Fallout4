@@ -26,6 +26,7 @@ use classic_scangame_core::{
     ConfigFileCache, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, ModIniScanner,
 };
 use classic_shared_core::GameId;
+use classic_vocabulary::Vocabulary;
 use futures::stream::{FuturesUnordered, StreamExt};
 use std::collections::VecDeque;
 use std::future::Future;
@@ -554,10 +555,22 @@ pub enum CrashLogScanRunStatus {
     Cancelled,
 }
 
-impl CrashLogScanRunStatus {
-    /// Returns the stable adapter-facing status identifier.
-    #[must_use]
-    pub const fn as_str(self) -> &'static str {
+impl Vocabulary for CrashLogScanRunStatus {
+    const VARIANTS: &'static [Self] = &[
+        Self::Completed,
+        Self::NoCrashLogsFound,
+        Self::SetupFailed,
+        Self::LocalIgnoreRecoveryRequired,
+        Self::CancelledBeforeDiscovery,
+        Self::Cancelled,
+    ];
+
+    /// These tokens are frozen and are the exact strings the inherent `as_str`
+    /// this trait method replaced already published. Every binding surface
+    /// projects them, and `classic-cli`'s scan-run contract test pins them as
+    /// manifest identifiers, so respelling one is a breaking change on all three
+    /// surfaces at once.
+    fn as_str(self) -> &'static str {
         match self {
             Self::Completed => "completed",
             Self::NoCrashLogsFound => "no_crash_logs_found",
@@ -565,6 +578,28 @@ impl CrashLogScanRunStatus {
             Self::LocalIgnoreRecoveryRequired => "local_ignore_recovery_required",
             Self::CancelledBeforeDiscovery => "cancelled_before_discovery",
             Self::Cancelled => "cancelled",
+        }
+    }
+
+    /// The prose `CONTEXT.md` already uses to define this concept, rather than
+    /// wording invented here: *completed, no Crash Logs found, Local Ignore
+    /// recovery required, setup failed, cancelled before discovery, or cancelled
+    /// after discovery*.
+    ///
+    /// Two labels could not have been derived from their tokens. `no Crash Logs
+    /// found` capitalizes `Crash Log` as the glossary domain term it is, and
+    /// `Cancelled` reads as `cancelled after discovery` rather than as the bare
+    /// `cancelled` its token spells — the word alone does not distinguish it from
+    /// `CancelledBeforeDiscovery`, and telling the two apart is the whole reason
+    /// this enum carries both.
+    fn label(self) -> &'static str {
+        match self {
+            Self::Completed => "completed",
+            Self::NoCrashLogsFound => "no Crash Logs found",
+            Self::SetupFailed => "setup failed",
+            Self::LocalIgnoreRecoveryRequired => "Local Ignore recovery required",
+            Self::CancelledBeforeDiscovery => "cancelled before discovery",
+            Self::Cancelled => "cancelled after discovery",
         }
     }
 }
@@ -1834,3 +1869,7 @@ async fn cleanup_incomplete_destination(destination: &Path) {
 #[cfg(test)]
 #[path = "scan_run_test_support.rs"]
 mod test_support;
+
+#[cfg(test)]
+#[path = "scan_run_tests.rs"]
+mod tests;

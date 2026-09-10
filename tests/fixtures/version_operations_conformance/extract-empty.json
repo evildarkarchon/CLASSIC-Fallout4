@@ -1,0 +1,7 @@
+{
+  "request": {
+    "operation": "extract",
+    "filename": "NoVersion.esp",
+    "content": "nothing here"
+  }
+}

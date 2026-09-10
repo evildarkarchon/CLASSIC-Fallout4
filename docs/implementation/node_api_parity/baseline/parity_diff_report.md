@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-08-05T12:38:58.793038+00:00`
-- Tier-1 contract rows: **907**
-- Tier-1 matched: **900**
+- Generated: `2026-09-08T07:25:36.773817+00:00`
+- Tier-1 contract rows: **952**
+- Tier-1 matched: **942**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -12,6 +12,7 @@
 
 | ID | Owner Module | Rust Symbol | Node Export | Status |
 |---|---|---|---|---|
+| `message-init-logging` | `message` | `init` | `initLogging` | `matched` |
 | `user-settings-current-schema-version` | `user_settings` | `CURRENT_USER_SETTINGS_SCHEMA_VERSION` | `JsUserSettingsSchemaVersion` | `matched` |
 | `user-settings-schema-version-type` | `user_settings` | `UserSettingsSchemaVersion` | `JsUserSettingsSchemaVersion` | `matched` |
 | `user-settings-migration-endpoint-type` | `user_settings` | `MigrationEndpoint` | `JsUserSettingsMigrationEndpoint` | `matched` |
@@ -193,7 +194,7 @@
 | `scanlog-parse-crashgen-version` | `scanlog` | `CrashgenVersion` | `parseCrashgenVersion` | `matched` |
 | `scanlog-crashgen-version-status` | `scanlog` | `check_crashgen_version_status` | `checkCrashgenVersionStatus` | `matched` |
 | `scanlog-papyrus-analysis` | `scanlog` | `PapyrusStats` | `analyzePapyrusLog` | `matched` |
-| `scanlog-detect-crash-pattern` | `scanlog` | `PatternMatcher` | `detectCrashPattern` | `matched` |
+| `scanlog-detect-crash-pattern` | `scanlog` | `detect_crash_pattern` | `detectCrashPattern` | `matched` |
 | `scanlog-crashgen-version-status-enum` | `scanlog` | `CrashgenVersionStatus` | `JsCrashgenVersionStatus` | `matched` |
 | `config-yamldata-class` | `config` | `YamlDataCore` | `YamlData` | `matched` |
 | `config-create-yamldata-content` | `config` | `YamlDataCore` | `createYamlDataFromContent` | `matched` |
@@ -214,26 +215,26 @@
 | `config-yaml-source-display-name-with-game` | `config` | `YamlSource` | `getYamlSourceDisplayNameWithGame` | `matched` |
 | `config-fileio-config-interface` | `config` | `config` | `FileIoConfig` | `matched` |
 | `config-yaml-file-enum` | `config` | `YamlSource` | `JsYamlFile` | `matched` |
-| `config-get-all-yaml-files` | `config` | `YamlSource` | `getAllYamlFiles` | `matched` |
-| `config-get-yaml-file-description` | `config` | `YamlSource` | `getYamlFileDescription` | `matched` |
-| `config-default-cache-ttl-const` | `config` | `config` | `DEFAULT_CACHE_TTL` | `matched` |
-| `config-batch-cache-ttl-const` | `config` | `config` | `BATCH_CACHE_TTL` | `matched` |
-| `config-max-cache-ttl-const` | `config` | `config` | `MAX_CACHE_TTL` | `matched` |
-| `config-get-default-cache-ttl` | `config` | `config` | `getDefaultCacheTtl` | `matched` |
-| `config-get-batch-cache-ttl` | `config` | `config` | `getBatchCacheTtl` | `matched` |
-| `config-get-max-cache-ttl` | `config` | `config` | `getMaxCacheTtl` | `matched` |
-| `config-generate-local-yaml` | `config` | `config` | `generateLocalYaml` | `matched` |
+| `config-get-all-yaml-files` | `config` | `YamlFile` | `getAllYamlFiles` | `matched` |
+| `config-get-yaml-file-description` | `config` | `YamlFile` | `getYamlFileDescription` | `matched` |
+| `config-default-cache-ttl-const` | `config` | `DEFAULT_CACHE_TTL_SECS` | `DEFAULT_CACHE_TTL` | `matched` |
+| `config-batch-cache-ttl-const` | `config` | `BATCH_CACHE_TTL_SECS` | `BATCH_CACHE_TTL` | `matched` |
+| `config-max-cache-ttl-const` | `config` | `MAX_CACHE_TTL_SECS` | `MAX_CACHE_TTL` | `matched` |
+| `config-get-default-cache-ttl` | `config` | `DEFAULT_CACHE_TTL_SECS` | `getDefaultCacheTtl` | `matched` |
+| `config-get-batch-cache-ttl` | `config` | `BATCH_CACHE_TTL_SECS` | `getBatchCacheTtl` | `matched` |
+| `config-get-max-cache-ttl` | `config` | `MAX_CACHE_TTL_SECS` | `getMaxCacheTtl` | `matched` |
+| `config-generate-local-yaml` | `config` | `generate_local_yaml` | `generateLocalYaml` | `matched` |
 | `config-settings-cache-stats-interface` | `config` | `config` | `SettingsCacheStats` | `matched` |
-| `config-load-settings-sync` | `config` | `config` | `loadSettingsSync` | `matched` |
-| `config-load-settings-async` | `config` | `config` | `loadSettingsAsync` | `matched` |
-| `config-get-cached` | `config` | `config` | `getCached` | `matched` |
-| `config-is-cached` | `config` | `config` | `isCached` | `matched` |
-| `config-invalidate-settings` | `config` | `config` | `invalidateSettings` | `matched` |
-| `config-clear-settings-cache` | `config` | `config` | `clearSettingsCache` | `matched` |
-| `config-settings-cache-size` | `config` | `config` | `settingsCacheSize` | `matched` |
-| `config-settings-cache-keys` | `config` | `config` | `settingsCacheKeys` | `matched` |
-| `config-get-settings-cache-stats` | `config` | `config` | `getSettingsCacheStats` | `matched` |
-| `config-reset-settings-cache-stats` | `config` | `config` | `resetSettingsCacheStats` | `matched` |
+| `config-load-settings-sync` | `config` | `load_settings_sync` | `loadSettingsSync` | `matched` |
+| `config-load-settings-async` | `config` | `load_settings_async` | `loadSettingsAsync` | `matched` |
+| `config-get-cached` | `config` | `get_cached` | `getCached` | `matched` |
+| `config-is-cached` | `config` | `is_cached` | `isCached` | `matched` |
+| `config-invalidate-settings` | `config` | `invalidate` | `invalidateSettings` | `matched` |
+| `config-clear-settings-cache` | `config` | `clear_cache` | `clearSettingsCache` | `matched` |
+| `config-settings-cache-size` | `config` | `cache_size` | `settingsCacheSize` | `matched` |
+| `config-settings-cache-keys` | `config` | `cache_keys` | `settingsCacheKeys` | `matched` |
+| `config-get-settings-cache-stats` | `config` | `cache_stats` | `getSettingsCacheStats` | `matched` |
+| `config-reset-settings-cache-stats` | `config` | `reset_cache_stats` | `resetSettingsCacheStats` | `matched` |
 | `config-validate-settings-path` | `path` | `validate_settings_path` | `validateSettingsPath` | `matched` |
 | `config-validate-settings-paths` | `path` | `validate_settings_paths` | `validateSettingsPaths` | `matched` |
 | `config-yaml-document-class` | `config` | `YamlOperations` | `YamlDocument` | `matched` |
@@ -250,28 +251,28 @@
 | `config-yaml-set-settings-batch` | `config` | `set_settings_batch` | `yamlSetSettingsBatch` | `matched` |
 | `config-yaml-get-indexmap-value` | `config` | `get_indexmap_value` | `yamlGetIndexmapValue` | `matched` |
 | `config-yaml-get-hashmap-vec-value` | `config` | `get_hashmap_vec_value` | `yamlGetHashmapVecValue` | `matched` |
-| `config-yaml-clear-cache` | `config` | `clear_global_yaml_cache` | `yamlClearCache` | `matched` |
-| `config-yaml-get-cache-stats` | `config` | `clear_global_yaml_cache` | `yamlGetCacheStats` | `matched` |
+| `config-yaml-clear-cache` | `config` | `YamlOperations` | `yamlClearCache` | `matched` |
+| `config-yaml-get-cache-stats` | `config` | `yaml_cache_stats` | `yamlGetCacheStats` | `matched` |
 | `version-registry-get-by-id` | `version_registry` | `VersionInfo` | `getVersionById` | `matched` |
-| `version-registry-get-by-version` | `version_registry` | `VersionInfo` | `getVersionByVersionString` | `matched` |
-| `version-registry-get-by-short-name` | `version_registry` | `VersionInfo` | `getVersionByShortName` | `matched` |
-| `version-registry-get-all` | `version_registry` | `VersionRegistry` | `getAllVersions` | `matched` |
-| `version-registry-get-all-for-game` | `version_registry` | `VersionRegistry` | `getAllVersionsForGame` | `matched` |
-| `version-registry-get-correct-versions` | `version_registry` | `VersionRegistry` | `getCorrectVersions` | `matched` |
-| `version-registry-get-wrong-versions` | `version_registry` | `VersionRegistry` | `getWrongVersions` | `matched` |
+| `version-registry-get-by-version` | `version_registry` | `get_by_version` | `getVersionByVersionString` | `matched` |
+| `version-registry-get-by-short-name` | `version_registry` | `get_by_short_name` | `getVersionByShortName` | `matched` |
+| `version-registry-get-all` | `version_registry` | `get_all` | `getAllVersions` | `matched` |
+| `version-registry-get-all-for-game` | `version_registry` | `get_all_for_game` | `getAllVersionsForGame` | `matched` |
+| `version-registry-get-correct-versions` | `version_registry` | `get_correct_versions` | `getCorrectVersions` | `matched` |
+| `version-registry-get-wrong-versions` | `version_registry` | `get_wrong_versions` | `getWrongVersions` | `matched` |
 | `version-registry-match-version` | `version_registry` | `MatchResult` | `matchVersion` | `matched` |
-| `version-registry-address-lib-filename` | `version_registry` | `VersionRegistry` | `getAddressLibraryFilename` | `matched` |
-| `version-registry-crashgen-versions` | `version_registry` | `CrashgenConfig` | `getCrashgenVersions` | `matched` |
-| `version-registry-crashgen-version-strings` | `version_registry` | `CrashgenConfig` | `getCrashgenVersionStrings` | `matched` |
-| `version-registry-crashgen-for-version` | `version_registry` | `CrashgenConfig` | `getCrashgenForVersion` | `matched` |
-| `version-registry-is-compatible` | `version_registry` | `GameVersion` | `isVersionCompatible` | `matched` |
-| `version-registry-parse-version` | `version_registry` | `GameVersion` | `parseGameVersion` | `matched` |
-| `version-registry-version-distance` | `version_registry` | `GameVersion` | `gameVersionDistance` | `matched` |
+| `version-registry-address-lib-filename` | `version_registry` | `get_address_library_filename` | `getAddressLibraryFilename` | `matched` |
+| `version-registry-crashgen-versions` | `version_registry` | `get_crashgen_versions` | `getCrashgenVersions` | `matched` |
+| `version-registry-crashgen-version-strings` | `version_registry` | `get_crashgen_version_strings` | `getCrashgenVersionStrings` | `matched` |
+| `version-registry-crashgen-for-version` | `version_registry` | `get_crashgen_for_version` | `getCrashgenForVersion` | `matched` |
+| `version-registry-is-compatible` | `version_registry` | `VersionRegistry` | `isVersionCompatible` | `matched` |
+| `version-registry-parse-version` | `version_registry` | `parse` | `parseGameVersion` | `matched` |
+| `version-registry-version-distance` | `version_registry` | `semantic_distance` | `gameVersionDistance` | `matched` |
 | `version-registry-promote-fallout4-version-info` | `version_registry` | `VersionInfo` | `Fallout4VersionInfo` | `matched` |
 | `version-registry-promote-js-address-lib-info` | `version_registry` | `AddressLibFormat` | `JsAddressLibInfo` | `matched` |
 | `version-registry-promote-js-address-library-config` | `version_registry` | `AddressLibraryConfig` | `JsAddressLibraryConfig` | `matched` |
 | `version-registry-promote-js-crashgen-check-result` | `version_registry` | `MatchResult` | `JsCrashgenCheckResult` | `matched` |
-| `version-registry-promote-js-crashgen-checker` | `version_registry` | `VersionMatcher` | `JsCrashgenChecker` | `matched` |
+| `version-registry-promote-js-crashgen-checker` | `version_registry` | `CrashgenChecker` | `JsCrashgenChecker` | `matched` |
 | `version-registry-promote-js-crashgen-config` | `version_registry` | `CrashgenConfig` | `JsCrashgenConfig` | `matched` |
 | `version-registry-promote-js-crashgen-report` | `version_registry` | `Result` | `JsCrashgenReport` | `matched` |
 | `version-registry-promote-js-crashgen-version-info` | `version_registry` | `CrashgenConfig` | `JsCrashgenVersionInfo` | `matched` |
@@ -280,29 +281,29 @@
 | `version-registry-promote-js-unknown-version-handling` | `version_registry` | `UnknownVersionHandling` | `JsUnknownVersionHandling` | `matched` |
 | `version-registry-promote-js-version-info` | `version_registry` | `XseConfig` | `JsVersionInfo` | `matched` |
 | `version-registry-promote-js-version-registry-snapshot` | `version_registry` | `VersionMatcher` | `JsVersionRegistrySnapshot` | `matched` |
-| `version-registry-promote-xse-version` | `version_registry` | `XseConfig` | `XseVersion` | `matched` |
-| `version-registry-promote-check-crashgen-config` | `version_registry` | `Result` | `checkCrashgenConfig` | `matched` |
-| `version-registry-promote-check-crashgen-full` | `version_registry` | `Result` | `checkCrashgenFull` | `matched` |
-| `version-registry-promote-compare-versions` | `version_registry` | `GameVersion` | `compareVersions` | `matched` |
-| `version-registry-promote-detect-xse-version` | `version_registry` | `XseConfig` | `detectXseVersion` | `matched` |
-| `version-registry-promote-extract-all-versions` | `version_registry` | `GameVersion` | `extractAllVersions` | `matched` |
-| `version-registry-promote-extract-version-from-filename` | `version_registry` | `GameVersion` | `extractVersionFromFilename` | `matched` |
-| `version-registry-promote-extract-version-from-log` | `version_registry` | `GameVersion` | `extractVersionFromLog` | `matched` |
-| `version-registry-promote-format-version` | `version_registry` | `GameVersion` | `formatVersion` | `matched` |
-| `version-registry-promote-get-address-lib-info` | `version_registry` | `CompatibleRange` | `getAddressLibInfo` | `matched` |
-| `version-registry-promote-get-all-fallout4-versions` | `version_registry` | `VersionRegistry` | `getAllFallout4Versions` | `matched` |
-| `version-registry-promote-get-classic-version` | `version_registry` | `VersionRegistry` | `getClassicVersion` | `matched` |
-| `version-registry-promote-get-fallout4-version-info` | `version_registry` | `VersionInfo` | `getFallout4VersionInfo` | `matched` |
-| `version-registry-promote-get-script-hashes-for-version` | `version_registry` | `XseConfig` | `getScriptHashesForVersion` | `matched` |
-| `version-registry-promote-get-unknown-version-default` | `version_registry` | `UnknownVersionStrategy` | `getUnknownVersionDefault` | `matched` |
-| `version-registry-promote-get-unknown-version-handling` | `version_registry` | `LogLevel` | `getUnknownVersionHandling` | `matched` |
-| `version-registry-promote-get-version` | `version_registry` | `VersionRegistry` | `getVersion` | `matched` |
-| `version-registry-promote-get-version-registry` | `version_registry` | `get_version_registry` | `getVersionRegistry` | `matched` |
-| `version-registry-promote-is-known-fallout4-version` | `version_registry` | `GameVersion` | `isKnownFallout4Version` | `matched` |
-| `version-registry-promote-parse-version` | `version_registry` | `VersionRegistryError` | `parseVersion` | `matched` |
-| `version-registry-promote-registry-get-game-version` | `version_registry` | `VersionRegistry` | `registryGetGameVersion` | `matched` |
+| `version-registry-promote-xse-version` | `version_registry` | `XseVersion` | `XseVersion` | `matched` |
+| `version-registry-promote-check-crashgen-config` | `version_registry` | `CrashgenChecker` | `checkCrashgenConfig` | `matched` |
+| `version-registry-promote-check-crashgen-full` | `version_registry` | `CrashgenChecker` | `checkCrashgenFull` | `matched` |
+| `version-registry-promote-compare-versions` | `version_registry` | `compare_versions` | `compareVersions` | `matched` |
+| `version-registry-promote-detect-xse-version` | `version_registry` | `detect_xse_version` | `detectXseVersion` | `matched` |
+| `version-registry-promote-extract-all-versions` | `version_registry` | `extract_all_versions` | `extractAllVersions` | `matched` |
+| `version-registry-promote-extract-version-from-filename` | `version_registry` | `extract_version_from_filename` | `extractVersionFromFilename` | `matched` |
+| `version-registry-promote-extract-version-from-log` | `version_registry` | `extract_version_from_log` | `extractVersionFromLog` | `matched` |
+| `version-registry-promote-format-version` | `version_registry` | `format_version` | `formatVersion` | `matched` |
+| `version-registry-promote-get-address-lib-info` | `version_registry` | `AddressLibInfo` | `getAddressLibInfo` | `matched` |
+| `version-registry-promote-get-all-fallout4-versions` | `version_registry` | `Fallout4Version` | `getAllFallout4Versions` | `matched` |
+| `version-registry-promote-get-classic-version` | `version_registry` | `CLASSIC_VERSION` | `getClassicVersion` | `matched` |
+| `version-registry-promote-get-fallout4-version-info` | `version_registry` | `Fallout4Version` | `getFallout4VersionInfo` | `matched` |
+| `version-registry-promote-get-script-hashes-for-version` | `version_registry` | `VersionRegistry` | `getScriptHashesForVersion` | `matched` |
+| `version-registry-promote-get-unknown-version-default` | `version_registry` | `UnknownVersionHandling` | `getUnknownVersionDefault` | `matched` |
+| `version-registry-promote-get-unknown-version-handling` | `version_registry` | `unknown_version_handling` | `getUnknownVersionHandling` | `matched` |
+| `version-registry-promote-get-version` | `aux` | `None` | `getVersion` | `unmapped` |
+| `version-registry-promote-get-version-registry` | `version_registry` | `VersionRegistry` | `getVersionRegistry` | `matched` |
+| `version-registry-promote-is-known-fallout4-version` | `version_registry` | `is_known_fallout4_version` | `isKnownFallout4Version` | `matched` |
+| `version-registry-promote-parse-version` | `version_registry` | `parse_version` | `parseVersion` | `matched` |
+| `version-registry-promote-registry-get-game-version` | `version_registry` | `get` | `registryGetGameVersion` | `matched` |
 | `version_registry.MatchConfidence@rust` | `version_registry` | `MatchConfidence@rust` | `None` | `matched` |
-| `version-registry-promote-try-parse-version` | `version_registry` | `GameVersion` | `tryParseVersion` | `matched` |
+| `version-registry-promote-try-parse-version` | `version_registry` | `try_parse_version` | `tryParseVersion` | `matched` |
 | `aux-phase4a-backup-manager` | `aux` | `BackupManager` | `BackupManager` | `matched` |
 | `aux-phase4a-docs-path-finder` | `aux` | `DocsPathFinder` | `DocsPathFinder` | `matched` |
 | `aux-phase4a-documents-checker` | `aux` | `DocumentsChecker` | `DocumentsChecker` | `matched` |
@@ -335,7 +336,7 @@
 | `aux-phase4a-intern-string` | `aux` | `intern` | `internString` | `matched` |
 | `aux-phase4a-is-restricted-path` | `aux` | `is_restricted_path` | `isRestrictedPath` | `matched` |
 | `aux-phase4a-is-runtime-available` | `aux` | `get_runtime` | `isRuntimeAvailable` | `matched` |
-| `aux-phase4a-is-valid-executable-path` | `aux` | `is_valid_path` | `isValidExecutablePath` | `matched` |
+| `aux-phase4a-is-valid-executable-path` | `aux` | `is_valid_executable_path` | `isValidExecutablePath` | `matched` |
 | `aux-phase4a-is-valid-path` | `aux` | `is_valid_path` | `isValidPath` | `matched` |
 | `aux-phase4a-join-paths` | `aux` | `join_paths` | `joinPaths` | `matched` |
 | `aux-phase4a-load-batch-async` | `aux` | `load_batch_async` | `loadBatchAsync` | `matched` |
@@ -430,21 +431,21 @@
 | `aux-phase4b-xse-dll-prefix` | `aux` | `dll_prefix` | `xseDllPrefix` | `matched` |
 | `aux-phase4b-xse-loader-name` | `aux` | `loader_name` | `xseLoaderName` | `matched` |
 | `aux-phase4b-xse-type-for-game` | `aux` | `from_game_id` | `xseTypeForGame` | `matched` |
-| `aux-phase4b-xse-type-name` | `aux` | `as_str` | `xseTypeName` | `matched` |
-| `aux-phase4c-crash-autoscan-pattern` | `aux` | `FileIOCore` | `CRASH_AUTOSCAN_PATTERN` | `matched` |
+| `aux-phase4b-xse-type-name` | `aux` | `XseType` | `xseTypeName` | `matched` |
+| `aux-phase4c-crash-autoscan-pattern` | `aux` | `CRASH_AUTOSCAN_PATTERN` | `CRASH_AUTOSCAN_PATTERN` | `matched` |
 | `version-registry-phase4c-js-compatible-range` | `version_registry` | `CompatibleRange` | `JsCompatibleRange` | `matched` |
 | `aux-phase4c-js-dds-analyzer-alias` | `aux` | `FileIOCore` | `JsDDSAnalyzer` | `matched` |
-| `aux-phase4c-js-dds-analyzer-class` | `aux` | `FileIOCore` | `JsDdsAnalyzer` | `matched` |
+| `aux-phase4c-js-dds-analyzer-class` | `aux` | `DDSAnalyzer` | `JsDdsAnalyzer` | `matched` |
 | `aux-phase4c-js-dds-batch-result` | `aux` | `FileIOCore` | `JsDdsBatchResult` | `matched` |
 | `aux-phase4c-js-dds-issue` | `aux` | `FileIOCore` | `JsDdsIssue` | `matched` |
 | `aux-phase4c-js-game-id` | `aux` | `GameId` | `JsGameId` | `matched` |
 | `aux-phase4c-js-ini-check-result` | `aux` | `IniCheckResult` | `JsIniCheckResult` | `matched` |
 | `version-registry-phase4c-js-match-result` | `version_registry` | `MatchResult` | `JsMatchResult` | `matched` |
-| `aux-phase4c-calculate-text-similarity` | `aux` | `calculate_similarity` | `calculateTextSimilarity` | `matched` |
+| `aux-phase4c-calculate-text-similarity` | `aux` | `similarity_ratio` | `calculateTextSimilarity` | `matched` |
 | `aux-phase4c-check-drive-exists` | `aux` | `check_drive_exists` | `checkDriveExists` | `matched` |
-| `version-registry-phase4c-get-all-exe-hashes` | `version_registry` | `get_version_registry` | `getAllExeHashes` | `matched` |
+| `version-registry-phase4c-get-all-exe-hashes` | `version_registry` | `VersionRegistry` | `getAllExeHashes` | `matched` |
 | `aux-phase4c-get-all-game-ids` | `aux` | `GameId` | `getAllGameIds` | `matched` |
-| `version-registry-phase4c-get-all-script-hashes` | `version_registry` | `get_version_registry` | `getAllScriptHashes` | `matched` |
+| `version-registry-phase4c-get-all-script-hashes` | `version_registry` | `VersionRegistry` | `getAllScriptHashes` | `matched` |
 | `aux-phase4c-get-game-name` | `aux` | `GameId` | `getGameName` | `matched` |
 | `scanlog.settings_validator.ConfigIssue@rust` | `scanlog` | `ConfigIssue@rust` | `None` | `matched` |
 | `scanlog.crashgen_registry.CrashgenEntry@rust` | `scanlog` | `CrashgenEntry@rust` | `None` | `matched` |
@@ -509,8 +510,8 @@
 | `scanlog.record_scanner.record_scanner@rust` | `scanlog` | `record_scanner@rust` | `None` | `matched` |
 | `scanlog.record_scanner.scan_records_batch@rust` | `scanlog` | `scan_records_batch@rust` | `None` | `matched` |
 | `scanlog.segment_key.segment_key@rust` | `scanlog` | `segment_key@rust` | `None` | `matched` |
-| `scanlog.analyzer.AnalyzerError` | `scanlog` | `AnalyzerError` | `CrashgenSettingsAnalyzer` | `matched` |
-| `scanlog.analyzer.AnalyzerErrorCode` | `scanlog` | `AnalyzerErrorCode` | `CrashgenSettingsAnalyzer` | `matched` |
+| `scanlog.analyzer.AnalyzerError` | `scanlog` | `AnalyzerError@rust` | `None` | `matched` |
+| `scanlog.analyzer.AnalyzerErrorCode` | `scanlog` | `AnalyzerErrorCode@rust` | `None` | `matched` |
 | `scanlog.analyzer.AnalyzerKind` | `scanlog` | `AnalyzerKind` | `JsAnalyzerKind` | `matched` |
 | `scanlog.analyzer.AnalyzerResult` | `scanlog` | `AnalyzerResult` | `JsCrashgenSettingsAnalysisResult` | `matched` |
 | `scanlog.analyzer.analyzer@rust` | `scanlog` | `analyzer@rust` | `None` | `matched` |
@@ -919,6 +920,50 @@
 | `config.local-ignore-reset-publication-stage-type` | `config` | `LocalIgnoreResetPublicationStage` | `JsLocalIgnoreResetPublicationStage` | `matched` |
 | `config.local-ignore-reset-result-type` | `config` | `LocalIgnoreResetResult` | `JsLocalIgnoreResetResult` | `matched` |
 | `config.local-ignore-reset-status-type` | `config` | `LocalIgnoreResetOutcome` | `JsLocalIgnoreResetStatus` | `matched` |
+| `config.installed_yaml_data.inspectInstalledYamlData` | `config` | `inspect_installed_yaml_data` | `inspectInstalledYamlData` | `matched` |
+| `config.installed_yaml_data.loadInstalledYamlData` | `config` | `load_installed_yaml_data` | `loadInstalledYamlData` | `matched` |
+| `config.explicit_yaml_data.loadExplicitYamlData` | `config` | `load_explicit_yaml_data` | `loadExplicitYamlData` | `matched` |
+| `update.notification.check_app_notification_configured` | `update` | `check_app_notification_configured` | `checkAppNotificationConfigured` | `matched` |
+| `config.main_yaml_version.loadMainYamlVersion` | `config` | `load_main_yaml_version_with_bundled_dir` | `loadMainYamlVersion` | `matched` |
+| `user-settings-legacy-tui-import` | `user_settings` | `import_legacy_tui_state` | `importLegacyTuiStateIntoUserSettings` | `matched` |
+| `user-settings-LegacyTuiStateImportReceipt` | `user_settings` | `LegacyTuiStateImportReceipt` | `JsLegacyTuiStateImportReceipt` | `matched` |
+| `user-settings-LegacyTuiStateImportOutcome` | `user_settings` | `LegacyTuiStateImportOutcome` | `JsLegacyTuiStateImportOutcome` | `matched` |
+| `user-settings-LegacyTuiStateImportRestoreOutcome` | `user_settings` | `LegacyTuiStateImportRestoreOutcome` | `JsLegacyTuiStateImportRestoreOutcome` | `matched` |
+| `scanlog.scan_run.ScanRunRequest` | `scanlog` | `Request` | `ScanRunRequest` | `matched` |
+| `scanlog.scan_run.ScanRunUnsolvedLogs` | `scanlog` | `StandardUnsolvedLogsIntent` | `ScanRunUnsolvedLogs` | `matched` |
+| `scanlog.scan_run.ScanRunCancellation` | `scanlog` | `Cancellation` | `ScanRunCancellation` | `matched` |
+| `scanlog.scan_run.ScanRunContinuation` | `scanlog` | `CrashLogScanRunContinuation` | `ScanRunContinuation` | `matched` |
+| `scanlog.scan_run.scanRunExecute` | `scanlog` | `execute` | `scanRunExecute` | `matched` |
+| `scanlog.scan_run.scanRunResume` | `scanlog` | `resume` | `scanRunResume` | `matched` |
+| `scanlog.scan_run.scanRunAbandon` | `scanlog` | `abandon` | `scanRunAbandon` | `matched` |
+| `scanlog.scan_run.JsScanRunConfiguration` | `scanlog` | `Configuration` | `JsScanRunConfiguration` | `matched` |
+| `scanlog.scan_run.JsScanRunStandardSource` | `scanlog` | `StandardCrashLogScanSource` | `JsScanRunStandardSource` | `matched` |
+| `scanlog.scan_run.JsScanRunTargetedSource` | `scanlog` | `TargetedCrashLogScanSource` | `JsScanRunTargetedSource` | `matched` |
+| `scanlog.scan_run.JsScanRunSetupContext` | `scanlog` | `CrashLogScanSetupContext` | `JsScanRunSetupContext` | `matched` |
+| `scanlog.scan_run.JsScanRunRejectedInput` | `scanlog` | `CrashLogScanRejectedInput` | `JsScanRunRejectedInput` | `matched` |
+| `scanlog.scan_run.JsScanRunDiscoveryResult` | `scanlog` | `CrashLogScanDiscoveryResult` | `JsScanRunDiscoveryResult` | `matched` |
+| `scanlog.scan_run.JsScanRunSetupCheck` | `scanlog` | `CrashLogScanSetupCheck` | `JsScanRunSetupCheck` | `matched` |
+| `scanlog.scan_run.JsScanRunSetupPathUpdate` | `scanlog` | `CrashLogScanSetupPathUpdate` | `JsScanRunSetupPathUpdate` | `matched` |
+| `scanlog.scan_run.JsScanRunSetupResult` | `scanlog` | `CrashLogScanSetupResult` | `JsScanRunSetupResult` | `matched` |
+| `scanlog.scan_run.JsScanRunLogFailure` | `scanlog` | `LogFailure` | `JsScanRunLogFailure` | `matched` |
+| `scanlog.scan_run.JsScanRunLogResult` | `scanlog` | `LogResult` | `JsScanRunLogResult` | `matched` |
+| `scanlog.scan_run.JsScanRunInstalledYamlDataDiagnostic` | `scanlog` | `InstalledYamlDataRunDiagnostic` | `JsScanRunInstalledYamlDataDiagnostic` | `matched` |
+| `scanlog.scan_run.JsScanRunInstalledYamlDataDiagnosticKind` | `scanlog` | `InstalledYamlDataRunDiagnosticKind` | `JsScanRunInstalledYamlDataDiagnosticKind` | `matched` |
+| `scanlog.scan_run.JsScanRunLocalIgnoreState` | `scanlog` | `LocalIgnoreRunState` | `JsScanRunLocalIgnoreState` | `matched` |
+| `scanlog.scan_run.JsScanRunLocalIgnoreResetRunData` | `scanlog` | `LocalIgnoreResetRunData` | `JsScanRunLocalIgnoreResetRunData` | `matched` |
+| `scanlog.scan_run.JsScanRunLocalIgnoreRecoveryDecision` | `scanlog` | `LocalIgnoreRecoveryDecision` | `JsScanRunLocalIgnoreRecoveryDecision` | `matched` |
+| `scanlog.scan_run.JsScanRunInfrastructureError` | `scanlog` | `InfrastructureError` | `JsScanRunInfrastructureError` | `matched` |
+| `scanlog.scan_run.JsScanRunLogEvent` | `scanlog` | `LogEvent` | `JsScanRunLogEvent` | `matched` |
+| `scanlog.scan_run.JsScanRunEvent` | `scanlog` | `Event` | `JsScanRunEvent` | `matched` |
+| `scanlog.scan_run.JsScanRunResult` | `scanlog` | `RunResult` | `JsScanRunResult` | `matched` |
+| `scanlog.scan_run.JsScanRunDisplayLine` | `scanlog` | `DisplayLine` | `JsScanRunDisplayLine` | `matched` |
+| `scanlog.scan_run.JsScanRunDisplaySegment` | `scanlog` | `DisplaySegment` | `JsScanRunDisplaySegment` | `matched` |
+| `scanlog.scan_run.JsScanRunDisplaySegmentKind` | `scanlog` | `DisplaySegment` | `JsScanRunDisplaySegmentKind` | `matched` |
+| `scanlog.scan_run.JsScanRunDisplaySeverity` | `scanlog` | `DisplaySeverity` | `JsScanRunDisplaySeverity` | `matched` |
+| `scanlog.scan_run.JsScanRunRecoveryDecisionDescription` | `scanlog` | `RecoveryDecisionDescription` | `JsScanRunRecoveryDecisionDescription` | `matched` |
+| `scanlog.scan_run.JsScanRunRecoveryPrompt` | `scanlog` | `RecoveryPrompt` | `JsScanRunRecoveryPrompt` | `matched` |
+| `scanlog.scan_run.JsScanRunSuccess` | `scanlog` | `None` | `JsScanRunSuccess` | `unmapped` |
+| `scanlog.scan_run.JsScanRunFailure` | `scanlog` | `None` | `JsScanRunFailure` | `unmapped` |
 
 ## Gap Counts By Owner/Tier
 

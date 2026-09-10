@@ -169,45 +169,14 @@ pub fn extract_plugin_list(content: String) -> napi::Result<Vec<String>> {
 ///
 /// Analyzes the log header for known crash patterns (e.g., "ACCESS_VIOLATION",
 /// "STACK_OVERFLOW", "STACK_BUFFER_OVERRUN"). Returns the pattern name if
-/// detected, or `undefined` if no known pattern is found.
+/// detected, or `null` if no known pattern is found. The shared Rust core scans
+/// only the first 30 lines and recognizes case-insensitive hexadecimal aliases.
 ///
 /// @param content - The crash log content to analyze.
-/// @returns The crash pattern name, or `undefined` if none detected.
+/// @returns The crash pattern name, or `null` if none detected.
 #[napi]
 pub fn detect_crash_pattern(content: String) -> Option<String> {
-    // Known crash patterns to detect in the main error line
-    let known_patterns: &[(&str, &str)] = &[
-        ("EXCEPTION_ACCESS_VIOLATION", "ACCESS_VIOLATION"),
-        ("EXCEPTION_STACK_OVERFLOW", "STACK_OVERFLOW"),
-        ("EXCEPTION_INT_DIVIDE_BY_ZERO", "INT_DIVIDE_BY_ZERO"),
-        ("EXCEPTION_BREAKPOINT", "BREAKPOINT"),
-        ("EXCEPTION_ILLEGAL_INSTRUCTION", "ILLEGAL_INSTRUCTION"),
-        ("EXCEPTION_STACK_BUFFER_OVERRUN", "STACK_BUFFER_OVERRUN"),
-        ("STATUS_HEAP_CORRUPTION", "HEAP_CORRUPTION"),
-        ("0xC0000005", "ACCESS_VIOLATION"),
-        ("0xC00000FD", "STACK_OVERFLOW"),
-        ("0xC0000094", "INT_DIVIDE_BY_ZERO"),
-        ("0x80000003", "BREAKPOINT"),
-        ("0xC000001D", "ILLEGAL_INSTRUCTION"),
-        ("0xC0000409", "STACK_BUFFER_OVERRUN"),
-    ];
-
-    // Search the first 30 lines for the main error / unhandled exception
-    let upper = content.to_uppercase();
-    for line in upper.lines().take(30) {
-        if line.contains("UNHANDLED EXCEPTION")
-            || line.contains("EXCEPTION_")
-            || line.contains("0XC000")
-        {
-            for (pattern, name) in known_patterns {
-                if line.contains(pattern) {
-                    return Some(name.to_string());
-                }
-            }
-        }
-    }
-
-    None
+    classic_scanlog_core::detect_crash_pattern(&content).map(str::to_owned)
 }
 
 // ============================================================================

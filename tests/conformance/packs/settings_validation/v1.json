@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "familyId": "settings-validation",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-settings-core"
+  },
+  "fixtureRoot": "tests/fixtures/settings_validation_conformance",
+  "fixtures": {
+    "values": "values.json",
+    "float-precision": "float-precision.json"
+  },
+  "capabilities": [
+    {
+      "id": "settings-validation.observe",
+      "rustSymbols": [
+        "validate_setting_value",
+        "coerce_setting_value"
+      ],
+      "observationFamilies": [
+        "values-and-errors"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "values",
+      "action": "settings-validation.observe",
+      "capabilityIds": [
+        "settings-validation.observe"
+      ],
+      "fixtureRefs": [
+        "values"
+      ],
+      "input": {
+        "fixtureRef": "values"
+      },
+      "expected": {
+        "results": [
+          {
+            "valid": true,
+            "value": 42,
+            "error": null
+          },
+          {
+            "valid": true,
+            "value": false,
+            "error": null
+          },
+          {
+            "valid": true,
+            "value": {
+              "float": "3.125e0"
+            },
+            "error": null
+          },
+          {
+            "valid": true,
+            "value": "mods/data",
+            "error": null
+          },
+          {
+            "valid": true,
+            "value": "",
+            "error": null
+          },
+          {
+            "valid": false,
+            "value": null,
+            "error": "Cannot coerce 'perhaps' to Bool"
+          },
+          {
+            "valid": false,
+            "value": null,
+            "error": "Cannot coerce empty string to Path"
+          },
+          {
+            "valid": false,
+            "value": null,
+            "error": "Cannot coerce 'hello' to Int: invalid digit found in string"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "float-precision",
+      "action": "settings-validation.observe",
+      "capabilityIds": [
+        "settings-validation.observe"
+      ],
+      "fixtureRefs": [
+        "float-precision"
+      ],
+      "input": {
+        "fixtureRef": "float-precision"
+      },
+      "expected": {
+        "results": [
+          {
+            "valid": true,
+            "value": {
+              "float": "1.23456789e0"
+            },
+            "error": null
+          },
+          {
+            "valid": true,
+            "value": {
+              "float": "1e20"
+            },
+            "error": null
+          },
+          {
+            "valid": true,
+            "value": {
+              "float": "1e-7"
+            },
+            "error": null
+          },
+          {
+            "valid": true,
+            "value": {
+              "float": "1e0"
+            },
+            "error": null
+          },
+          {
+            "valid": true,
+            "value": {
+              "float": "-0e0"
+            },
+            "error": null
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

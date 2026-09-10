@@ -108,6 +108,34 @@ fn read_source(relative_path: &str) -> String {
         .unwrap_or_else(|error| panic!("{} should be readable: {error}", path.display()))
 }
 
+/// The shared deny-list of phrases about a Crash Log Scan Run that no frontend may write.
+///
+/// One file, read by all four frontend audits, rather than four inline copies. A per-frontend list
+/// would put back into the test layer the four-copies drift `classic-scan-presentation` exists to
+/// delete: a contributor adding core-owned prose would have to remember four lists, and forgetting
+/// one would leave the phrase unenforced in exactly the frontend nobody was looking at.
+fn core_owned_phrases_file() -> PathBuf {
+    // `CARGO_MANIFEST_DIR` is `ui-applications/classic-tui`, so the repo root is two levels up.
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../business-logic/classic-scan-presentation/core-owned-phrases.txt")
+}
+
+/// Reads the shared deny-list, dropping blank lines and `#` comments.
+///
+/// Panics on an unreadable file for the same reason [`read_source`] does: an audit that quietly
+/// enforces nothing is worse than no audit, because it reads as coverage.
+fn core_owned_phrases() -> Vec<String> {
+    let path = core_owned_phrases_file();
+    let contents = fs::read_to_string(&path)
+        .unwrap_or_else(|error| panic!("{} should be readable: {error}", path.display()));
+    contents
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty() && !line.starts_with('#'))
+        .map(str::to_string)
+        .collect()
+}
+
 /// Every domain enum the TUI presents, each owned by a core crate that supplies both its names.
 ///
 /// The first four are the tables this frontend used to carry. `LogDisposition` and
@@ -115,7 +143,19 @@ fn read_source(relative_path: &str) -> String {
 /// inventory did not count. `InfrastructureErrorStage` never had a table at all — it rendered the
 /// Vocabulary *Token* through `Display`, which is an identifier in a sentence rather than a second
 /// vocabulary — and now renders its Display Label like the other six.
-const AUDITED_ENUMS: [&str; 7] = [
+///
+/// The next two arrived with the scan-run vocabulary adoption. `ScanProgressPhase` did carry a
+/// table — the four participles the progress line shows — which now resolves through `label()`
+/// with the same words. `InstalledYamlDataRole` is named nowhere in `src/`, so it is here purely
+/// so that the first frontend code to render a role cannot start by writing a table.
+///
+/// `CrashLogScanRunStatus` joined them when this frontend adopted `classic-scan-presentation`. It
+/// was held back while `format_result` composed the six outcomes into count-bearing sentences of
+/// its own and the detail block printed `Run status: <token>`; both are gone, and the status now
+/// reaches the user as one Display Label inside a segment core owns.
+///
+/// The adopter that is *not* here is named in [`DEFERRED_ENUMS`] with its reason.
+const AUDITED_ENUMS: [&str; 10] = [
     "InstalledYamlDataProvenance",
     "LocalIgnoreRunState",
     "InstalledYamlDataRunDiagnosticKind",
@@ -123,7 +163,67 @@ const AUDITED_ENUMS: [&str; 7] = [
     "LogDisposition",
     "LogFailureStage",
     "InfrastructureErrorStage",
+    "ScanProgressPhase",
+    "InstalledYamlDataRole",
+    "CrashLogScanRunStatus",
 ];
+
+/// The Vocabulary adopter this frontend cannot be audited for yet, and why.
+///
+/// It is covered by the same naming contract as the ten above and it carries a
+/// Display Label, so leaving it out is a statement about this *audit* rather
+/// than about the enum. It cannot be added without a false failure today:
+///
+/// - `LocalIgnoreRecoveryDecision` has no table in this frontend at all. Every
+///   match on it selects control flow. It trips only [`arm_body_end`]'s
+///   over-read, where a final arm with no successor runs to the end of the
+///   enclosing item and swallows an unrelated literal — the deliberate
+///   false-positive bias documented on that function.
+///
+/// Listed rather than merely absent so the omission is data the meta-test below
+/// can check, instead of a comment that rots. A contributor moving the name
+/// into `AUDITED_ENUMS` deletes it from here, and the meta-test is what tells
+/// them both lists have to change together.
+const DEFERRED_ENUMS: [&str; 1] = ["LocalIgnoreRecoveryDecision"];
+
+/// The four enums that adopted the Vocabulary naming contract alongside this audit.
+///
+/// Fixed at the four this frontend was asked to account for, so that "audited or
+/// deferred" stays a claim about a known set rather than a tautology over
+/// whatever the two lists happen to contain.
+const NEWLY_ADOPTED_ENUMS: [&str; 4] = [
+    "CrashLogScanRunStatus",
+    "ScanProgressPhase",
+    "LocalIgnoreRecoveryDecision",
+    "InstalledYamlDataRole",
+];
+
+#[test]
+fn every_newly_adopted_enum_is_either_audited_or_explicitly_deferred() {
+    // The stale-list guard for the enum lists, playing the role the recursive
+    // directory listing plays for the source lists. Without it, an adopter could
+    // be dropped from `AUDITED_ENUMS` and read as never having been in scope.
+    for name in NEWLY_ADOPTED_ENUMS {
+        assert!(
+            AUDITED_ENUMS.contains(&name) || DEFERRED_ENUMS.contains(&name),
+            "{name} adopted the Vocabulary naming contract but is neither audited \
+             nor listed in DEFERRED_ENUMS with a reason"
+        );
+    }
+
+    // Both at once would be a contributor who moved a name across and forgot to
+    // delete it, leaving a deferral note for something already enforced.
+    for name in DEFERRED_ENUMS {
+        assert!(
+            !AUDITED_ENUMS.contains(&name),
+            "{name} is audited now; delete it from DEFERRED_ENUMS and its reason"
+        );
+        assert!(
+            NEWLY_ADOPTED_ENUMS.contains(&name),
+            "{name} is deferred but is not one of the adopters this audit tracks"
+        );
+    }
+}
 
 #[test]
 fn the_tui_never_constructs_its_own_async_runtime() {
@@ -229,6 +329,173 @@ fn no_tui_source_turns_an_audited_enum_into_a_string_literal() {
          disagree about the same outcome:\n  {}",
         offenders.join("\n  ")
     );
+}
+
+#[test]
+fn no_tui_source_writes_a_sentence_the_presentation_crate_owns() {
+    let phrases = core_owned_phrases();
+    let mut offenders = Vec::new();
+    for name in AUDITED_SOURCES {
+        let code = string_literals(&read_source(name));
+        for phrase in &phrases {
+            if contains(&code, phrase.as_bytes()) {
+                offenders.push(format!("{name} writes {phrase:?}"));
+            }
+        }
+    }
+
+    assert!(
+        offenders.is_empty(),
+        "classic-scan-presentation already states these things about a Crash Log Scan Run; render \
+         the display lines it produces instead of restating them here, so a wording fix lands once \
+         and reaches every frontend:\n  {}",
+        offenders.join("\n  ")
+    );
+}
+
+#[test]
+fn the_shared_deny_list_is_readable_and_not_empty() {
+    // The detector loops over the deny-list, so an empty or mislocated list asserts nothing while
+    // still reporting green — the "reads as coverage while providing none" failure the detector
+    // self-tests below exist to prevent for the naming half. The other three audits carry the same
+    // guard against the same file.
+    let phrases = core_owned_phrases();
+    assert!(
+        phrases.len() >= 10,
+        "the shared deny-list at {} looks truncated: {} phrase(s)",
+        core_owned_phrases_file().display(),
+        phrases.len()
+    );
+    assert!(
+        phrases.contains(&"Crash Log Scan Run failed during".to_string()),
+        "the shared deny-list no longer carries the phrase the original drift took"
+    );
+    // No constraint on an entry's shape is asserted any more, and that is deliberate. An earlier
+    // version required each entry to contain a space, because the detector searched comment-stripped
+    // *code* and a bare word could match an identifier. That constraint was load-bearing only
+    // because the detector was reading more than it needed: `string_literals` now yields literals
+    // alone, where no identifier can appear, so `succeeded,` — core-owned prose that occurs in
+    // ordinary code as `terminal.succeeded, terminal.failed` — is safe to list.
+}
+
+/// Returns the contents of every string literal in `source`, one per line, with nothing else.
+///
+/// Literals rather than comment-stripped code, which is what this scanned first. Prose is only ever
+/// a literal, so scanning anything more than literals only adds ways to be wrong — and it was wrong:
+/// `succeeded,` is core-owned prose that occurs verbatim in ordinary code as `terminal.succeeded,
+/// terminal.failed`. Extracting literals removes that whole class of false positive rather than
+/// asking the deny-list to dodge it, and puts this in line with the Python audit, which reads
+/// literals off the AST for the same reason.
+///
+/// Comments never appear, for the reason the CXX parity gate's name scan was fixed: a comment
+/// *describing* the drift is not the drift, and this file's own module docs quote the phrases it
+/// forbids. Tracking string state is what tells the two apart, and it also stops a `//` inside a
+/// path or URL literal from reading as the start of a comment.
+///
+/// Literals are newline-separated rather than concatenated so two adjacent ones cannot form a
+/// phrase neither contains — `"succeeded" ", "` must not read as `succeeded, `.
+fn string_literals(source: &str) -> Vec<u8> {
+    let bytes = source.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut index = 0;
+    while index < bytes.len() {
+        // A character literal holding a quote — `'"'` or `'\"'`, and the same inside `b'…'` — would
+        // otherwise open a string that never closes where the scanner thinks it does, dropping the
+        // rest of the file from the audit. That is exactly the "reads as coverage while providing
+        // none" failure this file's guards exist to prevent, so it is handled rather than left
+        // latent. A lifetime (`&'static str`) has no closing quote two or three bytes along, so it
+        // falls through to the ordinary branch untouched.
+        if bytes[index] == b'\'' {
+            let escaped = bytes.get(index + 1) == Some(&b'\\');
+            let close = index + if escaped { 3 } else { 2 };
+            if bytes.get(close) == Some(&b'\'') {
+                index = close + 1;
+                continue;
+            }
+        }
+        // A raw string takes no escapes, so `r"C:\dir\"` ends at its own quote and a `\"` inside it
+        // is two characters rather than one. Handled before the ordinary-string branch, which would
+        // otherwise read that backslash as an escape and run past the end of the literal.
+        if bytes[index] == b'r' {
+            let mut hashes = index + 1;
+            while bytes.get(hashes) == Some(&b'#') {
+                hashes += 1;
+            }
+            if bytes.get(hashes) == Some(&b'"') {
+                let fence = hashes - (index + 1);
+                index = hashes + 1;
+                while index < bytes.len() {
+                    if bytes[index] == b'"'
+                        && bytes[index + 1..]
+                            .iter()
+                            .take(fence)
+                            .filter(|byte| **byte == b'#')
+                            .count()
+                            == fence
+                    {
+                        index += 1 + fence;
+                        break;
+                    }
+                    out.push(bytes[index]);
+                    index += 1;
+                }
+                out.push(b'\n');
+                continue;
+            }
+        }
+        if bytes[index] == b'/' && bytes.get(index + 1) == Some(&b'/') {
+            while index < bytes.len() && bytes[index] != b'\n' {
+                index += 1;
+            }
+            continue;
+        }
+        if bytes[index] == b'/' && bytes.get(index + 1) == Some(&b'*') {
+            index += 2;
+            // Rust block comments nest, unlike C++'s.
+            let mut depth = 1usize;
+            while index < bytes.len() && depth > 0 {
+                if bytes[index] == b'/' && bytes.get(index + 1) == Some(&b'*') {
+                    depth += 1;
+                    index += 2;
+                } else if bytes[index] == b'*' && bytes.get(index + 1) == Some(&b'/') {
+                    depth -= 1;
+                    index += 2;
+                } else {
+                    index += 1;
+                }
+            }
+            continue;
+        }
+        if bytes[index] == b'"' {
+            index += 1;
+            while index < bytes.len() {
+                if bytes[index] == b'\\' {
+                    index += 2;
+                    continue;
+                }
+                if bytes[index] == b'"' {
+                    index += 1;
+                    break;
+                }
+                out.push(bytes[index]);
+                index += 1;
+            }
+            out.push(b'\n');
+            continue;
+        }
+        // Ordinary code, which is deliberately dropped rather than collected.
+        index += 1;
+    }
+    out
+}
+
+/// Returns whether `haystack` contains `needle`, over bytes so no encoding assumption is needed.
+fn contains(haystack: &[u8], needle: &[u8]) -> bool {
+    !needle.is_empty()
+        && haystack.len() >= needle.len()
+        && haystack
+            .windows(needle.len())
+            .any(|window| window == needle)
 }
 
 /// Counts every naming-table shape `source` gives `enum_name`, under any name it is imported by.
@@ -542,6 +809,106 @@ fn the_detectors_leave_code_that_is_not_a_naming_table_alone() {
             count_naming_tables(NOT_A_TABLE, enum_name),
             0,
             "a predicate over {enum_name} is not a naming table"
+        );
+    }
+}
+
+/// The sentence a frontend would reach for, written as the template it would actually be written as.
+///
+/// `format!` rather than a verbatim paste, because a template is the shape drift takes in practice:
+/// the phrase survives and only the stage is substituted. Matching a phrase rather than a whole
+/// sentence is what lets the plain substring test see it.
+const REWORDED_SENTENCE: &str = r#"
+fn summary(stage: InfrastructureErrorStage, message: &str) -> String {
+    format!("Crash Log Scan Run failed during {} - {message}", stage.label())
+}
+"#;
+
+#[test]
+fn the_phrase_detector_catches_the_drift_it_exists_for() {
+    // Same proof the naming detectors carry above, for the same reason: the TUI writes none of these
+    // phrases now, so a broken phrase detector and a compliant frontend look identical from here.
+    let code = string_literals(REWORDED_SENTENCE);
+    assert!(
+        contains(&code, b"Crash Log Scan Run failed during"),
+        "a sentence template reusing a core-owned phrase should be caught"
+    );
+}
+
+#[test]
+fn the_phrase_detector_reads_code_rather_than_comments() {
+    // A comment describing the drift is documentation, not the drift — the same false positive the
+    // CXX parity gate's name scan hit. This file's own module docs would trip a detector that could
+    // not tell the two apart.
+    let commented = string_literals(
+        "// Crash Log Scan Run failed during is core's to say.\n\
+         /* Crash Log Scan Run failed during, again. */\nlet x = 1;\n",
+    );
+    assert!(!contains(&commented, b"Crash Log Scan Run failed during"));
+
+    // The converse: a literal writing it is the drift, and a raw string is still a literal.
+    let raw = string_literals("let s = r\"Crash Log Scan Run failed during\";\n");
+    assert!(contains(&raw, b"Crash Log Scan Run failed during"));
+}
+
+#[test]
+fn the_phrase_detector_reads_literals_rather_than_the_code_around_them() {
+    // `succeeded,` is core-owned prose and also, character for character, an ordinary argument list.
+    // A detector that searched code rather than literals reported the Qt GUI's
+    // `emit finished(terminal.total, terminal.succeeded, terminal.failed, ...)` as drift, which is
+    // how this scanner came to extract literals instead of merely stripping comments.
+    let code = string_literals("emit finished(terminal.succeeded, terminal.failed);\n");
+    assert!(!contains(&code, b"succeeded,"));
+
+    let written = string_literals("let s = \"3 succeeded, 4 failed\";\n");
+    assert!(contains(&written, b"succeeded,"));
+
+    // Two adjacent literals must not fuse into a phrase neither contains, or the separator this
+    // relies on is doing nothing.
+    let adjacent = string_literals("let s = concat!(\"succeeded\", \", failed\");\n");
+    assert!(!contains(&adjacent, b"succeeded,"));
+}
+
+#[test]
+fn the_phrase_detector_survives_a_character_literal_holding_a_quote() {
+    // A `'"'` read as a string opener would swallow everything up to the next quote, taking the
+    // phrase after it out of the audit — a silent hole rather than a failure. No TUI source
+    // contains one today, which is precisely why it needs a test rather than a reader's vigilance.
+    let code = string_literals(
+        "let quote = '\"';\nlet escaped = '\\'';\nlet s = \"Crash Log Scan Run failed during\";\n",
+    );
+    assert!(contains(&code, b"Crash Log Scan Run failed during"));
+
+    // A lifetime is not a character literal and must not be consumed as one.
+    let lifetime = string_literals(
+        "fn label(s: &'static str) -> &'static str { \"Crash Log Scan recovery failed\" }\n",
+    );
+    assert!(contains(&lifetime, b"Crash Log Scan recovery failed"));
+}
+
+#[test]
+fn the_phrase_detector_does_not_mistake_a_literal_slash_for_a_comment() {
+    // A path or URL literal containing `//` must not read as the start of a comment, or everything
+    // after it on that line silently leaves the audited text — including a phrase written there.
+    let code = string_literals(
+        "let url = \"https://example.invalid\"; let s = \"Crash Log Scan Run failed during\";\n",
+    );
+    assert!(contains(&code, b"Crash Log Scan Run failed during"));
+}
+
+#[test]
+fn the_phrase_detector_leaves_compliant_rendering_alone() {
+    // The other half of the proof. Rendering a segment core produced is the correct shape and must
+    // stay quiet, or the audit becomes noise a contributor learns to work around.
+    let compliant = string_literals(
+        "fn render(line: &DisplayLine) -> String {\n\
+             line.segments.iter().map(segment_text).collect::<Vec<_>>().join(\" \")\n\
+         }\n",
+    );
+    for phrase in core_owned_phrases() {
+        assert!(
+            !contains(&compliant, phrase.as_bytes()),
+            "concatenating core's own segments should not read as writing {phrase:?}"
         );
     }
 }

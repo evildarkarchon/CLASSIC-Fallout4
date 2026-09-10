@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "familyId": "update-rejection",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-update-core"
+  },
+  "fixtureRoot": "tests/fixtures/update_rejection_conformance",
+  "fixtures": {
+    "latest": "latest.json",
+    "all": "all.json",
+    "notification": "notification.json",
+    "metadata": "metadata.json"
+  },
+  "capabilities": [
+    {
+      "id": "update-rejection.latest",
+      "operationScoped": true,
+      "rustSymbols": [
+        "GithubClient",
+        "get_latest_release"
+      ],
+      "observationFamilies": [
+        "negative-runtime"
+      ]
+    },
+    {
+      "id": "update-rejection.all",
+      "operationScoped": true,
+      "rustSymbols": [
+        "GithubClient",
+        "get_all_releases"
+      ],
+      "observationFamilies": [
+        "negative-runtime"
+      ]
+    },
+    {
+      "id": "update-rejection.notification",
+      "operationScoped": true,
+      "rustSymbols": [
+        "check_app_notification"
+      ],
+      "observationFamilies": [
+        "negative-runtime"
+      ]
+    },
+    {
+      "id": "update-rejection.metadata",
+      "operationScoped": true,
+      "rustSymbols": [
+        "GithubClient"
+      ],
+      "observationFamilies": [
+        "values"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "latest",
+      "action": "update-rejection.latest",
+      "capabilityIds": [
+        "update-rejection.latest"
+      ],
+      "fixtureRefs": [
+        "latest"
+      ],
+      "input": {
+        "fixtureRef": "latest"
+      },
+      "expected": {
+        "boundary": "request-builder",
+        "error": "builder-error",
+        "requestBuilt": false
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    },
+    {
+      "id": "all",
+      "action": "update-rejection.all",
+      "capabilityIds": [
+        "update-rejection.all"
+      ],
+      "fixtureRefs": [
+        "all"
+      ],
+      "input": {
+        "fixtureRef": "all"
+      },
+      "expected": {
+        "boundary": "request-builder",
+        "error": "builder-error",
+        "requestBuilt": false
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    },
+    {
+      "id": "notification",
+      "action": "update-rejection.notification",
+      "capabilityIds": [
+        "update-rejection.notification"
+      ],
+      "fixtureRefs": [
+        "notification"
+      ],
+      "input": {
+        "fixtureRef": "notification"
+      },
+      "expected": {
+        "boundary": "caller-validation",
+        "error": "invalid-installed-version",
+        "requestBuilt": false
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    },
+    {
+      "id": "metadata",
+      "action": "update-rejection.metadata",
+      "capabilityIds": [
+        "update-rejection.metadata"
+      ],
+      "fixtureRefs": [
+        "metadata"
+      ],
+      "input": {
+        "fixtureRef": "metadata"
+      },
+      "expected": {
+        "repoUrl": "https://github.com/conformance/fixture"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

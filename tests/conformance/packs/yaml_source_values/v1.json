@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "familyId": "yaml-source-values",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-config-core"
+  },
+  "fixtureRoot": "tests/fixtures/yaml_source_values",
+  "fixtures": {
+    "vr": "vr.json"
+  },
+  "capabilities": [
+    {
+      "id": "yaml-source-values.matrix",
+      "rustSymbols": [
+        "YamlSource"
+      ],
+      "observationFamilies": [
+        "values"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "vr-role-distinction",
+      "action": "yaml-source-values.matrix",
+      "capabilityIds": [
+        "yaml-source-values.matrix"
+      ],
+      "fixtureRefs": [
+        "vr"
+      ],
+      "input": {
+        "fixtureRef": "vr"
+      },
+      "expected": {
+        "sources": [
+          {
+            "id": "MAIN",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml",
+            "name": "Main Database",
+            "gameName": "Main Database"
+          },
+          {
+            "id": "IGNORE",
+            "path": "CLASSIC Ignore.yaml",
+            "name": "Ignore List",
+            "gameName": "Ignore List"
+          },
+          {
+            "id": "GAME",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+            "name": "Game Database",
+            "gameName": "Fallout4VR Database"
+          },
+          {
+            "id": "GAME_LOCAL",
+            "path": "CLASSIC Data/CLASSIC Fallout4VR Local.yaml",
+            "name": "Game Local Config",
+            "gameName": "Fallout4VR Local Config"
+          },
+          {
+            "id": "TEST",
+            "path": "tests/test_settings.yaml",
+            "name": "Test Fixture",
+            "gameName": "Test Fixture"
+          }
+        ],
+        "equal": true,
+        "different": true,
+        "distinct": 5
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

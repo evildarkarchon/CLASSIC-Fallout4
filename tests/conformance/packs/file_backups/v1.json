@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "familyId": "file-backups",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-file-io-core"
+  },
+  "fixtureRoot": "tests/fixtures/file_backups",
+  "fixtures": {
+    "managed": "managed.json",
+    "remove": "remove.json",
+    "game-files": "game-files.json"
+  },
+  "capabilities": [
+    {
+      "id": "file-backups.managed",
+      "rustSymbols": [
+        "BackupManager",
+        "create_backup",
+        "restore_backup",
+        "backup_exists"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "durable-effects"
+      ]
+    },
+    {
+      "id": "file-backups.remove",
+      "rustSymbols": [
+        "remove_backup"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "durable-effects"
+      ]
+    },
+    {
+      "id": "file-backups.game-files",
+      "rustSymbols": [
+        "GameFilesManager",
+        "backup",
+        "restore",
+        "remove"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "durable-effects"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "managed",
+      "action": "file-backups.managed",
+      "capabilityIds": [
+        "file-backups.managed"
+      ],
+      "fixtureRefs": [
+        "managed"
+      ],
+      "input": {
+        "fixtureRef": "managed"
+      },
+      "expected": {
+        "initial": false,
+        "exists": true,
+        "created": "Backed up 1 files",
+        "restored": 1,
+        "copy": "original bytes\n",
+        "source": "original bytes\n",
+        "files": {
+          "f4se_fixture.dll": "original bytes\n",
+          "sentinel.txt": "keep\n",
+          "CLASSIC_Backups/XSE_Backup/f4se_fixture.dll": "original bytes\n"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "remove",
+      "action": "file-backups.remove",
+      "capabilityIds": [
+        "file-backups.remove"
+      ],
+      "fixtureRefs": [
+        "remove"
+      ],
+      "input": {
+        "fixtureRef": "remove"
+      },
+      "expected": {
+        "exists": false,
+        "files": {
+          "f4se_fixture.dll": "original bytes\n",
+          "sentinel.txt": "keep\n"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "game-files",
+      "action": "file-backups.game-files",
+      "capabilityIds": [
+        "file-backups.game-files"
+      ],
+      "fixtureRefs": [
+        "game-files"
+      ],
+      "input": {
+        "fixtureRef": "game-files"
+      },
+      "expected": {
+        "backup": "1 files affected, 0 errors",
+        "restore": "1 files affected, 0 errors",
+        "remove": "1 files affected, 0 errors",
+        "restored": "original bytes\n",
+        "files": {
+          "backups/fixture/f4se_fixture.dll": "original bytes\n",
+          "game/sentinel.txt": "keep\n"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

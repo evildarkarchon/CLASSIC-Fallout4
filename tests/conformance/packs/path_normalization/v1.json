@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "familyId": "path-normalization",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-shared-core"
+  },
+  "fixtureRoot": "tests/fixtures/path_normalization_conformance",
+  "fixtures": {
+    "existing-path": "existing-path.json",
+    "missing-cleaned-path": "missing-cleaned-path.json"
+  },
+  "capabilities": [
+    {
+      "id": "path-normalization.resolve",
+      "rustSymbols": [
+        "PathHandler",
+        "normalize_path",
+        "join_paths",
+        "validate_paths_batch"
+      ],
+      "observationFamilies": [
+        "path-resolution"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "existing-path",
+      "action": "path-normalization.resolve",
+      "capabilityIds": [
+        "path-normalization.resolve"
+      ],
+      "fixtureRefs": [
+        "existing-path"
+      ],
+      "input": {
+        "fixtureRef": "existing-path"
+      },
+      "expected": {
+        "joinedPath": "game/Fallout4.exe",
+        "normalizedPath": "game/Fallout4.exe",
+        "validation": [
+          {
+            "path": "game",
+            "exists": true
+          },
+          {
+            "path": "game/Fallout4.exe",
+            "exists": true
+          },
+          {
+            "path": "absent",
+            "exists": false
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "missing-cleaned-path",
+      "action": "path-normalization.resolve",
+      "capabilityIds": [
+        "path-normalization.resolve"
+      ],
+      "fixtureRefs": [
+        "missing-cleaned-path"
+      ],
+      "input": {
+        "fixtureRef": "missing-cleaned-path"
+      },
+      "expected": {
+        "joinedPath": "game/missing/../future.log",
+        "normalizedPath": "game/future.log",
+        "validation": [
+          {
+            "path": "game",
+            "exists": true
+          },
+          {
+            "path": "game/Fallout4.exe",
+            "exists": true
+          },
+          {
+            "path": "absent",
+            "exists": false
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

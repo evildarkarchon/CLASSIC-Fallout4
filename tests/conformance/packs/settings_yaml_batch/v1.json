@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "familyId": "settings-yaml-batch",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-settings-core"
+  },
+  "fixtureRoot": "tests/fixtures/settings_yaml_batch_conformance",
+  "fixtures": {
+    "batch": "batch.json"
+  },
+  "capabilities": [
+    {
+      "id": "settings-yaml-batch.execute",
+      "rustSymbols": [
+        "get_settings_batch",
+        "set_settings_batch",
+        "get_indexmap_value",
+        "get_hashmap_vec_value"
+      ],
+      "observationFamilies": [
+        "settings-yaml-batch"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "batch",
+      "action": "settings-yaml-batch.execute",
+      "capabilityIds": [
+        "settings-yaml-batch.execute"
+      ],
+      "fixtureRefs": [
+        "batch"
+      ],
+      "input": {
+        "fixtureRef": "batch"
+      },
+      "expected": {
+        "before": {
+          "name": "original"
+        },
+        "ordered": [
+          [
+            "zebra",
+            "last"
+          ],
+          [
+            "alpha",
+            "first"
+          ]
+        ],
+        "vectors": {
+          "selected": [
+            "one",
+            "two"
+          ]
+        },
+        "after": {
+          "name": "changed",
+          "new": "added"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

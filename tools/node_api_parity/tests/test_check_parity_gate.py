@@ -16,8 +16,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PARITY_CONTRACT = (
     REPO_ROOT
@@ -85,10 +83,6 @@ def test_node_gate_defaults_use_repo_root_paths() -> None:
     ).read_text(encoding="utf-8")
     assert 'default="node-bindings/classic-node/index.d.ts"' in source
     assert 'default="node-bindings/classic-node/parity-artifacts"' in source
-    assert (
-        'default="node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json"'
-        in source
-    )
     assert "ClassicLib-rs/node-bindings/classic-node" not in source
     assert '"rust_api_surface.json",' in source
     assert '"node_api_surface.json",' in source

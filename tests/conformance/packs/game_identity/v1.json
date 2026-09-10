@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "familyId": "game-identity",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-shared-core"
+  },
+  "fixtureRoot": "tests/fixtures/game_identity_conformance",
+  "fixtures": {
+    "metadata": "metadata.json",
+    "details": "details.json",
+    "stable": "stable.json"
+  },
+  "capabilities": [
+    {
+      "id": "game-identity.observe",
+      "rustSymbols": [
+        "GameId",
+        "as_str"
+      ],
+      "observationFamilies": [
+        "game-identity"
+      ]
+    },
+    {
+      "id": "game-identity.metadata",
+      "operationScoped": true,
+      "rustSymbols": [
+        "GameId",
+        "display_name"
+      ],
+      "observationFamilies": [
+        "game-identity"
+      ]
+    },
+    {
+      "id": "game-identity.details",
+      "operationScoped": true,
+      "rustSymbols": [
+        "GameId",
+        "exe_name",
+        "is_vr"
+      ],
+      "observationFamilies": [
+        "game-identity"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "stable",
+      "action": "game-identity.observe",
+      "capabilityIds": [
+        "game-identity.observe"
+      ],
+      "fixtureRefs": [
+        "stable"
+      ],
+      "input": {
+        "fixtureRef": "stable"
+      },
+      "expected": {
+        "tokens": [
+          "Fallout4",
+          "Fallout4VR",
+          "Skyrim",
+          "Starfield"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "metadata",
+      "action": "game-identity.metadata",
+      "capabilityIds": [
+        "game-identity.metadata"
+      ],
+      "fixtureRefs": [
+        "metadata"
+      ],
+      "input": {
+        "fixtureRef": "metadata"
+      },
+      "expected": {
+        "labels": [
+          "Fallout 4",
+          "Fallout 4 VR",
+          "Skyrim",
+          "Starfield"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    },
+    {
+      "id": "details",
+      "action": "game-identity.details",
+      "capabilityIds": [
+        "game-identity.details"
+      ],
+      "fixtureRefs": [
+        "details"
+      ],
+      "input": {
+        "fixtureRef": "details"
+      },
+      "expected": {
+        "games": [
+          {
+            "exeName": "Fallout4.exe",
+            "vr": false,
+            "text": "Fallout4",
+            "repr": "GameId.Fallout4",
+            "equalCopy": true,
+            "equalOther": false,
+            "hashCopy": true
+          },
+          {
+            "exeName": "Fallout4VR.exe",
+            "vr": true,
+            "text": "Fallout4VR",
+            "repr": "GameId.Fallout4VR",
+            "equalCopy": true,
+            "equalOther": false,
+            "hashCopy": true
+          },
+          {
+            "exeName": "SkyrimSE.exe",
+            "vr": false,
+            "text": "Skyrim",
+            "repr": "GameId.Skyrim",
+            "equalCopy": true,
+            "equalOther": false,
+            "hashCopy": true
+          },
+          {
+            "exeName": "Starfield.exe",
+            "vr": false,
+            "text": "Starfield",
+            "repr": "GameId.Starfield",
+            "equalCopy": true,
+            "equalOther": false,
+            "hashCopy": true
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

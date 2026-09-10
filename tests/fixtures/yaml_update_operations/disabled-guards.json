@@ -1,0 +1,17 @@
+{
+  "operation": "disabled",
+  "approved": {
+    "releaseTag": "yaml-data-v-old",
+    "names": [
+      "CLASSIC Main.yaml"
+    ],
+    "digests": [
+      "deadbeef"
+    ]
+  },
+  "files": {},
+  "service": {
+    "pages": [],
+    "api": []
+  }
+}

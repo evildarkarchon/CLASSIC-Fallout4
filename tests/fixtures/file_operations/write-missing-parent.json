@@ -1,0 +1,8 @@
+{
+  "operation": "write-text",
+  "path": "absent/output.txt",
+  "files": {
+    "sentinel.txt": "keep"
+  },
+  "content": "must not appear"
+}

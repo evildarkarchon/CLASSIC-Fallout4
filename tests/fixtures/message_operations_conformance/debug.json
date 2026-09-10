@@ -1,0 +1,8 @@
+{
+  "request": {
+    "type": "Debug",
+    "target": "LogOnly",
+    "content": "line one\nline two",
+    "details": null
+  }
+}
