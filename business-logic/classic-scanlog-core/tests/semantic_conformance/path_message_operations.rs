@@ -71,7 +71,18 @@ pub(super) fn execute(family: &str, fixture: &Value) -> RunnerResult<Value> {
         );
     }
     let temporary = tempfile::tempdir()?;
-    let root = temporary.path();
+    // Windows temp paths can use 8.3 aliases; match native normalization's spelling.
+    let canonical_root = fs::canonicalize(temporary.path())?;
+    // Verbatim Windows paths collapse `..` during joins, before normalization is exercised.
+    let canonical_text = canonical_root.to_string_lossy();
+    let canonical_root = if let Some(unc) = canonical_text.strip_prefix(r"\\?\UNC\") {
+        PathBuf::from(format!(r"\\{unc}"))
+    } else if let Some(disk) = canonical_text.strip_prefix(r"\\?\") {
+        PathBuf::from(disk)
+    } else {
+        canonical_root
+    };
+    let root = canonical_root.as_path();
     for relative in strings(&fixture["directories"])? {
         fs::create_dir_all(owned(root, &relative)?)?;
     }

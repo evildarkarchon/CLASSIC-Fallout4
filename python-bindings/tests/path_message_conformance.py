@@ -109,7 +109,8 @@ def observe_path_message(family: str, fixture: Mapping[str, Any]) -> dict[str, A
             ),
         }
     with TemporaryDirectory(prefix="classic-path-conformance-") as directory:
-        root = Path(directory)
+        # Windows temp paths can use 8.3 aliases; match native normalization's spelling.
+        root = Path(directory).resolve(strict=True)
         for relative in fixture["directories"]:
             _owned(root, relative).mkdir(parents=True, exist_ok=True)
         for relative, content in fixture["files"].items():

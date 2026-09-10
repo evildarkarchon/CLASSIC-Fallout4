@@ -299,6 +299,10 @@ class ComplianceSuite:
                 cwd=str(cwd),
                 env=env,
                 text=True,
+                # Native build tools emit UTF-8 independently of the Windows
+                # locale; malformed diagnostic bytes must not discard a stream.
+                encoding="utf-8",
+                errors="replace",
                 capture_output=True,
                 stdin=subprocess.DEVNULL,
                 timeout=command.timeout_seconds,

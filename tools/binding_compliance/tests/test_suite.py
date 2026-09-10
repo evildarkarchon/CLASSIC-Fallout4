@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import subprocess
+import sys
 from pathlib import Path
 from unittest.mock import patch
+
+import pytest
 
 from catalog import (  # type: ignore
     CommandSpec,
@@ -13,6 +16,46 @@ from catalog import (  # type: ignore
     requirements_for_profile,  # type: ignore
 )
 from suite import ComplianceSuite, RequirementResult, build_summary  # type: ignore
+
+
+@pytest.mark.parametrize(
+    ("payload", "expected"),
+    [
+        (b"\xe2\x9c\x8d diagnostics", "\u270d diagnostics"),
+        (b"native \x8d diagnostics", "native \ufffd diagnostics"),
+    ],
+)
+def test_command_evidence_survives_windows_locale(
+    tmp_path: Path, payload: bytes, expected: str
+) -> None:
+    """Retain both output streams even when native bytes cannot decode as cp1252."""
+    requirement = ComplianceRequirement(
+        id="output-check",
+        title="Output check",
+        surface="policy",
+        classification="existing_gate",
+        profiles=("ci",),
+        blocking=True,
+        summary="Capture native tool diagnostics.",
+        command=CommandSpec(
+            argv=(
+                sys.executable,
+                "-c",
+                f"import os; os.write(1, {payload!r}); os.write(2, {payload!r})",
+            ),
+        ),
+    )
+    # Model Windows' legacy locale even on UTF-8 developer machines; the child
+    # still writes real bytes through the production subprocess capture path.
+    with patch("subprocess._text_encoding", return_value="cp1252"):
+        report = ComplianceSuite(
+            repo_root=tmp_path, profile="ci", requirements=(requirement,)
+        ).run()
+
+    result = report["requirements"][0]
+    assert result["status"] == "passed"
+    assert result["stdout"] == expected
+    assert result["stderr"] == expected
 
 
 def test_full_profile_requires_repository_receipts(tmp_path: Path) -> None:

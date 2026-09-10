@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import * as classic from "../index.js";
@@ -31,8 +31,10 @@ export async function observePathMessage(family: string, fixture: JsonObject): P
     return { type: message.messageType, target: message.target, content: message.content,
       title: message.title ?? null, details: message.details ?? null, formatted: classic.formatMessage(message) };
   }
-  const root = await mkdtemp(join(tmpdir(), "classic-path-conformance-"));
+  const temporary = await mkdtemp(join(tmpdir(), "classic-path-conformance-"));
   try {
+    // Windows temp paths can use 8.3 aliases; match the spelling native normalization returns.
+    const root = await realpath(temporary);
     for (const path of fixture.directories) await mkdir(owned(root, path), { recursive: true });
     for (const [path, content] of Object.entries(fixture.files)) {
       const target = owned(root, path);
@@ -60,6 +62,6 @@ export async function observePathMessage(family: string, fixture: JsonObject): P
     }
     throw new Error("unsupported path/message family");
   } finally {
-    await rm(root, { recursive: true, force: true });
+    await rm(temporary, { recursive: true, force: true });
   }
 }
