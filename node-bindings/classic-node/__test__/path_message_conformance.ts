@@ -14,8 +14,11 @@ function owned(root: string, path: string): string {
 }
 
 /** Normalize only the scenario root, Windows extended prefixes and separators. */
-function portable(value: string, root: string): string {
-  return value.replace(/^\\\\\?\\/, "").split(`${root}\\`).join("").split(`${root}/`).join("").replace(/\\/g, "/");
+export function portable(value: string, root: string): string {
+  // Native paths may already use forward slashes while the temporary root uses backslashes.
+  const normalizedValue = value.replace(/\\/g, "/").replace(/^\/\/\?\//, "");
+  const normalizedRoot = root.replace(/\\/g, "/").replace(/^\/\/\?\//, "");
+  return normalizedValue.split(`//?/${normalizedRoot}/`).join("").split(`${normalizedRoot}/`).join("");
 }
 
 /** Exercise public native bindings and return input-independent observed domain facts. */

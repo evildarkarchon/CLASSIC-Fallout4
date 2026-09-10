@@ -9,6 +9,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[cfg(test)]
+#[path = "path_message_operations_tests.rs"]
+mod tests;
+
 /// Restrict authored destinations to portable paths beneath the temporary root.
 fn owned(root: &Path, relative: &str) -> RunnerResult<PathBuf> {
     if relative.is_empty()
@@ -24,12 +28,15 @@ fn owned(root: &Path, relative: &str) -> RunnerResult<PathBuf> {
 
 /// Remove only this invocation's root and native separators from path-bearing text.
 fn portable(value: &str, root: &Path) -> String {
+    // Core APIs may already normalize separators while the temporary root remains native.
+    let value = value.replace('\\', "/");
+    let root = root.to_string_lossy().replace('\\', "/");
+    let root = root.strip_prefix("//?/").unwrap_or(&root);
     value
-        .strip_prefix("\\\\?\\")
-        .unwrap_or(value)
-        .replace(&format!("{}\\", root.display()), "")
-        .replace(&format!("{}/", root.display()), "")
-        .replace('\\', "/")
+        .strip_prefix("//?/")
+        .unwrap_or(&value)
+        .replace(&format!("//?/{root}/"), "")
+        .replace(&format!("{root}/"), "")
 }
 
 /// Exercise real core APIs; temporary inputs are removed even when a call fails.

@@ -23,11 +23,11 @@ def _owned(root: Path, path: str) -> Path:
 
 def _portable(value: str, root: Path) -> str:
     """Remove only this scenario's absolute root and native path separators."""
-    return (
-        value.removeprefix("\\\\?\\")
-        .replace(str(root) + "\\", "")
-        .replace(str(root) + "/", "")
-        .replace("\\", "/")
+    # Canonicalized values and temporary roots can use different Windows spellings.
+    portable_root = str(root).replace("\\", "/").removeprefix("//?/")
+    portable_value = value.replace("\\", "/").removeprefix("//?/")
+    return portable_value.replace("//?/" + portable_root + "/", "").replace(
+        portable_root + "/", ""
     )
 
 

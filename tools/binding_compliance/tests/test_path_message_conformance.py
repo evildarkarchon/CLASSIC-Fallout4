@@ -32,6 +32,38 @@ from conformance.receipts import validate_prepared_run
 ROOT = Path(__file__).resolve().parents[3]
 
 
+@pytest.mark.parametrize("root_prefix", ["", "\\\\?\\"])
+@pytest.mark.parametrize(
+    "value",
+    [
+        "C:/Temp/scenario/game/Fallout4.exe",
+        r"C:\Temp\scenario\game\Fallout4.exe",
+        r"\\?\C:\Temp\scenario\game\Fallout4.exe",
+        "//?/C:/Temp/scenario/game/Fallout4.exe",
+    ],
+)
+def test_python_portable_path_strips_windows_root_before_receipt_comparison(
+    root_prefix: str,
+    value: str,
+) -> None:
+    """Canonicalized paths and temporary roots may use different Windows spellings."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "path_message_conformance",
+        ROOT / "python-bindings/tests/path_message_conformance.py",
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    root = Path(root_prefix + r"C:\Temp\scenario")
+    assert module._portable(value, root) == "game/Fallout4.exe"
+    assert module._portable("Path does not exist: C:/Temp/scenario/missing", root) == (
+        "Path does not exist: missing"
+    )
+    assert module._portable(r"Missing \\?\C:\Temp\scenario\game", root) == "Missing game"
+    assert module._portable("C:/Temp/scenario-other/game", root) == "C:/Temp/scenario-other/game"
+
+
 def test_same_named_validator_in_a_new_bridge_namespace_cannot_borrow_proof(tmp_path):
     """Public namespace identity matters even when core owner and function name match."""
     from receipt_test_support import prepare_receipt_case
