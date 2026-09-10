@@ -41,16 +41,6 @@ jobs:
           path: tools/binding_compliance/artifacts/downloaded
           merge-multiple: false
 
-      - name: Require every retained participant job to pass
-        if: ${{ !cancelled() }}
-        env:
-          PARTICIPANT_RESULTS: ${{ toJSON(needs) }}
-        run: |
-          $results = $env:PARTICIPANT_RESULTS | ConvertFrom-Json -AsHashtable
-          if ($results.Count -ne 4 -or @($results.Values | Where-Object { $_.result -ne 'success' }).Count -ne 0) {
-            throw 'Every retained participant workflow must pass before repository conformance can pass.'
-          }
-
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -80,6 +70,18 @@ jobs:
       - name: Build Node binding for retained runtime gates
         working-directory: node-bindings/classic-node
         run: bun run build
+
+      # Prepare diagnostic dependencies before this check can fail: the full
+      # report still runs after participant failures via !cancelled().
+      - name: Require every retained participant job to pass
+        if: ${{ !cancelled() }}
+        env:
+          PARTICIPANT_RESULTS: ${{ toJSON(needs) }}
+        run: |
+          $results = $env:PARTICIPANT_RESULTS | ConvertFrom-Json -AsHashtable
+          if ($results.Count -ne 4 -or @($results.Values | Where-Object { $_.result -ne 'success' }).Count -ne 0) {
+            throw 'Every retained participant workflow must pass before repository conformance can pass.'
+          }
 
       # Full runs every retained gate, including the Python sync/rebuild. Failed
       # or missing participant receipts cannot borrow another job's success.

@@ -1,0 +1,66 @@
+{
+  "consumerCoverage": null,
+  "coverage": {
+    "executionEvidence": [
+      {
+        "executionInstanceId": "node",
+        "participantId": "node"
+      }
+    ],
+    "failures": [
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:node:aux-phase4a-join-paths"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:node:aux-phase4a-normalize-path"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:node:aux-phase4a-validate-paths-batch"
+      }
+    ],
+    "familyId": "path-normalization",
+    "preparedEvidenceDigest": "sha256:975954cd62b4c18413cab4c73f09a0a20ca9ec19458d7760435200b8e9dde564",
+    "result": "fail",
+    "rows": []
+  },
+  "enforcement": "blocking",
+  "failures": [
+    {
+      "executionInstanceId": "node",
+      "kind": "semantic_conformance_mismatch",
+      "message": "prepared invocation did not pass current receipt validation",
+      "participantId": "node"
+    }
+  ],
+  "familyId": "path-normalization",
+  "missingExecutions": [],
+  "receivedExecutions": [
+    {
+      "executionInstanceId": "node",
+      "participantId": "node"
+    }
+  ],
+  "repositoryComplete": false,
+  "requiredExecutions": [
+    {
+      "executionInstanceId": "node",
+      "participantId": "node"
+    }
+  ],
+  "result": "fail",
+  "schemaVersion": 1,
+  "scope": {
+    "executionInstanceId": "node",
+    "kind": "execution-instance",
+    "participantId": "node"
+  }
+}

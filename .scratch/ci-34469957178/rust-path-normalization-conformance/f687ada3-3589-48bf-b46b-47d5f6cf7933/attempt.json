@@ -1,0 +1,20 @@
+{
+  "command": [
+    "cargo",
+    "test",
+    "-p",
+    "classic-scanlog-core",
+    "--test",
+    "semantic_conformance",
+    "--",
+    "--nocapture"
+  ],
+  "exitCode": 0,
+  "launchError": null,
+  "participantId": "rust",
+  "schemaVersion": 1,
+  "stderr": "\u001b[1m\u001b[92m    Finished\u001b[0m `test` profile [unoptimized + debuginfo] target(s) in 0.52s\n\u001b[1m\u001b[92m     Running\u001b[0m tests\\semantic_conformance.rs (target\\debug\\deps\\semantic_conformance-37ec202961648859.exe)\n",
+  "stdout": "\nrunning 1 test\ntest writes_semantic_conformance_receipt ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n",
+  "timedOut": false,
+  "workingDirectory": "."
+}
