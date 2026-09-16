@@ -16,7 +16,6 @@ from typing import Any
 
 import pytest
 
-
 classic_update = pytest.importorskip(
     "classic_update",
     reason="classic_update extension not built; run `maturin develop` first",

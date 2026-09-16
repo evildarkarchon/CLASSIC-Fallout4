@@ -48,12 +48,12 @@ def copy_source_inventory(repo_root: Path, destination: Path) -> None:
 
 
 def prepare_receipt_case(
-    repo_root: Path,
-    tmp_path: Path,
-    pack_path: Path,
-    participant: str,
-    *,
-    runner_id: str,
+        repo_root: Path,
+        tmp_path: Path,
+        pack_path: Path,
+        participant: str,
+        *,
+        runner_id: str,
 ) -> tuple[ValidatedPack, MaterializedRun, dict[str, Any]]:
     """Copy a pack into an isolated Git repository and write a complete receipt.
 
@@ -67,18 +67,18 @@ def prepare_receipt_case(
     fixture_path = source_pack.fixture_root.relative_to(repo_root)
     shutil.copytree(source_pack.fixture_root, tmp_path / fixture_path)
     if any(
-        capability.get("operationScoped", False)
-        for capability in source_pack.document()["capabilities"]
+            capability.get("operationScoped", False)
+            for capability in source_pack.document()["capabilities"]
     ):
         # Scoped plans derive participation from source inventories even in an
         # isolated repository; copying their bytes preserves the real selection.
         copy_source_inventory(repo_root, tmp_path)
     for arguments in (
-        ("init",),
-        ("config", "user.email", "conformance@example.invalid"),
-        ("config", "user.name", "Conformance Tests"),
-        ("add", "."),
-        ("commit", "-m", "fixture"),
+            ("init",),
+            ("config", "user.email", "conformance@example.invalid"),
+            ("config", "user.name", "Conformance Tests"),
+            ("add", "."),
+            ("commit", "-m", "fixture"),
     ):
         subprocess.run(
             ["git", "-C", str(tmp_path), *arguments], check=True, capture_output=True

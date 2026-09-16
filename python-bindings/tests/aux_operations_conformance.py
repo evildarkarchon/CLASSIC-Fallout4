@@ -29,20 +29,20 @@ def observe_aux_operations(family: str, fixture: Mapping[str, Any]) -> dict[str,
         url = request["url"]
         sites = []
         for factory in (
-            web.ModSite.nexus_mods,
-            web.ModSite.bethesda_net,
-            web.ModSite.mod_db,
+                web.ModSite.nexus_mods,
+                web.ModSite.bethesda_net,
+                web.ModSite.mod_db,
         ):
             site = factory()
             if (
-                str(site) != site.name()
-                or repr(site) != f"ModSite.{factory.__name__}()"
+                    str(site) != site.name()
+                    or repr(site) != f"ModSite.{factory.__name__}()"
             ):
                 raise ValueError(
                     "ModSite display methods disagree with public site identity"
                 )
             if not site == factory() or (site == web.ModSite.nexus_mods()) != (
-                factory == web.ModSite.nexus_mods
+                    factory == web.ModSite.nexus_mods
             ):
                 raise ValueError("ModSite equality disagrees with constructor identity")
             sites.append({"name": site.name(), "baseUrl": site.base_url()})
@@ -104,7 +104,7 @@ def observe_aux_operations(family: str, fixture: Mapping[str, Any]) -> dict[str,
             "info": observed_info(info),
         }
         with tempfile.TemporaryDirectory(
-            prefix="classic-resource-conformance-"
+                prefix="classic-resource-conformance-"
         ) as directory:
             root = Path(directory)
             for relative, content in fixture["files"].items():
@@ -189,9 +189,9 @@ def observe_aux_operations(family: str, fixture: Mapping[str, Any]) -> dict[str,
 def _owned(root: Path, relative: str) -> Path:
     """Reject escape paths before writing temporary resource fixture files."""
     if (
-        not relative
-        or any(char in relative for char in "\\:")
-        or any(part in {"", ".", ".."} for part in relative.split("/"))
+            not relative
+            or any(char in relative for char in "\\:")
+            or any(part in {"", ".", ".."} for part in relative.split("/"))
     ):
         raise ValueError("resource fixture path must be contained")
     return root / relative

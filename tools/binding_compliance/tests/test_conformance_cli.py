@@ -74,7 +74,7 @@ def test_cxx_conformance_requires_attempt_and_junit_companions() -> None:
 
 
 def test_public_main_returns_nonzero_for_a_blocking_scoped_failure(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The supported command seam propagates a promoted report failure."""
 
@@ -108,7 +108,7 @@ def test_public_main_returns_nonzero_for_a_blocking_scoped_failure(
 
 
 def _write_cxx_attempt(
-    root: Path, *, stdout: str = "", stderr: str = "", exit_code: int = 1
+        root: Path, *, stdout: str = "", stderr: str = "", exit_code: int = 1
 ) -> Path:
     """Write one digest-bound failing native attempt for classification tests."""
 
@@ -139,7 +139,7 @@ def _write_cxx_attempt(
 
 
 def test_cxx_attempt_classifies_wrapper_prerequisite_output_as_local_environment(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """A started pwsh process can still fail because its toolchain is absent."""
 
@@ -165,7 +165,7 @@ def test_cxx_attempt_classifies_wrapper_prerequisite_output_as_local_environment
 
 
 def test_cxx_attempt_keeps_adapter_failures_distinct_from_toolchain_failures(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Ordinary native compile/test errors remain adapter command failures."""
 

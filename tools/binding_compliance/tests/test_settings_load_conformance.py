@@ -22,6 +22,7 @@ from conformance.families.settings_load import (
 )
 from conformance.packs import load_and_validate_pack, materialize_run_plan
 from conformance.receipts import validate_prepared_run
+
 from receipt_test_support import copy_source_inventory
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -43,7 +44,7 @@ def _pack(family: str) -> dict:
     """Read authored settings observations for receipt mutation checks."""
     return json.loads(
         (
-            ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
+                ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
         ).read_text(encoding="utf-8")
     )
 
@@ -57,7 +58,7 @@ def _pack(family: str) -> dict:
     ],
 )
 def test_settings_load_receipts_fail_closed_at_public_coverage_seam(
-    tmp_path: Path, family: str, participants: set[str]
+        tmp_path: Path, family: str, participants: set[str]
 ) -> None:
     """Only complete current receipts cover source-selected public operations.
 
@@ -71,16 +72,16 @@ def test_settings_load_receipts_fail_closed_at_public_coverage_seam(
     for relative in (pack_path.parent, Path(original["fixtureRoot"])):
         shutil.copytree(ROOT / relative, tmp_path / relative)
     if any(
-        capability.get("operationScoped", False)
-        for capability in original["capabilities"]
+            capability.get("operationScoped", False)
+            for capability in original["capabilities"]
     ):
         copy_source_inventory(ROOT, tmp_path)
     for args in (
-        ("init",),
-        ("config", "user.email", "conformance@example.invalid"),
-        ("config", "user.name", "Conformance Tests"),
-        ("add", "."),
-        ("commit", "-m", "fixture"),
+            ("init",),
+            ("config", "user.email", "conformance@example.invalid"),
+            ("config", "user.name", "Conformance Tests"),
+            ("add", "."),
+            ("commit", "-m", "fixture"),
     ):
         subprocess.run(
             ["git", "-C", str(tmp_path), *args], check=True, capture_output=True
@@ -184,11 +185,11 @@ def test_settings_load_receipts_fail_closed_at_public_coverage_seam(
                 retained_analyzers=retained,
             ).failures
             for mutation in (
-                "changed",
-                "missing-scenario",
-                "skipped",
-                "stale",
-                "missing-receipt",
+                    "changed",
+                    "missing-scenario",
+                    "skipped",
+                    "stale",
+                    "missing-receipt",
             ):
                 changed = copy.deepcopy(receipt)
                 if mutation == "changed":
@@ -229,13 +230,13 @@ def test_settings_cache_lifecycle_is_required_for_credit() -> None:
     observed = pack["scenarios"][0]["expected"]
     assert "cacheState" in observed["sync"]
     for field in (
-        "keys",
-        "size",
-        "invalidated",
-        "invalidatedAgain",
-        "afterInvalidate",
-        "stats",
-        "resetStats",
+            "keys",
+            "size",
+            "invalidated",
+            "invalidatedAgain",
+            "afterInvalidate",
+            "stats",
+            "resetStats",
     ):
         changed = copy.deepcopy(observed)
         del changed["sync"]["cacheState"][field]

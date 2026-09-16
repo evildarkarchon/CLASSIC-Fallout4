@@ -11,11 +11,11 @@ from typing import Any
 def _owned(root: Path, path: str) -> Path:
     """Contain fixture paths before materializing any scenario-owned bytes."""
     if (
-        not path
-        or "\\" in path
-        or ":" in path
-        or any(part in {"", ".", ".."} for part in path.split("/"))
-        or PurePosixPath(path).is_absolute()
+            not path
+            or "\\" in path
+            or ":" in path
+            or any(part in {"", ".", ".."} for part in path.split("/"))
+            or PurePosixPath(path).is_absolute()
     ):
         raise ValueError("fixture path must be a contained relative path")
     return root / path
@@ -54,23 +54,23 @@ def observe_path_message(family: str, fixture: Mapping[str, Any]) -> dict[str, A
             raise ValueError("message title setter lost supplied value")
         mutable.set_title(None)
         if (
-            mutable.content(),
-            mutable.msg_type(),
-            mutable.target(),
-            mutable.details(),
-            mutable.title(),
+                mutable.content(),
+                mutable.msg_type(),
+                mutable.target(),
+                mutable.details(),
+                mutable.title(),
         ) != (
-            message.content(),
-            message.msg_type(),
-            message.target(),
-            message.details(),
-            message.title(),
+                message.content(),
+                message.msg_type(),
+                message.target(),
+                message.details(),
+                message.title(),
         ):
             raise ValueError("message setters disagree with constructor/builders")
         titled = message.with_title(request["content"])
         if (
-            titled.title() != request["content"]
-            or titled.content() != message.content()
+                titled.title() != request["content"]
+                or titled.content() != message.content()
         ):
             raise ValueError("title builder changed unrelated message content")
         # Python's builder returns the same mutable wrapper, so restore its
@@ -89,13 +89,13 @@ def observe_path_message(family: str, fixture: Mapping[str, Any]) -> dict[str, A
             raise ValueError("message severity discriminant changed")
         target = message.target()
         if (
-            target.should_display_in_gui(),
-            target.should_display_in_cli(),
-            target.should_display(),
+                target.should_display_in_gui(),
+                target.should_display_in_cli(),
+                target.should_display(),
         ) != (
-            request["target"] in {"All", "Gui"},
-            request["target"] in {"All", "Console"},
-            request["target"] != "LogOnly",
+                request["target"] in {"All", "Gui"},
+                request["target"] in {"All", "Console"},
+                request["target"] != "LogOnly",
         ):
             raise ValueError("native routing decisions disagree with requested target")
         return {
@@ -151,7 +151,7 @@ def observe_path_message(family: str, fixture: Mapping[str, Any]) -> dict[str, A
                 if handler.get_filename(path) != (native_path.name or None):
                     raise ValueError("filename observation disagrees with path")
                 if handler.get_extension(path) != (
-                    native_path.suffix.removeprefix(".") or None
+                        native_path.suffix.removeprefix(".") or None
                 ):
                     raise ValueError("extension observation disagrees with path")
                 if Path(handler.get_parent(path)) != native_path.parent:
@@ -162,13 +162,13 @@ def observe_path_message(family: str, fixture: Mapping[str, Any]) -> dict[str, A
                 if native_path.drive and native_path.root:
                     parts = [native_path.drive, native_path.root, *parts[1:]]
                 if (
-                    list(handler.split_path(path)) != parts
-                    or list(handler.split_path_fast(path)) != parts
+                        list(handler.split_path(path)) != parts
+                        or list(handler.split_path_fast(path)) != parts
                 ):
                     raise ValueError("native component splitting disagrees with path")
                 if (
-                    not handler.is_absolute(path)
-                    or Path(handler.to_absolute(path, base)) != native_path
+                        not handler.is_absolute(path)
+                        or Path(handler.to_absolute(path, base)) != native_path
                 ):
                     raise ValueError("absolute path identity was not preserved")
                 if Path(handler.common_prefix([path, path])) != native_path:
@@ -178,9 +178,9 @@ def observe_path_message(family: str, fixture: Mapping[str, Any]) -> dict[str, A
                 raise ValueError("cached normalization changed the path")
             later_hits, later_misses, rate = handler.cache_metrics()
             if (
-                later_hits != hits + 1
-                or later_misses != misses
-                or rate != later_hits / (later_hits + later_misses)
+                    later_hits != hits + 1
+                    or later_misses != misses
+                    or rate != later_hits / (later_hits + later_misses)
             ):
                 raise ValueError("cache counters do not reflect repeated normalization")
             if not all(handler.cache_stats()):

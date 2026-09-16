@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 import classic_scanlog
+import pytest
 
 
 def plugin(name: str, prefix: str) -> classic_scanlog.FormIDPlugin:
@@ -48,18 +47,18 @@ def test_formid_finding_analyzer_returns_hits_misses_and_unresolved_data() -> No
     assert result.findings[0].plugin == "Found.esp"
     assert result.findings[0].value == "Resolved value"
     assert (
-        result.findings[0].value_lookup_status
-        == classic_scanlog.FormIDValueLookupStatus.Found
+            result.findings[0].value_lookup_status
+            == classic_scanlog.FormIDValueLookupStatus.Found
     )
     assert result.findings[1].value is None
     assert (
-        result.findings[1].value_lookup_status
-        == classic_scanlog.FormIDValueLookupStatus.Missing
+            result.findings[1].value_lookup_status
+            == classic_scanlog.FormIDValueLookupStatus.Missing
     )
     assert result.findings[2].plugin is None
     assert (
-        result.findings[2].value_lookup_status
-        == classic_scanlog.FormIDValueLookupStatus.NotApplicable
+            result.findings[2].value_lookup_status
+            == classic_scanlog.FormIDValueLookupStatus.NotApplicable
     )
 
 
@@ -91,7 +90,7 @@ def test_formid_finding_analyzer_raises_shared_typed_lookup_error() -> None:
 
 
 def test_formid_finding_sqlite_construction_raises_shared_typed_error(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """SQLite setup failure uses the same analyzer exception envelope as analysis."""
 

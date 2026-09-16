@@ -9,14 +9,14 @@ def observe_integrity(fixture: dict) -> dict:
     import classic_scangame
 
     with tempfile.TemporaryDirectory(
-        prefix="classic-integrity-conformance-"
+            prefix="classic-integrity-conformance-"
     ) as temporary:
         root = Path(temporary)
         for name, content in fixture["files"].items():
             if (
-                "\\" in name
-                or any(part in {"", ".", ".."} for part in name.split("/"))
-                or Path(name).is_absolute()
+                    "\\" in name
+                    or any(part in {"", ".", ".."} for part in name.split("/"))
+                    or Path(name).is_absolute()
             ):
                 raise ValueError("integrity fixture escaped its root")
             path = root / name
@@ -30,24 +30,24 @@ def observe_integrity(fixture: dict) -> dict:
         if fixture["rootWarn"] is not None:
             config.with_root_warn(fixture["rootWarn"])
         if (
-            config.game_exe_path != root / fixture["exe"]
-            or config.valid_exe_hashes != fixture["hashes"]
-            or config.root_name != fixture["rootName"]
+                config.game_exe_path != root / fixture["exe"]
+                or config.valid_exe_hashes != fixture["hashes"]
+                or config.root_name != fixture["rootName"]
         ):
             raise ValueError("integrity configuration lost constructor inputs")
         if (
-            config.steam_ini_path
-            != (None if fixture["steamIni"] is None else root / fixture["steamIni"])
-            or config.root_warn != fixture["rootWarn"]
+                config.steam_ini_path
+                != (None if fixture["steamIni"] is None else root / fixture["steamIni"])
+                or config.root_warn != fixture["rootWarn"]
         ):
             raise ValueError("integrity configuration lost optional inputs")
         executable = classic_scangame.CheckType.executable_version()
         location = classic_scangame.CheckType.installation_location()
         if (
-            not executable.is_executable_version()
-            or executable.is_installation_location()
-            or not location.is_installation_location()
-            or location.is_executable_version()
+                not executable.is_executable_version()
+                or executable.is_installation_location()
+                or not location.is_installation_location()
+                or location.is_executable_version()
         ):
             raise ValueError("integrity check type identity was lost")
         checker = classic_scangame.GameIntegrityChecker(config)

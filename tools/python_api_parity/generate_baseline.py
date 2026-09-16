@@ -196,7 +196,7 @@ def _python_phase3_route_for_mapping(mapping: dict[str, Any]) -> dict[str, str] 
 
     for family, route in PYTHON_PHASE3_ROUTE_FAMILIES.items():
         if row_id.startswith(f"constants.lib.{family}") or export_path.startswith(
-            family
+                family
         ):
             return route
 
@@ -217,7 +217,7 @@ def normalize_phase3_python_contract(contract: dict[str, Any]) -> dict[str, Any]
 
         old_id = str(mapping.get("id", ""))
         if old_id.startswith("constants.lib."):
-            mapping["id"] = route["idPrefix"] + old_id[len("constants.lib.") :]
+            mapping["id"] = route["idPrefix"] + old_id[len("constants.lib."):]
 
         mapping["ownerModule"] = route["ownerModule"]
         mapping["rustCrate"] = route["rustCrate"]
@@ -263,7 +263,7 @@ def count_call_arity(params: str, decorators: list[str] | None = None) -> int:
 
 
 def parse_rust_surface(
-    repo_root: Path, _tier1_rust_symbols: set[str]
+        repo_root: Path, _tier1_rust_symbols: set[str]
 ) -> dict[str, Any]:
     """Extract Rust public API symbols from target crate `lib.rs` + child modules.
 
@@ -327,7 +327,7 @@ def _is_property_decorator(decorators: list[str]) -> bool:
 
 
 def parse_python_surface(
-    repo_root: Path, _tier1_python_exports: set[str]
+        repo_root: Path, _tier1_python_exports: set[str]
 ) -> dict[str, Any]:
     """Extract classes, functions, methods, and property getters from `.pyi` files.
 
@@ -396,8 +396,8 @@ def parse_python_surface(
                             # Mutators describe the same property, so only its
                             # getter owns the export identity and read signature.
                             if method_match and (
-                                is_property
-                                or not _is_property_decorator(pending_decorators)
+                                    is_property
+                                    or not _is_property_decorator(pending_decorators)
                             ):
                                 export_name = method_match.group(1)
                                 params = method_match.group(2)
@@ -472,7 +472,7 @@ def parse_python_surface(
 
 
 def build_python_lookup(
-    items: list[dict[str, Any]],
+        items: list[dict[str, Any]],
 ) -> dict[tuple[str, str], dict[str, Any]]:
     """Build `(module, export_path)` lookup for Python exports."""
     lookup: dict[tuple[str, str], dict[str, Any]] = {}
@@ -508,9 +508,9 @@ def get_contract_python_export_identifier(mapping: dict[str, Any]) -> str | None
 
 
 def generate_diff_report(
-    contract: dict[str, Any],
-    rust_manifest: dict[str, Any],
-    python_manifest: dict[str, Any],
+        contract: dict[str, Any],
+        rust_manifest: dict[str, Any],
+        python_manifest: dict[str, Any],
 ) -> dict[str, Any]:
     """Generate contract status rows and parity gap inventory."""
     tier1_mappings: list[dict[str, Any]] = contract["tier1Mappings"]
@@ -552,16 +552,16 @@ def generate_diff_report(
                 item
                 for item in rust_symbols
                 if item.get("symbol") == rust_symbol
-                and item.get("crate") == mapping.get("rustCrate")
+                   and item.get("crate") == mapping.get("rustCrate")
             ]
             if any(
-                key in mapping
-                for key in (
-                    "pythonModule",
-                    "pythonExport",
-                    "pythonExportPath",
-                    "pythonArity",
-                )
+                    key in mapping
+                    for key in (
+                            "pythonModule",
+                            "pythonExport",
+                            "pythonExportPath",
+                            "pythonArity",
+                    )
             ):
                 status = "signature_mismatch"
                 reason = (
@@ -571,7 +571,7 @@ def generate_diff_report(
                 status = "missing_rust"
                 reason = f"Rust symbol '{rust_symbol}' not found in its declared crate."
             elif not mapping.get("rustKind") or not any(
-                item.get("kind") == mapping["rustKind"] for item in candidates
+                    item.get("kind") == mapping["rustKind"] for item in candidates
             ):
                 status = "signature_mismatch"
                 reason = "A rust_only row must declare the actual Rust source kind."

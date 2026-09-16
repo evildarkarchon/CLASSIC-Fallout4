@@ -6,6 +6,7 @@ from conformance.command import FAMILY_COVERAGE_POLICIES
 from conformance.families.path_backups import matches_versioned
 from conformance.packs import load_and_validate_pack
 from conformance.receipts import validate_prepared_run
+
 from receipt_test_support import prepare_receipt_case
 
 ROOT = Path(__file__).resolve().parents[3]

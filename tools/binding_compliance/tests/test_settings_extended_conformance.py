@@ -38,7 +38,7 @@ def test_extended_settings_packs_reject_missing_facts_and_input_oracles():
     for family in ("settings-validation", "settings-cached-docs"):
         pack = json.loads(
             (
-                root / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
+                    root / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
             ).read_text()
         )
         assert len(module.validate_settings_extended_pack(pack, root)) == len(
@@ -46,7 +46,7 @@ def test_extended_settings_packs_reject_missing_facts_and_input_oracles():
         )
         for case in pack["scenarios"]:
             for predicate in module.settings_extended_coverage_policy(
-                family
+                    family
             ).predicates:
                 assert predicate.matches(case["expected"])
                 for key in case["expected"]:

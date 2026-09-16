@@ -8,6 +8,8 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
+from conformance.receipts import ScenarioValidationResult
+
 from conformance import (
     CoverageDerivationError,
     CoveragePredicate,
@@ -23,7 +25,6 @@ from conformance import (
     load_source_parity_rows,
     prepared_report_evidence_digest,
 )
-from conformance.receipts import ScenarioValidationResult
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -62,7 +63,7 @@ def test_legacy_tui_import_is_in_all_exporting_source_inventories() -> None:
 
 
 def test_python_binding_namespaces_are_structural_only_without_constructor(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """A static namespace is a declaration; a separately exported constructor is runtime."""
     crate = tmp_path / "python-bindings/classic-binding-py"
@@ -101,8 +102,8 @@ def test_python_binding_namespaces_are_structural_only_without_constructor(
     ]
     for participant in ("cxx", "node", "python"):
         path = (
-            tmp_path
-            / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
+                tmp_path
+                / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
         )
         path.parent.mkdir(parents=True)
         path.write_text(
@@ -118,20 +119,20 @@ def test_python_binding_namespaces_are_structural_only_without_constructor(
     assert namespace.required_evidence_kind == "structural"
     assert namespace.retained_analyzer_id == "python-source-and-stub-parity"
     assert (
-        wrapper.required_evidence_kind
-        == constructor.required_evidence_kind
-        == "runtime"
+            wrapper.required_evidence_kind
+            == constructor.required_evidence_kind
+            == "runtime"
     )
 
 
 def test_cxx_declarations_have_structural_owners_but_calls_require_execution(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Generated type declarations have no callable behavior to substitute for getters."""
     for participant in ("cxx", "node", "python"):
         path = (
-            tmp_path
-            / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
+                tmp_path
+                / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
         )
         path.parent.mkdir(parents=True)
         rows = (
@@ -183,7 +184,7 @@ def test_user_settings_properties_keep_public_operation_identity() -> None:
 
 
 def test_python_source_references_require_an_independent_export_anchor(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Synthetic Rust references retain source proof without retiring real calls."""
     common = {
@@ -226,8 +227,8 @@ def test_python_source_references_require_an_independent_export_anchor(
     ]
     for participant in ("cxx", "node", "python"):
         path = (
-            tmp_path
-            / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
+                tmp_path
+                / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
         )
         path.parent.mkdir(parents=True)
         path.write_text(
@@ -250,13 +251,13 @@ def test_python_source_references_require_an_independent_export_anchor(
 
 
 def test_operation_family_free_functions_keep_their_public_identity(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """New owner-mapped free functions cannot borrow an aggregate class receipt."""
     for participant in ("cxx", "node", "python"):
         path = (
-            tmp_path
-            / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
+                tmp_path
+                / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
         )
         path.parent.mkdir(parents=True)
         rows = (
@@ -292,8 +293,8 @@ def test_node_source_only_rows_have_structural_ownership(tmp_path: Path) -> None
     """Source-only declarations need no Node execution; real exports still do."""
     for participant in ("cxx", "node", "python"):
         path = (
-            tmp_path
-            / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
+                tmp_path
+                / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
         )
         path.parent.mkdir(parents=True)
         rows = (
@@ -361,11 +362,11 @@ def _pack() -> dict[str, object]:
 
 
 def _prepared_report(
-    participant_id: str,
-    fact_ids: tuple[str, ...],
-    *,
-    execution_instance_id: str | None = None,
-    participant_role: str = "semantic-adapter",
+        participant_id: str,
+        fact_ids: tuple[str, ...],
+        *,
+        execution_instance_id: str | None = None,
+        participant_role: str = "semantic-adapter",
 ) -> PreparedRunReport:
     """Return one centrally typed passing coverage proof for a participant."""
 
@@ -885,19 +886,19 @@ def test_live_parity_loader_preserves_canonical_metadata_and_occurrences() -> No
     rows = load_source_parity_rows(REPO_ROOT)
 
     assert {
-        participant: sum(row.participant_id == participant for row in rows)
-        for participant in ("cxx", "node", "python")
-    } == {
-        participant: len(
-            json.loads(
-                (
-                    REPO_ROOT
-                    / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
-                ).read_text(encoding="utf-8")
-            )["entries" if participant == "cxx" else "tier1Mappings"]
-        )
-        for participant in ("cxx", "node", "python")
-    }
+               participant: sum(row.participant_id == participant for row in rows)
+               for participant in ("cxx", "node", "python")
+           } == {
+               participant: len(
+                   json.loads(
+                       (
+                               REPO_ROOT
+                               / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
+                       ).read_text(encoding="utf-8")
+                   )["entries" if participant == "cxx" else "tier1Mappings"]
+               )
+               for participant in ("cxx", "node", "python")
+           }
     obligation_ids = [row.obligation_id for row in rows]
     assert len(obligation_ids) == len(set(obligation_ids))
     assert any(":occurrence:1" in obligation_id for obligation_id in obligation_ids)
@@ -916,7 +917,7 @@ def test_live_parity_loader_preserves_canonical_metadata_and_occurrences() -> No
 
 
 def test_retained_analyzers_resolve_only_from_current_blocking_owners(
-    monkeypatch: pytest.MonkeyPatch,
+        monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Permanent analyzer ownership remains available after ledger removal."""
 
@@ -931,7 +932,7 @@ def test_retained_analyzers_resolve_only_from_current_blocking_owners(
 
 
 def test_retained_analyzer_and_exception_must_come_from_trusted_catalogs(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Ledger target strings alone cannot resolve non-executable evidence."""
 

@@ -20,20 +20,19 @@ use pyo3::Python;
 use pyo3::types::PyAnyMethods;
 
 use super::{
-    PyScanRunConfiguration, PyScanRunLocalIgnoreRecoveryDecision, configuration_to_core,
-    display_lines_to_py, display_segment_to_py, display_severity_to_string, disposition_to_string,
-    event_to_py, failure_execution, local_ignore_recovery_decision_to_py, recovery_prompt_to_py,
-    success_execution,
-    infrastructure_error_stage_to_string, infrastructure_error_to_py,
-    installed_yaml_data_diagnostic_kind_to_string, installed_yaml_data_provenance_to_string,
-    installed_yaml_data_role_to_string, local_ignore_state_to_string, log_failure_stage_to_string,
-    log_result_to_py, phase_to_string, reset_failure_stage_to_string, run_result_to_py,
-    run_status_to_string, scan_run_infrastructure_error_stage_label,
-    scan_run_installed_yaml_data_diagnostic_kind_label,
+    PyScanRunConfiguration, PyScanRunLocalIgnoreRecoveryDecision,
+    ScanRunLocalIgnoreResetDurabilityUnknownError, ScanRunLocalIgnoreResetReplacementError,
+    configuration_to_core, display_lines_to_py, display_segment_to_py, display_severity_to_string,
+    disposition_to_string, event_to_py, failure_execution, infrastructure_error_stage_to_string,
+    infrastructure_error_to_py, installed_yaml_data_diagnostic_kind_to_string,
+    installed_yaml_data_provenance_to_string, installed_yaml_data_role_to_string,
+    local_ignore_recovery_decision_to_py, local_ignore_state_to_string,
+    log_failure_stage_to_string, log_result_to_py, phase_to_string, recovery_prompt_to_py,
+    reset_failure_stage_to_string, run_result_to_py, run_status_to_string,
+    scan_run_infrastructure_error_stage_label, scan_run_installed_yaml_data_diagnostic_kind_label,
     scan_run_local_ignore_reset_failure_stage_label, scan_run_local_ignore_yaml_data_state_label,
     scan_run_log_disposition_label, scan_run_log_failure_stage_label, scan_run_resume_error_to_py,
-    setup_to_py, ScanRunLocalIgnoreResetDurabilityUnknownError,
-    ScanRunLocalIgnoreResetReplacementError,
+    setup_to_py, success_execution,
 };
 
 const SHARED_SCAN_RUN_MANIFEST: &str = include_str!(concat!(
@@ -296,16 +295,16 @@ fn durability_unknown_maps_shared_outcome_to_typed_python_exception() {
         let replacement_identity = YamlDataContentIdentity::from_bytes(b"defaults");
         let error = scan_run_resume_error_to_py(
             py,
-            contract::ResumeError::LocalIgnoreResetDurabilityUnknown(
-                Box::new(contract::LocalIgnoreResetDurabilityUnknownError {
+            contract::ResumeError::LocalIgnoreResetDurabilityUnknown(Box::new(
+                contract::LocalIgnoreResetDurabilityUnknownError {
                     path: path.clone(),
                     backup_path: backup_path.clone(),
                     malformed_identity: malformed_identity.clone(),
                     backup_identity: backup_identity.clone(),
                     replacement_identity: replacement_identity.clone(),
                     message: "replacement visible; durability unknown".to_string(),
-                }),
-            ),
+                },
+            )),
         );
 
         assert!(error.is_instance_of::<ScanRunLocalIgnoreResetDurabilityUnknownError>(py));
@@ -535,7 +534,12 @@ fn shared_failure_fixture_maps_every_python_failure_field() {
                     .to_string(),
             })
             .collect(),
-        message: Some(log["message"].as_str().expect("aggregate message").to_string()),
+        message: Some(
+            log["message"]
+                .as_str()
+                .expect("aggregate message")
+                .to_string(),
+        ),
         moved_to_unsolved_logs: log["movedToUnsolvedLogs"].as_bool().expect("movement flag"),
         processing_time_us: log["processingTimeUs"].as_u64().expect("microseconds"),
         processing_time_ms: log["processingTimeMs"].as_u64().expect("milliseconds"),
@@ -544,21 +548,30 @@ fn shared_failure_fixture_maps_every_python_failure_field() {
         suspect_count: log["suspectCount"].as_u64().expect("suspect count") as usize,
     });
 
-    assert_eq!(mapped.discovery_index, log["discoveryIndex"].as_u64().unwrap() as usize);
+    assert_eq!(
+        mapped.discovery_index,
+        log["discoveryIndex"].as_u64().unwrap() as usize
+    );
     assert_eq!(mapped.crash_log, log["crashLog"].as_str().unwrap());
     assert!(mapped.autoscan_report.is_none());
     assert_eq!(mapped.disposition, log["disposition"].as_str().unwrap());
     assert_eq!(mapped.failures.len(), failures.len());
     for (mapped_failure, expected) in mapped.failures.iter().zip(failures) {
         assert_eq!(mapped_failure.stage, expected["stage"].as_str().unwrap());
-        assert_eq!(mapped_failure.message, expected["message"].as_str().unwrap());
+        assert_eq!(
+            mapped_failure.message,
+            expected["message"].as_str().unwrap()
+        );
     }
     assert_eq!(mapped.message.as_deref(), log["message"].as_str());
     assert_eq!(
         mapped.moved_to_unsolved_logs,
         log["movedToUnsolvedLogs"].as_bool().unwrap()
     );
-    assert_eq!(mapped.processing_time_us, log["processingTimeUs"].as_u64().unwrap());
+    assert_eq!(
+        mapped.processing_time_us,
+        log["processingTimeUs"].as_u64().unwrap()
+    );
 
     let stages = [
         contract::InfrastructureErrorStage::RequestValidation,
@@ -612,29 +625,32 @@ fn maps_setup_and_run_optional_fields_without_loss() {
     assert_eq!(setup.fatal_errors, ["fatal"]);
 
     Python::attach(|py| {
-        let with_values = run_result_to_py(py, contract::RunResult {
-            status: CrashLogScanRunStatus::SetupFailed,
-            discovery: Some(discovery()),
-            setup: Some(CrashLogScanSetupResult {
-                status: setup.status.clone(),
-                checks: Vec::new(),
-                path_updates: Vec::new(),
-                configuration_issues: Vec::new(),
-                actions: Vec::new(),
-                fatal_errors: Vec::new(),
-                message: setup.message.clone(),
-                rendered_report: setup.rendered_report.clone(),
-            }),
-            installed_yaml_data: None,
-            continuation: None,
-            effective_concurrency: Some(2),
-            message: Some("run message".to_string()),
-            total: 4,
-            succeeded: 1,
-            failed: 2,
-            cancelled: 1,
-            logs: Vec::new(),
-        })
+        let with_values = run_result_to_py(
+            py,
+            contract::RunResult {
+                status: CrashLogScanRunStatus::SetupFailed,
+                discovery: Some(discovery()),
+                setup: Some(CrashLogScanSetupResult {
+                    status: setup.status.clone(),
+                    checks: Vec::new(),
+                    path_updates: Vec::new(),
+                    configuration_issues: Vec::new(),
+                    actions: Vec::new(),
+                    fatal_errors: Vec::new(),
+                    message: setup.message.clone(),
+                    rendered_report: setup.rendered_report.clone(),
+                }),
+                installed_yaml_data: None,
+                continuation: None,
+                effective_concurrency: Some(2),
+                message: Some("run message".to_string()),
+                total: 4,
+                succeeded: 1,
+                failed: 2,
+                cancelled: 1,
+                logs: Vec::new(),
+            },
+        )
         .expect("mapped result should allocate");
         let with_values = with_values.borrow(py);
         assert_eq!(with_values.status, "setup_failed");
@@ -652,20 +668,23 @@ fn maps_setup_and_run_optional_fields_without_loss() {
             (4, 1, 2, 1),
         );
 
-        let without_values = run_result_to_py(py, contract::RunResult {
-            status: CrashLogScanRunStatus::CancelledBeforeDiscovery,
-            discovery: None,
-            setup: None,
-            installed_yaml_data: None,
-            continuation: None,
-            effective_concurrency: None,
-            message: None,
-            total: 0,
-            succeeded: 0,
-            failed: 0,
-            cancelled: 0,
-            logs: Vec::new(),
-        })
+        let without_values = run_result_to_py(
+            py,
+            contract::RunResult {
+                status: CrashLogScanRunStatus::CancelledBeforeDiscovery,
+                discovery: None,
+                setup: None,
+                installed_yaml_data: None,
+                continuation: None,
+                effective_concurrency: None,
+                message: None,
+                total: 0,
+                succeeded: 0,
+                failed: 0,
+                cancelled: 0,
+                logs: Vec::new(),
+            },
+        )
         .expect("mapped result should allocate");
         let without_values = without_values.borrow(py);
         assert!(without_values.discovery.is_none());
@@ -712,9 +731,7 @@ fn every_scan_run_vocabulary_token_resolves_to_the_core_display_label() {
 /// their type parameter: repeating the loop four times would be four chances to
 /// paste the wrong core enum beside the right resolver, which is the class of
 /// mistake a test cannot catch about itself.
-fn assert_labels_match_the_core<T: Vocabulary>(
-    resolver: fn(&str) -> PyResult<&'static str>,
-) {
+fn assert_labels_match_the_core<T: Vocabulary>(resolver: fn(&str) -> PyResult<&'static str>) {
     for variant in T::VARIANTS.iter().copied() {
         let label = resolver(variant.as_str()).expect("a published token must resolve");
         assert_eq!(label, variant.label());
@@ -933,11 +950,13 @@ fn every_resume_failure_carries_lines_beside_its_stable_code() {
     Python::attach(|py| {
         for error in [
             contract::ResumeError::ContinuationConsumed,
-            contract::ResumeError::LocalIgnoreResetBackupFailure(contract::LocalIgnoreResetFailure {
-                path: PathBuf::from("CLASSIC Ignore.yaml"),
-                stage: Some(contract::LocalIgnoreResetFailureStage::Write),
-                message: "disk is full".to_string(),
-            }),
+            contract::ResumeError::LocalIgnoreResetBackupFailure(
+                contract::LocalIgnoreResetFailure {
+                    path: PathBuf::from("CLASSIC Ignore.yaml"),
+                    stage: Some(contract::LocalIgnoreResetFailureStage::Write),
+                    message: "disk is full".to_string(),
+                },
+            ),
         ] {
             let code = error.kind().as_str();
             let rendered = display_lines_to_py(&render_resume_error(&error));

@@ -49,8 +49,8 @@ def observe_unpacked_scan(fixture: Mapping[str, Any]) -> dict[str, Any]:
             scanner.scan_directory(root, fixture["scripts"]), root
         )
         if (
-            _issues(native.scan_unpacked_files(root, fixture["scripts"]), root)
-            != result["issues"]
+                _issues(native.scan_unpacked_files(root, fixture["scripts"]), root)
+                != result["issues"]
         ):
             raise ValueError("unpacked convenience scan disagrees with object scan")
         result.update(files=_files(root), directories=_directories(root))

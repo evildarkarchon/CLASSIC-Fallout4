@@ -38,17 +38,17 @@ def test_metadata_uses_rust_package_version_without_runtime_claim(metadata_repo:
 @pytest.mark.parametrize(
     "damage",
     (
-        "body",
-        "comment-spoof",
-        "raw-string-spoof",
-        "argument",
-        "declaration",
-        "union",
-        "shadow-macro",
+            "body",
+            "comment-spoof",
+            "raw-string-spoof",
+            "argument",
+            "declaration",
+            "union",
+            "shadow-macro",
     ),
 )
 def test_metadata_rejects_behavior_and_declaration_changes(
-    metadata_repo: Path, damage: str
+        metadata_repo: Path, damage: str
 ):
     """Changed behavior or fake source markers must return to runtime obligations."""
     from node_package_metadata import validate_node_package_metadata

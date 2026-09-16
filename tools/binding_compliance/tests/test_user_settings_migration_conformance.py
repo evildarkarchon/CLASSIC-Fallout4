@@ -11,6 +11,7 @@ from conformance.packs import (
     load_prepared_run,
 )
 from conformance.receipts import validate_prepared_run
+
 from test_user_settings_conformance import (
     PACK_PATH,
     REPO_ROOT,
@@ -132,7 +133,7 @@ def test_migration_receipts_fail_closed_on_changed_evidence(tmp_path, mutation) 
 
 
 def test_migration_plans_are_input_only_and_expected_bytes_are_digest_bound(
-    tmp_path,
+        tmp_path,
 ) -> None:
     """Expected documents never reach adapters, and changing one invalidates prepared work."""
     pack, run = _prepared_copy(tmp_path)
@@ -151,7 +152,7 @@ def test_migration_plans_are_input_only_and_expected_bytes_are_digest_bound(
 
 
 def test_migration_pack_rejects_missing_operations_and_changed_approval(
-    tmp_path,
+        tmp_path,
 ) -> None:
     """Applicability and caller approval cannot be weakened by editing a run scenario."""
     _prepared_copy(tmp_path)

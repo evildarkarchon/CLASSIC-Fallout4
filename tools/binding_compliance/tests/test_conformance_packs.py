@@ -97,7 +97,7 @@ def _commit_repository(repo_root: Path) -> None:
     ],
 )
 def test_pack_validation_rejects_invalid_machine_identities(
-    tmp_path: Path, field: str, invalid_identity: str
+        tmp_path: Path, field: str, invalid_identity: str
 ) -> None:
     """Every schema-owned identity uses the stable lowercase token grammar."""
 
@@ -123,7 +123,7 @@ def test_pack_validation_rejects_invalid_machine_identities(
 
 
 def test_pack_validation_rejects_floating_point_common_observations(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Common observations cannot depend on cross-language float encoding."""
 
@@ -139,7 +139,7 @@ def test_pack_validation_rejects_floating_point_common_observations(
     "failure_kind", ["undeclared", "parent", "absolute", "missing"]
 )
 def test_pack_validation_rejects_undeclared_or_escaping_fixtures(
-    tmp_path: Path, failure_kind: str
+        tmp_path: Path, failure_kind: str
 ) -> None:
     """Adapters can receive only declared files contained by the fixture root."""
 
@@ -164,7 +164,7 @@ def test_pack_validation_rejects_undeclared_or_escaping_fixtures(
 
 
 def test_pack_validation_rejects_a_fixture_symlink_that_escapes_its_root(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Resolved fixture containment cannot be bypassed through a symlink."""
 
@@ -194,7 +194,7 @@ def test_pack_validation_rejects_a_fixture_symlink_that_escapes_its_root(
     ],
 )
 def test_pack_validation_rejects_over_broad_normalization(
-    tmp_path: Path, excluded_paths: list[dict[str, str]]
+        tmp_path: Path, excluded_paths: list[dict[str, str]]
 ) -> None:
     """Exclusions name one exact path and carry a non-empty rationale."""
 
@@ -218,7 +218,7 @@ def test_pack_validation_rejects_over_broad_normalization(
     ],
 )
 def test_pack_validation_rejects_duplicate_or_dangling_identities(
-    tmp_path: Path, failure_kind: str
+        tmp_path: Path, failure_kind: str
 ) -> None:
     """Stable IDs stay unique and every scenario reference resolves centrally."""
 
@@ -256,7 +256,7 @@ def test_pack_validation_rejects_duplicate_or_dangling_identities(
     ],
 )
 def test_pack_schema_rejects_unknown_fields_and_incomplete_common_shapes(
-    tmp_path: Path, failure_kind: str
+        tmp_path: Path, failure_kind: str
 ) -> None:
     """The common schema fails closed instead of accepting adapter escape hatches."""
 
@@ -300,7 +300,7 @@ def test_pack_validation_rejects_duplicate_json_object_keys(tmp_path: Path) -> N
 
 
 def test_expectation_digest_covers_canonical_pack_and_every_declared_fixture(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Formatting is irrelevant while any pack fact or declared byte is covered."""
 
@@ -350,7 +350,7 @@ def test_pack_discovery_is_recursive_and_deterministic(tmp_path: Path) -> None:
 
 
 def test_each_materialization_is_fresh_and_never_exposes_the_oracle(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Adapters receive fresh plans containing inputs but no expected observation."""
 
@@ -399,12 +399,12 @@ def test_each_materialization_is_fresh_and_never_exposes_the_oracle(
     second_plan = second.document()
     assert first_plan["invocation"]["id"] != second_plan["invocation"]["id"]
     assert (
-        first_plan["invocation"]["runPlanDigest"]
-        != second_plan["invocation"]["runPlanDigest"]
+            first_plan["invocation"]["runPlanDigest"]
+            != second_plan["invocation"]["runPlanDigest"]
     )
     assert (
-        first_plan["invocation"]["sourceIdentity"]
-        == second_plan["invocation"]["sourceIdentity"]
+            first_plan["invocation"]["sourceIdentity"]
+            == second_plan["invocation"]["sourceIdentity"]
     )
     assert first.artifact_dir != second.artifact_dir
     assert first.run_plan_path.is_file()
@@ -424,7 +424,7 @@ def test_each_materialization_is_fresh_and_never_exposes_the_oracle(
 
 
 def test_materialized_run_can_be_authenticated_by_a_later_cli_process(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Receipt-only validation reloads the exact current immutable plan."""
 
@@ -454,7 +454,7 @@ def test_materialized_run_can_be_authenticated_by_a_later_cli_process(
 
 
 def test_source_identity_tracks_only_declared_current_runner_inputs(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Current source identity changes with relevant, not unrelated, worktree bytes."""
 
@@ -500,7 +500,7 @@ def test_source_identity_tracks_only_declared_current_runner_inputs(
 
 
 def test_source_identity_covers_declared_paths_even_when_git_ignores_them(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Declared path identity and bytes never disappear behind Git ignore state."""
 
@@ -551,17 +551,17 @@ def test_source_identity_covers_declared_paths_even_when_git_ignores_them(
     )
 
     assert (
-        first_path.document()["invocation"]["sourceIdentity"]
-        != second_path.document()["invocation"]["sourceIdentity"]
+            first_path.document()["invocation"]["sourceIdentity"]
+            != second_path.document()["invocation"]["sourceIdentity"]
     )
     assert (
-        ignored_first.document()["invocation"]["sourceIdentity"]
-        != ignored_second.document()["invocation"]["sourceIdentity"]
+            ignored_first.document()["invocation"]["sourceIdentity"]
+            != ignored_second.document()["invocation"]["sourceIdentity"]
     )
 
 
 def test_materialization_rejects_an_artifact_component_symlink_escape(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """A participant directory cannot redirect a fresh launch outside artifacts."""
 
@@ -592,7 +592,7 @@ def test_materialization_rejects_an_artifact_component_symlink_escape(
 
 
 def test_materialization_rejects_an_in_root_artifact_component_symlink(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Participant identity cannot alias another participant's artifact subtree."""
 

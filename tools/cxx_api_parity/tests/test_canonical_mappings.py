@@ -113,34 +113,34 @@ def test_generated_rows_receive_canonical_or_binding_only_metadata() -> None:
     [
         (lambda mappings: mappings["entries"].pop(), "missing canonical mappings"),
         (
-            lambda mappings: mappings["entries"].append(
-                {
-                    "id": "stale-id",
-                    "rustSymbol": "removed",
-                    "kind": "function",
-                    "bridgeModule": "scanner",
-                    "unmappedReason": "Removed binding-only row.",
-                }
-            ),
-            "stale canonical mappings",
+                lambda mappings: mappings["entries"].append(
+                    {
+                        "id": "stale-id",
+                        "rustSymbol": "removed",
+                        "kind": "function",
+                        "bridgeModule": "scanner",
+                        "unmappedReason": "Removed binding-only row.",
+                    }
+                ),
+                "stale canonical mappings",
         ),
         (
-            lambda mappings: mappings["entries"][0].update(
-                {"rustSymbol": "wrong_bridge_symbol"}
-            ),
-            "identity metadata",
+                lambda mappings: mappings["entries"][0].update(
+                    {"rustSymbol": "wrong_bridge_symbol"}
+                ),
+                "identity metadata",
         ),
         (
-            lambda mappings: mappings["entries"].append(
-                copy.deepcopy(mappings["entries"][0])
-            ),
-            "duplicate canonical mapping id",
+                lambda mappings: mappings["entries"].append(
+                    copy.deepcopy(mappings["entries"][0])
+                ),
+                "duplicate canonical mapping id",
         ),
     ],
 )
 def test_missing_stale_or_mismatched_mapping_rows_fail_closed(
-    mutate: Callable[[dict[str, Any]], None],
-    message: str,
+        mutate: Callable[[dict[str, Any]], None],
+        message: str,
 ) -> None:
     """The generated model rejects mappings that no longer match bridge source rows."""
 
@@ -159,7 +159,7 @@ def test_partial_or_mixed_mapping_metadata_fails_closed() -> None:
     mappings["entries"][0]["unmappedReason"] = "Ambiguous on purpose."
 
     with pytest.raises(
-        CanonicalMappingError, match="exactly one mapping classification"
+            CanonicalMappingError, match="exactly one mapping classification"
     ):
         enrich_surface_with_canonical_mappings(_surface(), mappings)
 
@@ -180,7 +180,7 @@ def test_committed_contract_metadata_must_match_independent_enrichment() -> None
 
 
 def test_canonical_target_must_exist_on_the_live_public_rust_surface(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """A mapping cannot survive after its core symbol is renamed or removed."""
 
@@ -197,7 +197,7 @@ def test_canonical_target_must_exist_on_the_live_public_rust_surface(
 
 
 def test_canonical_target_rejects_wrong_owner_or_module_only_matches(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Owner/crate metadata must resolve to a non-module public Rust declaration."""
 

@@ -17,6 +17,7 @@ from conformance.coverage import (
 from conformance.families.shared_identity import coverage_policy, validate_pack
 from conformance.packs import load_and_validate_pack, materialize_run_plan
 from conformance.receipts import validate_prepared_run
+
 from receipt_test_support import copy_source_inventory
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -53,9 +54,9 @@ def test_game_metadata_and_python_value_methods_are_source_scoped():
     }
     for row in load_source_parity_rows(ROOT):
         if (
-            row.rust_crate == "classic-shared-core"
-            and row.rust_symbol == "GameId"
-            and row.runtime_operation in selected
+                row.rust_crate == "classic-shared-core"
+                and row.rust_symbol == "GameId"
+                and row.runtime_operation in selected
         ):
             assert candidate_predicates(
                 row, document, coverage_policy("game-identity")
@@ -83,7 +84,7 @@ def test_identity_observations_reject_missing_fields(family: str) -> None:
     """Missing tokens or access outcomes cannot credit a public operation."""
     document = json.loads(
         (
-            ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
+                ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
         ).read_text(encoding="utf-8")
     )
     assert validate_pack(document, ROOT)
@@ -99,7 +100,7 @@ def _pack(family: str) -> dict:
     """Read authored expectations for receipt mutation checks."""
     return json.loads(
         (
-            ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
+                ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
         ).read_text(encoding="utf-8")
     )
 
@@ -112,7 +113,7 @@ def _pack(family: str) -> dict:
     ],
 )
 def test_shared_identity_receipts_fail_closed_at_public_coverage_seam(
-    tmp_path: Path, family: str, participants: set[str]
+        tmp_path: Path, family: str, participants: set[str]
 ) -> None:
     """Only complete current receipts cover source-selected public operations.
 
@@ -126,16 +127,16 @@ def test_shared_identity_receipts_fail_closed_at_public_coverage_seam(
     for relative in (pack_path.parent, Path(original["fixtureRoot"])):
         shutil.copytree(ROOT / relative, tmp_path / relative)
     if any(
-        capability.get("operationScoped", False)
-        for capability in original["capabilities"]
+            capability.get("operationScoped", False)
+            for capability in original["capabilities"]
     ):
         copy_source_inventory(ROOT, tmp_path)
     for args in (
-        ("init",),
-        ("config", "user.email", "conformance@example.invalid"),
-        ("config", "user.name", "Conformance Tests"),
-        ("add", "."),
-        ("commit", "-m", "fixture"),
+            ("init",),
+            ("config", "user.email", "conformance@example.invalid"),
+            ("config", "user.name", "Conformance Tests"),
+            ("add", "."),
+            ("commit", "-m", "fixture"),
     ):
         subprocess.run(
             ["git", "-C", str(tmp_path), *args], check=True, capture_output=True
@@ -238,11 +239,11 @@ def test_shared_identity_receipts_fail_closed_at_public_coverage_seam(
                 retained_analyzers=retained,
             ).failures
             for mutation in (
-                "changed",
-                "missing-scenario",
-                "skipped",
-                "stale",
-                "missing-receipt",
+                    "changed",
+                    "missing-scenario",
+                    "skipped",
+                    "stale",
+                    "missing-receipt",
             ):
                 changed = copy.deepcopy(receipt)
                 if mutation == "changed":

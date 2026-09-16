@@ -29,7 +29,7 @@ from conformance.packs import (
 )
 
 PACK_PATH = (
-    REPO_ROOT / "tests" / "conformance" / "packs" / "crash_log_scan_run" / "v1.json"
+        REPO_ROOT / "tests" / "conformance" / "packs" / "crash_log_scan_run" / "v1.json"
 )
 DEFAULT_ARTIFACT_ROOT = REPO_ROOT / "tools" / "binding_compliance" / "artifacts"
 
@@ -122,11 +122,11 @@ def _atomic_write_json(path: Path, document: dict[str, Any]) -> None:
 
 
 def _attempt_document(
-    participant_id: str,
-    command: ParticipantCommand,
-    completed: subprocess.CompletedProcess[str] | None,
-    timeout: subprocess.TimeoutExpired | None,
-    launch_error: OSError | None,
+        participant_id: str,
+        command: ParticipantCommand,
+        completed: subprocess.CompletedProcess[str] | None,
+        timeout: subprocess.TimeoutExpired | None,
+        launch_error: OSError | None,
 ) -> dict[str, Any]:
     """Return stable diagnostics for the exact native command attempt."""
 
@@ -142,7 +142,7 @@ def _attempt_document(
         "participantId": participant_id,
         "command": list(command.arguments),
         "workingDirectory": command.working_directory.relative_to(REPO_ROOT).as_posix()
-        or ".",
+                            or ".",
         "exitCode": completed.returncode if completed is not None else None,
         "timedOut": timeout is not None,
         "launchError": str(launch_error) if launch_error is not None else None,
@@ -190,9 +190,9 @@ def _terminate_process_tree(process: subprocess.Popen[str]) -> None:
 
 
 def _run_adapter_command(
-    command: ParticipantCommand,
-    environment: Mapping[str, str],
-    timeout_seconds: int,
+        command: ParticipantCommand,
+        environment: Mapping[str, str],
+        timeout_seconds: int,
 ) -> tuple[
     subprocess.CompletedProcess[str] | None,
     subprocess.TimeoutExpired | None,
@@ -232,12 +232,12 @@ def _run_adapter_command(
 
 
 def run_participant(
-    participant_id: str,
-    *,
-    artifact_root: Path = DEFAULT_ARTIFACT_ROOT,
-    timeout_seconds: int = 1_200,
-    pack_path: Path = PACK_PATH,
-    command: ParticipantCommand | None = None,
+        participant_id: str,
+        *,
+        artifact_root: Path = DEFAULT_ARTIFACT_ROOT,
+        timeout_seconds: int = 1_200,
+        pack_path: Path = PACK_PATH,
+        command: ParticipantCommand | None = None,
 ) -> tuple[int, Path]:
     """Execute one public adapter seam and build its exact participant report.
 
@@ -255,7 +255,7 @@ def run_participant(
         command = replace(
             command,
             source_paths=command.source_paths
-            + tuple(
+                         + tuple(
                 REPO_ROOT / "business-logic" / crate / "src"
                 for crate in (
                     "classic-scanlog-core",
@@ -269,7 +269,7 @@ def run_participant(
         command = replace(
             command,
             source_paths=command.source_paths
-            + (REPO_ROOT / "tools/binding_compliance/controlled_update_service.py",),
+                         + (REPO_ROOT / "tools/binding_compliance/controlled_update_service.py",),
         )
     prepared = materialize_run_plan(
         pack,
@@ -322,10 +322,10 @@ def run_participant(
     report_path = prepared.artifact_dir / "conformance_report.json"
     _atomic_write_json(report_path, report)
     command_passed = (
-        completed is not None
-        and completed.returncode == 0
-        and timeout is None
-        and launch_error is None
+            completed is not None
+            and completed.returncode == 0
+            and timeout is None
+            and launch_error is None
     )
     result_passed = report["result"] == "pass"
     return (0 if command_passed and result_passed else 1), prepared.artifact_dir
@@ -358,9 +358,9 @@ def main(argv: list[str] | None = None) -> int:
             artifact_root=args.artifact_root,
             timeout_seconds=args.timeout_seconds,
             pack_path=REPO_ROOT
-            / "tests/conformance/packs"
-            / args.family.replace("-", "_")
-            / "v1.json",
+                      / "tests/conformance/packs"
+                      / args.family.replace("-", "_")
+                      / "v1.json",
         )
     except (ConformanceCommandError, PackValidationError, ValueError) as error:
         print(f"Crash Log Scan Run conformance launch failed: {error}", file=sys.stderr)

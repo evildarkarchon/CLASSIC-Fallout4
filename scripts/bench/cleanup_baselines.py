@@ -125,9 +125,9 @@ def get_dir_size(path: Path) -> int:
 
 
 def cleanup_baselines(
-    criterion_dir: Path,
-    keep: int,
-    execute: bool,
+        criterion_dir: Path,
+        keep: int,
+        execute: bool,
 ) -> tuple[list[Path], list[Path]]:
     """Clean up old baselines, keeping the most recent ones.
 

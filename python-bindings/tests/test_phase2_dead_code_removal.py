@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import importlib
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 
 def _import_classic_scanlog():
@@ -71,10 +71,10 @@ def test_gpu_detector_binding_is_stateless_and_repeatable() -> None:
 
 def test_gpu_detector_binding_source_stays_unit_struct() -> None:
     source = (
-        Path(__file__).resolve().parents[1]
-        / "classic-scanlog-py"
-        / "src"
-        / "gpu_detector.rs"
+            Path(__file__).resolve().parents[1]
+            / "classic-scanlog-py"
+            / "src"
+            / "gpu_detector.rs"
     ).read_text(encoding="utf-8")
 
     assert "pub struct PyGpuDetector;" in source

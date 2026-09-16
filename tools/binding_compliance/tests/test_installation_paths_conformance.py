@@ -19,6 +19,7 @@ from conformance.families.installation_paths import (
 from conformance.families.installation_paths import validate_installation_paths_pack
 from conformance.packs import load_and_validate_pack
 from conformance.receipts import validate_prepared_run
+
 from receipt_test_support import prepare_receipt_case
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -28,17 +29,17 @@ PACK = Path("tests/conformance/packs/installation_paths/v1.json")
 def test_installation_validation_calls_are_explicitly_owned() -> None:
     """Only invoked native validation and per-file diagnostic operations get credit."""
     for operation in (
-        "parse_xse_log",
-        "PathValidator.validate_custom_scan_path",
-        "docs_checker_validate_ini_file",
-        "validateSettingsPaths",
-        "path_validate_is_file",
-        "check_restricted_path",
-        "has_issue",
-        "removeReadonly",
-        "remove_readonly",
-        "isValidPath",
-        "validateRequiredFiles",
+            "parse_xse_log",
+            "PathValidator.validate_custom_scan_path",
+            "docs_checker_validate_ini_file",
+            "validateSettingsPaths",
+            "path_validate_is_file",
+            "check_restricted_path",
+            "has_issue",
+            "removeReadonly",
+            "remove_readonly",
+            "isValidPath",
+            "validateRequiredFiles",
     ):
         assert any(
             predicate.covers_runtime_operation(operation)
@@ -105,7 +106,7 @@ def test_installation_fixture_rejects_discovery_fallback(tmp_path, mutation):
 
 @pytest.mark.parametrize("participant", ("rust", "cxx", "node", "python"))
 def test_installation_receipts_reject_changed_missing_extra_and_stale_facts(
-    tmp_path, participant
+        tmp_path, participant
 ):
     """The authenticated comparison boundary observes paths, messages and side effects."""
     pack, run, receipt = prepare_receipt_case(
@@ -135,7 +136,7 @@ def test_installation_receipts_reject_changed_missing_extra_and_stale_facts(
 
 @pytest.mark.parametrize("participant", ("node", "python"))
 def test_installation_row_coverage_does_not_credit_unexecuted_methods(
-    tmp_path, participant
+        tmp_path, participant
 ):
     """Current observed methods earn coverage; future methods cannot borrow their facts."""
     pack, run, _ = prepare_receipt_case(

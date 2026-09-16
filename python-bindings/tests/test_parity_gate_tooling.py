@@ -12,10 +12,10 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 NODE_CHECK_PARITY_GATE = (
-    REPO_ROOT / "tools" / "node_api_parity" / "check_parity_gate.py"
+        REPO_ROOT / "tools" / "node_api_parity" / "check_parity_gate.py"
 )
 PYTHON_CHECK_PARITY_GATE = (
-    REPO_ROOT / "tools" / "python_api_parity" / "check_parity_gate.py"
+        REPO_ROOT / "tools" / "python_api_parity" / "check_parity_gate.py"
 )
 
 
@@ -42,7 +42,7 @@ def load_module(module_name: str, module_path: Path):
 
 
 def test_load_module_restores_import_state(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     module_dir = tmp_path / "tools" / "python_api_parity"
     module_dir.mkdir(parents=True)
@@ -98,11 +98,11 @@ def minimal_diff_report(binding: str) -> dict:
     ],
 )
 def test_update_baseline_flag_refreshes_stale_baseline(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    binding: str,
-    module_path: Path,
-    module_name: str,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        binding: str,
+        module_path: Path,
+        module_name: str,
 ) -> None:
     module = load_module(module_name, module_path)
 

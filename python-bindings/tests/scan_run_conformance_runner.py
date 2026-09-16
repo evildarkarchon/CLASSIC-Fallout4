@@ -91,11 +91,11 @@ def _runtime_path(root: Path, value: object, label: str) -> Path:
     posix = PurePosixPath(text)
     windows = PureWindowsPath(text)
     if (
-        posix.is_absolute()
-        or windows.is_absolute()
-        or windows.drive
-        or "\\" in text
-        or any(part in {"", ".", ".."} for part in posix.parts)
+            posix.is_absolute()
+            or windows.is_absolute()
+            or windows.drive
+            or "\\" in text
+            or any(part in {"", ".", ".."} for part in posix.parts)
     ):
         raise RunnerContractError(f"{label} must stay beneath the runtime root")
     candidate = (root / Path(*posix.parts)).resolve(strict=False)
@@ -129,11 +129,11 @@ def _path_carrier(root: Path, value: object, label: str) -> dict[str, str]:
 
 
 def _copy_declared_fixture(
-    plan: Mapping[str, Any],
-    scenario: Mapping[str, Any],
-    item: Mapping[str, Any],
-    root: Path,
-    label: str,
+        plan: Mapping[str, Any],
+        scenario: Mapping[str, Any],
+        item: Mapping[str, Any],
+        root: Path,
+        label: str,
 ) -> None:
     """Copy one scenario-declared fixture to its writable runtime destination."""
 
@@ -157,7 +157,7 @@ def _copy_declared_fixture(
 
 
 def _materialize_scenario_inputs(
-    plan: Mapping[str, Any], scenario: Mapping[str, Any], root: Path
+        plan: Mapping[str, Any], scenario: Mapping[str, Any], root: Path
 ) -> Mapping[str, Any]:
     """Materialize plan-declared files, directories, and discovery roots."""
 
@@ -275,7 +275,7 @@ def _configured_paths(root: Path, raw_paths: object) -> list[str]:
 
 
 def _build_request(
-    classic_scanlog: Any, classic_shared: Any, inputs: Mapping[str, Any], root: Path
+        classic_scanlog: Any, classic_shared: Any, inputs: Mapping[str, Any], root: Path
 ) -> Any:
     """Construct the frozen Standard or Targeted request through public factories."""
 
@@ -311,9 +311,9 @@ def _build_request(
         context = _require_mapping(inputs.get("setupContext"), "setupContext")
         paths = {}
         for field, argument in (
-            ("gameRoot", "game_root"),
-            ("documentsRoot", "docs_root"),
-            ("executable", "game_exe_path"),
+                ("gameRoot", "game_root"),
+                ("documentsRoot", "docs_root"),
+                ("executable", "game_exe_path"),
         ):
             carrier = _require_mapping(context.get(field), f"setupContext.{field}")
             paths[argument] = str(
@@ -515,7 +515,7 @@ def _read_optional_file(path: Path) -> bytes | None:
 
 
 def _local_ignore_installed_yaml_data(
-    installed: object | None, root: Path
+        installed: object | None, root: Path
 ) -> object | None:
     """Project stable Local Ignore metadata without temporary-root diagnostic prose."""
 
@@ -554,7 +554,7 @@ def _local_ignore_installed_yaml_data(
                 ),
                 "exists": backup_content is not None,
                 "identityMatchesReceipt": backup_identity
-                == _content_identity(reset.backup_identity, "byte_len"),
+                                          == _content_identity(reset.backup_identity, "byte_len"),
             },
             "malformedIdentity": _content_identity(
                 reset.malformed_identity, "byte_len"
@@ -735,7 +735,7 @@ def _durable_effects(logs: object, root: Path) -> dict[str, Any]:
 
 
 def _failure_durable_effects(
-    inputs: Mapping[str, Any], root: Path
+        inputs: Mapping[str, Any], root: Path
 ) -> list[dict[str, str]]:
     """Classify each declared failure artifact without reading its contents."""
 
@@ -799,7 +799,7 @@ def _failure_log_results(logs: object, root: Path) -> list[dict[str, Any]]:
 
 
 def _failure_observation(
-    execution: Any, inputs: Mapping[str, Any], root: Path
+        execution: Any, inputs: Mapping[str, Any], root: Path
 ) -> dict[str, Any]:
     """Complete a failure-profile observation from either public envelope payload."""
 
@@ -842,15 +842,15 @@ def _failure_observation(
 
 
 def _lifecycle_durable_effects(
-    logs: object, inputs: Mapping[str, Any], root: Path
+        logs: object, inputs: Mapping[str, Any], root: Path
 ) -> dict[str, Any]:
     """Observe lifecycle reports plus every plan-declared forbidden destination."""
 
     forbidden = []
     for index, raw_path in enumerate(
-        _require_sequence(
-            inputs.get("forbiddenEffectPaths", []), "forbiddenEffectPaths"
-        )
+            _require_sequence(
+                inputs.get("forbiddenEffectPaths", []), "forbiddenEffectPaths"
+            )
     ):
         path = _runtime_path(root, raw_path, f"forbiddenEffectPaths[{index}]")
         forbidden.append(
@@ -885,7 +885,7 @@ def _file_effect(root: Path, path: Path, label: str) -> dict[str, Any]:
 
 
 def _local_ignore_durable_effects(
-    result: Any | None, inputs: Mapping[str, Any], root: Path
+        result: Any | None, inputs: Mapping[str, Any], root: Path
 ) -> dict[str, Any]:
     """Observe Local Ignore and every durable effect, including failed resume outcomes."""
 
@@ -932,9 +932,9 @@ def _local_ignore_durable_effects(
 
     forbidden = []
     for index, raw_path in enumerate(
-        _require_sequence(
-            inputs.get("forbiddenEffectPaths", []), "forbiddenEffectPaths"
-        )
+            _require_sequence(
+                inputs.get("forbiddenEffectPaths", []), "forbiddenEffectPaths"
+            )
     ):
         path = _runtime_path(root, raw_path, f"forbiddenEffectPaths[{index}]")
         forbidden.append(_file_effect(root, path, "forbidden effect"))
@@ -970,7 +970,7 @@ def _result_or_raise(execution: Any) -> Any:
 
 
 def _observation(
-    execution: Any, callbacks: Sequence[Any], root: Path
+        execution: Any, callbacks: Sequence[Any], root: Path
 ) -> dict[str, Any]:
     """Project one public execution envelope to the frozen normalized observation."""
 
@@ -996,7 +996,7 @@ def _observation(
 
 
 def _autoscan_report_observation(
-    execution: Any, inputs: Mapping[str, Any], root: Path
+        execution: Any, inputs: Mapping[str, Any], root: Path
 ) -> dict[str, Any]:
     """Observe public report results and exact durable bytes without normalization."""
 
@@ -1043,9 +1043,9 @@ def _autoscan_report_observation(
     )
     forbidden = []
     for index, raw_path in enumerate(
-        _require_sequence(
-            inputs.get("forbiddenEffectPaths", []), "forbiddenEffectPaths"
-        )
+            _require_sequence(
+                inputs.get("forbiddenEffectPaths", []), "forbiddenEffectPaths"
+            )
     ):
         path = _runtime_path(root, raw_path, f"forbiddenEffectPaths[{index}]")
         forbidden.append(
@@ -1095,11 +1095,11 @@ def _autoscan_report_observation(
 
 
 def _lifecycle_observation(
-    execution: Any,
-    callbacks: Sequence[Any],
-    inputs: Mapping[str, Any],
-    cancellation: Any,
-    root: Path,
+        execution: Any,
+        callbacks: Sequence[Any],
+        inputs: Mapping[str, Any],
+        cancellation: Any,
+        root: Path,
 ) -> dict[str, Any]:
     """Project cancellation boundaries and structured observer delivery failure."""
 
@@ -1156,7 +1156,7 @@ def _lifecycle_observation(
 
 
 def _execution_flow(
-    inputs: Mapping[str, Any], profile: object
+        inputs: Mapping[str, Any], profile: object
 ) -> Mapping[str, Any] | None:
     """Validate that execution controls remain exclusive to lifecycle scenarios."""
 
@@ -1185,17 +1185,17 @@ def _execution_flow(
     if cancellation == "on-observer-failure":
         failure = _require_mapping(raw_failure, "executionFlow.observerFailure")
         if (
-            _require_string(
-                failure.get("eventKind"),
-                "executionFlow.observerFailure.eventKind",
-            )
-            != "discovery_completed"
+                _require_string(
+                    failure.get("eventKind"),
+                    "executionFlow.observerFailure.eventKind",
+                )
+                != "discovery_completed"
         ):
             raise RunnerContractError(
                 "observer failure must target discovery_completed"
             )
         if not _require_string(
-            failure.get("message"), "executionFlow.observerFailure.message"
+                failure.get("message"), "executionFlow.observerFailure.message"
         ).strip():
             raise RunnerContractError("observer failure message must be non-empty")
     elif raw_failure is not None:
@@ -1229,7 +1229,7 @@ def _recovery_decision(classic_scanlog: Any, token: object, label: str) -> Any:
 
 
 def _project_recovery_prompt(
-    classic_scanlog: Any, prompt: Any, root: Path
+        classic_scanlog: Any, prompt: Any, root: Path
 ) -> dict[str, Any]:
     """Project complete prompt lines and decision descriptions with public labels."""
 
@@ -1249,13 +1249,13 @@ def _project_recovery_prompt(
 
 
 def _local_ignore_phase(
-    classic_scanlog: Any,
-    execution: Any,
-    callbacks: Sequence[Any],
-    root: Path,
-    *,
-    continuation_available: bool,
-    recovery_prompt: Any | None,
+        classic_scanlog: Any,
+        execution: Any,
+        callbacks: Sequence[Any],
+        root: Path,
+        *,
+        continuation_available: bool,
+        recovery_prompt: Any | None,
 ) -> dict[str, Any]:
     """Project one initial or terminal Local Ignore phase without filesystem effects."""
 
@@ -1288,11 +1288,11 @@ def _local_ignore_phase(
 
 
 def _local_ignore_observation(
-    classic_scanlog: Any,
-    execution: Any,
-    callbacks: Sequence[Any],
-    inputs: Mapping[str, Any],
-    root: Path,
+        classic_scanlog: Any,
+        execution: Any,
+        callbacks: Sequence[Any],
+        inputs: Mapping[str, Any],
+        root: Path,
 ) -> dict[str, Any]:
     """Project a terminal Local Ignore run and its exact durable effects."""
 
@@ -1333,12 +1333,12 @@ def _continuation_action(raw_action: object, label: str) -> tuple[str, str | Non
 
 
 def _run_continuation_action(
-    classic_scanlog: Any,
-    continuation: Any,
-    cancellation: Any,
-    raw_action: object,
-    label: str,
-    callbacks: list[Any] | None,
+        classic_scanlog: Any,
+        continuation: Any,
+        cancellation: Any,
+        raw_action: object,
+        label: str,
+        callbacks: list[Any] | None,
 ) -> Any:
     """Invoke one public resume or abandon operation on the retained continuation."""
 
@@ -1359,7 +1359,7 @@ def _run_continuation_action(
 
 
 def _project_replay_error(
-    raw_action: object, label: str, error: Exception, root: Path
+        raw_action: object, label: str, error: Exception, root: Path
 ) -> dict[str, Any]:
     """Project a typed consumed-continuation rejection without adapter-only prose."""
 
@@ -1391,7 +1391,7 @@ def _optional_error_identity(error: Exception, attribute: str) -> dict[str, Any]
 
 
 def _optional_error_path(
-    error: Exception, attribute: str, root: Path, label: str
+        error: Exception, attribute: str, root: Path, label: str
 ) -> dict[str, str] | None:
     """Project an optional typed resume-exception path beneath the runtime root."""
 
@@ -1400,7 +1400,7 @@ def _optional_error_path(
 
 
 def _project_terminal_resume_error(
-    error: Exception, callbacks: Sequence[Any], root: Path
+        error: Exception, callbacks: Sequence[Any], root: Path
 ) -> dict[str, Any]:
     """Normalize a public reset conflict or backup failure without OS-dependent prose."""
 
@@ -1408,12 +1408,12 @@ def _project_terminal_resume_error(
     code = getattr(error, "code", None)
     display_lines = getattr(error, "display_lines", None)
     if (
-        kind
-        not in {
-            "local_ignore_reset_conflict",
-            "local_ignore_reset_backup_failure",
-        }
-        or display_lines is None
+            kind
+            not in {
+        "local_ignore_reset_conflict",
+        "local_ignore_reset_backup_failure",
+    }
+            or display_lines is None
     ):
         raise RunnerContractError(
             "terminal continuation raised an unsupported untyped error: "
@@ -1455,10 +1455,10 @@ def _project_terminal_resume_error(
 
 
 def _materialize_post_pause_data(
-    plan: Mapping[str, Any],
-    scenario: Mapping[str, Any],
-    raw_placements: object,
-    root: Path,
+        plan: Mapping[str, Any],
+        scenario: Mapping[str, Any],
+        raw_placements: object,
+        root: Path,
 ) -> None:
     """Apply declared mutations only after the initial continuation has been retained."""
 
@@ -1471,14 +1471,14 @@ def _materialize_post_pause_data(
 
 
 def _execute_continuation_flow(
-    classic_scanlog: Any,
-    plan: Mapping[str, Any],
-    scenario: Mapping[str, Any],
-    inputs: Mapping[str, Any],
-    root: Path,
-    cancellation: Any,
-    initial_execution: Any,
-    initial_callbacks: Sequence[Any],
+        classic_scanlog: Any,
+        plan: Mapping[str, Any],
+        scenario: Mapping[str, Any],
+        inputs: Mapping[str, Any],
+        root: Path,
+        cancellation: Any,
+        initial_execution: Any,
+        initial_callbacks: Sequence[Any],
 ) -> dict[str, Any]:
     """Resolve one prepared run across reset outcomes and prove its claim rejects replays."""
 
@@ -1658,8 +1658,8 @@ def _config_issue_values(classic_scanlog: Any) -> dict[str, Any]:
     for issue in issues:
         section = "None" if issue.section is None else f'Some("{issue.section}")'
         if (
-            repr(issue)
-            != f"ConfigIssue(file='{issue.file_path}', section={section}, setting='{issue.setting}', current='{issue.current_value}', recommended='{issue.recommended_value}')"
+                repr(issue)
+                != f"ConfigIssue(file='{issue.file_path}', section={section}, setting='{issue.setting}', current='{issue.current_value}', recommended='{issue.recommended_value}')"
         ):
             raise RunnerContractError(
                 "ConfigIssue representation lost constructor values"
@@ -1669,7 +1669,7 @@ def _config_issue_values(classic_scanlog: Any) -> dict[str, Any]:
 
 
 def _execute_scenario(
-    plan: Mapping[str, Any], scenario: Mapping[str, Any]
+        plan: Mapping[str, Any], scenario: Mapping[str, Any]
 ) -> dict[str, Any]:
     """Execute one planned scenario through the installed public binding operation."""
 
@@ -1714,8 +1714,8 @@ def _execute_scenario(
 
                 callbacks.append(event)
                 if observer_failure is not None and str(event.kind) == _require_string(
-                    observer_failure.get("eventKind"),
-                    "executionFlow.observerFailure.eventKind",
+                        observer_failure.get("eventKind"),
+                        "executionFlow.observerFailure.eventKind",
                 ):
                     # This exception must remain observer data, not a core run error.
                     raise RuntimeError(
@@ -1727,10 +1727,10 @@ def _execute_scenario(
                 if boundary == "on-first-log-queued" and event.kind == "log_queued":
                     cancellation.cancel()
                 if (
-                    boundary == "on-first-log-started"
-                    and event.kind == "log_started"
-                    and event.log is not None
-                    and int(event.log.discovery_index) == 0
+                        boundary == "on-first-log-started"
+                        and event.kind == "log_started"
+                        and event.log is not None
+                        and int(event.log.discovery_index) == 0
                 ):
                     cancellation.cancel()
 

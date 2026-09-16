@@ -11,6 +11,7 @@ from conformance.compare import (
 )
 from conformance.packs import PackValidationError, load_and_validate_pack
 from conformance.schema import ConformanceSchemaError, _validate_normalization_envelope
+
 from test_conformance_packs import _valid_pack, _write_pack
 from test_conformance_schema import _schema
 
@@ -41,7 +42,7 @@ def _empty_file():
     [(False, False), (False, True), (True, False), (True, True)],
 )
 def test_optional_empty_file_presence_is_normalized(
-    tmp_path, expected_present, actual_present
+        tmp_path, expected_present, actual_present
 ):
     """Optional presence compares equally without mutating either input observation."""
     expected = {"tree": [_empty_file()] if expected_present else []}
@@ -69,7 +70,7 @@ def test_optional_empty_file_presence_is_normalized(
     ],
 )
 def test_optional_empty_file_rejects_malformed_evidence_before_exclusion(
-    tmp_path, tree
+        tmp_path, tree
 ):
     """Exclusion cannot conceal malformed or duplicate optional-file evidence."""
     rules = _normalization()
@@ -111,7 +112,7 @@ def test_optional_file_requires_declared_tree_and_preserves_other_files(tmp_path
     ],
 )
 def test_optional_file_schema_rejects_broad_or_unexplained_declarations(
-    tmp_path, field, value
+        tmp_path, field, value
 ):
     """Both shared envelopes and loaded packs enforce exact, explained declarations."""
     rules = _normalization()

@@ -23,9 +23,9 @@ def observe_setup(fixture: dict) -> dict:
         root = Path(temporary)
         for name, content in fixture["files"].items():
             if (
-                "\\" in name
-                or Path(name).is_absolute()
-                or any(part in {"", ".", ".."} for part in name.split("/"))
+                    "\\" in name
+                    or Path(name).is_absolute()
+                    or any(part in {"", ".", ".."} for part in name.split("/"))
             ):
                 raise ValueError("setup fixture escaped root")
             path = root / name
@@ -50,9 +50,9 @@ def observe_setup(fixture: dict) -> dict:
             game_exe_path=root / "Game/Starfield.exe",
         )
         if (
-            intake.game_id != "Starfield"
-            or intake.game_version != "Original"
-            or Path(intake.game_root) != root / "Game"
+                intake.game_id != "Starfield"
+                or intake.game_version != "Original"
+                or Path(intake.game_root) != root / "Game"
         ):
             raise ValueError("setup constructor lost supplied facts")
 
@@ -60,16 +60,16 @@ def observe_setup(fixture: dict) -> dict:
             """Read stable summary fields and verify typed checks agree with rendered output."""
             report = result.combined()
             if (
-                report != result.rendered_report
-                or result.total_checks != len(result.checks)
-                or result.failed_checks
-                != sum(check.state == "failed" for check in result.checks)
+                    report != result.rendered_report
+                    or result.total_checks != len(result.checks)
+                    or result.failed_checks
+                    != sum(check.state == "failed" for check in result.checks)
             ):
                 raise ValueError("setup summary lost typed diagnostic facts")
             for check in result.checks:
                 if (
-                    f"[{check.state}] {check.kind}: {check.message}" not in report
-                    or any(detail not in report for detail in check.details)
+                        f"[{check.state}] {check.kind}: {check.message}" not in report
+                        or any(detail not in report for detail in check.details)
                 ):
                     raise ValueError("setup report lost diagnostic content")
             return {

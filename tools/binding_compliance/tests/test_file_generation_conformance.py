@@ -8,7 +8,7 @@ from conformance.packs import load_and_validate_pack
 
 
 def test_file_generation_predicates_require_nonreplacement_and_exact_inventory() -> (
-    None
+        None
 ):
     """An existing-file overwrite or omitted observation cannot donate coverage."""
     from conformance.families.file_generation import FILE_GENERATION_COVERAGE_POLICY

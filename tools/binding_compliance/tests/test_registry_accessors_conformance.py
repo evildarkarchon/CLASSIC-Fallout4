@@ -10,6 +10,7 @@ from conformance.command import FAMILY_COVERAGE_POLICIES
 from conformance.coverage import load_source_parity_rows
 from conformance.packs import load_and_validate_pack
 from conformance.receipts import validate_prepared_run
+
 from receipt_test_support import prepare_receipt_case
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -29,11 +30,11 @@ def test_registry_accessor_receipts_require_owned_state(tmp_path, family, partic
     path = Path("tests/conformance/packs") / family.replace("-", "_") / "v1.json"
     pack = load_and_validate_pack(ROOT, path)
     assert {
-        p.id
-        for p in derive_applicability(
+               p.id
+               for p in derive_applicability(
             pack.document(), load_source_parity_rows(ROOT)
         ).participants
-    } == participants
+           } == participants
     policy = FAMILY_COVERAGE_POLICIES[family]
     for predicate in policy.predicates:
         assert not predicate.covers_runtime_operation("future_owner_alias")

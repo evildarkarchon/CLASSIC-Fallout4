@@ -12,15 +12,14 @@ from pathlib import Path
 
 import pytest
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CLI_SRC = REPO_ROOT / "python-bindings" / "classic-py-cli" / "src"
 
 
 def _install_user_settings_fake(
-    monkeypatch: pytest.MonkeyPatch,
-    *,
-    fcx_mode: bool = False,
+        monkeypatch: pytest.MonkeyPatch,
+        *,
+        fcx_mode: bool = False,
 ) -> None:
     """Install typed shared-game and User Settings projections for scan CLI tests."""
 
@@ -126,12 +125,12 @@ def _fake_recovery_prompt(*, reset_available: bool) -> types.SimpleNamespace:
 
 
 def _install_final_scan_run_fake(
-    fake: types.ModuleType,
-    make_logs: object,
-    *,
-    status: str = "completed",
-    message: str | None = None,
-    recovery_prompt: object | None = None,
+        fake: types.ModuleType,
+        make_logs: object,
+        *,
+        status: str = "completed",
+        message: str | None = None,
+        recovery_prompt: object | None = None,
 ) -> None:
     """Attach a selectable final request/execution result to a fake scanlog module."""
 
@@ -156,10 +155,10 @@ def _install_final_scan_run_fake(
         pass
 
     def scan_run_execute(
-        request: object,
-        cancellation: object,
-        observer: object | None = None,
-        cancel_on_observer_error: bool = False,
+            request: object,
+            cancellation: object,
+            observer: object | None = None,
+            cancel_on_observer_error: bool = False,
     ) -> object:
         assert getattr(request, "intent") == "targeted"
         assert isinstance(cancellation, ScanRunCancellation)
@@ -203,7 +202,8 @@ def _env() -> dict[str, str]:
 def _run_module(*args: str) -> subprocess.CompletedProcess[str]:
     """Run the module entry point as a subprocess."""
 
-    return subprocess.run([sys.executable, "-m", "classic_py_cli", *args], cwd=REPO_ROOT, env=_env(), check=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return subprocess.run([sys.executable, "-m", "classic_py_cli", *args], cwd=REPO_ROOT, env=_env(), check=False,
+                          text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 def test_console_script_help() -> None:
@@ -212,7 +212,8 @@ def test_console_script_help() -> None:
     script = shutil.which("classic-py")
     if script is None:
         pytest.skip("classic-py console script is installed by uv sync")
-    completed = subprocess.run([script, "--help"], cwd=REPO_ROOT, check=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    completed = subprocess.run([script, "--help"], cwd=REPO_ROOT, check=False, text=True, stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
     assert completed.returncode == 0
     assert "bindings" in completed.stdout
     assert "compliance" in completed.stdout
@@ -265,7 +266,8 @@ def test_json_invalid_command_accepts_global_flag_after_subcommand() -> None:
     assert completed.stderr == ""
 
 
-def test_invalid_global_path_returns_configuration_exit_status(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+def test_invalid_global_path_returns_configuration_exit_status(monkeypatch: pytest.MonkeyPatch,
+                                                               capsys: pytest.CaptureFixture[str]) -> None:
     """Invalid global path options map to exit status 2 with a JSON failure envelope."""
 
     sys.path.insert(0, str(CLI_SRC))
@@ -284,7 +286,8 @@ def test_invalid_global_path_returns_configuration_exit_status(monkeypatch: pyte
     assert payload["error"]["type"] == "OSError"
 
 
-def test_missing_binding_simulation_returns_import_status(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+def test_missing_binding_simulation_returns_import_status(monkeypatch: pytest.MonkeyPatch,
+                                                          capsys: pytest.CaptureFixture[str]) -> None:
     """A required missing binding maps to exit status 3 and structured JSON."""
 
     sys.path.insert(0, str(CLI_SRC))
@@ -319,7 +322,8 @@ def test_fake_version_binding_command(monkeypatch: pytest.MonkeyPatch, capsys: p
     assert payload["data"]["formatted"] == "v1.2.3"
 
 
-def test_update_validate_url_returns_product_failure_for_invalid_url(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+def test_update_validate_url_returns_product_failure_for_invalid_url(monkeypatch: pytest.MonkeyPatch,
+                                                                     capsys: pytest.CaptureFixture[str]) -> None:
     """Invalid update URLs are validation findings, not successful commands."""
 
     sys.path.insert(0, str(CLI_SRC))
@@ -339,7 +343,8 @@ def test_update_validate_url_returns_product_failure_for_invalid_url(monkeypatch
     assert payload["data"] == {"url": "not-a-url", "valid": False}
 
 
-def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+                                                   capsys: pytest.CaptureFixture[str]) -> None:
     """Per-log scan failures are visible in JSON without failing the completed batch."""
 
     sys.path.insert(0, str(CLI_SRC))
@@ -354,8 +359,8 @@ def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPat
     fake.__version__ = "test"
 
     def make_logs(
-        configuration: dict[str, object],
-        paths: list[str],
+            configuration: dict[str, object],
+            paths: list[str],
     ) -> list[types.SimpleNamespace]:
         assert configuration["installation_root"] == str(REPO_ROOT)
         assert configuration["game"] is sys.modules["classic_shared"].GameId.Fallout4
@@ -401,11 +406,11 @@ def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPat
     ],
 )
 def test_scan_logs_reports_unsuccessful_terminal_statuses(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-    status: str,
-    expected_exit_code: int,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        status: str,
+        expected_exit_code: int,
 ) -> None:
     """Terminal setup and cancellation outcomes must not render as successful scans."""
 
@@ -443,10 +448,10 @@ def test_scan_logs_reports_unsuccessful_terminal_statuses(
 
 @pytest.mark.parametrize("reset_available", [True, False])
 def test_scan_logs_states_a_paused_run_in_rusts_words(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-    reset_available: bool,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+        reset_available: bool,
 ) -> None:
     """A paused run is terminal here, but never unexplained.
 
@@ -504,9 +509,9 @@ def test_scan_logs_states_a_paused_run_in_rusts_words(
 
 
 def test_scan_logs_consumes_final_result_and_event_contract(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
 ) -> None:
     """The binding-local CLI constructs a Targeted request and reads final events/results."""
 
@@ -530,17 +535,17 @@ def test_scan_logs_consumes_final_result_and_event_contract(
     class ScanRunRequest:
         @staticmethod
         def targeted(
-            configuration: ScanRunConfiguration,
-            source: ScanRunTargetedSource,
+                configuration: ScanRunConfiguration,
+                source: ScanRunTargetedSource,
         ) -> object:
             observed["targetedInputs"] = source.inputs
             return types.SimpleNamespace(intent="targeted")
 
         @staticmethod
         def targeted_with_fcx(
-            configuration: ScanRunConfiguration,
-            source: ScanRunTargetedSource,
-            setup_context: object,
+                configuration: ScanRunConfiguration,
+                source: ScanRunTargetedSource,
+                setup_context: object,
         ) -> object:
             observed["targetedInputs"] = source.inputs
             observed["setupContext"] = setup_context
@@ -554,10 +559,10 @@ def test_scan_logs_consumes_final_result_and_event_contract(
         pass
 
     def scan_run_execute(
-        request: object,
-        cancellation: ScanRunCancellation,
-        observer: object | None = None,
-        cancel_on_observer_error: bool = False,
+            request: object,
+            cancellation: ScanRunCancellation,
+            observer: object | None = None,
+            cancel_on_observer_error: bool = False,
     ) -> object:
         assert getattr(request, "intent") == "targeted"
         assert isinstance(cancellation, ScanRunCancellation)
@@ -746,7 +751,8 @@ def test_catalog_validation() -> None:
     assert validate_catalog() == []
 
 
-def test_smoke_report_generation_with_fake_bindings(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_smoke_report_generation_with_fake_bindings(monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+                                                    capsys: pytest.CaptureFixture[str]) -> None:
     """Smoke compliance writes JSON and Markdown reports from shared report data."""
 
     sys.path.insert(0, str(CLI_SRC))
@@ -773,8 +779,8 @@ def test_smoke_report_generation_with_fake_bindings(monkeypatch: pytest.MonkeyPa
     fixture_root = REPO_ROOT / "python-bindings" / "tests" / "fixtures"
 
     def make_logs(
-        configuration: dict[str, object],
-        paths: list[str],
+            configuration: dict[str, object],
+            paths: list[str],
     ) -> list[types.SimpleNamespace]:
         assert configuration["installation_root"] == str(fixture_root)
         assert configuration["game"] is sys.modules["classic_shared"].GameId.Fallout4
@@ -828,7 +834,8 @@ def test_smoke_report_generation_with_fake_bindings(monkeypatch: pytest.MonkeyPa
     ]
 
 
-def test_smoke_scanlog_contract_rejects_outdated_warning(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_smoke_scanlog_contract_rejects_outdated_warning(monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+                                                         capsys: pytest.CaptureFixture[str]) -> None:
     """The Addictol smoke scenario fails if fixture evidence reports an outdated warning."""
 
     sys.path.insert(0, str(CLI_SRC))
@@ -837,12 +844,13 @@ def test_smoke_scanlog_contract_rejects_outdated_warning(monkeypatch: pytest.Mon
 
     scan_fixture = REPO_ROOT / "python-bindings" / "tests" / "fixtures" / "scanlogs" / "addictol-newer-than-floor.log"
     report_path = tmp_path / "addictol-AUTOSCAN.md"
-    report_path.write_text("*** WARNING: YOUR Addictol IS OUTDATED! PLEASE UPDATE TO A VALID VERSION!***\n", encoding="utf-8")
+    report_path.write_text("*** WARNING: YOUR Addictol IS OUTDATED! PLEASE UPDATE TO A VALID VERSION!***\n",
+                           encoding="utf-8")
     fake_scanlog = types.ModuleType("classic_scanlog")
 
     def make_logs(
-        configuration: dict[str, object],
-        paths: list[str],
+            configuration: dict[str, object],
+            paths: list[str],
     ) -> list[types.SimpleNamespace]:
         return [
             types.SimpleNamespace(
@@ -860,12 +868,12 @@ def test_smoke_scanlog_contract_rejects_outdated_warning(monkeypatch: pytest.Mon
         "scanlog-addictol-newer-than-floor",
         "Scan an Addictol crash log newer than the configured floor and prove it remains valid.",
         "classic_scanlog",
-            [
-                "ScanRunRequest.targeted",
-                "ScanRunCancellation",
-                "scan_run_execute",
-                "ScanRunLogResult.autoscan_report",
-            ],
+        [
+            "ScanRunRequest.targeted",
+            "ScanRunCancellation",
+            "scan_run_execute",
+            "ScanRunLogResult.autoscan_report",
+        ],
         ["scan", "logs", "--path", "python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log"],
         ["python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log"],
         0,
@@ -888,7 +896,8 @@ def test_smoke_scanlog_contract_rejects_outdated_warning(monkeypatch: pytest.Mon
     assert "validVersionLine" not in scanlog_result["data"]["reportEvidence"][0]
 
 
-def test_compliance_run_fails_when_scenario_expectation_missed(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_compliance_run_fails_when_scenario_expectation_missed(monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+                                                               capsys: pytest.CaptureFixture[str]) -> None:
     """Compliance run fails when a handler exits 0 but the scenario expected a nonzero exit."""
 
     sys.path.insert(0, str(CLI_SRC))
@@ -1043,9 +1052,9 @@ def test_display_lines_render_one_string_per_line_in_order() -> None:
 
 
 def test_scan_logs_prints_the_runs_lines_and_composes_no_summary(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Text output is the run's rendered lines, not a sentence written here."""
 
@@ -1070,9 +1079,9 @@ def test_scan_logs_prints_the_runs_lines_and_composes_no_summary(
 
 
 def test_scan_logs_states_an_infrastructure_failure_in_rusts_words(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
 ) -> None:
     """A stage reaches the user as prose while the token stays in the payload.
 
@@ -1121,9 +1130,9 @@ def test_scan_logs_states_an_infrastructure_failure_in_rusts_words(
 
 
 def test_scan_logs_json_output_carries_no_display_content(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Display Content stays out of the payload a consumer matches on."""
 
@@ -1134,10 +1143,10 @@ def test_scan_logs_json_output_carries_no_display_content(
     fake.__version__ = "test"
 
     def observing_execute(
-        request: object,
-        cancellation: object,
-        observer: object | None = None,
-        cancel_on_observer_error: bool = False,
+            request: object,
+            cancellation: object,
+            observer: object | None = None,
+            cancel_on_observer_error: bool = False,
     ) -> object:
         assert callable(observer)
         observer(

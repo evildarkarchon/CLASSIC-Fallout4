@@ -11,7 +11,6 @@ from typing import Any
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-
 from generate_baseline import (
     _effective_rust_symbol,
     generate_diff_report,
@@ -28,9 +27,9 @@ from parity_artifact_io import (
 
 
 def validate_contract_surface(
-    contract: dict[str, Any],
-    rust_manifest: dict[str, Any],
-    node_manifest: dict[str, Any],
+        contract: dict[str, Any],
+        rust_manifest: dict[str, Any],
+        node_manifest: dict[str, Any],
 ) -> list[str]:
     """Bidirectional contract ↔ surface guard with H1 fail-closed row rejection.
 
@@ -169,9 +168,9 @@ def validate_contract_surface(
 
         # Round 2 Fix 1.1: non-string nodeExport on a normal-shape row.
         if (
-            not is_proxy
-            and node_export is not None
-            and not isinstance(node_export, str)
+                not is_proxy
+                and node_export is not None
+                and not isinstance(node_export, str)
         ):
             diagnostics.append(
                 f"Row '{row_id}' has non-string nodeExport "
@@ -217,9 +216,9 @@ def validate_contract_surface(
         # @rust proxy rows are exempt: they have no nodeExport and exist
         # precisely to record that a Rust module has no binding counterpart.
         if (
-            not is_proxy
-            and effective_rust_symbol
-            and effective_rust_symbol in rust_module_only_symbols
+                not is_proxy
+                and effective_rust_symbol
+                and effective_rust_symbol in rust_module_only_symbols
         ):
             diagnostics.append(
                 f"Row '{row_id}' maps nodeExport '{node_export}' to "
@@ -417,9 +416,9 @@ def main() -> int:
 
     summary = diff_report["summary"]
     tier1_drift_count = (
-        summary["tier1_missing_rust"]
-        + summary["tier1_missing_node"]
-        + summary["tier1_signature_mismatch"]
+            summary["tier1_missing_rust"]
+            + summary["tier1_missing_node"]
+            + summary["tier1_signature_mismatch"]
     )
 
     tracked_artifact_names = (

@@ -44,19 +44,19 @@ def observe_crashgen_check(fixture: dict[str, Any]) -> dict[str, Any]:
         resolved = orchestrator.resolve_config_path(root)
         plugins = sorted(report.installed_plugins)
         if (
-            direct_message != message
-            or issues(direct_issues) != projected
-            or report.message != message
-            or issues(report.issues) != projected
-            or alias_message != message
-            or issues(alias_issues) != projected
-            or report.config_path != resolved
-            or sorted(orchestrator.detect_plugins(root)) != plugins
+                direct_message != message
+                or issues(direct_issues) != projected
+                or report.message != message
+                or issues(report.issues) != projected
+                or alias_message != message
+                or issues(alias_issues) != projected
+                or report.config_path != resolved
+                or sorted(orchestrator.detect_plugins(root)) != plugins
         ):
             raise ValueError("native Crashgen aliases disagree")
         if (
-            repr(checker) != "CrashgenChecker(...)"
-            or repr(orchestrator) != "CrashgenCheckOrchestrator()"
+                repr(checker) != "CrashgenChecker(...)"
+                or repr(orchestrator) != "CrashgenCheckOrchestrator()"
         ):
             raise ValueError("native Crashgen constructors returned wrong types")
         return {

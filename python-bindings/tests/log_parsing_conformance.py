@@ -19,16 +19,16 @@ def observe_log_parsing(fixture: Mapping[str, Any]) -> dict[str, Any]:
             constructed = native.CrashgenVersion(fixture["version"])
             normalized = native.CrashgenVersion(".".join(str(part) for part in version))
             if (
-                constructed != normalized
-                or hash(constructed) != hash(normalized)
-                or constructed.original != fixture["version"]
+                    constructed != normalized
+                    or hash(constructed) != hash(normalized)
+                    or constructed.original != fixture["version"]
             ):
                 raise ValueError(
                     "version construction/equality/hash changed numeric identity"
                 )
             if (
-                list(constructed.to_tuple()) != version
-                or [constructed.major, constructed.minor, constructed.patch] != version
+                    list(constructed.to_tuple()) != version
+                    or [constructed.major, constructed.minor, constructed.patch] != version
             ):
                 raise ValueError("version getters disagree with native parser")
         return {
@@ -53,8 +53,8 @@ def observe_log_parsing(fixture: Mapping[str, Any]) -> dict[str, Any]:
             "rival": info.rival,
         }
         if (
-            info.to_dict() != values
-            or str(native.GpuVendor(fixture["vendor"])) != values["manufacturer"]
+                info.to_dict() != values
+                or str(native.GpuVendor(fixture["vendor"])) != values["manufacturer"]
         ):
             raise ValueError("GPU public conversion differs from detected fields")
         empty = native.GpuInfo().to_dict()
@@ -101,13 +101,13 @@ def observe_log_parsing(fixture: Mapping[str, Any]) -> dict[str, Any]:
         [list(value) for value in parser.find_patterns(fixture["patternLines"])]
     )
     if (
-        sorted(
-            [
-                list(value)
-                for value in parser.find_patterns_chunked(fixture["patternLines"], 1)
-            ]
-        )
-        != patterns
+            sorted(
+                [
+                    list(value)
+                    for value in parser.find_patterns_chunked(fixture["patternLines"], 1)
+                ]
+            )
+            != patterns
     ):
         raise ValueError("chunked parser changed pattern results")
     sections = parser.parse_all_sections(fixture["lines"])
@@ -121,8 +121,8 @@ def observe_log_parsing(fixture: Mapping[str, Any]) -> dict[str, Any]:
         raise ValueError("complete parser changed named segments")
     headers = parser.parse_crash_header(fixture["lines"])
     if (complete.game_version, complete.crashgen_version, complete.main_error) != tuple(
-        headers.get(key, "UNKNOWN")
-        for key in ("game_version", "crashgen_version", "main_error")
+            headers.get(key, "UNKNOWN")
+            for key in ("game_version", "crashgen_version", "main_error")
     ):
         raise ValueError("complete parser changed header fields")
     benchmark = parser.benchmark(fixture["lines"], 16)

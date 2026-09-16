@@ -12,6 +12,7 @@ from conformance.families.version_registry_values import (
     VERSION_REGISTRY_VALUES_COVERAGE_POLICY as POLICY,
 )
 from conformance.receipts import validate_prepared_run
+
 from receipt_test_support import prepare_receipt_case
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -25,8 +26,8 @@ def test_value_methods_have_exact_python_applicability(tmp_path: Path) -> None:
     )
     rows = load_source_parity_rows(ROOT)
     assert {
-        item.id for item in derive_applicability(pack.document(), rows).participants
-    } == {"rust", "python"}
+               item.id for item in derive_applicability(pack.document(), rows).participants
+           } == {"rust", "python"}
     report = validate_prepared_run(pack, run, coverage_policy=POLICY)
     assert not report.failures
     coverage = derive_row_coverage(
@@ -39,9 +40,9 @@ def test_value_methods_have_exact_python_applicability(tmp_path: Path) -> None:
     )
     assert not coverage.failures
     assert {
-        "parity:python:version_registry.models.VersionInfo.__eq__",
-        "parity:python:version_registry.models.VersionInfo.__hash__",
-    } <= {row.obligation_id for row in coverage.rows}
+               "parity:python:version_registry.models.VersionInfo.__eq__",
+               "parity:python:version_registry.models.VersionInfo.__hash__",
+           } <= {row.obligation_id for row in coverage.rows}
     assert all(
         not predicate.covers_runtime_operation("future_value_method")
         for predicate in POLICY.predicates

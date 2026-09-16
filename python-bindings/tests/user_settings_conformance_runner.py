@@ -78,10 +78,10 @@ def _runtime_path(root: Path, raw_path: object) -> Path:
     posix = PurePosixPath(value)
     windows = PureWindowsPath(value)
     if (
-        posix.is_absolute()
-        or windows.drive
-        or "\\" in value
-        or any(part in {"", ".", ".."} for part in value.split("/"))
+            posix.is_absolute()
+            or windows.drive
+            or "\\" in value
+            or any(part in {"", ".", ".."} for part in value.split("/"))
     ):
         raise RunnerContractError(
             "installationData.path must stay beneath the runtime root"
@@ -93,7 +93,7 @@ def _runtime_path(root: Path, raw_path: object) -> Path:
 
 
 def _materialize_inputs(
-    plan: Mapping[str, Any], scenario: Mapping[str, Any], root: Path
+        plan: Mapping[str, Any], scenario: Mapping[str, Any], root: Path
 ) -> Mapping[str, Any]:
     """Copy exclusively scenario-declared fixtures into the private installation."""
     inputs = _mapping(scenario.get("input"), "scenario input")
@@ -162,7 +162,7 @@ def _selected_view(snapshot: Any, fields: object) -> dict[str, Any]:
 
 
 def _execute_scenario(
-    plan: Mapping[str, Any], scenario: Mapping[str, Any]
+        plan: Mapping[str, Any], scenario: Mapping[str, Any]
 ) -> dict[str, Any]:
     """Dispatch public operations or open once and compare source-byte evidence."""
     import classic_user_settings
@@ -183,7 +183,7 @@ def _execute_scenario(
     if action != "user-settings.open":
         raise RunnerContractError("unsupported User Settings action")
     with tempfile.TemporaryDirectory(
-        prefix="classic-user-settings-conformance-"
+            prefix="classic-user-settings-conformance-"
     ) as temporary:
         root = Path(temporary).resolve()
         inputs = _materialize_inputs(plan, scenario, root)
@@ -243,13 +243,13 @@ def _execute_scenario(
 
 
 def _execute_geometry(
-    plan: Mapping[str, Any], scenario: Mapping[str, Any]
+        plan: Mapping[str, Any], scenario: Mapping[str, Any]
 ) -> dict[str, Any]:
     """Commit a real geometry transition and authenticate its resulting source revision."""
     import classic_user_settings
 
     with tempfile.TemporaryDirectory(
-        prefix="classic-geometry-conformance-"
+            prefix="classic-geometry-conformance-"
     ) as temporary:
         root = Path(temporary).resolve()
         inputs = _materialize_inputs(plan, scenario, root)
@@ -268,7 +268,7 @@ def _execute_geometry(
                 "code": None,
                 "hasMessage": None,
                 "revisionMatches": outcome.revision
-                == "sha256:" + hashlib.sha256(content).hexdigest(),
+                                   == "sha256:" + hashlib.sha256(content).hexdigest(),
             }
         except classic_user_settings.UserSettingsCommitError as error:
             message = str(error)
@@ -302,13 +302,13 @@ def _execute_geometry(
 
 
 def _execute_legacy_import(
-    plan: Mapping[str, Any], scenario: Mapping[str, Any]
+        plan: Mapping[str, Any], scenario: Mapping[str, Any]
 ) -> dict[str, Any]:
     """Import dormant TUI bytes, inspect the verified receipt, and restore the exact base."""
     import classic_user_settings
 
     with tempfile.TemporaryDirectory(
-        prefix="classic-legacy-import-conformance-"
+            prefix="classic-legacy-import-conformance-"
     ) as temporary:
         root = Path(temporary).resolve()
         _materialize_inputs(plan, scenario, root)
@@ -328,19 +328,19 @@ def _execute_legacy_import(
         base_revision = "sha256:" + hashlib.sha256(original).hexdigest()
         published_revision = "sha256:" + hashlib.sha256(published).hexdigest()
         if (
-            outcome.source_path,
-            outcome.backup_path,
-            outcome.source_revision,
-            outcome.backup_revision,
-            outcome.base_settings_revision,
-            outcome.published_settings_revision,
+                outcome.source_path,
+                outcome.backup_path,
+                outcome.source_revision,
+                outcome.backup_revision,
+                outcome.base_settings_revision,
+                outcome.published_settings_revision,
         ) != (
-            receipt.source_path,
-            receipt.backup_path,
-            receipt.source_revision,
-            receipt.backup_revision,
-            receipt.base_settings_revision,
-            receipt.published_settings_revision,
+                receipt.source_path,
+                receipt.backup_path,
+                receipt.source_revision,
+                receipt.backup_revision,
+                receipt.base_settings_revision,
+                receipt.published_settings_revision,
         ):
             raise RunnerContractError("legacy outcome lost receipt metadata")
         tui = classic_user_settings.open_user_settings(str(root)).frontend_state.tui
@@ -354,11 +354,11 @@ def _execute_legacy_import(
             else _migration_relative_path(root, receipt.settings_backup_path),
             "sourceRevisionMatches": receipt.source_revision == source_revision,
             "backupRevisionMatches": receipt.backup_revision
-            == "sha256:" + hashlib.sha256(backup).hexdigest()
-            and backup == legacy,
+                                     == "sha256:" + hashlib.sha256(backup).hexdigest()
+                                     and backup == legacy,
             "baseRevisionMatches": receipt.base_settings_revision == base_revision,
             "publishedRevisionMatches": receipt.published_settings_revision
-            == published_revision,
+                                        == published_revision,
             "inapplicable": {
                 "classification": outcome.classification,
                 "revision": outcome.revision,
@@ -383,7 +383,7 @@ def _execute_legacy_import(
             "restore": {
                 "status": restored.status,
                 "revisionMatches": restored.revision == base_revision
-                and (root / "CLASSIC Settings.yaml").read_bytes() == original,
+                                   and (root / "CLASSIC Settings.yaml").read_bytes() == original,
                 "expectedRevision": restored.expected_revision,
                 "actualRevision": restored.actual_revision,
             },
@@ -453,7 +453,7 @@ def _requested_update(fields: object) -> Any:
 
 
 def _install_external_edit(
-    plan: Mapping[str, Any], scenario: Mapping[str, Any], root: Path, raw_edit: object
+        plan: Mapping[str, Any], scenario: Mapping[str, Any], root: Path, raw_edit: object
 ) -> None:
     """Materialize one declared caller edit after preview without interpreting its bytes."""
     edit = _mapping(raw_edit, "externalEdit")
@@ -565,9 +565,9 @@ def _migration_error_code(error: Exception) -> str:
     """Extract the stable code prefix transported by the public Python exception."""
     code, separator, _message = str(error).partition(": ")
     if (
-        not separator
-        or not code
-        or any(char not in "abcdefghijklmnopqrstuvwxyz0123456789_" for char in code)
+            not separator
+            or not code
+            or any(char not in "abcdefghijklmnopqrstuvwxyz0123456789_" for char in code)
     ):
         raise RunnerContractError(
             "migration exception has no stable core code"
@@ -576,11 +576,11 @@ def _migration_error_code(error: Exception) -> str:
 
 
 def _migration_intervention(
-    plan: Mapping[str, Any],
-    scenario: Mapping[str, Any],
-    root: Path,
-    intervention: object,
-    receipt: Any = None,
+        plan: Mapping[str, Any],
+        scenario: Mapping[str, Any],
+        root: Path,
+        intervention: object,
+        receipt: Any = None,
 ) -> None:
     """Apply declared external edits or backup disturbances at the requested phase."""
     if intervention is None:
@@ -605,7 +605,7 @@ def _migration_intervention(
         else:
             reference = _string(edit.get("fixtureRef"), "backup fixtureRef")
             if reference not in _array(
-                scenario.get("fixtureRefs"), "scenario fixtureRefs"
+                    scenario.get("fixtureRefs"), "scenario fixtureRefs"
             ):
                 raise RunnerContractError(
                     "backup fixture is not declared by the scenario"
@@ -619,29 +619,29 @@ def _migration_intervention(
 
 
 def _execute_migration(
-    plan: Mapping[str, Any], scenario: Mapping[str, Any]
+        plan: Mapping[str, Any], scenario: Mapping[str, Any]
 ) -> dict[str, Any]:
     """Exercise public planning, reversal, apply, and opaque-receipt restoration."""
     import classic_user_settings
 
     with tempfile.TemporaryDirectory(
-        prefix="classic-user-settings-migration-"
+            prefix="classic-user-settings-migration-"
     ) as temporary:
         root = Path(temporary).resolve()
         inputs = _materialize_inputs(plan, scenario, root)
         if not isinstance(inputs.get("apply"), bool) or not isinstance(
-            inputs.get("restore"), bool
+                inputs.get("restore"), bool
         ):
             raise RunnerContractError("migration apply and restore must be booleans")
         for phase, kinds in (
-            ("beforeApply", {"external-edit", "block-backup-directory"}),
-            ("beforeRestore", {"external-edit", "tamper-backup", "remove-backup"}),
+                ("beforeApply", {"external-edit", "block-backup-directory"}),
+                ("beforeRestore", {"external-edit", "tamper-backup", "remove-backup"}),
         ):
             if phase not in inputs:
                 raise RunnerContractError(f"{phase} must be supplied explicitly")
             if (
-                inputs[phase] is not None
-                and _mapping(inputs[phase], phase).get("kind") not in kinds
+                    inputs[phase] is not None
+                    and _mapping(inputs[phase], phase).get("kind") not in kinds
             ):
                 raise RunnerContractError(f"unsupported {phase} intervention")
         planning = classic_user_settings.open_user_settings(str(root)).plan_migration()
@@ -717,13 +717,13 @@ def _execute_migration(
 
 
 def _execute_operation(
-    plan: Mapping[str, Any], scenario: Mapping[str, Any]
+        plan: Mapping[str, Any], scenario: Mapping[str, Any]
 ) -> dict[str, Any]:
     """Preview and optionally commit through public APIs, preserving each durable phase."""
     import classic_user_settings
 
     with tempfile.TemporaryDirectory(
-        prefix="classic-user-settings-operation-"
+            prefix="classic-user-settings-operation-"
     ) as temporary:
         # An absent installation is an input: previews must not silently create its root.
         root = Path(temporary).resolve() / "installation"

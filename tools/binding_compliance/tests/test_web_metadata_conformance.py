@@ -47,8 +47,8 @@ def test_web_suffix_cases_include_empty_and_unicode():
         )["request"]
         suffixes.append(request["suffix"])
         assert (
-            case["expected"]["userAgentWithSuffix"]
-            == "CLASSIC/8.0.0 (" + request["suffix"] + ")"
+                case["expected"]["userAgentWithSuffix"]
+                == "CLASSIC/8.0.0 (" + request["suffix"] + ")"
         )
     assert "" in suffixes
     assert "conformance / 雪" in suffixes

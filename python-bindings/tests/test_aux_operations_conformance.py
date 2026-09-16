@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
     "family", ["web-operations", "resource-operations", "version-operations"]
 )
 def test_auxiliary_public_operations_match_authored_cases(
-    family: str, monkeypatch: pytest.MonkeyPatch
+        family: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Call native public APIs and compare complete values, errors and file results."""
     monkeypatch.syspath_prepend(str(Path(__file__).parent))
@@ -42,9 +42,9 @@ def test_auxiliary_public_operations_match_authored_cases(
             continue
         fixture = json.loads(
             (
-                ROOT
-                / pack["fixtureRoot"]
-                / pack["fixtures"][scenario["input"]["fixtureRef"]]
+                    ROOT
+                    / pack["fixtureRoot"]
+                    / pack["fixtures"][scenario["input"]["fixtureRef"]]
             ).read_text(encoding="utf-8")
         )
         assert observe_aux_operations(family, fixture) == scenario["expected"], (

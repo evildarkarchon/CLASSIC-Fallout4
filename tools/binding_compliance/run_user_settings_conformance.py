@@ -84,10 +84,10 @@ PARTICIPANT_COMMANDS = {
 
 
 def run_participant(
-    participant_id: str,
-    *,
-    artifact_root: Path = DEFAULT_ARTIFACT_ROOT,
-    timeout_seconds: int = 1_200,
+        participant_id: str,
+        *,
+        artifact_root: Path = DEFAULT_ARTIFACT_ROOT,
+        timeout_seconds: int = 1_200,
 ) -> tuple[int, Path]:
     """Execute settings through shared launch/receipt validation machinery.
 

@@ -16,9 +16,9 @@ def test_yaml_file_values_are_a_shared_executable_family() -> None:
 
     pack = load_and_validate_pack(root, path).document()
     assert {
-        p.id
-        for p in derive_applicability(pack, load_source_parity_rows(root)).participants
-    } == {"rust", "cxx", "node", "python"}
+               p.id
+               for p in derive_applicability(pack, load_source_parity_rows(root)).participants
+           } == {"rust", "cxx", "node", "python"}
     expected = pack["scenarios"][0]["expected"]
     predicate = YAML_FILE_VALUES_COVERAGE_POLICY.predicates[0]
     assert predicate.matches(expected)

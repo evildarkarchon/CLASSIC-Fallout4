@@ -168,7 +168,7 @@ def _balanced_body(text: str, open_idx: int) -> str:
         elif text[idx] == "}":
             depth -= 1
             if depth == 0:
-                return text[start : idx + 1]
+                return text[start: idx + 1]
     return text[start:]
 
 
@@ -204,7 +204,7 @@ def collect_node_wrappers(repo_root: Path) -> dict[str, dict[str, Any]]:
         for crate, body in _USE_RE.findall(text):
             inner = body
             if "{" in inner:
-                inner = inner[inner.find("{") + 1 : inner.rfind("}")]
+                inner = inner[inner.find("{") + 1: inner.rfind("}")]
             for part in inner.split(","):
                 part = part.strip()
                 if not part:
@@ -266,9 +266,9 @@ def collect_node_wrappers(repo_root: Path) -> dict[str, dict[str, Any]]:
 
 
 def resolve_export(
-    export: str,
-    info: dict[str, Any],
-    surface_by_name: dict[str, list[dict[str, Any]]],
+        export: str,
+        info: dict[str, Any],
+        surface_by_name: dict[str, list[dict[str, Any]]],
 ) -> Resolution:
     """Resolve one Node export to its core Rust symbol, strongest evidence first."""
     res = Resolution(node_export=export)
@@ -290,7 +290,7 @@ def resolve_export(
     local_helpers: dict[str, str] = info.get("local_helpers", {})
     for helper_name, helper_body in local_helpers.items():
         if helper_name != rust_name and re.search(
-            rf"\b{re.escape(helper_name)}\s*\(", body
+                rf"\b{re.escape(helper_name)}\s*\(", body
         ):
             body += helper_body
 
@@ -306,7 +306,7 @@ def resolve_export(
         if not alias.islower():
             continue
         for symbol in re.findall(
-            rf"\b{re.escape(alias)}::(?:[a-z0-9_]+::)*([A-Za-z0-9_]+)", body
+                rf"\b{re.escape(alias)}::(?:[a-z0-9_]+::)*([A-Za-z0-9_]+)", body
         ):
             qualified_names.append((symbol, crate))
 
@@ -326,11 +326,11 @@ def resolve_export(
         )
 
     def accept(
-        symbol: str,
-        crate: str | None,
-        confidence: str,
-        evidence: str,
-        allow_infrastructure: bool = False,
+            symbol: str,
+            crate: str | None,
+            confidence: str,
+            evidence: str,
+            allow_infrastructure: bool = False,
     ) -> bool:
         entries = surface_by_name.get(symbol)
         if not entries:
@@ -356,11 +356,11 @@ def resolve_export(
     # means the wrapper genuinely re-exports that symbol.
     for symbol, crate in qualified_names:
         if symbol == rust_name and accept(
-            symbol,
-            _crate_name_to_package(crate),
-            "exact",
-            f"{crate}::{symbol} called in wrapper body",
-            allow_infrastructure=True,
+                symbol,
+                _crate_name_to_package(crate),
+                "exact",
+                f"{crate}::{symbol} called in wrapper body",
+                allow_infrastructure=True,
         ):
             return res
 
@@ -371,11 +371,11 @@ def resolve_export(
     # ``Result`` -- ``CheckResult``, ``ScanResult``, ``ValidationResult`` -- get
     # thrown away with the plumbing.
     if from_core and accept(
-        from_core,
-        None,
-        "from_impl",
-        f"impl From<{from_core}> for {export}",
-        allow_infrastructure=True,
+            from_core,
+            None,
+            "from_impl",
+            f"impl From<{from_core}> for {export}",
+            allow_infrastructure=True,
     ):
         return res
 
@@ -384,11 +384,11 @@ def resolve_export(
     # correspondence is written down at all.
     converted = info.get("conversions", {}).get(export)
     if converted and accept(
-        converted,
-        None,
-        "conversion_fn",
-        f"conversion helper maps {converted} -> {export}",
-        allow_infrastructure=True,
+            converted,
+            None,
+            "conversion_fn",
+            f"conversion helper maps {converted} -> {export}",
+            allow_infrastructure=True,
     ):
         return res
 
@@ -403,7 +403,7 @@ def resolve_export(
     for field_type in field_types:
         entries = surface_by_name.get(field_type, [])
         if any(
-            e["kind"] in {"struct", "enum", "type", "reexport"} for e in entries
+                e["kind"] in {"struct", "enum", "type", "reexport"} for e in entries
         ) and accept(
             field_type,
             None,
@@ -437,11 +437,11 @@ def resolve_export(
         for candidate in candidates:
             entries = surface_by_name.get(candidate, [])
             if any(e["kind"] in type_kinds for e in entries) and accept(
-                candidate,
-                None,
-                "js_prefix",
-                f"Js-prefix convention: {export} mirrors core type {candidate}",
-                allow_infrastructure=True,
+                    candidate,
+                    None,
+                    "js_prefix",
+                    f"Js-prefix convention: {export} mirrors core type {candidate}",
+                    allow_infrastructure=True,
             ):
                 return res
 
@@ -456,8 +456,8 @@ def resolve_export(
     # surface as functions are considered, which filters out std combinators
     # like ``map_err`` and ``unwrap`` without needing to enumerate them.
     referenced_crates = {
-        _crate_name_to_package(crate) for _sym, crate in qualified_names
-    } | {_crate_name_to_package(crate) for _name, crate in imported_hits}
+                            _crate_name_to_package(crate) for _sym, crate in qualified_names
+                        } | {_crate_name_to_package(crate) for _name, crate in imported_hits}
     # Both `value.method(...)` and `CoreType::assoc(...)` count. The associated
     # form is how a bare core type gets used without ever being constructed --
     # `XseType::from_game_id(core_game)` -- and matching only the dotted form
@@ -473,14 +473,14 @@ def resolve_export(
     assoc_types = [
         type_name
         for type_name in re.findall(r"\b([A-Z][A-Za-z0-9_]*)::[A-Za-z_]", body)
-        + re.findall(r"::<\s*([A-Z][A-Za-z0-9_]*)", body)
+                         + re.findall(r"::<\s*([A-Z][A-Za-z0-9_]*)", body)
         if type_name in import_map or type_name in surface_by_name
     ]
     core_methods = [
         name
         for name in method_calls
         if name not in _UBIQUITOUS_METHODS
-        and any(
+           and any(
             e["kind"] == "function" and (not referenced_crates or e["crate"] in referenced_crates)
             for e in surface_by_name.get(name, [])
         )
@@ -489,43 +489,43 @@ def resolve_export(
     # vs ``parse_yaml``), then fall back to the first core method called.
     export_words = set(rust_name.split("_"))
     for name in sorted(
-        core_methods, key=lambda n: -len(export_words & set(n.split("_")))
+            core_methods, key=lambda n: -len(export_words & set(n.split("_")))
     ):
         if accept(
-            name,
-            None,
-            "core_method",
-            f"{name}(...) called on a core type in wrapper body",
+                name,
+                None,
+                "core_method",
+                f"{name}(...) called on a core type in wrapper body",
         ):
             return res
 
     # Fall back to the core type whose associated function was called.
     for type_name in assoc_types:
         if accept(
-            type_name,
-            None,
-            "core_assoc",
-            f"{type_name}::... called in wrapper body",
+                type_name,
+                None,
+                "core_assoc",
+                f"{type_name}::... called in wrapper body",
         ):
             return res
 
     # Next: any crate-qualified core symbol referenced by the wrapper.
     for symbol, crate in qualified_names:
         if accept(
-            symbol,
-            _crate_name_to_package(crate),
-            "qualified",
-            f"{crate}::{symbol} referenced in wrapper body",
+                symbol,
+                _crate_name_to_package(crate),
+                "qualified",
+                f"{crate}::{symbol} referenced in wrapper body",
         ):
             return res
 
     # Weakest accepted: an imported core name used in the body, same-name first.
     for name, crate in sorted(imported_hits, key=lambda kv: kv[0] != rust_name):
         if accept(
-            name,
-            _crate_name_to_package(crate),
-            "imported" if name != rust_name else "imported_exact",
-            f"use {crate}::{name}; referenced in wrapper body",
+                name,
+                _crate_name_to_package(crate),
+                "imported" if name != rust_name else "imported_exact",
+                f"use {crate}::{name}; referenced in wrapper body",
         ):
             return res
 

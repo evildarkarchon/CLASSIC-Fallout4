@@ -7,7 +7,6 @@ from dataclasses import asdict, dataclass
 from types import ModuleType
 from typing import Any
 
-
 EXPECTED_BINDINGS = [
     "classic_config",
     "classic_database",
@@ -61,8 +60,10 @@ def inspect_binding(module_name: str) -> BindingDiagnostic:
     try:
         module = importlib.import_module(module_name)
     except Exception as exc:  # noqa: BLE001 - report stale wheels and loader failures uniformly.
-        return BindingDiagnostic(module=module_name, importable=False, error_type=type(exc).__name__, error_message=str(exc))
-    return BindingDiagnostic(module=module_name, importable=True, version=getattr(module, "__version__", None), public_exports=public_exports(module))
+        return BindingDiagnostic(module=module_name, importable=False, error_type=type(exc).__name__,
+                                 error_message=str(exc))
+    return BindingDiagnostic(module=module_name, importable=True, version=getattr(module, "__version__", None),
+                             public_exports=public_exports(module))
 
 
 def list_bindings(module_names: list[str] | None = None) -> list[BindingDiagnostic]:

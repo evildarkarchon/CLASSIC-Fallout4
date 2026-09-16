@@ -97,7 +97,7 @@ def _balanced_block(text: str, open_idx: int) -> str:
         elif text[idx] == "}":
             depth -= 1
             if depth == 0:
-                return text[start : idx + 1]
+                return text[start: idx + 1]
     return text[start:]
 
 
@@ -146,7 +146,7 @@ def collect_python_wrappers(repo_root: Path) -> dict[str, dict[str, Any]]:
         for crate, body in _USE_RE.findall(text):
             inner = body
             if "{" in inner:
-                inner = inner[inner.find("{") + 1 : inner.rfind("}")]
+                inner = inner[inner.find("{") + 1: inner.rfind("}")]
             for part in inner.split(","):
                 part = part.strip()
                 if not part:
@@ -195,9 +195,9 @@ def collect_python_wrappers(repo_root: Path) -> dict[str, dict[str, Any]]:
 
 
 def resolve_export(
-    export: str,
-    info: dict[str, Any],
-    surface_by_name: dict[str, list[dict[str, Any]]],
+        export: str,
+        info: dict[str, Any],
+        surface_by_name: dict[str, list[dict[str, Any]]],
 ) -> Resolution:
     """Resolve one Python export to its core Rust symbol, strongest evidence first."""
     res = Resolution(python_export=export)
@@ -219,11 +219,11 @@ def resolve_export(
         )
 
     def accept(
-        symbol: str,
-        crate: str | None,
-        confidence: str,
-        evidence: str,
-        allow_infrastructure: bool = False,
+            symbol: str,
+            crate: str | None,
+            confidence: str,
+            evidence: str,
+            allow_infrastructure: bool = False,
     ) -> bool:
         entries = surface_by_name.get(symbol)
         if not entries:
@@ -245,20 +245,20 @@ def resolve_export(
     # Strongest: the wrapper calls a core symbol named exactly as it exposes.
     for symbol, crate in qualified_names:
         if symbol in {rust_name, export} and accept(
-            symbol,
-            _crate_ident_to_package(crate),
-            "exact",
-            f"{crate}::{symbol} referenced in wrapper",
-            allow_infrastructure=True,
+                symbol,
+                _crate_ident_to_package(crate),
+                "exact",
+                f"{crate}::{symbol} referenced in wrapper",
+                allow_infrastructure=True,
         ):
             return res
 
     if from_core and accept(
-        from_core,
-        None,
-        "from_impl",
-        f"impl From<{from_core}> for {rust_name}",
-        allow_infrastructure=True,
+            from_core,
+            None,
+            "from_impl",
+            f"impl From<{from_core}> for {rust_name}",
+            allow_infrastructure=True,
     ):
         return res
 
@@ -279,7 +279,7 @@ def resolve_export(
     for field_type in field_types:
         entries = surface_by_name.get(field_type, [])
         if any(
-            e["kind"] in {"struct", "enum", "type", "reexport"} for e in entries
+                e["kind"] in {"struct", "enum", "type", "reexport"} for e in entries
         ) and accept(
             field_type,
             None,
@@ -300,11 +300,11 @@ def resolve_export(
     for candidate in candidates:
         entries = surface_by_name.get(candidate, [])
         if any(e["kind"] in type_kinds for e in entries) and accept(
-            candidate,
-            None,
-            "name_match",
-            f"exported name matches core symbol {candidate}",
-            allow_infrastructure=True,
+                candidate,
+                None,
+                "name_match",
+                f"exported name matches core symbol {candidate}",
+                allow_infrastructure=True,
         ):
             return res
 
@@ -312,8 +312,8 @@ def resolve_export(
     # method is the real counterpart. Only methods present in the surface as
     # functions count, which filters std combinators without enumerating them.
     referenced_crates = {
-        _crate_ident_to_package(crate) for _s, crate in qualified_names
-    } | {_crate_ident_to_package(crate) for _n, crate in imported_hits}
+                            _crate_ident_to_package(crate) for _s, crate in qualified_names
+                        } | {_crate_ident_to_package(crate) for _n, crate in imported_hits}
     method_calls = re.findall(r"\.([a-z_][A-Za-z0-9_]*)\s*\(", body)
     core_methods = [
         name
@@ -326,28 +326,28 @@ def resolve_export(
     ]
     export_words = set(rust_name.split("_"))
     for name in sorted(
-        core_methods, key=lambda n: -len(export_words & set(n.split("_")))
+            core_methods, key=lambda n: -len(export_words & set(n.split("_")))
     ):
         if accept(
-            name, None, "core_method", f".{name}(...) called on a core type in wrapper"
+                name, None, "core_method", f".{name}(...) called on a core type in wrapper"
         ):
             return res
 
     for symbol, crate in qualified_names:
         if accept(
-            symbol,
-            _crate_ident_to_package(crate),
-            "qualified",
-            f"{crate}::{symbol} referenced in wrapper",
+                symbol,
+                _crate_ident_to_package(crate),
+                "qualified",
+                f"{crate}::{symbol} referenced in wrapper",
         ):
             return res
 
     for name, crate in sorted(imported_hits, key=lambda kv: kv[0] != rust_name):
         if accept(
-            name,
-            _crate_ident_to_package(crate),
-            "imported",
-            f"use {crate}::{name}; referenced in wrapper",
+                name,
+                _crate_ident_to_package(crate),
+                "imported",
+                f"use {crate}::{name}; referenced in wrapper",
         ):
             return res
 

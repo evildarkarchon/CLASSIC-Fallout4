@@ -19,9 +19,9 @@ def test_rejection_facts_never_accept_success_or_transport_failure():
             document, scenario, scenario["expected"], UPDATE_REJECTION_COVERAGE_POLICY
         )
         for altered in (
-            {"error": None},
-            {"boundary": "transport", "error": "timeout"},
-            {**scenario["expected"], "requestBuilt": True},
+                {"error": None},
+                {"boundary": "transport", "error": "timeout"},
+                {**scenario["expected"], "requestBuilt": True},
         ):
             assert not derive_observed_fact_ids(
                 document, scenario, altered, UPDATE_REJECTION_COVERAGE_POLICY

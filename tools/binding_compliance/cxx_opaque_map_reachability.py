@@ -53,25 +53,25 @@ def validate_cxx_opaque_map_reachability(repo_root: Path) -> frozenset[str]:
     starts = [
         index
         for index in range(len(source))
-        if source[index : index + len(surface)] == surface
+        if source[index: index + len(surface)] == surface
     ]
     if len(starts) != 1:
         raise ValueError(
             "opaque map CXX surface gained or changed an exposed reference"
         )
     start = starts[0]
-    outside = source[:start] + source[start + len(surface) :]
+    outside = source[:start] + source[start + len(surface):]
     if any(
-        token in outside
-        for token in ("extern", "type", "!", "no_mangle", "export_name", "bridge")
+            token in outside
+            for token in ("extern", "type", "!", "no_mangle", "export_name", "bridge")
     ):
         raise ValueError(
             "opaque map module gained an alias, macro, or additional exported ABI"
         )
     guarded_tests = _tokens('#[cfg(test)] #[path = "types_tests.rs"] mod tests;')
     if not any(
-        outside[index : index + len(guarded_tests)] == guarded_tests
-        for index in range(len(outside))
+            outside[index: index + len(guarded_tests)] == guarded_tests
+            for index in range(len(outside))
     ):
         raise ValueError("opaque map construction tests must remain test-only")
     for path in (crate / "src").rglob("*.rs"):

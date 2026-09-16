@@ -20,15 +20,15 @@ def observe_shared_registry(family: str, fixture: Mapping[str, Any]) -> dict[str
         if list(processor.intern_batch(values)) != observation["interned"]:
             raise ValueError("batch interning disagrees with scalar observations")
         if (
-            list(processor.process_batch_fast(values, "normalize"))
-            != observation["batch"]
+                list(processor.process_batch_fast(values, "normalize"))
+                != observation["batch"]
         ):
             raise ValueError("fast processing disagrees with native batch observation")
         for value in ["", *values]:
             lines = value.splitlines()
             if (
-                list(processor.split_lines(value)) != lines
-                or list(processor.split_lines_fast(value)) != lines
+                    list(processor.split_lines(value)) != lines
+                    or list(processor.split_lines_fast(value)) != lines
             ):
                 raise ValueError("native line splitting disagrees with fixture text")
             if processor.common_prefix([value, value]) != value:

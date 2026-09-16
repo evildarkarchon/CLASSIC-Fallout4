@@ -306,7 +306,7 @@ def _solution_rule(api: Any, rule: Mapping[str, Any]) -> Any:
 
 
 def _create_analyzer(
-    api: Any, family: str, config: Mapping[str, Any]
+        api: Any, family: str, config: Mapping[str, Any]
 ) -> tuple[Any, Callable[[Mapping[str, Any]], Any]]:
     """Construct real public analyzers and convert only their input carrier shapes."""
     if family == "crash-suspect":
@@ -536,7 +536,7 @@ async def _lookup(fixture: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def _execute_scenario(
-    plan: Mapping[str, Any], scenario: Mapping[str, Any]
+        plan: Mapping[str, Any], scenario: Mapping[str, Any]
 ) -> dict[str, Any]:
     """Read only a declared fixture and invoke its real public operation."""
     if plan["familyId"] in {"config-vocabulary", "scan-run-vocabulary"}:
@@ -791,7 +791,7 @@ def _execute_scenario(
 
 
 def _scenario_receipt(
-    plan: Mapping[str, Any], scenario: Mapping[str, Any]
+        plan: Mapping[str, Any], scenario: Mapping[str, Any]
 ) -> dict[str, Any]:
     """Keep adapter defects distinct from successfully observed domain errors."""
     receipt = {

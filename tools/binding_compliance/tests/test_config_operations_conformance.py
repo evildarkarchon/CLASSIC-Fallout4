@@ -179,7 +179,7 @@ def test_config_fact_limits_credit_to_observed_api() -> None:
 
 @pytest.mark.parametrize("participant", ("cxx", "node", "python"))
 def test_config_receipt_lifecycle_fails_closed(
-    tmp_path: Path, participant: str
+        tmp_path: Path, participant: str
 ) -> None:
     """Validate genuine receipt transport while rejecting drift, replay, and new APIs."""
     (tmp_path / PACK).parent.mkdir(parents=True)
@@ -190,11 +190,11 @@ def test_config_receipt_lifecycle_fails_closed(
 
     copy_source_inventory(ROOT, tmp_path)
     for arguments in (
-        ("init",),
-        ("config", "user.email", "conformance@example.invalid"),
-        ("config", "user.name", "Conformance Tests"),
-        ("add", "."),
-        ("commit", "-m", "fixture"),
+            ("init",),
+            ("config", "user.email", "conformance@example.invalid"),
+            ("config", "user.name", "Conformance Tests"),
+            ("add", "."),
+            ("commit", "-m", "fixture"),
     ):
         subprocess.run(
             ["git", "-C", str(tmp_path), *arguments], check=True, capture_output=True
@@ -277,9 +277,9 @@ def test_config_receipt_lifecycle_fails_closed(
         added.obligation_id
     ]
     for index, field, replacement in (
-        (0, "result", None),
-        (1, "error", None),
-        (2, "files", []),
+            (0, "result", None),
+            (1, "error", None),
+            (2, "files", []),
     ):
         changed = copy.deepcopy(receipt)
         changed["scenarios"][index]["observation"][field] = replacement

@@ -142,15 +142,18 @@ def doctor(args: object, context: CommandContext) -> CommandResult:
     data = {"checks": checks, "bindings": binding_diagnostics, "python": sys.executable}
     if failed:
         code = int(ExitCode.BINDING_IMPORT) if missing else int(ExitCode.USAGE)
-        return failure("doctor", f"{len(failed)} readiness checks failed", code, data=data, text_lines=[f"FAIL {check['id']}" for check in failed])
-    return success("doctor", "Python binding environment is ready", data, text_lines=["Python binding environment is ready"])
+        return failure("doctor", f"{len(failed)} readiness checks failed", code, data=data,
+                       text_lines=[f"FAIL {check['id']}" for check in failed])
+    return success("doctor", "Python binding environment is ready", data,
+                   text_lines=["Python binding environment is ready"])
 
 
 def _tool_available(tool: str) -> bool:
     """Return whether a tool can be launched from the current environment."""
 
     try:
-        subprocess.run([tool, "--version"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
+        subprocess.run([tool, "--version"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                       timeout=10)
     except (OSError, subprocess.TimeoutExpired):
         return False
     return True
@@ -200,11 +203,13 @@ def compliance_run(args: _ComplianceRunArgs, context: CommandContext) -> Command
     report = {
         "schemaVersion": "1.0",
         "profile": profile,
-        "environment": {"repoRoot": str(context.repo_root), "fixtureRoot": str(context.fixture_root), "python": sys.executable},
+        "environment": {"repoRoot": str(context.repo_root), "fixtureRoot": str(context.fixture_root),
+                        "python": sys.executable},
         "scenarioResults": scenario_results,
         "delegatedGates": delegated,
         "coveredExports": sorted({export for scenario in scenarios for export in scenario.covered_exports}),
-        "failureClassifications": sorted({classification for scenario in scenarios for classification in scenario.failure_classifications}),
+        "failureClassifications": sorted(
+            {classification for scenario in scenarios for classification in scenario.failure_classifications}),
     }
     artifacts = _write_reports(report, context)
     summary = f"Compliance profile {profile} {'passed' if exit_code == 0 else 'failed'}"
@@ -287,7 +292,8 @@ def _run_python_ci_delegates(context: CommandContext) -> list[dict[str, Any]]:
     gates: list[dict[str, Any]] = []
     for command in commands:
         completed = subprocess.run(command, cwd=context.repo_root, check=False, text=True, capture_output=True)
-        gates.append({"commandLine": command, "exitCode": completed.returncode, "stdout": completed.stdout[-4000:], "stderr": completed.stderr[-4000:]})
+        gates.append({"commandLine": command, "exitCode": completed.returncode, "stdout": completed.stdout[-4000:],
+                      "stderr": completed.stderr[-4000:]})
     return gates
 
 
@@ -300,10 +306,12 @@ def _write_reports(report: dict[str, Any], context: CommandContext) -> list[str]
     md_path = output_dir / "classic_python_cli_report.md"
     json_path.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
     md_lines = ["# CLASSIC Python CLI Report", "", f"Profile: `{report['profile']}`", "", "## Scenarios"]
-    md_lines.extend(f"- `{item['id']}`: {item['status']} (exit {item['exitCode']}) - {item['summary']}" for item in report["scenarioResults"])
+    md_lines.extend(f"- `{item['id']}`: {item['status']} (exit {item['exitCode']}) - {item['summary']}" for item in
+                    report["scenarioResults"])
     if report["delegatedGates"]:
         md_lines.extend(["", "## Delegated Gates"])
-        md_lines.extend(f"- `{' '.join(item['commandLine'])}`: exit {item['exitCode']}" for item in report["delegatedGates"])
+        md_lines.extend(
+            f"- `{' '.join(item['commandLine'])}`: exit {item['exitCode']}" for item in report["delegatedGates"])
     md_path.write_text("\n".join(md_lines) + "\n", encoding="utf-8")
     return [_relative_or_absolute(json_path, context.repo_root), _relative_or_absolute(md_path, context.repo_root)]
 
@@ -319,7 +327,8 @@ def version_parse(args: _VersionParseArgs, context: CommandContext) -> CommandRe
         return failure("version parse", str(exc), int(ExitCode.BINDING_IMPORT))
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("version parse", "classic_version", exc)
-    return success("version parse", f"{args.version} -> {formatted}", {"input": args.version, "parsed": list(parsed), "formatted": formatted})
+    return success("version parse", f"{args.version} -> {formatted}",
+                   {"input": args.version, "parsed": list(parsed), "formatted": formatted})
 
 
 def config_main_version(args: object, context: CommandContext) -> CommandResult:
@@ -389,7 +398,8 @@ def path_validate(args: _PathArg, context: CommandContext) -> CommandResult:
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("path validate", "classic_path", exc)
     if not valid:
-        return failure("path validate", f"Path is not valid: {target}", int(ExitCode.PRODUCT_FAILURE), data={"path": str(target), "valid": False})
+        return failure("path validate", f"Path is not valid: {target}", int(ExitCode.PRODUCT_FAILURE),
+                       data={"path": str(target), "valid": False})
     return success("path validate", f"Path is valid: {target}", {"path": str(target), "valid": True})
 
 
@@ -406,7 +416,8 @@ def file_hash(args: _PathArg, context: CommandContext) -> CommandResult:
         return failure("file hash", str(exc), int(ExitCode.BINDING_IMPORT))
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("file hash", "classic_file_io", exc)
-    return success("file hash", f"{_relative_or_absolute(target, context.repo_root)} {digest}", {"path": str(target), "sha256": digest})
+    return success("file hash", f"{_relative_or_absolute(target, context.repo_root)} {digest}",
+                   {"path": str(target), "sha256": digest})
 
 
 def database_info(args: object, context: CommandContext) -> CommandResult:
@@ -414,7 +425,8 @@ def database_info(args: object, context: CommandContext) -> CommandResult:
 
     try:
         module = require_binding("classic_database")
-        data = {name: getattr(module, name) for name in ("DEFAULT_CACHE_TTL", "BATCH_CACHE_TTL", "MAX_CACHE_TTL") if hasattr(module, name)}
+        data = {name: getattr(module, name) for name in ("DEFAULT_CACHE_TTL", "BATCH_CACHE_TTL", "MAX_CACHE_TTL") if
+                hasattr(module, name)}
     except ImportError as exc:
         return failure("database info", str(exc), int(ExitCode.BINDING_IMPORT))
     return success("database info", "Database binding constants loaded", data)
@@ -444,7 +456,8 @@ def update_validate_url(args: _UpdateValidateUrlArgs, context: CommandContext) -
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("update validate-url", "classic_web", exc)
     if not valid:
-        return failure("update validate-url", f"URL is not valid: {args.url}", int(ExitCode.PRODUCT_FAILURE), data={"url": args.url, "valid": False})
+        return failure("update validate-url", f"URL is not valid: {args.url}", int(ExitCode.PRODUCT_FAILURE),
+                       data={"url": args.url, "valid": False})
     return success("update validate-url", f"URL valid: {valid}", {"url": args.url, "valid": valid})
 
 
@@ -458,7 +471,8 @@ def resource_detect(args: _PathArg, context: CommandContext) -> CommandResult:
         return failure("resource detect", str(exc), int(ExitCode.BINDING_IMPORT))
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("resource detect", "classic_resource", exc)
-    return success("resource detect", f"Resource type: {resource_type}", {"path": args.path, "resourceType": str(resource_type)})
+    return success("resource detect", f"Resource type: {resource_type}",
+                   {"path": args.path, "resourceType": str(resource_type)})
 
 
 def _scan_result_success(result: object) -> bool:
@@ -609,7 +623,8 @@ def _scan_run_result_summary(result: object) -> dict[str, Any]:
         "status": str(result.status),
         "discovery": None if discovery is None else _scan_discovery_summary(discovery),
         "setup": None if setup is None else _scan_setup_summary(setup),
-        "installedYamlData": None if installed_yaml_data is None else _scan_installed_yaml_data_summary(installed_yaml_data),
+        "installedYamlData": None if installed_yaml_data is None else _scan_installed_yaml_data_summary(
+            installed_yaml_data),
         "effectiveConcurrency": None if effective_concurrency is None else int(effective_concurrency),
         "message": None if message is None else str(message),
         "total": int(result.total),
@@ -1009,7 +1024,8 @@ def scan_game(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         return failure("scan game", str(exc), int(ExitCode.BINDING_IMPORT))
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("scan game", "classic_scangame", exc)
-    return success("scan game", f"Scanned {len(results)} archive entries", {"rootPath": str(root_path), "findings": [str(item) for item in results]})
+    return success("scan game", f"Scanned {len(results)} archive entries",
+                   {"rootPath": str(root_path), "findings": [str(item) for item in results]})
 
 
 def dispatch_scenario_command(command: list[str], context: CommandContext) -> CommandResult:

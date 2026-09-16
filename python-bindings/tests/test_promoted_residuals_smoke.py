@@ -40,10 +40,11 @@ import classic_scanlog
 import classic_settings
 import classic_shared
 import classic_update
-import classic_version_registry
 import classic_version
+import classic_version_registry
 import classic_web
 import classic_xse
+
 
 # ---------------------------------------------------------------------------
 # redistributed constants surfaces (3 classes + 1 free function)
@@ -946,7 +947,7 @@ def test_scangame_game_setup_intake_helpers_smoke() -> None:
 
 
 def test_scangame_game_setup_intake_opens_canonical_user_settings(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Prepare Game Setup from typed User Settings without rewriting the document."""
     game_root = tmp_path / "Fallout4"

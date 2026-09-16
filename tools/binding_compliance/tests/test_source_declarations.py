@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 def test_typed_dict_is_a_type_only_contract_not_a_phantom_native_class(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Typing-only dictionary declarations retain stub shape without runtime credit."""
     from conformance.source_declarations import python_declaration_exports
@@ -23,7 +23,7 @@ def test_typed_dict_is_a_type_only_contract_not_a_phantom_native_class(
 
 
 def test_python_type_declaration_checks_both_stub_and_rust_constructor(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """An omitted stub constructor must never hide a real PyO3 #[new] function."""
     from conformance.source_declarations import python_declaration_exports
@@ -46,7 +46,7 @@ def test_python_type_declaration_checks_both_stub_and_rust_constructor(
 
 
 def test_constructor_in_another_source_file_prevents_structural_credit(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Split pymethods implementations must not hide callable construction."""
     from conformance.source_declarations import python_declaration_exports
@@ -69,7 +69,7 @@ def test_constructor_in_another_source_file_prevents_structural_credit(
 
 
 def test_comments_strings_and_unregistered_types_cannot_claim_declaration_evidence(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Only real registered declarations may own structural source evidence."""
     from conformance.source_declarations import python_declaration_exports
@@ -80,16 +80,16 @@ def test_comments_strings_and_unregistered_types_cannot_claim_declaration_eviden
     source = "#[pyclass]\npub struct Result {}\nfn register(m: Module) { m.add_class::<Result>(); }\n"
     rust = crate / "src/lib.rs"
     for fake in (
-        "/* " + source + " */",
-        'const FAKE: &str = r###"' + source + '"###;',
-        "#[pyclass]\npub struct Result {}\n// m.add_class::<Result>();\n",
+            "/* " + source + " */",
+            'const FAKE: &str = r###"' + source + '"###;',
+            "#[pyclass]\npub struct Result {}\n// m.add_class::<Result>();\n",
     ):
         rust.write_text(fake)
         assert python_declaration_exports(tmp_path) == set()
 
 
 def test_shared_exception_macro_requires_real_import_registration_and_unmodified_definition(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """The standard macro owns type declarations only while its expansion stays standard."""
     from conformance.source_declarations import python_declaration_exports
@@ -123,7 +123,7 @@ def test_shared_exception_macro_requires_real_import_registration_and_unmodified
 
 
 def test_exception_declaration_requires_pyo3_provenance_and_registration(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """A similarly named local macro cannot disguise a custom callable Python class."""
     from conformance.source_declarations import python_declaration_exports
@@ -136,12 +136,12 @@ def test_exception_declaration_requires_pyo3_provenance_and_registration(
     rust.write_text(source)
     assert python_declaration_exports(tmp_path) == {("classic_example", "Error")}
     for changed in (
-        source.replace('m.add("Error", m.py().get_type::<Error>());', ""),
-        source.replace(
-            "use pyo3::create_exception;",
-            "macro_rules! create_exception { ($($t:tt)*) => {}; }",
-        ),
-        source.replace("use pyo3::create_exception;", ""),
+            source.replace('m.add("Error", m.py().get_type::<Error>());', ""),
+            source.replace(
+                "use pyo3::create_exception;",
+                "macro_rules! create_exception { ($($t:tt)*) => {}; }",
+            ),
+            source.replace("use pyo3::create_exception;", ""),
     ):
         rust.write_text(changed)
         assert python_declaration_exports(tmp_path) == set()

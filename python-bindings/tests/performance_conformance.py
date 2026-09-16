@@ -39,11 +39,11 @@ def observe_performance(fixture: Mapping[str, Any]) -> dict[str, Any]:
                     }
                 )
             elif (
-                op == "record"
-                and set(operation) == {"op", "label", "durationMs"}
-                and isinstance(operation["label"], str)
-                and type(operation["durationMs"]) is int
-                and 0 <= operation["durationMs"] <= 1000000
+                    op == "record"
+                    and set(operation) == {"op", "label", "durationMs"}
+                    and isinstance(operation["label"], str)
+                    and type(operation["durationMs"]) is int
+                    and 0 <= operation["durationMs"] <= 1000000
             ):
                 classic_perf.record_timing(
                     operation["label"], operation["durationMs"] / 1000
@@ -88,14 +88,14 @@ def observe_timers(fixture: Mapping[str, Any]) -> dict[str, Any]:
                 {
                     "constructor": constructor,
                     "advanced": math.isfinite(first)
-                    and math.isfinite(later)
-                    and 0 <= first < later,
+                                and math.isfinite(later)
+                                and 0 <= first < later,
                     "positive": summary.total >= later > 0,
                     "singleSample": summary.count == 1,
                     "summaryConsistent": summary.total
-                    == summary.average
-                    == summary.min
-                    == summary.max,
+                                         == summary.average
+                                         == summary.min
+                                         == summary.max,
                 }
             )
         classic_perf.clear_metrics()

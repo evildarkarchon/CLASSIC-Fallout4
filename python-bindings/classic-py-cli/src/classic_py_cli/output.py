@@ -10,7 +10,6 @@ from typing import Any
 from .context import CommandContext
 from .exit_codes import ExitCode
 
-
 SCHEMA_VERSION = "1.0"
 
 
@@ -28,16 +27,21 @@ class CommandResult:
     text_lines: list[str] = field(default_factory=list)
 
 
-def success(command: str, summary: str, data: dict[str, Any] | None = None, *, artifacts: list[str] | None = None, text_lines: list[str] | None = None) -> CommandResult:
+def success(command: str, summary: str, data: dict[str, Any] | None = None, *, artifacts: list[str] | None = None,
+            text_lines: list[str] | None = None) -> CommandResult:
     """Create a successful command result envelope."""
 
-    return CommandResult(command=command, success=True, summary=summary, data=data or {}, artifacts=artifacts or [], text_lines=text_lines or [])
+    return CommandResult(command=command, success=True, summary=summary, data=data or {}, artifacts=artifacts or [],
+                         text_lines=text_lines or [])
 
 
-def failure(command: str, summary: str, exit_code: int, *, error: dict[str, Any] | None = None, data: dict[str, Any] | None = None, artifacts: list[str] | None = None, text_lines: list[str] | None = None) -> CommandResult:
+def failure(command: str, summary: str, exit_code: int, *, error: dict[str, Any] | None = None,
+            data: dict[str, Any] | None = None, artifacts: list[str] | None = None,
+            text_lines: list[str] | None = None) -> CommandResult:
     """Create a failed command result envelope with a stable exit status."""
 
-    return CommandResult(command=command, success=False, summary=summary, data=data or {}, artifacts=artifacts or [], exit_code=exit_code, error=error or {"message": summary}, text_lines=text_lines or [])
+    return CommandResult(command=command, success=False, summary=summary, data=data or {}, artifacts=artifacts or [],
+                         exit_code=exit_code, error=error or {"message": summary}, text_lines=text_lines or [])
 
 
 def binding_exception(command: str, module_name: str, exc: BaseException) -> CommandResult:
@@ -47,7 +51,8 @@ def binding_exception(command: str, module_name: str, exc: BaseException) -> Com
         command,
         f"{module_name} raised {type(exc).__name__}: {exc}",
         int(ExitCode.PRODUCT_FAILURE),
-        error={"classification": "binding-exception", "module": module_name, "type": type(exc).__name__, "message": str(exc)},
+        error={"classification": "binding-exception", "module": module_name, "type": type(exc).__name__,
+               "message": str(exc)},
     )
 
 

@@ -31,17 +31,17 @@ def test_user_settings_pack_covers_authored_update_and_bootstrap_operations() ->
     pack = load_and_validate_pack(REPO_ROOT, PACK_PATH)
     scenarios = {scenario["id"]: scenario for scenario in pack.document()["scenarios"]}
     assert scenarios["preview-multi-field-update"]["expected"]["preview"][
-        "acceptedFields"
-    ] == [
-        {"fieldPath": "/CLASSIC_Settings/Update Check", "value": False},
-        {"fieldPath": "/CLASSIC_Settings/Max Concurrent Scans", "value": 4},
-    ]
+               "acceptedFields"
+           ] == [
+               {"fieldPath": "/CLASSIC_Settings/Update Check", "value": False},
+               {"fieldPath": "/CLASSIC_Settings/Max Concurrent Scans", "value": 4},
+           ]
     assert (
-        scenarios["bootstrap-missing-defaults"]["expected"]["commit"]["status"]
-        == "committed"
+            scenarios["bootstrap-missing-defaults"]["expected"]["commit"]["status"]
+            == "committed"
     )
     assert (
-        scenarios["refuse-stale-revision"]["expected"]["commit"]["status"] == "conflict"
+            scenarios["refuse-stale-revision"]["expected"]["commit"]["status"] == "conflict"
     )
     assert all(
         "after_update" not in path and "bootstrap_defaults" not in path
@@ -84,11 +84,11 @@ def _prepared_copy(tmp_path: Path, fixture_updates: dict[str, bytes] | None = No
         '{"schemaVersion":1,"exceptions":[]}', encoding="utf-8"
     )
     for arguments in (
-        ("init",),
-        ("config", "user.email", "conformance@example.invalid"),
-        ("config", "user.name", "Conformance Tests"),
-        ("add", "."),
-        ("commit", "-m", "fixture"),
+            ("init",),
+            ("config", "user.email", "conformance@example.invalid"),
+            ("config", "user.name", "Conformance Tests"),
+            ("add", "."),
+            ("commit", "-m", "fixture"),
     ):
         subprocess.run(
             ["git", "-C", str(tmp_path), *arguments], check=True, capture_output=True
@@ -149,13 +149,13 @@ def _receipt(pack, run) -> dict:
             _raw_migration_observation(observation, scenario["id"], oracle, oracle_root)
         if observation.get("commit", {}).get("status") == "committed":
             content = (
-                oracle_root / operations[scenario["id"]]["expected_document"]
+                    oracle_root / operations[scenario["id"]]["expected_document"]
             ).read_bytes()
             document = observation["finalTree"][1]
             del document["yamlNodes"]
             document["bytesHex"] = content.hex()
             observation["commit"]["revision"] = (
-                "sha256:" + hashlib.sha256(content).hexdigest()
+                    "sha256:" + hashlib.sha256(content).hexdigest()
             )
     return receipt
 
@@ -222,7 +222,7 @@ def _raw_migration_observation(observation, scenario_id, oracle, fixture_root) -
     ],
 )
 def test_central_comparison_rejects_incomplete_or_changed_observations(
-    tmp_path: Path, mutation: str
+        tmp_path: Path, mutation: str
 ) -> None:
     """Completed adapter status cannot hide a semantic or envelope mismatch."""
 
@@ -267,7 +267,7 @@ def test_central_comparison_rejects_incomplete_or_changed_observations(
     ["expectations.json", "canonical_current_nested.yaml", "bootstrap_defaults.yaml"],
 )
 def test_existing_preparation_rejects_changed_oracle_or_fixture(
-    tmp_path: Path, changed_file: str
+        tmp_path: Path, changed_file: str
 ) -> None:
     """Both oracle and fixture bytes participate in freshness authentication."""
 
@@ -344,7 +344,7 @@ def test_removing_an_ordinary_open_case_cannot_shrink_the_pack(tmp_path: Path) -
     ],
 )
 def test_operation_receipts_reject_changed_semantics_or_durable_effects(
-    tmp_path: Path, case: str, mutation: str
+        tmp_path: Path, case: str, mutation: str
 ) -> None:
     """Actual receipt values and both disk checkpoints must match the authored contract."""
 
@@ -427,7 +427,7 @@ def test_operation_receipts_reject_changed_semantics_or_durable_effects(
         # Keep the revision truthful so the semantic comparison, rather than the
         # byte-authentication check, detects dropped or mistyped document nodes.
         observation["commit"]["revision"] = (
-            "sha256:" + hashlib.sha256(content).hexdigest()
+                "sha256:" + hashlib.sha256(content).hexdigest()
         )
     run.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
     report = validate_prepared_run(
@@ -444,7 +444,7 @@ def test_committed_yaml_preserves_unknown_real_precision(tmp_path: Path) -> None
 
     name = "unknown_entries_after_update.yaml"
     original = (
-        REPO_ROOT / "tests/fixtures/user_settings_compatibility" / name
+            REPO_ROOT / "tests/fixtures/user_settings_compatibility" / name
     ).read_bytes()
     authored = original.replace(
         b"threshold: 1.25", b"threshold: 1.25000000000000000000001"
@@ -463,24 +463,24 @@ def test_committed_yaml_preserves_unknown_real_precision(tmp_path: Path) -> None
     )
     case["observation"]["finalTree"][1]["bytesHex"] = content.hex()
     case["observation"]["commit"]["revision"] = (
-        "sha256:" + hashlib.sha256(content).hexdigest()
+            "sha256:" + hashlib.sha256(content).hexdigest()
     )
     run.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
     assert validate_prepared_run(pack, run).failures
 
 
 def test_bootstrap_expected_documents_are_authenticated_but_never_materialized(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """The complete default oracle participates in freshness without reaching adapters."""
 
     pack, run = _prepared_copy(tmp_path)
     dependency_names = {path.name for path in pack.oracle_paths}
     assert {
-        "bootstrap_defaults.yaml",
-        "bootstrap_overrides.yaml",
-        "alias_only_after_update.yaml",
-    } <= dependency_names
+               "bootstrap_defaults.yaml",
+               "bootstrap_overrides.yaml",
+               "alias_only_after_update.yaml",
+           } <= dependency_names
     planned_fixtures = run.document()["fixtures"]
     assert not any(name in json.dumps(planned_fixtures) for name in dependency_names)
     inputs = run.run_plan_path.read_text(encoding="utf-8")

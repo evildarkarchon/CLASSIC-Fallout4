@@ -16,6 +16,7 @@ from conformance.families.aux_operations import (
     validate_aux_operations_pack,
 )
 from conformance.receipts import validate_prepared_run
+
 from receipt_test_support import copy_source_inventory, prepare_receipt_case
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -50,7 +51,7 @@ def test_web_game_routing_obligates_only_adapters_with_the_public_operation():
 
 @pytest.mark.parametrize("participant", ["rust", "node", "python"])
 def test_resource_file_inventory_detects_mutation(
-    tmp_path: Path, participant: str
+        tmp_path: Path, participant: str
 ) -> None:
     """Deleted, modified and unexpected files invalidate otherwise correct results."""
     pack, run, receipt = prepare_receipt_case(
@@ -67,9 +68,9 @@ def test_resource_file_inventory_detects_mutation(
         {"path": "textures/body.dds", "hex": "44445320"},
     ]
     for replacement in (
-        files[:-1],
-        [{**files[0], "hex": "00"}, *files[1:]],
-        [*files, {"path": "unexpected.txt", "hex": "01"}],
+            files[:-1],
+            [{**files[0], "hex": "00"}, *files[1:]],
+            [*files, {"path": "unexpected.txt", "hex": "01"}],
     ):
         changed = copy.deepcopy(receipt)
         changed["scenarios"][0]["observation"]["files"] = replacement
@@ -89,7 +90,7 @@ def test_auxiliary_fixture_and_predicate_contract(family: str) -> None:
     """Verify authored input separation and reject incomplete operation evidence."""
     pack = json.loads(
         (
-            ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
+                ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
         ).read_text()
     )
     paths = validate_aux_operations_pack(pack, ROOT)
@@ -102,15 +103,15 @@ def test_auxiliary_fixture_and_predicate_contract(family: str) -> None:
 
         rows = load_source_parity_rows(ROOT)
         for obligation in (
-            "parity:cxx:7d9536f46f7a602a",
-            "parity:cxx:1c07ae6197b62a4e",
-            "parity:node:aux-phase4b-get-mod-site-name",
-            "parity:node:aux-phase4b-get-mod-site-url",
-            "parity:node:aux-phase4b-get-user-agent-prefix",
-            "parity:node:version-registry-promote-get-classic-version",
-            "parity:python:web.lib.ModSite.__eq__",
-            "parity:python:web.lib.ModSite.__str__",
-            "parity:python:web.lib.ModSite.__repr__",
+                "parity:cxx:7d9536f46f7a602a",
+                "parity:cxx:1c07ae6197b62a4e",
+                "parity:node:aux-phase4b-get-mod-site-name",
+                "parity:node:aux-phase4b-get-mod-site-url",
+                "parity:node:aux-phase4b-get-user-agent-prefix",
+                "parity:node:version-registry-promote-get-classic-version",
+                "parity:python:web.lib.ModSite.__eq__",
+                "parity:python:web.lib.ModSite.__str__",
+                "parity:python:web.lib.ModSite.__repr__",
         ):
             row = next(row for row in rows if row.obligation_id == obligation)
             assert candidate_predicates(row, pack, policy), obligation
@@ -165,11 +166,11 @@ def test_resource_pack_observes_filesystem_results_and_missing_errors() -> None:
             ("cxx", "node", "python")
             if family == "web-operations"
             else ("node", "python")
-        )
+    )
     ],
 )
 def test_auxiliary_receipts_cover_selected_rows_and_reject_mutations(
-    tmp_path: Path, family: str, participant: str
+        tmp_path: Path, family: str, participant: str
 ) -> None:
     """Source-derived obligations stay covered while altered observations and new APIs fail."""
     relative = Path("tests/conformance/packs") / family.replace("-", "_") / "v1.json"
@@ -229,7 +230,7 @@ def test_auxiliary_receipts_cover_selected_rows_and_reject_mutations(
 
 @pytest.mark.parametrize("participant", ["node", "python"])
 def test_source_loaded_resource_alias_cannot_borrow_class_carrier(
-    tmp_path: Path, participant: str
+        tmp_path: Path, participant: str
 ) -> None:
     """Load a real appended public alias row; its own operation must fail closed."""
     relative = Path("tests/conformance/packs/resource_operations/v1.json")
@@ -238,8 +239,8 @@ def test_source_loaded_resource_alias_cannot_borrow_class_carrier(
     )
     copy_source_inventory(ROOT, tmp_path)
     contract = (
-        tmp_path
-        / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
+            tmp_path
+            / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
     )
     document = json.loads(contract.read_text())
     export_key = "nodeExport" if participant == "node" else "pythonExportPath"

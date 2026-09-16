@@ -25,15 +25,15 @@ def test_new_native_helpers_automatically_enter_source_identity() -> None:
 
 @pytest.mark.parametrize("family", SUPPORTED_FAMILIES)
 def test_native_semantic_family_plans_are_fresh_and_input_only(
-    tmp_path: Path,
-    family: str,
+        tmp_path: Path,
+        family: str,
 ) -> None:
     """Both native compilers receive the same oracle identity and unique invocations."""
 
     artifact_root = (
-        REPO_ROOT
-        / "tools/binding_compliance/artifacts/test-semantic-launch"
-        / tmp_path.name
+            REPO_ROOT
+            / "tools/binding_compliance/artifacts/test-semantic-launch"
+            / tmp_path.name
     )
     plans = []
     try:

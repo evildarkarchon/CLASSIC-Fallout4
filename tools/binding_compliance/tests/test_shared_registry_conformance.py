@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_python_string_wrapper_methods_have_core_owner_and_executable_predicates() -> (
-    None
+        None
 ):
     """Foundation wrappers must resolve their actual Rust owner and exercised calls."""
     methods = {
@@ -65,7 +65,7 @@ def test_inputs_and_observation_predicates_fail_closed(family: str) -> None:
     """Authored inputs are oracle-free and missing actual fields earn no credit."""
     document = json.loads(
         (
-            ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
+                ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
         ).read_text(encoding="utf-8")
     )
     paths = validate_pack(document, ROOT)
@@ -88,7 +88,7 @@ def _pack(family: str) -> dict:
     """Load independent authored expectations for receipt mutation checks."""
     return json.loads(
         (
-            ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
+                ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
         ).read_text(encoding="utf-8")
     )
 
@@ -101,7 +101,7 @@ def _pack(family: str) -> dict:
     ],
 )
 def test_shared_registry_receipts_fail_closed_at_public_coverage_seam(
-    tmp_path: Path, family: str, participants: set[str]
+        tmp_path: Path, family: str, participants: set[str]
 ) -> None:
     """Only complete current receipts cover source-selected public operations.
 
@@ -115,11 +115,11 @@ def test_shared_registry_receipts_fail_closed_at_public_coverage_seam(
     for relative in (pack_path.parent, Path(original["fixtureRoot"])):
         shutil.copytree(ROOT / relative, tmp_path / relative)
     for args in (
-        ("init",),
-        ("config", "user.email", "conformance@example.invalid"),
-        ("config", "user.name", "Conformance Tests"),
-        ("add", "."),
-        ("commit", "-m", "fixture"),
+            ("init",),
+            ("config", "user.email", "conformance@example.invalid"),
+            ("config", "user.name", "Conformance Tests"),
+            ("add", "."),
+            ("commit", "-m", "fixture"),
     ):
         subprocess.run(
             ["git", "-C", str(tmp_path), *args], check=True, capture_output=True
@@ -214,11 +214,11 @@ def test_shared_registry_receipts_fail_closed_at_public_coverage_seam(
                 retained_analyzers=retained,
             ).failures
             for mutation in (
-                "changed",
-                "missing-scenario",
-                "skipped",
-                "stale",
-                "missing-receipt",
+                    "changed",
+                    "missing-scenario",
+                    "skipped",
+                    "stale",
+                    "missing-receipt",
             ):
                 changed = copy.deepcopy(receipt)
                 if mutation == "changed":

@@ -43,7 +43,6 @@ class ComplianceRequirement:
 
 STATIC_PROFILES = ("static", "ci", "full", "cxx-ci", "node-ci", "python-ci")
 
-
 REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
     ComplianceRequirement(
         id="cxx-opaque-map-reachability",

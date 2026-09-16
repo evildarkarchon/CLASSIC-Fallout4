@@ -201,20 +201,20 @@ PARTICIPANT_COMMANDS = {
                 / "node-bindings/classic-node/__test__"
                 / (module + "_conformance.ts")
                 for module in (
-                    "file_fingerprint",
-                    "performance",
-                    "message_logging",
-                    "update_rejection",
-                    "update_decisions",
-                    "update_services",
-                    "shared_registry",
-                    "registry_accessors",
-                    "aux_operations",
-                    "version_extended",
-                    "version_values",
-                    "settings_extended",
-                    "installation_paths",
-                )
+                "file_fingerprint",
+                "performance",
+                "message_logging",
+                "update_rejection",
+                "update_decisions",
+                "update_services",
+                "shared_registry",
+                "registry_accessors",
+                "aux_operations",
+                "version_extended",
+                "version_values",
+                "settings_extended",
+                "installation_paths",
+            )
             ),
             REPO_ROOT / "node-bindings/classic-node/package.json",
             *_COMMON_SOURCES,
@@ -258,32 +258,32 @@ PARTICIPANT_COMMANDS = {
             *(
                 REPO_ROOT / "python-bindings/tests" / (module + "_conformance.py")
                 for module in (
-                    "file_fingerprint",
-                    "performance",
-                    "message_logging",
-                    "update_rejection",
-                    "update_decisions",
-                    "update_services",
-                    "shared_registry",
-                    "registry_accessors",
-                    "registry_keys",
-                    "aux_operations",
-                    "version_extended",
-                    "version_values",
-                    "settings_extended",
-                    "installation_paths",
-                )
+                "file_fingerprint",
+                "performance",
+                "message_logging",
+                "update_rejection",
+                "update_decisions",
+                "update_services",
+                "shared_registry",
+                "registry_accessors",
+                "registry_keys",
+                "aux_operations",
+                "version_extended",
+                "version_values",
+                "settings_extended",
+                "installation_paths",
+            )
             ),
             *(
                 REPO_ROOT / "python-bindings" / ("classic-" + owner + "-py/src")
                 for owner in (
-                    "perf",
-                    "registry",
-                    "web",
-                    "resource",
-                    "version",
-                    "update",
-                )
+                "perf",
+                "registry",
+                "web",
+                "resource",
+                "version",
+                "update",
+            )
             ),
             REPO_ROOT / "python-bindings/classic-path-py/src",
             REPO_ROOT / "python-bindings/classic-message-py/src",
@@ -300,11 +300,11 @@ PARTICIPANT_COMMANDS = {
 
 
 def run_participant(
-    participant_id: str,
-    *,
-    family: str,
-    artifact_root: Path = DEFAULT_ARTIFACT_ROOT,
-    timeout_seconds: int = 1_200,
+        participant_id: str,
+        *,
+        family: str,
+        artifact_root: Path = DEFAULT_ARTIFACT_ROOT,
+        timeout_seconds: int = 1_200,
 ) -> tuple[int, Path]:
     """Execute every scenario for one family and validate fresh typed receipts.
 
@@ -352,9 +352,9 @@ def run_participant(
         artifact_root=artifact_root,
         timeout_seconds=timeout_seconds,
         pack_path=REPO_ROOT
-        / "tests/conformance/packs"
-        / family.replace("-", "_")
-        / "v1.json",
+                  / "tests/conformance/packs"
+                  / family.replace("-", "_")
+                  / "v1.json",
         command=command,
     )
 

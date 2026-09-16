@@ -37,6 +37,7 @@ Usage:
 
 __version__: str
 
+
 class MetricsSummary:
     """Summary statistics for a performance metric.
 
@@ -66,6 +67,7 @@ class MetricsSummary:
     average: float
     min: float
     max: float
+
 
 class Timer:
     """RAII timer that automatically records timing on drop.
@@ -131,6 +133,7 @@ class Timer:
 
         """
 
+
 def record_timing(name: str, duration_secs: float) -> None:
     """Record a timing measurement.
 
@@ -151,6 +154,7 @@ def record_timing(name: str, duration_secs: float) -> None:
         2
 
     """
+
 
 def get_summary() -> dict[str, MetricsSummary]:
     """Get summary statistics for all recorded metrics.
@@ -174,6 +178,7 @@ def get_summary() -> dict[str, MetricsSummary]:
 
     """
 
+
 def clear_metrics() -> None:
     """Clear all recorded metrics.
 
@@ -190,6 +195,7 @@ def clear_metrics() -> None:
 
     """
 
+
 def reset_metrics() -> None:
     """Alias for clear_metrics() for API compatibility.
 
@@ -204,6 +210,7 @@ def reset_metrics() -> None:
         0
 
     """
+
 
 def start_timer(name: str) -> Timer:
     """Start a new timer.

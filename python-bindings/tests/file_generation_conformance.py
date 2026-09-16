@@ -33,13 +33,13 @@ async def _observe(fixture: Mapping[str, Any]) -> dict[str, Any]:
             generator = native.FileGenerator(config)
             copied = generator.config()
             if (
-                copied.ignore_file_content,
-                copied.local_yaml_content,
-                copied.game_name,
+                    copied.ignore_file_content,
+                    copied.local_yaml_content,
+                    copied.game_name,
             ) != (
-                config.ignore_file_content,
-                config.local_yaml_content,
-                config.game_name,
+                    config.ignore_file_content,
+                    config.local_yaml_content,
+                    config.game_name,
             ):
                 raise ValueError("generator config accessor changed constructor state")
             result = {

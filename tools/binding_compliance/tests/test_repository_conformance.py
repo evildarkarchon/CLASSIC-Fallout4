@@ -7,7 +7,7 @@ import pytest
 
 
 def test_downloaded_receipts_preserve_separate_immutable_plan_pairs(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Artifact-name directories must not overwrite different participant runs."""
     from conformance.repository import discover_repository_receipts
@@ -44,7 +44,7 @@ def test_downloaded_receipt_discovery_fails_closed(tmp_path: Path, damage: str) 
 
 @pytest.mark.parametrize("changed_source", (False, True))
 def test_downloaded_plan_remains_immutable_and_bound_to_source(
-    tmp_path: Path, changed_source: bool
+        tmp_path: Path, changed_source: bool
 ) -> None:
     """Artifact relocation preserves authenticatable plans but cannot hide source changes."""
     from conformance.packs import MaterializationError, load_prepared_run
@@ -103,7 +103,7 @@ def test_empty_repository_cannot_certify_itself(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("failed_donor", [False, True])
 def test_complete_family_list_cannot_hide_uncovered_runtime_rows(
-    monkeypatch: pytest.MonkeyPatch, failed_donor: bool
+        monkeypatch: pytest.MonkeyPatch, failed_donor: bool
 ) -> None:
     """Even all family responses cannot grant absent or failed row evidence."""
     from conformance import repository

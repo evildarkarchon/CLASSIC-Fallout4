@@ -44,7 +44,6 @@ from pathlib import Path
 
 import pytest
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CLI_PACKAGE = REPO_ROOT / "python-bindings" / "classic-py-cli" / "src" / "classic_py_cli"
 
@@ -98,7 +97,7 @@ TOKEN_BEARING_SUFFIXES = ("_disposition", "_kind", "_label", "_stage", "_status"
 # adding core-owned prose would have to remember four lists, and forgetting one
 # would silently unenforce the phrase in that frontend.
 CORE_OWNED_PHRASES_FILE = (
-    REPO_ROOT / "business-logic" / "classic-scan-presentation" / "core-owned-phrases.txt"
+        REPO_ROOT / "business-logic" / "classic-scan-presentation" / "core-owned-phrases.txt"
 )
 
 
@@ -176,7 +175,7 @@ def _docstring_ids(tree: ast.Module) -> set[int]:
     documented: set[int] = set()
     for node in ast.walk(tree):
         if not isinstance(
-            node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+                node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
         ):
             continue
         body = getattr(node, "body", [])
@@ -184,9 +183,9 @@ def _docstring_ids(tree: ast.Module) -> set[int]:
             continue
         first = body[0]
         if (
-            isinstance(first, ast.Expr)
-            and isinstance(first.value, ast.Constant)
-            and isinstance(first.value.value, str)
+                isinstance(first, ast.Expr)
+                and isinstance(first.value, ast.Constant)
+                and isinstance(first.value.value, str)
         ):
             documented.add(id(first.value))
     return documented
@@ -204,8 +203,8 @@ def _string_literals(name: str, source: str) -> list[str]:
         node.value
         for node in ast.walk(tree)
         if isinstance(node, ast.Constant)
-        and isinstance(node.value, str)
-        and id(node) not in skip
+           and isinstance(node.value, str)
+           and id(node) not in skip
     ]
 
 
@@ -240,9 +239,9 @@ def _prose_constant(node: ast.expr) -> bool:
     """Return whether an expression is a string literal that reads as a sentence."""
 
     return (
-        isinstance(node, ast.Constant)
-        and isinstance(node.value, str)
-        and _is_prose(node.value)
+            isinstance(node, ast.Constant)
+            and isinstance(node.value, str)
+            and _is_prose(node.value)
     )
 
 
@@ -277,10 +276,10 @@ def _token_in_prose_violations(name: str, source: str) -> list[str]:
             if _prose_constant(node.left):
                 mentioned = _mentions_a_token(node.right)
         elif (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute)
-            and node.func.attr == "format"
-            and _prose_constant(node.func.value)
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "format"
+                and _prose_constant(node.func.value)
         ):
             # "failed during {}".format(stage_label)
             for argument in [*node.args, *(keyword.value for keyword in node.keywords)]:
@@ -304,18 +303,18 @@ def _plural_violations(name: str, source: str) -> list[str]:
         if isinstance(node, ast.IfExp):
             body, orelse = node.body, node.orelse
             if (
-                isinstance(body, ast.Constant)
-                and isinstance(orelse, ast.Constant)
-                and isinstance(body.value, str)
-                and isinstance(orelse.value, str)
-                and {body.value + "s", orelse.value + "s"} & {body.value, orelse.value}
+                    isinstance(body, ast.Constant)
+                    and isinstance(orelse, ast.Constant)
+                    and isinstance(body.value, str)
+                    and isinstance(orelse.value, str)
+                    and {body.value + "s", orelse.value + "s"} & {body.value, orelse.value}
             ):
                 violations.append(f"{name}:{node.lineno} chooses a noun's number")
         if (
-            isinstance(node, ast.BinOp)
-            and isinstance(node.op, ast.Add)
-            and isinstance(node.right, ast.Constant)
-            and node.right.value == "s"
+                isinstance(node, ast.BinOp)
+                and isinstance(node.op, ast.Add)
+                and isinstance(node.right, ast.Constant)
+                and node.right.value == "s"
         ):
             violations.append(f"{name}:{node.lineno} appends a plural suffix")
     return violations

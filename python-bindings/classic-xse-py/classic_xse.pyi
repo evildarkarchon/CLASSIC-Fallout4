@@ -33,6 +33,7 @@ __version__: str
 # Type alias for version tuples
 type Version = tuple[int, int, int]
 
+
 class XseType:
     """XSE type enumeration for Python.
 
@@ -99,6 +100,7 @@ class XseType:
     def __repr__(self) -> str:
         """Return a debug representation suitable for logs and REPL output."""
 
+
 class XseInfo:
     """XSE installation information for Python.
 
@@ -148,6 +150,7 @@ class XseInfo:
     def __repr__(self) -> str:
         """Return a debug representation suitable for logs and REPL output."""
 
+
 def parse_xse_type(type_name: str) -> XseType:
     """Parse an XSE type from a string.
 
@@ -167,6 +170,7 @@ def parse_xse_type(type_name: str) -> XseType:
         >>> assert xse.as_str() == "SKSE64"
 
     """
+
 
 def detect_xse_version(loader_path: str, xse_type: XseType) -> Version:
     """Detect XSE version from a loader executable.
@@ -190,6 +194,7 @@ def detect_xse_version(loader_path: str, xse_type: XseType) -> Version:
 
     """
 
+
 def is_xse_installed(game_path: str, xse_type: XseType) -> bool:
     r"""Check if XSE is installed in a directory.
 
@@ -205,6 +210,7 @@ def is_xse_installed(game_path: str, xse_type: XseType) -> bool:
         ...     print("F4SE is installed")
 
     """
+
 
 def get_xse_info(game_path: str, xse_type: XseType) -> XseInfo:
     r"""Get XSE information for a game directory.

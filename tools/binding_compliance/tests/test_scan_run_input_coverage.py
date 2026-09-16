@@ -33,7 +33,7 @@ def test_executed_request_inputs_and_cancellation_have_receipt_predicates():
         row
         for row in load_source_parity_rows(root)
         if row.runtime_operation in operations
-        and (row.runtime_operation != "__init__" or row.rust_symbol == "ConfigIssue")
+           and (row.runtime_operation != "__init__" or row.rust_symbol == "ConfigIssue")
     ]
     assert {row.runtime_operation for row in rows} == operations
     for row in rows:

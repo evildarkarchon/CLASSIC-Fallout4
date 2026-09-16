@@ -3,9 +3,8 @@
 import argparse
 import json
 import re
-from pathlib import Path
-
 import tomllib
+from pathlib import Path
 
 _TOKEN = re.compile(
     r""""(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|[A-Za-z_]\w*|[^\s]"""
@@ -46,7 +45,7 @@ def _tokens(source: str) -> list[str]:
             end = source.find(terminator, raw.end())
             if end < 0:
                 raise ValueError("unterminated raw source string")
-            result.append(source[index : end + len(terminator)])
+            result.append(source[index: end + len(terminator)])
             index = end + len(terminator)
             continue
         token = _TOKEN.match(source, index)
@@ -58,24 +57,24 @@ def _tokens(source: str) -> list[str]:
 
 
 def _require_export(
-    source: str, expected: str, name: str, *, typescript: bool = False
+        source: str, expected: str, name: str, *, typescript: bool = False
 ) -> None:
     """Reject changed, nested, conditional, duplicate, or comment-only declarations."""
     tokens, wanted = _tokens(source), _tokens(expected)
     starts = [
         index
         for index in range(len(tokens))
-        if tokens[index : index + len(wanted)] == wanted
+        if tokens[index: index + len(wanted)] == wanted
     ]
     if len(starts) != 1 or tokens.count(name) != 1:
         raise ValueError(f"{name} is not the reviewed compile-time metadata export")
     index = starts[0]
     prefix = tokens[:index]
     if prefix.count("{") != prefix.count("}") or (
-        not typescript and prefix and prefix[-1] not in {";", "}"}
+            not typescript and prefix and prefix[-1] not in {";", "}"}
     ):
         raise ValueError(f"{name} is not an unconditional top-level export")
-    suffix = tokens[index + len(wanted) :]
+    suffix = tokens[index + len(wanted):]
     if typescript and suffix and suffix[0] not in {";", "export"}:
         raise ValueError(f"{name} declaration widens the metadata contract")
 
@@ -109,14 +108,14 @@ def validate_node_package_metadata(repo_root: Path) -> dict[str, str]:
         raise ValueError("metadata getter must belong to classic-node")
     version = manifest["package"].get("version")
     if (
-        isinstance(version, dict)
-        and set(version) == {"workspace"}
-        and version["workspace"] is True
+            isinstance(version, dict)
+            and set(version) == {"workspace"}
+            and version["workspace"] is True
     ):
         workspace = tomllib.loads((root / "Cargo.toml").read_text(encoding="utf-8"))
         version = workspace.get("workspace", {}).get("package", {}).get("version")
     if not isinstance(version, str) or not re.fullmatch(
-        r"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", version
+            r"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?", version
     ):
         raise ValueError(
             "Cargo package version must resolve to a semantic version string"

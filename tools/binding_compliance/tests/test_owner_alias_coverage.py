@@ -8,6 +8,7 @@ import pytest
 from conformance.command import FAMILY_COVERAGE_POLICIES
 from conformance.coverage import load_source_parity_rows
 from conformance.packs import load_and_validate_pack
+
 from receipt_test_support import copy_source_inventory
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -29,7 +30,7 @@ ROOT = Path(__file__).resolve().parents[3]
 )
 @pytest.mark.parametrize("participant", ["node", "python"])
 def test_source_loaded_alias_cannot_borrow_owner_receipt(
-    tmp_path: Path, family: str, participant: str
+        tmp_path: Path, family: str, participant: str
 ) -> None:
     """A newly exported wrapper cannot inherit the aggregate Rust carrier's fact."""
     pack = load_and_validate_pack(
@@ -43,8 +44,8 @@ def test_source_loaded_alias_cannot_borrow_owner_receipt(
     }
     copy_source_inventory(ROOT, tmp_path)
     path = (
-        tmp_path
-        / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
+            tmp_path
+            / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
     )
     contract = json.loads(path.read_text())
     candidates = [

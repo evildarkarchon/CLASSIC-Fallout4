@@ -10,11 +10,12 @@ import run_scan_run_conformance as shared_launcher
 import run_user_settings_conformance as settings_launcher
 from check_compliance import main as compliance_main
 from conformance.packs import load_and_validate_pack, materialize_run_plan
+
 from test_user_settings_conformance import _receipt
 
 
 def test_missing_adapter_reports_blocking_settings_failure(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A failed launch retains diagnostics without claiming semantic success."""
 
@@ -25,9 +26,9 @@ def test_missing_adapter_reports_blocking_settings_failure(
 
     monkeypatch.setattr(shared_launcher, "_run_adapter_command", fail_to_spawn)
     artifact_root = (
-        settings_launcher.REPO_ROOT
-        / "tools/binding_compliance/artifacts"
-        / tmp_path.name
+            settings_launcher.REPO_ROOT
+            / "tools/binding_compliance/artifacts"
+            / tmp_path.name
     )
     result, artifact_dir = settings_launcher.run_participant(
         "rust", artifact_root=artifact_root
@@ -43,7 +44,7 @@ def test_missing_adapter_reports_blocking_settings_failure(
     assert plan["familyId"] == "user-settings"
     assert not (artifact_dir / "receipt.json").exists()
     assert "settings adapter is unavailable" in (
-        artifact_dir / "attempt.json"
+            artifact_dir / "attempt.json"
     ).read_text(encoding="utf-8")
 
 
@@ -51,7 +52,7 @@ def test_missing_adapter_reports_blocking_settings_failure(
     "state", ("valid", "missing", "stale", "malformed", "skipped", "mismatching")
 )
 def test_settings_compliance_requires_current_executed_facts(
-    tmp_path: Path, state: str
+        tmp_path: Path, state: str
 ) -> None:
     """Registry-backed parity cannot replace a current, matching Node receipt."""
 

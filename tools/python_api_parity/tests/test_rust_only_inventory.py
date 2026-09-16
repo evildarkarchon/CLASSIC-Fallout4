@@ -17,7 +17,7 @@ import pytest
     ],
 )
 def test_explicit_rust_only_rows_validate_owner_and_forbid_python_claims(
-    changes, exists, status
+        changes, exists, status
 ):
     """A retained Rust enum has no Python callable/declaration contract."""
     row = {

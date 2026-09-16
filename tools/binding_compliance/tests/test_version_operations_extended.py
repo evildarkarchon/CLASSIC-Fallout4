@@ -15,14 +15,14 @@ def test_remaining_version_operations_have_executable_evidence():
     """Every remaining bound version operation has complete, narrow observations."""
     symbols = set()
     for family in (
-        "version-extraction",
-        "version-f4se",
-        "version-pe",
-        "version-pe-path",
+            "version-extraction",
+            "version-f4se",
+            "version-pe",
+            "version-pe-path",
     ):
         pack = json.loads(
             (
-                ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
+                    ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
             ).read_text()
         )
         validate_aux_operations_pack(pack, ROOT)
@@ -38,28 +38,28 @@ def test_remaining_version_operations_have_executable_evidence():
             )
             assert not predicate.matches({})
     assert {
-        "extract_version_from_filename",
-        "extract_version_from_log",
-        "extract_all_versions",
-        "is_known_fallout4_version",
-        "is_known_f4se_version",
-        "extract_pe_version",
-        "is_valid_executable_path",
-    } <= symbols
+               "extract_version_from_filename",
+               "extract_version_from_log",
+               "extract_all_versions",
+               "is_known_fallout4_version",
+               "is_known_f4se_version",
+               "extract_pe_version",
+               "is_valid_executable_path",
+           } <= symbols
 
 
 def test_extended_version_observations_do_not_credit_comparison_or_other_operations():
     """Complete but unrelated observations never satisfy another public operation."""
     comparison = aux_operations_coverage_policy("version-operations")
     for family in (
-        "version-extraction",
-        "version-f4se",
-        "version-pe",
-        "version-pe-path",
+            "version-extraction",
+            "version-f4se",
+            "version-pe",
+            "version-pe-path",
     ):
         pack = json.loads(
             (
-                ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
+                    ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
             ).read_text()
         )
         for case in pack["scenarios"]:
@@ -77,13 +77,13 @@ def test_extended_packs_pass_public_loader():
     from conformance.packs import load_and_validate_pack
 
     for family in (
-        "version_extraction",
-        "version_f4se",
-        "version_pe",
-        "version_pe_path",
-        "settings_validation",
-        "settings_cached_docs",
-        "registry_keys",
+            "version_extraction",
+            "version_f4se",
+            "version_pe",
+            "version_pe_path",
+            "settings_validation",
+            "settings_cached_docs",
+            "registry_keys",
     ):
         load_and_validate_pack(
             ROOT, Path("tests/conformance/packs") / family / "v1.json"

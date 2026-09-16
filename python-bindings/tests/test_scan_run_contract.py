@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 
-
 MAIN_YAML = """schema_version: "2.0"
 CLASSIC_Info:
   version: "9.0.0"
@@ -74,7 +73,7 @@ PLUGINS:
 """
 
 SHARED_SCAN_RUN_FIXTURE_ROOT = (
-    Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "crash_log_scan_run"
+        Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "crash_log_scan_run"
 )
 SHARED_SCAN_RUN_MANIFEST = json.loads(
     (SHARED_SCAN_RUN_FIXTURE_ROOT / "manifest.json").read_text(encoding="utf-8")
@@ -83,8 +82,8 @@ SHARED_SCAN_RUN_MANIFEST = json.loads(
 
 @pytest.fixture(autouse=True)
 def _isolate_installed_yaml_cache(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Keep installed-data selection independent of the developer's real update cache."""
 
@@ -146,10 +145,10 @@ def _shared_relative(root: Path, path: str) -> str:
 
 
 def _configuration(
-    classic_scanlog: object,
-    root: Path,
-    *,
-    max_concurrent: int | None = None,
+        classic_scanlog: object,
+        root: Path,
+        *,
+        max_concurrent: int | None = None,
 ) -> object:
     """Create explicit scan facts shared by Standard and Targeted requests."""
 
@@ -172,8 +171,8 @@ def _configuration(
     ["Fallout4", "Fallout4VR", "Skyrim", "Starfield"],
 )
 def test_configuration_accepts_every_typed_shared_game_id(
-    tmp_path: Path,
-    game_attribute: str,
+        tmp_path: Path,
+        game_attribute: str,
 ) -> None:
     """Configuration maps every shared typed game value without parsing strings."""
 
@@ -202,7 +201,7 @@ def test_configuration_accepts_every_typed_shared_game_id(
 
 
 def test_request_factories_make_invalid_scan_intents_unrepresentable(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Request factories require FCX context and omit Targeted movement policy."""
 
@@ -227,38 +226,38 @@ def test_request_factories_make_invalid_scan_intents_unrepresentable(
     )
 
     assert (
-        classic_scanlog.ScanRunRequest.standard(
-            configuration, standard_source, movement
-        )
-        is not None
+            classic_scanlog.ScanRunRequest.standard(
+                configuration, standard_source, movement
+            )
+            is not None
     )
     assert (
-        classic_scanlog.ScanRunRequest.standard_with_fcx(
-            configuration, standard_source, movement, setup_context
-        )
-        is not None
+            classic_scanlog.ScanRunRequest.standard_with_fcx(
+                configuration, standard_source, movement, setup_context
+            )
+            is not None
     )
     assert (
-        classic_scanlog.ScanRunRequest.standard(
-            configuration, standard_source, configured_movement
-        )
-        is not None
+            classic_scanlog.ScanRunRequest.standard(
+                configuration, standard_source, configured_movement
+            )
+            is not None
     )
     assert (
-        classic_scanlog.ScanRunRequest.standard(
-            configuration, standard_source, custom_movement
-        )
-        is not None
+            classic_scanlog.ScanRunRequest.standard(
+                configuration, standard_source, custom_movement
+            )
+            is not None
     )
     assert (
-        classic_scanlog.ScanRunRequest.targeted(configuration, targeted_source)
-        is not None
+            classic_scanlog.ScanRunRequest.targeted(configuration, targeted_source)
+            is not None
     )
     assert (
-        classic_scanlog.ScanRunRequest.targeted_with_fcx(
-            configuration, targeted_source, setup_context
-        )
-        is not None
+            classic_scanlog.ScanRunRequest.targeted_with_fcx(
+                configuration, targeted_source, setup_context
+            )
+            is not None
     )
 
     with pytest.raises(TypeError):
@@ -341,7 +340,7 @@ def test_scan_run_maps_no_logs_and_pre_discovery_cancellation(tmp_path: Path) ->
 
 
 def test_targeted_directory_discovery_retains_paths_and_rejections(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Rust owns recursive Targeted discovery and retains searched/rejected paths."""
 
@@ -451,8 +450,8 @@ def test_failed_log_materializes_structured_python_failures(tmp_path: Path) -> N
 
 
 def test_standard_scan_run_persists_reports_in_discovery_order(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The shared Standard fixture retains Rust-owned facts and durable reports."""
 
@@ -529,8 +528,8 @@ def test_standard_scan_run_persists_reports_in_discovery_order(
     assert result.effective_concurrency == expected["effectiveConcurrency"]
     assert result.discovery.source == "standard"
     assert [
-        _shared_relative(tmp_path, path) for path in result.discovery.accepted_logs
-    ] == expected["acceptedLogs"]
+               _shared_relative(tmp_path, path) for path in result.discovery.accepted_logs
+           ] == expected["acceptedLogs"]
     assert [log.discovery_index for log in result.logs] == expected["discoveryOrder"]
     assert [log.crash_log for log in result.logs] == [str(path) for path in crash_logs]
     assert [log.disposition for log in result.logs] == expected["dispositions"]
@@ -549,7 +548,7 @@ def test_standard_scan_run_persists_reports_in_discovery_order(
 
 
 def test_missing_local_ignore_is_generated_and_reported_as_run_data(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """A generated Local Ignore is retained as structured run-level snapshot data."""
 
@@ -587,7 +586,7 @@ def test_missing_local_ignore_is_generated_and_reported_as_run_data(
 
 
 def test_shared_local_ignore_recovery_continuation_retains_snapshot_and_rejects_replay(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Proceed Without Ignore reuses exact retained discovery and YAML Data once."""
 
@@ -639,8 +638,8 @@ def test_shared_local_ignore_recovery_continuation_retains_snapshot_and_rejects_
     assert resumed.discovery.accepted_logs == initial.discovery.accepted_logs
     assert resumed.installed_yaml_data.main.sha256 == initial.installed_yaml_data.main.sha256
     assert (
-        resumed.installed_yaml_data.game_file.sha256
-        == initial.installed_yaml_data.game_file.sha256
+            resumed.installed_yaml_data.game_file.sha256
+            == initial.installed_yaml_data.game_file.sha256
     )
     assert resumed.installed_yaml_data.local_ignore_state == "proceed_without_ignore"
     assert all(event.kind != "discovery_completed" for event in resumed_events)
@@ -667,8 +666,8 @@ def test_shared_local_ignore_recovery_continuation_retains_snapshot_and_rejects_
 
 
 def test_a_real_run_publishes_display_content_on_every_carrier(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A real run carries Rust's words on its envelope and on every observed event.
 
@@ -763,7 +762,7 @@ def test_a_real_run_publishes_display_content_on_every_carrier(
 
 
 def test_reset_to_default_returns_durable_metadata_and_unchanged_shared_report(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Reset resumes retained discovery and selected bytes with verified backup metadata."""
 
@@ -819,8 +818,8 @@ def test_reset_to_default_returns_durable_metadata_and_unchanged_shared_report(
     assert metadata.backup_path.read_bytes() == fixture["malformedLocalIgnore"].encode()
     assert metadata.malformed_identity.sha256 == metadata.backup_identity.sha256
     assert (
-        metadata.replacement_identity.sha256
-        == reset.installed_yaml_data.local_ignore_identity.sha256
+            metadata.replacement_identity.sha256
+            == reset.installed_yaml_data.local_ignore_identity.sha256
     )
     assert Path(reset.logs[0].autoscan_report).read_bytes() == baseline_report
     assert all(event.kind != "discovery_completed" for event in events)
@@ -834,7 +833,7 @@ def test_reset_to_default_returns_durable_metadata_and_unchanged_shared_report(
 
 
 def test_reset_to_default_exposes_typed_conflict_and_backup_failure(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Reset conflict and pre-replacement operational failure remain distinct exceptions."""
 
@@ -886,7 +885,7 @@ def test_reset_to_default_exposes_typed_conflict_and_backup_failure(
 
 
 def test_pre_resume_cancellation_wins_without_mutating_local_ignore(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Cancellation at resume returns a normal post-discovery cancelled result."""
 
@@ -926,7 +925,7 @@ def test_pre_resume_cancellation_wins_without_mutating_local_ignore(
 
 
 def test_abandon_returns_the_cancelled_result_without_touching_anything(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Abandoning a paused run cancels it, writes nothing, and spends the continuation."""
 
@@ -1041,7 +1040,7 @@ def test_post_critical_cancellation_waits_for_durable_reset(tmp_path: Path) -> N
 
 
 def test_targeted_scan_run_preserves_input_order_and_never_moves(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """The shared Targeted fixture retains order, rejections, and no-move behavior."""
 
@@ -1077,17 +1076,17 @@ def test_targeted_scan_run_preserves_input_order_and_never_moves(
     result = execution.result
     assert result.discovery.source == "targeted"
     assert [
-        _shared_relative(tmp_path, path) for path in result.discovery.accepted_logs
-    ] == expected["acceptedLogs"]
+               _shared_relative(tmp_path, path) for path in result.discovery.accepted_logs
+           ] == expected["acceptedLogs"]
     assert [
-        _shared_relative(tmp_path, rejected.path)
-        for rejected in result.discovery.rejected_inputs
-    ] == expected["rejectedInputs"]
+               _shared_relative(tmp_path, rejected.path)
+               for rejected in result.discovery.rejected_inputs
+           ] == expected["rejectedInputs"]
     assert result.effective_concurrency == expected["effectiveConcurrency"]
     assert [log.discovery_index for log in result.logs] == expected["discoveryOrder"]
     assert [
-        _shared_relative(tmp_path, log.crash_log) for log in result.logs
-    ] == expected["acceptedLogs"]
+               _shared_relative(tmp_path, log.crash_log) for log in result.logs
+           ] == expected["acceptedLogs"]
     assert [log.disposition for log in result.logs] == expected["dispositions"]
     assert all(log.moved_to_unsolved_logs is False for log in result.logs)
     assert all(Path(log.autoscan_report).is_file() for log in result.logs)
@@ -1164,9 +1163,9 @@ def test_shared_cancellation_fixture_distinguishes_safe_seams(tmp_path: Path) ->
         """Cancel after the first log starts so its durable unit must finish."""
 
         if (
-            event.kind == "log_started"
-            and event.log is not None
-            and event.log.discovery_index == 0
+                event.kind == "log_started"
+                and event.log is not None
+                and event.log.discovery_index == 0
         ):
             admitted_cancellation.cancel()
 
@@ -1187,7 +1186,7 @@ def test_shared_cancellation_fixture_distinguishes_safe_seams(tmp_path: Path) ->
 
 
 def test_observer_failure_is_adapter_data_and_can_request_safe_cancellation(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """A callback exception stays outside core errors and can cancel future work."""
 
@@ -1252,7 +1251,7 @@ def test_configuration_rejects_the_run_only_recovery_required_state() -> None:
 
 
 def test_every_token_a_real_run_publishes_resolves_to_a_label(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Every token a completed run emits resolves to non-empty prose.
 
@@ -1326,9 +1325,9 @@ def test_run_owned_display_labels_have_no_configuration_counterpart() -> None:
     import classic_config
 
     for name in (
-        "log_disposition_label",
-        "log_failure_stage_label",
-        "infrastructure_error_stage_label",
+            "log_disposition_label",
+            "log_failure_stage_label",
+            "infrastructure_error_stage_label",
     ):
         assert not hasattr(classic_config, name)
 
@@ -1382,7 +1381,7 @@ def _paused_run(classic_scanlog: object, tmp_path: Path, main_yaml: str) -> obje
 
 
 def test_a_paused_run_describes_every_recovery_decision_it_accepts(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Both decisions arrive described, and both are available with defaults present."""
 
@@ -1417,7 +1416,7 @@ def test_a_paused_run_describes_every_recovery_decision_it_accepts(
 
 
 def test_a_paused_run_marks_reset_unavailable_when_no_defaults_are_retained(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """The one decision that can fail is withdrawn on the decision itself.
 

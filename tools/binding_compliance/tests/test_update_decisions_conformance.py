@@ -30,11 +30,11 @@ def test_update_decisions_reject_wrong_boolean_and_swallowed_errors():
         )
     for predicate in UPDATE_DECISIONS_COVERAGE_POLICY.predicates:
         for method in (
-            "get_latest_release",
-            "getLatestRelease",
-            "download_asset",
-            "set_token",
-            "future_method",
+                "get_latest_release",
+                "getLatestRelease",
+                "download_asset",
+                "set_token",
+                "future_method",
         ):
             assert not predicate.covers_runtime_operation(method)
 

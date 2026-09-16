@@ -35,6 +35,7 @@ Usage:
 
 __version__: str
 
+
 class ResourceType:
     """Resource type enumeration for game files.
 
@@ -101,6 +102,7 @@ class ResourceType:
     def __repr__(self) -> str:
         """Return a debug representation suitable for logs and REPL output."""
 
+
 class ResourceInfo:
     """Resource file information.
 
@@ -126,6 +128,7 @@ class ResourceInfo:
     def __repr__(self) -> str:
         """Return a debug representation suitable for logs and REPL output."""
 
+
 def detect_resource_type(path: str) -> ResourceType:
     """Detect the resource type from a file path.
 
@@ -140,6 +143,7 @@ def detect_resource_type(path: str) -> ResourceType:
         >>> assert rt.as_str() == "texture"
 
     """
+
 
 def is_supported_resource(path: str) -> bool:
     """Check if a file is a supported resource type.
@@ -156,6 +160,7 @@ def is_supported_resource(path: str) -> bool:
 
     """
 
+
 def parse_resource_type(type_name: str) -> ResourceType:
     """Parse a resource type from a string.
 
@@ -171,8 +176,9 @@ def parse_resource_type(type_name: str) -> ResourceType:
 
     """
 
+
 def enumerate_resources(
-    root: str, filter_type: ResourceType | None = None
+        root: str, filter_type: ResourceType | None = None
 ) -> list[ResourceInfo]:
     """Enumerate resources in a directory.
 
@@ -195,6 +201,7 @@ def enumerate_resources(
 
     """
 
+
 def count_resources_by_type(root: str) -> list[tuple[ResourceType, int]]:
     """Count resources in a directory by type.
 
@@ -213,6 +220,7 @@ def count_resources_by_type(root: str) -> list[tuple[ResourceType, int]]:
         ...     print(f"{resource_type.as_str()}: {count} files")
 
     """
+
 
 def validate_resource(path: str) -> None:
     """Check if a resource file exists and is readable.

@@ -31,7 +31,7 @@ from conformance.packs import (
 )
 
 PACK_PATH = (
-    REPO_ROOT / "tests" / "conformance" / "packs" / "crash_log_scan_run" / "v1.json"
+        REPO_ROOT / "tests" / "conformance" / "packs" / "crash_log_scan_run" / "v1.json"
 )
 DEFAULT_ARTIFACT_ROOT = REPO_ROOT / "tools" / "binding_compliance" / "artifacts"
 RUN_PLAN_ENV = "CLASSIC_CONSUMER_CONFORMANCE_RUN_PLAN"
@@ -88,7 +88,7 @@ def _terminate_process_tree(process: subprocess.Popen[str]) -> None:
 
 
 def _run_tui_command(
-    environment: dict[str, str], timeout_seconds: int
+        environment: dict[str, str], timeout_seconds: int
 ) -> tuple[subprocess.CompletedProcess[str] | None, str | None, bool]:
     """Run the bounded Cargo consumer test and retain launch/timeout state."""
 
@@ -127,9 +127,9 @@ def _run_tui_command(
 
 
 def _attempt_document(
-    completed: subprocess.CompletedProcess[str] | None,
-    launch_error: str | None,
-    timed_out: bool,
+        completed: subprocess.CompletedProcess[str] | None,
+        launch_error: str | None,
+        timed_out: bool,
 ) -> dict[str, Any]:
     """Return bounded diagnostics for the exact TUI Cargo attempt."""
 
@@ -147,10 +147,10 @@ def _attempt_document(
 
 
 def run_tui_consumer(
-    *,
-    artifact_root: Path = DEFAULT_ARTIFACT_ROOT,
-    timeout_seconds: int = 1_200,
-    family: str = "crash-log-scan-run",
+        *,
+        artifact_root: Path = DEFAULT_ARTIFACT_ROOT,
+        timeout_seconds: int = 1_200,
+        family: str = "crash-log-scan-run",
 ) -> tuple[int, Path]:
     """Execute the maintained TUI seam and build its exact consumer report."""
 
@@ -190,10 +190,10 @@ def run_tui_consumer(
     _atomic_write_json(report_path, report)
 
     command_passed = (
-        completed is not None
-        and completed.returncode == 0
-        and launch_error is None
-        and not timed_out
+            completed is not None
+            and completed.returncode == 0
+            and launch_error is None
+            and not timed_out
     )
     return (
         0 if command_passed and report["result"] == "pass" else 1,
@@ -227,12 +227,12 @@ def main(argv: list[str] | None = None) -> int:
             family=args.family,
         )
     except (
-        ConformanceCommandError,
-        ConsumerObligationError,
-        MaterializationError,
-        PackValidationError,
-        OSError,
-        ValueError,
+            ConformanceCommandError,
+            ConsumerObligationError,
+            MaterializationError,
+            PackValidationError,
+            OSError,
+            ValueError,
     ) as error:
         print(f"TUI consumer conformance launch failed: {error}", file=sys.stderr)
         return 1

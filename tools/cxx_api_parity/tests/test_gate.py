@@ -413,14 +413,14 @@ class TestDriftDetection:
 
 def test_cxx_gate_defaults_use_repo_root_paths() -> None:
     gate_source = (
-        REPO_ROOT / "tools" / "cxx_api_parity" / "check_parity_gate.py"
+            REPO_ROOT / "tools" / "cxx_api_parity" / "check_parity_gate.py"
     ).read_text(encoding="utf-8")
     generator_source = (
-        REPO_ROOT / "tools" / "cxx_api_parity" / "generate_baseline.py"
+            REPO_ROOT / "tools" / "cxx_api_parity" / "generate_baseline.py"
     ).read_text(encoding="utf-8")
     assert 'default="cpp-bindings/classic-cpp-bridge/parity-artifacts"' in gate_source
     assert (
-        'bridge_crate_rel: str = "cpp-bindings/classic-cpp-bridge"' in generator_source
+            'bridge_crate_rel: str = "cpp-bindings/classic-cpp-bridge"' in generator_source
     )
     assert "ClassicLib-rs/cpp-bindings/classic-cpp-bridge" not in gate_source
     assert "ClassicLib-rs/cpp-bindings/classic-cpp-bridge" not in generator_source
@@ -434,8 +434,8 @@ class TestStaleArtifact:
         """D-14: manually corrupting a committed baseline artifact -> gate exits 1."""
         synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
         stale_md = (
-            synth_repo
-            / "docs/implementation/cxx_api_parity/baseline/cxx_diff_report.md"
+                synth_repo
+                / "docs/implementation/cxx_api_parity/baseline/cxx_diff_report.md"
         )
         stale_md.write_text(
             "# CXX Parity Diff Report\n\nSTALE PLACEHOLDER\n", encoding="utf-8"
@@ -451,8 +451,8 @@ class TestStaleArtifact:
         """D-08/D-14: --update-baseline refreshes committed artifacts; next run is clean."""
         synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
         stale_md = (
-            synth_repo
-            / "docs/implementation/cxx_api_parity/baseline/cxx_diff_report.md"
+                synth_repo
+                / "docs/implementation/cxx_api_parity/baseline/cxx_diff_report.md"
         )
         stale_md.write_text("STALE\n", encoding="utf-8")
 
@@ -490,7 +490,7 @@ class TestCanonicalMappingDrift:
 
         synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
         mapping_path = (
-            synth_repo / "tools" / "cxx_api_parity" / "canonical_mappings.json"
+                synth_repo / "tools" / "cxx_api_parity" / "canonical_mappings.json"
         )
         mappings = json.loads(mapping_path.read_text(encoding="utf-8"))
         mappings["entries"].pop()
@@ -506,7 +506,7 @@ class TestCanonicalMappingDrift:
 
         synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
         mapping_path = (
-            synth_repo / "tools" / "cxx_api_parity" / "canonical_mappings.json"
+                synth_repo / "tools" / "cxx_api_parity" / "canonical_mappings.json"
         )
         mappings = json.loads(mapping_path.read_text(encoding="utf-8"))
         mappings["entries"].append(
@@ -530,7 +530,7 @@ class TestCanonicalMappingDrift:
 
         synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
         synth_lib = (
-            synth_repo / "business-logic" / "classic-synth-core" / "src" / "lib.rs"
+                synth_repo / "business-logic" / "classic-synth-core" / "src" / "lib.rs"
         )
         synth_lib.write_text("pub fn unrelated() {}\n", encoding="utf-8")
 
@@ -554,14 +554,14 @@ class TestCanonicalMappingDrift:
         assert "missing live Rust targets" in refresh.stderr
 
     def test_gate_rejects_tampered_contract_metadata_until_refresh(
-        self, tmp_path: Path
+            self, tmp_path: Path
     ):
         """The committed contract cannot contradict the independent mapping sidecar."""
 
         synth_repo = _bootstrap_synthetic_gate(tmp_path, {"synth.rs": _SIMPLE_BRIDGE})
         contract_path = (
-            synth_repo
-            / "docs/implementation/cxx_api_parity/baseline/parity_contract.json"
+                synth_repo
+                / "docs/implementation/cxx_api_parity/baseline/parity_contract.json"
         )
         contract = json.loads(contract_path.read_text(encoding="utf-8"))
         row = contract["entries"][0]
@@ -629,6 +629,6 @@ class TestNoDeferredRegistry:
         # argparse unrecognized-argument error code is 2
         assert result.returncode == 2
         assert (
-            "unrecognized arguments" in result.stderr.lower()
-            or "error" in result.stderr.lower()
+                "unrecognized arguments" in result.stderr.lower()
+                or "error" in result.stderr.lower()
         )

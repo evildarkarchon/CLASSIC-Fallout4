@@ -24,9 +24,9 @@ from conformance.packs import discover_pack_paths, load_and_validate_pack
 
 
 def candidate_predicates(
-    row: SourceParityRow,
-    pack: Mapping[str, Any],
-    policy: FamilyCoveragePolicy,
+        row: SourceParityRow,
+        pack: Mapping[str, Any],
+        policy: FamilyCoveragePolicy,
 ) -> tuple[str, ...]:
     """Find potential facts using the executable derivation's selection rules.
 
@@ -39,9 +39,9 @@ def candidate_predicates(
         capability["id"]
         for capability in pack["capabilities"]
         if row.mapping_origin == "canonical_rust"
-        and row.rust_crate
-        == capability.get("rustCrate", pack["domainOwner"]["rustCrate"])
-        and row.rust_symbol in capability["rustSymbols"]
+           and row.rust_crate
+           == capability.get("rustCrate", pack["domainOwner"]["rustCrate"])
+           and row.rust_symbol in capability["rustSymbols"]
     }
     # An explicit selector may name a binding-only operation, but cannot escape
     # the declared Rust owner when the source row has a canonical mapping.
@@ -56,7 +56,7 @@ def candidate_predicates(
                 row.obligation_id in predicate.binding_obligation_ids
                 if predicate.binding_obligation_ids
                 else predicate.capability_id in canonical
-                and row.rust_symbol in predicate.rust_symbols
+                     and row.rust_symbol in predicate.rust_symbols
             )
             and any(
                 scenario["action"] == predicate.action
@@ -95,10 +95,10 @@ def build_readiness_report(repo_root: Path) -> dict[str, Any]:
             for obligation_id in predicate.binding_obligation_ids:
                 row = rows_by_id[obligation_id]
                 if row.mapping_origin == "canonical_rust" and not any(
-                    row.rust_crate
-                    == capability.get("rustCrate", pack["domainOwner"]["rustCrate"])
-                    and row.rust_symbol in capability["rustSymbols"]
-                    for capability in pack["capabilities"]
+                        row.rust_crate
+                        == capability.get("rustCrate", pack["domainOwner"]["rustCrate"])
+                        and row.rust_symbol in capability["rustSymbols"]
+                        for capability in pack["capabilities"]
                 ):
                     raise CoverageDerivationError(
                         f"{family_id}: explicit row selector {obligation_id} "
@@ -115,9 +115,9 @@ def build_readiness_report(repo_root: Path) -> dict[str, Any]:
             for predicate_id in candidate_predicates(row, pack, policy)
         ]
         retained = (
-            row.required_evidence_kind in {"structural", "negative"}
-            and row.retained_analyzer_id is not None
-            and analyzers.get(row.retained_analyzer_id) == row.required_evidence_kind
+                row.required_evidence_kind in {"structural", "negative"}
+                and row.retained_analyzer_id is not None
+                and analyzers.get(row.retained_analyzer_id) == row.required_evidence_kind
         )
         disposition = (
             "retained-source"

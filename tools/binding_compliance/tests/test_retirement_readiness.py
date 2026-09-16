@@ -12,7 +12,7 @@ from conformance.coverage import (
 
 
 def test_candidate_matching_preserves_operation_and_explicit_selector_boundaries() -> (
-    None
+        None
 ):
     """A matching owner cannot donate coverage to an unexecuted public alias."""
     from retirement_readiness import candidate_predicates
@@ -45,8 +45,8 @@ def test_candidate_matching_preserves_operation_and_explicit_selector_boundaries
     policy = FamilyCoveragePolicy("example", (predicate,))
     assert candidate_predicates(row, pack, policy) == ("read-fact",)
     assert (
-        candidate_predicates(replace(row, runtime_operation="write"), pack, policy)
-        == ()
+            candidate_predicates(replace(row, runtime_operation="write"), pack, policy)
+            == ()
     )
     assert candidate_predicates(replace(row, rust_crate="other"), pack, policy) == ()
     restricted = FamilyCoveragePolicy(
@@ -57,7 +57,7 @@ def test_candidate_matching_preserves_operation_and_explicit_selector_boundaries
 
 
 def test_repository_diagnostic_accounts_for_every_occurrence_without_claiming_proof() -> (
-    None
+        None
 ):
     """Even a matching predicate remains only an unexecuted migration candidate."""
     from retirement_readiness import build_readiness_report
@@ -76,7 +76,7 @@ def test_repository_diagnostic_accounts_for_every_occurrence_without_claiming_pr
 
 
 def test_repository_diagnostic_rejects_selector_owner_escape(
-    monkeypatch: pytest.MonkeyPatch,
+        monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Invalid policy selectors must not disappear into the unmatched inventory."""
     import retirement_readiness
@@ -133,24 +133,24 @@ def test_binding_only_candidates_require_exact_selectors() -> None:
     policy = FamilyCoveragePolicy("example", (predicate,))
     assert candidate_predicates(row, pack, policy) == ("read-fact",)
     assert (
-        candidate_predicates(
-            replace(row, obligation_id="parity:node:other"), pack, policy
-        )
-        == ()
+            candidate_predicates(
+                replace(row, obligation_id="parity:node:other"), pack, policy
+            )
+            == ()
     )
     assert (
-        candidate_predicates(replace(row, runtime_operation="write"), pack, policy)
-        == ()
+            candidate_predicates(replace(row, runtime_operation="write"), pack, policy)
+            == ()
     )
     assert (
-        candidate_predicates(
-            row,
-            pack,
-            FamilyCoveragePolicy(
-                "example", (replace(predicate, binding_obligation_ids=()),)
-            ),
-        )
-        == ()
+            candidate_predicates(
+                row,
+                pack,
+                FamilyCoveragePolicy(
+                    "example", (replace(predicate, binding_obligation_ids=()),)
+                ),
+            )
+            == ()
     )
     escaped = replace(
         row, mapping_origin="canonical_rust", rust_crate="other", rust_symbol="Owner"
@@ -197,11 +197,11 @@ def test_retained_operation_does_not_become_a_candidate() -> None:
     "gaps,missing,expected", [(0, [], 0), (1, [], 1), (0, ["missing"], 1)]
 )
 def test_fail_on_unmatched_exit_status(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    gaps: int,
-    missing: list[str],
-    expected: int,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        gaps: int,
+        missing: list[str],
+        expected: int,
 ) -> None:
     """Only unresolved static obligations fail the opt-in diagnostic gate."""
     import retirement_readiness
@@ -216,6 +216,6 @@ def test_fail_on_unmatched_exit_status(
     )
     output = tmp_path / "readiness.json"
     assert (
-        retirement_readiness.main(["--output", str(output), "--fail-on-unmatched"])
-        == expected
+            retirement_readiness.main(["--output", str(output), "--fail-on-unmatched"])
+            == expected
     )

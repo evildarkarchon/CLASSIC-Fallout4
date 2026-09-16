@@ -17,6 +17,7 @@ from conformance.coverage import (
 from conformance.families.scan_game import SCAN_GAME_COVERAGE_POLICY
 from conformance.packs import load_and_validate_pack, materialize_run_plan
 from conformance.receipts import validate_prepared_run
+
 from receipt_test_support import prepare_receipt_case
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -30,8 +31,8 @@ def test_scan_game_facts_require_complete_native_results_and_no_writes() -> None
     for scenario in document["scenarios"]:
         fixture = json.loads(
             (
-                pack.fixture_root
-                / document["fixtures"][scenario["input"]["fixtureRef"]]
+                    pack.fixture_root
+                    / document["fixtures"][scenario["input"]["fixtureRef"]]
             ).read_text()
         )
         assert "expected" not in fixture
@@ -81,7 +82,7 @@ def test_scan_game_facts_require_complete_native_results_and_no_writes() -> None
 
 @pytest.mark.parametrize("participant", ("cxx", "node", "python"))
 def test_scan_game_receipts_reject_stale_partial_or_mutated_evidence(
-    tmp_path: Path, participant: str
+        tmp_path: Path, participant: str
 ) -> None:
     """Central validation binds real source rows to complete, invocation-owned receipts."""
     pack, run, receipt = prepare_receipt_case(
@@ -110,11 +111,11 @@ def test_scan_game_receipts_reject_stale_partial_or_mutated_evidence(
     )
     if participant == "python":
         for symbol in (
-            "EnbValidationResult",
-            "EnbResult",
-            "EnbConfigResult",
-            "ConfigIssue",
-            "IssueSeverity",
+                "EnbValidationResult",
+                "EnbResult",
+                "EnbConfigResult",
+                "ConfigIssue",
+                "IssueSeverity",
         ):
             carrier = next(
                 row
@@ -150,13 +151,13 @@ def test_scan_game_receipts_reject_stale_partial_or_mutated_evidence(
         added.obligation_id
     ]
     for mutation in (
-        "missing",
-        "skipped",
-        "wrong-result",
-        "write",
-        "directory",
-        "stale-expectation",
-        "stale-source",
+            "missing",
+            "skipped",
+            "wrong-result",
+            "write",
+            "directory",
+            "stale-expectation",
+            "stale-source",
     ):
         changed = copy.deepcopy(receipt)
         if mutation == "missing":
@@ -182,7 +183,7 @@ def test_scan_game_receipts_reject_stale_partial_or_mutated_evidence(
             changed["expectationDigest"] = "sha256:" + "0" * 64
         else:
             changed["invocation"]["sourceIdentity"] = (
-                "git:" + "0" * 40 + ":sha256:" + "0" * 64
+                    "git:" + "0" * 40 + ":sha256:" + "0" * 64
             )
         run.receipt_path.write_text(json.dumps(changed))
         rejected = validate_prepared_run(pack, run, coverage_policy=policy)

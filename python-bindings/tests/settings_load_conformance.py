@@ -10,9 +10,9 @@ from typing import Any
 def _owned(root: Path, relative: str) -> Path:
     """Contain every authored filename before materialization."""
     if (
-        not relative
-        or any(char in relative for char in "\\:")
-        or any(part in {"", ".", ".."} for part in relative.split("/"))
+            not relative
+            or any(char in relative for char in "\\:")
+            or any(part in {"", ".", ".."} for part in relative.split("/"))
     ):
         raise ValueError("settings fixture requires a contained relative path")
     return root / relative
@@ -22,8 +22,8 @@ def _error(failure: OSError, root: Path, paths: list[str]) -> dict[str, str]:
     """Project only attributed core I/O/parse errors; unexpected failures propagate."""
     message = str(failure)
     for prefix, kind in (
-        ("Failed to read file ", "io"),
-        ("Failed to parse YAML from ", "yaml-parse"),
+            ("Failed to read file ", "io"),
+            ("Failed to parse YAML from ", "yaml-parse"),
     ):
         for relative in paths:
             if message.startswith(prefix + str(_owned(root, relative)) + ": "):

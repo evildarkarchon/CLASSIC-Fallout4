@@ -23,7 +23,7 @@ def observe_version_registry(fixture: Mapping[str, Any]) -> dict[str, Any]:
         raise ValueError("unsupported version registry fixture")
     previous = Path.cwd()
     with tempfile.TemporaryDirectory(
-        prefix="classic-version-registry-conformance-"
+            prefix="classic-version-registry-conformance-"
     ) as directory:
         root = Path(directory)
         (root / "CLASSIC Main.yaml").write_bytes(
@@ -34,8 +34,8 @@ def observe_version_registry(fixture: Mapping[str, Any]) -> dict[str, Any]:
             os.chdir(root)
             observation = _observe(fixture, classic_version_registry.VersionRegistry())
             if (
-                _observe(fixture, classic_version_registry.get_version_registry())
-                != observation
+                    _observe(fixture, classic_version_registry.get_version_registry())
+                    != observation
             ):
                 raise ValueError(
                     "registry constructor and singleton entry point disagree"
@@ -106,18 +106,18 @@ def _observe(fixture: Mapping[str, Any], registry: Any) -> dict[str, Any]:
         info = registry.get_by_id(request["id"])
         handling = registry.unknown_version_handling
         if (
-            info is not None
-            and info.address_library is not None
-            and info.address_library.filename
-            != registry.get_address_library_filename(info.version, info.is_vr)
+                info is not None
+                and info.address_library is not None
+                and info.address_library.filename
+                != registry.get_address_library_filename(info.version, info.is_vr)
         ):
             raise ValueError(
                 "address-library carrier and public filename query disagree"
             )
         if (
-            info is not None
-            and info.get_crashgen_version_strings()
-            != registry.get_crashgen_versions(request["id"])
+                info is not None
+                and info.get_crashgen_version_strings()
+                != registry.get_crashgen_versions(request["id"])
         ):
             raise ValueError("registry and value crashgen version strings disagree")
         return {
@@ -150,7 +150,7 @@ def _observe(fixture: Mapping[str, Any], registry: Any) -> dict[str, Any]:
                 "logLevel": handling.log_level,
                 "defaultId": handling.get_default(request["game"]),
                 "compatible": info is not None
-                and info.is_compatible_with(request["version"]),
+                              and info.is_compatible_with(request["version"]),
                 "snapshotIds": [
                     info.id
                     for info in registry.get_all_for_game(
@@ -179,7 +179,7 @@ def _observe(fixture: Mapping[str, Any], registry: Any) -> dict[str, Any]:
         if info is not None:
             value_selected = info.get_crashgen_for_version(request["version"])
             if (None if selected is None else _crashgen(selected)) != (
-                None if value_selected is None else _crashgen(value_selected)
+                    None if value_selected is None else _crashgen(value_selected)
             ):
                 raise ValueError("registry and value crashgen selection disagree")
         return {

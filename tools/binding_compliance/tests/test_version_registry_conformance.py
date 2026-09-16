@@ -17,6 +17,7 @@ from conformance.coverage import (
 from conformance.families.version_registry import VERSION_REGISTRY_COVERAGE_POLICY
 from conformance.packs import load_and_validate_pack, materialize_run_plan
 from conformance.receipts import validate_prepared_run
+
 from receipt_test_support import prepare_receipt_case
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -53,7 +54,7 @@ def test_version_registry_fixtures_seed_one_isolated_registry() -> None:
     for scenario in document["scenarios"]:
         fixture = json.loads(
             (
-                ROOT / document["fixtureRoot"] / document["fixtures"][scenario["id"]]
+                    ROOT / document["fixtureRoot"] / document["fixtures"][scenario["id"]]
             ).read_text()
         )
         sources.add(fixture["registryYaml"])
@@ -79,17 +80,17 @@ def test_remaining_registry_queries_have_separate_executable_facts() -> None:
     document = load_and_validate_pack(ROOT, PACK).document()
     actions = {scenario["action"] for scenario in document["scenarios"]}
     assert {
-        "version-registry.enumerate",
-        "version-registry.crashgen",
-        "version-registry.xse",
-    } <= actions
+               "version-registry.enumerate",
+               "version-registry.crashgen",
+               "version-registry.xse",
+           } <= actions
     for predicate in VERSION_REGISTRY_COVERAGE_POLICY.predicates:
         assert not predicate.covers_runtime_operation("future_registry_operation")
 
 
 @pytest.mark.parametrize("participant", ("cxx", "node", "python"))
 def test_version_registry_receipt_lifecycle_fails_closed(
-    tmp_path: Path, participant: str
+        tmp_path: Path, participant: str
 ) -> None:
     """Validate genuine receipt transport while rejecting drift, replay, and new APIs."""
     pack, run, receipt = prepare_receipt_case(
@@ -137,9 +138,9 @@ def test_version_registry_receipt_lifecycle_fails_closed(
         added.obligation_id
     ]
     for index, field, replacement in (
-        (0, "result", None),
-        (6, "error", None),
-        (2, "files", []),
+            (0, "result", None),
+            (6, "error", None),
+            (2, "files", []),
     ):
         changed = copy.deepcopy(receipt)
         changed["scenarios"][index]["observation"][field] = replacement

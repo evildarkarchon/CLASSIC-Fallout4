@@ -91,7 +91,7 @@ def rust_enum_variants(source: str, enum_name: str) -> tuple[str, ...]:
         raise ManifestValidationError(f"Rust enum {enum_name} was not found")
     opening = source.find("{", match.start())
     closing = _matching_brace(source, opening)
-    body = source[opening + 1 : closing]
+    body = source[opening + 1: closing]
     body = re.sub(r"/\*.*?\*/", "", body, flags=re.DOTALL)
     body = re.sub(r"//[^\n]*", "", body)
 
@@ -127,15 +127,15 @@ def _contains_forbidden_symbol(source: str, symbol: str) -> bool:
 
     if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", symbol):
         return (
-            re.search(rf"(?<![A-Za-z0-9_]){re.escape(symbol)}(?![A-Za-z0-9_])", source)
-            is not None
+                re.search(rf"(?<![A-Za-z0-9_]){re.escape(symbol)}(?![A-Za-z0-9_])", source)
+                is not None
         )
     return symbol in source
 
 
 def _validate_forbidden_exports(
-    repo_root: Path,
-    forbidden_exports: object,
+        repo_root: Path,
+        forbidden_exports: object,
 ) -> None:
     """Fail when a contracted scan-execution export remains in a tracked surface.
 
@@ -217,9 +217,9 @@ def _validate_forbidden_exports(
 
 
 def _validate_rust_inventory(
-    repo_root: Path,
-    manifest: dict[str, Any],
-    variants: set[str],
+        repo_root: Path,
+        manifest: dict[str, Any],
+        variants: set[str],
 ) -> None:
     """Require manifest variants to match every configured Rust enum exactly."""
 
@@ -233,7 +233,7 @@ def _validate_rust_inventory(
         relative_path = spec.get("path")
         enum_name = spec.get("name")
         if not all(
-            isinstance(value, str) for value in (category, relative_path, enum_name)
+                isinstance(value, str) for value in (category, relative_path, enum_name)
         ):
             raise ManifestValidationError(
                 "Rust enum category, path, and name must be strings"
@@ -248,8 +248,8 @@ def _validate_rust_inventory(
         parsed_variants = rust_enum_variants(source, enum_name)
         renames = spec.get("renames", {})
         if not isinstance(renames, dict) or not all(
-            isinstance(name, str) and isinstance(value, str)
-            for name, value in renames.items()
+                isinstance(name, str) and isinstance(value, str)
+                for name, value in renames.items()
         ):
             raise ManifestValidationError(
                 f"Rust enum {enum_name} renames must be strings"
@@ -357,7 +357,7 @@ def _validate_failure_fixtures(manifest: dict[str, Any], variants: set[str]) -> 
         message = failure.get("message")
         path = failure.get("path")
         if not all(
-            isinstance(value, str) and value for value in (stage, raw_message, message)
+                isinstance(value, str) and value for value in (stage, raw_message, message)
         ):
             raise ManifestValidationError(
                 "infrastructure failure fixtures require stage, rawMessage, and message"
@@ -381,8 +381,8 @@ def _validate_failure_fixtures(manifest: dict[str, Any], variants: set[str]) -> 
 
 
 def _validate_reset_fixture_contract(
-    repo_root: Path,
-    manifest: dict[str, Any],
+        repo_root: Path,
+        manifest: dict[str, Any],
 ) -> None:
     """Require the shared Reset To Default fixture corpus to remain repository-owned."""
 
@@ -503,7 +503,7 @@ def validate_manifest(repo_root: Path, manifest: dict[str, Any]) -> None:
     _validate_failure_fixtures(manifest, variants)
     forbidden_exports = manifest.get("forbiddenExports")
     if not isinstance(forbidden_exports, dict) or set(forbidden_exports) != set(
-        supported
+            supported
     ):
         raise ManifestValidationError(
             "forbiddenExports must exactly match supportedAdapters"

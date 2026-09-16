@@ -102,11 +102,11 @@ def _prepare_example_consumer(tmp_path: Path):
     pack_path.parent.mkdir(parents=True)
     pack_path.write_text(json.dumps(pack), encoding="utf-8")
     for arguments in (
-        ("init",),
-        ("config", "user.email", "consumer@example.invalid"),
-        ("config", "user.name", "Consumer Test"),
-        ("add", "."),
-        ("commit", "-m", "fixture"),
+            ("init",),
+            ("config", "user.email", "consumer@example.invalid"),
+            ("config", "user.name", "Consumer Test"),
+            ("add", "."),
+            ("commit", "-m", "fixture"),
     ):
         subprocess.run(
             ["git", "-C", str(tmp_path), *arguments],
@@ -225,7 +225,7 @@ def test_consumer_reload_rejects_rehashed_source_path_narrowing(tmp_path: Path) 
 
 
 def test_consumer_receipt_compares_only_named_obligation_observations(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Consumer success grants its profile without producing semantic facts."""
 
@@ -294,7 +294,7 @@ def test_consumer_receipt_compares_only_named_obligation_observations(
 
 
 def test_participant_coverage_ignores_other_registered_consumers(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """A CLI slice denominates CLI obligations without claiming GUI evidence."""
 

@@ -12,10 +12,10 @@ from typing import Any
 def _owned_path(root: Path, path: str) -> Path:
     """Reject nonportable fixture paths before performing any native operation."""
     if (
-        not path
-        or ":" in path
-        or "\\" in path
-        or any(part in {"", ".", ".."} for part in path.split("/"))
+            not path
+            or ":" in path
+            or "\\" in path
+            or any(part in {"", ".", ".."} for part in path.split("/"))
     ):
         raise ValueError("file operation needs a contained relative path")
     return root / path
@@ -34,7 +34,7 @@ def _files(root: Path) -> list[dict[str, str]]:
 
 
 async def _check_read_variants(
-    io: Any, target: Path, result: Mapping[str, Any]
+        io: Any, target: Path, result: Mapping[str, Any]
 ) -> None:
     """Require each public read variant to agree before a text receipt can pass.
 
@@ -47,11 +47,11 @@ async def _check_read_variants(
     content = result["content"]
     error = result["error"]
     for operation in (
-        "read_bytes",
-        "read_lines",
-        "read_file_mmap",
-        "stream_lines",
-        "stream_lines_sync",
+            "read_bytes",
+            "read_lines",
+            "read_file_mmap",
+            "stream_lines",
+            "stream_lines_sync",
     ):
         actual = None
         actual_error = None
@@ -196,8 +196,8 @@ def _similarity_observation() -> list[str]:
                     "text similarity disagrees with native file similarity"
                 )
             if (
-                left.read_bytes() != first.encode()
-                or right.read_bytes() != second.encode()
+                    left.read_bytes() != first.encode()
+                    or right.read_bytes() != second.encode()
             ):
                 raise ValueError("similarity changed source bytes")
             results.append(f"{result:.6f}")

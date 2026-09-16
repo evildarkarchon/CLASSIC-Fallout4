@@ -36,7 +36,7 @@ def test_service_serves_sequences_and_rejects_unplanned_requests():
 def test_service_stalls_until_client_timeout_and_releases_on_shutdown():
     """Timeouts use an unanswered request, independent of scheduling sleeps."""
     with ControlledUpdateService(
-        {"case": {"pages": [{"stall": True}], "api": []}}
+            {"case": {"pages": [{"stall": True}], "api": []}}
     ) as local:
         with pytest.raises(TimeoutError):
             urllib.request.urlopen(local.url + "/case/pages", timeout=0.05)

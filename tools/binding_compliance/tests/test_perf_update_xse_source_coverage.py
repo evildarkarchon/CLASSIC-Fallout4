@@ -13,6 +13,7 @@ from conformance.families.performance import PERFORMANCE_COVERAGE_POLICY
 from conformance.families.update_decisions import UPDATE_DECISIONS_COVERAGE_POLICY
 from conformance.families.xse_operations import XSE_OPERATIONS_COVERAGE_POLICY
 from conformance.receipts import validate_prepared_run
+
 from receipt_test_support import prepare_receipt_case
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -21,14 +22,14 @@ ROOT = Path(__file__).resolve().parents[3]
 @pytest.mark.parametrize(
     "family,policy",
     (
-        ("performance", PERFORMANCE_COVERAGE_POLICY),
-        ("update_decisions", UPDATE_DECISIONS_COVERAGE_POLICY),
-        ("xse_operations", XSE_OPERATIONS_COVERAGE_POLICY),
+            ("performance", PERFORMANCE_COVERAGE_POLICY),
+            ("update_decisions", UPDATE_DECISIONS_COVERAGE_POLICY),
+            ("xse_operations", XSE_OPERATIONS_COVERAGE_POLICY),
     ),
 )
 @pytest.mark.parametrize("participant", ("cxx", "node", "python"))
 def test_owner_receipts_cover_selected_rows_and_reject_future_alias(
-    tmp_path, family, policy, participant
+        tmp_path, family, policy, participant
 ):
     """Full source selection must not silently award new methods existing receipts."""
     path = Path(f"tests/conformance/packs/{family}/v1.json")

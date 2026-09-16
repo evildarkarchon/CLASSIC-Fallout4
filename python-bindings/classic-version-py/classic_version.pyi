@@ -43,6 +43,7 @@ __version__: str
 type Version = tuple[int, int, int]
 type PeVersion = tuple[int, int, int, int]
 
+
 def parse_version(version_str: str) -> Version:
     """Parse a version string into a semantic version.
 
@@ -70,6 +71,7 @@ def parse_version(version_str: str) -> Version:
 
     """
 
+
 def try_parse_version(version_str: str) -> Version | None:
     """Try to parse a version string, returning None if parsing fails.
 
@@ -90,6 +92,7 @@ def try_parse_version(version_str: str) -> Version | None:
         >>> assert version is None
 
     """
+
 
 def compare_versions(v1: Version, v2: Version) -> int:
     """Compare two semantic versions.
@@ -114,6 +117,7 @@ def compare_versions(v1: Version, v2: Version) -> int:
 
     """
 
+
 def is_known_fallout4_version(version: Version) -> bool:
     """Check if a version is a known Fallout 4 version.
 
@@ -131,6 +135,7 @@ def is_known_fallout4_version(version: Version) -> bool:
 
     """
 
+
 def is_known_f4se_version(version: Version) -> bool:
     """Check if a version is a known F4SE version.
 
@@ -147,6 +152,7 @@ def is_known_f4se_version(version: Version) -> bool:
         >>> assert not classic_version.is_known_f4se_version((9, 9, 9))
 
     """
+
 
 def extract_version_from_filename(filename: str) -> Version | None:
     """Extract a version from a filename.
@@ -173,6 +179,7 @@ def extract_version_from_filename(filename: str) -> Version | None:
 
     """
 
+
 def extract_version_from_log(log_content: str) -> Version | None:
     r"""Extract a version from log content.
 
@@ -193,6 +200,7 @@ def extract_version_from_log(log_content: str) -> Version | None:
 
     """
 
+
 def extract_all_versions(content: str) -> list[Version]:
     """Extract all versions from a text content.
 
@@ -211,6 +219,7 @@ def extract_all_versions(content: str) -> list[Version]:
         >>> assert versions == [(1, 2, 3), (4, 5, 6)]
 
     """
+
 
 def format_version(version: Version, prefix: str | None = None) -> str:
     """Format a version with optional prefix.
@@ -233,6 +242,7 @@ def format_version(version: Version, prefix: str | None = None) -> str:
 
     """
 
+
 def extract_pe_version(path: str) -> PeVersion:
     """Extract file version from a PE executable or DLL.
 
@@ -247,6 +257,7 @@ def extract_pe_version(path: str) -> PeVersion:
         ValueError: If file is not a valid PE or has no version info.
 
     """
+
 
 def is_valid_pe_path(path: str) -> bool:
     """Check whether path is a valid PE file path.

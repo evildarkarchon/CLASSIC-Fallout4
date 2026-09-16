@@ -187,7 +187,6 @@ NODE_PHASE3_SYMBOL_ROUTE: dict[str, dict[str, str]] = {
     },
 }
 
-
 # Explicit exports avoid attributing ambiguous names such as `get` by symbol
 # alone. These routes follow the direct core calls in Node src/shared.rs and
 # src/fileio.rs, preserving the distinct registry, performance and file owners.
@@ -315,7 +314,7 @@ def normalize_phase3_node_contract(contract: dict[str, Any]) -> dict[str, Any]:
 
         old_id = str(mapping.get("id", ""))
         if old_id.startswith("constants."):
-            mapping["id"] = route["idPrefix"] + old_id[len("constants.") :]
+            mapping["id"] = route["idPrefix"] + old_id[len("constants."):]
 
         mapping["ownerModule"] = route["ownerModule"]
         mapping["rustCrate"] = route["rustCrate"]
@@ -407,10 +406,10 @@ def infer_node_owner(name: str, tier1_owner_map: dict[str, str]) -> str:
 
 
 def parse_node_surface(
-    repo_root: Path,
-    tier1_node_exports: set[str],
-    tier1_owner_map: dict[str, str],
-    index_dts_rel: str,
+        repo_root: Path,
+        tier1_node_exports: set[str],
+        tier1_owner_map: dict[str, str],
+        index_dts_rel: str,
 ) -> dict[str, Any]:
     """Extract Node export surface from classic-node index.d.ts."""
     index_path = repo_root / index_dts_rel
@@ -446,11 +445,11 @@ def parse_node_surface(
             signature = stripped
         else:
             for regex, inferred_kind in (
-                (class_re, "class"),
-                (const_enum_re, "const_enum"),
-                (interface_re, "interface"),
-                (type_re, "type"),
-                (const_re, "const"),
+                    (class_re, "class"),
+                    (const_enum_re, "const_enum"),
+                    (interface_re, "interface"),
+                    (type_re, "type"),
+                    (const_re, "const"),
             ):
                 fallback = regex.match(stripped)
                 if fallback:
@@ -507,9 +506,9 @@ def _effective_rust_symbol(rust_symbol: Any) -> str:
 
 
 def generate_diff_report(
-    contract: dict[str, Any],
-    rust_manifest: dict[str, Any],
-    node_manifest: dict[str, Any],
+        contract: dict[str, Any],
+        rust_manifest: dict[str, Any],
+        node_manifest: dict[str, Any],
 ) -> dict[str, Any]:
     """Generate contract results and parity gaps."""
     tier1_mappings: list[dict[str, Any]] = contract["tier1Mappings"]

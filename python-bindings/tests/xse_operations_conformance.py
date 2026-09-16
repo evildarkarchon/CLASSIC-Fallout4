@@ -10,14 +10,14 @@ def observe_xse_operations(fixture):
 
     variant = fixture.get("kind", "F4SE")
     if (
-        set(fixture) not in ({"files"}, {"files", "kind"})
-        or variant not in {"F4SE", "F4SEVR", "SKSE", "SKSE64", "SKSEVR", "SFSE"}
-        or not isinstance(fixture["files"], list)
-        or any(
-            name
-            not in (f"{variant.lower()}_loader.exe", f"{variant.lower()}_1_10_163.dll")
-            for name in fixture["files"]
-        )
+            set(fixture) not in ({"files"}, {"files", "kind"})
+            or variant not in {"F4SE", "F4SEVR", "SKSE", "SKSE64", "SKSEVR", "SFSE"}
+            or not isinstance(fixture["files"], list)
+            or any(
+        name
+        not in (f"{variant.lower()}_loader.exe", f"{variant.lower()}_1_10_163.dll")
+        for name in fixture["files"]
+    )
     ):
         raise ValueError("unsupported XSE fixture")
     with tempfile.TemporaryDirectory(prefix="classic-xse-conformance-") as directory:
@@ -40,23 +40,23 @@ def observe_xse_operations(fixture):
         except OSError as error:
             # Only the two native absence cases match Node/CXX's null/empty sentinel.
             if not str(error).startswith(
-                ("XSE not found at:", "Failed to detect XSE version:")
+                    ("XSE not found at:", "Failed to detect XSE version:")
             ):
                 raise
             version = None
         info = classic_xse.get_xse_info(str(root), kind)
         constructed = classic_xse.XseInfo(kind, str(root))
         if (
-            constructed.installed()
-            or constructed.version() is not None
-            or constructed.xse_type().as_str() != kind.as_str()
+                constructed.installed()
+                or constructed.version() is not None
+                or constructed.xse_type().as_str() != kind.as_str()
         ):
             raise ValueError("XSE information constructor changed its initial state")
         for value in (info, constructed):
             if (
-                Path(value.path()) != root
-                or Path(value.loader_path()) != root / kind.loader_name()
-                or value.check_installed() != info.installed()
+                    Path(value.path()) != root
+                    or Path(value.loader_path()) != root / kind.loader_name()
+                    or value.check_installed() != info.installed()
             ):
                 raise ValueError(
                     "XSE path/installation accessors disagree with owned files"

@@ -35,12 +35,12 @@ from .fixtures.tier1_parity_fixtures import (
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RUST_API_SURFACE = (
-    REPO_ROOT
-    / "docs"
-    / "implementation"
-    / "python_api_parity"
-    / "baseline"
-    / "rust_api_surface.json"
+        REPO_ROOT
+        / "docs"
+        / "implementation"
+        / "python_api_parity"
+        / "baseline"
+        / "rust_api_surface.json"
 )
 
 

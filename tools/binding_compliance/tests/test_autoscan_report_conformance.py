@@ -32,19 +32,19 @@ PACK = Path("tests/conformance/packs/autoscan_report/v1.json")
     "root, game_line, loader",
     [
         (
-            r"C:\fixture",
-            b"Game Root: C:\\fixture\\fcx-game\n",
-            b"C:\\fixture\\fcx-game\\f4se_loader.exe",
+                r"C:\fixture",
+                b"Game Root: C:\\fixture\\fcx-game\n",
+                b"C:\\fixture\\fcx-game\\f4se_loader.exe",
         ),
         (
-            "/fixture",
-            b"Game Root: /fixture/fcx-game\n",
-            b"/fixture/fcx-game/f4se_loader.exe",
+                "/fixture",
+                b"Game Root: /fixture/fcx-game\n",
+                b"/fixture/fcx-game/f4se_loader.exe",
         ),
     ],
 )
 def test_fcx_expands_only_environment_path_tokens(
-    root: str, game_line: bytes, loader: bytes
+        root: str, game_line: bytes, loader: bytes
 ) -> None:
     """Platform paths expand against literal expectations, without touching report prose."""
     scenario = load_and_validate_pack(ROOT, PACK).document()["scenarios"][2]
@@ -97,7 +97,7 @@ def test_goldens_remain_independent_and_all_adapters_are_blocking() -> None:
 
 @pytest.mark.parametrize("participant", ["rust", "cxx", "node", "python"])
 def test_receipts_reject_byte_display_effect_and_execution_mutations(
-    tmp_path: Path, participant: str
+        tmp_path: Path, participant: str
 ) -> None:
     """Only fresh exact public observations grant coverage; no adapter is an oracle."""
     fixtures = Path("tests/fixtures/autoscan_report_goldens")
@@ -105,11 +105,11 @@ def test_receipts_reject_byte_display_effect_and_execution_mutations(
     shutil.copyfile(ROOT / PACK, tmp_path / PACK)
     shutil.copytree(ROOT / fixtures, tmp_path / fixtures)
     for args in (
-        ("init",),
-        ("config", "user.email", "test@example.invalid"),
-        ("config", "user.name", "Conformance Test"),
-        ("add", "."),
-        ("commit", "-m", "Fixture"),
+            ("init",),
+            ("config", "user.email", "test@example.invalid"),
+            ("config", "user.name", "Conformance Test"),
+            ("add", "."),
+            ("commit", "-m", "Fixture"),
     ):
         subprocess.run(
             ("git", "-C", str(tmp_path), *args), check=True, capture_output=True

@@ -35,11 +35,11 @@ def test_forbidden_export_inventory_keeps_live_sources_after_metadata_retirement
     paths = {entry["path"] for entries in surfaces.values() for entry in entries}
     assert not any("runtime_coverage_registry" in path for path in paths)
     assert {
-        "node-bindings/classic-node/index.d.ts",
-        "docs/implementation/node_api_parity/baseline/parity_contract.json",
-        "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-        "docs/implementation/python_api_parity/baseline/parity_contract.json",
-    } <= paths
+               "node-bindings/classic-node/index.d.ts",
+               "docs/implementation/node_api_parity/baseline/parity_contract.json",
+               "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+               "docs/implementation/python_api_parity/baseline/parity_contract.json",
+           } <= paths
 
 
 def test_forbidden_legacy_export_fails_closed(tmp_path: Path) -> None:
@@ -49,8 +49,8 @@ def test_forbidden_legacy_export_fails_closed(tmp_path: Path) -> None:
     source.write_text("pub fn process_logs_batch() {}\n", encoding="utf-8")
 
     with pytest.raises(
-        ManifestValidationError,
-        match=r"node.*process_logs_batch",
+            ManifestValidationError,
+            match=r"node.*process_logs_batch",
     ):
         _validate_forbidden_exports(
             tmp_path,
@@ -66,7 +66,7 @@ def test_forbidden_legacy_export_fails_closed(tmp_path: Path) -> None:
 
 
 def test_forbidden_export_identifier_does_not_match_final_contract_name(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """A contracted prefix does not reject the surviving final entry point."""
 
@@ -87,13 +87,13 @@ def test_forbidden_export_identifier_does_not_match_final_contract_name(
 
 
 def test_missing_required_forbidden_export_surface_fails_closed(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """A misspelled or unexpectedly absent tracked contract file is not ignored."""
 
     with pytest.raises(
-        ManifestValidationError,
-        match=r"python.*missing\.pyi",
+            ManifestValidationError,
+            match=r"python.*missing\.pyi",
     ):
         _validate_forbidden_exports(
             tmp_path,
@@ -126,8 +126,8 @@ def test_unregistered_rust_enum_variant_fails_closed(tmp_path: Path) -> None:
     ]
 
     with pytest.raises(
-        ManifestValidationError,
-        match="event.adapter_forgotten_variant",
+            ManifestValidationError,
+            match="event.adapter_forgotten_variant",
     ):
         validate_manifest(tmp_path, manifest)
 
@@ -160,8 +160,8 @@ def test_registered_but_unmapped_rust_variant_fails_closed(tmp_path: Path) -> No
     manifest["contractVariants"].append(new_variant)
 
     with pytest.raises(
-        ManifestValidationError,
-        match=r"variant evidence policy differs: missing=.*adapter_forgotten_variant",
+            ManifestValidationError,
+            match=r"variant evidence policy differs: missing=.*adapter_forgotten_variant",
     ):
         validate_manifest(tmp_path, manifest)
 
@@ -173,8 +173,8 @@ def test_missing_shared_log_failure_stage_fails_closed() -> None:
     manifest["failureFixtures"]["logResult"]["failures"].pop()
 
     with pytest.raises(
-        ManifestValidationError,
-        match="unsolved_logs_finalization",
+            ManifestValidationError,
+            match="unsolved_logs_finalization",
     ):
         validate_manifest(REPO_ROOT, manifest)
 
@@ -186,8 +186,8 @@ def test_missing_shared_infrastructure_stage_fails_closed() -> None:
     manifest["failureFixtures"]["infrastructureErrors"].pop()
 
     with pytest.raises(
-        ManifestValidationError,
-        match="internal_invariant",
+            ManifestValidationError,
+            match="internal_invariant",
     ):
         validate_manifest(REPO_ROOT, manifest)
 
@@ -209,8 +209,8 @@ def test_missing_reset_fixture_fails_closed() -> None:
     manifest["fixtures"].pop("installedYamlData")
 
     with pytest.raises(
-        ManifestValidationError,
-        match=r"fixtures\.installedYamlData",
+            ManifestValidationError,
+            match=r"fixtures\.installedYamlData",
     ):
         validate_manifest(REPO_ROOT, manifest)
 
@@ -224,8 +224,8 @@ def test_missing_reset_outcome_fails_closed() -> None:
     )
 
     with pytest.raises(
-        ManifestValidationError,
-        match=r"replacementFailureCode",
+            ManifestValidationError,
+            match=r"replacementFailureCode",
     ):
         validate_manifest(REPO_ROOT, manifest)
 
@@ -239,8 +239,8 @@ def test_missing_durability_unknown_reset_outcome_fails_closed() -> None:
     )
 
     with pytest.raises(
-        ManifestValidationError,
-        match=r"durabilityUnknownCode",
+            ManifestValidationError,
+            match=r"durabilityUnknownCode",
     ):
         validate_manifest(REPO_ROOT, manifest)
 
@@ -254,8 +254,8 @@ def test_changed_reset_fixture_semantics_fail_closed() -> None:
     ] = "existing"
 
     with pytest.raises(
-        ManifestValidationError,
-        match=r"expectedResetToDefault\.localIgnoreState",
+            ManifestValidationError,
+            match=r"expectedResetToDefault\.localIgnoreState",
     ):
         validate_manifest(REPO_ROOT, manifest)
 
@@ -264,7 +264,7 @@ def test_manifest_is_machine_readable_json() -> None:
     """The fixture manifest remains consumable by every language runner."""
 
     manifest_path = (
-        REPO_ROOT / "tests" / "fixtures" / "crash_log_scan_run" / "manifest.json"
+            REPO_ROOT / "tests" / "fixtures" / "crash_log_scan_run" / "manifest.json"
     )
 
     parsed = json.loads(manifest_path.read_text(encoding="utf-8"))

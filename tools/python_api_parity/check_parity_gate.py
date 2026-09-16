@@ -11,7 +11,6 @@ from typing import Any
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-
 from generate_baseline import (
     collect_tier1_python_targets,
     generate_diff_report,
@@ -28,8 +27,8 @@ from parity_artifact_io import (
 
 
 def validate_contract_rust_symbols(
-    contract: dict[str, Any],
-    rust_manifest: dict[str, Any],
+        contract: dict[str, Any],
+        rust_manifest: dict[str, Any],
 ) -> list[str]:
     """Pitfall 2 guard: every Tier-1 contract row's rustSymbol must appear
     in the parsed Rust surface.
@@ -250,9 +249,9 @@ def main() -> int:
 
     summary = diff_report["summary"]
     tier1_drift_count = (
-        summary["tier1_missing_rust"]
-        + summary["tier1_missing_python"]
-        + summary["tier1_signature_mismatch"]
+            summary["tier1_missing_rust"]
+            + summary["tier1_missing_python"]
+            + summary["tier1_signature_mismatch"]
     )
 
     tracked_artifact_names = (

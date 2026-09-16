@@ -19,7 +19,7 @@ def test_every_scan_run_export_has_a_truthful_contract_row():
     }
     contract = json.loads(
         (
-            root / "docs/implementation/node_api_parity/baseline/parity_contract.json"
+                root / "docs/implementation/node_api_parity/baseline/parity_contract.json"
         ).read_text()
     )
     rows = {row.get("nodeExport"): row for row in contract["tier1Mappings"]}

@@ -10,7 +10,8 @@ from . import commands
 def build_parser() -> argparse.ArgumentParser:
     """Build the stdlib argparse command tree and global options."""
 
-    parser = argparse.ArgumentParser(prog="classic-py", description="CLASSIC Python binding diagnostics and compliance runner")
+    parser = argparse.ArgumentParser(prog="classic-py",
+                                     description="CLASSIC Python binding diagnostics and compliance runner")
     parser.add_argument("--json", action="store_true", help="write one JSON envelope to stdout")
     parser.add_argument("--output", help="write report artifacts under this directory")
     parser.add_argument("--repo-root", help="repository root override")
@@ -38,7 +39,8 @@ def build_parser() -> argparse.ArgumentParser:
     compliance_explain.add_argument("scenario_id")
     compliance_explain.set_defaults(handler=commands.compliance_explain)
     compliance_run = compliance_sub.add_parser("run", help="run a compliance profile")
-    compliance_run.add_argument("--profile", default="smoke", help="profile name, for example smoke, python-ci, or surface:classic_version")
+    compliance_run.add_argument("--profile", default="smoke",
+                                help="profile name, for example smoke, python-ci, or surface:classic_version")
     compliance_run.set_defaults(handler=commands.compliance_run)
 
     version = subcommands.add_parser("version", help="version utility commands")

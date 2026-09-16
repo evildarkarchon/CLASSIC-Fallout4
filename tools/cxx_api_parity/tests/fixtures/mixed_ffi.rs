@@ -23,6 +23,9 @@ mod ffi {
     extern "Rust" {
         type MixedOrchestrator;
         fn orchestrator_new() -> Box<MixedOrchestrator>;
-        fn orchestrator_run(orch: &MixedOrchestrator, callback: &ScanProgressCallback) -> Vec<BatchProgressEvent>;
+        fn orchestrator_run(
+            orch: &MixedOrchestrator,
+            callback: &ScanProgressCallback,
+        ) -> Vec<BatchProgressEvent>;
     }
 }

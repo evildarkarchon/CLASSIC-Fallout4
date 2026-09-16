@@ -36,8 +36,8 @@ def _worker(fixture):
     logger.log_message(native)
     rejected = []
     for invoke in (
-        lambda: logger.log(fixture["invalid"], "ignored"),
-        lambda: logger.is_enabled_for(fixture["invalid"]),
+            lambda: logger.log(fixture["invalid"], "ignored"),
+            lambda: logger.is_enabled_for(fixture["invalid"]),
     ):
         try:
             invoke()

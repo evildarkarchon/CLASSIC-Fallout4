@@ -8,7 +8,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
 from catalog import (  # type: ignore
     CommandSpec,
     ComplianceRequirement,
@@ -26,7 +25,7 @@ from suite import ComplianceSuite, RequirementResult, build_summary  # type: ign
     ],
 )
 def test_command_evidence_survives_windows_locale(
-    tmp_path: Path, payload: bytes, expected: str
+        tmp_path: Path, payload: bytes, expected: str
 ) -> None:
     """Retain both output streams even when native bytes cannot decode as cp1252."""
     requirement = ComplianceRequirement(
@@ -219,7 +218,7 @@ def test_timeout_preserves_stdout_and_stderr_separately(tmp_path: Path) -> None:
 
 
 def test_blocking_conformance_failure_fails_alongside_legacy_results(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """A promoted receipt failure is conjunctive with retained legacy gates."""
 
@@ -281,7 +280,7 @@ def test_shadow_success_cannot_turn_a_blocking_failure_green(tmp_path: Path) -> 
 
 
 def test_future_shadow_family_cannot_block_a_passing_retained_gate(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Coverage diagnostics remain nonblocking until their family is promoted."""
 
@@ -322,7 +321,7 @@ def test_future_shadow_family_cannot_block_a_passing_retained_gate(
 
 
 def test_conformance_profile_uses_its_scoped_report_as_process_result(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """A receipt-only native job fails when its exact scope is incomplete."""
 

@@ -30,8 +30,8 @@ def observe_log_collection(fixture: Mapping[str, Any]) -> dict[str, Any]:
         if normalize(collector.collect_crash_logs()) != result["first"]:
             raise ValueError("crash-only discovery disagrees with full collection")
         if (
-            Path(collector.crash_logs_dir()) != root / "base/Crash Logs"
-            or Path(collector.pastebin_dir()) != root / "base/Crash Logs/Pastebin"
+                Path(collector.crash_logs_dir()) != root / "base/Crash Logs"
+                or Path(collector.pastebin_dir()) != root / "base/Crash Logs/Pastebin"
         ):
             raise ValueError(
                 "collector path accessors disagree with durable directories"
@@ -42,7 +42,7 @@ def observe_log_collection(fixture: Mapping[str, Any]) -> dict[str, Any]:
         moved = collector.move_from_base_folder()
         copied = collector.copy_from_xse_folder()
         if moved != sum(
-            path.startswith("base/") for path in fixture["later"]
+                path.startswith("base/") for path in fixture["later"]
         ) or copied != sum(path.startswith("xse/") for path in fixture["later"]):
             raise ValueError("individual collector returned wrong move/copy counts")
         result["second"] = normalize(collector.collect_crash_logs())

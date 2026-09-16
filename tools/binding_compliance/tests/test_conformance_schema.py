@@ -20,12 +20,12 @@ def test_tracked_common_schemas_are_closed_and_versioned() -> None:
     """Every tracked v1 envelope fails closed on unknown common fields."""
 
     for name in (
-        "scenario-pack-v1.schema.json",
-        "run-plan-v1.schema.json",
-        "receipt-v1.schema.json",
-        "policy-exceptions-v1.schema.json",
-        "consumer-obligations-v1.schema.json",
-        "conformance-report-v1.schema.json",
+            "scenario-pack-v1.schema.json",
+            "run-plan-v1.schema.json",
+            "receipt-v1.schema.json",
+            "policy-exceptions-v1.schema.json",
+            "consumer-obligations-v1.schema.json",
+            "conformance-report-v1.schema.json",
     ):
         schema = _schema(name)
         assert schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"

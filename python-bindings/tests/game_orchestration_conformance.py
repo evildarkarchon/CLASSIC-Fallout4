@@ -9,7 +9,7 @@ def observe_orchestration(fixture: dict) -> dict:
     import classic_scangame
 
     with tempfile.TemporaryDirectory(
-        prefix="classic-orchestration-conformance-"
+            prefix="classic-orchestration-conformance-"
     ) as temporary:
         root = Path(temporary)
         for name, content in fixture["files"].items():
@@ -24,9 +24,9 @@ def observe_orchestration(fixture: dict) -> dict:
             log_catch_errors=["error"],
         )
         if (
-            config.game_path != root
-            or config.xse_acronym != fixture["xseAcronym"]
-            or config.game_name != fixture["gameName"]
+                config.game_path != root
+                or config.xse_acronym != fixture["xseAcronym"]
+                or config.game_name != fixture["gameName"]
         ):
             raise ValueError(
                 "orchestrator configuration lost public constructor fields"

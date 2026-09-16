@@ -28,9 +28,9 @@ def observe_shared_performance(fixture):
         samples["throughput"] = format(raw["throughput_bytes_per_sec"], ".3f")
         timer = monitor.start_timer("timer")
         if (
-            timer["operation"] != "timer"
-            or not math.isfinite(timer["start_time"])
-            or timer["start_time"] < 0
+                timer["operation"] != "timer"
+                or not math.isfinite(timer["start_time"])
+                or timer["start_time"] < 0
         ):
             raise ValueError("native timer returned invalid start state")
         monitor.stop_timer(timer, fixture["timerBytes"])
@@ -46,15 +46,15 @@ def observe_shared_performance(fixture):
                 "count": timing["count"],
                 "bytes": timing["bytes_processed"],
                 "durationValid": 0
-                <= timing["min_ms"]
-                <= timing["avg_ms"]
-                <= timing["max_ms"]
-                <= timing["total_ms"],
+                                 <= timing["min_ms"]
+                                 <= timing["avg_ms"]
+                                 <= timing["max_ms"]
+                                 <= timing["total_ms"],
             },
         }
     finally:
         monitor.clear_metrics()
     observation["emptyAfter"] = (
-        monitor.get_all_stats() == {} and monitor.get_operation_stats("samples") is None
+            monitor.get_all_stats() == {} and monitor.get_operation_stats("samples") is None
     )
     return observation

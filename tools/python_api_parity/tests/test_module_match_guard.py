@@ -15,12 +15,12 @@ import check_parity_gate as gate
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 CONTRACT_PATH = (
-    REPO_ROOT
-    / "docs"
-    / "implementation"
-    / "python_api_parity"
-    / "baseline"
-    / "parity_contract.json"
+        REPO_ROOT
+        / "docs"
+        / "implementation"
+        / "python_api_parity"
+        / "baseline"
+        / "parity_contract.json"
 )
 
 RUST_MANIFEST = {
@@ -113,7 +113,7 @@ class TestCommittedContract:
             r["id"]
             for r in contract["tier1Mappings"]
             if isinstance(r.get("rustSymbol"), str)
-            and r["rustSymbol"].removesuffix("@rust") == "fn"
+               and r["rustSymbol"].removesuffix("@rust") == "fn"
         ]
         assert not offenders, f"rows still reference the phantom 'fn' symbol: {offenders}"
 

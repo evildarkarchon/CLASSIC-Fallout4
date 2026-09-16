@@ -16,6 +16,7 @@ from conformance.families.version_registry_details import (
 )
 from conformance.packs import load_and_validate_pack
 from conformance.receipts import validate_prepared_run
+
 from receipt_test_support import prepare_receipt_case
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -51,7 +52,7 @@ def test_details_require_every_field_and_exclude_cxx() -> None:
 
 @pytest.mark.parametrize("participant", ("node", "python"))
 def test_details_receipts_cover_only_executed_operations(
-    tmp_path: Path, participant: str
+        tmp_path: Path, participant: str
 ) -> None:
     """Prepared receipt facts retain structural owners and cannot hide missing queries."""
     pack, run, _receipt = prepare_receipt_case(

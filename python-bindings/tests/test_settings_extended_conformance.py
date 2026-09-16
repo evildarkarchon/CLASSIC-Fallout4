@@ -23,6 +23,6 @@ def test_public_settings_validator_observations(scenario, monkeypatch):
         (ROOT / PACK["fixtureRoot"] / PACK["fixtures"][scenario["id"]]).read_text()
     )
     assert (
-        observe_settings_extended("settings-validation", fixture)
-        == scenario["expected"]
+            observe_settings_extended("settings-validation", fixture)
+            == scenario["expected"]
     )

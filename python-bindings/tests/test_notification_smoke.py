@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import pytest
 
-
 classic_update = pytest.importorskip(
     "classic_update",
     reason="classic_update extension not built; run `maturin develop` first",
@@ -63,7 +62,7 @@ def test_check_app_notification_rejects_unparseable_installed_version() -> None:
     binding contract advertised a surface the core never emitted.
     """
     with pytest.raises(
-        classic_update.ClassicNotificationInstalledVersionParseError
+            classic_update.ClassicNotificationInstalledVersionParseError
     ) as excinfo:
         classic_update.check_app_notification(
             owner="nonexistent-owner-xyzzy",

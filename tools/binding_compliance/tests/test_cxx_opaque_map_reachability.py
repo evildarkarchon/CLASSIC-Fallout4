@@ -32,7 +32,7 @@ def test_current_unconstructible_maps_have_eleven_negative_exports(map_repo: Pat
     "change", ("factory", "alias", "callback", "outparam", "comment-spoof")
 )
 def test_new_producer_or_alias_revokes_negative_disposition(
-    map_repo: Path, change: str
+        map_repo: Path, change: str
 ):
     """Any path that could hand CXX a map reference must reopen runtime obligations."""
     from cxx_opaque_map_reachability import validate_cxx_opaque_map_reachability

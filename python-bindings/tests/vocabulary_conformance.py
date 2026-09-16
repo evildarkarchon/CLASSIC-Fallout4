@@ -40,7 +40,7 @@ def observe_vocabulary(family: str, request: Mapping[str, Any]) -> dict[str, Any
         raise ValueError("unsupported vocabulary operation for family")
     tokens = request.get("tokens")
     if not isinstance(tokens, list) or any(
-        not isinstance(token, str) or not token for token in tokens
+            not isinstance(token, str) or not token for token in tokens
     ):
         raise ValueError("vocabulary tokens must be non-empty strings")
     # Python shares the config resolver for provenance carried by scan-run observations.

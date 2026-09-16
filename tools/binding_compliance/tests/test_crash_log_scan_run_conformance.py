@@ -40,7 +40,7 @@ from conformance.reports import build_scoped_report
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PACK_PATH = (
-    REPO_ROOT / "tests" / "conformance" / "packs" / "crash_log_scan_run" / "v1.json"
+        REPO_ROOT / "tests" / "conformance" / "packs" / "crash_log_scan_run" / "v1.json"
 )
 PARTICIPANT_SOURCES = {
     "rust": (
@@ -115,7 +115,7 @@ def test_live_pack_is_input_only_for_all_three_base_adapters(tmp_path: Path) -> 
         path
         for path in discover_pack_paths(REPO_ROOT)
         if load_and_validate_pack(REPO_ROOT, path).document()["familyId"]
-        == "crash-log-scan-run"
+           == "crash-log-scan-run"
     ]
 
     assert discovered == [PACK_PATH]
@@ -133,12 +133,12 @@ def test_live_pack_is_input_only_for_all_three_base_adapters(tmp_path: Path) -> 
     )
 
     artifact_root = (
-        REPO_ROOT
-        / "tools"
-        / "binding_compliance"
-        / "artifacts"
-        / "test-scan-run-pack"
-        / tmp_path.name
+            REPO_ROOT
+            / "tools"
+            / "binding_compliance"
+            / "artifacts"
+            / "test-scan-run-pack"
+            / tmp_path.name
     )
     plans = {}
     try:
@@ -160,7 +160,7 @@ def test_live_pack_is_input_only_for_all_three_base_adapters(tmp_path: Path) -> 
                     name
                     for name in EXPECTED_SCENARIO_IDS
                     if participant_id in {"rust", "python"}
-                    or name != "config-issue-construction"
+                       or name != "config-issue-construction"
                 ]
             )
     finally:
@@ -173,19 +173,19 @@ def test_live_pack_is_input_only_for_all_three_base_adapters(tmp_path: Path) -> 
 
 
 def test_cxx_preparation_materializes_fresh_input_only_toolchain_instances(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """MSVC and clang-cl receive distinct current plans without the tracked oracle."""
 
     from conformance.adapters.prepare_cxx_conformance import prepare_cxx_run
 
     artifact_root = (
-        REPO_ROOT
-        / "tools"
-        / "binding_compliance"
-        / "artifacts"
-        / "test-cxx-preparation"
-        / tmp_path.name
+            REPO_ROOT
+            / "tools"
+            / "binding_compliance"
+            / "artifacts"
+            / "test-cxx-preparation"
+            / tmp_path.name
     )
     plans = {}
     try:
@@ -311,14 +311,14 @@ def _scenario_by_id(pack: dict[str, object], scenario_id: str) -> dict[str, obje
     [("kind", "label"), ("text", "changed"), ("path", "unexpected"), ("count", 1)],
 )
 def test_recovery_display_transport_requires_every_frozen_segment_field(
-    field: str, value: object
+        field: str, value: object
 ) -> None:
     """A copied severity cannot earn recovery coverage after any segment payload drifts."""
     pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
     scenario = _scenario_by_id(pack, "proceed-without-ignore-recovery")
     for location, fact in (
-        ("prompt", "scan-run.recovery.initial-prompt"),
-        ("replay", "scan-run.recovery.proceed-replay-rejected"),
+            ("prompt", "scan-run.recovery.initial-prompt"),
+            ("replay", "scan-run.recovery.proceed-replay-rejected"),
     ):
         assert fact in derive_observed_fact_ids(
             pack, scenario, scenario["expected"], CRASH_LOG_SCAN_RUN_COVERAGE_POLICY
@@ -339,7 +339,7 @@ def test_recovery_display_transport_requires_every_frozen_segment_field(
 
 
 def test_request_validation_display_transport_requires_ordered_complete_segments() -> (
-    None
+        None
 ):
     """The public validation error carries exact prose, label, and diagnostic payloads."""
     pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
@@ -362,10 +362,10 @@ def test_recovery_decision_description_transport_requires_all_payload_fields() -
     pack = load_and_validate_pack(REPO_ROOT, PACK_PATH).document()
     scenario = _scenario_by_id(pack, "proceed-without-ignore-recovery")
     for field, value in (
-        ("kind", "name"),
-        ("text", "changed"),
-        ("path", "unexpected"),
-        ("count", 1),
+            ("kind", "name"),
+            ("text", "changed"),
+            ("path", "unexpected"),
+            ("count", 1),
     ):
         changed = copy.deepcopy(scenario["expected"])
         changed["initial"]["recoveryPrompt"]["decisions"][0]["description"][0][
@@ -377,9 +377,9 @@ def test_recovery_decision_description_transport_requires_all_payload_fields() -
 
 
 def _assert_semantic_mutations_lose_facts(
-    pack: dict[str, object],
-    scenario_id: str,
-    mutations: dict[str, object],
+        pack: dict[str, object],
+        scenario_id: str,
+        mutations: dict[str, object],
 ) -> None:
     """Assert each observation mutation removes its named policy-owned fact."""
 
@@ -502,95 +502,95 @@ def test_observer_failure_facts_fail_closed_on_mutation() -> None:
     ("scenario_id", "expected_fact_id", "mutations"),
     [
         (
-            "request-validation-failure",
-            "scan-run.failure.request-validation",
-            (
-                lambda value: value["infrastructureError"].__setitem__(
-                    "stage", "intake"
+                "request-validation-failure",
+                "scan-run.failure.request-validation",
+                (
+                        lambda value: value["infrastructureError"].__setitem__(
+                            "stage", "intake"
+                        ),
+                        lambda value: value["infrastructureError"].__setitem__(
+                            "messageNonEmpty", False
+                        ),
+                        lambda value: value["infrastructureError"].__setitem__(
+                            "path", {"path": "CLASSIC Data"}
+                        ),
+                        lambda value: value["durableEffects"][1].__setitem__("kind", "file"),
                 ),
-                lambda value: value["infrastructureError"].__setitem__(
-                    "messageNonEmpty", False
-                ),
-                lambda value: value["infrastructureError"].__setitem__(
-                    "path", {"path": "CLASSIC Data"}
-                ),
-                lambda value: value["durableEffects"][1].__setitem__("kind", "file"),
-            ),
         ),
         (
-            "discovery-failure",
-            "scan-run.failure.discovery",
-            (
-                lambda value: value["infrastructureError"].__setitem__(
-                    "stage", "intake"
+                "discovery-failure",
+                "scan-run.failure.discovery",
+                (
+                        lambda value: value["infrastructureError"].__setitem__(
+                            "stage", "intake"
+                        ),
+                        lambda value: value["infrastructureError"].__setitem__(
+                            "messageNonEmpty", False
+                        ),
+                        lambda value: value["infrastructureError"]["path"].__setitem__(
+                            "path", "wrong"
+                        ),
+                        lambda value: value["durableEffects"][0].__setitem__("kind", "missing"),
                 ),
-                lambda value: value["infrastructureError"].__setitem__(
-                    "messageNonEmpty", False
-                ),
-                lambda value: value["infrastructureError"]["path"].__setitem__(
-                    "path", "wrong"
-                ),
-                lambda value: value["durableEffects"][0].__setitem__("kind", "missing"),
-            ),
         ),
         (
-            "intake-failure",
-            "scan-run.failure.intake",
-            (
-                lambda value: value["infrastructureError"].__setitem__(
-                    "stage", "request_validation"
+                "intake-failure",
+                "scan-run.failure.intake",
+                (
+                        lambda value: value["infrastructureError"].__setitem__(
+                            "stage", "request_validation"
+                        ),
+                        lambda value: value["infrastructureError"].__setitem__(
+                            "messageNonEmpty", False
+                        ),
+                        lambda value: value["infrastructureError"]["path"].__setitem__(
+                            "path", "wrong"
+                        ),
+                        lambda value: value["durableEffects"][1].__setitem__("kind", "file"),
                 ),
-                lambda value: value["infrastructureError"].__setitem__(
-                    "messageNonEmpty", False
-                ),
-                lambda value: value["infrastructureError"]["path"].__setitem__(
-                    "path", "wrong"
-                ),
-                lambda value: value["durableEffects"][1].__setitem__("kind", "file"),
-            ),
         ),
         (
-            "report-write-failure",
-            "scan-run.failure.report-write",
-            (
-                lambda value: value["logs"][0].__setitem__("disposition", "succeeded"),
-                lambda value: value["logs"][0]["failures"][0].__setitem__(
-                    "stage", "analysis"
+                "report-write-failure",
+                "scan-run.failure.report-write",
+                (
+                        lambda value: value["logs"][0].__setitem__("disposition", "succeeded"),
+                        lambda value: value["logs"][0]["failures"][0].__setitem__(
+                            "stage", "analysis"
+                        ),
+                        lambda value: value["logs"][0]["failures"][0].__setitem__(
+                            "messageNonEmpty", False
+                        ),
+                        lambda value: value["logs"][0]["crashLog"].__setitem__(
+                            "path", "wrong.log"
+                        ),
+                        lambda value: value["logs"][0].__setitem__("movedToUnsolvedLogs", True),
+                        lambda value: value["durableEffects"][1].__setitem__("kind", "missing"),
                 ),
-                lambda value: value["logs"][0]["failures"][0].__setitem__(
-                    "messageNonEmpty", False
-                ),
-                lambda value: value["logs"][0]["crashLog"].__setitem__(
-                    "path", "wrong.log"
-                ),
-                lambda value: value["logs"][0].__setitem__("movedToUnsolvedLogs", True),
-                lambda value: value["durableEffects"][1].__setitem__("kind", "missing"),
-            ),
         ),
         (
-            "unsolved-logs-finalization-failure",
-            "scan-run.failure.unsolved-logs-finalization",
-            (
-                lambda value: value["logs"][0].__setitem__("disposition", "succeeded"),
-                lambda value: value["logs"][0]["failures"][1].__setitem__(
-                    "stage", "analysis"
+                "unsolved-logs-finalization-failure",
+                "scan-run.failure.unsolved-logs-finalization",
+                (
+                        lambda value: value["logs"][0].__setitem__("disposition", "succeeded"),
+                        lambda value: value["logs"][0]["failures"][1].__setitem__(
+                            "stage", "analysis"
+                        ),
+                        lambda value: value["logs"][0]["failures"][1].__setitem__(
+                            "messageNonEmpty", False
+                        ),
+                        lambda value: value["logs"][0]["crashLog"].__setitem__(
+                            "path", "wrong.log"
+                        ),
+                        lambda value: value["logs"][0].__setitem__("movedToUnsolvedLogs", True),
+                        lambda value: value["durableEffects"][2].__setitem__("kind", "missing"),
                 ),
-                lambda value: value["logs"][0]["failures"][1].__setitem__(
-                    "messageNonEmpty", False
-                ),
-                lambda value: value["logs"][0]["crashLog"].__setitem__(
-                    "path", "wrong.log"
-                ),
-                lambda value: value["logs"][0].__setitem__("movedToUnsolvedLogs", True),
-                lambda value: value["durableEffects"][2].__setitem__("kind", "missing"),
-            ),
         ),
     ],
 )
 def test_public_failure_facts_fail_closed_on_semantic_mutation(
-    scenario_id: str,
-    expected_fact_id: str,
-    mutations: tuple[object, ...],
+        scenario_id: str,
+        expected_fact_id: str,
+        mutations: tuple[object, ...],
 ) -> None:
     """Failure coverage requires typed errors, paths, dispositions, and effects."""
 
@@ -848,23 +848,23 @@ def test_native_consumer_runners_fail_closed_on_identity_and_probe_failure() -> 
     """Native runners bind toolchains and keep failed evidence schema-valid."""
 
     gui_runner = (
-        REPO_ROOT
-        / "classic-gui"
-        / "tests"
-        / "conformance"
-        / "classic_gui_consumer_conformance.cpp"
+            REPO_ROOT
+            / "classic-gui"
+            / "tests"
+            / "conformance"
+            / "classic_gui_consumer_conformance.cpp"
     ).read_text(encoding="utf-8")
     cli_runner = (
-        REPO_ROOT
-        / "classic-cli"
-        / "tests"
-        / "conformance"
-        / "classic_cli_consumer_conformance.cpp"
+            REPO_ROOT
+            / "classic-cli"
+            / "tests"
+            / "conformance"
+            / "classic_cli_consumer_conformance.cpp"
     ).read_text(encoding="utf-8")
 
     assert (
-        'QStringLiteral("windows-") + QStringLiteral(CLASSIC_GUI_CONFORMANCE_TOOLCHAIN)'
-        in gui_runner
+            'QStringLiteral("windows-") + QStringLiteral(CLASSIC_GUI_CONFORMANCE_TOOLCHAIN)'
+            in gui_runner
     )
     assert 'participant.value(QStringLiteral("executionInstanceId"))' in gui_runner
     assert '{"observation", json::object()}' in cli_runner
@@ -906,8 +906,8 @@ def _write_engine_test_receipt(prepared: MaterializedRun, pack: ValidatedPack) -
 
 
 def _write_consumer_test_receipt(
-    prepared: MaterializedRun,
-    catalog: ConsumerObligationCatalog,
+        prepared: MaterializedRun,
+        catalog: ConsumerObligationCatalog,
 ) -> None:
     """Publish catalog-shaped consumer evidence for aggregation tests only."""
 
@@ -945,7 +945,7 @@ def _write_consumer_test_receipt(
 
 
 def _prepare_base_adapter_reports(
-    pack: ValidatedPack, artifact_root: Path
+        pack: ValidatedPack, artifact_root: Path
 ) -> list[PreparedRunReport]:
     """Materialize and centrally validate Rust, Node, and Python test receipts."""
 
@@ -972,18 +972,18 @@ def _prepare_base_adapter_reports(
 
 
 def test_three_base_receipts_pass_their_scopes_but_not_full_repository(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Three exact participant slices cannot satisfy the blocking denominator."""
 
     pack = load_and_validate_pack(REPO_ROOT, PACK_PATH)
     artifact_root = (
-        REPO_ROOT
-        / "tools"
-        / "binding_compliance"
-        / "artifacts"
-        / "test-scan-run-report"
-        / tmp_path.name
+            REPO_ROOT
+            / "tools"
+            / "binding_compliance"
+            / "artifacts"
+            / "test-scan-run-report"
+            / tmp_path.name
     )
     try:
         prepared_reports = _prepare_base_adapter_reports(pack, artifact_root)
@@ -1049,7 +1049,7 @@ def test_three_base_receipts_pass_their_scopes_but_not_full_repository(
 
 
 def test_all_base_adapter_instances_need_consumers_for_full_repository_scope(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Semantic completeness cannot substitute for CLI, GUI, and TUI receipts."""
 
@@ -1057,12 +1057,12 @@ def test_all_base_adapter_instances_need_consumers_for_full_repository_scope(
 
     pack = load_and_validate_pack(REPO_ROOT, PACK_PATH)
     artifact_root = (
-        REPO_ROOT
-        / "tools"
-        / "binding_compliance"
-        / "artifacts"
-        / "test-full-scan-run-report"
-        / tmp_path.name
+            REPO_ROOT
+            / "tools"
+            / "binding_compliance"
+            / "artifacts"
+            / "test-full-scan-run-report"
+            / tmp_path.name
     )
     try:
         prepared_reports = _prepare_base_adapter_reports(pack, artifact_root)
@@ -1113,15 +1113,15 @@ def test_all_base_adapter_instances_need_consumers_for_full_repository_scope(
         assert report["result"] == "fail"
         assert report["repositoryComplete"] is False
         assert {
-            execution["participantId"] for execution in report["missingExecutions"]
-        } == {"cli", "gui", "tui"}
+                   execution["participantId"] for execution in report["missingExecutions"]
+               } == {"cli", "gui", "tui"}
     finally:
         if artifact_root.exists():
             shutil.rmtree(artifact_root)
 
 
 def test_complete_same_revision_pack_passes_the_full_repository_denominator(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """All adapters, native instances, scenarios, families, and consumers agree."""
 
@@ -1129,12 +1129,12 @@ def test_complete_same_revision_pack_passes_the_full_repository_denominator(
 
     pack = load_and_validate_pack(REPO_ROOT, PACK_PATH)
     artifact_root = (
-        REPO_ROOT
-        / "tools"
-        / "binding_compliance"
-        / "artifacts"
-        / "test-complete-scan-run-report"
-        / tmp_path.name
+            REPO_ROOT
+            / "tools"
+            / "binding_compliance"
+            / "artifacts"
+            / "test-complete-scan-run-report"
+            / tmp_path.name
     )
     try:
         semantic_reports = _prepare_base_adapter_reports(pack, artifact_root)
@@ -1219,24 +1219,24 @@ def test_complete_same_revision_pack_passes_the_full_repository_denominator(
                 name
                 for name in EXPECTED_SCENARIO_IDS
                 if report.participant["id"] in {"rust", "python"}
-                or name != "config-issue-construction"
+                   or name != "config-issue-construction"
             ]
             for report in semantic_reports
         )
         assert {
-            family
-            for capability in pack_document["capabilities"]
-            for family in capability["observationFamilies"]
-        } == EXPECTED_OBSERVATION_FAMILIES
+                   family
+                   for capability in pack_document["capabilities"]
+                   for family in capability["observationFamilies"]
+               } == EXPECTED_OBSERVATION_FAMILIES
         assert {
-            obligation.id
-            for report in consumer_reports
-            for obligation in report.obligations
-        } == {
-            obligation.id
-            for participant in catalog.participants("crash-log-scan-run")
-            for obligation in participant.obligations
-        }
+                   obligation.id
+                   for report in consumer_reports
+                   for obligation in report.obligations
+               } == {
+                   obligation.id
+                   for participant in catalog.participants("crash-log-scan-run")
+                   for obligation in participant.obligations
+               }
     finally:
         if artifact_root.exists():
             shutil.rmtree(artifact_root)
@@ -1246,11 +1246,11 @@ def test_cxx_runner_and_launcher_stay_bridge_only_and_oracle_blind() -> None:
     """Native evidence uses the generated bridge and only the approved wrapper."""
 
     runner_path = (
-        REPO_ROOT
-        / "classic-cli"
-        / "tests"
-        / "conformance"
-        / "classic_cxx_conformance.cpp"
+            REPO_ROOT
+            / "classic-cli"
+            / "tests"
+            / "conformance"
+            / "classic_cxx_conformance.cpp"
     )
     runner = runner_path.read_text(encoding="utf-8")
     assert '"classic_cxx_bridge/scanner.h"' in runner
@@ -1281,12 +1281,12 @@ def test_cxx_runner_and_launcher_stay_bridge_only_and_oracle_blind() -> None:
     assert "src/scanner.cpp" not in target_block
 
     launcher = (
-        REPO_ROOT
-        / "tools"
-        / "binding_compliance"
-        / "conformance"
-        / "adapters"
-        / "run_cxx_conformance.ps1"
+            REPO_ROOT
+            / "tools"
+            / "binding_compliance"
+            / "conformance"
+            / "adapters"
+            / "run_cxx_conformance.ps1"
     ).read_text(encoding="utf-8")
     assert "15 * 60 * 1000" in launcher
     wrapper_start = launcher.index("$WrapperArguments = @(")
@@ -1361,8 +1361,8 @@ def test_runners_are_private_and_call_only_their_public_scan_run_seams() -> None
 
 
 def test_launcher_records_spawn_failures_as_structured_diagnostics(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A missing adapter executable still produces an attempt and report."""
 
@@ -1372,12 +1372,12 @@ def test_launcher_records_spawn_failures_as_structured_diagnostics(
         return None, None, FileNotFoundError("adapter executable is unavailable")
 
     artifact_root = (
-        REPO_ROOT
-        / "tools"
-        / "binding_compliance"
-        / "artifacts"
-        / "test-launcher-failure"
-        / tmp_path.name
+            REPO_ROOT
+            / "tools"
+            / "binding_compliance"
+            / "artifacts"
+            / "test-launcher-failure"
+            / tmp_path.name
     )
     monkeypatch.setattr(scan_run_launcher, "_run_adapter_command", fail_to_spawn)
     try:
@@ -1411,8 +1411,8 @@ def test_launcher_records_spawn_failures_as_structured_diagnostics(
 
 
 def test_launcher_terminates_descendants_before_finalizing_a_timeout(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A timed-out child cannot publish a receipt after central validation."""
 
@@ -1434,12 +1434,12 @@ def test_launcher_terminates_descendants_before_finalizing_a_timeout(
     monkeypatch.setitem(scan_run_launcher.PARTICIPANT_COMMANDS, "rust", command)
 
     artifact_root = (
-        REPO_ROOT
-        / "tools"
-        / "binding_compliance"
-        / "artifacts"
-        / "test-launcher-timeout"
-        / tmp_path.name
+            REPO_ROOT
+            / "tools"
+            / "binding_compliance"
+            / "artifacts"
+            / "test-launcher-timeout"
+            / tmp_path.name
     )
     try:
         result, artifact_dir = scan_run_launcher.run_participant(

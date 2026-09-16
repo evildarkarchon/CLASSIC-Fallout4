@@ -46,6 +46,7 @@ from pathlib import Path
 __version__: str
 __debug_registered__: bool
 
+
 # ============================================================================
 # BA2 Archive Handling
 # ============================================================================
@@ -81,6 +82,7 @@ class BA2Issues:
             Sum of all issue list lengths.
 
         """
+
 
 class BA2Scanner:
     """Scans BA2 archive files for issues and validates their contents.
@@ -123,7 +125,7 @@ class BA2Scanner:
         """
 
     def scan_archives_batch(
-        self, archive_paths: list[Path]
+            self, archive_paths: list[Path]
     ) -> list[tuple[Path, BA2Issues]]:
         """Scan multiple BA2 archives in batch.
 
@@ -135,6 +137,7 @@ class BA2Scanner:
 
         """
 
+
 def scan_all_ba2_archives(root_path: Path) -> list[tuple[Path, BA2Issues]]:
     """Provide convenience wrapper to find and scan all BA2 archives in a directory.
 
@@ -145,6 +148,7 @@ def scan_all_ba2_archives(root_path: Path) -> list[tuple[Path, BA2Issues]]:
         List of tuples (archive_path, BA2Issues) for all BA2 files found.
 
     """
+
 
 # ============================================================================
 # Config Duplicate Detection
@@ -161,6 +165,7 @@ class DuplicateGroup:
 
     original: Path
     duplicates: list[Path]
+
 
 class ConfigDuplicateDetector:
     """Detects duplicate configuration files in a directory tree.
@@ -202,6 +207,7 @@ class ConfigDuplicateDetector:
 
         """
 
+
 def detect_config_duplicates(root_path: Path) -> list[DuplicateGroup]:
     """Provide convenience wrapper to detect duplicates without creating detector instance.
 
@@ -212,6 +218,7 @@ def detect_config_duplicates(root_path: Path) -> list[DuplicateGroup]:
         List of DuplicateGroup objects.
 
     """
+
 
 # ============================================================================
 # Unpacked File Scanning
@@ -253,6 +260,7 @@ class UnpackedIssues:
 
         """
 
+
 class UnpackedScanner:
     """Scans directories for unpacked files that should be in BA2 archives.
 
@@ -270,7 +278,7 @@ class UnpackedScanner:
         """Create a new UnpackedScanner instance."""
 
     def scan_directory(
-        self, root_path: Path, xse_scriptfiles: list[str]
+            self, root_path: Path, xse_scriptfiles: list[str]
     ) -> UnpackedIssues:
         """Scan a directory for unpacked file issues.
 
@@ -283,6 +291,7 @@ class UnpackedScanner:
 
         """
 
+
 def scan_unpacked_files(root_path: Path, xse_scriptfiles: list[str]) -> UnpackedIssues:
     """Provide convenience wrapper to scan unpacked files without creating scanner instance.
 
@@ -294,6 +303,7 @@ def scan_unpacked_files(root_path: Path, xse_scriptfiles: list[str]) -> Unpacked
         UnpackedIssues object.
 
     """
+
 
 # ============================================================================
 # Log Processing
@@ -313,6 +323,7 @@ class LogErrorEntry:
     errors: list[str]
     total_errors: int
 
+
 class LogProcessor:
     """Scans directories for log files and detects errors based on configurable patterns.
 
@@ -328,7 +339,7 @@ class LogProcessor:
     """
 
     def __init__(
-        self, catch_errors: list[str], ignore_files: list[str], ignore_errors: list[str]
+            self, catch_errors: list[str], ignore_files: list[str], ignore_errors: list[str]
     ) -> None:
         """Create a new LogProcessor instance.
 
@@ -350,11 +361,12 @@ class LogProcessor:
 
         """
 
+
 def process_logs(
-    log_dir: Path,
-    catch_errors: list[str],
-    ignore_files: list[str],
-    ignore_errors: list[str],
+        log_dir: Path,
+        catch_errors: list[str],
+        ignore_files: list[str],
+        ignore_errors: list[str],
 ) -> str:
     """Provide convenience wrapper to process logs without creating processor instance.
 
@@ -369,6 +381,7 @@ def process_logs(
 
     """
 
+
 # ============================================================================
 # INI Validation
 # ============================================================================
@@ -379,6 +392,7 @@ class IssueSeverity(Enum):
     Info = "Info"
     Warning = "Warning"
     Error = "Error"
+
 
 class ConfigIssue:
     """Configuration issue found in INI file.
@@ -401,6 +415,7 @@ class ConfigIssue:
     recommended_value: str
     description: str
     severity: IssueSeverity
+
 
 class IniValidator:
     """Validates game configuration INI files for common issues.
@@ -444,6 +459,7 @@ class IniValidator:
 
         """
 
+
 # ============================================================================
 # TOML/Crashgen Validation
 # ============================================================================
@@ -454,6 +470,7 @@ class TomlIssueSeverity(Enum):
     Info = "Info"
     Warning = "Warning"
     Error = "Error"
+
 
 class TomlConfigIssue:
     """TOML configuration issue found.
@@ -477,6 +494,7 @@ class TomlConfigIssue:
     description: str
     severity: TomlIssueSeverity
 
+
 class CrashgenChecker:
     """Validates Buffout4/crash generator TOML configuration files.
 
@@ -490,10 +508,10 @@ class CrashgenChecker:
     """
 
     def __init__(
-        self,
-        plugins_path: Path,
-        crashgen_name: str,
-        settings_rules: dict[str, object] | None = None,
+            self,
+            plugins_path: Path,
+            crashgen_name: str,
+            settings_rules: dict[str, object] | None = None,
     ) -> None:
         """Create a new CrashgenChecker instance.
 
@@ -511,10 +529,11 @@ class CrashgenChecker:
 
         """
 
+
 def check_crashgen_config(
-    plugins_path: Path,
-    crashgen_name: str,
-    settings_rules: dict[str, object] | None = None,
+        plugins_path: Path,
+        crashgen_name: str,
+        settings_rules: dict[str, object] | None = None,
 ) -> tuple[str, list[TomlConfigIssue]]:
     """Provide convenience wrapper to check crashgen config without creating checker instance.
 
@@ -526,6 +545,7 @@ def check_crashgen_config(
         Tuple of (message_string, list of TomlConfigIssue objects).
 
     """
+
 
 # ============================================================================
 # Crashgen Orchestrator
@@ -540,6 +560,7 @@ class CrashgenReport:
     config_path: Path | None
     installed_plugins: list[str]
 
+
 class CrashgenCheckOrchestrator:
     """High-level crashgen settings orchestrator."""
 
@@ -548,9 +569,9 @@ class CrashgenCheckOrchestrator:
 
     @staticmethod
     def check(
-        plugins_path: Path,
-        crashgen_name: str,
-        settings_rules: dict[str, object] | None = None,
+            plugins_path: Path,
+            crashgen_name: str,
+            settings_rules: dict[str, object] | None = None,
     ) -> CrashgenReport:
         """Run full crashgen settings validation."""
 
@@ -562,12 +583,14 @@ class CrashgenCheckOrchestrator:
     def resolve_config_path(plugins_path: Path) -> Path | None:
         """Resolve crashgen TOML config path, if present."""
 
+
 def check_crashgen_settings(
-    plugins_path: Path,
-    crashgen_name: str,
-    settings_rules: dict[str, object] | None = None,
+        plugins_path: Path,
+        crashgen_name: str,
+        settings_rules: dict[str, object] | None = None,
 ) -> tuple[str, list[TomlConfigIssue]]:
     """Convenience wrapper for crashgen settings validation."""
+
 
 # ============================================================================
 # Config Cache and Mod INI Scanning
@@ -579,11 +602,13 @@ class VsyncEntry:
     file_path: Path
     setting: str
 
+
 class DuplicateEntry:
     """Duplicate config filename with all discovered paths."""
 
     file_name: str
     paths: list[Path]
+
 
 class ModIniScanResult:
     """Structured mod INI scan output."""
@@ -593,11 +618,12 @@ class ModIniScanResult:
     vsync_files: list[VsyncEntry]
     duplicates: list[DuplicateEntry]
 
+
 class RustConfigFileCache:
     """Encoding-aware Rust config file cache."""
 
     def __init__(
-        self, game_root: Path, duplicate_whitelist: list[str] | None = ...
+            self, game_root: Path, duplicate_whitelist: list[str] | None = ...
     ) -> None:
         """Create a new RustConfigFileCache instance."""
 
@@ -617,7 +643,7 @@ class RustConfigFileCache:
         """Get integer value."""
 
     def get_float(
-        self, file_name_lower: str, section: str, setting: str
+            self, file_name_lower: str, section: str, setting: str
     ) -> float | None:
         """Get float value."""
 
@@ -630,6 +656,7 @@ class RustConfigFileCache:
     def get_duplicates(self) -> dict[str, list[Path]]:
         """Return duplicate file map."""
 
+
 class RustModIniScanner:
     """Rust scanner for mod INI validation and duplicate checks."""
 
@@ -640,8 +667,10 @@ class RustModIniScanner:
     def scan(game_root: Path, game_name: str) -> ModIniScanResult:
         """Run a mod INI scan."""
 
+
 def scan_mod_inis(game_root: Path, game_name: str) -> str:
     """Convenience wrapper returning formatted mod INI scan report."""
+
 
 # ============================================================================
 # Wrye Bash Parsing
@@ -654,6 +683,7 @@ class WryeSeverity(Enum):
     Warning = "Warning"
     Error = "Error"
 
+
 class WryeIssue:
     """Issue extracted from Wrye Bash ModChecker report."""
 
@@ -661,6 +691,7 @@ class WryeIssue:
     plugins: list[str]
     warning_message: str | None
     severity: WryeSeverity
+
 
 class WryeBashParser:
     """Parser for Wrye Bash Plugin Checker HTML reports."""
@@ -675,10 +706,12 @@ class WryeBashParser:
     def format_report(issues: list[WryeIssue]) -> str:
         """Format structured issues as a report string."""
 
+
 def parse_wrye_report(
-    html_content: str, wrye_warnings: dict[str, str] | None = ...
+        html_content: str, wrye_warnings: dict[str, str] | None = ...
 ) -> str:
     """Convenience wrapper to parse and format a Wrye report."""
+
 
 # ============================================================================
 # XSE Plugin Checking
@@ -693,6 +726,7 @@ class GameVersion(Enum):
     AnniversaryEdition = "AnniversaryEdition"
     Vr = "Vr"
 
+
 class ValidationResult(Enum):
     """Result of XSE plugin validation."""
 
@@ -701,6 +735,7 @@ class ValidationResult(Enum):
     NotFound = "NotFound"
     VersionNotDetected = "VersionNotDetected"
     PluginsPathNotFound = "PluginsPathNotFound"
+
 
 class AddressLibInfo:
     """Information about Address Library for a specific game version.
@@ -745,6 +780,7 @@ class AddressLibInfo:
 
         """
 
+
 class XseChecker:
     """Validates Address Library installation for F4SE/SKSE plugins.
 
@@ -764,9 +800,9 @@ class XseChecker:
     """
 
     def __init__(
-        self,
-        plugins_path: Path,
-        game_version: GameVersion = ...,
+            self,
+            plugins_path: Path,
+            game_version: GameVersion = ...,
     ) -> None:
         """Create a new XseChecker instance.
 
@@ -792,6 +828,7 @@ class XseChecker:
 
         """
 
+
 def check_xse_plugins(plugins_path: Path, game_version: GameVersion) -> str:
     """Provide convenience wrapper to validate XSE plugins without creating checker instance.
 
@@ -804,6 +841,7 @@ def check_xse_plugins(plugins_path: Path, game_version: GameVersion) -> str:
 
     """
 
+
 # ============================================================================
 # ENB Detection
 # ============================================================================
@@ -815,12 +853,14 @@ class EnbResult(Enum):
     Partial = "Partial"
     NotInstalled = "NotInstalled"
 
+
 class EnbConfigResult(Enum):
     """Result of ENB config check."""
 
     Valid = "Valid"
     NotFound = "NotFound"
     Unreadable = "Unreadable"
+
 
 class EnbValidationResult:
     """Combined result of ENB validation.
@@ -849,6 +889,7 @@ class EnbValidationResult:
             True if binaries are Present and config is Valid.
 
         """
+
 
 class EnbChecker:
     """Checks for ENB installation in a game directory.
@@ -904,6 +945,7 @@ class EnbChecker:
 
         """
 
+
 def check_enb(game_path: str) -> EnbValidationResult:
     """Check ENB installation.
 
@@ -914,6 +956,7 @@ def check_enb(game_path: str) -> EnbValidationResult:
         EnbValidationResult with binaries and config status.
 
     """
+
 
 # ============================================================================
 # Game Integrity Checking
@@ -936,6 +979,7 @@ class CheckType:
     def is_installation_location(self) -> bool:
         """Check if this is an InstallationLocation check."""
 
+
 class IntegrityCheckResult:
     """Result of a single integrity check.
 
@@ -950,6 +994,7 @@ class IntegrityCheckResult:
     is_valid: bool
     message: str
 
+
 class IntegrityConfig:
     """Configuration for game integrity checking.
 
@@ -958,7 +1003,7 @@ class IntegrityConfig:
     """
 
     def __init__(
-        self, executable_path: Path, valid_exe_hashes: list[str], game_name: str
+            self, executable_path: Path, valid_exe_hashes: list[str], game_name: str
     ) -> None:
         """Create a new integrity check configuration.
 
@@ -1010,6 +1055,7 @@ class IntegrityConfig:
             Self for method chaining.
 
         """
+
 
 class GameIntegrityChecker:
     """Game integrity checker for comprehensive game validation.
@@ -1074,6 +1120,7 @@ class GameIntegrityChecker:
 
         """
 
+
 # ============================================================================
 # Game Scan Orchestrator
 # ============================================================================
@@ -1083,6 +1130,7 @@ class CheckResult:
 
     name: str
     output: str
+
 
 class GameScanResult:
     """Output of orchestrated game checks."""
@@ -1095,6 +1143,7 @@ class GameScanResult:
     def config_issues(self) -> list[ConfigIssue]:
         """Structured config issues discovered during checks."""
 
+
 class ModScanResult:
     """Output of orchestrated mod scans."""
 
@@ -1103,27 +1152,28 @@ class ModScanResult:
     archived_issue_count: int
     errors: list[str]
 
+
 class GameScanConfig:
     """Configuration for GameScanOrchestrator."""
 
     def __init__(
-        self,
-        game_path: Path,
-        xse_acronym: str,
-        crashgen_name: str,
-        game_name: str,
-        docs_path: Path | None = ...,
-        mods_path: Path | None = ...,
-        xse_scriptfiles: dict[str, list[str]] | None = ...,
-        plugins_path: Path | None = ...,
-        is_vr: bool = False,
-        game_version: GameVersion | None = ...,
-        wrye_warnings: dict[str, str] | None = ...,
-        log_catch_errors: list[str] | None = ...,
-        log_exclude_files: list[str] | None = ...,
-        log_exclude_errors: list[str] | None = ...,
-        crashgen_settings_rules: dict[str, object] | None = ...,
-        game_target: str | None = ...,
+            self,
+            game_path: Path,
+            xse_acronym: str,
+            crashgen_name: str,
+            game_name: str,
+            docs_path: Path | None = ...,
+            mods_path: Path | None = ...,
+            xse_scriptfiles: dict[str, list[str]] | None = ...,
+            plugins_path: Path | None = ...,
+            is_vr: bool = False,
+            game_version: GameVersion | None = ...,
+            wrye_warnings: dict[str, str] | None = ...,
+            log_catch_errors: list[str] | None = ...,
+            log_exclude_files: list[str] | None = ...,
+            log_exclude_errors: list[str] | None = ...,
+            crashgen_settings_rules: dict[str, object] | None = ...,
+            game_target: str | None = ...,
     ) -> None:
         """Create a new game scan configuration."""
 
@@ -1138,6 +1188,7 @@ class GameScanConfig:
     @property
     def game_name(self) -> str:
         """Get game name."""
+
 
 class GameScanOrchestrator:
     """Coordinates concurrent game checks and mod scans."""
@@ -1154,6 +1205,7 @@ class GameScanOrchestrator:
     def run_full_scan(self) -> tuple[GameScanResult, ModScanResult]:
         """Run full scan pipeline."""
 
+
 # ============================================================================
 # Game Setup Intake
 # ============================================================================
@@ -1162,16 +1214,16 @@ class GameSetupIntake:
     """Read-only request for resolving and validating game setup inputs."""
 
     def __init__(
-        self,
-        game_id: str,
-        game_version: str = ...,
-        game_root: Path | None = ...,
-        docs_root: Path | None = ...,
-        xse_log_path: Path | None = ...,
-        game_exe_path: Path | None = ...,
-        mods_root: Path | None = ...,
-        custom_scan_input: Path | None = ...,
-        papyrus_log_path: Path | None = ...,
+            self,
+            game_id: str,
+            game_version: str = ...,
+            game_root: Path | None = ...,
+            docs_root: Path | None = ...,
+            xse_log_path: Path | None = ...,
+            game_exe_path: Path | None = ...,
+            mods_root: Path | None = ...,
+            custom_scan_input: Path | None = ...,
+            papyrus_log_path: Path | None = ...,
     ) -> None:
         """Create a new Game Setup Intake request."""
 
@@ -1211,6 +1263,7 @@ class GameSetupIntake:
     def xse_log_path(self) -> str | None:
         """Optional XSE log path used as a detection hint."""
 
+
 class GameSetupCheck:
     """Typed Game Setup Check result."""
 
@@ -1219,11 +1272,13 @@ class GameSetupCheck:
     message: str
     details: list[str]
 
+
 class GameSetupPathUpdate:
     """One detected Game Setup path proposal controlled by the caller."""
 
     kind: str
     path: Path
+
 
 class GameSetupIntakeResult:
     """Rendered and typed result from Game Setup Intake."""
@@ -1244,21 +1299,26 @@ class GameSetupIntakeResult:
     def combined(self) -> str:
         """Return the rendered report."""
 
+
 def run_game_setup_intake(intake: GameSetupIntake) -> GameSetupIntakeResult:
     """Run Game Setup Intake."""
 
+
 def run_game_setup_intake_from_user_settings(
-    classic_root: str, xse_log_path: str | None = ...
+        classic_root: str, xse_log_path: str | None = ...
 ) -> GameSetupIntakeResult:
     """Open typed User Settings at a CLASSIC root and run read-only Game Setup Intake."""
+
 
 def normalize_game_setup_version_selection(game_version: str | None = ...) -> str:
     """Normalize a raw Game Setup Intake version selection."""
 
+
 def game_setup_needs_path_detection(
-    game_path: str | None = ..., docs_path: str | None = ...
+        game_path: str | None = ..., docs_path: str | None = ...
 ) -> tuple[bool, bool]:
     """Return whether game/docs paths require Game Setup Intake detection."""
+
 
 # ============================================================================
 # Game Report Builders
@@ -1267,21 +1327,24 @@ def game_setup_needs_path_detection(
 def get_scan_issue_messages(xse_acronym: str, mode: str) -> dict[str, list[str]]:
     """Get issue message templates for scan reports."""
 
+
 def build_unpacked_report(
-    issue_lists: dict[str, list[str] | set[str] | tuple[str, ...]],
-    xse_acronym: str,
+        issue_lists: dict[str, list[str] | set[str] | tuple[str, ...]],
+        xse_acronym: str,
 ) -> str:
     """Build report for unpacked (loose) files scan."""
 
+
 def build_archived_report(
-    issue_lists: dict[str, list[str] | set[str] | tuple[str, ...]],
-    xse_acronym: str,
+        issue_lists: dict[str, list[str] | set[str] | tuple[str, ...]],
+        xse_acronym: str,
 ) -> str:
     """Build report for archived (BA2) files scan."""
 
+
 def build_combined_scan_report(
-    unpacked_issues: dict[str, list[str] | set[str] | tuple[str, ...]],
-    archived_issues: dict[str, list[str] | set[str] | tuple[str, ...]],
-    xse_acronym: str,
+        unpacked_issues: dict[str, list[str] | set[str] | tuple[str, ...]],
+        archived_issues: dict[str, list[str] | set[str] | tuple[str, ...]],
+        xse_acronym: str,
 ) -> str:
     """Build combined unpacked + archived scan report."""

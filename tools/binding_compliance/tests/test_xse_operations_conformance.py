@@ -13,15 +13,15 @@ PACK = Path("tests/conformance/packs/xse_operations/v1.json")
 def test_xse_info_methods_and_game_mapping_have_executed_predicates() -> None:
     """Constructor, filesystem probes, display and game mapping remain explicit calls."""
     for operation in (
-        "__init__",
-        "__repr__",
-        "__str__",
-        "__eq__",
-        "path",
-        "loader_path",
-        "check_installed",
-        "xse_get_type_from_game_id",
-        "xseTypeForGame",
+            "__init__",
+            "__repr__",
+            "__str__",
+            "__eq__",
+            "path",
+            "loader_path",
+            "check_installed",
+            "xse_get_type_from_game_id",
+            "xseTypeForGame",
     ):
         assert any(
             predicate.covers_runtime_operation(operation)
@@ -80,12 +80,12 @@ def test_xse_validator_rejects_path_escape_and_receipt_drift(tmp_path):
         changed["scenarios"][2]["observation"]["version"] = None
         run.receipt_path.write_text(json.dumps(changed))
         assert (
-            validate_prepared_run(
-                pack, run, coverage_policy=XSE_OPERATIONS_COVERAGE_POLICY
-            )
-            .scenarios[2]
-            .result
-            == "fail"
+                validate_prepared_run(
+                    pack, run, coverage_policy=XSE_OPERATIONS_COVERAGE_POLICY
+                )
+                .scenarios[2]
+                .result
+                == "fail"
         )
 
 
@@ -159,12 +159,12 @@ def test_variant_fixture_cannot_claim_another_variant_or_unsafe_filename(tmp_pat
     path.parent.mkdir(parents=True)
     valid = {"kind": "SKSE64", "files": ["skse64_1_10_163.dll", "skse64_loader.exe"]}
     for invalid in (
-        dict(valid, kind="F4SE"),
-        dict(valid, kind="../SKSE64"),
-        dict(valid, files=["../skse64_loader.exe"]),
-        dict(valid, files=["f4se_loader.exe"]),
-        dict(valid, files=["skse64_loader.exe", "skse64_loader.exe"]),
-        dict(valid, files=[]),
+            dict(valid, kind="F4SE"),
+            dict(valid, kind="../SKSE64"),
+            dict(valid, files=["../skse64_loader.exe"]),
+            dict(valid, files=["f4se_loader.exe"]),
+            dict(valid, files=["skse64_loader.exe", "skse64_loader.exe"]),
+            dict(valid, files=[]),
     ):
         path.write_text(json.dumps(invalid))
         with pytest.raises(ValueError):

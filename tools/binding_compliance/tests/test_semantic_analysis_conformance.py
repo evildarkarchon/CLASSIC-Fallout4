@@ -20,6 +20,7 @@ from conformance.coverage import (
 from conformance.enforcement import enforcement_for_family
 from conformance.packs import load_and_validate_pack, materialize_run_plan
 from conformance.receipts import validate_prepared_run
+
 from receipt_test_support import copy_source_inventory
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -56,7 +57,7 @@ def test_lookup_memory_carriers_are_owned_only_by_executed_memory_scenarios() ->
     "family", ("crash-suspect", "mod-guidance", "crashgen-settings")
 )
 def test_semantic_config_carriers_have_exact_supporting_owner_selectors(
-    family: str,
+        family: str,
 ) -> None:
     """Cross-crate support credit names exact constructed/projected Python exports."""
     policy = FAMILY_COVERAGE_POLICIES[family]
@@ -74,7 +75,7 @@ def test_semantic_config_carriers_have_exact_supporting_owner_selectors(
 
 @pytest.mark.parametrize("family", FAMILIES)
 def test_semantic_pack_has_input_only_fixtures_and_exact_fact_predicates(
-    family: str,
+        family: str,
 ) -> None:
     """Every authored scenario proves semantic facts without exporting its oracle."""
     pack = load_and_validate_pack(
@@ -86,8 +87,8 @@ def test_semantic_pack_has_input_only_fixtures_and_exact_fact_predicates(
     for scenario in document["scenarios"]:
         fixture = json.loads(
             (
-                pack.fixture_root
-                / document["fixtures"][scenario["input"]["fixtureRef"]]
+                    pack.fixture_root
+                    / document["fixtures"][scenario["input"]["fixtureRef"]]
             ).read_text()
         )
         assert set(fixture) <= {"configuration", "request", "warmupRequest"}
@@ -131,15 +132,15 @@ def test_formid_outcomes_and_failures_remain_distinct() -> None:
     assert all(
         not left & right
         for i, left in enumerate(evidence)
-        for right in evidence[i + 1 :]
+        for right in evidence[i + 1:]
     )
 
 
 def test_occurrence_count_type_and_authored_guidance_are_not_coarsened() -> None:
     """Typed counts and complete authored text remain load-bearing coverage facts."""
     for family, collection, field, value in (
-        ("named-record", "findings", "occurrences", True),
-        ("mod-guidance", "conflicts", "description", ""),
+            ("named-record", "findings", "occurrences", True),
+            ("mod-guidance", "conflicts", "description", ""),
     ):
         pack = load_and_validate_pack(
             ROOT, Path("tests/conformance/packs") / family.replace("-", "_") / "v1.json"
@@ -155,7 +156,7 @@ def test_occurrence_count_type_and_authored_guidance_are_not_coarsened() -> None
 
 @pytest.mark.parametrize("family", FAMILIES)
 def test_semantic_receipts_cover_only_their_executed_rows(
-    tmp_path: Path, family: str
+        tmp_path: Path, family: str
 ) -> None:
     """Central receipt evidence covers the live scope and rejects an omitted case."""
     pack_path = Path("tests/conformance/packs") / family.replace("-", "_") / "v1.json"
@@ -165,11 +166,11 @@ def test_semantic_receipts_cover_only_their_executed_rows(
     shutil.copytree(ROOT / fixture_path, tmp_path / fixture_path)
     copy_source_inventory(ROOT, tmp_path)
     for args in (
-        ("init",),
-        ("config", "user.email", "conformance@example.invalid"),
-        ("config", "user.name", "Conformance Tests"),
-        ("add", "."),
-        ("commit", "-m", "fixture"),
+            ("init",),
+            ("config", "user.email", "conformance@example.invalid"),
+            ("config", "user.name", "Conformance Tests"),
+            ("add", "."),
+            ("commit", "-m", "fixture"),
     ):
         subprocess.run(
             ["git", "-C", str(tmp_path), *args], check=True, capture_output=True
@@ -272,10 +273,10 @@ def test_semantic_receipts_cover_only_their_executed_rows(
                 retained_analyzers=load_retained_analyzer_kinds(ROOT),
             )
             assert [
-                failure.obligation_id
-                for failure in expanded.failures
-                if failure.obligation_id not in baseline_failures
-            ] == [added_method.obligation_id]
+                       failure.obligation_id
+                       for failure in expanded.failures
+                       if failure.obligation_id not in baseline_failures
+                   ] == [added_method.obligation_id]
         if family == "mod-guidance":
             # A nonblank replacement remains a typed observation, but the pack's
             # exact comparator must reject prose different from the authored text.
@@ -299,12 +300,12 @@ def test_semantic_receipts_cover_only_their_executed_rows(
 
 
 def test_new_bridge_alias_cannot_borrow_an_existing_analyze_operation(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Current source names distinguish a new function from the invoked public seam."""
     copy_source_inventory(ROOT, tmp_path)
     source = (
-        tmp_path / "docs/implementation/cxx_api_parity/baseline/parity_contract.json"
+            tmp_path / "docs/implementation/cxx_api_parity/baseline/parity_contract.json"
     )
     document = json.loads(source.read_text())
     original = next(
@@ -334,16 +335,16 @@ def test_new_bridge_alias_cannot_borrow_an_existing_analyze_operation(
     source.write_text(json.dumps(document))
     rows = load_source_parity_rows(tmp_path)
     assert (
-        next(
-            row
-            for row in rows
-            if row.obligation_id == "parity:cxx:future-analyze-alias"
-        ).runtime_operation
-        == "future_crash_suspect_analyze"
+            next(
+                row
+                for row in rows
+                if row.obligation_id == "parity:cxx:future-analyze-alias"
+            ).runtime_operation
+            == "future_crash_suspect_analyze"
     )
     assert (
-        next(
-            row for row in rows if row.obligation_id == "parity:cxx:future-lookup-alias"
-        ).runtime_operation
-        == "future_formid_value_lookup_lookup"
+            next(
+                row for row in rows if row.obligation_id == "parity:cxx:future-lookup-alias"
+            ).runtime_operation
+            == "future_formid_value_lookup_lookup"
     )

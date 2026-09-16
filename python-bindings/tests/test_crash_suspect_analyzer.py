@@ -2,9 +2,8 @@
 
 from concurrent.futures import ThreadPoolExecutor
 
-import pytest
-
 import classic_scanlog
+import pytest
 
 
 def _analyzer() -> classic_scanlog.CrashSuspectAnalyzer:
@@ -30,8 +29,8 @@ def _analyzer() -> classic_scanlog.CrashSuspectAnalyzer:
 
 
 def _analyze(
-    analyzer: classic_scanlog.CrashSuspectAnalyzer,
-    main_error: str = "plugin.dll",
+        analyzer: classic_scanlog.CrashSuspectAnalyzer,
+        main_error: str = "plugin.dll",
 ) -> classic_scanlog.CrashSuspectAnalysisResult:
     return analyzer.analyze(
         classic_scanlog.CrashSuspectAnalysisInput(main_error, "StackSignal")

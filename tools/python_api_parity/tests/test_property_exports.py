@@ -32,7 +32,7 @@ def load(path: str) -> Settings: ...
 
 
 def test_properties_are_exported_once_without_becoming_callable_methods(
-    property_surface: dict,
+        property_surface: dict,
 ) -> None:
     """Setter/deleter signatures cannot overwrite or duplicate the read contract."""
     exports = property_surface["exports"]
@@ -55,14 +55,14 @@ def test_properties_are_exported_once_without_becoming_callable_methods(
 @pytest.mark.parametrize(
     "export_path,kind,status",
     (
-        ("Settings.mode", "property", "matched"),
-        ("Settings.mode", "method", "signature_mismatch"),
-        ("Settings.update", "property", "signature_mismatch"),
-        ("Settings.absent", "property", "missing_python"),
+            ("Settings.mode", "property", "matched"),
+            ("Settings.mode", "method", "signature_mismatch"),
+            ("Settings.update", "property", "signature_mismatch"),
+            ("Settings.absent", "property", "missing_python"),
     ),
 )
 def test_parity_gate_validates_property_existence_and_kind(
-    property_surface: dict, export_path: str, kind: str, status: str
+        property_surface: dict, export_path: str, kind: str, status: str
 ) -> None:
     """A property obligation must name the actual getter and preserve its access kind."""
     contract = {
@@ -85,7 +85,7 @@ def test_parity_gate_validates_property_existence_and_kind(
 
 
 def test_unmapped_property_still_requires_property_access_kind(
-    property_surface: dict,
+        property_surface: dict,
 ) -> None:
     """Unknown Rust ownership cannot hide a callable method replacing a property."""
     contract = {

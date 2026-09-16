@@ -112,7 +112,7 @@ def extract_ffi_block(source: str) -> tuple[str | None, str]:
         elif ch == "}":
             depth -= 1
             if depth == 0:
-                return source[open_brace + 1 : i], namespace
+                return source[open_brace + 1: i], namespace
     return None, namespace
 
 
@@ -174,7 +174,7 @@ def _split_top_level_commas(text: str) -> list[str]:
 
 
 def _parse_function_signature(
-    params_text: str, return_text: str | None
+        params_text: str, return_text: str | None
 ) -> dict[str, Any]:
     """Build the signature dict from raw parameter and return-type text.
 
@@ -271,8 +271,8 @@ def _find_balanced_block(text: str, start_search: int) -> tuple[int, int] | None
 
 
 def _find_top_level_blocks(
-    ffi_body: str,
-    keyword: str,
+        ffi_body: str,
+        keyword: str,
 ) -> list[tuple[str, int, int]]:
     """Find all `<keyword> Name { ... }` blocks at the top level of an ffi body.
 
@@ -328,9 +328,9 @@ def _find_extern_blocks(ffi_body: str) -> list[tuple[str, int, int]]:
 
 
 def _parse_ffi_body(
-    ffi_body: str,
-    bridge_module: str,
-    source_file: str,
+        ffi_body: str,
+        bridge_module: str,
+        source_file: str,
 ) -> list[dict[str, Any]]:
     """Parse a single ffi body into a list of contract rows.
 
@@ -439,8 +439,8 @@ def _parse_ffi_body(
 
 
 def parse_cxx_bridge_surface(
-    repo_root: Path,
-    bridge_crate_rel: str = "cpp-bindings/classic-cpp-bridge",
+        repo_root: Path,
+        bridge_crate_rel: str = "cpp-bindings/classic-cpp-bridge",
 ) -> dict[str, Any]:
     """Parse every bridge file listed in build.rs and return a deterministic payload."""
     repo_root = Path(repo_root)
@@ -488,9 +488,9 @@ def _nonempty_mapping_string(value: object, label: str) -> str:
 
 
 def _index_rows_by_id(
-    raw_rows: object,
-    entries_label: str,
-    duplicate_label: str,
+        raw_rows: object,
+        entries_label: str,
+        duplicate_label: str,
 ) -> dict[str, dict[str, Any]]:
     """Validate an entry collection and index its object rows by unique string ID."""
 
@@ -510,8 +510,8 @@ def _index_rows_by_id(
 
 
 def enrich_surface_with_canonical_mappings(
-    surface: dict[str, Any],
-    mappings: dict[str, Any],
+        surface: dict[str, Any],
+        mappings: dict[str, Any],
 ) -> dict[str, Any]:
     """Attach reviewed canonical or binding-only metadata to every parsed CXX row.
 
@@ -557,8 +557,8 @@ def enrich_surface_with_canonical_mappings(
         binding_only_present = _BINDING_ONLY_MAPPING_FIELDS.intersection(mapping)
         is_canonical = canonical_present == _CANONICAL_MAPPING_FIELDS
         is_binding_only = (
-            binding_only_present == _BINDING_ONLY_MAPPING_FIELDS
-            and not canonical_present
+                binding_only_present == _BINDING_ONLY_MAPPING_FIELDS
+                and not canonical_present
         )
         if not (is_canonical ^ is_binding_only):
             raise CanonicalMappingError(
@@ -606,8 +606,8 @@ def enrich_surface_with_canonical_mappings(
 
 
 def validate_committed_canonical_metadata(
-    contract: dict[str, Any],
-    current_surface: dict[str, Any],
+        contract: dict[str, Any],
+        current_surface: dict[str, Any],
 ) -> None:
     """Require committed mapping metadata to match the independently enriched model.
 
@@ -649,8 +649,8 @@ def validate_committed_canonical_metadata(
 
 
 def validate_canonical_mapping_targets(
-    repo_root: Path,
-    mappings: dict[str, Any],
+        repo_root: Path,
+        mappings: dict[str, Any],
 ) -> None:
     """Require every canonical mapping to resolve on the live Rust public surface.
 
@@ -689,10 +689,10 @@ def validate_canonical_mapping_targets(
         )
         lib_path = Path(lib_rs)
         if (
-            lib_path.is_absolute()
-            or ".." in lib_path.parts
-            or "\\" in lib_rs
-            or lib_path.as_posix() != lib_rs
+                lib_path.is_absolute()
+                or ".." in lib_path.parts
+                or "\\" in lib_rs
+                or lib_path.as_posix() != lib_rs
         ):
             raise CanonicalMappingError(
                 f"rustCrates[{index}].libRs must be a canonical repository-relative path"
@@ -748,9 +748,9 @@ def validate_canonical_mapping_targets(
 
 
 def generate_cxx_parity_model(
-    repo_root: Path,
-    bridge_crate_rel: str = "cpp-bindings/classic-cpp-bridge",
-    canonical_mappings_rel: str = DEFAULT_CANONICAL_MAPPINGS,
+        repo_root: Path,
+        bridge_crate_rel: str = "cpp-bindings/classic-cpp-bridge",
+        canonical_mappings_rel: str = DEFAULT_CANONICAL_MAPPINGS,
 ) -> dict[str, Any]:
     """Generate the source-derived CXX model with reviewed canonical metadata.
 
@@ -805,8 +805,8 @@ def _normalize_row_for_compare(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def generate_diff_report(
-    contract: dict[str, Any],
-    current_surface: dict[str, Any],
+        contract: dict[str, Any],
+        current_surface: dict[str, Any],
 ) -> dict[str, Any]:
     """Compare committed baseline (contract) against fresh surface."""
     contract_rows = {_row_key(r): r for r in contract.get("entries", [])}
@@ -971,8 +971,8 @@ def main() -> int:
         "--write-baseline",
         action="store_true",
         help="Also write parity_contract.json to --baseline-output-dir "
-        "(used by the initial bootstrap; normal operation is "
-        "check_parity_gate.py --update-baseline).",
+             "(used by the initial bootstrap; normal operation is "
+             "check_parity_gate.py --update-baseline).",
     )
     args = parser.parse_args()
 

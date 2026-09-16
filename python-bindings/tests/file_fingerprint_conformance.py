@@ -36,7 +36,7 @@ def observe_file_fingerprint(fixture: dict[str, Any]) -> dict[str, Any]:
                 except RuntimeError as failure:
                     # FileHasher uses the legacy RuntimeError envelope, preserving the core prefix.
                     if not str(failure).startswith(
-                        "Hash calculation failed: File not found: "
+                            "Hash calculation failed: File not found: "
                     ):
                         raise
                     error = "not_found"

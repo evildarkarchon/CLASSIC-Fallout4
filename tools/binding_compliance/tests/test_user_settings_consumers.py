@@ -18,15 +18,15 @@ ROOT = Path(__file__).resolve().parents[3]
 def test_gui_consumer_launcher_preserves_the_requested_build_preset() -> None:
     """Receipt execution reuses the caller's Qt build configuration and records that choice."""
     launcher = (
-        ROOT
-        / "tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1"
+            ROOT
+            / "tools/binding_compliance/conformance/adapters/run_gui_consumer_conformance.ps1"
     ).read_text(encoding="utf-8")
     assert '[string]$Preset = "default"' in launcher
     child = launcher.split("$ChildCommand = @'", 1)[1].split("'@", 1)[0]
     assert "-Preset $env:CLASSIC_CONSUMER_CONFORMANCE_PRESET" in child
     assert (
-        '$StartInfo.Environment["CLASSIC_CONSUMER_CONFORMANCE_PRESET"] = $Preset'
-        in launcher
+            '$StartInfo.Environment["CLASSIC_CONSUMER_CONFORMANCE_PRESET"] = $Preset'
+            in launcher
     )
     recorded = launcher.split("$RecordedCommand = @(", 1)[1].split("\n    )", 1)[0]
     assert "-Preset $Preset" in recorded
@@ -34,7 +34,7 @@ def test_gui_consumer_launcher_preserves_the_requested_build_preset() -> None:
 
 @pytest.mark.parametrize("participant", ["cli", "gui", "tui"])
 def test_user_settings_consumer_plans_expose_only_maintained_obligations(
-    participant: str,
+        participant: str,
 ) -> None:
     """Each maintained frontend gets source-bound obligations without semantic expectations."""
     pack = load_and_validate_pack(
@@ -63,7 +63,7 @@ def test_user_settings_consumer_plans_expose_only_maintained_obligations(
     "damage", ["none", "missing", "stale", "malformed", "skipped", "mismatch"]
 )
 def test_user_settings_consumer_receipts_fail_closed(
-    participant: str, damage: str
+        participant: str, damage: str
 ) -> None:
     """Every maintained consumer requires a complete current receipt that actually matches."""
     pack = load_and_validate_pack(

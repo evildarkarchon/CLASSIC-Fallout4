@@ -111,8 +111,8 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     local_yaml_after = local_yaml.read_text(encoding="utf-8")
     assert 'Root_Folder_Game: "D:/Games/Fallout4"' in local_yaml_after
     assert (
-        'Root_Folder_Docs: "C:/Users/Test/Documents/My Games/Fallout4"'
-        in local_yaml_after
+            'Root_Folder_Docs: "C:/Users/Test/Documents/My Games/Fallout4"'
+            in local_yaml_after
     )
 
     local_yaml.write_text("{ invalid: yaml: content: }}}", encoding="utf-8")
@@ -125,8 +125,8 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
 
     assert classic_config.YamlSource.MAIN.display_name() == "Main Database"
     assert (
-        classic_config.YamlSource.GAME.display_name_with_game("Fallout4")
-        == "Fallout4 Database"
+            classic_config.YamlSource.GAME.display_name_with_game("Fallout4")
+            == "Fallout4 Database"
     )
     assert classic_config.YamlSource.GAME.path("Fallout4").endswith(
         "CLASSIC Fallout4.yaml"
@@ -151,12 +151,12 @@ def _run_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
 
     repo_root = Path(__file__).resolve().parents[2]
     log_path = (
-        repo_root
-        / "business-logic"
-        / "classic-scanlog-core"
-        / "benches"
-        / "fixtures"
-        / "crash-12624.log"
+            repo_root
+            / "business-logic"
+            / "classic-scanlog-core"
+            / "benches"
+            / "fixtures"
+            / "crash-12624.log"
     )
     log_lines = log_path.read_text(encoding="utf-8", errors="ignore").splitlines()
 
@@ -205,9 +205,8 @@ def _run_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
     assert papyrus_stats.dumps >= 1
 
 
-
 def _run_version_registry_tier1_smoke(
-    _tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
+        _tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
 ) -> None:
     import classic_version_registry
 
@@ -225,10 +224,10 @@ def _run_version_registry_tier1_smoke(
 
     game_version = classic_version_registry.GameVersion("1.10.163.0")
     assert (
-        game_version.semantic_distance(
-            classic_version_registry.GameVersion("1.10.984.0")
-        )
-        > 0
+            game_version.semantic_distance(
+                classic_version_registry.GameVersion("1.10.984.0")
+            )
+            > 0
     )
 
     registry = classic_version_registry.VersionRegistry()
@@ -286,7 +285,7 @@ def _run_scanlog_tier2_smoke(_tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) 
 
 
 def _run_version_registry_tier2_smoke(
-    _tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
+        _tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
 ) -> None:
     import classic_version_registry
 
@@ -296,7 +295,7 @@ def _run_version_registry_tier2_smoke(
 
 
 def _run_cache_helpers_tier2_smoke(
-    tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
 ) -> None:
     import classic_file_io
 
@@ -347,18 +346,18 @@ def test_parse_segments_parallel_deprecation_warning() -> None:
     parser = classic_scanlog.LogParser()
     repo_root = Path(__file__).resolve().parents[2]
     log_path = (
-        repo_root
-        / "business-logic"
-        / "classic-scanlog-core"
-        / "benches"
-        / "fixtures"
-        / "crash-12624.log"
+            repo_root
+            / "business-logic"
+            / "classic-scanlog-core"
+            / "benches"
+            / "fixtures"
+            / "crash-12624.log"
     )
     sample_lines = log_path.read_text(encoding="utf-8", errors="ignore").splitlines()
     expected = parser.parse_all_sections(sample_lines)
 
     with pytest.warns(
-        DeprecationWarning, match="parse_segments_parallel is deprecated"
+            DeprecationWarning, match="parse_segments_parallel is deprecated"
     ):
         result = parser.parse_segments_parallel(sample_lines)
 
@@ -398,7 +397,7 @@ def test_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
 
 
 def test_version_registry_tier1_smoke(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Run the retained version queries independently of coverage metadata."""
     _run_version_registry_tier1_smoke(tmp_path, monkeypatch)

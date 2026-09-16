@@ -18,21 +18,21 @@ async def _execute(fixture: Mapping[str, Any], root: Path) -> dict[str, Any]:
         max_connections=1, cache_ttl_seconds=300, game_table="Fallout4"
     )
     for getter, constant in (
-        (classic_database.get_default_cache_ttl, classic_database.DEFAULT_CACHE_TTL),
-        (classic_database.get_batch_cache_ttl, classic_database.BATCH_CACHE_TTL),
-        (classic_database.get_max_cache_ttl, classic_database.MAX_CACHE_TTL),
-        (
-            classic_database.get_default_query_cache_capacity,
-            classic_database.DEFAULT_QUERY_CACHE_CAPACITY,
-        ),
-        (
-            classic_database.get_default_cache_cleanup_threshold,
-            classic_database.DEFAULT_CACHE_CLEANUP_THRESHOLD,
-        ),
-        (
-            classic_database.get_default_cache_cleanup_interval,
-            classic_database.DEFAULT_CACHE_CLEANUP_INTERVAL,
-        ),
+            (classic_database.get_default_cache_ttl, classic_database.DEFAULT_CACHE_TTL),
+            (classic_database.get_batch_cache_ttl, classic_database.BATCH_CACHE_TTL),
+            (classic_database.get_max_cache_ttl, classic_database.MAX_CACHE_TTL),
+            (
+                    classic_database.get_default_query_cache_capacity,
+                    classic_database.DEFAULT_QUERY_CACHE_CAPACITY,
+            ),
+            (
+                    classic_database.get_default_cache_cleanup_threshold,
+                    classic_database.DEFAULT_CACHE_CLEANUP_THRESHOLD,
+            ),
+            (
+                    classic_database.get_default_cache_cleanup_interval,
+                    classic_database.DEFAULT_CACHE_CLEANUP_INTERVAL,
+            ),
     ):
         if getter() != constant:
             raise ValueError("cache helper disagrees with its exported constant")
@@ -41,10 +41,10 @@ async def _execute(fixture: Mapping[str, Any], root: Path) -> dict[str, Any]:
         raise ValueError("game-table setter failed to update the native owner")
     pool.set_game_table("Fallout4")
     for setter, getter, value in (
-        (pool.set_cache_capacity, pool.get_cache_capacity, 64),
-        (pool.set_cache_cleanup_threshold, pool.get_cache_cleanup_threshold, 20),
-        (pool.set_cache_cleanup_interval, pool.get_cache_cleanup_interval, 60),
-        (pool.set_max_connections, pool.get_max_connections, 2),
+            (pool.set_cache_capacity, pool.get_cache_capacity, 64),
+            (pool.set_cache_cleanup_threshold, pool.get_cache_cleanup_threshold, 20),
+            (pool.set_cache_cleanup_interval, pool.get_cache_cleanup_interval, 60),
+            (pool.set_max_connections, pool.get_max_connections, 2),
     ):
         setter(value)
         if getter() != value:
@@ -72,7 +72,7 @@ async def _execute(fixture: Mapping[str, Any], root: Path) -> dict[str, Any]:
         except classic_database.RustDatabaseIOError as failure:
             # Attribute only the native open carrier; unrelated failures must fail the runner.
             if not str(failure).startswith("Failed to open database:") or json.dumps(
-                str(root / "formids.db")
+                    str(root / "formids.db")
             )[1:-1] not in str(failure):
                 raise
             result["error"] = {"code": "open", "path": "formids.db"}
@@ -136,27 +136,27 @@ def observe_database_operations(fixture: Mapping[str, Any]) -> dict[str, Any]:
             raise ValueError("cache getter values disagree with exported constants")
         return result
     if (
-        set(fixture) != {"operation", "databaseHex", "queries"}
-        or fixture["operation"] != "pool"
+            set(fixture) != {"operation", "databaseHex", "queries"}
+            or fixture["operation"] != "pool"
     ):
         raise ValueError("unsupported database operation fixture")
     if not isinstance(fixture["queries"], list) or any(
-        not isinstance(pair, list)
-        or len(pair) != 2
-        or not all(isinstance(value, str) for value in pair)
-        for pair in fixture["queries"]
+            not isinstance(pair, list)
+            or len(pair) != 2
+            or not all(isinstance(value, str) for value in pair)
+            for pair in fixture["queries"]
     ):
         raise ValueError("database queries require string pairs")
     with tempfile.TemporaryDirectory(
-        prefix="classic-database-conformance-"
+            prefix="classic-database-conformance-"
     ) as directory:
         root = Path(directory)
         content = fixture["databaseHex"]
         if content is not None:
             if (
-                not isinstance(content, str)
-                or len(content) % 2
-                or any(c not in "0123456789abcdef" for c in content)
+                    not isinstance(content, str)
+                    or len(content) % 2
+                    or any(c not in "0123456789abcdef" for c in content)
             ):
                 raise ValueError("database bytes require lowercase hex")
             (root / "formids.db").write_bytes(bytes.fromhex(content))

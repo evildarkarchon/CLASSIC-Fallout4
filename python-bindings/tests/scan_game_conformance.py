@@ -41,7 +41,7 @@ def observe_scan_game(fixture: Mapping[str, Any]) -> dict[str, Any]:
     if operation not in {"validate-ini", "validate-enb", "process-logs"}:
         raise ValueError("unsupported scan game operation")
     with tempfile.TemporaryDirectory(
-        prefix="classic-scan-game-conformance-"
+            prefix="classic-scan-game-conformance-"
     ) as directory:
         root = Path(directory)
         for path in fixture["directories"]:
@@ -62,14 +62,14 @@ def observe_scan_game(fixture: Mapping[str, Any]) -> dict[str, Any]:
             )
             report = processor.process_logs(root)
             if (
-                native.process_logs(
-                    root,
-                    fixture["catch"],
-                    fixture["excludeFiles"],
-                    fixture["excludeErrors"],
-                )
-                != report
-                or repr(processor) != "LogProcessor(...)"
+                    native.process_logs(
+                        root,
+                        fixture["catch"],
+                        fixture["excludeFiles"],
+                        fixture["excludeErrors"],
+                    )
+                    != report
+                    or repr(processor) != "LogProcessor(...)"
             ):
                 raise ValueError("log processor public aliases disagree")
             return {
@@ -109,8 +109,8 @@ def observe_scan_game(fixture: Mapping[str, Any]) -> dict[str, Any]:
             checker = native.EnbChecker(str(root))
             result = checker.validate()
             if (
-                checker.check_binaries() != result.binaries
-                or checker.check_config() != result.config
+                    checker.check_binaries() != result.binaries
+                    or checker.check_config() != result.config
             ):
                 raise ValueError("ENB public check methods disagree with validate")
             observation["result"] = {
@@ -131,9 +131,9 @@ def observe_scan_game(fixture: Mapping[str, Any]) -> dict[str, Any]:
                     "ENB formatted message disagrees with typed native result"
                 )
             if result.is_present() != (
-                observation["result"]["binaries"] != "NotInstalled"
+                    observation["result"]["binaries"] != "NotInstalled"
             ) or result.is_fully_configured() != (
-                observation["result"] == {"binaries": "Present", "config": "Valid"}
+                    observation["result"] == {"binaries": "Present", "config": "Valid"}
             ):
                 raise ValueError(
                     "ENB public result queries disagree with native fields"

@@ -32,7 +32,7 @@ import urllib.parse
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ruamel.yaml import YAML # type: ignore
+from ruamel.yaml import YAML  # type: ignore
 
 try:
     from tools.publish_yaml_data.cache_names import (
@@ -40,7 +40,7 @@ try:
         windows_normalized_cache_file_key,
     )
 except ModuleNotFoundError:
-    from cache_names import is_valid_cache_file_name, windows_normalized_cache_file_key # type: ignore
+    from cache_names import is_valid_cache_file_name, windows_normalized_cache_file_key  # type: ignore
 
 # `pure=True` mirrors the parser choice in validate.py; see that module for
 # the rationale around bare-scalar `foo::bar` patterns in flow sequences.
@@ -114,7 +114,7 @@ def load_ranges(schema_ranges_path: Path) -> list[dict[str, str]]:
                 )
 
         if _parse_schema_point(str(entry["min_client_schema"])) > _parse_schema_point(
-            str(entry["max_client_schema"])
+                str(entry["max_client_schema"])
         ):
             raise SystemExit(
                 f"FAIL: ranges entry {name!r}: min_client_schema="

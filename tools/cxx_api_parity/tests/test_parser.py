@@ -300,7 +300,7 @@ class TestDeterminism:
 
 class TestMixedFfiInventory:
     def test_parse_mixed_ffi_complete_inventory(
-        self, fixture_dir: Path, tmp_path: Path
+            self, fixture_dir: Path, tmp_path: Path
     ):
         """CXXG-01: mixed_ffi.rs produces exactly the hand-counted 7 rows."""
         crate = tmp_path / "bridge"

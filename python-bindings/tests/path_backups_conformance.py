@@ -19,13 +19,13 @@ def observe_path_backups(fixture):
         version = manager.extract_version_from_xse_log(str(log))
         explicit = XseVersion(fixture["version"])
         if (version.full_version(), version.sanitized()) != (
-            explicit.full_version(),
-            explicit.sanitized(),
+                explicit.full_version(),
+                explicit.sanitized(),
         ):
             raise ValueError("extracted and explicit versions disagree")
         if (
-            repr(explicit) != f"XseVersion('{fixture['version']}')"
-            or str(explicit) != fixture["version"]
+                repr(explicit) != f"XseVersion('{fixture['version']}')"
+                or str(explicit) != fixture["version"]
         ):
             raise ValueError("version representation lost its native value")
         created = Path(manager.create_backup(str(source), version))

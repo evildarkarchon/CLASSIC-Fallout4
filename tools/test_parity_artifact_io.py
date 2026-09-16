@@ -144,7 +144,7 @@ class TestPreserveBaselineGeneratedAt:
         assert generated["generated_at_utc"] == NEW_STAMP
 
     def test_opaque_timestamp_formats_are_preserved_verbatim(
-        self, tmp_path: Path
+            self, tmp_path: Path
     ) -> None:
         """cxx second-granularity stamps survive alongside isoformat ones."""
         baseline = tmp_path / "surface.json"

@@ -9,20 +9,20 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 CONTRACT_PATH = (
-    REPO_ROOT
-    / "docs"
-    / "implementation"
-    / "python_api_parity"
-    / "baseline"
-    / "parity_contract.json"
+        REPO_ROOT
+        / "docs"
+        / "implementation"
+        / "python_api_parity"
+        / "baseline"
+        / "parity_contract.json"
 )
 DIFF_REPORT_PATH = (
-    REPO_ROOT
-    / "docs"
-    / "implementation"
-    / "python_api_parity"
-    / "baseline"
-    / "parity_diff_report.json"
+        REPO_ROOT
+        / "docs"
+        / "implementation"
+        / "python_api_parity"
+        / "baseline"
+        / "parity_diff_report.json"
 )
 
 
@@ -60,7 +60,7 @@ def test_tier2_gap_total_removed_from_summary() -> None:
 
 def test_python_gate_defaults_use_repo_root_paths() -> None:
     source = (
-        REPO_ROOT / "tools" / "python_api_parity" / "check_parity_gate.py"
+            REPO_ROOT / "tools" / "python_api_parity" / "check_parity_gate.py"
     ).read_text(encoding="utf-8")
     assert 'default="python-bindings/parity-artifacts"' in source
     assert "ClassicLib-rs/python-bindings" not in source
@@ -84,7 +84,7 @@ def test_validate_stubs_rejects_legacy_workspace_path() -> None:
     )
     assert result.returncode == 1
     assert (
-        "Legacy rust-dir 'ClassicLib-rs' is no longer supported"
-        in result.stdout + result.stderr
+            "Legacy rust-dir 'ClassicLib-rs' is no longer supported"
+            in result.stdout + result.stderr
     )
     assert "python-bindings" in result.stdout + result.stderr

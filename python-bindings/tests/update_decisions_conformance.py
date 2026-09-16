@@ -9,7 +9,7 @@ def observe_update_decisions(fixture: Mapping[str, Any]) -> dict[str, Any]:
     import classic_update
 
     if set(fixture) != {"current", "latest"} or any(
-        not isinstance(value, str) for value in fixture.values()
+            not isinstance(value, str) for value in fixture.values()
     ):
         raise ValueError("unsupported update decision fixture")
     client = classic_update.GithubClient("conformance", "unused")

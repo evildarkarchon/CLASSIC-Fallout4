@@ -16,13 +16,13 @@ def test_log_parsing_facts_require_complete_observations() -> None:
         root, Path("tests/conformance/packs/log_parsing/v1.json")
     ).document()
     assert {
-        "log-parsing.formids",
-        "log-parsing.plugins",
-        "log-parsing.records",
-        "log-parsing.gpu",
-        "log-parsing.node-parser",
-        "log-parsing.crashgen-version",
-    } <= {capability["id"] for capability in pack["capabilities"]}
+               "log-parsing.formids",
+               "log-parsing.plugins",
+               "log-parsing.records",
+               "log-parsing.gpu",
+               "log-parsing.node-parser",
+               "log-parsing.crashgen-version",
+           } <= {capability["id"] for capability in pack["capabilities"]}
     for scenario in pack["scenarios"]:
         expected = scenario["expected"]
         assert derive_observed_fact_ids(

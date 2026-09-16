@@ -15,7 +15,7 @@ from conformance.coverage import (
 
 
 def test_scoped_plan_projection_uses_the_same_source_denominator(
-    monkeypatch: pytest.MonkeyPatch,
+        monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Immutable plans must omit unsupported actions and rederive after source change."""
     from conformance import command, coverage, packs
@@ -24,8 +24,8 @@ def test_scoped_plan_projection_uses_the_same_source_denominator(
     monkeypatch.setitem(command.FAMILY_COVERAGE_POLICIES, "getter", policy)
     monkeypatch.setattr(coverage, "load_source_parity_rows", lambda _: rows)
     assert [
-        case["id"] for case in packs._semantic_scenarios(Path("."), pack, "python")
-    ] == ["one"]
+               case["id"] for case in packs._semantic_scenarios(Path("."), pack, "python")
+           ] == ["one"]
     with pytest.raises(packs.MaterializationError, match="not applicable"):
         packs._semantic_scenarios(Path("."), pack, "cxx")
     changed = (
@@ -34,8 +34,8 @@ def test_scoped_plan_projection_uses_the_same_source_denominator(
     )
     monkeypatch.setattr(coverage, "load_source_parity_rows", lambda _: changed)
     assert [
-        case["id"] for case in packs._semantic_scenarios(Path("."), pack, "cxx")
-    ] == ["one"]
+               case["id"] for case in packs._semantic_scenarios(Path("."), pack, "cxx")
+           ] == ["one"]
 
 
 def test_supporting_capability_keeps_its_explicit_rust_owner() -> None:
@@ -44,9 +44,9 @@ def test_supporting_capability_keeps_its_explicit_rust_owner() -> None:
     pack["domainOwner"]["rustCrate"] = "analyzer-core"
     pack["capabilities"][0]["rustCrate"] = "example-core"
     assert {
-        p.id
-        for p in derive_applicability(pack, rows, coverage_policy=policy).participants
-    } == {"rust", "python"}
+               p.id
+               for p in derive_applicability(pack, rows, coverage_policy=policy).participants
+           } == {"rust", "python"}
     report = derive_row_coverage(pack, rows, policy, ())
     assert {failure.obligation_id for failure in report.failures} == {"python.read"}
     unrelated = tuple(replace(row, rust_crate="other-core") for row in rows)
@@ -192,13 +192,13 @@ def test_unscoped_capability_preserves_class_wide_obligations() -> None:
         "cxx",
     }
     assert {
-        f.obligation_id for f in derive_row_coverage(pack, rows, policy, ()).failures
-    } == {"python.read", "cxx.other"}
+               f.obligation_id for f in derive_row_coverage(pack, rows, policy, ()).failures
+           } == {"python.read", "cxx.other"}
 
 
 @pytest.mark.parametrize("operations", [None, ()])
 def test_scoped_capability_rejects_absent_or_wildcard_operation_policy(
-    operations,
+        operations,
 ) -> None:
     """A missing explicit operation denominator cannot become a passing scope."""
     pack, rows, policy = _inputs()
@@ -218,8 +218,8 @@ def test_carrier_and_unknown_alias_cannot_borrow_scoped_getter() -> None:
         for index, row in enumerate(rows)
     )
     assert {
-        p.id
-        for p in derive_applicability(
+               p.id
+               for p in derive_applicability(
             pack, unrelated, coverage_policy=policy
         ).participants
-    } == {"rust"}
+           } == {"rust"}

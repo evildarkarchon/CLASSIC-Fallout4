@@ -10,4 +10,3 @@ TOOLS_DIR = REPO_ROOT / "tools" / "binding_compliance"
 
 if str(TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(TOOLS_DIR))
-

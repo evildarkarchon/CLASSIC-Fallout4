@@ -230,7 +230,7 @@ def collect_crate_sources(repo_root: Path, lib_rs_rel: str) -> list[tuple[str, s
         # Restricted modules are implementation details; public re-exports
         # must be discovered through an unrestricted facade instead.
         for match in re.finditer(
-            r"(?m)^\s*(?:pub\s+)?mod\s+([A-Za-z0-9_]+)\s*;", content
+                r"(?m)^\s*(?:pub\s+)?mod\s+([A-Za-z0-9_]+)\s*;", content
         ):
             child_path = resolve_module_path(source_path, match.group(1))
             if child_path is not None:
@@ -241,11 +241,11 @@ def collect_crate_sources(repo_root: Path, lib_rs_rel: str) -> list[tuple[str, s
 
 
 def extract_rust_symbols(
-    entries: list[dict[str, Any]],
-    content: str,
-    source_rel: str,
-    crate_name: str,
-    owner_module: str,
+        entries: list[dict[str, Any]],
+        content: str,
+        source_rel: str,
+        crate_name: str,
+        owner_module: str,
 ) -> None:
     """Append every public symbol found in one Rust source file to ``entries``."""
     for match in re.finditer(r"(?m)^\s*pub\s+mod\s+([A-Za-z0-9_]+)\s*;", content):
@@ -263,9 +263,9 @@ def extract_rust_symbols(
         )
 
     for match in re.finditer(
-        _PUB_FN_RE,
-        content,
-        flags=re.MULTILINE | re.DOTALL,
+            _PUB_FN_RE,
+            content,
+            flags=re.MULTILINE | re.DOTALL,
     ):
         symbol = match.group(1)
         arity = count_rust_params(match.group(2))
@@ -298,7 +298,7 @@ def extract_rust_symbols(
         )
 
     for match in re.finditer(
-        r"pub\s+use\s+([^;]+);", content, flags=re.MULTILINE | re.DOTALL
+            r"pub\s+use\s+([^;]+);", content, flags=re.MULTILINE | re.DOTALL
     ):
         use_body = match.group(1)
         for symbol, source_expr in expand_pub_use_statement(use_body):
@@ -317,9 +317,9 @@ def extract_rust_symbols(
 
 
 def parse_rust_surface(
-    repo_root: Path,
-    target_crates: dict[str, str],
-    owner_by_crate: dict[str, str],
+        repo_root: Path,
+        target_crates: dict[str, str],
+        owner_by_crate: dict[str, str],
 ) -> dict[str, Any]:
     """Extract Rust public API symbols from each target crate's `lib.rs` + child modules.
 
@@ -353,7 +353,7 @@ def parse_rust_surface(
 
 
 def build_lookup(
-    items: list[dict[str, Any]], key_field: str
+        items: list[dict[str, Any]], key_field: str
 ) -> dict[str, dict[str, Any]]:
     """Build a single-key name lookup dictionary from manifest entries.
 

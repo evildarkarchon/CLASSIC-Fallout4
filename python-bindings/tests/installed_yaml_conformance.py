@@ -99,7 +99,7 @@ def observe_installed_yaml(fixture: Mapping[str, Any]) -> dict[str, Any]:
 
     previous = {name: os.environ.get(name) for name in CACHE_ENVIRONMENT}
     with tempfile.TemporaryDirectory(
-        prefix="classic-python-installed-conformance-"
+            prefix="classic-python-installed-conformance-"
     ) as temporary:
         root = Path(temporary).resolve()
         try:
@@ -143,8 +143,8 @@ def observe_installed_yaml(fixture: Mapping[str, Any]) -> dict[str, Any]:
                         selected = snapshot = outcome.snapshot
                         observation["outcome"] = outcome.status
                     elif isinstance(
-                        outcome,
-                        classic_config.InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome,
+                            outcome,
+                            classic_config.InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome,
                     ):
                         selected = recovery = outcome.recovery_plan
                         if outcome.status != "local_ignore_recovery_required":
@@ -159,8 +159,8 @@ def observe_installed_yaml(fixture: Mapping[str, Any]) -> dict[str, Any]:
                 else:
                     raise ValueError("unsupported installed-data operation")
             except (
-                classic_config.InstalledYamlDataInspectionError,
-                classic_config.InstalledYamlDataLoadError,
+                    classic_config.InstalledYamlDataInspectionError,
+                    classic_config.InstalledYamlDataLoadError,
             ) as error:
                 # Shared roles are update-eligible Main/game; Local Ignore is identified by code.
                 observation["error"] = {
@@ -238,12 +238,12 @@ def observe_installed_yaml(fixture: Mapping[str, Any]) -> dict[str, Any]:
                         # Normalize only the process-unique name, after validating ownership and content-addressed stem.
                         backup_alias = _path(root, reset.backup_path)
                         stem = (
-                            "installation/CLASSIC Backup/YAML Data/Local Ignore/CLASSIC Ignore.yaml."
-                            + reset.malformed_local_ignore_identity.sha256
-                            + "."
+                                "installation/CLASSIC Backup/YAML Data/Local Ignore/CLASSIC Ignore.yaml."
+                                + reset.malformed_local_ignore_identity.sha256
+                                + "."
                         )
                         if not backup_alias.startswith(
-                            stem
+                                stem
                         ) or not backup_alias.endswith(".bak"):
                             raise ValueError(
                                 "reset backup is outside its owned content-addressed namespace"

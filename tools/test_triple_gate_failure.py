@@ -35,7 +35,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 # Gate scripts invoked by this test.
 GATE_SCRIPTS: list[tuple[str, str]] = [
     ("CXX", "tools/cxx_api_parity/check_parity_gate.py"),
@@ -57,10 +56,10 @@ BRIDGE_TARGET_REL = "cpp-bindings/classic-cpp-bridge/src/scanner.rs"
 
 
 def run_gate(
-    name: str,
-    script_path: Path,
-    repo_root: Path,
-    verbose: bool,
+        name: str,
+        script_path: Path,
+        repo_root: Path,
+        verbose: bool,
 ) -> tuple[int, str, str]:
     """Run a single parity gate script and return (returncode, stdout, stderr)."""
     cmd = [sys.executable, str(script_path), "--repo-root", str(repo_root)]
@@ -80,8 +79,8 @@ def run_gate(
 
 
 def run_preflight(
-    repo_root: Path,
-    verbose: bool,
+        repo_root: Path,
+        verbose: bool,
 ) -> bool:
     """Run all three gates and assert they all return 0 (clean baseline).
 
@@ -105,10 +104,10 @@ def run_preflight(
 
 
 def inject_canaries(
-    core_file: Path,
-    bridge_file: Path,
-    core_original: str,
-    bridge_original: str,
+        core_file: Path,
+        bridge_file: Path,
+        core_original: str,
+        bridge_original: str,
 ) -> None:
     """Inject canary markers into both target files."""
     # Core crate: append pub fn at end of file
@@ -124,18 +123,18 @@ def inject_canaries(
         raise RuntimeError(f"Cannot find 'extern \"Rust\" {{' in {bridge_file}")
     insert_point = bridge_original.find("\n", idx) + 1
     injected = (
-        bridge_original[:insert_point]
-        + CXX_CANARY_LINE
-        + bridge_original[insert_point:]
+            bridge_original[:insert_point]
+            + CXX_CANARY_LINE
+            + bridge_original[insert_point:]
     )
     bridge_file.write_text(injected, encoding="utf-8")
 
 
 def restore_files(
-    core_file: Path,
-    bridge_file: Path,
-    core_original: str,
-    bridge_original: str,
+        core_file: Path,
+        bridge_file: Path,
+        core_original: str,
+        bridge_original: str,
 ) -> None:
     """Restore both files to their original content."""
     core_file.write_text(core_original, encoding="utf-8")

@@ -17,6 +17,7 @@ from conformance.coverage import (
 from conformance.families.database_operations import DATABASE_OPERATIONS_COVERAGE_POLICY
 from conformance.packs import load_and_validate_pack, materialize_run_plan
 from conformance.receipts import validate_prepared_run
+
 from receipt_test_support import prepare_receipt_case
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -47,14 +48,14 @@ def test_database_constants_have_an_independent_shared_observation() -> None:
 def test_database_control_methods_have_executable_fact_ownership() -> None:
     """Pool controls and cache inspection are exercised alongside lookup effects."""
     for operation in (
-        "set_cache_capacity",
-        "get_cache_capacity",
-        "set_game_table",
-        "get_stats",
-        "optimize",
-        "rebalance_connections",
-        "recalculate_max_connections",
-        "db_pool_cache_size",
+            "set_cache_capacity",
+            "get_cache_capacity",
+            "set_game_table",
+            "get_stats",
+            "optimize",
+            "rebalance_connections",
+            "recalculate_max_connections",
+            "db_pool_cache_size",
     ):
         assert any(
             predicate.covers_runtime_operation(operation)
@@ -96,10 +97,10 @@ def test_database_lookup_order_misses_and_close_are_material() -> None:
     document = load_and_validate_pack(ROOT, PACK).document()
     scenario = next(item for item in document["scenarios"] if item["id"] == "populated")
     for field, value in (
-        ("single", []),
-        ("batch", []),
-        ("closedAvailable", True),
-        ("files", []),
+            ("single", []),
+            ("batch", []),
+            ("closedAvailable", True),
+            ("files", []),
     ):
         changed = copy.deepcopy(scenario["expected"])
         changed[field] = value
@@ -110,7 +111,7 @@ def test_database_lookup_order_misses_and_close_are_material() -> None:
 
 @pytest.mark.parametrize("participant", ("cxx", "node", "python"))
 def test_database_receipt_lifecycle_fails_closed(
-    tmp_path: Path, participant: str
+        tmp_path: Path, participant: str
 ) -> None:
     """Validate genuine receipt transport while rejecting drift, replay, and new APIs."""
     pack, run, receipt = prepare_receipt_case(
@@ -158,9 +159,9 @@ def test_database_receipt_lifecycle_fails_closed(
         added.obligation_id
     ]
     for index, field, replacement in (
-        (0, "single", []),
-        (1, "files", [{"path": "formids.db", "hex": "00"}]),
-        (2, "error", None),
+            (0, "single", []),
+            (1, "files", [{"path": "formids.db", "hex": "00"}]),
+            (2, "error", None),
     ):
         changed = copy.deepcopy(receipt)
         changed["scenarios"][index]["observation"][field] = replacement

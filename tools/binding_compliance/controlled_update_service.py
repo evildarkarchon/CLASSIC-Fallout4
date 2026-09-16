@@ -52,7 +52,7 @@ class ControlledUpdateService:
                     if parts[1:] == ["pages"]
                     else "api"
                     if parts[1:]
-                    == ["api", "repos", "conformance", "updates", "releases"]
+                       == ["api", "repos", "conformance", "updates", "releases"]
                     else None
                 )
                 with owner.lock:
@@ -65,7 +65,7 @@ class ControlledUpdateService:
                     else:
                         response = queue.pop(0)
                         if self.headers.get("If-None-Match") != response.get(
-                            "ifNoneMatch"
+                                "ifNoneMatch"
                         ):
                             owner.errors.append(
                                 "unexpected conditional request: " + self.path

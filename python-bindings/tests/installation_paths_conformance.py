@@ -14,7 +14,7 @@ def observe_installation_paths(fixture):
     if (game, docs) not in {("game", "docs"), ("Game Folder", "Docs Folder")}:
         raise ValueError("unsupported installation cache paths")
     with tempfile.TemporaryDirectory(
-        prefix="classic-installation-conformance-"
+            prefix="classic-installation-conformance-"
     ) as directory:
         root = Path(directory)
         (root / game).mkdir()
@@ -50,15 +50,15 @@ def observe_installation_paths(fixture):
             if checker.check_onedrive_in_path(docs) is not None:
                 raise ValueError("owned documents path unexpectedly reports OneDrive")
             for index, name in enumerate(
-                ("Fallout4.ini", "Fallout4Custom.ini", "Fallout4Prefs.ini")
+                    ("Fallout4.ini", "Fallout4Custom.ini", "Fallout4Prefs.ini")
             ):
                 check = checker.validate_ini_file(docs, name)
                 if (
-                    check.exists
-                    or check.is_valid
-                    or not check.has_issue()
-                    or check.ini_name != name
-                    or check.message != result["checks"][index]
+                        check.exists
+                        or check.is_valid
+                        or not check.has_issue()
+                        or check.ini_name != name
+                        or check.message != result["checks"][index]
                 ):
                     raise ValueError(
                         "per-file INI diagnosis disagrees with aggregate check"
@@ -84,7 +84,7 @@ def observe_installation_paths(fixture):
             validator.check_write_permissions(game)
             validator.validate_path_with_permissions(game, True, True)
             if not validator.is_valid_path(game) or validator.is_valid_path(
-                "missing-path"
+                    "missing-path"
             ):
                 raise ValueError("path existence alias disagrees with owned tree")
             validator.validate_required_files(game, ["Fallout4.exe"])
@@ -102,21 +102,21 @@ def observe_installation_paths(fixture):
                 raise ValueError("readonly precondition was not established")
             classic_path.remove_readonly(str(readonly_file))
             if (
-                not readonly_file.stat().st_mode & stat.S_IWRITE
-                or readonly_file.read_bytes() != b"retained bytes"
+                    not readonly_file.stat().st_mode & stat.S_IWRITE
+                    or readonly_file.read_bytes() != b"retained bytes"
             ):
                 raise ValueError(
                     "readonly removal changed bytes or failed to restore write access"
                 )
             readonly_file.unlink()
             if validator.is_restricted_path(
-                str(scan)
+                    str(scan)
             ) or not validator.is_restricted_path("Windows/System32/test"):
                 raise ValueError(
                     "restricted-path classification disagrees with owned input"
                 )
             if not validator.is_valid_executable_path(
-                game + "/Fallout4.exe"
+                    game + "/Fallout4.exe"
             ) or validator.is_valid_executable_path("CLASSIC Main.yaml"):
                 raise ValueError(
                     "executable path classification lost file extension semantics"

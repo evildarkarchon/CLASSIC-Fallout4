@@ -43,8 +43,8 @@ ROOT = Path(__file__).resolve().parents[3]
     ],
 )
 def test_python_portable_path_strips_windows_root_before_receipt_comparison(
-    root_prefix: str,
-    value: str,
+        root_prefix: str,
+        value: str,
 ) -> None:
     """Canonicalized paths and temporary roots may use different Windows spellings."""
     import importlib.util
@@ -104,18 +104,18 @@ def test_message_mutation_and_routing_methods_have_executable_ownership() -> Non
     """Mutation, title builders, enum values and routing decisions have real calls."""
     policy = message_operations_coverage_policy()
     for operation in (
-        "__init__",
-        "set_content",
-        "set_title",
-        "set_target",
-        "set_msg_type",
-        "set_details",
-        "with_title",
-        "__int__",
-        "name",
-        "should_display",
-        "should_display_in_cli",
-        "should_display_in_gui",
+            "__init__",
+            "set_content",
+            "set_title",
+            "set_target",
+            "set_msg_type",
+            "set_details",
+            "with_title",
+            "__int__",
+            "name",
+            "should_display",
+            "should_display_in_cli",
+            "should_display_in_gui",
     ):
         assert any(
             predicate.covers_runtime_operation(operation)
@@ -149,7 +149,7 @@ def _pack(family: str) -> dict:
     """Load independent authored expectations from the repository pack."""
     return json.loads(
         (
-            ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
+                ROOT / "tests/conformance/packs" / family.replace("-", "_") / "v1.json"
         ).read_text(encoding="utf-8")
     )
 
@@ -196,16 +196,16 @@ def test_predicates_reject_missing_domain_fields(family: str, policy) -> None:
 def test_unexecuted_methods_cannot_borrow_message_or_path_credit() -> None:
     """A class symbol never silently credits unrelated methods."""
     for policy in (
-        message_operations_coverage_policy(),
-        path_normalization_coverage_policy(),
+            message_operations_coverage_policy(),
+            path_normalization_coverage_policy(),
     ):
         for operation in (
-            "future_set_content",
-            "future_set_title",
-            "future_set_target",
-            "future_clear_cache",
-            "future_cache_metrics",
-            "future_split_path",
+                "future_set_content",
+                "future_set_title",
+                "future_set_target",
+                "future_clear_cache",
+                "future_cache_metrics",
+                "future_split_path",
         ):
             assert not any(
                 predicate.covers_runtime_operation(operation)
@@ -235,7 +235,7 @@ def test_missing_path_and_required_file_failures_are_distinct() -> None:
     ["../escape", "C:/outside", "/absolute", "game/../../escape", "game\\outside"],
 )
 def test_path_fixture_escape_fails_before_execution(
-    tmp_path: Path, escape: str
+        tmp_path: Path, escape: str
 ) -> None:
     """Fixture materialization rejects portable and Windows-specific escapes."""
     document = _pack("path-operations")
@@ -263,7 +263,7 @@ def test_path_fixture_escape_fails_before_execution(
     ],
 )
 def test_path_message_receipts_fail_closed_at_public_coverage_seam(
-    tmp_path: Path, family: str, participants: set[str]
+        tmp_path: Path, family: str, participants: set[str]
 ) -> None:
     """Only complete current receipts cover source-selected public operations.
 
@@ -277,11 +277,11 @@ def test_path_message_receipts_fail_closed_at_public_coverage_seam(
     for relative in (pack_path.parent, Path(original["fixtureRoot"])):
         shutil.copytree(ROOT / relative, tmp_path / relative)
     for args in (
-        ("init",),
-        ("config", "user.email", "conformance@example.invalid"),
-        ("config", "user.name", "Conformance Tests"),
-        ("add", "."),
-        ("commit", "-m", "fixture"),
+            ("init",),
+            ("config", "user.email", "conformance@example.invalid"),
+            ("config", "user.name", "Conformance Tests"),
+            ("add", "."),
+            ("commit", "-m", "fixture"),
     ):
         subprocess.run(
             ["git", "-C", str(tmp_path), *args], check=True, capture_output=True
@@ -376,11 +376,11 @@ def test_path_message_receipts_fail_closed_at_public_coverage_seam(
                 retained_analyzers=retained,
             ).failures
             for mutation in (
-                "changed",
-                "missing-scenario",
-                "skipped",
-                "stale",
-                "missing-receipt",
+                    "changed",
+                    "missing-scenario",
+                    "skipped",
+                    "stale",
+                    "missing-receipt",
             ):
                 changed = copy.deepcopy(receipt)
                 if mutation == "changed":

@@ -46,7 +46,7 @@ class _FakeResponse:
 
 @pytest.fixture
 def patch_urlopen(
-    monkeypatch: pytest.MonkeyPatch,
+        monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[list[tuple[int, bytes]]]:
     """Swap ``urllib.request.urlopen`` inside the module for a queue.
 
@@ -77,7 +77,7 @@ def patch_urlopen(
 
 
 def test_probe_asset_once_accepts_matching_body(
-    patch_urlopen: list[tuple[int, bytes]],
+        patch_urlopen: list[tuple[int, bytes]],
 ) -> None:
     patch_urlopen.append((200, _STAGED_YAML))
 
@@ -91,7 +91,7 @@ def test_probe_asset_once_accepts_matching_body(
 
 
 def test_probe_asset_once_rejects_mismatched_body(
-    patch_urlopen: list[tuple[int, bytes]],
+        patch_urlopen: list[tuple[int, bytes]],
 ) -> None:
     patch_urlopen.append((200, _STALE_YAML))
 
@@ -107,7 +107,7 @@ def test_probe_asset_once_rejects_mismatched_body(
 
 
 def test_probe_asset_once_rejects_non_200_status(
-    patch_urlopen: list[tuple[int, bytes]],
+        patch_urlopen: list[tuple[int, bytes]],
 ) -> None:
     patch_urlopen.append((404, b""))
 
@@ -160,7 +160,7 @@ def test_load_manifest_assets_requires_sha256(tmp_path: Path) -> None:
     ],
 )
 def test_load_manifest_assets_rejects_malformed_sha256(
-    tmp_path: Path, digest: str
+        tmp_path: Path, digest: str
 ) -> None:
     manifest = tmp_path / "manifest.json"
     manifest.write_text(
@@ -243,7 +243,7 @@ def test_load_manifest_assets_returns_triples(tmp_path: Path) -> None:
 
 
 def test_load_manifest_assets_includes_release_manifest_asset(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     manifest = tmp_path / "manifest.json"
     manifest.write_text(
@@ -269,8 +269,8 @@ def test_load_manifest_assets_includes_release_manifest_asset(
     assets = verify_assets_reachable._load_manifest_assets(manifest)
 
     assert (
-        "manifest.json",
-        "https://github.com/example/repo/releases/download/"
-        "yaml-data-v2026.06.12/manifest.json",
-        expected_manifest_digest,
-    ) in assets
+               "manifest.json",
+               "https://github.com/example/repo/releases/download/"
+               "yaml-data-v2026.06.12/manifest.json",
+               expected_manifest_digest,
+           ) in assets

@@ -18,11 +18,11 @@ def test_windows_path_facts_require_each_native_reference_agreement():
         root, Path("tests/conformance/packs/windows_platform_paths/v1.json")
     ).document()
     assert {
-        p.id
-        for p in derive_applicability(
+               p.id
+               for p in derive_applicability(
             document, load_source_parity_rows(root)
         ).participants
-    } == {"rust", "node"}
+           } == {"rust", "node"}
     scenario = document["scenarios"][0]
     expected = scenario["expected"]
     assert derive_observed_fact_ids(

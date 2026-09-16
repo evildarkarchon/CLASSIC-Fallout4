@@ -14,6 +14,7 @@ from conformance.coverage import (
 from conformance.families.file_fingerprint import FILE_FINGERPRINT_COVERAGE_POLICY
 from conformance.packs import load_and_validate_pack
 from conformance.receipts import validate_prepared_run
+
 from receipt_test_support import prepare_receipt_case
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -34,7 +35,7 @@ def test_fingerprints_use_independent_standard_sha256_vectors() -> None:
 
 @pytest.mark.parametrize("participant", ["node", "python"])
 def test_fingerprint_receipts_reject_lost_effects_and_new_methods(
-    tmp_path: Path, participant: str
+        tmp_path: Path, participant: str
 ) -> None:
     """Only complete current observations can credit the source-selected operations."""
     policy = FILE_FINGERPRINT_COVERAGE_POLICY

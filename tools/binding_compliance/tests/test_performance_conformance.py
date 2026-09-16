@@ -34,10 +34,10 @@ def test_performance_facts_reject_changed_statistics_and_missing_clear_effects()
                     )
     for predicate in PERFORMANCE_COVERAGE_POLICY.predicates:
         for operation in (
-            "start_timer",
-            "elapsed",
-            "finish",
-            "future_metric_operation",
+                "start_timer",
+                "elapsed",
+                "finish",
+                "future_metric_operation",
         ):
             assert not predicate.covers_runtime_operation(operation)
 
@@ -81,9 +81,9 @@ def test_performance_receipts_reject_drift_replay_and_future_operations(tmp_path
                 retained_analyzers=load_retained_analyzer_kinds(ROOT),
             )
             assert {
-                "parity:python:perf.lib.MetricsSummary",
-                "parity:python:perf.lib.reset_metrics",
-            } <= {row.obligation_id for row in actual.rows}
+                       "parity:python:perf.lib.MetricsSummary",
+                       "parity:python:perf.lib.reset_metrics",
+                   } <= {row.obligation_id for row in actual.rows}
         prototype = next(
             row
             for row in rows
@@ -111,12 +111,12 @@ def test_performance_receipts_reject_drift_replay_and_future_operations(tmp_path
         changed["scenarios"][1]["observation"]["snapshots"][2] = {"stale": {"count": 1}}
         run.receipt_path.write_text(json.dumps(changed))
         assert (
-            validate_prepared_run(
-                pack, run, coverage_policy=PERFORMANCE_COVERAGE_POLICY
-            )
-            .scenarios[1]
-            .result
-            == "fail"
+                validate_prepared_run(
+                    pack, run, coverage_policy=PERFORMANCE_COVERAGE_POLICY
+                )
+                .scenarios[1]
+                .result
+                == "fail"
         )
         other = materialize_run_plan(
             pack,
@@ -143,8 +143,8 @@ def test_performance_validator_rejects_non_integer_durations(tmp_path):
     path = tmp_path / document["fixtureRoot"] / document["fixtures"]["empty"]
     path.parent.mkdir(parents=True)
     for operation in (
-        {"op": "record", "label": "scan", "durationMs": True},
-        {"op": "timer"},
+            {"op": "record", "label": "scan", "durationMs": True},
+            {"op": "timer"},
     ):
         path.write_text(json.dumps({"operations": [operation]}))
         with pytest.raises(ValueError):

@@ -7,12 +7,12 @@ from typing import Any
 def observe_shared_identity(family: str, fixture: Mapping[str, Any]) -> dict[str, Any]:
     """Read public game identity/metadata and shared-runtime diagnostics through native APIs."""
     if fixture != {"request": {}} and not (
-        family == "game-identity"
-        and fixture
-        in (
-            {"request": {"operation": "metadata"}},
-            {"request": {"operation": "details"}},
-        )
+            family == "game-identity"
+            and fixture
+            in (
+                    {"request": {"operation": "metadata"}},
+                    {"request": {"operation": "details"}},
+            )
     ):
         raise ValueError("unsupported shared identity request")
     if family == "runtime-access":

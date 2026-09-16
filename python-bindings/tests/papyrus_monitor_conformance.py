@@ -23,7 +23,7 @@ def observe_papyrus_monitor(fixture: Mapping[str, Any]) -> dict[str, Any]:
     from classic_scanlog import PapyrusAnalyzer, PapyrusStats, papyrus_logging
 
     with tempfile.TemporaryDirectory(
-        prefix="classic-papyrus-conformance-"
+            prefix="classic-papyrus-conformance-"
     ) as directory:
         path = Path(directory) / "Papyrus.0.log"
         if fixture["content"] is not None:
@@ -40,7 +40,7 @@ def observe_papyrus_monitor(fixture: Mapping[str, Any]) -> dict[str, Any]:
             "finalContent": None,
         }
         if analyzer.log_path() != path or _stats(analyzer.stats()) != _stats(
-            PapyrusStats()
+                PapyrusStats()
         ):
             raise ValueError(
                 "new Papyrus analyzer has wrong path or nonempty statistics"

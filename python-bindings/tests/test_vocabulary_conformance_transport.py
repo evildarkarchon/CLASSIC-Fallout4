@@ -16,7 +16,7 @@ import pytest
     ],
 )
 def test_vocabulary_runner_observes_rejection_without_fixtures(
-    family: str, operation: str, monkeypatch: pytest.MonkeyPatch
+        family: str, operation: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Keep duplicate input order and actual native rejection in the runner receipt."""
     monkeypatch.syspath_prepend(str(Path(__file__).parent))
@@ -43,7 +43,7 @@ def test_vocabulary_runner_observes_rejection_without_fixtures(
 
 
 def test_vocabulary_transport_rejects_carrier_defects(
-    monkeypatch: pytest.MonkeyPatch,
+        monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Do not let family mismatches or malformed carriers become domain rejection."""
     monkeypatch.syspath_prepend(str(Path(__file__).parent))

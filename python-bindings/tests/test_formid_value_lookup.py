@@ -66,8 +66,8 @@ def test_disabled_and_shared_pool_adapters_remain_owned() -> None:
         assert absent_table.value.formid == "000800"
         assert absent_table.value.plugin == "SomeMod.esp"
         assert (
-            'no initialized database exposes active game table "Fallout4"'
-            in absent_table.value.message
+                'no initialized database exposes active game table "Fallout4"'
+                in absent_table.value.message
         )
 
     asyncio.run(run())

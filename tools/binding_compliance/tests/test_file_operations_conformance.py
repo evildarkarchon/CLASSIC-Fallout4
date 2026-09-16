@@ -32,8 +32,8 @@ def test_file_operations_have_complete_independent_observations() -> None:
     for scenario in document["scenarios"]:
         fixture = json.loads(
             (
-                pack.fixture_root
-                / document["fixtures"][scenario["input"]["fixtureRef"]]
+                    pack.fixture_root
+                    / document["fixtures"][scenario["input"]["fixtureRef"]]
             ).read_text()
         )
         assert set(fixture) == (
@@ -77,19 +77,19 @@ def test_scoped_migration_retains_only_known_deferred_methods() -> None:
     )
     assert is_retained_operation("file-operations", retained)
     for change in (
-        {"runtime_operation": "new_future_method"},
-        {"runtime_operation": "read_file"},
-        {"runtime_operation": None},
-        {"runtime_operation": "__init__"},
-        {"participant_id": "node"},
-        {"rust_symbol": "Unrelated"},
+            {"runtime_operation": "new_future_method"},
+            {"runtime_operation": "read_file"},
+            {"runtime_operation": None},
+            {"runtime_operation": "__init__"},
+            {"participant_id": "node"},
+            {"rust_symbol": "Unrelated"},
     ):
         assert not is_retained_operation("file-operations", replace(retained, **change))
 
 
 @pytest.mark.parametrize("participant", ("cxx", "node", "python"))
 def test_file_receipts_fail_closed_and_preserve_migration_scope(
-    tmp_path: Path, participant: str
+        tmp_path: Path, participant: str
 ) -> None:
     """Public receipt validation rejects replay, missing work, drift and future APIs."""
     (tmp_path / PACK).parent.mkdir(parents=True)
@@ -100,11 +100,11 @@ def test_file_receipts_fail_closed_and_preserve_migration_scope(
 
     copy_source_inventory(ROOT, tmp_path)
     for arguments in (
-        ("init",),
-        ("config", "user.email", "conformance@example.invalid"),
-        ("config", "user.name", "Conformance Tests"),
-        ("add", "."),
-        ("commit", "-m", "fixture"),
+            ("init",),
+            ("config", "user.email", "conformance@example.invalid"),
+            ("config", "user.name", "Conformance Tests"),
+            ("add", "."),
+            ("commit", "-m", "fixture"),
     ):
         subprocess.run(
             ["git", "-C", str(tmp_path), *arguments], check=True, capture_output=True
@@ -184,21 +184,21 @@ def test_file_receipts_fail_closed_and_preserve_migration_scope(
             row.obligation_id for row in coverage.rows
         }
         for operation in (
-            "read_bytes",
-            "read_lines",
-            "read_file_mmap",
-            "stream_lines",
-            "stream_lines_sync",
-            "file_exists",
-            "get_file_size",
-            "get_file_info",
-            "clear_cache",
-            "py_read_multiple_files",
-            "py_walk_directory",
-            "write_bytes",
-            "write_lines",
-            "append_file",
-            "py_write_multiple_files",
+                "read_bytes",
+                "read_lines",
+                "read_file_mmap",
+                "stream_lines",
+                "stream_lines_sync",
+                "file_exists",
+                "get_file_size",
+                "get_file_info",
+                "clear_cache",
+                "py_read_multiple_files",
+                "py_walk_directory",
+                "write_bytes",
+                "write_lines",
+                "append_file",
+                "py_write_multiple_files",
         ):
             migrated = next(
                 row

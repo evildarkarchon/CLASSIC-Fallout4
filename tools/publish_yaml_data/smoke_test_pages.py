@@ -45,10 +45,10 @@ DEFAULT_POLL_INTERVAL_SECONDS = 10
 
 
 def build_pages_url(
-    owner: str | None,
-    repo: str | None,
-    pages_path: str,
-    base_url: str | None = None,
+        owner: str | None,
+        repo: str | None,
+        pages_path: str,
+        base_url: str | None = None,
 ) -> str:
     """Return the URL that the Pages smoke test should poll.
 

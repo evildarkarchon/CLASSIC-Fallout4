@@ -23,6 +23,7 @@ from conformance.packs import (
     materialize_run_plan,
 )
 from conformance.receipts import validate_prepared_run
+
 from receipt_test_support import copy_source_inventory
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -31,7 +32,7 @@ FAMILIES = ("config-vocabulary", "scan-run-vocabulary")
 
 @pytest.mark.parametrize("family", FAMILIES)
 def test_vocabulary_public_observations_require_complete_labels_and_rejection(
-    family: str,
+        family: str,
 ) -> None:
     """Dropping a transported label or accepting an unknown token loses coverage."""
     pack = load_and_validate_pack(
@@ -43,11 +44,11 @@ def test_vocabulary_public_observations_require_complete_labels_and_rejection(
         actual = scenario["expected"]
         assert derive_observed_fact_ids(document, scenario, actual, policy)
         for mutation in (
-            "omit",
-            "empty-label",
-            "accept-unknown",
-            "duplicate",
-            "extra-field",
+                "omit",
+                "empty-label",
+                "accept-unknown",
+                "duplicate",
+                "extra-field",
         ):
             changed = copy.deepcopy(actual)
             if mutation == "omit":
@@ -66,12 +67,12 @@ def test_vocabulary_public_observations_require_complete_labels_and_rejection(
 
 
 def test_new_rust_vocabulary_variant_cannot_hide_behind_a_copied_pack(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """A new owner variant must fail pack loading before any adapter can run."""
     for relative in (
-        "tests/conformance/packs/config_vocabulary",
-        "business-logic/classic-config-core/src",
+            "tests/conformance/packs/config_vocabulary",
+            "business-logic/classic-config-core/src",
     ):
         shutil.copytree(ROOT / relative, tmp_path / relative)
     source = tmp_path / "business-logic/classic-config-core/src/installed_yaml_data.rs"
@@ -90,23 +91,23 @@ def test_new_rust_vocabulary_variant_cannot_hide_behind_a_copied_pack(
 
 @pytest.mark.parametrize("family", FAMILIES)
 def test_vocabulary_receipts_reject_changed_wording_missing_cases_and_new_operations(
-    tmp_path: Path, family: str
+        tmp_path: Path, family: str
 ) -> None:
     """Only authenticated complete execution covers resolvers; wording stays exact."""
     pack_path = Path("tests/conformance/packs") / family.replace("-", "_") / "v1.json"
     for relative in (
-        pack_path.parent,
-        Path("business-logic/classic-config-core/src"),
-        Path("business-logic/classic-scanlog-core/src/scan_run"),
-        Path("business-logic/classic-durable-publication/src"),
+            pack_path.parent,
+            Path("business-logic/classic-config-core/src"),
+            Path("business-logic/classic-scanlog-core/src/scan_run"),
+            Path("business-logic/classic-durable-publication/src"),
     ):
         shutil.copytree(ROOT / relative, tmp_path / relative)
     for args in (
-        ("init",),
-        ("config", "user.email", "conformance@example.invalid"),
-        ("config", "user.name", "Conformance Tests"),
-        ("add", "."),
-        ("commit", "-m", "fixture"),
+            ("init",),
+            ("config", "user.email", "conformance@example.invalid"),
+            ("config", "user.name", "Conformance Tests"),
+            ("add", "."),
+            ("commit", "-m", "fixture"),
     ):
         subprocess.run(
             ["git", "-C", str(tmp_path), *args], check=True, capture_output=True
@@ -212,13 +213,13 @@ def test_vocabulary_receipts_reject_changed_wording_missing_cases_and_new_operat
 
 @pytest.mark.parametrize("participant", ("node", "python"))
 def test_new_vocabulary_resolver_keeps_its_public_operation_identity(
-    tmp_path: Path, participant: str
+        tmp_path: Path, participant: str
 ) -> None:
     """A new exported resolver cannot inherit coverage merely by sharing an enum."""
     copy_source_inventory(ROOT, tmp_path)
     path = (
-        tmp_path
-        / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
+            tmp_path
+            / f"docs/implementation/{participant}_api_parity/baseline/parity_contract.json"
     )
     document = json.loads(path.read_text())
     row = next(

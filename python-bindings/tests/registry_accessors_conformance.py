@@ -83,17 +83,17 @@ def observe_registry_accessors(family: str, fixture: dict[str, Any]) -> dict[str
                 raise ValueError("unknown registry accessor family")
             initial = _context(registry)
             for key in (
-                registry.Keys.YAML_CACHE,
-                registry.Keys.MANUAL_DOCS_GUI,
-                registry.Keys.GAME_PATH_GUI,
+                    registry.Keys.YAML_CACHE,
+                    registry.Keys.MANUAL_DOCS_GUI,
+                    registry.Keys.GAME_PATH_GUI,
             ):
                 registry.register(key, request["value"])
             # Python treats an empty version as absent; use a separate nonempty input.
             registry.register(registry.Keys.GAME_VERSION, request["version"])
             for key in (
-                registry.Keys.VERSION_AUTO_DETECTED,
-                registry.Keys.XSE_VALID,
-                registry.Keys.ENB_PRESENT,
+                    registry.Keys.VERSION_AUTO_DETECTED,
+                    registry.Keys.XSE_VALID,
+                    registry.Keys.ENB_PRESENT,
             ):
                 registry.register(key, True)
             registry.register(registry.Keys.LOCAL_DIR, str(root / "local"))

@@ -6,6 +6,9 @@ import copy
 from dataclasses import replace
 
 import pytest
+from conformance.enforcement import enforcement_for_family
+from conformance.receipts import ScenarioValidationResult
+
 from conformance import (
     ApplicabilityMatrix,
     ApplicableParticipant,
@@ -16,8 +19,6 @@ from conformance import (
     build_scoped_report,
     validate_conformance_report_document,
 )
-from conformance.enforcement import enforcement_for_family
-from conformance.receipts import ScenarioValidationResult
 
 
 def _applicability() -> ApplicabilityMatrix:
@@ -52,14 +53,14 @@ def test_enforcement_registry_promotes_only_crash_log_scan_run() -> None:
 
 
 def _prepared_report(
-    participant: str,
-    instance: str,
-    *,
-    expectation_digest: str | None = None,
-    source_revision: str | None = None,
-    source_digest: str | None = None,
-    scenario_ids: tuple[str, ...] = ("base-case",),
-    participant_role: str = "semantic-adapter",
+        participant: str,
+        instance: str,
+        *,
+        expectation_digest: str | None = None,
+        source_revision: str | None = None,
+        source_digest: str | None = None,
+        scenario_ids: tuple[str, ...] = ("base-case",),
+        participant_role: str = "semantic-adapter",
 ) -> PreparedRunReport:
     """Return one passing prepared-run report for a common source revision."""
 
@@ -71,10 +72,10 @@ def _prepared_report(
             "id": f"invocation-{participant}-{instance}",
             "runPlanDigest": "sha256:" + "b" * 64,
             "sourceIdentity": (
-                "git:"
-                + (source_revision or "c" * 40)
-                + ":sha256:"
-                + (source_digest or "d" * 64)
+                    "git:"
+                    + (source_revision or "c" * 40)
+                    + ":sha256:"
+                    + (source_digest or "d" * 64)
             ),
         },
         "participant": {
@@ -98,7 +99,7 @@ def _prepared_report(
 
 
 def _passing_coverage(
-    *prepared_reports: PreparedRunReport,
+        *prepared_reports: PreparedRunReport,
 ) -> RowCoverageReport:
     """Return an empty but centrally derived coverage partition for test rows."""
 
@@ -189,14 +190,14 @@ def test_full_report_is_the_only_repository_complete_scope() -> None:
     assert document["result"] == "pass"
     assert document["repositoryComplete"] is True
     assert (
-        report.json_text()
-        == build_scoped_report(
-            family_id="example-family",
-            profile="full",
-            applicability=_applicability(),
-            prepared_reports=tuple(reversed(reports)),
-            coverage=_passing_coverage(*reports),
-        ).json_text()
+            report.json_text()
+            == build_scoped_report(
+        family_id="example-family",
+        profile="full",
+        applicability=_applicability(),
+        prepared_reports=tuple(reversed(reports)),
+        coverage=_passing_coverage(*reports),
+    ).json_text()
     )
 
 

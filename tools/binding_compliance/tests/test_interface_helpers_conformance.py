@@ -19,11 +19,11 @@ def test_interface_helpers_have_no_fabricated_core_owner_or_extra_adapter():
         ).document()
         assert document["domainOwner"]["rustCrate"] == "classic-cpp-bridge"
         assert {
-            p.id
-            for p in derive_applicability(
+                   p.id
+                   for p in derive_applicability(
                 document, load_source_parity_rows(root)
             ).participants
-        } == {"rust", "cxx"}
+               } == {"rust", "cxx"}
         policy = interface_coverage_policy(family)
         for scenario in document["scenarios"]:
             assert derive_observed_fact_ids(

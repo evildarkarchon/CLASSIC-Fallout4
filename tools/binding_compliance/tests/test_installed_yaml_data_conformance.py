@@ -52,8 +52,8 @@ def test_installed_yaml_pack_has_input_only_fixtures_and_observation_facts() -> 
     for scenario in document["scenarios"]:
         fixture = json.loads(
             (
-                pack.fixture_root
-                / document["fixtures"][scenario["input"]["fixtureRef"]]
+                    pack.fixture_root
+                    / document["fixtures"][scenario["input"]["fixtureRef"]]
             ).read_text()
         )
         assert set(fixture) <= {
@@ -82,11 +82,11 @@ def test_named_forbidden_effect_facts_reject_contradictory_files() -> None:
     policy = FAMILY_COVERAGE_POLICIES[document["familyId"]]
     scenarios = {item["id"]: item for item in document["scenarios"]}
     for name, path in (
-        ("previous-selected-read-only", "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml"),
-        (
-            "missing-ignore-invalid-defaults",
-            "installation/CLASSIC Data/CLASSIC Ignore.yaml",
-        ),
+            ("previous-selected-read-only", "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml"),
+            (
+                    "missing-ignore-invalid-defaults",
+                    "installation/CLASSIC Data/CLASSIC Ignore.yaml",
+            ),
     ):
         scenario = scenarios[name]
         observation = copy.deepcopy(scenario["expected"])
@@ -97,7 +97,7 @@ def test_named_forbidden_effect_facts_reject_contradictory_files() -> None:
 
 @pytest.mark.parametrize("participant", ("cxx", "node", "python"))
 def test_installed_yaml_receipts_fail_closed_and_cover_only_executed_operations(
-    tmp_path: Path, participant: str
+        tmp_path: Path, participant: str
 ) -> None:
     """Real receipt validation rejects semantic drift, omissions, replay, and new APIs."""
     fixtures = Path("tests/fixtures/installed_yaml_data_conformance")
@@ -105,11 +105,11 @@ def test_installed_yaml_receipts_fail_closed_and_cover_only_executed_operations(
     shutil.copyfile(ROOT / PACK, tmp_path / PACK)
     shutil.copytree(ROOT / fixtures, tmp_path / fixtures)
     for arguments in (
-        ("init",),
-        ("config", "user.email", "conformance@example.invalid"),
-        ("config", "user.name", "Conformance Tests"),
-        ("add", "."),
-        ("commit", "-m", "fixture"),
+            ("init",),
+            ("config", "user.email", "conformance@example.invalid"),
+            ("config", "user.name", "Conformance Tests"),
+            ("add", "."),
+            ("commit", "-m", "fixture"),
     ):
         subprocess.run(
             ["git", "-C", str(tmp_path), *arguments], check=True, capture_output=True
@@ -191,10 +191,10 @@ def test_installed_yaml_receipts_fail_closed_and_cover_only_executed_operations(
         added.obligation_id
     ]
     for field, replacement in (
-        ("main", None),
-        ("diagnostics", []),
-        ("files", []),
-        ("snapshot", None),
+            ("main", None),
+            ("diagnostics", []),
+            ("files", []),
+            ("snapshot", None),
     ):
         changed = copy.deepcopy(receipt)
         scenario_index = {"main": 0, "diagnostics": 2, "files": 1, "snapshot": 10}[

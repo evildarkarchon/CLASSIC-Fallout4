@@ -30,9 +30,9 @@ def test_valid_cached_paths_return_before_platform_discovery() -> None:
     )
     for name, method, returned, fallback in cases:
         source = (ROOT / "business-logic/classic-path-core/src" / name).read_text()
-        body = source[source.index(method) :]
+        body = source[source.index(method):]
         assert (
-            body.index("self.validate_") < body.index(returned) < body.index(fallback)
+                body.index("self.validate_") < body.index(returned) < body.index(fallback)
         )
 
 
@@ -47,17 +47,17 @@ def test_platform_discovery_retains_native_owner_delegation() -> None:
     assert ".find_game_path(cached.as_deref(), xse_log.as_deref())" in binding
     assert ".find_docs_path(cached_path.as_deref())" in binding
     xse = (ROOT / "business-logic/classic-xse-core/src/lib.rs").read_text()
-    resolver = xse[xse.index("pub fn resolve_xse_folder_for_scan(") :]
+    resolver = xse[xse.index("pub fn resolve_xse_folder_for_scan("):]
     assert resolver.index(
         "configured_docs_root.and_then(non_empty_path)"
     ) < resolver.index("discover_xse_folder(version_info)")
     version = xse[
-        xse.index("fn resolve_version_info(") : xse.index("fn clean_path_value(")
+        xse.index("fn resolve_version_info("): xse.index("fn clean_path_value(")
     ]
     assert version.index(
         'if !matches!(game, "Fallout4" | "Fallout4VR")'
     ) < version.index("return None;")
-    fallback = xse[xse.index("fn discover_xse_folder(") :]
+    fallback = xse[xse.index("fn discover_xse_folder("):]
     assert fallback.index("let info = version_info?;") < fallback.index(
         "DocsPathFinder::new(relative_docs)"
     )
@@ -67,7 +67,7 @@ def test_platform_discovery_retains_native_owner_delegation() -> None:
 def test_discovery_smoke_requires_explicit_paths_and_propagates_failures() -> None:
     """Reject accidental reintroduction of host probes or swallowed call errors."""
     source = (
-        ROOT / "python-bindings/tests/test_promoted_residuals_smoke.py"
+            ROOT / "python-bindings/tests/test_promoted_residuals_smoke.py"
     ).read_text()
     tree = ast.parse(source)
     selected = {
@@ -85,8 +85,8 @@ def test_discovery_smoke_requires_explicit_paths_and_propagates_failures() -> No
             node
             for node in nodes
             if isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute)
-            and node.func.attr == method
+               and isinstance(node.func, ast.Attribute)
+               and node.func.attr == method
         ]
         assert len(calls) == 1
         call = calls[0]

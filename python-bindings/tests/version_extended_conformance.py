@@ -35,7 +35,7 @@ def observe_version_extended(fixture):
     from aux_operations_conformance import _owned
 
     with tempfile.TemporaryDirectory(
-        prefix="classic-version-conformance-"
+            prefix="classic-version-conformance-"
     ) as directory:
         root = Path(directory)
         for path, content in fixture["files"].items():
@@ -50,12 +50,12 @@ def observe_version_extended(fixture):
         except (OSError, ValueError) as error:
             # CXX intentionally exposes an empty string for documented PE failures.
             if not str(error).startswith(
-                (
-                    "Invalid executable path:",
-                    "Not a valid PE file:",
-                    "No version information found in PE file:",
-                    "Failed to read PE file",
-                )
+                    (
+                            "Invalid executable path:",
+                            "Not a valid PE file:",
+                            "No version information found in PE file:",
+                            "Failed to read PE file",
+                    )
             ):
                 raise
             return {"peVersion": ""}

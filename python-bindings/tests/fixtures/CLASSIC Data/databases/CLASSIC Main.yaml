@@ -4,7 +4,7 @@ CLASSIC_Info:
   version_date: "2026-02-16"
 CLASSIC_Interface:
   autoscan_text_Fallout4: "Fixture Autoscan"
-catch_log_records: []
+catch_log_records: [ ]
 Version_Registry:
   versions:
     - id: FO4_AE_FIXTURE

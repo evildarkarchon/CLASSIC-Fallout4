@@ -55,7 +55,7 @@ def classify_failure(output: str, *, command_missing: bool = False) -> str:
 
 
 def build_summary(
-    results: Iterable[RequirementResult], *, fail_on_gaps: bool = False
+        results: Iterable[RequirementResult], *, fail_on_gaps: bool = False
 ) -> dict[str, Any]:
     """Build the top-level pass/fail summary from requirement results."""
 
@@ -81,7 +81,7 @@ def build_summary(
 
 
 def _blocking_conformance_coverage_gaps(
-    conformance_report: Mapping[str, Any] | None,
+        conformance_report: Mapping[str, Any] | None,
 ) -> int:
     """Count centrally classified blocking row gaps for report diagnostics."""
 
@@ -105,14 +105,14 @@ class ComplianceSuite:
     """Evaluate binding compliance requirements for one execution profile."""
 
     def __init__(
-        self,
-        *,
-        repo_root: Path,
-        profile: str,
-        requirements: tuple[ComplianceRequirement, ...] | None = None,
-        skip_commands: bool = False,
-        fail_on_gaps: bool = False,
-        conformance_report: Mapping[str, Any] | None = None,
+            self,
+            *,
+            repo_root: Path,
+            profile: str,
+            requirements: tuple[ComplianceRequirement, ...] | None = None,
+            skip_commands: bool = False,
+            fail_on_gaps: bool = False,
+            conformance_report: Mapping[str, Any] | None = None,
     ) -> None:
         """Create a suite runner bound to a repository root and profile.
 
@@ -147,9 +147,9 @@ class ComplianceSuite:
             # its exact scoped report is therefore the command's own result.
             summary["result"] = str(self.conformance_report.get("result", "fail"))
         elif (
-            self.conformance_report is not None
-            and self.conformance_report.get("enforcement") == "blocking"
-            and self.conformance_report.get("result") != "pass"
+                self.conformance_report is not None
+                and self.conformance_report.get("enforcement") == "blocking"
+                and self.conformance_report.get("result") != "pass"
         ):
             # Promoted executable evidence is conjunctive with every retained
             # legacy gate until the later retirement change removes that gate.
@@ -159,12 +159,12 @@ class ComplianceSuite:
             # A release/backstop claim needs executed receipts and every retained
             # gate. A source-only or deliberately skipped run cannot certify it.
             complete = (
-                self.conformance_report is not None
-                and self.conformance_report.get("repositoryComplete") is True
-                and self.conformance_report.get("result") == "pass"
-                and summary["result"] == "pass"
-                and not summary["skipped"]
-                and not summary["coverage_gaps"]
+                    self.conformance_report is not None
+                    and self.conformance_report.get("repositoryComplete") is True
+                    and self.conformance_report.get("result") == "pass"
+                    and summary["result"] == "pass"
+                    and not summary["skipped"]
+                    and not summary["coverage_gaps"]
             )
             summary["repository_complete"] = complete
             if not complete:
@@ -191,7 +191,7 @@ class ComplianceSuite:
         return report
 
     def _evaluate_requirement(
-        self, requirement: ComplianceRequirement
+            self, requirement: ComplianceRequirement
     ) -> RequirementResult:
         """Evaluate a single requirement via static evidence and optional command."""
 
@@ -249,7 +249,7 @@ class ComplianceSuite:
         return self._run_command_requirement(requirement, evidence)
 
     def _check_static_evidence(
-        self, requirement: ComplianceRequirement
+            self, requirement: ComplianceRequirement
     ) -> tuple[list[str], list[str]]:
         """Check required files and text expectations for a requirement."""
 
@@ -282,7 +282,7 @@ class ComplianceSuite:
         return errors, evidence
 
     def _run_command_requirement(
-        self, requirement: ComplianceRequirement, evidence: list[str]
+            self, requirement: ComplianceRequirement, evidence: list[str]
     ) -> RequirementResult:
         """Run the command associated with a requirement and capture evidence."""
 

@@ -50,9 +50,9 @@ def render_cxx_gate_markdown(diff_report: dict[str, Any]) -> str:
     """Concise gate report markdown. No Tier-1/Tier-2 language (D-04)."""
     summary = diff_report["summary"]
     drift_count = (
-        summary["missing_from_current"]
-        + summary["missing_from_contract"]
-        + summary["signature_mismatch"]
+            summary["missing_from_current"]
+            + summary["missing_from_contract"]
+            + summary["signature_mismatch"]
     )
     lines: list[str] = [
         "# CXX Parity Gate Report",
@@ -150,8 +150,8 @@ def main() -> int:
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
 
     if (
-        not args.update_baseline
-        and contract.get("schema_version") != CXX_CONTRACT_SCHEMA_VERSION
+            not args.update_baseline
+            and contract.get("schema_version") != CXX_CONTRACT_SCHEMA_VERSION
     ):
         print(
             "CXX parity contract schema is stale: expected "
@@ -226,16 +226,16 @@ def main() -> int:
 
     summary = diff_report["summary"]
     drift_count = (
-        summary["missing_from_current"]
-        + summary["missing_from_contract"]
-        + summary["signature_mismatch"]
+            summary["missing_from_current"]
+            + summary["missing_from_contract"]
+            + summary["signature_mismatch"]
     )
 
     if accepted_summary is not None:
         accepted_count = (
-            accepted_summary["missing_from_current"]
-            + accepted_summary["missing_from_contract"]
-            + accepted_summary["signature_mismatch"]
+                accepted_summary["missing_from_current"]
+                + accepted_summary["missing_from_contract"]
+                + accepted_summary["signature_mismatch"]
         )
         if accepted_count:
             print(
@@ -248,10 +248,10 @@ def main() -> int:
 
     print("CXX parity gate artifacts generated:")
     for name in (
-        "rust_api_surface.json",
-        "cxx_diff_report.json",
-        "cxx_diff_report.md",
-        "cxx_gate_report.md",
+            "rust_api_surface.json",
+            "cxx_diff_report.json",
+            "cxx_diff_report.md",
+            "cxx_gate_report.md",
     ):
         print(f"- {output_dir / name}")
 

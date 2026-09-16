@@ -27,9 +27,9 @@ def observe_config_operations(fixture: Mapping[str, Any]) -> dict[str, Any]:
         "operation",
         "files",
     } | (
-        {"gameRoot", "docsRoot"}
-        if fixture.get("operation") == "persist-local"
-        else set()
+            {"gameRoot", "docsRoot"}
+            if fixture.get("operation") == "persist-local"
+            else set()
     ):
         raise ValueError("unsupported config operation fixture")
     with tempfile.TemporaryDirectory(prefix="classic-config-conformance-") as directory:
@@ -133,8 +133,8 @@ def observe_config_operations(fixture: Mapping[str, Any]) -> dict[str, Any]:
                     "content constructor differs from retained explicit data"
                 )
             if (
-                repr(data)
-                != f"YamlData(game={data.crashgen_name.split('_')[0]}, version={data.classic_version})"
+                    repr(data)
+                    != f"YamlData(game={data.crashgen_name.split('_')[0]}, version={data.classic_version})"
             ):
                 raise ValueError(
                     "public YAML representation lost its identifying fields"

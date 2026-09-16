@@ -61,7 +61,7 @@ def _write_schema_ranges(tmp_path: Path, names: list[str]) -> Path:
     ],
 )
 def test_range_loaders_reject_windows_identity_duplicates(
-    tmp_path: Path, names: list[str], duplicate_name: str
+        tmp_path: Path, names: list[str], duplicate_name: str
 ) -> None:
     schema_ranges_path = _write_schema_ranges(tmp_path, names)
 
@@ -102,7 +102,7 @@ def test_load_shippable_names_preserves_original_names(tmp_path: Path) -> None:
     ],
 )
 def test_range_loaders_reject_non_installable_cache_basenames(
-    tmp_path: Path, invalid_name: str
+        tmp_path: Path, invalid_name: str
 ) -> None:
     schema_ranges_path = _write_schema_ranges(tmp_path, [invalid_name])
 
@@ -120,7 +120,7 @@ def test_range_loaders_reject_non_installable_cache_basenames(
     ["NULL.yaml", "COM10.yaml", "LPT10.yaml", "CON_main.yaml"],
 )
 def test_range_loaders_allow_near_miss_device_names(
-    tmp_path: Path, allowed_name: str
+        tmp_path: Path, allowed_name: str
 ) -> None:
     schema_ranges_path = _write_schema_ranges(tmp_path, [allowed_name])
 
@@ -159,7 +159,7 @@ def test_validate_file_rejects_placement_bucket_disagreement(tmp_path: Path) -> 
     ],
 )
 def test_validate_file_allows_agreeing_placement_bucket(
-    tmp_path: Path, placement: str, bucket: str
+        tmp_path: Path, placement: str, bucket: str
 ) -> None:
     path = _write_registry_yaml(
         tmp_path,

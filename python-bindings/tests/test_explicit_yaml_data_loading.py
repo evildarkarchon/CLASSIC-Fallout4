@@ -5,10 +5,8 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-import pytest
-
 import classic_config
-
+import pytest
 
 MAIN_BYTES = (
     b'schema_version: "2.0"\r\n'
@@ -30,7 +28,7 @@ EMPTY_IGNORE_BYTES = b"CLASSIC_Ignore_Fallout4: []\n"
 
 
 def write_explicit_files(
-    root: Path, ignore: bytes = EMPTY_IGNORE_BYTES
+        root: Path, ignore: bytes = EMPTY_IGNORE_BYTES
 ) -> classic_config.ExplicitYamlDataPaths:
     """Write arbitrary-name fixtures and return the public typed path request."""
     main_path = root / "chosen-main.fixture"
@@ -65,7 +63,7 @@ def test_explicit_loader_owns_exact_bytes_and_maps_vr_to_fallout4(tmp_path: Path
 
 
 def test_explicit_loader_exposes_typed_unsupported_and_ignore_failures(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Unsupported games and malformed Local Ignore data stay distinguishable."""
     missing = classic_config.ExplicitYamlDataPaths(

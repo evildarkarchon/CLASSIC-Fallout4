@@ -14,15 +14,15 @@ def test_observed_registry_carriers_and_singleton_have_precise_predicates():
     rows = load_source_parity_rows(root)
     for family, obligations in {
         "version-registry": (
-            "parity:python:version_registry.models.CrashgenConfig",
-            "parity:python:version-registry-get-singleton",
-            "parity:python:version-registry-match-confidence-class",
-            "parity:python:version_registry.matching.MatchConfidence.__eq__",
-            "parity:python:version_registry.matching.MatchConfidence.__hash__",
-            "parity:python:version_registry.matching.MatchConfidence.is_high_confidence",
+                "parity:python:version_registry.models.CrashgenConfig",
+                "parity:python:version-registry-get-singleton",
+                "parity:python:version-registry-match-confidence-class",
+                "parity:python:version_registry.matching.MatchConfidence.__eq__",
+                "parity:python:version_registry.matching.MatchConfidence.__hash__",
+                "parity:python:version_registry.matching.MatchConfidence.is_high_confidence",
         ),
         "version-registry-details": (
-            "parity:python:version_registry.models.AddressLibraryConfig",
+                "parity:python:version_registry.models.AddressLibraryConfig",
         ),
     }.items():
         pack = load_and_validate_pack(

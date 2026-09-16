@@ -18,12 +18,12 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PARITY_CONTRACT = (
-    REPO_ROOT
-    / "docs"
-    / "implementation"
-    / "node_api_parity"
-    / "baseline"
-    / "parity_contract.json"
+        REPO_ROOT
+        / "docs"
+        / "implementation"
+        / "node_api_parity"
+        / "baseline"
+        / "parity_contract.json"
 )
 
 
@@ -79,7 +79,7 @@ def test_parity_contract_file_exists() -> None:
 
 def test_node_gate_defaults_use_repo_root_paths() -> None:
     source = (
-        REPO_ROOT / "tools" / "node_api_parity" / "check_parity_gate.py"
+            REPO_ROOT / "tools" / "node_api_parity" / "check_parity_gate.py"
     ).read_text(encoding="utf-8")
     assert 'default="node-bindings/classic-node/index.d.ts"' in source
     assert 'default="node-bindings/classic-node/parity-artifacts"' in source
@@ -90,7 +90,7 @@ def test_node_gate_defaults_use_repo_root_paths() -> None:
 
 def test_dts_freshness_defaults_use_repo_root_paths() -> None:
     source = (
-        REPO_ROOT / "tools" / "node_api_parity" / "check_dts_freshness.py"
+            REPO_ROOT / "tools" / "node_api_parity" / "check_dts_freshness.py"
     ).read_text(encoding="utf-8")
     assert 'default="node-bindings/classic-node"' in source
     assert 'default="node-bindings/classic-node/parity-artifacts"' in source

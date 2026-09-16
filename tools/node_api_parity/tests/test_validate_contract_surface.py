@@ -25,9 +25,8 @@ entry with ``symbol`` / ``export`` string keys.
 """
 from __future__ import annotations
 
-import pytest
-
 import check_parity_gate as gate
+import pytest
 
 
 @pytest.fixture
@@ -81,7 +80,7 @@ def test_valid_row_empty_diagnostics(rust_manifest, node_manifest) -> None:
         ]
     }
     assert (
-        gate.validate_contract_surface(contract, rust_manifest, node_manifest) == []
+            gate.validate_contract_surface(contract, rust_manifest, node_manifest) == []
     )
 
 
@@ -98,7 +97,7 @@ def test_multiple_valid_rows_empty_diagnostics(rust_manifest, node_manifest) -> 
         ]
     }
     assert (
-        gate.validate_contract_surface(contract, rust_manifest, node_manifest) == []
+            gate.validate_contract_surface(contract, rust_manifest, node_manifest) == []
     )
 
 
@@ -133,7 +132,7 @@ def test_h1_missing_rust_symbol_is_rejected(rust_manifest, node_manifest) -> Non
 
 
 def test_h1_normal_row_missing_node_export_is_rejected(
-    rust_manifest, node_manifest
+        rust_manifest, node_manifest
 ) -> None:
     """H1: row with non-``@rust`` rustSymbol and NO nodeExport MUST fire
     'normal-shape but missing nodeExport'.
@@ -160,7 +159,7 @@ def test_h1_normal_row_missing_node_export_is_rejected(
 
 
 def test_h1_at_rust_proxy_without_node_export_is_accepted(
-    rust_manifest, node_manifest
+        rust_manifest, node_manifest
 ) -> None:
     """H1: ONLY ``@rust``-suffixed rows may omit nodeExport. Proxy row with
     a stripped-symbol match in the rust surface is valid.
@@ -208,7 +207,7 @@ def test_at_rust_suffix_rust_missing_diagnostic(rust_manifest, node_manifest) ->
 
 
 def test_h1_empty_string_rust_symbol_is_rejected(
-    rust_manifest, node_manifest
+        rust_manifest, node_manifest
 ) -> None:
     """Round 2 Fix 1.1: empty-string rustSymbol MUST fire a diagnostic
     (None-check alone was insufficient since `""` is falsy-but-not-None).
@@ -233,7 +232,7 @@ def test_h1_empty_string_rust_symbol_is_rejected(
 
 
 def test_h1_empty_string_node_export_is_rejected(
-    rust_manifest, node_manifest
+        rust_manifest, node_manifest
 ) -> None:
     """Round 2 Fix 1.1: empty-string nodeExport on a normal-shape row MUST
     fire a diagnostic.
@@ -258,7 +257,7 @@ def test_h1_empty_string_node_export_is_rejected(
 
 
 def test_h1_wrong_type_rust_symbol_is_rejected(
-    rust_manifest, node_manifest
+        rust_manifest, node_manifest
 ) -> None:
     """Round 2 Fix 1.1: non-string rustSymbol (e.g., list) MUST fire a
     diagnostic WITHOUT raising an uncaught exception from the guard.
@@ -284,7 +283,7 @@ def test_h1_wrong_type_rust_symbol_is_rejected(
 
 
 def test_h1_wrong_type_node_export_is_rejected(
-    rust_manifest, node_manifest
+        rust_manifest, node_manifest
 ) -> None:
     """Round 2 Fix 1.1: non-string nodeExport (e.g., dict) MUST fire a
     diagnostic without raising.
@@ -363,7 +362,7 @@ def test_missing_node_export_diagnostic(rust_manifest, node_manifest) -> None:
 
 
 def test_missing_rust_crate_fallback_diagnostic(
-    rust_manifest, node_manifest
+        rust_manifest, node_manifest
 ) -> None:
     """Legacy row without a ``rustCrate`` field → diagnostic uses
     ``<unknown>`` fallback instead of KeyError.

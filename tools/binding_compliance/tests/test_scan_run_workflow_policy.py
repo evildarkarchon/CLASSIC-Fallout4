@@ -10,11 +10,12 @@ import textwrap
 from pathlib import Path
 
 import pytest
-from conformance import workflow_policy
 from conformance.workflow_policy import (
     WorkflowPolicyError,
     validate_scan_run_workflow_policy,
 )
+
+from conformance import workflow_policy
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -29,7 +30,7 @@ def test_repository_workflows_keep_every_promoted_execution_blocking() -> None:
     "participant", ("rust", "cxx", "node", "python", "cli", "gui", "tui")
 )
 def test_policy_catalog_cannot_omit_a_required_participant(
-    monkeypatch: pytest.MonkeyPatch, participant: str
+        monkeypatch: pytest.MonkeyPatch, participant: str
 ) -> None:
     """Deleting audit entries cannot silently remove native CI obligations."""
 
@@ -43,13 +44,13 @@ def test_policy_catalog_cannot_omit_a_required_participant(
         ),
     )
     with pytest.raises(
-        WorkflowPolicyError, match="missing required execution policies"
+            WorkflowPolicyError, match="missing required execution policies"
     ):
         validate_scan_run_workflow_policy(REPO_ROOT)
 
 
 def test_new_applicable_execution_automatically_requires_ci_policy(
-    monkeypatch: pytest.MonkeyPatch,
+        monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """An expanded shared denominator cannot borrow an existing family's gate."""
 
@@ -61,7 +62,7 @@ def test_new_applicable_execution_automatically_requires_ci_policy(
 
 
 def test_native_policy_cannot_drop_compiler_denominator(
-    monkeypatch: pytest.MonkeyPatch,
+        monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Removing a matrix from the audit must fail even if workflow text remains."""
 
@@ -78,7 +79,7 @@ def test_native_policy_cannot_drop_compiler_denominator(
         ),
     )
     with pytest.raises(
-        WorkflowPolicyError, match="missing required execution policies"
+            WorkflowPolicyError, match="missing required execution policies"
     ):
         validate_scan_run_workflow_policy(REPO_ROOT)
 
@@ -86,39 +87,39 @@ def test_native_policy_cannot_drop_compiler_denominator(
 @pytest.mark.parametrize(
     "family",
     (
-        "crash-suspect",
-        "crashgen-settings",
-        "mod-guidance",
-        "formid-lookup",
-        "named-record",
-        "plugin-evidence",
-        "autoscan-report",
-        "config-vocabulary",
-        "scan-run-vocabulary",
-        "config-operations",
-        "file-operations",
-        "path-operations",
-        "path-normalization",
-        "message-operations",
-        "database-operations",
-        "version-registry",
-        "scan-game",
+            "crash-suspect",
+            "crashgen-settings",
+            "mod-guidance",
+            "formid-lookup",
+            "named-record",
+            "plugin-evidence",
+            "autoscan-report",
+            "config-vocabulary",
+            "scan-run-vocabulary",
+            "config-operations",
+            "file-operations",
+            "path-operations",
+            "path-normalization",
+            "message-operations",
+            "database-operations",
+            "version-registry",
+            "scan-game",
     ),
 )
 @pytest.mark.parametrize(
     ("participant", "workflow"),
     (
-        ("rust", "ci-rust.yml"),
-        ("node", "ci-typescript.yml"),
-        ("python", "ci-python-bindings.yml"),
-        ("cxx", "ci-cpp.yml"),
+            ("rust", "ci-rust.yml"),
+            ("node", "ci-typescript.yml"),
+            ("python", "ci-python-bindings.yml"),
+            ("cxx", "ci-cpp.yml"),
     ),
 )
 def test_every_focused_family_adapter_is_a_required_blocking_step(
-    tmp_path: Path,
-    family: str,
-    participant: str,
-    workflow: str,
+        tmp_path: Path,
+        family: str,
+        participant: str,
+        workflow: str,
 ) -> None:
     """Removing any single family/adapter cannot borrow another family's gate."""
 
@@ -146,104 +147,104 @@ def test_every_focused_family_adapter_is_a_required_blocking_step(
 @pytest.mark.parametrize(
     ("relative_path", "needle", "replacement", "message"),
     (
-        (
-            ".github/workflows/ci-rust.yml",
-            "run_user_settings_conformance.py --participant rust",
-            "run_removed_settings_conformance.py --participant rust",
-            "missing a required marker",
-        ),
-        (
-            ".github/workflows/ci-rust.yml",
-            "run: python tools/binding_compliance/run_scan_run_conformance.py --participant rust",
-            "continue-on-error: true\n        run: python tools/binding_compliance/run_scan_run_conformance.py --participant rust",
-            "launcher must be blocking",
-        ),
-        (
-            ".github/workflows/ci-cpp.yml",
-            "compiler: [msvc, clang-cl]",
-            "compiler: [msvc]",
-            "missing exact required matrix",
-        ),
-        (
-            ".github/workflows/ci-cpp.yml",
-            "timeout-minutes: 180",
-            "timeout-minutes: 120",
-            "must reserve 180 minutes",
-        ),
-        (
-            ".github/workflows/ci-cpp.yml",
-            "compiler: [msvc, clang-cl]",
-            "compiler: [msvc, clang-cl]\n        exclude:\n          - compiler: clang-cl",
-            "matrix cannot exclude required executions",
-        ),
-        (
-            ".github/workflows/ci-python-bindings.yml",
-            "needs: [parity-gates]",
-            "needs: [parity-gates]\n    if: false",
-            "job must run after upstream failures unless cancelled",
-        ),
-        (
-            ".github/workflows/ci-cpp.yml",
-            "run_cxx_conformance.ps1 -Compiler ${{ matrix.compiler }}",
-            "run_cxx_conformance.ps1 -Compiler ${{ matrix.compiler }} --profile full",
-            "cannot claim full-repository scope",
-        ),
-        (
-            ".github/workflows/ci-python-bindings.yml",
-            "- name: Upload Python Crash Log Scan Run conformance diagnostics\n        if: always()",
-            "- name: Upload Python Crash Log Scan Run conformance diagnostics\n        if: success()",
-            "diagnostics must upload even on failure",
-        ),
-        (
-            ".github/workflows/ci-rust.yml",
-            "Run Rust tests with all features",
-            "Run Rust tests without conformance",
-            "missing a required marker",
-        ),
-        (
-            ".github/workflows/ci-rust.yml",
-            "- name: Validate Crash Log Scan Run variant coverage\n        if: ${{ !cancelled() }}",
-            "- name: Validate Crash Log Scan Run variant coverage\n        if: success()",
-            "variant preflight must run after earlier failures unless cancelled",
-        ),
-        (
-            ".github/workflows/ci-typescript.yml",
-            "runtime: [bun, node]\n    env:\n      RUST_BACKTRACE: full\n    steps:\n      - uses: actions/checkout@v6",
-            "runtime: [bun, node]\n    env:\n      RUST_BACKTRACE: full\n    steps:\n      - uses: actions/checkout@v6\n        with:\n          ref: classic-next",
-            "cannot replace the event source revision",
-        ),
-        (
-            ".github/workflows/ci-cpp.yml",
-            "run_gui_consumer_conformance.ps1 -Compiler ${{ matrix.compiler }} -Preset ci-system-qt",
-            "run_gui_consumer_conformance.ps1 -Compiler ${{ matrix.compiler }}",
-            "must reuse the preceding GUI build preset",
-        ),
-        (
-            ".github/workflows/ci-cpp.yml",
-            "run_gui_consumer_conformance.ps1 -Family user-settings -Compiler ${{ matrix.compiler }} -Preset ci-system-qt",
-            "run_gui_consumer_conformance.ps1 -Family user-settings -Compiler ${{ matrix.compiler }} -Preset default",
-            "must reuse the preceding GUI build preset",
-        ),
-        (
-            ".github/workflows/ci-cpp.yml",
-            "classic-gui/build_gui.ps1 -Preset ci-system-qt",
-            "classic-gui/build_gui.ps1 -Preset default",
-            "must reuse the preceding GUI build preset",
-        ),
-        (
-            ".github/workflows/ci-cpp.yml",
-            "run_gui_consumer_conformance.ps1",
-            "run_removed_gui_consumer_conformance.ps1",
-            "missing a required marker",
-        ),
+            (
+                    ".github/workflows/ci-rust.yml",
+                    "run_user_settings_conformance.py --participant rust",
+                    "run_removed_settings_conformance.py --participant rust",
+                    "missing a required marker",
+            ),
+            (
+                    ".github/workflows/ci-rust.yml",
+                    "run: python tools/binding_compliance/run_scan_run_conformance.py --participant rust",
+                    "continue-on-error: true\n        run: python tools/binding_compliance/run_scan_run_conformance.py --participant rust",
+                    "launcher must be blocking",
+            ),
+            (
+                    ".github/workflows/ci-cpp.yml",
+                    "compiler: [msvc, clang-cl]",
+                    "compiler: [msvc]",
+                    "missing exact required matrix",
+            ),
+            (
+                    ".github/workflows/ci-cpp.yml",
+                    "timeout-minutes: 180",
+                    "timeout-minutes: 120",
+                    "must reserve 180 minutes",
+            ),
+            (
+                    ".github/workflows/ci-cpp.yml",
+                    "compiler: [msvc, clang-cl]",
+                    "compiler: [msvc, clang-cl]\n        exclude:\n          - compiler: clang-cl",
+                    "matrix cannot exclude required executions",
+            ),
+            (
+                    ".github/workflows/ci-python-bindings.yml",
+                    "needs: [parity-gates]",
+                    "needs: [parity-gates]\n    if: false",
+                    "job must run after upstream failures unless cancelled",
+            ),
+            (
+                    ".github/workflows/ci-cpp.yml",
+                    "run_cxx_conformance.ps1 -Compiler ${{ matrix.compiler }}",
+                    "run_cxx_conformance.ps1 -Compiler ${{ matrix.compiler }} --profile full",
+                    "cannot claim full-repository scope",
+            ),
+            (
+                    ".github/workflows/ci-python-bindings.yml",
+                    "- name: Upload Python Crash Log Scan Run conformance diagnostics\n        if: always()",
+                    "- name: Upload Python Crash Log Scan Run conformance diagnostics\n        if: success()",
+                    "diagnostics must upload even on failure",
+            ),
+            (
+                    ".github/workflows/ci-rust.yml",
+                    "Run Rust tests with all features",
+                    "Run Rust tests without conformance",
+                    "missing a required marker",
+            ),
+            (
+                    ".github/workflows/ci-rust.yml",
+                    "- name: Validate Crash Log Scan Run variant coverage\n        if: ${{ !cancelled() }}",
+                    "- name: Validate Crash Log Scan Run variant coverage\n        if: success()",
+                    "variant preflight must run after earlier failures unless cancelled",
+            ),
+            (
+                    ".github/workflows/ci-typescript.yml",
+                    "runtime: [bun, node]\n    env:\n      RUST_BACKTRACE: full\n    steps:\n      - uses: actions/checkout@v6",
+                    "runtime: [bun, node]\n    env:\n      RUST_BACKTRACE: full\n    steps:\n      - uses: actions/checkout@v6\n        with:\n          ref: classic-next",
+                    "cannot replace the event source revision",
+            ),
+            (
+                    ".github/workflows/ci-cpp.yml",
+                    "run_gui_consumer_conformance.ps1 -Compiler ${{ matrix.compiler }} -Preset ci-system-qt",
+                    "run_gui_consumer_conformance.ps1 -Compiler ${{ matrix.compiler }}",
+                    "must reuse the preceding GUI build preset",
+            ),
+            (
+                    ".github/workflows/ci-cpp.yml",
+                    "run_gui_consumer_conformance.ps1 -Family user-settings -Compiler ${{ matrix.compiler }} -Preset ci-system-qt",
+                    "run_gui_consumer_conformance.ps1 -Family user-settings -Compiler ${{ matrix.compiler }} -Preset default",
+                    "must reuse the preceding GUI build preset",
+            ),
+            (
+                    ".github/workflows/ci-cpp.yml",
+                    "classic-gui/build_gui.ps1 -Preset ci-system-qt",
+                    "classic-gui/build_gui.ps1 -Preset default",
+                    "must reuse the preceding GUI build preset",
+            ),
+            (
+                    ".github/workflows/ci-cpp.yml",
+                    "run_gui_consumer_conformance.ps1",
+                    "run_removed_gui_consumer_conformance.ps1",
+                    "missing a required marker",
+            ),
     ),
 )
 def test_workflow_policy_rejects_weakened_topology(
-    tmp_path: Path,
-    relative_path: str,
-    needle: str,
-    replacement: str,
-    message: str,
+        tmp_path: Path,
+        relative_path: str,
+        needle: str,
+        replacement: str,
+        message: str,
 ) -> None:
     """Each reviewed topology property fails closed when mutated."""
 
@@ -262,18 +263,18 @@ def test_workflow_policy_rejects_weakened_topology(
 @pytest.mark.parametrize(
     "condition,message",
     (
-        (
-            "if: matrix.runtime == 'node' && !cancelled()",
-            "launcher must run after earlier failures unless cancelled",
-        ),
-        (
-            "if: matrix.runtime == 'node' && always()",
-            "diagnostics must upload even on failure",
-        ),
+            (
+                    "if: matrix.runtime == 'node' && !cancelled()",
+                    "launcher must run after earlier failures unless cancelled",
+            ),
+            (
+                    "if: matrix.runtime == 'node' && always()",
+                    "diagnostics must upload even on failure",
+            ),
     ),
 )
 def test_workflow_policy_rejects_conditions_with_disabled_suffix(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, condition: str, message: str
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, condition: str, message: str
 ) -> None:
     """Keeping the approved condition as a prefix cannot disable required steps."""
 
@@ -296,31 +297,31 @@ def test_workflow_policy_rejects_conditions_with_disabled_suffix(
 @pytest.mark.parametrize(
     "needle,replacement",
     (
-        ("needs: [rust, node, python, native]", "needs: [rust, node, python]"),
-        (
-            "uses: ./.github/workflows/ci-cpp.yml",
-            "uses: owner/repo/.github/workflows/ci-cpp.yml@main",
-        ),
-        ("merge-multiple: false", "merge-multiple: true"),
-        ("pattern: '*conformance*'", "pattern: 'node-*'"),
-        ("--profile full", "--profile ci"),
-        (
-            "uses: actions/download-artifact@v8",
-            "uses: actions/download-artifact@v8\n        with:\n          run-id: 12345",
-        ),
-        (
-            "      - uses: actions/checkout@v6",
-            "      - uses: actions/checkout@v6\n        with:\n          ref: classic-next",
-        ),
-        (
-            "    name: Full Repository Conformance",
-            "    name: Full Repository Conformance\n    continue-on-error: true",
-        ),
-        ("PARTICIPANT_RESULTS: ${{ toJSON(needs) }}", "PARTICIPANT_RESULTS: '{}'"),
+            ("needs: [rust, node, python, native]", "needs: [rust, node, python]"),
+            (
+                    "uses: ./.github/workflows/ci-cpp.yml",
+                    "uses: owner/repo/.github/workflows/ci-cpp.yml@main",
+            ),
+            ("merge-multiple: false", "merge-multiple: true"),
+            ("pattern: '*conformance*'", "pattern: 'node-*'"),
+            ("--profile full", "--profile ci"),
+            (
+                    "uses: actions/download-artifact@v8",
+                    "uses: actions/download-artifact@v8\n        with:\n          run-id: 12345",
+            ),
+            (
+                    "      - uses: actions/checkout@v6",
+                    "      - uses: actions/checkout@v6\n        with:\n          ref: classic-next",
+            ),
+            (
+                    "    name: Full Repository Conformance",
+                    "    name: Full Repository Conformance\n    continue-on-error: true",
+            ),
+            ("PARTICIPANT_RESULTS: ${{ toJSON(needs) }}", "PARTICIPANT_RESULTS: '{}'"),
     ),
 )
 def test_full_aggregation_cannot_lose_required_jobs_or_artifact_identity(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, needle: str, replacement: str
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, needle: str, replacement: str
 ) -> None:
     """Repository proof requires all same-revision jobs and unmerged current-run plans."""
     required = workflow_policy._required_execution_keys(REPO_ROOT)
@@ -338,7 +339,7 @@ def test_full_aggregation_cannot_lose_required_jobs_or_artifact_identity(
 
 @pytest.mark.parametrize("damage", (None, "failure", "skipped", "missing"))
 def test_actual_workflow_upstream_guard_rejects_failed_or_absent_jobs(
-    damage: str | None,
+        damage: str | None,
 ) -> None:
     """Run the checked-in guard so a successful receipt cannot hide a native test failure."""
     workflow = (REPO_ROOT / ".github/workflows/ci-binding-compliance.yml").read_text(
@@ -371,15 +372,15 @@ def test_actual_workflow_upstream_guard_rejects_failed_or_absent_jobs(
 @pytest.mark.parametrize(
     "needle,replacement",
     (
-        ("    runs-on: windows-latest", "    runs-on: ubuntu-latest"),
-        (
-            "      - uses: actions/checkout@v6",
-            "      - uses: actions/checkout@v6\n        with:\n          path: alternate",
-        ),
+            ("    runs-on: windows-latest", "    runs-on: ubuntu-latest"),
+            (
+                    "      - uses: actions/checkout@v6",
+                    "      - uses: actions/checkout@v6\n        with:\n          path: alternate",
+            ),
     ),
 )
 def test_receipt_producers_preserve_aggregation_checkout_layout(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, needle: str, replacement: str
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, needle: str, replacement: str
 ) -> None:
     """Absolute immutable fixture paths require the same Windows checkout layout."""
     required = {("performance", "python", "python")}

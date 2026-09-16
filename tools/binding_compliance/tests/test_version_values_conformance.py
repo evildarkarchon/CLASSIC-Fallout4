@@ -9,12 +9,12 @@ def test_version_value_packs_are_executable():
     """Every public version value family has a schema-valid input-only pack."""
     root = Path(__file__).resolve().parents[3]
     for family in (
-        "game_version_parse",
-        "game_version_distance",
-        "game_version_order",
-        "fallout4_identity",
-        "fallout4_paths",
-        "fallout4_metadata",
+            "game_version_parse",
+            "game_version_distance",
+            "game_version_order",
+            "fallout4_identity",
+            "fallout4_paths",
+            "fallout4_metadata",
     ):
         load_and_validate_pack(
             root, Path("tests/conformance/packs") / family / "v1.json"
@@ -72,18 +72,18 @@ def test_config_owned_executable_name_has_cross_owner_evidence():
     [
         (family, participant)
         for family, participants in {
-            "game-version-parse": ("cxx", "node", "python"),
-            "game-version-distance": ("node", "python"),
-            "game-version-order": ("python",),
-            "fallout4-identity": ("cxx", "node", "python"),
-            "fallout4-paths": ("cxx", "python"),
-            "fallout4-metadata": ("python",),
-        }.items()
+        "game-version-parse": ("cxx", "node", "python"),
+        "game-version-distance": ("node", "python"),
+        "game-version-order": ("python",),
+        "fallout4-identity": ("cxx", "node", "python"),
+        "fallout4-paths": ("cxx", "python"),
+        "fallout4-metadata": ("python",),
+    }.items()
         for participant in participants
     ],
 )
 def test_version_value_receipts_cover_only_applicable_rows(
-    tmp_path, family, participant
+        tmp_path, family, participant
 ):
     """Complete receipts cover actual source rows while no nonexistent adapter is enrolled."""
     from conformance.coverage import (
@@ -145,6 +145,6 @@ def test_version_value_receipts_cover_only_applicable_rows(
             )
             module = "version" if owner == "GameVersion" else "lib"
             assert (
-                f"parity:python:version_registry.{module}.{owner}.{operation}"
-                in covered
+                    f"parity:python:version_registry.{module}.{owner}.{operation}"
+                    in covered
             )
