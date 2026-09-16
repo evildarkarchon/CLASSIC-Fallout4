@@ -1,13 +1,13 @@
 use super::*;
+// Imported here for the same reason: `contract.rs` names only `RecoveryPrompt`, because the
+// descriptions inside one are read through it. The tests fabricate descriptions directly, so
+// they need the type by name.
+use classic_scan_presentation::RecoveryDecisionDescription;
 // Imported here rather than in `contract.rs`: the module itself only projects
 // labels through `crate::vocabulary::display_label`, so the trait is in scope
 // only where the tests read `label()` off a core variant to derive their
 // expectation from.
 use classic_vocabulary::Vocabulary;
-// Imported here for the same reason: `contract.rs` names only `RecoveryPrompt`, because the
-// descriptions inside one are read through it. The tests fabricate descriptions directly, so
-// they need the type by name.
-use classic_scan_presentation::RecoveryDecisionDescription;
 use tempfile::tempdir;
 
 const FIXTURE_LOG_SMALL: &str = include_str!(
@@ -122,7 +122,10 @@ fn standard_request_constructor_builds_non_fcx_leave_in_place_request() {
         panic!("expected Standard request tag");
     };
     assert!(!request.fcx_enabled());
-    assert_eq!(request.configuration().installation_root, PathBuf::from("root"));
+    assert_eq!(
+        request.configuration().installation_root,
+        PathBuf::from("root")
+    );
     assert_eq!(request.configuration().game, GameId::Fallout4);
     assert_eq!(
         request.unsolved_logs(),
@@ -364,9 +367,7 @@ fn maps_every_core_enum_variant_to_a_typed_cxx_variant() {
         Ok(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore)
     );
     assert_eq!(
-        map_local_ignore_recovery_decision(
-            ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
-        ),
+        map_local_ignore_recovery_decision(ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,),
         Ok(contract::LocalIgnoreRecoveryDecision::ResetToDefault)
     );
 
@@ -551,7 +552,12 @@ fn shared_failure_fixture_maps_every_cxx_failure_field() {
                     .to_string(),
             })
             .collect(),
-        message: Some(log["message"].as_str().expect("aggregate message").to_string()),
+        message: Some(
+            log["message"]
+                .as_str()
+                .expect("aggregate message")
+                .to_string(),
+        ),
         moved_to_unsolved_logs: log["movedToUnsolvedLogs"].as_bool().expect("movement flag"),
         processing_time_us: log["processingTimeUs"].as_u64().expect("microseconds"),
         processing_time_ms: log["processingTimeMs"].as_u64().expect("milliseconds"),
@@ -560,10 +566,16 @@ fn shared_failure_fixture_maps_every_cxx_failure_field() {
         suspect_count: log["suspectCount"].as_u64().expect("suspect count") as usize,
     });
 
-    assert_eq!(mapped.discovery_index, log["discoveryIndex"].as_u64().unwrap() as usize);
+    assert_eq!(
+        mapped.discovery_index,
+        log["discoveryIndex"].as_u64().unwrap() as usize
+    );
     assert_eq!(mapped.crash_log, log["crashLog"].as_str().unwrap());
     assert!(!mapped.has_autoscan_report);
-    assert_eq!(mapped.disposition, ffi::ScanRunContractLogDisposition::Failed);
+    assert_eq!(
+        mapped.disposition,
+        ffi::ScanRunContractLogDisposition::Failed
+    );
     assert_eq!(mapped.failures.len(), failures.len());
     let expected_failure_stages = [
         ffi::ScanRunContractLogFailureStage::Analysis,
@@ -627,10 +639,7 @@ fn shared_failure_fixture_maps_every_cxx_failure_field() {
         assert_eq!(mapped.stage, cxx_stage);
         assert_eq!(mapped.message, expected["message"].as_str().unwrap());
         assert_eq!(mapped.has_path, !expected["path"].is_null());
-        assert_eq!(
-            mapped.path,
-            expected["path"].as_str().unwrap_or_default()
-        );
+        assert_eq!(mapped.path, expected["path"].as_str().unwrap_or_default());
     }
 }
 
@@ -934,8 +943,7 @@ fn execute_retains_structured_setup_result_data() {
         has_xse_log_path: false,
         xse_log_path: String::new(),
     };
-    let request =
-        scan_run_request_targeted_with_fcx(&configuration, &source, &setup).unwrap();
+    let request = scan_run_request_targeted_with_fcx(&configuration, &source, &setup).unwrap();
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut operation = unsafe {
@@ -973,12 +981,14 @@ fn execute_retains_structured_setup_result_data() {
         execution.result.installed_yaml_data.game_file.role,
         ffi::ScanRunInstalledYamlDataRole::Game
     );
-    assert!(!execution
-        .result
-        .installed_yaml_data
-        .local_ignore_identity
-        .sha256
-        .is_empty());
+    assert!(
+        !execution
+            .result
+            .installed_yaml_data
+            .local_ignore_identity
+            .sha256
+            .is_empty()
+    );
     assert!(
         execution
             .result
@@ -1093,7 +1103,10 @@ fn cxx_continuation_resumes_retained_recovery_once_and_projects_typed_replay_fai
                 ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
                 true
             ),
-            (ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault, true),
+            (
+                ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+                true
+            ),
         ]
     );
     let retained_discovery = initial.result.discovery.accepted_logs.clone();
@@ -1136,10 +1149,7 @@ fn cxx_continuation_resumes_retained_recovery_once_and_projects_typed_replay_fai
     let resumed = scan_run_contract_execution_take_result(&mut resumed_operation);
     assert!(resumed.has_result, "{}", resumed.error.message);
     assert_eq!(resumed.result.status, ffi::ScanRunContractStatus::Completed);
-    assert_eq!(
-        resumed.result.discovery.accepted_logs,
-        retained_discovery
-    );
+    assert_eq!(resumed.result.discovery.accepted_logs, retained_discovery);
     assert_eq!(
         resumed.result.installed_yaml_data.local_ignore_state,
         ffi::ScanRunLocalIgnoreYamlDataState::ProceedWithoutIgnore
@@ -1266,7 +1276,11 @@ fn cxx_continuation_abandons_retained_recovery_without_touching_disk() {
 
     // SAFETY: null is the documented representation of an omitted observer.
     let mut replay_operation = unsafe {
-        scan_run_continuation_abandon(&continuation, &scan_run_cancellation_new(), std::ptr::null())
+        scan_run_continuation_abandon(
+            &continuation,
+            &scan_run_cancellation_new(),
+            std::ptr::null(),
+        )
     };
     let replay = scan_run_contract_execution_take_result(&mut replay_operation);
     assert!(!replay.has_result);
@@ -1310,8 +1324,7 @@ fn cxx_resume_operational_errors_preserve_every_stable_reset_outcome_field() {
         assert_eq!(projected.kind, expected_kind);
         assert_eq!(projected.code, expected_code);
         assert!(projected.has_path);
-        if expected_kind
-            == ffi::ScanRunContractResumeErrorKind::LocalIgnoreResetReplacementFailure
+        if expected_kind == ffi::ScanRunContractResumeErrorKind::LocalIgnoreResetReplacementFailure
         {
             assert!(projected.has_stage);
             assert_eq!(
@@ -1326,23 +1339,21 @@ fn cxx_resume_operational_errors_preserve_every_stable_reset_outcome_field() {
 #[test]
 fn cxx_resume_durability_unknown_preserves_recovery_receipt() {
     let expected = shared_reset_outcomes();
-    let malformed_identity =
-        classic_config_core::YamlDataContentIdentity::from_bytes(b"malformed");
+    let malformed_identity = classic_config_core::YamlDataContentIdentity::from_bytes(b"malformed");
     let backup_identity = malformed_identity.clone();
     let replacement_identity =
         classic_config_core::YamlDataContentIdentity::from_bytes(b"defaults");
-    let projected = super::resume_error_to_dto(
-        contract::ResumeError::LocalIgnoreResetDurabilityUnknown(Box::new(
-            contract::LocalIgnoreResetDurabilityUnknownError {
+    let projected =
+        super::resume_error_to_dto(contract::ResumeError::LocalIgnoreResetDurabilityUnknown(
+            Box::new(contract::LocalIgnoreResetDurabilityUnknownError {
                 path: PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml"),
                 backup_path: PathBuf::from("C:/CLASSIC/backups/local-ignore.bak"),
                 malformed_identity: malformed_identity.clone(),
                 backup_identity: backup_identity.clone(),
                 replacement_identity: replacement_identity.clone(),
                 message: "replacement visible; durability unknown".to_string(),
-            },
-        )),
-    );
+            }),
+        ));
 
     assert_eq!(
         projected.kind,
@@ -1474,8 +1485,10 @@ fn no_scan_run_display_label_reaches_cxx_empty() {
 /// unreachable for a real variant — an empty label is exactly the "variant that
 /// renders as nothing" the naming contract exists to prevent, and core
 /// conformance guarantees it only on the core side of the seam.
-fn assert_cxx_labels_match_the_core<Core, Cxx>(project: fn(Core) -> Cxx, label_of: fn(Cxx) -> String)
-where
+fn assert_cxx_labels_match_the_core<Core, Cxx>(
+    project: fn(Core) -> Cxx,
+    label_of: fn(Cxx) -> String,
+) where
     Core: Vocabulary,
     Cxx: Copy + PartialEq,
 {
@@ -1634,18 +1647,8 @@ fn each_display_segment_kind_flattens_into_exactly_its_own_fields() {
         // The noun rides in `text` because CXX has no payload-carrying enum to put it in.
         (ffi::ScanRunDisplaySegmentKind::Count, "log", "", 1),
         (ffi::ScanRunDisplaySegmentKind::Path, "", "crash-é.log", 0),
-        (
-            ffi::ScanRunDisplaySegmentKind::Name,
-            "a domain name",
-            "",
-            0,
-        ),
-        (
-            ffi::ScanRunDisplaySegmentKind::Emphasis,
-            "set apart",
-            "",
-            0,
-        ),
+        (ffi::ScanRunDisplaySegmentKind::Name, "a domain name", "", 0),
+        (ffi::ScanRunDisplaySegmentKind::Emphasis, "set apart", "", 0),
     ];
     for (index, (kind, text, path, count)) in expected.into_iter().enumerate() {
         let segment = &line.segments[index];

@@ -238,7 +238,7 @@ fn match_state(value: ModGuidanceMatchState) -> &'static str {
 
 /// Projects every authored solution field from the public result.
 fn solution_result(values: Vec<ModSolutionGuidance>) -> Vec<Value> {
-    values.into_iter().map(|v|json!({"state":match_state(v.state),"id":v.id,"name":v.name,"description":v.description,"matchedPluginIds":v.matched_plugin_ids})).collect()
+    values.into_iter().map(|v| json!({"state":match_state(v.state),"id":v.id,"name":v.name,"description":v.description,"matchedPluginIds":v.matched_plugin_ids})).collect()
 }
 
 /// Converts owned fixture facts into the public crash-suspect input.
@@ -348,22 +348,23 @@ fn analyze(family: &str, c: &Value, r: &Value, warmup: Option<&Value>) -> Runner
             let input = crash_suspect_input(r)?;
             let warmup = warmup.map(crash_suspect_input).transpose()?;
             envelope(AnalyzerKind::CrashSuspect, reused(CrashSuspectAnalyzer::new(main, stack), input, warmup, |a, input| a.analyze(input)).map(|result| {
-                let findings:Vec<_> = result.findings.into_iter().map(|f| match f {
-                    CrashSuspectFinding::MainErrorRule {rule_id,name,severity} => json!({"kind":"main_error_rule","ruleId":rule_id,"name":name,"severity":severity}),
-                    CrashSuspectFinding::StackRule {rule_id,name,severity} => json!({"kind":"stack_rule","ruleId":rule_id,"name":name,"severity":severity}),
+                let findings: Vec<_> = result.findings.into_iter().map(|f| match f {
+                    CrashSuspectFinding::MainErrorRule { rule_id, name, severity } => json!({"kind":"main_error_rule","ruleId":rule_id,"name":name,"severity":severity}),
+                    CrashSuspectFinding::StackRule { rule_id, name, severity } => json!({"kind":"stack_rule","ruleId":rule_id,"name":name,"severity":severity}),
                     CrashSuspectFinding::DllInvolvement => json!({"kind":"dll_involvement","ruleId":null,"name":null,"severity":null}),
-                }).collect(); json!({"findings":findings})
+                }).collect();
+                json!({"findings":findings})
             }))
         }
         "named-record" => {
             let input = named_record_input(r)?;
             let warmup = warmup.map(named_record_input).transpose()?;
-            envelope(AnalyzerKind::NamedRecordFinding, reused(NamedRecordFindingAnalyzer::new(strings(&c["targetRecords"])?,strings(&c["ignoreRecords"])?), input, warmup, |a, input| a.analyze(input)).map(|result|json!({"findings":result.findings.into_iter().map(|v|json!({"record":v.record,"occurrences":v.occurrences})).collect::<Vec<_>>()})))
+            envelope(AnalyzerKind::NamedRecordFinding, reused(NamedRecordFindingAnalyzer::new(strings(&c["targetRecords"])?, strings(&c["ignoreRecords"])?), input, warmup, |a, input| a.analyze(input)).map(|result| json!({"findings":result.findings.into_iter().map(|v|json!({"record":v.record,"occurrences":v.occurrences})).collect::<Vec<_>>()})))
         }
         "plugin-evidence" => {
             let input = plugin_evidence_input(r)?;
             let warmup = warmup.map(plugin_evidence_input).transpose()?;
-            envelope(AnalyzerKind::PluginEvidence, reused(PluginEvidenceAnalyzer::new(strings(&c["ignoredPlugins"])?), input, warmup, |a, input| a.analyze(input)).map(|result|json!({"evidence":result.evidence.into_iter().map(|v|json!({"plugin":v.plugin,"occurrences":v.occurrences})).collect::<Vec<_>>()})))
+            envelope(AnalyzerKind::PluginEvidence, reused(PluginEvidenceAnalyzer::new(strings(&c["ignoredPlugins"])?), input, warmup, |a, input| a.analyze(input)).map(|result| json!({"evidence":result.evidence.into_iter().map(|v|json!({"plugin":v.plugin,"occurrences":v.occurrences})).collect::<Vec<_>>()})))
         }
         "mod-guidance" => {
             let input = ModGuidanceAnalysisInput {
@@ -376,7 +377,7 @@ fn analyze(family: &str, c: &Value, r: &Value, warmup: Option<&Value>) -> Runner
                 user_gpu: optional(&r["userGpu"])?,
                 xse_modules: strings(&r["xseModules"])?.into_iter().collect(),
             };
-            envelope(AnalyzerKind::ModGuidance, ModGuidanceAnalyzer::new(conflicts(&c["conflicts"])?,solutions(&c["frequentCrashes"])?,solutions(&c["solutions"])?,important_mods(&c["importantMods"])?).and_then(|a|a.analyze(input)).map(|result|json!({
+            envelope(AnalyzerKind::ModGuidance, ModGuidanceAnalyzer::new(conflicts(&c["conflicts"])?, solutions(&c["frequentCrashes"])?, solutions(&c["solutions"])?, important_mods(&c["importantMods"])?).and_then(|a| a.analyze(input)).map(|result| json!({
                 "conflicts":result.conflicts.into_iter().map(|v|json!({"state":match_state(v.state),"modA":v.mod_a,"modB":v.mod_b,"nameA":v.name_a,"nameB":v.name_b,"description":v.description,"fix":v.fix,"link":v.link})).collect::<Vec<_>>(),
                 "frequentCrashes":solution_result(result.frequent_crashes),"solutions":solution_result(result.solutions),
                 "importantMods":result.important_mods.into_iter().map(|v|json!({"state":match_state(v.state),"detect":v.detect,"name":v.name,"description":v.description,"gpu":v.gpu,"gpuMismatchWarning":v.gpu_mismatch_warning})).collect::<Vec<_>>()
@@ -402,7 +403,7 @@ fn analyze(family: &str, c: &Value, r: &Value, warmup: Option<&Value>) -> Runner
             };
             let input = crashgen_settings_input(r)?;
             let warmup = warmup.map(crashgen_settings_input).transpose()?;
-            envelope(AnalyzerKind::CrashgenSettings, reused(CrashgenSettingsAnalyzer::from_parsed_configuration(text(&c["crashgenName"])?,entry,parsed.diagnostics), input, warmup, |a, input| a.analyze(input)).map(|result|json!({
+            envelope(AnalyzerKind::CrashgenSettings, reused(CrashgenSettingsAnalyzer::from_parsed_configuration(text(&c["crashgenName"])?, entry, parsed.diagnostics), input, warmup, |a, input| a.analyze(input)).map(|result| json!({
                 "expectationOutcomes":result.expectation_outcomes.into_iter().map(|v|json!({"ruleId":v.rule_id,"kind":match v.kind {OutcomeKind::Notice=>"notice",OutcomeKind::Issue=>"issue",OutcomeKind::Success=>"success"},"severity":match v.severity {RuleSeverity::Info=>"info",RuleSeverity::Warning=>"warning",RuleSeverity::Error=>"error"},"message":v.message,"fix":v.fix,"placement":v.placement.as_str(),"section":v.section,"setting":v.setting,"expected":v.expected,"actual":v.actual})).collect::<Vec<_>>(),
                 "disabledSettingNotices":result.disabled_setting_notices.into_iter().map(|v|json!({"settingName":v.setting_name})).collect::<Vec<_>>()
             })))
@@ -477,7 +478,7 @@ fn lookup_fixture(c: &Value, r: &Value, warmup: Option<&Value>) -> RunnerResult<
             .iter()
             .map(|p| Ok((text(&p["formid"])?, text(&p["plugin"])?)))
             .collect::<RunnerResult<Vec<_>>>()?;
-        runtime.block_on(lookup.lookup_batch(pairs)).map(|outcomes|json!({"outcomes":outcomes.into_iter().map(lookup_outcome).collect::<Vec<_>>()}))
+        runtime.block_on(lookup.lookup_batch(pairs)).map(|outcomes| json!({"outcomes":outcomes.into_iter().map(lookup_outcome).collect::<Vec<_>>()}))
     } else {
         runtime
             .block_on(lookup.lookup(&text(&r["formid"])?, &text(&r["plugin"])?))
@@ -627,9 +628,9 @@ fn publish(plan_path: &Path, output_path: &Path) -> RunnerResult<()> {
     {
         return Err(invalid("receipt must be a fresh absolute sibling of the plan").into());
     }
-    let scenarios = plan["scenarios"].as_array().filter(|v|!v.is_empty()).ok_or_else(||invalid("scenarios must be nonempty"))?.iter().map(|scenario| match execute(&plan,scenario) {
-        Ok(observation)=>json!({"id":scenario["id"],"capabilityIds":scenario["capabilityIds"],"executionStatus":"completed","observation":observation,"failure":null}),
-        Err(error)=>json!({"id":scenario["id"],"capabilityIds":scenario["capabilityIds"],"executionStatus":"failed","observation":{},"failure":{"kind":"rust-runner-error","message":error.to_string()}}),
+    let scenarios = plan["scenarios"].as_array().filter(|v| !v.is_empty()).ok_or_else(|| invalid("scenarios must be nonempty"))?.iter().map(|scenario| match execute(&plan, scenario) {
+        Ok(observation) => json!({"id":scenario["id"],"capabilityIds":scenario["capabilityIds"],"executionStatus":"completed","observation":observation,"failure":null}),
+        Err(error) => json!({"id":scenario["id"],"capabilityIds":scenario["capabilityIds"],"executionStatus":"failed","observation":{},"failure":{"kind":"rust-runner-error","message":error.to_string()}}),
     }).collect::<Vec<_>>();
     let receipt = json!({"schemaVersion":plan["schemaVersion"],"familyId":plan["familyId"],"familyVersion":plan["familyVersion"],"expectationDigest":plan["expectationDigest"],"invocation":plan["invocation"],"participant":plan["participant"],"runner":{"id":"classic-rust-semantic-conformance","version":1,"platform":std::env::consts::OS,"toolchain":"rust"},"scenarios":scenarios});
     let mut temporary = NamedTempFile::new_in(

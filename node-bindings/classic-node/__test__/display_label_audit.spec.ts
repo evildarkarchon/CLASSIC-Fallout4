@@ -23,9 +23,9 @@
  * copy of an assertion that already exists.
  */
 
-import { describe, expect, test } from "bun:test";
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import {describe, expect, test} from "bun:test";
+import {readdirSync, readFileSync} from "node:fs";
+import {join} from "node:path";
 
 const CLI_DIR = join(import.meta.dir, "..", "cli");
 
@@ -37,13 +37,13 @@ const CLI_DIR = join(import.meta.dir, "..", "cli");
  * three levels up.
  */
 const CORE_OWNED_PHRASES_FILE = join(
-	import.meta.dir,
-	"..",
-	"..",
-	"..",
-	"business-logic",
-	"classic-scan-presentation",
-	"core-owned-phrases.txt",
+    import.meta.dir,
+    "..",
+    "..",
+    "..",
+    "business-logic",
+    "classic-scan-presentation",
+    "core-owned-phrases.txt",
 );
 
 /**
@@ -57,10 +57,10 @@ const AUDITED_SOURCES = ["main.ts", "run-scan.ts", "types.ts"] as const;
 
 /** Reads the shared deny-list, dropping blank lines and `#` comments. */
 function coreOwnedPhrases(): string[] {
-	return readFileSync(CORE_OWNED_PHRASES_FILE, "utf8")
-		.split("\n")
-		.map((line) => line.trim())
-		.filter((line) => line.length > 0 && !line.startsWith("#"));
+    return readFileSync(CORE_OWNED_PHRASES_FILE, "utf8")
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0 && !line.startsWith("#"));
 }
 
 /**
@@ -89,51 +89,51 @@ function coreOwnedPhrases(): string[] {
  * there costs a false positive, not a silent pass.
  */
 function stringLiterals(source: string): string {
-	let out = "";
-	let index = 0;
+    let out = "";
+    let index = 0;
 
-	while (index < source.length) {
-		const character = source[index];
+    while (index < source.length) {
+        const character = source[index];
 
-		if (character === "/" && source[index + 1] === "/") {
-			while (index < source.length && source[index] !== "\n") {
-				index += 1;
-			}
-			continue;
-		}
-		if (character === "/" && source[index + 1] === "*") {
-			const close = source.indexOf("*/", index + 2);
-			index = close === -1 ? source.length : close + 2;
-			continue;
-		}
-		// One branch for all three quotes. A template literal is a string as far as
-		// this is concerned: its fixed text is exactly where a rewritten sentence
-		// would live, since `${…}` interpolation is how drift is spelled in
-		// TypeScript.
-		if (character === '"' || character === "'" || character === "`") {
-			const quote = character;
-			index += 1;
-			while (index < source.length) {
-				if (source[index] === "\\") {
-					index += 2;
-					continue;
-				}
-				if (source[index] === quote) {
-					index += 1;
-					break;
-				}
-				out += source[index];
-				index += 1;
-			}
-			out += "\n";
-			continue;
-		}
+        if (character === "/" && source[index + 1] === "/") {
+            while (index < source.length && source[index] !== "\n") {
+                index += 1;
+            }
+            continue;
+        }
+        if (character === "/" && source[index + 1] === "*") {
+            const close = source.indexOf("*/", index + 2);
+            index = close === -1 ? source.length : close + 2;
+            continue;
+        }
+        // One branch for all three quotes. A template literal is a string as far as
+        // this is concerned: its fixed text is exactly where a rewritten sentence
+        // would live, since `${…}` interpolation is how drift is spelled in
+        // TypeScript.
+        if (character === '"' || character === "'" || character === "`") {
+            const quote = character;
+            index += 1;
+            while (index < source.length) {
+                if (source[index] === "\\") {
+                    index += 2;
+                    continue;
+                }
+                if (source[index] === quote) {
+                    index += 1;
+                    break;
+                }
+                out += source[index];
+                index += 1;
+            }
+            out += "\n";
+            continue;
+        }
 
-		// Ordinary code, which is deliberately dropped rather than collected.
-		index += 1;
-	}
+        // Ordinary code, which is deliberately dropped rather than collected.
+        index += 1;
+    }
 
-	return out;
+    return out;
 }
 
 /**
@@ -146,140 +146,140 @@ function stringLiterals(source: string): string {
  * test see through the interpolation.
  */
 const REWORDED_SENTENCE = [
-	"function summary(error: JsScanRunInfrastructureError): string {",
-	"\treturn `Crash Log Scan Run failed during ${error.stage}`;",
-	"}",
+    "function summary(error: JsScanRunInfrastructureError): string {",
+    "\treturn `Crash Log Scan Run failed during ${error.stage}`;",
+    "}",
 ].join("\n");
 
 describe("Node CLI display-label audit", () => {
-	test("no CLI source writes a sentence the presentation crate owns", () => {
-		// Deliberately scoped to the deny-list. A general "no template literals"
-		// rule would be unworkably noisy — this CLI legitimately composes a great
-		// deal of text that is Display Layout, including its own summary block,
-		// its banner, and its argument errors.
-		const phrases = coreOwnedPhrases();
-		const offenders: string[] = [];
+    test("no CLI source writes a sentence the presentation crate owns", () => {
+        // Deliberately scoped to the deny-list. A general "no template literals"
+        // rule would be unworkably noisy — this CLI legitimately composes a great
+        // deal of text that is Display Layout, including its own summary block,
+        // its banner, and its argument errors.
+        const phrases = coreOwnedPhrases();
+        const offenders: string[] = [];
 
-		for (const name of AUDITED_SOURCES) {
-			const code = stringLiterals(
-				readFileSync(join(CLI_DIR, name), "utf8"),
-			);
-			for (const phrase of phrases) {
-				if (code.includes(phrase)) {
-					offenders.push(`${name} writes ${JSON.stringify(phrase)}`);
-				}
-			}
-		}
+        for (const name of AUDITED_SOURCES) {
+            const code = stringLiterals(
+                readFileSync(join(CLI_DIR, name), "utf8"),
+            );
+            for (const phrase of phrases) {
+                if (code.includes(phrase)) {
+                    offenders.push(`${name} writes ${JSON.stringify(phrase)}`);
+                }
+            }
+        }
 
-		expect(offenders).toEqual([]);
-	});
+        expect(offenders).toEqual([]);
+    });
 
-	test("the shared deny-list is readable and not empty", () => {
-		// The detector loops over the deny-list, so a truncated or mislocated list
-		// asserts nothing while still reporting green — an audit that reads as
-		// coverage while providing none. The other four audits carry the same guard
-		// against the same file.
-		const phrases = coreOwnedPhrases();
+    test("the shared deny-list is readable and not empty", () => {
+        // The detector loops over the deny-list, so a truncated or mislocated list
+        // asserts nothing while still reporting green — an audit that reads as
+        // coverage while providing none. The other four audits carry the same guard
+        // against the same file.
+        const phrases = coreOwnedPhrases();
 
-		expect(phrases.length).toBeGreaterThanOrEqual(10);
-		expect(phrases).toContain("Crash Log Scan Run failed during");
+        expect(phrases.length).toBeGreaterThanOrEqual(10);
+        expect(phrases).toContain("Crash Log Scan Run failed during");
 
-		// No constraint on an entry's shape is asserted, and that is deliberate. An
-		// earlier version of the native ports required each entry to contain a
-		// space, because they searched comment-stripped *code* and a bare word
-		// could match an identifier. That constraint was load-bearing only because
-		// those detectors read more than they needed: `stringLiterals` yields
-		// literals alone, where no identifier can appear, so `succeeded,` — which
-		// occurs in ordinary code as `terminal.succeeded, terminal.failed` — is
-		// safe to list.
-	});
+        // No constraint on an entry's shape is asserted, and that is deliberate. An
+        // earlier version of the native ports required each entry to contain a
+        // space, because they searched comment-stripped *code* and a bare word
+        // could match an identifier. That constraint was load-bearing only because
+        // those detectors read more than they needed: `stringLiterals` yields
+        // literals alone, where no identifier can appear, so `succeeded,` — which
+        // occurs in ordinary code as `terminal.succeeded, terminal.failed` — is
+        // safe to list.
+    });
 
-	test("the phrase detector catches the drift it exists for", () => {
-		// This CLI writes none of these phrases now, so a broken detector and a
-		// compliant frontend look identical from here. Feeding the detector the
-		// drift it exists to catch is what tells the two apart.
-		expect(stringLiterals(REWORDED_SENTENCE)).toContain(
-			"Crash Log Scan Run failed during",
-		);
-	});
+    test("the phrase detector catches the drift it exists for", () => {
+        // This CLI writes none of these phrases now, so a broken detector and a
+        // compliant frontend look identical from here. Feeding the detector the
+        // drift it exists to catch is what tells the two apart.
+        expect(stringLiterals(REWORDED_SENTENCE)).toContain(
+            "Crash Log Scan Run failed during",
+        );
+    });
 
-	test("the phrase detector reads code rather than comments", () => {
-		// Load-bearing for this frontend specifically: `run-scan.ts` explains in
-		// prose why `Crash Log Scan Run failed during` is Rust's to say. A detector
-		// that could not tell a comment from a literal would fail on the very
-		// comment documenting the fix.
-		const commented = stringLiterals(
-			[
-				"// Crash Log Scan Run failed during is core's to say.",
-				"/* Crash Log Scan Run failed during, again. */",
-				"const x = 1;",
-			].join("\n"),
-		);
-		expect(commented).not.toContain("Crash Log Scan Run failed during");
+    test("the phrase detector reads code rather than comments", () => {
+        // Load-bearing for this frontend specifically: `run-scan.ts` explains in
+        // prose why `Crash Log Scan Run failed during` is Rust's to say. A detector
+        // that could not tell a comment from a literal would fail on the very
+        // comment documenting the fix.
+        const commented = stringLiterals(
+            [
+                "// Crash Log Scan Run failed during is core's to say.",
+                "/* Crash Log Scan Run failed during, again. */",
+                "const x = 1;",
+            ].join("\n"),
+        );
+        expect(commented).not.toContain("Crash Log Scan Run failed during");
 
-		const written = stringLiterals(
-			'const s = "Crash Log Scan Run failed during";',
-		);
-		expect(written).toContain("Crash Log Scan Run failed during");
-	});
+        const written = stringLiterals(
+            'const s = "Crash Log Scan Run failed during";',
+        );
+        expect(written).toContain("Crash Log Scan Run failed during");
+    });
 
-	test("the phrase detector does not mistake a literal slash for a comment", () => {
-		// A URL or path literal must not read as the start of a comment, or
-		// everything after it on that line silently leaves the audited text —
-		// including a phrase written there.
-		const code = stringLiterals(
-			[
-				'const url = "https://example.invalid";',
-				'const s = `Crash Log Scan Run failed during ${stage}`;',
-			].join("\n"),
-		);
-		expect(code).toContain("Crash Log Scan Run failed during");
-	});
+    test("the phrase detector does not mistake a literal slash for a comment", () => {
+        // A URL or path literal must not read as the start of a comment, or
+        // everything after it on that line silently leaves the audited text —
+        // including a phrase written there.
+        const code = stringLiterals(
+            [
+                'const url = "https://example.invalid";',
+                'const s = `Crash Log Scan Run failed during ${stage}`;',
+            ].join("\n"),
+        );
+        expect(code).toContain("Crash Log Scan Run failed during");
+    });
 
-	test("the phrase detector reads literals rather than the code around them", () => {
-		// `succeeded,` is core-owned prose and also, character for character, an
-		// ordinary argument list. A detector that searched code rather than
-		// literals reported the Qt GUI's `emit finished(terminal.succeeded,
-		// terminal.failed, ...)` as drift, which is why all four source-scanning
-		// ports extract literals.
-		expect(
-			stringLiterals("emit finished(terminal.succeeded, terminal.failed);"),
-		).not.toContain("succeeded,");
-		expect(stringLiterals('const s = "3 succeeded, 4 failed";')).toContain(
-			"succeeded,",
-		);
+    test("the phrase detector reads literals rather than the code around them", () => {
+        // `succeeded,` is core-owned prose and also, character for character, an
+        // ordinary argument list. A detector that searched code rather than
+        // literals reported the Qt GUI's `emit finished(terminal.succeeded,
+        // terminal.failed, ...)` as drift, which is why all four source-scanning
+        // ports extract literals.
+        expect(
+            stringLiterals("emit finished(terminal.succeeded, terminal.failed);"),
+        ).not.toContain("succeeded,");
+        expect(stringLiterals('const s = "3 succeeded, 4 failed";')).toContain(
+            "succeeded,",
+        );
 
-		// Two adjacent literals must not fuse into a phrase neither contains, or
-		// the separator this relies on is doing nothing.
-		expect(stringLiterals('const s = "succeeded" + ", failed";')).not.toContain(
-			"succeeded,",
-		);
-	});
+        // Two adjacent literals must not fuse into a phrase neither contains, or
+        // the separator this relies on is doing nothing.
+        expect(stringLiterals('const s = "succeeded" + ", failed";')).not.toContain(
+            "succeeded,",
+        );
+    });
 
-	test("the phrase detector leaves compliant rendering alone", () => {
-		// The other half of the proof. Concatenating segments Rust produced is the
-		// correct shape and must stay quiet, or the audit becomes noise a
-		// contributor learns to work around.
-		const compliant = stringLiterals(
-			"return line.segments.map(renderDisplaySegment).join(' ');",
-		);
-		for (const phrase of coreOwnedPhrases()) {
-			expect(compliant).not.toContain(phrase);
-		}
-	});
+    test("the phrase detector leaves compliant rendering alone", () => {
+        // The other half of the proof. Concatenating segments Rust produced is the
+        // correct shape and must stay quiet, or the audit becomes noise a
+        // contributor learns to work around.
+        const compliant = stringLiterals(
+            "return line.segments.map(renderDisplaySegment).join(' ');",
+        );
+        for (const phrase of coreOwnedPhrases()) {
+            expect(compliant).not.toContain(phrase);
+        }
+    });
 
-	test("the audit covers every CLI source file", () => {
-		// The stale-list guard every one of these audits carries. Without it a new
-		// file under `cli/` would be unaudited from the day it lands — and a
-		// rewritten sentence is likelier to appear in new code than in old.
-		//
-		// Set equality rather than a subset check, so a listed-but-deleted file
-		// fails too, matching the Python audit's stricter form.
-		const present = readdirSync(CLI_DIR, { recursive: true })
-			.map((entry) => String(entry).replaceAll("\\", "/"))
-			.filter((entry) => entry.endsWith(".ts"))
-			.sort();
+    test("the audit covers every CLI source file", () => {
+        // The stale-list guard every one of these audits carries. Without it a new
+        // file under `cli/` would be unaudited from the day it lands — and a
+        // rewritten sentence is likelier to appear in new code than in old.
+        //
+        // Set equality rather than a subset check, so a listed-but-deleted file
+        // fails too, matching the Python audit's stricter form.
+        const present = readdirSync(CLI_DIR, {recursive: true})
+            .map((entry) => String(entry).replaceAll("\\", "/"))
+            .filter((entry) => entry.endsWith(".ts"))
+            .sort();
 
-		expect(present).toEqual([...AUDITED_SOURCES].sort());
-	});
+        expect(present).toEqual([...AUDITED_SOURCES].sort());
+    });
 });

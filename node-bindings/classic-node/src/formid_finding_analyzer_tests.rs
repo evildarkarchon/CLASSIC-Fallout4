@@ -31,14 +31,17 @@ fn projects_resolved_unresolved_found_and_missing_findings() {
     )]);
     let analyzer = build_analyzer(lookup);
     let result = classic_shared_core::get_runtime()
-        .block_on(analyze_owned(&analyzer, JsFormIdFindingAnalysisInput {
-            crash_lines: vec![
-                "Form ID: 0x01123456".to_string(),
-                "Form ID: 0x02ABCDEF".to_string(),
-                "Form ID: 0x03999999".to_string(),
-            ],
-            plugins: vec![plugin("Found.esp", "01"), plugin("Missing.esp", "02")],
-        }))
+        .block_on(analyze_owned(
+            &analyzer,
+            JsFormIdFindingAnalysisInput {
+                crash_lines: vec![
+                    "Form ID: 0x01123456".to_string(),
+                    "Form ID: 0x02ABCDEF".to_string(),
+                    "Form ID: 0x03999999".to_string(),
+                ],
+                plugins: vec![plugin("Found.esp", "01"), plugin("Missing.esp", "02")],
+            },
+        ))
         .expect("semantic projection should succeed");
 
     assert_eq!(result.findings.len(), 3);
@@ -67,7 +70,8 @@ fn preserves_shared_lookup_failure_error() {
         FormIdValueLookupInMemoryReply::OperationalFailure("fixture offline".to_string()),
     )]);
     let analyzer = build_analyzer(lookup);
-    let result = classic_shared_core::get_runtime().block_on(analyze_owned(&analyzer,
+    let result = classic_shared_core::get_runtime().block_on(analyze_owned(
+        &analyzer,
         JsFormIdFindingAnalysisInput {
             crash_lines: vec!["Form ID: 0x01123456".to_string()],
             plugins: vec![plugin("Broken.esp", "01")],

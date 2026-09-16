@@ -73,7 +73,7 @@ pub(super) fn observe(fixture: &Value) -> RunnerResult<Value> {
                 .sort_by(|left, right| left["original"].as_str().cmp(&right["original"].as_str()));
             Ok(groups)
         };
-        let mapping=|values:std::collections::HashMap<String,Vec<std::path::PathBuf>>|->RunnerResult<BTreeMap<String,Vec<String>>>{values.into_iter().map(|(name,paths)|Ok((name,paths.iter().map(|path|relative(root,path)).collect::<RunnerResult<Vec<_>>>()?))).collect()};
+        let mapping = |values: std::collections::HashMap<String, Vec<std::path::PathBuf>>| -> RunnerResult<BTreeMap<String, Vec<String>>>{ values.into_iter().map(|(name, paths)| Ok((name, paths.iter().map(|path| relative(root, path)).collect::<RunnerResult<Vec<_>>>()?))).collect() };
         let mut detector = ConfigDuplicateDetector::new();
         let initial_map = mapping(detector.scan_directory(root)?)?;
         let initial = project(&detector)?;
@@ -92,7 +92,7 @@ pub(super) fn observe(fixture: &Value) -> RunnerResult<Value> {
         json!({"initialGroups":initial,"initialMap":initial_map,"afterGroups":after,"afterMap":after_map})
     } else if operation == "scan" {
         let value = ModIniScanner::scan(root, &text(&fixture["game"])?)?;
-        let issues=value.issues.iter().map(|issue|Ok(json!({"filePath":relative(root,&issue.file_path)?,"section":issue.section,"setting":issue.setting,"currentValue":issue.current_value,"recommendedValue":issue.recommended_value,"description":issue.description,"severity":format!("{:?}",issue.severity)}))).collect::<RunnerResult<Vec<_>>>()?;
+        let issues = value.issues.iter().map(|issue| Ok(json!({"filePath":relative(root,&issue.file_path)?,"section":issue.section,"setting":issue.setting,"currentValue":issue.current_value,"recommendedValue":issue.recommended_value,"description":issue.description,"severity":format!("{:?}",issue.severity)}))).collect::<RunnerResult<Vec<_>>>()?;
         let vsync = value
             .vsync_files
             .iter()

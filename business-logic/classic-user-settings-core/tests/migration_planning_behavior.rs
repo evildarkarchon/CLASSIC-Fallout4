@@ -213,7 +213,7 @@ fn alias_plan_promotes_the_typed_fallback_when_the_canonical_value_is_invalid() 
         root.path().join("CLASSIC Settings.yaml"),
         b"schema_version: \"1.0\"\nCLASSIC_Settings:\n  SCAN Custom Path: relative/logs\n  Custom Scan Folder: E:/Alias Crash Logs\n",
     )
-    .unwrap();
+        .unwrap();
 
     let MigrationPlanningOutcome::Planned(plan) = UserSettings::open(root.path()).plan_migration()
     else {
@@ -249,7 +249,7 @@ fn current_and_same_major_newer_documents_need_no_migration_or_downgrade() {
         newer_root.path().join("CLASSIC Settings.yaml"),
         b"schema_version: \"1.7\"\nCLASSIC_Settings:\n  Update Check: true\nFuture:\n  additive: value\n",
     )
-    .unwrap();
+        .unwrap();
     assert_eq!(
         UserSettings::open(newer_root.path()).plan_migration(),
         MigrationPlanningOutcome::NotRequired

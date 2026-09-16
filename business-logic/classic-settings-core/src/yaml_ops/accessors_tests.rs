@@ -1,13 +1,6 @@
 #![allow(unused_imports)]
 
 use super::super::*;
-use std::fs;
-use std::io::Write;
-use std::path::Path;
-use std::sync::Arc;
-use std::thread;
-use std::time::Duration;
-use tempfile::{NamedTempFile, tempdir};
 use yaml_rust2::Yaml;
 #[test]
 #[serial_test::serial]

@@ -18,7 +18,8 @@ pub(super) fn execute(family: &str, fixture: &Value) -> RunnerResult<Value> {
                     let copy: GameId = game.as_str().parse().expect("public token parses");
                     let mut left = std::collections::hash_map::DefaultHasher::new();
                     let mut right = std::collections::hash_map::DefaultHasher::new();
-                    game.hash(&mut left); copy.hash(&mut right);
+                    game.hash(&mut left);
+                    copy.hash(&mut right);
                     json!({"exeName": game.exe_name(), "vr": game.is_vr(), "text": game.to_string(), "repr": format!("GameId.{game:?}"), "equalCopy": *game == copy, "equalOther": *game == games[(index+1)%games.len()], "hashCopy": left.finish() == right.finish()})
                 }).collect::<Vec<_>>();
                 return Ok(json!({"games": values}));

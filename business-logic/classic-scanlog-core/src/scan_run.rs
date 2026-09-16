@@ -1701,11 +1701,11 @@ fn resolve_unsolved_logs_destination(
     match intent {
         CrashLogScanRunIntent::Targeted => Ok(None),
         CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
-            unsolved_logs: StandardUnsolvedLogsIntent::LeaveInPlace,
-        }) => Ok(None),
+                                            unsolved_logs: StandardUnsolvedLogsIntent::LeaveInPlace,
+                                        }) => Ok(None),
         CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
-            unsolved_logs: StandardUnsolvedLogsIntent::MoveToCustom(destination),
-        }) => {
+                                            unsolved_logs: StandardUnsolvedLogsIntent::MoveToCustom(destination),
+                                        }) => {
             if destination.is_absolute() {
                 Ok(Some(destination.clone()))
             } else {
@@ -1716,8 +1716,8 @@ fn resolve_unsolved_logs_destination(
             }
         }
         CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
-            unsolved_logs: StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault,
-        }) => ready
+                                            unsolved_logs: StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault,
+                                        }) => ready
             .unsolved_logs_destination()
             .map(|destination| Ok(Some(destination.to_path_buf())))
             .unwrap_or_else(|| {

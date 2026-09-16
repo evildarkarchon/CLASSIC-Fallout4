@@ -41,7 +41,7 @@ fn files(root: &Path, directory: &Path, out: &mut Vec<Value>) -> RunnerResult<()
                 .to_string_lossy()
                 .replace('\\', "/");
             let bytes = fs::read(&path)?;
-            out.push(if path.file_name().is_some_and(|name|name=="manifest-latest.json"){json!({"path":relative,"json":serde_json::from_slice::<Value>(&bytes)?})}else{json!({"path":relative,"hex":bytes.iter().map(|byte|format!("{byte:02x}")).collect::<String>()})});
+            out.push(if path.file_name().is_some_and(|name| name == "manifest-latest.json") { json!({"path":relative,"json":serde_json::from_slice::<Value>(&bytes)?}) } else { json!({"path":relative,"hex":bytes.iter().map(|byte|format!("{byte:02x}")).collect::<String>()}) });
         }
     }
     out.sort_by(|a, b| a["path"].as_str().cmp(&b["path"].as_str()));
@@ -86,7 +86,7 @@ fn status(api: &str, result: Result<YamlUpdateStatus, UpdateError>) -> RunnerRes
             value["tag"] = json!(1);
             value["releaseTag"] = json!(manifest.release_tag);
             value["publishedAt"] = json!(manifest.published_at);
-            value["compatible"]=json!(compatible_files.iter().map(|file|json!({"name":file.name,"schemaVersion":file.schema_version,"sha256":file.sha256,"sizeBytes":file.size_bytes,"downloadUrl":file.download_url})).collect::<Vec<_>>());
+            value["compatible"] = json!(compatible_files.iter().map(|file|json!({"name":file.name,"schemaVersion":file.schema_version,"sha256":file.sha256,"sizeBytes":file.size_bytes,"downloadUrl":file.download_url})).collect::<Vec<_>>());
         }
         other => return Err(invalid(&format!("unexpected YAML check status {other:?}")).into()),
     }
@@ -274,7 +274,11 @@ pub(super) fn execute(fixture: &Value, scenario: &Value) -> RunnerResult<Value> 
                 )?),
                 "rollback" => {
                     let name = text(&fixture["fileName"])?;
-                    results.push(match rollback_yaml_update(&name){Ok(RollbackOutcome::RolledBack{file_name})=>json!({"api":"yaml_rollback_update","fileName":file_name,"rolledBack":true,"error":null}),Ok(RollbackOutcome::NoPreviousVersion{file_name})=>json!({"api":"yaml_rollback_update","fileName":file_name,"rolledBack":false,"error":null}),Err(error)=>json!({"api":"yaml_rollback_update","fileName":name,"rolledBack":false,"error":error_kind(error)?})});
+                    results.push(match rollback_yaml_update(&name) {
+                        Ok(RollbackOutcome::RolledBack { file_name }) => json!({"api":"yaml_rollback_update","fileName":file_name,"rolledBack":true,"error":null}),
+                        Ok(RollbackOutcome::NoPreviousVersion { file_name }) => json!({"api":"yaml_rollback_update","fileName":file_name,"rolledBack":false,"error":null}),
+                        Err(error) => json!({"api":"yaml_rollback_update","fileName":name,"rolledBack":false,"error":error_kind(error)?})
+                    });
                 }
                 "rollback-bulk" => {
                     let mut rolled = Vec::new();

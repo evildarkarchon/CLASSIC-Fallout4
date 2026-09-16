@@ -1,5 +1,9 @@
 use super::*;
 use classic_config_core::YamlDataContentIdentity;
+// Imported here rather than in `scan_run.rs`, which names only `RecoveryPrompt`: the
+// descriptions inside one are read through it there, while these tests fabricate
+// descriptions directly and so need the type by name.
+use classic_scan_presentation::RecoveryDecisionDescription;
 use classic_scanlog_core::scan_run::contract::{
     InfrastructureError, InfrastructureErrorStage, LogDisposition, LogEvent, LogFailure,
     LogFailureStage, LogResult, RunResult,
@@ -11,14 +15,10 @@ use classic_scanlog_core::{CrashLogScanRejectedInput, CrashLogScanRunStatus};
 // or `VARIANTS` off a core variant to derive an expectation rather than restate
 // one.
 use classic_vocabulary::Vocabulary;
-// Imported here rather than in `scan_run.rs`, which names only `RecoveryPrompt`: the
-// descriptions inside one are read through it there, while these tests fabricate
-// descriptions directly and so need the type by name.
-use classic_scan_presentation::RecoveryDecisionDescription;
 
 const SHARED_SCAN_RUN_MANIFEST: &str = include_str!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/../../tests/fixtures/crash_log_scan_run/manifest.json"
+env!("CARGO_MANIFEST_DIR"),
+"/../../tests/fixtures/crash_log_scan_run/manifest.json"
 ));
 
 /// Loads the language-neutral structured-failure corpus for Node mapping tests.
@@ -57,7 +57,7 @@ fn request_conversion_treats_blank_optional_paths_as_absent() {
         unsolved_logs_destination: Some(" \t ".to_string()),
         max_concurrent: None,
     })
-    .expect("configuration should convert");
+        .expect("configuration should convert");
     assert_eq!(configuration.installation_root, PathBuf::from("C:/CLASSIC"));
     assert_eq!(configuration.game, classic_shared_core::GameId::Fallout4);
     assert!(configuration.scan_facts.unsolved_logs_destination.is_none());
@@ -67,7 +67,7 @@ fn request_conversion_treats_blank_optional_paths_as_absent() {
         custom_scan_directory: Some(String::new()),
         configured_documents_root: Some(" \t ".to_string()),
     })
-    .expect("standard source should convert");
+        .expect("standard source should convert");
     assert!(source.custom_scan_directory.is_none());
     assert!(source.configured_documents_root.is_none());
 }
@@ -535,7 +535,7 @@ fn no_scan_run_display_label_reaches_javascript_empty() {
             !scan_run_installed_yaml_data_diagnostic_kind_label(
                 installed_yaml_data_run_diagnostic_kind_to_js(variant)
             )
-            .is_empty()
+                .is_empty()
         );
     }
 

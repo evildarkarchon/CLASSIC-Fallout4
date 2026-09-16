@@ -763,7 +763,7 @@ fn execute_geometry(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
     };
     let current = UserSettings::open(root.path());
     let geometry = current.frontend_state().window_geometry().main_tab();
-    let files=tree(root.path())?.into_iter().map(|(path,content)|json!({"path":path.to_string_lossy().replace('\\',"/"),"kind":if content.is_some(){"file"}else{"directory"}})).collect::<Vec<_>>();
+    let files = tree(root.path())?.into_iter().map(|(path, content)| json!({"path":path.to_string_lossy().replace('\\',"/"),"kind":if content.is_some(){"file"}else{"directory"}})).collect::<Vec<_>>();
     Ok(
         json!({"transition":transition,"geometry":{"maximized":geometry.maximized(),"width":geometry.width(),"height":geometry.height()},"files":files}),
     )
@@ -805,6 +805,6 @@ fn execute_legacy_import(plan: &Value, scenario: &Value) -> RunnerResult<Value> 
         }
         _ => return Err(invalid("legacy restore did not restore").into()),
     };
-    let files=tree(root.path())?.into_iter().filter_map(|(path,bytes)|bytes.map(|bytes|json!({"path":path.to_string_lossy().replace('\\',"/"),"bytesHex":migration_hex(&bytes)}))).collect::<Vec<_>>();
+    let files = tree(root.path())?.into_iter().filter_map(|(path, bytes)| bytes.map(|bytes| json!({"path":path.to_string_lossy().replace('\\',"/"),"bytesHex":migration_hex(&bytes)}))).collect::<Vec<_>>();
     Ok(json!({"import":observed,"restore":restored,"files":files}))
 }

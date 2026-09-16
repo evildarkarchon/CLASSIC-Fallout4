@@ -1,8 +1,15 @@
 {
-	"extends": "../tsconfig.json",
-	"compilerOptions": {
-		"noEmit": true,
-		"types": ["node", "bun-types"]
-	},
-	"include": ["scan_run_contract.types.ts", "user_settings_conformance_runner.ts", "installed_yaml_conformance.ts"]
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": [
+      "node",
+      "bun-types"
+    ]
+  },
+  "include": [
+    "scan_run_contract.types.ts",
+    "user_settings_conformance_runner.ts",
+    "installed_yaml_conformance.ts"
+  ]
 }
