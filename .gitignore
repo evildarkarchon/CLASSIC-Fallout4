@@ -128,19 +128,15 @@ tools/binding_compliance/artifacts/
 tools/certs/
 
 # Rust
-target/
-Cargo.lock
 # Maturin build artifacts
 *.so
 *.pyd
-*.dll
 # Rust workspace. Ignore local cargo state but keep the tracked workspace
 # config. Git cannot re-include a file inside an ignored *directory*, so the
 # repo-root .cargo must be excluded per-entry rather than as a whole directory.
 /.cargo/*
 !/.cargo/config.toml
 # Rust debugging
-*.pdb
 *.dSYM/
 nul
 rust_build_check.txt
@@ -177,7 +173,6 @@ image.png
 plans/*.md
 # Logs
 logs
-*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -270,7 +265,6 @@ dist
 
 # vuepress v2.x temp and cache directory
 .temp
-.cache
 
 # Sveltekit cache directory
 .svelte-kit/
@@ -375,7 +369,6 @@ opencode.json
 graphify-out/
 Architecture review*.html
 Architecture review*_files/
-.mcp.json
 .pytest-tmp/
 .pytest-215-*
 .codegraph/
