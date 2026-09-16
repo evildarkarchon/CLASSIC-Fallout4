@@ -378,3 +378,4 @@ Architecture review*_files/
 .mcp.json
 .pytest-tmp/
 .pytest-215-*
+.codegraph/

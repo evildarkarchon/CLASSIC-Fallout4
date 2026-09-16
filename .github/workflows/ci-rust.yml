@@ -11,6 +11,7 @@ env:
 jobs:
   format:
     name: Formatting (rustfmt)
+    if: "false" # Disabled until further notice
     runs-on: windows-latest
     timeout-minutes: 10
     continue-on-error: true

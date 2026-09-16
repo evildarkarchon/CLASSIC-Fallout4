@@ -695,7 +695,8 @@ pub type LocalIgnoreResetPublicationStage = durable_publication::PublicationStag
 #[derive(Debug, Error)]
 pub enum LocalIgnoreResetError {
     /// The selected Main defaults retained by the plan were unusable.
-    #[error("retained selected Main defaults cannot reset Local Ignore YAML Data `{}`: {reason}", path.display())]
+    #[error("retained selected Main defaults cannot reset Local Ignore YAML Data `{}`: {reason}", path.display()
+    )]
     DefaultsUnavailable {
         /// Canonical Local Ignore path that would have been reset.
         path: PathBuf,
@@ -750,7 +751,8 @@ pub enum LocalIgnoreResetError {
     },
     /// Retained defaults could not be published durably at the canonical path.
     ///
-    #[error("failed to publish Local Ignore replacement `{}` at {stage:?}: {source}", path.display())]
+    #[error("failed to publish Local Ignore replacement `{}` at {stage:?}: {source}", path.display()
+    )]
     ReplacementPublication {
         /// Canonical Local Ignore path.
         path: PathBuf,
@@ -1382,7 +1384,8 @@ pub enum InstalledYamlDataLoadError {
         source: std::io::Error,
     },
     /// Selected Main defaults could not safely initialize missing Local Ignore YAML Data.
-    #[error("selected Main default for Local Ignore YAML Data `{}` is invalid: {reason}", path.display())]
+    #[error("selected Main default for Local Ignore YAML Data `{}` is invalid: {reason}", path.display()
+    )]
     LocalIgnoreDefaultInvalid {
         /// Expected Local Ignore path.
         path: PathBuf,

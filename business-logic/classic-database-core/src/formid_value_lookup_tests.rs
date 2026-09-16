@@ -204,10 +204,7 @@ fn shared_pool_batch_errors_when_every_database_lacks_the_active_game_table() {
         let lookup = FormIdValueLookup::shared_pool(Arc::clone(&pool));
 
         let error = lookup
-            .lookup_batch(vec![(
-                "000804".to_string(),
-                "SomeMod.esp".to_string(),
-            )])
+            .lookup_batch(vec![("000804".to_string(), "SomeMod.esp".to_string())])
             .await
             .expect_err("an all-mismatched shared pool must not report successful misses");
 
