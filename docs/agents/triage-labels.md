@@ -10,6 +10,6 @@ The skills speak in terms of five canonical triage roles. This file maps those r
 | `ready-for-human`          | `ready-for-human`    | Requires human implementation            |
 | `wontfix`                  | `wontfix`            | Will not be actioned                     |
 
-When a skill mentions a role, such as "apply the AFK-ready triage label", set the issue file's `Status:` line to the corresponding string from this table. Wayfinder claim and resolution states follow `issue-tracker.md`.
+When a skill mentions a role, apply the corresponding GitHub issue label from this table. Wayfinder claim and resolution states follow `issue-tracker.md`.
 
 Edit the right-hand column to match whatever vocabulary this repo actually uses.

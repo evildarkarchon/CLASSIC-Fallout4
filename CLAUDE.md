@@ -4,6 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 @AGENTS.md
 
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs are tracked in GitHub Issues for `evildarkarchon/CLASSIC-Fallout4`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Triage uses the canonical label vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Domain documentation uses a single-context layout: root `CONTEXT.md` and root `docs/adr/`. See `docs/agents/domain.md`.
+
 Read on demand, not up front:
 
 - `docs/api/README.md` — index of contributor-facing API guides. Read it before changing any public Rust, bridge, GUI-consumer, or binding-facing API (AGENTS.md rule 8).
