@@ -7,6 +7,7 @@ import argparse
 import sys
 from collections.abc import Mapping
 from pathlib import Path
+from typing import TextIO
 
 from catalog import ComplianceRequirement, requirements_for_profile  # type: ignore
 from gate_evidence import (  # type: ignore
@@ -17,6 +18,14 @@ from gate_evidence import (  # type: ignore
     write_gate_evidence,
 )
 from suite import ComplianceSuite  # type: ignore
+
+
+def _write_diagnostic(stream: TextIO, value: str) -> None:
+    """Preserve captured output on consoles that cannot encode every Unicode glyph."""
+    # Subprocess output is decoded as UTF-8, while Windows CI can expose a
+    # legacy stdout/stderr code page that rejects otherwise valid diagnostics.
+    encoding = stream.encoding or "utf-8"
+    stream.write(value.encode(encoding, errors="backslashreplace").decode(encoding))
 
 
 def run_one_requirement(
@@ -43,9 +52,9 @@ def run_one_requirement(
     ).run()
     for result in report["requirements"]:
         if result.get("stdout"):
-            print(result["stdout"], end="", file=sys.stdout)
+            _write_diagnostic(sys.stdout, result["stdout"])
         if result.get("stderr"):
-            print(result["stderr"], end="", file=sys.stderr)
+            _write_diagnostic(sys.stderr, result["stderr"])
     destination = evidence_path if evidence_path.is_absolute() else repo_root / evidence_path
     write_gate_evidence(
         repo_root,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import json
 import sys
 import tempfile
@@ -277,6 +278,48 @@ def test_single_gate_runner_executes_command_and_writes_evidence(tmp_path: Path)
     assert payload["result"] == "pass"
     assert payload["results"][0]["status"] == "passed"
     assert payload["results"][0]["command"]["argv"] == [sys.executable, "-c", "print('executed')"]
+
+
+def test_single_gate_runner_keeps_unicode_diagnostics_on_legacy_windows_streams(
+        tmp_path: Path,
+) -> None:
+    """An unencodable native log symbol cannot discard a passing gate result."""
+    requirement = ComplianceRequirement(
+        id="node-bun-runtime-tests",
+        title="Bun runtime tests",
+        surface="node",
+        classification="existing_gate",
+        profiles=("full",),
+        blocking=True,
+        summary="Bun runtime tests",
+        command=CommandSpec(
+            argv=(
+                sys.executable,
+                "-c",
+                "import os; value='🔍'.encode('utf-8'); os.write(1,value); os.write(2,value)",
+            )
+        ),
+    )
+    stdout = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+    stderr = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+    output = tmp_path / "gate_evidence.json"
+    with (
+        patch("run_retained_gate.sys.stdout", stdout),
+        patch("run_retained_gate.sys.stderr", stderr),
+    ):
+        result = run_one_requirement(
+            REPO_ROOT,
+            requirement,
+            output,
+            environment={"GITHUB_RUN_ID": "173", "GITHUB_RUN_ATTEMPT": "2"},
+        )
+    stdout.flush()
+    stderr.flush()
+
+    assert result == 0
+    assert output.is_file()
+    assert r"\U0001f50d" in stdout.buffer.getvalue().decode("cp1252")
+    assert r"\U0001f50d" in stderr.buffer.getvalue().decode("cp1252")
 
 
 def test_single_gate_runner_records_failed_command(tmp_path: Path) -> None:
