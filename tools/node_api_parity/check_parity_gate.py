@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -24,12 +25,19 @@ from parity_artifact_io import (
     preserve_baseline_generated_at_all,
     sync_baseline_artifacts,
 )
+from resolve_node_rust_symbols import (
+    Resolution,
+    resolve_all,
+    source_backed_crate,
+    source_backed_symbol,
+)
 
 
 def validate_contract_surface(
         contract: dict[str, Any],
         rust_manifest: dict[str, Any],
         node_manifest: dict[str, Any],
+        wrapper_resolutions: dict[str, Resolution] | None = None,
 ) -> list[str]:
     """Bidirectional contract ↔ surface guard with H1 fail-closed row rejection.
 
@@ -58,11 +66,10 @@ def validate_contract_surface(
        omit ``nodeExport`` (Phase 3 A7 precedent for proxy rows that cover
        Rust-only symbols without a direct Node binding).
 
-    2. The ``rustSymbol`` exists in the parsed Rust surface. For ``@rust``
-       proxy rows the suffix is stripped before lookup. Missing rows produce
-       a remediation hint that names the declared ``rustCrate`` (with
-       ``<unknown>`` fallback for legacy rows) and suggests the ``pub use``
-       statement to add to ``lib.rs``.
+    2. The ``rustSymbol`` exists in the declared ``rustCrate`` on the parsed
+       Rust surface. For ``@rust`` proxy rows the suffix is stripped before
+       lookup. Mapped rows without a crate are rejected; missing symbols
+       produce a crate-specific ``pub use`` remediation hint.
 
     3. The ``nodeExport`` exists in the parsed Node surface. The Node-side
        check is SKIPPED for ``@rust`` proxy rows (they have no Node binding
@@ -72,37 +79,52 @@ def validate_contract_surface(
        or a snake_case typo instead of NAPI's auto-converted camelCase) is
        called out.
 
+    4. When the Node wrapper directly identifies its Rust crate, the row's
+       ``rustCrate`` agrees with that source evidence even if another crate
+       exports the same-named symbol. A single-row export with direct symbol
+       evidence must also claim that exact symbol.
+
     Returns a list of human-readable diagnostic strings. Empty list means
     the contract is well-formed and both surfaces are in sync. A non-empty
     list causes ``main()`` to exit non-zero with the diagnostics printed to
     stderr.
     """
-    rust_symbols: set[str] = {
-        item["symbol"] for item in rust_manifest.get("symbols", [])
+    # The crate belongs in the key: a namesake in another crate is not proof
+    # that this row still points to the core capability its wrapper uses.
+    rust_symbols: set[tuple[str | None, str]] = {
+        (item.get("crate"), item["symbol"])
+        for item in rust_manifest.get("symbols", [])
     }
     # Symbols whose ONLY appearance in the Rust surface is as a module. A name
-    # that is both a module and a type elsewhere stays acceptable, since the
-    # row may legitimately mean the type.
+    # that is both a module and a type in the same crate stays acceptable,
+    # since the row may legitimately mean the type.
     # `kind` is read defensively: a manifest entry without one carries no
     # evidence that the symbol is a module, so it must not be flagged.
-    rust_symbol_kinds: dict[str, set[str]] = {}
+    rust_symbol_kinds: dict[tuple[str | None, str], set[str]] = {}
     for item in rust_manifest.get("symbols", []):
         kind = item.get("kind")
         if kind is not None:
-            rust_symbol_kinds.setdefault(item["symbol"], set()).add(kind)
-    rust_module_only_symbols: set[str] = {
-        symbol for symbol, kinds in rust_symbol_kinds.items() if kinds == {"module"}
+            key = (item.get("crate"), item["symbol"])
+            rust_symbol_kinds.setdefault(key, set()).add(kind)
+    rust_module_only_symbols: set[tuple[str | None, str]] = {
+        key for key, kinds in rust_symbol_kinds.items() if kinds == {"module"}
     }
     node_exports: set[str] = {
         item["export"] for item in node_manifest.get("exports", [])
     }
+    mapped_export_counts = Counter(
+        mapping.get("nodeExport")
+        for mapping in contract.get("tier1Mappings", [])
+        if isinstance(mapping.get("rustSymbol"), str)
+        and isinstance(mapping.get("nodeExport"), str)
+    )
     diagnostics: list[str] = []
 
     for mapping in contract.get("tier1Mappings", []):
         row_id = mapping.get("id", "<unknown>")
         rust_symbol = mapping.get("rustSymbol")
         node_export = mapping.get("nodeExport")
-        rust_crate = mapping.get("rustCrate", "<unknown>")
+        rust_crate = mapping.get("rustCrate")
 
         # H1 fail-closed: empty row (neither field present).
         if rust_symbol is None and node_export is None:
@@ -198,14 +220,50 @@ def validate_contract_surface(
         effective_rust_symbol = (
             rust_symbol[: -len("@rust")] if is_proxy else rust_symbol
         )
+        valid_rust_crate = isinstance(rust_crate, str) and bool(rust_crate.strip())
+        if not valid_rust_crate:
+            diagnostics.append(
+                f"Row '{row_id}' has no valid rustCrate (<unknown>); a mapped "
+                f"Rust symbol must name its owning crate."
+            )
 
         # Positive: Rust-side lookup.
-        if effective_rust_symbol and effective_rust_symbol not in rust_symbols:
+        rust_key = (rust_crate, effective_rust_symbol) if valid_rust_crate else None
+        if rust_key is not None and effective_rust_symbol and rust_key not in rust_symbols:
             diagnostics.append(
                 f"Row '{row_id}' rustSymbol '{effective_rust_symbol}' not in "
-                f"rust surface. Add 'pub use <sub_module>::"
+                f"rust surface for crate '{rust_crate}'. Add 'pub use <sub_module>::"
                 f"{effective_rust_symbol};' to {rust_crate}/lib.rs."
             )
+
+        # Direct wrapper evidence can disambiguate two crates that both still
+        # export the same name. We only enforce source-backed resolver tiers;
+        # name-derived guesses are not reliable enough to reject a row.
+        wrapper_resolution = (
+            wrapper_resolutions.get(node_export)
+            if wrapper_resolutions and isinstance(node_export, str) and not is_proxy
+            else None
+        )
+        wrapper_crate = source_backed_crate(wrapper_resolution)
+        if wrapper_crate and valid_rust_crate and wrapper_crate != rust_crate:
+            diagnostics.append(
+                f"Row '{row_id}' rustCrate '{rust_crate}' disagrees with "
+                f"nodeExport '{node_export}' wrapper source owner '{wrapper_crate}'."
+            )
+        # Repeated Node exports can have separate accessor rows, so their
+        # symbol need not equal the resolver's single enclosing core type.
+        elif (
+                wrapper_crate
+                and wrapper_crate == rust_crate
+                and mapped_export_counts[node_export] == 1
+        ):
+            wrapper_symbol = source_backed_symbol(wrapper_resolution)
+            if wrapper_symbol and wrapper_symbol != effective_rust_symbol:
+                diagnostics.append(
+                    f"Row '{row_id}' rustSymbol '{effective_rust_symbol}' disagrees "
+                    f"with nodeExport '{node_export}' wrapper source symbol "
+                    f"'{wrapper_symbol}' in '{rust_crate}'."
+                )
 
         # A Node export may not claim a Rust *module* as its counterpart. The
         # existence check above is satisfied by any symbol of any kind, which is
@@ -218,7 +276,7 @@ def validate_contract_surface(
         if (
                 not is_proxy
                 and effective_rust_symbol
-                and effective_rust_symbol in rust_module_only_symbols
+                and rust_key in rust_module_only_symbols
         ):
             diagnostics.append(
                 f"Row '{row_id}' maps nodeExport '{node_export}' to "
@@ -262,6 +320,7 @@ def render_tier1_gate_markdown(diff_report: dict[str, Any]) -> str:
             f"- Tier-1 missing Rust: **{summary['tier1_missing_rust']}**",
             f"- Tier-1 missing Node: **{summary['tier1_missing_node']}**",
             f"- Tier-1 signature mismatch: **{summary['tier1_signature_mismatch']}**",
+            f"- Tier-1 owner mismatch: **{summary.get('tier1_owner_mismatch', 0)}**",
             "",
         )
     )
@@ -276,15 +335,16 @@ def render_tier1_gate_markdown(diff_report: dict[str, Any]) -> str:
             "",
             "Tier-1 drift detected. Review failing contract rows below.",
             "",
-            "| ID | Owner Module | Rust Symbol | Node Export | Status | Reason |",
-            "|---|---|---|---|---|---|",
+            "| ID | Owner Module | Rust Crate | Rust Symbol | Node Export | Status | Reason |",
+            "|---|---|---|---|---|---|---|",
         )
     )
     for row in failing_rows:
         lines.append(
-            "| `{id}` | `{owner_module}` | `{rust_symbol}` | `{node_export}` | `{status}` | {reason} |".format(
-                id=row["id"],
-                owner_module=row["owner_module"],
+                "| `{id}` | `{owner_module}` | `{rust_crate}` | `{rust_symbol}` | `{node_export}` | `{status}` | {reason} |".format(
+                    id=row["id"],
+                    owner_module=row["owner_module"],
+                    rust_crate=row.get("rust_crate") or "-",
                 rust_symbol=row["rust_symbol"],
                 node_export=row["node_export"],
                 status=row["status"],
@@ -368,6 +428,7 @@ def main() -> int:
         tier1_owner_map=tier1_owner_map,
         index_dts_rel=args.index_dts,
     )
+    wrapper_resolutions = resolve_all(repo_root, rust_manifest)
 
     # Phase 4 Plan 1 Task 2: bidirectional guard with H1 fail-closed
     # malformed-row rejection. Runs unconditionally before downstream diff
@@ -377,7 +438,7 @@ def main() -> int:
     # drift noise later. See docstring on `validate_contract_surface()`
     # for the full list of rejected shapes.
     guard_diagnostics = validate_contract_surface(
-        contract, rust_manifest, node_manifest
+        contract, rust_manifest, node_manifest, wrapper_resolutions
     )
     if guard_diagnostics:
         print(
@@ -388,7 +449,9 @@ def main() -> int:
             print(f"  - {message}", file=sys.stderr)
         return 2
 
-    diff_report = generate_diff_report(contract, rust_manifest, node_manifest)
+    diff_report = generate_diff_report(
+        contract, rust_manifest, node_manifest, wrapper_resolutions
+    )
 
     # Carry the committed timestamps forward on any artifact whose substance is
     # unchanged, so `--update-baseline` copies byte-identical files into the
@@ -419,6 +482,7 @@ def main() -> int:
             summary["tier1_missing_rust"]
             + summary["tier1_missing_node"]
             + summary["tier1_signature_mismatch"]
+            + summary["tier1_owner_mismatch"]
     )
 
     tracked_artifact_names = (
@@ -449,7 +513,8 @@ def main() -> int:
             "Tier-1 parity drift detected: "
             f"missing_rust={summary['tier1_missing_rust']}, "
             f"missing_node={summary['tier1_missing_node']}, "
-            f"signature_mismatch={summary['tier1_signature_mismatch']}"
+            f"signature_mismatch={summary['tier1_signature_mismatch']}, "
+            f"owner_mismatch={summary['tier1_owner_mismatch']}"
         )
         return 1
 

@@ -8,7 +8,7 @@ import json
 import operator
 import re
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -21,6 +21,12 @@ from parity_artifact_io import (
 )
 from parity_rust_surface import build_lookup
 from parity_rust_surface import parse_rust_surface as _parse_rust_surface_shared
+from resolve_node_rust_symbols import (
+    Resolution,
+    resolve_all,
+    source_backed_crate,
+    source_backed_symbol,
+)
 
 RUST_TARGET_CRATES: dict[str, str] = {
     # Phase 1 original 10 crates (verified pre-state 2026-04-08).
@@ -509,14 +515,22 @@ def generate_diff_report(
         contract: dict[str, Any],
         rust_manifest: dict[str, Any],
         node_manifest: dict[str, Any],
+        wrapper_resolutions: dict[str, Resolution] | None = None,
 ) -> dict[str, Any]:
-    """Generate contract results and parity gaps."""
+    """Report exact crate/symbol matches and source-backed wrapper owners."""
     tier1_mappings: list[dict[str, Any]] = contract["tier1Mappings"]
     rust_symbols: list[dict[str, Any]] = rust_manifest["symbols"]
     node_exports: list[dict[str, Any]] = node_manifest["exports"]
 
-    rust_lookup = build_lookup(rust_symbols, "symbol")
+    # A symbol name alone can survive in the wrong crate after a migration.
+    rust_lookup = {(item["crate"], item["symbol"]): item for item in rust_symbols}
     node_lookup = build_lookup(node_exports, "export")
+    mapped_export_counts = Counter(
+        mapping.get("nodeExport")
+        for mapping in tier1_mappings
+        if isinstance(mapping.get("rustSymbol"), str)
+        and isinstance(mapping.get("nodeExport"), str)
+    )
 
     # Phase 4 Plan 2: @rust-suffix proxy rows intentionally omit nodeExport.
     # Strip the suffix to get the effective Rust symbol for tier1 tracking
@@ -535,8 +549,19 @@ def generate_diff_report(
         is_proxy = isinstance(rust_symbol, str) and rust_symbol.endswith("@rust")
         effective_rust_symbol = _effective_rust_symbol(rust_symbol)
 
-        rust_item = rust_lookup.get(effective_rust_symbol)
+        rust_item = rust_lookup.get((mapping.get("rustCrate"), effective_rust_symbol))
         node_item = node_lookup.get(node_export) if node_export is not None else None
+        wrapper_resolution = (
+            wrapper_resolutions.get(node_export)
+            if wrapper_resolutions and node_export else None
+        )
+        wrapper_crate = source_backed_crate(wrapper_resolution)
+        # Repeated exports can have separate accessor rows whose symbols
+        # differ from the resolver's single enclosing core type.
+        wrapper_symbol = (
+            source_backed_symbol(wrapper_resolution)
+            if node_export and mapped_export_counts[node_export] == 1 else None
+        )
         status = "matched"
         reason = ""
 
@@ -548,9 +573,24 @@ def generate_diff_report(
         if rust_symbol is None and mapping.get("unmappedReason"):
             status = "unmapped"
             reason = mapping["unmappedReason"]
+        elif wrapper_crate and wrapper_crate != mapping.get("rustCrate"):
+            status = "owner_mismatch"
+            reason = (
+                f"Node wrapper uses '{wrapper_crate}', but contract names "
+                f"'{mapping.get('rustCrate') or '<unknown>'}'."
+            )
+        elif wrapper_symbol and wrapper_symbol != effective_rust_symbol:
+            status = "owner_mismatch"
+            reason = (
+                f"Node wrapper uses Rust symbol '{wrapper_symbol}', but contract "
+                f"names '{effective_rust_symbol}' in '{mapping.get('rustCrate')}'."
+            )
         elif rust_item is None:
             status = "missing_rust"
-            reason = f"Rust symbol '{effective_rust_symbol}' not found in target crate exports."
+            reason = (
+                f"Rust symbol '{effective_rust_symbol}' not found in "
+                f"{mapping.get('rustCrate') or '<unknown>'} exports."
+            )
         elif is_proxy:
             # @rust-suffix proxy rows: Rust-side only, no Node surface check.
             status = "matched"
@@ -570,6 +610,7 @@ def generate_diff_report(
             "id": mapping["id"],
             "tier": mapping["tier"],
             "owner_module": owner_module,
+            "rust_crate": mapping.get("rustCrate"),
             "squad": SQUAD_BY_OWNER[owner_module],
             "rust_symbol": rust_symbol,
             "node_export": node_export,
@@ -592,6 +633,7 @@ def generate_diff_report(
                     "gap_type": f"tier1_{status}",
                     "tier": "tier1",
                     "owner_module": owner_module,
+                    "rust_crate": mapping.get("rustCrate"),
                     "squad": SQUAD_BY_OWNER[owner_module],
                     "rust_symbol": rust_symbol,
                     "node_export": node_export,
@@ -615,6 +657,7 @@ def generate_diff_report(
         "tier1_missing_rust": status_counts.get("missing_rust", 0),
         "tier1_missing_node": status_counts.get("missing_node", 0),
         "tier1_signature_mismatch": status_counts.get("signature_mismatch", 0),
+        "tier1_owner_mismatch": status_counts.get("owner_mismatch", 0),
         # Exports tracked by the contract with no verified Rust counterpart.
         # Not drift -- outstanding mapping debt, to be driven toward zero.
         "tier1_unmapped": status_counts.get("unmapped", 0),
@@ -648,17 +691,18 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
             f"- Tier-1 missing Rust: **{summary['tier1_missing_rust']}**",
             f"- Tier-1 missing Node: **{summary['tier1_missing_node']}**",
             f"- Tier-1 signature mismatch: **{summary['tier1_signature_mismatch']}**",
+            f"- Tier-1 owner mismatch: **{summary['tier1_owner_mismatch']}**",
             f"- Total gaps: **{summary['total_gaps']}**",
             "",
             "## Tier-1 Contract Evaluation",
             "",
-            "| ID | Owner Module | Rust Symbol | Node Export | Status |",
-            "|---|---|---|---|---|",
+            "| ID | Owner Module | Rust Crate | Rust Symbol | Node Export | Status |",
+            "|---|---|---|---|---|---|",
         )
     )
     for row in diff_report["contract_results"]:
         lines.append(
-            f"| `{row['id']}` | `{row['owner_module']}` | `{row['rust_symbol']}` | `{row['node_export']}` | `{row['status']}` |"
+            f"| `{row['id']}` | `{row['owner_module']}` | `{row['rust_crate'] or '-'}` | `{row['rust_symbol']}` | `{row['node_export']}` | `{row['status']}` |"
         )
 
     lines.extend(
@@ -799,7 +843,10 @@ def main() -> int:
         tier1_owner_map=tier1_owner_map,
         index_dts_rel=args.index_dts,
     )
-    diff_report = generate_diff_report(contract, rust_manifest, node_manifest)
+    wrapper_resolutions = resolve_all(repo_root, rust_manifest)
+    diff_report = generate_diff_report(
+        contract, rust_manifest, node_manifest, wrapper_resolutions
+    )
 
     # --output-dir defaults to the tracked baseline directory, so these writes
     # land straight in git. Carry each committed timestamp forward when only the

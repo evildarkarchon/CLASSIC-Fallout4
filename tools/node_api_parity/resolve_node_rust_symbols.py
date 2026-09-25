@@ -62,7 +62,7 @@ _FROM_IMPL_RE = re.compile(
 #: correspondence is written down.
 _CONVERSION_FN_RE = re.compile(
     r"(?m)^(?:pub(?:\([^)]*\))?\s+)?fn\s+[A-Za-z0-9_]+\s*\(\s*"
-    r"[A-Za-z0-9_]+\s*:\s*&?(?:mut\s+)?([A-Za-z][A-Za-z0-9_]*)"
+    r"[A-Za-z0-9_]+\s*:\s*&?(?:mut\s+)?([A-Za-z][A-Za-z0-9_:]*)"
     r"[^)]*\)\s*->\s*(Js[A-Za-z0-9_]+)"
 )
 #: A ``#[napi...]`` attribute followed by the item it decorates.
@@ -182,11 +182,53 @@ class Resolution:
     confidence: str = "unresolved"
     evidence: str = ""
     candidates: list[str] = field(default_factory=list)
+    crate_from_source: bool = False
 
 
 def _crate_name_to_package(crate_ident: str) -> str:
     """``classic_resource_core`` -> ``classic-resource-core``."""
     return crate_ident.replace("_", "-")
+
+
+def _source_type_ref(
+        type_ref: str, import_map: dict[str, str]
+) -> tuple[str, str | None]:
+    """Resolve a core type name and any crate named by its path or import."""
+    parts = type_ref.split("::")
+    symbol = parts[-1]
+    crate_ident = parts[0] if len(parts) > 1 else import_map.get(symbol)
+    if crate_ident in import_map:
+        crate_ident = import_map[crate_ident]
+    if isinstance(crate_ident, str) and crate_ident.startswith("classic_"):
+        return symbol, _crate_name_to_package(crate_ident)
+    return symbol, None
+
+
+def source_backed_crate(resolution: Resolution | None) -> str | None:
+    """Return a wrapper's crate only when direct source evidence identifies it."""
+    if (
+            resolution is not None
+            and resolution.crate_from_source
+            and resolution.confidence in {
+                "exact", "from_impl", "conversion_fn", "inner_field",
+                "imported_exact", "js_prefix"
+            }
+    ):
+        return resolution.rust_crate
+    return None
+
+
+def source_backed_symbol(resolution: Resolution | None) -> str | None:
+    """Return an exact counterpart only for direct single-symbol source forms."""
+    if (
+            source_backed_crate(resolution) is not None
+            and resolution is not None
+            and resolution.confidence in {
+                "exact", "from_impl", "conversion_fn", "imported_exact", "js_prefix"
+            }
+    ):
+        return resolution.rust_symbol
+    return None
 
 
 def collect_node_wrappers(repo_root: Path) -> dict[str, dict[str, Any]]:
@@ -217,12 +259,12 @@ def collect_node_wrappers(repo_root: Path) -> dict[str, dict[str, Any]]:
         # From<CoreType> for JsWrapper conversions.
         from_impls: dict[str, str] = {}
         for core_type, js_type in _FROM_IMPL_RE.findall(text):
-            from_impls.setdefault(js_type, core_type.split("::")[-1])
+            from_impls.setdefault(js_type, core_type)
 
         # DTO <- core pairings declared by conversion helpers.
         conversions: dict[str, str] = {}
         for core_type, js_type in _CONVERSION_FN_RE.findall(text):
-            if not core_type.startswith("Js"):
+            if not core_type.split("::")[-1].startswith("Js"):
                 conversions.setdefault(js_type, core_type)
 
         # File-local helper bodies, so one level of indirection can be followed.
@@ -342,13 +384,18 @@ def resolve_export(
         usable = [e for e in entries if e["kind"] != "module"]
         if not usable:
             return False
-        chosen = next(
-            (e for e in usable if crate and e["crate"] == crate), usable[0]
-        )
+        # A qualified path or imported type cannot borrow a same-named
+        # symbol from a different crate when its own crate has no match.
+        if crate is not None:
+            usable = [entry for entry in usable if entry["crate"] == crate]
+            if not usable:
+                return False
+        chosen = usable[0]
         res.rust_symbol = symbol
         res.rust_crate = chosen["crate"]
         res.confidence = confidence
         res.evidence = evidence
+        res.crate_from_source = crate is not None
         return True
 
     # Strongest: the wrapper calls a core symbol with the same name it exposes.
@@ -370,9 +417,10 @@ def resolve_export(
     # a match this strong, or legitimate domain types whose names merely end in
     # ``Result`` -- ``CheckResult``, ``ScanResult``, ``ValidationResult`` -- get
     # thrown away with the plumbing.
-    if from_core and accept(
-            from_core,
-            None,
+    from_symbol, from_crate = _source_type_ref(from_core, import_map) if from_core else (None, None)
+    if from_symbol and accept(
+            from_symbol,
+            from_crate,
             "from_impl",
             f"impl From<{from_core}> for {export}",
             allow_infrastructure=True,
@@ -383,9 +431,12 @@ def resolve_export(
     # For `#[napi(object)]` structs this is usually the only place the
     # correspondence is written down at all.
     converted = info.get("conversions", {}).get(export)
-    if converted and accept(
-            converted,
-            None,
+    converted_symbol, converted_crate = (
+        _source_type_ref(converted, import_map) if converted else (None, None)
+    )
+    if converted_symbol and accept(
+            converted_symbol,
+            converted_crate,
             "conversion_fn",
             f"conversion helper maps {converted} -> {export}",
             allow_infrastructure=True,
@@ -397,16 +448,17 @@ def resolve_export(
     # incidental locals inside method bodies are not picked up.
     field_types = re.findall(
         r"(?m)^\s*(?:pub(?:\([^)]*\))?\s+)?[a-z_][A-Za-z0-9_]*\s*:\s*"
-        r"(?:Option\s*<\s*|Arc\s*<\s*|Vec\s*<\s*)*([A-Za-z][A-Za-z0-9_]*)",
+        r"(?:Option\s*<\s*|Arc\s*<\s*|Vec\s*<\s*)*([A-Za-z][A-Za-z0-9_:]*)",
         info.get("decl_body", ""),
     )
     for field_type in field_types:
-        entries = surface_by_name.get(field_type, [])
+        field_symbol, field_crate = _source_type_ref(field_type, import_map)
+        entries = surface_by_name.get(field_symbol, [])
         if any(
                 e["kind"] in {"struct", "enum", "type", "reexport"} for e in entries
         ) and accept(
-            field_type,
-            None,
+            field_symbol,
+            field_crate,
             "inner_field",
             f"wrapper struct holds a field of core type {field_type}",
             allow_infrastructure=True,
@@ -436,9 +488,13 @@ def resolve_export(
             ]
         for candidate in candidates:
             entries = surface_by_name.get(candidate, [])
+            imported_crate = import_map.get(candidate)
+            source_crate = (
+                _crate_name_to_package(imported_crate) if imported_crate else None
+            )
             if any(e["kind"] in type_kinds for e in entries) and accept(
                     candidate,
-                    None,
+                    source_crate,
                     "js_prefix",
                     f"Js-prefix convention: {export} mirrors core type {candidate}",
                     allow_infrastructure=True,
@@ -551,9 +607,16 @@ def build_surface_index(repo_root: Path) -> dict[str, list[dict[str, Any]]]:
     return index
 
 
-def resolve_all(repo_root: Path) -> dict[str, Resolution]:
-    """Resolve every Node export found in the binding source."""
-    surface_by_name = build_surface_index(repo_root)
+def resolve_all(
+        repo_root: Path, rust_manifest: dict[str, Any] | None = None
+) -> dict[str, Resolution]:
+    """Resolve Node exports against the supplied Rust surface or the live one."""
+    if rust_manifest is None:
+        surface_by_name = build_surface_index(repo_root)
+    else:
+        surface_by_name: dict[str, list[dict[str, Any]]] = {}
+        for entry in rust_manifest["symbols"]:
+            surface_by_name.setdefault(entry["symbol"], []).append(entry)
     wrappers = collect_node_wrappers(repo_root)
     return {
         export: resolve_export(export, info, surface_by_name)
@@ -570,6 +633,7 @@ def main() -> int:
             "rust_symbol": r.rust_symbol,
             "rust_crate": r.rust_crate,
             "confidence": r.confidence,
+            "crate_from_source": r.crate_from_source,
             "evidence": r.evidence,
             "candidates": r.candidates,
         }

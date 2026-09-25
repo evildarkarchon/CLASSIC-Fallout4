@@ -1,969 +1,970 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-09-08T07:25:36.773817+00:00`
+- Generated: `2026-09-25T02:17:26.599848+00:00`
 - Tier-1 contract rows: **952**
-- Tier-1 matched: **942**
+- Tier-1 matched: **935**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
+- Tier-1 owner mismatch: **0**
 - Total gaps: **0**
 
 ## Tier-1 Contract Evaluation
 
-| ID | Owner Module | Rust Symbol | Node Export | Status |
-|---|---|---|---|---|
-| `message-init-logging` | `message` | `init` | `initLogging` | `matched` |
-| `user-settings-current-schema-version` | `user_settings` | `CURRENT_USER_SETTINGS_SCHEMA_VERSION` | `JsUserSettingsSchemaVersion` | `matched` |
-| `user-settings-schema-version-type` | `user_settings` | `UserSettingsSchemaVersion` | `JsUserSettingsSchemaVersion` | `matched` |
-| `user-settings-migration-endpoint-type` | `user_settings` | `MigrationEndpoint` | `JsUserSettingsMigrationEndpoint` | `matched` |
-| `user-settings-migration-change-kind-type` | `user_settings` | `MigrationChangeKind` | `JsUserSettingsMigrationChange` | `matched` |
-| `user-settings-migration-change-type` | `user_settings` | `MigrationChange` | `JsUserSettingsMigrationChange` | `matched` |
-| `user-settings-migration-diagnostic-type` | `user_settings` | `MigrationDiagnostic` | `JsUserSettingsMigrationDiagnostic` | `matched` |
-| `user-settings-migration-plan-type` | `user_settings` | `UserSettingsMigrationPlan` | `JsUserSettingsMigrationPlan` | `matched` |
-| `user-settings-migration-planning-outcome-type` | `user_settings` | `MigrationPlanningOutcome` | `JsUserSettingsMigrationPlanningResult` | `matched` |
-| `user-settings-schema-version-constructor` | `user_settings` | `UserSettingsSchemaVersion` | `JsUserSettingsSchemaVersion` | `matched` |
-| `user-settings-schema-version-major-accessor` | `user_settings` | `UserSettingsSchemaVersion` | `JsUserSettingsSchemaVersion` | `matched` |
-| `user-settings-schema-version-minor-accessor` | `user_settings` | `UserSettingsSchemaVersion` | `JsUserSettingsSchemaVersion` | `matched` |
-| `user-settings-migration-endpoint-location-accessor` | `user_settings` | `MigrationEndpoint` | `JsUserSettingsMigrationEndpoint` | `matched` |
-| `user-settings-migration-endpoint-schema-version-accessor` | `user_settings` | `MigrationEndpoint` | `JsUserSettingsMigrationEndpoint` | `matched` |
-| `user-settings-migration-change-kind-accessor` | `user_settings` | `MigrationChange` | `JsUserSettingsMigrationChange` | `matched` |
-| `user-settings-migration-diagnostic-code-accessor` | `user_settings` | `None` | `JsUserSettingsMigrationDiagnostic` | `unmapped` |
-| `user-settings-migration-plan-required-accessor` | `user_settings` | `UserSettingsMigrationPlan` | `JsUserSettingsMigrationPlan` | `matched` |
-| `user-settings-migration-plan-source-accessor` | `user_settings` | `UserSettingsMigrationPlan` | `JsUserSettingsMigrationPlan` | `matched` |
-| `user-settings-migration-plan-target-accessor` | `user_settings` | `UserSettingsMigrationPlan` | `JsUserSettingsMigrationPlan` | `matched` |
-| `user-settings-migration-change-source-path-accessor` | `user_settings` | `source_path` | `JsUserSettingsMigrationChange` | `matched` |
-| `user-settings-migration-change-target-path-accessor` | `user_settings` | `target_path` | `JsUserSettingsMigrationChange` | `matched` |
-| `user-settings-migration-change-before-accessor` | `user_settings` | `before` | `JsUserSettingsMigrationChange` | `matched` |
-| `user-settings-migration-change-after-accessor` | `user_settings` | `after` | `JsUserSettingsMigrationChange` | `matched` |
-| `user-settings-migration-diagnostic-message-accessor` | `user_settings` | `message` | `JsUserSettingsMigrationDiagnostic` | `matched` |
-| `user-settings-migration-plan-base-revision-accessor` | `user_settings` | `base_revision` | `JsUserSettingsMigrationPlan` | `matched` |
-| `user-settings-migration-plan-changes-accessor` | `user_settings` | `changes` | `JsUserSettingsMigrationPlan` | `matched` |
-| `user-settings-migration-plan-original-bytes-accessor` | `user_settings` | `original_bytes` | `JsUserSettingsMigrationPlan` | `matched` |
-| `user-settings-migration-plan-proposed-bytes-accessor` | `user_settings` | `proposed_bytes` | `JsUserSettingsMigrationPlan` | `matched` |
-| `user-settings-plan-migration` | `user_settings` | `plan_migration` | `planUserSettingsMigration` | `matched` |
-| `user-settings-migration-plan-reverse-in-memory` | `user_settings` | `reverse_in_memory` | `reverseUserSettingsMigrationPlan` | `matched` |
-| `user-settings-commit-eligibility` | `user_settings` | `CommitEligibility` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-diagnostic` | `user_settings` | `Diagnostic` | `JsUserSettingsDiagnostic` | `matched` |
-| `user-settings-document-classification` | `user_settings` | `DocumentClassification` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-preference-origin` | `user_settings` | `PreferenceOrigin` | `JsUpdatePreferences` | `matched` |
-| `user-settings-revision-type` | `user_settings` | `Revision` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-source-type` | `user_settings` | `SettingsSource` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-source-location` | `user_settings` | `SourceLocation` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-update-preferences-type` | `user_settings` | `UpdatePreferences` | `JsUpdatePreferences` | `matched` |
-| `user-settings-update-source-type` | `user_settings` | `UpdateSource` | `JsUpdatePreferences` | `matched` |
-| `user-settings-snapshot-type` | `user_settings` | `UserSettings` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-classification-accessor` | `user_settings` | `classification` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-diagnostic-code-accessor` | `user_settings` | `code` | `JsUserSettingsDiagnostic` | `matched` |
-| `user-settings-commit-eligibility-accessor` | `user_settings` | `commit_eligibility` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-diagnostics-accessor` | `user_settings` | `diagnostics` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-location-accessor` | `user_settings` | `location` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-diagnostic-message-accessor` | `user_settings` | `message` | `JsUserSettingsDiagnostic` | `matched` |
-| `user-settings-open` | `user_settings` | `open` | `openUserSettings` | `matched` |
-| `user-settings-published-defaults` | `user_settings` | `published_defaults` | `publishedUserSettingsDefaults` | `matched` |
-| `user-settings-original-bytes-accessor` | `user_settings` | `original_bytes` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-path-accessor` | `user_settings` | `path` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-revision-accessor` | `user_settings` | `revision` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-schema-version-accessor` | `user_settings` | `schema_version` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-source-accessor` | `user_settings` | `source` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-update-check-accessor` | `user_settings` | `update_check` | `JsUpdatePreferences` | `matched` |
-| `user-settings-update-check-origin-accessor` | `user_settings` | `update_check_origin` | `JsUpdatePreferences` | `matched` |
-| `user-settings-update-source-accessor` | `user_settings` | `update_source` | `JsUpdatePreferences` | `matched` |
-| `user-settings-update-source-origin-accessor` | `user_settings` | `update_source_origin` | `JsUpdatePreferences` | `matched` |
-| `user-settings-update-source-token-accessor` | `user_settings` | `as_str` | `JsUpdatePreferences` | `matched` |
-| `user-settings-update-preferences-accessor` | `user_settings` | `update_preferences` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-crash-log-scan-settings-type` | `user_settings` | `CrashLogScanSettings` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-game-version-selection-type` | `user_settings` | `GameVersionSelection` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-crash-log-scan-settings-accessor` | `user_settings` | `crash_log_scan_settings` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-game-version-as-str` | `user_settings` | `as_str` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-game-version-parse` | `user_settings` | `parse` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-fcx-mode-accessor` | `user_settings` | `fcx_mode` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-fcx-mode-origin-accessor` | `user_settings` | `fcx_mode_origin` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-simplify-logs-accessor` | `user_settings` | `simplify_logs` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-simplify-logs-origin-accessor` | `user_settings` | `simplify_logs_origin` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-show-statistics-accessor` | `user_settings` | `show_statistics` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-show-statistics-origin-accessor` | `user_settings` | `show_statistics_origin` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-formid-value-lookup-accessor` | `user_settings` | `formid_value_lookup` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-formid-value-lookup-origin-accessor` | `user_settings` | `formid_value_lookup_origin` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-formid-databases-accessor` | `user_settings` | `formid_databases` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-formid-databases-origin-accessor` | `user_settings` | `formid_databases_origin` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-move-unsolved-logs-accessor` | `user_settings` | `move_unsolved_logs` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-move-unsolved-logs-origin-accessor` | `user_settings` | `move_unsolved_logs_origin` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-unsolved-logs-destination-accessor` | `user_settings` | `unsolved_logs_destination` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-unsolved-logs-destination-origin-accessor` | `user_settings` | `unsolved_logs_destination_origin` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-custom-scan-input-accessor` | `user_settings` | `custom_scan_input` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-custom-scan-input-origin-accessor` | `user_settings` | `custom_scan_input_origin` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-game-version-selection-accessor` | `user_settings` | `game_version_selection` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-game-version-selection-origin-accessor` | `user_settings` | `game_version_selection_origin` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-max-concurrent-scans-accessor` | `user_settings` | `max_concurrent_scans` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-max-concurrent-scans-origin-accessor` | `user_settings` | `max_concurrent_scans_origin` | `JsCrashLogScanSettings` | `matched` |
-| `user-settings-game-setup-settings-type` | `user_settings` | `GameSetupSettings` | `JsGameSetupSettings` | `matched` |
-| `user-settings-game-setup-settings-accessor` | `user_settings` | `game_setup_settings` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-managed-game-accessor` | `user_settings` | `managed_game` | `JsGameSetupSettings` | `matched` |
-| `user-settings-managed-game-origin-accessor` | `user_settings` | `managed_game_origin` | `JsGameSetupSettings` | `matched` |
-| `user-settings-game-setup-version-selection-accessor` | `user_settings` | `game_version_selection` | `JsGameSetupSettings` | `matched` |
-| `user-settings-game-setup-version-selection-origin-accessor` | `user_settings` | `game_version_selection_origin` | `JsGameSetupSettings` | `matched` |
-| `user-settings-game-root-accessor` | `user_settings` | `game_root` | `JsGameSetupSettings` | `matched` |
-| `user-settings-game-root-origin-accessor` | `user_settings` | `game_root_origin` | `JsGameSetupSettings` | `matched` |
-| `user-settings-game-executable-accessor` | `user_settings` | `game_executable` | `JsGameSetupSettings` | `matched` |
-| `user-settings-game-executable-origin-accessor` | `user_settings` | `game_executable_origin` | `JsGameSetupSettings` | `matched` |
-| `user-settings-documents-root-accessor` | `user_settings` | `documents_root` | `JsGameSetupSettings` | `matched` |
-| `user-settings-documents-root-origin-accessor` | `user_settings` | `documents_root_origin` | `JsGameSetupSettings` | `matched` |
-| `user-settings-ini-folder-accessor` | `user_settings` | `ini_folder` | `JsGameSetupSettings` | `matched` |
-| `user-settings-ini-folder-origin-accessor` | `user_settings` | `ini_folder_origin` | `JsGameSetupSettings` | `matched` |
-| `user-settings-mods-root-accessor` | `user_settings` | `mods_root` | `JsGameSetupSettings` | `matched` |
-| `user-settings-mods-root-origin-accessor` | `user_settings` | `mods_root_origin` | `JsGameSetupSettings` | `matched` |
-| `user-settings-game-setup-custom-scan-input-accessor` | `user_settings` | `custom_scan_input` | `JsGameSetupSettings` | `matched` |
-| `user-settings-game-setup-custom-scan-input-origin-accessor` | `user_settings` | `custom_scan_input_origin` | `JsGameSetupSettings` | `matched` |
-| `user-settings-papyrus-log-accessor` | `user_settings` | `papyrus_log` | `JsGameSetupSettings` | `matched` |
-| `user-settings-papyrus-log-origin-accessor` | `user_settings` | `papyrus_log_origin` | `JsGameSetupSettings` | `matched` |
-| `user-settings-frontend-state-type` | `user_settings` | `FrontendState` | `JsFrontendState` | `matched` |
-| `user-settings-frontend-preferences-type` | `user_settings` | `FrontendPreferences` | `JsFrontendPreferences` | `matched` |
-| `user-settings-gui-window-geometry-type` | `user_settings` | `GuiWindowGeometry` | `JsGuiWindowGeometry` | `matched` |
-| `user-settings-gui-window-update-type` | `user_settings` | `GuiWindow` | `JsGuiWindow` | `matched` |
-| `user-settings-window-geometry-type` | `user_settings` | `WindowGeometry` | `JsWindowGeometry` | `matched` |
-| `user-settings-tui-remembered-state-type` | `user_settings` | `TuiRememberedState` | `JsTuiRememberedState` | `matched` |
-| `user-settings-frontend-state-accessor` | `user_settings` | `frontend_state` | `JsUserSettingsSnapshot` | `matched` |
-| `user-settings-frontend-state-preferences-accessor` | `user_settings` | `preferences` | `JsFrontendState` | `matched` |
-| `user-settings-frontend-state-window-geometry-accessor` | `user_settings` | `window_geometry` | `JsFrontendState` | `matched` |
-| `user-settings-frontend-state-tui-accessor` | `user_settings` | `tui` | `JsFrontendState` | `matched` |
-| `user-settings-auto-switch-after-scan-accessor` | `user_settings` | `auto_switch_after_scan` | `JsFrontendPreferences` | `matched` |
-| `user-settings-auto-switch-after-scan-origin-accessor` | `user_settings` | `auto_switch_after_scan_origin` | `JsFrontendPreferences` | `matched` |
-| `user-settings-auto-refresh-interval-ms-accessor` | `user_settings` | `auto_refresh_interval_ms` | `JsFrontendPreferences` | `matched` |
-| `user-settings-auto-refresh-interval-ms-origin-accessor` | `user_settings` | `auto_refresh_interval_ms_origin` | `JsFrontendPreferences` | `matched` |
-| `user-settings-main-tab-accessor` | `user_settings` | `main_tab` | `JsGuiWindowGeometry` | `matched` |
-| `user-settings-backups-tab-accessor` | `user_settings` | `backups_tab` | `JsGuiWindowGeometry` | `matched` |
-| `user-settings-articles-tab-accessor` | `user_settings` | `articles_tab` | `JsGuiWindowGeometry` | `matched` |
-| `user-settings-results-tab-accessor` | `user_settings` | `results_tab` | `JsGuiWindowGeometry` | `matched` |
-| `user-settings-window-maximized-accessor` | `user_settings` | `maximized` | `JsWindowGeometry` | `matched` |
-| `user-settings-window-maximized-origin-accessor` | `user_settings` | `maximized_origin` | `JsWindowGeometry` | `matched` |
-| `user-settings-window-width-accessor` | `user_settings` | `width` | `JsWindowGeometry` | `matched` |
-| `user-settings-window-width-origin-accessor` | `user_settings` | `width_origin` | `JsWindowGeometry` | `matched` |
-| `user-settings-window-height-accessor` | `user_settings` | `height` | `JsWindowGeometry` | `matched` |
-| `user-settings-window-height-origin-accessor` | `user_settings` | `height_origin` | `JsWindowGeometry` | `matched` |
-| `user-settings-tui-active-tab-accessor` | `user_settings` | `active_tab` | `JsTuiRememberedState` | `matched` |
-| `user-settings-tui-active-tab-origin-accessor` | `user_settings` | `active_tab_origin` | `JsTuiRememberedState` | `matched` |
-| `user-settings-tui-results-panel-width-accessor` | `user_settings` | `results_panel_width` | `JsTuiRememberedState` | `matched` |
-| `user-settings-tui-results-panel-width-origin-accessor` | `user_settings` | `results_panel_width_origin` | `JsTuiRememberedState` | `matched` |
-| `user-settings-tui-sort-ascending-accessor` | `user_settings` | `sort_ascending` | `JsTuiRememberedState` | `matched` |
-| `user-settings-tui-sort-ascending-origin-accessor` | `user_settings` | `sort_ascending_origin` | `JsTuiRememberedState` | `matched` |
-| `user-settings-update-type` | `user_settings` | `UserSettingsUpdate` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-update-field-type` | `user_settings` | `UserSettingsUpdateField` | `JsUserSettingsUpdateField` | `matched` |
-| `user-settings-accepted-update-type` | `user_settings` | `AcceptedUserSettingsUpdate` | `JsUserSettingsUpdatePreview` | `matched` |
-| `user-settings-commit-outcome-type` | `user_settings` | `UserSettingsCommitOutcome` | `JsUserSettingsCommitResult` | `matched` |
-| `user-settings-commit-error-type` | `user_settings` | `UserSettingsCommitError` | `commitUserSettingsUpdate` | `matched` |
-| `user-settings-frontend-transition-outcome-type` | `user_settings` | `UserSettingsFrontendTransitionOutcome` | `JsUserSettingsCommitResult` | `matched` |
-| `user-settings-commit-frontend-geometry-transition` | `user_settings` | `commit_frontend_geometry_transition` | `commitFrontendGeometryTransition` | `matched` |
-| `user-settings-accepted-update-commit` | `user_settings` | `AcceptedUserSettingsUpdate` | `commitUserSettingsUpdate` | `matched` |
-| `user-settings-commit-error-code-accessor` | `user_settings` | `code` | `commitUserSettingsUpdate` | `matched` |
-| `user-settings-commit-error-message-accessor` | `user_settings` | `message` | `commitUserSettingsUpdate` | `matched` |
-| `user-settings-update-diagnostic-type` | `user_settings` | `UpdateDiagnostic` | `JsUserSettingsUpdateDiagnostic` | `matched` |
-| `user-settings-update-preview-type` | `user_settings` | `UserSettingsUpdatePreview` | `JsUserSettingsUpdatePreview` | `matched` |
-| `user-settings-update-new` | `user_settings` | `new` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-update-check-builder` | `user_settings` | `with_update_check` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-update-source-builder` | `user_settings` | `with_update_source` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-auto-switch-after-scan-builder` | `user_settings` | `with_auto_switch_after_scan` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-game-version-selection-builder` | `user_settings` | `with_game_version_selection` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-managed-game-builder` | `user_settings` | `with_managed_game` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-game-root-builder` | `user_settings` | `with_game_root` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-game-executable-builder` | `user_settings` | `with_game_executable` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-documents-root-builder` | `user_settings` | `with_documents_root` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-ini-folder-builder` | `user_settings` | `with_ini_folder` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-mods-folder-builder` | `user_settings` | `with_mods_folder` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-papyrus-log-path-builder` | `user_settings` | `with_papyrus_log_path` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-fcx-mode-builder` | `user_settings` | `with_fcx_mode` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-simplify-logs-builder` | `user_settings` | `with_simplify_logs` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-show-statistics-builder` | `user_settings` | `with_show_statistics` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-formid-value-lookup-builder` | `user_settings` | `with_formid_value_lookup` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-formid-databases-builder` | `user_settings` | `with_formid_databases` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-move-unsolved-logs-builder` | `user_settings` | `with_move_unsolved_logs` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-unsolved-logs-destination-builder` | `user_settings` | `with_unsolved_logs_destination` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-custom-scan-input-builder` | `user_settings` | `with_custom_scan_input` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-max-concurrent-scans-builder` | `user_settings` | `with_max_concurrent_scans` | `JsUserSettingsUpdate` | `matched` |
-| `user-settings-update-field-canonical-path-accessor` | `user_settings` | `canonical_path` | `JsUserSettingsUpdateField` | `matched` |
-| `user-settings-update-diagnostic-field-path-accessor` | `user_settings` | `field_path` | `JsUserSettingsUpdateDiagnostic` | `matched` |
-| `user-settings-update-diagnostic-code-accessor` | `user_settings` | `code` | `JsUserSettingsUpdateDiagnostic` | `matched` |
-| `user-settings-update-diagnostic-message-accessor` | `user_settings` | `message` | `JsUserSettingsUpdateDiagnostic` | `matched` |
-| `user-settings-accepted-update-base-revision-accessor` | `user_settings` | `base_revision` | `JsUserSettingsUpdatePreview` | `matched` |
-| `user-settings-accepted-update-fields-accessor` | `user_settings` | `fields` | `JsUserSettingsUpdatePreview` | `matched` |
-| `user-settings-preview-update` | `user_settings` | `preview_update` | `previewUserSettingsUpdate` | `matched` |
-| `scanlog-parse-segments` | `scanlog` | `LogParser` | `parseLogSegments` | `matched` |
-| `scanlog-extract-formids` | `scanlog` | `LogParser` | `extractFormIds` | `matched` |
-| `scanlog-extract-plugins` | `scanlog` | `LogParser` | `extractPluginList` | `matched` |
-| `scanlog-detect-vr` | `scanlog` | `detect_vr_log` | `detectVrLog` | `matched` |
-| `scanlog-detect-gpu` | `scanlog` | `GpuInfo` | `detectGpuInfo` | `matched` |
-| `scanlog-parse-crashgen-version` | `scanlog` | `CrashgenVersion` | `parseCrashgenVersion` | `matched` |
-| `scanlog-crashgen-version-status` | `scanlog` | `check_crashgen_version_status` | `checkCrashgenVersionStatus` | `matched` |
-| `scanlog-papyrus-analysis` | `scanlog` | `PapyrusStats` | `analyzePapyrusLog` | `matched` |
-| `scanlog-detect-crash-pattern` | `scanlog` | `detect_crash_pattern` | `detectCrashPattern` | `matched` |
-| `scanlog-crashgen-version-status-enum` | `scanlog` | `CrashgenVersionStatus` | `JsCrashgenVersionStatus` | `matched` |
-| `config-yamldata-class` | `config` | `YamlDataCore` | `YamlData` | `matched` |
-| `config-create-yamldata-content` | `config` | `YamlDataCore` | `createYamlDataFromContent` | `matched` |
-| `config-clear-yaml-cache` | `config` | `clear_global_yaml_cache` | `clearYamlCache` | `matched` |
-| `config.game_local.persistGameLocalPaths` | `config` | `persist_game_local_paths` | `persistGameLocalPaths` | `matched` |
-| `config.installed_yaml_data.installedYamlDataProvenanceLabel` | `config` | `InstalledYamlDataProvenance` | `installedYamlDataProvenanceLabel` | `matched` |
-| `config.installed_yaml_data.installedYamlDataDiagnosticKindLabel` | `config` | `InstalledYamlDataDiagnosticKind` | `installedYamlDataDiagnosticKindLabel` | `matched` |
-| `config.installed_yaml_data.localIgnoreYamlDataStateLabel` | `config` | `LocalIgnoreYamlDataState` | `localIgnoreYamlDataStateLabel` | `matched` |
-| `scanlog.scan_run.scanRunInstalledYamlDataDiagnosticKindLabel` | `scanlog` | `InstalledYamlDataRunDiagnosticKind` | `scanRunInstalledYamlDataDiagnosticKindLabel` | `matched` |
-| `scanlog.scan_run.scanRunLocalIgnoreYamlDataStateLabel` | `scanlog` | `LocalIgnoreRunState` | `scanRunLocalIgnoreYamlDataStateLabel` | `matched` |
-| `scanlog.scan_run.scanRunLogDispositionLabel` | `scanlog` | `LogDisposition` | `scanRunLogDispositionLabel` | `matched` |
-| `scanlog.scan_run.scanRunLogFailureStageLabel` | `scanlog` | `LogFailureStage` | `scanRunLogFailureStageLabel` | `matched` |
-| `scanlog.scan_run.scanRunInfrastructureErrorStageLabel` | `scanlog` | `InfrastructureErrorStage` | `scanRunInfrastructureErrorStageLabel` | `matched` |
-| `scanlog.scan_run.scanRunLocalIgnoreResetFailureStageLabel` | `scanlog` | `LocalIgnoreResetFailureStage` | `scanRunLocalIgnoreResetFailureStageLabel` | `matched` |
-| `config-yaml-source-enum` | `config` | `YamlSource` | `JsYamlSource` | `matched` |
-| `config-yaml-source-path` | `config` | `YamlSource` | `getYamlSourcePath` | `matched` |
-| `config-yaml-source-display-name` | `config` | `YamlSource` | `getYamlSourceDisplayName` | `matched` |
-| `config-yaml-source-display-name-with-game` | `config` | `YamlSource` | `getYamlSourceDisplayNameWithGame` | `matched` |
-| `config-fileio-config-interface` | `config` | `config` | `FileIoConfig` | `matched` |
-| `config-yaml-file-enum` | `config` | `YamlSource` | `JsYamlFile` | `matched` |
-| `config-get-all-yaml-files` | `config` | `YamlFile` | `getAllYamlFiles` | `matched` |
-| `config-get-yaml-file-description` | `config` | `YamlFile` | `getYamlFileDescription` | `matched` |
-| `config-default-cache-ttl-const` | `config` | `DEFAULT_CACHE_TTL_SECS` | `DEFAULT_CACHE_TTL` | `matched` |
-| `config-batch-cache-ttl-const` | `config` | `BATCH_CACHE_TTL_SECS` | `BATCH_CACHE_TTL` | `matched` |
-| `config-max-cache-ttl-const` | `config` | `MAX_CACHE_TTL_SECS` | `MAX_CACHE_TTL` | `matched` |
-| `config-get-default-cache-ttl` | `config` | `DEFAULT_CACHE_TTL_SECS` | `getDefaultCacheTtl` | `matched` |
-| `config-get-batch-cache-ttl` | `config` | `BATCH_CACHE_TTL_SECS` | `getBatchCacheTtl` | `matched` |
-| `config-get-max-cache-ttl` | `config` | `MAX_CACHE_TTL_SECS` | `getMaxCacheTtl` | `matched` |
-| `config-generate-local-yaml` | `config` | `generate_local_yaml` | `generateLocalYaml` | `matched` |
-| `config-settings-cache-stats-interface` | `config` | `config` | `SettingsCacheStats` | `matched` |
-| `config-load-settings-sync` | `config` | `load_settings_sync` | `loadSettingsSync` | `matched` |
-| `config-load-settings-async` | `config` | `load_settings_async` | `loadSettingsAsync` | `matched` |
-| `config-get-cached` | `config` | `get_cached` | `getCached` | `matched` |
-| `config-is-cached` | `config` | `is_cached` | `isCached` | `matched` |
-| `config-invalidate-settings` | `config` | `invalidate` | `invalidateSettings` | `matched` |
-| `config-clear-settings-cache` | `config` | `clear_cache` | `clearSettingsCache` | `matched` |
-| `config-settings-cache-size` | `config` | `cache_size` | `settingsCacheSize` | `matched` |
-| `config-settings-cache-keys` | `config` | `cache_keys` | `settingsCacheKeys` | `matched` |
-| `config-get-settings-cache-stats` | `config` | `cache_stats` | `getSettingsCacheStats` | `matched` |
-| `config-reset-settings-cache-stats` | `config` | `reset_cache_stats` | `resetSettingsCacheStats` | `matched` |
-| `config-validate-settings-path` | `path` | `validate_settings_path` | `validateSettingsPath` | `matched` |
-| `config-validate-settings-paths` | `path` | `validate_settings_paths` | `validateSettingsPaths` | `matched` |
-| `config-yaml-document-class` | `config` | `YamlOperations` | `YamlDocument` | `matched` |
-| `config-yaml-parse` | `config` | `parse_yaml` | `yamlParse` | `matched` |
-| `config-yaml-stringify` | `config` | `dump_yaml` | `yamlStringify` | `matched` |
-| `config-yaml-load-file` | `config` | `load_yaml_file` | `yamlLoadFile` | `matched` |
-| `config-yaml-get-value` | `config` | `parse_yaml` | `yamlGetValue` | `matched` |
-| `config-yaml-get-string-value` | `config` | `get_string_value` | `yamlGetStringValue` | `matched` |
-| `config-yaml-get-vec-value` | `config` | `get_vec_value` | `yamlGetVecValue` | `matched` |
-| `config-yaml-get-hashmap-value` | `config` | `get_hashmap_value` | `yamlGetHashmapValue` | `matched` |
-| `config-yaml-save-file` | `config` | `save_yaml_file` | `yamlSaveFile` | `matched` |
-| `config-yaml-set-setting` | `config` | `set_setting` | `yamlSetSetting` | `matched` |
-| `config-yaml-get-settings-batch` | `config` | `get_settings_batch` | `yamlGetSettingsBatch` | `matched` |
-| `config-yaml-set-settings-batch` | `config` | `set_settings_batch` | `yamlSetSettingsBatch` | `matched` |
-| `config-yaml-get-indexmap-value` | `config` | `get_indexmap_value` | `yamlGetIndexmapValue` | `matched` |
-| `config-yaml-get-hashmap-vec-value` | `config` | `get_hashmap_vec_value` | `yamlGetHashmapVecValue` | `matched` |
-| `config-yaml-clear-cache` | `config` | `YamlOperations` | `yamlClearCache` | `matched` |
-| `config-yaml-get-cache-stats` | `config` | `yaml_cache_stats` | `yamlGetCacheStats` | `matched` |
-| `version-registry-get-by-id` | `version_registry` | `VersionInfo` | `getVersionById` | `matched` |
-| `version-registry-get-by-version` | `version_registry` | `get_by_version` | `getVersionByVersionString` | `matched` |
-| `version-registry-get-by-short-name` | `version_registry` | `get_by_short_name` | `getVersionByShortName` | `matched` |
-| `version-registry-get-all` | `version_registry` | `get_all` | `getAllVersions` | `matched` |
-| `version-registry-get-all-for-game` | `version_registry` | `get_all_for_game` | `getAllVersionsForGame` | `matched` |
-| `version-registry-get-correct-versions` | `version_registry` | `get_correct_versions` | `getCorrectVersions` | `matched` |
-| `version-registry-get-wrong-versions` | `version_registry` | `get_wrong_versions` | `getWrongVersions` | `matched` |
-| `version-registry-match-version` | `version_registry` | `MatchResult` | `matchVersion` | `matched` |
-| `version-registry-address-lib-filename` | `version_registry` | `get_address_library_filename` | `getAddressLibraryFilename` | `matched` |
-| `version-registry-crashgen-versions` | `version_registry` | `get_crashgen_versions` | `getCrashgenVersions` | `matched` |
-| `version-registry-crashgen-version-strings` | `version_registry` | `get_crashgen_version_strings` | `getCrashgenVersionStrings` | `matched` |
-| `version-registry-crashgen-for-version` | `version_registry` | `get_crashgen_for_version` | `getCrashgenForVersion` | `matched` |
-| `version-registry-is-compatible` | `version_registry` | `VersionRegistry` | `isVersionCompatible` | `matched` |
-| `version-registry-parse-version` | `version_registry` | `parse` | `parseGameVersion` | `matched` |
-| `version-registry-version-distance` | `version_registry` | `semantic_distance` | `gameVersionDistance` | `matched` |
-| `version-registry-promote-fallout4-version-info` | `version_registry` | `VersionInfo` | `Fallout4VersionInfo` | `matched` |
-| `version-registry-promote-js-address-lib-info` | `version_registry` | `AddressLibFormat` | `JsAddressLibInfo` | `matched` |
-| `version-registry-promote-js-address-library-config` | `version_registry` | `AddressLibraryConfig` | `JsAddressLibraryConfig` | `matched` |
-| `version-registry-promote-js-crashgen-check-result` | `version_registry` | `MatchResult` | `JsCrashgenCheckResult` | `matched` |
-| `version-registry-promote-js-crashgen-checker` | `version_registry` | `CrashgenChecker` | `JsCrashgenChecker` | `matched` |
-| `version-registry-promote-js-crashgen-config` | `version_registry` | `CrashgenConfig` | `JsCrashgenConfig` | `matched` |
-| `version-registry-promote-js-crashgen-report` | `version_registry` | `Result` | `JsCrashgenReport` | `matched` |
-| `version-registry-promote-js-crashgen-version-info` | `version_registry` | `CrashgenConfig` | `JsCrashgenVersionInfo` | `matched` |
-| `version-registry-promote-js-fallout4-version` | `version_registry` | `GameVersion` | `JsFallout4Version` | `matched` |
-| `version-registry-promote-js-game-version` | `version_registry` | `GameVersion` | `JsGameVersion` | `matched` |
-| `version-registry-promote-js-unknown-version-handling` | `version_registry` | `UnknownVersionHandling` | `JsUnknownVersionHandling` | `matched` |
-| `version-registry-promote-js-version-info` | `version_registry` | `XseConfig` | `JsVersionInfo` | `matched` |
-| `version-registry-promote-js-version-registry-snapshot` | `version_registry` | `VersionMatcher` | `JsVersionRegistrySnapshot` | `matched` |
-| `version-registry-promote-xse-version` | `version_registry` | `XseVersion` | `XseVersion` | `matched` |
-| `version-registry-promote-check-crashgen-config` | `version_registry` | `CrashgenChecker` | `checkCrashgenConfig` | `matched` |
-| `version-registry-promote-check-crashgen-full` | `version_registry` | `CrashgenChecker` | `checkCrashgenFull` | `matched` |
-| `version-registry-promote-compare-versions` | `version_registry` | `compare_versions` | `compareVersions` | `matched` |
-| `version-registry-promote-detect-xse-version` | `version_registry` | `detect_xse_version` | `detectXseVersion` | `matched` |
-| `version-registry-promote-extract-all-versions` | `version_registry` | `extract_all_versions` | `extractAllVersions` | `matched` |
-| `version-registry-promote-extract-version-from-filename` | `version_registry` | `extract_version_from_filename` | `extractVersionFromFilename` | `matched` |
-| `version-registry-promote-extract-version-from-log` | `version_registry` | `extract_version_from_log` | `extractVersionFromLog` | `matched` |
-| `version-registry-promote-format-version` | `version_registry` | `format_version` | `formatVersion` | `matched` |
-| `version-registry-promote-get-address-lib-info` | `version_registry` | `AddressLibInfo` | `getAddressLibInfo` | `matched` |
-| `version-registry-promote-get-all-fallout4-versions` | `version_registry` | `Fallout4Version` | `getAllFallout4Versions` | `matched` |
-| `version-registry-promote-get-classic-version` | `version_registry` | `CLASSIC_VERSION` | `getClassicVersion` | `matched` |
-| `version-registry-promote-get-fallout4-version-info` | `version_registry` | `Fallout4Version` | `getFallout4VersionInfo` | `matched` |
-| `version-registry-promote-get-script-hashes-for-version` | `version_registry` | `VersionRegistry` | `getScriptHashesForVersion` | `matched` |
-| `version-registry-promote-get-unknown-version-default` | `version_registry` | `UnknownVersionHandling` | `getUnknownVersionDefault` | `matched` |
-| `version-registry-promote-get-unknown-version-handling` | `version_registry` | `unknown_version_handling` | `getUnknownVersionHandling` | `matched` |
-| `version-registry-promote-get-version` | `aux` | `None` | `getVersion` | `unmapped` |
-| `version-registry-promote-get-version-registry` | `version_registry` | `VersionRegistry` | `getVersionRegistry` | `matched` |
-| `version-registry-promote-is-known-fallout4-version` | `version_registry` | `is_known_fallout4_version` | `isKnownFallout4Version` | `matched` |
-| `version-registry-promote-parse-version` | `version_registry` | `parse_version` | `parseVersion` | `matched` |
-| `version-registry-promote-registry-get-game-version` | `version_registry` | `get` | `registryGetGameVersion` | `matched` |
-| `version_registry.MatchConfidence@rust` | `version_registry` | `MatchConfidence@rust` | `None` | `matched` |
-| `version-registry-promote-try-parse-version` | `version_registry` | `try_parse_version` | `tryParseVersion` | `matched` |
-| `aux-phase4a-backup-manager` | `aux` | `BackupManager` | `BackupManager` | `matched` |
-| `aux-phase4a-docs-path-finder` | `aux` | `DocsPathFinder` | `DocsPathFinder` | `matched` |
-| `aux-phase4a-documents-checker` | `aux` | `DocumentsChecker` | `DocumentsChecker` | `matched` |
-| `aux-phase4a-game-path-finder` | `aux` | `GamePathFinder` | `GamePathFinder` | `matched` |
-| `aux-phase4a-js-backup-info` | `aux` | `BackupInfo` | `JsBackupInfo` | `matched` |
-| `aux-phase4a-js-backup-manager` | `aux` | `BackupManager` | `JsBackupManager` | `matched` |
-| `aux-phase4a-js-file-generator` | `aux` | `FileGenerator` | `JsFileGenerator` | `matched` |
-| `aux-phase4a-js-file-i-o` | `aux` | `FileIOCore` | `JsFileIO` | `matched` |
-| `aux-phase4a-js-file-operation-result` | `aux` | `FileOperationResult` | `JsFileOperationResult` | `matched` |
-| `aux-phase4a-js-game-files-manager` | `aux` | `GameFilesManager` | `JsGameFilesManager` | `matched` |
-| `aux-phase4a-js-message` | `aux` | `Message` | `JsMessage` | `matched` |
-| `aux-phase4a-js-message-target` | `aux` | `MessageTarget` | `JsMessageTarget` | `matched` |
-| `aux-phase4a-js-message-type` | `aux` | `MessageType` | `JsMessageType` | `matched` |
-| `aux-phase4a-metrics-summary-result` | `aux` | `MetricsSummary` | `MetricsSummaryResult` | `matched` |
-| `aux-phase4a-runtime-info` | `aux` | `get_runtime` | `RuntimeInfo` | `matched` |
-| `aux-phase4a-timing-stats` | `aux` | `MetricsSummary` | `TimingStats` | `matched` |
-| `aux-phase4a-calculate-file-similarity` | `aux` | `calculate_similarity` | `calculateFileSimilarity` | `matched` |
-| `aux-phase4a-check-read-permissions` | `aux` | `check_read_permissions` | `checkReadPermissions` | `matched` |
-| `aux-phase4a-check-write-permissions` | `aux` | `check_write_permissions` | `checkWritePermissions` | `matched` |
-| `aux-phase4a-clear-all-metrics` | `aux` | `clear_metrics` | `clearAllMetrics` | `matched` |
-| `aux-phase4a-create-message` | `aux` | `Message` | `createMessage` | `matched` |
-| `aux-phase4a-detect-encoding` | `aux` | `EncodingDetector` | `detectEncoding` | `matched` |
-| `aux-phase4a-format-message` | `aux` | `format_log_message` | `formatMessage` | `matched` |
-| `aux-phase4a-generate-ignore-file` | `aux` | `generate_ignore_file` | `generateIgnoreFile` | `matched` |
-| `aux-phase4a-get-metrics-summary` | `aux` | `get_summary` | `getMetricsSummary` | `matched` |
-| `aux-phase4a-get-runtime-info` | `aux` | `get_runtime` | `getRuntimeInfo` | `matched` |
-| `aux-phase4a-get-system-documents-path` | `aux` | `get_system_documents_path` | `getSystemDocumentsPath` | `matched` |
-| `aux-phase4a-hash-file` | `aux` | `FileHasher` | `hashFile` | `matched` |
-| `aux-phase4a-hash-files-parallel` | `aux` | `FileHasher` | `hashFilesParallel` | `matched` |
-| `aux-phase4a-intern-string` | `aux` | `intern` | `internString` | `matched` |
-| `aux-phase4a-is-restricted-path` | `aux` | `is_restricted_path` | `isRestrictedPath` | `matched` |
-| `aux-phase4a-is-runtime-available` | `aux` | `get_runtime` | `isRuntimeAvailable` | `matched` |
-| `aux-phase4a-is-valid-executable-path` | `aux` | `is_valid_executable_path` | `isValidExecutablePath` | `matched` |
-| `aux-phase4a-is-valid-path` | `aux` | `is_valid_path` | `isValidPath` | `matched` |
-| `aux-phase4a-join-paths` | `aux` | `join_paths` | `joinPaths` | `matched` |
-| `aux-phase4a-load-batch-async` | `aux` | `load_batch_async` | `loadBatchAsync` | `matched` |
-| `aux-phase4a-load-batch-sync` | `aux` | `load_batch_sync` | `loadBatchSync` | `matched` |
-| `aux-phase4a-normalize-path` | `aux` | `normalize_path` | `normalizePath` | `matched` |
-| `aux-phase4a-normalize-string` | `aux` | `normalize_string` | `normalizeString` | `matched` |
-| `aux-phase4a-parse-steam-library` | `aux` | `parse_steam_library` | `parseSteamLibrary` | `matched` |
-| `aux-phase4a-process-string-batch` | `aux` | `process_batch` | `processStringBatch` | `matched` |
-| `aux-phase4a-query-game-registry` | `aux` | `query_game_registry` | `queryGameRegistry` | `matched` |
-| `aux-phase4a-record-timing-metric` | `aux` | `record_timing` | `recordTimingMetric` | `matched` |
-| `aux-phase4a-registry-clear` | `aux` | `clear_all` | `registryClear` | `matched` |
-| `aux-phase4a-registry-get` | `aux` | `get` | `registryGet` | `matched` |
-| `aux-phase4a-registry-get-game` | `aux` | `get_game` | `registryGetGame` | `matched` |
-| `aux-phase4a-registry-remove` | `aux` | `unregister` | `registryRemove` | `matched` |
-| `aux-phase4a-registry-set` | `aux` | `register` | `registrySet` | `matched` |
-| `aux-phase4a-registry-set-game` | `aux` | `set_game` | `registrySetGame` | `matched` |
-| `aux-phase4a-remove-readonly` | `aux` | `remove_readonly` | `removeReadonly` | `matched` |
-| `aux-phase4a-validate-custom-scan-path` | `aux` | `validate_custom_scan_path` | `validateCustomScanPath` | `matched` |
-| `aux-phase4a-validate-path-with-permissions` | `aux` | `validate_path_with_permissions` | `validatePathWithPermissions` | `matched` |
-| `aux-phase4a-validate-paths-batch` | `aux` | `validate_paths_batch` | `validatePathsBatch` | `matched` |
-| `aux-phase4a-validate-required-files` | `aux` | `validate_required_files` | `validateRequiredFiles` | `matched` |
-| `aux-phase4b-github-client` | `aux` | `GithubClient` | `GithubClient` | `matched` |
-| `aux-phase4b-js-ba2-issues` | `aux` | `BA2Issues` | `JsBa2Issues` | `matched` |
-| `aux-phase4b-js-ba2-scan-result` | `aux` | `None` | `JsBa2ScanResult` | `unmapped` |
-| `aux-phase4b-js-ba2-scanner` | `aux` | `BA2Scanner` | `JsBa2Scanner` | `matched` |
-| `aux-phase4b-js-batch-entry` | `aux` | `None` | `JsBatchEntry` | `unmapped` |
-| `aux-phase4b-js-check-result` | `aux` | `CheckResult` | `JsCheckResult` | `matched` |
-| `aux-phase4b-js-check-type` | `aux` | `CheckType` | `JsCheckType` | `matched` |
-| `aux-phase4b-js-database-pool` | `aux` | `DatabasePool` | `JsDatabasePool` | `matched` |
-| `aux-phase4b-js-duplicate-group` | `aux` | `DuplicateGroup` | `JsDuplicateGroup` | `matched` |
-| `aux-phase4b-js-enb-checker` | `aux` | `EnbChecker` | `JsEnbChecker` | `matched` |
-| `aux-phase4b-js-enb-result` | `aux` | `EnbResult` | `JsEnbResult` | `matched` |
-| `aux-phase4b-js-enb-validation-result` | `aux` | `EnbValidationResult` | `JsEnbValidationResult` | `matched` |
-| `aux-phase4b-js-game-integrity-checker` | `aux` | `GameIntegrityChecker` | `JsGameIntegrityChecker` | `matched` |
-| `aux-phase4b-js-game-scan-result` | `aux` | `GameScanResult` | `JsGameScanResult` | `matched` |
-| `aux-phase4b-js-github-asset` | `aux` | `GithubAsset` | `JsGithubAsset` | `matched` |
-| `aux-phase4b-js-github-release` | `aux` | `GithubRelease` | `JsGithubRelease` | `matched` |
-| `aux-phase4b-js-ini-validator` | `aux` | `IniValidator` | `JsIniValidator` | `matched` |
-| `aux-phase4b-js-integrity-check-result` | `aux` | `IntegrityCheckResult` | `JsIntegrityCheckResult` | `matched` |
-| `aux-phase4b-js-issue-severity` | `aux` | `IssueSeverity` | `JsIssueSeverity` | `matched` |
-| `aux-phase4b-js-mod-duplicate-entry` | `aux` | `None` | `JsModDuplicateEntry` | `unmapped` |
-| `aux-phase4b-js-mod-ini-scan-result` | `aux` | `ModIniScanResult` | `JsModIniScanResult` | `matched` |
-| `aux-phase4b-js-mod-scan-result` | `aux` | `ModScanResult` | `JsModScanResult` | `matched` |
-| `aux-phase4b-js-mod-site` | `aux` | `ModSite` | `JsModSite` | `matched` |
-| `aux-phase4b-js-pool-statistics` | `aux` | `PoolStatistics` | `JsPoolStatistics` | `matched` |
-| `aux-phase4b-js-toml-issue-severity` | `aux` | `TomlIssueSeverity` | `JsTomlIssueSeverity` | `matched` |
-| `aux-phase4b-js-unpacked-issues` | `aux` | `UnpackedIssues` | `JsUnpackedIssues` | `matched` |
-| `aux-phase4b-js-unpacked-scanner` | `aux` | `UnpackedScanner` | `JsUnpackedScanner` | `matched` |
-| `aux-phase4b-js-update-check-result` | `aux` | `None` | `JsUpdateCheckResult` | `unmapped` |
-| `aux-phase4b-js-validation-result` | `aux` | `ValidationResult` | `JsValidationResult` | `matched` |
-| `aux-phase4b-js-vsync-entry` | `aux` | `VsyncEntry` | `JsVsyncEntry` | `matched` |
-| `aux-phase4b-js-wrye-bash-parser` | `aux` | `WryeBashParser` | `JsWryeBashParser` | `matched` |
-| `aux-phase4b-js-wrye-issue` | `aux` | `WryeIssue` | `JsWryeIssue` | `matched` |
-| `aux-phase4b-js-xse-checker` | `aux` | `XseChecker` | `JsXseChecker` | `matched` |
-| `aux-phase4b-js-xse-info` | `aux` | `XseInfo` | `JsXseInfo` | `matched` |
-| `aux-phase4b-js-xse-type` | `aux` | `XseType` | `JsXseType` | `matched` |
-| `aux-phase4b-query-param` | `aux` | `None` | `QueryParam` | `unmapped` |
-| `aux-phase4b-resource-count` | `aux` | `None` | `ResourceCount` | `unmapped` |
-| `aux-phase4b-resource-info` | `aux` | `ResourceInfo` | `ResourceInfo` | `matched` |
-| `aux-phase4b-build-url-with-query` | `aux` | `build_url_with_query` | `buildUrlWithQuery` | `matched` |
-| `aux-phase4b-check-enb` | `aux` | `validate` | `checkEnb` | `matched` |
-| `aux-phase4b-check-for-updates` | `aux` | `get_latest_release` | `checkForUpdates` | `matched` |
-| `aux-phase4b-count-resources-by-type` | `aux` | `count_resources_by_type` | `countResourcesByType` | `matched` |
-| `aux-phase4b-create-resource-info` | `aux` | `ResourceInfo` | `createResourceInfo` | `matched` |
-| `aux-phase4b-create-resource-info-with-size` | `aux` | `ResourceInfo` | `createResourceInfoWithSize` | `matched` |
-| `aux-phase4b-detect-resource-type` | `aux` | `detect_resource_type` | `detectResourceType` | `matched` |
-| `aux-phase4b-enumerate-resources` | `aux` | `enumerate_resources` | `enumerateResources` | `matched` |
-| `aux-phase4b-extract-domain` | `aux` | `extract_domain` | `extractDomain` | `matched` |
-| `aux-phase4b-get-latest-release` | `aux` | `get_latest_release` | `getLatestRelease` | `matched` |
-| `aux-phase4b-get-mod-site-game-url` | `aux` | `game_url` | `getModSiteGameUrl` | `matched` |
-| `aux-phase4b-get-mod-site-name` | `aux` | `name` | `getModSiteName` | `matched` |
-| `aux-phase4b-get-mod-site-url` | `aux` | `base_url` | `getModSiteUrl` | `matched` |
-| `aux-phase4b-get-resource-extensions` | `aux` | `extensions` | `getResourceExtensions` | `matched` |
-| `aux-phase4b-get-user-agent` | `aux` | `get_user_agent` | `getUserAgent` | `matched` |
-| `aux-phase4b-get-user-agent-prefix` | `aux` | `USER_AGENT_PREFIX` | `getUserAgentPrefix` | `matched` |
-| `aux-phase4b-get-user-agent-with-suffix` | `aux` | `get_user_agent_with_suffix` | `getUserAgentWithSuffix` | `matched` |
-| `aux-phase4b-get-xse-info` | `aux` | `get_xse_info` | `getXseInfo` | `matched` |
-| `aux-phase4b-has-update` | `aux` | `has_update` | `hasUpdate` | `matched` |
-| `aux-phase4b-is-supported-resource` | `aux` | `is_supported_resource` | `isSupportedResource` | `matched` |
-| `aux-phase4b-is-valid-url` | `aux` | `is_valid_url` | `isValidUrl` | `matched` |
-| `aux-phase4b-is-xse-installed` | `aux` | `is_xse_installed` | `isXseInstalled` | `matched` |
-| `aux-phase4b-join-url` | `aux` | `join_url` | `joinUrl` | `matched` |
-| `aux-phase4b-parse-resource-type` | `aux` | `ResourceType` | `parseResourceType` | `matched` |
-| `aux-phase4b-parse-xse-type` | `aux` | `XseType` | `parseXseType` | `matched` |
-| `aux-phase4b-run-game-checks` | `aux` | `run_game_checks` | `runGameChecks` | `matched` |
-| `aux-phase4b-run-mod-scans` | `aux` | `run_mod_scans` | `runModScans` | `matched` |
-| `aux-phase4b-scan-all-ba2-archives` | `aux` | `scan_archives_batch` | `scanAllBa2Archives` | `matched` |
-| `aux-phase4b-scan-mod-inis` | `aux` | `scan` | `scanModInis` | `matched` |
-| `aux-phase4b-scan-unpacked-files` | `aux` | `scan_directory` | `scanUnpackedFiles` | `matched` |
-| `aux-phase4b-validate-resource` | `aux` | `validate_resource` | `validateResource` | `matched` |
-| `aux-phase4b-validate-url` | `aux` | `validate_url` | `validateUrl` | `matched` |
-| `aux-phase4b-xse-dll-prefix` | `aux` | `dll_prefix` | `xseDllPrefix` | `matched` |
-| `aux-phase4b-xse-loader-name` | `aux` | `loader_name` | `xseLoaderName` | `matched` |
-| `aux-phase4b-xse-type-for-game` | `aux` | `from_game_id` | `xseTypeForGame` | `matched` |
-| `aux-phase4b-xse-type-name` | `aux` | `XseType` | `xseTypeName` | `matched` |
-| `aux-phase4c-crash-autoscan-pattern` | `aux` | `CRASH_AUTOSCAN_PATTERN` | `CRASH_AUTOSCAN_PATTERN` | `matched` |
-| `version-registry-phase4c-js-compatible-range` | `version_registry` | `CompatibleRange` | `JsCompatibleRange` | `matched` |
-| `aux-phase4c-js-dds-analyzer-alias` | `aux` | `FileIOCore` | `JsDDSAnalyzer` | `matched` |
-| `aux-phase4c-js-dds-analyzer-class` | `aux` | `DDSAnalyzer` | `JsDdsAnalyzer` | `matched` |
-| `aux-phase4c-js-dds-batch-result` | `aux` | `FileIOCore` | `JsDdsBatchResult` | `matched` |
-| `aux-phase4c-js-dds-issue` | `aux` | `FileIOCore` | `JsDdsIssue` | `matched` |
-| `aux-phase4c-js-game-id` | `aux` | `GameId` | `JsGameId` | `matched` |
-| `aux-phase4c-js-ini-check-result` | `aux` | `IniCheckResult` | `JsIniCheckResult` | `matched` |
-| `version-registry-phase4c-js-match-result` | `version_registry` | `MatchResult` | `JsMatchResult` | `matched` |
-| `aux-phase4c-calculate-text-similarity` | `aux` | `similarity_ratio` | `calculateTextSimilarity` | `matched` |
-| `aux-phase4c-check-drive-exists` | `aux` | `check_drive_exists` | `checkDriveExists` | `matched` |
-| `version-registry-phase4c-get-all-exe-hashes` | `version_registry` | `VersionRegistry` | `getAllExeHashes` | `matched` |
-| `aux-phase4c-get-all-game-ids` | `aux` | `GameId` | `getAllGameIds` | `matched` |
-| `version-registry-phase4c-get-all-script-hashes` | `version_registry` | `VersionRegistry` | `getAllScriptHashes` | `matched` |
-| `aux-phase4c-get-game-name` | `aux` | `GameId` | `getGameName` | `matched` |
-| `scanlog.settings_validator.ConfigIssue@rust` | `scanlog` | `ConfigIssue@rust` | `None` | `matched` |
-| `scanlog.crashgen_registry.CrashgenEntry@rust` | `scanlog` | `CrashgenEntry@rust` | `None` | `matched` |
-| `scanlog.crashgen_registry.CrashgenRegistry@rust` | `scanlog` | `CrashgenRegistry@rust` | `None` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzer@rust` | `scanlog` | `FormIDAnalyzer@rust` | `None` | `matched` |
-| `scanlog.gpu_detector.GpuDetector@rust` | `scanlog` | `GpuDetector@rust` | `None` | `matched` |
-| `scanlog.gpu_detector.GpuVendor@rust` | `scanlog` | `GpuVendor@rust` | `None` | `matched` |
-| `scanlog.papyrus.PapyrusAnalyzer@rust` | `scanlog` | `PapyrusAnalyzer@rust` | `None` | `matched` |
-| `scanlog.papyrus.PapyrusError@rust` | `scanlog` | `PapyrusError@rust` | `None` | `matched` |
-| `scanlog.plugin_analyzer.PluginAnalyzer@rust` | `scanlog` | `PluginAnalyzer@rust` | `None` | `matched` |
-| `scanlog.record_scanner.RecordScanner@rust` | `scanlog` | `RecordScanner@rust` | `None` | `matched` |
-| `scanlog.formid_analyzer.RustFormIDAnalyzer@rust` | `scanlog` | `RustFormIDAnalyzer@rust` | `None` | `matched` |
-| `scanlog.error.ScanLogError@rust` | `scanlog` | `ScanLogError@rust` | `None` | `matched` |
-| `scanlog.orchestrator.ScanProgressPhase@rust` | `scanlog` | `ScanProgressPhase@rust` | `None` | `matched` |
-| `scanlog.parser.StreamingIteratorParser@rust` | `scanlog` | `StreamingIteratorParser@rust` | `None` | `matched` |
-| `scanlog.parser.StreamingLogParser@rust` | `scanlog` | `StreamingLogParser@rust` | `None` | `matched` |
-| `scanlog.plugin_analyzer.contains_plugin@rust` | `scanlog` | `contains_plugin@rust` | `None` | `matched` |
-| `scanlog.record_scanner.contains_record@rust` | `scanlog` | `contains_record@rust` | `None` | `matched` |
-| `scanlog.crashgen_registry.crashgen_registry@rust` | `scanlog` | `crashgen_registry@rust` | `None` | `matched` |
-| `scanlog.version.crashgen_version_gen@rust` | `scanlog` | `crashgen_version_gen@rust` | `None` | `matched` |
-| `scanlog.mod_guidance_analyzer.ImportantModGuidance` | `scanlog` | `ImportantModGuidance` | `JsImportantModGuidance` | `matched` |
-| `scanlog.mod_guidance_analyzer.ImportantModRule` | `scanlog` | `CoreModEntry` | `JsImportantModRule` | `matched` |
-| `scanlog.mod_guidance_analyzer.ModConflictGuidance` | `scanlog` | `ModConflictGuidance` | `JsModConflictGuidance` | `matched` |
-| `scanlog.mod_guidance_analyzer.ModConflictRule` | `scanlog` | `ModConflictEntry` | `JsModConflictRule` | `matched` |
-| `scanlog.mod_guidance_analyzer.ModGuidanceAnalysisInput` | `scanlog` | `ModGuidanceAnalysisInput` | `JsModGuidanceAnalysisInput` | `matched` |
-| `scanlog.mod_guidance_analyzer.ModGuidanceAnalysisResult` | `scanlog` | `ModGuidanceAnalysisResult` | `JsModGuidanceAnalysisResult` | `matched` |
-| `scanlog.mod_guidance_analyzer.ModGuidanceAnalyzer` | `scanlog` | `ModGuidanceAnalyzer` | `ModGuidanceAnalyzer` | `matched` |
-| `scanlog.mod_guidance_analyzer.ModGuidanceCriteriaKind` | `scanlog` | `ModSolutionCriteria` | `JsModGuidanceCriteriaKind` | `matched` |
-| `scanlog.mod_guidance_analyzer.ModGuidanceMatchState` | `scanlog` | `ModGuidanceMatchState` | `JsModGuidanceMatchState` | `matched` |
-| `scanlog.mod_guidance_analyzer.ModGuidancePlugin` | `scanlog` | `ModGuidanceAnalysisInput` | `JsModGuidancePlugin` | `matched` |
-| `scanlog.mod_guidance_analyzer.ModSolutionGuidance` | `scanlog` | `ModSolutionGuidance` | `JsModSolutionGuidance` | `matched` |
-| `scanlog.mod_guidance_analyzer.ModSolutionRule` | `scanlog` | `ModSolutionEntry` | `JsModSolutionRule` | `matched` |
-| `scanlog.named_record_finding_analyzer.NamedRecordFinding` | `scanlog` | `NamedRecordFinding` | `JsNamedRecordFinding` | `matched` |
-| `scanlog.formid_finding_analyzer.FormIDFinding` | `scanlog` | `FormIDFinding` | `JsFormIdFinding` | `matched` |
-| `scanlog.formid_finding_analyzer.FormIDFindingAnalysisInput` | `scanlog` | `FormIDFindingAnalysisInput` | `JsFormIdFindingAnalysisInput` | `matched` |
-| `scanlog.formid_finding_analyzer.FormIDFindingAnalysisResult` | `scanlog` | `FormIDFindingAnalysisResult` | `JsFormIdFindingAnalysisResult` | `matched` |
-| `scanlog.formid_finding_analyzer.FormIDFindingAnalyzer` | `scanlog` | `FormIDFindingAnalyzer` | `FormIdFindingAnalyzer` | `matched` |
-| `scanlog.formid_finding_analyzer.FormIDPlugin` | `scanlog` | `FormIDPlugin` | `JsFormIdPlugin` | `matched` |
-| `scanlog.formid_finding_analyzer.FormIDValueLookupStatus` | `scanlog` | `FormIDValueLookupStatus` | `JsFormIdValueLookupStatus` | `matched` |
-| `scanlog.formid_finding_analyzer.formid_finding_analyzer@rust` | `scanlog` | `formid_finding_analyzer@rust` | `None` | `matched` |
-| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput` | `scanlog` | `NamedRecordFindingAnalysisInput` | `JsNamedRecordFindingAnalysisInput` | `matched` |
-| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisResult` | `scanlog` | `NamedRecordFindingAnalysisResult` | `JsNamedRecordFindingAnalysisResult` | `matched` |
-| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer` | `scanlog` | `NamedRecordFindingAnalyzer` | `NamedRecordFindingAnalyzer` | `matched` |
-| `scanlog.named_record_finding_analyzer.named_record_finding_analyzer@rust` | `scanlog` | `named_record_finding_analyzer@rust` | `None` | `matched` |
-| `scanlog.plugin_evidence_analyzer.PluginEvidence` | `scanlog` | `PluginEvidence` | `JsPluginEvidence` | `matched` |
-| `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisInput` | `scanlog` | `PluginEvidenceAnalysisInput` | `JsPluginEvidenceAnalysisInput` | `matched` |
-| `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisResult` | `scanlog` | `PluginEvidenceAnalysisResult` | `JsPluginEvidenceAnalysisResult` | `matched` |
-| `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer` | `scanlog` | `PluginEvidenceAnalyzer` | `PluginEvidenceAnalyzer` | `matched` |
-| `scanlog.plugin_evidence_analyzer.plugin_evidence_analyzer@rust` | `scanlog` | `plugin_evidence_analyzer@rust` | `None` | `matched` |
-| `scanlog.plugin_analyzer.detect_plugins_batch@rust` | `scanlog` | `detect_plugins_batch@rust` | `None` | `matched` |
-| `scanlog.error.error@rust` | `scanlog` | `error@rust` | `None` | `matched` |
-| `scanlog.formid.extract_formids_batch@rust` | `scanlog` | `extract_formids_batch@rust` | `None` | `matched` |
-| `scanlog.formid.formid@rust` | `scanlog` | `formid@rust` | `None` | `matched` |
-| `scanlog.formid_analyzer.formid_analyzer@rust` | `scanlog` | `formid_analyzer@rust` | `None` | `matched` |
-| `scanlog.gpu_detector.gpu_detector@rust` | `scanlog` | `gpu_detector@rust` | `None` | `matched` |
-| `scanlog.formid.is_valid_formid@rust` | `scanlog` | `is_valid_formid@rust` | `None` | `matched` |
-| `scanlog.mod_guidance_analyzer.mod_guidance_analyzer@rust` | `scanlog` | `mod_guidance_analyzer@rust` | `None` | `matched` |
-| `scanlog.papyrus.papyrus@rust` | `scanlog` | `papyrus@rust` | `None` | `matched` |
-| `scanlog.parser.parser@rust` | `scanlog` | `parser@rust` | `None` | `matched` |
-| `scanlog.patterns.patterns@rust` | `scanlog` | `patterns@rust` | `None` | `matched` |
-| `scanlog.plugin_analyzer.plugin_analyzer@rust` | `scanlog` | `plugin_analyzer@rust` | `None` | `matched` |
-| `scanlog.record_scanner.record_scanner@rust` | `scanlog` | `record_scanner@rust` | `None` | `matched` |
-| `scanlog.record_scanner.scan_records_batch@rust` | `scanlog` | `scan_records_batch@rust` | `None` | `matched` |
-| `scanlog.segment_key.segment_key@rust` | `scanlog` | `segment_key@rust` | `None` | `matched` |
-| `scanlog.analyzer.AnalyzerError` | `scanlog` | `AnalyzerError@rust` | `None` | `matched` |
-| `scanlog.analyzer.AnalyzerErrorCode` | `scanlog` | `AnalyzerErrorCode@rust` | `None` | `matched` |
-| `scanlog.analyzer.AnalyzerKind` | `scanlog` | `AnalyzerKind` | `JsAnalyzerKind` | `matched` |
-| `scanlog.analyzer.AnalyzerResult` | `scanlog` | `AnalyzerResult` | `JsCrashgenSettingsAnalysisResult` | `matched` |
-| `scanlog.analyzer.analyzer@rust` | `scanlog` | `analyzer@rust` | `None` | `matched` |
-| `scanlog.crashgen_settings_analyzer.AnalyzerSeverity` | `scanlog` | `RuleSeverity` | `JsCrashgenExpectationSeverity` | `matched` |
-| `scanlog.crashgen_settings_analyzer.AutoscanReportPlacement` | `scanlog` | `AutoscanReportPlacement` | `JsAutoscanReportPlacement` | `matched` |
-| `scanlog.crashgen_settings_analyzer.CrashgenConfigLayout` | `scanlog` | `ConfigLayout` | `JsCrashgenConfigLayout` | `matched` |
-| `scanlog.crashgen_settings_analyzer.CrashgenExpectationKind` | `scanlog` | `OutcomeKind` | `JsCrashgenExpectationOutcomeKind` | `matched` |
-| `scanlog.crashgen_settings_analyzer.CrashgenExpectationOutcome` | `scanlog` | `CrashgenExpectationOutcome` | `JsCrashgenExpectationOutcome` | `matched` |
-| `scanlog.crashgen_settings_analyzer.CrashgenSetting` | `scanlog` | `CrashgenSettingsAnalysisInput` | `JsCrashgenSetting` | `matched` |
-| `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisInput` | `scanlog` | `CrashgenSettingsAnalysisInput` | `JsCrashgenSettingsAnalysisInput` | `matched` |
-| `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisResult` | `scanlog` | `CrashgenSettingsAnalysisResult` | `JsCrashgenSettingsAnalysisResult` | `matched` |
-| `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalyzer` | `scanlog` | `CrashgenSettingsAnalyzer` | `CrashgenSettingsAnalyzer` | `matched` |
-| `scanlog.crashgen_settings_analyzer.CrashgenVersion` | `scanlog` | `CrashgenSettingsAnalysisInput` | `JsCrashgenVersion` | `matched` |
-| `scanlog.crashgen_settings_analyzer.DisabledSettingNotice` | `scanlog` | `DisabledSettingNotice` | `JsDisabledSettingNotice` | `matched` |
-| `scanlog.crashgen_settings_analyzer.crashgen_settings_analyzer@rust` | `scanlog` | `crashgen_settings_analyzer@rust` | `None` | `matched` |
-| `scanlog.crash_suspect_analyzer.CrashSuspectAnalysisInput` | `scanlog` | `CrashSuspectAnalysisInput` | `JsCrashSuspectAnalysisInput` | `matched` |
-| `scanlog.crash_suspect_analyzer.CrashSuspectAnalysisResult` | `scanlog` | `CrashSuspectAnalysisResult` | `JsCrashSuspectAnalysisResult` | `matched` |
-| `scanlog.crash_suspect_analyzer.CrashSuspectAnalyzer` | `scanlog` | `CrashSuspectAnalyzer` | `CrashSuspectAnalyzer` | `matched` |
-| `scanlog.crash_suspect_analyzer.CrashSuspectFinding` | `scanlog` | `CrashSuspectFinding` | `JsCrashSuspectFinding` | `matched` |
-| `scanlog.crash_suspect_analyzer.CrashSuspectFindingKind` | `scanlog` | `CrashSuspectFindingKind` | `JsCrashSuspectFindingKind` | `matched` |
-| `scanlog.crash_suspect_analyzer.CrashSuspectMainErrorRule` | `scanlog` | `SuspectErrorRule` | `JsCrashSuspectMainErrorRule` | `matched` |
-| `scanlog.crash_suspect_analyzer.CrashSuspectStackCountRule` | `scanlog` | `SuspectStackCountRule` | `JsCrashSuspectStackCountRule` | `matched` |
-| `scanlog.crash_suspect_analyzer.CrashSuspectStackRule` | `scanlog` | `SuspectStackRule` | `JsCrashSuspectStackRule` | `matched` |
-| `scanlog.crash_suspect_analyzer.crash_suspect_analyzer@rust` | `scanlog` | `crash_suspect_analyzer@rust` | `None` | `matched` |
-| `scanlog.formid_analyzer.validate_formids_batch@rust` | `scanlog` | `validate_formids_batch@rust` | `None` | `matched` |
-| `scanlog.version.version@rust` | `scanlog` | `version@rust` | `None` | `matched` |
-| `scanlog.patterns.CRASH_LOG_PATTERN` | `scanlog` | `CRASH_LOG_PATTERN` | `CRASH_LOG_PATTERN` | `matched` |
-| `scanlog.gpu_detector.JsGpuInfo` | `scanlog` | `GpuInfo` | `JsGpuInfo` | `matched` |
-| `scanlog.parser.JsLogErrorEntry` | `scanlog` | `LogErrorEntry` | `JsLogErrorEntry` | `matched` |
-| `scanlog.parser.JsLogSegments` | `scanlog` | `LogParser` | `JsLogSegments` | `matched` |
-| `scanlog.papyrus.JsPapyrusStats` | `scanlog` | `PapyrusStats` | `JsPapyrusStats` | `matched` |
-| `scanlog.settings_validator.checkXsePlugins` | `scanlog` | `XseChecker` | `checkXsePlugins` | `matched` |
-| `scanlog.parser.parseXseLog` | `scanlog` | `parse_xse_log` | `parseXseLog` | `matched` |
-| `config.ConfigError@rust` | `config` | `ConfigError@rust` | `None` | `matched` |
-| `config.CoreModEntry@rust` | `config` | `CoreModEntry@rust` | `None` | `matched` |
-| `config.CoreModExclude@rust` | `config` | `CoreModExclude@rust` | `None` | `matched` |
-| `config.CrashgenEntryRaw@rust` | `config` | `CrashgenEntryRaw@rust` | `None` | `matched` |
-| `config.ModSolutionCriteria@rust` | `config` | `ModSolutionCriteria@rust` | `None` | `matched` |
-| `config.ModSolutionEntry@rust` | `config` | `ModSolutionEntry@rust` | `None` | `matched` |
-| `config.SuspectErrorRule@rust` | `config` | `SuspectErrorRule@rust` | `None` | `matched` |
-| `config.SuspectStackCountRule@rust` | `config` | `SuspectStackCountRule@rust` | `None` | `matched` |
-| `config.SuspectStackRule@rust` | `config` | `SuspectStackRule@rust` | `None` | `matched` |
-| `config.format_registry_game_version@rust` | `config` | `format_registry_game_version@rust` | `None` | `matched` |
-| `config.resolve_registry_version_info@rust` | `config` | `resolve_registry_version_info@rust` | `None` | `matched` |
-| `config.caches.DEFAULT_CACHE_CLEANUP_INTERVAL` | `config` | `DEFAULT_CACHE_CLEANUP_INTERVAL_SECS` | `DEFAULT_CACHE_CLEANUP_INTERVAL` | `matched` |
-| `config.caches.DEFAULT_CACHE_CLEANUP_THRESHOLD` | `config` | `DEFAULT_CACHE_CLEANUP_OP_THRESHOLD` | `DEFAULT_CACHE_CLEANUP_THRESHOLD` | `matched` |
-| `config.caches.DEFAULT_QUERY_CACHE_CAPACITY` | `config` | `DEFAULT_QUERY_CACHE_CAPACITY` | `DEFAULT_QUERY_CACHE_CAPACITY` | `matched` |
-| `config.hash_cache.HashCacheStats` | `config` | `CacheStats` | `HashCacheStats` | `matched` |
-| `config.scangame.JsConfigIssue` | `config` | `ConfigIssue` | `JsConfigIssue` | `matched` |
-| `config.fcx.JsFcxConfigIssue` | `config` | `ConfigIssue` | `JsFcxConfigIssue` | `matched` |
-| `config.scangame.JsGameScanConfig` | `config` | `GameScanConfig` | `JsGameScanConfig` | `matched` |
-| `config.scangame.JsIntegrityConfig` | `config` | `IntegrityConfig` | `JsIntegrityConfig` | `matched` |
-| `config.scangame.JsTomlConfigIssue` | `config` | `TomlConfigIssue` | `JsTomlConfigIssue` | `matched` |
-| `config.version_registry.JsXseConfig` | `config` | `XseConfig` | `JsXseConfig` | `matched` |
-| `config.scangame.JsEnbConfigResult` | `config` | `EnbConfigResult` | `JsEnbConfigResult` | `matched` |
-| `config.duplicate_detector.JsConfigDuplicateDetector` | `config` | `ConfigDuplicateDetector` | `JsConfigDuplicateDetector` | `matched` |
-| `config.hash_cache.clearHashCache` | `config` | `FileHasher` | `clearHashCache` | `matched` |
-| `config.duplicate_detector.detectConfigDuplicates` | `config` | `ConfigDuplicateDetector` | `detectConfigDuplicates` | `matched` |
-| `config.caches.getDefaultCacheCleanupInterval` | `config` | `DEFAULT_CACHE_CLEANUP_INTERVAL_SECS` | `getDefaultCacheCleanupInterval` | `matched` |
-| `config.caches.getDefaultCacheCleanupThreshold` | `config` | `DEFAULT_CACHE_CLEANUP_OP_THRESHOLD` | `getDefaultCacheCleanupThreshold` | `matched` |
-| `config.caches.getDefaultQueryCacheCapacity` | `config` | `DEFAULT_QUERY_CACHE_CAPACITY` | `getDefaultQueryCacheCapacity` | `matched` |
-| `config.hash_cache.getHashCacheStats` | `config` | `FileHasher` | `getHashCacheStats` | `matched` |
-| `config.hash_cache.resetHashCacheStats` | `config` | `FileHasher` | `resetHashCacheStats` | `matched` |
-| `version-pe-extract` | `version_registry` | `extract_pe_version` | `extractPeVersion` | `matched` |
-| `version-pe-is-valid-path` | `version_registry` | `is_valid_executable_path` | `isValidPePath` | `matched` |
-| `version-pe-shape` | `version_registry` | `PeVersionResult` | `JsPeVersion` | `matched` |
-| `version-registry-crashgen-entry` | `version_registry` | `CrashgenConfig` | `JsCrashgenRegistryEntry` | `matched` |
-| `version-registry-crashgen-settings-rules` | `version_registry` | `CrashgenSettingsRules` | `JsCrashgenSettingsRules` | `matched` |
-| `version-registry-check-crashgen-config-with-rules` | `version_registry` | `CrashgenCheckOrchestrator` | `checkCrashgenConfigWithRules` | `matched` |
-| `version-registry-check-crashgen-full-with-rules` | `version_registry` | `CrashgenCheckOrchestrator` | `checkCrashgenFullWithRules` | `matched` |
-| `config.ModConflictEntry@rust` | `config` | `ModConflictEntry@rust` | `None` | `matched` |
-| `version_registry.Fallout4Version@rust` | `version_registry` | `Fallout4Version@rust` | `None` | `matched` |
-| `shared.GameId@rust` | `shared` | `GameId@rust` | `None` | `matched` |
-| `version_registry.NULL_VERSION@rust` | `version_registry` | `NULL_VERSION@rust` | `None` | `matched` |
-| `settings.YamlFile@rust` | `settings` | `YamlFile@rust` | `None` | `matched` |
-| `version_registry.display_name@rust` | `version_registry` | `display_name@rust` | `None` | `matched` |
-| `version_registry.display_name_string@rust` | `version_registry` | `display_name_string@rust` | `None` | `matched` |
-| `version_registry.game_version@rust` | `version_registry` | `game_version@rust` | `None` | `matched` |
-| `version_registry.get_version_info@rust` | `version_registry` | `get_version_info@rust` | `None` | `matched` |
-| `version_registry.short_name@rust` | `version_registry` | `short_name@rust` | `None` | `matched` |
-| `version_registry.version_semver@rust` | `version_registry` | `version_semver@rust` | `None` | `matched` |
-| `version_registry.xse_acronym@rust` | `version_registry` | `xse_acronym@rust` | `None` | `matched` |
-| `version_registry.xse_acronym_string@rust` | `version_registry` | `xse_acronym_string@rust` | `None` | `matched` |
-| `version_registry.xse_config@rust` | `version_registry` | `xse_config@rust` | `None` | `matched` |
-| `crashgen_settings.CheckRule@rust` | `config` | `CheckRule@rust` | `None` | `matched` |
-| `crashgen_settings.ConfigLayout@rust` | `config` | `ConfigLayout@rust` | `None` | `matched` |
-| `crashgen_settings.EvaluationContext@rust` | `config` | `EvaluationContext@rust` | `None` | `matched` |
-| `crashgen_settings.EvaluationOutcome@rust` | `config` | `EvaluationOutcome@rust` | `None` | `matched` |
-| `crashgen_settings.EvaluationResult@rust` | `config` | `EvaluationResult@rust` | `None` | `matched` |
-| `crashgen_settings.ExpectedValue@rust` | `config` | `ExpectedValue@rust` | `None` | `matched` |
-| `crashgen_settings.OutcomeKind@rust` | `config` | `OutcomeKind@rust` | `None` | `matched` |
-| `crashgen_settings.Predicate@rust` | `config` | `Predicate@rust` | `None` | `matched` |
-| `crashgen_settings.PreflightAction@rust` | `config` | `PreflightAction@rust` | `None` | `matched` |
-| `crashgen_settings.PreflightActionKind@rust` | `config` | `PreflightActionKind@rust` | `None` | `matched` |
-| `crashgen_settings.PreflightRule@rust` | `config` | `PreflightRule@rust` | `None` | `matched` |
-| `crashgen_settings.RuleMessages@rust` | `config` | `RuleMessages@rust` | `None` | `matched` |
-| `crashgen_settings.RuleReportBucket@rust` | `config` | `RuleReportBucket@rust` | `None` | `matched` |
-| `crashgen_settings.RuleSeverity@rust` | `config` | `RuleSeverity@rust` | `None` | `matched` |
-| `crashgen_settings.RuleTarget@rust` | `config` | `RuleTarget@rust` | `None` | `matched` |
-| `crashgen_settings.TargetValueType@rust` | `config` | `TargetValueType@rust` | `None` | `matched` |
-| `crashgen_settings.parse@rust` | `config` | `parse@rust` | `None` | `matched` |
-| `crashgen_settings.parse@rust` | `config` | `parse@rust` | `None` | `matched` |
-| `crashgen_settings.parse@rust` | `config` | `parse@rust` | `None` | `matched` |
-| `crashgen_settings.parse@rust` | `config` | `parse@rust` | `None` | `matched` |
-| `crashgen_settings.parse@rust` | `config` | `parse@rust` | `None` | `matched` |
-| `database.formid_value_lookup.FormIdValueLookup` | `database` | `FormIdValueLookup` | `JsFormIdValueLookup` | `matched` |
-| `database.formid_value_lookup.FormIdValueLookupEntry` | `database` | `FormIdValueLookupEntry` | `JsFormIdValueLookupEntry` | `matched` |
-| `database.formid_value_lookup.FormIdValueLookupOutcome` | `database` | `FormIdValueLookupOutcome` | `JsFormIdValueLookupOutcome` | `matched` |
-| `database.formid_value_lookup.FormIdValueLookupOutcomeKind` | `database` | `FormIdValueLookupOutcome` | `JsFormIdValueLookupOutcomeKind` | `matched` |
-| `database.FormIdValueLookup@rust` | `database` | `FormIdValueLookup@rust` | `None` | `matched` |
-| `database.FormIdValueLookupEntry@rust` | `database` | `FormIdValueLookupEntry@rust` | `None` | `matched` |
-| `database.FormIdValueLookupError@rust` | `database` | `FormIdValueLookupError@rust` | `None` | `matched` |
-| `database.FormIdValueLookupInMemoryReply@rust` | `database` | `FormIdValueLookupInMemoryReply@rust` | `None` | `matched` |
-| `database.FormIdValueLookupOutcome@rust` | `database` | `FormIdValueLookupOutcome@rust` | `None` | `matched` |
-| `database.BATCH_CACHE_TTL_SECS@rust` | `database` | `BATCH_CACHE_TTL_SECS@rust` | `None` | `matched` |
-| `database.CacheEntry@rust` | `database` | `CacheEntry@rust` | `None` | `matched` |
-| `database.CacheKey@rust` | `database` | `CacheKey@rust` | `None` | `matched` |
-| `database.DEFAULT_CACHE_TTL_SECS@rust` | `database` | `DEFAULT_CACHE_TTL_SECS@rust` | `None` | `matched` |
-| `database.DatabaseError@rust` | `database` | `DatabaseError@rust` | `None` | `matched` |
-| `database.DatabasePool@rust` | `database` | `DatabasePool@rust` | `None` | `matched` |
-| `database.MAX_CACHE_CLEANUP_INTERVAL_SECS@rust` | `database` | `MAX_CACHE_CLEANUP_INTERVAL_SECS@rust` | `None` | `matched` |
-| `database.MAX_CACHE_CLEANUP_OP_THRESHOLD@rust` | `database` | `MAX_CACHE_CLEANUP_OP_THRESHOLD@rust` | `None` | `matched` |
-| `database.MAX_CACHE_TTL_SECS@rust` | `database` | `MAX_CACHE_TTL_SECS@rust` | `None` | `matched` |
-| `database.MAX_QUERY_CACHE_CAPACITY@rust` | `database` | `MAX_QUERY_CACHE_CAPACITY@rust` | `None` | `matched` |
-| `database.MIN_CACHE_CLEANUP_INTERVAL_SECS@rust` | `database` | `MIN_CACHE_CLEANUP_INTERVAL_SECS@rust` | `None` | `matched` |
-| `database.MIN_CACHE_CLEANUP_OP_THRESHOLD@rust` | `database` | `MIN_CACHE_CLEANUP_OP_THRESHOLD@rust` | `None` | `matched` |
-| `database.MIN_QUERY_CACHE_CAPACITY@rust` | `database` | `MIN_QUERY_CACHE_CAPACITY@rust` | `None` | `matched` |
-| `database.PoolStatistics@rust` | `database` | `PoolStatistics@rust` | `None` | `matched` |
-| `file_io.BackupType@rust` | `file_io` | `BackupType@rust` | `None` | `matched` |
-| `file_io.CRASH_AUTOSCAN_PATTERN@rust` | `file_io` | `CRASH_AUTOSCAN_PATTERN@rust` | `None` | `matched` |
-| `file_io.DDSAnalyzer@rust` | `file_io` | `DDSAnalyzer@rust` | `None` | `matched` |
-| `file_io.DDSHeader@rust` | `file_io` | `DDSHeader@rust` | `None` | `matched` |
-| `file_io.DDSIssue@rust` | `file_io` | `DDSIssue@rust` | `None` | `matched` |
-| `file_io.FileGeneratorConfig@rust` | `file_io` | `FileGeneratorConfig@rust` | `None` | `matched` |
-| `file_io.FileIOError@rust` | `file_io` | `FileIOError@rust` | `None` | `matched` |
-| `file_io.FileOperation@rust` | `file_io` | `FileOperation@rust` | `None` | `matched` |
-| `file_io.GameTarget@rust` | `file_io` | `GameTarget@rust` | `None` | `matched` |
-| `file_io.LogCollector@rust` | `file_io` | `LogCollector@rust` | `None` | `matched` |
-| `file_io.RejectedInput@rust` | `file_io` | `RejectedInput@rust` | `None` | `matched` |
-| `file_io.TargetedResolution@rust` | `file_io` | `TargetedResolution@rust` | `None` | `matched` |
-| `file_io.backup@rust` | `file_io` | `backup@rust` | `None` | `matched` |
-| `file_io.core@rust` | `file_io` | `core@rust` | `None` | `matched` |
-| `file_io.dds@rust` | `file_io` | `dds@rust` | `None` | `matched` |
-| `file_io.encoding@rust` | `file_io` | `encoding@rust` | `None` | `matched` |
-| `file_io.game_files@rust` | `file_io` | `game_files@rust` | `None` | `matched` |
-| `file_io.generate_local_yaml@rust` | `file_io` | `generate_local_yaml@rust` | `None` | `matched` |
-| `file_io.generation@rust` | `file_io` | `generation@rust` | `None` | `matched` |
-| `file_io.hash@rust` | `file_io` | `hash@rust` | `None` | `matched` |
-| `file_io.log_collection@rust` | `file_io` | `log_collection@rust` | `None` | `matched` |
-| `file_io.resolve_targeted_inputs@rust` | `file_io` | `resolve_targeted_inputs@rust` | `None` | `matched` |
-| `file_io.similarity@rust` | `file_io` | `similarity@rust` | `None` | `matched` |
-| `file_io.similarity_ratio@rust` | `file_io` | `similarity_ratio@rust` | `None` | `matched` |
-| `message.ContractEvent@rust` | `message` | `ContractEvent@rust` | `None` | `matched` |
-| `message.EVENT_STARTUP_ACCELERATION_STATUS@rust` | `message` | `EVENT_STARTUP_ACCELERATION_STATUS@rust` | `None` | `matched` |
-| `message.EVENT_STARTUP_BINDING_CONTRACT_FAILED@rust` | `message` | `EVENT_STARTUP_BINDING_CONTRACT_FAILED@rust` | `None` | `matched` |
-| `message.EVENT_STARTUP_BINDING_CONTRACT_VALIDATED@rust` | `message` | `EVENT_STARTUP_BINDING_CONTRACT_VALIDATED@rust` | `None` | `matched` |
-| `message.Logger@rust` | `message` | `Logger@rust` | `None` | `matched` |
-| `message.format_contract_event@rust` | `message` | `format_contract_event@rust` | `None` | `matched` |
-| `message.logging@rust` | `message` | `logging@rust` | `None` | `matched` |
-| `message.redact_contract_fields@rust` | `message` | `redact_contract_fields@rust` | `None` | `matched` |
-| `message.redact_field_value@rust` | `message` | `redact_field_value@rust` | `None` | `matched` |
-| `path.drive_exists@rust` | `path` | `drive_exists@rust` | `None` | `matched` |
-| `path.is_valid_executable_path@rust` | `path` | `is_valid_executable_path@rust` | `None` | `matched` |
-| `path.BackupError@rust` | `path` | `BackupError@rust` | `None` | `matched` |
-| `path.BackupResult@rust` | `path` | `BackupResult@rust` | `None` | `matched` |
-| `path.DocsPathError@rust` | `path` | `DocsPathError@rust` | `None` | `matched` |
-| `path.DocsPathResult@rust` | `path` | `DocsPathResult@rust` | `None` | `matched` |
-| `path.DocumentsPathManager@rust` | `path` | `DocumentsPathManager@rust` | `None` | `matched` |
-| `path.GamePathError@rust` | `path` | `GamePathError@rust` | `None` | `matched` |
-| `path.GamePathResult@rust` | `path` | `GamePathResult@rust` | `None` | `matched` |
-| `path.IniCheckResult@rust` | `path` | `IniCheckResult@rust` | `None` | `matched` |
-| `path.IniFile@rust` | `path` | `IniFile@rust` | `None` | `matched` |
-| `path.PathError@rust` | `path` | `PathError@rust` | `None` | `matched` |
-| `path.PathResult@rust` | `path` | `PathResult@rust` | `None` | `matched` |
-| `path.ValidationError@rust` | `path` | `ValidationError@rust` | `None` | `matched` |
-| `path.ValidationResult@rust` | `path` | `ValidationResult@rust` | `None` | `matched` |
-| `path.XseVersion@rust` | `path` | `XseVersion@rust` | `None` | `matched` |
-| `path.check_drive_exists@rust` | `path` | `check_drive_exists@rust` | `None` | `matched` |
-| `path.has_read_permission@rust` | `path` | `has_read_permission@rust` | `None` | `matched` |
-| `path.has_write_permission@rust` | `path` | `has_write_permission@rust` | `None` | `matched` |
-| `path.remove_readonly_attribute@rust` | `path` | `remove_readonly_attribute@rust` | `None` | `matched` |
-| `path.validate_is_directory@rust` | `path` | `validate_is_directory@rust` | `None` | `matched` |
-| `path.validate_is_file@rust` | `path` | `validate_is_file@rust` | `None` | `matched` |
-| `path.validate_path_exists@rust` | `path` | `validate_path_exists@rust` | `None` | `matched` |
-| `path.validate_settings_path@rust` | `path` | `validate_settings_path@rust` | `None` | `matched` |
-| `path.validate_settings_paths@rust` | `path` | `validate_settings_paths@rust` | `None` | `matched` |
-| `perf.Timer@rust` | `perf` | `Timer@rust` | `None` | `matched` |
-| `perf.start_timer@rust` | `perf` | `start_timer@rust` | `None` | `matched` |
-| `registry.Keys@rust` | `registry` | `Keys@rust` | `None` | `matched` |
-| `registry.get_application_dir@rust` | `registry` | `get_application_dir@rust` | `None` | `matched` |
-| `registry.get_game_path_gui@rust` | `registry` | `get_game_path_gui@rust` | `None` | `matched` |
-| `registry.get_game_version@rust` | `registry` | `get_game_version@rust` | `None` | `matched` |
-| `registry.get_game_version_string@rust` | `registry` | `get_game_version_string@rust` | `None` | `matched` |
-| `registry.get_local_dir@rust` | `registry` | `get_local_dir@rust` | `None` | `matched` |
-| `registry.get_manual_docs_gui@rust` | `registry` | `get_manual_docs_gui@rust` | `None` | `matched` |
-| `registry.get_yaml_cache@rust` | `registry` | `get_yaml_cache@rust` | `None` | `matched` |
-| `registry.is_enb_present@rust` | `registry` | `is_enb_present@rust` | `None` | `matched` |
-| `registry.is_gui_mode@rust` | `registry` | `is_gui_mode@rust` | `None` | `matched` |
-| `registry.is_registered@rust` | `registry` | `is_registered@rust` | `None` | `matched` |
-| `registry.is_version_auto_detected@rust` | `registry` | `is_version_auto_detected@rust` | `None` | `matched` |
-| `registry.is_xse_valid@rust` | `registry` | `is_xse_valid@rust` | `None` | `matched` |
-| `registry.set_application_dir@rust` | `registry` | `set_application_dir@rust` | `None` | `matched` |
-| `scangame.AddressLibInfo@rust` | `scangame` | `AddressLibInfo@rust` | `None` | `matched` |
-| `scangame.BA2Error@rust` | `scangame` | `BA2Error@rust` | `None` | `matched` |
-| `scangame.BA2Issues@rust` | `scangame` | `BA2Issues@rust` | `None` | `matched` |
-| `scangame.BA2Scanner@rust` | `scangame` | `BA2Scanner@rust` | `None` | `matched` |
-| `scangame.CachedConfigFile@rust` | `scangame` | `CachedConfigFile@rust` | `None` | `matched` |
-| `scangame.CheckResult@rust` | `scangame` | `CheckResult@rust` | `None` | `matched` |
-| `scangame.CheckType@rust` | `scangame` | `CheckType@rust` | `None` | `matched` |
-| `scangame.ConfigCacheError@rust` | `scangame` | `ConfigCacheError@rust` | `None` | `matched` |
-| `scangame.ConfigFileCache@rust` | `scangame` | `ConfigFileCache@rust` | `None` | `matched` |
-| `scangame.CrashgenChecker@rust` | `scangame` | `CrashgenChecker@rust` | `None` | `matched` |
-| `scangame.CrashgenOrchestratorError@rust` | `scangame` | `CrashgenOrchestratorError@rust` | `None` | `matched` |
-| `scangame.CrashgenReport@rust` | `scangame` | `CrashgenReport@rust` | `None` | `matched` |
-| `scangame.DuplicateEntry@rust` | `scangame` | `DuplicateEntry@rust` | `None` | `matched` |
-| `scangame.DuplicateGroup@rust` | `scangame` | `DuplicateGroup@rust` | `None` | `matched` |
-| `scangame.EnbChecker@rust` | `scangame` | `EnbChecker@rust` | `None` | `matched` |
-| `scangame.EnbError@rust` | `scangame` | `EnbError@rust` | `None` | `matched` |
-| `scangame.EnbResult@rust` | `scangame` | `EnbResult@rust` | `None` | `matched` |
-| `scangame.EnbValidationResult@rust` | `scangame` | `EnbValidationResult@rust` | `None` | `matched` |
-| `scangame.GameIntegrityChecker@rust` | `scangame` | `GameIntegrityChecker@rust` | `None` | `matched` |
-| `scangame.GameScanOrchestrator@rust` | `scangame` | `GameScanOrchestrator@rust` | `None` | `matched` |
-| `scangame.GameScanResult@rust` | `scangame` | `GameScanResult@rust` | `None` | `matched` |
-| `scangame.IniError@rust` | `scangame` | `IniError@rust` | `None` | `matched` |
-| `scangame.IniValidator@rust` | `scangame` | `IniValidator@rust` | `None` | `matched` |
-| `scangame.IntegrityCheckResult@rust` | `scangame` | `IntegrityCheckResult@rust` | `None` | `matched` |
-| `scangame.IntegrityError@rust` | `scangame` | `IntegrityError@rust` | `None` | `matched` |
-| `scangame.IssueSeverity@rust` | `scangame` | `IssueSeverity@rust` | `None` | `matched` |
-| `scangame.LogError@rust` | `scangame` | `LogError@rust` | `None` | `matched` |
-| `scangame.LogProcessor@rust` | `scangame` | `LogProcessor@rust` | `None` | `matched` |
-| `scangame.ModIniScanResult@rust` | `scangame` | `ModIniScanResult@rust` | `None` | `matched` |
-| `scangame.ModIniScanner@rust` | `scangame` | `ModIniScanner@rust` | `None` | `matched` |
-| `scangame.ModScanResult@rust` | `scangame` | `ModScanResult@rust` | `None` | `matched` |
-| `scangame.OrchestratorError@rust` | `scangame` | `OrchestratorError@rust` | `None` | `matched` |
-| `scangame.ScanGameError@rust` | `scangame` | `ScanGameError@rust` | `None` | `matched` |
-| `scangame.ScanReportBuilder@rust` | `scangame` | `ScanReportBuilder@rust` | `None` | `matched` |
-| `scangame.ScanValidators@rust` | `scangame` | `ScanValidators@rust` | `None` | `matched` |
-| `scangame.TomlError@rust` | `scangame` | `TomlError@rust` | `None` | `matched` |
-| `scangame.TomlIssueSeverity@rust` | `scangame` | `TomlIssueSeverity@rust` | `None` | `matched` |
-| `scangame.UnpackedError@rust` | `scangame` | `UnpackedError@rust` | `None` | `matched` |
-| `scangame.UnpackedIssues@rust` | `scangame` | `UnpackedIssues@rust` | `None` | `matched` |
-| `scangame.UnpackedScanner@rust` | `scangame` | `UnpackedScanner@rust` | `None` | `matched` |
-| `scangame.VERSION@rust` | `scangame` | `VERSION@rust` | `None` | `matched` |
-| `scangame.ValidationResult@rust` | `scangame` | `ValidationResult@rust` | `None` | `matched` |
-| `scangame.VsyncEntry@rust` | `scangame` | `VsyncEntry@rust` | `None` | `matched` |
-| `scangame.WryeBashParser@rust` | `scangame` | `WryeBashParser@rust` | `None` | `matched` |
-| `scangame.WryeError@rust` | `scangame` | `WryeError@rust` | `None` | `matched` |
-| `scangame.WryeIssue@rust` | `scangame` | `WryeIssue@rust` | `None` | `matched` |
-| `scangame.WryeSeverity@rust` | `scangame` | `WryeSeverity@rust` | `None` | `matched` |
-| `scangame.XseError@rust` | `scangame` | `XseError@rust` | `None` | `matched` |
-| `scangame.ba2@rust` | `scangame` | `ba2@rust` | `None` | `matched` |
-| `scangame.config_cache@rust` | `scangame` | `config_cache@rust` | `None` | `matched` |
-| `scangame.crashgen_orchestrator@rust` | `scangame` | `crashgen_orchestrator@rust` | `None` | `matched` |
-| `scangame.detect_config_issues@rust` | `scangame` | `detect_config_issues@rust` | `None` | `matched` |
-| `scangame.enb@rust` | `scangame` | `enb@rust` | `None` | `matched` |
-| `scangame.game_report@rust` | `scangame` | `game_report@rust` | `None` | `matched` |
-| `scangame.ini@rust` | `scangame` | `ini@rust` | `None` | `matched` |
-| `scangame.integrity@rust` | `scangame` | `integrity@rust` | `None` | `matched` |
-| `scangame.logs@rust` | `scangame` | `logs@rust` | `None` | `matched` |
-| `scangame.mod_ini@rust` | `scangame` | `mod_ini@rust` | `None` | `matched` |
-| `scangame.toml@rust` | `scangame` | `toml@rust` | `None` | `matched` |
-| `scangame.unpacked@rust` | `scangame` | `unpacked@rust` | `None` | `matched` |
-| `scangame.wrye@rust` | `scangame` | `wrye@rust` | `None` | `matched` |
-| `scangame.xse@rust` | `scangame` | `xse@rust` | `None` | `matched` |
-| `settings.SettingsError@rust` | `settings` | `SettingsError@rust` | `None` | `matched` |
-| `settings.SettingsSource@rust` | `settings` | `SettingsSource@rust` | `None` | `matched` |
-| `settings.Yaml@rust` | `settings` | `Yaml@rust` | `None` | `matched` |
-| `settings.cache_keys@rust` | `settings` | `cache_keys@rust` | `None` | `matched` |
-| `settings.cache_size@rust` | `settings` | `cache_size@rust` | `None` | `matched` |
-| `settings.cache_stats@rust` | `settings` | `cache_stats@rust` | `None` | `matched` |
-| `settings.clear_cache@rust` | `settings` | `clear_cache@rust` | `None` | `matched` |
-| `settings.get_cached@rust` | `settings` | `get_cached@rust` | `None` | `matched` |
-| `settings.invalidate@rust` | `settings` | `invalidate@rust` | `None` | `matched` |
-| `settings.is_cached@rust` | `settings` | `is_cached@rust` | `None` | `matched` |
-| `settings.load_settings_async@rust` | `settings` | `load_settings_async@rust` | `None` | `matched` |
-| `settings.load_settings_sync@rust` | `settings` | `load_settings_sync@rust` | `None` | `matched` |
-| `settings.load_yaml_async@rust` | `settings` | `load_yaml_async@rust` | `None` | `matched` |
-| `settings.load_yaml_batch_async@rust` | `settings` | `load_yaml_batch_async@rust` | `None` | `matched` |
-| `settings.load_yaml_batch_sync@rust` | `settings` | `load_yaml_batch_sync@rust` | `None` | `matched` |
-| `settings.load_yaml_merged_async@rust` | `settings` | `load_yaml_merged_async@rust` | `None` | `matched` |
-| `settings.load_yaml_merged_sync@rust` | `settings` | `load_yaml_merged_sync@rust` | `None` | `matched` |
-| `settings.load_yaml_sync@rust` | `settings` | `load_yaml_sync@rust` | `None` | `matched` |
-| `settings.merge_yaml_documents@rust` | `settings` | `merge_yaml_documents@rust` | `None` | `matched` |
-| `settings.parse_yaml_content@rust` | `settings` | `parse_yaml_content@rust` | `None` | `matched` |
-| `settings.reset_cache_stats@rust` | `settings` | `reset_cache_stats@rust` | `None` | `matched` |
-| `settings.validators@rust` | `settings` | `validators@rust` | `None` | `matched` |
-| `shared.ClassicError@rust` | `shared` | `ClassicError@rust` | `None` | `matched` |
-| `shared.ClassicResult@rust` | `shared` | `ClassicResult@rust` | `None` | `matched` |
-| `shared.IntoClassicError@rust` | `shared` | `IntoClassicError@rust` | `None` | `matched` |
-| `shared.RuntimeConfig@rust` | `shared` | `RuntimeConfig@rust` | `None` | `matched` |
-| `shared.cpu_optimized@rust` | `shared` | `cpu_optimized@rust` | `None` | `matched` |
-| `shared.errors@rust` | `shared` | `errors@rust` | `None` | `matched` |
-| `shared.io_optimized@rust` | `shared` | `io_optimized@rust` | `None` | `matched` |
-| `shared.minimal@rust` | `shared` | `minimal@rust` | `None` | `matched` |
-| `shared.performance_core@rust` | `shared` | `performance_core@rust` | `None` | `matched` |
-| `update.GithubAsset@rust` | `update` | `GithubAsset@rust` | `None` | `matched` |
-| `update.GithubClient@rust` | `update` | `GithubClient@rust` | `None` | `matched` |
-| `update.GithubRelease@rust` | `update` | `GithubRelease@rust` | `None` | `matched` |
-| `update.UpdateError@rust` | `update` | `UpdateError@rust` | `None` | `matched` |
-| `update.VERSION@rust` | `update` | `VERSION@rust` | `None` | `matched` |
-| `update.github@rust` | `update` | `github@rust` | `None` | `matched` |
-| `version.NULL_VERSION@rust` | `version_registry` | `NULL_VERSION@rust` | `None` | `matched` |
-| `version.PeVersionError@rust` | `version` | `PeVersionError@rust` | `None` | `matched` |
-| `version.VersionError@rust` | `version` | `VersionError@rust` | `None` | `matched` |
-| `version.VersionResult@rust` | `version` | `VersionResult@rust` | `None` | `matched` |
-| `version.compare_versions@rust` | `version` | `compare_versions@rust` | `None` | `matched` |
-| `version.extract_all_versions@rust` | `version` | `extract_all_versions@rust` | `None` | `matched` |
-| `version.extract_version_from_filename@rust` | `version` | `extract_version_from_filename@rust` | `None` | `matched` |
-| `version.extract_version_from_log@rust` | `version` | `extract_version_from_log@rust` | `None` | `matched` |
-| `version.format_version@rust` | `version` | `format_version@rust` | `None` | `matched` |
-| `version.is_known_f4se_version@rust` | `version` | `is_known_f4se_version@rust` | `None` | `matched` |
-| `version.is_known_fallout4_version@rust` | `version` | `is_known_fallout4_version@rust` | `None` | `matched` |
-| `version.parse_version@rust` | `version` | `parse_version@rust` | `None` | `matched` |
-| `version.pe_version@rust` | `version` | `pe_version@rust` | `None` | `matched` |
-| `version.try_parse_version@rust` | `version` | `try_parse_version@rust` | `None` | `matched` |
-| `web.CLASSIC_VERSION@rust` | `web` | `CLASSIC_VERSION@rust` | `None` | `matched` |
-| `web.ModSite@rust` | `web` | `ModSite@rust` | `None` | `matched` |
-| `web.USER_AGENT_PREFIX@rust` | `web` | `USER_AGENT_PREFIX@rust` | `None` | `matched` |
-| `web.WebError@rust` | `web` | `WebError@rust` | `None` | `matched` |
-| `web.WebResult@rust` | `web` | `WebResult@rust` | `None` | `matched` |
-| `web.base_url@rust` | `web` | `base_url@rust` | `None` | `matched` |
-| `web.build_url_with_query@rust` | `web` | `build_url_with_query@rust` | `None` | `matched` |
-| `web.extract_domain@rust` | `web` | `extract_domain@rust` | `None` | `matched` |
-| `web.game_url@rust` | `web` | `game_url@rust` | `None` | `matched` |
-| `web.get_user_agent@rust` | `web` | `get_user_agent@rust` | `None` | `matched` |
-| `web.get_user_agent_with_suffix@rust` | `web` | `get_user_agent_with_suffix@rust` | `None` | `matched` |
-| `web.is_valid_url@rust` | `web` | `is_valid_url@rust` | `None` | `matched` |
-| `web.join_url@rust` | `web` | `join_url@rust` | `None` | `matched` |
-| `web.name@rust` | `web` | `name@rust` | `None` | `matched` |
-| `web.validate_url@rust` | `web` | `validate_url@rust` | `None` | `matched` |
-| `xse.XseError@rust` | `xse` | `XseError@rust` | `None` | `matched` |
-| `xse.XseInfo@rust` | `xse` | `XseInfo@rust` | `None` | `matched` |
-| `xse.XseResult@rust` | `xse` | `XseResult@rust` | `None` | `matched` |
-| `xse.XseType@rust` | `xse` | `XseType@rust` | `None` | `matched` |
-| `xse.as_str@rust` | `xse` | `as_str@rust` | `None` | `matched` |
-| `xse.check_installed@rust` | `xse` | `check_installed@rust` | `None` | `matched` |
-| `xse.compare_versions@rust` | `xse` | `compare_versions@rust` | `None` | `matched` |
-| `xse.detect_xse_version@rust` | `xse` | `detect_xse_version@rust` | `None` | `matched` |
-| `xse.dll_prefix@rust` | `xse` | `dll_prefix@rust` | `None` | `matched` |
-| `xse.from_game_id@rust` | `xse` | `from_game_id@rust` | `None` | `matched` |
-| `xse.get_xse_info@rust` | `xse` | `get_xse_info@rust` | `None` | `matched` |
-| `xse.is_xse_installed@rust` | `xse` | `is_xse_installed@rust` | `None` | `matched` |
-| `xse.loader_name@rust` | `xse` | `loader_name@rust` | `None` | `matched` |
-| `xse.loader_path@rust` | `xse` | `loader_path@rust` | `None` | `matched` |
-| `xse.new@rust` | `xse` | `new@rust` | `None` | `matched` |
-| `xse.parse_version@rust` | `xse` | `parse_version@rust` | `None` | `matched` |
-| `xse.try_parse_version@rust` | `xse` | `try_parse_version@rust` | `None` | `matched` |
-| `yaml.YamlError@rust` | `settings` | `YamlError@rust` | `None` | `matched` |
-| `yaml.YamlOperations@rust` | `settings` | `YamlOperations@rust` | `None` | `matched` |
-| `yaml.cache_stats@rust` | `settings` | `cache_stats@rust` | `None` | `matched` |
-| `yaml.clear_cache@rust` | `settings` | `clear_cache@rust` | `None` | `matched` |
-| `yaml.dump_yaml@rust` | `settings` | `dump_yaml@rust` | `None` | `matched` |
-| `yaml.get_cache_stats@rust` | `settings` | `get_cache_stats@rust` | `None` | `matched` |
-| `yaml.get_hashmap_value@rust` | `settings` | `get_hashmap_value@rust` | `None` | `matched` |
-| `yaml.get_indexmap_value@rust` | `settings` | `get_indexmap_value@rust` | `None` | `matched` |
-| `yaml.get_setting@rust` | `settings` | `get_setting@rust` | `None` | `matched` |
-| `yaml.get_settings_batch@rust` | `settings` | `get_settings_batch@rust` | `None` | `matched` |
-| `yaml.get_string_value@rust` | `settings` | `get_string_value@rust` | `None` | `matched` |
-| `yaml.get_vec_value@rust` | `settings` | `get_vec_value@rust` | `None` | `matched` |
-| `yaml.is_cache_enabled@rust` | `settings` | `is_cache_enabled@rust` | `None` | `matched` |
-| `yaml.load_yaml_file@rust` | `settings` | `load_yaml_file@rust` | `None` | `matched` |
-| `yaml.load_yaml_files_batch@rust` | `settings` | `load_yaml_files_batch@rust` | `None` | `matched` |
-| `yaml.merge_keys@rust` | `settings` | `merge_keys@rust` | `None` | `matched` |
-| `yaml.new@rust` | `settings` | `new@rust` | `None` | `matched` |
-| `yaml.parse_yaml@rust` | `settings` | `parse_yaml@rust` | `None` | `matched` |
-| `yaml.reset_cache_stats@rust` | `settings` | `reset_cache_stats@rust` | `None` | `matched` |
-| `yaml.save_yaml_file@rust` | `settings` | `save_yaml_file@rust` | `None` | `matched` |
-| `yaml.set_cache_enabled@rust` | `settings` | `set_cache_enabled@rust` | `None` | `matched` |
-| `yaml.set_setting@rust` | `settings` | `set_setting@rust` | `None` | `matched` |
-| `aux.JsCheckRule` | `aux` | `CheckRule` | `JsCheckRule` | `matched` |
-| `aux.JsExpectedValue` | `aux` | `ExpectedValue` | `JsExpectedValue` | `matched` |
-| `config.JsModConflictEntry` | `config` | `ModConflictEntry` | `JsModConflictEntry` | `matched` |
-| `aux.JsModSolutionCriteria` | `aux` | `ModSolutionCriteria` | `JsModSolutionCriteria` | `matched` |
-| `aux.JsModSolutionEntry` | `aux` | `ModSolutionEntry` | `JsModSolutionEntry` | `matched` |
-| `aux.JsPreflightAction` | `aux` | `PreflightAction` | `JsPreflightAction` | `matched` |
-| `aux.JsPreflightRule` | `aux` | `PreflightRule` | `JsPreflightRule` | `matched` |
-| `aux.JsRuleMessages` | `aux` | `RuleMessages` | `JsRuleMessages` | `matched` |
-| `aux.JsRuleTarget` | `aux` | `RuleTarget` | `JsRuleTarget` | `matched` |
-| `aux.JsSuspectErrorRule` | `aux` | `SuspectErrorRule` | `JsSuspectErrorRule` | `matched` |
-| `aux.JsSuspectStackCountRule` | `aux` | `SuspectStackCountRule` | `JsSuspectStackCountRule` | `matched` |
-| `aux.JsSuspectStackRule` | `aux` | `SuspectStackRule` | `JsSuspectStackRule` | `matched` |
-| `scanlog.JsLogCollector` | `scanlog` | `LogCollector` | `JsLogCollector` | `matched` |
-| `scanlog.JsLogProcessor` | `scanlog` | `LogProcessor` | `JsLogProcessor` | `matched` |
-| `scanlog.JsLogger` | `scanlog` | `Logger` | `JsLogger` | `matched` |
-| `scanlog.createLogger` | `scanlog` | `Logger` | `createLogger` | `matched` |
-| `aux.getApplicationDir` | `aux` | `get_application_dir` | `getApplicationDir` | `matched` |
-| `scanlog.processGameLogs` | `scanlog` | `LogProcessor` | `processGameLogs` | `matched` |
-| `aux.setApplicationDir` | `aux` | `set_application_dir` | `setApplicationDir` | `matched` |
-| `scangame.JsGameSetupCheck` | `scangame` | `GameSetupCheck` | `JsGameSetupCheck` | `matched` |
-| `scangame.JsGameSetupIntakeOptions` | `scangame` | `GameSetupIntake` | `JsGameSetupIntakeOptions` | `matched` |
-| `scangame.JsGameSetupIntakeResult` | `scangame` | `GameSetupIntakeResult` | `JsGameSetupIntakeResult` | `matched` |
-| `scangame.JsGameSetupPathUpdate` | `scangame` | `GameSetupPathUpdate` | `JsGameSetupPathUpdate` | `matched` |
-| `scangame.JsPathDetectionResult` | `scangame` | `game_setup_needs_path_detection` | `JsPathDetectionResult` | `matched` |
-| `scangame.gameSetupNeedsPathDetection` | `scangame` | `game_setup_needs_path_detection` | `gameSetupNeedsPathDetection` | `matched` |
-| `scangame.normalizeGameSetupVersionSelection` | `scangame` | `normalize_game_setup_version_selection` | `normalizeGameSetupVersionSelection` | `matched` |
-| `scangame.runGameSetupIntake` | `scangame` | `GameSetupIntake` | `runGameSetupIntake` | `matched` |
-| `scangame.runGameSetupIntakeFromUserSettings` | `scangame` | `from_user_settings` | `runGameSetupIntakeFromUserSettings` | `matched` |
-| `scangame.GameSetupIntake@rust` | `scangame` | `GameSetupIntake@rust` | `None` | `matched` |
-| `scangame.GameSetupIntakeResult@rust` | `scangame` | `GameSetupIntakeResult@rust` | `None` | `matched` |
-| `scangame.GameSetupCheck@rust` | `scangame` | `GameSetupCheck@rust` | `None` | `matched` |
-| `scangame.game_setup_intake@rust` | `scangame` | `game_setup_intake@rust` | `None` | `matched` |
-| `scangame.game_setup_needs_path_detection@rust` | `scangame` | `game_setup_needs_path_detection@rust` | `None` | `matched` |
-| `scangame.normalize_game_setup_version_selection@rust` | `scangame` | `normalize_game_setup_version_selection@rust` | `None` | `matched` |
-| `config.local-ignore-reset-conflict-type` | `config` | `LocalIgnoreResetConflict` | `JsLocalIgnoreResetConflict` | `matched` |
-| `config.local-ignore-reset-outcome-type` | `config` | `LocalIgnoreResetOutcome` | `JsLocalIgnoreResetOutcome` | `matched` |
-| `config.local-ignore-reset-publication-stage-type` | `config` | `LocalIgnoreResetPublicationStage` | `JsLocalIgnoreResetPublicationStage` | `matched` |
-| `config.local-ignore-reset-result-type` | `config` | `LocalIgnoreResetResult` | `JsLocalIgnoreResetResult` | `matched` |
-| `config.local-ignore-reset-status-type` | `config` | `LocalIgnoreResetOutcome` | `JsLocalIgnoreResetStatus` | `matched` |
-| `config.installed_yaml_data.inspectInstalledYamlData` | `config` | `inspect_installed_yaml_data` | `inspectInstalledYamlData` | `matched` |
-| `config.installed_yaml_data.loadInstalledYamlData` | `config` | `load_installed_yaml_data` | `loadInstalledYamlData` | `matched` |
-| `config.explicit_yaml_data.loadExplicitYamlData` | `config` | `load_explicit_yaml_data` | `loadExplicitYamlData` | `matched` |
-| `update.notification.check_app_notification_configured` | `update` | `check_app_notification_configured` | `checkAppNotificationConfigured` | `matched` |
-| `config.main_yaml_version.loadMainYamlVersion` | `config` | `load_main_yaml_version_with_bundled_dir` | `loadMainYamlVersion` | `matched` |
-| `user-settings-legacy-tui-import` | `user_settings` | `import_legacy_tui_state` | `importLegacyTuiStateIntoUserSettings` | `matched` |
-| `user-settings-LegacyTuiStateImportReceipt` | `user_settings` | `LegacyTuiStateImportReceipt` | `JsLegacyTuiStateImportReceipt` | `matched` |
-| `user-settings-LegacyTuiStateImportOutcome` | `user_settings` | `LegacyTuiStateImportOutcome` | `JsLegacyTuiStateImportOutcome` | `matched` |
-| `user-settings-LegacyTuiStateImportRestoreOutcome` | `user_settings` | `LegacyTuiStateImportRestoreOutcome` | `JsLegacyTuiStateImportRestoreOutcome` | `matched` |
-| `scanlog.scan_run.ScanRunRequest` | `scanlog` | `Request` | `ScanRunRequest` | `matched` |
-| `scanlog.scan_run.ScanRunUnsolvedLogs` | `scanlog` | `StandardUnsolvedLogsIntent` | `ScanRunUnsolvedLogs` | `matched` |
-| `scanlog.scan_run.ScanRunCancellation` | `scanlog` | `Cancellation` | `ScanRunCancellation` | `matched` |
-| `scanlog.scan_run.ScanRunContinuation` | `scanlog` | `CrashLogScanRunContinuation` | `ScanRunContinuation` | `matched` |
-| `scanlog.scan_run.scanRunExecute` | `scanlog` | `execute` | `scanRunExecute` | `matched` |
-| `scanlog.scan_run.scanRunResume` | `scanlog` | `resume` | `scanRunResume` | `matched` |
-| `scanlog.scan_run.scanRunAbandon` | `scanlog` | `abandon` | `scanRunAbandon` | `matched` |
-| `scanlog.scan_run.JsScanRunConfiguration` | `scanlog` | `Configuration` | `JsScanRunConfiguration` | `matched` |
-| `scanlog.scan_run.JsScanRunStandardSource` | `scanlog` | `StandardCrashLogScanSource` | `JsScanRunStandardSource` | `matched` |
-| `scanlog.scan_run.JsScanRunTargetedSource` | `scanlog` | `TargetedCrashLogScanSource` | `JsScanRunTargetedSource` | `matched` |
-| `scanlog.scan_run.JsScanRunSetupContext` | `scanlog` | `CrashLogScanSetupContext` | `JsScanRunSetupContext` | `matched` |
-| `scanlog.scan_run.JsScanRunRejectedInput` | `scanlog` | `CrashLogScanRejectedInput` | `JsScanRunRejectedInput` | `matched` |
-| `scanlog.scan_run.JsScanRunDiscoveryResult` | `scanlog` | `CrashLogScanDiscoveryResult` | `JsScanRunDiscoveryResult` | `matched` |
-| `scanlog.scan_run.JsScanRunSetupCheck` | `scanlog` | `CrashLogScanSetupCheck` | `JsScanRunSetupCheck` | `matched` |
-| `scanlog.scan_run.JsScanRunSetupPathUpdate` | `scanlog` | `CrashLogScanSetupPathUpdate` | `JsScanRunSetupPathUpdate` | `matched` |
-| `scanlog.scan_run.JsScanRunSetupResult` | `scanlog` | `CrashLogScanSetupResult` | `JsScanRunSetupResult` | `matched` |
-| `scanlog.scan_run.JsScanRunLogFailure` | `scanlog` | `LogFailure` | `JsScanRunLogFailure` | `matched` |
-| `scanlog.scan_run.JsScanRunLogResult` | `scanlog` | `LogResult` | `JsScanRunLogResult` | `matched` |
-| `scanlog.scan_run.JsScanRunInstalledYamlDataDiagnostic` | `scanlog` | `InstalledYamlDataRunDiagnostic` | `JsScanRunInstalledYamlDataDiagnostic` | `matched` |
-| `scanlog.scan_run.JsScanRunInstalledYamlDataDiagnosticKind` | `scanlog` | `InstalledYamlDataRunDiagnosticKind` | `JsScanRunInstalledYamlDataDiagnosticKind` | `matched` |
-| `scanlog.scan_run.JsScanRunLocalIgnoreState` | `scanlog` | `LocalIgnoreRunState` | `JsScanRunLocalIgnoreState` | `matched` |
-| `scanlog.scan_run.JsScanRunLocalIgnoreResetRunData` | `scanlog` | `LocalIgnoreResetRunData` | `JsScanRunLocalIgnoreResetRunData` | `matched` |
-| `scanlog.scan_run.JsScanRunLocalIgnoreRecoveryDecision` | `scanlog` | `LocalIgnoreRecoveryDecision` | `JsScanRunLocalIgnoreRecoveryDecision` | `matched` |
-| `scanlog.scan_run.JsScanRunInfrastructureError` | `scanlog` | `InfrastructureError` | `JsScanRunInfrastructureError` | `matched` |
-| `scanlog.scan_run.JsScanRunLogEvent` | `scanlog` | `LogEvent` | `JsScanRunLogEvent` | `matched` |
-| `scanlog.scan_run.JsScanRunEvent` | `scanlog` | `Event` | `JsScanRunEvent` | `matched` |
-| `scanlog.scan_run.JsScanRunResult` | `scanlog` | `RunResult` | `JsScanRunResult` | `matched` |
-| `scanlog.scan_run.JsScanRunDisplayLine` | `scanlog` | `DisplayLine` | `JsScanRunDisplayLine` | `matched` |
-| `scanlog.scan_run.JsScanRunDisplaySegment` | `scanlog` | `DisplaySegment` | `JsScanRunDisplaySegment` | `matched` |
-| `scanlog.scan_run.JsScanRunDisplaySegmentKind` | `scanlog` | `DisplaySegment` | `JsScanRunDisplaySegmentKind` | `matched` |
-| `scanlog.scan_run.JsScanRunDisplaySeverity` | `scanlog` | `DisplaySeverity` | `JsScanRunDisplaySeverity` | `matched` |
-| `scanlog.scan_run.JsScanRunRecoveryDecisionDescription` | `scanlog` | `RecoveryDecisionDescription` | `JsScanRunRecoveryDecisionDescription` | `matched` |
-| `scanlog.scan_run.JsScanRunRecoveryPrompt` | `scanlog` | `RecoveryPrompt` | `JsScanRunRecoveryPrompt` | `matched` |
-| `scanlog.scan_run.JsScanRunSuccess` | `scanlog` | `None` | `JsScanRunSuccess` | `unmapped` |
-| `scanlog.scan_run.JsScanRunFailure` | `scanlog` | `None` | `JsScanRunFailure` | `unmapped` |
+| ID | Owner Module | Rust Crate | Rust Symbol | Node Export | Status |
+|---|---|---|---|---|---|
+| `message-init-logging` | `message` | `classic-message-core` | `init` | `initLogging` | `matched` |
+| `user-settings-current-schema-version` | `user_settings` | `classic-user-settings-core` | `CURRENT_USER_SETTINGS_SCHEMA_VERSION` | `JsUserSettingsSchemaVersion` | `matched` |
+| `user-settings-schema-version-type` | `user_settings` | `classic-user-settings-core` | `UserSettingsSchemaVersion` | `JsUserSettingsSchemaVersion` | `matched` |
+| `user-settings-migration-endpoint-type` | `user_settings` | `classic-user-settings-core` | `MigrationEndpoint` | `JsUserSettingsMigrationEndpoint` | `matched` |
+| `user-settings-migration-change-kind-type` | `user_settings` | `classic-user-settings-core` | `MigrationChangeKind` | `JsUserSettingsMigrationChange` | `matched` |
+| `user-settings-migration-change-type` | `user_settings` | `classic-user-settings-core` | `MigrationChange` | `JsUserSettingsMigrationChange` | `matched` |
+| `user-settings-migration-diagnostic-type` | `user_settings` | `classic-user-settings-core` | `MigrationDiagnostic` | `JsUserSettingsMigrationDiagnostic` | `matched` |
+| `user-settings-migration-plan-type` | `user_settings` | `classic-user-settings-core` | `UserSettingsMigrationPlan` | `JsUserSettingsMigrationPlan` | `matched` |
+| `user-settings-migration-planning-outcome-type` | `user_settings` | `classic-user-settings-core` | `MigrationPlanningOutcome` | `JsUserSettingsMigrationPlanningResult` | `matched` |
+| `user-settings-schema-version-constructor` | `user_settings` | `classic-user-settings-core` | `UserSettingsSchemaVersion` | `JsUserSettingsSchemaVersion` | `matched` |
+| `user-settings-schema-version-major-accessor` | `user_settings` | `classic-user-settings-core` | `UserSettingsSchemaVersion` | `JsUserSettingsSchemaVersion` | `matched` |
+| `user-settings-schema-version-minor-accessor` | `user_settings` | `classic-user-settings-core` | `UserSettingsSchemaVersion` | `JsUserSettingsSchemaVersion` | `matched` |
+| `user-settings-migration-endpoint-location-accessor` | `user_settings` | `classic-user-settings-core` | `MigrationEndpoint` | `JsUserSettingsMigrationEndpoint` | `matched` |
+| `user-settings-migration-endpoint-schema-version-accessor` | `user_settings` | `classic-user-settings-core` | `MigrationEndpoint` | `JsUserSettingsMigrationEndpoint` | `matched` |
+| `user-settings-migration-change-kind-accessor` | `user_settings` | `classic-user-settings-core` | `MigrationChange` | `JsUserSettingsMigrationChange` | `matched` |
+| `user-settings-migration-diagnostic-code-accessor` | `user_settings` | `-` | `None` | `JsUserSettingsMigrationDiagnostic` | `unmapped` |
+| `user-settings-migration-plan-required-accessor` | `user_settings` | `classic-user-settings-core` | `UserSettingsMigrationPlan` | `JsUserSettingsMigrationPlan` | `matched` |
+| `user-settings-migration-plan-source-accessor` | `user_settings` | `classic-user-settings-core` | `UserSettingsMigrationPlan` | `JsUserSettingsMigrationPlan` | `matched` |
+| `user-settings-migration-plan-target-accessor` | `user_settings` | `classic-user-settings-core` | `UserSettingsMigrationPlan` | `JsUserSettingsMigrationPlan` | `matched` |
+| `user-settings-migration-change-source-path-accessor` | `user_settings` | `classic-user-settings-core` | `source_path` | `JsUserSettingsMigrationChange` | `matched` |
+| `user-settings-migration-change-target-path-accessor` | `user_settings` | `classic-user-settings-core` | `target_path` | `JsUserSettingsMigrationChange` | `matched` |
+| `user-settings-migration-change-before-accessor` | `user_settings` | `classic-user-settings-core` | `before` | `JsUserSettingsMigrationChange` | `matched` |
+| `user-settings-migration-change-after-accessor` | `user_settings` | `classic-user-settings-core` | `after` | `JsUserSettingsMigrationChange` | `matched` |
+| `user-settings-migration-diagnostic-message-accessor` | `user_settings` | `classic-user-settings-core` | `message` | `JsUserSettingsMigrationDiagnostic` | `matched` |
+| `user-settings-migration-plan-base-revision-accessor` | `user_settings` | `classic-user-settings-core` | `base_revision` | `JsUserSettingsMigrationPlan` | `matched` |
+| `user-settings-migration-plan-changes-accessor` | `user_settings` | `classic-user-settings-core` | `changes` | `JsUserSettingsMigrationPlan` | `matched` |
+| `user-settings-migration-plan-original-bytes-accessor` | `user_settings` | `classic-user-settings-core` | `original_bytes` | `JsUserSettingsMigrationPlan` | `matched` |
+| `user-settings-migration-plan-proposed-bytes-accessor` | `user_settings` | `classic-user-settings-core` | `proposed_bytes` | `JsUserSettingsMigrationPlan` | `matched` |
+| `user-settings-plan-migration` | `user_settings` | `classic-user-settings-core` | `plan_migration` | `planUserSettingsMigration` | `matched` |
+| `user-settings-migration-plan-reverse-in-memory` | `user_settings` | `classic-user-settings-core` | `reverse_in_memory` | `reverseUserSettingsMigrationPlan` | `matched` |
+| `user-settings-commit-eligibility` | `user_settings` | `classic-user-settings-core` | `CommitEligibility` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-diagnostic` | `user_settings` | `classic-user-settings-core` | `Diagnostic` | `JsUserSettingsDiagnostic` | `matched` |
+| `user-settings-document-classification` | `user_settings` | `classic-user-settings-core` | `DocumentClassification` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-preference-origin` | `user_settings` | `classic-user-settings-core` | `PreferenceOrigin` | `JsUpdatePreferences` | `matched` |
+| `user-settings-revision-type` | `user_settings` | `classic-user-settings-core` | `Revision` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-source-type` | `user_settings` | `classic-user-settings-core` | `SettingsSource` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-source-location` | `user_settings` | `classic-user-settings-core` | `SourceLocation` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-update-preferences-type` | `user_settings` | `classic-user-settings-core` | `UpdatePreferences` | `JsUpdatePreferences` | `matched` |
+| `user-settings-update-source-type` | `user_settings` | `classic-user-settings-core` | `UpdateSource` | `JsUpdatePreferences` | `matched` |
+| `user-settings-snapshot-type` | `user_settings` | `classic-user-settings-core` | `UserSettings` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-classification-accessor` | `user_settings` | `classic-user-settings-core` | `classification` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-diagnostic-code-accessor` | `user_settings` | `classic-user-settings-core` | `code` | `JsUserSettingsDiagnostic` | `matched` |
+| `user-settings-commit-eligibility-accessor` | `user_settings` | `classic-user-settings-core` | `commit_eligibility` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-diagnostics-accessor` | `user_settings` | `classic-user-settings-core` | `diagnostics` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-location-accessor` | `user_settings` | `classic-user-settings-core` | `location` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-diagnostic-message-accessor` | `user_settings` | `classic-user-settings-core` | `message` | `JsUserSettingsDiagnostic` | `matched` |
+| `user-settings-open` | `user_settings` | `classic-user-settings-core` | `open` | `openUserSettings` | `matched` |
+| `user-settings-published-defaults` | `user_settings` | `classic-user-settings-core` | `published_defaults` | `publishedUserSettingsDefaults` | `matched` |
+| `user-settings-original-bytes-accessor` | `user_settings` | `classic-user-settings-core` | `original_bytes` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-path-accessor` | `user_settings` | `classic-user-settings-core` | `path` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-revision-accessor` | `user_settings` | `classic-user-settings-core` | `revision` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-schema-version-accessor` | `user_settings` | `classic-user-settings-core` | `schema_version` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-source-accessor` | `user_settings` | `classic-user-settings-core` | `source` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-update-check-accessor` | `user_settings` | `classic-user-settings-core` | `update_check` | `JsUpdatePreferences` | `matched` |
+| `user-settings-update-check-origin-accessor` | `user_settings` | `classic-user-settings-core` | `update_check_origin` | `JsUpdatePreferences` | `matched` |
+| `user-settings-update-source-accessor` | `user_settings` | `classic-user-settings-core` | `update_source` | `JsUpdatePreferences` | `matched` |
+| `user-settings-update-source-origin-accessor` | `user_settings` | `classic-user-settings-core` | `update_source_origin` | `JsUpdatePreferences` | `matched` |
+| `user-settings-update-source-token-accessor` | `user_settings` | `classic-user-settings-core` | `as_str` | `JsUpdatePreferences` | `matched` |
+| `user-settings-update-preferences-accessor` | `user_settings` | `classic-user-settings-core` | `update_preferences` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-crash-log-scan-settings-type` | `user_settings` | `classic-user-settings-core` | `CrashLogScanSettings` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-game-version-selection-type` | `user_settings` | `classic-user-settings-core` | `GameVersionSelection` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-crash-log-scan-settings-accessor` | `user_settings` | `classic-user-settings-core` | `crash_log_scan_settings` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-game-version-as-str` | `user_settings` | `classic-user-settings-core` | `as_str` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-game-version-parse` | `user_settings` | `classic-user-settings-core` | `parse` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-fcx-mode-accessor` | `user_settings` | `classic-user-settings-core` | `fcx_mode` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-fcx-mode-origin-accessor` | `user_settings` | `classic-user-settings-core` | `fcx_mode_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-simplify-logs-accessor` | `user_settings` | `classic-user-settings-core` | `simplify_logs` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-simplify-logs-origin-accessor` | `user_settings` | `classic-user-settings-core` | `simplify_logs_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-show-statistics-accessor` | `user_settings` | `classic-user-settings-core` | `show_statistics` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-show-statistics-origin-accessor` | `user_settings` | `classic-user-settings-core` | `show_statistics_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-formid-value-lookup-accessor` | `user_settings` | `classic-user-settings-core` | `formid_value_lookup` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-formid-value-lookup-origin-accessor` | `user_settings` | `classic-user-settings-core` | `formid_value_lookup_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-formid-databases-accessor` | `user_settings` | `classic-user-settings-core` | `formid_databases` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-formid-databases-origin-accessor` | `user_settings` | `classic-user-settings-core` | `formid_databases_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-move-unsolved-logs-accessor` | `user_settings` | `classic-user-settings-core` | `move_unsolved_logs` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-move-unsolved-logs-origin-accessor` | `user_settings` | `classic-user-settings-core` | `move_unsolved_logs_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-unsolved-logs-destination-accessor` | `user_settings` | `classic-user-settings-core` | `unsolved_logs_destination` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-unsolved-logs-destination-origin-accessor` | `user_settings` | `classic-user-settings-core` | `unsolved_logs_destination_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-custom-scan-input-accessor` | `user_settings` | `classic-user-settings-core` | `custom_scan_input` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-custom-scan-input-origin-accessor` | `user_settings` | `classic-user-settings-core` | `custom_scan_input_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-game-version-selection-accessor` | `user_settings` | `classic-user-settings-core` | `game_version_selection` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-game-version-selection-origin-accessor` | `user_settings` | `classic-user-settings-core` | `game_version_selection_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-max-concurrent-scans-accessor` | `user_settings` | `classic-user-settings-core` | `max_concurrent_scans` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-max-concurrent-scans-origin-accessor` | `user_settings` | `classic-user-settings-core` | `max_concurrent_scans_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-game-setup-settings-type` | `user_settings` | `classic-user-settings-core` | `GameSetupSettings` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-setup-settings-accessor` | `user_settings` | `classic-user-settings-core` | `game_setup_settings` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-managed-game-accessor` | `user_settings` | `classic-user-settings-core` | `managed_game` | `JsGameSetupSettings` | `matched` |
+| `user-settings-managed-game-origin-accessor` | `user_settings` | `classic-user-settings-core` | `managed_game_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-setup-version-selection-accessor` | `user_settings` | `classic-user-settings-core` | `game_version_selection` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-setup-version-selection-origin-accessor` | `user_settings` | `classic-user-settings-core` | `game_version_selection_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-root-accessor` | `user_settings` | `classic-user-settings-core` | `game_root` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-root-origin-accessor` | `user_settings` | `classic-user-settings-core` | `game_root_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-executable-accessor` | `user_settings` | `classic-user-settings-core` | `game_executable` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-executable-origin-accessor` | `user_settings` | `classic-user-settings-core` | `game_executable_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-documents-root-accessor` | `user_settings` | `classic-user-settings-core` | `documents_root` | `JsGameSetupSettings` | `matched` |
+| `user-settings-documents-root-origin-accessor` | `user_settings` | `classic-user-settings-core` | `documents_root_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-ini-folder-accessor` | `user_settings` | `classic-user-settings-core` | `ini_folder` | `JsGameSetupSettings` | `matched` |
+| `user-settings-ini-folder-origin-accessor` | `user_settings` | `classic-user-settings-core` | `ini_folder_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-mods-root-accessor` | `user_settings` | `classic-user-settings-core` | `mods_root` | `JsGameSetupSettings` | `matched` |
+| `user-settings-mods-root-origin-accessor` | `user_settings` | `classic-user-settings-core` | `mods_root_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-setup-custom-scan-input-accessor` | `user_settings` | `classic-user-settings-core` | `custom_scan_input` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-setup-custom-scan-input-origin-accessor` | `user_settings` | `classic-user-settings-core` | `custom_scan_input_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-papyrus-log-accessor` | `user_settings` | `classic-user-settings-core` | `papyrus_log` | `JsGameSetupSettings` | `matched` |
+| `user-settings-papyrus-log-origin-accessor` | `user_settings` | `classic-user-settings-core` | `papyrus_log_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-frontend-state-type` | `user_settings` | `classic-user-settings-core` | `FrontendState` | `JsFrontendState` | `matched` |
+| `user-settings-frontend-preferences-type` | `user_settings` | `classic-user-settings-core` | `FrontendPreferences` | `JsFrontendPreferences` | `matched` |
+| `user-settings-gui-window-geometry-type` | `user_settings` | `classic-user-settings-core` | `GuiWindowGeometry` | `JsGuiWindowGeometry` | `matched` |
+| `user-settings-gui-window-update-type` | `user_settings` | `classic-user-settings-core` | `GuiWindow` | `JsGuiWindow` | `matched` |
+| `user-settings-window-geometry-type` | `user_settings` | `classic-user-settings-core` | `WindowGeometry` | `JsWindowGeometry` | `matched` |
+| `user-settings-tui-remembered-state-type` | `user_settings` | `classic-user-settings-core` | `TuiRememberedState` | `JsTuiRememberedState` | `matched` |
+| `user-settings-frontend-state-accessor` | `user_settings` | `classic-user-settings-core` | `frontend_state` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-frontend-state-preferences-accessor` | `user_settings` | `classic-user-settings-core` | `preferences` | `JsFrontendState` | `matched` |
+| `user-settings-frontend-state-window-geometry-accessor` | `user_settings` | `classic-user-settings-core` | `window_geometry` | `JsFrontendState` | `matched` |
+| `user-settings-frontend-state-tui-accessor` | `user_settings` | `classic-user-settings-core` | `tui` | `JsFrontendState` | `matched` |
+| `user-settings-auto-switch-after-scan-accessor` | `user_settings` | `classic-user-settings-core` | `auto_switch_after_scan` | `JsFrontendPreferences` | `matched` |
+| `user-settings-auto-switch-after-scan-origin-accessor` | `user_settings` | `classic-user-settings-core` | `auto_switch_after_scan_origin` | `JsFrontendPreferences` | `matched` |
+| `user-settings-auto-refresh-interval-ms-accessor` | `user_settings` | `classic-user-settings-core` | `auto_refresh_interval_ms` | `JsFrontendPreferences` | `matched` |
+| `user-settings-auto-refresh-interval-ms-origin-accessor` | `user_settings` | `classic-user-settings-core` | `auto_refresh_interval_ms_origin` | `JsFrontendPreferences` | `matched` |
+| `user-settings-main-tab-accessor` | `user_settings` | `classic-user-settings-core` | `main_tab` | `JsGuiWindowGeometry` | `matched` |
+| `user-settings-backups-tab-accessor` | `user_settings` | `classic-user-settings-core` | `backups_tab` | `JsGuiWindowGeometry` | `matched` |
+| `user-settings-articles-tab-accessor` | `user_settings` | `classic-user-settings-core` | `articles_tab` | `JsGuiWindowGeometry` | `matched` |
+| `user-settings-results-tab-accessor` | `user_settings` | `classic-user-settings-core` | `results_tab` | `JsGuiWindowGeometry` | `matched` |
+| `user-settings-window-maximized-accessor` | `user_settings` | `classic-user-settings-core` | `maximized` | `JsWindowGeometry` | `matched` |
+| `user-settings-window-maximized-origin-accessor` | `user_settings` | `classic-user-settings-core` | `maximized_origin` | `JsWindowGeometry` | `matched` |
+| `user-settings-window-width-accessor` | `user_settings` | `classic-user-settings-core` | `width` | `JsWindowGeometry` | `matched` |
+| `user-settings-window-width-origin-accessor` | `user_settings` | `classic-user-settings-core` | `width_origin` | `JsWindowGeometry` | `matched` |
+| `user-settings-window-height-accessor` | `user_settings` | `classic-user-settings-core` | `height` | `JsWindowGeometry` | `matched` |
+| `user-settings-window-height-origin-accessor` | `user_settings` | `classic-user-settings-core` | `height_origin` | `JsWindowGeometry` | `matched` |
+| `user-settings-tui-active-tab-accessor` | `user_settings` | `classic-user-settings-core` | `active_tab` | `JsTuiRememberedState` | `matched` |
+| `user-settings-tui-active-tab-origin-accessor` | `user_settings` | `classic-user-settings-core` | `active_tab_origin` | `JsTuiRememberedState` | `matched` |
+| `user-settings-tui-results-panel-width-accessor` | `user_settings` | `classic-user-settings-core` | `results_panel_width` | `JsTuiRememberedState` | `matched` |
+| `user-settings-tui-results-panel-width-origin-accessor` | `user_settings` | `classic-user-settings-core` | `results_panel_width_origin` | `JsTuiRememberedState` | `matched` |
+| `user-settings-tui-sort-ascending-accessor` | `user_settings` | `classic-user-settings-core` | `sort_ascending` | `JsTuiRememberedState` | `matched` |
+| `user-settings-tui-sort-ascending-origin-accessor` | `user_settings` | `classic-user-settings-core` | `sort_ascending_origin` | `JsTuiRememberedState` | `matched` |
+| `user-settings-update-type` | `user_settings` | `classic-user-settings-core` | `UserSettingsUpdate` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-update-field-type` | `user_settings` | `classic-user-settings-core` | `UserSettingsUpdateField` | `JsUserSettingsUpdateField` | `matched` |
+| `user-settings-accepted-update-type` | `user_settings` | `classic-user-settings-core` | `AcceptedUserSettingsUpdate` | `JsUserSettingsUpdatePreview` | `matched` |
+| `user-settings-commit-outcome-type` | `user_settings` | `classic-user-settings-core` | `UserSettingsCommitOutcome` | `JsUserSettingsCommitResult` | `matched` |
+| `user-settings-commit-error-type` | `user_settings` | `classic-user-settings-core` | `UserSettingsCommitError` | `commitUserSettingsUpdate` | `matched` |
+| `user-settings-frontend-transition-outcome-type` | `user_settings` | `classic-user-settings-core` | `UserSettingsFrontendTransitionOutcome` | `JsUserSettingsCommitResult` | `matched` |
+| `user-settings-commit-frontend-geometry-transition` | `user_settings` | `classic-user-settings-core` | `commit_frontend_geometry_transition` | `commitFrontendGeometryTransition` | `matched` |
+| `user-settings-accepted-update-commit` | `user_settings` | `classic-user-settings-core` | `AcceptedUserSettingsUpdate` | `commitUserSettingsUpdate` | `matched` |
+| `user-settings-commit-error-code-accessor` | `user_settings` | `classic-user-settings-core` | `code` | `commitUserSettingsUpdate` | `matched` |
+| `user-settings-commit-error-message-accessor` | `user_settings` | `classic-user-settings-core` | `message` | `commitUserSettingsUpdate` | `matched` |
+| `user-settings-update-diagnostic-type` | `user_settings` | `classic-user-settings-core` | `UpdateDiagnostic` | `JsUserSettingsUpdateDiagnostic` | `matched` |
+| `user-settings-update-preview-type` | `user_settings` | `classic-user-settings-core` | `UserSettingsUpdatePreview` | `JsUserSettingsUpdatePreview` | `matched` |
+| `user-settings-update-new` | `user_settings` | `classic-user-settings-core` | `new` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-update-check-builder` | `user_settings` | `classic-user-settings-core` | `with_update_check` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-update-source-builder` | `user_settings` | `classic-user-settings-core` | `with_update_source` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-auto-switch-after-scan-builder` | `user_settings` | `classic-user-settings-core` | `with_auto_switch_after_scan` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-game-version-selection-builder` | `user_settings` | `classic-user-settings-core` | `with_game_version_selection` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-managed-game-builder` | `user_settings` | `classic-user-settings-core` | `with_managed_game` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-game-root-builder` | `user_settings` | `classic-user-settings-core` | `with_game_root` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-game-executable-builder` | `user_settings` | `classic-user-settings-core` | `with_game_executable` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-documents-root-builder` | `user_settings` | `classic-user-settings-core` | `with_documents_root` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-ini-folder-builder` | `user_settings` | `classic-user-settings-core` | `with_ini_folder` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-mods-folder-builder` | `user_settings` | `classic-user-settings-core` | `with_mods_folder` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-papyrus-log-path-builder` | `user_settings` | `classic-user-settings-core` | `with_papyrus_log_path` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-fcx-mode-builder` | `user_settings` | `classic-user-settings-core` | `with_fcx_mode` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-simplify-logs-builder` | `user_settings` | `classic-user-settings-core` | `with_simplify_logs` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-show-statistics-builder` | `user_settings` | `classic-user-settings-core` | `with_show_statistics` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-formid-value-lookup-builder` | `user_settings` | `classic-user-settings-core` | `with_formid_value_lookup` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-formid-databases-builder` | `user_settings` | `classic-user-settings-core` | `with_formid_databases` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-move-unsolved-logs-builder` | `user_settings` | `classic-user-settings-core` | `with_move_unsolved_logs` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-unsolved-logs-destination-builder` | `user_settings` | `classic-user-settings-core` | `with_unsolved_logs_destination` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-custom-scan-input-builder` | `user_settings` | `classic-user-settings-core` | `with_custom_scan_input` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-max-concurrent-scans-builder` | `user_settings` | `classic-user-settings-core` | `with_max_concurrent_scans` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-update-field-canonical-path-accessor` | `user_settings` | `classic-user-settings-core` | `canonical_path` | `JsUserSettingsUpdateField` | `matched` |
+| `user-settings-update-diagnostic-field-path-accessor` | `user_settings` | `classic-user-settings-core` | `field_path` | `JsUserSettingsUpdateDiagnostic` | `matched` |
+| `user-settings-update-diagnostic-code-accessor` | `user_settings` | `classic-user-settings-core` | `code` | `JsUserSettingsUpdateDiagnostic` | `matched` |
+| `user-settings-update-diagnostic-message-accessor` | `user_settings` | `classic-user-settings-core` | `message` | `JsUserSettingsUpdateDiagnostic` | `matched` |
+| `user-settings-accepted-update-base-revision-accessor` | `user_settings` | `classic-user-settings-core` | `base_revision` | `JsUserSettingsUpdatePreview` | `matched` |
+| `user-settings-accepted-update-fields-accessor` | `user_settings` | `classic-user-settings-core` | `fields` | `JsUserSettingsUpdatePreview` | `matched` |
+| `user-settings-preview-update` | `user_settings` | `classic-user-settings-core` | `preview_update` | `previewUserSettingsUpdate` | `matched` |
+| `scanlog-parse-segments` | `scanlog` | `classic-scanlog-core` | `LogParser` | `parseLogSegments` | `matched` |
+| `scanlog-extract-formids` | `scanlog` | `classic-scanlog-core` | `LogParser` | `extractFormIds` | `matched` |
+| `scanlog-extract-plugins` | `scanlog` | `classic-scanlog-core` | `LogParser` | `extractPluginList` | `matched` |
+| `scanlog-detect-vr` | `scanlog` | `classic-scanlog-core` | `detect_vr_log` | `detectVrLog` | `matched` |
+| `scanlog-detect-gpu` | `scanlog` | `classic-scanlog-core` | `GpuInfo` | `detectGpuInfo` | `matched` |
+| `scanlog-parse-crashgen-version` | `scanlog` | `classic-scanlog-core` | `CrashgenVersion` | `parseCrashgenVersion` | `matched` |
+| `scanlog-crashgen-version-status` | `scanlog` | `classic-scanlog-core` | `check_crashgen_version_status` | `checkCrashgenVersionStatus` | `matched` |
+| `scanlog-papyrus-analysis` | `scanlog` | `classic-scanlog-core` | `PapyrusStats` | `analyzePapyrusLog` | `matched` |
+| `scanlog-detect-crash-pattern` | `scanlog` | `classic-scanlog-core` | `detect_crash_pattern` | `detectCrashPattern` | `matched` |
+| `scanlog-crashgen-version-status-enum` | `scanlog` | `classic-scanlog-core` | `CrashgenVersionStatus` | `JsCrashgenVersionStatus` | `matched` |
+| `config-yamldata-class` | `config` | `classic-config-core` | `YamlDataCore` | `YamlData` | `matched` |
+| `config-create-yamldata-content` | `config` | `classic-config-core` | `YamlDataCore` | `createYamlDataFromContent` | `matched` |
+| `config-clear-yaml-cache` | `config` | `classic-settings-core` | `clear_global_yaml_cache` | `clearYamlCache` | `matched` |
+| `config.game_local.persistGameLocalPaths` | `config` | `classic-config-core` | `persist_game_local_paths` | `persistGameLocalPaths` | `matched` |
+| `config.installed_yaml_data.installedYamlDataProvenanceLabel` | `config` | `classic-config-core` | `InstalledYamlDataProvenance` | `installedYamlDataProvenanceLabel` | `matched` |
+| `config.installed_yaml_data.installedYamlDataDiagnosticKindLabel` | `config` | `classic-config-core` | `InstalledYamlDataDiagnosticKind` | `installedYamlDataDiagnosticKindLabel` | `matched` |
+| `config.installed_yaml_data.localIgnoreYamlDataStateLabel` | `config` | `classic-config-core` | `LocalIgnoreYamlDataState` | `localIgnoreYamlDataStateLabel` | `matched` |
+| `scanlog.scan_run.scanRunInstalledYamlDataDiagnosticKindLabel` | `scanlog` | `classic-scanlog-core` | `InstalledYamlDataRunDiagnosticKind` | `scanRunInstalledYamlDataDiagnosticKindLabel` | `matched` |
+| `scanlog.scan_run.scanRunLocalIgnoreYamlDataStateLabel` | `scanlog` | `classic-scanlog-core` | `LocalIgnoreRunState` | `scanRunLocalIgnoreYamlDataStateLabel` | `matched` |
+| `scanlog.scan_run.scanRunLogDispositionLabel` | `scanlog` | `classic-scanlog-core` | `LogDisposition` | `scanRunLogDispositionLabel` | `matched` |
+| `scanlog.scan_run.scanRunLogFailureStageLabel` | `scanlog` | `classic-scanlog-core` | `LogFailureStage` | `scanRunLogFailureStageLabel` | `matched` |
+| `scanlog.scan_run.scanRunInfrastructureErrorStageLabel` | `scanlog` | `classic-scanlog-core` | `InfrastructureErrorStage` | `scanRunInfrastructureErrorStageLabel` | `matched` |
+| `scanlog.scan_run.scanRunLocalIgnoreResetFailureStageLabel` | `scanlog` | `classic-scanlog-core` | `LocalIgnoreResetFailureStage` | `scanRunLocalIgnoreResetFailureStageLabel` | `matched` |
+| `config-yaml-source-enum` | `config` | `classic-config-core` | `YamlSource` | `JsYamlSource` | `matched` |
+| `config-yaml-source-path` | `config` | `classic-config-core` | `YamlSource` | `getYamlSourcePath` | `matched` |
+| `config-yaml-source-display-name` | `config` | `classic-config-core` | `YamlSource` | `getYamlSourceDisplayName` | `matched` |
+| `config-yaml-source-display-name-with-game` | `config` | `classic-config-core` | `YamlSource` | `getYamlSourceDisplayNameWithGame` | `matched` |
+| `config-fileio-config-interface` | `config` | `-` | `None` | `FileIoConfig` | `unmapped` |
+| `config-yaml-file-enum` | `config` | `classic-settings-core` | `YamlFile` | `JsYamlFile` | `matched` |
+| `config-get-all-yaml-files` | `config` | `classic-settings-core` | `YamlFile` | `getAllYamlFiles` | `matched` |
+| `config-get-yaml-file-description` | `config` | `classic-settings-core` | `YamlFile` | `getYamlFileDescription` | `matched` |
+| `config-default-cache-ttl-const` | `config` | `classic-database-core` | `DEFAULT_CACHE_TTL_SECS` | `DEFAULT_CACHE_TTL` | `matched` |
+| `config-batch-cache-ttl-const` | `config` | `classic-database-core` | `BATCH_CACHE_TTL_SECS` | `BATCH_CACHE_TTL` | `matched` |
+| `config-max-cache-ttl-const` | `config` | `classic-database-core` | `MAX_CACHE_TTL_SECS` | `MAX_CACHE_TTL` | `matched` |
+| `config-get-default-cache-ttl` | `config` | `classic-database-core` | `DEFAULT_CACHE_TTL_SECS` | `getDefaultCacheTtl` | `matched` |
+| `config-get-batch-cache-ttl` | `config` | `classic-database-core` | `BATCH_CACHE_TTL_SECS` | `getBatchCacheTtl` | `matched` |
+| `config-get-max-cache-ttl` | `config` | `classic-database-core` | `MAX_CACHE_TTL_SECS` | `getMaxCacheTtl` | `matched` |
+| `config-generate-local-yaml` | `config` | `classic-file-io-core` | `generate_local_yaml` | `generateLocalYaml` | `matched` |
+| `config-settings-cache-stats-interface` | `config` | `classic-settings-core` | `CacheStats` | `SettingsCacheStats` | `matched` |
+| `config-load-settings-sync` | `config` | `classic-settings-core` | `load_settings_sync` | `loadSettingsSync` | `matched` |
+| `config-load-settings-async` | `config` | `classic-settings-core` | `load_settings_async` | `loadSettingsAsync` | `matched` |
+| `config-get-cached` | `config` | `classic-settings-core` | `get_cached` | `getCached` | `matched` |
+| `config-is-cached` | `config` | `classic-settings-core` | `is_cached` | `isCached` | `matched` |
+| `config-invalidate-settings` | `config` | `classic-settings-core` | `invalidate` | `invalidateSettings` | `matched` |
+| `config-clear-settings-cache` | `config` | `classic-settings-core` | `clear_cache` | `clearSettingsCache` | `matched` |
+| `config-settings-cache-size` | `config` | `classic-settings-core` | `cache_size` | `settingsCacheSize` | `matched` |
+| `config-settings-cache-keys` | `config` | `classic-settings-core` | `cache_keys` | `settingsCacheKeys` | `matched` |
+| `config-get-settings-cache-stats` | `config` | `classic-settings-core` | `cache_stats` | `getSettingsCacheStats` | `matched` |
+| `config-reset-settings-cache-stats` | `config` | `classic-settings-core` | `reset_cache_stats` | `resetSettingsCacheStats` | `matched` |
+| `config-validate-settings-path` | `path` | `classic-path-core` | `validate_settings_path` | `validateSettingsPath` | `matched` |
+| `config-validate-settings-paths` | `path` | `classic-path-core` | `validate_settings_paths` | `validateSettingsPaths` | `matched` |
+| `config-yaml-document-class` | `config` | `classic-settings-core` | `YamlOperations` | `YamlDocument` | `matched` |
+| `config-yaml-parse` | `config` | `classic-settings-core` | `parse_yaml` | `yamlParse` | `matched` |
+| `config-yaml-stringify` | `config` | `classic-settings-core` | `dump_yaml` | `yamlStringify` | `matched` |
+| `config-yaml-load-file` | `config` | `classic-settings-core` | `load_yaml_file` | `yamlLoadFile` | `matched` |
+| `config-yaml-get-value` | `config` | `classic-settings-core` | `parse_yaml` | `yamlGetValue` | `matched` |
+| `config-yaml-get-string-value` | `config` | `classic-settings-core` | `get_string_value` | `yamlGetStringValue` | `matched` |
+| `config-yaml-get-vec-value` | `config` | `classic-settings-core` | `get_vec_value` | `yamlGetVecValue` | `matched` |
+| `config-yaml-get-hashmap-value` | `config` | `classic-settings-core` | `get_hashmap_value` | `yamlGetHashmapValue` | `matched` |
+| `config-yaml-save-file` | `config` | `classic-settings-core` | `save_yaml_file` | `yamlSaveFile` | `matched` |
+| `config-yaml-set-setting` | `config` | `classic-settings-core` | `set_setting` | `yamlSetSetting` | `matched` |
+| `config-yaml-get-settings-batch` | `config` | `classic-settings-core` | `get_settings_batch` | `yamlGetSettingsBatch` | `matched` |
+| `config-yaml-set-settings-batch` | `config` | `classic-settings-core` | `set_settings_batch` | `yamlSetSettingsBatch` | `matched` |
+| `config-yaml-get-indexmap-value` | `config` | `classic-settings-core` | `get_indexmap_value` | `yamlGetIndexmapValue` | `matched` |
+| `config-yaml-get-hashmap-vec-value` | `config` | `classic-settings-core` | `get_hashmap_vec_value` | `yamlGetHashmapVecValue` | `matched` |
+| `config-yaml-clear-cache` | `config` | `classic-settings-core` | `YamlOperations` | `yamlClearCache` | `matched` |
+| `config-yaml-get-cache-stats` | `config` | `classic-settings-core` | `yaml_cache_stats` | `yamlGetCacheStats` | `matched` |
+| `version-registry-get-by-id` | `version_registry` | `classic-version-registry-core` | `VersionInfo` | `getVersionById` | `matched` |
+| `version-registry-get-by-version` | `version_registry` | `classic-version-registry-core` | `get_by_version` | `getVersionByVersionString` | `matched` |
+| `version-registry-get-by-short-name` | `version_registry` | `classic-version-registry-core` | `get_by_short_name` | `getVersionByShortName` | `matched` |
+| `version-registry-get-all` | `version_registry` | `classic-version-registry-core` | `get_all` | `getAllVersions` | `matched` |
+| `version-registry-get-all-for-game` | `version_registry` | `classic-version-registry-core` | `get_all_for_game` | `getAllVersionsForGame` | `matched` |
+| `version-registry-get-correct-versions` | `version_registry` | `classic-version-registry-core` | `get_correct_versions` | `getCorrectVersions` | `matched` |
+| `version-registry-get-wrong-versions` | `version_registry` | `classic-version-registry-core` | `get_wrong_versions` | `getWrongVersions` | `matched` |
+| `version-registry-match-version` | `version_registry` | `classic-version-registry-core` | `MatchResult` | `matchVersion` | `matched` |
+| `version-registry-address-lib-filename` | `version_registry` | `classic-version-registry-core` | `get_address_library_filename` | `getAddressLibraryFilename` | `matched` |
+| `version-registry-crashgen-versions` | `version_registry` | `classic-version-registry-core` | `get_crashgen_versions` | `getCrashgenVersions` | `matched` |
+| `version-registry-crashgen-version-strings` | `version_registry` | `classic-version-registry-core` | `get_crashgen_version_strings` | `getCrashgenVersionStrings` | `matched` |
+| `version-registry-crashgen-for-version` | `version_registry` | `classic-version-registry-core` | `get_crashgen_for_version` | `getCrashgenForVersion` | `matched` |
+| `version-registry-is-compatible` | `version_registry` | `classic-version-registry-core` | `VersionRegistry` | `isVersionCompatible` | `matched` |
+| `version-registry-parse-version` | `version_registry` | `classic-version-registry-core` | `parse` | `parseGameVersion` | `matched` |
+| `version-registry-version-distance` | `version_registry` | `classic-version-registry-core` | `semantic_distance` | `gameVersionDistance` | `matched` |
+| `version-registry-promote-fallout4-version-info` | `version_registry` | `-` | `None` | `Fallout4VersionInfo` | `unmapped` |
+| `version-registry-promote-js-address-lib-info` | `version_registry` | `classic-scangame-core` | `AddressLibInfo` | `JsAddressLibInfo` | `matched` |
+| `version-registry-promote-js-address-library-config` | `version_registry` | `classic-version-registry-core` | `AddressLibraryConfig` | `JsAddressLibraryConfig` | `matched` |
+| `version-registry-promote-js-crashgen-check-result` | `version_registry` | `-` | `None` | `JsCrashgenCheckResult` | `unmapped` |
+| `version-registry-promote-js-crashgen-checker` | `version_registry` | `classic-scangame-core` | `CrashgenChecker` | `JsCrashgenChecker` | `matched` |
+| `version-registry-promote-js-crashgen-config` | `version_registry` | `classic-version-registry-core` | `CrashgenConfig` | `JsCrashgenConfig` | `matched` |
+| `version-registry-promote-js-crashgen-report` | `version_registry` | `classic-scangame-core` | `CrashgenReport` | `JsCrashgenReport` | `matched` |
+| `version-registry-promote-js-crashgen-version-info` | `version_registry` | `classic-scanlog-core` | `CrashgenVersion` | `JsCrashgenVersionInfo` | `matched` |
+| `version-registry-promote-js-fallout4-version` | `version_registry` | `classic-version-registry-core` | `Fallout4Version` | `JsFallout4Version` | `matched` |
+| `version-registry-promote-js-game-version` | `version_registry` | `classic-scangame-core` | `GameVersion` | `JsGameVersion` | `matched` |
+| `version-registry-promote-js-unknown-version-handling` | `version_registry` | `classic-version-registry-core` | `UnknownVersionHandling` | `JsUnknownVersionHandling` | `matched` |
+| `version-registry-promote-js-version-info` | `version_registry` | `classic-version-registry-core` | `VersionInfo` | `JsVersionInfo` | `matched` |
+| `version-registry-promote-js-version-registry-snapshot` | `version_registry` | `-` | `None` | `JsVersionRegistrySnapshot` | `unmapped` |
+| `version-registry-promote-xse-version` | `version_registry` | `classic-path-core` | `XseVersion` | `XseVersion` | `matched` |
+| `version-registry-promote-check-crashgen-config` | `version_registry` | `classic-scangame-core` | `CrashgenChecker` | `checkCrashgenConfig` | `matched` |
+| `version-registry-promote-check-crashgen-full` | `version_registry` | `classic-scangame-core` | `CrashgenChecker` | `checkCrashgenFull` | `matched` |
+| `version-registry-promote-compare-versions` | `version_registry` | `classic-version-core` | `compare_versions` | `compareVersions` | `matched` |
+| `version-registry-promote-detect-xse-version` | `version_registry` | `classic-xse-core` | `detect_xse_version` | `detectXseVersion` | `matched` |
+| `version-registry-promote-extract-all-versions` | `version_registry` | `classic-version-core` | `extract_all_versions` | `extractAllVersions` | `matched` |
+| `version-registry-promote-extract-version-from-filename` | `version_registry` | `classic-version-core` | `extract_version_from_filename` | `extractVersionFromFilename` | `matched` |
+| `version-registry-promote-extract-version-from-log` | `version_registry` | `classic-version-core` | `extract_version_from_log` | `extractVersionFromLog` | `matched` |
+| `version-registry-promote-format-version` | `version_registry` | `classic-version-core` | `format_version` | `formatVersion` | `matched` |
+| `version-registry-promote-get-address-lib-info` | `version_registry` | `classic-scangame-core` | `AddressLibInfo` | `getAddressLibInfo` | `matched` |
+| `version-registry-promote-get-all-fallout4-versions` | `version_registry` | `classic-version-registry-core` | `Fallout4Version` | `getAllFallout4Versions` | `matched` |
+| `version-registry-promote-get-classic-version` | `version_registry` | `classic-web-core` | `CLASSIC_VERSION` | `getClassicVersion` | `matched` |
+| `version-registry-promote-get-fallout4-version-info` | `version_registry` | `classic-version-registry-core` | `Fallout4Version` | `getFallout4VersionInfo` | `matched` |
+| `version-registry-promote-get-script-hashes-for-version` | `version_registry` | `classic-version-registry-core` | `VersionRegistry` | `getScriptHashesForVersion` | `matched` |
+| `version-registry-promote-get-unknown-version-default` | `version_registry` | `classic-version-registry-core` | `UnknownVersionHandling` | `getUnknownVersionDefault` | `matched` |
+| `version-registry-promote-get-unknown-version-handling` | `version_registry` | `classic-version-registry-core` | `unknown_version_handling` | `getUnknownVersionHandling` | `matched` |
+| `version-registry-promote-get-version` | `aux` | `-` | `None` | `getVersion` | `unmapped` |
+| `version-registry-promote-get-version-registry` | `version_registry` | `classic-version-registry-core` | `VersionRegistry` | `getVersionRegistry` | `matched` |
+| `version-registry-promote-is-known-fallout4-version` | `version_registry` | `classic-version-core` | `is_known_fallout4_version` | `isKnownFallout4Version` | `matched` |
+| `version-registry-promote-parse-version` | `version_registry` | `classic-version-core` | `parse_version` | `parseVersion` | `matched` |
+| `version-registry-promote-registry-get-game-version` | `version_registry` | `classic-registry-core` | `get` | `registryGetGameVersion` | `matched` |
+| `version_registry.MatchConfidence@rust` | `version_registry` | `classic-version-registry-core` | `MatchConfidence@rust` | `None` | `matched` |
+| `version-registry-promote-try-parse-version` | `version_registry` | `classic-version-core` | `try_parse_version` | `tryParseVersion` | `matched` |
+| `aux-phase4a-backup-manager` | `aux` | `classic-path-core` | `BackupManager` | `BackupManager` | `matched` |
+| `aux-phase4a-docs-path-finder` | `aux` | `classic-path-core` | `DocsPathFinder` | `DocsPathFinder` | `matched` |
+| `aux-phase4a-documents-checker` | `aux` | `classic-path-core` | `DocumentsChecker` | `DocumentsChecker` | `matched` |
+| `aux-phase4a-game-path-finder` | `aux` | `classic-path-core` | `GamePathFinder` | `GamePathFinder` | `matched` |
+| `aux-phase4a-js-backup-info` | `aux` | `classic-file-io-core` | `BackupInfo` | `JsBackupInfo` | `matched` |
+| `aux-phase4a-js-backup-manager` | `aux` | `classic-file-io-core` | `BackupManager` | `JsBackupManager` | `matched` |
+| `aux-phase4a-js-file-generator` | `aux` | `classic-file-io-core` | `FileGenerator` | `JsFileGenerator` | `matched` |
+| `aux-phase4a-js-file-i-o` | `aux` | `classic-file-io-core` | `FileIOCore` | `JsFileIO` | `matched` |
+| `aux-phase4a-js-file-operation-result` | `aux` | `classic-file-io-core` | `FileOperationResult` | `JsFileOperationResult` | `matched` |
+| `aux-phase4a-js-game-files-manager` | `aux` | `classic-file-io-core` | `GameFilesManager` | `JsGameFilesManager` | `matched` |
+| `aux-phase4a-js-message` | `aux` | `classic-message-core` | `Message` | `JsMessage` | `matched` |
+| `aux-phase4a-js-message-target` | `aux` | `classic-message-core` | `MessageTarget` | `JsMessageTarget` | `matched` |
+| `aux-phase4a-js-message-type` | `aux` | `classic-message-core` | `MessageType` | `JsMessageType` | `matched` |
+| `aux-phase4a-metrics-summary-result` | `aux` | `-` | `None` | `MetricsSummaryResult` | `unmapped` |
+| `aux-phase4a-runtime-info` | `aux` | `-` | `None` | `RuntimeInfo` | `unmapped` |
+| `aux-phase4a-timing-stats` | `aux` | `classic-perf-core` | `MetricsSummary` | `TimingStats` | `matched` |
+| `aux-phase4a-calculate-file-similarity` | `aux` | `classic-file-io-core` | `calculate_similarity` | `calculateFileSimilarity` | `matched` |
+| `aux-phase4a-check-read-permissions` | `aux` | `classic-path-core` | `check_read_permissions` | `checkReadPermissions` | `matched` |
+| `aux-phase4a-check-write-permissions` | `aux` | `classic-path-core` | `check_write_permissions` | `checkWritePermissions` | `matched` |
+| `aux-phase4a-clear-all-metrics` | `aux` | `classic-perf-core` | `clear_metrics` | `clearAllMetrics` | `matched` |
+| `aux-phase4a-create-message` | `aux` | `classic-message-core` | `Message` | `createMessage` | `matched` |
+| `aux-phase4a-detect-encoding` | `aux` | `classic-file-io-core` | `EncodingDetector` | `detectEncoding` | `matched` |
+| `aux-phase4a-format-message` | `aux` | `classic-message-core` | `format_log_message` | `formatMessage` | `matched` |
+| `aux-phase4a-generate-ignore-file` | `aux` | `classic-file-io-core` | `generate_ignore_file` | `generateIgnoreFile` | `matched` |
+| `aux-phase4a-get-metrics-summary` | `aux` | `classic-perf-core` | `get_summary` | `getMetricsSummary` | `matched` |
+| `aux-phase4a-get-runtime-info` | `aux` | `classic-shared-core` | `get_runtime` | `getRuntimeInfo` | `matched` |
+| `aux-phase4a-get-system-documents-path` | `aux` | `classic-path-core` | `get_system_documents_path` | `getSystemDocumentsPath` | `matched` |
+| `aux-phase4a-hash-file` | `aux` | `classic-file-io-core` | `FileHasher` | `hashFile` | `matched` |
+| `aux-phase4a-hash-files-parallel` | `aux` | `classic-file-io-core` | `FileHasher` | `hashFilesParallel` | `matched` |
+| `aux-phase4a-intern-string` | `aux` | `classic-shared-core` | `intern` | `internString` | `matched` |
+| `aux-phase4a-is-restricted-path` | `aux` | `classic-path-core` | `is_restricted_path` | `isRestrictedPath` | `matched` |
+| `aux-phase4a-is-runtime-available` | `aux` | `classic-shared-core` | `get_runtime` | `isRuntimeAvailable` | `matched` |
+| `aux-phase4a-is-valid-executable-path` | `aux` | `classic-path-core` | `is_valid_executable_path` | `isValidExecutablePath` | `matched` |
+| `aux-phase4a-is-valid-path` | `aux` | `classic-path-core` | `is_valid_path` | `isValidPath` | `matched` |
+| `aux-phase4a-join-paths` | `aux` | `classic-shared-core` | `join_paths` | `joinPaths` | `matched` |
+| `aux-phase4a-load-batch-async` | `aux` | `classic-settings-core` | `load_batch_async` | `loadBatchAsync` | `matched` |
+| `aux-phase4a-load-batch-sync` | `aux` | `classic-settings-core` | `load_batch_sync` | `loadBatchSync` | `matched` |
+| `aux-phase4a-normalize-path` | `aux` | `classic-shared-core` | `normalize_path` | `normalizePath` | `matched` |
+| `aux-phase4a-normalize-string` | `aux` | `classic-shared-core` | `normalize_string` | `normalizeString` | `matched` |
+| `aux-phase4a-parse-steam-library` | `aux` | `classic-path-core` | `parse_steam_library` | `parseSteamLibrary` | `matched` |
+| `aux-phase4a-process-string-batch` | `aux` | `classic-shared-core` | `process_batch` | `processStringBatch` | `matched` |
+| `aux-phase4a-query-game-registry` | `aux` | `classic-path-core` | `query_game_registry` | `queryGameRegistry` | `matched` |
+| `aux-phase4a-record-timing-metric` | `aux` | `classic-perf-core` | `record_timing` | `recordTimingMetric` | `matched` |
+| `aux-phase4a-registry-clear` | `aux` | `classic-registry-core` | `clear_all` | `registryClear` | `matched` |
+| `aux-phase4a-registry-get` | `aux` | `classic-registry-core` | `get` | `registryGet` | `matched` |
+| `aux-phase4a-registry-get-game` | `aux` | `classic-registry-core` | `get_game` | `registryGetGame` | `matched` |
+| `aux-phase4a-registry-remove` | `aux` | `classic-registry-core` | `unregister` | `registryRemove` | `matched` |
+| `aux-phase4a-registry-set` | `aux` | `classic-registry-core` | `register` | `registrySet` | `matched` |
+| `aux-phase4a-registry-set-game` | `aux` | `classic-registry-core` | `set_game` | `registrySetGame` | `matched` |
+| `aux-phase4a-remove-readonly` | `aux` | `classic-path-core` | `remove_readonly` | `removeReadonly` | `matched` |
+| `aux-phase4a-validate-custom-scan-path` | `aux` | `classic-path-core` | `validate_custom_scan_path` | `validateCustomScanPath` | `matched` |
+| `aux-phase4a-validate-path-with-permissions` | `aux` | `classic-path-core` | `validate_path_with_permissions` | `validatePathWithPermissions` | `matched` |
+| `aux-phase4a-validate-paths-batch` | `aux` | `classic-shared-core` | `validate_paths_batch` | `validatePathsBatch` | `matched` |
+| `aux-phase4a-validate-required-files` | `aux` | `classic-path-core` | `validate_required_files` | `validateRequiredFiles` | `matched` |
+| `aux-phase4b-github-client` | `aux` | `classic-update-core` | `GithubClient` | `GithubClient` | `matched` |
+| `aux-phase4b-js-ba2-issues` | `aux` | `classic-scangame-core` | `BA2Issues` | `JsBa2Issues` | `matched` |
+| `aux-phase4b-js-ba2-scan-result` | `aux` | `-` | `None` | `JsBa2ScanResult` | `unmapped` |
+| `aux-phase4b-js-ba2-scanner` | `aux` | `classic-scangame-core` | `BA2Scanner` | `JsBa2Scanner` | `matched` |
+| `aux-phase4b-js-batch-entry` | `aux` | `-` | `None` | `JsBatchEntry` | `unmapped` |
+| `aux-phase4b-js-check-result` | `aux` | `classic-scangame-core` | `CheckResult` | `JsCheckResult` | `matched` |
+| `aux-phase4b-js-check-type` | `aux` | `classic-scangame-core` | `CheckType` | `JsCheckType` | `matched` |
+| `aux-phase4b-js-database-pool` | `aux` | `classic-database-core` | `DatabasePool` | `JsDatabasePool` | `matched` |
+| `aux-phase4b-js-duplicate-group` | `aux` | `classic-scangame-core` | `DuplicateGroup` | `JsDuplicateGroup` | `matched` |
+| `aux-phase4b-js-enb-checker` | `aux` | `classic-scangame-core` | `EnbChecker` | `JsEnbChecker` | `matched` |
+| `aux-phase4b-js-enb-result` | `aux` | `classic-scangame-core` | `EnbResult` | `JsEnbResult` | `matched` |
+| `aux-phase4b-js-enb-validation-result` | `aux` | `classic-scangame-core` | `EnbValidationResult` | `JsEnbValidationResult` | `matched` |
+| `aux-phase4b-js-game-integrity-checker` | `aux` | `classic-scangame-core` | `GameIntegrityChecker` | `JsGameIntegrityChecker` | `matched` |
+| `aux-phase4b-js-game-scan-result` | `aux` | `classic-scangame-core` | `GameScanResult` | `JsGameScanResult` | `matched` |
+| `aux-phase4b-js-github-asset` | `aux` | `classic-update-core` | `GithubAsset` | `JsGithubAsset` | `matched` |
+| `aux-phase4b-js-github-release` | `aux` | `classic-update-core` | `GithubRelease` | `JsGithubRelease` | `matched` |
+| `aux-phase4b-js-ini-validator` | `aux` | `classic-scangame-core` | `IniValidator` | `JsIniValidator` | `matched` |
+| `aux-phase4b-js-integrity-check-result` | `aux` | `classic-scangame-core` | `IntegrityCheckResult` | `JsIntegrityCheckResult` | `matched` |
+| `aux-phase4b-js-issue-severity` | `aux` | `classic-scangame-core` | `IssueSeverity` | `JsIssueSeverity` | `matched` |
+| `aux-phase4b-js-mod-duplicate-entry` | `aux` | `-` | `None` | `JsModDuplicateEntry` | `unmapped` |
+| `aux-phase4b-js-mod-ini-scan-result` | `aux` | `classic-scangame-core` | `ModIniScanResult` | `JsModIniScanResult` | `matched` |
+| `aux-phase4b-js-mod-scan-result` | `aux` | `classic-scangame-core` | `ModScanResult` | `JsModScanResult` | `matched` |
+| `aux-phase4b-js-mod-site` | `aux` | `classic-web-core` | `ModSite` | `JsModSite` | `matched` |
+| `aux-phase4b-js-pool-statistics` | `aux` | `classic-database-core` | `PoolStatistics` | `JsPoolStatistics` | `matched` |
+| `aux-phase4b-js-toml-issue-severity` | `aux` | `classic-scangame-core` | `TomlIssueSeverity` | `JsTomlIssueSeverity` | `matched` |
+| `aux-phase4b-js-unpacked-issues` | `aux` | `classic-scangame-core` | `UnpackedIssues` | `JsUnpackedIssues` | `matched` |
+| `aux-phase4b-js-unpacked-scanner` | `aux` | `classic-scangame-core` | `UnpackedScanner` | `JsUnpackedScanner` | `matched` |
+| `aux-phase4b-js-update-check-result` | `aux` | `-` | `None` | `JsUpdateCheckResult` | `unmapped` |
+| `aux-phase4b-js-validation-result` | `aux` | `classic-scangame-core` | `ValidationResult` | `JsValidationResult` | `matched` |
+| `aux-phase4b-js-vsync-entry` | `aux` | `classic-scangame-core` | `VsyncEntry` | `JsVsyncEntry` | `matched` |
+| `aux-phase4b-js-wrye-bash-parser` | `aux` | `classic-scangame-core` | `WryeBashParser` | `JsWryeBashParser` | `matched` |
+| `aux-phase4b-js-wrye-issue` | `aux` | `classic-scangame-core` | `WryeIssue` | `JsWryeIssue` | `matched` |
+| `aux-phase4b-js-xse-checker` | `aux` | `classic-scangame-core` | `XseChecker` | `JsXseChecker` | `matched` |
+| `aux-phase4b-js-xse-info` | `aux` | `classic-xse-core` | `XseInfo` | `JsXseInfo` | `matched` |
+| `aux-phase4b-js-xse-type` | `aux` | `classic-xse-core` | `XseType` | `JsXseType` | `matched` |
+| `aux-phase4b-query-param` | `aux` | `-` | `None` | `QueryParam` | `unmapped` |
+| `aux-phase4b-resource-count` | `aux` | `-` | `None` | `ResourceCount` | `unmapped` |
+| `aux-phase4b-resource-info` | `aux` | `classic-resource-core` | `ResourceInfo` | `ResourceInfo` | `matched` |
+| `aux-phase4b-build-url-with-query` | `aux` | `classic-web-core` | `build_url_with_query` | `buildUrlWithQuery` | `matched` |
+| `aux-phase4b-check-enb` | `aux` | `classic-scangame-core` | `validate` | `checkEnb` | `matched` |
+| `aux-phase4b-check-for-updates` | `aux` | `classic-update-core` | `get_latest_release` | `checkForUpdates` | `matched` |
+| `aux-phase4b-count-resources-by-type` | `aux` | `classic-resource-core` | `count_resources_by_type` | `countResourcesByType` | `matched` |
+| `aux-phase4b-create-resource-info` | `aux` | `classic-resource-core` | `ResourceInfo` | `createResourceInfo` | `matched` |
+| `aux-phase4b-create-resource-info-with-size` | `aux` | `classic-resource-core` | `ResourceInfo` | `createResourceInfoWithSize` | `matched` |
+| `aux-phase4b-detect-resource-type` | `aux` | `classic-resource-core` | `detect_resource_type` | `detectResourceType` | `matched` |
+| `aux-phase4b-enumerate-resources` | `aux` | `classic-resource-core` | `enumerate_resources` | `enumerateResources` | `matched` |
+| `aux-phase4b-extract-domain` | `aux` | `classic-web-core` | `extract_domain` | `extractDomain` | `matched` |
+| `aux-phase4b-get-latest-release` | `aux` | `classic-update-core` | `get_latest_release` | `getLatestRelease` | `matched` |
+| `aux-phase4b-get-mod-site-game-url` | `aux` | `classic-web-core` | `game_url` | `getModSiteGameUrl` | `matched` |
+| `aux-phase4b-get-mod-site-name` | `aux` | `classic-web-core` | `name` | `getModSiteName` | `matched` |
+| `aux-phase4b-get-mod-site-url` | `aux` | `classic-web-core` | `base_url` | `getModSiteUrl` | `matched` |
+| `aux-phase4b-get-resource-extensions` | `aux` | `classic-resource-core` | `extensions` | `getResourceExtensions` | `matched` |
+| `aux-phase4b-get-user-agent` | `aux` | `classic-web-core` | `get_user_agent` | `getUserAgent` | `matched` |
+| `aux-phase4b-get-user-agent-prefix` | `aux` | `classic-web-core` | `USER_AGENT_PREFIX` | `getUserAgentPrefix` | `matched` |
+| `aux-phase4b-get-user-agent-with-suffix` | `aux` | `classic-web-core` | `get_user_agent_with_suffix` | `getUserAgentWithSuffix` | `matched` |
+| `aux-phase4b-get-xse-info` | `aux` | `classic-xse-core` | `get_xse_info` | `getXseInfo` | `matched` |
+| `aux-phase4b-has-update` | `aux` | `classic-update-core` | `has_update` | `hasUpdate` | `matched` |
+| `aux-phase4b-is-supported-resource` | `aux` | `classic-resource-core` | `is_supported_resource` | `isSupportedResource` | `matched` |
+| `aux-phase4b-is-valid-url` | `aux` | `classic-web-core` | `is_valid_url` | `isValidUrl` | `matched` |
+| `aux-phase4b-is-xse-installed` | `aux` | `classic-xse-core` | `is_xse_installed` | `isXseInstalled` | `matched` |
+| `aux-phase4b-join-url` | `aux` | `classic-web-core` | `join_url` | `joinUrl` | `matched` |
+| `aux-phase4b-parse-resource-type` | `aux` | `classic-resource-core` | `ResourceType` | `parseResourceType` | `matched` |
+| `aux-phase4b-parse-xse-type` | `aux` | `classic-xse-core` | `XseType` | `parseXseType` | `matched` |
+| `aux-phase4b-run-game-checks` | `aux` | `classic-scangame-core` | `run_game_checks` | `runGameChecks` | `matched` |
+| `aux-phase4b-run-mod-scans` | `aux` | `classic-scangame-core` | `run_mod_scans` | `runModScans` | `matched` |
+| `aux-phase4b-scan-all-ba2-archives` | `aux` | `classic-scangame-core` | `scan_archives_batch` | `scanAllBa2Archives` | `matched` |
+| `aux-phase4b-scan-mod-inis` | `aux` | `classic-scangame-core` | `scan` | `scanModInis` | `matched` |
+| `aux-phase4b-scan-unpacked-files` | `aux` | `classic-scangame-core` | `scan_directory` | `scanUnpackedFiles` | `matched` |
+| `aux-phase4b-validate-resource` | `aux` | `classic-resource-core` | `validate_resource` | `validateResource` | `matched` |
+| `aux-phase4b-validate-url` | `aux` | `classic-web-core` | `validate_url` | `validateUrl` | `matched` |
+| `aux-phase4b-xse-dll-prefix` | `aux` | `classic-xse-core` | `dll_prefix` | `xseDllPrefix` | `matched` |
+| `aux-phase4b-xse-loader-name` | `aux` | `classic-xse-core` | `loader_name` | `xseLoaderName` | `matched` |
+| `aux-phase4b-xse-type-for-game` | `aux` | `classic-xse-core` | `from_game_id` | `xseTypeForGame` | `matched` |
+| `aux-phase4b-xse-type-name` | `aux` | `classic-xse-core` | `XseType` | `xseTypeName` | `matched` |
+| `aux-phase4c-crash-autoscan-pattern` | `aux` | `classic-file-io-core` | `CRASH_AUTOSCAN_PATTERN` | `CRASH_AUTOSCAN_PATTERN` | `matched` |
+| `version-registry-phase4c-js-compatible-range` | `version_registry` | `classic-version-registry-core` | `CompatibleRange` | `JsCompatibleRange` | `matched` |
+| `aux-phase4c-js-dds-analyzer-alias` | `aux` | `classic-file-io-core` | `DDSAnalyzer` | `JsDDSAnalyzer` | `matched` |
+| `aux-phase4c-js-dds-analyzer-class` | `aux` | `classic-file-io-core` | `DDSAnalyzer` | `JsDdsAnalyzer` | `matched` |
+| `aux-phase4c-js-dds-batch-result` | `aux` | `-` | `None` | `JsDdsBatchResult` | `unmapped` |
+| `aux-phase4c-js-dds-issue` | `aux` | `classic-file-io-core` | `DDSIssue` | `JsDdsIssue` | `matched` |
+| `aux-phase4c-js-game-id` | `aux` | `classic-shared-core` | `GameId` | `JsGameId` | `matched` |
+| `aux-phase4c-js-ini-check-result` | `aux` | `classic-path-core` | `IniCheckResult` | `JsIniCheckResult` | `matched` |
+| `version-registry-phase4c-js-match-result` | `version_registry` | `classic-version-registry-core` | `MatchResult` | `JsMatchResult` | `matched` |
+| `aux-phase4c-calculate-text-similarity` | `aux` | `classic-file-io-core` | `similarity_ratio` | `calculateTextSimilarity` | `matched` |
+| `aux-phase4c-check-drive-exists` | `aux` | `classic-path-core` | `check_drive_exists` | `checkDriveExists` | `matched` |
+| `version-registry-phase4c-get-all-exe-hashes` | `version_registry` | `classic-version-registry-core` | `VersionRegistry` | `getAllExeHashes` | `matched` |
+| `aux-phase4c-get-all-game-ids` | `aux` | `classic-shared-core` | `GameId` | `getAllGameIds` | `matched` |
+| `version-registry-phase4c-get-all-script-hashes` | `version_registry` | `classic-version-registry-core` | `VersionRegistry` | `getAllScriptHashes` | `matched` |
+| `aux-phase4c-get-game-name` | `aux` | `classic-shared-core` | `GameId` | `getGameName` | `matched` |
+| `scanlog.settings_validator.ConfigIssue@rust` | `scanlog` | `classic-scanlog-core` | `ConfigIssue@rust` | `None` | `matched` |
+| `scanlog.crashgen_registry.CrashgenEntry@rust` | `scanlog` | `classic-scanlog-core` | `CrashgenEntry@rust` | `None` | `matched` |
+| `scanlog.crashgen_registry.CrashgenRegistry@rust` | `scanlog` | `classic-scanlog-core` | `CrashgenRegistry@rust` | `None` | `matched` |
+| `scanlog.formid_analyzer.FormIDAnalyzer@rust` | `scanlog` | `classic-scanlog-core` | `FormIDAnalyzer@rust` | `None` | `matched` |
+| `scanlog.gpu_detector.GpuDetector@rust` | `scanlog` | `classic-scanlog-core` | `GpuDetector@rust` | `None` | `matched` |
+| `scanlog.gpu_detector.GpuVendor@rust` | `scanlog` | `classic-scanlog-core` | `GpuVendor@rust` | `None` | `matched` |
+| `scanlog.papyrus.PapyrusAnalyzer@rust` | `scanlog` | `classic-scanlog-core` | `PapyrusAnalyzer@rust` | `None` | `matched` |
+| `scanlog.papyrus.PapyrusError@rust` | `scanlog` | `classic-scanlog-core` | `PapyrusError@rust` | `None` | `matched` |
+| `scanlog.plugin_analyzer.PluginAnalyzer@rust` | `scanlog` | `classic-scanlog-core` | `PluginAnalyzer@rust` | `None` | `matched` |
+| `scanlog.record_scanner.RecordScanner@rust` | `scanlog` | `classic-scanlog-core` | `RecordScanner@rust` | `None` | `matched` |
+| `scanlog.formid_analyzer.RustFormIDAnalyzer@rust` | `scanlog` | `classic-scanlog-core` | `RustFormIDAnalyzer@rust` | `None` | `matched` |
+| `scanlog.error.ScanLogError@rust` | `scanlog` | `classic-scanlog-core` | `ScanLogError@rust` | `None` | `matched` |
+| `scanlog.orchestrator.ScanProgressPhase@rust` | `scanlog` | `classic-scanlog-core` | `ScanProgressPhase@rust` | `None` | `matched` |
+| `scanlog.parser.StreamingIteratorParser@rust` | `scanlog` | `classic-scanlog-core` | `StreamingIteratorParser@rust` | `None` | `matched` |
+| `scanlog.parser.StreamingLogParser@rust` | `scanlog` | `classic-scanlog-core` | `StreamingLogParser@rust` | `None` | `matched` |
+| `scanlog.plugin_analyzer.contains_plugin@rust` | `scanlog` | `classic-scanlog-core` | `contains_plugin@rust` | `None` | `matched` |
+| `scanlog.record_scanner.contains_record@rust` | `scanlog` | `classic-scanlog-core` | `contains_record@rust` | `None` | `matched` |
+| `scanlog.crashgen_registry.crashgen_registry@rust` | `scanlog` | `classic-scanlog-core` | `crashgen_registry@rust` | `None` | `matched` |
+| `scanlog.version.crashgen_version_gen@rust` | `scanlog` | `classic-scanlog-core` | `crashgen_version_gen@rust` | `None` | `matched` |
+| `scanlog.mod_guidance_analyzer.ImportantModGuidance` | `scanlog` | `classic-scanlog-core` | `ImportantModGuidance` | `JsImportantModGuidance` | `matched` |
+| `scanlog.mod_guidance_analyzer.ImportantModRule` | `scanlog` | `classic-config-core` | `CoreModEntry` | `JsImportantModRule` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModConflictGuidance` | `scanlog` | `classic-scanlog-core` | `ModConflictGuidance` | `JsModConflictGuidance` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModConflictRule` | `scanlog` | `classic-config-core` | `ModConflictEntry` | `JsModConflictRule` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceAnalysisInput` | `scanlog` | `classic-scanlog-core` | `ModGuidanceAnalysisInput` | `JsModGuidanceAnalysisInput` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceAnalysisResult` | `scanlog` | `classic-scanlog-core` | `ModGuidanceAnalysisResult` | `JsModGuidanceAnalysisResult` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceAnalyzer` | `scanlog` | `classic-scanlog-core` | `ModGuidanceAnalyzer` | `ModGuidanceAnalyzer` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceCriteriaKind` | `scanlog` | `classic-config-core` | `ModSolutionCriteria` | `JsModGuidanceCriteriaKind` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceMatchState` | `scanlog` | `classic-scanlog-core` | `ModGuidanceMatchState` | `JsModGuidanceMatchState` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidancePlugin` | `scanlog` | `classic-scanlog-core` | `ModGuidanceAnalysisInput` | `JsModGuidancePlugin` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModSolutionGuidance` | `scanlog` | `classic-scanlog-core` | `ModSolutionGuidance` | `JsModSolutionGuidance` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModSolutionRule` | `scanlog` | `classic-config-core` | `ModSolutionEntry` | `JsModSolutionRule` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFinding` | `scanlog` | `classic-scanlog-core` | `NamedRecordFinding` | `JsNamedRecordFinding` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFinding` | `scanlog` | `classic-scanlog-core` | `FormIDFinding` | `JsFormIdFinding` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalysisInput` | `scanlog` | `classic-scanlog-core` | `FormIDFindingAnalysisInput` | `JsFormIdFindingAnalysisInput` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalysisResult` | `scanlog` | `classic-scanlog-core` | `FormIDFindingAnalysisResult` | `JsFormIdFindingAnalysisResult` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalyzer` | `scanlog` | `classic-scanlog-core` | `FormIDFindingAnalyzer` | `FormIdFindingAnalyzer` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDPlugin` | `scanlog` | `classic-scanlog-core` | `FormIDPlugin` | `JsFormIdPlugin` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDValueLookupStatus` | `scanlog` | `classic-scanlog-core` | `FormIDValueLookupStatus` | `JsFormIdValueLookupStatus` | `matched` |
+| `scanlog.formid_finding_analyzer.formid_finding_analyzer@rust` | `scanlog` | `classic-scanlog-core` | `formid_finding_analyzer@rust` | `None` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput` | `scanlog` | `classic-scanlog-core` | `NamedRecordFindingAnalysisInput` | `JsNamedRecordFindingAnalysisInput` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisResult` | `scanlog` | `classic-scanlog-core` | `NamedRecordFindingAnalysisResult` | `JsNamedRecordFindingAnalysisResult` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer` | `scanlog` | `classic-scanlog-core` | `NamedRecordFindingAnalyzer` | `NamedRecordFindingAnalyzer` | `matched` |
+| `scanlog.named_record_finding_analyzer.named_record_finding_analyzer@rust` | `scanlog` | `classic-scanlog-core` | `named_record_finding_analyzer@rust` | `None` | `matched` |
+| `scanlog.plugin_evidence_analyzer.PluginEvidence` | `scanlog` | `classic-scanlog-core` | `PluginEvidence` | `JsPluginEvidence` | `matched` |
+| `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisInput` | `scanlog` | `classic-scanlog-core` | `PluginEvidenceAnalysisInput` | `JsPluginEvidenceAnalysisInput` | `matched` |
+| `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisResult` | `scanlog` | `classic-scanlog-core` | `PluginEvidenceAnalysisResult` | `JsPluginEvidenceAnalysisResult` | `matched` |
+| `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer` | `scanlog` | `classic-scanlog-core` | `PluginEvidenceAnalyzer` | `PluginEvidenceAnalyzer` | `matched` |
+| `scanlog.plugin_evidence_analyzer.plugin_evidence_analyzer@rust` | `scanlog` | `classic-scanlog-core` | `plugin_evidence_analyzer@rust` | `None` | `matched` |
+| `scanlog.plugin_analyzer.detect_plugins_batch@rust` | `scanlog` | `classic-scanlog-core` | `detect_plugins_batch@rust` | `None` | `matched` |
+| `scanlog.error.error@rust` | `scanlog` | `classic-scanlog-core` | `error@rust` | `None` | `matched` |
+| `scanlog.formid.extract_formids_batch@rust` | `scanlog` | `classic-scanlog-core` | `extract_formids_batch@rust` | `None` | `matched` |
+| `scanlog.formid.formid@rust` | `scanlog` | `classic-scanlog-core` | `formid@rust` | `None` | `matched` |
+| `scanlog.formid_analyzer.formid_analyzer@rust` | `scanlog` | `classic-scanlog-core` | `formid_analyzer@rust` | `None` | `matched` |
+| `scanlog.gpu_detector.gpu_detector@rust` | `scanlog` | `classic-scanlog-core` | `gpu_detector@rust` | `None` | `matched` |
+| `scanlog.formid.is_valid_formid@rust` | `scanlog` | `classic-scanlog-core` | `is_valid_formid@rust` | `None` | `matched` |
+| `scanlog.mod_guidance_analyzer.mod_guidance_analyzer@rust` | `scanlog` | `classic-scanlog-core` | `mod_guidance_analyzer@rust` | `None` | `matched` |
+| `scanlog.papyrus.papyrus@rust` | `scanlog` | `classic-scanlog-core` | `papyrus@rust` | `None` | `matched` |
+| `scanlog.parser.parser@rust` | `scanlog` | `classic-scanlog-core` | `parser@rust` | `None` | `matched` |
+| `scanlog.patterns.patterns@rust` | `scanlog` | `classic-scanlog-core` | `patterns@rust` | `None` | `matched` |
+| `scanlog.plugin_analyzer.plugin_analyzer@rust` | `scanlog` | `classic-scanlog-core` | `plugin_analyzer@rust` | `None` | `matched` |
+| `scanlog.record_scanner.record_scanner@rust` | `scanlog` | `classic-scanlog-core` | `record_scanner@rust` | `None` | `matched` |
+| `scanlog.record_scanner.scan_records_batch@rust` | `scanlog` | `classic-scanlog-core` | `scan_records_batch@rust` | `None` | `matched` |
+| `scanlog.segment_key.segment_key@rust` | `scanlog` | `classic-scanlog-core` | `segment_key@rust` | `None` | `matched` |
+| `scanlog.analyzer.AnalyzerError` | `scanlog` | `classic-scanlog-core` | `AnalyzerError@rust` | `None` | `matched` |
+| `scanlog.analyzer.AnalyzerErrorCode` | `scanlog` | `classic-scanlog-core` | `AnalyzerErrorCode@rust` | `None` | `matched` |
+| `scanlog.analyzer.AnalyzerKind` | `scanlog` | `classic-scanlog-core` | `AnalyzerKind` | `JsAnalyzerKind` | `matched` |
+| `scanlog.analyzer.AnalyzerResult` | `scanlog` | `classic-scanlog-core` | `AnalyzerResult` | `JsCrashgenSettingsAnalysisResult` | `matched` |
+| `scanlog.analyzer.analyzer@rust` | `scanlog` | `classic-scanlog-core` | `analyzer@rust` | `None` | `matched` |
+| `scanlog.crashgen_settings_analyzer.AnalyzerSeverity` | `scanlog` | `classic-config-core` | `RuleSeverity` | `JsCrashgenExpectationSeverity` | `matched` |
+| `scanlog.crashgen_settings_analyzer.AutoscanReportPlacement` | `scanlog` | `classic-config-core` | `AutoscanReportPlacement` | `JsAutoscanReportPlacement` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenConfigLayout` | `scanlog` | `classic-config-core` | `ConfigLayout` | `JsCrashgenConfigLayout` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenExpectationKind` | `scanlog` | `classic-config-core` | `OutcomeKind` | `JsCrashgenExpectationOutcomeKind` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenExpectationOutcome` | `scanlog` | `classic-scanlog-core` | `CrashgenExpectationOutcome` | `JsCrashgenExpectationOutcome` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenSetting` | `scanlog` | `classic-scanlog-core` | `CrashgenSettingsAnalysisInput` | `JsCrashgenSetting` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisInput` | `scanlog` | `classic-scanlog-core` | `CrashgenSettingsAnalysisInput` | `JsCrashgenSettingsAnalysisInput` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisResult` | `scanlog` | `classic-scanlog-core` | `CrashgenSettingsAnalysisResult` | `JsCrashgenSettingsAnalysisResult` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalyzer` | `scanlog` | `classic-scanlog-core` | `CrashgenSettingsAnalyzer` | `CrashgenSettingsAnalyzer` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenVersion` | `scanlog` | `classic-scanlog-core` | `CrashgenSettingsAnalysisInput` | `JsCrashgenVersion` | `matched` |
+| `scanlog.crashgen_settings_analyzer.DisabledSettingNotice` | `scanlog` | `classic-scanlog-core` | `DisabledSettingNotice` | `JsDisabledSettingNotice` | `matched` |
+| `scanlog.crashgen_settings_analyzer.crashgen_settings_analyzer@rust` | `scanlog` | `classic-scanlog-core` | `crashgen_settings_analyzer@rust` | `None` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectAnalysisInput` | `scanlog` | `classic-scanlog-core` | `CrashSuspectAnalysisInput` | `JsCrashSuspectAnalysisInput` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectAnalysisResult` | `scanlog` | `classic-scanlog-core` | `CrashSuspectAnalysisResult` | `JsCrashSuspectAnalysisResult` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectAnalyzer` | `scanlog` | `classic-scanlog-core` | `CrashSuspectAnalyzer` | `CrashSuspectAnalyzer` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectFinding` | `scanlog` | `classic-scanlog-core` | `CrashSuspectFinding` | `JsCrashSuspectFinding` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectFindingKind` | `scanlog` | `classic-scanlog-core` | `CrashSuspectFindingKind` | `JsCrashSuspectFindingKind` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectMainErrorRule` | `scanlog` | `classic-config-core` | `SuspectErrorRule` | `JsCrashSuspectMainErrorRule` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectStackCountRule` | `scanlog` | `classic-config-core` | `SuspectStackCountRule` | `JsCrashSuspectStackCountRule` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectStackRule` | `scanlog` | `classic-config-core` | `SuspectStackRule` | `JsCrashSuspectStackRule` | `matched` |
+| `scanlog.crash_suspect_analyzer.crash_suspect_analyzer@rust` | `scanlog` | `classic-scanlog-core` | `crash_suspect_analyzer@rust` | `None` | `matched` |
+| `scanlog.formid_analyzer.validate_formids_batch@rust` | `scanlog` | `classic-scanlog-core` | `validate_formids_batch@rust` | `None` | `matched` |
+| `scanlog.version.version@rust` | `scanlog` | `classic-scanlog-core` | `version@rust` | `None` | `matched` |
+| `scanlog.patterns.CRASH_LOG_PATTERN` | `scanlog` | `classic-file-io-core` | `CRASH_LOG_PATTERN` | `CRASH_LOG_PATTERN` | `matched` |
+| `scanlog.gpu_detector.JsGpuInfo` | `scanlog` | `classic-scanlog-core` | `GpuInfo` | `JsGpuInfo` | `matched` |
+| `scanlog.parser.JsLogErrorEntry` | `scanlog` | `classic-scangame-core` | `LogErrorEntry` | `JsLogErrorEntry` | `matched` |
+| `scanlog.parser.JsLogSegments` | `scanlog` | `classic-scanlog-core` | `LogParser` | `JsLogSegments` | `matched` |
+| `scanlog.papyrus.JsPapyrusStats` | `scanlog` | `classic-scanlog-core` | `PapyrusStats` | `JsPapyrusStats` | `matched` |
+| `scanlog.settings_validator.checkXsePlugins` | `scanlog` | `classic-scangame-core` | `XseChecker` | `checkXsePlugins` | `matched` |
+| `scanlog.parser.parseXseLog` | `scanlog` | `classic-path-core` | `parse_xse_log` | `parseXseLog` | `matched` |
+| `config.ConfigError@rust` | `config` | `classic-config-core` | `ConfigError@rust` | `None` | `matched` |
+| `config.CoreModEntry@rust` | `config` | `classic-config-core` | `CoreModEntry@rust` | `None` | `matched` |
+| `config.CoreModExclude@rust` | `config` | `classic-config-core` | `CoreModExclude@rust` | `None` | `matched` |
+| `config.CrashgenEntryRaw@rust` | `config` | `classic-config-core` | `CrashgenEntryRaw@rust` | `None` | `matched` |
+| `config.ModSolutionCriteria@rust` | `config` | `classic-config-core` | `ModSolutionCriteria@rust` | `None` | `matched` |
+| `config.ModSolutionEntry@rust` | `config` | `classic-config-core` | `ModSolutionEntry@rust` | `None` | `matched` |
+| `config.SuspectErrorRule@rust` | `config` | `classic-config-core` | `SuspectErrorRule@rust` | `None` | `matched` |
+| `config.SuspectStackCountRule@rust` | `config` | `classic-config-core` | `SuspectStackCountRule@rust` | `None` | `matched` |
+| `config.SuspectStackRule@rust` | `config` | `classic-config-core` | `SuspectStackRule@rust` | `None` | `matched` |
+| `config.format_registry_game_version@rust` | `config` | `classic-config-core` | `format_registry_game_version@rust` | `None` | `matched` |
+| `config.resolve_registry_version_info@rust` | `config` | `classic-config-core` | `resolve_registry_version_info@rust` | `None` | `matched` |
+| `config.caches.DEFAULT_CACHE_CLEANUP_INTERVAL` | `config` | `classic-database-core` | `DEFAULT_CACHE_CLEANUP_INTERVAL_SECS` | `DEFAULT_CACHE_CLEANUP_INTERVAL` | `matched` |
+| `config.caches.DEFAULT_CACHE_CLEANUP_THRESHOLD` | `config` | `classic-database-core` | `DEFAULT_CACHE_CLEANUP_OP_THRESHOLD` | `DEFAULT_CACHE_CLEANUP_THRESHOLD` | `matched` |
+| `config.caches.DEFAULT_QUERY_CACHE_CAPACITY` | `config` | `classic-database-core` | `DEFAULT_QUERY_CACHE_CAPACITY` | `DEFAULT_QUERY_CACHE_CAPACITY` | `matched` |
+| `config.hash_cache.HashCacheStats` | `config` | `classic-file-io-core` | `CacheStats` | `HashCacheStats` | `matched` |
+| `config.scangame.JsConfigIssue` | `config` | `classic-scangame-core` | `ConfigIssue` | `JsConfigIssue` | `matched` |
+| `config.fcx.JsFcxConfigIssue` | `config` | `classic-scanlog-core` | `ConfigIssue` | `JsFcxConfigIssue` | `matched` |
+| `config.scangame.JsGameScanConfig` | `config` | `classic-scangame-core` | `GameScanConfig` | `JsGameScanConfig` | `matched` |
+| `config.scangame.JsIntegrityConfig` | `config` | `classic-scangame-core` | `IntegrityConfig` | `JsIntegrityConfig` | `matched` |
+| `config.scangame.JsTomlConfigIssue` | `config` | `classic-scangame-core` | `TomlConfigIssue` | `JsTomlConfigIssue` | `matched` |
+| `config.version_registry.JsXseConfig` | `config` | `classic-version-registry-core` | `XseConfig` | `JsXseConfig` | `matched` |
+| `config.scangame.JsEnbConfigResult` | `config` | `classic-scangame-core` | `EnbConfigResult` | `JsEnbConfigResult` | `matched` |
+| `config.duplicate_detector.JsConfigDuplicateDetector` | `config` | `classic-scangame-core` | `ConfigDuplicateDetector` | `JsConfigDuplicateDetector` | `matched` |
+| `config.hash_cache.clearHashCache` | `config` | `classic-file-io-core` | `FileHasher` | `clearHashCache` | `matched` |
+| `config.duplicate_detector.detectConfigDuplicates` | `config` | `classic-scangame-core` | `ConfigDuplicateDetector` | `detectConfigDuplicates` | `matched` |
+| `config.caches.getDefaultCacheCleanupInterval` | `config` | `classic-database-core` | `DEFAULT_CACHE_CLEANUP_INTERVAL_SECS` | `getDefaultCacheCleanupInterval` | `matched` |
+| `config.caches.getDefaultCacheCleanupThreshold` | `config` | `classic-database-core` | `DEFAULT_CACHE_CLEANUP_OP_THRESHOLD` | `getDefaultCacheCleanupThreshold` | `matched` |
+| `config.caches.getDefaultQueryCacheCapacity` | `config` | `classic-database-core` | `DEFAULT_QUERY_CACHE_CAPACITY` | `getDefaultQueryCacheCapacity` | `matched` |
+| `config.hash_cache.getHashCacheStats` | `config` | `classic-file-io-core` | `FileHasher` | `getHashCacheStats` | `matched` |
+| `config.hash_cache.resetHashCacheStats` | `config` | `classic-file-io-core` | `FileHasher` | `resetHashCacheStats` | `matched` |
+| `version-pe-extract` | `version_registry` | `classic-version-core` | `extract_pe_version` | `extractPeVersion` | `matched` |
+| `version-pe-is-valid-path` | `version_registry` | `classic-version-core` | `is_valid_executable_path` | `isValidPePath` | `matched` |
+| `version-pe-shape` | `version_registry` | `classic-version-core` | `PeVersionResult` | `JsPeVersion` | `matched` |
+| `version-registry-crashgen-entry` | `version_registry` | `classic-version-registry-core` | `CrashgenConfig` | `JsCrashgenRegistryEntry` | `matched` |
+| `version-registry-crashgen-settings-rules` | `version_registry` | `classic-config-core` | `CrashgenSettingsRules` | `JsCrashgenSettingsRules` | `matched` |
+| `version-registry-check-crashgen-config-with-rules` | `version_registry` | `classic-scangame-core` | `CrashgenCheckOrchestrator` | `checkCrashgenConfigWithRules` | `matched` |
+| `version-registry-check-crashgen-full-with-rules` | `version_registry` | `classic-scangame-core` | `CrashgenCheckOrchestrator` | `checkCrashgenFullWithRules` | `matched` |
+| `config.ModConflictEntry@rust` | `config` | `classic-config-core` | `ModConflictEntry@rust` | `None` | `matched` |
+| `version_registry.Fallout4Version@rust` | `version_registry` | `classic-version-registry-core` | `Fallout4Version@rust` | `None` | `matched` |
+| `shared.GameId@rust` | `shared` | `classic-shared-core` | `GameId@rust` | `None` | `matched` |
+| `version_registry.NULL_VERSION@rust` | `version_registry` | `classic-version-registry-core` | `NULL_VERSION@rust` | `None` | `matched` |
+| `settings.YamlFile@rust` | `settings` | `classic-settings-core` | `YamlFile@rust` | `None` | `matched` |
+| `version_registry.display_name@rust` | `version_registry` | `classic-version-registry-core` | `display_name@rust` | `None` | `matched` |
+| `version_registry.display_name_string@rust` | `version_registry` | `classic-version-registry-core` | `display_name_string@rust` | `None` | `matched` |
+| `version_registry.game_version@rust` | `version_registry` | `classic-version-registry-core` | `game_version@rust` | `None` | `matched` |
+| `version_registry.get_version_info@rust` | `version_registry` | `classic-version-registry-core` | `get_version_info@rust` | `None` | `matched` |
+| `version_registry.short_name@rust` | `version_registry` | `classic-version-registry-core` | `short_name@rust` | `None` | `matched` |
+| `version_registry.version_semver@rust` | `version_registry` | `classic-version-registry-core` | `version_semver@rust` | `None` | `matched` |
+| `version_registry.xse_acronym@rust` | `version_registry` | `classic-version-registry-core` | `xse_acronym@rust` | `None` | `matched` |
+| `version_registry.xse_acronym_string@rust` | `version_registry` | `classic-version-registry-core` | `xse_acronym_string@rust` | `None` | `matched` |
+| `version_registry.xse_config@rust` | `version_registry` | `classic-version-registry-core` | `xse_config@rust` | `None` | `matched` |
+| `crashgen_settings.CheckRule@rust` | `config` | `classic-config-core` | `CheckRule@rust` | `None` | `matched` |
+| `crashgen_settings.ConfigLayout@rust` | `config` | `classic-config-core` | `ConfigLayout@rust` | `None` | `matched` |
+| `crashgen_settings.EvaluationContext@rust` | `config` | `classic-config-core` | `EvaluationContext@rust` | `None` | `matched` |
+| `crashgen_settings.EvaluationOutcome@rust` | `config` | `classic-config-core` | `EvaluationOutcome@rust` | `None` | `matched` |
+| `crashgen_settings.EvaluationResult@rust` | `config` | `classic-config-core` | `EvaluationResult@rust` | `None` | `matched` |
+| `crashgen_settings.ExpectedValue@rust` | `config` | `classic-config-core` | `ExpectedValue@rust` | `None` | `matched` |
+| `crashgen_settings.OutcomeKind@rust` | `config` | `classic-config-core` | `OutcomeKind@rust` | `None` | `matched` |
+| `crashgen_settings.Predicate@rust` | `config` | `classic-config-core` | `Predicate@rust` | `None` | `matched` |
+| `crashgen_settings.PreflightAction@rust` | `config` | `classic-config-core` | `PreflightAction@rust` | `None` | `matched` |
+| `crashgen_settings.PreflightActionKind@rust` | `config` | `classic-config-core` | `PreflightActionKind@rust` | `None` | `matched` |
+| `crashgen_settings.PreflightRule@rust` | `config` | `classic-config-core` | `PreflightRule@rust` | `None` | `matched` |
+| `crashgen_settings.RuleMessages@rust` | `config` | `classic-config-core` | `RuleMessages@rust` | `None` | `matched` |
+| `crashgen_settings.RuleReportBucket@rust` | `config` | `classic-config-core` | `RuleReportBucket@rust` | `None` | `matched` |
+| `crashgen_settings.RuleSeverity@rust` | `config` | `classic-config-core` | `RuleSeverity@rust` | `None` | `matched` |
+| `crashgen_settings.RuleTarget@rust` | `config` | `classic-config-core` | `RuleTarget@rust` | `None` | `matched` |
+| `crashgen_settings.TargetValueType@rust` | `config` | `classic-config-core` | `TargetValueType@rust` | `None` | `matched` |
+| `crashgen_settings.parse@rust` | `config` | `classic-config-core` | `parse@rust` | `None` | `matched` |
+| `crashgen_settings.parse@rust` | `config` | `classic-config-core` | `parse@rust` | `None` | `matched` |
+| `crashgen_settings.parse@rust` | `config` | `classic-config-core` | `parse@rust` | `None` | `matched` |
+| `crashgen_settings.parse@rust` | `config` | `classic-config-core` | `parse@rust` | `None` | `matched` |
+| `crashgen_settings.parse@rust` | `config` | `classic-config-core` | `parse@rust` | `None` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookup` | `database` | `classic-database-core` | `FormIdValueLookup` | `JsFormIdValueLookup` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupEntry` | `database` | `classic-database-core` | `FormIdValueLookupEntry` | `JsFormIdValueLookupEntry` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupOutcome` | `database` | `classic-database-core` | `FormIdValueLookupOutcome` | `JsFormIdValueLookupOutcome` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupOutcomeKind` | `database` | `classic-database-core` | `FormIdValueLookupOutcome` | `JsFormIdValueLookupOutcomeKind` | `matched` |
+| `database.FormIdValueLookup@rust` | `database` | `classic-database-core` | `FormIdValueLookup@rust` | `None` | `matched` |
+| `database.FormIdValueLookupEntry@rust` | `database` | `classic-database-core` | `FormIdValueLookupEntry@rust` | `None` | `matched` |
+| `database.FormIdValueLookupError@rust` | `database` | `classic-database-core` | `FormIdValueLookupError@rust` | `None` | `matched` |
+| `database.FormIdValueLookupInMemoryReply@rust` | `database` | `classic-database-core` | `FormIdValueLookupInMemoryReply@rust` | `None` | `matched` |
+| `database.FormIdValueLookupOutcome@rust` | `database` | `classic-database-core` | `FormIdValueLookupOutcome@rust` | `None` | `matched` |
+| `database.BATCH_CACHE_TTL_SECS@rust` | `database` | `classic-database-core` | `BATCH_CACHE_TTL_SECS@rust` | `None` | `matched` |
+| `database.CacheEntry@rust` | `database` | `classic-database-core` | `CacheEntry@rust` | `None` | `matched` |
+| `database.CacheKey@rust` | `database` | `classic-database-core` | `CacheKey@rust` | `None` | `matched` |
+| `database.DEFAULT_CACHE_TTL_SECS@rust` | `database` | `classic-database-core` | `DEFAULT_CACHE_TTL_SECS@rust` | `None` | `matched` |
+| `database.DatabaseError@rust` | `database` | `classic-database-core` | `DatabaseError@rust` | `None` | `matched` |
+| `database.DatabasePool@rust` | `database` | `classic-database-core` | `DatabasePool@rust` | `None` | `matched` |
+| `database.MAX_CACHE_CLEANUP_INTERVAL_SECS@rust` | `database` | `classic-database-core` | `MAX_CACHE_CLEANUP_INTERVAL_SECS@rust` | `None` | `matched` |
+| `database.MAX_CACHE_CLEANUP_OP_THRESHOLD@rust` | `database` | `classic-database-core` | `MAX_CACHE_CLEANUP_OP_THRESHOLD@rust` | `None` | `matched` |
+| `database.MAX_CACHE_TTL_SECS@rust` | `database` | `classic-database-core` | `MAX_CACHE_TTL_SECS@rust` | `None` | `matched` |
+| `database.MAX_QUERY_CACHE_CAPACITY@rust` | `database` | `classic-database-core` | `MAX_QUERY_CACHE_CAPACITY@rust` | `None` | `matched` |
+| `database.MIN_CACHE_CLEANUP_INTERVAL_SECS@rust` | `database` | `classic-database-core` | `MIN_CACHE_CLEANUP_INTERVAL_SECS@rust` | `None` | `matched` |
+| `database.MIN_CACHE_CLEANUP_OP_THRESHOLD@rust` | `database` | `classic-database-core` | `MIN_CACHE_CLEANUP_OP_THRESHOLD@rust` | `None` | `matched` |
+| `database.MIN_QUERY_CACHE_CAPACITY@rust` | `database` | `classic-database-core` | `MIN_QUERY_CACHE_CAPACITY@rust` | `None` | `matched` |
+| `database.PoolStatistics@rust` | `database` | `classic-database-core` | `PoolStatistics@rust` | `None` | `matched` |
+| `file_io.BackupType@rust` | `file_io` | `classic-file-io-core` | `BackupType@rust` | `None` | `matched` |
+| `file_io.CRASH_AUTOSCAN_PATTERN@rust` | `file_io` | `classic-file-io-core` | `CRASH_AUTOSCAN_PATTERN@rust` | `None` | `matched` |
+| `file_io.DDSAnalyzer@rust` | `file_io` | `classic-file-io-core` | `DDSAnalyzer@rust` | `None` | `matched` |
+| `file_io.DDSHeader@rust` | `file_io` | `classic-file-io-core` | `DDSHeader@rust` | `None` | `matched` |
+| `file_io.DDSIssue@rust` | `file_io` | `classic-file-io-core` | `DDSIssue@rust` | `None` | `matched` |
+| `file_io.FileGeneratorConfig@rust` | `file_io` | `classic-file-io-core` | `FileGeneratorConfig@rust` | `None` | `matched` |
+| `file_io.FileIOError@rust` | `file_io` | `classic-file-io-core` | `FileIOError@rust` | `None` | `matched` |
+| `file_io.FileOperation@rust` | `file_io` | `classic-file-io-core` | `FileOperation@rust` | `None` | `matched` |
+| `file_io.GameTarget@rust` | `file_io` | `classic-file-io-core` | `GameTarget@rust` | `None` | `matched` |
+| `file_io.LogCollector@rust` | `file_io` | `classic-file-io-core` | `LogCollector@rust` | `None` | `matched` |
+| `file_io.RejectedInput@rust` | `file_io` | `classic-file-io-core` | `RejectedInput@rust` | `None` | `matched` |
+| `file_io.TargetedResolution@rust` | `file_io` | `classic-file-io-core` | `TargetedResolution@rust` | `None` | `matched` |
+| `file_io.backup@rust` | `file_io` | `classic-file-io-core` | `backup@rust` | `None` | `matched` |
+| `file_io.core@rust` | `file_io` | `classic-file-io-core` | `core@rust` | `None` | `matched` |
+| `file_io.dds@rust` | `file_io` | `classic-file-io-core` | `dds@rust` | `None` | `matched` |
+| `file_io.encoding@rust` | `file_io` | `classic-file-io-core` | `encoding@rust` | `None` | `matched` |
+| `file_io.game_files@rust` | `file_io` | `classic-file-io-core` | `game_files@rust` | `None` | `matched` |
+| `file_io.generate_local_yaml@rust` | `file_io` | `classic-file-io-core` | `generate_local_yaml@rust` | `None` | `matched` |
+| `file_io.generation@rust` | `file_io` | `classic-file-io-core` | `generation@rust` | `None` | `matched` |
+| `file_io.hash@rust` | `file_io` | `classic-file-io-core` | `hash@rust` | `None` | `matched` |
+| `file_io.log_collection@rust` | `file_io` | `classic-file-io-core` | `log_collection@rust` | `None` | `matched` |
+| `file_io.resolve_targeted_inputs@rust` | `file_io` | `classic-file-io-core` | `resolve_targeted_inputs@rust` | `None` | `matched` |
+| `file_io.similarity@rust` | `file_io` | `classic-file-io-core` | `similarity@rust` | `None` | `matched` |
+| `file_io.similarity_ratio@rust` | `file_io` | `classic-file-io-core` | `similarity_ratio@rust` | `None` | `matched` |
+| `message.ContractEvent@rust` | `message` | `classic-message-core` | `ContractEvent@rust` | `None` | `matched` |
+| `message.EVENT_STARTUP_ACCELERATION_STATUS@rust` | `message` | `classic-message-core` | `EVENT_STARTUP_ACCELERATION_STATUS@rust` | `None` | `matched` |
+| `message.EVENT_STARTUP_BINDING_CONTRACT_FAILED@rust` | `message` | `classic-message-core` | `EVENT_STARTUP_BINDING_CONTRACT_FAILED@rust` | `None` | `matched` |
+| `message.EVENT_STARTUP_BINDING_CONTRACT_VALIDATED@rust` | `message` | `classic-message-core` | `EVENT_STARTUP_BINDING_CONTRACT_VALIDATED@rust` | `None` | `matched` |
+| `message.Logger@rust` | `message` | `classic-message-core` | `Logger@rust` | `None` | `matched` |
+| `message.format_contract_event@rust` | `message` | `classic-message-core` | `format_contract_event@rust` | `None` | `matched` |
+| `message.logging@rust` | `message` | `classic-message-core` | `logging@rust` | `None` | `matched` |
+| `message.redact_contract_fields@rust` | `message` | `classic-message-core` | `redact_contract_fields@rust` | `None` | `matched` |
+| `message.redact_field_value@rust` | `message` | `classic-message-core` | `redact_field_value@rust` | `None` | `matched` |
+| `path.drive_exists@rust` | `path` | `classic-path-core` | `drive_exists@rust` | `None` | `matched` |
+| `path.is_valid_executable_path@rust` | `path` | `classic-path-core` | `is_valid_executable_path@rust` | `None` | `matched` |
+| `path.BackupError@rust` | `path` | `classic-path-core` | `BackupError@rust` | `None` | `matched` |
+| `path.BackupResult@rust` | `path` | `classic-path-core` | `BackupResult@rust` | `None` | `matched` |
+| `path.DocsPathError@rust` | `path` | `classic-path-core` | `DocsPathError@rust` | `None` | `matched` |
+| `path.DocsPathResult@rust` | `path` | `classic-path-core` | `DocsPathResult@rust` | `None` | `matched` |
+| `path.DocumentsPathManager@rust` | `path` | `classic-path-core` | `DocumentsPathManager@rust` | `None` | `matched` |
+| `path.GamePathError@rust` | `path` | `classic-path-core` | `GamePathError@rust` | `None` | `matched` |
+| `path.GamePathResult@rust` | `path` | `classic-path-core` | `GamePathResult@rust` | `None` | `matched` |
+| `path.IniCheckResult@rust` | `path` | `classic-path-core` | `IniCheckResult@rust` | `None` | `matched` |
+| `path.IniFile@rust` | `path` | `classic-path-core` | `IniFile@rust` | `None` | `matched` |
+| `path.PathError@rust` | `path` | `classic-path-core` | `PathError@rust` | `None` | `matched` |
+| `path.PathResult@rust` | `path` | `classic-path-core` | `PathResult@rust` | `None` | `matched` |
+| `path.ValidationError@rust` | `path` | `classic-path-core` | `ValidationError@rust` | `None` | `matched` |
+| `path.ValidationResult@rust` | `path` | `classic-scangame-core` | `ValidationResult@rust` | `None` | `matched` |
+| `path.XseVersion@rust` | `path` | `classic-path-core` | `XseVersion@rust` | `None` | `matched` |
+| `path.check_drive_exists@rust` | `path` | `classic-path-core` | `check_drive_exists@rust` | `None` | `matched` |
+| `path.has_read_permission@rust` | `path` | `classic-path-core` | `has_read_permission@rust` | `None` | `matched` |
+| `path.has_write_permission@rust` | `path` | `classic-path-core` | `has_write_permission@rust` | `None` | `matched` |
+| `path.remove_readonly_attribute@rust` | `path` | `classic-path-core` | `remove_readonly_attribute@rust` | `None` | `matched` |
+| `path.validate_is_directory@rust` | `path` | `classic-path-core` | `validate_is_directory@rust` | `None` | `matched` |
+| `path.validate_is_file@rust` | `path` | `classic-path-core` | `validate_is_file@rust` | `None` | `matched` |
+| `path.validate_path_exists@rust` | `path` | `classic-path-core` | `validate_path_exists@rust` | `None` | `matched` |
+| `path.validate_settings_path@rust` | `path` | `classic-path-core` | `validate_settings_path@rust` | `None` | `matched` |
+| `path.validate_settings_paths@rust` | `path` | `classic-path-core` | `validate_settings_paths@rust` | `None` | `matched` |
+| `perf.Timer@rust` | `perf` | `classic-perf-core` | `Timer@rust` | `None` | `matched` |
+| `perf.start_timer@rust` | `perf` | `classic-perf-core` | `start_timer@rust` | `None` | `matched` |
+| `registry.Keys@rust` | `registry` | `classic-registry-core` | `Keys@rust` | `None` | `matched` |
+| `registry.get_application_dir@rust` | `registry` | `classic-registry-core` | `get_application_dir@rust` | `None` | `matched` |
+| `registry.get_game_path_gui@rust` | `registry` | `classic-registry-core` | `get_game_path_gui@rust` | `None` | `matched` |
+| `registry.get_game_version@rust` | `registry` | `classic-registry-core` | `get_game_version@rust` | `None` | `matched` |
+| `registry.get_game_version_string@rust` | `registry` | `classic-registry-core` | `get_game_version_string@rust` | `None` | `matched` |
+| `registry.get_local_dir@rust` | `registry` | `classic-registry-core` | `get_local_dir@rust` | `None` | `matched` |
+| `registry.get_manual_docs_gui@rust` | `registry` | `classic-registry-core` | `get_manual_docs_gui@rust` | `None` | `matched` |
+| `registry.get_yaml_cache@rust` | `registry` | `classic-registry-core` | `get_yaml_cache@rust` | `None` | `matched` |
+| `registry.is_enb_present@rust` | `registry` | `classic-registry-core` | `is_enb_present@rust` | `None` | `matched` |
+| `registry.is_gui_mode@rust` | `registry` | `classic-registry-core` | `is_gui_mode@rust` | `None` | `matched` |
+| `registry.is_registered@rust` | `registry` | `classic-registry-core` | `is_registered@rust` | `None` | `matched` |
+| `registry.is_version_auto_detected@rust` | `registry` | `classic-registry-core` | `is_version_auto_detected@rust` | `None` | `matched` |
+| `registry.is_xse_valid@rust` | `registry` | `classic-registry-core` | `is_xse_valid@rust` | `None` | `matched` |
+| `registry.set_application_dir@rust` | `registry` | `classic-registry-core` | `set_application_dir@rust` | `None` | `matched` |
+| `scangame.AddressLibInfo@rust` | `scangame` | `classic-scangame-core` | `AddressLibInfo@rust` | `None` | `matched` |
+| `scangame.BA2Error@rust` | `scangame` | `classic-scangame-core` | `BA2Error@rust` | `None` | `matched` |
+| `scangame.BA2Issues@rust` | `scangame` | `classic-scangame-core` | `BA2Issues@rust` | `None` | `matched` |
+| `scangame.BA2Scanner@rust` | `scangame` | `classic-scangame-core` | `BA2Scanner@rust` | `None` | `matched` |
+| `scangame.CachedConfigFile@rust` | `scangame` | `classic-scangame-core` | `CachedConfigFile@rust` | `None` | `matched` |
+| `scangame.CheckResult@rust` | `scangame` | `classic-scangame-core` | `CheckResult@rust` | `None` | `matched` |
+| `scangame.CheckType@rust` | `scangame` | `classic-scangame-core` | `CheckType@rust` | `None` | `matched` |
+| `scangame.ConfigCacheError@rust` | `scangame` | `classic-scangame-core` | `ConfigCacheError@rust` | `None` | `matched` |
+| `scangame.ConfigFileCache@rust` | `scangame` | `classic-scangame-core` | `ConfigFileCache@rust` | `None` | `matched` |
+| `scangame.CrashgenChecker@rust` | `scangame` | `classic-scangame-core` | `CrashgenChecker@rust` | `None` | `matched` |
+| `scangame.CrashgenOrchestratorError@rust` | `scangame` | `classic-scangame-core` | `CrashgenOrchestratorError@rust` | `None` | `matched` |
+| `scangame.CrashgenReport@rust` | `scangame` | `classic-scangame-core` | `CrashgenReport@rust` | `None` | `matched` |
+| `scangame.DuplicateEntry@rust` | `scangame` | `classic-scangame-core` | `DuplicateEntry@rust` | `None` | `matched` |
+| `scangame.DuplicateGroup@rust` | `scangame` | `classic-scangame-core` | `DuplicateGroup@rust` | `None` | `matched` |
+| `scangame.EnbChecker@rust` | `scangame` | `classic-scangame-core` | `EnbChecker@rust` | `None` | `matched` |
+| `scangame.EnbError@rust` | `scangame` | `classic-scangame-core` | `EnbError@rust` | `None` | `matched` |
+| `scangame.EnbResult@rust` | `scangame` | `classic-scangame-core` | `EnbResult@rust` | `None` | `matched` |
+| `scangame.EnbValidationResult@rust` | `scangame` | `classic-scangame-core` | `EnbValidationResult@rust` | `None` | `matched` |
+| `scangame.GameIntegrityChecker@rust` | `scangame` | `classic-scangame-core` | `GameIntegrityChecker@rust` | `None` | `matched` |
+| `scangame.GameScanOrchestrator@rust` | `scangame` | `classic-scangame-core` | `GameScanOrchestrator@rust` | `None` | `matched` |
+| `scangame.GameScanResult@rust` | `scangame` | `classic-scangame-core` | `GameScanResult@rust` | `None` | `matched` |
+| `scangame.IniError@rust` | `scangame` | `classic-scangame-core` | `IniError@rust` | `None` | `matched` |
+| `scangame.IniValidator@rust` | `scangame` | `classic-scangame-core` | `IniValidator@rust` | `None` | `matched` |
+| `scangame.IntegrityCheckResult@rust` | `scangame` | `classic-scangame-core` | `IntegrityCheckResult@rust` | `None` | `matched` |
+| `scangame.IntegrityError@rust` | `scangame` | `classic-scangame-core` | `IntegrityError@rust` | `None` | `matched` |
+| `scangame.IssueSeverity@rust` | `scangame` | `classic-scangame-core` | `IssueSeverity@rust` | `None` | `matched` |
+| `scangame.LogError@rust` | `scangame` | `classic-scangame-core` | `LogError@rust` | `None` | `matched` |
+| `scangame.LogProcessor@rust` | `scangame` | `classic-scangame-core` | `LogProcessor@rust` | `None` | `matched` |
+| `scangame.ModIniScanResult@rust` | `scangame` | `classic-scangame-core` | `ModIniScanResult@rust` | `None` | `matched` |
+| `scangame.ModIniScanner@rust` | `scangame` | `classic-scangame-core` | `ModIniScanner@rust` | `None` | `matched` |
+| `scangame.ModScanResult@rust` | `scangame` | `classic-scangame-core` | `ModScanResult@rust` | `None` | `matched` |
+| `scangame.OrchestratorError@rust` | `scangame` | `classic-scangame-core` | `OrchestratorError@rust` | `None` | `matched` |
+| `scangame.ScanGameError@rust` | `scangame` | `classic-scangame-core` | `ScanGameError@rust` | `None` | `matched` |
+| `scangame.ScanReportBuilder@rust` | `scangame` | `classic-scangame-core` | `ScanReportBuilder@rust` | `None` | `matched` |
+| `scangame.ScanValidators@rust` | `scangame` | `classic-scangame-core` | `ScanValidators@rust` | `None` | `matched` |
+| `scangame.TomlError@rust` | `scangame` | `classic-scangame-core` | `TomlError@rust` | `None` | `matched` |
+| `scangame.TomlIssueSeverity@rust` | `scangame` | `classic-scangame-core` | `TomlIssueSeverity@rust` | `None` | `matched` |
+| `scangame.UnpackedError@rust` | `scangame` | `classic-scangame-core` | `UnpackedError@rust` | `None` | `matched` |
+| `scangame.UnpackedIssues@rust` | `scangame` | `classic-scangame-core` | `UnpackedIssues@rust` | `None` | `matched` |
+| `scangame.UnpackedScanner@rust` | `scangame` | `classic-scangame-core` | `UnpackedScanner@rust` | `None` | `matched` |
+| `scangame.VERSION@rust` | `scangame` | `classic-update-core` | `VERSION@rust` | `None` | `matched` |
+| `scangame.ValidationResult@rust` | `scangame` | `classic-scangame-core` | `ValidationResult@rust` | `None` | `matched` |
+| `scangame.VsyncEntry@rust` | `scangame` | `classic-scangame-core` | `VsyncEntry@rust` | `None` | `matched` |
+| `scangame.WryeBashParser@rust` | `scangame` | `classic-scangame-core` | `WryeBashParser@rust` | `None` | `matched` |
+| `scangame.WryeError@rust` | `scangame` | `classic-scangame-core` | `WryeError@rust` | `None` | `matched` |
+| `scangame.WryeIssue@rust` | `scangame` | `classic-scangame-core` | `WryeIssue@rust` | `None` | `matched` |
+| `scangame.WryeSeverity@rust` | `scangame` | `classic-scangame-core` | `WryeSeverity@rust` | `None` | `matched` |
+| `scangame.XseError@rust` | `scangame` | `classic-xse-core` | `XseError@rust` | `None` | `matched` |
+| `scangame.ba2@rust` | `scangame` | `classic-scangame-core` | `ba2@rust` | `None` | `matched` |
+| `scangame.config_cache@rust` | `scangame` | `classic-scangame-core` | `config_cache@rust` | `None` | `matched` |
+| `scangame.crashgen_orchestrator@rust` | `scangame` | `classic-scangame-core` | `crashgen_orchestrator@rust` | `None` | `matched` |
+| `scangame.detect_config_issues@rust` | `scangame` | `classic-scangame-core` | `detect_config_issues@rust` | `None` | `matched` |
+| `scangame.enb@rust` | `scangame` | `classic-scangame-core` | `enb@rust` | `None` | `matched` |
+| `scangame.game_report@rust` | `scangame` | `classic-scangame-core` | `game_report@rust` | `None` | `matched` |
+| `scangame.ini@rust` | `scangame` | `classic-scangame-core` | `ini@rust` | `None` | `matched` |
+| `scangame.integrity@rust` | `scangame` | `classic-scangame-core` | `integrity@rust` | `None` | `matched` |
+| `scangame.logs@rust` | `scangame` | `classic-scangame-core` | `logs@rust` | `None` | `matched` |
+| `scangame.mod_ini@rust` | `scangame` | `classic-scangame-core` | `mod_ini@rust` | `None` | `matched` |
+| `scangame.toml@rust` | `scangame` | `classic-scangame-core` | `toml@rust` | `None` | `matched` |
+| `scangame.unpacked@rust` | `scangame` | `classic-scangame-core` | `unpacked@rust` | `None` | `matched` |
+| `scangame.wrye@rust` | `scangame` | `classic-scangame-core` | `wrye@rust` | `None` | `matched` |
+| `scangame.xse@rust` | `scangame` | `classic-scangame-core` | `xse@rust` | `None` | `matched` |
+| `settings.SettingsError@rust` | `settings` | `classic-settings-core` | `SettingsError@rust` | `None` | `matched` |
+| `settings.SettingsSource@rust` | `settings` | `classic-settings-core` | `SettingsSource@rust` | `None` | `matched` |
+| `settings.Yaml@rust` | `settings` | `classic-settings-core` | `Yaml@rust` | `None` | `matched` |
+| `settings.cache_keys@rust` | `settings` | `classic-settings-core` | `cache_keys@rust` | `None` | `matched` |
+| `settings.cache_size@rust` | `settings` | `classic-settings-core` | `cache_size@rust` | `None` | `matched` |
+| `settings.cache_stats@rust` | `settings` | `classic-settings-core` | `cache_stats@rust` | `None` | `matched` |
+| `settings.clear_cache@rust` | `settings` | `classic-settings-core` | `clear_cache@rust` | `None` | `matched` |
+| `settings.get_cached@rust` | `settings` | `classic-settings-core` | `get_cached@rust` | `None` | `matched` |
+| `settings.invalidate@rust` | `settings` | `classic-settings-core` | `invalidate@rust` | `None` | `matched` |
+| `settings.is_cached@rust` | `settings` | `classic-settings-core` | `is_cached@rust` | `None` | `matched` |
+| `settings.load_settings_async@rust` | `settings` | `classic-settings-core` | `load_settings_async@rust` | `None` | `matched` |
+| `settings.load_settings_sync@rust` | `settings` | `classic-settings-core` | `load_settings_sync@rust` | `None` | `matched` |
+| `settings.load_yaml_async@rust` | `settings` | `classic-settings-core` | `load_yaml_async@rust` | `None` | `matched` |
+| `settings.load_yaml_batch_async@rust` | `settings` | `classic-settings-core` | `load_yaml_batch_async@rust` | `None` | `matched` |
+| `settings.load_yaml_batch_sync@rust` | `settings` | `classic-settings-core` | `load_yaml_batch_sync@rust` | `None` | `matched` |
+| `settings.load_yaml_merged_async@rust` | `settings` | `classic-settings-core` | `load_yaml_merged_async@rust` | `None` | `matched` |
+| `settings.load_yaml_merged_sync@rust` | `settings` | `classic-settings-core` | `load_yaml_merged_sync@rust` | `None` | `matched` |
+| `settings.load_yaml_sync@rust` | `settings` | `classic-settings-core` | `load_yaml_sync@rust` | `None` | `matched` |
+| `settings.merge_yaml_documents@rust` | `settings` | `classic-settings-core` | `merge_yaml_documents@rust` | `None` | `matched` |
+| `settings.parse_yaml_content@rust` | `settings` | `classic-settings-core` | `parse_yaml_content@rust` | `None` | `matched` |
+| `settings.reset_cache_stats@rust` | `settings` | `classic-settings-core` | `reset_cache_stats@rust` | `None` | `matched` |
+| `settings.validators@rust` | `settings` | `classic-settings-core` | `validators@rust` | `None` | `matched` |
+| `shared.ClassicError@rust` | `shared` | `classic-shared-core` | `ClassicError@rust` | `None` | `matched` |
+| `shared.ClassicResult@rust` | `shared` | `classic-shared-core` | `ClassicResult@rust` | `None` | `matched` |
+| `shared.IntoClassicError@rust` | `shared` | `classic-shared-core` | `IntoClassicError@rust` | `None` | `matched` |
+| `shared.RuntimeConfig@rust` | `shared` | `classic-shared-core` | `RuntimeConfig@rust` | `None` | `matched` |
+| `shared.cpu_optimized@rust` | `shared` | `classic-shared-core` | `cpu_optimized@rust` | `None` | `matched` |
+| `shared.errors@rust` | `shared` | `classic-shared-core` | `errors@rust` | `None` | `matched` |
+| `shared.io_optimized@rust` | `shared` | `classic-shared-core` | `io_optimized@rust` | `None` | `matched` |
+| `shared.minimal@rust` | `shared` | `classic-shared-core` | `minimal@rust` | `None` | `matched` |
+| `shared.performance_core@rust` | `shared` | `classic-shared-core` | `performance_core@rust` | `None` | `matched` |
+| `update.GithubAsset@rust` | `update` | `classic-update-core` | `GithubAsset@rust` | `None` | `matched` |
+| `update.GithubClient@rust` | `update` | `classic-update-core` | `GithubClient@rust` | `None` | `matched` |
+| `update.GithubRelease@rust` | `update` | `classic-update-core` | `GithubRelease@rust` | `None` | `matched` |
+| `update.UpdateError@rust` | `update` | `classic-update-core` | `UpdateError@rust` | `None` | `matched` |
+| `update.VERSION@rust` | `update` | `classic-update-core` | `VERSION@rust` | `None` | `matched` |
+| `update.github@rust` | `update` | `classic-update-core` | `github@rust` | `None` | `matched` |
+| `version.NULL_VERSION@rust` | `version_registry` | `classic-version-registry-core` | `NULL_VERSION@rust` | `None` | `matched` |
+| `version.PeVersionError@rust` | `version` | `classic-version-core` | `PeVersionError@rust` | `None` | `matched` |
+| `version.VersionError@rust` | `version` | `classic-version-core` | `VersionError@rust` | `None` | `matched` |
+| `version.VersionResult@rust` | `version` | `classic-version-core` | `VersionResult@rust` | `None` | `matched` |
+| `version.compare_versions@rust` | `version` | `classic-xse-core` | `compare_versions@rust` | `None` | `matched` |
+| `version.extract_all_versions@rust` | `version` | `classic-version-core` | `extract_all_versions@rust` | `None` | `matched` |
+| `version.extract_version_from_filename@rust` | `version` | `classic-version-core` | `extract_version_from_filename@rust` | `None` | `matched` |
+| `version.extract_version_from_log@rust` | `version` | `classic-version-core` | `extract_version_from_log@rust` | `None` | `matched` |
+| `version.format_version@rust` | `version` | `classic-version-core` | `format_version@rust` | `None` | `matched` |
+| `version.is_known_f4se_version@rust` | `version` | `classic-version-core` | `is_known_f4se_version@rust` | `None` | `matched` |
+| `version.is_known_fallout4_version@rust` | `version` | `classic-version-core` | `is_known_fallout4_version@rust` | `None` | `matched` |
+| `version.parse_version@rust` | `version` | `classic-xse-core` | `parse_version@rust` | `None` | `matched` |
+| `version.pe_version@rust` | `version` | `classic-version-core` | `pe_version@rust` | `None` | `matched` |
+| `version.try_parse_version@rust` | `version` | `classic-xse-core` | `try_parse_version@rust` | `None` | `matched` |
+| `web.CLASSIC_VERSION@rust` | `web` | `classic-web-core` | `CLASSIC_VERSION@rust` | `None` | `matched` |
+| `web.ModSite@rust` | `web` | `classic-web-core` | `ModSite@rust` | `None` | `matched` |
+| `web.USER_AGENT_PREFIX@rust` | `web` | `classic-web-core` | `USER_AGENT_PREFIX@rust` | `None` | `matched` |
+| `web.WebError@rust` | `web` | `classic-web-core` | `WebError@rust` | `None` | `matched` |
+| `web.WebResult@rust` | `web` | `classic-web-core` | `WebResult@rust` | `None` | `matched` |
+| `web.base_url@rust` | `web` | `classic-web-core` | `base_url@rust` | `None` | `matched` |
+| `web.build_url_with_query@rust` | `web` | `classic-web-core` | `build_url_with_query@rust` | `None` | `matched` |
+| `web.extract_domain@rust` | `web` | `classic-web-core` | `extract_domain@rust` | `None` | `matched` |
+| `web.game_url@rust` | `web` | `classic-web-core` | `game_url@rust` | `None` | `matched` |
+| `web.get_user_agent@rust` | `web` | `classic-web-core` | `get_user_agent@rust` | `None` | `matched` |
+| `web.get_user_agent_with_suffix@rust` | `web` | `classic-web-core` | `get_user_agent_with_suffix@rust` | `None` | `matched` |
+| `web.is_valid_url@rust` | `web` | `classic-web-core` | `is_valid_url@rust` | `None` | `matched` |
+| `web.join_url@rust` | `web` | `classic-web-core` | `join_url@rust` | `None` | `matched` |
+| `web.name@rust` | `web` | `classic-web-core` | `name@rust` | `None` | `matched` |
+| `web.validate_url@rust` | `web` | `classic-web-core` | `validate_url@rust` | `None` | `matched` |
+| `xse.XseError@rust` | `xse` | `classic-xse-core` | `XseError@rust` | `None` | `matched` |
+| `xse.XseInfo@rust` | `xse` | `classic-xse-core` | `XseInfo@rust` | `None` | `matched` |
+| `xse.XseResult@rust` | `xse` | `classic-xse-core` | `XseResult@rust` | `None` | `matched` |
+| `xse.XseType@rust` | `xse` | `classic-xse-core` | `XseType@rust` | `None` | `matched` |
+| `xse.as_str@rust` | `xse` | `classic-xse-core` | `as_str@rust` | `None` | `matched` |
+| `xse.check_installed@rust` | `xse` | `classic-xse-core` | `check_installed@rust` | `None` | `matched` |
+| `xse.compare_versions@rust` | `xse` | `classic-xse-core` | `compare_versions@rust` | `None` | `matched` |
+| `xse.detect_xse_version@rust` | `xse` | `classic-xse-core` | `detect_xse_version@rust` | `None` | `matched` |
+| `xse.dll_prefix@rust` | `xse` | `classic-xse-core` | `dll_prefix@rust` | `None` | `matched` |
+| `xse.from_game_id@rust` | `xse` | `classic-xse-core` | `from_game_id@rust` | `None` | `matched` |
+| `xse.get_xse_info@rust` | `xse` | `classic-xse-core` | `get_xse_info@rust` | `None` | `matched` |
+| `xse.is_xse_installed@rust` | `xse` | `classic-xse-core` | `is_xse_installed@rust` | `None` | `matched` |
+| `xse.loader_name@rust` | `xse` | `classic-xse-core` | `loader_name@rust` | `None` | `matched` |
+| `xse.loader_path@rust` | `xse` | `classic-xse-core` | `loader_path@rust` | `None` | `matched` |
+| `xse.new@rust` | `xse` | `classic-settings-core` | `new@rust` | `None` | `matched` |
+| `xse.parse_version@rust` | `xse` | `classic-xse-core` | `parse_version@rust` | `None` | `matched` |
+| `xse.try_parse_version@rust` | `xse` | `classic-xse-core` | `try_parse_version@rust` | `None` | `matched` |
+| `yaml.YamlError@rust` | `settings` | `classic-settings-core` | `YamlError@rust` | `None` | `matched` |
+| `yaml.YamlOperations@rust` | `settings` | `classic-settings-core` | `YamlOperations@rust` | `None` | `matched` |
+| `yaml.cache_stats@rust` | `settings` | `classic-settings-core` | `cache_stats@rust` | `None` | `matched` |
+| `yaml.clear_cache@rust` | `settings` | `classic-settings-core` | `clear_cache@rust` | `None` | `matched` |
+| `yaml.dump_yaml@rust` | `settings` | `classic-settings-core` | `dump_yaml@rust` | `None` | `matched` |
+| `yaml.get_cache_stats@rust` | `settings` | `classic-settings-core` | `get_cache_stats@rust` | `None` | `matched` |
+| `yaml.get_hashmap_value@rust` | `settings` | `classic-settings-core` | `get_hashmap_value@rust` | `None` | `matched` |
+| `yaml.get_indexmap_value@rust` | `settings` | `classic-settings-core` | `get_indexmap_value@rust` | `None` | `matched` |
+| `yaml.get_setting@rust` | `settings` | `classic-settings-core` | `get_setting@rust` | `None` | `matched` |
+| `yaml.get_settings_batch@rust` | `settings` | `classic-settings-core` | `get_settings_batch@rust` | `None` | `matched` |
+| `yaml.get_string_value@rust` | `settings` | `classic-settings-core` | `get_string_value@rust` | `None` | `matched` |
+| `yaml.get_vec_value@rust` | `settings` | `classic-settings-core` | `get_vec_value@rust` | `None` | `matched` |
+| `yaml.is_cache_enabled@rust` | `settings` | `classic-settings-core` | `is_cache_enabled@rust` | `None` | `matched` |
+| `yaml.load_yaml_file@rust` | `settings` | `classic-settings-core` | `load_yaml_file@rust` | `None` | `matched` |
+| `yaml.load_yaml_files_batch@rust` | `settings` | `classic-settings-core` | `load_yaml_files_batch@rust` | `None` | `matched` |
+| `yaml.merge_keys@rust` | `settings` | `classic-settings-core` | `merge_keys@rust` | `None` | `matched` |
+| `yaml.new@rust` | `settings` | `classic-settings-core` | `new@rust` | `None` | `matched` |
+| `yaml.parse_yaml@rust` | `settings` | `classic-settings-core` | `parse_yaml@rust` | `None` | `matched` |
+| `yaml.reset_cache_stats@rust` | `settings` | `classic-settings-core` | `reset_cache_stats@rust` | `None` | `matched` |
+| `yaml.save_yaml_file@rust` | `settings` | `classic-settings-core` | `save_yaml_file@rust` | `None` | `matched` |
+| `yaml.set_cache_enabled@rust` | `settings` | `classic-settings-core` | `set_cache_enabled@rust` | `None` | `matched` |
+| `yaml.set_setting@rust` | `settings` | `classic-settings-core` | `set_setting@rust` | `None` | `matched` |
+| `aux.JsCheckRule` | `aux` | `classic-config-core` | `CheckRule` | `JsCheckRule` | `matched` |
+| `aux.JsExpectedValue` | `aux` | `classic-config-core` | `ExpectedValue` | `JsExpectedValue` | `matched` |
+| `config.JsModConflictEntry` | `config` | `classic-config-core` | `ModConflictEntry` | `JsModConflictEntry` | `matched` |
+| `aux.JsModSolutionCriteria` | `aux` | `classic-config-core` | `ModSolutionCriteria` | `JsModSolutionCriteria` | `matched` |
+| `aux.JsModSolutionEntry` | `aux` | `classic-config-core` | `ModSolutionEntry` | `JsModSolutionEntry` | `matched` |
+| `aux.JsPreflightAction` | `aux` | `classic-config-core` | `PreflightAction` | `JsPreflightAction` | `matched` |
+| `aux.JsPreflightRule` | `aux` | `classic-config-core` | `PreflightRule` | `JsPreflightRule` | `matched` |
+| `aux.JsRuleMessages` | `aux` | `classic-config-core` | `RuleMessages` | `JsRuleMessages` | `matched` |
+| `aux.JsRuleTarget` | `aux` | `classic-config-core` | `RuleTarget` | `JsRuleTarget` | `matched` |
+| `aux.JsSuspectErrorRule` | `aux` | `classic-config-core` | `SuspectErrorRule` | `JsSuspectErrorRule` | `matched` |
+| `aux.JsSuspectStackCountRule` | `aux` | `classic-config-core` | `SuspectStackCountRule` | `JsSuspectStackCountRule` | `matched` |
+| `aux.JsSuspectStackRule` | `aux` | `classic-config-core` | `SuspectStackRule` | `JsSuspectStackRule` | `matched` |
+| `scanlog.JsLogCollector` | `scanlog` | `classic-file-io-core` | `LogCollector` | `JsLogCollector` | `matched` |
+| `scanlog.JsLogProcessor` | `scanlog` | `classic-scangame-core` | `LogProcessor` | `JsLogProcessor` | `matched` |
+| `scanlog.JsLogger` | `scanlog` | `classic-message-core` | `Logger` | `JsLogger` | `matched` |
+| `scanlog.createLogger` | `scanlog` | `classic-message-core` | `Logger` | `createLogger` | `matched` |
+| `aux.getApplicationDir` | `aux` | `classic-registry-core` | `get_application_dir` | `getApplicationDir` | `matched` |
+| `scanlog.processGameLogs` | `scanlog` | `classic-scangame-core` | `LogProcessor` | `processGameLogs` | `matched` |
+| `aux.setApplicationDir` | `aux` | `classic-registry-core` | `set_application_dir` | `setApplicationDir` | `matched` |
+| `scangame.JsGameSetupCheck` | `scangame` | `classic-scangame-core` | `GameSetupCheck` | `JsGameSetupCheck` | `matched` |
+| `scangame.JsGameSetupIntakeOptions` | `scangame` | `classic-scangame-core` | `GameSetupIntake` | `JsGameSetupIntakeOptions` | `matched` |
+| `scangame.JsGameSetupIntakeResult` | `scangame` | `classic-scangame-core` | `GameSetupIntakeResult` | `JsGameSetupIntakeResult` | `matched` |
+| `scangame.JsGameSetupPathUpdate` | `scangame` | `classic-scangame-core` | `GameSetupPathUpdate` | `JsGameSetupPathUpdate` | `matched` |
+| `scangame.JsPathDetectionResult` | `scangame` | `classic-scangame-core` | `game_setup_needs_path_detection` | `JsPathDetectionResult` | `matched` |
+| `scangame.gameSetupNeedsPathDetection` | `scangame` | `classic-scangame-core` | `game_setup_needs_path_detection` | `gameSetupNeedsPathDetection` | `matched` |
+| `scangame.normalizeGameSetupVersionSelection` | `scangame` | `classic-scangame-core` | `normalize_game_setup_version_selection` | `normalizeGameSetupVersionSelection` | `matched` |
+| `scangame.runGameSetupIntake` | `scangame` | `classic-scangame-core` | `GameSetupIntake` | `runGameSetupIntake` | `matched` |
+| `scangame.runGameSetupIntakeFromUserSettings` | `scangame` | `classic-scangame-core` | `from_user_settings` | `runGameSetupIntakeFromUserSettings` | `matched` |
+| `scangame.GameSetupIntake@rust` | `scangame` | `classic-scangame-core` | `GameSetupIntake@rust` | `None` | `matched` |
+| `scangame.GameSetupIntakeResult@rust` | `scangame` | `classic-scangame-core` | `GameSetupIntakeResult@rust` | `None` | `matched` |
+| `scangame.GameSetupCheck@rust` | `scangame` | `classic-scangame-core` | `GameSetupCheck@rust` | `None` | `matched` |
+| `scangame.game_setup_intake@rust` | `scangame` | `classic-scangame-core` | `game_setup_intake@rust` | `None` | `matched` |
+| `scangame.game_setup_needs_path_detection@rust` | `scangame` | `classic-scangame-core` | `game_setup_needs_path_detection@rust` | `None` | `matched` |
+| `scangame.normalize_game_setup_version_selection@rust` | `scangame` | `classic-scangame-core` | `normalize_game_setup_version_selection@rust` | `None` | `matched` |
+| `config.local-ignore-reset-conflict-type` | `config` | `classic-config-core` | `LocalIgnoreResetConflict` | `JsLocalIgnoreResetConflict` | `matched` |
+| `config.local-ignore-reset-outcome-type` | `config` | `classic-config-core` | `LocalIgnoreResetOutcome` | `JsLocalIgnoreResetOutcome` | `matched` |
+| `config.local-ignore-reset-publication-stage-type` | `config` | `classic-config-core` | `LocalIgnoreResetPublicationStage` | `JsLocalIgnoreResetPublicationStage` | `matched` |
+| `config.local-ignore-reset-result-type` | `config` | `classic-config-core` | `LocalIgnoreResetResult` | `JsLocalIgnoreResetResult` | `matched` |
+| `config.local-ignore-reset-status-type` | `config` | `classic-config-core` | `LocalIgnoreResetOutcome` | `JsLocalIgnoreResetStatus` | `matched` |
+| `config.installed_yaml_data.inspectInstalledYamlData` | `config` | `classic-config-core` | `inspect_installed_yaml_data` | `inspectInstalledYamlData` | `matched` |
+| `config.installed_yaml_data.loadInstalledYamlData` | `config` | `classic-config-core` | `load_installed_yaml_data` | `loadInstalledYamlData` | `matched` |
+| `config.explicit_yaml_data.loadExplicitYamlData` | `config` | `classic-config-core` | `load_explicit_yaml_data` | `loadExplicitYamlData` | `matched` |
+| `update.notification.check_app_notification_configured` | `update` | `classic-update-core` | `check_app_notification_configured` | `checkAppNotificationConfigured` | `matched` |
+| `config.main_yaml_version.loadMainYamlVersion` | `config` | `classic-config-core` | `load_main_yaml_version_with_bundled_dir` | `loadMainYamlVersion` | `matched` |
+| `user-settings-legacy-tui-import` | `user_settings` | `classic-user-settings-core` | `import_legacy_tui_state` | `importLegacyTuiStateIntoUserSettings` | `matched` |
+| `user-settings-LegacyTuiStateImportReceipt` | `user_settings` | `classic-user-settings-core` | `LegacyTuiStateImportReceipt` | `JsLegacyTuiStateImportReceipt` | `matched` |
+| `user-settings-LegacyTuiStateImportOutcome` | `user_settings` | `classic-user-settings-core` | `LegacyTuiStateImportOutcome` | `JsLegacyTuiStateImportOutcome` | `matched` |
+| `user-settings-LegacyTuiStateImportRestoreOutcome` | `user_settings` | `classic-user-settings-core` | `LegacyTuiStateImportRestoreOutcome` | `JsLegacyTuiStateImportRestoreOutcome` | `matched` |
+| `scanlog.scan_run.ScanRunRequest` | `scanlog` | `classic-scanlog-core` | `Request` | `ScanRunRequest` | `matched` |
+| `scanlog.scan_run.ScanRunUnsolvedLogs` | `scanlog` | `classic-scanlog-core` | `StandardUnsolvedLogsIntent` | `ScanRunUnsolvedLogs` | `matched` |
+| `scanlog.scan_run.ScanRunCancellation` | `scanlog` | `classic-scanlog-core` | `Cancellation` | `ScanRunCancellation` | `matched` |
+| `scanlog.scan_run.ScanRunContinuation` | `scanlog` | `classic-scanlog-core` | `CrashLogScanRunContinuation` | `ScanRunContinuation` | `matched` |
+| `scanlog.scan_run.scanRunExecute` | `scanlog` | `classic-scanlog-core` | `execute` | `scanRunExecute` | `matched` |
+| `scanlog.scan_run.scanRunResume` | `scanlog` | `classic-scanlog-core` | `resume` | `scanRunResume` | `matched` |
+| `scanlog.scan_run.scanRunAbandon` | `scanlog` | `classic-scanlog-core` | `abandon` | `scanRunAbandon` | `matched` |
+| `scanlog.scan_run.JsScanRunConfiguration` | `scanlog` | `classic-scanlog-core` | `Configuration` | `JsScanRunConfiguration` | `matched` |
+| `scanlog.scan_run.JsScanRunStandardSource` | `scanlog` | `classic-scanlog-core` | `StandardCrashLogScanSource` | `JsScanRunStandardSource` | `matched` |
+| `scanlog.scan_run.JsScanRunTargetedSource` | `scanlog` | `classic-scanlog-core` | `TargetedCrashLogScanSource` | `JsScanRunTargetedSource` | `matched` |
+| `scanlog.scan_run.JsScanRunSetupContext` | `scanlog` | `classic-scanlog-core` | `CrashLogScanSetupContext` | `JsScanRunSetupContext` | `matched` |
+| `scanlog.scan_run.JsScanRunRejectedInput` | `scanlog` | `classic-scanlog-core` | `CrashLogScanRejectedInput` | `JsScanRunRejectedInput` | `matched` |
+| `scanlog.scan_run.JsScanRunDiscoveryResult` | `scanlog` | `classic-scanlog-core` | `CrashLogScanDiscoveryResult` | `JsScanRunDiscoveryResult` | `matched` |
+| `scanlog.scan_run.JsScanRunSetupCheck` | `scanlog` | `classic-scanlog-core` | `CrashLogScanSetupCheck` | `JsScanRunSetupCheck` | `matched` |
+| `scanlog.scan_run.JsScanRunSetupPathUpdate` | `scanlog` | `classic-scanlog-core` | `CrashLogScanSetupPathUpdate` | `JsScanRunSetupPathUpdate` | `matched` |
+| `scanlog.scan_run.JsScanRunSetupResult` | `scanlog` | `classic-scanlog-core` | `CrashLogScanSetupResult` | `JsScanRunSetupResult` | `matched` |
+| `scanlog.scan_run.JsScanRunLogFailure` | `scanlog` | `classic-scanlog-core` | `LogFailure` | `JsScanRunLogFailure` | `matched` |
+| `scanlog.scan_run.JsScanRunLogResult` | `scanlog` | `classic-scanlog-core` | `LogResult` | `JsScanRunLogResult` | `matched` |
+| `scanlog.scan_run.JsScanRunInstalledYamlDataDiagnostic` | `scanlog` | `classic-scanlog-core` | `InstalledYamlDataRunDiagnostic` | `JsScanRunInstalledYamlDataDiagnostic` | `matched` |
+| `scanlog.scan_run.JsScanRunInstalledYamlDataDiagnosticKind` | `scanlog` | `classic-scanlog-core` | `InstalledYamlDataRunDiagnosticKind` | `JsScanRunInstalledYamlDataDiagnosticKind` | `matched` |
+| `scanlog.scan_run.JsScanRunLocalIgnoreState` | `scanlog` | `classic-scanlog-core` | `LocalIgnoreRunState` | `JsScanRunLocalIgnoreState` | `matched` |
+| `scanlog.scan_run.JsScanRunLocalIgnoreResetRunData` | `scanlog` | `classic-scanlog-core` | `LocalIgnoreResetRunData` | `JsScanRunLocalIgnoreResetRunData` | `matched` |
+| `scanlog.scan_run.JsScanRunLocalIgnoreRecoveryDecision` | `scanlog` | `classic-scanlog-core` | `LocalIgnoreRecoveryDecision` | `JsScanRunLocalIgnoreRecoveryDecision` | `matched` |
+| `scanlog.scan_run.JsScanRunInfrastructureError` | `scanlog` | `classic-scanlog-core` | `InfrastructureError` | `JsScanRunInfrastructureError` | `matched` |
+| `scanlog.scan_run.JsScanRunLogEvent` | `scanlog` | `classic-scanlog-core` | `LogEvent` | `JsScanRunLogEvent` | `matched` |
+| `scanlog.scan_run.JsScanRunEvent` | `scanlog` | `classic-scanlog-core` | `Event` | `JsScanRunEvent` | `matched` |
+| `scanlog.scan_run.JsScanRunResult` | `scanlog` | `classic-scanlog-core` | `RunResult` | `JsScanRunResult` | `matched` |
+| `scanlog.scan_run.JsScanRunDisplayLine` | `scanlog` | `classic-scan-presentation` | `DisplayLine` | `JsScanRunDisplayLine` | `matched` |
+| `scanlog.scan_run.JsScanRunDisplaySegment` | `scanlog` | `classic-scan-presentation` | `DisplaySegment` | `JsScanRunDisplaySegment` | `matched` |
+| `scanlog.scan_run.JsScanRunDisplaySegmentKind` | `scanlog` | `classic-scan-presentation` | `DisplaySegment` | `JsScanRunDisplaySegmentKind` | `matched` |
+| `scanlog.scan_run.JsScanRunDisplaySeverity` | `scanlog` | `classic-scan-presentation` | `DisplaySeverity` | `JsScanRunDisplaySeverity` | `matched` |
+| `scanlog.scan_run.JsScanRunRecoveryDecisionDescription` | `scanlog` | `classic-scan-presentation` | `RecoveryDecisionDescription` | `JsScanRunRecoveryDecisionDescription` | `matched` |
+| `scanlog.scan_run.JsScanRunRecoveryPrompt` | `scanlog` | `classic-scan-presentation` | `RecoveryPrompt` | `JsScanRunRecoveryPrompt` | `matched` |
+| `scanlog.scan_run.JsScanRunSuccess` | `scanlog` | `-` | `None` | `JsScanRunSuccess` | `unmapped` |
+| `scanlog.scan_run.JsScanRunFailure` | `scanlog` | `-` | `None` | `JsScanRunFailure` | `unmapped` |
 
 ## Gap Counts By Owner/Tier
 

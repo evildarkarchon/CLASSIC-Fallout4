@@ -1,7 +1,7 @@
 {
   "contractVersion": "1.0.0",
   "phase": "phase1",
-  "description": "Live one-tier 895-row Node vs Rust parity contract for high-level APIs, preserving the 706-row enforcement floor.",
+  "description": "Live one-tier 952-row Node vs Rust parity contract for high-level APIs, preserving the 706-row enforcement floor.",
   "tierDefinitions": {
     "tier1": "Must-have high-level APIs required by app workflows and cross-language integration."
   },
@@ -2034,7 +2034,8 @@
       "ownerModule": "config",
       "rustSymbol": "YamlSource",
       "nodeExport": "JsYamlSource",
-      "nodeKind": "const_enum"
+      "nodeKind": "const_enum",
+      "rustCrate": "classic-config-core"
     },
     {
       "id": "config-yaml-source-path",
@@ -2070,17 +2071,19 @@
       "id": "config-fileio-config-interface",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": null,
       "nodeExport": "FileIoConfig",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "unmappedReason": "Node file-I/O configuration DTO has no single public Rust counterpart."
     },
     {
       "id": "config-yaml-file-enum",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "YamlSource",
+      "rustSymbol": "YamlFile",
       "nodeExport": "JsYamlFile",
-      "nodeKind": "const_enum"
+      "nodeKind": "const_enum",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "config-get-all-yaml-files",
@@ -2167,9 +2170,10 @@
       "id": "config-settings-cache-stats-interface",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "config",
+      "rustSymbol": "CacheStats",
       "nodeExport": "SettingsCacheStats",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "rustCrate": "classic-settings-core"
     },
     {
       "id": "config-load-settings-sync",
@@ -2577,17 +2581,19 @@
       "id": "version-registry-promote-fallout4-version-info",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "VersionInfo",
+      "rustSymbol": null,
       "nodeExport": "Fallout4VersionInfo",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "unmappedReason": "Node DTO is assembled from Fallout4Version methods, not one Rust type."
     },
     {
       "id": "version-registry-promote-js-address-lib-info",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "AddressLibFormat",
+      "rustSymbol": "AddressLibInfo",
       "nodeExport": "JsAddressLibInfo",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "rustCrate": "classic-scangame-core"
     },
     {
       "id": "version-registry-promote-js-address-library-config",
@@ -2595,15 +2601,17 @@
       "ownerModule": "version_registry",
       "rustSymbol": "AddressLibraryConfig",
       "nodeExport": "JsAddressLibraryConfig",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-promote-js-crashgen-check-result",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "MatchResult",
+      "rustSymbol": null,
       "nodeExport": "JsCrashgenCheckResult",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "unmappedReason": "Node checker result is assembled from multiple Rust values."
     },
     {
       "id": "version-registry-promote-js-crashgen-checker",
@@ -2620,31 +2628,35 @@
       "ownerModule": "version_registry",
       "rustSymbol": "CrashgenConfig",
       "nodeExport": "JsCrashgenConfig",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-promote-js-crashgen-report",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "Result",
+      "rustSymbol": "CrashgenReport",
       "nodeExport": "JsCrashgenReport",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "rustCrate": "classic-scangame-core"
     },
     {
       "id": "version-registry-promote-js-crashgen-version-info",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "CrashgenConfig",
+      "rustSymbol": "CrashgenVersion",
       "nodeExport": "JsCrashgenVersionInfo",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "version-registry-promote-js-fallout4-version",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "GameVersion",
+      "rustSymbol": "Fallout4Version",
       "nodeExport": "JsFallout4Version",
-      "nodeKind": "const_enum"
+      "nodeKind": "const_enum",
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-promote-js-game-version",
@@ -2652,7 +2664,8 @@
       "ownerModule": "version_registry",
       "rustSymbol": "GameVersion",
       "nodeExport": "JsGameVersion",
-      "nodeKind": "const_enum"
+      "nodeKind": "const_enum",
+      "rustCrate": "classic-scangame-core"
     },
     {
       "id": "version-registry-promote-js-unknown-version-handling",
@@ -2660,23 +2673,26 @@
       "ownerModule": "version_registry",
       "rustSymbol": "UnknownVersionHandling",
       "nodeExport": "JsUnknownVersionHandling",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-promote-js-version-info",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "XseConfig",
+      "rustSymbol": "VersionInfo",
       "nodeExport": "JsVersionInfo",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-promote-js-version-registry-snapshot",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "VersionMatcher",
+      "rustSymbol": null,
       "nodeExport": "JsVersionRegistrySnapshot",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "unmappedReason": "Node snapshot is assembled from registry queries."
     },
     {
       "id": "version-registry-promote-xse-version",
@@ -2947,7 +2963,8 @@
       "ownerModule": "aux",
       "rustSymbol": "BackupInfo",
       "nodeExport": "JsBackupInfo",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "rustCrate": "classic-file-io-core"
     },
     {
       "id": "aux-phase4a-js-backup-manager",
@@ -2982,7 +2999,8 @@
       "ownerModule": "aux",
       "rustSymbol": "FileOperationResult",
       "nodeExport": "JsFileOperationResult",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "rustCrate": "classic-file-io-core"
     },
     {
       "id": "aux-phase4a-js-game-files-manager",
@@ -3008,7 +3026,8 @@
       "ownerModule": "aux",
       "rustSymbol": "MessageTarget",
       "nodeExport": "JsMessageTarget",
-      "nodeKind": "const_enum"
+      "nodeKind": "const_enum",
+      "rustCrate": "classic-message-core"
     },
     {
       "id": "aux-phase4a-js-message-type",
@@ -3016,23 +3035,26 @@
       "ownerModule": "aux",
       "rustSymbol": "MessageType",
       "nodeExport": "JsMessageType",
-      "nodeKind": "const_enum"
+      "nodeKind": "const_enum",
+      "rustCrate": "classic-message-core"
     },
     {
       "id": "aux-phase4a-metrics-summary-result",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustSymbol": "MetricsSummary",
+      "rustSymbol": null,
       "nodeExport": "MetricsSummaryResult",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "unmappedReason": "Node aggregate DTO wraps a map of per-operation timing values."
     },
     {
       "id": "aux-phase4a-runtime-info",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustSymbol": "get_runtime",
+      "rustSymbol": null,
       "nodeExport": "RuntimeInfo",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "unmappedReason": "Node runtime diagnostics DTO has no single public Rust counterpart."
     },
     {
       "id": "aux-phase4a-timing-stats",
@@ -3040,7 +3062,8 @@
       "ownerModule": "aux",
       "rustSymbol": "MetricsSummary",
       "nodeExport": "TimingStats",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "rustCrate": "classic-perf-core"
     },
     {
       "id": "aux-phase4a-calculate-file-similarity",
@@ -3643,7 +3666,7 @@
       "rustSymbol": "ValidationResult",
       "nodeExport": "JsValidationResult",
       "nodeKind": "const_enum",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-scangame-core"
     },
     {
       "id": "aux-phase4b-js-vsync-entry",
@@ -4101,15 +4124,17 @@
       "ownerModule": "version_registry",
       "rustSymbol": "CompatibleRange",
       "nodeExport": "JsCompatibleRange",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "aux-phase4c-js-dds-analyzer-alias",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustSymbol": "FileIOCore",
+      "rustSymbol": "DDSAnalyzer",
       "nodeExport": "JsDDSAnalyzer",
-      "nodeKind": "type"
+      "nodeKind": "type",
+      "rustCrate": "classic-file-io-core"
     },
     {
       "id": "aux-phase4c-js-dds-analyzer-class",
@@ -4124,17 +4149,19 @@
       "id": "aux-phase4c-js-dds-batch-result",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustSymbol": "FileIOCore",
+      "rustSymbol": null,
       "nodeExport": "JsDdsBatchResult",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "unmappedReason": "Node batch DTO combines a path with file-I/O validation issues."
     },
     {
       "id": "aux-phase4c-js-dds-issue",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustSymbol": "FileIOCore",
+      "rustSymbol": "DDSIssue",
       "nodeExport": "JsDdsIssue",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "rustCrate": "classic-file-io-core"
     },
     {
       "id": "aux-phase4c-js-game-id",
@@ -4160,7 +4187,8 @@
       "ownerModule": "version_registry",
       "rustSymbol": "MatchResult",
       "nodeExport": "JsMatchResult",
-      "nodeKind": "interface"
+      "nodeKind": "interface",
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "aux-phase4c-calculate-text-similarity",
@@ -5068,7 +5096,7 @@
       "id": "scanlog.parser.JsLogErrorEntry",
       "tier": "tier1",
       "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
+      "rustCrate": "classic-scangame-core",
       "rustSymbol": "LogErrorEntry",
       "rustKind": "class",
       "nodeExport": "JsLogErrorEntry",
@@ -5236,7 +5264,7 @@
       "id": "config.hash_cache.HashCacheStats",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-file-io-core",
       "rustSymbol": "CacheStats",
       "rustKind": "class",
       "nodeExport": "HashCacheStats",
@@ -5246,7 +5274,7 @@
       "id": "config.scangame.JsConfigIssue",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-scangame-core",
       "rustSymbol": "ConfigIssue",
       "rustKind": "class",
       "nodeExport": "JsConfigIssue",
@@ -5256,7 +5284,7 @@
       "id": "config.fcx.JsFcxConfigIssue",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "ConfigIssue",
       "rustKind": "class",
       "nodeExport": "JsFcxConfigIssue",
@@ -5266,7 +5294,7 @@
       "id": "config.scangame.JsGameScanConfig",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-scangame-core",
       "rustSymbol": "GameScanConfig",
       "rustKind": "class",
       "nodeExport": "JsGameScanConfig",
@@ -5276,7 +5304,7 @@
       "id": "config.scangame.JsIntegrityConfig",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-scangame-core",
       "rustSymbol": "IntegrityConfig",
       "rustKind": "class",
       "nodeExport": "JsIntegrityConfig",
@@ -5286,7 +5314,7 @@
       "id": "config.scangame.JsTomlConfigIssue",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-scangame-core",
       "rustSymbol": "TomlConfigIssue",
       "rustKind": "class",
       "nodeExport": "JsTomlConfigIssue",
@@ -5296,7 +5324,7 @@
       "id": "config.version_registry.JsXseConfig",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-version-registry-core",
       "rustSymbol": "XseConfig",
       "rustKind": "class",
       "nodeExport": "JsXseConfig",
@@ -5306,7 +5334,7 @@
       "id": "config.scangame.JsEnbConfigResult",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-scangame-core",
       "rustSymbol": "EnbConfigResult",
       "rustKind": "enum",
       "nodeExport": "JsEnbConfigResult",

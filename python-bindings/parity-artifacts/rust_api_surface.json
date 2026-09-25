@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-08T07:25:37.244479+00:00",
+  "generated_at_utc": "2026-09-25T02:05:30.909132+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -17889,6 +17889,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "PublishedDefault",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub enum PublishedDefault",
+      "tier": "tier1"
+    },
+    {
       "symbol": "Revision",
       "kind": "enum",
       "crate": "classic-user-settings-core",
@@ -18338,6 +18347,46 @@
       "tier": "tier1"
     },
     {
+      "symbol": "as_bool",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub const fn as_bool(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "as_integer",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub const fn as_integer(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "as_optional_str",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub const fn as_optional_str(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "as_str",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub const fn as_str(self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "as_str",
       "kind": "function",
       "arity": 1,
@@ -18355,6 +18404,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
       "source_decl": "pub fn as_str(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "assert_empty_mapping",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub const fn assert_empty_mapping(self)",
       "tier": "tier1"
     },
     {
@@ -18658,6 +18717,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "default",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub const fn default(self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "destination_path",
       "kind": "function",
       "arity": 1,
@@ -18958,6 +19027,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "label",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub const fn label(self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "location",
       "kind": "function",
       "arity": 1,
@@ -19255,6 +19334,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/update.rs",
       "source_decl": "pub fn parse(value: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub const fn path(self)",
       "tier": "tier1"
     },
     {

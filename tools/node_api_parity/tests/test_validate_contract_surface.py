@@ -34,10 +34,10 @@ def rust_manifest() -> dict:
     """Matches live schema of rust_api_surface.json (top-level ``symbols``)."""
     return {
         "symbols": [
-            {"symbol": "parse_version"},
-            {"symbol": "extract_pe_version"},
-            {"symbol": "FormIDAnalyzer"},
-            {"symbol": "AnalysisConfig"},
+            {"crate": "classic-version-core", "symbol": "parse_version"},
+            {"crate": "classic-version-core", "symbol": "extract_pe_version"},
+            {"crate": "classic-scanlog-core", "symbol": "FormIDAnalyzer"},
+            {"crate": "classic-scanlog-core", "symbol": "AnalysisConfig"},
         ]
     }
 
@@ -73,8 +73,9 @@ def test_valid_row_empty_diagnostics(rust_manifest, node_manifest) -> None:
     contract = {
         "tier1Mappings": [
             {
-                "id": "row-1",
-                "rustSymbol": "parse_version",
+                    "id": "row-1",
+                    "rustCrate": "classic-version-core",
+                    "rustSymbol": "parse_version",
                 "nodeExport": "parseVersion",
             }
         ]
@@ -88,9 +89,10 @@ def test_multiple_valid_rows_empty_diagnostics(rust_manifest, node_manifest) -> 
     """Multiple well-formed rows → empty diagnostics."""
     contract = {
         "tier1Mappings": [
-            {"id": "row-1", "rustSymbol": "parse_version", "nodeExport": "parseVersion"},
+            {"id": "row-1", "rustCrate": "classic-version-core", "rustSymbol": "parse_version", "nodeExport": "parseVersion"},
             {
                 "id": "row-2",
+                "rustCrate": "classic-scanlog-core",
                 "rustSymbol": "AnalysisConfig",
                 "nodeExport": "JsAnalysisConfig",
             },

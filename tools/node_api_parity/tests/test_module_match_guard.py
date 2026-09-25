@@ -28,12 +28,12 @@ CONTRACT_PATH = (
 
 RUST_MANIFEST = {
     "symbols": [
-        {"symbol": "path_core", "kind": "module"},
-        {"symbol": "detect_resource_type", "kind": "function"},
-        {"symbol": "ResourceInfo", "kind": "struct"},
+        {"crate": "classic-fixture-core", "symbol": "path_core", "kind": "module"},
+        {"crate": "classic-fixture-core", "symbol": "detect_resource_type", "kind": "function"},
+        {"crate": "classic-fixture-core", "symbol": "ResourceInfo", "kind": "struct"},
         # A name that is both a module and a type stays acceptable.
-        {"symbol": "config", "kind": "module"},
-        {"symbol": "config", "kind": "struct"},
+        {"crate": "classic-fixture-core", "symbol": "config", "kind": "module"},
+        {"crate": "classic-fixture-core", "symbol": "config", "kind": "struct"},
     ]
 }
 NODE_MANIFEST = {
@@ -50,6 +50,7 @@ def row(**overrides) -> dict:
         "id": "row-1",
         "tier": "tier1",
         "ownerModule": "aux",
+        "rustCrate": "classic-fixture-core",
         "rustSymbol": "detect_resource_type",
         "nodeExport": "detectResourceType",
     }
