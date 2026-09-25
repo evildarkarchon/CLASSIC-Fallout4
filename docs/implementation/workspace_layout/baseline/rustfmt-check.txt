@@ -1,0 +1,41 @@
+command: cargo fmt --all -- --check
+sourceRevision: ddb260a8ef55619e0099522843a6f5ae96a56c3e
+exitCode: 1
+
+Diff in \\?\D:\repos\CLASSIC-Fallout4\node-bindings\classic-node\src\scan_run_tests.rs:17:
+ use classic_vocabulary::Vocabulary;
+
+ const SHARED_SCAN_RUN_MANIFEST: &str = include_str!(concat!(
+-env!("CARGO_MANIFEST_DIR"),
+-"/../../tests/fixtures/crash_log_scan_run/manifest.json"
++    env!("CARGO_MANIFEST_DIR"),
++    "/../../tests/fixtures/crash_log_scan_run/manifest.json"
+ ));
+
+ /// Loads the language-neutral structured-failure corpus for Node mapping tests.
+Diff in \\?\D:\repos\CLASSIC-Fallout4\node-bindings\classic-node\src\scan_run_tests.rs:57:
+         unsolved_logs_destination: Some(" \t ".to_string()),
+         max_concurrent: None,
+     })
+-        .expect("configuration should convert");
++    .expect("configuration should convert");
+     assert_eq!(configuration.installation_root, PathBuf::from("C:/CLASSIC"));
+     assert_eq!(configuration.game, classic_shared_core::GameId::Fallout4);
+     assert!(configuration.scan_facts.unsolved_logs_destination.is_none());
+Diff in \\?\D:\repos\CLASSIC-Fallout4\node-bindings\classic-node\src\scan_run_tests.rs:67:
+         custom_scan_directory: Some(String::new()),
+         configured_documents_root: Some(" \t ".to_string()),
+     })
+-        .expect("standard source should convert");
++    .expect("standard source should convert");
+     assert!(source.custom_scan_directory.is_none());
+     assert!(source.configured_documents_root.is_none());
+ }
+Diff in \\?\D:\repos\CLASSIC-Fallout4\node-bindings\classic-node\src\scan_run_tests.rs:535:
+             !scan_run_installed_yaml_data_diagnostic_kind_label(
+                 installed_yaml_data_run_diagnostic_kind_to_js(variant)
+             )
+-                .is_empty()
++            .is_empty()
+         );
+     }

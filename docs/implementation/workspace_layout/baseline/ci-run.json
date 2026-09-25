@@ -1,0 +1,135 @@
+{
+  "conclusion": "failure",
+  "event": "pull_request",
+  "headSha": "ddb260a8ef55619e0099522843a6f5ae96a56c3e",
+  "jobs": [
+    {
+      "completedAt": "2026-09-25T04:39:49Z",
+      "conclusion": "success",
+      "name": "python / Python Parity Gates",
+      "startedAt": "2026-09-25T04:39:06Z",
+      "status": "completed",
+      "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/actions/runs/36095292890/job/107946189694"
+    },
+    {
+      "completedAt": "2026-09-25T04:52:09Z",
+      "conclusion": "success",
+      "name": "node / Node Parity Gates",
+      "startedAt": "2026-09-25T04:39:03Z",
+      "status": "completed",
+      "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/actions/runs/36095292890/job/107946189833"
+    },
+    {
+      "completedAt": "2026-09-25T04:39:30Z",
+      "conclusion": "success",
+      "name": "native / Binding Compliance Gate (C++)",
+      "startedAt": "2026-09-25T04:39:03Z",
+      "status": "completed",
+      "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/actions/runs/36095292890/job/107946189856"
+    },
+    {
+      "completedAt": "2026-09-25T05:58:39Z",
+      "conclusion": "success",
+      "name": "rust / Tests",
+      "startedAt": "2026-09-25T04:39:03Z",
+      "status": "completed",
+      "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/actions/runs/36095292890/job/107946189929"
+    },
+    {
+      "completedAt": "2026-09-25T04:51:19Z",
+      "conclusion": "success",
+      "name": "rust / Build",
+      "startedAt": "2026-09-25T04:39:04Z",
+      "status": "completed",
+      "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/actions/runs/36095292890/job/107946189982"
+    },
+    {
+      "completedAt": "2026-09-25T04:43:57Z",
+      "conclusion": "success",
+      "name": "rust / Linting (Clippy)",
+      "startedAt": "2026-09-25T04:39:03Z",
+      "status": "completed",
+      "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/actions/runs/36095292890/job/107946190022"
+    },
+    {
+      "completedAt": "2026-09-25T04:39:01Z",
+      "conclusion": "skipped",
+      "name": "rust / Formatting (rustfmt)",
+      "startedAt": "2026-09-25T04:39:01Z",
+      "status": "completed",
+      "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/actions/runs/36095292890/job/107946190378"
+    },
+    {
+      "completedAt": "2026-09-25T04:53:02Z",
+      "conclusion": "success",
+      "name": "native / GUI Tests (msvc)",
+      "startedAt": "2026-09-25T04:39:33Z",
+      "status": "completed",
+      "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/actions/runs/36095292890/job/107946284230"
+    },
+    {
+      "completedAt": "2026-09-25T05:02:44Z",
+      "conclusion": "success",
+      "name": "native / CLI Tests (clang-cl)",
+      "startedAt": "2026-09-25T04:39:32Z",
+      "status": "completed",
+      "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/actions/runs/36095292890/job/107946284253"
+    },
+    {
+      "completedAt": "2026-09-25T04:50:29Z",
+      "conclusion": "success",
+      "name": "native / GUI Tests (clang-cl)",
+      "startedAt": "2026-09-25T04:39:33Z",
+      "status": "completed",
+      "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/actions/runs/36095292890/job/107946284276"
+    },
+    {
+      "completedAt": "2026-09-25T05:04:29Z",
+      "conclusion": "success",
+      "name": "native / CLI Tests (msvc)",
+      "startedAt": "2026-09-25T04:39:32Z",
+      "status": "completed",
+      "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/actions/runs/36095292890/job/107946284355"
+    },
+    {
+      "completedAt": "2026-09-25T05:04:22Z",
+      "conclusion": "success",
+      "name": "python / Python Bindings Build + Smoke Tests",
+      "startedAt": "2026-09-25T04:39:52Z",
+      "status": "completed",
+      "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/actions/runs/36095292890/job/107946348141"
+    },
+    {
+      "completedAt": "2026-09-25T05:02:51Z",
+      "conclusion": "success",
+      "name": "node / NAPI-RS Build + Runtime Tests (node)",
+      "startedAt": "2026-09-25T04:52:11Z",
+      "status": "completed",
+      "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/actions/runs/36095292890/job/107948832013"
+    },
+    {
+      "completedAt": "2026-09-25T04:58:46Z",
+      "conclusion": "success",
+      "name": "node / NAPI-RS Build + Runtime Tests (bun)",
+      "startedAt": "2026-09-25T04:52:11Z",
+      "status": "completed",
+      "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/actions/runs/36095292890/job/107948832018"
+    },
+    {
+      "completedAt": "2026-09-25T06:33:27Z",
+      "conclusion": "failure",
+      "name": "Full Repository Conformance",
+      "startedAt": "2026-09-25T05:58:43Z",
+      "status": "completed",
+      "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/actions/runs/36095292890/job/107962719683"
+    }
+  ],
+  "name": "CI - Binding Compliance",
+  "startedAt": "2026-09-25T04:39:01Z",
+  "status": "completed",
+  "updatedAt": "2026-09-25T06:33:28Z",
+  "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/actions/runs/36095292890",
+  "pullRequest": 219,
+  "checkoutRevision": "810ea57651fbaa5d4c1ecb4246fbaf7d9ac39c13",
+  "sourceTree": "e2b043876f62fd2f2f19bcf59a9f0e1c603c7e9f"
+}
