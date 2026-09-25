@@ -19,7 +19,7 @@ on:
   # branch is absent here. Dropping `main` would leave that required check
   # permanently pending on every release PR into `main`.
   pull_request:
-    types: [ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review]
     branches: [main, classic-next]
 
 # Prevent parallel runs for the same PR
@@ -41,7 +41,7 @@ jobs:
     name: Run Benchmarks
     runs-on: windows-latest
     timeout-minutes: 60
-    # Skip if PR is still draft (ready_for_review won't fire for drafts anyway, but safety check)
+    # Opening or updating a draft triggers the workflow; run benchmarks once it is ready.
     if: github.event_name == 'push' || !github.event.pull_request.draft
     steps:
       - name: Checkout code
