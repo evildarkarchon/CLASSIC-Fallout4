@@ -28,7 +28,8 @@
       "rustSymbols": [
         "WryeBashParser",
         "WryeIssue",
-        "WryeSeverity"
+        "WryeSeverity",
+        "format_report"
       ],
       "operationScoped": true,
       "observationFamilies": [

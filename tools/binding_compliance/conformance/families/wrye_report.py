@@ -57,7 +57,13 @@ WRYE_REPORT_COVERAGE_POLICY = FamilyCoveragePolicy(
             "wrye-report.format",
             "wrye-report.format",
             "wrye-format",
-            ("WryeBashParser", "WryeIssue", "WryeSeverity"),
+            (
+                "WryeBashParser",
+                "WryeIssue",
+                "WryeSeverity",
+                # Python's parse_wrye_report maps to this core formatter.
+                "format_report",
+            ),
             partial(_observed, True),
             runtime_operations=(
                 None,

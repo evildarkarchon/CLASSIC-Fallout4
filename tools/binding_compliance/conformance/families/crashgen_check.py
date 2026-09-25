@@ -70,6 +70,8 @@ CRASHGEN_CHECK_COVERAGE_POLICY = FamilyCoveragePolicy(
                 "CrashgenReport",
                 "TomlIssueSeverity",
                 "check",
+                # Python's check_crashgen_settings maps to this core operation.
+                "check_with_rules",
             ),
             _observed,
             runtime_operations=(

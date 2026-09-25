@@ -19,7 +19,8 @@
         "CrashgenCheckOrchestrator",
         "CrashgenReport",
         "TomlIssueSeverity",
-        "check"
+        "check",
+        "check_with_rules"
       ],
       "operationScoped": true,
       "observationFamilies": [

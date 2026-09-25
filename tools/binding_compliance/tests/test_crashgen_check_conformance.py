@@ -3,7 +3,11 @@
 from copy import deepcopy
 from pathlib import Path
 
-from conformance.coverage import derive_observed_fact_ids
+from conformance.coverage import (
+    derive_observed_fact_ids,
+    derive_row_coverage,
+    load_source_parity_rows,
+)
 from conformance.packs import load_and_validate_pack
 
 
@@ -32,3 +36,19 @@ def test_crashgen_observations_require_every_native_field() -> None:
         assert not derive_observed_fact_ids(
             pack, scenario, changed, CRASHGEN_CHECK_COVERAGE_POLICY
         )
+
+
+def test_python_crashgen_settings_row_requires_a_runtime_receipt() -> None:
+    """Keep the public settings facade in the crashgen family's source denominator."""
+    from conformance.families.crashgen_check import CRASHGEN_CHECK_COVERAGE_POLICY
+
+    root = Path(__file__).resolve().parents[3]
+    pack = load_and_validate_pack(
+        root, Path("tests/conformance/packs/crashgen_check/v1.json")
+    ).document()
+    row_id = "parity:python:scangame.crashgen_orchestrator.check_crashgen_settings"
+    rows = tuple(row for row in load_source_parity_rows(root) if row.obligation_id == row_id)
+    assert len(rows) == 1
+
+    coverage = derive_row_coverage(pack, rows, CRASHGEN_CHECK_COVERAGE_POLICY, ())
+    assert [failure.obligation_id for failure in coverage.failures] == [row_id]
