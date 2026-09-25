@@ -55,7 +55,7 @@ jobs:
 
       - name: Install npm dependencies
         working-directory: node-bindings/classic-node
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Build NAPI-RS binary
         working-directory: node-bindings/classic-node
@@ -77,7 +77,17 @@ jobs:
         run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
 
       - name: Run Node binding compliance profile
-        run: python tools/binding_compliance/check_compliance.py --repo-root . --profile node-ci
+        run: python tools/binding_compliance/check_compliance.py --repo-root . --profile node-ci --gate-evidence-out tools/binding_compliance/artifacts/retained/node-ci/gate_evidence.json
+
+      - name: Upload Node parity retained gate evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-parity-retained-gates
+          path: tools/binding_compliance/artifacts/retained/
+          if-no-files-found: warn
+          overwrite: true
+          retention-days: 7
 
       - name: Upload parity and runtime coverage diagnostics
         if: failure()
@@ -113,8 +123,8 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Set up Python for scan conformance
-        if: matrix.runtime == 'node'
+      # Both runtime branches use the Python launcher to record retained gate evidence.
+      - name: Set up Python for retained gates and scan conformance
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
@@ -149,7 +159,7 @@ jobs:
 
       - name: Install npm dependencies
         working-directory: node-bindings/classic-node
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Build NAPI-RS binary
         working-directory: node-bindings/classic-node
@@ -169,13 +179,21 @@ jobs:
 
       - name: Run Bun tests
         if: matrix.runtime == 'bun'
-        working-directory: node-bindings/classic-node
-        run: bun run test:bun
+        run: python tools/binding_compliance/run_retained_gate.py --repo-root . --gate-id node-bun-runtime-tests --gate-evidence-out tools/binding_compliance/artifacts/retained/node-bun-runtime-tests/gate_evidence.json
 
       - name: Run Node runtime smoke tests
         if: matrix.runtime == 'node'
-        working-directory: node-bindings/classic-node
-        run: bun run test:node
+        run: python tools/binding_compliance/run_retained_gate.py --repo-root . --gate-id node-node-runtime-tests --gate-evidence-out tools/binding_compliance/artifacts/retained/node-node-runtime-tests/gate_evidence.json
+
+      - name: Upload Node runtime retained gate evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: node-runtime-retained-gates-${{ matrix.runtime }}
+          path: tools/binding_compliance/artifacts/retained/
+          if-no-files-found: warn
+          overwrite: true
+          retention-days: 7
 
       - name: Install User Settings conformance YAML parser
         if: matrix.runtime == 'node'

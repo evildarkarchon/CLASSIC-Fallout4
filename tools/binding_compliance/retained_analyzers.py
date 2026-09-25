@@ -28,11 +28,11 @@ WORKFLOW_BLOCKING_OWNERS: dict[str, dict[str, str]] = {
     },
     "node": {
         "path": ".github/workflows/ci-typescript.yml",
-        "commandMarker": "bun run test:bun",
+        "commandMarker": "--gate-id node-bun-runtime-tests",
     },
     "python-cli": {
         "path": ".github/workflows/ci-python-bindings.yml",
-        "commandMarker": "python -m pytest python-bindings/tests -q",
+        "commandMarker": "--gate-id python-runtime-smoke-tests",
     },
     "tui": {
         "path": ".github/workflows/ci-rust.yml",

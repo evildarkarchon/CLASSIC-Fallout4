@@ -65,11 +65,14 @@ After executing the applicable producers, aggregate their artifact directories:
 python tools/binding_compliance/check_compliance.py --profile full --receipt-directory tools/binding_compliance/artifacts/current-run --output-dir tools/binding_compliance/artifacts/full
 ```
 
-The full command executes the retained lower-level gates as well as receipt
-validation. Missing instances, skipped or failed scenarios, changed observations,
-stale source identities, modified plans, and unresolved parity rows fail the
-result. A scoped participant pass cannot claim repository completion. Source
-changes require fresh affected producer evidence before aggregation.
+The local full command executes the retained lower-level gates as well as
+receipt validation. In CI, producer jobs execute those gates once and the full
+job imports their exact same-run command outcomes while independently validating
+all receipts and immutable plans. Missing instances, skipped or failed scenarios,
+changed observations, stale source identities, modified plans, and unresolved
+parity rows fail the result. A scoped participant pass cannot claim repository
+completion. Source changes require fresh affected producer evidence before
+aggregation.
 
 See the [binding compliance suite contract](../../api/binding-compliance-suite.md)
 and the [project command reference](../../../.agents/skills/classic-project-guide/references/repo-guide.md)

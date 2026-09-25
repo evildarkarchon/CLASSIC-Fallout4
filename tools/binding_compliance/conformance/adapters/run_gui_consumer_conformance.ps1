@@ -10,6 +10,9 @@
 .PARAMETER Preset
     Reuses the GUI build wrapper's requested preset. Pass ci-system-qt after a
     system-Qt build so the bounded receipt run uses the already configured Qt provider.
+
+.PARAMETER TestOnly
+    Reuses the completed GUI build after the retained native test step.
 #>
 
 [CmdletBinding()]
@@ -19,7 +22,8 @@ param(
     [ValidateSet("crash-log-scan-run", "user-settings")]
     [string]$Family = "crash-log-scan-run",
     [string]$ArtifactRoot = "tools/binding_compliance/artifacts",
-    [string]$Preset = "default"
+    [string]$Preset = "default",
+    [switch]$TestOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -104,10 +108,12 @@ try {
     -CTestName classic-gui-consumer-conformance `
     -Compiler $env:CLASSIC_CONSUMER_CONFORMANCE_COMPILER `
     -Preset $env:CLASSIC_CONSUMER_CONFORMANCE_PRESET `
+    -TestOnly:($env:CLASSIC_CONSUMER_CONFORMANCE_TEST_ONLY -eq '1') `
     -CTestArgs @('--output-junit', $env:CLASSIC_CONSUMER_CONFORMANCE_JUNIT)
 exit $LASTEXITCODE
 '@
     $EncodedChildCommand = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($ChildCommand))
+    $RecordedTestOnly = if ($TestOnly) { '-TestOnly:$true' } else { '-TestOnly:$false' }
     $WrapperArguments = @(
         "-NoProfile",
         "-ExecutionPolicy",
@@ -121,7 +127,7 @@ exit $LASTEXITCODE
         "-ExecutionPolicy",
         "Bypass",
         "-Command",
-        "& classic-gui/build_gui.ps1 -Test -CTestName classic-gui-consumer-conformance -Compiler $Compiler -Preset $Preset -CTestArgs @('--output-junit', '$JunitPath')"
+        "& classic-gui/build_gui.ps1 -Test -CTestName classic-gui-consumer-conformance -Compiler $Compiler -Preset $Preset $RecordedTestOnly -CTestArgs @('--output-junit', '$JunitPath')"
     )
 
     $ExitCode = $null
@@ -154,6 +160,9 @@ exit $LASTEXITCODE
         $StartInfo.Environment["CLASSIC_CONSUMER_CONFORMANCE_COMPILER"] = $Compiler
         # Reuse the preceding GUI build's Qt provider instead of starting a different preset's cold build.
         $StartInfo.Environment["CLASSIC_CONSUMER_CONFORMANCE_PRESET"] = $Preset
+        # The encoded invocation cannot inherit PowerShell switch binding from
+        # this process, so pass an explicit value for its optional reuse mode.
+        $StartInfo.Environment["CLASSIC_CONSUMER_CONFORMANCE_TEST_ONLY"] = if ($TestOnly) { "1" } else { "0" }
         $StartInfo.Environment["CLASSIC_CONSUMER_CONFORMANCE_JUNIT"] = $JunitPath
 
         $Process = [System.Diagnostics.Process]::new()

@@ -6,7 +6,7 @@ import json
 import os
 import subprocess
 from collections.abc import Iterable, Mapping
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -113,11 +113,14 @@ class ComplianceSuite:
             skip_commands: bool = False,
             fail_on_gaps: bool = False,
             conformance_report: Mapping[str, Any] | None = None,
+            imported_gate_results: Mapping[str, RequirementResult] | None = None,
     ) -> None:
         """Create a suite runner bound to a repository root and profile.
 
         ``conformance_report`` is reported separately. A blocking family is
         conjunctive with retained gates; a shadow family cannot weaken them.
+        ``imported_gate_results`` contains results authenticated against this
+        checkout and workflow run; missing command results fail closed.
         """
 
         self.repo_root = repo_root.resolve()
@@ -130,6 +133,7 @@ class ComplianceSuite:
         self.skip_commands = skip_commands
         self.fail_on_gaps = fail_on_gaps
         self.conformance_report = conformance_report
+        self.imported_gate_results = imported_gate_results
 
     def run(self) -> dict[str, Any]:
         """Evaluate all selected requirements and return a structured report."""
@@ -244,6 +248,23 @@ class ComplianceSuite:
                 blocking=requirement.blocking,
                 summary=requirement.summary,
                 evidence=evidence + ["Command skipped by --skip-commands."],
+            )
+
+        if self.imported_gate_results is not None:
+            imported = self.imported_gate_results.get(requirement.id)
+            if imported is not None and imported.id == requirement.id and imported.status == "passed":
+                return replace(imported, evidence=evidence + imported.evidence)
+            return RequirementResult(
+                id=requirement.id,
+                title=requirement.title,
+                surface=requirement.surface,
+                classification=requirement.classification,
+                status="failed",
+                blocking=requirement.blocking,
+                summary=requirement.summary,
+                evidence=evidence,
+                failure_kind="local_environment_failure",
+                stderr=f"Missing or failed current-run evidence for {requirement.id}",
             )
 
         return self._run_command_requirement(requirement, evidence)
@@ -391,6 +412,9 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.extend(("", "## Coverage Gaps", ""))
         for gap in report["gaps"]:
             lines.append("- `{requirementId}` ({surface}): {message}".format(**gap))
+
+    if report.get("gateEvidenceError"):
+        lines.extend(("", "## Retained Gate Evidence", "", str(report["gateEvidenceError"])))
 
     conformance = report.get("conformance")
     if isinstance(conformance, dict):

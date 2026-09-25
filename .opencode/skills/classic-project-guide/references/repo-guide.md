@@ -24,6 +24,7 @@ The two wrappers do **not** take the same parameters. Check this table before co
 | Parameter | `build_cli.ps1` | `build_gui.ps1` |
 | --- | --- | --- |
 | `-Clean`, `-Test`, `-Debug`, `-Install`, `-Package`, `-Compiler` | yes | yes |
+| `-TestOnly` | yes | yes |
 | `-CTestName`, `-CTestArgs` | yes | yes |
 | `-IntegrationTestName` | yes | **no** |
 | `-Preset`, `-TestTimeoutSec` | **no** | yes |
@@ -44,6 +45,10 @@ pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "T
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -IntegrationTestName help,version
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -CTestName classic-gui-test-scan-settings-wiring
 
+# Reuse a completed build in the same checkout for a separate CI receipt test.
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -TestOnly -CTestName classic-cxx-conformance
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -TestOnly -CTestName classic-gui-consumer-conformance
+
 # Clean rebuild, install, or package
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Clean
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Clean
@@ -52,6 +57,12 @@ pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Install
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Package
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Package
 ```
+
+`-TestOnly` verifies the completed build marker's compiler, preset, and Git
+revision before running the wrapper's selected tests; it skips configure/build.
+Run a normal build/test through the matching wrapper first. Native CI fetches
+the pinned Corrosion source once for its compiler jobs and reuses that source
+for their initial CMake configure; ordinary local builds retain FetchContent.
 
 CLI integration scenarios use the crash-log fixture corpus under `sample_logs/FO4`; initialize it with `git submodule update --init --recursive` when that directory is missing.
 
@@ -97,6 +108,11 @@ pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters
 pwsh -ExecutionPolicy Bypass -File tools/binding_compliance/conformance/adapters/run_cxx_conformance.ps1 -Family <family> -Compiler clang-cl
 python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory <receipt-directory>
 ```
+
+The local `full` command still runs retained command gates. In CI, producer jobs
+run those gates once and upload exact current-run evidence; the final job passes
+`--gate-evidence-directory tools/binding_compliance/artifacts/retained-downloaded`
+to import their results while independently validating every receipt and plan.
 
 Use the dedicated Scan Run/User Settings/consumer launchers listed in
 `docs/api/binding-compliance-suite.md` for those packs. Missing or stale receipts

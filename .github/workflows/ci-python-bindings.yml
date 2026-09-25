@@ -30,7 +30,17 @@ jobs:
         run: python -m pip install --disable-pip-version-check "ruamel.yaml>=0.18,<0.19"
 
       - name: Run Python binding compliance profile
-        run: python tools/binding_compliance/check_compliance.py --repo-root . --profile python-ci
+        run: python tools/binding_compliance/check_compliance.py --repo-root . --profile python-ci --gate-evidence-out tools/binding_compliance/artifacts/retained/python-ci/gate_evidence.json
+
+      - name: Upload Python parity retained gate evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-parity-retained-gates
+          path: tools/binding_compliance/artifacts/retained/
+          if-no-files-found: warn
+          overwrite: true
+          retention-days: 7
 
       - name: Upload parity and runtime coverage diagnostics
         if: failure()
@@ -105,12 +115,21 @@ jobs:
       # modules at import time, so CI must install the full Python binding
       # set instead of a hand-maintained subset.
       - name: Build and install Python bindings
-        shell: pwsh
-        run: pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python
+        run: python tools/binding_compliance/run_retained_gate.py --repo-root . --gate-id python-bindings-rebuild --gate-evidence-out tools/binding_compliance/artifacts/retained/python-bindings-rebuild/gate_evidence.json
 
-      # Use the repository-standard module invocation so local and CI commands match.
+      # The retained gate runner uses the repository-standard module invocation.
       - name: Run Python bindings smoke tests
-        run: uv run --project python-bindings python -m pytest python-bindings/tests -q
+        run: python tools/binding_compliance/run_retained_gate.py --repo-root . --gate-id python-runtime-smoke-tests --gate-evidence-out tools/binding_compliance/artifacts/retained/python-runtime-smoke-tests/gate_evidence.json
+
+      - name: Upload Python runtime retained gate evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-runtime-retained-gates
+          path: tools/binding_compliance/artifacts/retained/
+          if-no-files-found: warn
+          overwrite: true
+          retention-days: 7
 
       - name: Run Python Crash Log Scan Run conformance
         if: ${{ !cancelled() }}

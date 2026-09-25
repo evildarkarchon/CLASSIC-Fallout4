@@ -12,6 +12,7 @@
 param(
     [ValidateSet("msvc", "clang-cl")]
     [string]$Compiler = "msvc",
+    [switch]$TestOnly,
     [ValidateSet("game-version-parse", "fallout4-identity", "fallout4-paths", "settings-yaml", "settings-validation", "registry-game", "registry-gui", "version-pe", "settings-load", "registry-operations", "web-operations", "performance", "update-decisions", "update-services", "xse-operations", "xse-folder", "installation-paths", "game-identity", "runtime-access", "crash-log-scan-run", "autoscan-report", "user-settings", "crash-suspect", "crashgen-settings", "mod-guidance", "formid-lookup", "named-record", "plugin-evidence", "installed-yaml-data", "config-vocabulary", "scan-run-vocabulary", "config-operations", "file-backups", "path-backups", "game-integrity", "game-setup-intake", "yaml-update-operations", "file-operations", "path-operations", "database-operations", "version-registry", "scan-game", "papyrus-monitor", "wrye-report", "log-collection", "crash-pattern", "formid-finding", "ba2-scan", "hash-cache-controls", "crashgen-check", "message-logging", "update-rejection", "yaml-file-values", "markdown-rendering", "report-discovery")]
     [string]$Family = "crash-log-scan-run",
     [string]$ArtifactRoot = "tools/binding_compliance/artifacts"
@@ -88,7 +89,14 @@ try {
         "-CTestName",
         "classic-cxx-conformance",
         "-Compiler",
-        $Compiler,
+        $Compiler
+    )
+    if ($TestOnly) {
+        # The retained CLI step completed this checkout's build; the wrapper
+        # verifies its marker before using the same exact CTest selection.
+        $WrapperArguments += "-TestOnly"
+    }
+    $WrapperArguments += @(
         "-CTestArgs",
         "--output-junit",
         $JunitPath

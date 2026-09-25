@@ -12,6 +12,7 @@
 param(
     [ValidateSet("msvc", "clang-cl")]
     [string]$Compiler = "msvc",
+    [switch]$TestOnly,
     [ValidateSet("crash-log-scan-run", "user-settings")]
     [string]$Family = "crash-log-scan-run",
     [string]$ArtifactRoot = "tools/binding_compliance/artifacts"
@@ -100,7 +101,14 @@ try {
         "-CTestName",
         "classic-cli-consumer-conformance",
         "-Compiler",
-        $Compiler,
+        $Compiler
+    )
+    if ($TestOnly) {
+        # Reuse the retained CLI build while keeping this consumer's bounded
+        # CTest run and receipt validation as an independent attempt.
+        $WrapperArguments += "-TestOnly"
+    }
+    $WrapperArguments += @(
         "-CTestArgs",
         "--output-junit",
         $JunitPath

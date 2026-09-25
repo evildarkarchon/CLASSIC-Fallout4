@@ -17,6 +17,13 @@ from conformance.repository import (  # type: ignore
     build_repository_report,
     discover_repository_receipts,
 )
+from gate_evidence import (  # type: ignore
+    GateEvidenceError,
+    current_source_revision,
+    github_run_identity,
+    load_gate_evidence,
+    write_gate_evidence,
+)
 from suite import ComplianceSuite, write_report_files  # type: ignore
 
 
@@ -79,6 +86,16 @@ def build_argument_parser() -> argparse.ArgumentParser:
         help="Full profile: recursively collect downloaded receipts with sibling plans.",
     )
     parser.add_argument(
+        "--gate-evidence-out",
+        type=Path,
+        help="Participant source profile: write same-run retained-gate evidence.",
+    )
+    parser.add_argument(
+        "--gate-evidence-directory",
+        type=Path,
+        help="Full profile: import current-run retained-gate evidence without rerunning commands.",
+    )
+    parser.add_argument(
         "--attempt",
         help="Companion native attempt diagnostics; never semantic evidence.",
     )
@@ -94,6 +111,14 @@ def _argument_error(args: argparse.Namespace) -> str | None:
 
     if args.receipt_directory and args.profile != "full":
         return "--receipt-directory requires --profile full"
+    if args.gate_evidence_out and args.profile not in {"cxx-ci", "node-ci", "python-ci"}:
+        return "--gate-evidence-out requires cxx-ci, node-ci, or python-ci profile"
+    if args.gate_evidence_directory and args.profile != "full":
+        return "--gate-evidence-directory requires --profile full"
+    if args.gate_evidence_out and args.gate_evidence_directory:
+        return "gate evidence output and import cannot be combined"
+    if args.skip_commands and (args.gate_evidence_out or args.gate_evidence_directory):
+        return "gate evidence cannot be produced or imported with --skip-commands"
     if args.profile == "conformance":
         if not args.participant:
             return "--profile conformance requires --participant"
@@ -172,6 +197,26 @@ def main(argv: list[str] | None = None) -> int:
             print(str(exc), file=sys.stderr)
             return 2
 
+    imported_gate_results = None
+    gate_evidence_error = None
+    if args.gate_evidence_directory:
+        try:
+            run_id, run_attempt = github_run_identity()
+            imported_gate_results = load_gate_evidence(
+                repo_root,
+                args.gate_evidence_directory,
+                requirements,
+                source_revision=current_source_revision(repo_root),
+                run_id=run_id,
+                run_attempt=run_attempt,
+            )
+        except GateEvidenceError as exc:
+            # Keep a red full report after a producer failure; rerunning its
+            # missing commands here would erase the same-run evidence boundary.
+            gate_evidence_error = str(exc)
+            imported_gate_results = {}
+            print(gate_evidence_error, file=sys.stderr)
+
     suite = ComplianceSuite(
         repo_root=repo_root,
         profile=args.profile,
@@ -179,9 +224,25 @@ def main(argv: list[str] | None = None) -> int:
         skip_commands=args.skip_commands,
         fail_on_gaps=args.fail_on_gaps,
         conformance_report=conformance_report,
+        imported_gate_results=imported_gate_results,
     )
     report = suite.run()
+    if gate_evidence_error is not None:
+        report["gateEvidenceError"] = gate_evidence_error
+        report["summary"]["result"] = "fail"
+        report["summary"]["repository_complete"] = False
     json_path, markdown_path = write_report_files(report, repo_root / args.output_dir)
+    if args.gate_evidence_out:
+        try:
+            destination = (
+                args.gate_evidence_out
+                if args.gate_evidence_out.is_absolute()
+                else repo_root / args.gate_evidence_out
+            )
+            write_gate_evidence(repo_root, destination, report, requirements)
+        except GateEvidenceError as exc:
+            print(str(exc), file=sys.stderr)
+            return 2
 
     summary = report["summary"]
     print(f"Binding compliance profile: {args.profile}")

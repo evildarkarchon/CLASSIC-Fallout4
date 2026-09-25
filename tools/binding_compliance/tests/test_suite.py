@@ -91,6 +91,88 @@ def test_full_profile_cannot_skip_retained_commands(tmp_path: Path) -> None:
     assert report["summary"]["repository_complete"] is False
 
 
+def test_full_profile_reuses_executed_gate_without_running_its_command(
+        tmp_path: Path,
+) -> None:
+    """An authenticated retained result replaces execution but retains the full claim."""
+    (tmp_path / "marker.txt").write_text("current", encoding="utf-8")
+    requirement = ComplianceRequirement(
+        id="retained",
+        title="Retained",
+        surface="policy",
+        classification="existing_gate",
+        profiles=("full",),
+        blocking=True,
+        summary="Retained analyzer",
+        command=CommandSpec(argv=("this-command-must-not-run",)),
+        paths=("marker.txt",),
+    )
+    imported = RequirementResult(
+        id="retained",
+        title="Retained",
+        surface="policy",
+        classification="existing_gate",
+        status="passed",
+        blocking=True,
+        summary="Retained analyzer",
+        evidence=["Passed in a current-run participant job."],
+    )
+    report = ComplianceSuite(
+        repo_root=tmp_path,
+        profile="full",
+        requirements=(requirement,),
+        imported_gate_results={"retained": imported},
+        conformance_report={
+            "enforcement": "blocking",
+            "result": "pass",
+            "repositoryComplete": True,
+        },
+    ).run()
+
+    assert report["summary"]["result"] == "pass"
+    assert report["summary"]["repository_complete"] is True
+    assert report["requirements"][0]["status"] == "passed"
+
+
+def test_imported_gate_still_checks_current_source_paths(tmp_path: Path) -> None:
+    """A previous participant pass cannot cover missing files in the full checkout."""
+    requirement = ComplianceRequirement(
+        id="retained",
+        title="Retained",
+        surface="policy",
+        classification="existing_gate",
+        profiles=("full",),
+        blocking=True,
+        summary="Retained analyzer",
+        command=CommandSpec(argv=("this-command-must-not-run",)),
+        paths=("missing.txt",),
+    )
+    imported = RequirementResult(
+        id="retained",
+        title="Retained",
+        surface="policy",
+        classification="existing_gate",
+        status="passed",
+        blocking=True,
+        summary="Retained analyzer",
+    )
+    report = ComplianceSuite(
+        repo_root=tmp_path,
+        profile="full",
+        requirements=(requirement,),
+        imported_gate_results={"retained": imported},
+        conformance_report={
+            "enforcement": "blocking",
+            "result": "pass",
+            "repositoryComplete": True,
+        },
+    ).run()
+
+    assert report["summary"]["result"] == "fail"
+    assert report["requirements"][0]["status"] == "failed"
+    assert "Missing required path: missing.txt" in report["requirements"][0]["stderr"]
+
+
 def test_build_summary_keeps_gap_reporting_non_blocking_by_default() -> None:
     results = [
         RequirementResult(

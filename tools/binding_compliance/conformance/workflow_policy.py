@@ -441,6 +441,204 @@ def _has_exact_step_condition(step: str, expected: str) -> bool:
     return [condition.rstrip() for condition in conditions] == [expected]
 
 
+def _validate_retained_gate_producers(repo_root: Path) -> None:
+    """Require every imported command gate to execute in its producer job.
+
+    A successful reusable workflow alone cannot prove that a named command ran.
+    These exact launch and upload checks keep the full job's imported evidence
+    tied to blocking steps in the same checked-out workflow revision.
+    """
+
+    def job(workflow: str, job_id: str) -> str:
+        """Load one retained-gate producer without trusting artifact content."""
+        source = (repo_root / ".github" / "workflows" / workflow).read_text(
+            encoding="utf-8"
+        )
+        block = _job_block(source, job_id)
+        if re.search(r"(?m)^    continue-on-error:", block):
+            raise WorkflowPolicyError("retained gate producer must be blocking")
+        return block
+
+    def command_step(
+        block: str, name: str, command: str, condition: str | None = None
+    ) -> None:
+        """Require the catalog command and its reviewed matrix condition."""
+        step = _step_block(block, f"- name: {name}", label="retained gate command")
+        if (
+            f"        run: {command}" not in step.splitlines()
+            or "continue-on-error:" in step
+        ):
+            raise WorkflowPolicyError("retained gate command differs from catalog")
+        conditions = re.findall(r"(?m)^        (if:[^\r\n]*)$", step)
+        if conditions != ([] if condition is None else [f"if: {condition}"]):
+            raise WorkflowPolicyError("retained gate command has a changed condition")
+
+    def upload_step(block: str, name: str, artifact_name: str) -> None:
+        """Require one current-run artifact that survives failed producer steps."""
+        step = _step_block(block, f"- name: {name}", label="retained gate upload")
+        for line in (
+            "        if: always()",
+            "        uses: actions/upload-artifact@v6",
+            f"          name: {artifact_name}",
+            "          path: tools/binding_compliance/artifacts/retained/",
+            "          overwrite: true",
+        ):
+            if line not in step.splitlines():
+                raise WorkflowPolicyError("retained gate upload lost current-run evidence")
+        if "continue-on-error:" in step:
+            raise WorkflowPolicyError("retained gate upload must be blocking")
+
+    for workflow, job_id, step_name, profile, upload_name, artifact_name in (
+        (
+            "ci-cpp.yml",
+            "cxx-parity-gate",
+            "Run CXX binding compliance profile",
+            "cxx-ci",
+            "Upload CXX retained gate evidence",
+            "cxx-parity-retained-gates",
+        ),
+        (
+            "ci-typescript.yml",
+            "parity-gates",
+            "Run Node binding compliance profile",
+            "node-ci",
+            "Upload Node parity retained gate evidence",
+            "node-parity-retained-gates",
+        ),
+        (
+            "ci-python-bindings.yml",
+            "parity-gates",
+            "Run Python binding compliance profile",
+            "python-ci",
+            "Upload Python parity retained gate evidence",
+            "python-parity-retained-gates",
+        ),
+    ):
+        block = job(workflow, job_id)
+        command_step(
+            block,
+            step_name,
+            "python tools/binding_compliance/check_compliance.py --repo-root . "
+            f"--profile {profile} --gate-evidence-out "
+            "tools/binding_compliance/artifacts/retained/"
+            f"{profile}/gate_evidence.json",
+        )
+        upload_step(block, upload_name, artifact_name)
+        if block.index(f"- name: {upload_name}") < block.index(f"- name: {step_name}"):
+            raise WorkflowPolicyError("retained gate upload precedes its command")
+
+    node = job("ci-typescript.yml", "build-and-test")
+    for name, runtime, gate_id in (
+        ("Run Bun tests", "bun", "node-bun-runtime-tests"),
+        ("Run Node runtime smoke tests", "node", "node-node-runtime-tests"),
+    ):
+        command_step(
+            node,
+            name,
+            "python tools/binding_compliance/run_retained_gate.py --repo-root . "
+            f"--gate-id {gate_id} --gate-evidence-out "
+            "tools/binding_compliance/artifacts/retained/"
+            f"{gate_id}/gate_evidence.json",
+            f"matrix.runtime == '{runtime}'",
+        )
+    upload_step(
+        node,
+        "Upload Node runtime retained gate evidence",
+        "node-runtime-retained-gates-${{ matrix.runtime }}",
+    )
+
+    python = job("ci-python-bindings.yml", "build-and-test")
+    for name, gate_id in (
+        ("Build and install Python bindings", "python-bindings-rebuild"),
+        ("Run Python bindings smoke tests", "python-runtime-smoke-tests"),
+    ):
+        command_step(
+            python,
+            name,
+            "python tools/binding_compliance/run_retained_gate.py --repo-root . "
+            f"--gate-id {gate_id} --gate-evidence-out "
+            "tools/binding_compliance/artifacts/retained/"
+            f"{gate_id}/gate_evidence.json",
+        )
+    upload_step(
+        python,
+        "Upload Python runtime retained gate evidence",
+        "python-runtime-retained-gates",
+    )
+
+
+def _validate_corrosion_source_workflow(repo_root: Path) -> None:
+    """Bind native builds to one verified current-run Corrosion checkout."""
+    source = (repo_root / ".github" / "workflows" / "ci-cpp.yml").read_text(
+        encoding="utf-8"
+    )
+    revision = "1499b14e4906a2890f5cee1547c8848db261753d"
+    artifact_name = "corrosion-source-v0.6.1"
+    fetch = _job_block(source, "corrosion-source")
+    archive = _step_block(
+        fetch,
+        "Archive verified Corrosion v0.6.1 source",
+        label="Corrosion source archive",
+    )
+    for marker in (
+        "git clone --depth 1 --branch v0.6.1",
+        revision,
+        "git -C $sourceDir archive --format=zip",
+        "Get-FileHash -LiteralPath $archivePath -Algorithm SHA256",
+    ):
+        if marker not in archive:
+            raise WorkflowPolicyError("Corrosion source must be pinned and archived once")
+    upload = _step_block(fetch, "Upload pinned Corrosion source", label="Corrosion source upload")
+    for line in (
+        "        uses: actions/upload-artifact@v6",
+        f"          name: {artifact_name}",
+        "          path: ${{ runner.temp }}/classic-corrosion-artifact/",
+        "          if-no-files-found: error",
+    ):
+        if line not in upload.splitlines():
+            raise WorkflowPolicyError("Corrosion source archive must be uploaded")
+    if "    continue-on-error:" in fetch or "matrix:" in fetch:
+        raise WorkflowPolicyError("Corrosion source fetch must be one blocking job")
+
+    for job_id, build_step in (
+        ("cli-tests", "Build and test CLI"),
+        ("gui-tests", "Build and test GUI"),
+    ):
+        job = _job_block(source, job_id)
+        if "    needs: [cxx-parity-gate, corrosion-source]" not in job.splitlines():
+            raise WorkflowPolicyError("Corrosion source must gate each native build")
+        download = _step_block(
+            job, "Download pinned Corrosion source", label="Corrosion source download"
+        )
+        for line in (
+            "        uses: actions/download-artifact@v8",
+            f"          name: {artifact_name}",
+            "          path: ${{ runner.temp }}/classic-corrosion-artifact",
+        ):
+            if line not in download.splitlines():
+                raise WorkflowPolicyError("Corrosion source must come from this run")
+        if re.search(
+            r"(?m)^\s+(run-id|repository|github-token|artifact-ids):",
+            "\n".join(download.splitlines()[1:]),
+        ):
+            raise WorkflowPolicyError("Corrosion source must come from this run")
+        verify = _step_block(
+            job,
+            "Verify and extract pinned Corrosion source",
+            label="Corrosion source verification",
+        )
+        for marker in (
+            revision,
+            "Get-FileHash -LiteralPath $archivePath -Algorithm SHA256",
+            "Expand-Archive -LiteralPath $archivePath",
+            "CLASSIC_CORROSION_SOURCE_DIR=$sourceDir",
+        ):
+            if marker not in verify:
+                raise WorkflowPolicyError("Corrosion source verification was weakened")
+        if not job.index("Verify and extract pinned Corrosion source") < job.index(build_step):
+            raise WorkflowPolicyError("Corrosion source must be verified before build")
+
+
 def _validate_full_aggregation(repo_root: Path) -> None:
     """Keep the repository gate bound to every current-run native participant.
 
@@ -492,9 +690,12 @@ def _validate_full_aggregation(repo_root: Path) -> None:
             "full aggregation must preserve event checkout identity"
         )
     download = _step_block(
-        full, "uses: actions/download-artifact@v8", label="full aggregation download"
+        full,
+        "Download current-run conformance artifacts",
+        label="full aggregation download",
     )
     for line in (
+        "        uses: actions/download-artifact@v8",
         "          pattern: '*conformance*'",
         "          path: tools/binding_compliance/artifacts/downloaded",
         "          merge-multiple: false",
@@ -510,6 +711,28 @@ def _validate_full_aggregation(repo_root: Path) -> None:
         raise WorkflowPolicyError(
             "full aggregation artifacts must come from the current workflow run"
         )
+    retained_download = _step_block(
+        full,
+        "Download current-run retained gate artifacts",
+        label="full aggregation retained gate evidence",
+    )
+    for line in (
+        "        uses: actions/download-artifact@v8",
+        "          pattern: '*retained-gates*'",
+        "          path: tools/binding_compliance/artifacts/retained-downloaded",
+        "          merge-multiple: false",
+    ):
+        if line not in retained_download.splitlines():
+            raise WorkflowPolicyError(
+                "full aggregation requires current-run retained gate evidence"
+            )
+    if re.search(
+        r"(?m)^\s+(run-id|repository|github-token|name|artifact-ids):",
+        "\n".join(retained_download.splitlines()[1:]),
+    ):
+        raise WorkflowPolicyError(
+            "full aggregation retained gate evidence must come from the current run"
+        )
     upstream = _step_block(
         full,
         "Require every retained participant job to pass",
@@ -524,7 +747,7 @@ def _validate_full_aggregation(repo_root: Path) -> None:
         raise WorkflowPolicyError(
             "full aggregation must require actual upstream job results"
         )
-    command = "python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded --output-dir tools/binding_compliance/artifacts/full"
+    command = "python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded --gate-evidence-directory tools/binding_compliance/artifacts/retained-downloaded --output-dir tools/binding_compliance/artifacts/full"
     launcher = _step_block(
         full,
         "tools/binding_compliance/check_compliance.py",
@@ -539,6 +762,8 @@ def _validate_full_aggregation(repo_root: Path) -> None:
         )
     if not _has_exact_step_condition(launcher, "if: ${{ !cancelled() }}"):
         raise WorkflowPolicyError("full aggregation must report upstream failures")
+    _validate_retained_gate_producers(repo_root)
+    _validate_corrosion_source_workflow(repo_root)
 
 
 def validate_scan_run_workflow_policy(repo_root: Path) -> None:

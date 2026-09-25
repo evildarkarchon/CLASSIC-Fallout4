@@ -337,6 +337,99 @@ def test_full_aggregation_cannot_lose_required_jobs_or_artifact_identity(
         validate_scan_run_workflow_policy(tmp_path)
 
 
+def test_full_aggregation_requires_current_run_retained_gate_evidence(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A receipt-only download cannot certify commands run by producer jobs."""
+    required = workflow_policy._required_execution_keys(REPO_ROOT)
+    monkeypatch.setattr(workflow_policy, "_required_execution_keys", lambda _: required)
+    workflow_root = tmp_path / ".github" / "workflows"
+    workflow_root.parent.mkdir(parents=True)
+    shutil.copytree(REPO_ROOT / ".github" / "workflows", workflow_root)
+    path = workflow_root / "ci-binding-compliance.yml"
+    source = path.read_text(encoding="utf-8")
+    path.write_text(
+        source.replace("pattern: '*retained-gates*'", "pattern: 'stale-*'", 1),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(WorkflowPolicyError, match="retained gate evidence"):
+        validate_scan_run_workflow_policy(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "workflow_name,needle,replacement",
+    (
+        (
+            "ci-cpp.yml",
+            "--gate-evidence-out tools/binding_compliance/artifacts/retained/cxx-ci/gate_evidence.json",
+            "--skip-commands",
+        ),
+        (
+            "ci-typescript.yml",
+            "name: node-runtime-retained-gates-${{ matrix.runtime }}",
+            "name: node-runtime-stale",
+        ),
+        (
+            "ci-python-bindings.yml",
+            "--gate-id python-runtime-smoke-tests",
+            "--gate-id python-bindings-rebuild",
+        ),
+    ),
+)
+def test_retained_gate_producers_cannot_lose_their_current_run_evidence(
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        workflow_name: str,
+        needle: str,
+        replacement: str,
+) -> None:
+    """A green producer job must still execute and publish its exact catalog gates."""
+    required = workflow_policy._required_execution_keys(REPO_ROOT)
+    monkeypatch.setattr(workflow_policy, "_required_execution_keys", lambda _: required)
+    workflow_root = tmp_path / ".github" / "workflows"
+    workflow_root.parent.mkdir(parents=True)
+    shutil.copytree(REPO_ROOT / ".github" / "workflows", workflow_root)
+    path = workflow_root / workflow_name
+    source = path.read_text(encoding="utf-8")
+    assert needle in source
+    path.write_text(source.replace(needle, replacement, 1), encoding="utf-8")
+
+    with pytest.raises(WorkflowPolicyError, match="retained gate"):
+        validate_scan_run_workflow_policy(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "needle,replacement",
+    (
+        (
+            "1499b14e4906a2890f5cee1547c8848db261753d",
+            "0000000000000000000000000000000000000000",
+        ),
+        ("needs: [cxx-parity-gate, corrosion-source]", "needs: [cxx-parity-gate]"),
+    ),
+)
+def test_native_jobs_require_the_pinned_shared_corrosion_source(
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        needle: str,
+        replacement: str,
+) -> None:
+    """A passing native job must use the one verified current-run source archive."""
+    required = workflow_policy._required_execution_keys(REPO_ROOT)
+    monkeypatch.setattr(workflow_policy, "_required_execution_keys", lambda _: required)
+    workflow_root = tmp_path / ".github" / "workflows"
+    workflow_root.parent.mkdir(parents=True)
+    shutil.copytree(REPO_ROOT / ".github" / "workflows", workflow_root)
+    path = workflow_root / "ci-cpp.yml"
+    source = path.read_text(encoding="utf-8")
+    assert needle in source
+    path.write_text(source.replace(needle, replacement, 1), encoding="utf-8")
+
+    with pytest.raises(WorkflowPolicyError, match="Corrosion source"):
+        validate_scan_run_workflow_policy(tmp_path)
+
+
 @pytest.mark.parametrize("damage", (None, "failure", "skipped", "missing"))
 def test_actual_workflow_upstream_guard_rejects_failed_or_absent_jobs(
         damage: str | None,

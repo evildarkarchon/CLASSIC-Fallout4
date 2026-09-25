@@ -100,7 +100,7 @@ The command writes:
 | `node-ci` | CI slice for the Node workflow. Runs the canonical suite around Node parity and `index.d.ts` freshness checks. |
 | `python-ci` | CI slice for the Python workflow. Runs the canonical suite around Python parity, stub validation, uv drift-guard setup, and the schema-version guard. |
 | `conformance` | Receipt-only native-job validation for one participant or execution instance. Requires `--participant` and repeatable `--receipt`; CXX also requires companion `--attempt` and `--junit` diagnostics. |
-| `full` | Repository backstop. Adds Bun/Node runtime tests, the Python PyO3 rebuild, and Python smoke tests. Repeatable `--receipt` inputs must cover every tracked family and applicable execution instance. Every source parity row needs executed evidence or a named retained analyzer/policy exception. Missing receipts, unresolved rows, or skipped retained gates fail. |
+| `full` | Repository backstop. Executes retained Bun/Node and Python runtime gates locally, or authenticates their producer results from the current CI run. Repeatable `--receipt` inputs must cover every tracked family and applicable execution instance. Every source parity row needs executed evidence or a named retained analyzer/policy exception. Missing receipts, unresolved rows, or skipped retained gates fail. |
 | `static` | Policy, docs, and artifact checks; command-backed requirements still run unless `--skip-commands` is supplied. It makes no repository conformance claim. |
 
 Use `--skip-commands` when reviewing policy mapping without invoking lower-level gates.
@@ -123,15 +123,28 @@ source mappings, rejecting omitted CI policies.
 `ci-binding-compliance.yml` is the blocking repository CI entrypoint. Its four
 local reusable workflows execute the Rust, Node, Python, and native participants
 at the caller's event revision. The final **Full Repository Conformance** job
-waits for all four, requires their retained jobs to pass, downloads only artifacts
-from that workflow run into separate directories, and runs all retained `full`
-requirements. An incomplete family, compiler instance, or source-row disposition
-fails the full job even when individual adapter jobs pass.
+waits for all four, requires their retained jobs to pass, and downloads two
+separate kinds of current-run artifacts: immutable conformance receipts/plans
+and retained-gate outcomes. Producer jobs execute all 16 command-backed `full`
+requirements. The full job checks each imported gate's exact catalog command,
+passing status, Git revision, workflow run ID, and unique owner; an earlier
+successful attempt in the same run remains valid on a failed-job retry. It
+independently rechecks static requirements and authenticates every conformance
+receipt and plan against its checkout. An incomplete family, compiler instance,
+retained gate, or source-row disposition fails the full job even when individual
+adapter jobs pass.
 
 The aggregate uses the same Windows checkout layout as its producer jobs because
 immutable plans bind fixture paths as well as source contents and revision. It
-never edits a downloaded plan to fit a different checkout. Contributors can run
-the same aggregation over downloaded artifacts with:
+never edits a downloaded plan to fit a different checkout. CI uses:
+
+```powershell
+python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded --gate-evidence-directory tools/binding_compliance/artifacts/retained-downloaded
+```
+
+Contributors can run `full` without gate-evidence import; that form executes the
+retained commands locally and requires the usual built Node package, Python/uv,
+Rust, and native tooling:
 
 ```powershell
 python tools/binding_compliance/check_compliance.py --repo-root . --profile full --receipt-directory tools/binding_compliance/artifacts/downloaded
@@ -139,8 +152,9 @@ python tools/binding_compliance/check_compliance.py --repo-root . --profile full
 
 Keep each artifact's receipt beside its original `run_plan.json`. Directory
 discovery preserves independent invocations and rejects empty downloads or
-missing plans; central validation still authenticates every receipt. This command
-requires the usual built Node package, Python/uv, Rust, and native build tooling.
+missing plans; central validation still authenticates every receipt. Imported
+gate evidence is not `--skip-commands`: missing, stale, failed, duplicate, or
+command-mismatched evidence fails the full profile.
 
 ### Capabilities scoped to public operations
 

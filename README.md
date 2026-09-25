@@ -195,7 +195,7 @@ When `-Compiler clang-cl` is selected, the scripts also pass clang-cl to Cargo `
 
 GitHub Actions workflows:
 
-`ci-binding-compliance.yml` is the blocking umbrella workflow. It calls the four reusable participant workflows below at the same revision, then authenticates their receipts with the `full` profile and runs every retained gate. Missing executions or uncovered rows fail the aggregate; a passing participant slice cannot certify the repository. Binding conformance includes controlled XSE and installation-path scenarios. See the [binding compliance guide](docs/api/binding-compliance-suite.md) for executable coverage and retained platform-discovery evidence.
+`ci-binding-compliance.yml` is the blocking umbrella workflow. It calls the four reusable participant workflows below at the same revision. Those jobs run retained gates once and publish their outcomes; the `full` profile verifies the current-run command evidence and independently authenticates the conformance receipts and plans. Native CI reuses one verified CLI/GUI build per compiler across its family tests. Missing executions or uncovered rows fail the aggregate; a passing participant slice cannot certify the repository. Binding conformance includes controlled XSE and installation-path scenarios. See the [binding compliance guide](docs/api/binding-compliance-suite.md) for executable coverage and retained platform-discovery evidence.
 
 - `ci-cpp.yml` - C++ CLI/GUI build and test pipeline on `windows-latest` for MSVC and clang-cl
 - `ci-rust.yml` - Rust format/lint/build/test

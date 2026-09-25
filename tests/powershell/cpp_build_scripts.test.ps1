@@ -154,6 +154,124 @@ function Assert-BuildScriptSupportsCompilerSelection {
     }
 }
 
+<#
+.SYNOPSIS
+    Exercises the build-reuse guard without configuring or compiling native code.
+#>
+function Assert-TestOnlyBuildMarker {
+    param(
+        [System.Management.Automation.Language.Ast]$Ast,
+        [string]$ScriptLabel,
+        [string]$Preset
+    )
+
+    if ("TestOnly" -notin (Get-ParameterNames -Ast $Ast)) {
+        throw "Expected $ScriptLabel to expose -TestOnly."
+    }
+
+    $validator = $Ast.Find({
+            param($Node)
+            $Node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+            $Node.Name -eq "Assert-ReusableBuildMarker"
+        }, $true)
+    if (-not $validator) {
+        throw "Expected $ScriptLabel to define Assert-ReusableBuildMarker."
+    }
+
+    $runner = [scriptblock]::Create(@"
+param([string]`$MarkerPath, [string]`$Compiler, [string]`$Preset, [string]`$SourceRevision)
+$($validator.Extent.Text)
+Assert-ReusableBuildMarker -MarkerPath `$MarkerPath -Compiler `$Compiler -Preset `$Preset -SourceRevision `$SourceRevision
+"@)
+    $markerFile = New-TemporaryFile
+    try {
+        $marker = [ordered]@{
+            schemaVersion = 1
+            compiler = "msvc"
+            preset = $Preset
+            sourceRevision = "test-revision"
+        }
+        $marker | ConvertTo-Json | Set-Content -LiteralPath $markerFile.FullName -Encoding utf8
+        & $runner -MarkerPath $markerFile.FullName -Compiler msvc -Preset $Preset -SourceRevision test-revision
+
+        foreach ($mismatch in @(
+                @{ Compiler = "clang-cl"; Preset = $Preset; SourceRevision = "test-revision" },
+                @{ Compiler = "msvc"; Preset = "wrong-preset"; SourceRevision = "test-revision" },
+                @{ Compiler = "msvc"; Preset = $Preset; SourceRevision = "wrong-revision" }
+            )) {
+            $rejected = $false
+            try {
+                & $runner -MarkerPath $markerFile.FullName @mismatch
+            }
+            catch {
+                $rejected = $true
+            }
+            if (-not $rejected) {
+                throw "Expected $ScriptLabel to reject a compiler, preset, or source revision mismatch."
+            }
+        }
+
+        $rejected = $false
+        try {
+            & $runner -MarkerPath "$($markerFile.FullName).missing" -Compiler msvc -Preset $Preset -SourceRevision test-revision
+        }
+        catch {
+            $rejected = $true
+        }
+        if (-not $rejected) {
+            throw "Expected $ScriptLabel to reject a missing build completion marker."
+        }
+    }
+    finally {
+        Remove-Item -LiteralPath $markerFile.FullName -Force
+    }
+}
+
+<#
+.SYNOPSIS
+    Checks the optional CMake source override without invoking CMake or Git.
+#>
+function Assert-CorrosionSourceOverride {
+    param(
+        [System.Management.Automation.Language.Ast]$Ast,
+        [string]$ScriptLabel,
+        [string]$SourceDir
+    )
+
+    $helper = $Ast.Find({
+            param($Node)
+            $Node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+            $Node.Name -eq "Get-CorrosionSourceCmakeArgument"
+        }, $true)
+    if (-not $helper) {
+        throw "Expected $ScriptLabel to support the shared Corrosion source override."
+    }
+    $runner = [scriptblock]::Create(@"
+param([string]`$SourceDir)
+$($helper.Extent.Text)
+Get-CorrosionSourceCmakeArgument -SourceDir `$SourceDir
+"@)
+
+    $sourcePath = (Resolve-Path -LiteralPath $SourceDir).Path
+    $argument = & $runner -SourceDir $sourcePath
+    if ($argument -cne "-DFETCHCONTENT_SOURCE_DIR_CORROSION:PATH=$sourcePath") {
+        throw "Expected $ScriptLabel to pass the verified source directory to CMake."
+    }
+    if (@(& $runner -SourceDir "").Count -ne 0) {
+        throw "Expected $ScriptLabel to keep local FetchContent behavior when no override is set."
+    }
+    $rejected = $false
+    try {
+        & $runner -SourceDir (Join-Path $sourcePath "missing-corrosion") | Out-Null
+    }
+    catch {
+        $rejected = $true
+    }
+    if (-not $rejected) {
+        throw "Expected $ScriptLabel to reject a missing Corrosion source directory."
+    }
+}
+
 $guiAst = Get-ScriptAst -ScriptPath $GuiBuildScriptPath
 $guiText = Get-Content -Path (Resolve-Path $GuiBuildScriptPath) -Raw
 $guiParamNames = Get-ParameterNames -Ast $guiAst
@@ -174,6 +292,8 @@ if ($guiText -notmatch '\$ctestRunArgs\s*\+=\s*\$CTestArgs') {
 
 Assert-TestNameNormalizerAcceptsCommaLists -Ast $guiAst -ScriptLabel "classic-gui/build_gui.ps1"
 Assert-BuildScriptSupportsCompilerSelection -Ast $guiAst -ScriptText $guiText -ScriptLabel "classic-gui/build_gui.ps1"
+Assert-TestOnlyBuildMarker -Ast $guiAst -ScriptLabel "classic-gui/build_gui.ps1" -Preset "ci-system-qt"
+Assert-CorrosionSourceOverride -Ast $guiAst -ScriptLabel "classic-gui/build_gui.ps1" -SourceDir (Split-Path -Parent $GuiCmakePath)
 
 $cliAst = Get-ScriptAst -ScriptPath $CliBuildScriptPath
 $cliText = Get-Content -Path (Resolve-Path $CliBuildScriptPath) -Raw
@@ -199,6 +319,8 @@ if ($cliText -notmatch '&\s*\$integrationScript[\s\S]*-TestName\s+\$IntegrationT
 
 Assert-TestNameNormalizerAcceptsCommaLists -Ast $cliAst -ScriptLabel "classic-cli/build_cli.ps1"
 Assert-BuildScriptSupportsCompilerSelection -Ast $cliAst -ScriptText $cliText -ScriptLabel "classic-cli/build_cli.ps1"
+Assert-TestOnlyBuildMarker -Ast $cliAst -ScriptLabel "classic-cli/build_cli.ps1" -Preset "default"
+Assert-CorrosionSourceOverride -Ast $cliAst -ScriptLabel "classic-cli/build_cli.ps1" -SourceDir (Split-Path -Parent $CliCmakePath)
 
 $cliPresetNames = Get-ConfigurePresetNames -PresetsPath $CliCmakePresetsPath
 Assert-ConfigurePresetsExist -ActualNames $cliPresetNames -ExpectedNames @(
