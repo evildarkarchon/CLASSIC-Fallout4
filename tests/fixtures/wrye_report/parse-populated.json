@@ -1,0 +1,7 @@
+{
+  "operation": "parse",
+  "html": "<h3>Missing Masters</h3><p>Example.esp</p><h3>Empty Section</h3><p>No plugins here</p><h3>Active Plugins:</h3><p>Fallout4.esm</p>",
+  "warnings": {
+    "Missing Masters": "  Fix masters!\n"
+  }
+}

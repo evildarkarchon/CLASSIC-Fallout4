@@ -9,13 +9,15 @@
 //! TUI owns it correctly. Each test therefore executes one genuine run, hands the paused result to
 //! an `App`, and then exercises exactly one decision path.
 
+use classic_config_core::InstalledYamlDataProvenance;
 use classic_scanlog_core::scan_run::contract::{
-    self, Cancellation, Configuration, LocalIgnoreRecoveryDecision, LocalIgnoreRunState, Options,
-    Request, RunResult,
+    self, Cancellation, Configuration, InstalledYamlDataRunDiagnosticKind,
+    LocalIgnoreRecoveryDecision, LocalIgnoreRunState, Options, Request, ResumeError, RunResult,
 };
 use classic_scanlog_core::{CrashLogScanFacts, CrashLogScanRunStatus, TargetedCrashLogScanSource};
 use classic_shared_core::{GameId, get_runtime};
 use classic_tui::app::{App, AsyncMessage, LastScanRun, Overlay};
+use classic_vocabulary::Vocabulary;
 use crossterm::event::{Event as TerminalEvent, KeyCode, KeyEvent, KeyModifiers};
 use std::path::{Path, PathBuf};
 
@@ -380,8 +382,9 @@ fn recovery_overlay_scrolling_reveals_diagnostics_without_answering() {
         "scrolling must not answer the recovery question"
     );
     let text = render_to_text(&mut fixture.app);
+    let parse_failure = InstalledYamlDataRunDiagnosticKind::Parse.label();
     assert!(
-        text.contains("parse failure:"),
+        text.contains(parse_failure),
         "diagnostics should be reachable by scrolling.\nrendered frame:\n{text}"
     );
 
@@ -467,6 +470,11 @@ fn recovery_overlay_escape_key_cancels_without_mutation() {
 }
 
 /// Verifies the pre-decision overlay presents Rust-owned facts and every offered outcome.
+///
+/// The Installed YAML Data facts are asserted through the Display Labels core owns rather than
+/// through the sentences around them. Restating that prose here would be a second copy of wording
+/// pinned in `classic-scan-presentation`, which is the drift this consolidation removes — what the
+/// TUI has to prove is that the facts arrive, not that it can repeat them.
 #[test]
 fn recovery_overlay_presents_retained_discovery_and_installation_diagnostics() {
     let fixture = awaiting_decision(&["crash-01.log", "crash-02.log"]);
@@ -476,23 +484,16 @@ fn recovery_overlay_presents_retained_discovery_and_installation_diagnostics() {
         text.contains("Retained discovery: 2 crash logs will be scanned once you decide."),
         "overlay text: {text}"
     );
-    assert!(
-        text.contains("Installed YAML Data:"),
-        "overlay text: {text}"
-    );
-    assert!(
-        text.contains("Main: bundled schema"),
-        "overlay text: {text}"
-    );
-    assert!(
-        text.contains("Game: bundled schema"),
-        "overlay text: {text}"
-    );
-    assert!(
-        text.contains("Local Ignore: recovery required"),
-        "overlay text: {text}"
-    );
-    assert!(text.contains("parse failure:"), "overlay text: {text}");
+    for label in [
+        InstalledYamlDataProvenance::Bundled.label(),
+        LocalIgnoreRunState::RecoveryRequired.label(),
+        InstalledYamlDataRunDiagnosticKind::Parse.label(),
+    ] {
+        assert!(
+            text.contains(label),
+            "`{label}` is missing.\noverlay text: {text}"
+        );
+    }
     assert!(
         text.contains("[P] Proceed Without Ignore"),
         "overlay text: {text}"
@@ -726,22 +727,30 @@ fn a_reset_conflict_is_presented_without_overwriting_newer_local_ignore_state() 
         .accept_local_ignore_recovery(LocalIgnoreRecoveryDecision::ResetToDefault);
     pump_until_resume_finished(&mut fixture.app);
 
+    let details = fixture.app.scan_run_summary_text();
     match fixture.app.last_scan_run.as_ref() {
         Some(LastScanRun::RecoveryFailed(error)) => {
             assert_eq!(error.kind().as_str(), "local_ignore_reset_conflict");
+            // Both identities must survive into the overlay, because comparing them is the whole
+            // action available to a user whose file changed while they were deciding. Asserted as
+            // the digests themselves rather than as the sentences around them: the prose belongs to
+            // `classic-scan-presentation` and is pinned there.
+            let ResumeError::LocalIgnoreResetConflict(conflict) = error else {
+                panic!("the conflict kind must carry conflict data, got {error:?}");
+            };
+            let expected = conflict.expected_identity.sha256_hex();
+            let actual = conflict
+                .actual_identity
+                .as_ref()
+                .expect("the repaired file must have been observed")
+                .sha256_hex();
+            assert_ne!(expected, actual, "the fixture must produce a real conflict");
+            assert!(details.contains(&expected), "run details: {details}");
+            assert!(details.contains(&actual), "run details: {details}");
         }
         other => panic!("expected a typed reset conflict, got {other:?}"),
     }
 
-    let details = fixture.app.scan_run_summary_text();
-    assert!(
-        details.contains("Expected identity: sha256"),
-        "run details: {details}"
-    );
-    assert!(
-        details.contains("Actual identity: sha256"),
-        "run details: {details}"
-    );
     assert!(
         details.contains("Your Local Ignore file was not replaced."),
         "run details: {details}"

@@ -2,9 +2,8 @@
 
 from concurrent.futures import ThreadPoolExecutor
 
-import pytest
-
 import classic_scanlog
+import pytest
 
 
 def _analyzer() -> classic_scanlog.ModGuidanceAnalyzer:
@@ -70,7 +69,7 @@ def _analyzer() -> classic_scanlog.ModGuidanceAnalyzer:
 
 
 def _analyze(
-    analyzer: classic_scanlog.ModGuidanceAnalyzer,
+        analyzer: classic_scanlog.ModGuidanceAnalyzer,
 ) -> classic_scanlog.ModGuidanceAnalysisResult:
     return analyzer.analyze(
         classic_scanlog.ModGuidanceAnalysisInput(
@@ -175,10 +174,10 @@ def test_mod_guidance_analyzer_returns_explicit_empty_result() -> None:
 
 def test_report_producing_mod_detection_functions_are_not_public() -> None:
     for obsolete_name in (
-        "detect_mods_single",
-        "detect_mods_double",
-        "detect_mods_important",
-        "detect_mods_batch",
+            "detect_mods_single",
+            "detect_mods_double",
+            "detect_mods_important",
+            "detect_mods_batch",
     ):
         assert not hasattr(classic_scanlog, obsolete_name)
 

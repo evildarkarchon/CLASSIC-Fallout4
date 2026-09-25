@@ -13,6 +13,13 @@ It is a pure Rust business-logic crate. It does not own a UI surface, binding la
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 
+The CXX `ini_validator_detect_all_issues_for_root` wrapper loads INI values through
+`IniValidator::validate_inis` before detecting structured issues. It follows the
+core loader's policy of skipping unreadable or malformed candidates and leaves
+the supplied game files unchanged. The fixture-backed `scan-game` conformance
+pack checks this behavior across Rust, CXX, Node, and Python alongside INI report
+game selection and ENB validation.
+
 ---
 
 ## Purpose And Scope
@@ -62,6 +69,12 @@ This crate exposes public modules directly and also re-exports most contributor-
 - `config_cache` - encoding-aware INI/CONF cache plus duplicate detection
 - `config` - lower-level duplicate config-file detector
 - `ini` - standalone INI validator APIs used less often than `mod_ini`
+
+`ConfigDuplicateDetector::scan_directory` publishes the same groups returned by
+`get_duplicates`. Canonical files follow sorted path order, hashes are reused
+only within one scan, and a new or failed scan cannot expose stale groups from
+the previous directory contents. Node and Python detector methods delegate to
+this state, so object results and returned duplicate maps now agree.
 
 ### Root re-exports
 

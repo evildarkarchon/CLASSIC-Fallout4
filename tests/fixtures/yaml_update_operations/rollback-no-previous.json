@@ -1,0 +1,11 @@
+{
+  "operation": "rollback",
+  "fileName": "fixture.yaml",
+  "files": {
+    "cache/CLASSIC/yaml-cache/fixture.yaml": "current\n"
+  },
+  "service": {
+    "pages": [],
+    "api": []
+  }
+}

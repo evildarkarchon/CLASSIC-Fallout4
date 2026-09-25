@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 640,
-    "current_total": 640,
-    "matched": 640,
+    "contract_total": 647,
+    "current_total": 647,
+    "matched": 647,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -115,14 +115,6 @@
     {
       "id": "30c322625eae2fc6",
       "rustSymbol": "LocalIgnoreYamlDataState",
-      "kind": "enum",
-      "bridgeModule": "config",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "0f22e0568d44d623",
-      "rustSymbol": "definitions",
       "kind": "enum",
       "bridgeModule": "config",
       "status": "matched",
@@ -2105,14 +2097,6 @@
       "reason": "-"
     },
     {
-      "id": "d3107ca39007d3a7",
-      "rustSymbol": "mirroring",
-      "kind": "struct",
-      "bridgeModule": "path",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
       "id": "1e32a6af317a1a05",
       "rustSymbol": "perf_clear_metrics",
       "kind": "function",
@@ -2697,6 +2681,22 @@
       "reason": "-"
     },
     {
+      "id": "4f8ff71acf6e2763",
+      "rustSymbol": "ScanRunDisplaySegmentKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "2a505bf704804de4",
+      "rustSymbol": "ScanRunDisplaySeverity",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "17a9ae976a21c5f7",
       "rustSymbol": "ScanRunGameId",
       "kind": "enum",
@@ -2753,9 +2753,9 @@
       "reason": "-"
     },
     {
-      "id": "1341fc11b331a2a8",
-      "rustSymbol": "definitions",
-      "kind": "enum",
+      "id": "792f70658ed4adf9",
+      "rustSymbol": "classify_crash_pattern",
+      "kind": "function",
       "bridgeModule": "scanner",
       "status": "matched",
       "reason": "-"
@@ -3011,6 +3011,14 @@
     {
       "id": "47ab0d08f55f9a74",
       "rustSymbol": "scan_run_cancellation_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3e200e21dc680fbe",
+      "rustSymbol": "scan_run_continuation_abandon",
       "kind": "function",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -3769,6 +3777,22 @@
       "reason": "-"
     },
     {
+      "id": "95a8829b439c6f88",
+      "rustSymbol": "ScanRunDisplayLine",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "96859cdfda9f3705",
+      "rustSymbol": "ScanRunDisplaySegment",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "bed961986b7dfb6e",
       "rustSymbol": "ScanRunInspectedYamlDataFileDto",
       "kind": "struct",
@@ -3795,6 +3819,22 @@
     {
       "id": "e0e0fec08acd4c5b",
       "rustSymbol": "ScanRunLocalIgnoreResetRunDataDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "92ccebfd8d784717",
+      "rustSymbol": "ScanRunRecoveryDecisionDescription",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "54164d0fad3f13e3",
+      "rustSymbol": "ScanRunRecoveryPrompt",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -4497,6 +4537,14 @@
       "reason": "-"
     },
     {
+      "id": "2e2bb77c38194322",
+      "rustSymbol": "game_id_display_name",
+      "kind": "function",
+      "bridgeModule": "shared",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "43170371baf7eb95",
       "rustSymbol": "string_map_contains",
       "kind": "function",
@@ -4603,6 +4651,14 @@
     {
       "id": "20888c90002f9464",
       "rustSymbol": "check_app_notification",
+      "kind": "function",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "00ade685439d4829",
+      "rustSymbol": "check_app_notification_configured",
       "kind": "function",
       "bridgeModule": "update",
       "status": "matched",

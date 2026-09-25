@@ -39,6 +39,7 @@ __version__: str
 CLASSIC_VERSION: str
 USER_AGENT_PREFIX: str
 
+
 class ModSite:
     """Mod site enumeration for Python.
 
@@ -91,6 +92,7 @@ class ModSite:
     def __repr__(self) -> str:
         """Return a debug representation suitable for logs and REPL output."""
 
+
 def get_user_agent() -> str:
     """Get the default user agent string for CLASSIC.
 
@@ -102,6 +104,7 @@ def get_user_agent() -> str:
         >>> assert ua.startswith("CLASSIC/")
 
     """
+
 
 def get_user_agent_with_suffix(suffix: str) -> str:
     """Get a user agent string with a custom suffix.
@@ -117,6 +120,7 @@ def get_user_agent_with_suffix(suffix: str) -> str:
         >>> assert "NexusMods" in ua
 
     """
+
 
 def validate_url(url_str: str) -> str:
     """Validate and parse a URL string.
@@ -136,6 +140,7 @@ def validate_url(url_str: str) -> str:
 
     """
 
+
 def is_valid_url(url_str: str) -> bool:
     """Check if a URL string is valid.
 
@@ -150,6 +155,7 @@ def is_valid_url(url_str: str) -> bool:
         >>> assert not is_valid_url("not a url")
 
     """
+
 
 def extract_domain(url_str: str) -> str:
     """Extract the domain from a URL.
@@ -169,6 +175,7 @@ def extract_domain(url_str: str) -> str:
 
     """
 
+
 def join_url(base: str, path: str) -> str:
     """Join a base URL with a path.
 
@@ -187,6 +194,7 @@ def join_url(base: str, path: str) -> str:
         >>> assert url == "https://www.nexusmods.com/fallout4/mods"
 
     """
+
 
 def build_url_with_query(base: str, params: list[tuple[str, str]]) -> str:
     """Build a URL with query parameters.

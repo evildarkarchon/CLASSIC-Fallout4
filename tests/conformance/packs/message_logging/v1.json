@@ -1,0 +1,209 @@
+{
+  "schemaVersion": 1,
+  "familyId": "message-logging",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-message-core"
+  },
+  "fixtureRoot": "tests/fixtures/message_logging_conformance",
+  "fixtures": {
+    "basic": "basic.json",
+    "extended": "extended.json",
+    "startup": "startup.json",
+    "format": "format.json"
+  },
+  "capabilities": [
+    {
+      "id": "message-logging.basic",
+      "operationScoped": true,
+      "rustSymbols": [
+        "Logger",
+        "init",
+        "info",
+        "warning",
+        "error",
+        "debug"
+      ],
+      "observationFamilies": [
+        "log-records"
+      ]
+    },
+    {
+      "id": "message-logging.extended",
+      "operationScoped": true,
+      "rustSymbols": [
+        "Logger"
+      ],
+      "observationFamilies": [
+        "log-records"
+      ]
+    },
+    {
+      "id": "message-logging.startup",
+      "operationScoped": true,
+      "rustSymbols": [
+        "trace",
+        "log_startup_binding_contract_validated",
+        "log_startup_binding_contract_failed",
+        "log_startup_acceleration_status"
+      ],
+      "observationFamilies": [
+        "log-records"
+      ]
+    },
+    {
+      "id": "message-logging.format",
+      "operationScoped": true,
+      "rustSymbols": [
+        "format_contract_event"
+      ],
+      "observationFamilies": [
+        "log-records"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "basic",
+      "action": "message-logging.basic",
+      "capabilityIds": [
+        "message-logging.basic"
+      ],
+      "fixtureRefs": [
+        "basic"
+      ],
+      "input": {
+        "fixtureRef": "basic"
+      },
+      "expected": {
+        "records": [
+          {
+            "level": "INFO",
+            "message": "fixture-info"
+          },
+          {
+            "level": "WARN",
+            "message": "fixture-warning"
+          },
+          {
+            "level": "ERROR",
+            "message": "fixture-error"
+          },
+          {
+            "level": "DEBUG",
+            "message": "fixture-debug"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    },
+    {
+      "id": "extended",
+      "action": "message-logging.extended",
+      "capabilityIds": [
+        "message-logging.extended"
+      ],
+      "fixtureRefs": [
+        "extended"
+      ],
+      "input": {
+        "fixtureRef": "extended"
+      },
+      "expected": {
+        "records": [
+          {
+            "level": "TRACE",
+            "message": "fixture-trace"
+          },
+          {
+            "level": "INFO",
+            "message": "fixture-dynamic"
+          },
+          {
+            "level": "WARN",
+            "message": "fixture-title: fixture-message - fixture-details"
+          }
+        ],
+        "enabled": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "name": "CLASSIC",
+        "invalidLog": true,
+        "invalidEnabled": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    },
+    {
+      "id": "startup",
+      "action": "message-logging.startup",
+      "capabilityIds": [
+        "message-logging.startup"
+      ],
+      "fixtureRefs": [
+        "startup"
+      ],
+      "input": {
+        "fixtureRef": "startup"
+      },
+      "expected": {
+        "records": [
+          {
+            "level": "TRACE",
+            "message": "fixture-trace"
+          },
+          {
+            "level": "INFO",
+            "message": "event=classic.startup.binding_contract.validated severity=info component=integration.startup outcome=success checked_bindings=2 contract=fixture correlation_id=case"
+          },
+          {
+            "level": "ERROR",
+            "message": "event=classic.startup.binding_contract.failed severity=error component=integration.startup outcome=failure contract=fixture correlation_id=case error=fixture-error failure_hint=retry failure_type=fixture missing_binding=fixture-binding"
+          },
+          {
+            "level": "INFO",
+            "message": "event=classic.startup.acceleration.status severity=info component=integration.startup outcome=success acceleration_level=fixture active_components=1 correlation_id=case total_components=2"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    },
+    {
+      "id": "format",
+      "action": "message-logging.format",
+      "capabilityIds": [
+        "message-logging.format"
+      ],
+      "fixtureRefs": [
+        "format"
+      ],
+      "input": {
+        "fixtureRef": "format"
+      },
+      "expected": {
+        "records": [],
+        "formatted": "event=fixture.event severity=warning component=conformance outcome=ok count=2 label=\"two words\""
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

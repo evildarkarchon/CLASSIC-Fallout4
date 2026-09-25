@@ -1,0 +1,988 @@
+{
+  "schemaVersion": 1,
+  "familyId": "log-parsing",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scanlog-core"
+  },
+  "fixtureRoot": "tests/fixtures/log_parsing",
+  "fixtures": {
+    "literal-matches": "literal-matches.json",
+    "literal-missing": "literal-missing.json",
+    "parsed-empty": "parsed-empty.json",
+    "parsed-populated": "parsed-populated.json",
+    "formids-mixed": "formids-mixed.json",
+    "plugins-mixed": "plugins-mixed.json",
+    "records-mixed": "records-mixed.json",
+    "gpu-nvidia": "gpu-nvidia.json",
+    "gpu-amd": "gpu-amd.json",
+    "gpu-intel": "gpu-intel.json",
+    "gpu-unknown": "gpu-unknown.json",
+    "node-empty": "node-empty.json",
+    "node-segments": "node-segments.json",
+    "version-prefixed": "version-prefixed.json",
+    "version-old": "version-old.json",
+    "version-new": "version-new.json",
+    "version-no-floor": "version-no-floor.json",
+    "version-invalid": "version-invalid.json",
+    "version-short": "version-short.json"
+  },
+  "capabilities": [
+    {
+      "id": "log-parsing.patterns",
+      "operationScoped": true,
+      "rustSymbols": [
+        "PatternMatcher"
+      ],
+      "observationFamilies": [
+        "literal-matches"
+      ]
+    },
+    {
+      "id": "log-parsing.parser",
+      "rustSymbols": [
+        "LogParser"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "parsed-log"
+      ]
+    },
+    {
+      "id": "log-parsing.formids",
+      "rustSymbols": [
+        "RustFormIDAnalyzer",
+        "extract_formids_batch",
+        "is_valid_formid",
+        "validate_formids_batch"
+      ],
+      "observationFamilies": [
+        "extracted-values"
+      ]
+    },
+    {
+      "id": "log-parsing.plugins",
+      "rustSymbols": [
+        "PluginAnalyzer",
+        "detect_plugins_batch",
+        "contains_plugin"
+      ],
+      "observationFamilies": [
+        "extracted-values"
+      ]
+    },
+    {
+      "id": "log-parsing.records",
+      "rustSymbols": [
+        "RecordScanner",
+        "scan_records_batch",
+        "contains_record"
+      ],
+      "observationFamilies": [
+        "extracted-values"
+      ]
+    },
+    {
+      "id": "log-parsing.gpu",
+      "rustSymbols": [
+        "GpuDetector",
+        "GpuInfo",
+        "GpuVendor"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "gpu-fields"
+      ]
+    },
+    {
+      "id": "log-parsing.node-parser",
+      "rustSymbols": [
+        "LogParser"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "node-log-values"
+      ]
+    },
+    {
+      "id": "log-parsing.crashgen-version",
+      "rustSymbols": [
+        "CrashgenVersion",
+        "check_crashgen_version_status"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "version-values"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "literal-matches",
+      "action": "log-parsing.patterns",
+      "capabilityIds": [
+        "log-parsing.patterns"
+      ],
+      "fixtureRefs": [
+        "literal-matches"
+      ],
+      "input": {
+        "fixtureRef": "literal-matches"
+      },
+      "expected": {
+        "operation": "patterns",
+        "before": [
+          2,
+          0
+        ],
+        "matches": [
+          [
+            3,
+            "error"
+          ],
+          [
+            13,
+            "warning"
+          ]
+        ],
+        "first": [
+          3,
+          "error"
+        ],
+        "hasMatch": true,
+        "replaced": "an ! and !",
+        "cached": [
+          2,
+          1
+        ],
+        "afterClear": [
+          2,
+          0
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "literal-missing",
+      "action": "log-parsing.patterns",
+      "capabilityIds": [
+        "log-parsing.patterns"
+      ],
+      "fixtureRefs": [
+        "literal-missing"
+      ],
+      "input": {
+        "fixtureRef": "literal-missing"
+      },
+      "expected": {
+        "operation": "patterns",
+        "before": [
+          2,
+          0
+        ],
+        "matches": [],
+        "first": null,
+        "hasMatch": false,
+        "replaced": "quiet text",
+        "cached": [
+          2,
+          1
+        ],
+        "afterClear": [
+          2,
+          0
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "parsed-empty",
+      "action": "log-parsing.parser",
+      "capabilityIds": [
+        "log-parsing.parser"
+      ],
+      "fixtureRefs": [
+        "parsed-empty"
+      ],
+      "input": {
+        "fixtureRef": "parsed-empty"
+      },
+      "expected": {
+        "operation": "parser",
+        "patterns": [],
+        "section": null,
+        "sectionBatch": [
+          null,
+          null
+        ],
+        "headers": {},
+        "sections": {
+          "settings": [],
+          "system": [],
+          "callstack": [],
+          "modules": [],
+          "xse_modules": [],
+          "plugins": [],
+          "registers": [],
+          "stack_dump": []
+        },
+        "system": null,
+        "sizes": {
+          "settings": 0,
+          "system": 0,
+          "callstack": 0,
+          "modules": 0,
+          "xse_modules": 0,
+          "plugins": 0,
+          "registers": 0,
+          "stack_dump": 0
+        },
+        "formids": [],
+        "plugins": [],
+        "addresses": [],
+        "errors": [],
+        "benchmarkKeys": [
+          "find_patterns_avg_ms",
+          "lines_per_second",
+          "parse_segments_avg_ms"
+        ],
+        "benchmarkFinite": true,
+        "afterClear": {
+          "segment_cache_size": 0,
+          "pattern_cache_size": 0,
+          "custom_patterns": 1,
+          "compiled_patterns": 7
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "parsed-populated",
+      "action": "log-parsing.parser",
+      "capabilityIds": [
+        "log-parsing.parser"
+      ],
+      "fixtureRefs": [
+        "parsed-populated"
+      ],
+      "input": {
+        "fixtureRef": "parsed-populated"
+      },
+      "expected": {
+        "operation": "parser",
+        "patterns": [
+          [
+            0,
+            "custom",
+            "needle"
+          ]
+        ],
+        "section": [
+          "body"
+        ],
+        "sectionBatch": [
+          [
+            "body"
+          ],
+          null
+        ],
+        "headers": {
+          "game_version": "Fallout 4 v1.10.163",
+          "crashgen_version": "Buffout 4 v1.28.6",
+          "main_error": "Unhandled exception EXCEPTION_ACCESS_VIOLATION"
+        },
+        "sections": {
+          "settings": [
+            "Fallout 4 v1.10.163",
+            "Buffout 4 v1.28.6",
+            "Unhandled exception EXCEPTION_ACCESS_VIOLATION"
+          ],
+          "system": [
+            "CPU: sample"
+          ],
+          "callstack": [
+            "frame"
+          ],
+          "modules": [],
+          "xse_modules": [],
+          "plugins": [
+            "[00] Fallout4.esm"
+          ],
+          "registers": [],
+          "stack_dump": []
+        },
+        "system": [
+          "CPU: sample"
+        ],
+        "sizes": {
+          "settings": 3,
+          "system": 1,
+          "callstack": 1,
+          "modules": 0,
+          "xse_modules": 0,
+          "plugins": 1,
+          "registers": 0,
+          "stack_dump": 0
+        },
+        "formids": [
+          "12345678"
+        ],
+        "plugins": [
+          [
+            "Fallout4.esm",
+            "00"
+          ]
+        ],
+        "addresses": [
+          "0x12345678",
+          "0x1234567890ABCDEF"
+        ],
+        "errors": [
+          [
+            2,
+            "error at 0x1234567890ABCDEF"
+          ]
+        ],
+        "benchmarkKeys": [
+          "find_patterns_avg_ms",
+          "lines_per_second",
+          "parse_segments_avg_ms"
+        ],
+        "benchmarkFinite": true,
+        "afterClear": {
+          "segment_cache_size": 0,
+          "pattern_cache_size": 0,
+          "custom_patterns": 1,
+          "compiled_patterns": 7
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "formids-mixed",
+      "action": "log-parsing.formids",
+      "capabilityIds": [
+        "log-parsing.formids"
+      ],
+      "fixtureRefs": [
+        "formids-mixed"
+      ],
+      "input": {
+        "fixtureRef": "formids-mixed"
+      },
+      "expected": {
+        "operation": "formids",
+        "extracted": [
+          "Form ID: 01000001",
+          "Form ID: 00000000"
+        ],
+        "extractedBatch": [
+          [
+            "Form ID: 01000001",
+            "Form ID: 00000000"
+          ],
+          []
+        ],
+        "parsed": [
+          16777217,
+          0,
+          null
+        ],
+        "resolved": [
+          [
+            "01000001",
+            "Example.esp"
+          ],
+          [
+            "0x00000000",
+            null
+          ],
+          [
+            "bad-id",
+            null
+          ]
+        ],
+        "valid": [
+          true,
+          false,
+          false
+        ],
+        "validBatch": [
+          true,
+          false,
+          false
+        ],
+        "cache": [
+          0,
+          0
+        ],
+        "afterClear": [
+          0,
+          0
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "plugins-mixed",
+      "action": "log-parsing.plugins",
+      "capabilityIds": [
+        "log-parsing.plugins"
+      ],
+      "fixtureRefs": [
+        "plugins-mixed"
+      ],
+      "input": {
+        "fixtureRef": "plugins-mixed"
+      },
+      "expected": {
+        "operation": "plugins",
+        "plugins": [
+          [
+            "Fallout4.esm",
+            "00"
+          ],
+          [
+            "Ignore.esp",
+            "01"
+          ],
+          [
+            "Limit.esp",
+            "FF"
+          ]
+        ],
+        "limits": [
+          true,
+          false
+        ],
+        "checkedLimits": [
+          true,
+          false
+        ],
+        "filtered": [
+          [
+            "Fallout4.esm",
+            "00"
+          ],
+          [
+            "Limit.esp",
+            "FF"
+          ]
+        ],
+        "batch": [
+          [
+            [
+              "Fallout4.esm",
+              "00"
+            ],
+            [
+              "Ignore.esp",
+              "01"
+            ],
+            [
+              "Limit.esp",
+              "FF"
+            ]
+          ],
+          []
+        ],
+        "contains": [
+          true,
+          true,
+          true,
+          false
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "records-mixed",
+      "action": "log-parsing.records",
+      "capabilityIds": [
+        "log-parsing.records"
+      ],
+      "fixtureRefs": [
+        "records-mixed"
+      ],
+      "input": {
+        "fixtureRef": "records-mixed"
+      },
+      "expected": {
+        "operation": "records",
+        "records": [
+          "Weapon Example",
+          "actorbase Player"
+        ],
+        "batch": [
+          [
+            "Weapon Example",
+            "actorbase Player"
+          ],
+          []
+        ],
+        "contains": [
+          true,
+          false,
+          false,
+          true
+        ],
+        "afterClear": [
+          "Weapon Example",
+          "actorbase Player"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "gpu-nvidia",
+      "action": "log-parsing.gpu",
+      "capabilityIds": [
+        "log-parsing.gpu"
+      ],
+      "fixtureRefs": [
+        "gpu-nvidia"
+      ],
+      "input": {
+        "fixtureRef": "gpu-nvidia"
+      },
+      "expected": {
+        "operation": "gpu",
+        "info": {
+          "primary": "Nvidia GeForce Fixture",
+          "secondary": "Intel Fixture",
+          "manufacturer": "Nvidia",
+          "rival": "amd"
+        },
+        "empty": {
+          "primary": "Unknown",
+          "secondary": null,
+          "manufacturer": "Unknown",
+          "rival": null
+        },
+        "batch": [
+          {
+            "primary": "Nvidia GeForce Fixture",
+            "secondary": "Intel Fixture",
+            "manufacturer": "Nvidia",
+            "rival": "amd"
+          },
+          {
+            "primary": "Unknown",
+            "secondary": null,
+            "manufacturer": "Unknown",
+            "rival": null
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "gpu-amd",
+      "action": "log-parsing.gpu",
+      "capabilityIds": [
+        "log-parsing.gpu"
+      ],
+      "fixtureRefs": [
+        "gpu-amd"
+      ],
+      "input": {
+        "fixtureRef": "gpu-amd"
+      },
+      "expected": {
+        "operation": "gpu",
+        "info": {
+          "primary": "AMD Radeon Fixture",
+          "secondary": null,
+          "manufacturer": "AMD",
+          "rival": "nvidia"
+        },
+        "empty": {
+          "primary": "Unknown",
+          "secondary": null,
+          "manufacturer": "Unknown",
+          "rival": null
+        },
+        "batch": [
+          {
+            "primary": "AMD Radeon Fixture",
+            "secondary": null,
+            "manufacturer": "AMD",
+            "rival": "nvidia"
+          },
+          {
+            "primary": "Unknown",
+            "secondary": null,
+            "manufacturer": "Unknown",
+            "rival": null
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "gpu-intel",
+      "action": "log-parsing.gpu",
+      "capabilityIds": [
+        "log-parsing.gpu"
+      ],
+      "fixtureRefs": [
+        "gpu-intel"
+      ],
+      "input": {
+        "fixtureRef": "gpu-intel"
+      },
+      "expected": {
+        "operation": "gpu",
+        "info": {
+          "primary": "Intel Fixture",
+          "secondary": null,
+          "manufacturer": "Intel",
+          "rival": null
+        },
+        "empty": {
+          "primary": "Unknown",
+          "secondary": null,
+          "manufacturer": "Unknown",
+          "rival": null
+        },
+        "batch": [
+          {
+            "primary": "Intel Fixture",
+            "secondary": null,
+            "manufacturer": "Intel",
+            "rival": null
+          },
+          {
+            "primary": "Unknown",
+            "secondary": null,
+            "manufacturer": "Unknown",
+            "rival": null
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "gpu-unknown",
+      "action": "log-parsing.gpu",
+      "capabilityIds": [
+        "log-parsing.gpu"
+      ],
+      "fixtureRefs": [
+        "gpu-unknown"
+      ],
+      "input": {
+        "fixtureRef": "gpu-unknown"
+      },
+      "expected": {
+        "operation": "gpu",
+        "info": {
+          "primary": "Unknown",
+          "secondary": null,
+          "manufacturer": "Unknown",
+          "rival": null
+        },
+        "empty": {
+          "primary": "Unknown",
+          "secondary": null,
+          "manufacturer": "Unknown",
+          "rival": null
+        },
+        "batch": [
+          {
+            "primary": "Unknown",
+            "secondary": null,
+            "manufacturer": "Unknown",
+            "rival": null
+          },
+          {
+            "primary": "Unknown",
+            "secondary": null,
+            "manufacturer": "Unknown",
+            "rival": null
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "node-empty",
+      "action": "log-parsing.node-parser",
+      "capabilityIds": [
+        "log-parsing.node-parser"
+      ],
+      "fixtureRefs": [
+        "node-empty"
+      ],
+      "input": {
+        "fixtureRef": "node-empty"
+      },
+      "expected": {
+        "operation": "node-parser",
+        "segments": {
+          "header": [],
+          "system": [],
+          "stack": [],
+          "modules": [],
+          "plugins": [],
+          "segmentCount": 0
+        },
+        "formids": [],
+        "plugins": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "node-segments",
+      "action": "log-parsing.node-parser",
+      "capabilityIds": [
+        "log-parsing.node-parser"
+      ],
+      "fixtureRefs": [
+        "node-segments"
+      ],
+      "input": {
+        "fixtureRef": "node-segments"
+      },
+      "expected": {
+        "operation": "node-parser",
+        "segments": {
+          "header": [
+            "Feature=true"
+          ],
+          "system": [
+            "GPU #1: Nvidia Fixture"
+          ],
+          "stack": [
+            "FormID: 0x12345678"
+          ],
+          "modules": [
+            "Fixture.dll"
+          ],
+          "plugins": [
+            "[00] Fallout4.esm"
+          ],
+          "segmentCount": 5
+        },
+        "formids": [
+          "12345678"
+        ],
+        "plugins": [
+          "Fallout4.esm"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "version-prefixed",
+      "action": "log-parsing.crashgen-version",
+      "capabilityIds": [
+        "log-parsing.crashgen-version"
+      ],
+      "fixtureRefs": [
+        "version-prefixed"
+      ],
+      "input": {
+        "fixtureRef": "version-prefixed"
+      },
+      "expected": {
+        "operation": "crashgen-version",
+        "version": [
+          1,
+          28,
+          6
+        ],
+        "status": "valid"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "version-old",
+      "action": "log-parsing.crashgen-version",
+      "capabilityIds": [
+        "log-parsing.crashgen-version"
+      ],
+      "fixtureRefs": [
+        "version-old"
+      ],
+      "input": {
+        "fixtureRef": "version-old"
+      },
+      "expected": {
+        "operation": "crashgen-version",
+        "version": [
+          1,
+          0,
+          0
+        ],
+        "status": "outdated"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "version-new",
+      "action": "log-parsing.crashgen-version",
+      "capabilityIds": [
+        "log-parsing.crashgen-version"
+      ],
+      "fixtureRefs": [
+        "version-new"
+      ],
+      "input": {
+        "fixtureRef": "version-new"
+      },
+      "expected": {
+        "operation": "crashgen-version",
+        "version": [
+          2,
+          0,
+          0
+        ],
+        "status": "valid"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "version-no-floor",
+      "action": "log-parsing.crashgen-version",
+      "capabilityIds": [
+        "log-parsing.crashgen-version"
+      ],
+      "fixtureRefs": [
+        "version-no-floor"
+      ],
+      "input": {
+        "fixtureRef": "version-no-floor"
+      },
+      "expected": {
+        "operation": "crashgen-version",
+        "version": [
+          1,
+          28,
+          0
+        ],
+        "status": "no_supported_version"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "version-invalid",
+      "action": "log-parsing.crashgen-version",
+      "capabilityIds": [
+        "log-parsing.crashgen-version"
+      ],
+      "fixtureRefs": [
+        "version-invalid"
+      ],
+      "input": {
+        "fixtureRef": "version-invalid"
+      },
+      "expected": {
+        "operation": "crashgen-version",
+        "version": null,
+        "status": "outdated"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "version-short",
+      "action": "log-parsing.crashgen-version",
+      "capabilityIds": [
+        "log-parsing.crashgen-version"
+      ],
+      "fixtureRefs": [
+        "version-short"
+      ],
+      "input": {
+        "fixtureRef": "version-short"
+      },
+      "expected": {
+        "operation": "crashgen-version",
+        "version": [
+          1,
+          28,
+          0
+        ],
+        "status": "valid"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

@@ -26,7 +26,7 @@ pub enum UserSettingsCommitOutcome {
     Conflict {
         /// Revision against which the update was accepted.
         expected_revision: Revision,
-        /// Revision found after acquiring cross-process coordination.
+        /// Revision observed when the stale update was rejected.
         actual_revision: Revision,
     },
 }
@@ -163,10 +163,11 @@ fn commit_frontend_transition_attempt(
 impl AcceptedUserSettingsUpdate {
     /// Commits this accepted update against the latest canonical document.
     ///
-    /// The operation holds a cross-process sibling lock while reopening and comparing the exact
+    /// An already-stale revision returns a conflict before creating a lock file. Otherwise the
+    /// operation holds a cross-process sibling lock while reopening and comparing the exact
     /// content revision, patches only the accepted canonical fields, and publishes all fields in
-    /// one durable atomic replacement. A revision mismatch is returned as data and performs no
-    /// write; operational failures are returned as [`UserSettingsCommitError`].
+    /// one durable atomic replacement. A revision mismatch is returned as data; operational
+    /// failures are returned as [`UserSettingsCommitError`].
     pub fn commit(
         &self,
         classic_root: impl AsRef<Path>,
@@ -180,8 +181,21 @@ impl AcceptedUserSettingsUpdate {
         classic_root: &Path,
         publisher: &impl Publisher,
     ) -> Result<UserSettingsCommitOutcome, UserSettingsCommitError> {
+        let observed = UserSettings::open(classic_root);
+        // Known-stale requests must leave even lock-file creation untouched across bindings.
+        // Unreadable sources retain the existing locked operational-error handling below.
+        if !matches!(observed.revision(), Revision::Unavailable)
+            && observed.revision() != self.base_revision()
+        {
+            return Ok(UserSettingsCommitOutcome::Conflict {
+                expected_revision: self.base_revision().clone(),
+                actual_revision: observed.revision().clone(),
+            });
+        }
         let target = classic_root.join(CANONICAL_FILENAME);
         let _lock = acquire_commit_lock(&target)?;
+        // The unlocked observation cannot authorize publication: another writer may have won
+        // before this lock was acquired, so reopen and compare again while holding the lock.
         let latest = UserSettings::open(classic_root);
 
         if matches!(latest.revision(), Revision::Unavailable) {

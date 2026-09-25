@@ -1,0 +1,313 @@
+{
+  "schemaVersion": 1,
+  "profile": "ci",
+  "repoRoot": "D:\\repos\\CLASSIC-Fallout4",
+  "summary": {
+    "result": "pass",
+    "total": 16,
+    "passed": 16,
+    "failed": 0,
+    "blocking_failed": 0,
+    "coverage_gaps": 0,
+    "skipped": 0,
+    "blocking_conformance_coverage_gaps": 0,
+    "repository_complete": false
+  },
+  "requirements": [
+    {
+      "id": "cxx-opaque-map-reachability",
+      "surface": "cxx",
+      "classification": "new_check",
+      "status": "passed",
+      "blocking": true,
+      "summary": "Checks the closed read-only map surface and rejects any new alias, factory, output, callback, or external map reference; grants no runtime behavior proof.",
+      "title": "Opaque CXX map accessors have no exposed producer",
+      "evidence": [
+        "Found tools/binding_compliance/cxx_opaque_map_reachability.py",
+        "Ran: python tools/binding_compliance/cxx_opaque_map_reachability.py --repo-root ."
+      ],
+      "gaps": [],
+      "failure_kind": null,
+      "stdout": "{\"evidenceKind\": \"negative\", \"unreachableExports\": [\"string_map_contains\", \"string_map_get\", \"string_map_is_empty\", \"string_map_keys\", \"string_map_len\", \"string_map_values\", \"string_vec_map_contains\", \"string_vec_map_get\", \"string_vec_map_is_empty\", \"string_vec_map_keys\", \"string_vec_map_len\"]}\n",
+      "stderr": ""
+    },
+    {
+      "id": "node-package-metadata",
+      "surface": "node",
+      "classification": "new_check",
+      "status": "passed",
+      "blocking": true,
+      "summary": "Validates only getVersion's exact CARGO_PKG_VERSION body, zero-argument string declaration, and Rust Cargo package version.",
+      "title": "Node compile-time package metadata has a precise structural owner",
+      "evidence": [
+        "Found tools/binding_compliance/node_package_metadata.py",
+        "Ran: python tools/binding_compliance/node_package_metadata.py --repo-root ."
+      ],
+      "gaps": [],
+      "failure_kind": null,
+      "stdout": "{\"binding\": \"node\", \"evidenceKind\": \"structural\", \"export\": \"getVersion\", \"rustPackageVersion\": \"9.1.0\"}\n",
+      "stderr": ""
+    },
+    {
+      "id": "user-settings-exclusive-ownership",
+      "surface": "policy",
+      "classification": "new_check",
+      "status": "passed",
+      "blocking": true,
+      "summary": "Rejects legacy settings models, raw first-party key interpretation, and runtime compatibility-mirror reads outside classic-user-settings-core.",
+      "title": "User Settings has one deep Rust owner",
+      "evidence": [
+        "Found tools/user_settings_ownership/check.py",
+        "Ran: python tools/user_settings_ownership/check.py --repo-root ."
+      ],
+      "gaps": [],
+      "failure_kind": null,
+      "stdout": "User Settings ownership audit passed.\n",
+      "stderr": ""
+    },
+    {
+      "id": "scan-run-contract-variants",
+      "surface": "policy",
+      "classification": "new_check",
+      "status": "passed",
+      "blocking": true,
+      "summary": "Validates the shared Standard and Targeted fixture corpus, compares the manifest with Rust enum inventory, rejects contracted legacy exports in source and tracked contract artifacts, and requires a concrete executable fact or retained analyzer for each source-derived variant.",
+      "title": "Crash Log Scan Run fixtures and source contracts remain valid",
+      "evidence": [
+        "Found tools/binding_compliance/scan_run_contract.py",
+        "Found tools/binding_compliance/conformance/variant_policy.py",
+        "Found tests/fixtures/crash_log_scan_run/manifest.json",
+        "Found tests/fixtures/crash_log_scan_run/valid-crash.log",
+        "Ran: python tools/binding_compliance/scan_run_contract.py --repo-root ."
+      ],
+      "gaps": [],
+      "failure_kind": null,
+      "stdout": "Crash Log Scan Run contract manifest is complete.\n",
+      "stderr": ""
+    },
+    {
+      "id": "scan-run-workflow-policy",
+      "surface": "policy",
+      "classification": "new_check",
+      "status": "passed",
+      "blocking": true,
+      "summary": "Audits the same-revision retained-check/receipt job topology, exact native execution denominator, blocking launch steps, and always-uploaded diagnostics for every Scan Run and User Settings participant and consumer.",
+      "title": "Scan Run and User Settings receipts remain blocking in CI",
+      "evidence": [
+        "Found tools/binding_compliance/scan_run_workflow_policy.py",
+        "Found tools/binding_compliance/conformance/workflow_policy.py",
+        "Found .github/workflows/ci-rust.yml",
+        "Found .github/workflows/ci-typescript.yml",
+        "Found .github/workflows/ci-python-bindings.yml",
+        "Found .github/workflows/ci-cpp.yml",
+        "Ran: python tools/binding_compliance/scan_run_workflow_policy.py --repo-root ."
+      ],
+      "gaps": [],
+      "failure_kind": null,
+      "stdout": "Scan Run and User Settings workflow policy passed.\n",
+      "stderr": ""
+    },
+    {
+      "id": "policy-one-tier-contract",
+      "surface": "policy",
+      "classification": "new_check",
+      "status": "passed",
+      "blocking": true,
+      "summary": "The binding policy must remain one-tier with no deferred backlog.",
+      "title": "One-tier parity policy is documented",
+      "evidence": [
+        "Found docs/api/binding-parity-policy.md",
+        "docs/api/binding-parity-policy.md contains expected policy text"
+      ],
+      "gaps": [],
+      "failure_kind": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "id": "shared-rust-api-inventory-baselines",
+      "surface": "shared_rust_api_inventory",
+      "classification": "new_check",
+      "status": "passed",
+      "blocking": true,
+      "summary": "The generated Rust API inventory baselines for C++, Node, and Python exist.",
+      "title": "Shared Rust API inventories are checked in",
+      "evidence": [
+        "Found docs/implementation/cxx_api_parity/baseline/rust_api_surface.json",
+        "Found docs/implementation/node_api_parity/baseline/rust_api_surface.json",
+        "Found docs/implementation/python_api_parity/baseline/rust_api_surface.json"
+      ],
+      "gaps": [],
+      "failure_kind": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "id": "cxx-parity-gate",
+      "surface": "cxx",
+      "classification": "existing_gate",
+      "status": "passed",
+      "blocking": true,
+      "summary": "Runs the source-only CXX bridge drift gate against the committed baseline.",
+      "title": "C++ bridge parity gate",
+      "evidence": [
+        "Found tools/cxx_api_parity/check_parity_gate.py",
+        "Found docs/implementation/cxx_api_parity/baseline/parity_contract.json",
+        "Ran: python tools/cxx_api_parity/check_parity_gate.py --repo-root ."
+      ],
+      "gaps": [],
+      "failure_kind": null,
+      "stdout": "CXX parity gate artifacts generated:\n- D:\\repos\\CLASSIC-Fallout4\\cpp-bindings\\classic-cpp-bridge\\parity-artifacts\\rust_api_surface.json\n- D:\\repos\\CLASSIC-Fallout4\\cpp-bindings\\classic-cpp-bridge\\parity-artifacts\\cxx_diff_report.json\n- D:\\repos\\CLASSIC-Fallout4\\cpp-bindings\\classic-cpp-bridge\\parity-artifacts\\cxx_diff_report.md\n- D:\\repos\\CLASSIC-Fallout4\\cpp-bindings\\classic-cpp-bridge\\parity-artifacts\\cxx_gate_report.md\nCXX parity gate passed.\n",
+      "stderr": ""
+    },
+    {
+      "id": "node-parity-gate",
+      "surface": "node",
+      "classification": "existing_gate",
+      "status": "passed",
+      "blocking": true,
+      "summary": "Runs the Node source/declaration parity gate and rejects stale baseline artifacts.",
+      "title": "Node source parity gate",
+      "evidence": [
+        "Found tools/node_api_parity/check_parity_gate.py",
+        "Found docs/implementation/node_api_parity/baseline/parity_contract.json",
+        "Ran: python tools/node_api_parity/check_parity_gate.py --repo-root ."
+      ],
+      "gaps": [],
+      "failure_kind": null,
+      "stdout": "Phase 2 parity gate artifacts generated:\n- D:\\repos\\CLASSIC-Fallout4\\node-bindings\\classic-node\\parity-artifacts\\rust_api_surface.json\n- D:\\repos\\CLASSIC-Fallout4\\node-bindings\\classic-node\\parity-artifacts\\node_api_surface.json\n- D:\\repos\\CLASSIC-Fallout4\\node-bindings\\classic-node\\parity-artifacts\\parity_diff_report.json\n- D:\\repos\\CLASSIC-Fallout4\\node-bindings\\classic-node\\parity-artifacts\\parity_diff_report.md\n- D:\\repos\\CLASSIC-Fallout4\\node-bindings\\classic-node\\parity-artifacts\\tier1_gate_report.md\nTier-1 parity gate passed.\n",
+      "stderr": ""
+    },
+    {
+      "id": "python-parity-gate",
+      "surface": "python",
+      "classification": "existing_gate",
+      "status": "passed",
+      "blocking": true,
+      "summary": "Runs the Python source/stub parity gate and rejects stale baseline artifacts.",
+      "title": "Python source parity gate",
+      "evidence": [
+        "Found tools/python_api_parity/check_parity_gate.py",
+        "Found docs/implementation/python_api_parity/baseline/parity_contract.json",
+        "Ran: python tools/python_api_parity/check_parity_gate.py --repo-root . --output-dir tools/binding_compliance/artifacts/python_api_parity"
+      ],
+      "gaps": [],
+      "failure_kind": null,
+      "stdout": "Python parity gate artifacts generated:\n- D:\\repos\\CLASSIC-Fallout4\\tools\\binding_compliance\\artifacts\\python_api_parity\\rust_api_surface.json\n- D:\\repos\\CLASSIC-Fallout4\\tools\\binding_compliance\\artifacts\\python_api_parity\\python_api_surface.json\n- D:\\repos\\CLASSIC-Fallout4\\tools\\binding_compliance\\artifacts\\python_api_parity\\parity_diff_report.json\n- D:\\repos\\CLASSIC-Fallout4\\tools\\binding_compliance\\artifacts\\python_api_parity\\parity_diff_report.md\n- D:\\repos\\CLASSIC-Fallout4\\tools\\binding_compliance\\artifacts\\python_api_parity\\tier1_gate_report.md\nTier-1 parity gate passed.\n",
+      "stderr": ""
+    },
+    {
+      "id": "python-stub-validation",
+      "surface": "stubs_declarations",
+      "classification": "existing_gate",
+      "status": "passed",
+      "blocking": true,
+      "summary": "Validates maintained Python .pyi files against PyO3 wrapper source.",
+      "title": "Python stub validation",
+      "evidence": [
+        "Found validate_stubs.py",
+        "Ran: python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out tools/binding_compliance/artifacts/stub_validation_report.json --fail-on-warnings"
+      ],
+      "gaps": [],
+      "failure_kind": null,
+      "stdout": "[INFO] Validating 18 Python stub modules...\n\n\n======================================================================\nVALIDATION SUMMARY\n======================================================================\n[OK] Stub modules passed: 18/18\n[ERROR] Total errors: 0\n[WARN] Total warnings: 0\n======================================================================\nJSON report written: tools\\binding_compliance\\artifacts\\stub_validation_report.json\n",
+      "stderr": ""
+    },
+    {
+      "id": "generated-artifacts-present",
+      "surface": "generated_artifacts",
+      "classification": "new_check",
+      "status": "passed",
+      "blocking": true,
+      "summary": "The suite can find every checked-in baseline, declaration, and stub report it depends on.",
+      "title": "Generated and maintained contract artifacts are present",
+      "evidence": [
+        "Found node-bindings/classic-node/index.d.ts",
+        "Found docs/implementation/cxx_api_parity/baseline/parity_contract.json",
+        "Found docs/implementation/node_api_parity/baseline/parity_contract.json",
+        "Found docs/implementation/python_api_parity/baseline/parity_contract.json",
+        "Found python-bindings/parity-artifacts/stub_validation_report.json"
+      ],
+      "gaps": [],
+      "failure_kind": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "id": "repository-receipt-coverage",
+      "surface": "runtime_coverage",
+      "classification": "new_check",
+      "status": "passed",
+      "blocking": true,
+      "summary": "Full-profile aggregation requires every family, native instance, and source parity row; file presence alone is not runtime proof.",
+      "title": "Repository receipt coverage engine is present",
+      "evidence": [
+        "Found tools/binding_compliance/conformance/repository.py",
+        "Found tools/binding_compliance/conformance/coverage.py",
+        "Found tools/binding_compliance/retained_analyzers.py"
+      ],
+      "gaps": [],
+      "failure_kind": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "id": "error-shape-docs",
+      "surface": "docs",
+      "classification": "new_check",
+      "status": "passed",
+      "blocking": true,
+      "summary": "The documented C++, Node, and Python error-shape expectations remain discoverable.",
+      "title": "Binding error shapes are documented",
+      "evidence": [
+        "Found docs/api/error-contract.md",
+        "docs/api/error-contract.md contains expected policy text"
+      ],
+      "gaps": [],
+      "failure_kind": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "id": "docs-canonical-command",
+      "surface": "docs",
+      "classification": "new_check",
+      "status": "passed",
+      "blocking": true,
+      "summary": "Contributor docs name the binding compliance suite as the canonical umbrella gate.",
+      "title": "Canonical binding compliance command is documented",
+      "evidence": [
+        "Found docs/api/binding-compliance-suite.md",
+        "docs/api/binding-compliance-suite.md contains expected policy text"
+      ],
+      "gaps": [],
+      "failure_kind": null,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "id": "ci-canonical-command",
+      "surface": "policy",
+      "classification": "new_check",
+      "status": "passed",
+      "blocking": true,
+      "summary": "Binding-related CI workflows invoke the canonical compliance command.",
+      "title": "CI invokes the binding compliance command",
+      "evidence": [
+        "Found .github/workflows/ci-binding-compliance.yml",
+        "Found .github/workflows/ci-cpp.yml",
+        "Found .github/workflows/ci-typescript.yml",
+        "Found .github/workflows/ci-python-bindings.yml",
+        ".github/workflows/ci-binding-compliance.yml contains expected policy text",
+        ".github/workflows/ci-cpp.yml contains expected policy text",
+        ".github/workflows/ci-typescript.yml contains expected policy text",
+        ".github/workflows/ci-python-bindings.yml contains expected policy text"
+      ],
+      "gaps": [],
+      "failure_kind": null,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "gaps": []
+}

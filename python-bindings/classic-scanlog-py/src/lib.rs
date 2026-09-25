@@ -79,6 +79,7 @@ define_exceptions!(
 // Import all wrapper modules
 /// Conversion helpers for `CoreModExclude` ↔ Python dict round-tripping.
 pub mod core_mod_convert;
+pub mod crash_pattern;
 pub mod crash_suspect_analyzer;
 /// Crashgen settings rule parsing helpers for Python inputs.
 pub mod crashgen_rules;
@@ -101,6 +102,7 @@ pub mod scan_run;
 pub mod version;
 
 // Re-export all public types
+pub use crash_pattern::detect_crash_pattern;
 pub use crash_suspect_analyzer::{
     PyCrashSuspectAnalysisInput, PyCrashSuspectAnalysisResult, PyCrashSuspectAnalyzer,
     PyCrashSuspectFinding, PyCrashSuspectFindingKind, PyCrashSuspectMainErrorRule,
@@ -141,17 +143,19 @@ pub use plugin_evidence_analyzer::{
 pub use record_scanner::{PyRecordScanner, contains_record, scan_records_batch};
 pub use scan_run::{
     PyScanRunCancellation, PyScanRunConfiguration, PyScanRunContinuation, PyScanRunDiscoveryResult,
-    PyScanRunEvent, PyScanRunExecution, PyScanRunInfrastructureError,
-    PyScanRunInspectedYamlDataFile, PyScanRunInstalledYamlDataDiagnostic,
-    PyScanRunInstalledYamlDataRunData, PyScanRunLocalIgnoreRecoveryDecision,
-    PyScanRunLocalIgnoreResetRunData, PyScanRunLogEvent, PyScanRunLogFailure, PyScanRunLogResult,
-    PyScanRunRejectedInput, PyScanRunRequest, PyScanRunResult, PyScanRunSetupCheck,
-    PyScanRunSetupContext, PyScanRunSetupPathUpdate, PyScanRunSetupResult, PyScanRunStandardSource,
-    PyScanRunTargetedSource, PyScanRunUnsolvedLogs, PyScanRunYamlDataContentIdentity,
-    ScanRunContinuationConsumedError, ScanRunLocalIgnoreResetBackupError,
-    ScanRunLocalIgnoreResetConflictError, ScanRunLocalIgnoreResetDurabilityUnknownError,
-    ScanRunLocalIgnoreResetReplacementError, scan_run_execute,
-    scan_run_infrastructure_error_stage_label, scan_run_installed_yaml_data_diagnostic_kind_label,
+    PyScanRunDisplayLine, PyScanRunDisplaySegment, PyScanRunEvent, PyScanRunExecution,
+    PyScanRunInfrastructureError, PyScanRunInspectedYamlDataFile,
+    PyScanRunInstalledYamlDataDiagnostic, PyScanRunInstalledYamlDataRunData,
+    PyScanRunLocalIgnoreRecoveryDecision, PyScanRunLocalIgnoreResetRunData, PyScanRunLogEvent,
+    PyScanRunLogFailure, PyScanRunLogResult, PyScanRunRecoveryDecisionDescription,
+    PyScanRunRecoveryPrompt, PyScanRunRejectedInput, PyScanRunRequest, PyScanRunResult,
+    PyScanRunSetupCheck, PyScanRunSetupContext, PyScanRunSetupPathUpdate, PyScanRunSetupResult,
+    PyScanRunStandardSource, PyScanRunTargetedSource, PyScanRunUnsolvedLogs,
+    PyScanRunYamlDataContentIdentity, ScanRunContinuationConsumedError,
+    ScanRunLocalIgnoreResetBackupError, ScanRunLocalIgnoreResetConflictError,
+    ScanRunLocalIgnoreResetDurabilityUnknownError, ScanRunLocalIgnoreResetReplacementError,
+    scan_run_abandon, scan_run_execute, scan_run_infrastructure_error_stage_label,
+    scan_run_installed_yaml_data_diagnostic_kind_label,
     scan_run_local_ignore_reset_failure_stage_label, scan_run_local_ignore_yaml_data_state_label,
     scan_run_log_disposition_label, scan_run_log_failure_stage_label, scan_run_resume,
 };
@@ -217,10 +221,15 @@ fn register_scan_run_exports(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyScanRunResult>()?;
     m.add_class::<PyScanRunInfrastructureError>()?;
     m.add_class::<PyScanRunLogEvent>()?;
+    m.add_class::<PyScanRunDisplaySegment>()?;
+    m.add_class::<PyScanRunDisplayLine>()?;
+    m.add_class::<PyScanRunRecoveryDecisionDescription>()?;
+    m.add_class::<PyScanRunRecoveryPrompt>()?;
     m.add_class::<PyScanRunEvent>()?;
     m.add_class::<PyScanRunExecution>()?;
     m.add_function(wrap_pyfunction!(scan_run_execute, m)?)?;
     m.add_function(wrap_pyfunction!(scan_run_resume, m)?)?;
+    m.add_function(wrap_pyfunction!(scan_run_abandon, m)?)?;
     m.add_function(wrap_pyfunction!(
         scan_run_installed_yaml_data_diagnostic_kind_label,
         m
@@ -272,6 +281,7 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Parser
     m.add_class::<PyLogParser>()?;
     m.add_class::<parser::ScanOutput>()?;
+    m.add_function(wrap_pyfunction!(detect_crash_pattern, m)?)?;
 
     // FormID analysis
     m.add_class::<PyRustFormIDAnalyzer>()?;

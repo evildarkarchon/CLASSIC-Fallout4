@@ -145,6 +145,58 @@ class TestConversionAndFieldEvidence:
         )
         assert res.rust_symbol == "GithubAsset"
 
+    def test_qualified_converter_keeps_the_core_types_crate(self) -> None:
+        """A DTO converter identifies its crate even when names collide."""
+        surface = {
+            "VersionInfo": [
+                {"symbol": "VersionInfo", "kind": "struct", "crate": "classic-version-core"},
+                {
+                    "symbol": "VersionInfo",
+                    "kind": "struct",
+                    "crate": "classic-version-registry-core",
+                },
+            ]
+        }
+        info = {
+            "kind": "struct",
+            "rust_name": "JsVersionInfo",
+            "body": "{}",
+            "decl_body": "{}",
+            "import_map": {},
+            "from_impls": {},
+            "conversions": {
+                "JsVersionInfo": "classic_version_registry_core::VersionInfo"
+            },
+            "local_helpers": {},
+        }
+
+        resolution = rns.resolve_export("JsVersionInfo", info, surface)
+
+        assert resolution.rust_crate == "classic-version-registry-core"
+        assert rns.source_backed_crate(resolution) == "classic-version-registry-core"
+
+    def test_qualified_reference_cannot_borrow_a_namesake(self) -> None:
+        """Source named a crate with no matching symbol; another crate cannot supply it."""
+        surface = {
+            "OtherName": [
+                {"symbol": "OtherName", "kind": "struct", "crate": "classic-other-core"}
+            ]
+        }
+        info = {
+            "kind": "fn",
+            "rust_name": "OtherName",
+            "body": "{ classic_right_core::OtherName() }",
+            "decl_body": "{}",
+            "import_map": {},
+            "from_impls": {},
+            "conversions": {},
+            "local_helpers": {},
+        }
+
+        resolution = rns.resolve_export("OtherName", info, surface)
+
+        assert rns.source_backed_crate(resolution) is None
+
 
 class TestLocalHelperIndirection:
     def test_one_level_of_indirection_is_followed(self) -> None:

@@ -34,7 +34,6 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
-import tempfile
 from pathlib import Path
 
 import classic_file_io
@@ -407,8 +406,8 @@ def test_rust_only_symbols_in_core_surface() -> None:
             missing.append(f"{row['id']} -> {row['rustSymbol']}")
 
     assert not missing, (
-        "Rust-only file_io @rust-suffix rows missing from rust_api_surface: "
-        + ", ".join(missing)
+            "Rust-only file_io @rust-suffix rows missing from rust_api_surface: "
+            + ", ".join(missing)
     )
 
     # Plan 08 enrolled 23 @rust-suffixed file_io proxy rows. The floor allows

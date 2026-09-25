@@ -1,0 +1,8 @@
+{
+  "request": {
+    "type": "Info",
+    "target": "All",
+    "content": "Tier1 message [ok]",
+    "details": null
+  }
+}

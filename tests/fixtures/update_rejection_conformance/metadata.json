@@ -1,0 +1,8 @@
+{
+  "operation": "metadata",
+  "owner": "conformance",
+  "repo": "fixture",
+  "token": "synthetic\ninvalid",
+  "currentVersion": "1.0.0",
+  "invalidVersion": "invalid"
+}

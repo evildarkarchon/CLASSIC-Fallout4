@@ -45,6 +45,11 @@ impl PyGameId {
         self.inner.as_str()
     }
 
+    /// Return the shared user-facing game name without duplicating the label table.
+    fn display_name(&self) -> &'static str {
+        self.inner.display_name()
+    }
+
     fn exe_name(&self) -> &'static str {
         self.inner.exe_name()
     }

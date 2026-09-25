@@ -1,0 +1,320 @@
+{
+  "schemaVersion": 1,
+  "familyId": "log-collection",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-file-io-core"
+  },
+  "fixtureRoot": "tests/fixtures/log_collection",
+  "fixtures": {
+    "collect": "collect.json",
+    "empty": "empty.json",
+    "configured": "configured.json"
+  },
+  "capabilities": [
+    {
+      "id": "log-collection.collect",
+      "rustSymbols": [
+        "LogCollector",
+        "collect_all",
+        "collect_crash_logs",
+        "CRASH_AUTOSCAN_PATTERN",
+        "CRASH_LOG_PATTERN",
+        "resolve_targeted_inputs"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "collection-effects"
+      ]
+    },
+    {
+      "id": "log-collection.configured",
+      "rustSymbols": [
+        "new_for_scan"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "collection-effects"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "collect",
+      "action": "log-collection.collect",
+      "capabilityIds": [
+        "log-collection.collect"
+      ],
+      "fixtureRefs": [
+        "collect"
+      ],
+      "input": {
+        "fixtureRef": "collect"
+      },
+      "expected": {
+        "before": [
+          {
+            "path": "base/crash-base-AUTOSCAN.md",
+            "content": "report"
+          },
+          {
+            "path": "base/crash-base.log",
+            "content": "base log"
+          },
+          {
+            "path": "base/sentinel.txt",
+            "content": "keep"
+          },
+          {
+            "path": "custom/crash-custom.log",
+            "content": "custom log"
+          },
+          {
+            "path": "xse/crash-xse.log",
+            "content": "xse log"
+          }
+        ],
+        "first": [
+          "base/Crash Logs/crash-base.log",
+          "base/Crash Logs/crash-xse.log",
+          "custom/crash-custom.log"
+        ],
+        "afterFirst": [
+          {
+            "path": "base/Crash Logs/crash-base-AUTOSCAN.md",
+            "content": "report"
+          },
+          {
+            "path": "base/Crash Logs/crash-base.log",
+            "content": "base log"
+          },
+          {
+            "path": "base/Crash Logs/crash-xse.log",
+            "content": "xse log"
+          },
+          {
+            "path": "base/sentinel.txt",
+            "content": "keep"
+          },
+          {
+            "path": "custom/crash-custom.log",
+            "content": "custom log"
+          },
+          {
+            "path": "xse/crash-xse.log",
+            "content": "xse log"
+          }
+        ],
+        "second": [
+          "base/Crash Logs/crash-base.log",
+          "base/Crash Logs/crash-later-xse.log",
+          "base/Crash Logs/crash-later.log",
+          "base/Crash Logs/crash-xse.log",
+          "custom/crash-custom.log"
+        ],
+        "files": [
+          {
+            "path": "base/Crash Logs/crash-base-AUTOSCAN.md",
+            "content": "report"
+          },
+          {
+            "path": "base/Crash Logs/crash-base.log",
+            "content": "base log"
+          },
+          {
+            "path": "base/Crash Logs/crash-later-xse.log",
+            "content": "later xse"
+          },
+          {
+            "path": "base/Crash Logs/crash-later.log",
+            "content": "later base"
+          },
+          {
+            "path": "base/Crash Logs/crash-xse.log",
+            "content": "xse log"
+          },
+          {
+            "path": "base/sentinel.txt",
+            "content": "keep"
+          },
+          {
+            "path": "custom/crash-custom.log",
+            "content": "custom log"
+          },
+          {
+            "path": "xse/crash-later-xse.log",
+            "content": "later xse"
+          },
+          {
+            "path": "xse/crash-xse.log",
+            "content": "xse log"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "empty",
+      "action": "log-collection.collect",
+      "capabilityIds": [
+        "log-collection.collect"
+      ],
+      "fixtureRefs": [
+        "empty"
+      ],
+      "input": {
+        "fixtureRef": "empty"
+      },
+      "expected": {
+        "before": [
+          {
+            "path": "base/sentinel.txt",
+            "content": "keep"
+          }
+        ],
+        "first": [],
+        "afterFirst": [
+          {
+            "path": "base/sentinel.txt",
+            "content": "keep"
+          }
+        ],
+        "second": [],
+        "files": [
+          {
+            "path": "base/sentinel.txt",
+            "content": "keep"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "configured",
+      "action": "log-collection.configured",
+      "capabilityIds": [
+        "log-collection.configured"
+      ],
+      "fixtureRefs": [
+        "configured"
+      ],
+      "input": {
+        "fixtureRef": "configured"
+      },
+      "expected": {
+        "before": [
+          {
+            "path": "base/crash-base-AUTOSCAN.md",
+            "content": "report"
+          },
+          {
+            "path": "base/crash-base.log",
+            "content": "base log"
+          },
+          {
+            "path": "base/sentinel.txt",
+            "content": "keep"
+          },
+          {
+            "path": "custom/crash-custom.log",
+            "content": "custom log"
+          },
+          {
+            "path": "xse/crash-xse.log",
+            "content": "xse log"
+          }
+        ],
+        "first": [
+          "base/Crash Logs/crash-base.log",
+          "base/Crash Logs/crash-xse.log",
+          "custom/crash-custom.log"
+        ],
+        "afterFirst": [
+          {
+            "path": "base/Crash Logs/crash-base-AUTOSCAN.md",
+            "content": "report"
+          },
+          {
+            "path": "base/Crash Logs/crash-base.log",
+            "content": "base log"
+          },
+          {
+            "path": "base/Crash Logs/crash-xse.log",
+            "content": "xse log"
+          },
+          {
+            "path": "base/sentinel.txt",
+            "content": "keep"
+          },
+          {
+            "path": "custom/crash-custom.log",
+            "content": "custom log"
+          },
+          {
+            "path": "xse/crash-xse.log",
+            "content": "xse log"
+          }
+        ],
+        "second": [
+          "base/Crash Logs/crash-base.log",
+          "base/Crash Logs/crash-later-xse.log",
+          "base/Crash Logs/crash-later.log",
+          "base/Crash Logs/crash-xse.log",
+          "custom/crash-custom.log"
+        ],
+        "files": [
+          {
+            "path": "base/Crash Logs/crash-base-AUTOSCAN.md",
+            "content": "report"
+          },
+          {
+            "path": "base/Crash Logs/crash-base.log",
+            "content": "base log"
+          },
+          {
+            "path": "base/Crash Logs/crash-later-xse.log",
+            "content": "later xse"
+          },
+          {
+            "path": "base/Crash Logs/crash-later.log",
+            "content": "later base"
+          },
+          {
+            "path": "base/Crash Logs/crash-xse.log",
+            "content": "xse log"
+          },
+          {
+            "path": "base/sentinel.txt",
+            "content": "keep"
+          },
+          {
+            "path": "custom/crash-custom.log",
+            "content": "custom log"
+          },
+          {
+            "path": "xse/crash-later-xse.log",
+            "content": "later xse"
+          },
+          {
+            "path": "xse/crash-xse.log",
+            "content": "xse log"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

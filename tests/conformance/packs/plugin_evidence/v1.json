@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "familyId": "plugin-evidence",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scanlog-core"
+  },
+  "fixtureRoot": "tests/fixtures/semantic_conformance/plugin-evidence",
+  "fixtures": {
+    "counted_evidence": "counted-evidence.json",
+    "empty_after_reuse": "empty-after-reuse.json",
+    "invalid_configuration": "invalid-configuration.json"
+  },
+  "capabilities": [
+    {
+      "id": "plugin-evidence.analyze",
+      "rustSymbols": [
+        "PluginEvidenceAnalyzer",
+        "PluginEvidenceAnalysisInput",
+        "PluginEvidenceAnalysisResult",
+        "PluginEvidence"
+      ],
+      "observationFamilies": [
+        "semantic-result",
+        "structured-error"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "counted-evidence",
+      "action": "plugin-evidence.analyze",
+      "capabilityIds": [
+        "plugin-evidence.analyze"
+      ],
+      "fixtureRefs": [
+        "counted_evidence"
+      ],
+      "input": {
+        "fixtureRef": "counted_evidence"
+      },
+      "expected": {
+        "analyzerKind": "plugin_evidence",
+        "result": {
+          "evidence": [
+            {
+              "plugin": "example.esp",
+              "occurrences": 2
+            }
+          ]
+        },
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "empty-after-reuse",
+      "action": "plugin-evidence.analyze",
+      "capabilityIds": [
+        "plugin-evidence.analyze"
+      ],
+      "fixtureRefs": [
+        "empty_after_reuse"
+      ],
+      "input": {
+        "fixtureRef": "empty_after_reuse"
+      },
+      "expected": {
+        "analyzerKind": "plugin_evidence",
+        "result": {
+          "evidence": []
+        },
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid-configuration",
+      "action": "plugin-evidence.analyze",
+      "capabilityIds": [
+        "plugin-evidence.analyze"
+      ],
+      "fixtureRefs": [
+        "invalid_configuration"
+      ],
+      "input": {
+        "fixtureRef": "invalid_configuration"
+      },
+      "expected": {
+        "analyzerKind": "plugin_evidence",
+        "result": null,
+        "error": {
+          "analyzerKind": "plugin_evidence",
+          "code": "invalid_configuration",
+          "message": "Plugin Evidence ignored plugin must not be empty"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

@@ -32,7 +32,8 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:  # noqa: BLE001 - final CLI boundary normalization.
         if context.tracebacks:
             traceback.print_exc(file=sys.stderr)
-        result = failure("startup", f"Unexpected CLI failure: {exc}", int(ExitCode.USAGE), error={"type": type(exc).__name__, "message": str(exc)})
+        result = failure("startup", f"Unexpected CLI failure: {exc}", int(ExitCode.USAGE),
+                         error={"type": type(exc).__name__, "message": str(exc)})
     return render_result(result, context)
 
 

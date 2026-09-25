@@ -1,0 +1,12 @@
+{
+  "operation": "rollback",
+  "fileName": "../outside.yaml",
+  "files": {
+    "cache/CLASSIC/outside.yaml": "outside-current\n",
+    "cache/CLASSIC/outside.yaml.prev": "outside-previous\n"
+  },
+  "service": {
+    "pages": [],
+    "api": []
+  }
+}

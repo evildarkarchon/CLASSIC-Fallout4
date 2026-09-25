@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "familyId": "game-orchestration",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scangame-core"
+  },
+  "fixtureRoot": "tests/fixtures/game_orchestration",
+  "fixtures": {
+    "isolated": "isolated.json"
+  },
+  "capabilities": [
+    {
+      "id": "game-orchestration.composed",
+      "rustSymbols": [
+        "GameScanConfig",
+        "GameScanOrchestrator",
+        "GameScanResult",
+        "ModScanResult",
+        "CheckResult",
+        "run_game_checks",
+        "run_mod_scans"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "values"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "game-jobs-and-unconfigured-mods",
+      "action": "game-orchestration.composed",
+      "capabilityIds": [
+        "game-orchestration.composed"
+      ],
+      "fixtureRefs": [
+        "isolated"
+      ],
+      "input": {
+        "fixtureRef": "isolated"
+      },
+      "expected": {
+        "game": {
+          "checkResults": [
+            {
+              "name": "crashgen",
+              "output": "# \u274c CAUTION : BUFFOUT4 TOML SETTINGS FILE NOT FOUND! #\nPlease recheck your Buffout4 installation and delete any obsolete files.\n-----\n# [!] NOTICE : Unable to find the Buffout4 config file, settings check will be skipped. #\n  To ensure this check doesn't get skipped, Buffout4 has to be installed manually.\n  [ If you are using Mod Organizer 2, you need to run CLASSIC through a shortcut in MO2. ]\n-----\n"
+            },
+            {
+              "name": "enb",
+              "output": "ENB is not installed.\n"
+            },
+            {
+              "name": "game_logs",
+              "output": ""
+            },
+            {
+              "name": "mod_inis",
+              "output": ""
+            },
+            {
+              "name": "wrye_bash",
+              "output": ""
+            },
+            {
+              "name": "xse_plugins",
+              "output": ""
+            }
+          ],
+          "reportMatchesChecks": true,
+          "configIssueCount": 0,
+          "errors": []
+        },
+        "mods": {
+          "report": "",
+          "unpackedIssueCount": 0,
+          "archivedIssueCount": 0,
+          "errors": [
+            "Mods folder path not configured"
+          ]
+        },
+        "files": [
+          {
+            "path": "sentinel.txt",
+            "content": "unchanged\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

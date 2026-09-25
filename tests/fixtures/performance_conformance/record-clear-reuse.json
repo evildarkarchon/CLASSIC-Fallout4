@@ -1,0 +1,45 @@
+{
+  "operations": [
+    {
+      "op": "clear"
+    },
+    {
+      "op": "summary"
+    },
+    {
+      "op": "record",
+      "label": "scan",
+      "durationMs": 125
+    },
+    {
+      "op": "record",
+      "label": "zero",
+      "durationMs": 0
+    },
+    {
+      "op": "record",
+      "label": "scan",
+      "durationMs": 375
+    },
+    {
+      "op": "summary"
+    },
+    {
+      "op": "clear"
+    },
+    {
+      "op": "summary"
+    },
+    {
+      "op": "record",
+      "label": "scan",
+      "durationMs": 1000
+    },
+    {
+      "op": "summary"
+    },
+    {
+      "op": "clear"
+    }
+  ]
+}

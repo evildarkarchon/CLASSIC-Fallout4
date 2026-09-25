@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "familyId": "database-operations",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-database-core"
+  },
+  "fixtureRoot": "tests/fixtures/database_operations_conformance",
+  "fixtures": {
+    "populated": "populated.json",
+    "missing": "missing.json",
+    "invalid": "invalid.json",
+    "cache-defaults": "cache-defaults.json"
+  },
+  "capabilities": [
+    {
+      "id": "database-operations.pool",
+      "rustSymbols": [
+        "DatabasePool",
+        "cache_size",
+        "initialize",
+        "get_entry",
+        "get_entries_batch",
+        "is_available",
+        "get_game_table",
+        "clear_cache",
+        "close"
+      ],
+      "observationFamilies": [
+        "values",
+        "errors",
+        "durable-effects"
+      ]
+    },
+    {
+      "id": "database-operations.cache-defaults",
+      "rustSymbols": [
+        "DEFAULT_CACHE_TTL_SECS",
+        "BATCH_CACHE_TTL_SECS",
+        "MAX_CACHE_TTL_SECS",
+        "DEFAULT_QUERY_CACHE_CAPACITY",
+        "DEFAULT_CACHE_CLEANUP_OP_THRESHOLD",
+        "DEFAULT_CACHE_CLEANUP_INTERVAL_SECS"
+      ],
+      "observationFamilies": [
+        "values"
+      ],
+      "operationScoped": true
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "populated",
+      "action": "database-operations.pool",
+      "capabilityIds": [
+        "database-operations.pool"
+      ],
+      "fixtureRefs": [
+        "populated"
+      ],
+      "input": {
+        "fixtureRef": "populated"
+      },
+      "expected": {
+        "table": "Fallout4",
+        "initialAvailable": false,
+        "available": true,
+        "error": null,
+        "single": [
+          "Alpha caf\u00e9",
+          "",
+          null,
+          "Alpha caf\u00e9"
+        ],
+        "batch": [
+          "Alpha caf\u00e9",
+          "",
+          null,
+          "Alpha caf\u00e9"
+        ],
+        "cleared": 2,
+        "afterClear": 0,
+        "closedAvailable": false,
+        "closedCache": 0,
+        "files": [
+          {
+            "path": "formids.db",
+            "hex": "53514c69746520666f726d61742033000200010100402020000000000000000200000000000000000000000100000004000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000d00000001018b00018b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000730107171d1d0181397461626c6546616c6c6f75743446616c6c6f75743402435245415445205441424c452046616c6c6f75743428666f726d69642054455854204e4f54204e554c4c2c20706c7567696e2054455854204e4f54204e554c4c2c20656e7472792054455854204e4f54204e554c4c290d0000000201c70001de01c7000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015020419230d3030303030324578616d706c652e6573702001041923233030303030314578616d706c652e657370416c70686120636166c3a9"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "missing",
+      "action": "database-operations.pool",
+      "capabilityIds": [
+        "database-operations.pool"
+      ],
+      "fixtureRefs": [
+        "missing"
+      ],
+      "input": {
+        "fixtureRef": "missing"
+      },
+      "expected": {
+        "table": "Fallout4",
+        "initialAvailable": false,
+        "available": false,
+        "error": null,
+        "single": [],
+        "batch": [],
+        "cleared": 0,
+        "afterClear": 0,
+        "closedAvailable": false,
+        "closedCache": 0,
+        "files": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid",
+      "action": "database-operations.pool",
+      "capabilityIds": [
+        "database-operations.pool"
+      ],
+      "fixtureRefs": [
+        "invalid"
+      ],
+      "input": {
+        "fixtureRef": "invalid"
+      },
+      "expected": {
+        "table": "Fallout4",
+        "initialAvailable": false,
+        "available": false,
+        "error": {
+          "code": "open",
+          "path": "formids.db"
+        },
+        "single": [],
+        "batch": [],
+        "cleared": 0,
+        "afterClear": 0,
+        "closedAvailable": false,
+        "closedCache": 0,
+        "files": [
+          {
+            "path": "formids.db",
+            "hex": "6e6f7420612053514c6974652064617461626173650a"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "cache-defaults",
+      "action": "database-operations.cache-defaults",
+      "capabilityIds": [
+        "database-operations.cache-defaults"
+      ],
+      "fixtureRefs": [
+        "cache-defaults"
+      ],
+      "input": {
+        "fixtureRef": "cache-defaults"
+      },
+      "expected": {
+        "defaultTtl": 300,
+        "batchTtl": 1800,
+        "maximumTtl": 3600,
+        "capacity": 20000,
+        "cleanupThreshold": 2048,
+        "cleanupInterval": 30
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

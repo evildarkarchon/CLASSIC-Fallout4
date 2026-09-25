@@ -26,33 +26,41 @@ void ScanController::setLocalIgnoreRecoveryPrompt(classic::gui::ScanRunLocalIgno
     m_localIgnoreRecoveryPrompt = std::move(prompt);
 }
 
-classic::gui::ScanRunLocalIgnoreRecoveryChoice
-ScanController::requestLocalIgnoreRecoveryChoice(const QString& message) const
+classic::gui::ScanRunLocalIgnoreRecoveryChoice ScanController::requestLocalIgnoreRecoveryChoice(
+    const classic::gui::ScanRunLocalIgnoreRecoveryPresentation& recovery) const
 {
     if (!m_localIgnoreRecoveryPrompt) {
         return classic::gui::ScanRunLocalIgnoreRecoveryChoice::Cancel;
     }
-    return m_localIgnoreRecoveryPrompt(message);
+    return m_localIgnoreRecoveryPrompt(recovery);
 }
 
 classic::gui::ScanRunLocalIgnoreRecoveryPrompt ScanController::makeLocalIgnoreRecoveryPrompt()
 {
-    return [controller = QPointer<ScanController>(this)](const QString& message) {
+    return [controller = QPointer<ScanController>(this)](
+               const classic::gui::ScanRunLocalIgnoreRecoveryPresentation& recovery) {
         using Choice = classic::gui::ScanRunLocalIgnoreRecoveryChoice;
         if (!controller) {
             return Choice::Cancel;
         }
+        // Load-bearing, not an optimisation: `Qt::BlockingQueuedConnection` self-deadlocks when the
+        // source and target threads are the same, which is exactly the case in a single-threaded
+        // test that drives this seam directly.
         if (QThread::currentThread() == controller->thread()) {
-            return controller->requestLocalIgnoreRecoveryChoice(message);
+            return controller->requestLocalIgnoreRecoveryChoice(recovery);
         }
 
         Choice choice = Choice::Cancel;
-        // Keep the Rust continuation and observer on the worker stack while the GUI owns the modal prompt.
+        // Keep the Rust continuation and observer on the worker stack while the GUI owns the modal
+        // prompt. The payload is captured by value and carries only Qt-owned copies — no
+        // continuation and no `rust::Box` — which is what makes copying it across the hop safe.
+        // No metatype registration is needed because this is the functor overload of
+        // `invokeMethod` rather than the string-based one.
         const bool invoked = QMetaObject::invokeMethod(
             controller.data(),
-            [controller, message, &choice]() {
+            [controller, recovery, &choice]() {
                 if (controller) {
-                    choice = controller->requestLocalIgnoreRecoveryChoice(message);
+                    choice = controller->requestLocalIgnoreRecoveryChoice(recovery);
                 }
             },
             Qt::BlockingQueuedConnection);
@@ -128,11 +136,11 @@ bool ScanController::isScanning() const
     return m_scanning;
 }
 
-void ScanController::onWorkerFinished(int total, int success, int errors)
+void ScanController::onWorkerFinished(int total, int success, int errors, const QString& message)
 {
     m_scanning = false;
     m_currentWorker = nullptr;
-    emit scanFinished(total, success, errors);
+    emit scanFinished(total, success, errors, message);
     if (m_signalHub) {
         emit m_signalHub->scanCompleted();
     }

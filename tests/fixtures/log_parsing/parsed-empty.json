@@ -1,0 +1,12 @@
+{
+  "operation": "parser",
+  "pattern": "needle",
+  "patternLines": [
+    "quiet"
+  ],
+  "lines": [
+    "SYSTEM SPECS:"
+  ],
+  "sectionLines": [],
+  "extractLines": []
+}

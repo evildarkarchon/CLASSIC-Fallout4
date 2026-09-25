@@ -1,0 +1,29 @@
+{
+  "operation": "parser",
+  "pattern": "needle",
+  "patternLines": [
+    "needle",
+    "quiet"
+  ],
+  "lines": [
+    "Fallout 4 v1.10.163",
+    "Buffout 4 v1.28.6",
+    "Unhandled exception EXCEPTION_ACCESS_VIOLATION",
+    "SYSTEM SPECS:",
+    "CPU: sample",
+    "PROBABLE CALL STACK:",
+    "frame",
+    "PLUGINS:",
+    "[00] Fallout4.esm"
+  ],
+  "sectionLines": [
+    "START",
+    "body",
+    "END"
+  ],
+  "extractLines": [
+    "FormID: 0x12345678",
+    "[00] Fallout4.esm",
+    "error at 0x1234567890ABCDEF"
+  ]
+}

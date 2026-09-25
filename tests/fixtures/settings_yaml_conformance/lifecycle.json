@@ -1,0 +1,19 @@
+{
+  "kind": "yaml",
+  "content": "items:\n  - alpha\n  - beta\nmapping:\n  left: west\n  right: east\nname: original\nready: false\nsize: 1\nvalues: []\n",
+  "updates": {
+    "name": "revised",
+    "ready": true,
+    "size": 7,
+    "values": [
+      "gamma",
+      "delta"
+    ]
+  },
+  "updateOrder": [
+    "name",
+    "ready",
+    "size",
+    "values"
+  ]
+}

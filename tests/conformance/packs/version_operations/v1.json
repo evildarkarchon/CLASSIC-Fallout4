@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "familyId": "version-operations",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-version-core"
+  },
+  "fixtureRoot": "tests/fixtures/version_operations_conformance",
+  "fixtures": {
+    "prefixed": "prefixed.json",
+    "four-part": "four-part.json",
+    "newer": "newer.json",
+    "invalid": "invalid.json"
+  },
+  "capabilities": [
+    {
+      "id": "version-operations.observe",
+      "rustSymbols": [
+        "parse_version",
+        "try_parse_version",
+        "compare_versions",
+        "format_version"
+      ],
+      "observationFamilies": [
+        "version-comparison"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "prefixed",
+      "action": "version-operations.observe",
+      "capabilityIds": [
+        "version-operations.observe"
+      ],
+      "fixtureRefs": [
+        "prefixed"
+      ],
+      "input": {
+        "fixtureRef": "prefixed"
+      },
+      "expected": {
+        "parsed": {
+          "value": "1.10.163",
+          "error": null
+        },
+        "optional": "1.10.163",
+        "comparison": -1,
+        "formatted": "1.10.163"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "four-part",
+      "action": "version-operations.observe",
+      "capabilityIds": [
+        "version-operations.observe"
+      ],
+      "fixtureRefs": [
+        "four-part"
+      ],
+      "input": {
+        "fixtureRef": "four-part"
+      },
+      "expected": {
+        "parsed": {
+          "value": "1.10.984",
+          "error": null
+        },
+        "optional": "1.10.984",
+        "comparison": 0,
+        "formatted": "1.10.984"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "newer",
+      "action": "version-operations.observe",
+      "capabilityIds": [
+        "version-operations.observe"
+      ],
+      "fixtureRefs": [
+        "newer"
+      ],
+      "input": {
+        "fixtureRef": "newer"
+      },
+      "expected": {
+        "parsed": {
+          "value": "2.0.0",
+          "error": null
+        },
+        "optional": "2.0.0",
+        "comparison": 1,
+        "formatted": "2.0.0"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid",
+      "action": "version-operations.observe",
+      "capabilityIds": [
+        "version-operations.observe"
+      ],
+      "fixtureRefs": [
+        "invalid"
+      ],
+      "input": {
+        "fixtureRef": "invalid"
+      },
+      "expected": {
+        "parsed": {
+          "value": null,
+          "error": "Version string is empty"
+        },
+        "optional": null,
+        "comparison": null,
+        "formatted": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

@@ -23,7 +23,7 @@ import re
 import sys
 from pathlib import Path
 
-from ruamel.yaml import YAML, YAMLError # type: ignore
+from ruamel.yaml import YAML, YAMLError  # type: ignore
 
 try:
     from tools.publish_yaml_data.cache_names import (
@@ -31,7 +31,7 @@ try:
         windows_normalized_cache_file_key,
     )
 except ModuleNotFoundError:
-    from cache_names import is_valid_cache_file_name, windows_normalized_cache_file_key # type: ignore
+    from cache_names import is_valid_cache_file_name, windows_normalized_cache_file_key  # type: ignore
 
 # `pure=True` forces the pure-Python parser; the libyaml-backed C parser
 # rejects the `foo::bar` bare-scalar pattern used by several
@@ -105,7 +105,7 @@ def _parse_schema_point(value: str) -> tuple[int, int]:
 
 
 def _validate_range_field(
-    schema_ranges_path: Path, entry: dict[str, object], field: str
+        schema_ranges_path: Path, entry: dict[str, object], field: str
 ) -> str:
     """Extract and format-validate one schema-range field. Returns the raw
     string on success; raises ``SystemExit`` with a ``FAIL:`` diagnostic on

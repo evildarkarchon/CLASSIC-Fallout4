@@ -1,0 +1,24 @@
+{
+  "operation": "process-logs",
+  "game": "Fallout4",
+  "directories": [
+    "empty"
+  ],
+  "files": {
+    "active.log": "error 00\nerror 01\nerror 02\nerror 03\nerror 04\nerror 05\nerror 06\nerror 07\nerror 08\nerror 09\nerror 10\nerror 11\nerror 12\nerror 13\nerror 14\nerror 15\nerror 16\nerror 17\nerror 18\nerror 19\nerror 20\nerror 21\nerror 22\nerror 23\nerror 24\nerror 25\nerror 26\nerror 27\nerror 28\nerror 29\nerror 30\nerror 31\nerror 32\nerror 33\nerror 34\nerror 35\nerror 36\nerror 37\nerror 38\nerror 39\nerror 40\nerror 41\nerror 42\nerror 43\nerror 44\nerror 45\nerror 46\nerror 47\nerror 48\nerror 49\nerror 50\nerror 51\nerror 52\n",
+    "crash-excluded.log": "error excluded\n",
+    "ignored.log": "error excluded\n",
+    "notes.txt": "error excluded\n",
+    "nested/hidden.log": "error excluded\n"
+  },
+  "catch": [
+    "error",
+    "fatal"
+  ],
+  "excludeFiles": [
+    "ignored.log"
+  ],
+  "excludeErrors": [
+    "ignored"
+  ]
+}

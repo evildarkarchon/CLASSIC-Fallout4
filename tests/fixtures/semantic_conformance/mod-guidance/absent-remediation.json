@@ -1,0 +1,43 @@
+{
+  "configuration": {
+    "conflicts": [
+      {
+        "modA": "alpha",
+        "modB": "beta",
+        "nameA": "Alpha Mod",
+        "nameB": "Beta Mod",
+        "description": "Authored conflict description",
+        "fix": null,
+        "link": null
+      }
+    ],
+    "frequentCrashes": [],
+    "solutions": [],
+    "importantMods": []
+  },
+  "request": {
+    "plugins": [
+      {
+        "name": "Alpha.esp",
+        "id": "01"
+      },
+      {
+        "name": "Beta.esp",
+        "id": "02"
+      },
+      {
+        "name": "CrashFix.esp",
+        "id": "03"
+      },
+      {
+        "name": "Solution.esp",
+        "id": "04"
+      }
+    ],
+    "userGpu": "amd",
+    "xseModules": [
+      "Installed.dll",
+      "WrongGpu.dll"
+    ]
+  }
+}

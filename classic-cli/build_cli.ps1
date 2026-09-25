@@ -13,6 +13,11 @@
 .PARAMETER Test
     Run CTest (Catch2 unit tests) and integration tests after building.
 
+.PARAMETER TestOnly
+    Run selected tests against a completed build from the same checkout,
+    compiler, and preset. Requires -Test and cannot be combined with build
+    cleanup, install, or packaging.
+
 .PARAMETER CTestName
     Run only the specified CTest unit test name or names. Requires -Test.
     Accepts PowerShell arrays and comma-separated strings.
@@ -52,11 +57,13 @@
     .\build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks","Yaml update bridge returns status"
     .\build_cli.ps1 -Test -CTestArgs @('--repeat', 'until-fail:2')
     .\build_cli.ps1 -Test -IntegrationTestName help,version
+    .\build_cli.ps1 -Test -TestOnly -CTestName classic-cxx-conformance
 #>
 
 param(
     [switch]$Clean,
     [switch]$Test,
+    [switch]$TestOnly,
     [switch]$Debug,
     [switch]$Install,
     [switch]$Package,
@@ -64,10 +71,17 @@ param(
     [string]$Compiler = "msvc",
     [string[]]$CTestName = @(),
     [string[]]$CTestArgs = @(),
+    # pwsh -File flattens the required two-value CTest array. Keep this adjacent
+    # positional receiver private to the wrapper and fold it back immediately.
+    [string[]]$_CTestArgsContinuation = @(),
     [string[]]$IntegrationTestName = @()
 )
 
 $ErrorActionPreference = "Stop"
+
+if ($_CTestArgsContinuation.Count -gt 0) {
+    $CTestArgs += $_CTestArgsContinuation
+}
 
 function New-ExactTestNameRegex {
     param([string[]]$TestNames)
@@ -107,6 +121,11 @@ function ConvertTo-TestNameList {
 
 # -Package implies -Install
 if ($Package) { $Install = $true }
+
+if ($TestOnly -and (-not $Test -or $Clean -or $Install -or $Package)) {
+    Write-Error "-TestOnly requires -Test and cannot be combined with -Clean, -Install, or -Package."
+    exit 1
+}
 
 $CTestName = @(ConvertTo-TestNameList -TestNames $CTestName)
 $CTestArgs = @($CTestArgs | ForEach-Object { $_.Trim() } | Where-Object { $_ })
@@ -198,6 +217,64 @@ function Set-ClangClCargoCcEnvironment {
     }
 }
 
+<#
+.SYNOPSIS
+    Returns the checked-out commit used to bind a reusable native build.
+#>
+function Get-BuildSourceRevision {
+    param([Parameter(Mandatory)][string]$RepositoryRoot)
+
+    $revision = @(& git -C $RepositoryRoot rev-parse HEAD)
+    if ($LASTEXITCODE -ne 0 -or $revision.Count -ne 1 -or $revision[0] -notmatch '^[0-9a-f]{40}$') {
+        throw "Cannot identify the repository revision for native build reuse."
+    }
+    return [string]$revision[0]
+}
+
+<#
+.SYNOPSIS
+    Rejects a missing or mismatched completion marker before running CTest.
+#>
+function Assert-ReusableBuildMarker {
+    param(
+        [Parameter(Mandatory)][string]$MarkerPath,
+        [Parameter(Mandatory)][string]$Compiler,
+        [Parameter(Mandatory)][string]$Preset,
+        [Parameter(Mandatory)][string]$SourceRevision
+    )
+
+    if (-not (Test-Path -LiteralPath $MarkerPath -PathType Leaf)) {
+        throw "No completed native build marker exists at '$MarkerPath'. Run the build first."
+    }
+    try {
+        $marker = Get-Content -LiteralPath $MarkerPath -Raw | ConvertFrom-Json -AsHashtable
+    }
+    catch {
+        throw "Cannot read native build marker at '$MarkerPath': $($_.Exception.Message)"
+    }
+    if ($marker.schemaVersion -ne 1 -or $marker.compiler -cne $Compiler -or
+        $marker.preset -cne $Preset -or $marker.sourceRevision -cne $SourceRevision) {
+        throw "Native build marker does not match this checkout, compiler, and preset: '$MarkerPath'."
+    }
+}
+
+<#
+.SYNOPSIS
+    Uses a preverified Corrosion source when CI provides one; otherwise lets FetchContent download it.
+#>
+function Get-CorrosionSourceCmakeArgument {
+    param([string]$SourceDir)
+
+    if ([string]::IsNullOrWhiteSpace($SourceDir)) {
+        return
+    }
+    $resolved = [System.IO.Path]::GetFullPath($SourceDir)
+    if (-not (Test-Path -LiteralPath (Join-Path $resolved "CMakeLists.txt") -PathType Leaf)) {
+        throw "Corrosion source override at '$resolved' is missing CMakeLists.txt."
+    }
+    return "-DFETCHCONTENT_SOURCE_DIR_CORROSION:PATH=$resolved"
+}
+
 # Verify VCPKG_ROOT is set
 if (-not $env:VCPKG_ROOT) {
     Write-Error "VCPKG_ROOT environment variable is not set. Install vcpkg and set VCPKG_ROOT."
@@ -269,6 +346,8 @@ else {
     $buildDirName = if ($Debug) { "build-debug" } else { "build" }
 }
 $buildDir = Join-Path $ScriptDir $buildDirName
+$sourceRevision = Get-BuildSourceRevision -RepositoryRoot (Split-Path -Parent $ScriptDir)
+$buildMarkerPath = Join-Path $buildDir ".classic-build-complete.json"
 
 if ($Compiler -eq "clang-cl") {
     Set-ClangClCargoCcEnvironment -ClangClPath $clangClFound.Source
@@ -283,35 +362,60 @@ if ($Clean -and (Test-Path $buildDir)) {
     Remove-Item -Recurse -Force $buildDir
 }
 
-# ── Step 2: CMake configure ─────────────────────────────────────
-Write-Host "`n=== Configuring CMake (Ninja) ===" -ForegroundColor Cyan
-
-$cmakeArgs = @("--preset", $buildPreset)
-
 Push-Location $ScriptDir
 try {
-    Write-Host "cmake $($cmakeArgs -join ' ')" -ForegroundColor DarkGray
-    & cmake @cmakeArgs
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "CMake configure failed with exit code $LASTEXITCODE"
-        exit $LASTEXITCODE
+    if ($TestOnly) {
+        # Receipt runs must reuse only the build completed by this checkout's
+        # retained native test step, never a partial or other-compiler tree.
+        Assert-ReusableBuildMarker -MarkerPath $buildMarkerPath -Compiler $Compiler -Preset $buildPreset -SourceRevision $sourceRevision
+        if (-not (Test-Path -LiteralPath (Join-Path $buildDir "CMakeCache.txt") -PathType Leaf) -or
+            -not (Test-Path -LiteralPath (Join-Path $buildDir "build.ninja") -PathType Leaf)) {
+            throw "The completed native build at '$buildDir' is missing CMake/Ninja state."
+        }
+        Write-Host "`n=== Reusing completed C++ CLI build ===" -ForegroundColor Cyan
     }
+    else {
+        # Invalidate the previous completion before configure so a failed
+        # rebuild cannot leave a marker that authorizes stale test evidence.
+        if (Test-Path -LiteralPath $buildMarkerPath -PathType Leaf) {
+            Remove-Item -LiteralPath $buildMarkerPath -Force
+        }
 
-    # ── Step 3: CMake build ──────────────────────────────────────
-    Write-Host "`n=== Building C++ CLI (Corrosion handles Rust build) ===" -ForegroundColor Cyan
+        # ── Step 2: CMake configure ─────────────────────────────
+        Write-Host "`n=== Configuring CMake (Ninja) ===" -ForegroundColor Cyan
+        $cmakeArgs = @("--preset", $buildPreset)
+        $corrosionSourceArgument = Get-CorrosionSourceCmakeArgument -SourceDir $env:CLASSIC_CORROSION_SOURCE_DIR
+        if ($corrosionSourceArgument) {
+            $cmakeArgs += $corrosionSourceArgument
+        }
+        Write-Host "cmake $($cmakeArgs -join ' ')" -ForegroundColor DarkGray
+        & cmake @cmakeArgs
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "CMake configure failed with exit code $LASTEXITCODE"
+            exit $LASTEXITCODE
+        }
 
-    # Corrosion builds the Rust crate with PROFILE release and compiles
-    # the CXX bridge glue code, so a single cmake --build is all that's needed.
-    $buildArgs = @("--build", $buildDirName)
+        # ── Step 3: CMake build ──────────────────────────────────
+        Write-Host "`n=== Building C++ CLI (Corrosion handles Rust build) ===" -ForegroundColor Cyan
+        # Corrosion builds the Rust crate with PROFILE release and compiles
+        # the CXX bridge glue code, so a single cmake --build is all that's needed.
+        $buildArgs = @("--build", $buildDirName)
+        Write-Host "cmake $($buildArgs -join ' ')" -ForegroundColor DarkGray
+        & cmake @buildArgs
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "CMake build failed with exit code $LASTEXITCODE"
+            exit $LASTEXITCODE
+        }
 
-    Write-Host "cmake $($buildArgs -join ' ')" -ForegroundColor DarkGray
-    & cmake @buildArgs
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "CMake build failed with exit code $LASTEXITCODE"
-        exit $LASTEXITCODE
+        $marker = [ordered]@{
+            schemaVersion = 1
+            compiler = $Compiler
+            preset = $buildPreset
+            sourceRevision = $sourceRevision
+        }
+        $marker | ConvertTo-Json | Set-Content -LiteralPath $buildMarkerPath -Encoding utf8
+        Write-Host "`n=== Build complete ===" -ForegroundColor Green
     }
-
-    Write-Host "`n=== Build complete ===" -ForegroundColor Green
 
     $exePath = Join-Path $buildDir "classic-cli.exe"
     if (Test-Path $exePath) {
@@ -337,10 +441,30 @@ try {
             if ($ctestRegex) {
                 $ctestDiscoveryArgs += @("-R", $ctestRegex)
             }
-            & ctest @ctestDiscoveryArgs
-            if ($LASTEXITCODE -ne 0) {
-                Write-Error "CTest discovery failed with exit code $LASTEXITCODE"
-                exit $LASTEXITCODE
+            $ctestDiscoveryOutput = @(& ctest @ctestDiscoveryArgs)
+            $ctestDiscoveryExitCode = $LASTEXITCODE
+            $ctestDiscoveryOutput | ForEach-Object { Write-Host $_ }
+            if ($ctestDiscoveryExitCode -ne 0) {
+                Write-Error "CTest discovery failed with exit code $ctestDiscoveryExitCode"
+                exit $ctestDiscoveryExitCode
+            }
+            if ($CTestName.Count -gt 0) {
+                # Exact-name conformance evidence must never broaden silently if
+                # registration changes. The same guard also protects ordinary
+                # multi-name selections from missing or duplicate discovery.
+                $totalMatch = [regex]::Match(
+                    ($ctestDiscoveryOutput -join "`n"),
+                    '(?m)^Total Tests:\s+(?<count>\d+)\s*$'
+                )
+                if (-not $totalMatch.Success) {
+                    Write-Error "CTest discovery did not report its selected test count."
+                    exit 1
+                }
+                $discoveredTestCount = [int]$totalMatch.Groups['count'].Value
+                if ($discoveredTestCount -ne $CTestName.Count) {
+                    Write-Error "CTest discovery selected $discoveredTestCount tests; expected exactly $($CTestName.Count)."
+                    exit 1
+                }
             }
 
             $ctestRunArgs = @("--test-dir", $buildDirName, "--output-on-failure", "--no-tests=error")

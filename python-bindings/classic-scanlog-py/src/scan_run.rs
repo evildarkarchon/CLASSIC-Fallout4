@@ -8,6 +8,11 @@ use classic_config_core::{
     InspectedYamlDataFile, InstalledYamlDataProvenance, InstalledYamlDataRole,
     YamlDataContentIdentity,
 };
+use classic_scan_presentation::{
+    DisplayLine, DisplaySegment, DisplaySeverity, RecoveryPrompt, render_event,
+    render_infrastructure_error, render_local_ignore_recovery, render_resume_error,
+    render_run_result,
+};
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanFacts,
@@ -935,6 +940,116 @@ impl PyScanRunInfrastructureError {
     }
 }
 
+/// One typed piece of a Crash Log Scan Run display line.
+///
+/// The six-variant Rust segment crosses flattened: a `kind` tag plus one field per
+/// payload shape, with the fields the kind does not select left empty. Read only the
+/// field `kind` names.
+///
+/// The flattening is the C++ bridge's, field for field, rather than a Python-idiomatic
+/// shape with optional payloads. One flattening across every binding is what lets a
+/// wording fix reach all of them without three separate readings of the same segment,
+/// and it is what the parity baselines pin.
+///
+/// `path` is a `str` rather than a `pathlib.Path` for one reason worth naming: every
+/// other kind must leave it empty, and an empty `Path` is `Path('.')` — a wrong value
+/// rather than an absent one. A `str` has a genuine empty form, which is what "unused
+/// fields empty" needs to be expressible at all.
+#[pyclass(name = "ScanRunDisplaySegment", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunDisplaySegment {
+    /// Stable token naming which field below carries this segment's payload:
+    /// `text`, `label`, `count`, `path`, `name`, or `emphasis`.
+    #[pyo3(get)]
+    kind: String,
+    /// Payload for `text`, `label`, `name`, and `emphasis`. For `count` this is the
+    /// noun Rust already resolved to agree with `count`, so no consumer re-decides
+    /// pluralization and no user reads "1 logs". Empty for `path`.
+    #[pyo3(get)]
+    text: String,
+    /// Payload for `path`, whole and untruncated. Truncation is the consumer's
+    /// choice. Empty otherwise.
+    #[pyo3(get)]
+    path: String,
+    /// Payload for `count`. Zero otherwise.
+    #[pyo3(get)]
+    count: u64,
+}
+
+/// One line of Crash Log Scan Run Display Content.
+///
+/// A consumer concatenates `segments` in order and never reorders within a line. It
+/// may reorder, group, or omit whole lines. It must not re-derive a Display Label
+/// already carried in a `label` segment, and must not re-decide a `count`'s noun.
+#[pyclass(name = "ScanRunDisplayLine", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunDisplayLine {
+    /// How gravely this line should read: `info`, `notice`, `warning`, `failure`,
+    /// or `success`. Rust names no colour, text attribute, or widget — a plain,
+    /// pipeable frontend may map every severity onto nothing at all and stay correct.
+    #[pyo3(get)]
+    severity: String,
+    /// The line's content, in reading order.
+    #[pyo3(get)]
+    segments: Vec<PyScanRunDisplaySegment>,
+}
+
+/// One Local Ignore recovery decision, named and explained, with its availability
+/// attached.
+///
+/// `available` travels here rather than as a separate flag beside the prompt, which is
+/// what makes honouring it take no separate lookup. A consumer must not offer a decision
+/// for which it is false: Rust still fails safely and touches nothing on disk, but the
+/// attempt spends the one-shot continuation, so the user is left with no scan and no
+/// second attempt. Two native frontends made exactly that mistake while the fact lived
+/// beside the prompt instead of on the decision.
+#[pyclass(
+    name = "ScanRunRecoveryDecisionDescription",
+    frozen,
+    skip_from_py_object
+)]
+#[derive(Clone)]
+pub struct PyScanRunRecoveryDecisionDescription {
+    /// The decision to hand straight back to `scan_run_resume`.
+    ///
+    /// The enum rather than a snake_case token, unlike every other tag this surface
+    /// publishes on an output. `scan_run_resume` takes the enum, so a token here would
+    /// make a consumer map it back — and a mapping table written by a consumer is the
+    /// drift this whole effort removes.
+    #[pyo3(get)]
+    decision: PyScanRunLocalIgnoreRecoveryDecision,
+    /// The decision's Display Label.
+    #[pyo3(get)]
+    label: String,
+    /// What choosing it will actually do, concatenated in order like any other line.
+    #[pyo3(get)]
+    description: Vec<PyScanRunDisplaySegment>,
+    /// Whether this run can honor the decision.
+    #[pyo3(get)]
+    available: bool,
+}
+
+/// The Rust-owned content of a Local Ignore recovery prompt.
+///
+/// `lines` state why the run paused and what is being decided about; `decisions` lists
+/// every decision the continuation contract accepts. The affordance beside a description
+/// is the consumer's own, as is the order it presents them in and what kind of surface
+/// asks the question. The descriptions themselves are not.
+///
+/// Backing out appears nowhere here. `ScanRunLocalIgnoreRecoveryDecision` has exactly two
+/// variants by design, and abandonment is spelled as the absence of a decision through
+/// `scan_run_abandon`.
+#[pyclass(name = "ScanRunRecoveryPrompt", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunRecoveryPrompt {
+    /// Why the run paused and what is being decided about, in reading order.
+    #[pyo3(get)]
+    lines: Vec<PyScanRunDisplayLine>,
+    /// One description per recovery decision, in the contract's variant order.
+    #[pyo3(get)]
+    decisions: Vec<PyScanRunRecoveryDecisionDescription>,
+}
+
 /// Common log-scoped event payload.
 #[pyclass(name = "ScanRunLogEvent", from_py_object)]
 #[derive(Clone)]
@@ -982,6 +1097,7 @@ pub struct PyScanRunEvent {
     log: Option<PyScanRunLogEvent>,
     phase: Option<String>,
     disposition: Option<String>,
+    display_lines: Vec<PyScanRunDisplayLine>,
 }
 
 #[pymethods]
@@ -1021,6 +1137,17 @@ impl PyScanRunEvent {
     pub fn disposition(&self) -> Option<String> {
         self.disposition.clone()
     }
+
+    /// Returns what this event says, in Rust's words.
+    ///
+    /// Rendered inline on the observer path before the event reaches Python. There
+    /// is no later opportunity: the Python observer receives a projected copy and
+    /// never holds the Rust event. The tokens on the fields above are unaffected —
+    /// prose for a person, tokens for a consumer matching on them.
+    #[getter]
+    pub fn display_lines(&self) -> Vec<PyScanRunDisplayLine> {
+        self.display_lines.clone()
+    }
 }
 
 /// Final operation envelope with independent adapter observation failure data.
@@ -1029,6 +1156,8 @@ pub struct PyScanRunExecution {
     result: Option<Py<PyScanRunResult>>,
     error: Option<PyScanRunInfrastructureError>,
     observer_error: Option<String>,
+    display_lines: Vec<PyScanRunDisplayLine>,
+    recovery_prompt: Option<PyScanRunRecoveryPrompt>,
 }
 
 #[pymethods]
@@ -1049,6 +1178,37 @@ impl PyScanRunExecution {
     #[getter]
     pub fn observer_error(&self) -> Option<String> {
         self.observer_error.clone()
+    }
+
+    /// Returns what this execution says, in Rust's words.
+    ///
+    /// One field covers both payloads, describing whichever of `result` and `error`
+    /// is present — the same call the C++ bridge's single execution envelope makes,
+    /// and for the same reason: putting it on each payload would mean two fields
+    /// saying the same thing and two baseline rows rather than one. `scan_run_resume`
+    /// resolves the same envelope, so the initial run and the continuation resume
+    /// share this field rather than each growing their own.
+    ///
+    /// Empty only when this surface built an envelope for neither payload, which the
+    /// two entry points do not do.
+    #[getter]
+    pub fn display_lines(&self) -> Vec<PyScanRunDisplayLine> {
+        self.display_lines.clone()
+    }
+
+    /// Returns what to ask the user, and which answers this run can honor.
+    ///
+    /// Present only when `result.status` is `"local_ignore_recovery_required"`, which is
+    /// also exactly when the run retains a continuation to answer with. `None` rather
+    /// than an empty prompt, because a run with nothing to ask has no prompt rather than
+    /// an empty one — and `None` is what a Python consumer already reads as "not
+    /// present" everywhere else on this surface.
+    ///
+    /// Rendered here for the reason `display_lines` is: Python receives a projected copy
+    /// of the run and cannot render from the Rust value later.
+    #[getter]
+    pub fn recovery_prompt(&self) -> Option<PyScanRunRecoveryPrompt> {
+        self.recovery_prompt.clone()
     }
 }
 
@@ -1246,20 +1406,26 @@ fn log_result_to_py(value: contract::LogResult) -> PyScanRunLogResult {
 
 /// Returns the stable Python token for one run-wide lifecycle status.
 ///
-/// Delegates for the same reason as [`disposition_to_string`]. The run status
-/// does not implement the Vocabulary naming contract — no frontend renders a
-/// Display Label for it — but the core has always owned an inherent token
-/// method, and this surface was writing the same six strings out beside it.
+/// Delegates for the same reason as [`disposition_to_string`]: the core owns the
+/// six strings this surface was writing out beside it. The run status now
+/// implements the Vocabulary naming contract too, so this resolves the trait
+/// method rather than the inherent one it used to — the same six bytes either
+/// way, which is what made the adoption a prefactor.
 fn run_status_to_string(value: CrashLogScanRunStatus) -> &'static str {
     value.as_str()
 }
 
 /// Returns the stable Python token for one selected Installed YAML Data role.
-const fn installed_yaml_data_role_to_string(value: InstalledYamlDataRole) -> &'static str {
-    match value {
-        InstalledYamlDataRole::Main => "main",
-        InstalledYamlDataRole::Game => "game",
-    }
+///
+/// Delegates rather than restating. This surface and `classic-config-py` each
+/// wrote out the same two strings, which meant one Python surface could drift
+/// from the other while both stayed internally exhaustive — the same hazard the
+/// provenance delegation below closed.
+///
+/// Note that the role's `Display` renders its *Display Label*, which capitalizes
+/// `Main`. This is the token, so it does not.
+fn installed_yaml_data_role_to_string(value: InstalledYamlDataRole) -> &'static str {
+    value.as_str()
 }
 
 /// Returns the stable Python token for one selected candidate provenance.
@@ -1553,14 +1719,15 @@ fn infrastructure_error_to_py(
     }
 }
 
+/// Returns the stable Python token for one coarse-grained scan progress phase.
+///
+/// Delegates rather than restating: the phase adopted the Vocabulary naming
+/// contract with the four strings this table already published, so the copy that
+/// stood here — byte-identical to the Node surface's own copy, and to the core's
+/// — was one of two that could have drifted apart without either failing to
+/// compile.
 fn phase_to_string(value: ScanProgressPhase) -> String {
-    match value {
-        ScanProgressPhase::Setup => "setup",
-        ScanProgressPhase::Parse => "parse",
-        ScanProgressPhase::Analyze => "analyze",
-        ScanProgressPhase::Finalize => "finalize",
-    }
-    .to_string()
+    value.as_str().to_string()
 }
 
 fn log_event_to_py(value: contract::LogEvent) -> PyScanRunLogEvent {
@@ -1572,8 +1739,183 @@ fn log_event_to_py(value: contract::LogEvent) -> PyScanRunLogEvent {
     }
 }
 
+/// Flattens rendered Display Content into the Python mirror classes.
+///
+/// The flattening is the C++ bridge's, unchanged: each segment crosses as a kind
+/// tag plus one field per payload shape, and the fields the kind does not select
+/// stay empty rather than absent. Making them optional here would be more
+/// idiomatic Python and worse parity — a consumer reading two bindings would read
+/// the same segment two ways, and the taxonomy is frozen precisely so that cannot
+/// happen.
+fn display_lines_to_py(lines: &[DisplayLine]) -> Vec<PyScanRunDisplayLine> {
+    lines
+        .iter()
+        .map(|line| PyScanRunDisplayLine {
+            severity: display_severity_to_string(line.severity).to_string(),
+            segments: line.segments.iter().map(display_segment_to_py).collect(),
+        })
+        .collect()
+}
+
+/// Flattens one typed segment, filling exactly the fields its kind selects.
+fn display_segment_to_py(segment: &DisplaySegment) -> PyScanRunDisplaySegment {
+    let mut projected = PyScanRunDisplaySegment {
+        kind: String::new(),
+        text: String::new(),
+        path: String::new(),
+        count: 0,
+    };
+    match segment {
+        DisplaySegment::Text(text) => {
+            projected.kind = "text".to_string();
+            projected.text = (*text).to_string();
+        }
+        DisplaySegment::Label(label) => {
+            projected.kind = "label".to_string();
+            projected.text = (*label).to_string();
+        }
+        DisplaySegment::Count { value, noun } => {
+            projected.kind = "count".to_string();
+            // The noun rides in `text` already agreeing with `count`. A consumer
+            // prints the two side by side; it never re-decides the form.
+            projected.text = (*noun).to_string();
+            projected.count = *value;
+        }
+        DisplaySegment::Path(path) => {
+            projected.kind = "path".to_string();
+            projected.path = path.to_string_lossy().into_owned();
+        }
+        DisplaySegment::Name(name) => {
+            projected.kind = "name".to_string();
+            projected.text = name.clone();
+        }
+        DisplaySegment::Emphasis(value) => {
+            projected.kind = "emphasis".to_string();
+            projected.text = value.clone();
+        }
+    }
+    projected
+}
+
+/// Returns the stable Python token for how gravely a display line should read.
+///
+/// A token rather than a Python enum because every other tag this surface
+/// publishes on an output — a run status, an event kind, a log disposition, a
+/// scan phase — is a snake_case token string. Both native frontends and the Node
+/// binding spell the same tag in their own idiom; what parity fixes is the
+/// flattening beneath it, not the spelling of the tag.
+///
+/// Exhaustive rather than derived: the two enumerations agree today, and a `match`
+/// is what makes them keep agreeing when either one gains a variant.
+const fn display_severity_to_string(value: DisplaySeverity) -> &'static str {
+    match value {
+        DisplaySeverity::Info => "info",
+        DisplaySeverity::Notice => "notice",
+        DisplaySeverity::Warning => "warning",
+        DisplaySeverity::Failure => "failure",
+        DisplaySeverity::Success => "success",
+    }
+}
+
+/// Flattens a rendered Local Ignore recovery prompt into the Python mirror types.
+///
+/// The decision descriptions cross as ordinary segment lists, the same flattening the
+/// lines beside them use, so a consumer reads a description with the renderer it already
+/// has.
+fn recovery_prompt_to_py(prompt: &RecoveryPrompt) -> PyScanRunRecoveryPrompt {
+    PyScanRunRecoveryPrompt {
+        lines: display_lines_to_py(&prompt.lines),
+        decisions: prompt
+            .decisions
+            .iter()
+            .map(|description| PyScanRunRecoveryDecisionDescription {
+                decision: local_ignore_recovery_decision_to_py(description.decision),
+                label: description.label.to_string(),
+                description: description
+                    .description
+                    .iter()
+                    .map(display_segment_to_py)
+                    .collect(),
+                available: description.available,
+            })
+            .collect(),
+    }
+}
+
+/// Maps a Rust-owned recovery decision onto its Python twin.
+///
+/// The outbound half of the mapping whose inbound half is inlined in `scan_run_resume`.
+/// Written separately because Rust cannot invert a `match`, and exhaustive so that a
+/// third variant added to the contract stops this from compiling rather than silently
+/// describing itself as one of the two that exist.
+const fn local_ignore_recovery_decision_to_py(
+    value: contract::LocalIgnoreRecoveryDecision,
+) -> PyScanRunLocalIgnoreRecoveryDecision {
+    match value {
+        contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
+            PyScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+        }
+        contract::LocalIgnoreRecoveryDecision::ResetToDefault => {
+            PyScanRunLocalIgnoreRecoveryDecision::ResetToDefault
+        }
+    }
+}
+
+/// Builds the success envelope, rendering the run before projecting it.
+///
+/// The order is load-bearing. `run_result_to_py` consumes the result — including
+/// moving its one-shot continuation into the opaque carrier — so the render has to
+/// happen while the Rust value is still borrowable. Rendering afterwards would have
+/// nothing left to render, and writing it that way does not compile.
+///
+/// `scan_run_execute` and `scan_run_resume` both build this envelope, which is why
+/// one builder serves the initial run and the continuation resume alike.
+fn success_execution(
+    py: Python<'_>,
+    result: contract::RunResult,
+    observer_error: Option<String>,
+) -> PyResult<PyScanRunExecution> {
+    let display_lines = display_lines_to_py(&render_run_result(&result));
+    // Rendered only for the one status that pauses for an answer. Every other status has
+    // nothing to ask, and a prompt attached to a finished run would invite a consumer to
+    // show one.
+    let recovery_prompt =
+        (result.status == contract::RunStatus::LocalIgnoreRecoveryRequired).then(|| {
+            recovery_prompt_to_py(&render_local_ignore_recovery(
+                result.installed_yaml_data.as_ref(),
+            ))
+        });
+    Ok(PyScanRunExecution {
+        result: Some(run_result_to_py(py, result)?),
+        error: None,
+        observer_error,
+        display_lines,
+        recovery_prompt,
+    })
+}
+
+/// Builds the failure envelope, rendering the failure before projecting it.
+fn failure_execution(
+    error: contract::InfrastructureError,
+    observer_error: Option<String>,
+) -> PyScanRunExecution {
+    let display_lines = display_lines_to_py(&render_infrastructure_error(&error));
+    PyScanRunExecution {
+        result: None,
+        error: Some(infrastructure_error_to_py(error)),
+        observer_error,
+        display_lines,
+        // A run that failed run-wide never reached a decision to pause on.
+        recovery_prompt: None,
+    }
+}
+
 /// Maps every event variant into one stable tagged Python shape.
-fn event_to_py(value: contract::Event) -> PyScanRunEvent {
+///
+/// `event_to_py` renders on the way through; this is the tagging half, which the
+/// renderer's output is written over. Split so the rendering happens in exactly one
+/// place rather than in all six arms.
+fn tagged_event_to_py(value: contract::Event) -> PyScanRunEvent {
     match value {
         contract::Event::DiscoveryCompleted(discovery) => PyScanRunEvent {
             kind: "discovery_completed".to_string(),
@@ -1582,6 +1924,7 @@ fn event_to_py(value: contract::Event) -> PyScanRunEvent {
             log: None,
             phase: None,
             disposition: None,
+            display_lines: Vec::new(),
         },
         contract::Event::EffectiveConcurrencySelected {
             effective_concurrency,
@@ -1592,6 +1935,7 @@ fn event_to_py(value: contract::Event) -> PyScanRunEvent {
             log: None,
             phase: None,
             disposition: None,
+            display_lines: Vec::new(),
         },
         contract::Event::LogQueued(log) => PyScanRunEvent {
             kind: "log_queued".to_string(),
@@ -1600,6 +1944,7 @@ fn event_to_py(value: contract::Event) -> PyScanRunEvent {
             log: Some(log_event_to_py(log)),
             phase: None,
             disposition: None,
+            display_lines: Vec::new(),
         },
         contract::Event::LogStarted(log) => PyScanRunEvent {
             kind: "log_started".to_string(),
@@ -1608,6 +1953,7 @@ fn event_to_py(value: contract::Event) -> PyScanRunEvent {
             log: Some(log_event_to_py(log)),
             phase: None,
             disposition: None,
+            display_lines: Vec::new(),
         },
         contract::Event::LogPhase { log, phase } => PyScanRunEvent {
             kind: "log_phase".to_string(),
@@ -1616,6 +1962,7 @@ fn event_to_py(value: contract::Event) -> PyScanRunEvent {
             log: Some(log_event_to_py(log)),
             phase: Some(phase_to_string(phase)),
             disposition: None,
+            display_lines: Vec::new(),
         },
         contract::Event::LogFinished { log, disposition } => PyScanRunEvent {
             kind: "log_finished".to_string(),
@@ -1624,8 +1971,21 @@ fn event_to_py(value: contract::Event) -> PyScanRunEvent {
             log: Some(log_event_to_py(log)),
             phase: None,
             disposition: Some(disposition_to_string(disposition).to_string()),
+            display_lines: Vec::new(),
         },
     }
+}
+
+/// Maps one lifecycle event, rendering its Display Content on the way through.
+///
+/// Rendering happens here, inline on the observer path, before the event reaches
+/// Python. There is no later opportunity: the Python observer receives a projected
+/// copy and never holds the Rust event.
+fn event_to_py(value: contract::Event) -> PyScanRunEvent {
+    let display_lines = display_lines_to_py(&render_event(&value));
+    let mut event = tagged_event_to_py(value);
+    event.display_lines = display_lines;
+    event
 }
 
 struct PyObserverAdapter {
@@ -1700,25 +2060,61 @@ pub fn scan_run_execute(
     });
 
     let (result, observer_error) = result;
-    Ok(match result {
-        Ok(result) => PyScanRunExecution {
-            result: Some(run_result_to_py(py, result)?),
-            error: None,
-            observer_error,
-        },
-        Err(error) => PyScanRunExecution {
-            result: None,
-            error: Some(infrastructure_error_to_py(error)),
-            observer_error,
-        },
-    })
+    match result {
+        Ok(result) => success_execution(py, result, observer_error),
+        Err(error) => Ok(failure_execution(error, observer_error)),
+    }
 }
 
-/// Converts scan-run reset outcomes into stable Python exception subclasses and metadata.
-fn scan_run_reset_error_to_py(py: Python<'_>, error: contract::ResumeError) -> PyErr {
+/// Converts resume outcomes into stable Python exception subclasses and metadata.
+///
+/// Every rejection this surface raises comes through here, including the replay
+/// rejection, which used to construct its own code and message by hand. Both of
+/// those strings were already byte-identical to `ResumeErrorKind::as_str` and
+/// `ResumeError`'s `Display`, so the pair recorded the agreement rather than
+/// checking it — and hand-construction is what would have left that one rejection
+/// with nothing to say. Neither the code nor the message changes; it gains `kind`
+/// and `display_lines`.
+///
+/// Infrastructure resume failures never reach here: they resolve as an ordinary
+/// execution envelope, exactly as an initial run's do.
+fn scan_run_resume_error_to_py(py: Python<'_>, error: contract::ResumeError) -> PyErr {
     let code = error.kind().as_str();
     let message = error.to_string();
+    // Rendered from the borrowed error before the match below consumes it. The
+    // rendered lines deliberately omit the stable resume error code that `code`
+    // still carries: the code is machine-facing identity for a consumer to match
+    // on, and a sentence is not where it belongs.
+    let display_lines = display_lines_to_py(&render_resume_error(&error));
+    let py_error = scan_run_resume_error_body(py, error, code, message);
+    // The typed exception stays authoritative if Python rejects optional metadata.
+    let _ = py_error.value(py).setattr("display_lines", display_lines);
+    py_error
+}
+
+/// Builds the typed exception and its per-category metadata for one resume failure.
+fn scan_run_resume_error_body(
+    py: Python<'_>,
+    error: contract::ResumeError,
+    code: &'static str,
+    message: String,
+) -> PyErr {
     match error {
+        contract::ResumeError::ContinuationConsumed => {
+            let py_error = ScanRunContinuationConsumedError::new_err(message);
+            let value = py_error.value(py);
+            // `kind` duplicates `code` and is kept because the four reset exceptions
+            // beside this one have published it since they were written. This was the
+            // one member of the resume family without it, so `except (...) as error:
+            // error.kind` raised `AttributeError` for exactly one variant. The shared
+            // builder makes it free; the family's existing shape is what makes it
+            // correct. Node publishes it too, but that is not the reason — binding
+            // surfaces are not held to each other's shapes, only to the core's.
+            let _ = value
+                .setattr("code", code)
+                .and_then(|()| value.setattr("kind", code));
+            py_error
+        }
         contract::ResumeError::LocalIgnoreResetConflict(conflict) => {
             let py_error = ScanRunLocalIgnoreResetConflictError::new_err(message);
             let value = py_error.value(py);
@@ -1799,8 +2195,8 @@ fn scan_run_reset_error_to_py(py: Python<'_>, error: contract::ResumeError) -> P
                 .expect("scan-run durability exceptions must accept recovery receipt attributes");
             py_error
         }
-        contract::ResumeError::ContinuationConsumed | contract::ResumeError::Infrastructure(_) => {
-            unreachable!("non-reset resume errors are handled before reset exception projection")
+        contract::ResumeError::Infrastructure(_) => {
+            unreachable!("infrastructure resume failures resolve as an execution envelope")
         }
     }
 }
@@ -1822,8 +2218,6 @@ pub fn scan_run_resume(
     observer: Option<Py<PyAny>>,
     cancel_on_observer_error: bool,
 ) -> PyResult<PyScanRunExecution> {
-    let continuation = Arc::clone(&continuation.inner);
-    let cancellation = cancellation.inner.clone();
     let decision = match decision {
         PyScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
             contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore
@@ -1832,6 +2226,63 @@ pub fn scan_run_resume(
             contract::LocalIgnoreRecoveryDecision::ResetToDefault
         }
     };
+    claim_continuation(
+        py,
+        Arc::clone(&continuation.inner),
+        Some(decision),
+        cancellation.inner.clone(),
+        observer,
+        cancel_on_observer_error,
+    )
+}
+
+/// Abandons one retained Crash Log Scan Run without applying either recovery decision.
+///
+/// Requests cancellation on `cancellation` and then claims the continuation, returning the ordinary
+/// post-discovery cancelled execution. No backup is taken, nothing is published, and the malformed
+/// Local Ignore file is left exactly as it was. Prefer this over cancelling and then calling
+/// [`scan_run_resume`] with a placeholder decision: that sequence is what this replaces, and getting
+/// its ordering wrong spends the one-shot continuation on a real recovery attempt.
+///
+/// `cancellation` is left cancelled afterwards, which is what abandoning the run means. The GIL is
+/// released while the shared runtime executes. Sequential or concurrent replay raises
+/// [`ScanRunContinuationConsumedError`] with code `scan_run_continuation_consumed`, exactly as
+/// [`scan_run_resume`] does. The reset and infrastructure failures resume can raise are unreachable
+/// here, because cancellation short-circuits ahead of every stage that produces them.
+#[pyfunction]
+#[pyo3(signature = (continuation, cancellation, observer=None, cancel_on_observer_error=false))]
+pub fn scan_run_abandon(
+    py: Python<'_>,
+    continuation: PyRef<'_, PyScanRunContinuation>,
+    cancellation: PyRef<'_, PyScanRunCancellation>,
+    observer: Option<Py<PyAny>>,
+    cancel_on_observer_error: bool,
+) -> PyResult<PyScanRunExecution> {
+    claim_continuation(
+        py,
+        Arc::clone(&continuation.inner),
+        None,
+        cancellation.inner.clone(),
+        observer,
+        cancel_on_observer_error,
+    )
+}
+
+/// Claims a continuation once on the shared runtime and projects its outcome to Python.
+///
+/// `decision` is `None` to abandon the run. Abandonment is modelled as the absence of a decision
+/// rather than as a third variant, because [`contract::LocalIgnoreRecoveryDecision`] deliberately
+/// carries none — adding one would reshape a type crossing five binding surfaces. Sharing one body
+/// keeps `scan_run_abandon` and [`scan_run_resume`] on the same observer adapter, the same GIL
+/// release, and the same exception mapping, so the two cannot drift.
+fn claim_continuation(
+    py: Python<'_>,
+    continuation: Arc<contract::CrashLogScanRunContinuation>,
+    decision: Option<contract::LocalIgnoreRecoveryDecision>,
+    cancellation: contract::Cancellation,
+    observer: Option<Py<PyAny>>,
+    cancel_on_observer_error: bool,
+) -> PyResult<PyScanRunExecution> {
     let (result, observer_error) = without_gil_block_on(py, || async move {
         let mut observer = observer.map(|callback| PyObserverAdapter {
             callback,
@@ -1840,41 +2291,39 @@ pub fn scan_run_resume(
             delivery_error: None,
             delivery_failed: false,
         });
-        let result = continuation
-            .resume(
-                decision,
-                &cancellation,
-                observer
-                    .as_mut()
-                    .map(|adapter| adapter as &mut dyn contract::Observer),
-            )
-            .await;
+        let result = match decision {
+            Some(decision) => {
+                continuation
+                    .resume(
+                        decision,
+                        &cancellation,
+                        observer
+                            .as_mut()
+                            .map(|adapter| adapter as &mut dyn contract::Observer),
+                    )
+                    .await
+            }
+            None => {
+                continuation
+                    .abandon(
+                        &cancellation,
+                        observer
+                            .as_mut()
+                            .map(|adapter| adapter as &mut dyn contract::Observer),
+                    )
+                    .await
+            }
+        };
         let observer_error = observer.and_then(|adapter| adapter.delivery_error);
         (result, observer_error)
     });
 
     match result {
-        Ok(result) => Ok(PyScanRunExecution {
-            result: Some(run_result_to_py(py, result)?),
-            error: None,
-            observer_error,
-        }),
-        Err(contract::ResumeError::Infrastructure(error)) => Ok(PyScanRunExecution {
-            result: None,
-            error: Some(infrastructure_error_to_py(error)),
-            observer_error,
-        }),
-        Err(contract::ResumeError::ContinuationConsumed) => {
-            let py_error = PyErr::new::<ScanRunContinuationConsumedError, _>(
-                "Crash Log Scan Run continuation was already consumed",
-            );
-            // The typed exception remains authoritative if Python rejects optional metadata.
-            let _ = py_error
-                .value(py)
-                .setattr("code", "scan_run_continuation_consumed");
-            Err(py_error)
+        Ok(result) => success_execution(py, result, observer_error),
+        Err(contract::ResumeError::Infrastructure(error)) => {
+            Ok(failure_execution(error, observer_error))
         }
-        Err(error) => Err(scan_run_reset_error_to_py(py, error)),
+        Err(error) => Err(scan_run_resume_error_to_py(py, error)),
     }
 }
 

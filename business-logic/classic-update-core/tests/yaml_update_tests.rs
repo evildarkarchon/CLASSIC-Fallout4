@@ -188,8 +188,8 @@ fn valid_manifest() -> YamlManifest {
             min_client_schema: None,
             max_client_schema: None,
             download_url:
-                "https://github.com/owner/repo/releases/download/yaml-data-v2026.04.17/CLASSIC%20Main.yaml"
-                    .into(),
+            "https://github.com/owner/repo/releases/download/yaml-data-v2026.04.17/CLASSIC%20Main.yaml"
+                .into(),
         }],
         signatures: vec![],
     }
@@ -1381,8 +1381,8 @@ async fn download_rejects_off_template_github_url() {
         "yaml-data-v2026.04.17",
         "CLASSIC Main.yaml",
     )
-    .await
-    .unwrap_err();
+        .await
+        .unwrap_err();
     assert!(matches!(err, UpdateError::ManifestInvalid { .. }));
 }
 

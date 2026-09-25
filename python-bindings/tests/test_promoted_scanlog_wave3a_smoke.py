@@ -7,8 +7,6 @@ coverage that remains outside complete scan execution.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import classic_scanlog
 
 
@@ -213,12 +211,12 @@ def test_rust_only_symbols_in_core_surface() -> None:
     # 03-04-CONSTRUCTOR-INVENTORY.md "Rust-only Symbols (Proxy Rows)" table).
     wave3a_rust_only = {
         # papyrus sub-module
-        "papyrus",                  # module marker
-        "PapyrusError",             # thiserror enum, no pyclass
-        "PapyrusStats",             # also has Python wrapper; rust-only row is duplicate marker
+        "papyrus",  # module marker
+        "PapyrusError",  # thiserror enum, no pyclass
+        "PapyrusStats",  # also has Python wrapper; rust-only row is duplicate marker
         # version sub-module
-        "version",                  # module marker
-        "crashgen_version_gen",     # -core free fn (wrapped via parse_crashgen_version)
+        "version",  # module marker
+        "crashgen_version_gen",  # -core free fn (wrapped via parse_crashgen_version)
         # crashgen_registry sub-module (pure Rust)
         "crashgen_registry",
         "CrashgenRegistry",

@@ -38,6 +38,7 @@ from enum import IntEnum
 
 __version__: str
 
+
 class MessageType:
     """Message type enumeration for categorizing messages.
 
@@ -89,6 +90,7 @@ class MessageType:
             'Warning'
 
         """
+
 
 class MessageTarget(IntEnum):
     """Message target enumeration for routing messages.
@@ -162,6 +164,7 @@ class MessageTarget(IntEnum):
 
         """
 
+
 class Message:
     """Message data structure with content, type, target, and optional metadata.
 
@@ -201,7 +204,7 @@ class Message:
 
     @staticmethod
     def with_target(
-        content: str, msg_type: MessageType, target: MessageTarget
+            content: str, msg_type: MessageType, target: MessageTarget
     ) -> Message:
         """Create a new message with the specified content, type, and target.
 
@@ -337,6 +340,12 @@ class Message:
             details: The new details for the message, or None to clear them.
 
         """
+
+
+def init_logging() -> None:
+    """Initialize the Rust logger explicitly using RUST_LOG; repeated calls preserve the existing logger."""
+    ...
+
 
 class Logger:
     """Centralized logging facility that integrates with Rust's log crate.
@@ -532,6 +541,7 @@ class Logger:
 
         """
 
+
 def format_log_message(content: str, details: str | None) -> str:
     """Format a message for logging while preserving valid UTF-8.
 
@@ -550,12 +560,13 @@ def format_log_message(content: str, details: str | None) -> str:
 
     """
 
+
 def format_contract_event(
-    component: str,
-    event: str,
-    severity: str,
-    outcome: str,
-    context: dict[str, str] | None = ...,
+        component: str,
+        event: str,
+        severity: str,
+        outcome: str,
+        context: dict[str, str] | None = ...,
 ) -> str:
     """Format a structured contract event with redaction applied.
 

@@ -37,6 +37,7 @@ from typing import Any, TypedDict
 
 __version__: str
 
+
 # ----------------------------------------------------------------------------
 # YAML exception hierarchy (folded in from classic-yaml-py per plan 01-02 D-06)
 # ----------------------------------------------------------------------------
@@ -44,11 +45,14 @@ __version__: str
 class RustYamlError(Exception):
     """Base exception for classic_settings YAML errors."""
 
+
 class RustYamlIOError(RustYamlError):
     """YAML I/O errors (file read/write failures)."""
 
+
 class RustYamlParseError(RustYamlError):
     """YAML parse/validation errors (including serialization failures)."""
+
 
 # NOTE: There is intentionally NO `RustYamlSerializeError`. YAML serialization
 # errors are reported via ``RustYamlParseError`` — same mapping as the former
@@ -63,6 +67,7 @@ class YamlCacheStats(TypedDict):
     size: int
     capacity: int
 
+
 class SettingsCacheStats(TypedDict):
     """Canonical settings cache statistics contract."""
 
@@ -72,9 +77,9 @@ class SettingsCacheStats(TypedDict):
     size: int
     capacity: int
 
+
 class YamlFile:
     Main: YamlFile
-    Settings: YamlFile
     Ignore: YamlFile
     Game: YamlFile
     GameLocal: YamlFile
@@ -82,11 +87,17 @@ class YamlFile:
     Cache: YamlFile
 
     def as_str(self) -> str: ...
+
     def description(self) -> str: ...
+
     def __eq__(self, other: object) -> bool: ...
+
     def __hash__(self) -> int: ...
+
     def __str__(self) -> str: ...
+
     def __repr__(self) -> str: ...
+
 
 def load_settings_sync(key: str, path: str) -> list[dict[str, Any]]:
     """Load YAML settings synchronously.
@@ -111,6 +122,7 @@ def load_settings_sync(key: str, path: str) -> list[dict[str, Any]]:
         'value'
 
     """
+
 
 async def load_settings_async(key: str, path: str) -> list[dict[str, Any]]:
     """Load YAML settings asynchronously.
@@ -137,6 +149,7 @@ async def load_settings_async(key: str, path: str) -> list[dict[str, Any]]:
 
     """
 
+
 def load_batch_sync(paths: list[str]) -> int:
     """Load multiple YAML files in batch (synchronous).
 
@@ -158,6 +171,7 @@ def load_batch_sync(paths: list[str]) -> int:
         Loaded 2 files
 
     """
+
 
 async def load_batch_async(paths: list[str]) -> int:
     """Load multiple YAML files in batch (asynchronous).
@@ -182,6 +196,7 @@ async def load_batch_async(paths: list[str]) -> int:
 
     """
 
+
 def get_cached(key: str) -> list[dict[str, Any]] | None:
     """Get cached settings by key.
 
@@ -201,6 +216,7 @@ def get_cached(key: str) -> list[dict[str, Any]] | None:
 
     """
 
+
 def is_cached(key: str) -> bool:
     """Check if a key exists in the cache.
 
@@ -218,6 +234,7 @@ def is_cached(key: str) -> bool:
         False
 
     """
+
 
 def invalidate(key: str) -> bool:
     """Invalidate (remove) a cached entry.
@@ -239,6 +256,7 @@ def invalidate(key: str) -> bool:
 
     """
 
+
 def clear_cache() -> None:
     """Clear all cached settings.
 
@@ -253,6 +271,7 @@ def clear_cache() -> None:
 
     """
 
+
 def cache_size() -> int:
     """Get the number of cached entries.
 
@@ -265,6 +284,7 @@ def cache_size() -> int:
         1
 
     """
+
 
 def cache_keys() -> list[str]:
     """Get all cache keys.
@@ -280,6 +300,7 @@ def cache_keys() -> list[str]:
         2
 
     """
+
 
 def cache_stats() -> SettingsCacheStats:
     """Get canonical cache statistics.
@@ -299,6 +320,7 @@ def cache_stats() -> SettingsCacheStats:
 
     """
 
+
 def reset_cache_stats() -> None:
     """Reset cache hit and miss counters.
 
@@ -308,6 +330,7 @@ def reset_cache_stats() -> None:
         0
 
     """
+
 
 def validate_setting_value(value: str, expected_type: str) -> bool:
     """Check whether a string value can be interpreted as the expected setting type.
@@ -334,6 +357,7 @@ def validate_setting_value(value: str, expected_type: str) -> bool:
         False
 
     """
+
 
 def coerce_setting_value(value: str, target_type: str) -> Any:
     """Coerce a string value to the target setting type.
@@ -368,6 +392,7 @@ def coerce_setting_value(value: str, target_type: str) -> Any:
 
     """
 
+
 # ============================================================================
 # YAML operations (folded in from classic-yaml-py per plan 01-02 D-05/D-06)
 # ============================================================================
@@ -383,29 +408,44 @@ class YamlOperations:
     """
 
     def __init__(self) -> None: ...
+
     def load_yaml_file(self, path: str | Path) -> Any: ...
+
     def parse_yaml(self, content: str) -> Any: ...
+
     def dump_yaml(self, data: Any) -> str: ...
+
     def save_yaml_file(self, path: str | Path, data: Any) -> None: ...
+
     def get_setting(self, data: Any, key_path: str) -> Any | None: ...
+
     def set_setting(self, data: Any, key_path: str, value: Any) -> Any: ...
+
     def get_string_value(self, data: Any, key_path: str, default: str) -> str: ...
+
     def get_vec_value(self, data: Any, key_path: str) -> list[str]: ...
+
     def get_hashmap_value(self, data: Any, key_path: str) -> dict[str, str]: ...
+
     def clear_cache(self) -> None: ...
+
     def get_cache_stats(self) -> YamlCacheStats: ...
+
 
 def clear_global_yaml_cache() -> None:
     """Clear the process-wide YAML-file cache."""
 
+
 def reset_yaml_cache_stats() -> None:
     """Reset the YAML-file cache hit/miss counters to zero."""
+
 
 def yaml_cache_stats() -> YamlCacheStats:
     """Get statistics for the process-wide YAML-file cache.
 
     Distinct from `cache_stats()` — that one reports the settings cache.
     """
+
 
 def merge_keys(data: Any) -> Any:
     """Apply YAML merge keys (`<<:`) to a parsed document.

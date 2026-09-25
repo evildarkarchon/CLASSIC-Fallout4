@@ -40,10 +40,11 @@ import classic_scanlog
 import classic_settings
 import classic_shared
 import classic_update
-import classic_version_registry
 import classic_version
+import classic_version_registry
 import classic_web
 import classic_xse
+
 
 # ---------------------------------------------------------------------------
 # redistributed constants surfaces (3 classes + 1 free function)
@@ -106,37 +107,37 @@ def test_path_backup_manager_construct_and_list_versions() -> None:
 
 
 def test_path_docs_path_finder_construct_and_find() -> None:
+    """Resolve a valid owned cache path without entering platform discovery."""
     finder = classic_path.DocsPathFinder("Fallout4")
-    # find_documents_path returns Optional[str]; may be None on bare test
-    # systems without a real Fallout 4 install — just assert the call works.
-    try:
-        result = finder.find_documents_path()
-        assert result is None or isinstance(result, str)
-    except Exception:
-        # OK — some systems (CI without a Fallout4 install) will raise
-        pass
+    with tempfile.TemporaryDirectory() as directory:
+        # A valid cache returns before registry/home discovery in the Rust owner.
+        finder.validate_docs_path(directory)
+        assert Path(finder.find_docs_path(cached_path=directory)) == Path(directory)
+        assert list(Path(directory).iterdir()) == []
 
 
 def test_path_documents_checker_construct_and_run_checks() -> None:
+    """Observe missing INI findings against an empty disposable documents root."""
     checker = classic_path.DocumentsChecker("Fallout4")
-    # run_all_checks returns a result DTO; may raise on bare systems
-    # without a real Fallout 4 documents path — just exercise the call.
-    try:
-        result = checker.run_all_checks()
-        assert result is not None
-    except Exception:
-        # OK — some environments don't have a Documents\My Games\Fallout4 dir
-        pass
+    with tempfile.TemporaryDirectory() as directory:
+        result = checker.run_all_checks(directory)
+        assert isinstance(result, list)
+        for name in ("Fallout4.ini", "Fallout4Custom.ini", "Fallout4Prefs.ini"):
+            assert any(name in message for message in result)
+        assert list(Path(directory).iterdir()) == []
 
 
 def test_path_game_path_finder_construct_and_find() -> None:
+    """Resolve a controlled valid game root before any host registry fallback."""
     finder = classic_path.GamePathFinder("Fallout4.exe", None, "Fallout4", False)
-    # find_game_path returns Optional[str]; may be None on bare systems
-    try:
-        result = finder.find_game_path()
-        assert result is None or isinstance(result, str)
-    except Exception:
-        pass
+    with tempfile.TemporaryDirectory() as directory:
+        executable = Path(directory) / "Fallout4.exe"
+        executable.write_bytes(b"owned executable marker")
+        # Validate first so a malformed fixture fails before discovery is called.
+        finder.validate_game_path(directory)
+        assert Path(finder.find_game_path(cached_path=directory, xse_log_path=None)) == Path(directory)
+        assert executable.read_bytes() == b"owned executable marker"
+        assert list(Path(directory).iterdir()) == [executable]
 
 
 def test_path_xse_version_construct_and_full_version() -> None:
@@ -946,7 +947,7 @@ def test_scangame_game_setup_intake_helpers_smoke() -> None:
 
 
 def test_scangame_game_setup_intake_opens_canonical_user_settings(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Prepare Game Setup from typed User Settings without rewriting the document."""
     game_root = tmp_path / "Fallout4"

@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
 import json
 import os
-from pathlib import Path
 import subprocess
-from typing import Any, Iterable
+from collections.abc import Iterable, Mapping
+from dataclasses import asdict, dataclass, field, replace
+from pathlib import Path
+from typing import Any
 
 from catalog import ComplianceRequirement, requirements_for_profile  # type: ignore
 
@@ -54,7 +55,7 @@ def classify_failure(output: str, *, command_missing: bool = False) -> str:
 
 
 def build_summary(
-    results: Iterable[RequirementResult], *, fail_on_gaps: bool = False
+        results: Iterable[RequirementResult], *, fail_on_gaps: bool = False
 ) -> dict[str, Any]:
     """Build the top-level pass/fail summary from requirement results."""
 
@@ -79,25 +80,60 @@ def build_summary(
     }
 
 
+def _blocking_conformance_coverage_gaps(
+        conformance_report: Mapping[str, Any] | None,
+) -> int:
+    """Count centrally classified blocking row gaps for report diagnostics."""
+
+    if conformance_report is None:
+        return 0
+    coverage = conformance_report.get("coverage")
+    if not isinstance(coverage, Mapping):
+        return 0
+    failures = coverage.get("failures")
+    if not isinstance(failures, list):
+        return 0
+    return sum(
+        isinstance(failure, Mapping)
+        and failure.get("kind") == "coverage_mapping_gap"
+        and failure.get("blocking") is True
+        for failure in failures
+    )
+
+
 class ComplianceSuite:
     """Evaluate binding compliance requirements for one execution profile."""
 
     def __init__(
-        self,
-        *,
-        repo_root: Path,
-        profile: str,
-        requirements: tuple[ComplianceRequirement, ...] | None = None,
-        skip_commands: bool = False,
-        fail_on_gaps: bool = False,
+            self,
+            *,
+            repo_root: Path,
+            profile: str,
+            requirements: tuple[ComplianceRequirement, ...] | None = None,
+            skip_commands: bool = False,
+            fail_on_gaps: bool = False,
+            conformance_report: Mapping[str, Any] | None = None,
+            imported_gate_results: Mapping[str, RequirementResult] | None = None,
     ) -> None:
-        """Create a suite runner bound to a repository root and profile."""
+        """Create a suite runner bound to a repository root and profile.
+
+        ``conformance_report`` is reported separately. A blocking family is
+        conjunctive with retained gates; a shadow family cannot weaken them.
+        ``imported_gate_results`` contains results authenticated against this
+        checkout and workflow run; missing command results fail closed.
+        """
 
         self.repo_root = repo_root.resolve()
         self.profile = profile
-        self.requirements = requirements or requirements_for_profile(profile)
+        self.requirements = (
+            requirements
+            if requirements is not None
+            else requirements_for_profile(profile)
+        )
         self.skip_commands = skip_commands
         self.fail_on_gaps = fail_on_gaps
+        self.conformance_report = conformance_report
+        self.imported_gate_results = imported_gate_results
 
     def run(self) -> dict[str, Any]:
         """Evaluate all selected requirements and return a structured report."""
@@ -105,11 +141,43 @@ class ComplianceSuite:
         results = [
             self._evaluate_requirement(requirement) for requirement in self.requirements
         ]
+        summary = build_summary(results, fail_on_gaps=self.fail_on_gaps)
+        blocking_conformance_gaps = _blocking_conformance_coverage_gaps(
+            self.conformance_report
+        )
+        summary["blocking_conformance_coverage_gaps"] = blocking_conformance_gaps
+        if self.profile == "conformance" and self.conformance_report is not None:
+            # The receipt-only native job has no legacy requirement catalog;
+            # its exact scoped report is therefore the command's own result.
+            summary["result"] = str(self.conformance_report.get("result", "fail"))
+        elif (
+                self.conformance_report is not None
+                and self.conformance_report.get("enforcement") == "blocking"
+                and self.conformance_report.get("result") != "pass"
+        ):
+            # Promoted executable evidence is conjunctive with every retained
+            # legacy gate until the later retirement change removes that gate.
+            summary["result"] = "fail"
+        summary["repository_complete"] = False
+        if self.profile == "full":
+            # A release/backstop claim needs executed receipts and every retained
+            # gate. A source-only or deliberately skipped run cannot certify it.
+            complete = (
+                    self.conformance_report is not None
+                    and self.conformance_report.get("repositoryComplete") is True
+                    and self.conformance_report.get("result") == "pass"
+                    and summary["result"] == "pass"
+                    and not summary["skipped"]
+                    and not summary["coverage_gaps"]
+            )
+            summary["repository_complete"] = complete
+            if not complete:
+                summary["result"] = "fail"
         report = {
             "schemaVersion": 1,
             "profile": self.profile,
             "repoRoot": str(self.repo_root),
-            "summary": build_summary(results, fail_on_gaps=self.fail_on_gaps),
+            "summary": summary,
             "requirements": [asdict(result) for result in results],
             "gaps": [
                 {
@@ -122,10 +190,12 @@ class ComplianceSuite:
                 for gap in result.gaps
             ],
         }
+        if self.conformance_report is not None:
+            report["conformance"] = dict(self.conformance_report)
         return report
 
     def _evaluate_requirement(
-        self, requirement: ComplianceRequirement
+            self, requirement: ComplianceRequirement
     ) -> RequirementResult:
         """Evaluate a single requirement via static evidence and optional command."""
 
@@ -180,10 +250,27 @@ class ComplianceSuite:
                 evidence=evidence + ["Command skipped by --skip-commands."],
             )
 
+        if self.imported_gate_results is not None:
+            imported = self.imported_gate_results.get(requirement.id)
+            if imported is not None and imported.id == requirement.id and imported.status == "passed":
+                return replace(imported, evidence=evidence + imported.evidence)
+            return RequirementResult(
+                id=requirement.id,
+                title=requirement.title,
+                surface=requirement.surface,
+                classification=requirement.classification,
+                status="failed",
+                blocking=requirement.blocking,
+                summary=requirement.summary,
+                evidence=evidence,
+                failure_kind="local_environment_failure",
+                stderr=f"Missing or failed current-run evidence for {requirement.id}",
+            )
+
         return self._run_command_requirement(requirement, evidence)
 
     def _check_static_evidence(
-        self, requirement: ComplianceRequirement
+            self, requirement: ComplianceRequirement
     ) -> tuple[list[str], list[str]]:
         """Check required files and text expectations for a requirement."""
 
@@ -216,7 +303,7 @@ class ComplianceSuite:
         return errors, evidence
 
     def _run_command_requirement(
-        self, requirement: ComplianceRequirement, evidence: list[str]
+            self, requirement: ComplianceRequirement, evidence: list[str]
     ) -> RequirementResult:
         """Run the command associated with a requirement and capture evidence."""
 
@@ -233,6 +320,10 @@ class ComplianceSuite:
                 cwd=str(cwd),
                 env=env,
                 text=True,
+                # Native build tools emit UTF-8 independently of the Windows
+                # locale; malformed diagnostic bytes must not discard a stream.
+                encoding="utf-8",
+                errors="replace",
                 capture_output=True,
                 stdin=subprocess.DEVNULL,
                 timeout=command.timeout_seconds,
@@ -321,6 +412,22 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.extend(("", "## Coverage Gaps", ""))
         for gap in report["gaps"]:
             lines.append("- `{requirementId}` ({surface}): {message}".format(**gap))
+
+    if report.get("gateEvidenceError"):
+        lines.extend(("", "## Retained Gate Evidence", "", str(report["gateEvidenceError"])))
+
+    conformance = report.get("conformance")
+    if isinstance(conformance, dict):
+        lines.extend(
+            (
+                "",
+                "## Executable Conformance",
+                "",
+                f"Enforcement: **{str(conformance.get('enforcement', 'unknown')).upper()}**",
+                "",
+                f"- Result: **{str(conformance.get('result', 'unknown')).upper()}**",
+            )
+        )
 
     lines.append("")
     return "\n".join(lines)

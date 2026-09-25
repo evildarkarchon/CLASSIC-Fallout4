@@ -9,10 +9,10 @@ import pytest
 def user_settings_fixture_root() -> Path:
     """Return the repository-level User Settings compatibility corpus."""
     return (
-        Path(__file__).parents[2]
-        / "tests"
-        / "fixtures"
-        / "user_settings_compatibility"
+            Path(__file__).parents[2]
+            / "tests"
+            / "fixtures"
+            / "user_settings_compatibility"
     )
 
 
@@ -26,7 +26,7 @@ def test_classic_config_does_not_expose_retired_user_settings_facades() -> None:
 
 
 def test_user_settings_published_defaults_require_no_filesystem_root(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Return Rust-owned defaults without consulting an implicit working directory."""
     settings_path = tmp_path / "CLASSIC Settings.yaml"
@@ -107,7 +107,7 @@ def test_user_settings_read_only_open(tmp_path: Path) -> None:
         ),
     ]
     for index, (name, classification, update_check, origin, eligibility) in enumerate(
-        variants
+            variants
     ):
         case_root = tmp_path / f"case-{index}"
         case_root.mkdir()
@@ -156,7 +156,7 @@ def test_user_settings_read_only_open(tmp_path: Path) -> None:
 
 
 def test_user_settings_update_source_exposes_typed_value_and_fallback(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Expose Update Source as a canonical token with independent provenance."""
     settings_path = tmp_path / "CLASSIC Settings.yaml"
@@ -184,7 +184,7 @@ def test_user_settings_update_source_exposes_typed_value_and_fallback(
 
 
 def test_user_settings_frontend_state_exposes_nested_values_and_origins(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Expose shared preferences, GUI geometry, and namespaced TUI remembered state."""
     fixture_root = user_settings_fixture_root()
@@ -215,20 +215,20 @@ def test_user_settings_frontend_state_exposes_nested_values_and_origins(
         assert isinstance(tab, classic_user_settings.WindowGeometry)
         assert (tab.maximized, tab.width, tab.height) == expected
         assert {
-            tab.maximized_origin,
-            tab.width_origin,
-            tab.height_origin,
-        } == {"document"}
+                   tab.maximized_origin,
+                   tab.width_origin,
+                   tab.height_origin,
+               } == {"document"}
 
     assert isinstance(frontend.tui, classic_user_settings.TuiRememberedState)
     assert frontend.tui.active_tab == 0
     assert frontend.tui.results_panel_width == 30
     assert frontend.tui.sort_ascending is False
     assert {
-        frontend.tui.active_tab_origin,
-        frontend.tui.results_panel_width_origin,
-        frontend.tui.sort_ascending_origin,
-    } == {"default"}
+               frontend.tui.active_tab_origin,
+               frontend.tui.results_panel_width_origin,
+               frontend.tui.sort_ascending_origin,
+           } == {"default"}
     assert snapshot.original_content == source_bytes
     assert settings_path.read_bytes() == source_bytes
 
@@ -253,7 +253,7 @@ def test_user_settings_frontend_state_exposes_nested_values_and_origins(
 
 
 def test_user_settings_scan_snapshot_exposes_typed_values_and_alias_policy(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Project scan choices, provenance, aliases, and safe fallbacks as typed values."""
     fixture_root = user_settings_fixture_root()
@@ -354,20 +354,20 @@ CLASSIC_Settings:
         "/home/deck/Documents/My Games/Fallout4VR/Logs/Script/Papyrus.0.log"
     )
     assert {
-        setup.managed_game_origin,
-        setup.game_version_selection_origin,
-        setup.game_root_origin,
-        setup.game_executable_origin,
-        setup.documents_root_origin,
-        setup.ini_folder_origin,
-        setup.mods_root_origin,
-        setup.custom_scan_input_origin,
-        setup.papyrus_log_origin,
-    } == {"document"}
+               setup.managed_game_origin,
+               setup.game_version_selection_origin,
+               setup.game_root_origin,
+               setup.game_executable_origin,
+               setup.documents_root_origin,
+               setup.ini_folder_origin,
+               setup.mods_root_origin,
+               setup.custom_scan_input_origin,
+               setup.papyrus_log_origin,
+           } == {"document"}
 
 
 def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Return one complete accepted preview or field-specific rejection diagnostics."""
     fixture_root = user_settings_fixture_root()
@@ -464,31 +464,31 @@ def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
     assert rejected.base_revision is None
     assert rejected.fields == []
     assert [
-        (diagnostic.field_path, diagnostic.code)
-        for diagnostic in rejected.diagnostics
-    ] == [
-        (
-            "/CLASSIC_Settings/Update Source",
-            "invalid_enum_update_source",
-        ),
-        (
-            "/CLASSIC_Settings/Managed Game",
-            "invalid_enum_managed_game",
-        ),
-        (
-            "/CLASSIC_Settings/Game Version",
-            "invalid_enum_game_version",
-        ),
-        (
-            "/CLASSIC_Settings/Max Concurrent Scans",
-            "invalid_range_max_concurrent_scans",
-        ),
-    ]
+               (diagnostic.field_path, diagnostic.code)
+               for diagnostic in rejected.diagnostics
+           ] == [
+               (
+                   "/CLASSIC_Settings/Update Source",
+                   "invalid_enum_update_source",
+               ),
+               (
+                   "/CLASSIC_Settings/Managed Game",
+                   "invalid_enum_managed_game",
+               ),
+               (
+                   "/CLASSIC_Settings/Game Version",
+                   "invalid_enum_game_version",
+               ),
+               (
+                   "/CLASSIC_Settings/Max Concurrent Scans",
+                   "invalid_range_max_concurrent_scans",
+               ),
+           ]
     assert settings_path.read_bytes() == source_bytes
 
 
 def test_user_settings_update_round_trips_window_geometry(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Commit one stable GUI window token and expose each accepted geometry field."""
     fixture_root = user_settings_fixture_root()
@@ -523,7 +523,7 @@ def test_user_settings_update_round_trips_window_geometry(
 
 
 def test_user_settings_update_round_trips_tui_remembered_state(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Commit one complete TUI transition and expose each accepted field."""
     fixture_root = user_settings_fixture_root()
@@ -553,7 +553,7 @@ def test_user_settings_update_round_trips_tui_remembered_state(
 
 
 def test_legacy_tui_state_import_reports_receipt_and_coded_errors(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Expose verified import evidence and a typed, code-prefixed failure."""
     fixture_root = user_settings_fixture_root()
@@ -582,8 +582,8 @@ def test_legacy_tui_state_import_reports_receipt_and_coded_errors(
 
     legacy_path.write_text("{", encoding="utf-8")
     with pytest.raises(
-        classic_user_settings.LegacyTuiStateImportError,
-        match="^legacy_tui_state_parse_failed:",
+            classic_user_settings.LegacyTuiStateImportError,
+            match="^legacy_tui_state_parse_failed:",
     ):
         classic_user_settings.import_legacy_tui_state_into_user_settings(
             str(tmp_path), str(legacy_path)
@@ -595,17 +595,17 @@ def test_user_settings_update_rejects_unknown_window_geometry_token() -> None:
     update = classic_user_settings.UserSettingsUpdate()
 
     with pytest.raises(
-        ValueError,
-        match=(
-            "unknown GUI window 'sidebar'; expected one of: main_tab, backups_tab, "
-            "articles_tab, results_tab"
-        ),
+            ValueError,
+            match=(
+                    "unknown GUI window 'sidebar'; expected one of: main_tab, backups_tab, "
+                    "articles_tab, results_tab"
+            ),
     ):
         update.set_window_geometry("sidebar", False, 640, 480)
 
 
 def test_frontend_geometry_transition_replays_stale_snapshot_once(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Preserve a newer preference while replaying one accepted geometry transition."""
     fixture_root = user_settings_fixture_root()
@@ -632,7 +632,7 @@ def test_frontend_geometry_transition_replays_stale_snapshot_once(
 
 
 def test_accepted_user_settings_update_commit_publishes_preserved_document(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Commit requested fields while retaining unrelated document content."""
     fixture_root = user_settings_fixture_root()
@@ -659,8 +659,8 @@ def test_accepted_user_settings_update_commit_publishes_preserved_document(
     assert committed.update_preferences.update_source == "Both"
     assert committed.frontend_state.preferences.auto_switch_after_scan is False
     assert (
-        committed.crash_log_scan_settings.unsolved_logs_destination
-        == "D:/CLASSIC/Unsolved"
+            committed.crash_log_scan_settings.unsolved_logs_destination
+            == "D:/CLASSIC/Unsolved"
     )
     committed_content = settings_path.read_text(encoding="utf-8")
     assert "ThirdPartyPlugin:" in committed_content
@@ -668,7 +668,7 @@ def test_accepted_user_settings_update_commit_publishes_preserved_document(
 
 
 def test_missing_user_settings_requires_explicit_bootstrap_preview(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Create the complete Rust-owned defaults only through explicit bootstrap."""
     settings_path = tmp_path / "CLASSIC Settings.yaml"
@@ -704,7 +704,7 @@ def test_missing_user_settings_requires_explicit_bootstrap_preview(
 
 
 def test_accepted_user_settings_update_commit_reports_stale_conflict(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Return revision details without overwriting a concurrent external edit."""
     fixture_root = user_settings_fixture_root()
@@ -730,7 +730,7 @@ def test_accepted_user_settings_update_commit_reports_stale_conflict(
 
 
 def test_user_settings_update_commit_rejects_unaccepted_and_operational_failures(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Reject invalid previews and raise the typed commit error for I/O failures."""
     snapshot = classic_user_settings.open_user_settings(str(tmp_path))
@@ -746,7 +746,7 @@ def test_user_settings_update_commit_rejects_unaccepted_and_operational_failures
     tmp_path.rmdir()
 
     with pytest.raises(
-        classic_user_settings.UserSettingsCommitError,
-        match="commit_lock_open_failed",
+            classic_user_settings.UserSettingsCommitError,
+            match="commit_lock_open_failed",
     ):
         accepted.commit(str(tmp_path))

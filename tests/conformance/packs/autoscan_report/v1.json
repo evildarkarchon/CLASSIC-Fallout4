@@ -1,0 +1,1706 @@
+{
+  "schemaVersion": 1,
+  "familyId": "autoscan-report",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scanlog-core"
+  },
+  "fixtureRoot": "tests/fixtures/autoscan_report_goldens",
+  "fixtures": {
+    "empty_findings_main": "cases/empty/input/CLASSIC Data/databases/CLASSIC Main.yaml",
+    "empty_findings_game": "cases/empty/input/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+    "empty_findings_ignore": "cases/empty/input/CLASSIC Data/CLASSIC Ignore.yaml",
+    "empty_findings_log": "cases/empty/input/crash-empty.log",
+    "populated_findings_main": "cases/populated/input/CLASSIC Data/databases/CLASSIC Main.yaml",
+    "populated_findings_game": "cases/populated/input/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+    "populated_findings_ignore": "cases/populated/input/CLASSIC Data/CLASSIC Ignore.yaml",
+    "populated_findings_log": "cases/populated/input/crash-populated.log",
+    "formids": "formids.db",
+    "fcx_mode_main": "cases/fcx/input/CLASSIC Data/databases/CLASSIC Main.yaml",
+    "fcx_mode_game": "cases/fcx/input/CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+    "fcx_mode_ignore": "cases/fcx/input/CLASSIC Data/CLASSIC Ignore.yaml",
+    "fcx_mode_log": "cases/fcx/input/crash-fcx.log",
+    "fcxExecutable": "fcx-game/Fallout4.exe"
+  },
+  "capabilities": [
+    {
+      "id": "autoscan-report.execute",
+      "rustSymbols": [
+        "LogResult",
+        "LogDisposition"
+      ],
+      "observationFamilies": [
+        "report-bytes",
+        "display-content",
+        "durable-effects"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "empty-findings",
+      "action": "autoscan-report.execute",
+      "capabilityIds": [
+        "autoscan-report.execute"
+      ],
+      "fixtureRefs": [
+        "empty_findings_main",
+        "empty_findings_game",
+        "empty_findings_ignore",
+        "empty_findings_log"
+      ],
+      "input": {
+        "observationProfile": "autoscan-report",
+        "installationData": [
+          {
+            "fixtureRef": "empty_findings_main",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "empty_findings_game",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "empty_findings_ignore",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "Original",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "logInputs": [
+          {
+            "fixtureRef": "empty_findings_log",
+            "path": "crash-empty.log"
+          }
+        ],
+        "targetedInputs": [
+          {
+            "path": "crash-empty.log"
+          }
+        ],
+        "directoryInputs": [],
+        "forbiddenEffectPaths": [
+          "Unsolved Logs",
+          "CLASSIC Backup",
+          "CLASSIC Settings.yaml"
+        ]
+      },
+      "expected": {
+        "executionRoot": "{{EXECUTION_ROOT}}",
+        "semanticInputs": {
+          "game": "fallout4",
+          "gameVersion": "Original",
+          "showFormidValues": false,
+          "simplifyLogs": false,
+          "fcxMode": false
+        },
+        "run": {
+          "status": "completed",
+          "message": null,
+          "total": 1,
+          "succeeded": 1,
+          "failed": 0,
+          "cancelled": 0,
+          "effectiveConcurrency": 1,
+          "setupPresent": false
+        },
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "crash-empty.log"
+            },
+            "autoscanReport": {
+              "path": "crash-empty-AUTOSCAN.md"
+            },
+            "disposition": "succeeded",
+            "failures": [],
+            "message": null,
+            "movedToUnsolvedLogs": false,
+          "dispositionLabel": "succeeded",
+          "formidCount": 0,
+            "pluginCount": 1,
+            "suspectCount": 0
+          }
+        ],
+        "displayContent": [
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "label",
+                "text": "completed",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "log",
+                "path": "",
+                "count": 1
+              },
+              {
+                "kind": "text",
+                "text": "scanned",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Discovery:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "targeted discovery",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "crash log",
+                "path": "",
+                "count": 1
+              },
+              {
+                "kind": "text",
+                "text": "accepted,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "targeted inputs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "rejected,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "location",
+                "path": "",
+                "count": 1
+              },
+              {
+                "kind": "text",
+                "text": "searched",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Searched:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "crash-empty.log",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Effective concurrency:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "concurrent scan",
+                "path": "",
+                "count": 1
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Installed YAML Data",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Selected",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "Main",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "YAML Data:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "bundled",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- schema",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "2.0",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "1414c4f4784b80b48d9edaedb95fbc093bfca0bb5a284210ffb6376fc4c02a74",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 289
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Selected",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "game",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "YAML Data:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "bundled",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- schema",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "1.0",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "cbe40906bc682a639060d6a3f52ea9a6777fabf02be2f587cb63b1ea4e69e463",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 737
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Local Ignore:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "existing",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "1fc79ee2668e143c355dc3b931de1a2c41041227e79e21890da90a744ad3b70c",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 29
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Outcomes:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "log",
+                "path": "",
+                "count": 1
+              },
+              {
+                "kind": "text",
+                "text": "succeeded,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "failed,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "not started",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "emphasis",
+                "text": "1",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "crash-empty.log",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "succeeded",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- report",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "crash-empty-AUTOSCAN.md",
+                "count": 0
+              }
+            ]
+          }
+        ],
+        "durableEffects": {
+          "reports": [
+            {
+              "path": "crash-empty-AUTOSCAN.md",
+              "template": "cases/empty/expected.md"
+            }
+          ],
+          "forbiddenPaths": [
+            {
+              "path": "Unsolved Logs",
+              "exists": false
+            },
+            {
+              "path": "CLASSIC Backup",
+              "exists": false
+            },
+            {
+              "path": "CLASSIC Settings.yaml",
+              "exists": false
+            }
+          ],
+          "inputFiles": [
+            {
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml",
+              "sha256": "1fc79ee2668e143c355dc3b931de1a2c41041227e79e21890da90a744ad3b70c",
+              "byteLength": 29
+            },
+            {
+              "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+              "sha256": "cbe40906bc682a639060d6a3f52ea9a6777fabf02be2f587cb63b1ea4e69e463",
+              "byteLength": 737
+            },
+            {
+              "path": "CLASSIC Data/databases/CLASSIC Main.yaml",
+              "sha256": "1414c4f4784b80b48d9edaedb95fbc093bfca0bb5a284210ffb6376fc4c02a74",
+              "byteLength": 289
+            },
+            {
+              "path": "crash-empty.log",
+              "sha256": "060236ddef5adbc62e135592c43c8dd640d2d7ac56ae53464e1784ca3de3b9e6",
+              "byteLength": 449
+            }
+          ],
+          "unexpectedFiles": []
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "populated-findings",
+      "action": "autoscan-report.execute",
+      "capabilityIds": [
+        "autoscan-report.execute"
+      ],
+      "fixtureRefs": [
+        "populated_findings_main",
+        "populated_findings_game",
+        "populated_findings_ignore",
+        "populated_findings_log",
+        "formids"
+      ],
+      "input": {
+        "observationProfile": "autoscan-report",
+        "installationData": [
+          {
+            "fixtureRef": "populated_findings_main",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "populated_findings_game",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "populated_findings_ignore",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          },
+          {
+            "fixtureRef": "formids",
+            "path": "CLASSIC Data/databases/Fallout4 FormIDs Main.db"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "Original",
+        "showFormidValues": true,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "logInputs": [
+          {
+            "fixtureRef": "populated_findings_log",
+            "path": "crash-populated.log"
+          }
+        ],
+        "targetedInputs": [
+          {
+            "path": "crash-populated.log"
+          }
+        ],
+        "directoryInputs": [],
+        "forbiddenEffectPaths": [
+          "Unsolved Logs",
+          "CLASSIC Backup",
+          "CLASSIC Settings.yaml"
+        ]
+      },
+      "expected": {
+        "executionRoot": "{{EXECUTION_ROOT}}",
+        "semanticInputs": {
+          "game": "fallout4",
+          "gameVersion": "Original",
+          "showFormidValues": true,
+          "simplifyLogs": false,
+          "fcxMode": false
+        },
+        "run": {
+          "status": "completed",
+          "message": null,
+          "total": 1,
+          "succeeded": 1,
+          "failed": 0,
+          "cancelled": 0,
+          "effectiveConcurrency": 1,
+          "setupPresent": false
+        },
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "crash-populated.log"
+            },
+            "autoscanReport": {
+              "path": "crash-populated-AUTOSCAN.md"
+            },
+            "disposition": "succeeded",
+            "failures": [],
+            "message": null,
+            "movedToUnsolvedLogs": false,
+          "dispositionLabel": "succeeded",
+          "formidCount": 4,
+            "pluginCount": 4,
+            "suspectCount": 4
+          }
+        ],
+        "displayContent": [
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "label",
+                "text": "completed",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "log",
+                "path": "",
+                "count": 1
+              },
+              {
+                "kind": "text",
+                "text": "scanned",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Discovery:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "targeted discovery",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "crash log",
+                "path": "",
+                "count": 1
+              },
+              {
+                "kind": "text",
+                "text": "accepted,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "targeted inputs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "rejected,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "location",
+                "path": "",
+                "count": 1
+              },
+              {
+                "kind": "text",
+                "text": "searched",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Searched:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "crash-populated.log",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Effective concurrency:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "concurrent scan",
+                "path": "",
+                "count": 1
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Installed YAML Data",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Selected",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "Main",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "YAML Data:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "bundled",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- schema",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "2.0",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "1414c4f4784b80b48d9edaedb95fbc093bfca0bb5a284210ffb6376fc4c02a74",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 289
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Selected",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "game",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "YAML Data:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "bundled",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- schema",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "1.0",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "c7cdfa78f89223d80a52399c1f41352112f3c622ed7c946be9048ed6d7183741",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 3124
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Local Ignore:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "existing",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "1fc79ee2668e143c355dc3b931de1a2c41041227e79e21890da90a744ad3b70c",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 29
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Outcomes:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "log",
+                "path": "",
+                "count": 1
+              },
+              {
+                "kind": "text",
+                "text": "succeeded,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "failed,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "not started",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "emphasis",
+                "text": "1",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "crash-populated.log",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "succeeded",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- report",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "crash-populated-AUTOSCAN.md",
+                "count": 0
+              }
+            ]
+          }
+        ],
+        "durableEffects": {
+          "reports": [
+            {
+              "path": "crash-populated-AUTOSCAN.md",
+              "template": "cases/populated/expected.md"
+            }
+          ],
+          "forbiddenPaths": [
+            {
+              "path": "Unsolved Logs",
+              "exists": false
+            },
+            {
+              "path": "CLASSIC Backup",
+              "exists": false
+            },
+            {
+              "path": "CLASSIC Settings.yaml",
+              "exists": false
+            }
+          ],
+          "inputFiles": [
+            {
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml",
+              "sha256": "1fc79ee2668e143c355dc3b931de1a2c41041227e79e21890da90a744ad3b70c",
+              "byteLength": 29
+            },
+            {
+              "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+              "sha256": "c7cdfa78f89223d80a52399c1f41352112f3c622ed7c946be9048ed6d7183741",
+              "byteLength": 3124
+            },
+            {
+              "path": "CLASSIC Data/databases/CLASSIC Main.yaml",
+              "sha256": "1414c4f4784b80b48d9edaedb95fbc093bfca0bb5a284210ffb6376fc4c02a74",
+              "byteLength": 289
+            },
+            {
+              "path": "CLASSIC Data/databases/Fallout4 FormIDs Main.db",
+              "sha256": "4c3550ecfb9def6225512d5fc4b64a3f9cce43c172af327358438b4573c13910",
+              "byteLength": 12288
+            },
+            {
+              "path": "crash-populated.log",
+              "sha256": "de4019119a9c363a903de3a7273fb5a189b0c87762076678df55ac57b36b6a35",
+              "byteLength": 873
+            }
+          ],
+          "unexpectedFiles": []
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "fcx-mode",
+      "action": "autoscan-report.execute",
+      "capabilityIds": [
+        "autoscan-report.execute"
+      ],
+      "fixtureRefs": [
+        "fcx_mode_main",
+        "fcx_mode_game",
+        "fcx_mode_ignore",
+        "fcx_mode_log",
+        "fcxExecutable"
+      ],
+      "input": {
+        "observationProfile": "autoscan-report",
+        "installationData": [
+          {
+            "fixtureRef": "fcx_mode_main",
+            "path": "CLASSIC Data/databases/CLASSIC Main.yaml"
+          },
+          {
+            "fixtureRef": "fcx_mode_game",
+            "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+          },
+          {
+            "fixtureRef": "fcx_mode_ignore",
+            "path": "CLASSIC Data/CLASSIC Ignore.yaml"
+          },
+          {
+            "fixtureRef": "fcxExecutable",
+            "path": "fcx-game/Fallout4.exe"
+          }
+        ],
+        "game": "fallout4",
+        "gameVersion": "AnniversaryEdition",
+        "showFormidValues": false,
+        "simplifyLogs": false,
+        "formidDatabasePaths": [],
+        "maxConcurrent": 1,
+        "intent": "targeted",
+        "logInputs": [
+          {
+            "fixtureRef": "fcx_mode_log",
+            "path": "crash-fcx.log"
+          }
+        ],
+        "targetedInputs": [
+          {
+            "path": "crash-fcx.log"
+          }
+        ],
+        "directoryInputs": [
+          {
+            "path": "fcx-documents"
+          }
+        ],
+        "forbiddenEffectPaths": [
+          "Unsolved Logs",
+          "CLASSIC Backup",
+          "CLASSIC Settings.yaml"
+        ],
+        "setupContext": {
+          "gameRoot": {
+            "path": "fcx-game"
+          },
+          "documentsRoot": {
+            "path": "fcx-documents"
+          },
+          "executable": {
+            "path": "fcx-game/Fallout4.exe"
+          }
+        }
+      },
+      "expected": {
+        "executionRoot": "{{EXECUTION_ROOT}}",
+        "semanticInputs": {
+          "game": "fallout4",
+          "gameVersion": "AnniversaryEdition",
+          "showFormidValues": false,
+          "simplifyLogs": false,
+          "fcxMode": true
+        },
+        "run": {
+          "status": "completed",
+          "message": null,
+          "total": 1,
+          "succeeded": 1,
+          "failed": 0,
+          "cancelled": 0,
+          "effectiveConcurrency": 1,
+          "setupPresent": true
+        },
+        "logs": [
+          {
+            "discoveryIndex": 0,
+            "crashLog": {
+              "path": "crash-fcx.log"
+            },
+            "autoscanReport": {
+              "path": "crash-fcx-AUTOSCAN.md"
+            },
+            "disposition": "succeeded",
+            "failures": [],
+            "message": null,
+            "movedToUnsolvedLogs": false,
+          "dispositionLabel": "succeeded",
+          "formidCount": 0,
+            "pluginCount": 1,
+            "suspectCount": 0
+          }
+        ],
+        "displayContent": [
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "label",
+                "text": "completed",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "log",
+                "path": "",
+                "count": 1
+              },
+              {
+                "kind": "text",
+                "text": "scanned",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Discovery:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "targeted discovery",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "crash log",
+                "path": "",
+                "count": 1
+              },
+              {
+                "kind": "text",
+                "text": "accepted,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "targeted inputs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "rejected,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "location",
+                "path": "",
+                "count": 1
+              },
+              {
+                "kind": "text",
+                "text": "searched",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Searched:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "crash-fcx.log",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Effective concurrency:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "concurrent scan",
+                "path": "",
+                "count": 1
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Installed YAML Data",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Selected",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "Main",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "YAML Data:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "bundled",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- schema",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "2.0",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "1414c4f4784b80b48d9edaedb95fbc093bfca0bb5a284210ffb6376fc4c02a74",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 289
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Selected",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "game",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "YAML Data:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "bundled",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- schema",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "1.0",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "cbe40906bc682a639060d6a3f52ea9a6777fabf02be2f587cb63b1ea4e69e463",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 737
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Local Ignore:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "existing",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- sha256",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "emphasis",
+                "text": "1fc79ee2668e143c355dc3b931de1a2c41041227e79e21890da90a744ad3b70c",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "bytes",
+                "path": "",
+                "count": 29
+              }
+            ]
+          },
+          {
+            "severity": "info",
+            "segments": [
+              {
+                "kind": "text",
+                "text": "Outcomes:",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "log",
+                "path": "",
+                "count": 1
+              },
+              {
+                "kind": "text",
+                "text": "succeeded,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "failed,",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "count",
+                "text": "logs",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "not started",
+                "path": "",
+                "count": 0
+              }
+            ]
+          },
+          {
+            "severity": "success",
+            "segments": [
+              {
+                "kind": "emphasis",
+                "text": "1",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "crash-fcx.log",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "-",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "label",
+                "text": "succeeded",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "text",
+                "text": "- report",
+                "path": "",
+                "count": 0
+              },
+              {
+                "kind": "path",
+                "text": "",
+                "path": "crash-fcx-AUTOSCAN.md",
+                "count": 0
+              }
+            ]
+          }
+        ],
+        "durableEffects": {
+          "reports": [
+            {
+              "path": "crash-fcx-AUTOSCAN.md",
+              "template": "cases/fcx/expected.md"
+            }
+          ],
+          "forbiddenPaths": [
+            {
+              "path": "Unsolved Logs",
+              "exists": false
+            },
+            {
+              "path": "CLASSIC Backup",
+              "exists": false
+            },
+            {
+              "path": "CLASSIC Settings.yaml",
+              "exists": false
+            }
+          ],
+          "inputFiles": [
+            {
+              "path": "CLASSIC Data/CLASSIC Ignore.yaml",
+              "sha256": "1fc79ee2668e143c355dc3b931de1a2c41041227e79e21890da90a744ad3b70c",
+              "byteLength": 29
+            },
+            {
+              "path": "CLASSIC Data/databases/CLASSIC Fallout4.yaml",
+              "sha256": "cbe40906bc682a639060d6a3f52ea9a6777fabf02be2f587cb63b1ea4e69e463",
+              "byteLength": 737
+            },
+            {
+              "path": "CLASSIC Data/databases/CLASSIC Main.yaml",
+              "sha256": "1414c4f4784b80b48d9edaedb95fbc093bfca0bb5a284210ffb6376fc4c02a74",
+              "byteLength": 289
+            },
+            {
+              "path": "crash-fcx.log",
+              "sha256": "3fc2574240cc67686ad65d4f7c9acacddc0faf3690422688ec55f8094337412d",
+              "byteLength": 453
+            },
+            {
+              "path": "fcx-game/Fallout4.exe",
+              "sha256": "3ed0674e6471bd7faeeb46807761bfd44c04bebdffbf5e69af0ad673372ee3a7",
+              "byteLength": 81
+            }
+          ],
+          "unexpectedFiles": []
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

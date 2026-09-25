@@ -1,0 +1,15 @@
+{
+  "command": [
+    "bun",
+    "run",
+    "conformance:semantic"
+  ],
+  "exitCode": 0,
+  "launchError": null,
+  "participantId": "node",
+  "schemaVersion": 1,
+  "stderr": "$ bun __test__/semantic_conformance_runner.ts\n",
+  "stdout": "",
+  "timedOut": false,
+  "workingDirectory": "node-bindings/classic-node"
+}

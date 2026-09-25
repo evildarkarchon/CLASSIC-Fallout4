@@ -13,51 +13,28 @@
 #include <QSet>
 
 #include <exception>
+#include <optional>
 #include <utility>
 
 namespace {
 
 namespace scanner = classic::scanner;
 
+/// Produces the one-row progress text for one observed lifecycle event.
+///
+/// The words come from Rust, already rendered on the observer callback before the event crossed the
+/// bridge — there is no later opportunity, because this process receives a projected copy and never
+/// holds the Rust event. What stays this frontend's is the shape: the progress row is a single
+/// `QProgressBar` format string, so a discovery that also states a rejection is joined onto one line
+/// rather than shown as two.
 QString eventStatus(const scanner::ScanRunContractEvent& event)
 {
-    using EventKind = scanner::ScanRunContractEventKind;
-    const QString path = classic::toQString(event.crash_log);
-    switch (event.kind) {
-    case EventKind::DiscoveryCompleted:
-        return QStringLiteral("Found %1 crash log%2")
-            .arg(event.discovery.accepted_logs.size())
-            .arg(event.discovery.accepted_logs.size() == 1 ? "" : "s");
-    case EventKind::EffectiveConcurrencySelected:
-        return QStringLiteral("Scanning with %1 concurrent scan%2")
-            .arg(event.effective_concurrency)
-            .arg(event.effective_concurrency == 1 ? "" : "s");
-    case EventKind::LogQueued:
-        return QStringLiteral("Queued: %1").arg(path);
-    case EventKind::LogStarted:
-        return QStringLiteral("Scanning: %1").arg(path);
-    case EventKind::LogPhase: {
-        QString phase;
-        switch (event.phase) {
-        case scanner::ScanRunContractProgressPhase::Setup:
-            phase = QStringLiteral("setup");
-            break;
-        case scanner::ScanRunContractProgressPhase::Parse:
-            phase = QStringLiteral("parse");
-            break;
-        case scanner::ScanRunContractProgressPhase::Analyze:
-            phase = QStringLiteral("analysis");
-            break;
-        case scanner::ScanRunContractProgressPhase::Finalize:
-            phase = QStringLiteral("finalization");
-            break;
-        }
-        return QStringLiteral("%1: %2").arg(phase, path);
+    QStringList rendered;
+    rendered.reserve(static_cast<qsizetype>(event.display_lines.size()));
+    for (const auto& line : classic::gui::presentScanRunDisplayLines(event.display_lines)) {
+        rendered.append(classic::gui::renderScanRunDisplayLineAsPlainText(line));
     }
-    case EventKind::LogFinished:
-        return QStringLiteral("Finished: %1").arg(path);
-    }
-    return path;
+    return rendered.join(QStringLiteral(" - "));
 }
 
 QStringList terminalReportDirectories(const classic::gui::ScanRunTerminalPresentation& terminal)
@@ -189,23 +166,46 @@ void ScanWorker::doScan(const QString& installationRoot, const classic::gui::Cra
                 return;
             }
 
+            // The prompt is handed the whole rendered run *and* Rust's own question, already
+            // rendered on this thread. Rust exposes the Installed YAML Data block — the facts this
+            // decision is about — only as part of the rendered run, and picking that block back out
+            // by position would be a structural assumption about a sequence that carries no
+            // structure. The native CLI and the TUI made the same call for the same reason.
+            //
+            // Rendering happens here rather than in the dialog because the bridged envelope cannot
+            // cross the hop to the GUI thread: `presentScanRunExecution` above has already turned it
+            // into copyable Qt values carrying no `rust::Box`, which is what makes the
+            // `Qt::BlockingQueuedConnection` in `makeLocalIgnoreRecoveryPrompt` legal.
             auto continuation = scanner::scan_run_contract_execution_take_continuation(*operation);
-            const auto choice = m_localIgnoreRecoveryPrompt(terminal.message);
-            auto decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
-            switch (choice) {
-            case classic::gui::ScanRunLocalIgnoreRecoveryChoice::ProceedWithoutIgnore:
-                break;
-            case classic::gui::ScanRunLocalIgnoreRecoveryChoice::ResetToDefault:
-                decision = scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault;
-                break;
-            case classic::gui::ScanRunLocalIgnoreRecoveryChoice::Cancel:
-                // Rust observes cancellation before the placeholder decision, so dismissal cannot mutate Local Ignore.
-                scanner::scan_run_cancellation_cancel(*m_cancellation);
-                break;
-            }
+            const auto choice = m_localIgnoreRecoveryPrompt(terminal.recoveryPrompt);
+            // Dismissal maps to *no decision*, which is exactly what the shared abandon operation
+            // takes. The switch stays exhaustive so a choice added later trips `-Wswitch` here
+            // rather than silently resolving to Proceed Without Ignore. The same `optional`-shaped
+            // mapping is what the native CLI and the Node and Python bindings use, for the same
+            // reason: `LocalIgnoreRecoveryDecision` deliberately has no abandonment variant, so
+            // absence is how abandonment is spelled everywhere.
+            const auto decision = [&]() -> std::optional<scanner::ScanRunLocalIgnoreRecoveryDecision> {
+                switch (choice) {
+                case classic::gui::ScanRunLocalIgnoreRecoveryChoice::ProceedWithoutIgnore:
+                    return scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore;
+                case classic::gui::ScanRunLocalIgnoreRecoveryChoice::ResetToDefault:
+                    return scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault;
+                case classic::gui::ScanRunLocalIgnoreRecoveryChoice::Cancel:
+                    return std::nullopt;
+                }
+                // Unreachable for a valid enumerator. Abandonment is the safe resolution for a
+                // value this build does not recognize: it cannot touch the user's files.
+                return std::nullopt;
+            }();
 
+            // `scan_run_continuation_abandon` performs the cancel-then-resume sequence that used to
+            // live here, so the GUI cannot reorder it, cannot pick a different placeholder, and
+            // cannot drift from what the native CLI and the TUI do. It cancels `m_cancellation`
+            // itself, which is why nothing here cancels first — and it leaves the control cancelled,
+            // exactly as the hand-written sequence did, so a later `requestCancel()` stays inert.
             auto resumedOperation =
-                scanner::scan_run_continuation_resume(*continuation, decision, *m_cancellation, &observer);
+                decision ? scanner::scan_run_continuation_resume(*continuation, *decision, *m_cancellation, &observer)
+                         : scanner::scan_run_continuation_abandon(*continuation, *m_cancellation, &observer);
             const auto resumedExecution =
                 scanner::scan_run_contract_execution_take_result(*resumedOperation);
             if (observer.deliveryFailed()) {
@@ -215,6 +215,13 @@ void ScanWorker::doScan(const QString& installationRoot, const classic::gui::Cra
             terminal = classic::gui::presentScanRunExecution(resumedExecution);
         }
 
+        // One log entry for the whole run, in the words the run itself used. This replaces the
+        // per-log warnings this worker used to compose: every fact they carried — the Crash Log
+        // path, its outcome, the Autoscan Report, movement to Unsolved Logs, and each structured
+        // failure's stage and message — is a line in the rendered run, stated once by Rust rather
+        // than twice in two frontends able to disagree. The FCX setup projection still follows,
+        // because the presentation crate deliberately does not render it.
+        qInfo().noquote() << terminal.message;
         if (!terminal.setupDetails.isEmpty()) {
             qInfo().noquote() << terminal.setupDetails;
         }
@@ -227,42 +234,43 @@ void ScanWorker::doScan(const QString& installationRoot, const classic::gui::Cra
             emit reportDirectoriesResolved(reportDirectories);
         }
 
-        // The contract supplies terminal outcomes in discovery order even when execution events interleave.
+        // The contract supplies terminal outcomes in discovery order even when execution events
+        // interleave. Nothing is described here any more — the rendered run above already said what
+        // happened to each Crash Log. What survives is the signal, which carries data rather than
+        // words: a discovery index, a success flag, and the path the results view keys on.
         for (const auto& log : terminal.logs) {
             if (log.cancelledBeforeStart) {
                 continue;
             }
-            if (!log.failures.isEmpty()) {
-                qWarning().noquote() << QStringLiteral("Crash Log Scan failed for %1: %2")
-                                            .arg(log.crashLog, log.failures.join(QStringLiteral("; ")));
-            } else if (log.failed && !log.message.isEmpty()) {
-                qWarning().noquote()
-                    << QStringLiteral("Crash Log Scan failed for %1: %2").arg(log.crashLog, log.message);
-            }
-            if (log.movedToUnsolvedLogs) {
-                qInfo().noquote()
-                    << QStringLiteral("Moved failed Crash Log artifacts to Unsolved Logs: %1").arg(log.crashLog);
-            }
             emit logScanned(log.discoveryIndex, log.succeeded, log.crashLog);
         }
 
+        // Every terminal signal carries the rendered run as rich text, because each ends in a
+        // `QMessageBox` — a widget that can style a severity and open a path the run just wrote.
+        // The window reduces it to one plain line for the progress row, which is the only surface
+        // here that cannot hold more.
+        //
+        // `finished` was the exception until it carried a message: it published three counts and no
+        // words, so the window had nothing to state the outcome with and wrote its own sentence,
+        // re-deciding both the wording and the plural of "logs". Handing it the same rendered run
+        // the other three get is what removed that.
         switch (terminal.kind) {
         case TerminalKind::Completed:
             emit progress(100.0F, QStringLiteral("Complete"));
             emit progressDetailed(100.0F, QStringLiteral("Complete"), terminal.succeeded + terminal.failed,
                                   terminal.total);
-            emit finished(terminal.total, terminal.succeeded, terminal.failed);
+            emit finished(terminal.total, terminal.succeeded, terminal.failed, terminal.richText);
             break;
         case TerminalKind::CancelledBeforeDiscovery:
         case TerminalKind::Cancelled:
-            emit cancelled(terminal.message);
+            emit cancelled(terminal.richText);
             break;
         case TerminalKind::NoCrashLogsFound:
-            emit noLogsFound(terminal.message);
+            emit noLogsFound(terminal.richText);
             break;
         case TerminalKind::SetupFailed:
         case TerminalKind::InfrastructureError:
-            emit error(terminal.message);
+            emit error(terminal.richText);
             break;
         case TerminalKind::LocalIgnoreRecoveryRequired:
             emit error(QStringLiteral("Crash Log Scan recovery returned an unexpected second recovery request."));

@@ -1,0 +1,9 @@
+{
+  "operation": "patterns",
+  "patterns": [
+    "error",
+    "warning"
+  ],
+  "text": "quiet text",
+  "replacement": "!"
+}

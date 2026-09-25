@@ -1,0 +1,629 @@
+{
+  "schemaVersion": 1,
+  "familyId": "yaml-update-operations",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-update-core"
+  },
+  "fixtureRoot": "tests/fixtures/yaml_update_operations",
+  "fixtures": {
+    "disabled-guards": "disabled-guards.json",
+    "malformed-approval": "malformed-approval.json",
+    "controlled-consent": "controlled-consent.json",
+    "stale-decision": "stale-decision.json",
+    "rollback-generations": "rollback-generations.json",
+    "rollback-no-previous": "rollback-no-previous.json",
+    "rollback-traversal-refused": "rollback-traversal-refused.json",
+    "rollback-local-ignore-refused": "rollback-local-ignore-refused.json",
+    "bulk-rollback": "bulk-rollback.json",
+    "bulk-no-previous": "bulk-no-previous.json"
+  },
+  "capabilities": [
+    {
+      "id": "yaml-update-operations.execute",
+      "rustSymbols": [
+        "check_yaml_update",
+        "check_yaml_data_update",
+        "apply_yaml_update_with_decision",
+        "apply_yaml_data_update_with_decision",
+        "rollback_yaml_update",
+        "rollback_yaml_data_update"
+      ],
+      "observationFamilies": [
+        "values",
+        "durable-effects"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "disabled-guards",
+      "action": "yaml-update-operations.execute",
+      "capabilityIds": [
+        "yaml-update-operations.execute"
+      ],
+      "fixtureRefs": [
+        "disabled-guards"
+      ],
+      "input": {
+        "fixtureRef": "disabled-guards"
+      },
+      "expected": {
+        "results": [
+          {
+            "api": "yaml_check_update",
+            "tag": 0,
+            "releaseTag": "",
+            "publishedAt": "",
+            "compatible": [],
+            "incompatible": [],
+            "incompatibleReasons": [],
+            "unknownReason": "",
+            "error": null
+          },
+          {
+            "api": "yaml_data_check_update",
+            "tag": 0,
+            "releaseTag": "",
+            "publishedAt": "",
+            "compatible": [],
+            "incompatible": [],
+            "incompatibleReasons": [],
+            "unknownReason": "",
+            "error": null
+          },
+          {
+            "api": "yaml_apply_update",
+            "installed": [],
+            "failed": [],
+            "error": "disabled"
+          },
+          {
+            "api": "yaml_data_apply_update",
+            "installed": [],
+            "failed": [],
+            "error": "disabled"
+          }
+        ],
+        "beforeFiles": [
+          {
+            "path": ".env",
+            "hex": ""
+          }
+        ],
+        "files": [
+          {
+            "path": ".env",
+            "hex": ""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "malformed-approval",
+      "action": "yaml-update-operations.execute",
+      "capabilityIds": [
+        "yaml-update-operations.execute"
+      ],
+      "fixtureRefs": [
+        "malformed-approval"
+      ],
+      "input": {
+        "fixtureRef": "malformed-approval"
+      },
+      "expected": {
+        "results": [
+          {
+            "api": "yaml_apply_update",
+            "installed": [],
+            "failed": [],
+            "error": "malformed_approval"
+          }
+        ],
+        "beforeFiles": [
+          {
+            "path": ".env",
+            "hex": ""
+          }
+        ],
+        "files": [
+          {
+            "path": ".env",
+            "hex": ""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "controlled-consent",
+      "action": "yaml-update-operations.execute",
+      "capabilityIds": [
+        "yaml-update-operations.execute"
+      ],
+      "fixtureRefs": [
+        "controlled-consent"
+      ],
+      "input": {
+        "fixtureRef": "controlled-consent"
+      },
+      "expected": {
+        "results": [
+          {
+            "api": "yaml_check_update",
+            "tag": 1,
+            "releaseTag": "yaml-data-v-conformance",
+            "publishedAt": "2026-09-08T00:00:00Z",
+            "compatible": [
+              {
+                "name": "CLASSIC Main.yaml",
+                "schemaVersion": "2.0",
+                "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+                "sizeBytes": 24,
+                "downloadUrl": "https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/download/yaml-data-v-conformance/CLASSIC%20Main.yaml"
+              }
+            ],
+            "incompatible": [],
+            "incompatibleReasons": [],
+            "unknownReason": "",
+            "error": null
+          },
+          {
+            "api": "yaml_apply_update",
+            "installed": [],
+            "failed": [],
+            "error": null
+          }
+        ],
+        "beforeFiles": [
+          {
+            "path": ".env",
+            "hex": ""
+          }
+        ],
+        "files": [
+          {
+            "path": ".env",
+            "hex": ""
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/manifest-latest.json",
+            "json": {
+              "manifest_version": 1,
+              "release_tag": "yaml-data-v-conformance",
+              "published_at": "2026-09-08T00:00:00Z",
+              "files": [
+                {
+                  "name": "CLASSIC Main.yaml",
+                  "schema_version": "2.0",
+                  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+                  "size_bytes": 24,
+                  "download_url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/download/yaml-data-v-conformance/CLASSIC%20Main.yaml"
+                }
+              ],
+              "signatures": []
+            }
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "stale-decision",
+      "action": "yaml-update-operations.execute",
+      "capabilityIds": [
+        "yaml-update-operations.execute"
+      ],
+      "fixtureRefs": [
+        "stale-decision"
+      ],
+      "input": {
+        "fixtureRef": "stale-decision"
+      },
+      "expected": {
+        "results": [
+          {
+            "api": "yaml_apply_update",
+            "installed": [],
+            "failed": [],
+            "error": "stale_decision"
+          }
+        ],
+        "beforeFiles": [
+          {
+            "path": ".env",
+            "hex": ""
+          }
+        ],
+        "files": [
+          {
+            "path": ".env",
+            "hex": ""
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/manifest-latest.json",
+            "json": {
+              "manifest_version": 1,
+              "release_tag": "yaml-data-v-conformance",
+              "published_at": "2026-09-08T00:00:00Z",
+              "files": [
+                {
+                  "name": "CLASSIC Main.yaml",
+                  "schema_version": "2.0",
+                  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+                  "size_bytes": 24,
+                  "download_url": "https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/download/yaml-data-v-conformance/CLASSIC%20Main.yaml"
+                }
+              ],
+              "signatures": []
+            }
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "rollback-generations",
+      "action": "yaml-update-operations.execute",
+      "capabilityIds": [
+        "yaml-update-operations.execute"
+      ],
+      "fixtureRefs": [
+        "rollback-generations"
+      ],
+      "input": {
+        "fixtureRef": "rollback-generations"
+      },
+      "expected": {
+        "results": [
+          {
+            "api": "yaml_rollback_update",
+            "fileName": "fixture.yaml",
+            "rolledBack": true,
+            "error": null
+          }
+        ],
+        "beforeFiles": [
+          {
+            "path": ".env",
+            "hex": ""
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/fixture.yaml",
+            "hex": "63757272656e740a"
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/fixture.yaml.prev",
+            "hex": "70726576696f75730a"
+          }
+        ],
+        "files": [
+          {
+            "path": ".env",
+            "hex": ""
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/fixture.yaml",
+            "hex": "70726576696f75730a"
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/fixture.yaml.install.lock",
+            "hex": ""
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/fixture.yaml.prev",
+            "hex": "63757272656e740a"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "rollback-no-previous",
+      "action": "yaml-update-operations.execute",
+      "capabilityIds": [
+        "yaml-update-operations.execute"
+      ],
+      "fixtureRefs": [
+        "rollback-no-previous"
+      ],
+      "input": {
+        "fixtureRef": "rollback-no-previous"
+      },
+      "expected": {
+        "results": [
+          {
+            "api": "yaml_rollback_update",
+            "fileName": "fixture.yaml",
+            "rolledBack": false,
+            "error": null
+          }
+        ],
+        "beforeFiles": [
+          {
+            "path": ".env",
+            "hex": ""
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/fixture.yaml",
+            "hex": "63757272656e740a"
+          }
+        ],
+        "files": [
+          {
+            "path": ".env",
+            "hex": ""
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/fixture.yaml",
+            "hex": "63757272656e740a"
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/fixture.yaml.install.lock",
+            "hex": ""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "rollback-traversal-refused",
+      "action": "yaml-update-operations.execute",
+      "capabilityIds": [
+        "yaml-update-operations.execute"
+      ],
+      "fixtureRefs": [
+        "rollback-traversal-refused"
+      ],
+      "input": {
+        "fixtureRef": "rollback-traversal-refused"
+      },
+      "expected": {
+        "results": [
+          {
+            "api": "yaml_rollback_update",
+            "fileName": "../outside.yaml",
+            "rolledBack": false,
+            "error": "invalid_name"
+          }
+        ],
+        "beforeFiles": [
+          {
+            "path": ".env",
+            "hex": ""
+          },
+          {
+            "path": "cache/CLASSIC/outside.yaml",
+            "hex": "6f7574736964652d63757272656e740a"
+          },
+          {
+            "path": "cache/CLASSIC/outside.yaml.prev",
+            "hex": "6f7574736964652d70726576696f75730a"
+          }
+        ],
+        "files": [
+          {
+            "path": ".env",
+            "hex": ""
+          },
+          {
+            "path": "cache/CLASSIC/outside.yaml",
+            "hex": "6f7574736964652d63757272656e740a"
+          },
+          {
+            "path": "cache/CLASSIC/outside.yaml.prev",
+            "hex": "6f7574736964652d70726576696f75730a"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "rollback-local-ignore-refused",
+      "action": "yaml-update-operations.execute",
+      "capabilityIds": [
+        "yaml-update-operations.execute"
+      ],
+      "fixtureRefs": [
+        "rollback-local-ignore-refused"
+      ],
+      "input": {
+        "fixtureRef": "rollback-local-ignore-refused"
+      },
+      "expected": {
+        "results": [
+          {
+            "api": "yaml_rollback_update",
+            "fileName": "CLASSIC Ignore.yaml",
+            "rolledBack": false,
+            "error": "local_ignore_refused"
+          }
+        ],
+        "beforeFiles": [
+          {
+            "path": ".env",
+            "hex": ""
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Ignore.yaml",
+            "hex": "707269766174650a"
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Ignore.yaml.prev",
+            "hex": "6f6c64657220707269766174650a"
+          }
+        ],
+        "files": [
+          {
+            "path": ".env",
+            "hex": ""
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Ignore.yaml",
+            "hex": "707269766174650a"
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Ignore.yaml.prev",
+            "hex": "6f6c64657220707269766174650a"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "bulk-rollback",
+      "action": "yaml-update-operations.execute",
+      "capabilityIds": [
+        "yaml-update-operations.execute"
+      ],
+      "fixtureRefs": [
+        "bulk-rollback"
+      ],
+      "input": {
+        "fixtureRef": "bulk-rollback"
+      },
+      "expected": {
+        "results": [
+          {
+            "api": "yaml_data_rollback_update",
+            "rolledBack": [
+              "CLASSIC Main.yaml"
+            ],
+            "noPrevious": [
+              "CLASSIC Fallout4.yaml"
+            ],
+            "failedFiles": [],
+            "failureReasons": []
+          }
+        ],
+        "beforeFiles": [
+          {
+            "path": ".env",
+            "hex": ""
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml",
+            "hex": "63757272656e742d6d61696e0a"
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml.prev",
+            "hex": "70726576696f75732d6d61696e0a"
+          }
+        ],
+        "files": [
+          {
+            "path": ".env",
+            "hex": ""
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Fallout4.yaml.install.lock",
+            "hex": ""
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml",
+            "hex": "70726576696f75732d6d61696e0a"
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml.install.lock",
+            "hex": ""
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml.prev",
+            "hex": "63757272656e742d6d61696e0a"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "bulk-no-previous",
+      "action": "yaml-update-operations.execute",
+      "capabilityIds": [
+        "yaml-update-operations.execute"
+      ],
+      "fixtureRefs": [
+        "bulk-no-previous"
+      ],
+      "input": {
+        "fixtureRef": "bulk-no-previous"
+      },
+      "expected": {
+        "results": [
+          {
+            "api": "yaml_data_rollback_update",
+            "rolledBack": [],
+            "noPrevious": [
+              "CLASSIC Main.yaml",
+              "CLASSIC Fallout4.yaml"
+            ],
+            "failedFiles": [],
+            "failureReasons": []
+          }
+        ],
+        "beforeFiles": [
+          {
+            "path": ".env",
+            "hex": ""
+          }
+        ],
+        "files": [
+          {
+            "path": ".env",
+            "hex": ""
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Fallout4.yaml.install.lock",
+            "hex": ""
+          },
+          {
+            "path": "cache/CLASSIC/yaml-cache/CLASSIC Main.yaml.install.lock",
+            "hex": ""
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

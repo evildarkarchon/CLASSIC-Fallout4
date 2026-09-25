@@ -1,0 +1,29 @@
+{
+  "configuration": {
+    "mode": "in-memory",
+    "entries": [
+      {
+        "formid": "000800",
+        "plugin": "SomeMod.esp",
+        "value": "Laser Musket",
+        "operationalFailure": null
+      },
+      {
+        "formid": "000801",
+        "plugin": "SomeMod.esp",
+        "value": "   ",
+        "operationalFailure": null
+      },
+      {
+        "formid": "000802",
+        "plugin": "SomeMod.esp",
+        "value": null,
+        "operationalFailure": "fixture offline"
+      }
+    ]
+  },
+  "request": {
+    "formid": "000801",
+    "plugin": "SomeMod.esp"
+  }
+}

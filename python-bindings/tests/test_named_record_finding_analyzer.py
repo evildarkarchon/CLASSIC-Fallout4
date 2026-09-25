@@ -1,8 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 
-import pytest
-
 import classic_scanlog
+import pytest
 
 
 def test_named_record_finding_analyzer_returns_typed_counts_and_empty_success() -> None:
@@ -30,8 +29,8 @@ def test_named_record_finding_analyzer_preserves_shared_error_contract() -> None
     assert caught.value.analyzer_kind.code == "named_record_finding"
     assert caught.value.code == "invalid_configuration"
     assert (
-        caught.value.message
-        == "Named Record Finding target record must not be empty"
+            caught.value.message
+            == "Named Record Finding target record must not be empty"
     )
 
 

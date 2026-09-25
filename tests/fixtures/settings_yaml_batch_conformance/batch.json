@@ -1,0 +1,13 @@
+{
+  "kind": "yaml-batch",
+  "content": "name: original\nmapping:\n  zebra: last\n  alpha: first\nvectors:\n  selected: [one, 2, two]\n",
+  "keys": [
+    "name",
+    "new",
+    "absent"
+  ],
+  "updates": {
+    "name": "changed",
+    "new": "added"
+  }
+}

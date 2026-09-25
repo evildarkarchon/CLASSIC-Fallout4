@@ -120,7 +120,10 @@ where
     let etag_path = cache_dir.map(|d| d.join(ETAG_FILENAME));
     let cached_manifest_path = cache_dir.map(|d| d.join(CACHED_MANIFEST_FILENAME));
 
-    let mut req = client.http_client().get(pages_url).timeout(PAGES_TIMEOUT);
+    let mut req = client
+        .http_client()
+        .get(pages_url)
+        .timeout(client.capped_timeout(PAGES_TIMEOUT));
     let cached_etag = etag_path.as_deref().and_then(read_etag);
     if let Some(etag) = &cached_etag {
         req = req.header("If-None-Match", etag.as_str());

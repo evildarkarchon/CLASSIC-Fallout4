@@ -68,9 +68,9 @@ def stable_id_hash(values: list[str]) -> str:
 
 
 def sync_baseline_artifacts(
-    output_dir: Path,
-    baseline_output_dir: Path,
-    artifact_names: tuple[str, ...],
+        output_dir: Path,
+        baseline_output_dir: Path,
+        artifact_names: tuple[str, ...],
 ) -> None:
     """Copy generated artifacts into the checked-in baseline directory.
 
@@ -89,7 +89,7 @@ def sync_baseline_artifacts(
 
 
 def payloads_match_ignoring_generated_at(
-    expected_payload: dict[str, Any], actual_payload: dict[str, Any]
+        expected_payload: dict[str, Any], actual_payload: dict[str, Any]
 ) -> bool:
     """Return whether two JSON artifact payloads differ only by timestamp.
 
@@ -105,7 +105,7 @@ def payloads_match_ignoring_generated_at(
 
 
 def markdown_matches_ignoring_generated_at(
-    expected_text: str, actual_text: str
+        expected_text: str, actual_text: str
 ) -> bool:
     """Return whether two markdown artifacts differ only by their header timestamp."""
     expected_lines = [
@@ -146,7 +146,7 @@ def artifacts_match(expected: Path, actual: Path) -> bool:
 
 
 def preserve_baseline_generated_at(
-    baseline_path: Path, generated_payload: dict[str, Any]
+        baseline_path: Path, generated_payload: dict[str, Any]
 ) -> None:
     """Reuse the committed baseline timestamp when regenerated content is unchanged.
 
@@ -180,7 +180,7 @@ def preserve_baseline_generated_at(
 
 
 def preserve_baseline_generated_at_all(
-    baseline_dir: Path, payloads: dict[str, dict[str, Any]]
+        baseline_dir: Path, payloads: dict[str, dict[str, Any]]
 ) -> None:
     """Apply :func:`preserve_baseline_generated_at` across a set of artifacts.
 

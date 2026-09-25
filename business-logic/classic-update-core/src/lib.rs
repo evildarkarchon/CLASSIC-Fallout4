@@ -54,6 +54,7 @@
 //!
 //! Always check for `UpdateError::RateLimitExceeded` and handle appropriately.
 
+pub mod endpoints;
 pub mod error;
 pub mod github;
 pub(crate) mod manifest_fetch;
@@ -61,6 +62,7 @@ pub mod notification;
 pub mod yaml_update;
 
 // Re-export key types for convenience
+pub use endpoints::{UpdateEndpointConfig, check_app_notification_configured};
 pub use error::{Result, UpdateError};
 pub use github::{GithubAsset, GithubClient, GithubRelease};
 pub use notification::{

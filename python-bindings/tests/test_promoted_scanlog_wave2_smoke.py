@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import classic_scanlog
 
+
 # =============================================================================
 # Run-scoped FCX result data: ConfigIssue
 # =============================================================================

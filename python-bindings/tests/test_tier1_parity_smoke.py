@@ -1,4 +1,4 @@
-"""Registry-driven runtime parity smoke tests for maintained Python bindings."""
+"""Independent runtime parity smoke tests for maintained Python bindings."""
 
 from __future__ import annotations
 
@@ -8,15 +8,11 @@ from typing import Any, cast
 
 import pytest
 
-from .fixtures.runtime_coverage_registry import get_runtime_coverage_case_ids
 from .fixtures.tier1_parity_fixtures import (
     PARITY_GAME_YAML,
     PARITY_IGNORE_YAML,
     PARITY_MAIN_YAML,
 )
-
-
-THIS_SUITE = "python-bindings/tests/test_tier1_parity_smoke.py"
 
 
 def test_imports_and_versions() -> None:
@@ -115,8 +111,8 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     local_yaml_after = local_yaml.read_text(encoding="utf-8")
     assert 'Root_Folder_Game: "D:/Games/Fallout4"' in local_yaml_after
     assert (
-        'Root_Folder_Docs: "C:/Users/Test/Documents/My Games/Fallout4"'
-        in local_yaml_after
+            'Root_Folder_Docs: "C:/Users/Test/Documents/My Games/Fallout4"'
+            in local_yaml_after
     )
 
     local_yaml.write_text("{ invalid: yaml: content: }}}", encoding="utf-8")
@@ -129,8 +125,8 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
 
     assert classic_config.YamlSource.MAIN.display_name() == "Main Database"
     assert (
-        classic_config.YamlSource.GAME.display_name_with_game("Fallout4")
-        == "Fallout4 Database"
+            classic_config.YamlSource.GAME.display_name_with_game("Fallout4")
+            == "Fallout4 Database"
     )
     assert classic_config.YamlSource.GAME.path("Fallout4").endswith(
         "CLASSIC Fallout4.yaml"
@@ -155,12 +151,12 @@ def _run_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
 
     repo_root = Path(__file__).resolve().parents[2]
     log_path = (
-        repo_root
-        / "business-logic"
-        / "classic-scanlog-core"
-        / "benches"
-        / "fixtures"
-        / "crash-12624.log"
+            repo_root
+            / "business-logic"
+            / "classic-scanlog-core"
+            / "benches"
+            / "fixtures"
+            / "crash-12624.log"
     )
     log_lines = log_path.read_text(encoding="utf-8", errors="ignore").splitlines()
 
@@ -209,9 +205,8 @@ def _run_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
     assert papyrus_stats.dumps >= 1
 
 
-
 def _run_version_registry_tier1_smoke(
-    _tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
+        _tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
 ) -> None:
     import classic_version_registry
 
@@ -229,10 +224,10 @@ def _run_version_registry_tier1_smoke(
 
     game_version = classic_version_registry.GameVersion("1.10.163.0")
     assert (
-        game_version.semantic_distance(
-            classic_version_registry.GameVersion("1.10.984.0")
-        )
-        > 0
+            game_version.semantic_distance(
+                classic_version_registry.GameVersion("1.10.984.0")
+            )
+            > 0
     )
 
     registry = classic_version_registry.VersionRegistry()
@@ -290,7 +285,7 @@ def _run_scanlog_tier2_smoke(_tmp_path: Path, _monkeypatch: pytest.MonkeyPatch) 
 
 
 def _run_version_registry_tier2_smoke(
-    _tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
+        _tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
 ) -> None:
     import classic_version_registry
 
@@ -300,7 +295,7 @@ def _run_version_registry_tier2_smoke(
 
 
 def _run_cache_helpers_tier2_smoke(
-    tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
 ) -> None:
     import classic_file_io
 
@@ -328,17 +323,6 @@ def _run_cache_helpers_tier2_smoke(
     assert cleared_stats["size"] == 0
 
 
-CASE_RUNNERS = {
-    "config-tier1-smoke": _run_config_tier1_smoke,
-    "scanlog-tier1-smoke": _run_scanlog_tier1_smoke,
-    "version-registry-tier1-smoke": _run_version_registry_tier1_smoke,
-    "config-tier2-smoke": _run_config_tier2_smoke,
-    "cache-helpers-tier2-smoke": _run_cache_helpers_tier2_smoke,
-    "scanlog-tier2-smoke": _run_scanlog_tier2_smoke,
-    "version-registry-tier2-smoke": _run_version_registry_tier2_smoke,
-}
-
-
 def test_application_dir_override(tmp_path: Path) -> None:
     """Independent application-local YAML helpers expose the registry override."""
     import classic_config
@@ -355,15 +339,6 @@ def test_application_dir_override(tmp_path: Path) -> None:
         classic_config.set_application_dir(app_dir)
 
 
-def _run_application_dir_override(
-    tmp_path: Path, _monkeypatch: pytest.MonkeyPatch
-) -> None:
-    test_application_dir_override(tmp_path)
-
-
-CASE_RUNNERS["application-dir-override"] = _run_application_dir_override
-
-
 def test_parse_segments_parallel_deprecation_warning() -> None:
     """parse_segments_parallel matches parse_all_sections output."""
     import classic_scanlog
@@ -371,18 +346,18 @@ def test_parse_segments_parallel_deprecation_warning() -> None:
     parser = classic_scanlog.LogParser()
     repo_root = Path(__file__).resolve().parents[2]
     log_path = (
-        repo_root
-        / "business-logic"
-        / "classic-scanlog-core"
-        / "benches"
-        / "fixtures"
-        / "crash-12624.log"
+            repo_root
+            / "business-logic"
+            / "classic-scanlog-core"
+            / "benches"
+            / "fixtures"
+            / "crash-12624.log"
     )
     sample_lines = log_path.read_text(encoding="utf-8", errors="ignore").splitlines()
     expected = parser.parse_all_sections(sample_lines)
 
     with pytest.warns(
-        DeprecationWarning, match="parse_segments_parallel is deprecated"
+            DeprecationWarning, match="parse_segments_parallel is deprecated"
     ):
         result = parser.parse_segments_parallel(sample_lines)
 
@@ -411,8 +386,23 @@ def test_obsolete_report_fragment_surface_is_not_exported() -> None:
     assert not [name for name in obsolete_exports if hasattr(classic_scanlog, name)]
 
 
-@pytest.mark.parametrize("case_id", get_runtime_coverage_case_ids(THIS_SUITE))
-def test_runtime_coverage_registry_cases(
-    case_id: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+def test_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run the retained YAML constructor checks independently of coverage metadata."""
+    _run_config_tier1_smoke(tmp_path, monkeypatch)
+
+
+def test_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run retained scan-log assertions even when no coverage claim is present."""
+    _run_scanlog_tier1_smoke(tmp_path, monkeypatch)
+
+
+def test_version_registry_tier1_smoke(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    CASE_RUNNERS[case_id](tmp_path, monkeypatch)
+    """Run the retained version queries independently of coverage metadata."""
+    _run_version_registry_tier1_smoke(tmp_path, monkeypatch)
+
+
+def test_config_tier2_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep independent checks for the remaining YAML display fields."""
+    _run_config_tier2_smoke(tmp_path, monkeypatch)

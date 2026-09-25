@@ -1,0 +1,16 @@
+{
+  "operations": [
+    {
+      "op": "clear"
+    },
+    {
+      "op": "summary"
+    },
+    {
+      "op": "clear"
+    },
+    {
+      "op": "summary"
+    }
+  ]
+}

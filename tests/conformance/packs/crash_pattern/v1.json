@@ -1,0 +1,618 @@
+{
+  "schemaVersion": 1,
+  "familyId": "crash-pattern",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scanlog-core"
+  },
+  "fixtureRoot": "tests/fixtures/crash_pattern",
+  "fixtures": {
+    "classify-0": "classify-0.json",
+    "classify-1": "classify-1.json",
+    "classify-2": "classify-2.json",
+    "classify-3": "classify-3.json",
+    "classify-4": "classify-4.json",
+    "classify-5": "classify-5.json",
+    "classify-6": "classify-6.json",
+    "classify-7": "classify-7.json",
+    "classify-8": "classify-8.json",
+    "classify-9": "classify-9.json",
+    "classify-10": "classify-10.json",
+    "classify-11": "classify-11.json",
+    "classify-12": "classify-12.json",
+    "classify-13": "classify-13.json",
+    "classify-14": "classify-14.json",
+    "classify-15": "classify-15.json",
+    "classify-16": "classify-16.json",
+    "legacy-full": "legacy-full.json",
+    "legacy-unknown": "legacy-unknown.json",
+    "legacy-empty": "legacy-empty.json",
+    "vr-fallout-exe": "vr-fallout-exe.json",
+    "vr-fallout-esm": "vr-fallout-esm.json",
+    "vr-skyrim-exe": "vr-skyrim-exe.json",
+    "vr-skyrim-esm": "vr-skyrim-esm.json",
+    "vr-non-vr": "vr-non-vr.json",
+    "vr-near-miss": "vr-near-miss.json"
+  },
+  "capabilities": [
+    {
+      "id": "crash-pattern.classify",
+      "rustSymbols": [
+        "detect_crash_pattern"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "classification"
+      ]
+    },
+    {
+      "id": "crash-pattern.legacy",
+      "rustSymbols": [
+        "LogParser"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "main-error"
+      ]
+    },
+    {
+      "id": "crash-pattern.vr",
+      "rustSymbols": [
+        "detect_vr_log"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "vr-detection"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "classify-0",
+      "action": "crash-pattern.classify",
+      "capabilityIds": [
+        "crash-pattern.classify"
+      ],
+      "fixtureRefs": [
+        "classify-0"
+      ],
+      "input": {
+        "fixtureRef": "classify-0"
+      },
+      "expected": {
+        "token": "ACCESS_VIOLATION"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "classify-1",
+      "action": "crash-pattern.classify",
+      "capabilityIds": [
+        "crash-pattern.classify"
+      ],
+      "fixtureRefs": [
+        "classify-1"
+      ],
+      "input": {
+        "fixtureRef": "classify-1"
+      },
+      "expected": {
+        "token": "STACK_OVERFLOW"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "classify-2",
+      "action": "crash-pattern.classify",
+      "capabilityIds": [
+        "crash-pattern.classify"
+      ],
+      "fixtureRefs": [
+        "classify-2"
+      ],
+      "input": {
+        "fixtureRef": "classify-2"
+      },
+      "expected": {
+        "token": "INT_DIVIDE_BY_ZERO"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "classify-3",
+      "action": "crash-pattern.classify",
+      "capabilityIds": [
+        "crash-pattern.classify"
+      ],
+      "fixtureRefs": [
+        "classify-3"
+      ],
+      "input": {
+        "fixtureRef": "classify-3"
+      },
+      "expected": {
+        "token": "BREAKPOINT"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "classify-4",
+      "action": "crash-pattern.classify",
+      "capabilityIds": [
+        "crash-pattern.classify"
+      ],
+      "fixtureRefs": [
+        "classify-4"
+      ],
+      "input": {
+        "fixtureRef": "classify-4"
+      },
+      "expected": {
+        "token": "ILLEGAL_INSTRUCTION"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "classify-5",
+      "action": "crash-pattern.classify",
+      "capabilityIds": [
+        "crash-pattern.classify"
+      ],
+      "fixtureRefs": [
+        "classify-5"
+      ],
+      "input": {
+        "fixtureRef": "classify-5"
+      },
+      "expected": {
+        "token": "STACK_BUFFER_OVERRUN"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "classify-6",
+      "action": "crash-pattern.classify",
+      "capabilityIds": [
+        "crash-pattern.classify"
+      ],
+      "fixtureRefs": [
+        "classify-6"
+      ],
+      "input": {
+        "fixtureRef": "classify-6"
+      },
+      "expected": {
+        "token": "HEAP_CORRUPTION"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "classify-7",
+      "action": "crash-pattern.classify",
+      "capabilityIds": [
+        "crash-pattern.classify"
+      ],
+      "fixtureRefs": [
+        "classify-7"
+      ],
+      "input": {
+        "fixtureRef": "classify-7"
+      },
+      "expected": {
+        "token": "ACCESS_VIOLATION"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "classify-8",
+      "action": "crash-pattern.classify",
+      "capabilityIds": [
+        "crash-pattern.classify"
+      ],
+      "fixtureRefs": [
+        "classify-8"
+      ],
+      "input": {
+        "fixtureRef": "classify-8"
+      },
+      "expected": {
+        "token": "STACK_OVERFLOW"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "classify-9",
+      "action": "crash-pattern.classify",
+      "capabilityIds": [
+        "crash-pattern.classify"
+      ],
+      "fixtureRefs": [
+        "classify-9"
+      ],
+      "input": {
+        "fixtureRef": "classify-9"
+      },
+      "expected": {
+        "token": "INT_DIVIDE_BY_ZERO"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "classify-10",
+      "action": "crash-pattern.classify",
+      "capabilityIds": [
+        "crash-pattern.classify"
+      ],
+      "fixtureRefs": [
+        "classify-10"
+      ],
+      "input": {
+        "fixtureRef": "classify-10"
+      },
+      "expected": {
+        "token": "BREAKPOINT"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "classify-11",
+      "action": "crash-pattern.classify",
+      "capabilityIds": [
+        "crash-pattern.classify"
+      ],
+      "fixtureRefs": [
+        "classify-11"
+      ],
+      "input": {
+        "fixtureRef": "classify-11"
+      },
+      "expected": {
+        "token": "ILLEGAL_INSTRUCTION"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "classify-12",
+      "action": "crash-pattern.classify",
+      "capabilityIds": [
+        "crash-pattern.classify"
+      ],
+      "fixtureRefs": [
+        "classify-12"
+      ],
+      "input": {
+        "fixtureRef": "classify-12"
+      },
+      "expected": {
+        "token": "STACK_BUFFER_OVERRUN"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "classify-13",
+      "action": "crash-pattern.classify",
+      "capabilityIds": [
+        "crash-pattern.classify"
+      ],
+      "fixtureRefs": [
+        "classify-13"
+      ],
+      "input": {
+        "fixtureRef": "classify-13"
+      },
+      "expected": {
+        "token": "BREAKPOINT"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "classify-14",
+      "action": "crash-pattern.classify",
+      "capabilityIds": [
+        "crash-pattern.classify"
+      ],
+      "fixtureRefs": [
+        "classify-14"
+      ],
+      "input": {
+        "fixtureRef": "classify-14"
+      },
+      "expected": {
+        "token": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "classify-15",
+      "action": "crash-pattern.classify",
+      "capabilityIds": [
+        "crash-pattern.classify"
+      ],
+      "fixtureRefs": [
+        "classify-15"
+      ],
+      "input": {
+        "fixtureRef": "classify-15"
+      },
+      "expected": {
+        "token": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "classify-16",
+      "action": "crash-pattern.classify",
+      "capabilityIds": [
+        "crash-pattern.classify"
+      ],
+      "fixtureRefs": [
+        "classify-16"
+      ],
+      "input": {
+        "fixtureRef": "classify-16"
+      },
+      "expected": {
+        "token": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "legacy-full",
+      "action": "crash-pattern.legacy",
+      "capabilityIds": [
+        "crash-pattern.legacy"
+      ],
+      "fixtureRefs": [
+        "legacy-full"
+      ],
+      "input": {
+        "fixtureRef": "legacy-full"
+      },
+      "expected": {
+        "mainError": "Unhandled exception EXCEPTION_ACCESS_VIOLATION at 0x12345678"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "legacy-unknown",
+      "action": "crash-pattern.legacy",
+      "capabilityIds": [
+        "crash-pattern.legacy"
+      ],
+      "fixtureRefs": [
+        "legacy-unknown"
+      ],
+      "input": {
+        "fixtureRef": "legacy-unknown"
+      },
+      "expected": {
+        "mainError": "Unhandled exception EXCEPTION_UNKNOWN_TYPE"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "legacy-empty",
+      "action": "crash-pattern.legacy",
+      "capabilityIds": [
+        "crash-pattern.legacy"
+      ],
+      "fixtureRefs": [
+        "legacy-empty"
+      ],
+      "input": {
+        "fixtureRef": "legacy-empty"
+      },
+      "expected": {
+        "mainError": ""
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "vr-fallout-exe",
+      "action": "crash-pattern.vr",
+      "capabilityIds": [
+        "crash-pattern.vr"
+      ],
+      "fixtureRefs": [
+        "vr-fallout-exe"
+      ],
+      "input": {
+        "fixtureRef": "vr-fallout-exe"
+      },
+      "expected": {
+        "vr": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "vr-fallout-esm",
+      "action": "crash-pattern.vr",
+      "capabilityIds": [
+        "crash-pattern.vr"
+      ],
+      "fixtureRefs": [
+        "vr-fallout-esm"
+      ],
+      "input": {
+        "fixtureRef": "vr-fallout-esm"
+      },
+      "expected": {
+        "vr": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "vr-skyrim-exe",
+      "action": "crash-pattern.vr",
+      "capabilityIds": [
+        "crash-pattern.vr"
+      ],
+      "fixtureRefs": [
+        "vr-skyrim-exe"
+      ],
+      "input": {
+        "fixtureRef": "vr-skyrim-exe"
+      },
+      "expected": {
+        "vr": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "vr-skyrim-esm",
+      "action": "crash-pattern.vr",
+      "capabilityIds": [
+        "crash-pattern.vr"
+      ],
+      "fixtureRefs": [
+        "vr-skyrim-esm"
+      ],
+      "input": {
+        "fixtureRef": "vr-skyrim-esm"
+      },
+      "expected": {
+        "vr": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "vr-non-vr",
+      "action": "crash-pattern.vr",
+      "capabilityIds": [
+        "crash-pattern.vr"
+      ],
+      "fixtureRefs": [
+        "vr-non-vr"
+      ],
+      "input": {
+        "fixtureRef": "vr-non-vr"
+      },
+      "expected": {
+        "vr": false
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "vr-near-miss",
+      "action": "crash-pattern.vr",
+      "capabilityIds": [
+        "crash-pattern.vr"
+      ],
+      "fixtureRefs": [
+        "vr-near-miss"
+      ],
+      "input": {
+        "fixtureRef": "vr-near-miss"
+      },
+      "expected": {
+        "vr": false
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

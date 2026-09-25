@@ -1,0 +1,156 @@
+{
+  "consumerCoverage": null,
+  "coverage": {
+    "executionEvidence": [
+      {
+        "executionInstanceId": "python",
+        "participantId": "python"
+      }
+    ],
+    "failures": [
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler.__init__"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler.cache_metrics"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler.cache_stats"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler.cleanup_cache"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler.clear_cache"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler.common_prefix"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler.get_extension"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler.get_filename"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler.get_parent"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler.is_absolute"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler.join_paths"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler.normalize_path"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler.split_path"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler.split_path_fast"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler.to_absolute"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler.validate_paths_batch"
+      },
+      {
+        "blocking": true,
+        "kind": "coverage_mapping_gap",
+        "message": "source parity row lacks predicate-derived executable coverage",
+        "obligationId": "parity:python:shared.path.PathHandler.validate_paths_batch_fast"
+      }
+    ],
+    "familyId": "path-normalization",
+    "preparedEvidenceDigest": "sha256:c611eacce4164beaf76b48ec174ddd23483cd16b95ca25681385605b516c56a4",
+    "result": "fail",
+    "rows": []
+  },
+  "enforcement": "blocking",
+  "failures": [
+    {
+      "executionInstanceId": "python",
+      "kind": "semantic_conformance_mismatch",
+      "message": "prepared invocation did not pass current receipt validation",
+      "participantId": "python"
+    }
+  ],
+  "familyId": "path-normalization",
+  "missingExecutions": [],
+  "receivedExecutions": [
+    {
+      "executionInstanceId": "python",
+      "participantId": "python"
+    }
+  ],
+  "repositoryComplete": false,
+  "requiredExecutions": [
+    {
+      "executionInstanceId": "python",
+      "participantId": "python"
+    }
+  ],
+  "result": "fail",
+  "schemaVersion": 1,
+  "scope": {
+    "executionInstanceId": "python",
+    "kind": "execution-instance",
+    "participantId": "python"
+  }
+}

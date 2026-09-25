@@ -1,0 +1,12 @@
+{
+  "operation": "plugins",
+  "lines": [
+    "[00] Fallout4.esm",
+    "[01] Ignore.esp",
+    "[FF] Limit.esp",
+    "quiet"
+  ],
+  "ignore": [
+    "IGNORE.esp"
+  ]
+}

@@ -13,6 +13,7 @@ from typing import Any, Protocol
 
 from .binding_loader import list_bindings, require_binding
 from .context import CommandContext
+from .display import render_display_lines, render_display_segments
 from .exit_codes import ExitCode, worst_exit_code
 from .output import CommandResult, binding_exception, failure, success
 from .scenarios import Scenario, all_scenarios, get_scenario, scenarios_for_profile
@@ -141,15 +142,18 @@ def doctor(args: object, context: CommandContext) -> CommandResult:
     data = {"checks": checks, "bindings": binding_diagnostics, "python": sys.executable}
     if failed:
         code = int(ExitCode.BINDING_IMPORT) if missing else int(ExitCode.USAGE)
-        return failure("doctor", f"{len(failed)} readiness checks failed", code, data=data, text_lines=[f"FAIL {check['id']}" for check in failed])
-    return success("doctor", "Python binding environment is ready", data, text_lines=["Python binding environment is ready"])
+        return failure("doctor", f"{len(failed)} readiness checks failed", code, data=data,
+                       text_lines=[f"FAIL {check['id']}" for check in failed])
+    return success("doctor", "Python binding environment is ready", data,
+                   text_lines=["Python binding environment is ready"])
 
 
 def _tool_available(tool: str) -> bool:
     """Return whether a tool can be launched from the current environment."""
 
     try:
-        subprocess.run([tool, "--version"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
+        subprocess.run([tool, "--version"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                       timeout=10)
     except (OSError, subprocess.TimeoutExpired):
         return False
     return True
@@ -199,11 +203,13 @@ def compliance_run(args: _ComplianceRunArgs, context: CommandContext) -> Command
     report = {
         "schemaVersion": "1.0",
         "profile": profile,
-        "environment": {"repoRoot": str(context.repo_root), "fixtureRoot": str(context.fixture_root), "python": sys.executable},
+        "environment": {"repoRoot": str(context.repo_root), "fixtureRoot": str(context.fixture_root),
+                        "python": sys.executable},
         "scenarioResults": scenario_results,
         "delegatedGates": delegated,
         "coveredExports": sorted({export for scenario in scenarios for export in scenario.covered_exports}),
-        "failureClassifications": sorted({classification for scenario in scenarios for classification in scenario.failure_classifications}),
+        "failureClassifications": sorted(
+            {classification for scenario in scenarios for classification in scenario.failure_classifications}),
     }
     artifacts = _write_reports(report, context)
     summary = f"Compliance profile {profile} {'passed' if exit_code == 0 else 'failed'}"
@@ -286,7 +292,8 @@ def _run_python_ci_delegates(context: CommandContext) -> list[dict[str, Any]]:
     gates: list[dict[str, Any]] = []
     for command in commands:
         completed = subprocess.run(command, cwd=context.repo_root, check=False, text=True, capture_output=True)
-        gates.append({"commandLine": command, "exitCode": completed.returncode, "stdout": completed.stdout[-4000:], "stderr": completed.stderr[-4000:]})
+        gates.append({"commandLine": command, "exitCode": completed.returncode, "stdout": completed.stdout[-4000:],
+                      "stderr": completed.stderr[-4000:]})
     return gates
 
 
@@ -299,10 +306,12 @@ def _write_reports(report: dict[str, Any], context: CommandContext) -> list[str]
     md_path = output_dir / "classic_python_cli_report.md"
     json_path.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
     md_lines = ["# CLASSIC Python CLI Report", "", f"Profile: `{report['profile']}`", "", "## Scenarios"]
-    md_lines.extend(f"- `{item['id']}`: {item['status']} (exit {item['exitCode']}) - {item['summary']}" for item in report["scenarioResults"])
+    md_lines.extend(f"- `{item['id']}`: {item['status']} (exit {item['exitCode']}) - {item['summary']}" for item in
+                    report["scenarioResults"])
     if report["delegatedGates"]:
         md_lines.extend(["", "## Delegated Gates"])
-        md_lines.extend(f"- `{' '.join(item['commandLine'])}`: exit {item['exitCode']}" for item in report["delegatedGates"])
+        md_lines.extend(
+            f"- `{' '.join(item['commandLine'])}`: exit {item['exitCode']}" for item in report["delegatedGates"])
     md_path.write_text("\n".join(md_lines) + "\n", encoding="utf-8")
     return [_relative_or_absolute(json_path, context.repo_root), _relative_or_absolute(md_path, context.repo_root)]
 
@@ -318,7 +327,8 @@ def version_parse(args: _VersionParseArgs, context: CommandContext) -> CommandRe
         return failure("version parse", str(exc), int(ExitCode.BINDING_IMPORT))
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("version parse", "classic_version", exc)
-    return success("version parse", f"{args.version} -> {formatted}", {"input": args.version, "parsed": list(parsed), "formatted": formatted})
+    return success("version parse", f"{args.version} -> {formatted}",
+                   {"input": args.version, "parsed": list(parsed), "formatted": formatted})
 
 
 def config_main_version(args: object, context: CommandContext) -> CommandResult:
@@ -388,7 +398,8 @@ def path_validate(args: _PathArg, context: CommandContext) -> CommandResult:
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("path validate", "classic_path", exc)
     if not valid:
-        return failure("path validate", f"Path is not valid: {target}", int(ExitCode.PRODUCT_FAILURE), data={"path": str(target), "valid": False})
+        return failure("path validate", f"Path is not valid: {target}", int(ExitCode.PRODUCT_FAILURE),
+                       data={"path": str(target), "valid": False})
     return success("path validate", f"Path is valid: {target}", {"path": str(target), "valid": True})
 
 
@@ -405,7 +416,8 @@ def file_hash(args: _PathArg, context: CommandContext) -> CommandResult:
         return failure("file hash", str(exc), int(ExitCode.BINDING_IMPORT))
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("file hash", "classic_file_io", exc)
-    return success("file hash", f"{_relative_or_absolute(target, context.repo_root)} {digest}", {"path": str(target), "sha256": digest})
+    return success("file hash", f"{_relative_or_absolute(target, context.repo_root)} {digest}",
+                   {"path": str(target), "sha256": digest})
 
 
 def database_info(args: object, context: CommandContext) -> CommandResult:
@@ -413,7 +425,8 @@ def database_info(args: object, context: CommandContext) -> CommandResult:
 
     try:
         module = require_binding("classic_database")
-        data = {name: getattr(module, name) for name in ("DEFAULT_CACHE_TTL", "BATCH_CACHE_TTL", "MAX_CACHE_TTL") if hasattr(module, name)}
+        data = {name: getattr(module, name) for name in ("DEFAULT_CACHE_TTL", "BATCH_CACHE_TTL", "MAX_CACHE_TTL") if
+                hasattr(module, name)}
     except ImportError as exc:
         return failure("database info", str(exc), int(ExitCode.BINDING_IMPORT))
     return success("database info", "Database binding constants loaded", data)
@@ -443,7 +456,8 @@ def update_validate_url(args: _UpdateValidateUrlArgs, context: CommandContext) -
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("update validate-url", "classic_web", exc)
     if not valid:
-        return failure("update validate-url", f"URL is not valid: {args.url}", int(ExitCode.PRODUCT_FAILURE), data={"url": args.url, "valid": False})
+        return failure("update validate-url", f"URL is not valid: {args.url}", int(ExitCode.PRODUCT_FAILURE),
+                       data={"url": args.url, "valid": False})
     return success("update validate-url", f"URL valid: {valid}", {"url": args.url, "valid": valid})
 
 
@@ -457,7 +471,8 @@ def resource_detect(args: _PathArg, context: CommandContext) -> CommandResult:
         return failure("resource detect", str(exc), int(ExitCode.BINDING_IMPORT))
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("resource detect", "classic_resource", exc)
-    return success("resource detect", f"Resource type: {resource_type}", {"path": args.path, "resourceType": str(resource_type)})
+    return success("resource detect", f"Resource type: {resource_type}",
+                   {"path": args.path, "resourceType": str(resource_type)})
 
 
 def _scan_result_success(result: object) -> bool:
@@ -608,7 +623,8 @@ def _scan_run_result_summary(result: object) -> dict[str, Any]:
         "status": str(result.status),
         "discovery": None if discovery is None else _scan_discovery_summary(discovery),
         "setup": None if setup is None else _scan_setup_summary(setup),
-        "installedYamlData": None if installed_yaml_data is None else _scan_installed_yaml_data_summary(installed_yaml_data),
+        "installedYamlData": None if installed_yaml_data is None else _scan_installed_yaml_data_summary(
+            installed_yaml_data),
         "effectiveConcurrency": None if effective_concurrency is None else int(effective_concurrency),
         "message": None if message is None else str(message),
         "total": int(result.total),
@@ -617,6 +633,130 @@ def _scan_run_result_summary(result: object) -> dict[str, Any]:
         "cancelled": int(result.cancelled),
         "logs": [_scan_log_result_summary(item) for item in result.logs],
     }
+
+
+# Reported when the binding hands back a run but says nothing about it. Every render
+# entry point in `classic-scan-presentation` opens on a line stating the outcome, so
+# this is unreachable through a real binding -- but it describes a broken binding
+# promise rather than anything a run said, which is why it stays this CLI's sentence to
+# write. The alternative is a silent failure, which reads to a user as the process
+# dying rather than as a run that failed.
+_UNRENDERED_RUN = "classic_scanlog published no Display Content for this Crash Log Scan Run"
+
+# Terminal statuses this CLI reports as unsuccessful, and the exit status each earns.
+# Exit codes are Display Layout and stay this frontend's; the prose beside them is not,
+# and no longer appears here at all.
+#
+# `local_ignore_recovery_required` is terminal for this CLI. The run paused before
+# analysing any log and returned a one-shot continuation that only an interactive caller
+# can answer; `scan logs` never resumes it. Falling through to the success path reported
+# "0 succeeded, 0 failed" and exit 0, which is indistinguishable from a healthy scan of
+# an empty directory even though the real cause was a malformed CLASSIC Ignore.yaml the
+# caller was never told about.
+_UNSUCCESSFUL_TERMINAL_EXIT_CODES = {
+    "setup_failed": int(ExitCode.PRODUCT_FAILURE),
+    "local_ignore_recovery_required": int(ExitCode.PRODUCT_FAILURE),
+    "cancelled_before_discovery": int(ExitCode.INTERRUPTED),
+    "cancelled": int(ExitCode.INTERRUPTED),
+}
+
+
+def _scan_run_display_lines(carrier: object) -> list[str]:
+    """Render what Rust said about this run, from whichever carrier holds it.
+
+    Args:
+        carrier: A ``ScanRunExecution``, or any object publishing the same
+            ``display_lines`` sequence.
+
+    Returns:
+        One plain string per Rust-owned display line, in Rust's order. Empty when
+        the loaded binding publishes no Display Content at all, which
+        :data:`_UNRENDERED_RUN` then reports.
+
+    Read through ``getattr`` for the same reason every other field on this envelope
+    is: the binding is resolved at run time, so this CLI can be pointed at a build
+    older than itself.
+    """
+
+    lines = getattr(carrier, "display_lines", None)
+    if not lines:
+        return []
+    return render_display_lines(lines)
+
+
+def _scan_run_summary(display_lines: list[str]) -> str:
+    """Return the leading line Rust wrote, or a report that the binding wrote none."""
+
+    return display_lines[0] if display_lines else _UNRENDERED_RUN
+
+
+# Introduces the decisions a paused run would accept. Display Layout, and about this
+# frontend rather than about the run: `scan logs` is CI-oriented and never prompts
+# (`docs/CLASSIC_Python_CLI_PRD.md`, Out Of Scope), so a paused run is terminal here.
+# Printing Rust's decisions with no way to answer them would read as a menu that does
+# nothing; saying where they *can* be answered is what makes the list useful instead.
+_RECOVERY_DECISIONS_HEADER = "This command does not prompt. An interactive CLASSIC frontend offers:"
+
+
+def _scan_recovery_prompt(execution: object) -> dict[str, Any] | None:
+    """Project the Rust-rendered recovery prompt a paused run carries.
+
+    Args:
+        execution: A ``ScanRunExecution``, or any object publishing the same
+            ``recovery_prompt`` attribute.
+
+    Returns:
+        A payload holding the prompt's rendered lines and one entry per decision
+        this run can honor, or ``None`` when the run is not waiting on a decision.
+
+    Only available decisions are listed. This CLI cannot answer any of them, so the
+    filter costs it nothing today -- but a consumer reading this payload to drive its
+    own prompt would repeat the two native frontends' bug if the list included a
+    decision the run had already reported it cannot honor. The availability is read
+    from the description that carries it, so there is no second fact to consult.
+
+    ``decision`` is ``str()`` of the binding's own enum -- ``scan_run_resume`` takes
+    that enum rather than a snake_case token, and the binding publishes no token for
+    it. Stringifying is what keeps the mapping table out of this frontend; writing one
+    here is exactly the drift the enum was chosen to prevent.
+
+    Read through ``getattr`` for the same reason every other field on this envelope
+    is: the binding is resolved at run time, so this CLI can be pointed at a build
+    older than itself and simply reports no prompt.
+    """
+
+    prompt = getattr(execution, "recovery_prompt", None)
+    if prompt is None:
+        return None
+    return {
+        "lines": render_display_lines(getattr(prompt, "lines", [])),
+        "decisions": [
+            {
+                "decision": str(description.decision),
+                "label": description.label,
+                "description": render_display_segments(description.description),
+            }
+            for description in getattr(prompt, "decisions", [])
+            if description.available
+        ],
+    }
+
+
+def _scan_recovery_prompt_lines(recovery_prompt: dict[str, Any]) -> list[str]:
+    """Render a projected recovery prompt as plain lines for the text stream.
+
+    Every word comes from Rust except :data:`_RECOVERY_DECISIONS_HEADER` and the
+    ``" - "`` between a label and its description, both of which are Display Layout.
+    There is no bracketed letter or key hint, because this frontend offers no
+    affordance to hint at.
+    """
+
+    lines = list(recovery_prompt["lines"])
+    decisions = recovery_prompt["decisions"]
+    if decisions:
+        lines.append(_RECOVERY_DECISIONS_HEADER)
+        lines.extend(f"{entry['label']} - {entry['description']}" for entry in decisions)
+    return lines
 
 
 def _scan_report_text(result: object) -> str:
@@ -784,19 +924,30 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         return binding_exception("scan logs", "classic_scanlog", exc)
     infrastructure_error = getattr(execution, "error", None)
     observer_error = getattr(execution, "observer_error", None)
+    # One field covers both payloads, describing whichever of `result` and `error` the
+    # envelope carries -- the same shape the C++ bridge's execution envelope has.
+    display_lines = _scan_run_display_lines(execution)
     if infrastructure_error is not None:
         stage = str(getattr(infrastructure_error, "stage", "internal_invariant"))
         message = str(getattr(infrastructure_error, "message", infrastructure_error))
         path = getattr(infrastructure_error, "path", None)
+        # The prose is Rust's, and states the stage as its Display Label inside a
+        # rendered line. The structured payload keeps the frozen Vocabulary Token,
+        # because machine consumers match on the token and it must not move when a
+        # label is reworded. This is where "failed during formid_database_access"
+        # used to reach a user as a sentence.
         return failure(
             "scan logs",
-            f"Crash Log Scan Run failed during {stage}: {message}",
+            _scan_run_summary(display_lines),
             int(ExitCode.PRODUCT_FAILURE),
             error={"classification": "scan-run-infrastructure", "stage": stage, "message": message, "path": path},
             data={"events": events, "observerError": observer_error},
+            text_lines=display_lines,
         )
     result = getattr(execution, "result", None)
     if result is None:
+        # A broken binding promise, not something a run said, so this sentence is
+        # this CLI's to write.
         return failure(
             "scan logs",
             "classic_scanlog returned neither a result nor an infrastructure error",
@@ -804,53 +955,35 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
             data={"events": events, "observerError": observer_error},
         )
     terminal_status = str(result.status)
-    if terminal_status == "setup_failed":
-        message = str(getattr(result, "message", None) or "Crash Log Scan setup failed")
+    unsuccessful_exit_code = _UNSUCCESSFUL_TERMINAL_EXIT_CODES.get(terminal_status)
+    if unsuccessful_exit_code is not None:
+        # `message` is core's own run-level field, kept in the structured payload as
+        # it was. Where it is absent this now falls back to the run's leading rendered
+        # line rather than to a sentence written here, so the field is Rust's words in
+        # every branch rather than in some of them.
+        message = str(getattr(result, "message", None) or _scan_run_summary(display_lines))
+        data: dict[str, Any] = {
+            "events": events,
+            "observerError": observer_error,
+            "result": _scan_run_result_summary(result),
+        }
+        # A paused run is terminal for this CLI, but terminal is not the same as
+        # unexplained: Rust states why it paused and what each decision would do, and
+        # a user reading CI output needs both to know what to run next. Nothing here
+        # claims the continuation, so no file is touched and there is nothing to
+        # abandon -- the run is simply left where Rust left it.
+        recovery_prompt = _scan_recovery_prompt(execution)
+        terminal_lines = display_lines
+        if recovery_prompt is not None:
+            data["recoveryPrompt"] = recovery_prompt
+            terminal_lines = display_lines + _scan_recovery_prompt_lines(recovery_prompt)
         return failure(
             "scan logs",
-            message,
-            int(ExitCode.PRODUCT_FAILURE),
+            _scan_run_summary(display_lines),
+            unsuccessful_exit_code,
             error={"classification": "scan-run-terminal", "status": terminal_status, "message": message},
-            data={
-                "events": events,
-                "observerError": observer_error,
-                "result": _scan_run_result_summary(result),
-            },
-        )
-    if terminal_status == "local_ignore_recovery_required":
-        # Terminal for this CLI. The run paused before analysing any log and returned a one-shot
-        # continuation that only an interactive caller can answer; `scan logs` never resumes it.
-        # Falling through to the success path below reported "0 succeeded, 0 failed" and exit 0,
-        # which is indistinguishable from a healthy scan of an empty directory even though the real
-        # cause was a malformed CLASSIC Ignore.yaml the caller was never told about.
-        message = str(
-            getattr(result, "message", None)
-            or "Local Ignore YAML Data is malformed and requires a recovery decision "
-            "(reset to default, or proceed without ignore) before crash logs can be scanned"
-        )
-        return failure(
-            "scan logs",
-            message,
-            int(ExitCode.PRODUCT_FAILURE),
-            error={"classification": "scan-run-terminal", "status": terminal_status, "message": message},
-            data={
-                "events": events,
-                "observerError": observer_error,
-                "result": _scan_run_result_summary(result),
-            },
-        )
-    if terminal_status in {"cancelled_before_discovery", "cancelled"}:
-        message = str(getattr(result, "message", None) or "Crash Log Scan Run was cancelled")
-        return failure(
-            "scan logs",
-            message,
-            int(ExitCode.INTERRUPTED),
-            error={"classification": "scan-run-terminal", "status": terminal_status, "message": message},
-            data={
-                "events": events,
-                "observerError": observer_error,
-                "result": _scan_run_result_summary(result),
-            },
+            data=data,
+            text_lines=terminal_lines,
         )
     results = list(result.logs)
     failures = [_scan_failure_summary(item) for item in results if not _scan_result_success(item)]
@@ -858,7 +991,7 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
     successful_logs = len(results) - len(failures)
     return success(
         "scan logs",
-        f"Scanlog binding completed: {successful_logs} succeeded, {len(failures)} failed",
+        _scan_run_summary(display_lines),
         {
             "scanPath": str(scan_path),
             "installationRoot": str(installation_root),
@@ -874,6 +1007,7 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
             "observerError": observer_error,
             "result": _scan_run_result_summary(result),
         },
+        text_lines=display_lines,
     )
 
 
@@ -890,7 +1024,8 @@ def scan_game(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         return failure("scan game", str(exc), int(ExitCode.BINDING_IMPORT))
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("scan game", "classic_scangame", exc)
-    return success("scan game", f"Scanned {len(results)} archive entries", {"rootPath": str(root_path), "findings": [str(item) for item in results]})
+    return success("scan game", f"Scanned {len(results)} archive entries",
+                   {"rootPath": str(root_path), "findings": [str(item) for item in results]})
 
 
 def dispatch_scenario_command(command: list[str], context: CommandContext) -> CommandResult:

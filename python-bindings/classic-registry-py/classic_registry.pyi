@@ -41,6 +41,7 @@ from typing import Any
 
 __version__: str
 
+
 class Keys:
     """Predefined registry keys for common values.
 
@@ -90,6 +91,7 @@ class Keys:
     ENB_PRESENT: str
     GAME_VERSION_DETECTED: str
 
+
 def register(key: str, value: Any) -> None:
     """Register a value in the global registry.
 
@@ -108,6 +110,7 @@ def register(key: str, value: Any) -> None:
 
     """
 
+
 def is_registered(key: str) -> bool:
     """Check if a key is registered.
 
@@ -123,6 +126,7 @@ def is_registered(key: str) -> bool:
         ...     print("Game is registered")
 
     """
+
 
 def get(key: str) -> Any | None:
     """Retrieve a value from the global registry.
@@ -141,6 +145,7 @@ def get(key: str) -> Any | None:
 
     """
 
+
 def clear_all() -> None:
     """Clear all entries from the registry.
 
@@ -154,6 +159,7 @@ def clear_all() -> None:
         >>> clear_all()
 
     """
+
 
 def unregister(key: str) -> bool:
     """Remove a key from the global registry.
@@ -174,6 +180,7 @@ def unregister(key: str) -> bool:
 
     """
 
+
 def get_game() -> str:
     """Get the current game name.
 
@@ -187,6 +194,7 @@ def get_game() -> str:
 
     """
 
+
 def set_game(game_name: str) -> None:
     """Set the current game name.
 
@@ -198,6 +206,7 @@ def set_game(game_name: str) -> None:
         >>> set_game("Skyrim")
 
     """
+
 
 def is_gui_mode() -> bool:
     """Check if the application is running in GUI mode.
@@ -214,6 +223,7 @@ def is_gui_mode() -> bool:
 
     """
 
+
 def get_yaml_cache() -> Any | None:
     """Get the YAML settings cache instance.
 
@@ -227,6 +237,7 @@ def get_yaml_cache() -> Any | None:
         ...     settings = cache.get_settings(...)
 
     """
+
 
 def get_manual_docs_gui() -> Any | None:
     """Get the manual documents GUI widget reference.
@@ -242,6 +253,7 @@ def get_manual_docs_gui() -> Any | None:
 
     """
 
+
 def get_game_path_gui() -> Any | None:
     """Get the game path GUI widget reference.
 
@@ -256,6 +268,7 @@ def get_game_path_gui() -> Any | None:
 
     """
 
+
 def get_local_dir() -> str:
     """Get the local application directory.
 
@@ -268,6 +281,7 @@ def get_local_dir() -> str:
         >>> print(f"Local directory: {local_dir}")
 
     """
+
 
 def set_application_dir(path: str) -> None:
     """Override the directory used to resolve ``CLASSIC Settings.yaml``.
@@ -284,6 +298,7 @@ def set_application_dir(path: str) -> None:
 
     """
 
+
 def get_application_dir() -> str | None:
     """Return the current application directory override, or ``None``.
 
@@ -292,6 +307,7 @@ def get_application_dir() -> str | None:
         >>> app_dir = get_application_dir()
 
     """
+
 
 def is_version_auto_detected() -> bool:
     """Check if the game version was auto-detected.
@@ -318,6 +334,7 @@ def is_version_auto_detected() -> bool:
 
     """
 
+
 def is_xse_valid() -> bool:
     """Check if XSE validation passed.
 
@@ -326,6 +343,7 @@ def is_xse_valid() -> bool:
 
     """
 
+
 def is_enb_present() -> bool:
     """Check if ENB binaries are present.
 
@@ -333,6 +351,7 @@ def is_enb_present() -> bool:
         True if ENB binaries detected, False otherwise.
 
     """
+
 
 def get_game_version_string() -> str:
     """Get the game version as a string.

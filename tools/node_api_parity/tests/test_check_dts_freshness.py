@@ -15,13 +15,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 import check_dts_freshness as freshness
+import pytest
 
 
 def _completed(
-    command: list[str], *, returncode: int = 0, stdout: str = "", stderr: str = ""
+        command: list[str], *, returncode: int = 0, stdout: str = "", stderr: str = ""
 ) -> subprocess.CompletedProcess[str]:
     return subprocess.CompletedProcess(
         command,
@@ -32,7 +31,7 @@ def _completed(
 
 
 def test_main_uses_temp_generated_dts_and_normalizes_line_endings(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Freshness should be content-based, not git-diff-based.
 
@@ -52,7 +51,7 @@ def test_main_uses_temp_generated_dts_and_normalizes_line_endings(
     commands: list[list[str]] = []
 
     def fake_run_command(
-        command: list[str], cwd: Path
+            command: list[str], cwd: Path
     ) -> subprocess.CompletedProcess[str]:
         commands.append(command)
         assert cwd == package_dir

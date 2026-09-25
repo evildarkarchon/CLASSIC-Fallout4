@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "runId": 36127742320,
+  "checkoutRevision": "3704143b8cd109294667c9ad212e9aab6e42f8b2",
+  "sourceTree": "a29d4f8b260674789dd31c155fae4ebd7579370c",
+  "evidenceFiles": 7,
+  "commandResults": 16,
+  "archiveSha256": "be9e9077c72e460999df9f40c0f3ea288007d0db3f85222bcaf5d8161e9a1eb8",
+  "entries": [
+    {
+      "path": "cxx-parity-retained-gates/cxx-ci/gate_evidence.json",
+      "profile": "cxx-ci",
+      "sourceRevision": "3704143b8cd109294667c9ad212e9aab6e42f8b2",
+      "runId": "36127742320",
+      "runAttempt": 1,
+      "commandIds": [
+        "cxx-opaque-map-reachability",
+        "node-package-metadata",
+        "user-settings-exclusive-ownership",
+        "scan-run-contract-variants",
+        "scan-run-workflow-policy",
+        "cxx-parity-gate"
+      ],
+      "sha256": "a33a8a830bb52258762c893ce138827035bcd4ba29c1f687ae7a281af359e147"
+    },
+    {
+      "path": "node-parity-retained-gates/node-ci/gate_evidence.json",
+      "profile": "node-ci",
+      "sourceRevision": "3704143b8cd109294667c9ad212e9aab6e42f8b2",
+      "runId": "36127742320",
+      "runAttempt": 1,
+      "commandIds": [
+        "node-parity-gate",
+        "node-dts-freshness"
+      ],
+      "sha256": "253ff4d8ddf81c24096f7b59aa0bea08fcf3dd109c1bb21640ffb75dd4972a0f"
+    },
+    {
+      "path": "node-runtime-retained-gates-bun/node-bun-runtime-tests/gate_evidence.json",
+      "profile": "single-gate",
+      "sourceRevision": "3704143b8cd109294667c9ad212e9aab6e42f8b2",
+      "runId": "36127742320",
+      "runAttempt": 1,
+      "commandIds": [
+        "node-bun-runtime-tests"
+      ],
+      "sha256": "49be04509de9dfea8610104bec93910e1fd4ff906c570a32089cdffb112e3da3"
+    },
+    {
+      "path": "node-runtime-retained-gates-node/node-node-runtime-tests/gate_evidence.json",
+      "profile": "single-gate",
+      "sourceRevision": "3704143b8cd109294667c9ad212e9aab6e42f8b2",
+      "runId": "36127742320",
+      "runAttempt": 1,
+      "commandIds": [
+        "node-node-runtime-tests"
+      ],
+      "sha256": "2a90130ce5e534bb707f5a62ed4d74836b20bc791ce42852a966093e142ab0fa"
+    },
+    {
+      "path": "python-parity-retained-gates/python-ci/gate_evidence.json",
+      "profile": "python-ci",
+      "sourceRevision": "3704143b8cd109294667c9ad212e9aab6e42f8b2",
+      "runId": "36127742320",
+      "runAttempt": 1,
+      "commandIds": [
+        "python-parity-gate",
+        "python-stub-validation",
+        "python-tooling-sync",
+        "python-schema-version-drift"
+      ],
+      "sha256": "0dcc70392c170768a0c4b39addd84b5ce0c57a1e558bfdcdf09d68991cf63886"
+    },
+    {
+      "path": "python-runtime-retained-gates/python-bindings-rebuild/gate_evidence.json",
+      "profile": "single-gate",
+      "sourceRevision": "3704143b8cd109294667c9ad212e9aab6e42f8b2",
+      "runId": "36127742320",
+      "runAttempt": 1,
+      "commandIds": [
+        "python-bindings-rebuild"
+      ],
+      "sha256": "f4b8d1dc8910e809d7a25b55c6a81b8639c6a9455fc4b9b359e639712e20e83e"
+    },
+    {
+      "path": "python-runtime-retained-gates/python-runtime-smoke-tests/gate_evidence.json",
+      "profile": "single-gate",
+      "sourceRevision": "3704143b8cd109294667c9ad212e9aab6e42f8b2",
+      "runId": "36127742320",
+      "runAttempt": 1,
+      "commandIds": [
+        "python-runtime-smoke-tests"
+      ],
+      "sha256": "3763be56d30980806172a3d223a544701bb9a3581223a3456c3bc231c47bfd0b"
+    }
+  ]
+}

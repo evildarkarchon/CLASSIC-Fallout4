@@ -9,12 +9,11 @@ from pathlib import Path
 
 import pytest
 
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 TOOLS_ROOT = REPO_ROOT / "tools" / "binding_compliance"
 sys.path.insert(0, str(TOOLS_ROOT))
 
-from scan_run_contract import (  # type: ignore  # noqa: E402
+from scan_run_contract import (  # type: ignore
     ManifestValidationError,
     _validate_forbidden_exports,
     load_manifest,
@@ -23,24 +22,24 @@ from scan_run_contract import (  # type: ignore  # noqa: E402
 
 
 def test_live_scan_run_contract_manifest_is_complete() -> None:
-    """The repository manifest acknowledges every variant and scenario."""
+    """The repository fixtures, source inventory, and export constraints remain valid."""
 
     manifest = load_manifest(REPO_ROOT)
 
     validate_manifest(REPO_ROOT, manifest)
 
 
-def test_missing_adapter_variant_acknowledgement_fails_closed() -> None:
-    """Every supported adapter must explicitly acknowledge every variant."""
-
-    manifest = copy.deepcopy(load_manifest(REPO_ROOT))
-    manifest["adapters"]["node"]["acknowledgedVariants"].remove("event.log_finished")
-
-    with pytest.raises(
-        ManifestValidationError,
-        match=r"node.*event\.log_finished",
-    ):
-        validate_manifest(REPO_ROOT, manifest)
+def test_forbidden_export_inventory_keeps_live_sources_after_metadata_retirement() -> None:
+    """Retired metadata is absent while declarations and source contracts stay checked."""
+    surfaces = load_manifest(REPO_ROOT)["forbiddenExports"]
+    paths = {entry["path"] for entries in surfaces.values() for entry in entries}
+    assert not any("runtime_coverage_registry" in path for path in paths)
+    assert {
+               "node-bindings/classic-node/index.d.ts",
+               "docs/implementation/node_api_parity/baseline/parity_contract.json",
+               "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+               "docs/implementation/python_api_parity/baseline/parity_contract.json",
+           } <= paths
 
 
 def test_forbidden_legacy_export_fails_closed(tmp_path: Path) -> None:
@@ -50,8 +49,8 @@ def test_forbidden_legacy_export_fails_closed(tmp_path: Path) -> None:
     source.write_text("pub fn process_logs_batch() {}\n", encoding="utf-8")
 
     with pytest.raises(
-        ManifestValidationError,
-        match=r"node.*process_logs_batch",
+            ManifestValidationError,
+            match=r"node.*process_logs_batch",
     ):
         _validate_forbidden_exports(
             tmp_path,
@@ -67,7 +66,7 @@ def test_forbidden_legacy_export_fails_closed(tmp_path: Path) -> None:
 
 
 def test_forbidden_export_identifier_does_not_match_final_contract_name(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """A contracted prefix does not reject the surviving final entry point."""
 
@@ -88,13 +87,13 @@ def test_forbidden_export_identifier_does_not_match_final_contract_name(
 
 
 def test_missing_required_forbidden_export_surface_fails_closed(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """A misspelled or unexpectedly absent tracked contract file is not ignored."""
 
     with pytest.raises(
-        ManifestValidationError,
-        match=r"python.*missing\.pyi",
+            ManifestValidationError,
+            match=r"python.*missing\.pyi",
     ):
         _validate_forbidden_exports(
             tmp_path,
@@ -127,8 +126,42 @@ def test_unregistered_rust_enum_variant_fails_closed(tmp_path: Path) -> None:
     ]
 
     with pytest.raises(
-        ManifestValidationError,
-        match="event.adapter_forgotten_variant",
+            ManifestValidationError,
+            match="event.adapter_forgotten_variant",
+    ):
+        validate_manifest(tmp_path, manifest)
+
+
+def test_registered_but_unmapped_rust_variant_fails_closed(tmp_path: Path) -> None:
+    """Each registered variant needs a concrete executable fact or retained analyzer."""
+
+    manifest = copy.deepcopy(load_manifest(REPO_ROOT))
+    event_spec = next(
+        item for item in manifest["rustEnums"] if item["category"] == "event"
+    )
+    source = tmp_path / "event.rs"
+    original = (REPO_ROOT / event_spec["path"]).read_text(encoding="utf-8")
+    source.write_text(
+        original.replace(
+            f"pub enum {event_spec['name']} {{",
+            f"pub enum {event_spec['name']} {{\n    AdapterForgottenVariant,",
+            1,
+        ),
+        encoding="utf-8",
+    )
+    manifest["rustEnums"] = [
+        {
+            "category": "event",
+            "path": source.name,
+            "name": event_spec["name"],
+        }
+    ]
+    new_variant = "event.adapter_forgotten_variant"
+    manifest["contractVariants"].append(new_variant)
+
+    with pytest.raises(
+            ManifestValidationError,
+            match=r"variant evidence policy differs: missing=.*adapter_forgotten_variant",
     ):
         validate_manifest(tmp_path, manifest)
 
@@ -140,8 +173,8 @@ def test_missing_shared_log_failure_stage_fails_closed() -> None:
     manifest["failureFixtures"]["logResult"]["failures"].pop()
 
     with pytest.raises(
-        ManifestValidationError,
-        match="unsolved_logs_finalization",
+            ManifestValidationError,
+            match="unsolved_logs_finalization",
     ):
         validate_manifest(REPO_ROOT, manifest)
 
@@ -153,8 +186,8 @@ def test_missing_shared_infrastructure_stage_fails_closed() -> None:
     manifest["failureFixtures"]["infrastructureErrors"].pop()
 
     with pytest.raises(
-        ManifestValidationError,
-        match="internal_invariant",
+            ManifestValidationError,
+            match="internal_invariant",
     ):
         validate_manifest(REPO_ROOT, manifest)
 
@@ -170,14 +203,14 @@ def test_missing_reset_fixture_root_fails_closed() -> None:
 
 
 def test_missing_reset_fixture_fails_closed() -> None:
-    """The shared reset outcomes cannot disappear while adapter evidence remains."""
+    """The shared reset outcomes must remain part of the independent fixture oracle."""
 
     manifest = copy.deepcopy(load_manifest(REPO_ROOT))
     manifest["fixtures"].pop("installedYamlData")
 
     with pytest.raises(
-        ManifestValidationError,
-        match=r"fixtures\.installedYamlData",
+            ManifestValidationError,
+            match=r"fixtures\.installedYamlData",
     ):
         validate_manifest(REPO_ROOT, manifest)
 
@@ -191,8 +224,8 @@ def test_missing_reset_outcome_fails_closed() -> None:
     )
 
     with pytest.raises(
-        ManifestValidationError,
-        match=r"replacementFailureCode",
+            ManifestValidationError,
+            match=r"replacementFailureCode",
     ):
         validate_manifest(REPO_ROOT, manifest)
 
@@ -206,8 +239,8 @@ def test_missing_durability_unknown_reset_outcome_fails_closed() -> None:
     )
 
     with pytest.raises(
-        ManifestValidationError,
-        match=r"durabilityUnknownCode",
+            ManifestValidationError,
+            match=r"durabilityUnknownCode",
     ):
         validate_manifest(REPO_ROOT, manifest)
 
@@ -221,21 +254,8 @@ def test_changed_reset_fixture_semantics_fail_closed() -> None:
     ] = "existing"
 
     with pytest.raises(
-        ManifestValidationError,
-        match=r"expectedResetToDefault\.localIgnoreState",
-    ):
-        validate_manifest(REPO_ROOT, manifest)
-
-
-def test_missing_reset_scenario_fails_closed() -> None:
-    """All supported adapters must retain executable Reset To Default evidence."""
-
-    manifest = copy.deepcopy(load_manifest(REPO_ROOT))
-    manifest["scenarios"].pop("reset_to_default_continuation")
-
-    with pytest.raises(
-        ManifestValidationError,
-        match="reset_to_default_continuation",
+            ManifestValidationError,
+            match=r"expectedResetToDefault\.localIgnoreState",
     ):
         validate_manifest(REPO_ROOT, manifest)
 
@@ -244,7 +264,7 @@ def test_manifest_is_machine_readable_json() -> None:
     """The fixture manifest remains consumable by every language runner."""
 
     manifest_path = (
-        REPO_ROOT / "tests" / "fixtures" / "crash_log_scan_run" / "manifest.json"
+            REPO_ROOT / "tests" / "fixtures" / "crash_log_scan_run" / "manifest.json"
     )
 
     parsed = json.loads(manifest_path.read_text(encoding="utf-8"))

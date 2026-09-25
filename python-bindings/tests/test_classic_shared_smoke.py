@@ -25,6 +25,7 @@ from pathlib import Path
 
 import classic_shared
 
+
 # ---------------------------------------------------------------------------
 # Runtime diagnostics (module-level functions + RuntimeStats factory)
 # ---------------------------------------------------------------------------

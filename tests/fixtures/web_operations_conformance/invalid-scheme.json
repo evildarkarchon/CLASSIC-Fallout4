@@ -1,0 +1,17 @@
+{
+  "request": {
+    "url": "ftp://example.com",
+    "path": "child",
+    "params": [
+      [
+        "q",
+        "two words"
+      ],
+      [
+        "tag",
+        "a&b"
+      ]
+    ],
+    "suffix": ""
+  }
+}

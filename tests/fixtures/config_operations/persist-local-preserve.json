@@ -1,0 +1,9 @@
+{
+  "operation": "persist-local",
+  "files": {
+    "local.yaml": "Unrelated: keep\nGame_Info:\n  Root_Folder_Game: C:/Games/Old\n  Root_Folder_Docs: C:/Docs/Existing\n",
+    "CLASSIC Settings.yaml": "{malformed settings sentinel"
+  },
+  "gameRoot": "D:/Games/Fallout4",
+  "docsRoot": null
+}

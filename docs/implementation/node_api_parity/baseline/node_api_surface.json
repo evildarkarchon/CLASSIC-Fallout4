@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-05T12:38:58.790839+00:00",
+  "generated_at_utc": "2026-09-08T07:25:36.772558+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -1031,7 +1031,7 @@
     {
       "export": "JsLegacyTuiStateImportOutcome",
       "kind": "interface",
-      "owner_module": "aux",
+      "owner_module": "user_settings",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsLegacyTuiStateImportOutcome {"
@@ -1039,7 +1039,7 @@
     {
       "export": "JsLegacyTuiStateImportReceipt",
       "kind": "class",
-      "owner_module": "aux",
+      "owner_module": "user_settings",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsLegacyTuiStateImportReceipt {"
@@ -1047,7 +1047,7 @@
     {
       "export": "JsLegacyTuiStateImportRestoreOutcome",
       "kind": "interface",
-      "owner_module": "aux",
+      "owner_module": "user_settings",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsLegacyTuiStateImportRestoreOutcome {"
@@ -1431,7 +1431,7 @@
     {
       "export": "JsScanRunConfiguration",
       "kind": "interface",
-      "owner_module": "config",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunConfiguration {"
@@ -1439,15 +1439,47 @@
     {
       "export": "JsScanRunDiscoveryResult",
       "kind": "interface",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunDiscoveryResult {"
     },
     {
+      "export": "JsScanRunDisplayLine",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunDisplayLine {"
+    },
+    {
+      "export": "JsScanRunDisplaySegment",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunDisplaySegment {"
+    },
+    {
+      "export": "JsScanRunDisplaySegmentKind",
+      "kind": "const_enum",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsScanRunDisplaySegmentKind {"
+    },
+    {
+      "export": "JsScanRunDisplaySeverity",
+      "kind": "const_enum",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsScanRunDisplaySeverity {"
+    },
+    {
       "export": "JsScanRunEvent",
       "kind": "interface",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunEvent {"
@@ -1455,7 +1487,7 @@
     {
       "export": "JsScanRunFailure",
       "kind": "interface",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunFailure {"
@@ -1463,7 +1495,7 @@
     {
       "export": "JsScanRunInfrastructureError",
       "kind": "interface",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunInfrastructureError {"
@@ -1471,7 +1503,7 @@
     {
       "export": "JsScanRunInstalledYamlDataDiagnostic",
       "kind": "interface",
-      "owner_module": "config",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunInstalledYamlDataDiagnostic {"
@@ -1479,7 +1511,7 @@
     {
       "export": "JsScanRunInstalledYamlDataDiagnosticKind",
       "kind": "const_enum",
-      "owner_module": "config",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsScanRunInstalledYamlDataDiagnosticKind {"
@@ -1487,7 +1519,7 @@
     {
       "export": "JsScanRunLocalIgnoreRecoveryDecision",
       "kind": "const_enum",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsScanRunLocalIgnoreRecoveryDecision {"
@@ -1495,7 +1527,7 @@
     {
       "export": "JsScanRunLocalIgnoreResetRunData",
       "kind": "interface",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunLocalIgnoreResetRunData {"
@@ -1503,7 +1535,7 @@
     {
       "export": "JsScanRunLocalIgnoreState",
       "kind": "const_enum",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsScanRunLocalIgnoreState {"
@@ -1533,9 +1565,25 @@
       "signature": "export interface JsScanRunLogResult {"
     },
     {
+      "export": "JsScanRunRecoveryDecisionDescription",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunRecoveryDecisionDescription {"
+    },
+    {
+      "export": "JsScanRunRecoveryPrompt",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunRecoveryPrompt {"
+    },
+    {
       "export": "JsScanRunRejectedInput",
       "kind": "interface",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunRejectedInput {"
@@ -1543,7 +1591,7 @@
     {
       "export": "JsScanRunResult",
       "kind": "interface",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunResult {"
@@ -1551,7 +1599,7 @@
     {
       "export": "JsScanRunSetupCheck",
       "kind": "interface",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunSetupCheck {"
@@ -1559,7 +1607,7 @@
     {
       "export": "JsScanRunSetupContext",
       "kind": "interface",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunSetupContext {"
@@ -1567,7 +1615,7 @@
     {
       "export": "JsScanRunSetupPathUpdate",
       "kind": "interface",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunSetupPathUpdate {"
@@ -1575,7 +1623,7 @@
     {
       "export": "JsScanRunSetupResult",
       "kind": "interface",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunSetupResult {"
@@ -1583,7 +1631,7 @@
     {
       "export": "JsScanRunStandardSource",
       "kind": "interface",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunStandardSource {"
@@ -1591,7 +1639,7 @@
     {
       "export": "JsScanRunSuccess",
       "kind": "interface",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunSuccess {"
@@ -1599,7 +1647,7 @@
     {
       "export": "JsScanRunTargetedSource",
       "kind": "interface",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunTargetedSource {"
@@ -2103,7 +2151,7 @@
     {
       "export": "ScanRunCancellation",
       "kind": "class",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class ScanRunCancellation {"
@@ -2111,7 +2159,7 @@
     {
       "export": "ScanRunContinuation",
       "kind": "class",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class ScanRunContinuation {"
@@ -2119,7 +2167,7 @@
     {
       "export": "ScanRunRequest",
       "kind": "class",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class ScanRunRequest {"
@@ -2234,6 +2282,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function checkAppNotification(options: JsCheckAppNotificationOptions): Promise<JsNotificationStatus>",
       "arity": 1
+    },
+    {
+      "export": "checkAppNotificationConfigured",
+      "kind": "function",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function checkAppNotificationConfigured(owner: string, repo: string, installedVersion: string, configJson: string, cacheDir: string): Promise<JsNotificationStatus>",
+      "arity": 5
     },
     {
       "export": "checkCrashgenConfig",
@@ -3021,7 +3078,7 @@
     {
       "export": "getVersion",
       "kind": "function",
-      "owner_module": "version_registry",
+      "owner_module": "aux",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getVersion(): string",
@@ -3147,11 +3204,20 @@
     {
       "export": "importLegacyTuiStateIntoUserSettings",
       "kind": "function",
-      "owner_module": "config",
+      "owner_module": "user_settings",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function importLegacyTuiStateIntoUserSettings(classicRoot: string, legacyStatePath: string): JsLegacyTuiStateImportOutcome",
       "arity": 2
+    },
+    {
+      "export": "initLogging",
+      "kind": "function",
+      "owner_module": "message",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function initLogging(): void",
+      "arity": 0
     },
     {
       "export": "inspectInstalledYamlData",
@@ -3354,7 +3420,7 @@
     {
       "export": "loadMainYamlVersion",
       "kind": "function",
-      "owner_module": "version_registry",
+      "owner_module": "config",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function loadMainYamlVersion(bundledYamlDir?: string | undefined | null): Promise<string>",
@@ -3757,12 +3823,21 @@
       "arity": 2
     },
     {
-      "export": "scanRunExecute",
+      "export": "scanRunAbandon",
       "kind": "function",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function scanRunExecute(request: ScanRunRequest, cancellation: ScanRunCancellation, observer?: (event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
+      "signature": "export declare function scanRunAbandon(continuation: ScanRunContinuation, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
+      "arity": 4
+    },
+    {
+      "export": "scanRunExecute",
+      "kind": "function",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function scanRunExecute(request: ScanRunRequest, cancellation: ScanRunCancellation, observer?: (event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
       "arity": 4
     },
     {
@@ -3822,10 +3897,10 @@
     {
       "export": "scanRunResume",
       "kind": "function",
-      "owner_module": "aux",
+      "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function scanRunResume(continuation: ScanRunContinuation, decision: JsScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
+      "signature": "export declare function scanRunResume(continuation: ScanRunContinuation, decision: JsScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize'; displayLines: Array<JsScanRunDisplayLine> } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start'; displayLines: Array<JsScanRunDisplayLine> }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
       "arity": 5
     },
     {

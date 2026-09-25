@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "familyId": "mod-guidance",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scanlog-core"
+  },
+  "fixtureRoot": "tests/fixtures/semantic_conformance/mod-guidance",
+  "fixtures": {
+    "authored_guidance": "authored-guidance.json",
+    "empty": "empty.json",
+    "absent_remediation": "absent-remediation.json",
+    "invalid_configuration": "invalid-configuration.json"
+  },
+  "capabilities": [
+    {
+      "id": "mod-guidance.analyze",
+      "rustSymbols": [
+        "ModGuidanceAnalyzer",
+        "ModGuidanceAnalysisInput",
+        "ModGuidanceAnalysisResult",
+        "ModGuidanceMatchState",
+        "ModConflictGuidance",
+        "ModSolutionGuidance",
+        "ImportantModGuidance"
+      ],
+      "observationFamilies": [
+        "semantic-result",
+        "structured-error"
+      ]
+    }
+    ,{
+      "id": "mod-guidance.config-carriers",
+      "rustCrate": "classic-config-core",
+      "rustSymbols": ["ModConflictEntry", "CoreModEntry", "ModSolutionEntry", "ModSolutionCriteria"],
+      "operationScoped": true,
+      "observationFamilies": ["semantic-result"]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "authored-guidance",
+      "action": "mod-guidance.analyze",
+      "capabilityIds": [
+        "mod-guidance.analyze",
+        "mod-guidance.config-carriers"
+      ],
+      "fixtureRefs": [
+        "authored_guidance"
+      ],
+      "input": {
+        "fixtureRef": "authored_guidance"
+      },
+      "expected": {
+        "analyzerKind": "mod_guidance",
+        "result": {
+          "conflicts": [
+            {
+              "state": "matched",
+              "modA": "alpha",
+              "modB": "beta",
+              "nameA": "Alpha Mod",
+              "nameB": "Beta Mod",
+              "description": "Authored conflict description",
+              "fix": "Install the authored compatibility patch",
+              "link": "https://example.invalid/patch"
+            }
+          ],
+          "frequentCrashes": [
+            {
+              "state": "matched",
+              "id": "frequent-crash",
+              "name": "Frequent Crash Mod",
+              "description": "Authored frequent-crash guidance",
+              "matchedPluginIds": [
+                "03"
+              ]
+            }
+          ],
+          "solutions": [
+            {
+              "state": "matched",
+              "id": "solution",
+              "name": "Solution Mod",
+              "description": "Authored solution guidance",
+              "matchedPluginIds": [
+                "04",
+                "01"
+              ]
+            }
+          ],
+          "importantMods": [
+            {
+              "state": "matched",
+              "detect": "installed.dll",
+              "name": "Installed Important Mod",
+              "description": "Installed authored description",
+              "gpu": null,
+              "gpuMismatchWarning": null
+            },
+            {
+              "state": "missing",
+              "detect": "missing.dll",
+              "name": "Missing Important Mod",
+              "description": "Missing authored description\nwith a second line",
+              "gpu": "amd",
+              "gpuMismatchWarning": null
+            },
+            {
+              "state": "gpu_mismatch",
+              "detect": "wronggpu.dll",
+              "name": "Wrong GPU Important Mod",
+              "description": "Wrong GPU authored description",
+              "gpu": "nvidia",
+              "gpuMismatchWarning": "Authored GPU mismatch warning"
+            }
+          ]
+        },
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "empty",
+      "action": "mod-guidance.analyze",
+      "capabilityIds": [
+        "mod-guidance.analyze"
+      ],
+      "fixtureRefs": [
+        "empty"
+      ],
+      "input": {
+        "fixtureRef": "empty"
+      },
+      "expected": {
+        "analyzerKind": "mod_guidance",
+        "result": {
+          "conflicts": [],
+          "frequentCrashes": [],
+          "solutions": [],
+          "importantMods": []
+        },
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "absent-remediation",
+      "action": "mod-guidance.analyze",
+      "capabilityIds": [
+        "mod-guidance.analyze"
+      ],
+      "fixtureRefs": [
+        "absent_remediation"
+      ],
+      "input": {
+        "fixtureRef": "absent_remediation"
+      },
+      "expected": {
+        "analyzerKind": "mod_guidance",
+        "result": {
+          "conflicts": [
+            {
+              "state": "matched",
+              "modA": "alpha",
+              "modB": "beta",
+              "nameA": "Alpha Mod",
+              "nameB": "Beta Mod",
+              "description": "Authored conflict description",
+              "fix": null,
+              "link": null
+            }
+          ],
+          "frequentCrashes": [],
+          "solutions": [],
+          "importantMods": []
+        },
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid-configuration",
+      "action": "mod-guidance.analyze",
+      "capabilityIds": [
+        "mod-guidance.analyze"
+      ],
+      "fixtureRefs": [
+        "invalid_configuration"
+      ],
+      "input": {
+        "fixtureRef": "invalid_configuration"
+      },
+      "expected": {
+        "analyzerKind": "mod_guidance",
+        "result": null,
+        "error": {
+          "analyzerKind": "mod_guidance",
+          "code": "invalid_configuration",
+          "message": "Mod Guidance conflict mod_a must not be empty"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

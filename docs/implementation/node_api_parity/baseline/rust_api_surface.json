@@ -1,8 +1,9 @@
 {
-  "generated_at_utc": "2026-08-05T12:37:22.895380+00:00",
+  "generated_at_utc": "2026-09-25T01:59:48.509399+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
+      "classic-scan-presentation",
       "classic-config-core",
       "classic-user-settings-core",
       "classic-version-registry-core",
@@ -23,6 +24,7 @@
     ],
     "source_files": [
       "business-logic/classic-scanlog-core/src/lib.rs",
+      "business-logic/classic-scan-presentation/src/lib.rs",
       "business-logic/classic-config-core/src/lib.rs",
       "business-logic/classic-user-settings-core/src/lib.rs",
       "business-logic/classic-version-registry-core/src/lib.rs",
@@ -7439,6 +7441,201 @@
       "tier": "tier1"
     },
     {
+      "symbol": "DisplayLine",
+      "kind": "reexport",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/lib.rs",
+      "source_decl": "pub use display::{DisplayLine, DisplaySegment, DisplaySeverity};",
+      "source_expr": "display::DisplayLine",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DisplayLine",
+      "kind": "struct",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/display.rs",
+      "source_decl": "pub struct DisplayLine",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DisplaySegment",
+      "kind": "enum",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/display.rs",
+      "source_decl": "pub enum DisplaySegment",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DisplaySegment",
+      "kind": "reexport",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/lib.rs",
+      "source_decl": "pub use display::{DisplayLine, DisplaySegment, DisplaySeverity};",
+      "source_expr": "display::DisplaySegment",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DisplaySeverity",
+      "kind": "enum",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/display.rs",
+      "source_decl": "pub enum DisplaySeverity",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DisplaySeverity",
+      "kind": "reexport",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/lib.rs",
+      "source_decl": "pub use display::{DisplayLine, DisplaySegment, DisplaySeverity};",
+      "source_expr": "display::DisplaySeverity",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "RecoveryDecisionDescription",
+      "kind": "reexport",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/lib.rs",
+      "source_decl": "pub use recovery::{RecoveryDecisionDescription, RecoveryPrompt, render_local_ignore_recovery};",
+      "source_expr": "recovery::RecoveryDecisionDescription",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "RecoveryDecisionDescription",
+      "kind": "struct",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/recovery.rs",
+      "source_decl": "pub struct RecoveryDecisionDescription",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "RecoveryPrompt",
+      "kind": "reexport",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/lib.rs",
+      "source_decl": "pub use recovery::{RecoveryDecisionDescription, RecoveryPrompt, render_local_ignore_recovery};",
+      "source_expr": "recovery::RecoveryPrompt",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "RecoveryPrompt",
+      "kind": "struct",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/recovery.rs",
+      "source_decl": "pub struct RecoveryPrompt",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "render_event",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/render.rs",
+      "source_decl": "pub fn render_event(event: &Event)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "render_event",
+      "kind": "reexport",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/lib.rs",
+      "source_decl": "pub use render::{ render_event, render_infrastructure_error, render_resume_error, render_run_result, };",
+      "source_expr": "render::render_event",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "render_infrastructure_error",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/render.rs",
+      "source_decl": "pub fn render_infrastructure_error(error: &InfrastructureError)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "render_infrastructure_error",
+      "kind": "reexport",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/lib.rs",
+      "source_decl": "pub use render::{ render_event, render_infrastructure_error, render_resume_error, render_run_result, };",
+      "source_expr": "render::render_infrastructure_error",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "render_local_ignore_recovery",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/recovery.rs",
+      "source_decl": "pub fn render_local_ignore_recovery(data: Option<&InstalledYamlDataRunData>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "render_local_ignore_recovery",
+      "kind": "reexport",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/lib.rs",
+      "source_decl": "pub use recovery::{RecoveryDecisionDescription, RecoveryPrompt, render_local_ignore_recovery};",
+      "source_expr": "recovery::render_local_ignore_recovery",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "render_resume_error",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/render.rs",
+      "source_decl": "pub fn render_resume_error(error: &ResumeError)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "render_resume_error",
+      "kind": "reexport",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/lib.rs",
+      "source_decl": "pub use render::{ render_event, render_infrastructure_error, render_resume_error, render_run_result, };",
+      "source_expr": "render::render_resume_error",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "render_run_result",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/render.rs",
+      "source_decl": "pub fn render_run_result(result: &RunResult)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "render_run_result",
+      "kind": "reexport",
+      "crate": "classic-scan-presentation",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scan-presentation/src/lib.rs",
+      "source_decl": "pub use render::{ render_event, render_infrastructure_error, render_resume_error, render_run_result, };",
+      "source_expr": "render::render_run_result",
+      "tier": "tier1"
+    },
+    {
       "symbol": "AddressLibInfo",
       "kind": "reexport",
       "crate": "classic-scangame-core",
@@ -11779,6 +11976,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "abandon",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub async fn abandon(\n        &self,\n        cancellation: &Cancellation,\n        observer: Option<&mut dyn Observer>,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "add_pattern",
       "kind": "function",
       "arity": 3,
@@ -11944,26 +12151,6 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
-      "source_decl": "pub const fn as_str(self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "as_str",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
-      "source_decl": "pub const fn as_str(self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "as_str",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
       "source_decl": "pub const fn as_str(self)",
       "tier": "tier1"
     },
@@ -12247,6 +12434,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "crash_pattern",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod crash_pattern;",
+      "tier": "tier1"
+    },
+    {
       "symbol": "crash_suspect_analyzer",
       "kind": "module",
       "crate": "classic-scanlog-core",
@@ -12311,6 +12507,26 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/crashgen_registry.rs",
       "source_decl": "pub fn default_entry(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "detect_crash_pattern",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crash_pattern.rs",
+      "source_decl": "pub fn detect_crash_pattern(content: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "detect_crash_pattern",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use crash_pattern::detect_crash_pattern;",
+      "source_expr": "crash_pattern::detect_crash_pattern",
       "tier": "tier1"
     },
     {
@@ -15159,6 +15375,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "display_name",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/game_id.rs",
+      "source_decl": "pub const fn display_name(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "encoding",
       "kind": "function",
       "arity": 2,
@@ -15998,6 +16224,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "UpdateEndpointConfig",
+      "kind": "reexport",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub use endpoints::{UpdateEndpointConfig, check_app_notification_configured};",
+      "source_expr": "endpoints::UpdateEndpointConfig",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UpdateEndpointConfig",
+      "kind": "struct",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/endpoints.rs",
+      "source_decl": "pub struct UpdateEndpointConfig",
+      "tier": "tier1"
+    },
+    {
       "symbol": "UpdateError",
       "kind": "enum",
       "crate": "classic-update-core",
@@ -16202,6 +16447,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "check_app_notification_configured",
+      "kind": "function",
+      "arity": 5,
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/endpoints.rs",
+      "source_decl": "pub async fn check_app_notification_configured(\n    owner: &str,\n    repo: &str,\n    installed_version: &str,\n    config_json: &str,\n    cache_dir: &str,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_app_notification_configured",
+      "kind": "reexport",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub use endpoints::{UpdateEndpointConfig, check_app_notification_configured};",
+      "source_expr": "endpoints::check_app_notification_configured",
+      "tier": "tier1"
+    },
+    {
       "symbol": "check_app_notification_with",
       "kind": "function",
       "arity": 4,
@@ -16349,6 +16614,15 @@
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/yaml_update.rs",
       "source_decl": "pub const fn enabled()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "endpoints",
+      "kind": "module",
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/lib.rs",
+      "source_decl": "pub mod endpoints;",
       "tier": "tier1"
     },
     {
@@ -16656,6 +16930,16 @@
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/yaml_update.rs",
       "source_decl": "pub fn with_bundled_yaml_dir(mut self, dir: PathBuf)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_endpoint_config",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/github.rs",
+      "source_decl": "pub fn with_endpoint_config(\n        owner: impl Into<String>,\n        repo: impl Into<String>,\n        config: &crate::endpoints::UpdateEndpointConfig,\n    )",
       "tier": "tier1"
     },
     {
@@ -17093,6 +17377,15 @@
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
       "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::PreferenceOrigin",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PublishedDefault",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub enum PublishedDefault",
       "tier": "tier1"
     },
     {
@@ -17545,6 +17838,46 @@
       "tier": "tier1"
     },
     {
+      "symbol": "as_bool",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub const fn as_bool(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "as_integer",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub const fn as_integer(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "as_optional_str",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub const fn as_optional_str(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "as_str",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub const fn as_str(self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "as_str",
       "kind": "function",
       "arity": 1,
@@ -17562,6 +17895,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
       "source_decl": "pub fn as_str(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "assert_empty_mapping",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub const fn assert_empty_mapping(self)",
       "tier": "tier1"
     },
     {
@@ -17865,6 +18208,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "default",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub const fn default(self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "destination_path",
       "kind": "function",
       "arity": 1,
@@ -18165,6 +18518,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "label",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub const fn label(self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "location",
       "kind": "function",
       "arity": 1,
@@ -18462,6 +18825,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/update.rs",
       "source_decl": "pub fn parse(value: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/default_settings.rs",
+      "source_decl": "pub const fn path(self)",
       "tier": "tier1"
     },
     {

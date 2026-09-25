@@ -1,0 +1,8 @@
+{
+  "operation": "rollback-bulk",
+  "files": {},
+  "service": {
+    "pages": [],
+    "api": []
+  }
+}

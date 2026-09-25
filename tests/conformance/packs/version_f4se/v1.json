@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "familyId": "version-f4se",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-version-core"
+  },
+  "fixtureRoot": "tests/fixtures/version_operations_conformance",
+  "fixtures": {
+    "known-f4se-known": "known-f4se-known.json",
+    "known-f4se-unknown": "known-f4se-unknown.json"
+  },
+  "capabilities": [
+    {
+      "id": "version-f4se.observe",
+      "rustSymbols": [
+        "is_known_f4se_version"
+      ],
+      "observationFamilies": [
+        "version-known-f4se"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "known-f4se-known",
+      "action": "version-f4se.observe",
+      "capabilityIds": [
+        "version-f4se.observe"
+      ],
+      "fixtureRefs": [
+        "known-f4se-known"
+      ],
+      "input": {
+        "fixtureRef": "known-f4se-known"
+      },
+      "expected": {
+        "known-f4se": true
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "known-f4se-unknown",
+      "action": "version-f4se.observe",
+      "capabilityIds": [
+        "version-f4se.observe"
+      ],
+      "fixtureRefs": [
+        "known-f4se-unknown"
+      ],
+      "input": {
+        "fixtureRef": "known-f4se-unknown"
+      },
+      "expected": {
+        "known-f4se": false
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

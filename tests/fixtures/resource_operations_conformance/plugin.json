@@ -1,0 +1,28 @@
+{
+  "request": {
+    "path": "mods/A.ESP",
+    "type": "PLUGIN",
+    "validate": [
+      "mods/A.esp",
+      "missing.dds"
+    ],
+    "types": [
+      "texture",
+      "mesh",
+      "script",
+      "plugin",
+      "sound",
+      "animation",
+      "interface",
+      "strings",
+      "archive",
+      "config",
+      "other"
+    ]
+  },
+  "files": {
+    "mods/A.esp": "plugin",
+    "textures/body.dds": "DDS ",
+    "notes.unknown": "ignored"
+  }
+}

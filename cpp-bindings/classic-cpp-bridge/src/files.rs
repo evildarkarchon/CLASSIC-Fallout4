@@ -243,7 +243,11 @@ fn discover_report_files(directory: &str) -> Vec<String> {
         })
         .filter_map(|e| {
             let path = e.path();
-            let modified = e.metadata().ok()?.modified().ok()?;
+            let metadata = e.metadata().ok()?;
+            if !metadata.is_file() {
+                return None;
+            }
+            let modified = metadata.modified().ok()?;
             Some((modified, path.to_string_lossy().to_string()))
         })
         .collect();

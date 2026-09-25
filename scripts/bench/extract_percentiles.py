@@ -74,7 +74,7 @@ def calculate_percentiles(values: list[float]) -> dict[str, float]:
         upper_idx = min(lower_idx + 1, n - 1)
         weight = rank - lower_idx
         return (
-            sorted_values[lower_idx] * (1 - weight) + sorted_values[upper_idx] * weight
+                sorted_values[lower_idx] * (1 - weight) + sorted_values[upper_idx] * weight
         )
 
     result = {
@@ -166,7 +166,7 @@ def extract_benchmark_name(csv_path: Path) -> str:
     try:
         criterion_idx = parts.index("criterion")
         new_idx = parts.index("new")
-        benchmark_parts = parts[criterion_idx + 1 : new_idx]
+        benchmark_parts = parts[criterion_idx + 1: new_idx]
         return "/".join(benchmark_parts)
     except ValueError:
         # Fallback: use parent directories

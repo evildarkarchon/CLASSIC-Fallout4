@@ -1,0 +1,24 @@
+{
+  "operation": "process-logs",
+  "game": "Fallout4",
+  "directories": [
+    "empty"
+  ],
+  "files": {
+    "active.log": "ok\nERROR first\nerror ignored noise\nFaTaL last\n",
+    "crash-excluded.log": "error excluded\n",
+    "ignored.log": "error excluded\n",
+    "notes.txt": "error excluded\n",
+    "nested/hidden.log": "error excluded\n"
+  },
+  "catch": [
+    "error",
+    "fatal"
+  ],
+  "excludeFiles": [
+    "ignored.log"
+  ],
+  "excludeErrors": [
+    "ignored"
+  ]
+}

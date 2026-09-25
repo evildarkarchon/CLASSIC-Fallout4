@@ -5,40 +5,42 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
-import sys
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-
-from binding_parity_runtime_coverage import (
-    build_coverage_summary,
-    load_json_file,
-    render_coverage_summary_markdown,
-)
-
-from parity_artifact_io import (
-    artifacts_match,
-    preserve_baseline_generated_at_all,
-    sync_baseline_artifacts,
-)
 
 from generate_baseline import (
     collect_tier1_python_targets,
     generate_diff_report,
     parse_python_surface,
     parse_rust_surface,
+    python_mapping_counts,
     render_diff_markdown,
+    source_resolution_for_mapping,
+    source_symbol_must_match,
     write_json,
+)
+from parity_artifact_io import (
+    artifacts_match,
+    preserve_baseline_generated_at_all,
+    sync_baseline_artifacts,
+)
+from resolve_python_rust_symbols import (
+    Resolution,
+    resolve_all,
+    source_backed_crate,
+    source_backed_symbol,
 )
 
 
 def validate_contract_rust_symbols(
-    contract: dict[str, Any],
-    rust_manifest: dict[str, Any],
+        contract: dict[str, Any],
+        rust_manifest: dict[str, Any],
+        wrapper_resolutions: dict[str, Resolution] | None = None,
 ) -> list[str]:
-    """Pitfall 2 guard: every Tier-1 contract row's rustSymbol must appear
-    in the parsed Rust surface.
+    """Require each mapped Rust symbol in its declared crate and source owner.
 
     Returns a list of human-readable diagnostic strings; empty list means
     success. Failing fast here keeps downstream tier1_missing_rust noise
@@ -50,24 +52,27 @@ def validate_contract_rust_symbols(
     that is not re-exported at ``lib.rs``. The parity parser only sees
     symbols reachable from the crate root, so the downstream diff would
     report ``missing_rust`` with no hint about the root cause. This guard
-    prints an actionable remediation message instead.
+    prints an actionable remediation message instead. A uniquely mapped
+    top-level Python export also checks direct PyO3 wrapper crate evidence.
     """
-    rust_symbols: set[str] = {
-        item["symbol"] for item in rust_manifest.get("symbols", [])
+    rust_symbols: set[tuple[str | None, str]] = {
+        (item.get("crate"), item["symbol"])
+        for item in rust_manifest.get("symbols", [])
     }
     # Symbols whose ONLY appearance in the Rust surface is as a module. A row
     # naming one of these verifies nothing about the Python export it claims to
     # cover -- see the module rule below.
     # `kind` is read defensively: a manifest entry without one carries no
     # evidence that the symbol is a module, so it must not be flagged.
-    rust_symbol_kinds: dict[str, set[str]] = {}
+    rust_symbol_kinds: dict[tuple[str | None, str], set[str]] = {}
     for item in rust_manifest.get("symbols", []):
         kind = item.get("kind")
         if kind is not None:
-            rust_symbol_kinds.setdefault(item["symbol"], set()).add(kind)
-    rust_module_only_symbols: set[str] = {
-        symbol for symbol, kinds in rust_symbol_kinds.items() if kinds == {"module"}
+            rust_symbol_kinds.setdefault((item.get("crate"), item["symbol"]), set()).add(kind)
+    rust_module_only_symbols: set[tuple[str | None, str]] = {
+        key for key, kinds in rust_symbol_kinds.items() if kinds == {"module"}
     }
+    mapping_counts = python_mapping_counts(contract.get("tier1Mappings", []))
     diagnostics: list[str] = []
     for mapping in contract.get("tier1Mappings", []):
         rust_symbol = mapping.get("rustSymbol")
@@ -84,7 +89,15 @@ def validate_contract_rust_symbols(
                 f"'unmappedReason'."
             )
             continue
-        if rust_symbol not in rust_symbols:
+        rust_crate = mapping.get("rustCrate")
+        if not isinstance(rust_crate, str) or not rust_crate.strip():
+            diagnostics.append(
+                f"Pitfall 2: contract row '{mapping.get('id', '<unknown>')}' "
+                "is missing a valid 'rustCrate' for its mapped Rust symbol."
+            )
+            continue
+        rust_key = (rust_crate, rust_symbol)
+        if rust_key not in rust_symbols:
             diagnostics.append(
                 "Pitfall 2: contract row '{id}' references rustSymbol "
                 "'{rust_symbol}' which is not in the parsed Rust surface "
@@ -100,14 +113,39 @@ def validate_contract_rust_symbols(
             )
             continue
 
-        # A Python export may not claim a Rust *module* as its counterpart.
-        # The existence check above is satisfied by a symbol of any kind, which
-        # is how placeholder rows accumulated: `FileIOCore` was mapped to the
-        # modules `core`, `game_files` and `similarity` in three separate rows,
-        # none of which verified anything. Map the row to the specific core
-        # symbol the PyO3 wrapper uses, or set rustSymbol to null with an
-        # 'unmappedReason'.
-        if rust_symbol in rust_module_only_symbols:
+        wrapper_resolution = source_resolution_for_mapping(
+            mapping, mapping_counts, wrapper_resolutions
+        )
+        wrapper_crate = source_backed_crate(wrapper_resolution)
+        if wrapper_resolution and wrapper_resolution.route_error:
+            diagnostics.append(
+                f"Contract row '{mapping['id']}' has an unresolved Python facade "
+                f"route: {wrapper_resolution.route_error}"
+            )
+        elif wrapper_crate and wrapper_crate != rust_crate:
+            diagnostics.append(
+                f"Contract row '{mapping['id']}' rustCrate '{rust_crate}' disagrees "
+                f"with Python wrapper source owner '{wrapper_crate}'."
+            )
+        elif wrapper_crate:
+            wrapper_symbol = source_backed_symbol(wrapper_resolution)
+            if (
+                    wrapper_symbol
+                    and source_symbol_must_match(
+                        mapping, rust_symbol_kinds.get(rust_key, set())
+                    )
+                    and wrapper_symbol != rust_symbol
+            ):
+                diagnostics.append(
+                    f"Contract row '{mapping['id']}' rustSymbol '{rust_symbol}' disagrees "
+                    f"with Python wrapper source symbol '{wrapper_symbol}' in '{rust_crate}'."
+                )
+
+        # Historical @rust IDs inventory Rust source independently of the
+        # related Python target and can legitimately name a module. Ordinary
+        # rows must name a concrete counterpart, even when another crate has
+        # a non-module symbol with the same name.
+        if rust_key in rust_module_only_symbols and not mapping["id"].endswith("@rust"):
             diagnostics.append(
                 f"Contract row '{mapping['id']}' maps python export "
                 f"'{mapping.get('pythonExportPath') or mapping.get('pythonExport')}' "
@@ -122,7 +160,9 @@ def render_tier1_gate_markdown(diff_report: dict[str, Any]) -> str:
     """Render concise Tier-1 gate report for CI diagnostics."""
     summary = diff_report["summary"]
     failing_rows = [
-        row for row in diff_report["contract_results"] if row["status"] != "matched"
+        row
+        for row in diff_report["contract_results"]
+        if row["status"] not in {"matched", "unmapped"}
     ]
 
     lines: list[str] = []
@@ -135,6 +175,7 @@ def render_tier1_gate_markdown(diff_report: dict[str, Any]) -> str:
             f"- Tier-1 missing Rust: **{summary['tier1_missing_rust']}**",
             f"- Tier-1 missing Python: **{summary['tier1_missing_python']}**",
             f"- Tier-1 signature mismatch: **{summary['tier1_signature_mismatch']}**",
+            f"- Tier-1 owner mismatch: **{summary['tier1_owner_mismatch']}**",
             "",
         )
     )
@@ -149,16 +190,17 @@ def render_tier1_gate_markdown(diff_report: dict[str, Any]) -> str:
             "",
             "Tier-1 drift detected. Review failing contract rows below.",
             "",
-            "| ID | Owner Module | Rust Symbol | Python Export | Status | Reason |",
-            "|---|---|---|---|---|---|",
+            "| ID | Owner Module | Rust Crate | Rust Symbol | Python Export | Status | Reason |",
+            "|---|---|---|---|---|---|---|",
         )
     )
     for row in failing_rows:
         python_target = row.get("python_export_path", row["python_export"])
         lines.append(
-            "| `{id}` | `{owner_module}` | `{rust_symbol}` | `{python_module}.{python_export}` | `{status}` | {reason} |".format(
+            "| `{id}` | `{owner_module}` | `{rust_crate}` | `{rust_symbol}` | `{python_module}.{python_export}` | `{status}` | {reason} |".format(
                 id=row["id"],
                 owner_module=row["owner_module"],
+                rust_crate=row["rust_crate"],
                 rust_symbol=row["rust_symbol"],
                 python_module=row["python_module"],
                 python_export=python_target,
@@ -191,11 +233,6 @@ def main() -> int:
         help="Directory for generated gate artifacts, relative to repo root.",
     )
     parser.add_argument(
-        "--runtime-registry",
-        default="python-bindings/tests/fixtures/runtime_coverage_registry.json",
-        help="Path to the Python runtime coverage registry JSON, relative to repo root.",
-    )
-    parser.add_argument(
         "--baseline-output-dir",
         default="docs/implementation/python_api_parity/baseline",
         help="Directory containing checked-in baseline artifacts, relative to repo root.",
@@ -225,29 +262,23 @@ def main() -> int:
     # generation so a missing pub use at the -core/lib.rs surface is
     # reported with an actionable remediation message instead of being
     # buried as "missing_rust" drift noise later.
-    pitfall2_diagnostics = validate_contract_rust_symbols(contract, rust_manifest)
+    wrapper_resolutions = resolve_all(repo_root, rust_manifest)
+    pitfall2_diagnostics = validate_contract_rust_symbols(
+        contract, rust_manifest, wrapper_resolutions
+    )
     if pitfall2_diagnostics:
         print("\n".join(pitfall2_diagnostics), file=sys.stderr)
         return 1
 
-    diff_report = generate_diff_report(contract, rust_manifest, python_manifest)
-    runtime_registry = load_json_file(repo_root / args.runtime_registry)
-    coverage_summary = build_coverage_summary(
-        binding="python",
-        contract=contract,
-        diff_report=diff_report,
-        runtime_registry=runtime_registry,
-        source_paths={
-            "contract": args.contract,
-            "runtime_registry": args.runtime_registry,
-        },
+    diff_report = generate_diff_report(
+        contract, rust_manifest, python_manifest, wrapper_resolutions
     )
 
     # Carry the committed timestamps forward on any artifact whose substance is
     # unchanged, so a no-op rerun writes byte-identical files instead of a
     # timestamp-only diff. Covers the surface manifests too -- they were left
     # out when this was first added, and churned on every run as a result. The
-    # two markdown reports follow for free: their "- Generated:" header renders
+    # Markdown report follows for free: its "- Generated:" header renders
     # from the corresponding JSON payload rather than calling the clock again.
     preserve_baseline_generated_at_all(
         baseline_output_dir,
@@ -255,7 +286,6 @@ def main() -> int:
             "rust_api_surface.json": rust_manifest,
             "python_api_surface.json": python_manifest,
             "parity_diff_report.json": diff_report,
-            "runtime_coverage_summary.json": coverage_summary,
         },
     )
 
@@ -265,29 +295,23 @@ def main() -> int:
     (output_dir / "parity_diff_report.md").write_text(
         render_diff_markdown(diff_report), encoding="utf-8"
     )
-    write_json(output_dir / "runtime_coverage_summary.json", coverage_summary)
-    (output_dir / "runtime_coverage_summary.md").write_text(
-        render_coverage_summary_markdown(coverage_summary), encoding="utf-8"
-    )
     (output_dir / "tier1_gate_report.md").write_text(
         render_tier1_gate_markdown(diff_report), encoding="utf-8"
     )
 
     summary = diff_report["summary"]
     tier1_drift_count = (
-        summary["tier1_missing_rust"]
-        + summary["tier1_missing_python"]
-        + summary["tier1_signature_mismatch"]
+            summary["tier1_missing_rust"]
+            + summary["tier1_missing_python"]
+            + summary["tier1_signature_mismatch"]
+            + summary["tier1_owner_mismatch"]
     )
-    coverage_totals = coverage_summary["summary"]
 
     tracked_artifact_names = (
         "rust_api_surface.json",
         "python_api_surface.json",
         "parity_diff_report.json",
         "parity_diff_report.md",
-        "runtime_coverage_summary.json",
-        "runtime_coverage_summary.md",
     )
 
     if args.update_baseline:
@@ -304,8 +328,6 @@ def main() -> int:
     print(f"- {output_dir / 'python_api_surface.json'}")
     print(f"- {output_dir / 'parity_diff_report.json'}")
     print(f"- {output_dir / 'parity_diff_report.md'}")
-    print(f"- {output_dir / 'runtime_coverage_summary.json'}")
-    print(f"- {output_dir / 'runtime_coverage_summary.md'}")
     print(f"- {output_dir / 'tier1_gate_report.md'}")
 
     if tier1_drift_count > 0:
@@ -314,27 +336,7 @@ def main() -> int:
             f"missing_rust={summary['tier1_missing_rust']}, "
             f"missing_python={summary['tier1_missing_python']}, "
             f"signature_mismatch={summary['tier1_signature_mismatch']}"
-        )
-        return 1
-
-    if coverage_totals["tier1_missing_runtime_total"] > 0:
-        print(
-            "Tier-1 runtime coverage metadata missing for "
-            f"{coverage_totals['tier1_missing_runtime_total']} contract row(s)."
-        )
-        return 1
-
-    if coverage_totals["registry_mismatch_total"] > 0:
-        print(
-            "Python runtime coverage registry snapshot mismatch detected for "
-            f"{coverage_totals['registry_mismatch_total']} selector row(s)."
-        )
-        return 1
-
-    if coverage_totals["newly_uncovered_total"] > 0:
-        print(
-            "Newly uncovered Python surfaces detected: "
-            f"{coverage_totals['newly_uncovered_total']}"
+            f", owner_mismatch={summary['tier1_owner_mismatch']}"
         )
         return 1
 

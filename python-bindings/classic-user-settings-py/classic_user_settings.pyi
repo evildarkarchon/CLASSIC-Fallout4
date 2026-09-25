@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+__version__: str
+
 
 class UserSettingsDiagnostic:
     """One structured diagnostic produced while opening User Settings."""
@@ -255,7 +257,7 @@ class UserSettingsUpdate:
         """Request whether the GUI should switch to Results after a completed scan."""
 
     def set_window_geometry(
-        self, tab: str, maximized: bool, width: int, height: int
+            self, tab: str, maximized: bool, width: int, height: int
     ) -> None:
         """Request remembered geometry for a maintained GUI window.
 
@@ -265,7 +267,7 @@ class UserSettingsUpdate:
         """
 
     def set_tui_remembered_state(
-        self, active_tab: int, results_panel_width: int, sort_ascending: bool
+            self, active_tab: int, results_panel_width: int, sort_ascending: bool
     ) -> None:
         """Request one complete TUI remembered-state transition."""
 
@@ -699,12 +701,12 @@ class UserSettingsSnapshot:
         """Preview explicit creation of a missing document from Rust-owned defaults."""
 
     def commit_frontend_geometry_transition(
-        self,
-        classic_root: str,
-        tab: str,
-        maximized: bool,
-        width: int,
-        height: int,
+            self,
+            classic_root: str,
+            tab: str,
+            maximized: bool,
+            width: int,
+            height: int,
     ) -> UserSettingsFrontendTransitionOutcome:
         """Commit one geometry transition with at most one Rust-owned conflict replay."""
 
@@ -717,7 +719,7 @@ def open_user_settings(classic_root: str) -> UserSettingsSnapshot:
 
 
 def import_legacy_tui_state_into_user_settings(
-    classic_root: str, legacy_state_path: str
+        classic_root: str, legacy_state_path: str
 ) -> LegacyTuiStateImportOutcome:
     """Explicitly import retired TUI state into canonical User Settings."""
 

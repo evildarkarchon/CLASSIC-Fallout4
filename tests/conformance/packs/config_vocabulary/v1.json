@@ -1,0 +1,262 @@
+{
+  "schemaVersion": 1,
+  "familyId": "config-vocabulary",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-config-core"
+  },
+  "fixtureRoot": "tests/conformance/packs/config_vocabulary",
+  "fixtures": {},
+  "capabilities": [
+    {
+      "id": "vocabulary.resolve",
+      "rustSymbols": [
+        "InstalledYamlDataProvenance",
+        "InstalledYamlDataDiagnosticKind",
+        "LocalIgnoreYamlDataState"
+      ],
+      "observationFamilies": [
+        "vocabulary"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "installed-yaml-data-provenance-label",
+      "action": "vocabulary.resolve",
+      "capabilityIds": [
+        "vocabulary.resolve"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "operation": "installed_yaml_data_provenance_label",
+        "tokens": [
+          "updated",
+          "previous",
+          "bundled",
+          "not_a_real_token"
+        ]
+      },
+      "expected": {
+        "operation": "installed_yaml_data_provenance_label",
+        "entries": [
+          {
+            "token": "updated",
+            "label": "updated",
+            "rejected": false
+          },
+          {
+            "token": "previous",
+            "label": "previous",
+            "rejected": false
+          },
+          {
+            "token": "bundled",
+            "label": "bundled",
+            "rejected": false
+          },
+          {
+            "token": "not_a_real_token",
+            "label": null,
+            "rejected": true
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "scan-run-installed-yaml-data-provenance-label",
+      "action": "vocabulary.resolve",
+      "capabilityIds": [
+        "vocabulary.resolve"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "operation": "scan_run_installed_yaml_data_provenance_label",
+        "tokens": [
+          "updated",
+          "previous",
+          "bundled",
+          "not_a_real_token"
+        ]
+      },
+      "expected": {
+        "operation": "scan_run_installed_yaml_data_provenance_label",
+        "entries": [
+          {
+            "token": "updated",
+            "label": "updated",
+            "rejected": false
+          },
+          {
+            "token": "previous",
+            "label": "previous",
+            "rejected": false
+          },
+          {
+            "token": "bundled",
+            "label": "bundled",
+            "rejected": false
+          },
+          {
+            "token": "not_a_real_token",
+            "label": null,
+            "rejected": true
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "installed-yaml-data-diagnostic-kind-label",
+      "action": "vocabulary.resolve",
+      "capabilityIds": [
+        "vocabulary.resolve"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "operation": "installed_yaml_data_diagnostic_kind_label",
+        "tokens": [
+          "cache_unavailable",
+          "missing",
+          "read",
+          "invalid_utf8",
+          "parse",
+          "invalid_schema",
+          "incompatible_schema",
+          "invalid_role_data",
+          "local_ignore_generated",
+          "local_ignore_reset",
+          "not_a_real_token"
+        ]
+      },
+      "expected": {
+        "operation": "installed_yaml_data_diagnostic_kind_label",
+        "entries": [
+          {
+            "token": "cache_unavailable",
+            "label": "update cache unavailable",
+            "rejected": false
+          },
+          {
+            "token": "missing",
+            "label": "missing candidate",
+            "rejected": false
+          },
+          {
+            "token": "read",
+            "label": "read failure",
+            "rejected": false
+          },
+          {
+            "token": "invalid_utf8",
+            "label": "invalid UTF-8",
+            "rejected": false
+          },
+          {
+            "token": "parse",
+            "label": "parse failure",
+            "rejected": false
+          },
+          {
+            "token": "invalid_schema",
+            "label": "invalid schema",
+            "rejected": false
+          },
+          {
+            "token": "incompatible_schema",
+            "label": "incompatible schema",
+            "rejected": false
+          },
+          {
+            "token": "invalid_role_data",
+            "label": "invalid role data",
+            "rejected": false
+          },
+          {
+            "token": "local_ignore_generated",
+            "label": "Local Ignore generated",
+            "rejected": false
+          },
+          {
+            "token": "local_ignore_reset",
+            "label": "Local Ignore reset",
+            "rejected": false
+          },
+          {
+            "token": "not_a_real_token",
+            "label": null,
+            "rejected": true
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "local-ignore-yaml-data-state-label",
+      "action": "vocabulary.resolve",
+      "capabilityIds": [
+        "vocabulary.resolve"
+      ],
+      "fixtureRefs": [],
+      "input": {
+        "operation": "local_ignore_yaml_data_state_label",
+        "tokens": [
+          "existing",
+          "generated",
+          "proceed_without_ignore",
+          "reset_to_default",
+          "not_a_real_token"
+        ]
+      },
+      "expected": {
+        "operation": "local_ignore_yaml_data_state_label",
+        "entries": [
+          {
+            "token": "existing",
+            "label": "existing",
+            "rejected": false
+          },
+          {
+            "token": "generated",
+            "label": "generated from selected Main defaults",
+            "rejected": false
+          },
+          {
+            "token": "proceed_without_ignore",
+            "label": "proceeded without ignore entries",
+            "rejected": false
+          },
+          {
+            "token": "reset_to_default",
+            "label": "reset to default",
+            "rejected": false
+          },
+          {
+            "token": "not_a_real_token",
+            "label": null,
+            "rejected": true
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

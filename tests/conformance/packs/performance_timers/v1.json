@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "familyId": "performance-timers",
+  "familyVersion": 1,
+  "domainOwner": {"rustCrate": "classic-perf-core"},
+  "fixtureRoot": "tests/fixtures/performance_timers_conformance",
+  "fixtures": {"lifecycle": "lifecycle.json"},
+  "capabilities": [{
+    "id": "performance-timers.observe",
+    "rustSymbols": ["Timer", "start_timer"],
+    "observationFamilies": ["timer-lifecycle"]
+  }],
+  "scenarios": [{
+    "id": "lifecycle",
+    "action": "performance-timers.observe",
+    "capabilityIds": ["performance-timers.observe"],
+    "fixtureRefs": ["lifecycle"],
+    "input": {"fixtureRef": "lifecycle"},
+    "expected": {
+      "timers": [
+        {"constructor": "direct", "advanced": true, "positive": true, "singleSample": true, "summaryConsistent": true},
+        {"constructor": "factory", "advanced": true, "positive": true, "singleSample": true, "summaryConsistent": true}
+      ],
+      "cleared": true
+    },
+    "normalization": {"excludedPaths": [], "rootRelativePaths": false, "unorderedPaths": []}
+  }],
+  "consumerObligations": []
+}

@@ -794,7 +794,7 @@ mod fallback_cache {
             tmp.path().join(CACHED_MANIFEST_FILENAME),
             br#"{"manifest_version":"1.0","release_tag":"v9.2.0","published_at":"2026-05-01T12:00:00Z"}"#,
         )
-        .unwrap();
+            .unwrap();
         assert!(
             try_fallback_cache_at(Some(tmp.path()), SystemTime::now()).is_none(),
             "invalid cached body must not be reused",

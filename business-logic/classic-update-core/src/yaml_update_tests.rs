@@ -617,7 +617,7 @@ fn classify_detects_same_schema_content_churn_as_update_available() {
             min_client_schema: None,
             max_client_schema: None,
             download_url:
-                "https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/download/yaml-data-v2026.04.18/CLASSIC%20Main.yaml".into(),
+            "https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/download/yaml-data-v2026.04.18/CLASSIC%20Main.yaml".into(),
         }],
         signatures: Vec::new(),
     };
@@ -668,7 +668,7 @@ fn classify_treats_matching_sha_as_up_to_date_even_when_schema_bumped() {
             min_client_schema: None,
             max_client_schema: None,
             download_url:
-                "https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/download/yaml-data-v2026.04.18/CLASSIC%20Main.yaml".into(),
+            "https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/download/yaml-data-v2026.04.18/CLASSIC%20Main.yaml".into(),
         }],
         signatures: Vec::new(),
     };

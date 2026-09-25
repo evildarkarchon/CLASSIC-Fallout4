@@ -1,0 +1,12 @@
+{
+  "operation": "rollback",
+  "fileName": "CLASSIC Ignore.yaml",
+  "files": {
+    "cache/CLASSIC/yaml-cache/CLASSIC Ignore.yaml": "private\n",
+    "cache/CLASSIC/yaml-cache/CLASSIC Ignore.yaml.prev": "older private\n"
+  },
+  "service": {
+    "pages": [],
+    "api": []
+  }
+}

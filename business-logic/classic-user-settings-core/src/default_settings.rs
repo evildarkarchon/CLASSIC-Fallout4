@@ -8,7 +8,7 @@ pub(crate) const USER_SETTINGS_SCHEMA_MINOR: u32 = 0;
 
 /// One const-friendly YAML value used by the published-default registry.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum PublishedDefault {
+pub enum PublishedDefault {
     Bool(bool),
     Integer(i64),
     String(&'static str),
@@ -18,7 +18,7 @@ pub(crate) enum PublishedDefault {
 
 impl PublishedDefault {
     /// Returns the boolean default expected by a typed runtime field.
-    pub(crate) const fn as_bool(self) -> bool {
+    pub const fn as_bool(self) -> bool {
         match self {
             Self::Bool(value) => value,
             _ => panic!("published default is not a boolean"),
@@ -26,7 +26,7 @@ impl PublishedDefault {
     }
 
     /// Returns the integer default expected by a typed runtime field.
-    pub(crate) const fn as_integer(self) -> i64 {
+    pub const fn as_integer(self) -> i64 {
         match self {
             Self::Integer(value) => value,
             _ => panic!("published default is not an integer"),
@@ -34,7 +34,7 @@ impl PublishedDefault {
     }
 
     /// Returns the string default expected by a typed runtime field.
-    pub(crate) const fn as_str(self) -> &'static str {
+    pub const fn as_str(self) -> &'static str {
         match self {
             Self::String(value) => value,
             _ => panic!("published default is not a string"),
@@ -42,7 +42,7 @@ impl PublishedDefault {
     }
 
     /// Returns an optional string default, preserving explicit YAML null as `None`.
-    pub(crate) const fn as_optional_str(self) -> Option<&'static str> {
+    pub const fn as_optional_str(self) -> Option<&'static str> {
         match self {
             Self::String(value) => Some(value),
             Self::Null => None,
@@ -51,7 +51,7 @@ impl PublishedDefault {
     }
 
     /// Asserts that a typed collection is backed by the registry's empty-mapping default.
-    pub(crate) const fn assert_empty_mapping(self) {
+    pub const fn assert_empty_mapping(self) {
         if !matches!(self, Self::EmptyMapping) {
             panic!("published default is not an empty mapping");
         }
@@ -61,27 +61,27 @@ impl PublishedDefault {
 /// Canonical label, published default, and user-facing guidance for one known setting.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct SettingMetadata {
-    pub(crate) path: &'static [&'static str],
+    pub path: &'static [&'static str],
     pub(crate) dotted_path: &'static str,
     pub(crate) pointer_path: &'static str,
     pub(crate) default: PublishedDefault,
-    pub(crate) guidance: &'static [&'static str],
+    pub guidance: &'static [&'static str],
     pub(crate) canonical: bool,
 }
 
 impl SettingMetadata {
     /// Returns the canonical or compatibility path from the document root.
-    pub(crate) const fn path(self) -> &'static [&'static str] {
+    pub const fn path(self) -> &'static [&'static str] {
         self.path
     }
 
     /// Returns the leaf label used by runtime projection and mirror generation.
-    pub(crate) const fn label(self) -> &'static str {
+    pub const fn label(self) -> &'static str {
         self.path[self.path.len() - 1]
     }
 
     /// Returns the Rust-owned published default.
-    pub(crate) const fn default(self) -> PublishedDefault {
+    pub const fn default(self) -> PublishedDefault {
         self.default
     }
 }

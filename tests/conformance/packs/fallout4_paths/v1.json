@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "familyId": "fallout4-paths",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-version-registry-core"
+  },
+  "fixtureRoot": "tests/fixtures/version_values_conformance",
+  "fixtures": {
+    "fallout4-paths-all": "fallout4-paths-all.json"
+  },
+  "capabilities": [
+    {
+      "id": "fallout4-paths.config-exe",
+      "operationScoped": true,
+      "rustCrate": "classic-config-core",
+      "rustSymbols": ["resolve_registry_version_info"],
+      "observationFamilies": ["value-results"]
+    },
+    {
+      "id": "fallout4-paths.observe",
+      "operationScoped": true,
+      "rustSymbols": [
+        "Fallout4Version",
+        "as_str",
+        "docs_folder_name",
+        "is_standard",
+        "registry_id"
+      ],
+      "observationFamilies": [
+        "value-results"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "all",
+      "action": "fallout4-paths.observe",
+      "capabilityIds": [
+        "fallout4-paths.config-exe",
+        "fallout4-paths.observe"
+      ],
+      "fixtureRefs": [
+        "fallout4-paths-all"
+      ],
+      "input": {
+        "fixtureRef": "fallout4-paths-all"
+      },
+      "expected": {
+        "variants": [
+          {
+            "token": "Original",
+            "docsName": "Fallout4",
+            "standard": true,
+            "registryId": "FO4_OG"
+          },
+          {
+            "token": "NextGen",
+            "docsName": "Fallout4",
+            "standard": true,
+            "registryId": "FO4_NG"
+          },
+          {
+            "token": "AnniversaryEdition",
+            "docsName": "Fallout4",
+            "standard": true,
+            "registryId": "FO4_AE"
+          },
+          {
+            "token": "VR",
+            "docsName": "Fallout4VR",
+            "standard": false,
+            "registryId": "FO4_VR"
+          }
+        ],
+        "files": [
+          {
+            "path": "CLASSIC Main.yaml",
+            "content": "Version_Registry:\n  versions:\n    - id: FO4_OG\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: OG\n      display_name: Fixture OG\n      docs_name: FixtureDocs\n      steam_id: 7\n      is_vr: false\n      priority: 1\n    - id: FO4_NG\n      game: Fallout4\n      version: \"1.10.984\"\n      short_name: NG\n      display_name: Fixture NG\n      docs_name: FixtureDocs\n      steam_id: 7\n      is_vr: false\n      priority: 1\n    - id: FO4_AE\n      game: Fallout4\n      version: \"1.11.137\"\n      short_name: AE\n      display_name: Fixture AE\n      docs_name: FixtureDocs\n      steam_id: 7\n      is_vr: false\n      priority: 1\n    - id: FO4_VR\n      game: Fallout4\n      version: \"1.2.72\"\n      short_name: VR\n      display_name: Fixture VR\n      docs_name: FixtureDocs\n      steam_id: 7\n      is_vr: true\n      priority: 1\n"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

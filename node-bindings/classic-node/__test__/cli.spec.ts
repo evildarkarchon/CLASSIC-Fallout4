@@ -1,24 +1,17 @@
-import { afterEach, beforeAll, describe, expect, test } from "bun:test";
+import {afterEach, beforeAll, describe, expect, test} from "bun:test";
+import {existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync,} from "node:fs";
+import {tmpdir} from "node:os";
+import {dirname, join} from "node:path";
+import {fileURLToPath} from "node:url";
+import {spawnSync} from "node:child_process";
 import {
-	existsSync,
-	mkdirSync,
-	mkdtempSync,
-	readFileSync,
-	rmSync,
-	writeFileSync,
-} from "node:fs";
-import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { spawnSync } from "node:child_process";
-import { getVersion } from "../index.js";
-import {
-	CLI_GAME_YAML,
-	CLI_IGNORE_YAML,
-	CLI_LOCAL_YAML,
-	CLI_MAIN_YAML,
-	CLI_SAMPLE_LOG,
-} from "./fixtures/cli.fixtures";
+    getVersion,
+    type JsScanRunDisplayLine,
+    JsScanRunDisplaySegmentKind,
+    JsScanRunDisplaySeverity,
+} from "../index.js";
+import {renderDisplayLine, renderDisplaySegment} from "../cli/run-scan.js";
+import {CLI_GAME_YAML, CLI_IGNORE_YAML, CLI_LOCAL_YAML, CLI_MAIN_YAML, CLI_SAMPLE_LOG,} from "./fixtures/cli.fixtures";
 
 const PACKAGE_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const DIST_CLI_PATH = join(PACKAGE_ROOT, "dist", "cli", "main.js");
@@ -26,291 +19,366 @@ const DIST_CLI_PATH = join(PACKAGE_ROOT, "dist", "cli", "main.js");
 const tempDirs: string[] = [];
 
 type CliResult = {
-	exitCode: number;
-	stdout: string;
-	stderr: string;
-	output: string;
+    exitCode: number;
+    stdout: string;
+    stderr: string;
+    output: string;
 };
 
 function rememberTempDir(prefix: string): string {
-	const dir = mkdtempSync(join(tmpdir(), prefix));
-	tempDirs.push(dir);
-	return dir;
+    const dir = mkdtempSync(join(tmpdir(), prefix));
+    tempDirs.push(dir);
+    return dir;
 }
 
 function replaceEvery(
-	value: string,
-	search: string,
-	replacement: string,
+    value: string,
+    search: string,
+    replacement: string,
 ): string {
-	return value.split(search).join(replacement);
+    return value.split(search).join(replacement);
 }
 
 function replaceDocsPlaceholder(content: string, docsPath: string): string {
-	const escapedDocsPath = replaceEvery(docsPath, "\\", "\\\\");
-	return replaceEvery(content, "DOCS_XSE_PLACEHOLDER", escapedDocsPath);
+    const escapedDocsPath = replaceEvery(docsPath, "\\", "\\\\");
+    return replaceEvery(content, "DOCS_XSE_PLACEHOLDER", escapedDocsPath);
 }
 
 function writeWorkspaceDataRoot(workspace: string): string {
-	const classicDataDir = join(workspace, "CLASSIC Data");
-	const databaseDir = join(classicDataDir, "databases");
-	const docsDir = join(workspace, "docs", "F4SE");
+    const classicDataDir = join(workspace, "CLASSIC Data");
+    const databaseDir = join(classicDataDir, "databases");
+    const docsDir = join(workspace, "docs", "F4SE");
 
-	mkdirSync(databaseDir, { recursive: true });
-	mkdirSync(docsDir, { recursive: true });
+    mkdirSync(databaseDir, {recursive: true});
+    mkdirSync(docsDir, {recursive: true});
 
-	writeFileSync(join(databaseDir, "CLASSIC Main.yaml"), CLI_MAIN_YAML, "utf8");
-	writeFileSync(
-		join(databaseDir, "CLASSIC Fallout4.yaml"),
-		replaceDocsPlaceholder(CLI_GAME_YAML, docsDir),
-		"utf8",
-	);
-	writeFileSync(
-		join(classicDataDir, "CLASSIC Ignore.yaml"),
-		CLI_IGNORE_YAML,
-		"utf8",
-	);
-	writeFileSync(
-		join(classicDataDir, "CLASSIC Fallout4 Local.yaml"),
-		replaceDocsPlaceholder(CLI_LOCAL_YAML, docsDir),
-		"utf8",
-	);
+    writeFileSync(join(databaseDir, "CLASSIC Main.yaml"), CLI_MAIN_YAML, "utf8");
+    writeFileSync(
+        join(databaseDir, "CLASSIC Fallout4.yaml"),
+        replaceDocsPlaceholder(CLI_GAME_YAML, docsDir),
+        "utf8",
+    );
+    writeFileSync(
+        join(classicDataDir, "CLASSIC Ignore.yaml"),
+        CLI_IGNORE_YAML,
+        "utf8",
+    );
+    writeFileSync(
+        join(classicDataDir, "CLASSIC Fallout4 Local.yaml"),
+        replaceDocsPlaceholder(CLI_LOCAL_YAML, docsDir),
+        "utf8",
+    );
 
-	return docsDir;
+    return docsDir;
 }
 
 function ensureCliBuilt(): void {
-	const build = spawnSync(process.execPath, ["run", "build:cli"], {
-		cwd: PACKAGE_ROOT,
-		encoding: "utf8",
-	});
+    const build = spawnSync(process.execPath, ["run", "build:cli"], {
+        cwd: PACKAGE_ROOT,
+        encoding: "utf8",
+    });
 
-	expect(build.status).toBe(0);
-	expect(existsSync(DIST_CLI_PATH)).toBe(true);
+    expect(build.status).toBe(0);
+    expect(existsSync(DIST_CLI_PATH)).toBe(true);
 }
 
 function runCli(
-	args: string[],
-	workingDirectory: string,
-	env?: NodeJS.ProcessEnv,
+    args: string[],
+    workingDirectory: string,
+    env?: NodeJS.ProcessEnv,
 ): CliResult {
-	const result = spawnSync(process.execPath, [DIST_CLI_PATH, ...args], {
-		cwd: workingDirectory,
-		encoding: "utf8",
-		env: env ? { ...process.env, ...env } : process.env,
-	});
+    const result = spawnSync(process.execPath, [DIST_CLI_PATH, ...args], {
+        cwd: workingDirectory,
+        encoding: "utf8",
+        env: env ? {...process.env, ...env} : process.env,
+    });
 
-	return {
-		exitCode: result.status ?? -1,
-		stdout: result.stdout ?? "",
-		stderr: result.stderr ?? "",
-		output: `${result.stdout ?? ""}${result.stderr ?? ""}`,
-	};
+    return {
+        exitCode: result.status ?? -1,
+        stdout: result.stdout ?? "",
+        stderr: result.stderr ?? "",
+        output: `${result.stdout ?? ""}${result.stderr ?? ""}`,
+    };
 }
 
 beforeAll(() => {
-	ensureCliBuilt();
+    ensureCliBuilt();
 });
 
 afterEach(() => {
-	while (tempDirs.length > 0) {
-		const dir = tempDirs.pop();
-		if (dir) {
-			rmSync(dir, { recursive: true, force: true });
-		}
-	}
+    while (tempDirs.length > 0) {
+        const dir = tempDirs.pop();
+        if (dir) {
+            rmSync(dir, {recursive: true, force: true});
+        }
+    }
 });
 
 describe("classic-node CLI", () => {
-	test("prints version output without scanning", () => {
-		const workspace = rememberTempDir("classic-node-cli-version-");
-		writeWorkspaceDataRoot(workspace);
-		const expectedVersion = getVersion();
+    test("prints version output without scanning", () => {
+        const workspace = rememberTempDir("classic-node-cli-version-");
+        writeWorkspaceDataRoot(workspace);
+        const expectedVersion = getVersion();
 
-		const result = runCli(["--version"], workspace);
+        const result = runCli(["--version"], workspace);
 
-		expect(result.exitCode).toBe(0);
-		expect(result.output).toContain("CLASSIC CLI Scanner");
-		expect(result.output).toContain(expectedVersion);
-	});
+        expect(result.exitCode).toBe(0);
+        expect(result.output).toContain("CLASSIC CLI Scanner");
+        expect(result.output).toContain(expectedVersion);
+    });
 
-	test("returns success when no logs are found", () => {
-		const workspace = rememberTempDir("classic-node-cli-empty-");
-		const scanDir = join(workspace, "incoming");
+    test("returns success when no logs are found", () => {
+        const workspace = rememberTempDir("classic-node-cli-empty-");
+        const scanDir = join(workspace, "incoming");
 
-		writeWorkspaceDataRoot(workspace);
-		mkdirSync(scanDir, { recursive: true });
+        writeWorkspaceDataRoot(workspace);
+        mkdirSync(scanDir, {recursive: true});
 
-		const result = runCli(
-			["--scan-path", scanDir, "--game-version", "auto"],
-			workspace,
-		);
+        const result = runCli(
+            ["--scan-path", scanDir, "--game-version", "auto"],
+            workspace,
+        );
 
-		expect(result.exitCode).toBe(0);
-		expect(result.output).toContain("No crash logs found");
-	});
+        expect(result.exitCode).toBe(0);
+        expect(result.output).toContain("No crash logs found");
+    });
 
-	test("writes AUTOSCAN reports next to scanned logs", () => {
-		const workspace = rememberTempDir("classic-node-cli-success-");
-		const scanDir = join(workspace, "incoming");
-		const logPath = join(scanDir, "crash-2026-03-06-12-00-00.log");
+    test("writes AUTOSCAN reports next to scanned logs", () => {
+        const workspace = rememberTempDir("classic-node-cli-success-");
+        const scanDir = join(workspace, "incoming");
+        const logPath = join(scanDir, "crash-2026-03-06-12-00-00.log");
 
-		writeWorkspaceDataRoot(workspace);
-		mkdirSync(scanDir, { recursive: true });
-		writeFileSync(logPath, CLI_SAMPLE_LOG, "utf8");
+        writeWorkspaceDataRoot(workspace);
+        mkdirSync(scanDir, {recursive: true});
+        writeFileSync(logPath, CLI_SAMPLE_LOG, "utf8");
 
-		const result = runCli(
-			["--scan-path", scanDir, "--game-version", "auto"],
-			workspace,
-		);
-		const reportPath = join(scanDir, "crash-2026-03-06-12-00-00-AUTOSCAN.md");
+        const result = runCli(
+            ["--scan-path", scanDir, "--game-version", "auto"],
+            workspace,
+        );
+        const reportPath = join(scanDir, "crash-2026-03-06-12-00-00-AUTOSCAN.md");
 
-		expect(result.exitCode).toBe(0);
-		expect(result.output).toContain("Found 1 crash log");
-		expect(existsSync(reportPath)).toBe(true);
-		expect(readFileSync(reportPath, "utf8")).toContain("AUTOSCAN REPORT");
-	});
+        expect(result.exitCode).toBe(0);
+        // Anchored on the paths the run carries rather than on a sentence about it.
+        // Both reach the user inside Rust's per-log line, whole and untruncated, which
+        // is what lets a later command open the report this one just wrote.
+        expect(result.output).toContain(logPath);
+        expect(result.output).toContain(reportPath);
+        expect(existsSync(reportPath)).toBe(true);
+        expect(readFileSync(reportPath, "utf8")).toContain("AUTOSCAN REPORT");
+    });
 
-	test("uses canonical User Settings when scan flags are omitted", () => {
-		const workspace = rememberTempDir("classic-node-cli-user-settings-");
-		const scanDir = join(workspace, "incoming");
-		const logPath = join(scanDir, "crash-2026-03-06-12-00-00.log");
+    test("uses canonical User Settings when scan flags are omitted", () => {
+        const workspace = rememberTempDir("classic-node-cli-user-settings-");
+        const scanDir = join(workspace, "incoming");
+        const logPath = join(scanDir, "crash-2026-03-06-12-00-00.log");
 
-		writeWorkspaceDataRoot(workspace);
-		mkdirSync(scanDir, { recursive: true });
-		writeFileSync(logPath, CLI_SAMPLE_LOG, "utf8");
-		writeFileSync(
-			join(workspace, "CLASSIC Settings.yaml"),
-			`schema_version: "1.0"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n  Game Version: Original\n  SCAN Custom Path: '${scanDir.replace(/\\/g, "/")}'\n  Max Concurrent Scans: 1\n`,
-			"utf8",
-		);
+        writeWorkspaceDataRoot(workspace);
+        mkdirSync(scanDir, {recursive: true});
+        writeFileSync(logPath, CLI_SAMPLE_LOG, "utf8");
+        writeFileSync(
+            join(workspace, "CLASSIC Settings.yaml"),
+            `schema_version: "1.0"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n  Game Version: Original\n  SCAN Custom Path: '${scanDir.replace(/\\/g, "/")}'\n  Max Concurrent Scans: 1\n`,
+            "utf8",
+        );
 
-		const result = runCli([], workspace);
-		const reportPath = join(scanDir, "crash-2026-03-06-12-00-00-AUTOSCAN.md");
+        const result = runCli([], workspace);
+        const reportPath = join(scanDir, "crash-2026-03-06-12-00-00-AUTOSCAN.md");
 
-		expect(result.exitCode).toBe(0);
-		expect(result.output).toContain("Fallout4 Original");
-		expect(result.output).toContain("Scanning with 1 worker thread");
-		expect(existsSync(reportPath)).toBe(true);
-	});
+        expect(result.exitCode).toBe(0);
+        // The CLI's own header, which names the game version it read from settings.
+        expect(result.output).toContain("Fallout4 Original");
+        // The settings-configured scan directory reaches discovery, and discovery says
+        // so. Anchored on the path rather than on the concurrency sentence that stood
+        // here: the fact this test exists for is that canonical settings were honoured,
+        // and the directory proves that without restating any of Rust's words.
+        expect(result.output).toContain(scanDir.replace(/\\/g, "/"));
+        expect(existsSync(reportPath)).toBe(true);
+    });
 
-	test("emits structured report failure counts when AUTOSCAN writing fails", () => {
-		const workspace = rememberTempDir("classic-node-cli-report-failure-json-");
-		const scanDir = join(workspace, "incoming");
-		const logPath = join(scanDir, "crash-2026-03-06-12-00-00.log");
-		const reportPath = join(scanDir, "crash-2026-03-06-12-00-00-AUTOSCAN.md");
+    test("emits structured report failure counts when AUTOSCAN writing fails", () => {
+        const workspace = rememberTempDir("classic-node-cli-report-failure-json-");
+        const scanDir = join(workspace, "incoming");
+        const logPath = join(scanDir, "crash-2026-03-06-12-00-00.log");
+        const reportPath = join(scanDir, "crash-2026-03-06-12-00-00-AUTOSCAN.md");
 
-		writeWorkspaceDataRoot(workspace);
-		mkdirSync(scanDir, { recursive: true });
-		writeFileSync(logPath, CLI_SAMPLE_LOG, "utf8");
-		mkdirSync(reportPath);
+        writeWorkspaceDataRoot(workspace);
+        mkdirSync(scanDir, {recursive: true});
+        writeFileSync(logPath, CLI_SAMPLE_LOG, "utf8");
+        mkdirSync(reportPath);
 
-		const result = runCli(
-			["--json", "--scan-path", scanDir, "--game-version", "auto"],
-			workspace,
-		);
-		const summary = JSON.parse(result.stdout);
+        const result = runCli(
+            ["--json", "--scan-path", scanDir, "--game-version", "auto"],
+            workspace,
+        );
+        const summary = JSON.parse(result.stdout);
 
-		expect(result.exitCode).toBe(1);
-		expect(summary).toMatchObject({
-			mode: "scan",
-			exitCode: 1,
-			logsFound: 1,
-			reportsWritten: 0,
-			reportFailures: 1,
-			scanErrors: 0,
-			installedYamlData: {
-				main: { role: "Main" },
-				gameFile: { role: "Game" },
-				localIgnoreState: "Existing",
-				localIgnoreIdentity: {
-					sha256: expect.any(String),
-					byteLen: expect.any(Number),
-				},
-				diagnostics: expect.any(Array),
-			},
-		});
-	});
+        expect(result.exitCode).toBe(1);
+        expect(summary).toMatchObject({
+            mode: "scan",
+            exitCode: 1,
+            logsFound: 1,
+            reportsWritten: 0,
+            reportFailures: 1,
+            scanErrors: 0,
+            installedYamlData: {
+                main: {role: "Main"},
+                gameFile: {role: "Game"},
+                localIgnoreState: "Existing",
+                localIgnoreIdentity: {
+                    sha256: expect.any(String),
+                    byteLen: expect.any(Number),
+                },
+                diagnostics: expect.any(Array),
+            },
+        });
+    });
 
-	test("prints report failures separately from scan errors", () => {
-		const workspace = rememberTempDir("classic-node-cli-report-failure-human-");
-		const scanDir = join(workspace, "incoming");
-		const logPath = join(scanDir, "crash-2026-03-06-12-00-00.log");
-		const reportPath = join(scanDir, "crash-2026-03-06-12-00-00-AUTOSCAN.md");
+    test("prints report failures separately from scan errors", () => {
+        const workspace = rememberTempDir("classic-node-cli-report-failure-human-");
+        const scanDir = join(workspace, "incoming");
+        const logPath = join(scanDir, "crash-2026-03-06-12-00-00.log");
+        const reportPath = join(scanDir, "crash-2026-03-06-12-00-00-AUTOSCAN.md");
 
-		writeWorkspaceDataRoot(workspace);
-		mkdirSync(scanDir, { recursive: true });
-		writeFileSync(logPath, CLI_SAMPLE_LOG, "utf8");
-		mkdirSync(reportPath);
+        writeWorkspaceDataRoot(workspace);
+        mkdirSync(scanDir, {recursive: true});
+        writeFileSync(logPath, CLI_SAMPLE_LOG, "utf8");
+        mkdirSync(reportPath);
 
-		const result = runCli(
-			["--scan-path", scanDir, "--game-version", "auto"],
-			workspace,
-		);
+        const result = runCli(
+            ["--scan-path", scanDir, "--game-version", "auto"],
+            workspace,
+        );
 
-		expect(result.exitCode).toBe(1);
-		expect(result.output).toContain("Reports:  0 written");
-		expect(result.output).toContain("Failed:   1 report");
-		expect(result.output).not.toContain("Errors:");
-	});
+        expect(result.exitCode).toBe(1);
+        // Both lines are still this frontend's: they aggregate over per-log outcomes
+        // that the run contract does not tally.
+        expect(result.output).toContain("Reports:  0 written");
+        expect(result.output).toContain("Failed:   1 report");
+        // The counts Rust states are gone from this frontend's summary. Reintroducing
+        // either would be a second account of the same run, which is what this whole
+        // migration removes — so their absence is asserted rather than assumed.
+        expect(result.output).not.toContain("Errors:");
+        expect(result.output).not.toContain("Scanned:");
+    });
 
-	test("returns nonfatal exit code when one discovered log fails", () => {
-		const workspace = rememberTempDir("classic-node-cli-nonfatal-");
-		const scanDir = join(workspace, "incoming");
-		const goodLogPath = join(scanDir, "crash-2026-03-06-12-00-00.log");
-		const badLogDir = join(scanDir, "crash-2026-03-06-12-01-00.log");
+    test("returns nonfatal exit code when one discovered log fails", () => {
+        const workspace = rememberTempDir("classic-node-cli-nonfatal-");
+        const scanDir = join(workspace, "incoming");
+        const goodLogPath = join(scanDir, "crash-2026-03-06-12-00-00.log");
+        const badLogDir = join(scanDir, "crash-2026-03-06-12-01-00.log");
 
-		writeWorkspaceDataRoot(workspace);
-		mkdirSync(scanDir, { recursive: true });
-		writeFileSync(goodLogPath, CLI_SAMPLE_LOG, "utf8");
-		mkdirSync(badLogDir, { recursive: true });
+        writeWorkspaceDataRoot(workspace);
+        mkdirSync(scanDir, {recursive: true});
+        writeFileSync(goodLogPath, CLI_SAMPLE_LOG, "utf8");
+        mkdirSync(badLogDir, {recursive: true});
 
-		const result = runCli(
-			["--scan-path", scanDir, "--game-version", "auto"],
-			workspace,
-		);
+        const result = runCli(
+            ["--scan-path", scanDir, "--game-version", "auto"],
+            workspace,
+        );
 
-		expect(result.exitCode).toBe(1);
-		expect(result.output).toContain("Found 2 crash logs");
-		expect(result.output).toContain("Errors:");
-	});
+        expect(result.exitCode).toBe(1);
+        // Both discovered logs reach the user, and the one that failed is reported on
+        // stderr because Rust marked its line a failure. Severity reaches no further
+        // than the stream choice here — this output stays plain and pipeable, so a
+        // caller redirecting stdout still sees what went wrong.
+        expect(result.output).toContain(goodLogPath);
+        expect(result.stderr).toContain(badLogDir);
+    });
 
-	test("returns fatal exit code when CLASSIC Data cannot be resolved", () => {
-		const workspace = rememberTempDir("classic-node-cli-fatal-");
+    test("returns fatal exit code when CLASSIC Data cannot be resolved", () => {
+        const workspace = rememberTempDir("classic-node-cli-fatal-");
 
-		const result = runCli([], workspace);
+        const result = runCli([], workspace);
 
-		expect(result.exitCode).toBe(2);
-		expect(result.output).toContain("Fatal:");
-	});
+        expect(result.exitCode).toBe(2);
+        expect(result.output).toContain("Fatal:");
+    });
 
-	test("returns fatal exit code when the native binding fails during startup", () => {
-		const workspace = rememberTempDir("classic-node-cli-binding-fatal-");
-		writeWorkspaceDataRoot(workspace);
+    test("returns fatal exit code when the native binding fails during startup", () => {
+        const workspace = rememberTempDir("classic-node-cli-binding-fatal-");
+        writeWorkspaceDataRoot(workspace);
 
-		const result = runCli(["--version"], workspace, {
-			NAPI_RS_FORCE_WASI: "error",
-		});
+        const result = runCli(["--version"], workspace, {
+            NAPI_RS_FORCE_WASI: "error",
+        });
 
-		expect(result.exitCode).toBe(2);
-		expect(result.output).toContain("Fatal:");
-		expect(result.output).toContain("WASI binding not found");
-	});
+        expect(result.exitCode).toBe(2);
+        expect(result.output).toContain("Fatal:");
+        expect(result.output).toContain("WASI binding not found");
+    });
 
-	test("emits structured fatal json when the native binding fails during startup", () => {
-		const workspace = rememberTempDir("classic-node-cli-binding-fatal-json-");
-		writeWorkspaceDataRoot(workspace);
+    test("renders display segments in order, reading only the field each kind selects", () => {
+        // Fabricated lines, so this restates none of Rust's wording — that is pinned
+        // once, in the presentation crate. What a frontend must prove is narrower:
+        // that it did not reword or reorder what it was handed.
+        const segment = (
+            kind: JsScanRunDisplaySegmentKind,
+            text: string,
+            path = "",
+            count = 0,
+        ) => ({kind, text, path, count});
+        const line: JsScanRunDisplayLine = {
+            severity: JsScanRunDisplaySeverity.Warning,
+            segments: [
+                segment(JsScanRunDisplaySegmentKind.Text, "fixed prose"),
+                segment(JsScanRunDisplaySegmentKind.Label, "a display label"),
+                segment(JsScanRunDisplaySegmentKind.Count, "log", "", 1),
+                segment(JsScanRunDisplaySegmentKind.Path, "", "C:/crash-é.log"),
+                segment(JsScanRunDisplaySegmentKind.Name, "a domain name"),
+                segment(JsScanRunDisplaySegmentKind.Emphasis, "set apart"),
+            ],
+        };
 
-		const result = runCli(["--json", "--version"], workspace, {
-			NAPI_RS_FORCE_WASI: "error",
-		});
+        expect(renderDisplayLine(line)).toBe(
+            "fixed prose a display label 1 log C:/crash-é.log a domain name set apart",
+        );
+    });
 
-		expect(result.exitCode).toBe(2);
-		expect(result.stderr).toBe("");
-		expect(JSON.parse(result.stdout)).toMatchObject({
-			mode: "fatal",
-			exitCode: 2,
-			message: expect.stringContaining("WASI binding not found"),
-		});
-	});
+    test("prints the noun Rust resolved for a count rather than re-deriving it", () => {
+        // Zero takes the plural and one takes the singular, and neither form is chosen
+        // here. A frontend that re-derived the noun would have to get both right; this
+        // one cannot get either wrong, because it only ever prints what it was given.
+        const count = (value: number, noun: string) =>
+            renderDisplaySegment({
+                kind: JsScanRunDisplaySegmentKind.Count,
+                text: noun,
+                path: "",
+                count: value,
+            });
+
+        expect(count(1, "log")).toBe("1 log");
+        expect(count(0, "logs")).toBe("0 logs");
+    });
+
+    test("keeps a path whole, because a shortened one is not one a later command can open", () => {
+        const long = "C:/Users/someone/Documents/My Games/Fallout4/Crash Logs/crash.log";
+
+        expect(
+            renderDisplaySegment({
+                kind: JsScanRunDisplaySegmentKind.Path,
+                text: "",
+                path: long,
+                count: 0,
+            }),
+        ).toBe(long);
+    });
+
+    test("emits structured fatal json when the native binding fails during startup", () => {
+        const workspace = rememberTempDir("classic-node-cli-binding-fatal-json-");
+        writeWorkspaceDataRoot(workspace);
+
+        const result = runCli(["--json", "--version"], workspace, {
+            NAPI_RS_FORCE_WASI: "error",
+        });
+
+        expect(result.exitCode).toBe(2);
+        expect(result.stderr).toBe("");
+        expect(JSON.parse(result.stdout)).toMatchObject({
+            mode: "fatal",
+            exitCode: 2,
+            message: expect.stringContaining("WASI binding not found"),
+        });
+    });
 });

@@ -8,7 +8,7 @@ fn test_merge_yaml_documents_recursively_merges_nested_maps() {
         "memory://settings.yaml",
         "paths:\n  game_root: C:/Games/Fallout4\n  nested:\n    a: 1\n---\npaths:\n  nested:\n    b: 2\n",
     )
-    .unwrap();
+        .unwrap();
 
     let merged = merge_yaml_documents("memory://settings.yaml", &docs).unwrap();
 

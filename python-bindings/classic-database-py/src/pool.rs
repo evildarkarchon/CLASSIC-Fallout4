@@ -286,7 +286,8 @@ impl PyDatabasePool {
     /// pool = DatabasePool(cache_ttl_seconds=get_batch_cache_ttl())
     /// ```
     #[new]
-    #[pyo3(signature = (max_connections=None, cache_ttl_seconds=None, game_table=None, cache_capacity=None, cleanup_threshold=None, cleanup_interval_seconds=None))]
+    #[pyo3(signature = (max_connections=None, cache_ttl_seconds=None, game_table=None, cache_capacity=None, cleanup_threshold=None, cleanup_interval_seconds=None)
+    )]
     pub fn new(
         max_connections: Option<usize>,
         cache_ttl_seconds: Option<u64>,
@@ -356,7 +357,8 @@ impl PyDatabasePool {
     /// Batch lookup for FormID entries
     ///
     /// Returns a Python coroutine - use with await in Python.
-    #[pyo3(name = "get_entries_batch", signature = (formid_plugin_pairs, table=None, batch_size=None))]
+    #[pyo3(name = "get_entries_batch", signature = (formid_plugin_pairs, table=None, batch_size=None)
+    )]
     pub fn py_get_entries_batch<'py>(
         &self,
         py: Python<'py>,

@@ -6,6 +6,7 @@ implemented in Rust for optimal performance.
 
 __version__: str
 
+
 class GamePathFinder:
     """Python wrapper for game path detection.
 
@@ -14,7 +15,7 @@ class GamePathFinder:
     """
 
     def __init__(
-        self, game_exe: str, xse_loader: str | None, game_name: str, is_vr: bool
+            self, game_exe: str, xse_loader: str | None, game_name: str, is_vr: bool
     ) -> None:
         """Create a new GamePathFinder.
 
@@ -82,6 +83,7 @@ class GamePathFinder:
 
         """
 
+
 class PathValidator:
     """Python wrapper for path validation utilities."""
 
@@ -138,7 +140,7 @@ class PathValidator:
 
     @staticmethod
     def validate_settings_path(
-        path: str, setting_name: str, required_files: list[str] | None
+            path: str, setting_name: str, required_files: list[str] | None
     ) -> None:
         """Validate a settings path with optional required files.
 
@@ -154,7 +156,7 @@ class PathValidator:
 
     @staticmethod
     def validate_settings_paths(
-        game_path: str, docs_path: str, custom_scan_path: str | None, game_exe: str
+            game_path: str, docs_path: str, custom_scan_path: str | None, game_exe: str
     ) -> None:
         """Validate all common settings paths.
 
@@ -221,7 +223,7 @@ class PathValidator:
 
     @staticmethod
     def validate_path_with_permissions(
-        path: str, check_read: bool = True, check_write: bool = False
+            path: str, check_read: bool = True, check_write: bool = False
     ) -> None:
         """Validate a path with comprehensive permission checks.
 
@@ -237,6 +239,7 @@ class PathValidator:
             OSError: If other access errors occur
 
         """
+
 
 class DocsPathFinder:
     """Python wrapper for documents path detection."""
@@ -314,6 +317,7 @@ class DocsPathFinder:
     def relative_path(self) -> str:
         """Get the relative path within documents folder."""
 
+
 class BackupManager:
     """Python wrapper for backup management."""
 
@@ -382,6 +386,7 @@ class BackupManager:
 
         """
 
+
 class XseVersion:
     """Python wrapper for XSE version information."""
 
@@ -408,6 +413,7 @@ class XseVersion:
             A sanitized version string (e.g., "1_10_163_0").
 
         """
+
 
 class IniCheckResult:
     """Python wrapper for INI check result."""
@@ -439,6 +445,7 @@ class IniCheckResult:
             True if there's an issue, False otherwise.
 
         """
+
 
 class DocumentsChecker:
     """Python wrapper for documents configuration checker."""
@@ -494,6 +501,7 @@ class DocumentsChecker:
     @property
     def game_name(self) -> str:
         """Get the game name."""
+
 
 def remove_readonly(file_path: str) -> None:
     """Remove the read-only attribute from a file or directory (Windows only).

@@ -1,0 +1,36 @@
+{
+  "cases": [
+    {
+      "value": "42",
+      "type": "int"
+    },
+    {
+      "value": "OFF",
+      "type": "bool"
+    },
+    {
+      "value": "3.125",
+      "type": "float"
+    },
+    {
+      "value": "mods/data",
+      "type": "path"
+    },
+    {
+      "value": "",
+      "type": "string"
+    },
+    {
+      "value": "perhaps",
+      "type": "bool"
+    },
+    {
+      "value": "",
+      "type": "path"
+    },
+    {
+      "value": "hello",
+      "type": "int"
+    }
+  ]
+}

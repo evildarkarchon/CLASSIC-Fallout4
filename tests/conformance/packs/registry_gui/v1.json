@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "familyId": "registry-gui",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-registry-core"
+  },
+  "fixtureRoot": "tests/fixtures/registry_gui_conformance",
+  "fixtures": {
+    "populated": "populated.json"
+  },
+  "capabilities": [
+    {
+      "id": "registry-gui.observe",
+      "rustSymbols": [
+        "is_gui_mode",
+        "IS_GUI_MODE"
+      ],
+      "observationFamilies": [
+        "registry-state"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "populated",
+      "action": "registry-gui.observe",
+      "capabilityIds": [
+        "registry-gui.observe"
+      ],
+      "fixtureRefs": [
+        "populated"
+      ],
+      "input": {
+        "fixtureRef": "populated"
+      },
+      "expected": {
+        "default": false,
+        "enabled": true,
+        "disabled": false,
+        "afterClear": false,
+        "key": "is_gui_mode"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

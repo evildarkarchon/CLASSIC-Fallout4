@@ -27,11 +27,23 @@ class Scenario:
 
 
 SCENARIOS = [
-    Scenario("bindings-list", "Verify maintained binding inventory diagnostics.", "classic_py_cli", ["bindings.list"], ["bindings", "list", "--json"], [], 0, ["smoke", "python-ci"], ["local-environment-failure"]),
-    Scenario("version-parse", "Parse a deterministic semantic version through classic_version.", "classic_version", ["parse_version", "format_version"], ["version", "parse", "1.10.163.0"], [], 0, ["smoke", "python-ci", "surface:classic_version"], ["missing-runtime-coverage", "true-binding-compliance-gap"]),
-    Scenario("config-main-version", "Read the bundled main YAML version through classic_config.", "classic_config", ["load_main_yaml_version"], ["config", "main-version"], ["CLASSIC Data/databases"], 0, ["smoke", "python-ci", "surface:classic_config"], ["stale-generated-artifact", "policy-source-contradiction"]),
-    Scenario("path-validate-fixture", "Validate a deterministic fixture path through classic_path.", "classic_path", ["PathValidator.is_valid_path"], ["path", "validate", "python-bindings/tests/fixtures"], ["python-bindings/tests/fixtures"], 0, ["smoke", "python-ci", "surface:classic_path"], ["local-environment-failure"]),
-    Scenario("file-hash", "Hash a deterministic repository file through classic_file_io.", "classic_file_io", ["FileHasher.hash_file"], ["file", "hash", "Cargo.toml"], [], 0, ["smoke", "python-ci", "surface:classic_file_io"], ["true-binding-compliance-gap"]),
+    Scenario("bindings-list", "Verify maintained binding inventory diagnostics.", "classic_py_cli", ["bindings.list"],
+             ["bindings", "list", "--json"], [], 0, ["smoke", "python-ci"], ["local-environment-failure"]),
+    Scenario("version-parse", "Parse a deterministic semantic version through classic_version.", "classic_version",
+             ["parse_version", "format_version"], ["version", "parse", "1.10.163.0"], [], 0,
+             ["smoke", "python-ci", "surface:classic_version"],
+             ["missing-runtime-coverage", "true-binding-compliance-gap"]),
+    Scenario("config-main-version", "Read the bundled main YAML version through classic_config.", "classic_config",
+             ["load_main_yaml_version"], ["config", "main-version"], ["CLASSIC Data/databases"], 0,
+             ["smoke", "python-ci", "surface:classic_config"],
+             ["stale-generated-artifact", "policy-source-contradiction"]),
+    Scenario("path-validate-fixture", "Validate a deterministic fixture path through classic_path.", "classic_path",
+             ["PathValidator.is_valid_path"], ["path", "validate", "python-bindings/tests/fixtures"],
+             ["python-bindings/tests/fixtures"], 0, ["smoke", "python-ci", "surface:classic_path"],
+             ["local-environment-failure"]),
+    Scenario("file-hash", "Hash a deterministic repository file through classic_file_io.", "classic_file_io",
+             ["FileHasher.hash_file"], ["file", "hash", "Cargo.toml"], [], 0,
+             ["smoke", "python-ci", "surface:classic_file_io"], ["true-binding-compliance-gap"]),
     Scenario(
         "scanlog-addictol-newer-than-floor",
         "Scan an Addictol crash log newer than the configured floor and prove it remains valid.",

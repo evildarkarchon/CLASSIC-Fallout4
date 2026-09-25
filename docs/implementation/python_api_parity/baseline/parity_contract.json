@@ -66,6 +66,28 @@
   },
   "tier1Mappings": [
     {
+      "id": "shared.lib.GameId.display_name",
+      "tier": "tier1",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "GameId",
+      "pythonModule": "classic_shared",
+      "pythonExportPath": "GameId.display_name",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "message.lib.init_logging",
+      "tier": "tier1",
+      "ownerModule": "message",
+      "rustCrate": "classic-message-core",
+      "rustSymbol": "init",
+      "pythonModule": "classic_message",
+      "pythonExportPath": "init_logging",
+      "pythonKind": "function",
+      "pythonArity": 0
+    },
+    {
       "id": "scanlog.scan_run.ScanRunConfiguration",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -250,7 +272,7 @@
       "tier": "tier1",
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "new",
+      "rustSymbol": "Cancellation",
       "pythonModule": "classic_scanlog",
       "pythonExportPath": "ScanRunCancellation.__init__",
       "pythonKind": "method"
@@ -260,7 +282,7 @@
       "tier": "tier1",
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "cancel",
+      "rustSymbol": "Cancellation",
       "pythonModule": "classic_scanlog",
       "pythonExportPath": "ScanRunCancellation.cancel",
       "pythonKind": "method"
@@ -576,60 +598,60 @@
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "classification",
+      "rustSymbol": "UserSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsSnapshot",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsSnapshot.classification",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.diagnostic_code_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "code",
+      "rustSymbol": "Diagnostic",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsDiagnostic",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsDiagnostic.code",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.commit_eligibility_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "commit_eligibility",
+      "rustSymbol": "UserSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsSnapshot",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsSnapshot.commit_eligibility",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.diagnostics_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "diagnostics",
+      "rustSymbol": "UserSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsSnapshot",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsSnapshot.diagnostics",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.location_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "location",
+      "rustSymbol": "UserSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsSnapshot",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsSnapshot.source_location",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.diagnostic_message_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "message",
+      "rustSymbol": "Diagnostic",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsDiagnostic",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsDiagnostic.message",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.open",
@@ -658,30 +680,30 @@
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "original_bytes",
+      "rustSymbol": "UserSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsSnapshot",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsSnapshot.original_content",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.path_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "path",
+      "rustSymbol": "UserSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsSnapshot",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsSnapshot.source_path",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.revision_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "revision",
+      "rustSymbol": "UserSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsSnapshot",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsSnapshot.revision",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.schema_version_accessor",
@@ -708,50 +730,50 @@
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "update_check",
+      "rustSymbol": "UpdatePreferences",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UpdatePreferences",
-      "pythonKind": "class"
+      "pythonExportPath": "UpdatePreferences.update_check",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.update_check_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "update_check_origin",
+      "rustSymbol": "UpdatePreferences",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UpdatePreferences",
-      "pythonKind": "class"
+      "pythonExportPath": "UpdatePreferences.origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.update_source_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "update_source",
+      "rustSymbol": "UpdatePreferences",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UpdatePreferences",
-      "pythonKind": "class"
+      "pythonExportPath": "UpdatePreferences.update_source",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.update_source_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "update_source_origin",
+      "rustSymbol": "UpdatePreferences",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UpdatePreferences",
-      "pythonKind": "class"
+      "pythonExportPath": "UpdatePreferences.update_source_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.update_preferences_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "update_preferences",
+      "rustSymbol": "UserSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsSnapshot",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsSnapshot.update_preferences",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.crash_log_scan_settings_type",
@@ -858,210 +880,210 @@
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "crash_log_scan_settings",
+      "rustSymbol": "UserSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsSnapshot",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsSnapshot.crash_log_scan_settings",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_fcx_mode_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "fcx_mode",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.fcx_mode",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_fcx_mode_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "fcx_mode_origin",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.fcx_mode_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_simplify_logs_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "simplify_logs",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.simplify_logs",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_simplify_logs_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "simplify_logs_origin",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.simplify_logs_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_show_statistics_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "show_statistics",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.show_statistics",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_show_statistics_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "show_statistics_origin",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.show_statistics_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_formid_value_lookup_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "formid_value_lookup",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.formid_value_lookup",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_formid_value_lookup_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "formid_value_lookup_origin",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.formid_value_lookup_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_formid_databases_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "formid_databases",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.formid_databases",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_formid_databases_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "formid_databases_origin",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.formid_databases_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_move_unsolved_logs_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "move_unsolved_logs",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.move_unsolved_logs",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_move_unsolved_logs_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "move_unsolved_logs_origin",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.move_unsolved_logs_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_unsolved_logs_destination_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "unsolved_logs_destination",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.unsolved_logs_destination",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_unsolved_logs_destination_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "unsolved_logs_destination_origin",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.unsolved_logs_destination_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_custom_scan_input_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "custom_scan_input",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.custom_scan_input",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_custom_scan_input_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "custom_scan_input_origin",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.custom_scan_input_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_game_version_selection_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "game_version_selection",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.game_version_selection",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_game_version_selection_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "game_version_selection_origin",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.game_version_selection_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_max_concurrent_scans_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "max_concurrent_scans",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.max_concurrent_scans",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.scan_max_concurrent_scans_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "max_concurrent_scans_origin",
+      "rustSymbol": "CrashLogScanSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "CrashLogScanSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "CrashLogScanSettings.max_concurrent_scans_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.game_version_as_str",
@@ -1088,10 +1110,11 @@
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "new",
+      "rustSymbol": "UserSettingsUpdate",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsUpdate",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsUpdate.__init__",
+      "pythonKind": "method",
+      "pythonArity": 0
     },
     {
       "id": "user_settings.update_with_update_check",
@@ -1285,60 +1308,60 @@
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "base_revision",
+      "rustSymbol": "UserSettingsUpdatePreview",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsUpdatePreview",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsUpdatePreview.base_revision",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.accepted_fields_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "fields",
+      "rustSymbol": "UserSettingsUpdatePreview",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsUpdatePreview",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsUpdatePreview.fields",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.update_field_canonical_path_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "canonical_path",
+      "rustSymbol": "UserSettingsUpdateField",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsUpdateField",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsUpdateField.canonical_path",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.update_diagnostic_field_path_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "field_path",
+      "rustSymbol": "UpdateDiagnostic",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsUpdateDiagnostic",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsUpdateDiagnostic.field_path",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.update_diagnostic_code_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "code",
+      "rustSymbol": "UpdateDiagnostic",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsUpdateDiagnostic",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsUpdateDiagnostic.code",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.update_diagnostic_message_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "message",
+      "rustSymbol": "UpdateDiagnostic",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsUpdateDiagnostic",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsUpdateDiagnostic.message",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.game_setup_settings_type",
@@ -1355,190 +1378,190 @@
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "game_setup_settings",
+      "rustSymbol": "UserSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsSnapshot",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsSnapshot.game_setup_settings",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_managed_game_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "managed_game",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.managed_game",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_managed_game_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "managed_game_origin",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.managed_game_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_game_version_selection_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "game_version_selection",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.game_version_selection",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_game_version_selection_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "game_version_selection_origin",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.game_version_selection_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_game_root_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "game_root",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.game_root",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_game_root_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "game_root_origin",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.game_root_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_game_executable_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "game_executable",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.game_executable",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_game_executable_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "game_executable_origin",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.game_executable_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_documents_root_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "documents_root",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.documents_root",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_documents_root_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "documents_root_origin",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.documents_root_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_ini_folder_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "ini_folder",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.ini_folder",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_ini_folder_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "ini_folder_origin",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.ini_folder_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_mods_root_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "mods_root",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.mods_root",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_mods_root_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "mods_root_origin",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.mods_root_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_custom_scan_input_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "custom_scan_input",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.custom_scan_input",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_custom_scan_input_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "custom_scan_input_origin",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.custom_scan_input_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_papyrus_log_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "papyrus_log",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.papyrus_log",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.setup_papyrus_log_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "papyrus_log_origin",
+      "rustSymbol": "GameSetupSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GameSetupSettings",
-      "pythonKind": "class"
+      "pythonExportPath": "GameSetupSettings.papyrus_log_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_state_type",
@@ -1595,240 +1618,240 @@
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "frontend_state",
+      "rustSymbol": "UserSettings",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsSnapshot",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsSnapshot.frontend_state",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_preferences_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "preferences",
+      "rustSymbol": "FrontendState",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "FrontendState",
-      "pythonKind": "class"
+      "pythonExportPath": "FrontendState.preferences",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_window_geometry_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "window_geometry",
+      "rustSymbol": "FrontendState",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "FrontendState",
-      "pythonKind": "class"
+      "pythonExportPath": "FrontendState.window_geometry",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_tui_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "tui",
+      "rustSymbol": "FrontendState",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "FrontendState",
-      "pythonKind": "class"
+      "pythonExportPath": "FrontendState.tui",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_auto_switch_after_scan_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "auto_switch_after_scan",
+      "rustSymbol": "FrontendPreferences",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "FrontendPreferences",
-      "pythonKind": "class"
+      "pythonExportPath": "FrontendPreferences.auto_switch_after_scan",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_auto_switch_after_scan_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "auto_switch_after_scan_origin",
+      "rustSymbol": "FrontendPreferences",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "FrontendPreferences",
-      "pythonKind": "class"
+      "pythonExportPath": "FrontendPreferences.auto_switch_after_scan_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_auto_refresh_interval_ms_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "auto_refresh_interval_ms",
+      "rustSymbol": "FrontendPreferences",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "FrontendPreferences",
-      "pythonKind": "class"
+      "pythonExportPath": "FrontendPreferences.auto_refresh_interval_ms",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_auto_refresh_interval_ms_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "auto_refresh_interval_ms_origin",
+      "rustSymbol": "FrontendPreferences",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "FrontendPreferences",
-      "pythonKind": "class"
+      "pythonExportPath": "FrontendPreferences.auto_refresh_interval_ms_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_main_tab_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "main_tab",
+      "rustSymbol": "GuiWindowGeometry",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GuiWindowGeometry",
-      "pythonKind": "class"
+      "pythonExportPath": "GuiWindowGeometry.main_tab",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_backups_tab_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "backups_tab",
+      "rustSymbol": "GuiWindowGeometry",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GuiWindowGeometry",
-      "pythonKind": "class"
+      "pythonExportPath": "GuiWindowGeometry.backups_tab",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_articles_tab_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "articles_tab",
+      "rustSymbol": "GuiWindowGeometry",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GuiWindowGeometry",
-      "pythonKind": "class"
+      "pythonExportPath": "GuiWindowGeometry.articles_tab",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_results_tab_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "results_tab",
+      "rustSymbol": "GuiWindowGeometry",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "GuiWindowGeometry",
-      "pythonKind": "class"
+      "pythonExportPath": "GuiWindowGeometry.results_tab",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_window_maximized_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "maximized",
+      "rustSymbol": "WindowGeometry",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "WindowGeometry",
-      "pythonKind": "class"
+      "pythonExportPath": "WindowGeometry.maximized",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_window_maximized_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "maximized_origin",
+      "rustSymbol": "WindowGeometry",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "WindowGeometry",
-      "pythonKind": "class"
+      "pythonExportPath": "WindowGeometry.maximized_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_window_width_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "width",
+      "rustSymbol": "WindowGeometry",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "WindowGeometry",
-      "pythonKind": "class"
+      "pythonExportPath": "WindowGeometry.width",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_window_width_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "width_origin",
+      "rustSymbol": "WindowGeometry",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "WindowGeometry",
-      "pythonKind": "class"
+      "pythonExportPath": "WindowGeometry.width_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_window_height_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "height",
+      "rustSymbol": "WindowGeometry",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "WindowGeometry",
-      "pythonKind": "class"
+      "pythonExportPath": "WindowGeometry.height",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_window_height_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "height_origin",
+      "rustSymbol": "WindowGeometry",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "WindowGeometry",
-      "pythonKind": "class"
+      "pythonExportPath": "WindowGeometry.height_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_tui_active_tab_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "active_tab",
+      "rustSymbol": "TuiRememberedState",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "TuiRememberedState",
-      "pythonKind": "class"
+      "pythonExportPath": "TuiRememberedState.active_tab",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_tui_active_tab_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "active_tab_origin",
+      "rustSymbol": "TuiRememberedState",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "TuiRememberedState",
-      "pythonKind": "class"
+      "pythonExportPath": "TuiRememberedState.active_tab_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_tui_results_panel_width_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "results_panel_width",
+      "rustSymbol": "TuiRememberedState",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "TuiRememberedState",
-      "pythonKind": "class"
+      "pythonExportPath": "TuiRememberedState.results_panel_width",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_tui_results_panel_width_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "results_panel_width_origin",
+      "rustSymbol": "TuiRememberedState",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "TuiRememberedState",
-      "pythonKind": "class"
+      "pythonExportPath": "TuiRememberedState.results_panel_width_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_tui_sort_ascending_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "sort_ascending",
+      "rustSymbol": "TuiRememberedState",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "TuiRememberedState",
-      "pythonKind": "class"
+      "pythonExportPath": "TuiRememberedState.sort_ascending",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.frontend_tui_sort_ascending_origin_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "sort_ascending_origin",
+      "rustSymbol": "TuiRememberedState",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "TuiRememberedState",
-      "pythonKind": "class"
+      "pythonExportPath": "TuiRememberedState.sort_ascending_origin",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.update_with_managed_game",
@@ -2014,96 +2037,96 @@
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "base_revision",
+      "rustSymbol": "UserSettingsMigrationPlan",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsMigrationPlan",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsMigrationPlan.base_revision",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.migration_plan_changes",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "changes",
+      "rustSymbol": "UserSettingsMigrationPlan",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsMigrationPlan",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsMigrationPlan.changes",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.migration_plan_original_bytes",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "original_bytes",
+      "rustSymbol": "UserSettingsMigrationPlan",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsMigrationPlan",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsMigrationPlan.original_content",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.migration_plan_proposed_bytes",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "proposed_bytes",
+      "rustSymbol": "UserSettingsMigrationPlan",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsMigrationPlan",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsMigrationPlan.proposed_content",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.migration_change_source_path",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "source_path",
+      "rustSymbol": "MigrationChange",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsMigrationChange",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsMigrationChange.source_path",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.migration_change_target_path",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "target_path",
+      "rustSymbol": "MigrationChange",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsMigrationChange",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsMigrationChange.target_path",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.migration_change_before",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "before",
+      "rustSymbol": "MigrationChange",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsMigrationChange",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsMigrationChange.before",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.migration_change_after",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "after",
+      "rustSymbol": "MigrationChange",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsMigrationChange",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsMigrationChange.after",
+      "pythonKind": "property"
     },
     {
       "id": "user_settings.migration_diagnostic_message",
       "tier": "tier1",
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
-      "rustSymbol": "message",
+      "rustSymbol": "MigrationDiagnostic",
       "pythonModule": "classic_user_settings",
-      "pythonExportPath": "UserSettingsMigrationDiagnostic",
-      "pythonKind": "class"
+      "pythonExportPath": "UserSettingsMigrationDiagnostic.message",
+      "pythonKind": "property"
     },
     {
       "id": "config-clear-yaml-cache",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-settings-core",
       "rustSymbol": "clear_global_yaml_cache",
       "pythonModule": "classic_config",
       "pythonExportPath": "clear_yaml_cache",
@@ -2222,7 +2245,7 @@
       "id": "config.shared.get_application_dir",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-registry-core",
       "rustSymbol": "get_application_dir",
       "pythonModule": "classic_config",
       "pythonExportPath": "get_application_dir",
@@ -2244,7 +2267,7 @@
       "id": "config.shared.set_application_dir",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustCrate": "classic-config-core",
+      "rustCrate": "classic-registry-core",
       "rustSymbol": "set_application_dir",
       "pythonModule": "classic_config",
       "pythonExportPath": "set_application_dir",
@@ -2501,7 +2524,7 @@
       "tier": "tier1",
       "ownerModule": "version_registry",
       "rustCrate": "classic-version-registry-core",
-      "rustSymbol": "Fallout4Version",
+      "rustSymbol": "as_str",
       "pythonModule": "classic_version_registry",
       "pythonExportPath": "Fallout4Version.as_str",
       "pythonKind": "method"
@@ -2601,7 +2624,7 @@
       "tier": "tier1",
       "ownerModule": "version_registry",
       "rustCrate": "classic-version-registry-core",
-      "rustSymbol": "Fallout4Version",
+      "rustSymbol": "game_version",
       "pythonModule": "classic_version_registry",
       "pythonExportPath": "Fallout4Version.version",
       "pythonKind": "method"
@@ -2871,7 +2894,7 @@
       "tier": "tier1",
       "ownerModule": "database",
       "rustCrate": "classic-database-core",
-      "rustSymbol": "DatabaseError",
+      "rustSymbol": "DEFAULT_CACHE_CLEANUP_INTERVAL_SECS",
       "pythonModule": "classic_database",
       "pythonExportPath": "get_default_cache_cleanup_interval",
       "pythonKind": "function"
@@ -3261,7 +3284,7 @@
       "tier": "tier1",
       "ownerModule": "database",
       "rustCrate": "classic-database-core",
-      "rustSymbol": "DatabasePool",
+      "rustSymbol": "BATCH_CACHE_TTL_SECS",
       "pythonModule": "classic_database",
       "pythonExportPath": "get_batch_cache_ttl",
       "pythonKind": "function"
@@ -3271,7 +3294,7 @@
       "tier": "tier1",
       "ownerModule": "database",
       "rustCrate": "classic-database-core",
-      "rustSymbol": "DatabasePool",
+      "rustSymbol": "DEFAULT_CACHE_CLEANUP_OP_THRESHOLD",
       "pythonModule": "classic_database",
       "pythonExportPath": "get_default_cache_cleanup_threshold",
       "pythonKind": "function"
@@ -3281,7 +3304,7 @@
       "tier": "tier1",
       "ownerModule": "database",
       "rustCrate": "classic-database-core",
-      "rustSymbol": "DatabasePool",
+      "rustSymbol": "DEFAULT_CACHE_TTL_SECS",
       "pythonModule": "classic_database",
       "pythonExportPath": "get_default_cache_ttl",
       "pythonKind": "function"
@@ -3291,7 +3314,7 @@
       "tier": "tier1",
       "ownerModule": "database",
       "rustCrate": "classic-database-core",
-      "rustSymbol": "DatabasePool",
+      "rustSymbol": "DEFAULT_QUERY_CACHE_CAPACITY",
       "pythonModule": "classic_database",
       "pythonExportPath": "get_default_query_cache_capacity",
       "pythonKind": "function"
@@ -3301,7 +3324,7 @@
       "tier": "tier1",
       "ownerModule": "database",
       "rustCrate": "classic-database-core",
-      "rustSymbol": "DatabasePool",
+      "rustSymbol": "MAX_CACHE_TTL_SECS",
       "pythonModule": "classic_database",
       "pythonExportPath": "get_max_cache_ttl",
       "pythonKind": "function"
@@ -5209,18 +5232,18 @@
       "id": "path.lib.PathValidator",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
-      "rustSymbol": "GamePathFinder",
+      "rustSymbol": null,
       "pythonModule": "classic_path",
       "pythonExportPath": "PathValidator",
-      "pythonKind": "class"
+      "pythonKind": "class",
+      "unmappedReason": "Static Python namespace for individually mapped core validation functions; there is no Rust PathValidator object or Python constructor."
     },
     {
       "id": "path.lib.PathValidator.check_drive_exists",
       "tier": "tier1",
       "ownerModule": "path",
       "rustCrate": "classic-path-core",
-      "rustSymbol": "GamePathFinder",
+      "rustSymbol": "check_drive_exists",
       "pythonModule": "classic_path",
       "pythonExportPath": "PathValidator.check_drive_exists",
       "pythonKind": "method"
@@ -5230,7 +5253,7 @@
       "tier": "tier1",
       "ownerModule": "path",
       "rustCrate": "classic-path-core",
-      "rustSymbol": "GamePathFinder",
+      "rustSymbol": "check_read_permissions",
       "pythonModule": "classic_path",
       "pythonExportPath": "PathValidator.check_read_permissions",
       "pythonKind": "method"
@@ -5240,7 +5263,7 @@
       "tier": "tier1",
       "ownerModule": "path",
       "rustCrate": "classic-path-core",
-      "rustSymbol": "GamePathFinder",
+      "rustSymbol": "check_write_permissions",
       "pythonModule": "classic_path",
       "pythonExportPath": "PathValidator.check_write_permissions",
       "pythonKind": "method"
@@ -5250,7 +5273,7 @@
       "tier": "tier1",
       "ownerModule": "path",
       "rustCrate": "classic-path-core",
-      "rustSymbol": "GamePathFinder",
+      "rustSymbol": "is_restricted_path",
       "pythonModule": "classic_path",
       "pythonExportPath": "PathValidator.is_restricted_path",
       "pythonKind": "method"
@@ -5260,7 +5283,7 @@
       "tier": "tier1",
       "ownerModule": "path",
       "rustCrate": "classic-path-core",
-      "rustSymbol": "GamePathFinder",
+      "rustSymbol": "is_valid_executable_path",
       "pythonModule": "classic_path",
       "pythonExportPath": "PathValidator.is_valid_executable_path",
       "pythonKind": "method"
@@ -5270,17 +5293,18 @@
       "tier": "tier1",
       "ownerModule": "path",
       "rustCrate": "classic-path-core",
-      "rustSymbol": "GamePathFinder",
+      "rustSymbol": "is_valid_path",
       "pythonModule": "classic_path",
       "pythonExportPath": "PathValidator.is_valid_path",
-      "pythonKind": "method"
+      "pythonKind": "method",
+      "pythonArity": 1
     },
     {
       "id": "path.lib.PathValidator.validate_custom_scan_path",
       "tier": "tier1",
       "ownerModule": "path",
       "rustCrate": "classic-path-core",
-      "rustSymbol": "GamePathFinder",
+      "rustSymbol": "validate_custom_scan_path",
       "pythonModule": "classic_path",
       "pythonExportPath": "PathValidator.validate_custom_scan_path",
       "pythonKind": "method"
@@ -5290,7 +5314,7 @@
       "tier": "tier1",
       "ownerModule": "path",
       "rustCrate": "classic-path-core",
-      "rustSymbol": "GamePathFinder",
+      "rustSymbol": "validate_path_with_permissions",
       "pythonModule": "classic_path",
       "pythonExportPath": "PathValidator.validate_path_with_permissions",
       "pythonKind": "method"
@@ -5300,17 +5324,18 @@
       "tier": "tier1",
       "ownerModule": "path",
       "rustCrate": "classic-path-core",
-      "rustSymbol": "GamePathFinder",
+      "rustSymbol": "validate_required_files",
       "pythonModule": "classic_path",
       "pythonExportPath": "PathValidator.validate_required_files",
-      "pythonKind": "method"
+      "pythonKind": "method",
+      "pythonArity": 2
     },
     {
       "id": "path.lib.PathValidator.validate_settings_path",
       "tier": "tier1",
       "ownerModule": "path",
       "rustCrate": "classic-path-core",
-      "rustSymbol": "GamePathFinder",
+      "rustSymbol": "validate_settings_path",
       "pythonModule": "classic_path",
       "pythonExportPath": "PathValidator.validate_settings_path",
       "pythonKind": "method"
@@ -5320,7 +5345,7 @@
       "tier": "tier1",
       "ownerModule": "path",
       "rustCrate": "classic-path-core",
-      "rustSymbol": "GamePathFinder",
+      "rustSymbol": "validate_settings_paths",
       "pythonModule": "classic_path",
       "pythonExportPath": "PathValidator.validate_settings_paths",
       "pythonKind": "method"
@@ -5452,8 +5477,9 @@
       "rustCrate": "classic-path-core",
       "rustSymbol": "is_valid_path",
       "pythonModule": "classic_path",
-      "pythonExportPath": "BackupManager",
-      "pythonKind": "class"
+      "pythonExportPath": "PathValidator.is_valid_path",
+      "pythonKind": "method",
+      "pythonArity": 1
     },
     {
       "id": "path.lib.parse_steam_library@rust",
@@ -5562,8 +5588,9 @@
       "rustCrate": "classic-path-core",
       "rustSymbol": "validate_required_files",
       "pythonModule": "classic_path",
-      "pythonExportPath": "BackupManager",
-      "pythonKind": "class"
+      "pythonExportPath": "PathValidator.validate_required_files",
+      "pythonKind": "method",
+      "pythonArity": 2
     },
     {
       "id": "path.lib.validate_settings_path@rust",
@@ -5670,7 +5697,7 @@
       "tier": "tier1",
       "ownerModule": "perf",
       "rustCrate": "classic-perf-core",
-      "rustSymbol": "MetricsSummary",
+      "rustSymbol": "clear_metrics",
       "pythonModule": "classic_perf",
       "pythonExportPath": "reset_metrics",
       "pythonKind": "function"
@@ -5744,16 +5771,6 @@
       "pythonModule": "classic_registry",
       "pythonExportPath": "get_game_path_gui",
       "pythonKind": "function"
-    },
-    {
-      "id": "registry.lib.get_game_version@rust",
-      "tier": "tier1",
-      "ownerModule": "registry",
-      "rustCrate": "classic-registry-core",
-      "rustSymbol": "get_game_version",
-      "pythonModule": "classic_registry",
-      "pythonExportPath": "Keys",
-      "pythonKind": "class"
     },
     {
       "id": "registry.lib.get_game_version_string",
@@ -6180,7 +6197,7 @@
       "tier": "tier1",
       "ownerModule": "resource",
       "rustCrate": "classic-resource-core",
-      "rustSymbol": "ResourceType",
+      "rustSymbol": "enumerate_resources",
       "pythonModule": "classic_resource",
       "pythonExportPath": "enumerate_resources",
       "pythonKind": "function"
@@ -6420,7 +6437,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "VsyncEntry",
+      "rustSymbol": "ConfigFileCache",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "RustConfigFileCache",
       "pythonKind": "class"
@@ -6430,7 +6447,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "VsyncEntry",
+      "rustSymbol": "ConfigFileCache",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "RustConfigFileCache.__init__",
       "pythonKind": "method"
@@ -6440,7 +6457,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "VsyncEntry",
+      "rustSymbol": "ConfigFileCache",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "RustConfigFileCache.config_files",
       "pythonKind": "method"
@@ -6450,7 +6467,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "VsyncEntry",
+      "rustSymbol": "ConfigFileCache",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "RustConfigFileCache.contains",
       "pythonKind": "method"
@@ -6460,7 +6477,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "VsyncEntry",
+      "rustSymbol": "ConfigFileCache",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "RustConfigFileCache.get_bool",
       "pythonKind": "method"
@@ -6470,7 +6487,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "VsyncEntry",
+      "rustSymbol": "ConfigFileCache",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "RustConfigFileCache.get_duplicates",
       "pythonKind": "method"
@@ -6480,7 +6497,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "VsyncEntry",
+      "rustSymbol": "ConfigFileCache",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "RustConfigFileCache.get_float",
       "pythonKind": "method"
@@ -6490,7 +6507,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "VsyncEntry",
+      "rustSymbol": "ConfigFileCache",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "RustConfigFileCache.get_int",
       "pythonKind": "method"
@@ -6500,7 +6517,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "VsyncEntry",
+      "rustSymbol": "ConfigFileCache",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "RustConfigFileCache.get_path",
       "pythonKind": "method"
@@ -6510,7 +6527,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "VsyncEntry",
+      "rustSymbol": "ConfigFileCache",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "RustConfigFileCache.get_str",
       "pythonKind": "method"
@@ -6520,7 +6537,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "VsyncEntry",
+      "rustSymbol": "ConfigFileCache",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "RustConfigFileCache.has_setting",
       "pythonKind": "method"
@@ -6530,7 +6547,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "VsyncEntry",
+      "rustSymbol": "ModIniScanner",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "RustModIniScanner",
       "pythonKind": "class"
@@ -6540,7 +6557,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "VsyncEntry",
+      "rustSymbol": "ModIniScanner",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "RustModIniScanner.__init__",
       "pythonKind": "method"
@@ -6550,7 +6567,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "VsyncEntry",
+      "rustSymbol": "ModIniScanner",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "RustModIniScanner.scan",
       "pythonKind": "method"
@@ -6570,7 +6587,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "VsyncEntry",
+      "rustSymbol": "scan",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "scan_mod_inis",
       "pythonKind": "function"
@@ -6640,7 +6657,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "CrashgenReport",
+      "rustSymbol": "check_with_rules",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "check_crashgen_settings",
       "pythonKind": "function"
@@ -7070,7 +7087,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "LogErrorEntry",
+      "rustSymbol": "LogProcessor",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "process_logs",
       "pythonKind": "function"
@@ -7370,7 +7387,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "WryeSeverity",
+      "rustSymbol": "format_report",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "parse_wrye_report",
       "pythonKind": "function"
@@ -7680,7 +7697,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "GameVersion",
+      "rustSymbol": "XseChecker",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "check_xse_plugins",
       "pythonKind": "function"
@@ -8760,9 +8777,8 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "rustSymbol": "PapyrusError",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "PapyrusError",
-      "pythonKind": "class"
+      "pythonKind": "rust_only",
+      "rustKind": "enum"
     },
     {
       "id": "scanlog.papyrus.PapyrusStats",
@@ -10099,8 +10115,8 @@
       "id": "shared.path.PathHandler",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler",
       "pythonKind": "class"
@@ -10109,8 +10125,8 @@
       "id": "shared.path.PathHandler.__init__",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler.__init__",
       "pythonKind": "method",
@@ -10120,8 +10136,8 @@
       "id": "shared.path.PathHandler.cache_metrics",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler.cache_metrics",
       "pythonKind": "method",
@@ -10131,8 +10147,8 @@
       "id": "shared.path.PathHandler.cache_stats",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler.cache_stats",
       "pythonKind": "method",
@@ -10142,8 +10158,8 @@
       "id": "shared.path.PathHandler.cleanup_cache",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler.cleanup_cache",
       "pythonKind": "method",
@@ -10153,8 +10169,8 @@
       "id": "shared.path.PathHandler.clear_cache",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler.clear_cache",
       "pythonKind": "method",
@@ -10164,8 +10180,8 @@
       "id": "shared.path.PathHandler.common_prefix",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler.common_prefix",
       "pythonKind": "method",
@@ -10175,8 +10191,8 @@
       "id": "shared.path.PathHandler.get_extension",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler.get_extension",
       "pythonKind": "method",
@@ -10186,8 +10202,8 @@
       "id": "shared.path.PathHandler.get_filename",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler.get_filename",
       "pythonKind": "method",
@@ -10197,8 +10213,8 @@
       "id": "shared.path.PathHandler.get_parent",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler.get_parent",
       "pythonKind": "method",
@@ -10208,8 +10224,8 @@
       "id": "shared.path.PathHandler.is_absolute",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler.is_absolute",
       "pythonKind": "method",
@@ -10219,8 +10235,8 @@
       "id": "shared.path.PathHandler.join_paths",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler.join_paths",
       "pythonKind": "method",
@@ -10230,8 +10246,8 @@
       "id": "shared.path.PathHandler.normalize_path",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler.normalize_path",
       "pythonKind": "method",
@@ -10241,8 +10257,8 @@
       "id": "shared.path.PathHandler.split_path",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler.split_path",
       "pythonKind": "method",
@@ -10252,8 +10268,8 @@
       "id": "shared.path.PathHandler.split_path_fast",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler.split_path_fast",
       "pythonKind": "method",
@@ -10263,8 +10279,8 @@
       "id": "shared.path.PathHandler.to_absolute",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler.to_absolute",
       "pythonKind": "method",
@@ -10274,8 +10290,8 @@
       "id": "shared.path.PathHandler.validate_paths_batch",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler.validate_paths_batch",
       "pythonKind": "method",
@@ -10285,8 +10301,8 @@
       "id": "shared.path.PathHandler.validate_paths_batch_fast",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyPathHandler",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PathHandler",
       "pythonModule": "classic_shared",
       "pythonExportPath": "PathHandler.validate_paths_batch_fast",
       "pythonKind": "method",
@@ -10326,8 +10342,8 @@
       "id": "shared.performance.RustPerformanceMonitor",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyRustPerformanceMonitor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PerformanceMetrics",
       "pythonModule": "classic_shared",
       "pythonExportPath": "RustPerformanceMonitor",
       "pythonKind": "class"
@@ -10336,8 +10352,8 @@
       "id": "shared.performance.RustPerformanceMonitor.__init__",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyRustPerformanceMonitor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PerformanceMetrics",
       "pythonModule": "classic_shared",
       "pythonExportPath": "RustPerformanceMonitor.__init__",
       "pythonKind": "method",
@@ -10347,8 +10363,8 @@
       "id": "shared.performance.RustPerformanceMonitor.clear_metrics",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyRustPerformanceMonitor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PerformanceMetrics",
       "pythonModule": "classic_shared",
       "pythonExportPath": "RustPerformanceMonitor.clear_metrics",
       "pythonKind": "method",
@@ -10358,8 +10374,8 @@
       "id": "shared.performance.RustPerformanceMonitor.get_all_stats",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyRustPerformanceMonitor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PerformanceMetrics",
       "pythonModule": "classic_shared",
       "pythonExportPath": "RustPerformanceMonitor.get_all_stats",
       "pythonKind": "method",
@@ -10369,8 +10385,8 @@
       "id": "shared.performance.RustPerformanceMonitor.get_operation_stats",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyRustPerformanceMonitor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PerformanceMetrics",
       "pythonModule": "classic_shared",
       "pythonExportPath": "RustPerformanceMonitor.get_operation_stats",
       "pythonKind": "method",
@@ -10380,8 +10396,8 @@
       "id": "shared.performance.RustPerformanceMonitor.record_metric",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyRustPerformanceMonitor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PerformanceMetrics",
       "pythonModule": "classic_shared",
       "pythonExportPath": "RustPerformanceMonitor.record_metric",
       "pythonKind": "method",
@@ -10391,8 +10407,8 @@
       "id": "shared.performance.RustPerformanceMonitor.start_timer",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyRustPerformanceMonitor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PerformanceMetrics",
       "pythonModule": "classic_shared",
       "pythonExportPath": "RustPerformanceMonitor.start_timer",
       "pythonKind": "method",
@@ -10402,8 +10418,8 @@
       "id": "shared.performance.RustPerformanceMonitor.stop_timer",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyRustPerformanceMonitor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "PerformanceMetrics",
       "pythonModule": "classic_shared",
       "pythonExportPath": "RustPerformanceMonitor.stop_timer",
       "pythonKind": "method",
@@ -10483,8 +10499,8 @@
       "id": "shared.runtime.get_runtime_stats",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "get_runtime_stats",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "get_runtime",
       "pythonModule": "classic_shared",
       "pythonExportPath": "get_runtime_stats",
       "pythonKind": "function",
@@ -10494,8 +10510,8 @@
       "id": "shared.runtime.is_runtime_healthy",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "is_runtime_healthy",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "get_runtime",
       "pythonModule": "classic_shared",
       "pythonExportPath": "is_runtime_healthy",
       "pythonKind": "function",
@@ -10575,8 +10591,8 @@
       "id": "shared.strings.StringProcessor",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyStringProcessor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "StringProcessor",
       "pythonModule": "classic_shared",
       "pythonExportPath": "StringProcessor",
       "pythonKind": "class"
@@ -10585,8 +10601,8 @@
       "id": "shared.strings.StringProcessor.__init__",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyStringProcessor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "StringProcessor",
       "pythonModule": "classic_shared",
       "pythonExportPath": "StringProcessor.__init__",
       "pythonKind": "method",
@@ -10596,8 +10612,8 @@
       "id": "shared.strings.StringProcessor.clear_pool",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyStringProcessor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "StringProcessor",
       "pythonModule": "classic_shared",
       "pythonExportPath": "StringProcessor.clear_pool",
       "pythonKind": "method",
@@ -10607,8 +10623,8 @@
       "id": "shared.strings.StringProcessor.common_prefix",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyStringProcessor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "StringProcessor",
       "pythonModule": "classic_shared",
       "pythonExportPath": "StringProcessor.common_prefix",
       "pythonKind": "method",
@@ -10618,8 +10634,8 @@
       "id": "shared.strings.StringProcessor.intern",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyStringProcessor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "StringProcessor",
       "pythonModule": "classic_shared",
       "pythonExportPath": "StringProcessor.intern",
       "pythonKind": "method",
@@ -10629,8 +10645,8 @@
       "id": "shared.strings.StringProcessor.intern_batch",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyStringProcessor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "StringProcessor",
       "pythonModule": "classic_shared",
       "pythonExportPath": "StringProcessor.intern_batch",
       "pythonKind": "method",
@@ -10640,8 +10656,8 @@
       "id": "shared.strings.StringProcessor.join_lines",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyStringProcessor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "StringProcessor",
       "pythonModule": "classic_shared",
       "pythonExportPath": "StringProcessor.join_lines",
       "pythonKind": "method",
@@ -10651,8 +10667,8 @@
       "id": "shared.strings.StringProcessor.normalize",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyStringProcessor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "StringProcessor",
       "pythonModule": "classic_shared",
       "pythonExportPath": "StringProcessor.normalize",
       "pythonKind": "method",
@@ -10662,8 +10678,8 @@
       "id": "shared.strings.StringProcessor.pool_stats",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyStringProcessor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "StringProcessor",
       "pythonModule": "classic_shared",
       "pythonExportPath": "StringProcessor.pool_stats",
       "pythonKind": "method",
@@ -10673,8 +10689,8 @@
       "id": "shared.strings.StringProcessor.process_batch",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyStringProcessor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "StringProcessor",
       "pythonModule": "classic_shared",
       "pythonExportPath": "StringProcessor.process_batch",
       "pythonKind": "method",
@@ -10684,8 +10700,8 @@
       "id": "shared.strings.StringProcessor.process_batch_fast",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyStringProcessor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "StringProcessor",
       "pythonModule": "classic_shared",
       "pythonExportPath": "StringProcessor.process_batch_fast",
       "pythonKind": "method",
@@ -10695,8 +10711,8 @@
       "id": "shared.strings.StringProcessor.split_lines",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyStringProcessor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "StringProcessor",
       "pythonModule": "classic_shared",
       "pythonExportPath": "StringProcessor.split_lines",
       "pythonKind": "method",
@@ -10706,8 +10722,8 @@
       "id": "shared.strings.StringProcessor.split_lines_fast",
       "tier": "tier1",
       "ownerModule": "shared",
-      "rustCrate": "classic-shared-py",
-      "rustSymbol": "PyStringProcessor",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "StringProcessor",
       "pythonModule": "classic_shared",
       "pythonExportPath": "StringProcessor.split_lines_fast",
       "pythonKind": "method",
@@ -11370,7 +11386,7 @@
       "tier": "tier1",
       "ownerModule": "version_registry",
       "rustCrate": "classic-version-registry-core",
-      "rustSymbol": "CrashgenConfig",
+      "rustSymbol": "is_compatible_with",
       "pythonModule": "classic_version_registry",
       "pythonExportPath": "CrashgenConfig.is_compatible_with",
       "pythonKind": "method",
@@ -11433,7 +11449,7 @@
       "tier": "tier1",
       "ownerModule": "version_registry",
       "rustCrate": "classic-version-registry-core",
-      "rustSymbol": "VersionInfo",
+      "rustSymbol": "get_compatible_crashgens",
       "pythonModule": "classic_version_registry",
       "pythonExportPath": "VersionInfo.get_compatible_crashgens",
       "pythonKind": "method",
@@ -11444,7 +11460,7 @@
       "tier": "tier1",
       "ownerModule": "version_registry",
       "rustCrate": "classic-version-registry-core",
-      "rustSymbol": "VersionInfo",
+      "rustSymbol": "get_crashgen_for_version",
       "pythonModule": "classic_version_registry",
       "pythonExportPath": "VersionInfo.get_crashgen_for_version",
       "pythonKind": "method",
@@ -11455,7 +11471,7 @@
       "tier": "tier1",
       "ownerModule": "version_registry",
       "rustCrate": "classic-version-registry-core",
-      "rustSymbol": "VersionInfo",
+      "rustSymbol": "get_crashgen_version_strings",
       "pythonModule": "classic_version_registry",
       "pythonExportPath": "VersionInfo.get_crashgen_version_strings",
       "pythonKind": "method",
@@ -11466,7 +11482,7 @@
       "tier": "tier1",
       "ownerModule": "version_registry",
       "rustCrate": "classic-version-registry-core",
-      "rustSymbol": "VersionInfo",
+      "rustSymbol": "is_compatible_with",
       "pythonModule": "classic_version_registry",
       "pythonExportPath": "VersionInfo.is_compatible_with",
       "pythonKind": "method",
@@ -11585,7 +11601,7 @@
       "tier": "tier1",
       "ownerModule": "version_registry",
       "rustCrate": "classic-version-registry-core",
-      "rustSymbol": "GameVersion",
+      "rustSymbol": "same_major",
       "pythonModule": "classic_version_registry",
       "pythonExportPath": "GameVersion.same_major",
       "pythonKind": "method",
@@ -11596,7 +11612,7 @@
       "tier": "tier1",
       "ownerModule": "version_registry",
       "rustCrate": "classic-version-registry-core",
-      "rustSymbol": "GameVersion",
+      "rustSymbol": "semantic_distance",
       "pythonModule": "classic_version_registry",
       "pythonExportPath": "GameVersion.semantic_distance",
       "pythonKind": "method",
@@ -12373,31 +12389,11 @@
       "pythonKind": "class"
     },
     {
-      "id": "yaml.lib.get_indexmap_value@rust",
-      "tier": "tier1",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
-      "rustSymbol": "get_indexmap_value",
-      "pythonModule": "classic_settings",
-      "pythonExportPath": "YamlCacheStats",
-      "pythonKind": "class"
-    },
-    {
       "id": "yaml.lib.get_setting@rust",
       "tier": "tier1",
       "ownerModule": "settings",
       "rustCrate": "classic-settings-core",
       "rustSymbol": "get_setting",
-      "pythonModule": "classic_settings",
-      "pythonExportPath": "YamlCacheStats",
-      "pythonKind": "class"
-    },
-    {
-      "id": "yaml.lib.get_settings_batch@rust",
-      "tier": "tier1",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
-      "rustSymbol": "get_settings_batch",
       "pythonModule": "classic_settings",
       "pythonExportPath": "YamlCacheStats",
       "pythonKind": "class"
@@ -12602,6 +12598,176 @@
       "pythonModule": "classic_scangame",
       "pythonExportPath": "normalize_game_setup_version_selection",
       "pythonKind": "function"
+    },
+    {
+      "id": "config.installed_yaml_data.inspect_installed_yaml_data",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "inspect_installed_yaml_data",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "inspect_installed_yaml_data",
+      "pythonKind": "function",
+      "pythonArity": 2
+    },
+    {
+      "id": "config.installed_yaml_data.load_installed_yaml_data",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "load_installed_yaml_data",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "load_installed_yaml_data",
+      "pythonKind": "function",
+      "pythonArity": 4
+    },
+    {
+      "id": "config.explicit_yaml_data.load_explicit_yaml_data",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "load_explicit_yaml_data",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "load_explicit_yaml_data",
+      "pythonKind": "function",
+      "pythonArity": 3
+    },
+    {
+      "id": "update.notification.check_app_notification_configured",
+      "tier": "tier1",
+      "ownerModule": "update",
+      "rustCrate": "classic-update-core",
+      "rustSymbol": "check_app_notification_configured",
+      "pythonModule": "classic_update",
+      "pythonExportPath": "check_app_notification_configured",
+      "pythonKind": "function"
+    },
+    {
+      "id": "config.main_yaml_version.load_main_yaml_version",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "load_main_yaml_version_with_bundled_dir",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "load_main_yaml_version",
+      "pythonKind": "function",
+      "pythonArity": 1
+    },
+    {
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "pythonModule": "classic_user_settings",
+      "id": "user_settings.legacy_tui_import",
+      "rustSymbol": "import_legacy_tui_state",
+      "pythonExportPath": "import_legacy_tui_state_into_user_settings",
+      "pythonKind": "function",
+      "pythonArity": 2
+    },
+    {
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "pythonModule": "classic_user_settings",
+      "id": "user_settings.legacy_tui_restore",
+      "rustSymbol": "LegacyTuiStateImportReceipt",
+      "pythonExportPath": "LegacyTuiStateImportReceipt.restore",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "pythonModule": "classic_user_settings",
+      "id": "user_settings.LegacyTuiStateImportReceipt",
+      "rustSymbol": "LegacyTuiStateImportReceipt",
+      "pythonExportPath": "LegacyTuiStateImportReceipt",
+      "pythonKind": "class"
+    },
+    {
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "pythonModule": "classic_user_settings",
+      "id": "user_settings.LegacyTuiStateImportOutcome",
+      "rustSymbol": "LegacyTuiStateImportOutcome",
+      "pythonExportPath": "LegacyTuiStateImportOutcome",
+      "pythonKind": "class"
+    },
+    {
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "pythonModule": "classic_user_settings",
+      "id": "user_settings.LegacyTuiStateImportRestoreOutcome",
+      "rustSymbol": "LegacyTuiStateImportRestoreOutcome",
+      "pythonExportPath": "LegacyTuiStateImportRestoreOutcome",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.crash_pattern.detect_crash_pattern",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "detect_crash_pattern",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "detect_crash_pattern",
+      "pythonKind": "function",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFindingAnalyzer.in_memory",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDFindingAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "FormIDFindingAnalyzer.in_memory",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFindingAnalyzer.sqlite",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDFindingAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "FormIDFindingAnalyzer.sqlite",
+      "pythonKind": "method",
+      "pythonArity": 2
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFindingLookupEntry",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupEntry",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "FormIDFindingLookupEntry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFindingLookupEntry.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupEntry",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "FormIDFindingLookupEntry.__init__",
+      "pythonKind": "method",
+      "pythonArity": 5
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFindingLookupReplyKind",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupInMemoryReply",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "FormIDFindingLookupReplyKind",
+      "pythonKind": "class"
     }
   ]
 }

@@ -2,9 +2,8 @@
 
 from concurrent.futures import ThreadPoolExecutor
 
-import pytest
-
 import classic_scanlog
+import pytest
 
 
 def _entry(version: int = 1) -> dict[str, object]:
@@ -31,7 +30,7 @@ def _entry(version: int = 1) -> dict[str, object]:
 
 
 def _analyze(
-    analyzer: classic_scanlog.CrashgenSettingsAnalyzer,
+        analyzer: classic_scanlog.CrashgenSettingsAnalyzer,
 ) -> classic_scanlog.CrashgenSettingsAnalysisResult:
     input = classic_scanlog.CrashgenSettingsAnalysisInput(
         settings={

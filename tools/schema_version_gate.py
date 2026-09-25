@@ -24,7 +24,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from ruamel.yaml import YAML # type: ignore
+from ruamel.yaml import YAML  # type: ignore
 
 _YAML = YAML(typ="safe", pure=True)
 
@@ -98,19 +98,19 @@ def main() -> int:
 
     repo_root: Path = args.repo_root.resolve()
     client_schemas_rs = (
-        repo_root
-        / "business-logic"
-        / "classic-config-core"
-        / "src"
-        / "client_schemas.rs"
+            repo_root
+            / "business-logic"
+            / "classic-config-core"
+            / "src"
+            / "client_schemas.rs"
     )
     databases_dir = repo_root / "CLASSIC Data" / "databases"
     ranges_path = databases_dir / "client-schema-ranges.yaml"
 
     for path, label in (
-        (client_schemas_rs, "client_schemas.rs"),
-        (databases_dir, "databases directory"),
-        (ranges_path, "client-schema-ranges.yaml"),
+            (client_schemas_rs, "client_schemas.rs"),
+            (databases_dir, "databases directory"),
+            (ranges_path, "client-schema-ranges.yaml"),
     ):
         if not path.exists():
             print(f"FAIL: {label} not found at {path}", file=sys.stderr)

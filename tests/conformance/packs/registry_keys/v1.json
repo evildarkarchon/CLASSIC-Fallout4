@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "familyId": "registry-keys",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-registry-core"
+  },
+  "fixtureRoot": "tests/fixtures/registry_keys_conformance",
+  "fixtures": {
+    "keys": "keys.json"
+  },
+  "capabilities": [
+    {
+      "id": "registry-keys.observe",
+      "rustSymbols": [
+        "Keys"
+      ],
+      "observationFamilies": [
+        "key-values"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "keys",
+      "action": "registry-keys.observe",
+      "capabilityIds": [
+        "registry-keys.observe"
+      ],
+      "fixtureRefs": [
+        "keys"
+      ],
+      "input": {
+        "fixtureRef": "keys"
+      },
+      "expected": {
+        "keys": {
+          "YAML_CACHE": "yaml_cache",
+          "MANUAL_DOCS_GUI": "manual_docs_gui",
+          "GAME_PATH_GUI": "game_path_gui",
+          "GAME_PATH": "game_path",
+          "DOCS_PATH": "docs_path",
+          "IS_GUI_MODE": "is_gui_mode",
+          "OPEN_FILE_FUNC": "open_file_with_encoding",
+          "GAME": "gamevars_game",
+          "GAME_VERSION": "gamevars_version",
+          "VERSION_AUTO_DETECTED": "gamevars_version_auto",
+          "LOCAL_DIR": "local_dir",
+          "IS_PRERELEASE": "is_prerelease",
+          "XSE_VALID": "xse_validation_passed",
+          "XSE_VERSION": "xse_detected_version",
+          "ENB_PRESENT": "enb_binaries_present",
+          "GAME_VERSION_DETECTED": "game_exe_version"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

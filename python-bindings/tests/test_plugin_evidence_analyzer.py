@@ -1,8 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 
-import pytest
-
 import classic_scanlog
+import pytest
 
 
 def test_plugin_evidence_analyzer_returns_typed_counts_and_empty_success() -> None:

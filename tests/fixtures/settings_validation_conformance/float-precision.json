@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {
+      "value": "1.23456789",
+      "type": "float"
+    },
+    {
+      "value": "1e20",
+      "type": "float"
+    },
+    {
+      "value": "1e-7",
+      "type": "float"
+    },
+    {
+      "value": "1.0",
+      "type": "float"
+    },
+    {
+      "value": "-0.0",
+      "type": "float"
+    }
+  ]
+}

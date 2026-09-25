@@ -60,11 +60,11 @@ def detect_contract_type(contract: dict[str, Any]) -> str:
 
 
 def walk_recursive_owner_rewrite(
-    node: Any,
-    source_owner: str,
-    target_owner: str,
-    rust_crate_old: str,
-    rust_crate_new: str,
+        node: Any,
+        source_owner: str,
+        target_owner: str,
+        rust_crate_old: str,
+        rust_crate_new: str,
 ) -> tuple[int, int]:
     """Defensive recursive walk. Returns (owner_rows_changed, rust_crate_changed)."""
     owner_changed = 0
@@ -93,14 +93,14 @@ def walk_recursive_owner_rewrite(
 
 
 def merge_owner_group(
-    contract_path: Path,
-    source_owner: str,
-    target_owner: str,
-    rust_crate_old: str,
-    rust_crate_new: str,
-    binding_module_old: str,
-    binding_module_new: str,
-    dry_run: bool = False,
+        contract_path: Path,
+        source_owner: str,
+        target_owner: str,
+        rust_crate_old: str,
+        rust_crate_new: str,
+        binding_module_old: str,
+        binding_module_new: str,
+        dry_run: bool = False,
 ) -> int:
     """Return exit code (0 success, 1 error)."""
     try:

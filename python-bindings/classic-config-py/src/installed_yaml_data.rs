@@ -927,11 +927,16 @@ fn local_ignore_reset_error_to_py(error: CoreResetError) -> PyErr {
 }
 
 /// Returns the stable Python role token.
-const fn role_token(role: CoreRole) -> &'static str {
-    match role {
-        CoreRole::Main => "main",
-        CoreRole::Game => "game",
-    }
+///
+/// Delegates rather than restating, for the same reason as the provenance and
+/// stage tokens around it: the role adopted the Vocabulary naming contract with
+/// the two strings this table already published, and the copy that stood here
+/// was one of two Python restatements of them.
+///
+/// Note that the role's `Display` renders its *Display Label*, which capitalizes
+/// `Main`. This is the token, so it does not.
+fn role_token(role: CoreRole) -> &'static str {
+    role.as_str()
 }
 
 /// Returns the stable Python token for one durable reset publication boundary.

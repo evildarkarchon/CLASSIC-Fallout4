@@ -1,0 +1,4 @@
+{
+  "content": "name: caf\u00e9\nenabled: true\ncount: 7\nitems: [a, b]\noptional: null\n---\nsecond\n",
+  "replacement": "changed: true\n"
+}

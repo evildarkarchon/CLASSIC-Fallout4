@@ -1,0 +1,23 @@
+{
+  "installedVersion": "9.1.0",
+  "timeoutMs": 3000,
+  "checks": 2,
+  "service": {
+    "pages": [
+      {
+        "status": 200,
+        "body": "{\"manifest_version\":\"1.0\",\"release_tag\":\"v9.2.0\",\"latest_version\":\"9.2.0\",\"published_at\":\"2026-09-01T00:00:00Z\",\"min_supported_version\":\"9.0.0\",\"display\":{\"title\":\"Update available\",\"body\":\"Fixture release notes\",\"cta_url\":\"https://example.invalid/releases/v9.2.0\"}}",
+        "headers": {
+          "ETag": "\"fixture-v1\""
+        }
+      },
+      {
+        "status": 304,
+        "body": "",
+        "headers": {},
+        "ifNoneMatch": "\"fixture-v1\""
+      }
+    ],
+    "api": []
+  }
+}

@@ -76,7 +76,7 @@ def _parse_manifest_sha256(raw: str) -> str:
 
 
 def probe_asset_once(
-    url: str, expected_sha256: str, socket_timeout: float
+        url: str, expected_sha256: str, socket_timeout: float
 ) -> str | None:
     """Single-shot probe; return ``None`` on success, an error string otherwise.
 
@@ -119,7 +119,7 @@ def probe_asset_once(
 
 
 def _load_manifest_assets(
-    manifest_path: Path,
+        manifest_path: Path,
 ) -> list[tuple[str, str, str]]:
     """Return release assets that must serve exact staged bytes."""
     manifest_bytes = manifest_path.read_bytes()

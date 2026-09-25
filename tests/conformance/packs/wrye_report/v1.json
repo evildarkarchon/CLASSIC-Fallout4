@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "familyId": "wrye-report",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scangame-core"
+  },
+  "fixtureRoot": "tests/fixtures/wrye_report",
+  "fixtures": {
+    "parse-empty": "parse-empty.json",
+    "parse-populated": "parse-populated.json",
+    "format-empty": "format-empty.json",
+    "format-populated": "format-populated.json"
+  },
+  "capabilities": [
+    {
+      "id": "wrye-report.parse",
+      "rustSymbols": [
+        "parse"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "wrye-issues"
+      ]
+    },
+    {
+      "id": "wrye-report.format",
+      "rustSymbols": [
+        "WryeBashParser",
+        "WryeIssue",
+        "WryeSeverity",
+        "format_report"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "wrye-format"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "parse-empty",
+      "action": "wrye-report.parse",
+      "capabilityIds": [
+        "wrye-report.parse"
+      ],
+      "fixtureRefs": [
+        "parse-empty"
+      ],
+      "input": {
+        "fixtureRef": "parse-empty"
+      },
+      "expected": {
+        "issues": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "parse-populated",
+      "action": "wrye-report.parse",
+      "capabilityIds": [
+        "wrye-report.parse"
+      ],
+      "fixtureRefs": [
+        "parse-populated"
+      ],
+      "input": {
+        "fixtureRef": "parse-populated"
+      },
+      "expected": {
+        "issues": [
+          {
+            "section": "Missing Masters",
+            "plugins": [
+              "Example.esp"
+            ],
+            "warning": "  Fix masters!\n",
+            "severity": "Warning"
+          },
+          {
+            "section": "Empty Section",
+            "plugins": [],
+            "warning": null,
+            "severity": "Info"
+          }
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "format-empty",
+      "action": "wrye-report.format",
+      "capabilityIds": [
+        "wrye-report.format"
+      ],
+      "fixtureRefs": [
+        "format-empty"
+      ],
+      "input": {
+        "fixtureRef": "format-empty"
+      },
+      "expected": {
+        "issues": [],
+        "report": ""
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "format-populated",
+      "action": "wrye-report.format",
+      "capabilityIds": [
+        "wrye-report.format"
+      ],
+      "fixtureRefs": [
+        "format-populated"
+      ],
+      "input": {
+        "fixtureRef": "format-populated"
+      },
+      "expected": {
+        "issues": [
+          {
+            "section": "Missing Masters",
+            "plugins": [
+              "Example.esp"
+            ],
+            "warning": "  Fix masters!\n",
+            "severity": "Warning"
+          },
+          {
+            "section": "Empty Section",
+            "plugins": [],
+            "warning": null,
+            "severity": "Info"
+          }
+        ],
+        "report": "\n   ======== Missing Masters =========\n  Fix masters!\n    > Example.esp\n\n   ========= Empty Section ==========\n"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

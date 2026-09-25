@@ -1,0 +1,248 @@
+{
+  "schemaVersion": 1,
+  "familyId": "formid-finding",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scanlog-core"
+  },
+  "fixtureRoot": "tests/fixtures/formid_finding",
+  "fixtures": {
+    "disabled": "disabled.json",
+    "memory": "memory.json",
+    "empty": "empty.json",
+    "invalid-prefix": "invalid-prefix.json",
+    "lookup-failure": "lookup-failure.json",
+    "sqlite-missing": "sqlite-missing.json"
+  },
+  "capabilities": [
+    {
+      "id": "formid-finding.analyze",
+      "rustSymbols": [
+        "FormIDFindingAnalyzer",
+        "FormIDFindingAnalysisInput",
+        "FormIDPlugin"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "formid-findings"
+      ]
+    },
+    {
+      "id": "formid-finding.sqlite",
+      "rustSymbols": [
+        "FormIDFindingAnalyzer"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "formid-findings"
+      ]
+    },
+    {
+      "id": "formid-finding.lookup-entry",
+      "rustCrate": "classic-database-core",
+      "rustSymbols": [
+        "FormIdValueLookupEntry",
+        "FormIdValueLookupInMemoryReply"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "formid-findings"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "disabled",
+      "action": "formid-finding.analyze",
+      "capabilityIds": [
+        "formid-finding.analyze"
+      ],
+      "fixtureRefs": [
+        "disabled"
+      ],
+      "input": {
+        "fixtureRef": "disabled"
+      },
+      "expected": {
+        "mode": "disabled",
+        "findings": [
+          {
+            "identifier": "01000001",
+            "occurrences": 2,
+            "plugin": "Example.esp",
+            "status": "disabled",
+            "value": null
+          },
+          {
+            "identifier": "01000002",
+            "occurrences": 1,
+            "plugin": "Example.esp",
+            "status": "disabled",
+            "value": null
+          },
+          {
+            "identifier": "02000003",
+            "occurrences": 1,
+            "plugin": null,
+            "status": "not_applicable",
+            "value": null
+          }
+        ],
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "memory",
+      "action": "formid-finding.analyze",
+      "capabilityIds": [
+        "formid-finding.analyze",
+        "formid-finding.lookup-entry"
+      ],
+      "fixtureRefs": [
+        "memory"
+      ],
+      "input": {
+        "fixtureRef": "memory"
+      },
+      "expected": {
+        "mode": "in-memory",
+        "findings": [
+          {
+            "identifier": "01000001",
+            "occurrences": 2,
+            "plugin": "Example.esp",
+            "status": "found",
+            "value": "Fixture value"
+          },
+          {
+            "identifier": "01000002",
+            "occurrences": 1,
+            "plugin": "Example.esp",
+            "status": "missing",
+            "value": null
+          },
+          {
+            "identifier": "02000003",
+            "occurrences": 1,
+            "plugin": null,
+            "status": "not_applicable",
+            "value": null
+          }
+        ],
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "empty",
+      "action": "formid-finding.analyze",
+      "capabilityIds": [
+        "formid-finding.analyze"
+      ],
+      "fixtureRefs": [
+        "empty"
+      ],
+      "input": {
+        "fixtureRef": "empty"
+      },
+      "expected": {
+        "mode": "disabled",
+        "findings": [],
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid-prefix",
+      "action": "formid-finding.analyze",
+      "capabilityIds": [
+        "formid-finding.analyze"
+      ],
+      "fixtureRefs": [
+        "invalid-prefix"
+      ],
+      "input": {
+        "fixtureRef": "invalid-prefix"
+      },
+      "expected": {
+        "mode": "disabled",
+        "findings": null,
+        "error": {
+          "code": "invalid_configuration",
+          "message": "FormID Finding plugin 'Example.esp' has invalid load-order prefix 'bad'"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "lookup-failure",
+      "action": "formid-finding.analyze",
+      "capabilityIds": [
+        "formid-finding.analyze"
+      ],
+      "fixtureRefs": [
+        "lookup-failure"
+      ],
+      "input": {
+        "fixtureRef": "lookup-failure"
+      },
+      "expected": {
+        "mode": "in-memory",
+        "findings": null,
+        "error": {
+          "code": "operational_failure",
+          "message": "FormID Value Lookup failed for 000001:Example.esp: fixture offline"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "sqlite-missing",
+      "action": "formid-finding.sqlite",
+      "capabilityIds": [
+        "formid-finding.sqlite"
+      ],
+      "fixtureRefs": [
+        "sqlite-missing"
+      ],
+      "input": {
+        "fixtureRef": "sqlite-missing"
+      },
+      "expected": {
+        "mode": "sqlite-missing",
+        "findings": null,
+        "error": {
+          "code": "operational_failure",
+          "message": "FormID Value Lookup adapter initialization failed: database file not found: tests/fixtures/formid_finding/missing.sqlite3"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

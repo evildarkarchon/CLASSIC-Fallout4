@@ -1,0 +1,11 @@
+{
+  "request": {
+    "values": [
+      "  HELLO\t World  ",
+      "ÉCOLE ABC",
+      "repeat",
+      "repeat",
+      "\t\n"
+    ]
+  }
+}

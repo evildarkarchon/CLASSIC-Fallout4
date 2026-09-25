@@ -1,0 +1,10 @@
+{
+  "game": "Fallout4VR",
+  "sources": [
+    "MAIN",
+    "IGNORE",
+    "GAME",
+    "GAME_LOCAL",
+    "TEST"
+  ]
+}

@@ -1,0 +1,1116 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "ddb260a8ef55619e0099522843a6f5ae96a56c3e",
+  "sourceTree": "e2b043876f62fd2f2f19bcf59a9f0e1c603c7e9f",
+  "sourceCommand": "cargo metadata --locked --offline --format-version 1 --no-deps",
+  "summary": {
+    "physicalCrates": 43,
+    "cratesByGroup": {
+      "business-logic": 19,
+      "cpp-bindings": 1,
+      "foundation": 4,
+      "node-bindings": 1,
+      "python-bindings": 17,
+      "ui-applications": 1
+    },
+    "internalDependencyEntries": {
+      "normal": 161,
+      "dev": 14,
+      "build": 0
+    }
+  },
+  "crates": [
+    {
+      "name": "classic-config-core",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-config-core/Cargo.toml"
+    },
+    {
+      "name": "classic-config-py",
+      "group": "python-bindings",
+      "manifest": "python-bindings/classic-config-py/Cargo.toml"
+    },
+    {
+      "name": "classic-cpp-bridge",
+      "group": "cpp-bindings",
+      "manifest": "cpp-bindings/classic-cpp-bridge/Cargo.toml"
+    },
+    {
+      "name": "classic-database-core",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-database-core/Cargo.toml"
+    },
+    {
+      "name": "classic-database-py",
+      "group": "python-bindings",
+      "manifest": "python-bindings/classic-database-py/Cargo.toml"
+    },
+    {
+      "name": "classic-durable-publication",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-durable-publication/Cargo.toml"
+    },
+    {
+      "name": "classic-file-io-core",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-file-io-core/Cargo.toml"
+    },
+    {
+      "name": "classic-file-io-py",
+      "group": "python-bindings",
+      "manifest": "python-bindings/classic-file-io-py/Cargo.toml"
+    },
+    {
+      "name": "classic-message-core",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-message-core/Cargo.toml"
+    },
+    {
+      "name": "classic-message-py",
+      "group": "python-bindings",
+      "manifest": "python-bindings/classic-message-py/Cargo.toml"
+    },
+    {
+      "name": "classic-node",
+      "group": "node-bindings",
+      "manifest": "node-bindings/classic-node/Cargo.toml"
+    },
+    {
+      "name": "classic-operation-context",
+      "group": "foundation",
+      "manifest": "foundation/classic-operation-context/Cargo.toml"
+    },
+    {
+      "name": "classic-path-core",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-path-core/Cargo.toml"
+    },
+    {
+      "name": "classic-path-py",
+      "group": "python-bindings",
+      "manifest": "python-bindings/classic-path-py/Cargo.toml"
+    },
+    {
+      "name": "classic-perf-core",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-perf-core/Cargo.toml"
+    },
+    {
+      "name": "classic-perf-py",
+      "group": "python-bindings",
+      "manifest": "python-bindings/classic-perf-py/Cargo.toml"
+    },
+    {
+      "name": "classic-registry-core",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-registry-core/Cargo.toml"
+    },
+    {
+      "name": "classic-registry-py",
+      "group": "python-bindings",
+      "manifest": "python-bindings/classic-registry-py/Cargo.toml"
+    },
+    {
+      "name": "classic-resource-core",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-resource-core/Cargo.toml"
+    },
+    {
+      "name": "classic-resource-py",
+      "group": "python-bindings",
+      "manifest": "python-bindings/classic-resource-py/Cargo.toml"
+    },
+    {
+      "name": "classic-scan-presentation",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-scan-presentation/Cargo.toml"
+    },
+    {
+      "name": "classic-scangame-core",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-scangame-core/Cargo.toml"
+    },
+    {
+      "name": "classic-scangame-py",
+      "group": "python-bindings",
+      "manifest": "python-bindings/classic-scangame-py/Cargo.toml"
+    },
+    {
+      "name": "classic-scanlog-core",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-scanlog-core/Cargo.toml"
+    },
+    {
+      "name": "classic-scanlog-py",
+      "group": "python-bindings",
+      "manifest": "python-bindings/classic-scanlog-py/Cargo.toml"
+    },
+    {
+      "name": "classic-settings-core",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-settings-core/Cargo.toml"
+    },
+    {
+      "name": "classic-settings-py",
+      "group": "python-bindings",
+      "manifest": "python-bindings/classic-settings-py/Cargo.toml"
+    },
+    {
+      "name": "classic-shared-core",
+      "group": "foundation",
+      "manifest": "foundation/classic-shared-core/Cargo.toml"
+    },
+    {
+      "name": "classic-shared-py",
+      "group": "foundation",
+      "manifest": "foundation/classic-shared-py/Cargo.toml"
+    },
+    {
+      "name": "classic-tui",
+      "group": "ui-applications",
+      "manifest": "ui-applications/classic-tui/Cargo.toml"
+    },
+    {
+      "name": "classic-update-core",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-update-core/Cargo.toml"
+    },
+    {
+      "name": "classic-update-py",
+      "group": "python-bindings",
+      "manifest": "python-bindings/classic-update-py/Cargo.toml"
+    },
+    {
+      "name": "classic-user-settings-core",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-user-settings-core/Cargo.toml"
+    },
+    {
+      "name": "classic-user-settings-py",
+      "group": "python-bindings",
+      "manifest": "python-bindings/classic-user-settings-py/Cargo.toml"
+    },
+    {
+      "name": "classic-version-core",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-version-core/Cargo.toml"
+    },
+    {
+      "name": "classic-version-py",
+      "group": "python-bindings",
+      "manifest": "python-bindings/classic-version-py/Cargo.toml"
+    },
+    {
+      "name": "classic-version-registry-core",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-version-registry-core/Cargo.toml"
+    },
+    {
+      "name": "classic-version-registry-py",
+      "group": "python-bindings",
+      "manifest": "python-bindings/classic-version-registry-py/Cargo.toml"
+    },
+    {
+      "name": "classic-vocabulary",
+      "group": "foundation",
+      "manifest": "foundation/classic-vocabulary/Cargo.toml"
+    },
+    {
+      "name": "classic-web-core",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-web-core/Cargo.toml"
+    },
+    {
+      "name": "classic-web-py",
+      "group": "python-bindings",
+      "manifest": "python-bindings/classic-web-py/Cargo.toml"
+    },
+    {
+      "name": "classic-xse-core",
+      "group": "business-logic",
+      "manifest": "business-logic/classic-xse-core/Cargo.toml"
+    },
+    {
+      "name": "classic-xse-py",
+      "group": "python-bindings",
+      "manifest": "python-bindings/classic-xse-py/Cargo.toml"
+    }
+  ],
+  "internalDependencies": [
+    {
+      "from": "classic-config-core",
+      "to": "classic-durable-publication",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-config-core",
+      "to": "classic-file-io-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-config-core",
+      "to": "classic-path-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-config-core",
+      "to": "classic-registry-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-config-core",
+      "to": "classic-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-config-core",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-config-core",
+      "to": "classic-version-registry-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-config-core",
+      "to": "classic-vocabulary",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-config-py",
+      "to": "classic-config-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-config-py",
+      "to": "classic-registry-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-config-py",
+      "to": "classic-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-config-py",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-config-py",
+      "to": "classic-shared-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-config-py",
+      "to": "classic-vocabulary",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-config-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-database-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-file-io-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-message-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-path-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-perf-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-registry-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-scan-presentation",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-scangame-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-scanlog-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-update-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-user-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-version-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-version-registry-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-vocabulary",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-web-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-cpp-bridge",
+      "to": "classic-xse-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-database-core",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-database-py",
+      "to": "classic-database-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-database-py",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-database-py",
+      "to": "classic-shared-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-durable-publication",
+      "to": "classic-vocabulary",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-file-io-core",
+      "to": "classic-durable-publication",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-file-io-core",
+      "to": "classic-operation-context",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-file-io-core",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-file-io-core",
+      "to": "classic-xse-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-file-io-py",
+      "to": "classic-file-io-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-file-io-py",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-file-io-py",
+      "to": "classic-shared-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-message-py",
+      "to": "classic-message-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-message-py",
+      "to": "classic-shared-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-config-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-database-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-file-io-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-message-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-path-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-perf-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-registry-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-resource-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-scan-presentation",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-scangame-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-scanlog-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-update-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-user-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-version-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-version-registry-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-vocabulary",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-web-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-node",
+      "to": "classic-xse-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-path-py",
+      "to": "classic-path-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-path-py",
+      "to": "classic-shared-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-perf-py",
+      "to": "classic-perf-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-perf-py",
+      "to": "classic-shared-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-registry-py",
+      "to": "classic-registry-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-registry-py",
+      "to": "classic-shared-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-resource-core",
+      "to": "classic-path-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-resource-py",
+      "to": "classic-resource-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-resource-py",
+      "to": "classic-shared-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scan-presentation",
+      "to": "classic-config-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scan-presentation",
+      "to": "classic-scanlog-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scan-presentation",
+      "to": "classic-shared-core",
+      "kind": "dev"
+    },
+    {
+      "from": "classic-scan-presentation",
+      "to": "classic-vocabulary",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scangame-core",
+      "to": "classic-config-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scangame-core",
+      "to": "classic-file-io-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scangame-core",
+      "to": "classic-path-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scangame-core",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scangame-core",
+      "to": "classic-user-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scangame-core",
+      "to": "classic-version-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scangame-core",
+      "to": "classic-version-registry-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scangame-core",
+      "to": "classic-xse-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scangame-py",
+      "to": "classic-config-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scangame-py",
+      "to": "classic-config-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scangame-py",
+      "to": "classic-file-io-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scangame-py",
+      "to": "classic-scangame-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scangame-py",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scangame-py",
+      "to": "classic-shared-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scangame-py",
+      "to": "classic-user-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-config-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-database-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-file-io-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-message-core",
+      "kind": "dev"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-operation-context",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-path-core",
+      "kind": "dev"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-perf-core",
+      "kind": "dev"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-registry-core",
+      "kind": "dev"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-resource-core",
+      "kind": "dev"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-scangame-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-update-core",
+      "kind": "dev"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-user-settings-core",
+      "kind": "dev"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-version-core",
+      "kind": "dev"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-version-registry-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-vocabulary",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-web-core",
+      "kind": "dev"
+    },
+    {
+      "from": "classic-scanlog-core",
+      "to": "classic-xse-core",
+      "kind": "dev"
+    },
+    {
+      "from": "classic-scanlog-py",
+      "to": "classic-config-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-py",
+      "to": "classic-config-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-py",
+      "to": "classic-database-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-py",
+      "to": "classic-registry-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-py",
+      "to": "classic-scan-presentation",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-py",
+      "to": "classic-scangame-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-py",
+      "to": "classic-scanlog-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-py",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-py",
+      "to": "classic-shared-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-py",
+      "to": "classic-user-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-scanlog-py",
+      "to": "classic-vocabulary",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-settings-core",
+      "to": "classic-perf-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-settings-core",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-settings-py",
+      "to": "classic-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-settings-py",
+      "to": "classic-shared-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-shared-py",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-tui",
+      "to": "classic-config-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-tui",
+      "to": "classic-file-io-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-tui",
+      "to": "classic-path-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-tui",
+      "to": "classic-scan-presentation",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-tui",
+      "to": "classic-scangame-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-tui",
+      "to": "classic-scanlog-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-tui",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-tui",
+      "to": "classic-update-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-tui",
+      "to": "classic-user-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-tui",
+      "to": "classic-vocabulary",
+      "kind": "dev"
+    },
+    {
+      "from": "classic-update-core",
+      "to": "classic-config-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-update-core",
+      "to": "classic-file-io-core",
+      "kind": "dev"
+    },
+    {
+      "from": "classic-update-core",
+      "to": "classic-file-io-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-update-core",
+      "to": "classic-path-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-update-core",
+      "to": "classic-settings-core",
+      "kind": "dev"
+    },
+    {
+      "from": "classic-update-core",
+      "to": "classic-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-update-core",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-update-py",
+      "to": "classic-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-update-py",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-update-py",
+      "to": "classic-shared-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-update-py",
+      "to": "classic-update-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-user-settings-core",
+      "to": "classic-durable-publication",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-user-settings-core",
+      "to": "classic-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-user-settings-core",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-user-settings-core",
+      "to": "classic-vocabulary",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-user-settings-py",
+      "to": "classic-shared-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-user-settings-py",
+      "to": "classic-user-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-user-settings-py",
+      "to": "classic-vocabulary",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-version-core",
+      "to": "classic-version-registry-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-version-py",
+      "to": "classic-shared-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-version-py",
+      "to": "classic-version-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-version-registry-core",
+      "to": "classic-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-version-registry-core",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-version-registry-py",
+      "to": "classic-shared-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-version-registry-py",
+      "to": "classic-version-registry-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-web-core",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-web-py",
+      "to": "classic-shared-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-web-py",
+      "to": "classic-web-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-xse-core",
+      "to": "classic-path-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-xse-core",
+      "to": "classic-settings-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-xse-core",
+      "to": "classic-shared-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-xse-core",
+      "to": "classic-version-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-xse-core",
+      "to": "classic-version-registry-core",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-xse-py",
+      "to": "classic-shared-py",
+      "kind": "normal"
+    },
+    {
+      "from": "classic-xse-py",
+      "to": "classic-xse-core",
+      "kind": "normal"
+    }
+  ]
+}

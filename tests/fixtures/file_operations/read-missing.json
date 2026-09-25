@@ -1,0 +1,7 @@
+{
+  "operation": "read-text",
+  "path": "missing.txt",
+  "files": {
+    "sentinel.txt": "keep"
+  }
+}

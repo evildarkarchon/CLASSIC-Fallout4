@@ -1,0 +1,11 @@
+{
+  "operation": "format",
+  "component": "conformance",
+  "event": "fixture.event",
+  "severity": "warning",
+  "outcome": "ok",
+  "context": {
+    "count": "2",
+    "label": "two words"
+  }
+}

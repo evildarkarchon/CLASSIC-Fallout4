@@ -43,8 +43,46 @@ class ComplianceRequirement:
 
 STATIC_PROFILES = ("static", "ci", "full", "cxx-ci", "node-ci", "python-ci")
 
-
 REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
+    ComplianceRequirement(
+        id="cxx-opaque-map-reachability",
+        title="Opaque CXX map accessors have no exposed producer",
+        surface="cxx",
+        classification="new_check",
+        profiles=STATIC_PROFILES,
+        blocking=True,
+        summary="Checks the closed read-only map surface and rejects any new alias, factory, output, callback, or external map reference; grants no runtime behavior proof.",
+        command=CommandSpec(
+            argv=(
+                "python",
+                "tools/binding_compliance/cxx_opaque_map_reachability.py",
+                "--repo-root",
+                ".",
+            )
+        ),
+        paths=("tools/binding_compliance/cxx_opaque_map_reachability.py",),
+    ),
+    ComplianceRequirement(
+        id="node-package-metadata",
+        title="Node compile-time package metadata has a precise structural owner",
+        surface="node",
+        classification="new_check",
+        profiles=STATIC_PROFILES,
+        blocking=True,
+        summary="Validates only getVersion's exact CARGO_PKG_VERSION body, zero-argument string declaration, and Rust Cargo package version.",
+        command=CommandSpec(
+            argv=(
+                "python",
+                "tools/binding_compliance/node_package_metadata.py",
+                "--repo-root",
+                ".",
+            )
+        ),
+        paths=("tools/binding_compliance/node_package_metadata.py",),
+        proves=(
+            "A compile-time binding metadata getter does not invent a Rust core owner or runtime behavior claim.",
+        ),
+    ),
     ComplianceRequirement(
         id="user-settings-exclusive-ownership",
         title="User Settings has one deep Rust owner",
@@ -73,7 +111,7 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
     ),
     ComplianceRequirement(
         id="scan-run-contract-variants",
-        title="Crash Log Scan Run variants have cross-interface evidence",
+        title="Crash Log Scan Run fixtures and source contracts remain valid",
         surface="policy",
         classification="new_check",
         profiles=STATIC_PROFILES,
@@ -81,8 +119,8 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         summary=(
             "Validates the shared Standard and Targeted fixture corpus, compares the "
             "manifest with Rust enum inventory, rejects contracted legacy exports in "
-            "source and tracked contract artifacts, and requires Rust, CXX, Node, "
-            "Python, CLI, GUI, and TUI acknowledgements for their owned facts."
+            "source and tracked contract artifacts, and requires a concrete executable "
+            "fact or retained analyzer for each source-derived variant."
         ),
         command=CommandSpec(
             argv=(
@@ -94,15 +132,50 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         ),
         paths=(
             "tools/binding_compliance/scan_run_contract.py",
+            "tools/binding_compliance/conformance/variant_policy.py",
             "tests/fixtures/crash_log_scan_run/manifest.json",
             "tests/fixtures/crash_log_scan_run/valid-crash.log",
         ),
         proves=(
             "A new Rust contract enum variant cannot land without manifest registration.",
-            "Every registered variant is acknowledged by Rust, CXX, Node, and Python.",
+            "Every registered variant names one required executable fact or retained analyzer.",
             "Removed execution seams cannot remain in public source, declarations, stubs, runtime registries, or parity baselines.",
-            "Shared Standard, Targeted, cancellation, and failure scenarios retain executable evidence.",
-            "CLI, GUI, and TUI tests consume Rust-owned discovery, scheduling, and terminal facts.",
+            "Repository-owned fixtures retain independent reset outcomes and every typed failure stage.",
+        ),
+    ),
+    ComplianceRequirement(
+        id="scan-run-workflow-policy",
+        title="Scan Run and User Settings receipts remain blocking in CI",
+        surface="policy",
+        classification="new_check",
+        profiles=STATIC_PROFILES,
+        blocking=True,
+        summary=(
+            "Audits the same-revision retained-check/receipt job topology, exact native "
+            "execution denominator, blocking launch steps, and always-uploaded "
+            "diagnostics for every Scan Run and User Settings participant and consumer."
+        ),
+        command=CommandSpec(
+            argv=(
+                "python",
+                "tools/binding_compliance/scan_run_workflow_policy.py",
+                "--repo-root",
+                ".",
+            )
+        ),
+        paths=(
+            "tools/binding_compliance/scan_run_workflow_policy.py",
+            "tools/binding_compliance/conformance/workflow_policy.py",
+            ".github/workflows/ci-rust.yml",
+            ".github/workflows/ci-typescript.yml",
+            ".github/workflows/ci-python-bindings.yml",
+            ".github/workflows/ci-cpp.yml",
+        ),
+        proves=(
+            "Every required semantic adapter and consumer receipt runs as a blocking CI step.",
+            "MSVC and clang-cl remain separate required CXX, CLI, and GUI execution instances.",
+            "Retained checks and executable receipts execute from one default checkout revision.",
+            "Receipt plans and failure diagnostics remain available when execution fails.",
         ),
     ),
     ComplianceRequirement(
@@ -172,12 +245,12 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
     ),
     ComplianceRequirement(
         id="node-parity-gate",
-        title="Node parity and runtime coverage gate",
+        title="Node source parity gate",
         surface="node",
         classification="existing_gate",
         profiles=("ci", "full", "node-ci"),
         blocking=True,
-        summary="Runs the Node parity gate, including runtime coverage registry checks.",
+        summary="Runs the Node source/declaration parity gate and rejects stale baseline artifacts.",
         command=CommandSpec(
             argv=(
                 "python",
@@ -189,21 +262,20 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         paths=(
             "tools/node_api_parity/check_parity_gate.py",
             "docs/implementation/node_api_parity/baseline/parity_contract.json",
-            "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
         ),
         proves=(
             "Node exports in index.d.ts match the committed parity contract.",
-            "Node runtime coverage metadata covers every Tier-1 contract row.",
+            "Node source inventory retains every reviewed binding and core-only declaration.",
         ),
     ),
     ComplianceRequirement(
         id="python-parity-gate",
-        title="Python parity and runtime coverage gate",
+        title="Python source parity gate",
         surface="python",
         classification="existing_gate",
         profiles=("ci", "full", "python-ci"),
         blocking=True,
-        summary="Runs the Python parity gate, including runtime coverage registry checks.",
+        summary="Runs the Python source/stub parity gate and rejects stale baseline artifacts.",
         command=CommandSpec(
             argv=(
                 "python",
@@ -217,11 +289,10 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         paths=(
             "tools/python_api_parity/check_parity_gate.py",
             "docs/implementation/python_api_parity/baseline/parity_contract.json",
-            "python-bindings/tests/fixtures/runtime_coverage_registry.json",
         ),
         proves=(
             "Python exports and stubs mapped by the parity contract match the Rust inventory.",
-            "Python runtime coverage metadata covers every Tier-1 contract row.",
+            "Python source inventory retains every reviewed binding and core-only declaration.",
         ),
     ),
     ComplianceRequirement(
@@ -270,33 +341,17 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         ),
     ),
     ComplianceRequirement(
-        id="runtime-coverage-registries-present",
-        title="Runtime coverage registries are present",
+        id="repository-receipt-coverage",
+        title="Repository receipt coverage engine is present",
         surface="runtime_coverage",
         classification="new_check",
         profiles=STATIC_PROFILES,
         blocking=True,
-        summary="Node and Python runtime coverage registries and baseline summaries are checked in.",
+        summary="Full-profile aggregation requires every family, native instance, and source parity row; file presence alone is not runtime proof.",
         paths=(
-            "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
-            "python-bindings/tests/fixtures/runtime_coverage_registry.json",
-            "docs/implementation/node_api_parity/baseline/runtime_coverage_summary.json",
-            "docs/implementation/python_api_parity/baseline/runtime_coverage_summary.json",
-        ),
-        proves=(
-            "Node and Python lower-level gates can classify runtime-verified, mapped-only, and uncovered surfaces.",
-        ),
-    ),
-    ComplianceRequirement(
-        id="cxx-runtime-coverage-gap",
-        title="C++ runtime coverage registry gap",
-        surface="runtime_coverage",
-        classification="coverage_gap",
-        profiles=STATIC_PROFILES,
-        blocking=False,
-        summary="The CXX parity gate is source-only and has no dedicated runtime coverage registry.",
-        gaps=(
-            "C++ bridge runtime behavior is still covered by CLI/GUI wrapper tests rather than a CXX runtime coverage registry equivalent to Node/Python.",
+            "tools/binding_compliance/conformance/repository.py",
+            "tools/binding_compliance/conformance/coverage.py",
+            "tools/binding_compliance/retained_analyzers.py",
         ),
     ),
     ComplianceRequirement(
@@ -367,7 +422,9 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
                 "--locked",
             )
         ),
-        proves=("Python parity, schema drift, and stub validation tools are available.",),
+        proves=(
+            "Python parity, schema drift, and stub validation tools are available.",
+        ),
     ),
     ComplianceRequirement(
         id="python-schema-version-drift",
@@ -390,7 +447,9 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
             )
         ),
         paths=("tools/schema_version_gate.py",),
-        proves=("Binding validation is not hiding schema contract drift that Python smoke tests import.",),
+        proves=(
+            "Binding validation is not hiding schema contract drift that Python smoke tests import.",
+        ),
     ),
     ComplianceRequirement(
         id="python-bindings-rebuild",
@@ -401,8 +460,21 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         blocking=True,
         summary="Builds and installs every PyO3 binding crate into python-bindings/.venv.",
         command=CommandSpec(
-            argv=("pwsh", "-ExecutionPolicy", "Bypass", "-File", "rebuild_rust.ps1", "-Target", "python"),
-            env=(("PYO3_PYTHON", "{repo_root}\\python-bindings\\.venv\\Scripts\\python.exe"),),
+            argv=(
+                "pwsh",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "rebuild_rust.ps1",
+                "-Target",
+                "python",
+            ),
+            env=(
+                (
+                    "PYO3_PYTHON",
+                    "{repo_root}\\python-bindings\\.venv\\Scripts\\python.exe",
+                ),
+            ),
         ),
         proves=("Python runtime smoke tests import freshly built PyO3 modules.",),
     ),
@@ -450,7 +522,9 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
                 ),
             ),
         ),
-        proves=("Known per-binding error shape divergence is documented rather than normalized away.",),
+        proves=(
+            "Known per-binding error shape divergence is documented rather than normalized away.",
+        ),
     ),
     ComplianceRequirement(
         id="docs-canonical-command",
@@ -471,7 +545,9 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
                 ),
             ),
         ),
-        proves=("Contributors can find the top-level replacement command without reading CI YAML.",),
+        proves=(
+            "Contributors can find the top-level replacement command without reading CI YAML.",
+        ),
     ),
     ComplianceRequirement(
         id="ci-canonical-command",
@@ -482,25 +558,45 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         blocking=True,
         summary="Binding-related CI workflows invoke the canonical compliance command.",
         paths=(
+            ".github/workflows/ci-binding-compliance.yml",
             ".github/workflows/ci-cpp.yml",
             ".github/workflows/ci-typescript.yml",
             ".github/workflows/ci-python-bindings.yml",
         ),
         text_expectations=(
             TextExpectation(
+                path=".github/workflows/ci-binding-compliance.yml",
+                contains=(
+                    "tools/binding_compliance/check_compliance.py",
+                    "--profile full",
+                    "--receipt-directory",
+                ),
+            ),
+            TextExpectation(
                 path=".github/workflows/ci-cpp.yml",
-                contains=("tools/binding_compliance/check_compliance.py", "--profile cxx-ci"),
+                contains=(
+                    "tools/binding_compliance/check_compliance.py",
+                    "--profile cxx-ci",
+                ),
             ),
             TextExpectation(
                 path=".github/workflows/ci-typescript.yml",
-                contains=("tools/binding_compliance/check_compliance.py", "--profile node-ci"),
+                contains=(
+                    "tools/binding_compliance/check_compliance.py",
+                    "--profile node-ci",
+                ),
             ),
             TextExpectation(
                 path=".github/workflows/ci-python-bindings.yml",
-                contains=("tools/binding_compliance/check_compliance.py", "--profile python-ci"),
+                contains=(
+                    "tools/binding_compliance/check_compliance.py",
+                    "--profile python-ci",
+                ),
             ),
         ),
-        proves=("CI policy now flows through the umbrella suite while old gates remain diagnostic subcommands.",),
+        proves=(
+            "CI policy now flows through the umbrella suite while old gates remain diagnostic subcommands.",
+        ),
     ),
 )
 
@@ -508,11 +604,17 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
 def requirements_for_profile(profile: str) -> tuple[ComplianceRequirement, ...]:
     """Return requirements that participate in a named execution profile."""
 
+    if profile == "conformance":
+        # Native conformance jobs are governed by their scoped receipt report,
+        # not by a duplicate run of the repository-wide requirement catalog.
+        return ()
     selected = tuple(
         requirement for requirement in REQUIREMENTS if profile in requirement.profiles
     )
     if not selected:
-        known = sorted({name for req in REQUIREMENTS for name in req.profiles})
+        known = sorted(
+            {name for req in REQUIREMENTS for name in req.profiles} | {"conformance"}
+        )
         raise ValueError(
             f"Unknown binding compliance profile '{profile}'. Known profiles: {', '.join(known)}"
         )

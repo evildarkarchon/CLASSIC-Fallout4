@@ -135,6 +135,15 @@
       <sourceFolder url="file://$MODULE_DIR$/python-bindings/classic-xse-py/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ui-applications/classic-tui/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ui-applications/classic-tui/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-durable-publication/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-scan-presentation/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-scan-presentation/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-update-core/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-user-settings-core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-user-settings-core/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/foundation/classic-operation-context/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/foundation/classic-vocabulary/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/python-bindings/classic-user-settings-py/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/classic-core/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
@@ -142,7 +151,7 @@
       <excludeFolder url="file://$MODULE_DIR$/ClassicLib-rs/target" />
       <excludeFolder url="file://$MODULE_DIR$/python-bindings/.venv" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.13 (CLASSIC-Fallout4)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="uv (CLASSIC-Fallout4)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="uv (CLASSIC-Fallout4) interpreter library" level="application" />
   </component>

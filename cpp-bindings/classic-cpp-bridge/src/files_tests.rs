@@ -169,3 +169,50 @@ fn test_read_report_file_nonexistent() {
     let result = read_report_file("nonexistent_report_xyz.md");
     assert!(result.is_err());
 }
+#[test]
+fn report_discovery_excludes_directories_with_report_suffix() {
+    let directory = tempfile::tempdir().unwrap();
+    std::fs::create_dir(directory.path().join("directory-AUTOSCAN.md")).unwrap();
+    assert!(discover_report_files(directory.path().to_str().unwrap()).is_empty());
+}
+#[test]
+fn writes_report_discovery_conformance_receipt() {
+    crate::tests::interface_receipt("report-discovery", |fixture| {
+        let temporary = tempfile::tempdir().unwrap();
+        let root = temporary.path();
+        for directory in fixture["directories"].as_array().unwrap() {
+            std::fs::create_dir_all(root.join(directory.as_str().unwrap())).unwrap();
+        }
+        for item in fixture["files"].as_array().unwrap() {
+            let path = root.join(item["path"].as_str().unwrap());
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(&path, item["content"].as_str().unwrap()).unwrap();
+            let time = std::time::UNIX_EPOCH
+                + std::time::Duration::from_secs(item["modifiedSeconds"].as_u64().unwrap());
+            std::fs::File::options()
+                .write(true)
+                .open(path)
+                .unwrap()
+                .set_times(std::fs::FileTimes::new().set_modified(time))
+                .unwrap();
+        }
+        let target = if fixture["missing"].as_bool().unwrap() {
+            root.join("missing")
+        } else {
+            root.to_path_buf()
+        };
+        let reports = discover_report_files(target.to_str().unwrap())
+            .into_iter()
+            .map(|path| {
+                std::path::Path::new(&path)
+                    .strip_prefix(root)
+                    .unwrap()
+                    .to_string_lossy()
+                    .replace('\\', "/")
+            })
+            .collect::<Vec<_>>();
+        let mut observation = crate::tests::file_snapshot(root);
+        observation["reports"] = reports.into();
+        observation
+    });
+}

@@ -276,6 +276,148 @@ std::size_t count_literals_in_label_shaped_functions(const std::string& source, 
     return count / 2;
 }
 
+/// Returns the shared deny-list of phrases about a Crash Log Scan Run that no
+/// frontend may write.
+///
+/// One file, read by all four frontend audits, rather than four inline copies.
+/// A per-frontend list would put back into the test layer the four-copies drift
+/// `classic-scan-presentation` exists to delete: a contributor adding core-owned
+/// prose would have to remember four lists, and forgetting one would leave the
+/// phrase unenforced in exactly the frontend nobody was looking at.
+std::vector<std::string> core_owned_phrases() {
+    const auto path = cli_root().parent_path() / "business-logic" / "classic-scan-presentation" /
+                      "core-owned-phrases.txt";
+    std::ifstream file(path);
+    REQUIRE(file.is_open());
+
+    std::vector<std::string> phrases;
+    std::string line;
+    while (std::getline(file, line)) {
+        // `\r` is trimmed with the rest: the file is read as text on a repo where
+        // the working copy may hold either line ending, and a trailing carriage
+        // return would silently make every phrase unmatchable.
+        const auto first = line.find_first_not_of(" \t\r\n");
+        if (first == std::string::npos) {
+            continue;
+        }
+        const auto last = line.find_last_not_of(" \t\r\n");
+        std::string phrase = line.substr(first, last - first + 1);
+        if (phrase.front() == '#') {
+            continue;
+        }
+        phrases.push_back(std::move(phrase));
+    }
+    return phrases;
+}
+
+/// Returns the contents of every string literal in `source`, one per line, with
+/// nothing else.
+///
+/// Literals rather than comment-stripped code, which is what this scanned first.
+/// Prose is only ever a literal, so reading more than literals only adds ways to
+/// be wrong — and it was wrong: `succeeded,` is core-owned prose that occurs
+/// verbatim in ordinary code as `terminal.succeeded, terminal.failed`. Extracting
+/// literals removes that whole class of false positive rather than asking the
+/// deny-list to dodge it, and matches the Python audit, which reads literals off
+/// the AST for the same reason.
+///
+/// Comments never appear, for the reason the CXX parity gate's name scan was
+/// fixed: a comment *describing* the drift is not the drift, and this file's own
+/// header quotes phrases the detector forbids. Tracking string state is what
+/// tells the two apart, and it also stops a `//` inside a path or URL literal
+/// from reading as the start of a comment.
+///
+/// Literals are newline-separated rather than concatenated so two adjacent ones
+/// cannot form a phrase neither contains — `"succeeded" ", "` must not read as
+/// `succeeded, `.
+std::string string_literals(const std::string& source) {
+    std::string out;
+    out.reserve(source.size());
+
+    std::size_t index = 0;
+    while (index < source.size()) {
+        // A character literal holding a quote — `'"'` or `'\"'` — would otherwise
+        // open a string that never closes where the scanner thinks it does,
+        // dropping the rest of the file from the audit. That is exactly the
+        // "reads as coverage while providing none" failure these guards exist to
+        // prevent, so it is handled rather than left latent. A digit separator
+        // (`1'000`) and any other `'` fall through to the ordinary branch, since
+        // neither can be mistaken for a string.
+        if (source[index] == '\'') {
+            const auto escaped = index + 1 < source.size() && source[index + 1] == '\\';
+            const auto close = index + (escaped ? 3 : 2);
+            if (close < source.size() && source[close] == '\'') {
+                index = close + 1;
+                continue;
+            }
+        }
+        // A raw string takes no escapes, so `R"(C:\dir\)"` ends at its own
+        // delimiter and a `\"` inside it is two characters rather than one.
+        // Handled before the ordinary-string branch, which would otherwise read
+        // that backslash as an escape and run past the end of the literal.
+        if (source[index] == 'R' && index + 1 < source.size() && source[index + 1] == '"') {
+            // Bounded because the standard caps a raw delimiter at 16 characters
+            // and forbids `(` in it. Searching to end-of-file instead would let a
+            // stray `R"` synthesize a closer that never matches and silently swallow
+            // the remainder of the source.
+            const auto limit = std::min(index + 2 + 16, source.size());
+            const auto open = source.find('(', index + 2);
+            if (open != std::string::npos && open <= limit) {
+                const std::string closer = ")" + source.substr(index + 2, open - (index + 2)) + "\"";
+                const auto close = source.find(closer, open + 1);
+                const auto body_end = close == std::string::npos ? source.size() : close;
+                out.append(source, open + 1, body_end - (open + 1));
+                out.push_back('\n');
+                index = close == std::string::npos ? source.size() : close + closer.size();
+                continue;
+            }
+        }
+        if (source.compare(index, 2, "//") == 0) {
+            while (index < source.size() && source[index] != '\n') {
+                ++index;
+            }
+            continue;
+        }
+        if (source.compare(index, 2, "/*") == 0) {
+            const auto close = source.find("*/", index + 2);
+            index = close == std::string::npos ? source.size() : close + 2;
+            continue;
+        }
+        if (source[index] == '"') {
+            ++index;
+            while (index < source.size()) {
+                if (source[index] == '\\') {
+                    index += 2;
+                    continue;
+                }
+                if (source[index] == '"') {
+                    ++index;
+                    break;
+                }
+                out.push_back(source[index]);
+                ++index;
+            }
+            out.push_back('\n');
+            continue;
+        }
+        // Ordinary code, which is deliberately dropped rather than collected.
+        ++index;
+    }
+    return out;
+}
+
+/// The sentence a frontend would reach for, written as the template it would
+/// actually be written as.
+///
+/// `std::format`-shaped rather than a verbatim paste, because a template is the
+/// shape drift takes in practice: the phrase survives and only the stage is
+/// substituted. Matching a phrase rather than a whole sentence is what lets the
+/// plain substring test see it.
+constexpr std::string_view REWORDED_SENTENCE =
+    "std::string summary(ScanRunContractInfrastructureErrorStage stage) {\n"
+    "    return std::format(\"Crash Log Scan Run failed during {}\", label(stage));\n"
+    "}\n";
+
 } // namespace
 
 TEST_CASE("No CLI source turns an audited enum into a string literal", "[display-label][audit]") {
@@ -303,17 +445,153 @@ TEST_CASE("No CLI source turns an audited enum into a string literal", "[display
     }
 }
 
-TEST_CASE("Every CLI Display Label comes from a bridge accessor", "[display-label][audit]") {
+TEST_CASE("Every CLI Display Label arrives inside a rendered display line", "[display-label][audit]") {
     // The negative audit above proves no table was written. This proves the
     // labels are still rendered at all: without it, deleting a call site would
     // read as compliance rather than as a frontend that stopped saying what
-    // happened. It checks the call appears, not that it is reached — the
-    // behavioral half of that lives in test_scanner.cpp.
+    // happened.
+    //
+    // What it checks changed when this frontend stopped composing sentences.
+    // Every Display Label the CLI prints now arrives inside a `Label` segment of
+    // a Rust-rendered display line, so it calls none of the seven bridge
+    // accessors any more. Their absence is asserted rather than merely
+    // tolerated: re-deriving a label that a segment already carries is how a
+    // frontend ends up disagreeing with the sentence built around it.
+    //
+    // The accessors themselves stay. They remain the correct surface for
+    // labelling a domain enum *outside* a display line, and the Qt GUI still
+    // renders that way until its own migration lands.
     const std::string source = read_source("src/scan_run_cli.cpp");
     for (const auto& rendered : RENDERED_ENUMS) {
-        INFO(rendered.label_accessor << " is not called from src/scan_run_cli.cpp, so "
-                                     << rendered.type_name << " has no Display Label to render");
-        CHECK(source.find(rendered.label_accessor) != std::string::npos);
+        INFO(rendered.label_accessor << " is called from src/scan_run_cli.cpp, but " << rendered.type_name
+                                     << " is already labelled inside the display line that carries it");
+        CHECK(source.find(rendered.label_accessor) == std::string::npos);
+    }
+
+    // The positive half, moved down one level: the renderer must read every
+    // segment kind, because a `Label` it fails to handle is a Display Label that
+    // crossed the bridge and was then silently dropped. Checking all six rather
+    // than just `Label` costs nothing and catches the same mistake for a path or
+    // a count.
+    for (const auto& kind : {"Text", "Label", "Count", "Path", "Name", "Emphasis"}) {
+        INFO("src/scan_run_cli.cpp never reads ScanRunDisplaySegmentKind::"
+             << kind << ", so a segment of that kind would be rendered as something else or not at all");
+        CHECK(source.find(std::string("ScanRunDisplaySegmentKind::") + kind) != std::string::npos);
+    }
+}
+
+TEST_CASE("No CLI source writes a sentence the presentation crate owns", "[display-label][audit]") {
+    // The naming audit above proves this frontend keeps no table of Display
+    // Labels. This proves the narrower thing every frontend must show once it
+    // renders display lines: that it did not reword what it was given.
+    //
+    // Deliberately scoped to the deny-list. A general "no format strings" rule
+    // was considered and rejected as unworkably noisy — it would bury real
+    // findings in false positives and get switched off, which is worse than not
+    // having it.
+    const auto phrases = core_owned_phrases();
+    for (const auto& relative_path : AUDITED_SOURCES) {
+        const std::string code = string_literals(read_source(relative_path));
+        for (const auto& phrase : phrases) {
+            INFO(relative_path << " writes \"" << phrase
+                               << "\", which classic-scan-presentation already says about a Crash Log Scan "
+                                  "Run; render the display lines it produces instead, so a wording fix "
+                                  "lands once and reaches every frontend");
+            CHECK(code.find(phrase) == std::string::npos);
+        }
+    }
+}
+
+TEST_CASE("The shared deny-list is readable and not empty", "[display-label][audit]") {
+    // The detector loops over the deny-list, so an empty or mislocated list
+    // asserts nothing while still reporting green — an audit that reads as
+    // coverage while providing none. The other three audits carry the same guard
+    // against the same file.
+    const auto phrases = core_owned_phrases();
+    CHECK(phrases.size() >= 10);
+    CHECK(std::find(phrases.begin(), phrases.end(), "Crash Log Scan Run failed during") != phrases.end());
+
+    // No constraint on an entry's shape is asserted any more, and that is
+    // deliberate. An earlier version required each entry to contain a space,
+    // because the detector searched comment-stripped *code* and a bare word could
+    // match an identifier. That constraint was load-bearing only because the
+    // detector read more than it needed: `string_literals` now yields literals
+    // alone, where no identifier can appear, so `succeeded,` — core-owned prose
+    // that occurs in ordinary code as `terminal.succeeded, terminal.failed` — is
+    // safe to list.
+}
+
+TEST_CASE("The phrase detector catches the drift it exists for", "[display-label][audit]") {
+    // The CLI writes none of these phrases now, so a broken detector and a
+    // compliant frontend look identical from here. Feeding the detector the drift
+    // it exists to catch is what tells the two apart — the same proof the TUI
+    // audit carries for its naming detectors.
+    //
+    // Split into sections so a failure names which property broke, matching the
+    // one-test-per-property shape the Rust and Qt ports use.
+    SECTION("a sentence template reusing a core-owned phrase is caught") {
+        const std::string drift = string_literals(std::string(REWORDED_SENTENCE));
+        CHECK(drift.find("Crash Log Scan Run failed during") != std::string::npos);
+    }
+
+    SECTION("a comment describing the drift is documentation, not the drift") {
+        const std::string commented = string_literals(
+            "// Crash Log Scan Run failed during is core's to say.\n"
+            "/* Crash Log Scan Run failed during, again. */\n"
+            "int x = 1;\n");
+        CHECK(commented.find("Crash Log Scan Run failed during") == std::string::npos);
+    }
+
+    SECTION("a raw string is a literal, and `//` inside one is not a comment") {
+        // Without this, everything after a path or URL on the same line silently
+        // leaves the audited text, taking any phrase written there with it.
+        const std::string raw = string_literals(
+            "const auto s = R\"(Crash Log Scan Run failed during)\";\n"
+            "const auto u = \"https://example.invalid\";\n"
+            "const auto t = \"Start the Crash Log Scan again to retry.\";\n");
+        CHECK(raw.find("Crash Log Scan Run failed during") != std::string::npos);
+        CHECK(raw.find("Start the Crash Log Scan again to retry.") != std::string::npos);
+    }
+
+    SECTION("a character literal holding a quote does not swallow the rest of the file") {
+        // No CLI source contains one today, which is exactly why this needs a
+        // test rather than a reader's vigilance: the failure would be a silent
+        // hole in the audit, not a red test.
+        const std::string quoted = string_literals(
+            "const char q = '\"';\n"
+            "const char e = '\\'';\n"
+            "const auto s = \"Crash Log Scan Run failed during\";\n");
+        CHECK(quoted.find("Crash Log Scan Run failed during") != std::string::npos);
+    }
+
+    SECTION("literals are read, and the code around them is not") {
+        // `succeeded,` is core-owned prose and also, character for character, an
+        // ordinary argument list. A detector that searched code rather than
+        // literals reported the Qt GUI's `emit finished(terminal.succeeded,
+        // terminal.failed, ...)` as drift, which is how this scanner came to
+        // extract literals instead of merely stripping comments.
+        const std::string code = string_literals("emit finished(terminal.succeeded, terminal.failed);\n");
+        CHECK(code.find("succeeded,") == std::string::npos);
+
+        const std::string written = string_literals("const auto s = \"3 succeeded, 4 failed\";\n");
+        CHECK(written.find("succeeded,") != std::string::npos);
+
+        // Two adjacent literals must not fuse into a phrase neither contains, or
+        // the separator this relies on is doing nothing.
+        const std::string adjacent = string_literals("const auto s = \"succeeded\" \", failed\";\n");
+        CHECK(adjacent.find("succeeded,") == std::string::npos);
+    }
+
+    SECTION("rendering core's own segments stays quiet") {
+        // The other half of the proof. A detector that answered "drift" to
+        // everything would make the audit noise a contributor learns to work
+        // around, which is worse than not having it.
+        const std::string compliant = string_literals(
+            "for (const auto& segment : line.segments) { out += segment_text(segment); }\n");
+        for (const auto& phrase : core_owned_phrases()) {
+            INFO("concatenating core's own segments should not read as writing \"" << phrase << '"');
+            CHECK(compliant.find(phrase) == std::string::npos);
+        }
     }
 }
 

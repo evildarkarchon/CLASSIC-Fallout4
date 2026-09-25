@@ -1,0 +1,15 @@
+{
+  "operation": "malformed-approval",
+  "approved": {
+    "releaseTag": "yaml-data-v-conformance",
+    "names": [
+      "CLASSIC Main.yaml"
+    ],
+    "digests": []
+  },
+  "files": {},
+  "service": {
+    "pages": [],
+    "api": []
+  }
+}

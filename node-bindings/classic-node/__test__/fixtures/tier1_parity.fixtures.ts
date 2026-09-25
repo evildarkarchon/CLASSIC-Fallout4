@@ -37,110 +37,110 @@ CLASSIC_Ignore_Fallout4:
 export const INVALID_PARITY_MAIN_YAML = "{ invalid: yaml: content: }}}";
 
 export const scanlogConfigCases = [
-  {
-    id: "fallout4-non-vr-defaults",
-    game: "Fallout4",
-    gameVersion: "auto",
-    expected: {
-      crashgenName: "",
-      xseAcronym: "",
-      classicVersion: "CLASSIC",
-      fcxMode: false,
-      simplifyLogs: false,
+    {
+        id: "fallout4-non-vr-defaults",
+        game: "Fallout4",
+        gameVersion: "auto",
+        expected: {
+            crashgenName: "",
+            xseAcronym: "",
+            classicVersion: "CLASSIC",
+            fcxMode: false,
+            simplifyLogs: false,
+        },
     },
-  },
-  {
-    id: "fallout4-vr-defaults",
-    game: "Fallout4",
-    gameVersion: "VR",
-    expected: {
-      crashgenName: "",
-      xseAcronym: "",
-      classicVersion: "CLASSIC",
-      fcxMode: false,
-      simplifyLogs: false,
+    {
+        id: "fallout4-vr-defaults",
+        game: "Fallout4",
+        gameVersion: "VR",
+        expected: {
+            crashgenName: "",
+            xseAcronym: "",
+            classicVersion: "CLASSIC",
+            fcxMode: false,
+            simplifyLogs: false,
+        },
     },
-  },
 ] as const;
 
 export const scanlogYamlOptionsCases = [
-  {
-    id: "omitted-options",
-    options: undefined,
-    expected: {
-      crashgenName: "Buffout 4",
-      xseAcronym: "F4SE",
-      classicVersion: "9.0.0",
-      fcxMode: false,
-      simplifyLogs: false,
+    {
+        id: "omitted-options",
+        options: undefined,
+        expected: {
+            crashgenName: "Buffout 4",
+            xseAcronym: "F4SE",
+            classicVersion: "9.0.0",
+            fcxMode: false,
+            simplifyLogs: false,
+        },
     },
-  },
-  {
-    id: "explicit-options",
-    options: {
-      showFormidValues: true,
-      fcxMode: true,
-      simplifyLogs: true,
-      removeList: ["NVIDIA", "AMD"],
+    {
+        id: "explicit-options",
+        options: {
+            showFormidValues: true,
+            fcxMode: true,
+            simplifyLogs: true,
+            removeList: ["NVIDIA", "AMD"],
+        },
+        expected: {
+            crashgenName: "Buffout 4",
+            xseAcronym: "F4SE",
+            classicVersion: "9.0.0",
+            fcxMode: true,
+            simplifyLogs: true,
+        },
     },
-    expected: {
-      crashgenName: "Buffout 4",
-      xseAcronym: "F4SE",
-      classicVersion: "9.0.0",
-      fcxMode: true,
-      simplifyLogs: true,
-    },
-  },
 ] as const;
 
 export const scanlogErrorCase = {
-  missingLogPath: "Z:\\nonexistent\\tier1-parity.log",
+    missingLogPath: "Z:\\nonexistent\\tier1-parity.log",
 } as const;
 
 export const configSourceCases = [
-  {
-    id: "main-source",
-    source: "Main",
-    game: "",
-    expectedPathToken: "CLASSIC Main.yaml",
-    expectedDisplayName: "Main Database",
-  },
-  {
-    id: "game-source",
-    source: "Game",
-    game: "Fallout4",
-    expectedPathToken: "CLASSIC Fallout4.yaml",
-    expectedDisplayName: "Fallout4 Database",
-  },
-  {
-    id: "ignore-source",
-    source: "Ignore",
-    game: "",
-    expectedPathToken: "CLASSIC Ignore.yaml",
-    expectedDisplayName: "Ignore List",
-  },
+    {
+        id: "main-source",
+        source: "Main",
+        game: "",
+        expectedPathToken: "CLASSIC Main.yaml",
+        expectedDisplayName: "Main Database",
+    },
+    {
+        id: "game-source",
+        source: "Game",
+        game: "Fallout4",
+        expectedPathToken: "CLASSIC Fallout4.yaml",
+        expectedDisplayName: "Fallout4 Database",
+    },
+    {
+        id: "ignore-source",
+        source: "Ignore",
+        game: "",
+        expectedPathToken: "CLASSIC Ignore.yaml",
+        expectedDisplayName: "Ignore List",
+    },
 ] as const;
 
 export const versionRegistryCases = [
-  {
-    id: "fo4-og",
-    versionId: "FO4_OG",
-    expectedShortName: "OG",
-    expectedIsVr: false,
-    expectedVersion: "1.10.163.0",
-  },
-  {
-    id: "fo4-ng",
-    versionId: "FO4_NG",
-    expectedShortName: "NG",
-    expectedIsVr: false,
-    expectedVersion: "1.10.984.0",
-  },
-  {
-    id: "fo4-vr",
-    versionId: "FO4_VR",
-    expectedShortName: "VR",
-    expectedIsVr: true,
-    expectedVersion: "1.2.72.0",
-  },
+    {
+        id: "fo4-og",
+        versionId: "FO4_OG",
+        expectedShortName: "OG",
+        expectedIsVr: false,
+        expectedVersion: "1.10.163.0",
+    },
+    {
+        id: "fo4-ng",
+        versionId: "FO4_NG",
+        expectedShortName: "NG",
+        expectedIsVr: false,
+        expectedVersion: "1.10.984.0",
+    },
+    {
+        id: "fo4-vr",
+        versionId: "FO4_VR",
+        expectedShortName: "VR",
+        expectedIsVr: true,
+        expectedVersion: "1.2.72.0",
+    },
 ] as const;

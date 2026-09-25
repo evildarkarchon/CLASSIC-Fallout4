@@ -1120,49 +1120,114 @@ fn cancellation_racing_after_reset_begins_returns_cancelled_after_durable_reset(
     );
 }
 
+/// Races two one-shot claims on real threads and returns both outcomes in completion-agnostic order.
+///
+/// These tests previously used `tokio::join!`, which polls both futures on one task. The claim
+/// inside `resume` is a synchronous `take()` under a mutex with nothing awaited before it, so
+/// joined futures always resolve in poll order and the mutex is never contended — nothing about
+/// concurrent access was exercised at all. Two OS threads released together by a barrier put the
+/// claim under genuine parallel entry.
+///
+/// The barrier is also what makes the arrangement self-verifying: `Barrier::wait` with two parties
+/// cannot return until both threads have arrived, so a run that finishes at all is a run in which
+/// both threads were live and about to claim. If the two ever stopped overlapping, this would hang
+/// rather than quietly pass.
+///
+/// What that proves is bounded, and worth stating so nobody reads more into it. `Option::take`
+/// under a `Mutex` makes two winners unreachable for any lock discipline that compiles, so this is
+/// not a test that a non-atomic claim would fail. It is a test that under real parallel entry the
+/// contract still holds end to end: exactly one caller wins, the loser gets the typed consumed
+/// error rather than a wrong-typed or infrastructure one, and neither thread deadlocks or panics.
+///
+/// `claim` is a plain `fn` rather than a closure so each caller can supply its own operation —
+/// `abandon`, or `resume` with a chosen decision — without this helper having to name the borrowing
+/// future those methods return.
+fn race_two_claims(
+    continuation: &Arc<contract::CrashLogScanRunContinuation>,
+    claim: fn(
+        Arc<contract::CrashLogScanRunContinuation>,
+        contract::Cancellation,
+    ) -> Result<contract::RunResult, contract::ResumeError>,
+) -> [Result<contract::RunResult, contract::ResumeError>; 2] {
+    let barrier = Arc::new(Barrier::new(2));
+    let racers = [Arc::clone(continuation), Arc::clone(continuation)].map(|continuation| {
+        let barrier = Arc::clone(&barrier);
+        std::thread::spawn(move || {
+            // Every per-thread setup cost is paid before the barrier, so both threads leave it
+            // with nothing left to do but claim.
+            let cancellation = contract::Cancellation::new();
+            barrier.wait();
+            claim(continuation, cancellation)
+        })
+    });
+    racers.map(|racer| racer.join().expect("racing claim thread should not panic"))
+}
+
+/// Asserts exactly one of two racing claims won and the loser reported a consumed continuation.
+fn assert_exactly_one_claim_won(outcomes: [Result<contract::RunResult, contract::ResumeError>; 2]) {
+    let [first, second] = outcomes;
+    assert_eq!(usize::from(first.is_ok()) + usize::from(second.is_ok()), 1);
+    let error = first
+        .err()
+        .or_else(|| second.err())
+        .expect("one racing claim should fail");
+    assert_eq!(error, contract::ResumeError::ContinuationConsumed);
+    assert_eq!(error.kind().as_str(), "scan_run_continuation_consumed");
+}
+
 /// Sequential and concurrent replay both return the same typed consumed-continuation failure.
 #[test]
 fn proceed_without_ignore_continuation_rejects_every_replay() {
     let (_temp, _logs, _ignore_path, _malformed_ignore, mut initial) =
         paused_recovery_fixture(&["crash-continuation-replay.log"]);
-    let continuation = initial
-        .continuation
-        .take()
-        .expect("recovery-required result should carry a continuation");
+    let continuation = Arc::new(
+        initial
+            .continuation
+            .take()
+            .expect("recovery-required result should carry a continuation"),
+    );
 
-    get_runtime().block_on(async {
-        let first_cancellation = contract::Cancellation::new();
-        let second_cancellation = contract::Cancellation::new();
-        let (first, second) = tokio::join!(
-            continuation.resume(
+    assert_exactly_one_claim_won(race_two_claims(
+        &continuation,
+        |continuation, cancellation| {
+            get_runtime().block_on(continuation.resume(
                 contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-                &first_cancellation,
+                &cancellation,
                 None,
-            ),
-            continuation.resume(
-                contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-                &second_cancellation,
-                None,
-            )
-        );
-        assert_eq!(usize::from(first.is_ok()) + usize::from(second.is_ok()), 1);
-        let error = first
-            .err()
-            .or_else(|| second.err())
-            .expect("one racing resume should fail");
-        assert_eq!(error, contract::ResumeError::ContinuationConsumed);
-        assert_eq!(error.kind().as_str(), "scan_run_continuation_consumed");
+            ))
+        },
+    ));
 
-        let replay = continuation
-            .resume(
-                contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
-                &contract::Cancellation::new(),
-                None,
-            )
-            .await
-            .expect_err("every later resume should reject replay");
-        assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
-    });
+    let replay = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect_err("every later resume should reject replay");
+    assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
+}
+
+/// Asserts the ordinary post-discovery cancelled shape.
+///
+/// Complete discovery is retained, every accepted log counts as cancelled, and no intake or
+/// concurrency facts are present because neither stage was reached. Shared by the two paths that
+/// produce this shape from a paused run — a pre-cancelled `resume` and `abandon` — so the contract
+/// they are both required to honour is written down once and cannot drift between them.
+fn assert_cancelled_after_discovery(result: &contract::RunResult, logs: &[PathBuf]) {
+    assert_eq!(result.status, contract::RunStatus::Cancelled);
+    assert_eq!(result.cancelled, logs.len());
+    assert_eq!(
+        result
+            .discovery
+            .as_ref()
+            .expect("cancelled-after-discovery should retain discovery")
+            .accepted_logs,
+        logs
+    );
+    assert!(result.installed_yaml_data.is_none());
+    assert!(result.effective_concurrency.is_none());
+    assert!(result.continuation.is_none());
 }
 
 /// Pre-resume cancellation consumes the continuation before recovery or analysis can begin.
@@ -1187,18 +1252,7 @@ fn cancellation_before_recovery_resume_returns_normal_cancelled_after_discovery_
         ))
         .expect("pre-resume cancellation should remain expected result data");
 
-    assert_eq!(cancelled.status, contract::RunStatus::Cancelled);
-    assert_eq!(cancelled.cancelled, logs.len());
-    assert_eq!(
-        cancelled
-            .discovery
-            .as_ref()
-            .expect("cancelled-after-discovery should retain discovery")
-            .accepted_logs,
-        logs
-    );
-    assert!(cancelled.installed_yaml_data.is_none());
-    assert!(cancelled.effective_concurrency.is_none());
+    assert_cancelled_after_discovery(&cancelled, &logs);
     assert!(events.is_empty());
     assert!(
         logs.iter()
@@ -1216,6 +1270,141 @@ fn cancellation_before_recovery_resume_returns_normal_cancelled_after_discovery_
         ))
         .expect_err("cancelled resume should still consume the continuation");
     assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
+}
+
+/// Snapshots every file below `root` as a sorted path-to-bytes map.
+///
+/// Abandonment claims to touch nothing on disk, and the two things it could plausibly touch — an
+/// Autoscan Report and the Local Ignore backup directory — sit in different subtrees. Comparing
+/// whole trees proves the claim generally, instead of naming only the paths that exist today.
+fn snapshot_tree(root: &std::path::Path) -> std::collections::BTreeMap<PathBuf, Vec<u8>> {
+    let mut files = std::collections::BTreeMap::new();
+    let mut pending = vec![root.to_path_buf()];
+    while let Some(directory) = pending.pop() {
+        for entry in std::fs::read_dir(&directory).expect("fixture tree should stay readable") {
+            let path = entry.expect("fixture entry should be readable").path();
+            if path.is_dir() {
+                pending.push(path);
+            } else {
+                let bytes = std::fs::read(&path).expect("fixture file should be readable");
+                files.insert(path, bytes);
+            }
+        }
+    }
+    files
+}
+
+/// Asserts nothing below the fixture root was created, deleted, or rewritten.
+///
+/// Paths are compared before bytes, so a stray Autoscan Report or Local Ignore backup fails as a
+/// readable path diff rather than as a wall of file contents.
+fn assert_tree_unchanged(
+    before: &std::collections::BTreeMap<PathBuf, Vec<u8>>,
+    after: &std::collections::BTreeMap<PathBuf, Vec<u8>>,
+) {
+    assert_eq!(
+        after.keys().collect::<Vec<_>>(),
+        before.keys().collect::<Vec<_>>(),
+        "abandonment created or removed files"
+    );
+    for (path, bytes) in before {
+        assert_eq!(
+            after.get(path),
+            Some(bytes),
+            "{} was rewritten",
+            path.display()
+        );
+    }
+}
+
+/// Abandoning a paused run yields the ordinary cancelled result and writes nothing at all.
+#[test]
+fn abandoning_a_paused_run_returns_the_cancelled_result_and_touches_nothing() {
+    let (temp, logs, ignore_path, malformed_ignore, mut initial) =
+        paused_recovery_fixture(&["crash-continuation-abandoned.log"]);
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry a continuation");
+    let cancellation = contract::Cancellation::new();
+    let before = snapshot_tree(temp.path());
+    let mut events = Vec::new();
+    let mut observer = |event| events.push(event);
+
+    let abandoned = get_runtime()
+        .block_on(continuation.abandon(&cancellation, Some(&mut observer)))
+        .expect("abandonment should remain expected result data");
+
+    assert_cancelled_after_discovery(&abandoned, &logs);
+    assert!(events.is_empty());
+    // Abandonment cancels the run's own monotonic control, so a frontend that shares it observes
+    // the same cancelled run every other cancellation path produces.
+    assert!(cancellation.is_cancelled());
+    // The tree comparison is the general claim; the two assertions after it name the specific
+    // hazards a reader cares about — the user's malformed bytes, and analysis never starting.
+    assert_tree_unchanged(&before, &snapshot_tree(temp.path()));
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("malformed Local Ignore should remain readable"),
+        malformed_ignore
+    );
+    assert!(
+        logs.iter()
+            .all(|log| !crate::report::autoscan_report_path(log).exists())
+    );
+
+    let replay = get_runtime()
+        .block_on(continuation.abandon(&contract::Cancellation::new(), None))
+        .expect_err("abandonment should still consume the continuation");
+    assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
+}
+
+/// Abandonment claims the continuation once, so concurrent and later attempts are all rejected.
+#[test]
+fn abandonment_consumes_the_continuation_exactly_once() {
+    let (temp, _logs, ignore_path, malformed_ignore, mut initial) =
+        paused_recovery_fixture(&["crash-continuation-abandon-replay.log"]);
+    let continuation = Arc::new(
+        initial
+            .continuation
+            .take()
+            .expect("recovery-required result should carry a continuation"),
+    );
+    let before = snapshot_tree(temp.path());
+
+    assert_exactly_one_claim_won(race_two_claims(
+        &continuation,
+        |continuation, cancellation| {
+            get_runtime().block_on(continuation.abandon(&cancellation, None))
+        },
+    ));
+
+    get_runtime().block_on(async {
+        let replayed_abandon = continuation
+            .abandon(&contract::Cancellation::new(), None)
+            .await
+            .expect_err("every later abandonment should reject replay");
+        assert_eq!(
+            replayed_abandon,
+            contract::ResumeError::ContinuationConsumed
+        );
+        // The spent claim also closes the resume seam, and Reset To Default is the one decision
+        // that could have written to disk had the claim survived.
+        let replayed_resume = continuation
+            .resume(
+                contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+                &contract::Cancellation::new(),
+                None,
+            )
+            .await
+            .expect_err("a resume after abandonment should reject replay too");
+        assert_eq!(replayed_resume, contract::ResumeError::ContinuationConsumed);
+    });
+
+    assert_tree_unchanged(&before, &snapshot_tree(temp.path()));
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("malformed Local Ignore should remain readable"),
+        malformed_ignore
+    );
 }
 
 #[test]
@@ -3164,4 +3353,68 @@ fn the_two_halves_of_each_near_identity_mapping_are_inverses() {
             "the two halves of the reset failure stage mapping disagree"
         );
     }
+}
+
+#[test]
+/// The Local Ignore recovery decision satisfies the contract in its own right.
+fn local_ignore_recovery_decision_satisfies_the_vocabulary_contract() {
+    // Deliberately the plain assertion rather than the twin one, even though
+    // `LocalIgnoreYamlDataState` spells two of its tokens identically. A shared
+    // spelling is not a shared concept: this enum is a caller's choice, that one
+    // is a stored file's condition, and their labels are free to diverge - as
+    // they do, `Reset To Default` against `reset to default`.
+    assert_vocabulary_conformance::<contract::LocalIgnoreRecoveryDecision>();
+}
+
+#[test]
+fn every_local_ignore_recovery_decision_variant_is_listed_for_iteration() {
+    // The same backstop the enums above carry. The glossary calls a third
+    // variant out as deliberately absent, so this count is also what a
+    // contributor tempted to add an abandonment decision lands on first.
+    assert_eq!(contract::LocalIgnoreRecoveryDecision::VARIANTS.len(), 2);
+}
+
+#[test]
+fn every_local_ignore_recovery_decision_label_stays_distinct_from_its_token() {
+    // The per-variant shape of `every_infrastructure_stage_renders_its_display
+    // _label`, exhaustive over `VARIANTS` rather than over a literal table.
+    //
+    // Both forms differ for both variants here, so unlike the config enums there
+    // is no legitimate equality to pin - a label equal to its token would mean a
+    // frontend offering `reset_to_default` as a menu entry, which is the exact
+    // leak this contract exists to prevent. The underscore check is the second
+    // half of the same claim: a Display Label never carries token punctuation.
+    for decision in contract::LocalIgnoreRecoveryDecision::VARIANTS
+        .iter()
+        .copied()
+    {
+        let token = Vocabulary::as_str(decision);
+        let label = decision.label();
+        assert_ne!(
+            label, token,
+            "the Display Label for {decision:?} is still its Vocabulary Token"
+        );
+        assert!(
+            !label.contains('_'),
+            "Display Label `{label}` looks like a Vocabulary Token"
+        );
+    }
+}
+
+#[test]
+fn the_recovery_decision_labels_are_the_glossary_spelling() {
+    // The wording decision this contract is the arbiter of, pinned exactly
+    // because it is a settled decision rather than free prose. Three frontends
+    // spell these three different ways today - `Proceed without Ignore` in the
+    // native CLI, `Continue Without Ignore` in the Qt GUI, `Proceed Without
+    // Ignore` in the TUI - and the glossary's own `accepting Reset To Default`
+    // is what breaks the tie.
+    assert_eq!(
+        contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore.label(),
+        "Proceed Without Ignore"
+    );
+    assert_eq!(
+        contract::LocalIgnoreRecoveryDecision::ResetToDefault.label(),
+        "Reset To Default"
+    );
 }

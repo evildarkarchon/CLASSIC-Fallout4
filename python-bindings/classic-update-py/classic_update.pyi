@@ -30,6 +30,7 @@ Usage:
 
 __version__: str
 
+
 class GithubAsset:
     """GitHub release asset information.
 
@@ -49,6 +50,7 @@ class GithubAsset:
     browser_download_url: str
     content_type: str
     download_count: int
+
 
 class GithubRelease:
     """GitHub release information.
@@ -83,6 +85,7 @@ class GithubRelease:
     assets: list[GithubAsset]
     created_at: str
     published_at: str | None
+
 
 class GithubClient:
     """GitHub API client for release monitoring.
@@ -159,7 +162,7 @@ class GithubClient:
         """
 
     async def get_all_releases(
-        self, include_prereleases: bool = False, include_drafts: bool = False
+            self, include_prereleases: bool = False, include_drafts: bool = False
     ) -> list[GithubRelease]:
         """Get all releases from GitHub.
 
@@ -210,6 +213,7 @@ class GithubClient:
 
         """
 
+
 # ----------------------------------------------------------------------------
 # YAML update delivery (yaml-update-delivery change)
 # ----------------------------------------------------------------------------
@@ -245,14 +249,15 @@ class YamlClientSchemaEntry:
     installed_minor: int
 
     def __init__(
-        self,
-        name: str,
-        accepted_major: int,
-        accepted_minimum_minor: int,
-        has_installed: bool = False,
-        installed_major: int = 0,
-        installed_minor: int = 0,
+            self,
+            name: str,
+            accepted_major: int,
+            accepted_minimum_minor: int,
+            has_installed: bool = False,
+            installed_major: int = 0,
+            installed_minor: int = 0,
     ) -> None: ...
+
 
 class ApprovedUpdate:
     """Reviewed decision captured from a prior `check_yaml_update` call.
@@ -268,11 +273,12 @@ class ApprovedUpdate:
     file_sha256: list[str]
 
     def __init__(
-        self,
-        release_tag: str,
-        file_names: list[str],
-        file_sha256: list[str],
+            self,
+            release_tag: str,
+            file_names: list[str],
+            file_sha256: list[str],
     ) -> None: ...
+
 
 class YamlApplyRequest:
     """Structured input to `apply_yaml_update`."""
@@ -285,14 +291,15 @@ class YamlApplyRequest:
     bundled_yaml_dir: str | None
 
     def __init__(
-        self,
-        pages_url: str,
-        tag_prefix: str,
-        entries: list[YamlClientSchemaEntry],
-        enabled: bool,
-        approved: ApprovedUpdate,
-        bundled_yaml_dir: str | None = None,
+            self,
+            pages_url: str,
+            tag_prefix: str,
+            entries: list[YamlClientSchemaEntry],
+            enabled: bool,
+            approved: ApprovedUpdate,
+            bundled_yaml_dir: str | None = None,
     ) -> None: ...
+
 
 class YamlUpdateFile:
     """One file entry inside `YamlUpdateStatus` or `YamlUpdateReport`.
@@ -311,11 +318,13 @@ class YamlUpdateFile:
     size_bytes: int
     download_url: str
 
+
 class YamlRejectedFile:
     """One rejection inside `YamlUpdateStatus.incompatible_files`."""
 
     file: YamlUpdateFile
     reason: str
+
 
 class YamlUpdateStatus:
     """Discriminated status DTO returned by `check_yaml_update`.
@@ -336,6 +345,7 @@ class YamlUpdateStatus:
     incompatible_files: list[YamlRejectedFile]
     unknown_reason: str
 
+
 class YamlUpdateFileOutcome:
     """Per-file install outcome inside `YamlUpdateReport`.
 
@@ -350,11 +360,13 @@ class YamlUpdateFileOutcome:
     created_prev: bool
     failure_reason: str
 
+
 class YamlUpdateReport:
     """Aggregate result of `apply_yaml_update`."""
 
     installed: list[YamlUpdateFileOutcome]
     failed: list[YamlUpdateFileOutcome]
+
 
 class YamlRollbackOutcome:
     """Result of `rollback_yaml_update`.
@@ -366,12 +378,13 @@ class YamlRollbackOutcome:
     rolled_back: bool
     file_name: str
 
+
 def check_yaml_update(
-    pages_url: str,
-    tag_prefix: str,
-    entries: list[YamlClientSchemaEntry],
-    enabled: bool,
-    bundled_yaml_dir: str | None = None,
+        pages_url: str,
+        tag_prefix: str,
+        entries: list[YamlClientSchemaEntry],
+        enabled: bool,
+        bundled_yaml_dir: str | None = None,
 ) -> YamlUpdateStatus:
     """Check for a YAML data update.
 
@@ -402,6 +415,7 @@ def check_yaml_update(
         RuntimeError: on network failure the fallback cannot recover from.
     """
 
+
 def apply_yaml_update(request: YamlApplyRequest) -> YamlUpdateReport:
     """Fetch + download + atomically install the reviewed set of files.
 
@@ -425,6 +439,7 @@ def apply_yaml_update(request: YamlApplyRequest) -> YamlUpdateReport:
             decision is stale.
     """
 
+
 def rollback_yaml_update(file_name: str) -> YamlRollbackOutcome:
     """Swap the cached YAML file with its ``.prev`` sibling (if any).
 
@@ -434,6 +449,7 @@ def rollback_yaml_update(file_name: str) -> YamlRollbackOutcome:
     Args:
         file_name: Canonical file name (e.g. ``"CLASSIC Main.yaml"``).
     """
+
 
 # ----------------------------------------------------------------------------
 # App-notification (app-update-manifest-notification change)
@@ -447,6 +463,7 @@ class ClassicUpdateError(Exception):
     under :class:`ClassicNotificationError` all inherit from this class
     via :class:`ClassicNotificationError` → :class:`ClassicUpdateError`.
     """
+
 
 class ClassicNotificationError(ClassicUpdateError):
     """Base class for app-notification check failures.
@@ -465,17 +482,22 @@ class ClassicNotificationError(ClassicUpdateError):
     underlying Rust variants are shared with other update surfaces.
     """
 
+
 class ClassicNotificationFetchFailed(ClassicNotificationError):
     """Both Pages and Releases fallback channels failed."""
+
 
 class ClassicNotificationDecodeError(ClassicNotificationError):
     """The fetched manifest body is missing a required field or otherwise malformed."""
 
+
 class ClassicNotificationInstalledVersionParseError(ClassicNotificationError):
     """The caller-supplied installed_version could not be parsed as semver."""
 
+
 class ClassicNotificationCacheIoError(ClassicNotificationError):
     """The notification cache file (body or ETag) could not be read, written, or created."""
+
 
 class AppNotificationDisplay:
     """Optional display payload attached to a notification manifest.
@@ -490,6 +512,7 @@ class AppNotificationDisplay:
     title: str
     body: str
     cta_url: str | None
+
 
 class NotificationStatus:
     """Result of :func:`check_app_notification`.
@@ -519,10 +542,11 @@ class NotificationStatus:
     display: AppNotificationDisplay | None
     parse_error: str | None
 
+
 def check_app_notification(
-    owner: str,
-    repo: str,
-    installed_version: str,
+        owner: str,
+        repo: str,
+        installed_version: str,
 ) -> NotificationStatus:
     """Check for a published CLASSIC binary-release notification.
 
@@ -551,3 +575,9 @@ def check_app_notification(
         ClassicNotificationError: Invalid or unsupported notification manifest.
         ClassicUpdateError: Non-notification update-subsystem error.
     """
+
+
+def check_app_notification_configured(owner: str, repo: str, installed_version: str, config_json: str,
+                                      cache_dir: str) -> NotificationStatus:
+    """Check with endpoint JSON and explicit cache storage; empty disables caching."""
+    ...

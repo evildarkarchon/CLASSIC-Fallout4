@@ -1,0 +1,16 @@
+{
+  "mode": "disabled",
+  "lines": [
+    "Form ID: 0x01000001",
+    "Form ID: 0x01000001",
+    "Form ID: 0x01000002",
+    "Form ID: 0x02000003",
+    "Form ID: 0xFF000001"
+  ],
+  "plugins": [
+    {
+      "name": "Example.esp",
+      "prefix": "bad"
+    }
+  ]
+}

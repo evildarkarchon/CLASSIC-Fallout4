@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "familyId": "named-record",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-scanlog-core"
+  },
+  "fixtureRoot": "tests/fixtures/semantic_conformance/named-record",
+  "fixtures": {
+    "counted_findings": "counted-findings.json",
+    "empty_after_reuse": "empty-after-reuse.json",
+    "invalid_configuration": "invalid-configuration.json"
+  },
+  "capabilities": [
+    {
+      "id": "named-record.analyze",
+      "rustSymbols": [
+        "NamedRecordFindingAnalyzer",
+        "NamedRecordFindingAnalysisInput",
+        "NamedRecordFindingAnalysisResult",
+        "NamedRecordFinding"
+      ],
+      "observationFamilies": [
+        "semantic-result",
+        "structured-error"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "counted-findings",
+      "action": "named-record.analyze",
+      "capabilityIds": [
+        "named-record.analyze"
+      ],
+      "fixtureRefs": [
+        "counted_findings"
+      ],
+      "input": {
+        "fixtureRef": "counted_findings"
+      },
+      "expected": {
+        "analyzerKind": "named_record_finding",
+        "result": {
+          "findings": [
+            {
+              "record": "ActorBase_Player",
+              "occurrences": 2
+            }
+          ]
+        },
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "empty-after-reuse",
+      "action": "named-record.analyze",
+      "capabilityIds": [
+        "named-record.analyze"
+      ],
+      "fixtureRefs": [
+        "empty_after_reuse"
+      ],
+      "input": {
+        "fixtureRef": "empty_after_reuse"
+      },
+      "expected": {
+        "analyzerKind": "named_record_finding",
+        "result": {
+          "findings": []
+        },
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid-configuration",
+      "action": "named-record.analyze",
+      "capabilityIds": [
+        "named-record.analyze"
+      ],
+      "fixtureRefs": [
+        "invalid_configuration"
+      ],
+      "input": {
+        "fixtureRef": "invalid_configuration"
+      },
+      "expected": {
+        "analyzerKind": "named_record_finding",
+        "result": null,
+        "error": {
+          "analyzerKind": "named_record_finding",
+          "code": "invalid_configuration",
+          "message": "Named Record Finding target record must not be empty"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

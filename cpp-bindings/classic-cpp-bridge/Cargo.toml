@@ -48,6 +48,13 @@ classic-settings-core = { path = "../../business-logic/classic-settings-core" }
 classic-user-settings-core = { path = "../../business-logic/classic-user-settings-core" }
 classic-config-core = { path = "../../business-logic/classic-config-core" }
 classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
+
+# Crash Log Scan Run Display Content. The bridge renders while the Rust run
+# result is still live and carries the resulting display lines across as
+# mirrored data, because C++ never holds the Rust value and so cannot render
+# from it later. Adds no CXX surface of its own; the flattened mirror types in
+# `scanner.rs` are what cross.
+classic-scan-presentation = { path = "../../business-logic/classic-scan-presentation" }
 classic-database-core = { path = "../../business-logic/classic-database-core" }
 classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
 classic-scangame-core = { path = "../../business-logic/classic-scangame-core" }

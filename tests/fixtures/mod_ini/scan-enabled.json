@@ -1,0 +1,7 @@
+{
+  "operation": "scan",
+  "files": {
+    "enblocal.ini": "[ENGINE]\nForceVSync=true\n"
+  },
+  "game": "Fallout4"
+}

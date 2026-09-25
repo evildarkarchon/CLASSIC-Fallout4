@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "familyId": "report-discovery",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-cpp-bridge"
+  },
+  "fixtureRoot": "tests/fixtures/report_discovery_conformance",
+  "fixtures": {
+    "populated": "populated.json",
+    "missing": "missing.json"
+  },
+  "capabilities": [
+    {
+      "id": "report-discovery.observe",
+      "operationScoped": true,
+      "rustSymbols": [
+        "discover_report_files"
+      ],
+      "observationFamilies": [
+        "interface-output"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "populated",
+      "action": "report-discovery.observe",
+      "capabilityIds": [
+        "report-discovery.observe"
+      ],
+      "fixtureRefs": [
+        "populated"
+      ],
+      "input": {
+        "fixtureRef": "populated"
+      },
+      "expected": {
+        "reports": [
+          "new-AUTOSCAN.md",
+          "old-AUTOSCAN.md"
+        ],
+        "files": [
+          {
+            "path": "nested/deep-AUTOSCAN.md",
+            "hex": "64656570"
+          },
+          {
+            "path": "new-AUTOSCAN.md",
+            "hex": "6e6577"
+          },
+          {
+            "path": "notes.md",
+            "hex": "6e6f7465"
+          },
+          {
+            "path": "old-AUTOSCAN.md",
+            "hex": "6f6c64"
+          }
+        ],
+        "directories": [
+          "directory-AUTOSCAN.md",
+          "nested"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    },
+    {
+      "id": "missing",
+      "action": "report-discovery.observe",
+      "capabilityIds": [
+        "report-discovery.observe"
+      ],
+      "fixtureRefs": [
+        "missing"
+      ],
+      "input": {
+        "fixtureRef": "missing"
+      },
+      "expected": {
+        "reports": [],
+        "files": [],
+        "directories": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "excludedPaths": [],
+        "unorderedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

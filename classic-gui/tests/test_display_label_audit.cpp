@@ -187,29 +187,59 @@ constexpr auto AUDITED_SOURCES = std::to_array<std::string_view>({
 struct RenderedEnum {
     std::string_view typeName;
     std::string_view labelAccessor;
-    /// Whether this frontend actually renders the label today.
+    /// Whether this frontend still calls the accessor.
     ///
-    /// Only `ScanRunContractLogDisposition` is `false`, and that is a recorded
-    /// decision rather than an omission — see the comment on the positive test.
-    bool renderedByTheGui;
+    /// True for exactly the two enums the GUI labels *outside* a display line:
+    /// `installedYamlDataStatusSuffix` compresses the YAML Data selection into
+    /// one progress-bar format string, which has no room for the rendered
+    /// Installed YAML Data block. Everywhere else the label now arrives inside a
+    /// `Label` segment, and calling the accessor again would be re-deriving a
+    /// word the run already said.
+    bool labelledOutsideADisplayLine;
+    /// Whether the rendering source still handles this type at all.
+    ///
+    /// False once the GUI stopped touching the enum entirely — its infrastructure
+    /// stage, reset failure stage, and per-log failure stage all reach the user
+    /// only inside rendered lines now, so the type is spelled nowhere in this
+    /// frontend. Where it is still true, the type is named and the "is it still
+    /// spelled" guard below applies.
+    bool handledByTheRenderingSource;
 };
 
 /// Every domain enum whose Display Label the Rust core owns and the bridge exposes.
 ///
 /// A table here producing a string is by definition a second copy of a
 /// vocabulary that already has a home, which is why all seven are audited
-/// negatively even though the GUI renders six.
+/// negatively however the frontend treats them.
 constexpr auto RENDERED_ENUMS = std::to_array<RenderedEnum>({
-    {"ScanRunContractLogFailureStage", "scanner::scan_run_log_failure_stage_label", true},
-    {"ScanRunContractInfrastructureErrorStage", "scanner::scan_run_infrastructure_error_stage_label", true},
-    {"ScanRunLocalIgnoreResetFailureStage", "scanner::scan_run_local_ignore_reset_failure_stage_label", true},
-    {"ScanRunInstalledYamlDataProvenance", "scanner::scan_run_installed_yaml_data_provenance_label", true},
-    {"ScanRunLocalIgnoreYamlDataState", "scanner::scan_run_local_ignore_yaml_data_state_label", true},
-    {"ScanRunInstalledYamlDataDiagnosticKind", "scanner::scan_run_installed_yaml_data_diagnostic_kind_label", true},
-    {"ScanRunContractLogDisposition", "scanner::scan_run_log_disposition_label", false},
+    {"ScanRunContractLogFailureStage", "scanner::scan_run_log_failure_stage_label", false, false},
+    {"ScanRunContractInfrastructureErrorStage", "scanner::scan_run_infrastructure_error_stage_label", false, false},
+    {"ScanRunLocalIgnoreResetFailureStage", "scanner::scan_run_local_ignore_reset_failure_stage_label", false, false},
+    {"ScanRunInstalledYamlDataProvenance", "scanner::scan_run_installed_yaml_data_provenance_label", true, true},
+    {"ScanRunLocalIgnoreYamlDataState", "scanner::scan_run_local_ignore_yaml_data_state_label", true, true},
+    {"ScanRunInstalledYamlDataDiagnosticKind", "scanner::scan_run_installed_yaml_data_diagnostic_kind_label", false,
+     true},
+    {"ScanRunContractLogDisposition", "scanner::scan_run_log_disposition_label", false, true},
 });
 
-/// The one GUI file that renders scan-run Display Labels.
+/// Every segment kind the bridge can hand this frontend.
+///
+/// The rich-text renderer must read all six. A kind it fails to handle is not a
+/// compile error — the flattened DTO carries the same three payload fields
+/// whatever the tag says — so an unhandled `Path` would silently render as empty
+/// text and an unhandled `Count` would print its noun without its value.
+constexpr auto DISPLAY_SEGMENT_KINDS =
+    std::to_array<std::string_view>({"Text", "Label", "Count", "Path", "Name", "Emphasis"});
+
+/// Every severity the bridge can hand this frontend.
+///
+/// Severity is where Display Content stops and Display Layout starts: the Rust
+/// core says how gravely a line should read and names no colour, so a severity
+/// this frontend never reads is one whose gravity a user never sees.
+constexpr auto DISPLAY_SEVERITIES =
+    std::to_array<std::string_view>({"Info", "Notice", "Warning", "Failure", "Success"});
+
+/// The one GUI file that renders scan-run Display Content.
 constexpr std::string_view LABEL_RENDERING_SOURCE = "src/workers/scanrunpresentation.cpp";
 
 /// True for a character C++ allows inside an identifier.
@@ -438,9 +468,9 @@ std::size_t findBodyEnd(const std::string& source, std::size_t bodyStart)
 /// usable: a function that merely takes a diagnostic kind and formats a wider
 /// message is not a naming table and should not be counted. Note that this is a
 /// narrower exemption than it sounds — it excludes nothing in this file today.
-/// `formatInstalledYamlDataDiagnostic` returns `QString` and would not survive
-/// the return-type filter; what actually spares it is that no audited type is
-/// named in its signature, only in its body.
+/// `formatInstalledYamlDataWarning` returns `QString` and would not survive the
+/// return-type filter; what actually spares it is that no audited type is named
+/// in its signature, only in its body.
 ///
 /// **Known limits.** Two shapes still escape all three detectors, and are
 /// recorded here rather than papered over. A table keyed by index —
@@ -519,6 +549,157 @@ std::size_t countNamingTables(const std::string& source, std::string_view enumNa
     return tables;
 }
 
+/// Returns the path of the shared deny-list of phrases no frontend may write.
+///
+/// One file, read by all four frontend audits, rather than four inline copies. A
+/// per-frontend list would put back into the test layer the four-copies drift
+/// `classic-scan-presentation` exists to delete: a contributor adding core-owned
+/// prose would have to remember four lists, and forgetting one would leave the
+/// phrase unenforced in exactly the frontend nobody was looking at.
+QString coreOwnedPhrasesPath()
+{
+    return QDir::cleanPath(guiRoot() +
+                           QStringLiteral("/../business-logic/classic-scan-presentation/core-owned-phrases.txt"));
+}
+
+/// Reads the shared deny-list, dropping blank lines and `#` comments.
+///
+/// Returns an empty list when the file cannot be read, which the guard slot
+/// below turns into a failure — the caller cannot `QVERIFY` from a helper.
+std::vector<std::string> coreOwnedPhrases()
+{
+    QFile file(coreOwnedPhrasesPath());
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return {};
+    }
+
+    std::vector<std::string> phrases;
+    const QByteArray bytes = file.readAll();
+    // `QIODevice::Text` already normalises the line ending, but the split still
+    // trims: the working copy may hold either ending on this repo, and a
+    // trailing carriage return would silently make every phrase unmatchable.
+    for (const QByteArray& line : bytes.split('\n')) {
+        const QByteArray trimmed = line.trimmed();
+        if (trimmed.isEmpty() || trimmed.startsWith('#')) {
+            continue;
+        }
+        phrases.emplace_back(trimmed.constData(), static_cast<std::size_t>(trimmed.size()));
+    }
+    return phrases;
+}
+
+/// Returns the contents of every string literal in `source`, one per line, with
+/// nothing else.
+///
+/// Literals rather than comment-stripped code, which is what this scanned first.
+/// Prose is only ever a literal, so reading more than literals only adds ways to
+/// be wrong — and it was wrong here specifically: `succeeded,` is core-owned prose
+/// that occurs verbatim in this frontend's own code as `emit
+/// finished(terminal.succeeded, terminal.failed, ...)`. Extracting literals
+/// removes that whole class of false positive rather than asking the deny-list to
+/// dodge it, and matches the Python audit, which reads literals off the AST for
+/// the same reason.
+///
+/// Comments never appear, for the reason the CXX parity gate's name scan was
+/// fixed: a comment *describing* the drift is not the drift, and this file's own
+/// header quotes phrases the detector forbids. Tracking string state is what
+/// tells the two apart, and it also stops a `//` inside a path or URL literal
+/// from reading as the start of a comment.
+///
+/// Literals are newline-separated rather than concatenated so two adjacent ones
+/// cannot form a phrase neither contains — `"succeeded" ", "` must not read as
+/// `succeeded, `.
+std::string stringLiterals(const std::string& source)
+{
+    std::string out;
+    out.reserve(source.size());
+
+    std::size_t index = 0;
+    while (index < source.size()) {
+        // A character literal holding a quote — `'"'` or `'\"'` — would otherwise
+        // open a string that never closes where the scanner thinks it does,
+        // dropping the rest of the file from the audit. That is exactly the
+        // "reads as coverage while providing none" failure these guards exist to
+        // prevent, so it is handled rather than left latent. A digit separator
+        // (`1'000`) and any other `'` fall through to the ordinary branch, since
+        // neither can be mistaken for a string.
+        if (source[index] == '\'') {
+            const auto escaped = index + 1 < source.size() && source[index + 1] == '\\';
+            const auto close = index + (escaped ? 3 : 2);
+            if (close < source.size() && source[close] == '\'') {
+                index = close + 1;
+                continue;
+            }
+        }
+        // A raw string takes no escapes, so `R"(C:\dir\)"` ends at its own
+        // delimiter and a `\"` inside it is two characters rather than one.
+        // Handled before the ordinary-string branch, which would otherwise read
+        // that backslash as an escape and run past the end of the literal. This
+        // is load-bearing here and not in the CLI port: `scanrunpresentation.cpp`
+        // and two widgets do use raw strings.
+        if (source[index] == 'R' && index + 1 < source.size() && source[index + 1] == '"') {
+            // Bounded because the standard caps a raw delimiter at 16 characters
+            // and forbids `(` in it. Searching to end-of-file instead would let a
+            // stray `R"` synthesize a closer that never matches and silently swallow
+            // the remainder of the source.
+            const auto limit = std::min(index + 2 + 16, source.size());
+            const auto open = source.find('(', index + 2);
+            if (open != std::string::npos && open <= limit) {
+                const std::string closer = ")" + source.substr(index + 2, open - (index + 2)) + "\"";
+                const auto close = source.find(closer, open + 1);
+                const auto bodyEnd = close == std::string::npos ? source.size() : close;
+                out.append(source, open + 1, bodyEnd - (open + 1));
+                out.push_back('\n');
+                index = close == std::string::npos ? source.size() : close + closer.size();
+                continue;
+            }
+        }
+        if (source.compare(index, 2, "//") == 0) {
+            while (index < source.size() && source[index] != '\n') {
+                ++index;
+            }
+            continue;
+        }
+        if (source.compare(index, 2, "/*") == 0) {
+            const auto close = source.find("*/", index + 2);
+            index = close == std::string::npos ? source.size() : close + 2;
+            continue;
+        }
+        if (source[index] == '"') {
+            ++index;
+            while (index < source.size()) {
+                if (source[index] == '\\') {
+                    index += 2;
+                    continue;
+                }
+                if (source[index] == '"') {
+                    ++index;
+                    break;
+                }
+                out.push_back(source[index]);
+                ++index;
+            }
+            out.push_back('\n');
+            continue;
+        }
+        // Ordinary code, which is deliberately dropped rather than collected.
+        ++index;
+    }
+    return out;
+}
+
+/// The sentence a frontend would reach for, written as the template it would
+/// actually be written as.
+///
+/// `QString::arg` rather than a verbatim paste, because a template is the shape
+/// drift takes in practice: the phrase survives and only the stage is
+/// substituted. Matching a phrase rather than a whole sentence is what lets the
+/// plain substring test see it through any toolkit's placeholder syntax.
+constexpr std::string_view REWORDED_SENTENCE =
+    "QString summary(ScanRunInfrastructureErrorStage stage) {\n"
+    "    return QStringLiteral(\"Crash Log Scan Run failed during %1\").arg(label(stage));\n"
+    "}\n";
+
 } // namespace
 
 class DisplayLabelAuditTests : public QObject {
@@ -526,6 +707,9 @@ class DisplayLabelAuditTests : public QObject {
 
 private slots:
     void no_gui_source_turns_an_audited_enum_into_a_string_literal();
+    void no_gui_source_writes_a_sentence_the_presentation_crate_owns();
+    void the_shared_deny_list_is_readable_and_not_empty();
+    void the_phrase_detector_catches_the_drift_it_exists_for();
     void every_rendered_gui_display_label_comes_from_a_bridge_accessor();
     void the_audit_covers_every_gui_source_file();
 };
@@ -572,58 +756,236 @@ void DisplayLabelAuditTests::no_gui_source_turns_an_audited_enum_into_a_string_l
     QVERIFY2(offenders.isEmpty(), qPrintable(offenders.join(QStringLiteral("\n"))));
 }
 
+void DisplayLabelAuditTests::no_gui_source_writes_a_sentence_the_presentation_crate_owns()
+{
+    // The naming audit above proves this frontend keeps no table of Display
+    // Labels. This proves the narrower thing every frontend must show once it
+    // renders display lines: that it did not reword what it was given.
+    //
+    // Deliberately scoped to the deny-list. A general "no format strings" rule
+    // was considered and rejected as unworkably noisy — it would bury real
+    // findings in false positives and get switched off, which is worse than not
+    // having it. The GUI writes a great many strings that are Display Layout:
+    // section headers, button text, and its own status-bar phrasing.
+    const auto phrases = coreOwnedPhrases();
+    // Asserted here and not only in the guard slot below: this loop is over
+    // `phrases`, so a moved or unreadable file would make *this* test pass
+    // vacuously, and a reader checking whether the GUI is covered reads this
+    // slot. The helper cannot `QVERIFY` on its caller's behalf, but the slot can.
+    QVERIFY2(!phrases.empty(), qPrintable(QStringLiteral("Unable to read %1").arg(coreOwnedPhrasesPath())));
+
+    QStringList offenders;
+    for (const auto& relativePath : AUDITED_SOURCES) {
+        const QString path = QString::fromUtf8(relativePath.data(), static_cast<qsizetype>(relativePath.size()));
+        std::string source;
+        QVERIFY2(readSource(path, source), qPrintable(QStringLiteral("Unable to read %1").arg(path)));
+
+        const std::string code = stringLiterals(source);
+        for (const auto& phrase : phrases) {
+            if (code.find(phrase) == std::string::npos) {
+                continue;
+            }
+            offenders.append(QStringLiteral("%1 writes \"%2\", which classic-scan-presentation already says about "
+                                            "a Crash Log Scan Run; render the display lines it produces instead, "
+                                            "so a wording fix lands once and reaches every frontend")
+                                 .arg(path, QString::fromStdString(phrase)));
+        }
+    }
+
+    QVERIFY2(offenders.isEmpty(), qPrintable(offenders.join(QStringLiteral("\n"))));
+}
+
+void DisplayLabelAuditTests::the_shared_deny_list_is_readable_and_not_empty()
+{
+    // The detector loops over the deny-list, so an empty or mislocated list
+    // asserts nothing while still reporting green — an audit that reads as
+    // coverage while providing none. The other three audits carry the same guard
+    // against the same file.
+    const auto phrases = coreOwnedPhrases();
+    QVERIFY2(!phrases.empty(), qPrintable(QStringLiteral("Unable to read %1").arg(coreOwnedPhrasesPath())));
+    QVERIFY(phrases.size() >= 10);
+    QVERIFY(std::find(phrases.begin(), phrases.end(), "Crash Log Scan Run failed during") != phrases.end());
+
+    // No constraint on an entry's shape is asserted any more, and that is
+    // deliberate. An earlier version required each entry to contain a space,
+    // because the detector searched comment-stripped *code* and a bare word could
+    // match an identifier. That constraint was load-bearing only because the
+    // detector read more than it needed: `stringLiterals` now yields literals
+    // alone, where no identifier can appear, so `succeeded,` — core-owned prose
+    // that occurs in this frontend's own code as `emit
+    // finished(terminal.succeeded, terminal.failed, ...)` — is safe to list.
+}
+
+void DisplayLabelAuditTests::the_phrase_detector_catches_the_drift_it_exists_for()
+{
+    // The GUI writes none of these phrases now, so a broken detector and a
+    // compliant frontend look identical from here. Feeding the detector the drift
+    // it exists to catch is what tells the two apart — the same proof the TUI
+    // audit carries for its naming detectors, and the reason the header above can
+    // claim each detector was verified by planting the shape it targets.
+    const std::string drift = stringLiterals(std::string(REWORDED_SENTENCE));
+    QVERIFY(drift.find("Crash Log Scan Run failed during") != std::string::npos);
+
+    // A comment describing the drift is documentation, not the drift.
+    const std::string commented = stringLiterals(
+        "// Crash Log Scan Run failed during is core's to say.\n"
+        "/* Crash Log Scan Run failed during, again. */\n"
+        "int x = 1;\n");
+    QVERIFY(commented.find("Crash Log Scan Run failed during") == std::string::npos);
+
+    // A raw string is still a literal, and `//` inside a literal is not a comment
+    // — without that, everything after a path or URL silently leaves the audit.
+    // Both shapes appear in this frontend's own sources.
+    const std::string raw = stringLiterals(
+        "const auto s = R\"(Crash Log Scan Run failed during)\";\n"
+        "const auto u = QStringLiteral(\"https://example.invalid\");\n"
+        "const auto t = QStringLiteral(\"Start the Crash Log Scan again to retry.\");\n");
+    QVERIFY(raw.find("Crash Log Scan Run failed during") != std::string::npos);
+    QVERIFY(raw.find("Start the Crash Log Scan again to retry.") != std::string::npos);
+
+    // A character literal holding a quote must not open a string. No GUI source
+    // contains one today, which is exactly why this needs a test rather than a
+    // reader's vigilance: the failure would be a silent hole in the audit, where
+    // everything to the next quote leaves the audited text, not a red test.
+    const std::string quoted = stringLiterals(
+        "const char q = '\"';\n"
+        "const char e = '\\'';\n"
+        "const auto s = QStringLiteral(\"Crash Log Scan Run failed during\");\n");
+    QVERIFY(quoted.find("Crash Log Scan Run failed during") != std::string::npos);
+
+    // Literals are read; the code around them is not. `succeeded,` is core-owned
+    // prose and also, character for character, an ordinary argument list — this
+    // frontend's own `emit finished(terminal.succeeded, terminal.failed, ...)`.
+    // A detector that searched code rather than literals reported that line as
+    // drift, which is how this scanner came to extract literals.
+    const std::string argumentList = stringLiterals("emit finished(terminal.succeeded, terminal.failed);\n");
+    QVERIFY(argumentList.find("succeeded,") == std::string::npos);
+    const std::string writtenOut = stringLiterals("const auto s = QStringLiteral(\"3 succeeded, 4 failed\");\n");
+    QVERIFY(writtenOut.find("succeeded,") != std::string::npos);
+
+    // Two adjacent literals must not fuse into a phrase neither contains, or the
+    // separator this relies on is doing nothing.
+    const std::string adjacent = stringLiterals("const auto s = \"succeeded\" \", failed\";\n");
+    QVERIFY(adjacent.find("succeeded,") == std::string::npos);
+
+    // The other half of the proof: rendering a segment core produced is the
+    // correct shape and must stay quiet, or the audit becomes noise a contributor
+    // learns to work around.
+    const std::string compliant = stringLiterals(
+        "for (const auto& segment : line.segments) { html += segmentHtml(segment); }\n");
+    QStringList falsePositives;
+    for (const auto& phrase : coreOwnedPhrases()) {
+        if (compliant.find(phrase) != std::string::npos) {
+            falsePositives.append(QString::fromStdString(phrase));
+        }
+    }
+    QVERIFY2(falsePositives.isEmpty(),
+             qPrintable(QStringLiteral("concatenating core's own segments should not read as writing: %1")
+                            .arg(falsePositives.join(QStringLiteral(", ")))));
+}
+
 void DisplayLabelAuditTests::every_rendered_gui_display_label_comes_from_a_bridge_accessor()
 {
-    // The negative audit above proves no table was written. This proves the
-    // labels are still rendered at all: without it, deleting a call site would
-    // read as compliance rather than as a frontend that stopped saying what
-    // happened. It checks the call appears, not that it is reached — the
-    // behavioral half of that lives in test_scanrunpresentation.cpp.
+    // This test inverted when the GUI started rendering core-owned display lines.
     //
-    // Per-log disposition is excluded on purpose, decided on #167. The GUI has
-    // no disposition line to label: `presentLog` maps the three variants onto
-    // booleans that select control flow and feed counts, so requiring the
-    // accessor here would force a results-view column into existence to justify
-    // it. The enum stays in the negative audit above, so the guard still holds
-    // if that column is ever added.
+    // It used to assert that six bridge label accessors were *called*, because
+    // calling them was how a Display Label reached the user without this
+    // frontend inventing one. Five of those call sites are gone now, and their
+    // absence is the point: an infrastructure stage, a reset failure stage, a
+    // per-log failure stage, and an Installed YAML Data diagnostic kind all
+    // arrive inside a `Label` segment on a line Rust already wrote. Calling the
+    // accessor again would re-derive a word the run just said, which the adapter
+    // contract forbids in as many words.
+    //
+    // Two calls survive and are still required. `installedYamlDataStatusSuffix`
+    // in `mainwindow.cpp` compresses the YAML Data selection into a single
+    // progress-bar format string; there is no rendered line small enough to go
+    // there, so labelling the enum directly is exactly the case the accessors
+    // remain correct for.
+    //
+    // Per-log disposition was already excluded before this change, decided on
+    // #167, and stays excluded for the same reason: `presentLog` maps the three
+    // variants onto booleans that select control flow and feed counts.
+    //
+    // The accessors themselves are untouched on the bridge. They remain the
+    // right surface for labelling a domain enum outside a display line, which is
+    // why two of them are still in use here.
     const QString path =
         QString::fromUtf8(LABEL_RENDERING_SOURCE.data(), static_cast<qsizetype>(LABEL_RENDERING_SOURCE.size()));
-    std::string source;
-    QVERIFY2(readSource(path, source), qPrintable(QStringLiteral("Unable to read %1").arg(path)));
+    std::string renderingSource;
+    QVERIFY2(readSource(path, renderingSource), qPrintable(QStringLiteral("Unable to read %1").arg(path)));
 
-    QStringList missing;
+    QStringList offenders;
     for (const auto& rendered : RENDERED_ENUMS) {
         const QString typeName =
             QString::fromUtf8(rendered.typeName.data(), static_cast<qsizetype>(rendered.typeName.size()));
+        const QString accessor =
+            QString::fromUtf8(rendered.labelAccessor.data(), static_cast<qsizetype>(rendered.labelAccessor.size()));
 
-        // Every audited type is checked to still be spelled somewhere in this
-        // file, including the disposition the GUI renders no label for — it
-        // appears as `using Disposition = ...`. This closes the one way the
-        // negative audit could go quiet without anyone noticing: `RENDERED_ENUMS`
-        // holds strings, never the types, so a bridge-side rename would leave
-        // all three detectors matching nothing forever. The rename itself breaks
-        // the GUI build, but the fix for that build break would not touch this
-        // file, and a green audit afterwards would mean only that it had stopped
-        // looking.
-        if (source.find(rendered.typeName) == std::string::npos) {
-            missing.append(QStringLiteral("%1 is named nowhere in %2, so the audit's detectors for it match nothing; "
-                                          "if the bridge renamed it, rename it in RENDERED_ENUMS too")
-                               .arg(typeName, path));
+        // A type the rendering source still handles is checked to still be
+        // spelled there. This closes the one way the negative audit could go
+        // quiet without anyone noticing: `RENDERED_ENUMS` holds strings, never
+        // the types, so a bridge-side rename would leave all three detectors
+        // matching nothing forever. The rename itself breaks the GUI build, but
+        // the fix for that build break would not touch this file, and a green
+        // audit afterwards would mean only that it had stopped looking.
+        if (rendered.handledByTheRenderingSource && renderingSource.find(rendered.typeName) == std::string::npos) {
+            offenders.append(QStringLiteral("%1 is named nowhere in %2, so the audit's detectors for it match nothing; "
+                                            "if the bridge renamed it, rename it in RENDERED_ENUMS too")
+                                 .arg(typeName, path));
             continue;
         }
 
-        if (!rendered.renderedByTheGui) {
+        if (rendered.labelledOutsideADisplayLine) {
+            if (renderingSource.find(rendered.labelAccessor) == std::string::npos) {
+                offenders.append(QStringLiteral("%1 is not called from %2, so %3 has no Display Label to render on the "
+                                                "one-row surface that cannot hold a rendered line")
+                                     .arg(accessor, path, typeName));
+            }
             continue;
         }
-        if (source.find(rendered.labelAccessor) != std::string::npos) {
-            continue;
+
+        // Swept across every audited source rather than the rendering one alone,
+        // because a re-derived label is just as wrong in the window or the worker
+        // as it is here.
+        for (const auto& relativePath : AUDITED_SOURCES) {
+            const QString auditedPath =
+                QString::fromUtf8(relativePath.data(), static_cast<qsizetype>(relativePath.size()));
+            std::string source;
+            QVERIFY2(readSource(auditedPath, source), qPrintable(QStringLiteral("Unable to read %1").arg(auditedPath)));
+            if (source.find(rendered.labelAccessor) == std::string::npos) {
+                continue;
+            }
+            offenders.append(QStringLiteral("%1 is called from %2, but %3 is already labelled inside the display line "
+                                            "that carries it; render that line instead of looking the label up again")
+                                 .arg(accessor, auditedPath, typeName));
         }
-        missing.append(QStringLiteral("%1 is not called from %2, so %3 has no Display Label to render")
-                           .arg(QString::fromUtf8(rendered.labelAccessor.data(),
-                                                  static_cast<qsizetype>(rendered.labelAccessor.size())),
-                                path, typeName));
     }
-    QVERIFY2(missing.isEmpty(), qPrintable(missing.join(QStringLiteral("\n"))));
+
+    // The positive half, moved down one level: the renderer must read every
+    // segment kind and every severity. A `Label` it fails to handle is a Display
+    // Label that reaches nobody, an unhandled `Path` renders as empty text
+    // because the flattened DTO leaves `text` empty for that kind, an unhandled
+    // `Count` prints a noun with no value, and an unread severity is a gravity
+    // the user never sees.
+    for (const auto& kind : DISPLAY_SEGMENT_KINDS) {
+        const std::string qualified = "ScanRunDisplaySegmentKind::" + std::string(kind);
+        if (renderingSource.find(qualified) == std::string::npos) {
+            offenders.append(QStringLiteral("%1 never reads %2, so a segment of that kind would be rendered as "
+                                            "something else or not at all")
+                                 .arg(path, QString::fromStdString(qualified)));
+        }
+    }
+    for (const auto& severity : DISPLAY_SEVERITIES) {
+        const std::string qualified = "ScanRunDisplaySeverity::" + std::string(severity);
+        if (renderingSource.find(qualified) == std::string::npos) {
+            offenders.append(
+                QStringLiteral("%1 never reads %2, so a line of that severity would read with someone else's gravity")
+                    .arg(path, QString::fromStdString(qualified)));
+        }
+    }
+
+    QVERIFY2(offenders.isEmpty(), qPrintable(offenders.join(QStringLiteral("\n"))));
 }
 
 void DisplayLabelAuditTests::the_audit_covers_every_gui_source_file()

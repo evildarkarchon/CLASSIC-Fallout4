@@ -1,5 +1,6 @@
 use super::*;
 use classic_shared_core::get_runtime;
+use classic_vocabulary::assert_vocabulary_conformance;
 use tempfile::tempdir;
 
 const FIXTURE_LOG_SMALL: &str = include_str!("../benches/fixtures/crash-0DB9300.log");
@@ -1236,4 +1237,76 @@ fn process_log_suppresses_structured_mods_solu_exceptions() {
     assert!(result.success);
     assert!(!report_text.contains("Everyone's Best Friend"));
     assert!(!report_text.contains("### Checking For Mods That HAVE SOLUTIONS"));
+}
+
+// --- Vocabulary naming contract -------------------------------------------
+//
+// These sit in the owning module because they assert what only the owner can:
+// that the names this module now owns satisfy the contract, and that the frozen
+// tokens are the exact bytes the bindings already published. Every per-binding
+// assertion about these strings derives its expectation from here.
+
+#[test]
+fn scan_progress_phase_satisfies_the_vocabulary_contract() {
+    assert_vocabulary_conformance::<ScanProgressPhase>();
+}
+
+#[test]
+fn every_scan_progress_phase_variant_is_listed_for_iteration() {
+    // Nothing at runtime can observe whether `VARIANTS` is complete, so adding a
+    // phase must land a contributor on a line that says so. This count is also
+    // the arity every binding's exhaustive projection test iterates.
+    assert_eq!(ScanProgressPhase::VARIANTS.len(), 4);
+}
+
+#[test]
+fn scan_progress_phase_tokens_are_the_frozen_published_spelling() {
+    // This enum never had a token method, so these are not a respelling of one -
+    // they are the exact strings the Python and Node surfaces already publish
+    // from two separate hand-written tables, adopted here so those tables can be
+    // deleted without moving a byte on either surface. A change to any arm below
+    // is a breaking change to every binding consumer.
+    assert_eq!(ScanProgressPhase::Setup.as_str(), "setup");
+    assert_eq!(ScanProgressPhase::Parse.as_str(), "parse");
+    assert_eq!(ScanProgressPhase::Analyze.as_str(), "analyze");
+    assert_eq!(ScanProgressPhase::Finalize.as_str(), "finalize");
+}
+
+#[test]
+fn every_scan_progress_phase_label_stays_distinct_from_its_token() {
+    // The per-variant shape of `every_infrastructure_stage_renders_its_display
+    // _label` in the TUI, exhaustive over `VARIANTS` rather than over a literal
+    // table, so a phase added later is covered from the day it lands.
+    //
+    // Every variant's two forms differ here, and they have to: the token names
+    // the phase as a noun for a machine, the label describes work in flight for
+    // a person. A label that had collapsed back onto its token would mean a
+    // progress line reading `parse crash.log`, which is the identifier-in-prose
+    // leak this contract exists to prevent.
+    for phase in ScanProgressPhase::VARIANTS.iter().copied() {
+        let token = Vocabulary::as_str(phase);
+        let label = phase.label();
+        assert_ne!(
+            label, token,
+            "the Display Label for {phase:?} is still its Vocabulary Token"
+        );
+        assert!(
+            !label.contains('_'),
+            "Display Label `{label}` looks like a Vocabulary Token"
+        );
+    }
+}
+
+#[test]
+fn the_scan_progress_phase_labels_are_the_participle_form() {
+    // The wording decision this module is the arbiter of, pinned exactly because
+    // it is a settled decision rather than free prose. This is the widest of the
+    // four divergences the adoption closes: the TUI renders these four as
+    // participles and the Qt GUI renders `setup`, `parse`, `analysis`,
+    // `finalization`. The participle wins because it is the only form that reads
+    // grammatically in the progress sentence both frontends build around it.
+    assert_eq!(ScanProgressPhase::Setup.label(), "preparing");
+    assert_eq!(ScanProgressPhase::Parse.label(), "parsing");
+    assert_eq!(ScanProgressPhase::Analyze.label(), "analyzing");
+    assert_eq!(ScanProgressPhase::Finalize.label(), "finalizing");
 }

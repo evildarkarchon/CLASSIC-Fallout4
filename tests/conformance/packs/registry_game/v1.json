@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "familyId": "registry-game",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-registry-core"
+  },
+  "fixtureRoot": "tests/fixtures/registry_game_conformance",
+  "fixtures": {
+    "populated": "populated.json",
+    "replacement-after-reuse": "replacement-after-reuse.json"
+  },
+  "capabilities": [
+    {
+      "id": "registry-game.observe",
+      "rustSymbols": [
+        "set_game",
+        "get_game",
+        "GAME"
+      ],
+      "observationFamilies": [
+        "registry-state"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "populated",
+      "action": "registry-game.observe",
+      "capabilityIds": [
+        "registry-game.observe"
+      ],
+      "fixtureRefs": [
+        "populated"
+      ],
+      "input": {
+        "fixtureRef": "populated"
+      },
+      "expected": {
+        "game": "Crème / Fallout4",
+        "replacement": "Skyrim",
+        "afterClearPresent": false,
+        "key": "gamevars_game"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "replacement-after-reuse",
+      "action": "registry-game.observe",
+      "capabilityIds": [
+        "registry-game.observe"
+      ],
+      "fixtureRefs": [
+        "replacement-after-reuse"
+      ],
+      "input": {
+        "fixtureRef": "replacement-after-reuse"
+      },
+      "expected": {
+        "game": "SkyrimVR",
+        "replacement": "Fallout4",
+        "afterClearPresent": false,
+        "key": "gamevars_game"
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "familyId": "hash-cache-controls",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-file-io-core"
+  },
+  "fixtureRoot": "tests/fixtures/hash_cache_controls",
+  "fixtures": {
+    "empty": "empty.json"
+  },
+  "capabilities": [
+    {
+      "id": "hash-cache-controls.empty",
+      "rustSymbols": [
+        "clear_cache",
+        "cache_size",
+        "cache_stats",
+        "reset_cache_stats"
+      ],
+      "operationScoped": true,
+      "observationFamilies": [
+        "cache-state"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "empty",
+      "action": "hash-cache-controls.empty",
+      "capabilityIds": [
+        "hash-cache-controls.empty"
+      ],
+      "fixtureRefs": [
+        "empty"
+      ],
+      "input": {
+        "fixtureRef": "empty"
+      },
+      "expected": {
+        "initial": {
+          "hits": 0,
+          "misses": 0,
+          "hitRate": "0.000",
+          "size": 0,
+          "capacity": 1024
+        },
+        "initialSize": 0,
+        "afterReset": {
+          "hits": 0,
+          "misses": 0,
+          "hitRate": "0.000",
+          "size": 0,
+          "capacity": 1024
+        },
+        "afterClear": {
+          "hits": 0,
+          "misses": 0,
+          "hitRate": "0.000",
+          "size": 0,
+          "capacity": 1024
+        },
+        "finalSize": 0
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

@@ -15,7 +15,7 @@ def test_validate_passes_when_all_symbols_present() -> None:
             }
         ]
     }
-    rust_manifest = {"symbols": [{"symbol": "FooStruct"}]}
+    rust_manifest = {"symbols": [{"crate": "classic-test-core", "symbol": "FooStruct"}]}
     diagnostics = validate_contract_rust_symbols(contract, rust_manifest)
     assert diagnostics == []
 
@@ -30,7 +30,7 @@ def test_validate_fails_when_symbol_missing() -> None:
             }
         ]
     }
-    rust_manifest = {"symbols": [{"symbol": "OtherStruct"}]}
+    rust_manifest = {"symbols": [{"crate": "classic-test-core", "symbol": "OtherStruct"}]}
     diagnostics = validate_contract_rust_symbols(contract, rust_manifest)
     assert len(diagnostics) == 1
     assert "Pitfall 2" in diagnostics[0]

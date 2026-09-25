@@ -2,7 +2,7 @@
 
 Covers the surviving promoted contract rows:
   - deferred config backlog entries for YAML Data and non-User-Settings helpers
-  - 2 Tier-2 runtime-verified migrations (get_application_dir, set_application_dir)
+  - application directory getters/setters (get_application_dir, set_application_dir)
 
 R1 HIGH: fixture-backed construction — every promoted #[pyclass] is either constructed
 directly or deserialized via YamlData.from_yaml_content() with real field access.
@@ -24,9 +24,8 @@ import json
 from pathlib import Path
 from typing import Any, cast
 
-import pytest
-
 import classic_config
+import pytest
 
 from .fixtures.tier1_parity_fixtures import (
     PARITY_GAME_YAML,
@@ -34,15 +33,14 @@ from .fixtures.tier1_parity_fixtures import (
     PARITY_MAIN_YAML,
 )
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RUST_API_SURFACE = (
-    REPO_ROOT
-    / "docs"
-    / "implementation"
-    / "python_api_parity"
-    / "baseline"
-    / "rust_api_surface.json"
+        REPO_ROOT
+        / "docs"
+        / "implementation"
+        / "python_api_parity"
+        / "baseline"
+        / "rust_api_surface.json"
 )
 
 
@@ -127,7 +125,7 @@ def test_yaml_data_mod_conflict_fix_is_optional() -> None:
     """Missing Mods_CONF remediation remains absent in the Python projection."""
     game_yaml = PARITY_GAME_YAML.replace(
         "Mods_CONF: []",
-        "\n".join(
+        "\n".join(  # noqa: FLY002 -- Keep the authored YAML indentation explicit per line.
             (
                 "Mods_CONF:",
                 "  - mod_a: Upscaling.dll",
@@ -168,7 +166,7 @@ def test_yaml_data_structured_mod_solu_with_real_rules() -> None:
     """ModSolutionEntry + ModSolutionCriteria — exercised through structured Mods_SOLU."""
     structured_game_yaml = PARITY_GAME_YAML.replace(
         "Mods_SOLU: []",
-        "\n".join(
+        "\n".join(  # noqa: FLY002 -- Keep the authored YAML indentation explicit per line.
             (
                 "Mods_SOLU:",
                 "  - id: solu-mod-01",
@@ -243,7 +241,9 @@ def test_config_exception_classes_hierarchy() -> None:
     """RustConfigError hierarchy — verifies define_exceptions! / register_exceptions! wiring."""
     assert issubclass(classic_config.RustConfigError, Exception)
     assert issubclass(classic_config.RustConfigIOError, classic_config.RustConfigError)
-    assert issubclass(classic_config.RustConfigParseError, classic_config.RustConfigError)
+    assert issubclass(
+        classic_config.RustConfigParseError, classic_config.RustConfigError
+    )
     # Exercise a raise path that hits the real config error conversion
     with pytest.raises(classic_config.RustConfigParseError):
         classic_config.YamlData.from_yaml_content(

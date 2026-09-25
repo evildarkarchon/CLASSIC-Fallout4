@@ -9,15 +9,15 @@ import pytest
 def user_settings_fixture_root() -> Path:
     """Return the repository-level User Settings compatibility corpus."""
     return (
-        Path(__file__).parents[2]
-        / "tests"
-        / "fixtures"
-        / "user_settings_compatibility"
+            Path(__file__).parents[2]
+            / "tests"
+            / "fixtures"
+            / "user_settings_compatibility"
     )
 
 
 def test_flat_user_settings_migration_plan_is_reviewable_and_reversible(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Expose every flat-shape transition and its exact in-memory inverse."""
     source = (user_settings_fixture_root() / "flat_classic_config.yaml").read_bytes()
@@ -56,7 +56,7 @@ def test_flat_user_settings_migration_plan_is_reviewable_and_reversible(
 
 
 def test_current_and_unsupported_documents_return_structured_planning_outcomes(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Distinguish a current no-op from an unsupported version gap without writes."""
     fixture_root = user_settings_fixture_root()
@@ -96,11 +96,11 @@ def test_current_and_unsupported_documents_return_structured_planning_outcomes(
 
 
 def test_previous_location_plan_reports_location_and_version_transitions(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Describe both legacy-location and unversioned transitions without relocating files."""
     source = (
-        user_settings_fixture_root() / "previous_location_nested.yaml"
+            user_settings_fixture_root() / "previous_location_nested.yaml"
     ).read_bytes()
     legacy_path = tmp_path / "CLASSIC Data" / "CLASSIC Settings.yaml"
     legacy_path.parent.mkdir()
@@ -114,9 +114,9 @@ def test_previous_location_plan_reports_location_and_version_transitions(
     assert outcome.plan.source.schema_version is None
     assert outcome.plan.target.location == "canonical"
     assert (
-        outcome.plan.target.schema_version.major,
-        outcome.plan.target.schema_version.minor,
-    ) == (1, 0)
+               outcome.plan.target.schema_version.major,
+               outcome.plan.target.schema_version.minor,
+           ) == (1, 0)
     assert [change.kind for change in outcome.plan.changes[:2]] == [
         "location_transition",
         "schema_version_transition",
@@ -126,7 +126,7 @@ def test_previous_location_plan_reports_location_and_version_transitions(
 
 
 def test_approved_migration_applies_and_restores_through_an_opaque_receipt(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Publish an approved plan, report its verified backup, and restore it explicitly."""
     source = (user_settings_fixture_root() / "flat_classic_config.yaml").read_bytes()
@@ -152,9 +152,9 @@ def test_approved_migration_applies_and_restores_through_an_opaque_receipt(
     assert receipt.source.schema_version is None
     assert receipt.target.location == "canonical"
     assert (
-        receipt.target.schema_version.major,
-        receipt.target.schema_version.minor,
-    ) == (1, 0)
+               receipt.target.schema_version.major,
+               receipt.target.schema_version.minor,
+           ) == (1, 0)
     assert receipt.backup_revision == snapshot.revision
     assert receipt.published_revision == classic_user_settings.open_user_settings(
         str(tmp_path)
@@ -171,7 +171,7 @@ def test_approved_migration_applies_and_restores_through_an_opaque_receipt(
 
 
 def test_migration_conflicts_are_data_and_operational_failures_raise(
-    tmp_path: Path,
+        tmp_path: Path,
 ) -> None:
     """Preserve newer documents on apply/restore conflicts and type operational failures."""
     source = (user_settings_fixture_root() / "flat_classic_config.yaml").read_bytes()
@@ -208,7 +208,7 @@ def test_migration_conflicts_are_data_and_operational_failures_raise(
     assert settings_path.read_bytes() == newer_migrated
 
     with pytest.raises(
-        classic_user_settings.UserSettingsMigrationError,
-        match="migration_restore_root_mismatch",
+            classic_user_settings.UserSettingsMigrationError,
+            match="migration_restore_root_mismatch",
     ):
         receipt.restore(str(tmp_path / "different-root"))

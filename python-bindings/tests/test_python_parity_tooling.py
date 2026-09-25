@@ -6,10 +6,9 @@ import ast
 import importlib.util
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 GENERATE_BASELINE_PATH = (
-    REPO_ROOT / "tools" / "python_api_parity" / "generate_baseline.py"
+        REPO_ROOT / "tools" / "python_api_parity" / "generate_baseline.py"
 )
 # expand_pub_use_statement moved here when the Rust surface parser was
 # de-duplicated out of the per-binding generators; the Node and Python gates
@@ -80,6 +79,7 @@ def test_generate_diff_report_matches_python_export_paths() -> None:
                 "id": "demo-static-factory",
                 "tier": "tier1",
                 "ownerModule": "scanlog",
+                "rustCrate": "classic-scanlog-core",
                 "rustSymbol": "Demo",
                 "pythonModule": "sample_module",
                 "pythonExportPath": "Demo.from_content",
@@ -133,6 +133,7 @@ def test_generate_diff_report_flags_missing_contract_python_export_identifier() 
                 "id": "demo-missing-python-export",
                 "tier": "tier1",
                 "ownerModule": "scanlog",
+                "rustCrate": "classic-scanlog-core",
                 "rustSymbol": "Demo",
                 "pythonModule": "sample_module",
                 "pythonKind": "function",
@@ -189,8 +190,8 @@ def test_expand_pub_use_statement_does_not_reannotate_alias_name() -> None:
         node
         for node in ast.walk(expand_function)
         if isinstance(node, ast.AnnAssign)
-        and isinstance(node.target, ast.Name)
-        and node.target.id == "alias_name"
+           and isinstance(node.target, ast.Name)
+           and node.target.id == "alias_name"
     ]
 
     assert len(alias_annotations) <= 1

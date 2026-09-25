@@ -16,6 +16,19 @@ from classic_shared import GameId
 
 __version__: str
 
+
+class RustScanLogError(Exception):
+    """Base error raised by the Rust scan-log adapter."""
+
+
+class RustParseError(RustScanLogError):
+    """Raised when the adapter cannot parse scan-log input."""
+
+
+class RustConfigError(RustScanLogError):
+    """Raised for scan-log configuration failures."""
+
+
 # =============================================================================
 # Crashgen Version Helpers
 # =============================================================================
@@ -46,7 +59,9 @@ class CrashgenVersion:
         """Return ``(major, minor, patch)``."""
 
     def __eq__(self, other: object) -> bool: ...
+
     def __hash__(self) -> int: ...
+
 
 class CrashgenVersionStatus:
     """Enum-like crash generator version validation status."""
@@ -56,13 +71,16 @@ class CrashgenVersionStatus:
     NEWER_THAN_KNOWN: str
     NO_SUPPORTED_VERSION: str
 
+
 def parse_crashgen_version(version_str: str) -> CrashgenVersion | None:
     """Parse a crash generator version string."""
 
+
 def check_crashgen_version_status(
-    detected_version: str, valid_versions: list[str]
+        detected_version: str, valid_versions: list[str]
 ) -> CrashgenVersionStatus:
     """Check a crash generator version against a list of valid versions."""
+
 
 # =============================================================================
 # Cancellation Support
@@ -74,6 +92,7 @@ class FormIDAnalyzer:
     This is a direct Rust implementation without Python fallback,
     providing maximum performance for FormID operations.
     """
+
     def __init__(self) -> None:
         """Create Rust FormID analyzer."""
 
@@ -100,7 +119,7 @@ class FormIDAnalyzer:
         """
 
     def analyze_batch(
-        self, formids: list[str], plugins: dict[str, str]
+            self, formids: list[str], plugins: dict[str, str]
     ) -> list[tuple[str, str | None]]:
         """Batch analyze FormIDs with plugin resolution.
 
@@ -123,6 +142,7 @@ class FormIDAnalyzer:
             Tuple of (cache_entries, cache_size_bytes)
 
         """
+
 
 # =============================================================================
 # Log Parsing
@@ -151,7 +171,7 @@ class LogParser:
         """Clear all caches to free memory."""
 
     def parse_segments_parallel(
-        self, lines: list[str], chunk_size: int | None = None
+            self, lines: list[str], chunk_size: int | None = None
     ) -> dict[str, list[str]]:
         """Parse segments in parallel for large logs.
 
@@ -164,17 +184,17 @@ class LogParser:
         """Find all pattern matches in parallel with caching."""
 
     def find_patterns_chunked(
-        self, lines: list[str], chunk_size: int | None = None
+            self, lines: list[str], chunk_size: int | None = None
     ) -> list[tuple[int, str, str]]:
         """Find patterns in parallel chunks for better performance."""
 
     def extract_section(
-        self, lines: list[str], start_marker: str, end_marker: str
+            self, lines: list[str], start_marker: str, end_marker: str
     ) -> list[str] | None:
         """Extract section from log."""
 
     def extract_sections_batch(
-        self, lines: list[str], markers: list[tuple[str, str]]
+            self, lines: list[str], markers: list[tuple[str, str]]
     ) -> list[list[str] | None]:
         """Extract multiple sections batch."""
 
@@ -188,8 +208,8 @@ class LogParser:
         """Parse and extract all important sections at once."""
 
     def parse_complete(
-        self,
-        lines: list[str],
+            self,
+            lines: list[str],
     ) -> ScanOutput:
         """Optimized batch operation: complete log analysis in single FFI call.
 
@@ -220,7 +240,7 @@ class LogParser:
         """Benchmark parsing performance on given data."""
 
     def detect_vr_log(self, content: str) -> bool:
-        """Detect if a crash log is from Fallout 4 VR.
+        """Detect Fallout 4 VR or Skyrim VR executable/master-plugin markers, ignoring case.
 
         Args:
             content: Crash log content string
@@ -229,6 +249,7 @@ class LogParser:
             True if VR indicators are found
 
         """
+
 
 class ScanOutput:
     """Result of optimized complete log parsing.
@@ -242,6 +263,7 @@ class ScanOutput:
     crashgen_version: str
     main_error: str
     segments: dict[str, list[str]]
+
 
 # =============================================================================
 # Pattern Matching
@@ -321,6 +343,7 @@ class PatternMatcher:
 
         """
 
+
 # =============================================================================
 # Plugin Analysis
 # =============================================================================
@@ -332,12 +355,12 @@ class PluginAnalyzer:
     """
 
     def __init__(
-        self,
-        game_ignore_plugins: list[str],
-        ignore_list: list[str],
-        crashgen_name: str,
-        game_version: str = "",
-        game_version_vr: str = "",
+            self,
+            game_ignore_plugins: list[str],
+            ignore_list: list[str],
+            crashgen_name: str,
+            game_version: str = "",
+            game_version_vr: str = "",
     ) -> None:
         """Create plugin analyzer.
 
@@ -351,10 +374,10 @@ class PluginAnalyzer:
         """
 
     def loadorder_scan_log(
-        self,
-        segment_plugins: list[str],
-        game_version: str | None = None,
-        version_current: str | None = None,
+            self,
+            segment_plugins: list[str],
+            game_version: str | None = None,
+            version_current: str | None = None,
     ) -> tuple[dict[str, str], bool, bool]:
         """Scan log for plugins and check limits.
 
@@ -375,7 +398,7 @@ class PluginAnalyzer:
         """
 
     def check_plugin_limit(
-        self, segment_plugins: list[str], game_version: str, version_current: str
+            self, segment_plugins: list[str], game_version: str, version_current: str
     ) -> tuple[bool, bool]:
         """Check plugin limit.
 
@@ -399,6 +422,7 @@ class PluginAnalyzer:
             HashMap with ignored plugins removed
 
         """
+
 
 # =============================================================================
 # Record Scanning
@@ -438,19 +462,20 @@ class RecordScanner:
         Clears any cached data used for optimizing repeated scans.
         """
 
+
 class ScanRunConfiguration:
     """Explicit facts shared by Standard and Targeted scan requests."""
 
     def __init__(
-        self,
-        installation_root: str,
-        game: GameId,
-        game_version: str,
-        show_formid_values: bool,
-        simplify_logs: bool,
-        formid_database_paths: list[str],
-        unsolved_logs_destination: str | None = None,
-        max_concurrent: int | None = None,
+            self,
+            installation_root: str,
+            game: GameId,
+            game_version: str,
+            show_formid_values: bool,
+            simplify_logs: bool,
+            formid_database_paths: list[str],
+            unsolved_logs_destination: str | None = None,
+            max_concurrent: int | None = None,
     ) -> None:
         """Create scan facts with a typed ``classic_shared.GameId``.
 
@@ -461,20 +486,23 @@ class ScanRunConfiguration:
 
         """
 
+
 class ScanRunStandardSource:
     """Explicit Standard discovery inputs."""
 
     def __init__(
-        self,
-        base_directory: str,
-        custom_scan_directory: str | None = None,
-        configured_documents_root: str | None = None,
+            self,
+            base_directory: str,
+            custom_scan_directory: str | None = None,
+            configured_documents_root: str | None = None,
     ) -> None: ...
+
 
 class ScanRunTargetedSource:
     """Explicit Targeted candidates in caller order."""
 
     def __init__(self, inputs: list[str]) -> None: ...
+
 
 class ScanRunSetupContext:
     """Explicit run-scoped FCX setup facts."""
@@ -485,22 +513,26 @@ class ScanRunSetupContext:
     xse_log_path: str | None
 
     def __init__(
-        self,
-        game_root: str | None = None,
-        docs_root: str | None = None,
-        game_exe_path: str | None = None,
-        xse_log_path: str | None = None,
+            self,
+            game_root: str | None = None,
+            docs_root: str | None = None,
+            game_exe_path: str | None = None,
+            xse_log_path: str | None = None,
     ) -> None: ...
+
 
 class ScanRunUnsolvedLogs:
     """Opaque Standard-only Unsolved Logs policy."""
 
     @staticmethod
     def leave_in_place() -> ScanRunUnsolvedLogs: ...
+
     @staticmethod
     def move_to_configured_or_default() -> ScanRunUnsolvedLogs: ...
+
     @staticmethod
     def move_to_custom(destination: str) -> ScanRunUnsolvedLogs: ...
+
 
 class ScanRunRequest:
     """Opaque invariant-preserving Standard or Targeted request."""
@@ -509,28 +541,32 @@ class ScanRunRequest:
 
     @staticmethod
     def standard(
-        configuration: ScanRunConfiguration,
-        source: ScanRunStandardSource,
-        unsolved_logs: ScanRunUnsolvedLogs,
+            configuration: ScanRunConfiguration,
+            source: ScanRunStandardSource,
+            unsolved_logs: ScanRunUnsolvedLogs,
     ) -> ScanRunRequest: ...
+
     @staticmethod
     def standard_with_fcx(
-        configuration: ScanRunConfiguration,
-        source: ScanRunStandardSource,
-        unsolved_logs: ScanRunUnsolvedLogs,
-        setup_context: ScanRunSetupContext,
+            configuration: ScanRunConfiguration,
+            source: ScanRunStandardSource,
+            unsolved_logs: ScanRunUnsolvedLogs,
+            setup_context: ScanRunSetupContext,
     ) -> ScanRunRequest: ...
+
     @staticmethod
     def targeted(
-        configuration: ScanRunConfiguration,
-        source: ScanRunTargetedSource,
+            configuration: ScanRunConfiguration,
+            source: ScanRunTargetedSource,
     ) -> ScanRunRequest: ...
+
     @staticmethod
     def targeted_with_fcx(
-        configuration: ScanRunConfiguration,
-        source: ScanRunTargetedSource,
-        setup_context: ScanRunSetupContext,
+            configuration: ScanRunConfiguration,
+            source: ScanRunTargetedSource,
+            setup_context: ScanRunSetupContext,
     ) -> ScanRunRequest: ...
+
 
 class ScanRunCancellation:
     """Opaque monotonic cancellation control for one scan run."""
@@ -538,13 +574,16 @@ class ScanRunCancellation:
     is_cancelled: bool
 
     def __init__(self) -> None: ...
+
     def cancel(self) -> None: ...
+
 
 class ScanRunRejectedInput:
     """One Targeted candidate rejected during discovery."""
 
     path: str
     reason: str
+
 
 class ScanRunDiscoveryResult:
     """Complete retained discovery data."""
@@ -554,6 +593,7 @@ class ScanRunDiscoveryResult:
     rejected_inputs: list[ScanRunRejectedInput]
     searched_locations: list[str]
 
+
 class ScanRunSetupCheck:
     """One typed FCX setup check."""
 
@@ -562,11 +602,13 @@ class ScanRunSetupCheck:
     message: str
     details: list[str]
 
+
 class ScanRunSetupPathUpdate:
     """One proposed setup path update."""
 
     kind: str
     path: str
+
 
 class ScanRunSetupResult:
     """Run-scoped FCX setup result."""
@@ -580,11 +622,13 @@ class ScanRunSetupResult:
     actions: list[str]
     fatal_errors: list[str]
 
+
 class ScanRunLogFailure:
     """One structured processing or finalization failure."""
 
     stage: Literal["analysis", "report_write", "unsolved_logs_finalization"]
     message: str
+
 
 class ScanRunLogResult:
     """Complete durable terminal result for one discovered Crash Log."""
@@ -602,11 +646,13 @@ class ScanRunLogResult:
     plugin_count: int
     suspect_count: int
 
+
 class ScanRunYamlDataContentIdentity:
     """Exact-byte identity retained for one Installed YAML Data file."""
 
     sha256: str
     byte_len: int
+
 
 class ScanRunInspectedYamlDataFile:
     """Selected metadata for one update-eligible Main or game file."""
@@ -617,6 +663,7 @@ class ScanRunInspectedYamlDataFile:
     schema_minor: int
     sha256: str
     byte_length: int
+
 
 class ScanRunInstalledYamlDataDiagnostic:
     """One structured selection, fallback, validation, or generation diagnostic."""
@@ -638,6 +685,7 @@ class ScanRunInstalledYamlDataDiagnostic:
     ]
     message: str
 
+
 class ScanRunInstalledYamlDataRunData:
     """Installed YAML Data metadata retained from one immutable run snapshot."""
 
@@ -655,6 +703,7 @@ class ScanRunInstalledYamlDataRunData:
     local_ignore_reset_available: bool
     local_ignore_reset: ScanRunLocalIgnoreResetRunData | None
 
+
 class ScanRunLocalIgnoreResetRunData:
     """Durable metadata from successful Reset To Default resume."""
 
@@ -664,19 +713,30 @@ class ScanRunLocalIgnoreResetRunData:
     backup_identity: ScanRunYamlDataContentIdentity
     replacement_identity: ScanRunYamlDataContentIdentity
 
+
 class ScanRunLocalIgnoreRecoveryDecision:
     """Explicit Rust-owned choice for resuming Local Ignore recovery."""
 
     ProceedWithoutIgnore: ScanRunLocalIgnoreRecoveryDecision
     ResetToDefault: ScanRunLocalIgnoreRecoveryDecision
 
+
 class ScanRunContinuation:
     """Opaque process-local carrier for one paused Crash Log Scan Run."""
 
+
 class ScanRunContinuationConsumedError(RuntimeError):
-    """Raised when a recovery continuation is consumed more than once."""
+    """Raised when a recovery continuation is consumed more than once.
+
+    ``kind`` duplicates ``code``; both are the frozen Vocabulary Token. Match
+    on either and read ``display_lines`` for what to show a person -- the
+    rendered lines deliberately omit the code.
+    """
 
     code: Literal["scan_run_continuation_consumed"]
+    kind: Literal["scan_run_continuation_consumed"]
+    display_lines: list[ScanRunDisplayLine]
+
 
 class ScanRunLocalIgnoreResetConflictError(RuntimeError):
     """Raised when Local Ignore changed while the caller was deciding."""
@@ -686,6 +746,8 @@ class ScanRunLocalIgnoreResetConflictError(RuntimeError):
     expected_identity: ScanRunYamlDataContentIdentity
     actual_identity: ScanRunYamlDataContentIdentity | None
     backup_path: Path | None
+    display_lines: list[ScanRunDisplayLine]
+
 
 class ScanRunLocalIgnoreResetBackupError(RuntimeError):
     """Raised when reset fails before replacement can safely begin."""
@@ -694,12 +756,14 @@ class ScanRunLocalIgnoreResetBackupError(RuntimeError):
     kind: Literal["local_ignore_reset_backup_failure"]
     path: Path
     stage: Literal[
-        "create",
-        "write",
-        "flush",
-        "sync",
-        "publish",
-    ] | None
+               "create",
+               "write",
+               "flush",
+               "sync",
+               "publish",
+           ] | None
+    display_lines: list[ScanRunDisplayLine]
+
 
 class ScanRunLocalIgnoreResetReplacementError(RuntimeError):
     """Raised when reset fails while publishing retained defaults."""
@@ -708,12 +772,14 @@ class ScanRunLocalIgnoreResetReplacementError(RuntimeError):
     kind: Literal["local_ignore_reset_replacement_failure"]
     path: Path
     stage: Literal[
-        "create",
-        "write",
-        "flush",
-        "sync",
-        "publish",
-    ] | None
+               "create",
+               "write",
+               "flush",
+               "sync",
+               "publish",
+           ] | None
+    display_lines: list[ScanRunDisplayLine]
+
 
 class ScanRunLocalIgnoreResetDurabilityUnknownError(RuntimeError):
     """Raised when defaults are visible but canonical replacement durability is unconfirmed."""
@@ -725,6 +791,8 @@ class ScanRunLocalIgnoreResetDurabilityUnknownError(RuntimeError):
     malformed_identity: ScanRunYamlDataContentIdentity
     backup_identity: ScanRunYamlDataContentIdentity
     replacement_identity: ScanRunYamlDataContentIdentity
+    display_lines: list[ScanRunDisplayLine]
+
 
 class ScanRunResult:
     """Complete terminal Crash Log Scan Run result."""
@@ -749,6 +817,7 @@ class ScanRunResult:
     cancelled: int
     logs: list[ScanRunLogResult]
 
+
 class ScanRunInfrastructureError:
     """Typed run-wide failure that prevents a meaningful result."""
 
@@ -763,6 +832,71 @@ class ScanRunInfrastructureError:
     message: str
     path: str | None
 
+
+class ScanRunDisplaySegment:
+    """One typed piece of a Crash Log Scan Run display line.
+
+    The six-variant Rust segment crosses flattened: a ``kind`` tag plus one
+    field per payload shape, with the fields the kind does not select left
+    empty. Read only the field ``kind`` names.
+
+    The flattening is the C++ bridge's, field for field, so a consumer reading
+    two bindings reads the same segment the same way.
+    """
+
+    kind: Literal["text", "label", "count", "path", "name", "emphasis"]
+    text: str
+    path: str
+    count: int
+
+
+class ScanRunDisplayLine:
+    """One line of Crash Log Scan Run Display Content.
+
+    Concatenate ``segments`` in order and never reorder within a line; whole
+    lines may be reordered, grouped, or omitted. Never re-derive a Display
+    Label already carried in a ``label`` segment, and never re-decide a
+    ``count`` segment's noun -- print ``count`` then ``text``.
+    """
+
+    severity: Literal["info", "notice", "warning", "failure", "success"]
+    segments: list[ScanRunDisplaySegment]
+
+
+class ScanRunRecoveryDecisionDescription:
+    """One Local Ignore recovery decision, explained, with its availability.
+
+    Never offer a decision whose ``available`` is ``False``. Rust still fails
+    safely and touches nothing on disk, but the attempt spends the one-shot
+    continuation, so the user is left with no scan and no second attempt.
+
+    ``decision`` is the enum rather than a token, unlike every other tag this
+    surface publishes on an output, because ``scan_run_resume`` takes the enum:
+    a consumer answers with exactly what it was offered.
+    """
+
+    decision: ScanRunLocalIgnoreRecoveryDecision
+    label: str
+    description: list[ScanRunDisplaySegment]
+    available: bool
+
+
+class ScanRunRecoveryPrompt:
+    """The Rust-owned content of a Local Ignore recovery prompt.
+
+    ``lines`` state why the run paused; ``decisions`` lists every decision the
+    continuation contract accepts. The affordance beside a description is the
+    consumer's own, as is the order they are presented in -- the descriptions
+    themselves are not.
+
+    Backing out appears nowhere here: it is spelled as the absence of a decision
+    through ``scan_run_abandon``.
+    """
+
+    lines: list[ScanRunDisplayLine]
+    decisions: list[ScanRunRecoveryDecisionDescription]
+
+
 class ScanRunLogEvent:
     """Common facts for one log-scoped observer event."""
 
@@ -770,6 +904,7 @@ class ScanRunLogEvent:
     crash_log: str
     completed: int
     total: int
+
 
 class ScanRunEvent:
     """One tagged serialized observer event."""
@@ -787,6 +922,8 @@ class ScanRunEvent:
     log: ScanRunLogEvent | None
     phase: Literal["setup", "parse", "analyze", "finalize"] | None
     disposition: Literal["succeeded", "failed", "cancelled_before_start"] | None
+    display_lines: list[ScanRunDisplayLine]
+
 
 class ScanRunExecution:
     """Final operation envelope with adapter-only observer failure data."""
@@ -794,23 +931,49 @@ class ScanRunExecution:
     result: ScanRunResult | None
     error: ScanRunInfrastructureError | None
     observer_error: str | None
+    display_lines: list[ScanRunDisplayLine]
+    recovery_prompt: ScanRunRecoveryPrompt | None
+
 
 def scan_run_execute(
-    request: ScanRunRequest,
-    cancellation: ScanRunCancellation,
-    observer: Callable[[ScanRunEvent], None] | None = None,
-    cancel_on_observer_error: bool = False,
+        request: ScanRunRequest,
+        cancellation: ScanRunCancellation,
+        observer: Callable[[ScanRunEvent], None] | None = None,
+        cancel_on_observer_error: bool = False,
 ) -> ScanRunExecution:
     """Execute one final-contract Crash Log Scan Run."""
 
+
 def scan_run_resume(
-    continuation: ScanRunContinuation,
-    decision: ScanRunLocalIgnoreRecoveryDecision,
-    cancellation: ScanRunCancellation,
-    observer: Callable[[ScanRunEvent], None] | None = None,
-    cancel_on_observer_error: bool = False,
+        continuation: ScanRunContinuation,
+        decision: ScanRunLocalIgnoreRecoveryDecision,
+        cancellation: ScanRunCancellation,
+        observer: Callable[[ScanRunEvent], None] | None = None,
+        cancel_on_observer_error: bool = False,
 ) -> ScanRunExecution:
     """Resume retained work without repeating discovery or YAML Data selection."""
+
+
+def scan_run_abandon(
+        continuation: ScanRunContinuation,
+        cancellation: ScanRunCancellation,
+        observer: Callable[[ScanRunEvent], None] | None = None,
+        cancel_on_observer_error: bool = False,
+) -> ScanRunExecution:
+    """Abandon retained work without applying either recovery decision.
+
+    Requests cancellation on ``cancellation`` and then claims the continuation,
+    returning the ordinary post-discovery cancelled execution. Nothing on disk
+    is touched. Prefer this over cancelling and then calling
+    :func:`scan_run_resume` with a placeholder decision; that sequence is what
+    this replaces, and getting its ordering wrong spends the one-shot
+    continuation on a real recovery attempt.
+
+    ``cancellation`` is left cancelled afterwards. Replay raises
+    :class:`ScanRunContinuationConsumedError`, exactly as
+    :func:`scan_run_resume` does.
+    """
+
 
 def scan_run_installed_yaml_data_diagnostic_kind_label(token: str) -> str:
     """Return the human-facing Display Label for one diagnostic-kind token.
@@ -833,6 +996,7 @@ def scan_run_installed_yaml_data_diagnostic_kind_label(token: str) -> str:
         ValueError: ``token`` is not a published diagnostic-kind token.
     """
 
+
 def scan_run_local_ignore_yaml_data_state_label(token: str) -> str:
     """Return the human-facing Display Label for one Local Ignore state token.
 
@@ -848,6 +1012,7 @@ def scan_run_local_ignore_yaml_data_state_label(token: str) -> str:
     Raises:
         ValueError: ``token`` is not a published Local Ignore state token.
     """
+
 
 def scan_run_log_disposition_label(token: str) -> str:
     """Return the human-facing Display Label for one log disposition token.
@@ -868,6 +1033,7 @@ def scan_run_log_disposition_label(token: str) -> str:
         ValueError: ``token`` is not a published disposition token.
     """
 
+
 def scan_run_log_failure_stage_label(token: str) -> str:
     """Return the human-facing Display Label for one log failure stage token.
 
@@ -885,6 +1051,7 @@ def scan_run_log_failure_stage_label(token: str) -> str:
         ValueError: ``token`` is not a published failure stage token.
     """
 
+
 def scan_run_infrastructure_error_stage_label(token: str) -> str:
     """Return the human-facing Display Label for one infrastructure stage token.
 
@@ -901,6 +1068,7 @@ def scan_run_infrastructure_error_stage_label(token: str) -> str:
     Raises:
         ValueError: ``token`` is not a published infrastructure stage token.
     """
+
 
 def scan_run_local_ignore_reset_failure_stage_label(token: str) -> str:
     """Return the human-facing Display Label for one reset failure stage token.
@@ -941,6 +1109,7 @@ def extract_formids_batch(segments: list[list[str]]) -> list[list[str]]:
 
     """
 
+
 def is_valid_formid(formid: str) -> bool:
     """Check if a FormID string is valid.
 
@@ -951,6 +1120,7 @@ def is_valid_formid(formid: str) -> bool:
         True if valid FormID format (8-char hex)
 
     """
+
 
 def validate_formids_batch(formids: list[str]) -> list[bool]:
     """Validate multiple FormIDs in parallel.
@@ -963,8 +1133,9 @@ def validate_formids_batch(formids: list[str]) -> list[bool]:
 
     """
 
+
 def scan_records_batch(
-    texts: list[list[str]], record_list: list[str], ignore_records: list[str]
+        texts: list[list[str]], record_list: list[str], ignore_records: list[str]
 ) -> list[list[str]]:
     """Scan for records in multiple texts.
 
@@ -978,8 +1149,9 @@ def scan_records_batch(
 
     """
 
+
 def contains_record(
-    text: str, target_records: list[str], ignore_records: list[str]
+        text: str, target_records: list[str], ignore_records: list[str]
 ) -> bool:
     """Check if text contains a specific record.
 
@@ -993,6 +1165,7 @@ def contains_record(
 
     """
 
+
 def detect_plugins_batch(texts: list[str], plugin_list: list[str]) -> list[list[str]]:
     """Detect plugins in multiple texts.
 
@@ -1005,6 +1178,7 @@ def detect_plugins_batch(texts: list[str], plugin_list: list[str]) -> list[list[
 
     """
 
+
 def contains_plugin(text: str, plugin: str) -> bool:
     """Check if text contains a specific plugin reference.
 
@@ -1016,6 +1190,7 @@ def contains_plugin(text: str, plugin: str) -> bool:
         True if plugin found in text
 
     """
+
 
 # =============================================================================
 # Settings Validation (Phase 2)
@@ -1035,6 +1210,7 @@ class AnalyzerKind:
     def code(self) -> str:
         """Return the stable cross-language analyzer token."""
 
+
 class CrashgenExpectationKind:
     """Semantic kind of a Crashgen Expectation outcome."""
 
@@ -1045,6 +1221,7 @@ class CrashgenExpectationKind:
     @property
     def value(self) -> str:
         """Return ``notice``, ``issue``, or ``success``."""
+
 
 class AnalyzerSeverity:
     """Severity attached to a Crashgen Expectation outcome."""
@@ -1057,6 +1234,7 @@ class AnalyzerSeverity:
     def value(self) -> str:
         """Return the stable lowercase severity token."""
 
+
 class AutoscanReportPlacement:
     """YAML-owned destination for a Crashgen Expectation outcome."""
 
@@ -1067,12 +1245,14 @@ class AutoscanReportPlacement:
     def value(self) -> str:
         """Return ``settings`` or ``error_information``."""
 
+
 class AnalyzerError(RuntimeError):
     """Typed focused-analyzer construction or execution failure."""
 
     analyzer_kind: AnalyzerKind
     code: str
     message: str
+
 
 class ModGuidanceMatchState:
     """Semantic state shared by aggregate Mod Guidance result families."""
@@ -1085,6 +1265,7 @@ class ModGuidanceMatchState:
     def value(self) -> str:
         """Return the stable cross-language match-state token."""
 
+
 class ModGuidanceCriteriaKind:
     """Grouped match strategy for a frequent-crash or solution rule."""
 
@@ -1095,170 +1276,220 @@ class ModGuidanceCriteriaKind:
     def value(self) -> str:
         """Return ``any`` or ``all``."""
 
+
 class ModGuidanceConflictRule:
     """Immutable owned conflict rule."""
 
     def __init__(
-        self,
-        mod_a: str,
-        mod_b: str,
-        name_a: str,
-        name_b: str,
-        description: str,
-        fix: str | None = None,
-        link: str | None = None,
+            self,
+            mod_a: str,
+            mod_b: str,
+            name_a: str,
+            name_b: str,
+            description: str,
+            fix: str | None = None,
+            link: str | None = None,
     ) -> None: ...
+
     @property
     def mod_a(self) -> str: ...
+
     @property
     def mod_b(self) -> str: ...
+
     @property
     def name_a(self) -> str: ...
+
     @property
     def name_b(self) -> str: ...
+
     @property
     def description(self) -> str: ...
+
     @property
     def fix(self) -> str | None: ...
+
     @property
     def link(self) -> str | None: ...
+
 
 class ModGuidanceSolutionRule:
     """Immutable owned frequent-crash or solution rule."""
 
     def __init__(
-        self,
-        id: str,
-        criteria_kind: ModGuidanceCriteriaKind,
-        criteria: list[str],
-        exceptions: list[str],
-        name: str,
-        description: str,
+            self,
+            id: str,
+            criteria_kind: ModGuidanceCriteriaKind,
+            criteria: list[str],
+            exceptions: list[str],
+            name: str,
+            description: str,
     ) -> None: ...
+
     @property
     def id(self) -> str: ...
+
     @property
     def criteria_kind(self) -> ModGuidanceCriteriaKind: ...
+
     @property
     def criteria(self) -> list[str]: ...
+
     @property
     def exceptions(self) -> list[str]: ...
+
     @property
     def name(self) -> str: ...
+
     @property
     def description(self) -> str: ...
+
 
 class ModGuidanceImportantModRule:
     """Immutable owned important-mod rule."""
 
     def __init__(
-        self,
-        detect: str,
-        name: str,
-        description: str,
-        gpu: str | None = None,
-        gpu_mismatch_warning: str | None = None,
-        exclude_when_plugin_any: list[str] | None = None,
+            self,
+            detect: str,
+            name: str,
+            description: str,
+            gpu: str | None = None,
+            gpu_mismatch_warning: str | None = None,
+            exclude_when_plugin_any: list[str] | None = None,
     ) -> None: ...
+
     @property
     def detect(self) -> str: ...
+
     @property
     def name(self) -> str: ...
+
     @property
     def description(self) -> str: ...
+
     @property
     def gpu(self) -> str | None: ...
+
     @property
     def gpu_mismatch_warning(self) -> str | None: ...
+
     @property
     def exclude_when_plugin_any(self) -> list[str] | None: ...
+
 
 class ModGuidanceAnalysisInput:
     """Immutable owned facts for one aggregate Mod Guidance call."""
 
     def __init__(
-        self,
-        plugins: dict[str, str],
-        user_gpu: str | None = None,
-        xse_modules: set[str] = ...,
+            self,
+            plugins: dict[str, str],
+            user_gpu: str | None = None,
+            xse_modules: set[str] = ...,
     ) -> None: ...
+
 
 class ModConflictGuidance:
     """Immutable semantic conflict result."""
 
     @property
     def state(self) -> ModGuidanceMatchState: ...
+
     @property
     def mod_a(self) -> str: ...
+
     @property
     def mod_b(self) -> str: ...
+
     @property
     def name_a(self) -> str: ...
+
     @property
     def name_b(self) -> str: ...
+
     @property
     def description(self) -> str: ...
+
     @property
     def fix(self) -> str | None: ...
+
     @property
     def link(self) -> str | None: ...
+
 
 class ModSolutionGuidance:
     """Immutable semantic frequent-crash or solution result."""
 
     @property
     def state(self) -> ModGuidanceMatchState: ...
+
     @property
     def id(self) -> str: ...
+
     @property
     def name(self) -> str: ...
+
     @property
     def description(self) -> str: ...
+
     @property
     def matched_plugin_ids(self) -> list[str]: ...
+
 
 class ImportantModGuidance:
     """Immutable semantic important-mod result."""
 
     @property
     def state(self) -> ModGuidanceMatchState: ...
+
     @property
     def detect(self) -> str: ...
+
     @property
     def name(self) -> str: ...
+
     @property
     def description(self) -> str: ...
+
     @property
     def gpu(self) -> str | None: ...
+
     @property
     def gpu_mismatch_warning(self) -> str | None: ...
+
 
 class ModGuidanceAnalysisResult:
     """Completed aggregate analysis, including explicit empty success."""
 
     @property
     def conflicts(self) -> list[ModConflictGuidance]: ...
+
     @property
     def frequent_crashes(self) -> list[ModSolutionGuidance]: ...
+
     @property
     def solutions(self) -> list[ModSolutionGuidance]: ...
+
     @property
     def important_mods(self) -> list[ImportantModGuidance]: ...
+
 
 class ModGuidanceAnalyzer:
     """Immutable analyzer over validated aggregate Mod Guidance rules."""
 
     def __init__(
-        self,
-        conflicts: list[ModGuidanceConflictRule],
-        frequent_crashes: list[ModGuidanceSolutionRule],
-        solutions: list[ModGuidanceSolutionRule],
-        important_mods: list[ModGuidanceImportantModRule],
+            self,
+            conflicts: list[ModGuidanceConflictRule],
+            frequent_crashes: list[ModGuidanceSolutionRule],
+            solutions: list[ModGuidanceSolutionRule],
+            important_mods: list[ModGuidanceImportantModRule],
     ) -> None: ...
+
     @property
     def kind(self) -> AnalyzerKind: ...
+
     def analyze(self, input: ModGuidanceAnalysisInput) -> ModGuidanceAnalysisResult:
         """Run aggregate semantic analysis without producing report lines."""
+
 
 class CrashSuspectFindingKind:
     """Evidence source that produced one Crash Suspect Finding."""
@@ -1271,77 +1502,100 @@ class CrashSuspectFindingKind:
     def value(self) -> str:
         """Return the stable cross-language finding-kind token."""
 
+
 class CrashSuspectStackCountRule:
     """Immutable minimum-occurrence stack condition."""
 
     def __init__(self, substring: str, count: int) -> None: ...
+
     @property
     def substring(self) -> str: ...
+
     @property
     def count(self) -> int: ...
+
 
 class CrashSuspectMainErrorRule:
     """Immutable owned main-error rule."""
 
     def __init__(
-        self, id: str, name: str, severity: int, main_error_contains_any: list[str]
+            self, id: str, name: str, severity: int, main_error_contains_any: list[str]
     ) -> None: ...
+
     @property
     def id(self) -> str: ...
+
     @property
     def name(self) -> str: ...
+
     @property
     def severity(self) -> int: ...
+
     @property
     def main_error_contains_any(self) -> list[str]: ...
+
 
 class CrashSuspectStackRule:
     """Immutable owned stack rule."""
 
     def __init__(
-        self,
-        id: str,
-        name: str,
-        severity: int,
-        main_error_required_any: list[str],
-        main_error_optional_any: list[str],
-        stack_contains_any: list[str],
-        exclude_if_stack_contains_any: list[str],
-        stack_contains_at_least: list[CrashSuspectStackCountRule],
+            self,
+            id: str,
+            name: str,
+            severity: int,
+            main_error_required_any: list[str],
+            main_error_optional_any: list[str],
+            stack_contains_any: list[str],
+            exclude_if_stack_contains_any: list[str],
+            stack_contains_at_least: list[CrashSuspectStackCountRule],
     ) -> None: ...
+
     @property
     def id(self) -> str: ...
+
     @property
     def name(self) -> str: ...
+
     @property
     def severity(self) -> int: ...
+
     @property
     def main_error_required_any(self) -> list[str]: ...
+
     @property
     def main_error_optional_any(self) -> list[str]: ...
+
     @property
     def stack_contains_any(self) -> list[str]: ...
+
     @property
     def exclude_if_stack_contains_any(self) -> list[str]: ...
+
     @property
     def stack_contains_at_least(self) -> list[CrashSuspectStackCountRule]: ...
+
 
 class CrashSuspectAnalysisInput:
     """Immutable owned input for one aggregate Crash Suspect analysis call."""
 
     def __init__(self, main_error: str, call_stack: str) -> None: ...
 
+
 class CrashSuspectFinding:
     """Immutable semantic Crash Suspect Finding."""
 
     @property
     def kind(self) -> CrashSuspectFindingKind: ...
+
     @property
     def rule_id(self) -> str | None: ...
+
     @property
     def name(self) -> str | None: ...
+
     @property
     def severity(self) -> int | None: ...
+
 
 class CrashSuspectAnalysisResult:
     """Completed analysis; an empty list explicitly means no findings."""
@@ -1349,31 +1603,38 @@ class CrashSuspectAnalysisResult:
     @property
     def findings(self) -> list[CrashSuspectFinding]: ...
 
+
 class CrashSuspectAnalyzer:
     """Immutable analyzer with validated, compiled Crash Suspect rules."""
 
     def __init__(
-        self,
-        main_error_rules: list[CrashSuspectMainErrorRule],
-        stack_rules: list[CrashSuspectStackRule],
+            self,
+            main_error_rules: list[CrashSuspectMainErrorRule],
+            stack_rules: list[CrashSuspectStackRule],
     ) -> None: ...
+
     @property
     def kind(self) -> AnalyzerKind: ...
+
     def analyze(self, input: CrashSuspectAnalysisInput) -> CrashSuspectAnalysisResult:
         """Run aggregate semantic analysis without producing report lines."""
+
 
 class PluginEvidenceAnalysisInput:
     """Immutable owned input for one aggregate Plugin Evidence analysis call."""
 
     def __init__(self, call_stack: list[str], plugins: list[str]) -> None: ...
 
+
 class PluginEvidence:
     """Immutable typed plugin identity and occurrence count."""
 
     @property
     def plugin(self) -> str: ...
+
     @property
     def occurrences(self) -> int: ...
+
 
 class PluginEvidenceAnalysisResult:
     """Completed analysis; an empty list explicitly means no evidence."""
@@ -1381,14 +1642,18 @@ class PluginEvidenceAnalysisResult:
     @property
     def evidence(self) -> list[PluginEvidence]: ...
 
+
 class PluginEvidenceAnalyzer:
     """Immutable analyzer with validated Plugin Evidence ignore configuration."""
 
     def __init__(self, ignored_plugins: list[str]) -> None: ...
+
     @property
     def kind(self) -> AnalyzerKind: ...
+
     def analyze(self, input: PluginEvidenceAnalysisInput) -> PluginEvidenceAnalysisResult:
         """Run aggregate semantic analysis without producing report lines."""
+
 
 class FormIDFindingLookupReplyKind:
     """Callback-free deterministic lookup reply category."""
@@ -1397,27 +1662,31 @@ class FormIDFindingLookupReplyKind:
     Found: FormIDFindingLookupReplyKind
     OperationalFailure: FormIDFindingLookupReplyKind
 
+
 class FormIDFindingLookupEntry:
     """Immutable owned deterministic FormID lookup reply."""
 
     def __init__(
-        self,
-        formid: str,
-        plugin: str,
-        reply_kind: FormIDFindingLookupReplyKind,
-        value: str | None = None,
-        error_message: str | None = None,
+            self,
+            formid: str,
+            plugin: str,
+            reply_kind: FormIDFindingLookupReplyKind,
+            value: str | None = None,
+            error_message: str | None = None,
     ) -> None: ...
+
 
 class FormIDPlugin:
     """Immutable plugin identity and load-order prefix."""
 
     def __init__(self, name: str, prefix: str) -> None: ...
 
+
 class FormIDFindingAnalysisInput:
     """Immutable owned input for one aggregate FormID Finding call."""
 
     def __init__(self, crash_lines: list[str], plugins: list[FormIDPlugin]) -> None: ...
+
 
 class FormIDValueLookupStatus:
     """Semantic state of optional FormID Value Lookup."""
@@ -1427,19 +1696,25 @@ class FormIDValueLookupStatus:
     Missing: FormIDValueLookupStatus
     Found: FormIDValueLookupStatus
 
+
 class FormIDFinding:
     """Immutable distinct FormID Finding including unresolved identifiers."""
 
     @property
     def identifier(self) -> str: ...
+
     @property
     def occurrences(self) -> int: ...
+
     @property
     def plugin(self) -> str | None: ...
+
     @property
     def value_lookup_status(self) -> FormIDValueLookupStatus: ...
+
     @property
     def value(self) -> str | None: ...
+
 
 class FormIDFindingAnalysisResult:
     """Completed semantic analysis, including explicit empty success."""
@@ -1447,31 +1722,40 @@ class FormIDFindingAnalysisResult:
     @property
     def findings(self) -> list[FormIDFinding]: ...
 
+
 class FormIDFindingAnalyzer:
     """Immutable aggregate FormID Finding analyzer."""
 
     def __init__(self) -> None: ...
+
     @staticmethod
     def in_memory(entries: list[FormIDFindingLookupEntry]) -> FormIDFindingAnalyzer: ...
+
     @staticmethod
     def sqlite(database_path: str, game_table: str) -> FormIDFindingAnalyzer: ...
+
     @property
     def kind(self) -> AnalyzerKind: ...
+
     def analyze(self, input: FormIDFindingAnalysisInput) -> FormIDFindingAnalysisResult:
         """Run async Rust analysis on the shared runtime while releasing the GIL."""
+
 
 class NamedRecordFindingAnalysisInput:
     """Immutable owned input for one aggregate Named Record Finding analysis call."""
 
     def __init__(self, crash_lines: list[str]) -> None: ...
 
+
 class NamedRecordFinding:
     """Immutable distinct named record and exact occurrence count."""
 
     @property
     def record(self) -> str: ...
+
     @property
     def occurrences(self) -> int: ...
+
 
 class NamedRecordFindingAnalysisResult:
     """Completed analysis; an empty list explicitly means no findings."""
@@ -1479,42 +1763,56 @@ class NamedRecordFindingAnalysisResult:
     @property
     def findings(self) -> list[NamedRecordFinding]: ...
 
+
 class NamedRecordFindingAnalyzer:
     """Immutable analyzer with validated, compiled Named Record Finding configuration."""
 
     def __init__(
-        self, target_records: list[str], ignored_records: list[str]
+            self, target_records: list[str], ignored_records: list[str]
     ) -> None: ...
+
     @property
     def kind(self) -> AnalyzerKind: ...
+
     def analyze(
-        self, input: NamedRecordFindingAnalysisInput
+            self, input: NamedRecordFindingAnalysisInput
     ) -> NamedRecordFindingAnalysisResult:
         """Run aggregate semantic analysis without producing report lines."""
+
 
 class CrashgenExpectationOutcome:
     """Immutable semantic result from one YAML-backed expectation."""
 
     @property
     def rule_id(self) -> str: ...
+
     @property
     def kind(self) -> CrashgenExpectationKind: ...
+
     @property
     def severity(self) -> AnalyzerSeverity: ...
+
     @property
     def message(self) -> str: ...
+
     @property
     def fix(self) -> str | None: ...
+
     @property
     def placement(self) -> AutoscanReportPlacement: ...
+
     @property
     def section(self) -> str | None: ...
+
     @property
     def setting(self) -> str | None: ...
+
     @property
     def expected(self) -> str | None: ...
+
     @property
     def actual(self) -> str | None: ...
+
 
 class DisabledSettingNotice:
     """Immutable semantic notice for one non-ignored disabled setting."""
@@ -1522,25 +1820,29 @@ class DisabledSettingNotice:
     @property
     def setting_name(self) -> str: ...
 
+
 class CrashgenSettingsAnalysisInput:
     """Immutable owned input for one aggregate Crashgen Settings Analysis call."""
 
     def __init__(
-        self,
-        settings: dict[str, dict[str, str]],
-        installed_plugins: set[str],
-        crashgen_version: tuple[int, int, int] | None = None,
-        config_layout: str | None = None,
+            self,
+            settings: dict[str, dict[str, str]],
+            installed_plugins: set[str],
+            crashgen_version: tuple[int, int, int] | None = None,
+            config_layout: str | None = None,
     ) -> None:
         """Own settings, plugin, version, and layout facts for analysis."""
+
 
 class CrashgenSettingsAnalysisResult:
     """Completed analysis; empty lists explicitly mean no findings."""
 
     @property
     def expectation_outcomes(self) -> list[CrashgenExpectationOutcome]: ...
+
     @property
     def disabled_setting_notices(self) -> list[DisabledSettingNotice]: ...
+
 
 class CrashgenSettingsAnalyzer:
     """Immutable analyzer with validated, compiled Crashgen configuration."""
@@ -1554,6 +1856,7 @@ class CrashgenSettingsAnalyzer:
 
     def analyze(self, input: CrashgenSettingsAnalysisInput) -> CrashgenSettingsAnalysisResult:
         """Run aggregate semantic analysis without producing report lines."""
+
 
 # =============================================================================
 # GPU Detection (Phase 2)
@@ -1572,6 +1875,7 @@ class GpuVendor:
             vendor_name: Vendor name (case-insensitive: "AMD", "NVIDIA", "INTEL")
 
         """
+
 
 class GpuInfo:
     """Detected GPU information from crash log.
@@ -1607,6 +1911,7 @@ class GpuInfo:
 
         """
 
+
 class GpuDetector:
     """GPU vendor detection from system info.
 
@@ -1638,6 +1943,7 @@ class GpuDetector:
 
         """
 
+
 # =============================================================================
 # FCX Mode Handler (Phase 2)
 # =============================================================================
@@ -1650,14 +1956,14 @@ class ConfigIssue:
     """
 
     def __init__(
-        self,
-        file_path: str,
-        section: str | None,
-        setting: str,
-        current_value: str,
-        recommended_value: str,
-        description: str,
-        severity: str = "warning",
+            self,
+            file_path: str,
+            section: str | None,
+            setting: str,
+            current_value: str,
+            recommended_value: str,
+            description: str,
+            severity: str = "warning",
     ) -> None:
         """Create a new configuration issue.
 
@@ -1700,6 +2006,7 @@ class ConfigIssue:
     def severity(self) -> str:
         """Issue severity level ('error', 'warning', 'info')."""
 
+
 # =============================================================================
 # Test Classes
 # =============================================================================
@@ -1707,21 +2014,6 @@ class ConfigIssue:
 # =============================================================================
 # Papyrus Log Analysis
 # =============================================================================
-
-class PapyrusError(Exception):
-    """Raised on Papyrus log analysis failures.
-
-    Phase 3 Plan 04 (Wave 3a): stub mirrors the Rust
-    ``classic_scanlog_core::papyrus::PapyrusError`` enum so the parity
-    contract row can resolve ``classic_scanlog.PapyrusError`` through
-    ``classic_scanlog.pyi``. At runtime, current Papyrus error paths in
-    :class:`PapyrusAnalyzer` still raise the standard Python
-    ``FileNotFoundError`` / ``IOError`` / ``RuntimeError`` variants that
-    the PyO3 wrapper converts from the underlying Rust enum. Callers that
-    want a typed catch class can still ``except classic_scanlog.PapyrusError``
-    once a future phase wires the create_exception! macro for it.
-    """
-
 
 class PapyrusStats:
     """Statistics from Papyrus log analysis.
@@ -1760,6 +2052,7 @@ class PapyrusStats:
             Ratio of dumps to stacks, or 0.0 if no dumps/stacks
 
         """
+
 
 class PapyrusAnalyzer:
     """Analyzer for Papyrus script logs.
@@ -1852,6 +2145,15 @@ class PapyrusAnalyzer:
             IOError: If failed to read the file or file was truncated
 
         """
+
+
+def detect_crash_pattern(content: str) -> str | None:
+    """Return a stable token for a known error in the first thirty header lines.
+
+    Matching is ASCII-case-insensitive and recognizes symbolic exceptions and
+    hexadecimal aliases. Return None when no known pattern is present.
+    """
+
 
 def papyrus_logging(log_path: str) -> tuple[str, int]:
     """Provide convenience wrapper to analyze a Papyrus log file.

@@ -51,12 +51,36 @@ DEFAULT_QUERY_CACHE_CAPACITY: int
 DEFAULT_CACHE_CLEANUP_THRESHOLD: int
 DEFAULT_CACHE_CLEANUP_INTERVAL: int
 
+
+class RustDatabaseError(Exception):
+    """Base error raised by the Rust database adapter."""
+
+
+class RustDatabaseIOError(RustDatabaseError):
+    """Raised for database I/O failures."""
+
+
+class RustDatabaseQueryError(RustDatabaseError):
+    """Raised for database query failures."""
+
+
 def get_default_cache_ttl() -> int: ...
+
+
 def get_batch_cache_ttl() -> int: ...
+
+
 def get_max_cache_ttl() -> int: ...
+
+
 def get_default_query_cache_capacity() -> int: ...
+
+
 def get_default_cache_cleanup_threshold() -> int: ...
+
+
 def get_default_cache_cleanup_interval() -> int: ...
+
 
 class FormIdValueLookupError(Exception):
     """Strict lookup failure with stable machine-readable context."""
@@ -65,6 +89,7 @@ class FormIdValueLookupError(Exception):
     formid: str | None
     plugin: str | None
     message: str
+
 
 class FormIdValueLookupEntry:
     """One owned deterministic reply for the in-memory lookup adapter."""
@@ -75,18 +100,20 @@ class FormIdValueLookupEntry:
     operational_failure: str | None
 
     def __init__(
-        self,
-        formid: str,
-        plugin: str,
-        value: str | None = None,
-        operational_failure: str | None = None,
+            self,
+            formid: str,
+            plugin: str,
+            value: str | None = None,
+            operational_failure: str | None = None,
     ) -> None: ...
+
 
 class FormIdValueLookupOutcome:
     """One successful semantic lookup outcome."""
 
     kind: str
     value: str | None
+
 
 class FormIdValueLookup:
     """Opaque callback-free facade over disabled, memory, SQLite, and shared-pool adapters."""
@@ -106,8 +133,9 @@ class FormIdValueLookup:
     async def lookup(self, formid: str, plugin: str) -> FormIdValueLookupOutcome: ...
 
     async def lookup_batch(
-        self, pairs: list[tuple[str, str]]
+            self, pairs: list[tuple[str, str]]
     ) -> list[FormIdValueLookupOutcome]: ...
+
 
 class DatabasePool:
     """High-performance async database pool with TTL caching.
@@ -130,13 +158,13 @@ class DatabasePool:
     """
 
     def __init__(
-        self,
-        max_connections: int | None = None,
-        cache_ttl_seconds: int | None = 300,
-        game_table: str | None = None,
-        cache_capacity: int | None = None,
-        cleanup_threshold: int | None = None,
-        cleanup_interval_seconds: int | None = None,
+            self,
+            max_connections: int | None = None,
+            cache_ttl_seconds: int | None = 300,
+            game_table: str | None = None,
+            cache_capacity: int | None = None,
+            cleanup_threshold: int | None = None,
+            cleanup_interval_seconds: int | None = None,
     ) -> None:
         """Create a new database pool.
 
@@ -177,7 +205,7 @@ class DatabasePool:
         """
 
     async def get_entry(
-        self, formid: str, plugin: str, table: str | None = None
+            self, formid: str, plugin: str, table: str | None = None
     ) -> dict[str, Any] | None:
         """Lookup a single FormID in the database.
 
@@ -202,10 +230,10 @@ class DatabasePool:
         """
 
     async def get_entries_batch(
-        self,
-        formid_plugin_pairs: list[tuple[str, str]],
-        table: str | None = None,
-        batch_size: int | None = None,
+            self,
+            formid_plugin_pairs: list[tuple[str, str]],
+            table: str | None = None,
+            batch_size: int | None = None,
     ) -> dict[str, dict[str, Any]]:
         """Batch lookup multiple FormID-plugin pairs in optimized queries.
 

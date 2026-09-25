@@ -540,6 +540,7 @@ fn classic_message(m: &Bound<'_, PyModule>) -> PyResult<()> {
     logging::register(m)?;
 
     // Add functions
+    m.add_function(wrap_pyfunction!(init_logging, m)?)?;
     m.add_function(wrap_pyfunction!(format_log_message, m)?)?;
     m.add_function(wrap_pyfunction!(format_contract_event, m)?)?;
 
@@ -547,4 +548,11 @@ fn classic_message(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
 
     Ok(())
+}
+
+/// Initialize the process logger explicitly, honoring RUST_LOG and preserving an existing logger.
+/// Repeated calls are safe; importing the binding does not initialize logging.
+#[pyfunction]
+fn init_logging() {
+    core::logging::init();
 }

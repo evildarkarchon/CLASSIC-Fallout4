@@ -6,10 +6,8 @@ import hashlib
 import os
 from pathlib import Path
 
-import pytest
-
 import classic_config
-
+import pytest
 
 MAIN_BYTES = (
     b'schema_version: "2.0"\r\n'
@@ -44,7 +42,7 @@ MAIN_WITH_DEFAULT_BYTES = (
 
 
 def write_install(
-    root: Path, *, with_ignore: bool = False, main_bytes: bytes = MAIN_BYTES
+        root: Path, *, with_ignore: bool = False, main_bytes: bytes = MAIN_BYTES
 ) -> None:
     """Write minimum valid bundled data and, when requested, Local Ignore data."""
     databases = root / "CLASSIC Data" / "databases"
@@ -67,7 +65,7 @@ def isolate_cache(monkeypatch: pytest.MonkeyPatch, root: Path) -> Path:
 
 
 def test_python_cli_smoke_fixture_satisfies_installed_yaml_data_contract(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Keep the permanent CLI smoke fixture valid for strict installed-data loading."""
     fixture_root = Path(__file__).parent / "fixtures"
@@ -86,13 +84,13 @@ def test_python_cli_smoke_fixture_satisfies_installed_yaml_data_contract(
         0,
     )
     assert (
-        outcome.snapshot.game_file.schema_major,
-        outcome.snapshot.game_file.schema_minor,
-    ) == (1, 0)
+               outcome.snapshot.game_file.schema_major,
+               outcome.snapshot.game_file.schema_minor,
+           ) == (1, 0)
 
 
 def test_inspection_projects_independent_selection_and_exact_identity(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Selected Main/game facts retain independent provenance and exact-byte identity."""
     installation = tmp_path / "install"
@@ -126,7 +124,7 @@ def test_inspection_projects_independent_selection_and_exact_identity(
 
 
 def test_inspection_preserves_rejection_diagnostics_on_bundled_fallback(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """An incompatible canonical cache file is attributed without being modified."""
     installation = tmp_path / "install"
@@ -154,7 +152,7 @@ def test_inspection_preserves_rejection_diagnostics_on_bundled_fallback(
 
 
 def test_inspection_exposes_typed_terminal_failures(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Unsupported games and exhausted sources remain separately catchable."""
     isolate_cache(monkeypatch, tmp_path / "cache-root")
@@ -183,7 +181,7 @@ def test_inspection_exposes_typed_terminal_failures(
 
 
 def test_installed_load_projects_ready_immutable_snapshot(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A valid load exposes one stable snapshot of independently selected bytes."""
     installation = tmp_path / "install"
@@ -234,7 +232,7 @@ def test_installed_load_projects_ready_immutable_snapshot(
 
 
 def test_installed_load_projects_generated_local_ignore(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Missing Local Ignore becomes a Ready snapshot with generated provenance."""
     installation = tmp_path / "install"
@@ -265,13 +263,13 @@ def test_installed_load_projects_generated_local_ignore(
 
 
 def test_installed_load_projects_selection_failures(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Typed selection failures retain stable codes, roles, paths, and diagnostics."""
     isolate_cache(monkeypatch, tmp_path / "cache-root")
 
     with pytest.raises(
-        classic_config.InstalledYamlDataLoadUnsupportedGameError
+            classic_config.InstalledYamlDataLoadUnsupportedGameError
     ) as unsupported:
         classic_config.load_installed_yaml_data(
             tmp_path / "missing",
@@ -284,7 +282,7 @@ def test_installed_load_projects_selection_failures(
     assert unsupported.value.diagnostics == []
 
     with pytest.raises(
-        classic_config.InstalledYamlDataLoadNoUsableSourceError
+            classic_config.InstalledYamlDataLoadNoUsableSourceError
     ) as unavailable:
         classic_config.load_installed_yaml_data(
             tmp_path / "missing",
@@ -299,8 +297,8 @@ def test_installed_load_projects_selection_failures(
 
 
 def test_installed_load_keeps_invalid_defaults_fatal_only_while_ignore_is_missing(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Invalid defaults do not block recovery from malformed installed Local Ignore."""
     installation = tmp_path / "install"
@@ -309,7 +307,7 @@ def test_installed_load_keeps_invalid_defaults_fatal_only_while_ignore_is_missin
     ignore_path = installation / "CLASSIC Data" / "CLASSIC Ignore.yaml"
 
     with pytest.raises(
-        classic_config.InstalledYamlDataLoadLocalIgnoreDefaultInvalidError
+            classic_config.InstalledYamlDataLoadLocalIgnoreDefaultInvalidError
     ) as exc_info:
         classic_config.load_installed_yaml_data(
             installation,
@@ -369,10 +367,10 @@ def test_installed_load_keeps_invalid_defaults_fatal_only_while_ignore_is_missin
     ],
 )
 def test_installed_load_projects_consumable_local_ignore_recovery_without_writes(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    ignore_bytes: bytes,
-    diagnostic_kind: str,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        ignore_bytes: bytes,
+        diagnostic_kind: str,
 ) -> None:
     """Malformed Local Ignore data can be ignored once without mutating installed files."""
     installation = tmp_path / "install"
@@ -440,15 +438,15 @@ def test_installed_load_projects_consumable_local_ignore_recovery_without_writes
     assert snapshot.game_file.sha256 == retained_game_sha256
     assert snapshot.local_ignore_identity.sha256 == malformed_sha256
     assert {
-        path: path.read_bytes() for path in files_before_proceed
-    } == files_before_proceed
+               path: path.read_bytes() for path in files_before_proceed
+           } == files_before_proceed
 
     with pytest.raises(
-        RuntimeError, match="Local Ignore recovery plan has already been consumed"
+            RuntimeError, match="Local Ignore recovery plan has already been consumed"
     ):
         plan.proceed_without_ignore()
     with pytest.raises(
-        RuntimeError, match="Local Ignore recovery plan has already been consumed"
+            RuntimeError, match="Local Ignore recovery plan has already been consumed"
     ):
         _ = plan.game
 
@@ -462,8 +460,8 @@ def test_installed_load_projects_consumable_local_ignore_recovery_without_writes
         classic_config.InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome,
     )
     assert (
-        later_outcome.recovery_plan.malformed_local_ignore_identity.sha256
-        == snapshot.local_ignore_identity.sha256
+            later_outcome.recovery_plan.malformed_local_ignore_identity.sha256
+            == snapshot.local_ignore_identity.sha256
     )
     assert later_outcome.recovery_plan.main.sha256 == hashlib.sha256(
         replacement_main
@@ -472,12 +470,12 @@ def test_installed_load_projects_consumable_local_ignore_recovery_without_writes
         replacement_game
     ).hexdigest()
     assert {
-        path: path.read_bytes() for path in files_before_proceed
-    } == files_before_proceed
+               path: path.read_bytes() for path in files_before_proceed
+           } == files_before_proceed
 
 
 def test_local_ignore_reset_projects_durable_success_metadata(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Reset exposes the durable backup, replacement identities, and retained snapshot."""
     installation = tmp_path / "install"
@@ -513,13 +511,13 @@ def test_local_ignore_reset_projects_durable_success_metadata(
     assert reset_diagnostic.kind == "local_ignore_reset"
 
     with pytest.raises(
-        RuntimeError, match="Local Ignore recovery plan has already been consumed"
+            RuntimeError, match="Local Ignore recovery plan has already been consumed"
     ):
         plan.reset_to_default()
 
 
 def test_local_ignore_reset_projects_conflict_without_overwriting_newer_state(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A changed canonical file returns typed identity metadata and is never overwritten."""
     installation = tmp_path / "install"
@@ -551,13 +549,13 @@ def test_local_ignore_reset_projects_conflict_without_overwriting_newer_state(
     assert not (installation / "CLASSIC Backup").exists()
 
     with pytest.raises(
-        RuntimeError, match="Local Ignore recovery plan has already been consumed"
+            RuntimeError, match="Local Ignore recovery plan has already been consumed"
     ):
         plan.proceed_without_ignore()
 
 
 def test_local_ignore_reset_projects_defaults_unavailable_and_error_hierarchy(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Every reset failure remains catchable through a typed operational hierarchy."""
     installation = tmp_path / "install"
@@ -574,7 +572,7 @@ def test_local_ignore_reset_projects_defaults_unavailable_and_error_hierarchy(
     )
     plan = load_outcome.recovery_plan
     with pytest.raises(
-        classic_config.LocalIgnoreResetDefaultsUnavailableError
+            classic_config.LocalIgnoreResetDefaultsUnavailableError
     ) as exc_info:
         plan.reset_to_default()
 
@@ -585,19 +583,19 @@ def test_local_ignore_reset_projects_defaults_unavailable_and_error_hierarchy(
     assert exc_info.value.reason
     assert ignore_path.read_bytes() == malformed_bytes
     with pytest.raises(
-        RuntimeError, match="Local Ignore recovery plan has already been consumed"
+            RuntimeError, match="Local Ignore recovery plan has already been consumed"
     ):
         plan.reset_to_default()
 
     for error_type in (
-        classic_config.LocalIgnoreResetDefaultsUnavailableError,
-        classic_config.LocalIgnoreResetLockError,
-        classic_config.LocalIgnoreResetReadError,
-        classic_config.LocalIgnoreResetBackupDirectoryError,
-        classic_config.LocalIgnoreResetBackupPublicationError,
-        classic_config.LocalIgnoreResetBackupVerificationError,
-        classic_config.LocalIgnoreResetReplacementPublicationError,
-        classic_config.LocalIgnoreResetReplacementDurabilityUnknownError,
+            classic_config.LocalIgnoreResetDefaultsUnavailableError,
+            classic_config.LocalIgnoreResetLockError,
+            classic_config.LocalIgnoreResetReadError,
+            classic_config.LocalIgnoreResetBackupDirectoryError,
+            classic_config.LocalIgnoreResetBackupPublicationError,
+            classic_config.LocalIgnoreResetBackupVerificationError,
+            classic_config.LocalIgnoreResetReplacementPublicationError,
+            classic_config.LocalIgnoreResetReplacementDurabilityUnknownError,
     ):
         assert issubclass(error_type, classic_config.LocalIgnoreResetError)
 
@@ -618,46 +616,8 @@ def test_installed_load_exports_invalid_selected_data_failure_type() -> None:
     )
 
 
-def test_display_labels_carry_the_settled_descriptive_wording() -> None:
-    """The wording decision, pinned where a Python consumer observes it.
-
-    The Rust sibling module proves each label equals the core's; what is left to
-    check here is that the projection survives the PyO3 boundary and that the
-    five settled wordings arrive intact rather than in the terse form the CLI
-    and GUI used to print.
-    """
-    assert (
-        classic_config.installed_yaml_data_diagnostic_kind_label("parse")
-        == "parse failure"
-    )
-    assert (
-        classic_config.installed_yaml_data_diagnostic_kind_label("read")
-        == "read failure"
-    )
-    assert (
-        classic_config.installed_yaml_data_diagnostic_kind_label("missing")
-        == "missing candidate"
-    )
-    assert (
-        classic_config.installed_yaml_data_diagnostic_kind_label("cache_unavailable")
-        == "update cache unavailable"
-    )
-    assert (
-        classic_config.local_ignore_yaml_data_state_label("generated")
-        == "generated from selected Main defaults"
-    )
-
-
-def test_display_labels_use_glossary_capitalization_for_domain_terms() -> None:
-    """`Local Ignore` is a domain term, so no token transform could derive it."""
-    assert (
-        classic_config.installed_yaml_data_diagnostic_kind_label("local_ignore_reset")
-        == "Local Ignore reset"
-    )
-
-
 def test_every_token_a_real_inspection_publishes_resolves_to_a_label(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Tokens come from an inspection this test drives, never from a literal.
 

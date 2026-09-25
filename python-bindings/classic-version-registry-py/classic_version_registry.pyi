@@ -31,6 +31,7 @@ Usage:
 __version__: str
 NULL_VERSION: str
 
+
 class Fallout4Version:
     Original: Fallout4Version
     NextGen: Fallout4Version
@@ -39,23 +40,40 @@ class Fallout4Version:
 
     @staticmethod
     def from_str(s: str) -> Fallout4Version: ...
+
     @staticmethod
     def all() -> list[Fallout4Version]: ...
+
     def is_vr(self) -> bool: ...
+
     def is_standard(self) -> bool: ...
+
     def exe_name(self) -> str: ...
+
     def docs_folder_name(self) -> str: ...
+
     def steam_app_id(self) -> int: ...
+
     def version(self) -> str: ...
+
     def registry_id(self) -> str: ...
+
     def short_name(self) -> str: ...
+
     def xse_acronym(self) -> str: ...
+
     def display_name(self) -> str: ...
+
     def as_str(self) -> str: ...
+
     def __eq__(self, other: object) -> bool: ...
+
     def __hash__(self) -> int: ...
+
     def __str__(self) -> str: ...
+
     def __repr__(self) -> str: ...
+
 
 class GameVersion:
     """A 4-component game version (major.minor.patch.build).
@@ -116,11 +134,17 @@ class GameVersion:
         """Check if this version has the same major version as another."""
 
     def __eq__(self, other: object) -> bool: ...
+
     def __hash__(self) -> int: ...
+
     def __lt__(self, other: GameVersion) -> bool: ...
+
     def __le__(self, other: GameVersion) -> bool: ...
+
     def __gt__(self, other: GameVersion) -> bool: ...
+
     def __ge__(self, other: GameVersion) -> bool: ...
+
 
 class AddressLibraryConfig:
     """Address Library configuration for a game version.
@@ -143,6 +167,7 @@ class AddressLibraryConfig:
     @property
     def nexus_url(self) -> str:
         """Nexus Mods download URL."""
+
 
 class XseConfig:
     """Script Extender (XSE) configuration for a game version.
@@ -178,6 +203,7 @@ class XseConfig:
     def script_hashes(self) -> list[tuple[str, str]]:
         """List of (filename, sha256_hash) pairs for XSE script files."""
 
+
 class CompatibleRange:
     """Version range for compatibility matching.
 
@@ -209,6 +235,7 @@ class CompatibleRange:
             ValueError: If the version string is invalid.
 
         """
+
 
 class CrashgenConfig:
     """Crash generator configuration for a specific version.
@@ -262,6 +289,7 @@ class CrashgenConfig:
 
         """
 
+
 class UnknownVersionHandling:
     """Configuration for handling unknown/unsupported versions.
 
@@ -295,6 +323,7 @@ class UnknownVersionHandling:
 
         """
 
+
 class MatchConfidence:
     """Confidence level for version matching results.
 
@@ -322,7 +351,9 @@ class MatchConfidence:
         """Check if this is a high-confidence match (Exact or Range)."""
 
     def __eq__(self, other: object) -> bool: ...
+
     def __hash__(self) -> int: ...
+
 
 class MatchResult:
     """Result of version matching.
@@ -371,6 +402,7 @@ class MatchResult:
     @property
     def is_valid(self) -> bool:
         """Whether this is a valid match (version_info present and not Unknown)."""
+
 
 class VersionInfo:
     """Complete version information for a game version.
@@ -472,7 +504,7 @@ class VersionInfo:
         """
 
     def get_compatible_crashgens(
-        self, game_version_str: str | None = None
+            self, game_version_str: str | None = None
     ) -> list[CrashgenConfig]:
         """Get crash generators compatible with a specific game version.
 
@@ -502,7 +534,9 @@ class VersionInfo:
         """
 
     def __eq__(self, other: object) -> bool: ...
+
     def __hash__(self) -> int: ...
+
 
 class VersionRegistry:
     """Singleton version registry for game version metadata.
@@ -576,7 +610,7 @@ class VersionRegistry:
         """
 
     def get_all_for_game(
-        self, game: str, is_vr: bool | None = None
+            self, game: str, is_vr: bool | None = None
     ) -> list[VersionInfo]:
         """Get all versions for a specific game.
 
@@ -614,10 +648,10 @@ class VersionRegistry:
     # === Matching API ===
 
     def match_version(
-        self,
-        version_str: str,
-        game: str = "Fallout4",
-        is_vr: bool = False,
+            self,
+            version_str: str,
+            game: str = "Fallout4",
+            is_vr: bool = False,
     ) -> MatchResult:
         """Match a detected version string to the registry.
 
@@ -641,7 +675,7 @@ class VersionRegistry:
         """
 
     def get_address_library_filename(
-        self, version_str: str, is_vr: bool = False
+            self, version_str: str, is_vr: bool = False
     ) -> str | None:
         """Get Address Library filename for a version.
 
@@ -682,7 +716,7 @@ class VersionRegistry:
         """
 
     def get_crashgen_for_version(
-        self, version_id: str, crashgen_version: str
+            self, version_id: str, crashgen_version: str
     ) -> CrashgenConfig | None:
         """Get a specific crash generator by version ID and crashgen version.
 
@@ -698,7 +732,7 @@ class VersionRegistry:
     # === Hash API ===
 
     def get_all_exe_hashes(
-        self, game: str = "Fallout4", is_vr: bool | None = None
+            self, game: str = "Fallout4", is_vr: bool | None = None
     ) -> set[str]:
         """Get all known exe hashes for a game.
 
@@ -712,7 +746,7 @@ class VersionRegistry:
         """
 
     def get_all_script_hashes(
-        self, game: str = "Fallout4", is_vr: bool | None = None
+            self, game: str = "Fallout4", is_vr: bool | None = None
     ) -> dict[str, set[str]]:
         """Get all valid script hashes for all versions of a game.
 
@@ -743,10 +777,11 @@ class VersionRegistry:
     def unknown_version_handling(self) -> UnknownVersionHandling:
         """Gets the unknown version handling configuration."""
 
+
 def match_version_string(
-    version_str: str,
-    game: str = "Fallout4",
-    is_vr: bool = False,
+        version_str: str,
+        game: str = "Fallout4",
+        is_vr: bool = False,
 ) -> MatchResult:
     """Match a version string to the registry.
 
@@ -765,6 +800,7 @@ def match_version_string(
         ValueError: If the version string is invalid.
 
     """
+
 
 def get_version_registry() -> VersionRegistry:
     """Get the singleton registry instance.

@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/evildarkarchon/CLASSIC-Fallout4/tests/conformance/schemas/receipt-v1.schema.json",
+  "title": "CLASSIC conformance execution receipt v1",
+  "x-classic-reject-floating-point-lexemes": true,
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "familyId",
+    "familyVersion",
+    "expectationDigest",
+    "invocation",
+    "participant",
+    "runner"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "familyId": { "$ref": "#/$defs/stableId" },
+    "familyVersion": { "type": "integer", "minimum": 1 },
+    "expectationDigest": { "$ref": "#/$defs/sha256" },
+    "invocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "runPlanDigest", "sourceIdentity"],
+      "properties": {
+        "id": { "$ref": "#/$defs/uuidV4" },
+        "runPlanDigest": { "$ref": "#/$defs/sha256" },
+        "sourceIdentity": { "$ref": "#/$defs/sourceIdentity" }
+      }
+    },
+    "participant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "executionInstanceId"],
+      "properties": {
+        "id": { "$ref": "#/$defs/stableId" },
+        "role": { "enum": ["semantic-adapter", "consumer"] },
+        "executionInstanceId": { "$ref": "#/$defs/stableId" }
+      }
+    },
+    "runner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "platform", "toolchain"],
+      "properties": {
+        "id": { "$ref": "#/$defs/stableId" },
+        "version": { "type": "integer", "minimum": 1 },
+        "platform": { "$ref": "#/$defs/stableId" },
+        "toolchain": { "$ref": "#/$defs/stableId" }
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "executionStatus",
+          "capabilityIds",
+          "observation",
+          "failure"
+        ],
+        "properties": {
+          "id": { "$ref": "#/$defs/stableId" },
+          "executionStatus": {
+            "enum": ["completed", "failed", "not_applicable"]
+          },
+          "capabilityIds": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "$ref": "#/$defs/stableId" }
+          },
+          "observation": {
+            "oneOf": [
+              { "$ref": "#/$defs/canonicalJsonObject" },
+              { "type": "null" }
+            ]
+          },
+          "failure": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "message"],
+                "properties": {
+                  "kind": { "$ref": "#/$defs/stableId" },
+                  "message": { "type": "string", "minLength": 1 }
+                }
+              }
+            ]
+          },
+          "policyExceptionId": { "$ref": "#/$defs/stableId" }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": { "executionStatus": { "const": "not_applicable" } },
+              "required": ["executionStatus"]
+            },
+            "then": {
+              "required": ["policyExceptionId"],
+              "properties": {
+                "observation": { "type": "null" },
+                "failure": { "type": "null" }
+              }
+            },
+            "else": { "not": { "required": ["policyExceptionId"] } }
+          },
+          {
+            "if": {
+              "properties": { "executionStatus": { "const": "completed" } },
+              "required": ["executionStatus"]
+            },
+            "then": {
+              "properties": {
+                "observation": { "$ref": "#/$defs/canonicalJsonObject" },
+                "failure": { "type": "null" }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": { "executionStatus": { "const": "failed" } },
+              "required": ["executionStatus"]
+            },
+            "then": {
+              "properties": {
+                "observation": { "$ref": "#/$defs/canonicalJsonObject" },
+                "failure": { "type": "object" }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "obligations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "executionStatus", "observation", "failure"],
+        "properties": {
+          "id": { "$ref": "#/$defs/stableId" },
+          "executionStatus": { "enum": ["completed", "failed"] },
+          "observation": { "$ref": "#/$defs/canonicalJsonObject" },
+          "failure": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "message"],
+                "properties": {
+                  "kind": { "$ref": "#/$defs/stableId" },
+                  "message": { "type": "string", "minLength": 1 }
+                }
+              }
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": { "executionStatus": { "const": "completed" } },
+              "required": ["executionStatus"]
+            },
+            "then": { "properties": { "failure": { "type": "null" } } },
+            "else": { "properties": { "failure": { "type": "object" } } }
+          }
+        ]
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "participant": {
+            "properties": { "role": { "const": "consumer" } },
+            "required": ["role"]
+          }
+        }
+      },
+      "then": {
+        "required": ["obligations"],
+        "not": { "required": ["scenarios"] }
+      },
+      "else": {
+        "required": ["scenarios"],
+        "not": { "required": ["obligations"] }
+      }
+    }
+  ],
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "uuidV4": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "sourceIdentity": {
+      "type": "string",
+      "pattern": "^git:[0-9a-f]{40,64}:sha256:[0-9a-f]{64}$"
+    },
+    "canonicalJsonObject": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/canonicalJsonValue" }
+    },
+    "canonicalJsonValue": {
+      "description": "Canonical JSON value; receipt loading additionally rejects integer-valued float lexemes.",
+      "x-classic-number-lexeme": "integer-only",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "integer" },
+        { "type": "boolean" },
+        { "type": "null" },
+        {
+          "type": "array",
+          "items": { "$ref": "#/$defs/canonicalJsonValue" }
+        },
+        { "$ref": "#/$defs/canonicalJsonObject", "type": "object" }
+      ]
+    }
+  }
+}

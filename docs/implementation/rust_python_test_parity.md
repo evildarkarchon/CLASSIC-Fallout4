@@ -11,7 +11,7 @@ The maintained parity workflow is contract-based and lives around the modular bi
 ## Source of truth
 
 - Tier-1 contract: `docs/implementation/python_api_parity/baseline/parity_contract.json`
-- Runtime coverage registry: `python-bindings/tests/fixtures/runtime_coverage_registry.json`
+- Executable runtime evidence: shared packs under `tests/conformance/packs/` and authenticated adapter receipts; see `docs/api/binding-compliance-suite.md`.
 - Generated parity artifacts: `python-bindings/parity-artifacts/`
 - Smoke/parity tests: `python-bindings/tests/`
 
@@ -19,7 +19,7 @@ The maintained parity workflow is contract-based and lives around the modular bi
 
 - `python-bindings/tests/test_tier1_parity_smoke.py`
 - `python-bindings/tests/test_python_parity_tooling.py`
-- `python-bindings/tests/test_binding_coverage_tooling.py`
+- `tools/binding_compliance/tests/test_retired_metadata.py` (prevents obsolete metadata authority from returning)
 
 These tests validate the active Python binding surfaces such as:
 
@@ -33,7 +33,7 @@ Additional binding crates are validated through stubs, parity metadata, and targ
 
 1. Update the Rust binding crate and its `.pyi` stub.
 2. If the public surface changed, update `docs/implementation/python_api_parity/baseline/parity_contract.json` as needed.
-3. Update `python-bindings/tests/fixtures/runtime_coverage_registry.json` for newly runtime-verified or deferred surfaces.
+3. Add applicable shared scenarios and real adapter observations for changed runtime operations, or establish a justified named permanent analyzer for declaration-only surfaces.
 4. Refresh parity artifacts and run the smoke tests.
 
 ## Local commands

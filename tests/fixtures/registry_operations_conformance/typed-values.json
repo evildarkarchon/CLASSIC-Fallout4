@@ -1,0 +1,9 @@
+{
+  "request": {
+    "stringValue": "Crème / Fallout4",
+    "boolValue": true,
+    "intValue": 42,
+    "replacement": "Skyrim",
+    "gameVersion": "NextGen"
+  }
+}

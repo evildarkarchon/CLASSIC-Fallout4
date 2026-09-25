@@ -41,6 +41,7 @@ from typing import Any, TypedDict
 
 __version__: str
 
+
 class FileHasherCacheStats(TypedDict):
     """Canonical hash cache statistics contract."""
 
@@ -50,14 +51,18 @@ class FileHasherCacheStats(TypedDict):
     size: int
     capacity: int
 
+
 class RustFileIOError(Exception):
     """Base for File I/O Rust errors."""
+
 
 class RustFileIOIOError(RustFileIOError):
     """File I/O errors."""
 
+
 class RustFileIOParseError(RustFileIOError):
     """File parsing errors (DDS, encoding)."""
+
 
 class PyLineStreamer:
     """Python iterator for streaming lines from a file asynchronously.
@@ -67,7 +72,9 @@ class PyLineStreamer:
     """
 
     def __aiter__(self) -> PyLineStreamer: ...
+
     def __anext__(self) -> Coroutine[Any, Any, str]: ...
+
 
 class PySyncLineStreamer:
     """Python iterator for streaming lines from a file synchronously.
@@ -78,7 +85,9 @@ class PySyncLineStreamer:
     """
 
     def __iter__(self) -> PySyncLineStreamer: ...
+
     def __next__(self) -> str: ...
+
 
 class FileIOCore:
     """High-performance async file I/O core with caching and encoding detection.
@@ -101,11 +110,11 @@ class FileIOCore:
     """
 
     def __init__(
-        self,
-        encoding: str = "utf-8",
-        errors: str = "ignore",
-        cache_size: int = 100,
-        max_concurrent_io: int = 50,
+            self,
+            encoding: str = "utf-8",
+            errors: str = "ignore",
+            cache_size: int = 100,
+            max_concurrent_io: int = 50,
     ) -> None:
         """Create a new file I/O core with specified configuration.
 
@@ -400,7 +409,7 @@ class FileIOCore:
         """
 
     def read_file_with_encoding(
-        self, path: str, encoding: str
+            self, path: str, encoding: str
     ) -> Coroutine[Any, Any, str]:
         """Read a file with a specific encoding.
 
@@ -437,7 +446,7 @@ class FileIOCore:
         """
 
     def read_dds_headers_batch(
-        self, paths: list[str]
+            self, paths: list[str]
     ) -> dict[str, tuple[int, int] | None]:
         """Parse multiple DDS headers in parallel (synchronous).
 
@@ -477,7 +486,7 @@ class FileIOCore:
         """
 
     def py_walk_directory(
-        self, path: str, pattern: str | None = None, max_depth: int | None = None
+            self, path: str, pattern: str | None = None, max_depth: int | None = None
     ) -> list[str]:
         r"""Walk directory tree and collect file paths (synchronous).
 
@@ -505,7 +514,7 @@ class FileIOCore:
         """
 
     def py_read_multiple_files(
-        self, paths: list[str]
+            self, paths: list[str]
     ) -> Coroutine[Any, Any, dict[str, str]]:
         """Read multiple files in parallel (asynchronous).
 
@@ -531,7 +540,7 @@ class FileIOCore:
         """
 
     def py_write_multiple_files(
-        self, files: dict[str, str]
+            self, files: dict[str, str]
     ) -> Coroutine[Any, Any, None]:
         """Write multiple files in parallel (asynchronous).
 
@@ -559,6 +568,27 @@ class FileIOCore:
             >>> await io_core.py_write_multiple_files(writes)
 
         """
+
+
+class DDSAnalyzer:
+    """Validate DDS textures against game-specific rules."""
+
+    def __init__(self, game_target: str = "fallout4") -> None:
+        """Choose Fallout 4 or Skyrim SE rules, defaulting unknown names to Fallout 4."""
+
+    def validate_file(self, path: str) -> list[str]:
+        """Return issue messages for one DDS file, or an empty list when valid."""
+
+    def validate_batch(self, paths: list[str]) -> list[tuple[str, list[str]]]:
+        """Return paths and issue messages only for files with findings."""
+
+    @staticmethod
+    def validate_dimensions(width: int, height: int) -> list[str]:
+        """Check dimensions without reading a file and return issue messages."""
+
+    def __repr__(self) -> str:
+        """Return the stable diagnostic representation."""
+
 
 class DDSHeader:
     """DDS texture file header parser.
@@ -683,6 +713,7 @@ class DDSHeader:
 
         """
 
+
 class EncodingDetector:
     """File encoding detection using chardet.
 
@@ -717,6 +748,7 @@ class EncodingDetector:
             ...     encoding = detector.detect_encoding(f.read())
 
         """
+
 
 class FileHasher:
     """File hashing utilities with SHA256 and caching.
@@ -870,6 +902,7 @@ class FileHasher:
 
         """
 
+
 class PyLogCollector:
     """Crash log collection and organization.
 
@@ -898,10 +931,10 @@ class PyLogCollector:
     """
 
     def __init__(
-        self,
-        base_folder: str,
-        xse_folder: str | None = None,
-        custom_folder: str | None = None,
+            self,
+            base_folder: str,
+            xse_folder: str | None = None,
+            custom_folder: str | None = None,
     ) -> None:
         """Create a new LogCollector.
 
@@ -995,6 +1028,7 @@ class PyLogCollector:
 
         """
 
+
 class FileGeneratorConfig:
     r"""Configuration for file generation.
 
@@ -1023,7 +1057,7 @@ class FileGeneratorConfig:
     """Game name for local YAML path (e.g., 'Fallout4', 'Skyrim')."""
 
     def __init__(
-        self, ignore_file_content: str, local_yaml_content: str, game_name: str
+            self, ignore_file_content: str, local_yaml_content: str, game_name: str
     ) -> None:
         """Create a new file generator configuration.
 
@@ -1033,6 +1067,7 @@ class FileGeneratorConfig:
             game_name: Game name for local YAML path (e.g., "Fallout4", "Skyrim")
 
         """
+
 
 class FileGenerator:
     r"""File generation operations.
@@ -1161,6 +1196,7 @@ class FileGenerator:
 
         """
 
+
 def calculate_similarity(path1: str, path2: str) -> float:
     """Calculate Jaccard similarity between two file contents.
 
@@ -1184,6 +1220,7 @@ def calculate_similarity(path1: str, path2: str) -> float:
 
     """
 
+
 def similarity_ratio(text1: str, text2: str) -> float:
     """Calculate Jaccard similarity between two in-memory strings.
 
@@ -1202,6 +1239,7 @@ def similarity_ratio(text1: str, text2: str) -> float:
         >>> print(f"{ratio:.3f}")
 
     """
+
 
 async def generate_ignore_file_async(content: str) -> bool:
     r"""Generate CLASSIC Ignore.yaml if it doesn't exist (async).
@@ -1225,6 +1263,7 @@ async def generate_ignore_file_async(content: str) -> bool:
         >>> print(f"File generated: {result}")
 
     """
+
 
 async def generate_local_yaml_async(content: str, game_name: str) -> bool:
     """Generate CLASSIC Data/CLASSIC <GAME> Local.yaml if it doesn't exist (async).

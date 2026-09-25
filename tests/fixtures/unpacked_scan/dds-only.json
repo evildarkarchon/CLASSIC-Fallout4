@@ -1,0 +1,9 @@
+{
+  "files": {
+    "textures/sample.dds": "DDS path only"
+  },
+  "directories": [],
+  "scripts": [
+    "f4se.pex"
+  ]
+}

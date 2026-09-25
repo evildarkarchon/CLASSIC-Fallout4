@@ -59,7 +59,7 @@ The repository already has strong compliance infrastructure:
 - Canonical umbrella suite: `tools/binding_compliance/check_compliance.py`
 - Python parity gate: `tools/python_api_parity/check_parity_gate.py`
 - Stub validation: `validate_stubs.py`
-- Runtime coverage registry: `python-bindings/tests/fixtures/runtime_coverage_registry.json`
+- Executable runtime evidence: shared packs under `tests/conformance/packs/` and authenticated adapter receipts; see `docs/api/binding-compliance-suite.md`.
 - Generated Python parity artifacts: `python-bindings/parity-artifacts/`
 
 The new CLI must reuse and complement this tooling. It should not weaken, bypass, or duplicate the canonical gates. Its value is that it turns binding verification into product-shaped workflows that can be run manually, scripted in CI, and used as regression evidence.

@@ -1,0 +1,273 @@
+{
+  "schemaVersion": 1,
+  "familyId": "formid-lookup",
+  "familyVersion": 1,
+  "domainOwner": {
+    "rustCrate": "classic-database-core"
+  },
+  "fixtureRoot": "tests/fixtures/semantic_conformance/formid-lookup",
+  "fixtures": {
+    "hit": "hit.json",
+    "miss_after_reuse": "miss-after-reuse.json",
+    "disabled": "disabled.json",
+    "blank_value": "blank-value.json",
+    "operational_failure": "operational-failure.json",
+    "batch_hit_miss": "batch-hit-miss.json",
+    "sqlite_missing": "sqlite-missing.json",
+    "shared_pool_uninitialized": "shared-pool-uninitialized.json"
+  },
+  "capabilities": [
+    {
+      "id": "formid-lookup.lookup",
+      "rustSymbols": [
+        "FormIdValueLookup",
+        "FormIdValueLookupEntry",
+        "FormIdValueLookupInMemoryReply",
+        "FormIdValueLookupOutcome",
+        "FormIdValueLookupError",
+        "disabled",
+        "in_memory",
+        "lookup",
+        "lookup_batch",
+        "shared_pool",
+        "sqlite"
+      ],
+      "observationFamilies": [
+        "semantic-result",
+        "structured-error"
+      ],
+      "operationScoped": true
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "hit",
+      "action": "formid-lookup.lookup",
+      "capabilityIds": [
+        "formid-lookup.lookup"
+      ],
+      "fixtureRefs": [
+        "hit"
+      ],
+      "input": {
+        "fixtureRef": "hit"
+      },
+      "expected": {
+        "analyzerKind": null,
+        "result": {
+          "kind": "found",
+          "value": "Laser Musket"
+        },
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "miss-after-reuse",
+      "action": "formid-lookup.lookup",
+      "capabilityIds": [
+        "formid-lookup.lookup"
+      ],
+      "fixtureRefs": [
+        "miss_after_reuse"
+      ],
+      "input": {
+        "fixtureRef": "miss_after_reuse"
+      },
+      "expected": {
+        "analyzerKind": null,
+        "result": {
+          "kind": "missing",
+          "value": null
+        },
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "disabled",
+      "action": "formid-lookup.lookup",
+      "capabilityIds": [
+        "formid-lookup.lookup"
+      ],
+      "fixtureRefs": [
+        "disabled"
+      ],
+      "input": {
+        "fixtureRef": "disabled"
+      },
+      "expected": {
+        "analyzerKind": null,
+        "result": {
+          "kind": "disabled",
+          "value": null
+        },
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "blank-value",
+      "action": "formid-lookup.lookup",
+      "capabilityIds": [
+        "formid-lookup.lookup"
+      ],
+      "fixtureRefs": [
+        "blank_value"
+      ],
+      "input": {
+        "fixtureRef": "blank_value"
+      },
+      "expected": {
+        "analyzerKind": null,
+        "result": null,
+        "error": {
+          "analyzerKind": null,
+          "code": "malformed_result",
+          "message": "FormID Value Lookup returned a blank value for 000801:SomeMod.esp",
+          "formid": "000801",
+          "plugin": "SomeMod.esp"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "operational-failure",
+      "action": "formid-lookup.lookup",
+      "capabilityIds": [
+        "formid-lookup.lookup"
+      ],
+      "fixtureRefs": [
+        "operational_failure"
+      ],
+      "input": {
+        "fixtureRef": "operational_failure"
+      },
+      "expected": {
+        "analyzerKind": null,
+        "result": null,
+        "error": {
+          "analyzerKind": null,
+          "code": "operational_failure",
+          "message": "FormID Value Lookup failed for 000802:SomeMod.esp: fixture offline",
+          "formid": "000802",
+          "plugin": "SomeMod.esp"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "batch-hit-miss",
+      "action": "formid-lookup.lookup",
+      "capabilityIds": [
+        "formid-lookup.lookup"
+      ],
+      "fixtureRefs": [
+        "batch_hit_miss"
+      ],
+      "input": {
+        "fixtureRef": "batch_hit_miss"
+      },
+      "expected": {
+        "analyzerKind": null,
+        "result": {
+          "outcomes": [
+            {
+              "kind": "found",
+              "value": "Laser Musket"
+            },
+            {
+              "kind": "missing",
+              "value": null
+            }
+          ]
+        },
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "sqlite-missing",
+      "action": "formid-lookup.lookup",
+      "capabilityIds": [
+        "formid-lookup.lookup"
+      ],
+      "fixtureRefs": [
+        "sqlite_missing"
+      ],
+      "input": {
+        "fixtureRef": "sqlite_missing"
+      },
+      "expected": {
+        "analyzerKind": null,
+        "result": null,
+        "error": {
+          "analyzerKind": null,
+          "code": "operational_failure",
+          "message": "FormID Value Lookup adapter initialization failed: database file not found: tests/fixtures/semantic_conformance/formid-lookup/missing-formids.sqlite3",
+          "formid": null,
+          "plugin": null
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "shared-pool-uninitialized",
+      "action": "formid-lookup.lookup",
+      "capabilityIds": [
+        "formid-lookup.lookup"
+      ],
+      "fixtureRefs": [
+        "shared_pool_uninitialized"
+      ],
+      "input": {
+        "fixtureRef": "shared_pool_uninitialized"
+      },
+      "expected": {
+        "analyzerKind": null,
+        "result": null,
+        "error": {
+          "analyzerKind": null,
+          "code": "operational_failure",
+          "message": "FormID Value Lookup failed for 000800:SomeMod.esp: Query execution failed: no initialized database exposes active game table \"Fallout4\"",
+          "formid": "000800",
+          "plugin": "SomeMod.esp"
+        }
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    }
+  ],
+  "consumerObligations": []
+}

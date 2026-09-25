@@ -1,0 +1,32 @@
+{
+  "configuration": {
+    "mainErrorRules": [
+      {
+        "id": "main-rule",
+        "name": "Main Rule",
+        "severity": 5,
+        "mainErrorContainsAny": [
+          "plugin.dll"
+        ]
+      }
+    ],
+    "stackRules": [
+      {
+        "id": "stack-rule",
+        "name": "Stack Rule",
+        "severity": 4,
+        "mainErrorRequiredAny": [],
+        "mainErrorOptionalAny": [],
+        "stackContainsAny": [
+          "StackSignal"
+        ],
+        "excludeIfStackContainsAny": [],
+        "stackContainsAtLeast": [{"substring": "StackSignal", "count": 1}]
+      }
+    ]
+  },
+  "request": {
+    "mainError": "plugin.dll",
+    "callStack": "StackSignal"
+  }
+}

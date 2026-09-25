@@ -44,7 +44,32 @@ python tools/binding_compliance/check_compliance.py --repo-root . --profile ci
 
 The suite owns the top-level pass/fail result, policy mapping, structured report, and known-gap report. The surface-specific gates below remain available as lower-level checks and focused debugging commands.
 
+The `ci` result is source-level validation. Only `--profile full` with all family
+receipts and executed retained gates can certify repository-wide conformance.
+Full aggregation counts every source parity occurrence and fails on missing
+families or uncovered runtime rows. Registry metadata never supplies that proof.
+The remaining migration gaps are recorded in the
+[retirement readiness audit](../implementation/binding_compliance/retirement_readiness.md).
+
+Crash Log Scan Run and User Settings have blocking executable conformance obligations. Rust,
+Node, Python, CXX on both MSVC and clang-cl, CLI and GUI on both compiler legs,
+and TUI must emit current same-revision receipts for their exact applicable
+scopes. Central validation requires the full scenario and observation-family
+denominator plus every source-owned consumer obligation. Missing, skipped,
+stale, malformed, duplicate, or semantically mismatched evidence fails the
+applicable workflow. These receipts run conjunctively with the source parity,
+declaration/stub, runtime, Rust-variant, and native wrapper gates; promotion
+does not weaken or retire those checks.
+
 See [`binding-compliance-suite.md`](binding-compliance-suite.md).
+
+Autoscan Report output also has a blocking semantic family across Rust, Node,
+Python, and CXX on MSVC and clang-cl. Fresh same-revision receipts compare
+actual persisted bytes with the original immutable goldens, typed Display
+Content, and durable filesystem effects. Existing owner goldens and focused
+assembly diagnostics remain required. This family adds no public assembly API
+or frontend layout contract; see the
+[Autoscan Report evidence map](../implementation/autoscan_report_conformance_equivalence.md).
 
 ---
 
@@ -99,23 +124,24 @@ The shared implementation is `tools/parity_artifact_io.py`; the byte-stability p
 
 ### Shared Gate Tooling
 
-Three modules under `tools/` are shared by the per-binding gates. Change them with the understanding that all three gates consume them:
+Two modules under `tools/` are shared by the per-binding gates. Change them with the understanding that all three gates consume them:
 
 | Module | Owns |
 |---|---|
 | `parity_rust_surface.py` | Parsing the public Rust surface — crate source collection, `pub use` expansion, symbol extraction |
 | `parity_artifact_io.py` | Reading, comparing, and writing artifacts — `write_json`, `stable_id_hash`, `sync_baseline_artifacts`, timestamp preservation |
-| `binding_parity_runtime_coverage.py` | Runtime coverage summaries |
 
 The Node and Python gates previously carried independent copies of the Rust parser, which let them disagree about which Rust exports exist while both reported success. They now share one parser and differ only in their **crate list** — `RUST_TARGET_CRATES` / `RUST_OWNER_BY_CRATE` stay per-gate and are passed into `parse_rust_surface()` at call time. When you add a `-core` crate that a binding depends on, add it to that binding's crate list; a crate missing from the list is invisible to that gate, and any contract row naming one of its symbols will be rejected as "not in the parsed Rust surface".
 
 ### What a Contract Row Must Prove
 
-A row's `rustSymbol` check used to be satisfied by *any* symbol of any kind. That is weaker than it reads, and placeholder rows accumulated behind it — at one point 82 unrelated Node exports all named the Rust module `path_core`, and the gate still reported 913/913 matched. Three rules now hold:
+A row's `rustSymbol` check used to be satisfied by *any* symbol of any kind. That is weaker than it reads, and placeholder rows accumulated behind it — at one point 82 unrelated Node exports all named the Rust module `path_core`, and the gate still reported 913/913 matched. These rules now hold:
 
 1. **A binding export may not map to a Rust module.** A module match verifies nothing about the export. Map the row to the specific core symbol the wrapper actually uses. Two resolvers derive that from the binding source rather than guessing — `tools/node_api_parity/resolve_node_rust_symbols.py` for NAPI wrappers and `tools/python_api_parity/resolve_python_rust_symbols.py` for PyO3 wrappers. Run either against the repo to see the proposed mapping and the evidence behind it.
-2. **`@rust` proxy rows may name a module.** They carry no binding export and exist precisely to record Rust-only surface.
+2. **`@rust` source-inventory rows may name a module.** They record Rust-only source even when a historical Python row also names a related binding export. They do not claim that the module implements that export.
 3. **An export with no verified counterpart must say so.** Set `rustSymbol` to `null` and add an `unmappedReason`. The row is then counted in the diff report's `tier1_unmapped` rather than being disguised as a match. A `null` `rustSymbol` without a reason is a malformed row.
+4. **A claimed Node counterpart must name its actual Rust crate.** The Node guard and diff report resolve the pair (`rustCrate`, `rustSymbol`), including `@rust` proxy rows. A same-named symbol in another crate cannot satisfy the mapping or hide a module-only match in the declared crate. When the NAPI wrapper gives direct crate evidence, the gate also rejects a row that names a different crate even if both crates export the symbol. For an export represented by one row, direct symbol evidence must match that row too. Name-derived resolver guesses remain advisory. Rows without a verified single core counterpart remain explicit `unmapped` rows; they still check that their Node export exists. Historical row IDs and `ownerModule` report buckets do not determine the physical Rust owner.
+5. **A claimed Python counterpart must name its actual Rust crate.** The Python guard and diff report resolve (`rustCrate`, `rustSymbol`) for every mapped row. A namesake in another crate cannot satisfy the row or hide a module-only match in the declared crate. Source-backed PyO3 evidence checks uniquely mapped public exports, including methods where their own body identifies a core owner, follows external Rust re-exports to the defining crate, and traces checked-in facade imports to shared native wrappers. A broken explicit facade-to-native route fails; ambiguous method evidence and name-derived guesses remain advisory. Historical row IDs and logical `ownerModule` buckets stay stable while `rustCrate` tracks the physical owner.
 
 `tier1_unmapped` is **tracked debt, not drift** — it does not fail the gate, but it is the number to drive toward zero. It is deliberately separate from `tier1_matched` so neither figure lies.
 

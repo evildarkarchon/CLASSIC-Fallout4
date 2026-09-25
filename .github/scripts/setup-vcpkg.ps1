@@ -85,6 +85,26 @@ function Invoke-FallbackDownload {
     Write-Host "Fallback download succeeded."
 }
 
+<#
+.SYNOPSIS
+    Returns whether a cached vcpkg tool can run its version command.
+#>
+function Test-VcpkgTool {
+    param([Parameter(Mandatory)][string]$ToolPath)
+
+    if (-not (Test-Path -LiteralPath $ToolPath -PathType Leaf)) {
+        return $false
+    }
+    try {
+        & $ToolPath version *> $null
+        return $LASTEXITCODE -eq 0
+    }
+    catch {
+        Write-Warning "Cached vcpkg tool at '$ToolPath' is unusable: $($_.Exception.Message)"
+        return $false
+    }
+}
+
 Write-Host "Preparing vcpkg at '$VcpkgRoot'"
 if (-not (Test-Path $VcpkgRoot)) {
     Write-Host "Cloning microsoft/vcpkg..."
@@ -97,13 +117,21 @@ else {
     Write-Host "Using existing vcpkg root at '$VcpkgRoot'."
 }
 
-$bootstrapped = Invoke-Bootstrap -Root $VcpkgRoot -MaxAttempts $BootstrapAttempts -BackoffSeconds $BaseBackoffSeconds
+$vcpkgExe = Join-Path $VcpkgRoot "vcpkg.exe"
+$bootstrapped = Test-VcpkgTool -ToolPath $vcpkgExe
+if ($bootstrapped) {
+    # A cache hit already contains the bootstrapped tool. Running bootstrap
+    # again can trigger another remote tool download on every CI run.
+    Write-Host "Using validated cached vcpkg tool."
+}
+else {
+    $bootstrapped = Invoke-Bootstrap -Root $VcpkgRoot -MaxAttempts $BootstrapAttempts -BackoffSeconds $BaseBackoffSeconds
+}
 if (-not $bootstrapped) {
     Write-Warning "All bootstrap attempts failed. Running fallback download via curl.exe."
     Invoke-FallbackDownload -Root $VcpkgRoot -Retries $FallbackCurlRetries
 }
 
-$vcpkgExe = Join-Path $VcpkgRoot "vcpkg.exe"
 if (-not (Test-Path $vcpkgExe)) {
     throw "vcpkg.exe is still missing after bootstrap + fallback."
 }
