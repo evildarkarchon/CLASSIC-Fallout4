@@ -254,6 +254,18 @@ For Python, the practical contract chain is:
 2. PyO3 wrapper code in the matching `src/lib.rs` and adjacent `src/*.rs` files
 3. parity and stub-validation artifacts in [`python-bindings/parity-artifacts/`](../../python-bindings/parity-artifacts/)
 
+All 18 `classic_*` modules remain direct imports. The checked-in Python surface
+inventory records their public stub names, including module constants. The
+stub validator checks that maintained inventory in both directions and checks
+literal `__all__` names when a facade package is present. The source resolver
+traces explicit facade imports to shared native wrappers, so two facades can
+reexport one canonical PyO3 class without losing its Rust owner. This inventory is
+organized by public module name, so the future single-adapter wheel can retain
+the same imports without inheriting the former one-crate-per-module layout.
+The Python parity gate separately checks each row's exact Rust crate and
+symbol; its logical owner bucket and stable row ID do not substitute for a
+physical Rust owner.
+
 In practice:
 
 - the `.pyi` files are the quickest contributor contract view

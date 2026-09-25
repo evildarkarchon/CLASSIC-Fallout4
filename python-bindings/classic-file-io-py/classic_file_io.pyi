@@ -570,6 +570,26 @@ class FileIOCore:
         """
 
 
+class DDSAnalyzer:
+    """Validate DDS textures against game-specific rules."""
+
+    def __init__(self, game_target: str = "fallout4") -> None:
+        """Choose Fallout 4 or Skyrim SE rules, defaulting unknown names to Fallout 4."""
+
+    def validate_file(self, path: str) -> list[str]:
+        """Return issue messages for one DDS file, or an empty list when valid."""
+
+    def validate_batch(self, paths: list[str]) -> list[tuple[str, list[str]]]:
+        """Return paths and issue messages only for files with findings."""
+
+    @staticmethod
+    def validate_dimensions(width: int, height: int) -> list[str]:
+        """Check dimensions without reading a file and return issue messages."""
+
+    def __repr__(self) -> str:
+        """Return the stable diagnostic representation."""
+
+
 class DDSHeader:
     """DDS texture file header parser.
 

@@ -25,11 +25,11 @@ CONTRACT_PATH = (
 
 RUST_MANIFEST = {
     "symbols": [
-        {"symbol": "core", "kind": "module"},
-        {"symbol": "load_yaml_file", "kind": "function"},
+        {"crate": "classic-file-io-core", "symbol": "core", "kind": "module"},
+        {"crate": "classic-file-io-core", "symbol": "load_yaml_file", "kind": "function"},
         # A name that is both a module and a type stays acceptable.
-        {"symbol": "config", "kind": "module"},
-        {"symbol": "config", "kind": "struct"},
+        {"crate": "classic-file-io-core", "symbol": "config", "kind": "module"},
+        {"crate": "classic-file-io-core", "symbol": "config", "kind": "struct"},
     ]
 }
 

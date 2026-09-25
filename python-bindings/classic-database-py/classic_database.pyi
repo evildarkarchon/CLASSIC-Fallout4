@@ -52,6 +52,18 @@ DEFAULT_CACHE_CLEANUP_THRESHOLD: int
 DEFAULT_CACHE_CLEANUP_INTERVAL: int
 
 
+class RustDatabaseError(Exception):
+    """Base error raised by the Rust database adapter."""
+
+
+class RustDatabaseIOError(RustDatabaseError):
+    """Raised for database I/O failures."""
+
+
+class RustDatabaseQueryError(RustDatabaseError):
+    """Raised for database query failures."""
+
+
 def get_default_cache_ttl() -> int: ...
 
 

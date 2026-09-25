@@ -4,9 +4,9 @@
 This script validates that all .pyi stub files accurately represent their
 corresponding Rust implementation by checking for:
 - Missing classes/functions from Rust implementation
-- Missing magic methods (__repr__, __str__, __eq__, etc.)
-- Inconsistent signatures
-- Missing module-level exports
+- Missing class methods from legacy direct PyO3 crates
+- Missing or extra maintained names against the checked-in Python API surface
+- Missing or extra exports in a checked-in direct-import facade's literal __all__
 
 Usage:
     python validate_stubs.py                            # Validate all crates from repo root
@@ -17,12 +17,13 @@ Usage:
 """
 
 import argparse
+import ast
 import json
+import os
 import re
 import sys
 from pathlib import Path
 from typing import Any
-
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 LEGACY_WORKSPACE_DIR = SCRIPT_DIR / "ClassicLib-rs"
@@ -70,6 +71,194 @@ class StubValidator:
         if crate_name.endswith("-py"):
             return crate_name[:-3].replace("-", "_")
         return crate_name.replace("-", "_")
+
+    @staticmethod
+    def public_stub_names(stub_content: str) -> set[str]:
+        """Return maintained top-level class, callable, and constant names."""
+        module = ast.parse(stub_content)
+        names: set[str] = set()
+        for node in module.body:
+            if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+                names.add(node.name)
+            elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                names.add(node.target.id)
+            elif isinstance(node, ast.Assign):
+                names.update(
+                    target.id for target in node.targets if isinstance(target, ast.Name)
+                )
+        return names
+
+    @staticmethod
+    def public_stub_export_paths(stub_content: str) -> set[str]:
+        """Return top-level names plus class methods and property getters.
+
+        Setter and deleter declarations reuse their getter's public path and
+        do not create a second maintained name.
+        """
+        module = ast.parse(stub_content)
+        names = StubValidator.public_stub_names(stub_content)
+        for node in module.body:
+            if not isinstance(node, ast.ClassDef):
+                continue
+            for member in node.body:
+                if not isinstance(member, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    continue
+                if any(
+                    isinstance(decorator, ast.Attribute)
+                    and decorator.attr in {"setter", "deleter"}
+                    for decorator in member.decorator_list
+                ):
+                    continue
+                names.add(f"{node.name}.{member.name}")
+        return names
+
+    @staticmethod
+    def typing_only_stub_names(stub_content: str) -> set[str]:
+        """Find classes that describe Python typing records, not runtime exports."""
+        module = ast.parse(stub_content)
+        names: set[str] = set()
+        for node in module.body:
+            if not isinstance(node, ast.ClassDef):
+                continue
+            for base in node.bases:
+                base_name = base.id if isinstance(base, ast.Name) else (
+                    base.attr if isinstance(base, ast.Attribute) else None
+                )
+                if base_name in {"TypedDict", "Protocol"}:
+                    names.add(node.name)
+                    break
+        return names
+
+    @staticmethod
+    def check_stub_name_inventory(
+        module_name: str, stub_content: str, expected_names: set[str]
+    ) -> list[str]:
+        """Report missing and extra maintained export paths against the surface."""
+        actual_names = StubValidator.public_stub_export_paths(stub_content)
+        missing = expected_names - actual_names
+        extra = actual_names - expected_names
+        errors: list[str] = []
+        if missing:
+            errors.append(
+                f"[ERROR] {module_name}: Missing maintained stub names: {sorted(missing)}"
+            )
+        if extra:
+            errors.append(
+                f"[ERROR] {module_name}: Extra maintained stub names: {sorted(extra)}"
+            )
+        return errors
+
+    @staticmethod
+    def check_facade_export_inventory(
+        module_name: str, facade_content: str, expected_names: set[str]
+    ) -> list[str]:
+        """Compare literal ``__all__`` to expected names and their bindings.
+
+        Returns diagnostics for missing, extra, wildcard, duplicate, or unbound
+        public facade names; an empty list means the source names agree.
+        """
+        module = ast.parse(facade_content)
+        declarations = [
+            node.value
+            for node in module.body
+            if isinstance(node, (ast.Assign, ast.AnnAssign))
+            and (
+                isinstance(node, ast.AnnAssign)
+                and isinstance(node.target, ast.Name)
+                and node.target.id == "__all__"
+                or isinstance(node, ast.Assign)
+                and any(
+                    isinstance(target, ast.Name) and target.id == "__all__"
+                    for target in node.targets
+                )
+            )
+        ]
+        if len(declarations) != 1:
+            return [
+                f"[ERROR] {module_name}: Source facade must declare one literal __all__."
+            ]
+        literal_names = declarations[0]
+        try:
+            names = ast.literal_eval(literal_names) if literal_names is not None else None
+        except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
+            names = None
+        if not isinstance(names, (list, tuple)) or not all(
+            isinstance(name, str) for name in names
+        ):
+            return [
+                f"[ERROR] {module_name}: Source facade __all__ must be a literal list of names."
+            ]
+
+        errors: list[str] = []
+        if len(names) != len(set(names)):
+            errors.append(f"[ERROR] {module_name}: Source facade __all__ has duplicate names.")
+        # PyO3 may include internal module metadata in __all__; it is not part
+        # of the contributor-facing public name inventory.
+        actual_names = set(names) - {"__doc__", "__debug_registered__"}
+        missing = expected_names - actual_names
+        extra = actual_names - expected_names
+        if missing:
+            errors.append(
+                f"[ERROR] {module_name}: Missing source facade exports: {sorted(missing)}"
+            )
+        if extra:
+            errors.append(
+                f"[ERROR] {module_name}: Extra source facade exports: {sorted(extra)}"
+            )
+        bound_names: set[str] = set()
+        for node in module.body:
+            if isinstance(node, ast.ImportFrom):
+                if any(alias.name == "*" for alias in node.names):
+                    errors.append(
+                        f"[ERROR] {module_name}: Wildcard facade import cannot prove public names."
+                    )
+                bound_names.update(
+                    alias.asname or alias.name for alias in node.names if alias.name != "*"
+                )
+            elif isinstance(node, ast.Import):
+                bound_names.update(
+                    alias.asname or alias.name.split(".")[0] for alias in node.names
+                )
+            elif isinstance(node, ast.Assign):
+                bound_names.update(
+                    target.id for target in node.targets if isinstance(target, ast.Name)
+                )
+            elif (
+                isinstance(node, ast.AnnAssign)
+                and isinstance(node.target, ast.Name)
+                and node.value is not None
+            ):
+                bound_names.add(node.target.id)
+            elif isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+                bound_names.add(node.name)
+        unbound = actual_names - bound_names
+        if unbound:
+            errors.append(
+                f"[ERROR] {module_name}: Unbound source facade exports: {sorted(unbound)}"
+            )
+        return errors
+
+    @staticmethod
+    def find_source_facades(repo_root: Path, module_names: set[str]) -> dict[str, list[Path]]:
+        """Locate checked-in Python facade files while skipping built wheel contents."""
+        facades: dict[str, list[Path]] = {name: [] for name in module_names}
+        for layer in ("python-bindings", "foundation"):
+            layer_root = repo_root / layer
+            if not layer_root.is_dir():
+                continue
+            for current, directories, files in os.walk(layer_root):
+                directories[:] = [
+                    name
+                    for name in directories
+                    if name not in {".venv", "target", "tests", "__pycache__"}
+                ]
+                current_path = Path(current)
+                if current_path.name in module_names and "__init__.py" in files:
+                    facades[current_path.name].append(current_path / "__init__.py")
+                for name in files:
+                    if name.endswith(".py") and name[:-3] in module_names:
+                        facades[name[:-3]].append(current_path / name)
+        return facades
 
     @staticmethod
     def extract_rust_classes(rust_content: str) -> set[str]:
@@ -236,11 +425,52 @@ class StubValidator:
 
         return methods
 
-    def validate_crate(self, crate_path: Path) -> tuple[int, int]:
+    def validate_public_surface(
+        self,
+        module_name: str,
+        stub_content: str,
+        expected_names: set[str],
+        facade_source: Path | None,
+    ) -> int:
+        """Check maintained stub paths and an optional source facade ``__all__``.
+
+        ``expected_names`` includes dotted class methods and properties;
+        ``facade_source`` may be absent for a direct native module. Returns the
+        number of errors appended to this validator.
+        """
+        name_errors = self.check_stub_name_inventory(
+            module_name, stub_content, expected_names
+        )
+        self.errors.extend(name_errors)
+        errors = len(name_errors)
+
+        if facade_source is not None:
+            # TypedDicts and protocols are maintained typing contracts,
+            # but no native class is exported for them at runtime.
+            public_facade_names = {
+                name for name in expected_names if "." not in name
+            } - self.typing_only_stub_names(stub_content) - {"__debug_registered__"}
+            facade_errors = self.check_facade_export_inventory(
+                module_name,
+                facade_source.read_text(encoding="utf-8"),
+                public_facade_names,
+            )
+            self.errors.extend(facade_errors)
+            errors += len(facade_errors)
+        return errors
+
+    def validate_crate(
+        self,
+        crate_path: Path,
+        expected_names: set[str] | None = None,
+        facade_source: Path | None = None,
+    ) -> tuple[int, int]:
         """Validate a single Python binding crate.
 
         Args:
             crate_path: Path to the crate directory.
+            expected_names: Checked-in public stub paths, including class members.
+            facade_source: Optional checked-in facade exposing these names.
 
         Returns:
             Tuple of (error_count, warning_count).
@@ -268,6 +498,11 @@ class StubValidator:
 
         errors = 0
         warnings = 0
+
+        if expected_names is not None:
+            errors += self.validate_public_surface(
+                stub_name, stub_content, expected_names, facade_source
+            )
 
         # Validate classes
         rust_classes = self.extract_rust_classes(rust_content)
@@ -332,10 +567,13 @@ class StubValidator:
         include_crates: list[str] | None = None,
         parity_contract: Path | None = None,
     ) -> tuple[bool, dict[str, Any]]:
-        """Validate all Python binding crates.
+        """Validate all maintained Python stub modules and direct binding crates.
 
         Args:
             rust_dir: Path to the rust directory containing python-bindings/.
+            fail_on_warnings: Treat the legacy Rust method warnings as errors.
+            include_crates: Limit validation to stub paths beneath these crate names.
+            parity_contract: Limit validation to modules in its Tier-1 mappings.
 
         Returns:
             Tuple of (success, structured_report).
@@ -356,13 +594,40 @@ class StubValidator:
             }
             return (False, report)
 
-        # Find all *-py crate directories
-        crates = sorted(
-            [d for d in bindings_dir.iterdir() if d.is_dir() and d.name.endswith("-py")]
+        surface_path = (
+            rust_dir
+            / "docs"
+            / "implementation"
+            / "python_api_parity"
+            / "baseline"
+            / "python_api_surface.json"
         )
+        if not surface_path.is_file():
+            error = f"[ERROR] Checked-in Python API surface not found at {surface_path}"
+            self.errors.append(error)
+            return (False, self.build_report(1, 0, rust_dir))
+        surface = json.loads(surface_path.read_text(encoding="utf-8"))
+        expected_by_module: dict[str, set[str]] = {}
+        for entry in surface["exports"]:
+            export_path = entry.get("export_path", entry["export"])
+            expected_by_module.setdefault(entry["module"], set()).add(export_path)
+
+        scope = surface["scope"]
+        modules = scope["target_modules"]
+        source_files = scope["source_files"]
+        if len(modules) != len(source_files) or len(modules) != len(set(modules)):
+            self.errors.append(
+                "[ERROR] Checked-in Python API surface has invalid module/source paths."
+            )
+            return (False, self.build_report(1, 0, rust_dir))
+        targets = list(zip(modules, source_files, strict=True))
         if include_crates:
             include_set = set(include_crates)
-            crates = [crate for crate in crates if crate.name in include_set]
+            targets = [
+                (module, source)
+                for module, source in targets
+                if include_set.intersection(Path(source).parts)
+            ]
         if parity_contract:
             contract = json.loads(parity_contract.read_text(encoding="utf-8"))
             tier1_mappings = contract.get("tier1Mappings", [])
@@ -371,33 +636,84 @@ class StubValidator:
                 for mapping in tier1_mappings
                 if mapping.get("pythonModule")
             }
-            crates = [
-                crate
-                for crate in crates
-                if self.crate_name_to_stub_module(crate.name) in tier1_modules
+            targets = [
+                (module, source)
+                for module, source in targets
+                if module in tier1_modules
             ]
 
-        if not crates:
-            print(f"[ERROR] No Python binding crates found in {bindings_dir}")
+        if not targets:
+            print("[ERROR] No maintained Python stub modules selected")
             report = {
                 "rust_dir": str(rust_dir),
                 "total_crates": 0,
                 "crates_passed": 0,
                 "total_errors": 1,
                 "total_warnings": 0,
-                "errors": [f"No Python binding crates found in {bindings_dir}"],
+                "errors": ["No maintained Python stub modules selected"],
                 "warnings": [],
             }
             return (False, report)
 
-        print(f"[INFO] Validating {len(crates)} Python binding crates...\n")
+        print(f"[INFO] Validating {len(targets)} Python stub modules...\n")
 
         total_errors = 0
         total_warnings = 0
-        self.total_count = len(crates)
+        self.total_count = len(targets)
 
-        for crate in crates:
-            errors, warnings = self.validate_crate(crate)
+        facades = self.find_source_facades(
+            rust_dir, {module for module, _source in targets}
+        )
+
+        for module_name, source in targets:
+            expected_names = expected_by_module.get(module_name)
+            if expected_names is None:
+                self.errors.append(
+                    f"[ERROR] {module_name}: No checked-in Python API surface inventory."
+                )
+                total_errors += 1
+                continue
+            stub_path = rust_dir / source
+            if not stub_path.is_file():
+                self.errors.append(
+                    f"[ERROR] {module_name}: Maintained stub not found at {stub_path}"
+                )
+                total_errors += 1
+                continue
+            source_paths = facades[module_name]
+            if len(source_paths) > 1:
+                self.errors.append(
+                    f"[ERROR] {module_name}: Multiple source facades: {source_paths}"
+                )
+                total_errors += 1
+                continue
+            facade_source = source_paths[0] if source_paths else None
+            crate = stub_path.parent
+            if self.crate_name_to_stub_module(crate.name) == module_name:
+                errors, warnings = self.validate_crate(
+                    crate,
+                    expected_names=expected_names,
+                    facade_source=facade_source,
+                )
+            else:
+                # Once one adapter owns several stubs, its module-level PyO3
+                # source is checked by parity resolution, while this gate
+                # checks each direct-import facade's exact public names.
+                if facade_source is None:
+                    self.errors.append(
+                        f"[ERROR] {module_name}: No checked-in source facade found."
+                    )
+                    total_errors += 1
+                    continue
+                errors = self.validate_public_surface(
+                    module_name,
+                    stub_path.read_text(encoding="utf-8"),
+                    expected_names,
+                    facade_source,
+                )
+                warnings = 0
+                if errors == 0:
+                    self.success_count += 1
             total_errors += errors
             total_warnings += warnings
 
@@ -405,7 +721,7 @@ class StubValidator:
         print("\n" + "=" * 70)
         print("VALIDATION SUMMARY")
         print("=" * 70)
-        print(f"[OK] Crates passed: {self.success_count}/{self.total_count}")
+        print(f"[OK] Stub modules passed: {self.success_count}/{self.total_count}")
         print(f"[ERROR] Total errors: {total_errors}")
         print(f"[WARN] Total warnings: {total_warnings}")
 

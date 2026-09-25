@@ -6197,7 +6197,7 @@
       "tier": "tier1",
       "ownerModule": "resource",
       "rustCrate": "classic-resource-core",
-      "rustSymbol": "ResourceType",
+      "rustSymbol": "enumerate_resources",
       "pythonModule": "classic_resource",
       "pythonExportPath": "enumerate_resources",
       "pythonKind": "function"
@@ -6587,7 +6587,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "ModIniScanner",
+      "rustSymbol": "scan",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "scan_mod_inis",
       "pythonKind": "function"
@@ -6657,7 +6657,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "CrashgenReport",
+      "rustSymbol": "check_with_rules",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "check_crashgen_settings",
       "pythonKind": "function"
@@ -7387,7 +7387,7 @@
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
-      "rustSymbol": "WryeSeverity",
+      "rustSymbol": "format_report",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "parse_wrye_report",
       "pythonKind": "function"

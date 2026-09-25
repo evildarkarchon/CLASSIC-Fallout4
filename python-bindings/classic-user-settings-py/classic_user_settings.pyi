@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+__version__: str
+
 
 class UserSettingsDiagnostic:
     """One structured diagnostic produced while opening User Settings."""

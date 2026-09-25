@@ -4,11 +4,12 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import operator
 import re
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -19,8 +20,14 @@ from parity_artifact_io import (
     preserve_baseline_generated_at_all,
     write_json,
 )
-from parity_rust_surface import build_lookup, split_top_level_items
 from parity_rust_surface import parse_rust_surface as _parse_rust_surface_shared
+from parity_rust_surface import split_top_level_items
+from resolve_python_rust_symbols import (
+    Resolution,
+    resolve_all,
+    source_backed_crate,
+    source_backed_symbol,
+)
 
 RUST_TARGET_CRATES: dict[str, str] = {
     # Existing 3 (preserved for stability)
@@ -329,7 +336,7 @@ def _is_property_decorator(decorators: list[str]) -> bool:
 def parse_python_surface(
         repo_root: Path, _tier1_python_exports: set[str]
 ) -> dict[str, Any]:
-    """Extract classes, functions, methods, and property getters from `.pyi` files.
+    """Extract public declarations and module variables from `.pyi` files.
 
     Properties use their class-qualified export path and have no call arity.
     Setter/deleter declarations do not create duplicate exports or replace the
@@ -343,6 +350,28 @@ def parse_python_surface(
         path = repo_root / rel_path
         owner_module = PYTHON_OWNER_BY_MODULE[module_name]
         lines = path.read_text(encoding="utf-8").splitlines()
+
+        # The AST distinguishes top-level declarations from prose in docstrings
+        # and class fields, both of which can look like annotated variables.
+        for node in ast.parse("\n".join(lines), filename=str(path)).body:
+            names: list[str] = []
+            if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                names = [node.target.id]
+            elif isinstance(node, ast.Assign):
+                names = [target.id for target in node.targets if isinstance(target, ast.Name)]
+            for name in names:
+                exports.append(
+                    {
+                        "module": module_name,
+                        "export": name,
+                        "export_path": name,
+                        "kind": "constant",
+                        "owner_module": owner_module,
+                        "tier": "tier1",
+                        "source_file": rel_path,
+                        "signature": lines[node.lineno - 1].strip(),
+                    }
+                )
 
         idx = 0
         while idx < len(lines):
@@ -507,18 +536,83 @@ def get_contract_python_export_identifier(mapping: dict[str, Any]) -> str | None
     return export_identifier if isinstance(export_identifier, str) else None
 
 
+def python_mapping_counts(
+        mappings: list[dict[str, Any]],
+) -> Counter[tuple[str, str]]:
+    """Count ordinary claims per Python export path, excluding @rust inventory."""
+    counts: Counter[tuple[str, str]] = Counter()
+    for mapping in mappings:
+        if str(mapping.get("id", "")).endswith("@rust"):
+            continue
+        module = mapping.get("pythonModule")
+        export = get_contract_python_export_identifier(mapping)
+        if isinstance(module, str) and export:
+            counts[(module, export)] += 1
+    return counts
+
+
+def source_resolution_for_mapping(
+        mapping: dict[str, Any],
+        mapping_counts: Counter[tuple[str, str]],
+        wrapper_resolutions: dict[str, Resolution] | None,
+) -> Resolution | None:
+    """Return direct wrapper evidence for a uniquely mapped public export path.
+
+    Method paths use their own resolver entries, never the enclosing class's
+    entry. Multiple ordinary claims for one path can map to different symbols,
+    so only an explicit broken facade route applies to all of them. Historical
+    @rust inventory rows do not count as ordinary claims.
+    """
+    if not wrapper_resolutions or str(mapping.get("id", "")).endswith("@rust"):
+        return None
+    module = mapping.get("pythonModule")
+    export = get_contract_python_export_identifier(mapping)
+    if not isinstance(module, str) or not export:
+        return None
+    resolution = wrapper_resolutions.get(f"{module}.{export}")
+    # A declared facade import is a public-name obligation even when several
+    # contract rows use the name; row uniqueness limits owner attribution only.
+    if resolution and resolution.route_error:
+        return resolution
+    if mapping_counts[(module, export)] != 1:
+        return None
+    return resolution
+
+
+def source_symbol_must_match(
+        mapping: dict[str, Any], rust_kinds: set[str]
+) -> bool:
+    """Compare symbols for top-level exports and method rows naming Rust functions.
+
+    Some established method rows name their owning Rust type rather than the
+    invoked method. Those rows still require the wrapper's source crate to agree.
+    """
+    export = get_contract_python_export_identifier(mapping) or ""
+    return "." not in export or "function" in rust_kinds
+
+
 def generate_diff_report(
         contract: dict[str, Any],
         rust_manifest: dict[str, Any],
         python_manifest: dict[str, Any],
+        wrapper_resolutions: dict[str, Resolution] | None = None,
 ) -> dict[str, Any]:
-    """Generate contract status rows and parity gap inventory."""
+    """Generate crate-qualified status rows using direct wrapper evidence when safe."""
     tier1_mappings: list[dict[str, Any]] = contract["tier1Mappings"]
     rust_symbols: list[dict[str, Any]] = rust_manifest["symbols"]
     python_exports: list[dict[str, Any]] = python_manifest["exports"]
 
-    rust_lookup = build_lookup(rust_symbols, "symbol")
+    # Crate identity is part of a mapped Rust symbol: a namesake elsewhere
+    # cannot preserve parity when the actual owner moves or is retired.
+    rust_lookup: dict[tuple[str | None, str], dict[str, Any]] = {
+        (item.get("crate"), item["symbol"]): item for item in rust_symbols
+    }
+    rust_kinds: dict[tuple[str | None, str], set[str]] = defaultdict(set)
+    for item in rust_symbols:
+        if isinstance(item.get("kind"), str):
+            rust_kinds[(item.get("crate"), item["symbol"])].add(item["kind"])
     python_lookup = build_python_lookup(python_exports)
+    mapping_counts = python_mapping_counts(tier1_mappings)
 
     contract_results: list[dict[str, Any]] = []
     gaps: list[dict[str, Any]] = []
@@ -532,10 +626,21 @@ def generate_diff_report(
         expected_arity = mapping.get("pythonArity")
         owner_module = mapping["ownerModule"]
 
-        rust_item = rust_lookup.get(rust_symbol)
+        rust_crate = mapping.get("rustCrate")
+        rust_key = (
+            (rust_crate if isinstance(rust_crate, str) else None, rust_symbol)
+            if isinstance(rust_symbol, str)
+            else None
+        )
+        rust_item = rust_lookup.get(rust_key) if rust_key is not None else None
+        wrapper_resolution = source_resolution_for_mapping(
+            mapping, mapping_counts, wrapper_resolutions
+        )
+        wrapper_crate = source_backed_crate(wrapper_resolution)
+        wrapper_symbol = source_backed_symbol(wrapper_resolution)
         py_item = (
             python_lookup.get((python_module, python_export_path))
-            if python_export_path is not None
+            if isinstance(python_module, str) and python_export_path is not None
             else None
         )
         status = "matched"
@@ -597,6 +702,27 @@ def generate_diff_report(
             else:
                 status = "unmapped"
                 reason = mapping["unmappedReason"]
+        elif wrapper_resolution and wrapper_resolution.route_error:
+            status = "owner_mismatch"
+            reason = f"Python facade route is unresolved: {wrapper_resolution.route_error}"
+        elif wrapper_crate and wrapper_crate != mapping.get("rustCrate"):
+            status = "owner_mismatch"
+            reason = (
+                f"Python wrapper uses '{wrapper_crate}', but contract names "
+                f"'{mapping.get('rustCrate') or '<unknown>'}'."
+            )
+        elif (
+                wrapper_symbol
+                and source_symbol_must_match(
+                    mapping, rust_kinds.get(rust_key, set()) if rust_key else set()
+                )
+                and wrapper_symbol != rust_symbol
+        ):
+            status = "owner_mismatch"
+            reason = (
+                f"Python wrapper uses Rust symbol '{wrapper_symbol}', but contract "
+                f"names '{rust_symbol}' in '{mapping.get('rustCrate')}'."
+            )
         elif rust_item is None:
             status = "missing_rust"
             reason = f"Rust symbol '{rust_symbol}' not found in target crate exports."
@@ -622,6 +748,7 @@ def generate_diff_report(
             "id": mapping["id"],
             "tier": mapping["tier"],
             "owner_module": owner_module,
+            "rust_crate": mapping.get("rustCrate"),
             "squad": SQUAD_BY_OWNER[owner_module],
             "rust_symbol": rust_symbol,
             "python_module": python_module,
@@ -646,6 +773,7 @@ def generate_diff_report(
                     "gap_type": f"tier1_{status}",
                     "tier": "tier1",
                     "owner_module": owner_module,
+                    "rust_crate": mapping.get("rustCrate"),
                     "squad": SQUAD_BY_OWNER[owner_module],
                     "rust_symbol": rust_symbol,
                     "python_module": python_module,
@@ -677,6 +805,7 @@ def generate_diff_report(
         "tier1_missing_rust": status_counts.get("missing_rust", 0),
         "tier1_missing_python": status_counts.get("missing_python", 0),
         "tier1_signature_mismatch": status_counts.get("signature_mismatch", 0),
+        "tier1_owner_mismatch": status_counts.get("owner_mismatch", 0),
         # Exports tracked by the contract with no verified Rust counterpart.
         # Not drift -- outstanding mapping debt, to be driven toward zero.
         "tier1_unmapped": status_counts.get("unmapped", 0),
@@ -710,18 +839,19 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
             f"- Tier-1 missing Rust: **{summary['tier1_missing_rust']}**",
             f"- Tier-1 missing Python: **{summary['tier1_missing_python']}**",
             f"- Tier-1 signature mismatch: **{summary['tier1_signature_mismatch']}**",
+            f"- Tier-1 owner mismatch: **{summary['tier1_owner_mismatch']}**",
             f"- Total gaps: **{summary['total_gaps']}**",
             "",
             "## Tier-1 Contract Evaluation",
             "",
-            "| ID | Owner Module | Rust Symbol | Python Export | Status |",
-            "|---|---|---|---|---|",
+            "| ID | Owner Module | Rust Crate | Rust Symbol | Python Export | Status |",
+            "|---|---|---|---|---|---|",
         )
     )
     for row in diff_report["contract_results"]:
         python_target = row.get("python_export_path", row["python_export"])
         lines.append(
-            f"| `{row['id']}` | `{row['owner_module']}` | `{row['rust_symbol']}` | `{row['python_module']}.{python_target}` | `{row['status']}` |"
+            f"| `{row['id']}` | `{row['owner_module']}` | `{row['rust_crate']}` | `{row['rust_symbol']}` | `{row['python_module']}.{python_target}` | `{row['status']}` |"
         )
 
     lines.extend(
@@ -776,7 +906,10 @@ def main() -> int:
 
     rust_manifest = parse_rust_surface(repo_root, tier1_rust_symbols)
     python_manifest = parse_python_surface(repo_root, tier1_python_exports)
-    diff_report = generate_diff_report(contract, rust_manifest, python_manifest)
+    wrapper_resolutions = resolve_all(repo_root, rust_manifest)
+    diff_report = generate_diff_report(
+        contract, rust_manifest, python_manifest, wrapper_resolutions
+    )
 
     # --output-dir defaults to the tracked baseline directory, so these writes
     # land straight in git. Carry each committed timestamp forward when only the

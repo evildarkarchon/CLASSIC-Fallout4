@@ -12,6 +12,7 @@ def test_binding_only_rows_do_not_report_source_drift():
             "tier1_missing_rust": 0,
             "tier1_missing_python": 0,
             "tier1_signature_mismatch": 0,
+            "tier1_owner_mismatch": 0,
             "tier1_gap_total": 0,
         },
         "contract_results": [{"status": "unmapped"}],

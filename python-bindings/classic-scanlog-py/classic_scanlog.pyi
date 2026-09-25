@@ -17,6 +17,18 @@ from classic_shared import GameId
 __version__: str
 
 
+class RustScanLogError(Exception):
+    """Base error raised by the Rust scan-log adapter."""
+
+
+class RustParseError(RustScanLogError):
+    """Raised when the adapter cannot parse scan-log input."""
+
+
+class RustConfigError(RustScanLogError):
+    """Raised for scan-log configuration failures."""
+
+
 # =============================================================================
 # Crashgen Version Helpers
 # =============================================================================

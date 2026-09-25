@@ -5,6 +5,7 @@
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
+- Tier-1 owner mismatch: **0**
 
 ## Result
 

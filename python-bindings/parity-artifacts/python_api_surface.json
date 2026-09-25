@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-08T07:25:37.259127+00:00",
+  "generated_at_utc": "2026-09-25T03:25:13.857367+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -1208,6 +1208,36 @@
     },
     {
       "module": "classic_config",
+      "export": "RustConfigError",
+      "export_path": "RustConfigError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class RustConfigError(Exception):"
+    },
+    {
+      "module": "classic_config",
+      "export": "RustConfigIOError",
+      "export_path": "RustConfigIOError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class RustConfigIOError(RustConfigError):"
+    },
+    {
+      "module": "classic_config",
+      "export": "RustConfigParseError",
+      "export_path": "RustConfigParseError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class RustConfigParseError(RustConfigError):"
+    },
+    {
+      "module": "classic_config",
       "export": "YamlData",
       "export_path": "YamlData",
       "kind": "class",
@@ -1621,6 +1651,16 @@
     },
     {
       "module": "classic_config",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "__version__: str"
+    },
+    {
+      "module": "classic_config",
       "export": "clear_yaml_cache",
       "export_path": "clear_yaml_cache",
       "kind": "function",
@@ -1739,6 +1779,56 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def set_application_dir(path: str | Path) -> None:"
+    },
+    {
+      "module": "classic_database",
+      "export": "BATCH_CACHE_TTL",
+      "export_path": "BATCH_CACHE_TTL",
+      "kind": "constant",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "BATCH_CACHE_TTL: int"
+    },
+    {
+      "module": "classic_database",
+      "export": "DEFAULT_CACHE_CLEANUP_INTERVAL",
+      "export_path": "DEFAULT_CACHE_CLEANUP_INTERVAL",
+      "kind": "constant",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "DEFAULT_CACHE_CLEANUP_INTERVAL: int"
+    },
+    {
+      "module": "classic_database",
+      "export": "DEFAULT_CACHE_CLEANUP_THRESHOLD",
+      "export_path": "DEFAULT_CACHE_CLEANUP_THRESHOLD",
+      "kind": "constant",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "DEFAULT_CACHE_CLEANUP_THRESHOLD: int"
+    },
+    {
+      "module": "classic_database",
+      "export": "DEFAULT_CACHE_TTL",
+      "export_path": "DEFAULT_CACHE_TTL",
+      "kind": "constant",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "DEFAULT_CACHE_TTL: int"
+    },
+    {
+      "module": "classic_database",
+      "export": "DEFAULT_QUERY_CACHE_CAPACITY",
+      "export_path": "DEFAULT_QUERY_CACHE_CAPACITY",
+      "kind": "constant",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "DEFAULT_QUERY_CACHE_CAPACITY: int"
     },
     {
       "module": "classic_database",
@@ -2140,6 +2230,56 @@
     },
     {
       "module": "classic_database",
+      "export": "MAX_CACHE_TTL",
+      "export_path": "MAX_CACHE_TTL",
+      "kind": "constant",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "MAX_CACHE_TTL: int"
+    },
+    {
+      "module": "classic_database",
+      "export": "RustDatabaseError",
+      "export_path": "RustDatabaseError",
+      "kind": "class",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "class RustDatabaseError(Exception):"
+    },
+    {
+      "module": "classic_database",
+      "export": "RustDatabaseIOError",
+      "export_path": "RustDatabaseIOError",
+      "kind": "class",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "class RustDatabaseIOError(RustDatabaseError):"
+    },
+    {
+      "module": "classic_database",
+      "export": "RustDatabaseQueryError",
+      "export_path": "RustDatabaseQueryError",
+      "kind": "class",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "class RustDatabaseQueryError(RustDatabaseError):"
+    },
+    {
+      "module": "classic_database",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "__version__: str"
+    },
+    {
+      "module": "classic_database",
       "export": "get_batch_cache_ttl",
       "export_path": "get_batch_cache_ttl",
       "kind": "function",
@@ -2203,6 +2343,76 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def get_max_cache_ttl() -> int: ..."
+    },
+    {
+      "module": "classic_file_io",
+      "export": "DDSAnalyzer",
+      "export_path": "DDSAnalyzer",
+      "kind": "class",
+      "owner_module": "file_io",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-file-io-py/classic_file_io.pyi",
+      "signature": "class DDSAnalyzer:"
+    },
+    {
+      "module": "classic_file_io",
+      "export": "__init__",
+      "export_path": "DDSAnalyzer.__init__",
+      "parent_class": "DDSAnalyzer",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "file_io",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-file-io-py/classic_file_io.pyi",
+      "signature": "def __init__(self, game_target: str = \"fallout4\") -> None:"
+    },
+    {
+      "module": "classic_file_io",
+      "export": "__repr__",
+      "export_path": "DDSAnalyzer.__repr__",
+      "parent_class": "DDSAnalyzer",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "file_io",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-file-io-py/classic_file_io.pyi",
+      "signature": "def __repr__(self) -> str:"
+    },
+    {
+      "module": "classic_file_io",
+      "export": "validate_batch",
+      "export_path": "DDSAnalyzer.validate_batch",
+      "parent_class": "DDSAnalyzer",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "file_io",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-file-io-py/classic_file_io.pyi",
+      "signature": "def validate_batch(self, paths: list[str]) -> list[tuple[str, list[str]]]:"
+    },
+    {
+      "module": "classic_file_io",
+      "export": "validate_dimensions",
+      "export_path": "DDSAnalyzer.validate_dimensions",
+      "parent_class": "DDSAnalyzer",
+      "kind": "method",
+      "arity": 2,
+      "owner_module": "file_io",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-file-io-py/classic_file_io.pyi",
+      "signature": "def validate_dimensions(width: int, height: int) -> list[str]:"
+    },
+    {
+      "module": "classic_file_io",
+      "export": "validate_file",
+      "export_path": "DDSAnalyzer.validate_file",
+      "parent_class": "DDSAnalyzer",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "file_io",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-file-io-py/classic_file_io.pyi",
+      "signature": "def validate_file(self, path: str) -> list[str]:"
     },
     {
       "module": "classic_file_io",
@@ -2996,6 +3206,16 @@
     },
     {
       "module": "classic_file_io",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "file_io",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-file-io-py/classic_file_io.pyi",
+      "signature": "__version__: str"
+    },
+    {
+      "module": "classic_file_io",
       "export": "calculate_similarity",
       "export_path": "calculate_similarity",
       "kind": "function",
@@ -3472,6 +3692,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def value(self) -> int:"
+    },
+    {
+      "module": "classic_message",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "message",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-message-py/classic_message.pyi",
+      "signature": "__version__: str"
     },
     {
       "module": "classic_message",
@@ -4095,6 +4325,16 @@
     },
     {
       "module": "classic_path",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "path",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-path-py/classic_path.pyi",
+      "signature": "__version__: str"
+    },
+    {
+      "module": "classic_path",
       "export": "remove_readonly",
       "export_path": "remove_readonly",
       "kind": "function",
@@ -4162,6 +4402,16 @@
     },
     {
       "module": "classic_perf",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "perf",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-perf-py/classic_perf.pyi",
+      "signature": "__version__: str"
+    },
+    {
+      "module": "classic_perf",
       "export": "clear_metrics",
       "export_path": "clear_metrics",
       "kind": "function",
@@ -4224,6 +4474,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-registry-py/classic_registry.pyi",
       "signature": "class Keys:"
+    },
+    {
+      "module": "classic_registry",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "registry",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-registry-py/classic_registry.pyi",
+      "signature": "__version__: str"
     },
     {
       "module": "classic_registry",
@@ -4706,6 +4966,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-resource-py/classic_resource.pyi",
       "signature": "def texture() -> ResourceType:"
+    },
+    {
+      "module": "classic_resource",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "resource",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-resource-py/classic_resource.pyi",
+      "signature": "__version__: str"
     },
     {
       "module": "classic_resource",
@@ -6272,6 +6542,26 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def validate(self) -> str:"
+    },
+    {
+      "module": "classic_scangame",
+      "export": "__debug_registered__",
+      "export_path": "__debug_registered__",
+      "kind": "constant",
+      "owner_module": "scangame",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
+      "signature": "__debug_registered__: bool"
+    },
+    {
+      "module": "classic_scangame",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "scangame",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
+      "signature": "__version__: str"
     },
     {
       "module": "classic_scangame",
@@ -9442,6 +9732,36 @@
     },
     {
       "module": "classic_scanlog",
+      "export": "RustConfigError",
+      "export_path": "RustConfigError",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class RustConfigError(RustScanLogError):"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "RustParseError",
+      "export_path": "RustParseError",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class RustParseError(RustScanLogError):"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "RustScanLogError",
+      "export_path": "RustScanLogError",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class RustScanLogError(Exception):"
+    },
+    {
+      "module": "classic_scanlog",
       "export": "ScanOutput",
       "export_path": "ScanOutput",
       "kind": "class",
@@ -9958,6 +10278,16 @@
     },
     {
       "module": "classic_scanlog",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "__version__: str"
+    },
+    {
+      "module": "classic_scanlog",
       "export": "check_crashgen_version_status",
       "export_path": "check_crashgen_version_status",
       "kind": "function",
@@ -10461,6 +10791,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "def set_setting(self, data: Any, key_path: str, value: Any) -> Any: ..."
+    },
+    {
+      "module": "classic_settings",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-settings-py/classic_settings.pyi",
+      "signature": "__version__: str"
     },
     {
       "module": "classic_settings",
@@ -11240,6 +11580,16 @@
     },
     {
       "module": "classic_shared",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "shared",
+      "tier": "tier1",
+      "source_file": "foundation/classic-shared-py/classic_shared.pyi",
+      "signature": "__version__: str"
+    },
+    {
+      "module": "classic_shared",
       "export": "get_runtime_stats",
       "export_path": "get_runtime_stats",
       "kind": "function",
@@ -11577,6 +11927,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-update-py/classic_update.pyi",
       "signature": "class YamlUpdateStatus:"
+    },
+    {
+      "module": "classic_update",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "update",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-update-py/classic_update.pyi",
+      "signature": "__version__: str"
     },
     {
       "module": "classic_update",
@@ -14067,6 +14427,16 @@
     },
     {
       "module": "classic_user_settings",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "__version__: str"
+    },
+    {
+      "module": "classic_user_settings",
       "export": "import_legacy_tui_state_into_user_settings",
       "export_path": "import_legacy_tui_state_into_user_settings",
       "kind": "function",
@@ -14097,6 +14467,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
       "signature": "def user_settings_published_defaults() -> UserSettingsSnapshot:"
+    },
+    {
+      "module": "classic_version",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "version",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-version-py/classic_version.pyi",
+      "signature": "__version__: str"
     },
     {
       "module": "classic_version",
@@ -14938,6 +15318,16 @@
     },
     {
       "module": "classic_version_registry",
+      "export": "NULL_VERSION",
+      "export_path": "NULL_VERSION",
+      "kind": "constant",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-version-registry-py/classic_version_registry.pyi",
+      "signature": "NULL_VERSION: str"
+    },
+    {
+      "module": "classic_version_registry",
       "export": "UnknownVersionHandling",
       "export_path": "UnknownVersionHandling",
       "kind": "class",
@@ -15551,6 +15941,16 @@
     },
     {
       "module": "classic_version_registry",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-version-registry-py/classic_version_registry.pyi",
+      "signature": "__version__: str"
+    },
+    {
+      "module": "classic_version_registry",
       "export": "get_version_registry",
       "export_path": "get_version_registry",
       "kind": "function",
@@ -15570,6 +15970,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-version-registry-py/classic_version_registry.pyi",
       "signature": "def match_version_string( version_str: str, game: str = \"Fallout4\", is_vr: bool = False, ) -> MatchResult:"
+    },
+    {
+      "module": "classic_web",
+      "export": "CLASSIC_VERSION",
+      "export_path": "CLASSIC_VERSION",
+      "kind": "constant",
+      "owner_module": "web",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-web-py/classic_web.pyi",
+      "signature": "CLASSIC_VERSION: str"
     },
     {
       "module": "classic_web",
@@ -15676,6 +16086,26 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-web-py/classic_web.pyi",
       "signature": "def nexus_mods() -> ModSite:"
+    },
+    {
+      "module": "classic_web",
+      "export": "USER_AGENT_PREFIX",
+      "export_path": "USER_AGENT_PREFIX",
+      "kind": "constant",
+      "owner_module": "web",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-web-py/classic_web.pyi",
+      "signature": "USER_AGENT_PREFIX: str"
+    },
+    {
+      "module": "classic_web",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "web",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-web-py/classic_web.pyi",
+      "signature": "__version__: str"
     },
     {
       "module": "classic_web",
@@ -16025,6 +16455,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-xse-py/classic_xse.pyi",
       "signature": "def sksevr() -> XseType:"
+    },
+    {
+      "module": "classic_xse",
+      "export": "__version__",
+      "export_path": "__version__",
+      "kind": "constant",
+      "owner_module": "xse",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-xse-py/classic_xse.pyi",
+      "signature": "__version__: str"
     },
     {
       "module": "classic_xse",

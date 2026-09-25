@@ -74,6 +74,7 @@ def minimal_diff_report(binding: str) -> dict:
         "tier1_matched": 0,
         "tier1_missing_rust": 0,
         "tier1_signature_mismatch": 0,
+        "tier1_owner_mismatch": 0,
         "total_gaps": 0,
     }
     if binding == "node":

@@ -31,6 +31,18 @@ from typing import Any, Literal
 __version__: str
 
 
+class RustConfigError(Exception):
+    """Base error raised by the Rust config adapter."""
+
+
+class RustConfigIOError(RustConfigError):
+    """Raised for config I/O failures."""
+
+
+class RustConfigParseError(RustConfigError):
+    """Raised for config parse or validation failures."""
+
+
 class YamlData:
     """Python wrapper for YamlDataCore.
 
