@@ -50,3 +50,7 @@ The [`full` report](full-compliance-report.json) and [readable summary](full-com
 This is an exposed baseline failure. The passing participant jobs and source profile are valid scoped observations, but the failed `full` gate is **not** migration evidence of repository completion. A later owner move must not borrow this run's receipts or treat these two rows as covered without a fresh, passing full aggregation.
 
 The gap is in coverage selection, not an unexecuted Python runner: #236 corrected these contract rows to Rust symbols `check_with_rules` and `format_report`, while the corresponding `crashgen_check` and `wrye_report` conformance pack capabilities and trusted predicates still omit those symbols. Their Python runners do call the public operations. Updating the pack capabilities and predicates, then producing fresh same-revision receipts and a passing `full` report, is the follow-up needed to close this gap.
+
+## Passing follow-up
+
+The two selectors were corrected before any crate owner move. [Validated run 36127742320](validated-36127742320/README.md) records a fresh same-tree graph, all participant receipts and retained-gate evidence, and a passing `full` report. The failed report above remains the accurate observation for the original revision.
