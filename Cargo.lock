@@ -1173,7 +1173,6 @@ name = "classic-settings-core"
 version = "9.1.0"
 dependencies = [
  "classic-shared-core",
- "dhat",
  "serde",
  "serde_json",
  "serial_test",

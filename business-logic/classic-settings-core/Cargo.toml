@@ -7,14 +7,7 @@ authors = ["CLASSIC Development Team"]
 description = "CLASSIC YAML settings facade over classic-shared-core generic YAML and YAML operations, plus YamlFile"
 license = "MIT"
 
-[features]
-default = []
-dhat-heap = ["dep:dhat"]
-
 [dependencies]
-# Heap profiling (optional)
-dhat = { version = "0.3", optional = true }
-
 # Owner of the generic YAML rules, YAML operations, and both YAML caches this
 # crate re-exports
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
