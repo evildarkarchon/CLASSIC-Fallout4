@@ -1796,7 +1796,9 @@ export declare function clearSettingsCache(): void
 /**
  * Clear the global YAML cache.
  *
- * Useful for testing to ensure clean state between test runs.
+ * Useful for testing to ensure clean state between test runs. Clears the
+ * default (unscoped) path/mtime-aware YAML-file cache that config's loaders
+ * use; counters are kept.
  */
 export declare function clearYamlCache(): void
 

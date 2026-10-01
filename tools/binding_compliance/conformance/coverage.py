@@ -550,6 +550,45 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
                         "record_timing",
                         "record_timing_millis",
                         "start_timer",
+                        # Generic YAML moved here from classic-settings-core;
+                        # keep each logical-key cache and validator export's
+                        # own operation identity.
+                        "CacheStats",
+                        "CoercedValue",
+                        "cache_keys",
+                        "cache_size",
+                        "cache_stats",
+                        "clear_cache",
+                        "coerce_setting_value",
+                        "get_cached",
+                        "invalidate",
+                        "is_cached",
+                        "load_batch_async",
+                        "load_batch_sync",
+                        "load_settings_async",
+                        "load_settings_sync",
+                        "reset_cache_stats",
+                        "validate_setting_value",
+                        # YamlOperations and the path/mtime YAML-file cache
+                        # moved here from classic-settings-core (#240); several
+                        # exports share one Rust symbol (yamlParse and
+                        # yamlGetValue both map to parse_yaml), so keep each
+                        # export's own operation identity.
+                        "YamlOperations",
+                        "clear_global_yaml_cache",
+                        "dump_yaml",
+                        "get_hashmap_value",
+                        "get_hashmap_vec_value",
+                        "get_indexmap_value",
+                        "get_settings_batch",
+                        "get_string_value",
+                        "get_vec_value",
+                        "load_yaml_file",
+                        "parse_yaml",
+                        "save_yaml_file",
+                        "set_setting",
+                        "set_settings_batch",
+                        "yaml_cache_stats",
                     }
                 )
                 or (

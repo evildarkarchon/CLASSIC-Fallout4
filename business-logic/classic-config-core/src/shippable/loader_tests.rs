@@ -1,6 +1,6 @@
 use super::*;
 use classic_path_core::ensure_yaml_cache_dir_with_env;
-use classic_settings_core::clear_global_yaml_cache;
+use classic_shared_core::yaml::clear_global_yaml_cache;
 use serial_test::serial;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};

@@ -1,31 +1,25 @@
-//! Core YAML settings cache with dual sync/async API.
+//! CLASSIC YAML settings facade.
 //!
-//! This crate provides a high-performance, thread-safe cache for YAML settings files.
-//! It offers both synchronous and asynchronous APIs for maximum flexibility:
+//! The generic YAML rules this crate used to own (parsing, document and
+//! merge-key merging, sync/async loaders, scalar validators, schema-version
+//! compatibility, the logical-key settings cache, and [`YamlOperations`] with
+//! its path/mtime-aware YAML-file cache) now live in
+//! [`classic_shared_core::yaml`]. Every such item below is a `pub use` of that
+//! owner, so loading through this facade or through `classic_shared_core::yaml`
+//! reads and clears the same default-scope caches, with the same capacity,
+//! freshness, counters, and errors. The two caches stay distinct from each
+//! other.
 //!
-//! - Sync API for backwards compatibility and simple use cases
-//! - Async API for non-blocking I/O in async contexts
-//! - Batch loading support for efficient multi-file operations
-//! - Lock-free concurrent access using DashMap
+//! This crate still owns [`YamlFile`], CLASSIC's domain-specific YAML file
+//! identity, until config takes ownership of file policy.
 //!
-//! # Architecture
-//!
-//! The cache uses a three-layer design:
-//! - **Loader Layer**: Handles YAML file reading (sync/async)
-//! - **Cache Layer**: Manages thread-safe storage and retrieval
-//! - **Error Layer**: Provides rich error types with context
+//! The crate identity is scheduled for retirement once its remaining callers
+//! import the accepted owners directly.
 //!
 //! # ONE RUNTIME RULE
 //!
-//! This crate integrates with `classic-shared-core` to ensure all async
-//! operations use the shared global Tokio runtime.
-//!
-//! # Performance
-//!
-//! - Lock-free concurrent reads/writes via DashMap
-//! - Zero-copy Arc-based value sharing
-//! - Async batch loading for parallel file I/O
-//! - Efficient memory usage with shared YAML documents
+//! The async loaders re-exported here run on the shared global Tokio runtime
+//! from `classic-shared-core`.
 //!
 //! # Examples
 //!
@@ -82,44 +76,27 @@
 //! # }
 //! ```
 
-mod cache;
-mod error;
-mod loader;
-mod schema_version;
-pub mod validators;
 mod yaml_file;
 
-// YAML operations (absorbed from classic-yaml-core per D-01)
-mod merge;
-mod yaml_ops;
-
-// Re-export public API
-pub use cache::{
-    CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate,
-    is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync,
-    reset_cache_stats,
-};
-pub use error::{Result, SettingsError, SettingsSource};
-pub use loader::{
-    load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async,
-    load_yaml_merged_sync, load_yaml_sync, parse_yaml_content,
-};
-pub use merge::merge_yaml_documents;
-pub use schema_version::{
-    Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion,
-    YamlSchemaError, extract_schema_version, schema_compat_check,
+// Generic YAML rules re-exported from their shared-core owner.
+pub use classic_shared_core::yaml::validators;
+pub use classic_shared_core::yaml::{
+    CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError,
+    SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size,
+    cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached,
+    load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async,
+    load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync,
+    load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats,
+    schema_compat_check,
 };
 pub use yaml_file::*;
 
-// YAML operations re-exports (D-04 flat re-exports)
-pub use merge::merge_keys;
-pub use yaml_ops::{
+// YAML operations and the path/mtime-aware YAML-file cache, re-exported from
+// their shared-core owner (formerly the D-04 flat re-exports of `yaml_ops`).
+pub use classic_shared_core::yaml::{
     YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats,
     yaml_cache_stats,
 };
-
-// Re-export yaml_rust2 types for convenience
-pub use yaml_rust2::Yaml;
 
 #[cfg(test)]
 #[path = "lib_tests.rs"]

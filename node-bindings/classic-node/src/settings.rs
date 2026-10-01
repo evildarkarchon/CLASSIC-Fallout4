@@ -1,4 +1,9 @@
-//! Settings + YAML bindings (classic-settings-core)
+//! Settings + YAML bindings (classic-shared-core `yaml` + classic-settings-core)
+//!
+//! The logical-key settings cache, `YamlOperations`, and the path/mtime-aware
+//! YAML-file cache are owned by `classic_shared_core::yaml` and called through
+//! that path directly, always on their default (unscoped) scopes; `YamlFile`
+//! still comes from `classic-settings-core`.
 //!
 //! Exposes the unified YAML settings cache and stateless YAML operations to
 //! JavaScript/TypeScript. This module was created by merging the former
@@ -31,7 +36,9 @@
 //! - `new YamlDocument(content)` with `getValue`, `getStringValue`, `getVecValue`,
 //!   `getHashmapValue`, `setValue`, `toString`
 
-use classic_settings_core::{self as core, YamlError, YamlFile, YamlOperations, yaml_cache_stats};
+use classic_settings_core::YamlFile;
+use classic_shared_core::yaml as shared_yaml;
+use classic_shared_core::yaml::{YamlError, YamlOperations, yaml_cache_stats};
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -148,7 +155,7 @@ pub struct SettingsCacheStats {
 #[napi]
 pub fn load_settings_sync(key: String, path: String) -> Result<serde_json::Value> {
     let path_buf = PathBuf::from(&path);
-    let docs = core::load_settings_sync(&key, &path_buf).map_err(to_napi_err)?;
+    let docs = shared_yaml::load_settings_sync(&key, &path_buf).map_err(to_napi_err)?;
     Ok(docs_to_json(&docs))
 }
 
@@ -159,7 +166,7 @@ pub fn load_settings_sync(key: String, path: String) -> Result<serde_json::Value
 #[napi]
 pub async fn load_settings_async(key: String, path: String) -> Result<serde_json::Value> {
     let path_buf = PathBuf::from(&path);
-    let docs = core::load_settings_async(&key, &path_buf)
+    let docs = shared_yaml::load_settings_async(&key, &path_buf)
         .await
         .map_err(to_napi_err)?;
     Ok(docs_to_json(&docs))
@@ -172,7 +179,7 @@ pub async fn load_settings_async(key: String, path: String) -> Result<serde_json
 pub fn load_batch_sync(paths: Vec<String>) -> Result<u32> {
     let path_bufs: Vec<PathBuf> = paths.iter().map(PathBuf::from).collect();
     let path_refs: Vec<&std::path::Path> = path_bufs.iter().map(|p| p.as_path()).collect();
-    let count = core::load_batch_sync(&path_refs).map_err(to_napi_err)?;
+    let count = shared_yaml::load_batch_sync(&path_refs).map_err(to_napi_err)?;
     Ok(count as u32)
 }
 
@@ -183,7 +190,7 @@ pub fn load_batch_sync(paths: Vec<String>) -> Result<u32> {
 pub async fn load_batch_async(paths: Vec<String>) -> Result<u32> {
     let path_bufs: Vec<PathBuf> = paths.iter().map(PathBuf::from).collect();
     let path_refs: Vec<&std::path::Path> = path_bufs.iter().map(|p| p.as_path()).collect();
-    let count = core::load_batch_async(&path_refs)
+    let count = shared_yaml::load_batch_async(&path_refs)
         .await
         .map_err(to_napi_err)?;
     Ok(count as u32)
@@ -199,13 +206,13 @@ pub async fn load_batch_async(paths: Vec<String>) -> Result<u32> {
 /// not present in the cache.
 #[napi]
 pub fn get_cached(key: String) -> Option<serde_json::Value> {
-    core::get_cached(&key).map(|docs| docs_to_json(&docs))
+    shared_yaml::get_cached(&key).map(|docs| docs_to_json(&docs))
 }
 
 /// Check whether a key exists in the settings cache.
 #[napi]
 pub fn is_cached(key: String) -> bool {
-    core::is_cached(&key)
+    shared_yaml::is_cached(&key)
 }
 
 // ============================================================================
@@ -217,25 +224,25 @@ pub fn is_cached(key: String) -> bool {
 /// Returns `true` if the key existed and was removed, `false` otherwise.
 #[napi]
 pub fn invalidate_settings(key: String) -> bool {
-    core::invalidate(&key)
+    shared_yaml::invalidate(&key)
 }
 
 /// Clear all entries from the settings cache.
 #[napi]
 pub fn clear_settings_cache() {
-    core::clear_cache();
+    shared_yaml::clear_cache();
 }
 
 /// Get the number of entries currently in the settings cache.
 #[napi]
 pub fn settings_cache_size() -> u32 {
-    core::cache_size() as u32
+    shared_yaml::cache_size() as u32
 }
 
 /// Get all keys currently stored in the settings cache.
 #[napi]
 pub fn settings_cache_keys() -> Vec<String> {
-    core::cache_keys()
+    shared_yaml::cache_keys()
 }
 
 // ============================================================================
@@ -245,7 +252,7 @@ pub fn settings_cache_keys() -> Vec<String> {
 /// Get cache performance statistics (hits, misses, hit rate, size, capacity).
 #[napi]
 pub fn get_settings_cache_stats() -> SettingsCacheStats {
-    let stats = core::cache_stats();
+    let stats = shared_yaml::cache_stats();
     SettingsCacheStats {
         hits: stats.hits as i64,
         misses: stats.misses as i64,
@@ -258,7 +265,7 @@ pub fn get_settings_cache_stats() -> SettingsCacheStats {
 /// Reset the cache hit/miss counters to zero.
 #[napi]
 pub fn reset_settings_cache_stats() {
-    core::reset_cache_stats();
+    shared_yaml::reset_cache_stats();
 }
 
 /// Get a human-readable description for a YAML file type.

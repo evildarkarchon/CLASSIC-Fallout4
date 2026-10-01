@@ -4,7 +4,7 @@ use crate::default_settings::{
 };
 use crate::scan_settings::CrashLogScanSettings;
 use crate::{FrontendState, GameSetupSettings};
-use classic_settings_core::{
+use classic_shared_core::yaml::{
     SchemaVersion, Yaml, YamlSchemaError, extract_schema_version, parse_yaml_content,
 };
 use classic_vocabulary::Vocabulary;

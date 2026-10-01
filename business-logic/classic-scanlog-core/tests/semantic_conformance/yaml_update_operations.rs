@@ -1,7 +1,7 @@
 //! YAML update operations with local manifest transport and owned cache generations.
 use super::{RunnerResult, invalid, text};
-use classic_settings_core::SchemaCompat;
 use classic_shared_core::get_runtime;
+use classic_shared_core::yaml::SchemaCompat;
 use classic_update_core::yaml_update::{
     apply_yaml_data_update_with_decision, check_yaml_data_update, rollback_yaml_data_update,
 };

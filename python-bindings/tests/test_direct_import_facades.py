@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import importlib
 import json
+import tomllib
 from pathlib import Path
 
 import pytest
-import tomllib
-
 from validate_stubs import StubValidator
 
 REPO_ROOT = Path(__file__).resolve().parents[2]

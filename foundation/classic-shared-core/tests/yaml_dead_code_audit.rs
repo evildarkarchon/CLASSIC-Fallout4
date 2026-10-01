@@ -1,14 +1,14 @@
 //! Source-backed contract audit for Phase 2 YAML dead code removal.
 
-const LIB_RS: &str = include_str!("../src/yaml_ops/operations.rs");
-const INTEGRATION_TESTS_RS: &str = include_str!("yaml_integration_tests.rs");
+const LIB_RS: &str = include_str!("../src/yaml/operations.rs");
+const INTEGRATION_TESTS_RS: &str = include_str!("yaml_operations_integration_tests.rs");
 const YAML_BENCHMARKS_RS: &str = include_str!("../benches/yaml_benchmarks.rs");
 
 #[test]
 fn yaml_format_configuration_dead_api_stays_removed() {
     assert!(
         LIB_RS.contains("pub struct YamlOperations"),
-        "classic-settings-core should continue exposing YamlOperations"
+        "classic-shared-core should continue exposing YamlOperations"
     );
     assert!(
         LIB_RS.contains("cache_enabled: bool"),

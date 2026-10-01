@@ -4,58 +4,22 @@ version = "9.1.0"
 edition = "2024"
 rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
-description = "Core YAML settings cache with dual sync/async API"
+description = "CLASSIC YAML settings facade over classic-shared-core generic YAML and YAML operations, plus YamlFile"
 license = "MIT"
 
-[features]
-default = []
-dhat-heap = ["dep:dhat"]
-
 [dependencies]
-# Heap profiling (optional)
-dhat = { version = "0.3", optional = true }
-
-# Tracing for instrumentation
-tracing = { workspace = true }
-# ONE RUNTIME RULE - shared Tokio runtime
+# Owner of the generic YAML rules, YAML operations, and both YAML caches this
+# crate re-exports
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
-# Performance monitoring
-classic-perf-core = { path = "../classic-perf-core" }
-
-# YAML parsing
-yaml-rust2 = { workspace = true }
-
-# Async runtime
-tokio = { workspace = true, features = ["fs", "io-util"] }
-
-# Thread safety
-parking_lot = { workspace = true }
-dashmap = { workspace = true }
-quick_cache = { workspace = true }
-
-# Data parallelism
-rayon = { workspace = true }
-
-# Error handling
-thiserror = { workspace = true }
-anyhow = { workspace = true }
-
-# Serialization
+# YamlFile serialization
 serde = { workspace = true }
-serde_json = { workspace = true }
-
-# Ordered collections (preserves YAML key order)
-indexmap = { workspace = true }
 
 [dev-dependencies]
 serial_test = "3.2"
 tempfile = "3.14"
-criterion = { version = "0.8.2", features = ["html_reports"] }
-
-[[bench]]
-name = "yaml_benchmarks"
-harness = false
+serde_json = { workspace = true }
+tokio = { workspace = true }
 
 [lints.rust]
 deprecated = "deny"

@@ -4,6 +4,12 @@ This module provides Python bindings for the pure Rust utilities in classic-shar
 including path handling, string processing, and performance monitoring.
 """
 
+# Dunders stay despite PYI029: validate_stubs.py requires every native export,
+# `__str__`/`__repr__` included (see python-bindings/pyproject.toml). A
+# file-level directive keeps lint pragmas out of the signature lines that the
+# Python parity surface records verbatim.
+# ruff: noqa: PYI029
+
 __version__: str
 
 class GameId:
@@ -15,7 +21,6 @@ class GameId:
     def as_str(self) -> str: ...
     def display_name(self) -> str:
         """Return the Rust-owned user-facing game name."""
-        ...
     def exe_name(self) -> str: ...
     def is_vr(self) -> bool: ...
     def __eq__(self, other: object) -> bool: ...

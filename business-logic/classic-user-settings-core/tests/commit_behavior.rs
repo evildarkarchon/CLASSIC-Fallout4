@@ -1,6 +1,6 @@
 //! Behavioral checks for explicit, conflict-safe User Settings commits.
 
-use classic_settings_core::{Yaml, parse_yaml_content};
+use classic_shared_core::yaml::{Yaml, parse_yaml_content};
 use classic_user_settings_core::{
     GuiWindow, UserSettings, UserSettingsCommitOutcome, UserSettingsFrontendTransitionOutcome,
     UserSettingsUpdate, UserSettingsUpdatePreview,

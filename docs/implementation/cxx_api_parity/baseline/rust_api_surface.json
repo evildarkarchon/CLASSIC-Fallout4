@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-01T01:38:24Z",
+  "generated_at_utc": "2026-10-01T06:45:09Z",
   "entries": [
     {
       "id": "0f1ce653765981f0",
@@ -1491,8 +1491,8 @@
         "args": [],
         "returnType": null
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "reset_cache_stats"
     },
     {
@@ -1534,8 +1534,8 @@
         "args": [],
         "returnType": null
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "clear_cache"
     },
     {
@@ -1549,8 +1549,8 @@
         "args": [],
         "returnType": "usize"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "cache_stats"
     },
     {
@@ -1564,8 +1564,8 @@
         "args": [],
         "returnType": "CacheStats"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "cache_stats"
     },
     {
@@ -2542,8 +2542,8 @@
           "type": "usize"
         }
       ],
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "CacheStats"
     },
     {
@@ -11113,8 +11113,8 @@
         "args": [],
         "returnType": "Vec<String>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "cache_keys"
     },
     {
@@ -11128,8 +11128,8 @@
         "args": [],
         "returnType": "u64"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "cache_size"
     },
     {
@@ -11143,8 +11143,8 @@
         "args": [],
         "returnType": "SettingsCacheStats"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "cache_stats"
     },
     {
@@ -11158,8 +11158,8 @@
         "args": [],
         "returnType": null
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "clear_cache"
     },
     {
@@ -11182,8 +11182,8 @@
         ],
         "returnType": "Result<SettingsCoercedValue>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "coerce_setting_value"
     },
     {
@@ -11202,8 +11202,8 @@
         ],
         "returnType": "bool"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "invalidate"
     },
     {
@@ -11222,8 +11222,8 @@
         ],
         "returnType": "bool"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "is_cached"
     },
     {
@@ -11246,8 +11246,8 @@
         ],
         "returnType": "Result<u32>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "load_settings_async"
     },
     {
@@ -11266,8 +11266,8 @@
         ],
         "returnType": "Result<u32>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "load_batch_async"
     },
     {
@@ -11286,8 +11286,8 @@
         ],
         "returnType": "Result<u32>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "load_batch_sync"
     },
     {
@@ -11310,8 +11310,8 @@
         ],
         "returnType": "Result<u32>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "load_settings_sync"
     },
     {
@@ -11325,8 +11325,8 @@
         "args": [],
         "returnType": null
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "reset_cache_stats"
     },
     {
@@ -11349,8 +11349,8 @@
         ],
         "returnType": "Result<bool>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "validate_setting_value"
     },
     {
@@ -11832,8 +11832,8 @@
         ],
         "returnType": "usize"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "yaml_cache_stats"
     },
     {
@@ -11852,8 +11852,8 @@
         ],
         "returnType": "YamlCacheStatsDto"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "yaml_cache_stats"
     },
     {
@@ -11872,8 +11872,8 @@
         ],
         "returnType": null
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "clear_cache"
     },
     {
@@ -11892,8 +11892,8 @@
         ],
         "returnType": "Result<String>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "dump_yaml"
     },
     {
@@ -11916,8 +11916,8 @@
         ],
         "returnType": "YamlValue"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "get_setting"
     },
     {
@@ -11944,8 +11944,8 @@
         ],
         "returnType": "String"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "get_string_value"
     },
     {
@@ -11968,8 +11968,8 @@
         ],
         "returnType": "Vec<String>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "get_vec_value"
     },
     {
@@ -11988,8 +11988,8 @@
         ],
         "returnType": "bool"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "YamlOperations"
     },
     {
@@ -12012,8 +12012,8 @@
         ],
         "returnType": "Result<()>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "load_yaml_file"
     },
     {
@@ -12027,8 +12027,8 @@
         "args": [],
         "returnType": "Box<YamlOps>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "new"
     },
     {
@@ -12051,8 +12051,8 @@
         ],
         "returnType": "Result<()>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "parse_yaml"
     },
     {
@@ -12075,8 +12075,8 @@
         ],
         "returnType": "Result<()>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "save_yaml_file"
     },
     {
@@ -12103,8 +12103,8 @@
         ],
         "returnType": "Result<()>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "set_setting"
     },
     {
@@ -12131,8 +12131,8 @@
         ],
         "returnType": "Result<()>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "set_setting"
     },
     {
@@ -12159,8 +12159,8 @@
         ],
         "returnType": "Result<()>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "set_setting"
     },
     {
@@ -12187,8 +12187,8 @@
         ],
         "returnType": "Result<()>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "set_setting"
     },
     {
@@ -12220,8 +12220,8 @@
       "bridgeModule": "settings",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
       "blockOrigin": "Rust",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "YamlOperations"
     },
     {
@@ -12724,8 +12724,8 @@
           "type": "u64"
         }
       ],
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "CacheStats"
     },
     {
@@ -12757,8 +12757,8 @@
           "type": "bool"
         }
       ],
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "CoercedValue"
     },
     {
@@ -13580,8 +13580,8 @@
           "type": "usize"
         }
       ],
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "YamlCacheStats"
     },
     {
@@ -13605,8 +13605,8 @@
           "type": "String"
         }
       ],
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "get_setting"
     },
     {

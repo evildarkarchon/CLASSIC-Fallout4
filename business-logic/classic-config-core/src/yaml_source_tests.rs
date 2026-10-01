@@ -24,7 +24,7 @@ fn main_load_routes_through_shippable_loader() {
     );
     std::fs::write(bundled_dir.join("CLASSIC Main.yaml"), bundled_payload).unwrap();
 
-    classic_settings_core::clear_global_yaml_cache();
+    classic_shared_core::yaml::clear_global_yaml_cache();
     std::env::set_current_dir(work_dir.path()).unwrap();
     let runtime = tokio::runtime::Runtime::new().unwrap();
     let result = runtime.block_on(async { YamlSource::Main.load("").await });
@@ -85,7 +85,60 @@ fn resolve_application_dir_returns_none_without_exe_path() {
 fn application_dir_uses_registry_override_when_set() {
     let override_dir = PathBuf::from("C:/my/project");
     classic_registry_core::set_application_dir(override_dir.clone());
-    assert_eq!(application_dir(), Some(override_dir));
+    assert_eq!(
+        application_dir_in(&classic_registry_core::RegistryScope::default_scope()),
+        Some(override_dir)
+    );
+    classic_registry_core::unregister(classic_registry_core::Keys::APP_DIR);
+}
+
+#[test]
+#[serial]
+fn application_dir_in_reads_only_the_selected_registry_scope() {
+    let scope = classic_registry_core::RegistryScope::new_isolated();
+    let scoped_dir = PathBuf::from("C:/facade/config");
+    let default_dir = PathBuf::from("C:/default/app");
+    classic_registry_core::set_application_dir(default_dir.clone());
+    scope.set_application_dir(scoped_dir.clone());
+
+    assert_eq!(application_dir_in(&scope), Some(scoped_dir));
+    assert_eq!(
+        application_dir_in(&classic_registry_core::RegistryScope::default_scope()),
+        Some(default_dir.clone())
+    );
+    assert_eq!(
+        classic_registry_core::get_application_dir(),
+        Some(default_dir)
+    );
+
+    // An empty scope falls back to the executable directory, never to the
+    // default scope's override.
+    let empty = classic_registry_core::RegistryScope::new_isolated();
+    let exe_dir = std::env::current_exe()
+        .ok()
+        .and_then(|path| resolve_application_dir(Some(path.as_path())));
+    assert_eq!(application_dir_in(&empty), exe_dir);
+    classic_registry_core::unregister(classic_registry_core::Keys::APP_DIR);
+}
+
+#[test]
+#[serial]
+fn cache_path_in_registry_scope_uses_that_scope_application_dir() {
+    let scope = classic_registry_core::RegistryScope::new_isolated();
+    let scoped_dir = PathBuf::from("C:/facade/config");
+    scope.set_application_dir(scoped_dir.clone());
+    classic_registry_core::set_application_dir(PathBuf::from("C:/default/app"));
+
+    let user_dir = user_config_dir();
+    assert_eq!(
+        YamlSource::Cache.path_in_registry_scope("", &scope),
+        resolve_cache_path(user_dir.as_deref(), Some(scoped_dir.as_path()))
+    );
+    // Non-cache sources never consult the registry.
+    assert_eq!(
+        YamlSource::Main.path_in_registry_scope("", &scope),
+        YamlSource::Main.path("")
+    );
     classic_registry_core::unregister(classic_registry_core::Keys::APP_DIR);
 }
 

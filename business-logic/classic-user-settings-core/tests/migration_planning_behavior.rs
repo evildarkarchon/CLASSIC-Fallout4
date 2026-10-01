@@ -1,6 +1,6 @@
 //! Behavioral checks for deterministic, side-effect-free User Settings migration planning.
 
-use classic_settings_core::parse_yaml_content;
+use classic_shared_core::yaml::parse_yaml_content;
 use classic_user_settings_core::{
     CURRENT_USER_SETTINGS_SCHEMA_VERSION, MigrationChangeKind, MigrationPlanningOutcome,
     SourceLocation, UserSettings, UserSettingsSchemaVersion,
@@ -24,7 +24,7 @@ fn install_fixture(root: &Path, relative_path: &Path, fixture: &str) -> PathBuf 
 }
 
 /// Parses one YAML document so semantic equality is independent of emitter formatting.
-fn parse_one(label: &str, bytes: &[u8]) -> classic_settings_core::Yaml {
+fn parse_one(label: &str, bytes: &[u8]) -> classic_shared_core::yaml::Yaml {
     let content = std::str::from_utf8(bytes).expect("planned YAML must be UTF-8");
     let mut documents = parse_yaml_content(label, content).expect("planned YAML must parse");
     assert_eq!(documents.len(), 1, "planned YAML must contain one document");
@@ -162,7 +162,7 @@ fn explicit_alias_plan_is_optional_and_removes_aliases_without_touching_disk() {
     );
     assert!(matches!(
         proposed["CLASSIC_Settings"]["Staging Mods Folder"],
-        classic_settings_core::Yaml::BadValue
+        classic_shared_core::yaml::Yaml::BadValue
     ));
     assert_eq!(
         proposed["CLASSIC_Settings"]["SCAN Custom Path"].as_str(),
@@ -170,7 +170,7 @@ fn explicit_alias_plan_is_optional_and_removes_aliases_without_touching_disk() {
     );
     assert!(matches!(
         proposed["CLASSIC_Settings"]["Custom Scan Folder"],
-        classic_settings_core::Yaml::BadValue
+        classic_shared_core::yaml::Yaml::BadValue
     ));
     assert_eq!(std::fs::read(&path).unwrap(), original);
     assert_eq!(
@@ -227,7 +227,7 @@ fn alias_plan_promotes_the_typed_fallback_when_the_canonical_value_is_invalid() 
     );
     assert!(matches!(
         proposed["CLASSIC_Settings"]["Custom Scan Folder"],
-        classic_settings_core::Yaml::BadValue
+        classic_shared_core::yaml::Yaml::BadValue
     ));
 }
 

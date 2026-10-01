@@ -8,8 +8,8 @@ use crate::preference::{
     optional_absolute_path_preference,
 };
 use crate::scan_settings::{CrashLogScanSettings, GameVersionSelection};
-use classic_settings_core::Yaml;
 use classic_shared_core::GameId;
+use classic_shared_core::yaml::Yaml;
 
 /// Cohesive, read-only User Settings facts used to prepare Game Setup Intake.
 ///

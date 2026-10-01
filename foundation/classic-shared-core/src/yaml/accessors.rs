@@ -1,6 +1,6 @@
 //! Dot-path accessors and typed YAML extractors.
 
-use super::error::YamlError;
+use super::YamlError;
 use super::operations::YamlOperations;
 use indexmap::IndexMap;
 use std::collections::HashMap;

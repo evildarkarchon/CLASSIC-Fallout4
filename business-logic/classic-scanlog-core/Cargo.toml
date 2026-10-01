@@ -26,7 +26,6 @@ classic-config-core = { path = "../classic-config-core" }
 classic-file-io-core = { path = "../classic-file-io-core" }
 classic-scangame-core = { path = "../classic-scangame-core" }
 classic-database-core = { path = "../classic-database-core" }
-classic-settings-core = { path = "../classic-settings-core" }
 classic-version-registry-core = { path = "../classic-version-registry-core" }
 
 # Workspace-internal Vocabulary naming contract: the Crash Log Scan Run
@@ -90,6 +89,8 @@ classic-version-core = { path = "../classic-version-core" }
 classic-update-core = { path = "../classic-update-core" }
 classic-path-core = { path = "../classic-path-core" }
 classic-message-core = { path = "../classic-message-core" }
+# YAML file identity conformance still reads YamlFile from its current owner.
+classic-settings-core = { path = "../classic-settings-core" }
 tempfile = { workspace = true }
 criterion = { version = "0.6.0", features = ["html_reports"] }
 sqlx = { workspace = true }

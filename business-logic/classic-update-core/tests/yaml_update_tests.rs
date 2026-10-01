@@ -21,7 +21,7 @@
 //!   composition failure modes (download failure, checksum mismatch) are
 //!   covered at unit level in this module via small direct calls.
 
-use classic_settings_core::{SchemaCompat, SchemaVersion};
+use classic_shared_core::yaml::{SchemaCompat, SchemaVersion};
 use classic_update_core::yaml_update::check_yaml_data_update_with_env;
 use classic_update_core::{
     ApprovedUpdate, ClientSchemaSet, FileInstallOutcome, GithubClient, MAX_MANIFEST_VERSION,

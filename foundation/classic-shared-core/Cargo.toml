@@ -4,13 +4,23 @@ version = "9.1.0"
 edition = "2024"
 rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
-description = "Pure Rust foundation utilities for CLASSIC - runtime, errors, and business logic"
+description = "Pure Rust foundation utilities for CLASSIC - runtime, errors, generic YAML, and business logic"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
 crate-type = ["rlib"] # Pure Rust library only - NO Python extension
 
+[features]
+default = []
+# Heap profiling for the YAML benchmark (`scripts/profile/run_dhat.ps1 -Bench`).
+# Only `benches/yaml_benchmarks.rs` installs the dhat allocator; the library
+# itself never references dhat.
+dhat-heap = ["dep:dhat"]
+
 [dependencies]
+# Heap profiling (optional, see the dhat-heap feature)
+dhat = { version = "0.3", optional = true }
+
 # Async runtime (ONE RUNTIME RULE)
 tokio = { workspace = true }
 futures = { workspace = true }
@@ -35,14 +45,25 @@ xxhash-rust = { workspace = true }
 
 # Logging
 log = { workspace = true }
+# Logical-key and YAML-file cache hit/miss trace events
+tracing = { workspace = true }
 
 # Serialization
 serde = { workspace = true }
+
+# Generic YAML parsing, loaders, and the bounded logical-key and
+# path/mtime-aware YAML-file caches
+yaml-rust2 = { workspace = true }
+quick_cache = { workspace = true }
+
+# Ordered collections (preserves YAML key order in YamlOperations accessors)
+indexmap = { workspace = true }
 
 [dev-dependencies]
 criterion = { version = "0.8.1", features = ["html_reports"] }
 serial_test = "3.2"
 serde_json = { workspace = true }
+tempfile = "3.14"
 
 [[bench]]
 name = "string_benchmarks"
@@ -54,6 +75,10 @@ harness = false
 
 [[bench]]
 name = "performance_benchmarks"
+harness = false
+
+[[bench]]
+name = "yaml_benchmarks"
 harness = false
 
 [lints.rust]

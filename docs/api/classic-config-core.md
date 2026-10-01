@@ -136,11 +136,11 @@ Changing a token is breaking for every binding consumer; rewording a label is no
 ### Re-exports from `lib.rs`
 
 - `get_runtime` from [`classic-shared-core`](../../foundation/classic-shared-core)
-- `clear_global_yaml_cache` from [`classic-settings-core`](../../business-logic/classic-settings-core) (historical note: that owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
+- `clear_global_yaml_cache` from [`classic_shared_core::yaml`](classic-shared-core.md#yaml-file-cache) (moved there from `classic-settings-core` in issue #240; historical note: that crate absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
 - crashgen rule-model and Crashgen Expectation Parser types/functions from `crashgen_rules` and `crashgen_expectation_parser`
 - Installed YAML Data request/result/snapshot/provenance/diagnostic/error types and loading/inspection functions from `installed_yaml_data`
 
-`clear_global_yaml_cache` is re-exported mainly for tests and cache-sensitive consumers.
+`clear_global_yaml_cache` is re-exported mainly for tests and cache-sensitive consumers. It clears the default YAML-file cache scope, which is the one config's own `YamlOperations::new()` loaders fill.
 
 ---
 
@@ -162,6 +162,7 @@ Variants:
 Important methods:
 
 - `path(&self, game: &str) -> PathBuf`
+- `path_in_registry_scope(&self, game: &str, registry: &classic_registry_core::RegistryScope) -> PathBuf`
 - `display_name(&self) -> &'static str`
 - `display_name_with_game(&self, game: &str) -> String`
 - `load(&self, game: &str) -> anyhow::Result<yaml_rust2::Yaml>`
@@ -170,7 +171,8 @@ Contributor notes:
 
 - `YamlSource::Game` and `YamlSource::GameLocal` require a non-empty `game` string and will panic otherwise.
 - `YamlSource::Cache` uses the `CLASSIC` base directory for user config/cache paths.
-- `load()` reads the full YAML stream, merges documents with `classic-settings-core`, and returns one merged mapping.
+- The `Cache` fallback reads the application-directory override from a registry scope: `path()` and `load()` use the default scope, while `path_in_registry_scope()` reads only the caller's scope (falling back to the executable directory, never to another scope). The Python `classic_config` facade passes its own facade-owned scope so `classic_registry` cannot replace or clear config's application directory once both facades share one native library.
+- `load()` reads the full YAML stream, merges documents with `classic_shared_core::yaml`, and returns one merged mapping.
 
 ## Game Local Path Persistence
 
@@ -400,7 +402,7 @@ This flow is independent from User Settings and never opens or saves that docume
 2. The crate resolves file paths and checks that all three YAML files exist.
 3. It reads all three files in parallel with `tokio::join!`.
 4. It parses and merges every YAML document from each file.
-5. `YamlOperations` from [`classic-settings-core`](../../business-logic/classic-settings-core) extracts nested values.
+5. `YamlOperations` from [`classic_shared_core::yaml`](classic-shared-core.md#yamloperations) extracts nested values.
 6. `Crashgen_Registry` is parsed into `HashMap<String, CrashgenEntryRaw>`.
 7. Metadata fallbacks are applied from [`classic-version-registry-core`](../../business-logic/classic-version-registry-core):
    - `crashgen_name`
@@ -460,7 +462,8 @@ That shared-runtime rule matters for contributors: if you extend this crate, kee
 ## Related Crates And Integration Points
 
 - [`classic-shared-core`](../../foundation/classic-shared-core) - shared Tokio runtime via `get_runtime`
-- [`classic-settings-core`](../../business-logic/classic-settings-core) - YAML extraction helpers, mtime-aware file cache, and settings-cache management (historical note: this owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
+- [`classic-settings-core`](../../business-logic/classic-settings-core) - YAML extraction helpers and mtime-aware file cache (historical note: this owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
+- [`classic-shared-core`](classic-shared-core.md#generic-yaml-yaml) - generic YAML loaders, document merging, and `schema_version` compatibility used by YAML Data loading
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - version metadata and fallback resolution
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - converts `YamlDataCore` and `CrashgenEntryRaw` into analysis configuration, and evaluates the crashgen rule model through `CrashgenSettingsAnalyzer`
 - [`classic-node`](../../node-bindings/classic-node) - wraps this crate for JavaScript/TypeScript

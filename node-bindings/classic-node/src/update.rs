@@ -46,7 +46,7 @@
 //! accepted ranges.
 
 use crate::runtime::spawn_result;
-use classic_settings_core::{SchemaCompat, SchemaVersion};
+use classic_shared_core::yaml::{SchemaCompat, SchemaVersion};
 use classic_update_core as core;
 use std::path::PathBuf;
 

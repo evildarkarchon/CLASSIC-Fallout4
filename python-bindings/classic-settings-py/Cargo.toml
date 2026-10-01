@@ -18,8 +18,11 @@ pyo3 = { workspace = true, features = ["extension-module"] }
 # Async Python support
 pyo3-async-runtimes = { workspace = true, features = ["tokio-runtime"] }
 
-# Core settings cache business logic
+# YamlFile (CLASSIC YAML file identity)
 classic-settings-core = { path = "../../business-logic/classic-settings-core" }
+# Owner of the generic YAML rules: loaders, merge, validators, YamlOperations,
+# and both scoped YAML caches (logical-key and path/mtime-aware YAML-file)
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
 # Shared PyO3 helpers (PathLike, define_exceptions!, register_exceptions!, without_gil)
 # — mandatory dependency after folding in classic-yaml-py (plan 01-02 D-05/D-06)

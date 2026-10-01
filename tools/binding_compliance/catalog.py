@@ -417,8 +417,6 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
                 "--project",
                 "python-bindings",
                 "--inexact",
-                "--group",
-                "drift-guards",
                 "--locked",
             )
         ),

@@ -1,17 +1,21 @@
 //! Settings operations bridge for CXX FFI.
 //!
-//! Bridges `classic_settings_core` to the C++ layer. Covers three surfaces:
+//! Bridges `classic_settings_core` (`YamlFile`) and the generic YAML rules,
+//! YAML operations, and both YAML caches in `classic_shared_core::yaml` to the
+//! C++ layer. Covers these surfaces:
 //!
 //! 1. **YAML operations** (pre-existing): File loading, parsing, settings access
 //!    via dot-notation keys, and per-instance cache observation. Delegates to
-//!    `classic_settings_core::YamlOperations`.
+//!    `classic_shared_core::yaml::YamlOperations`, which uses the default
+//!    (unscoped) path/mtime-aware YAML-file cache of this linked library.
 //! 2. **Settings cache** (new — D-09): Process-wide YAML-settings cache with
 //!    sync and async-blocking load helpers, cache inspection, invalidation,
-//!    and observability. Delegates to the `classic_settings_core::cache`
-//!    module. The async helpers use `classic_shared_core::get_runtime().block_on()`
+//!    and observability. Delegates to the logical-key cache owned by
+//!    `classic_shared_core::yaml`. The async helpers use `classic_shared_core::get_runtime().block_on()`
 //!    to preserve the ONE RUNTIME RULE.
 //! 3. **Validators** (new — D-09): Settings document structure validation,
-//!    per-value type checking, and string-to-typed coercion. Mirrors the
+//!    per-value type checking, and string-to-typed coercion through
+//!    `classic_shared_core::yaml::validators`. Mirrors the
 //!    Python `classic_settings` validator surface 1:1.
 //! 4. **User Settings**: Opens the deep User Settings module from an explicit
 //!    CLASSIC root, returns typed Update, Crash Log Scan, and Game Setup groups,
@@ -20,7 +24,7 @@
 //!
 //! ## CXX type-system exceptions (documented)
 //!
-//! Two entries in the underlying `classic_settings_core` surface cannot cross
+//! Two entries in the underlying `classic_shared_core::yaml` surface cannot cross
 //! the CXX boundary directly and are therefore intentionally omitted from
 //! this bridge:
 //!
@@ -34,13 +38,12 @@
 //!   CXX-marshallable. C++ consumers needing the parsed docs must round-trip
 //!   through `yaml_ops_*`.
 //!
-//! Everything else on the `cache` and `validators` modules IS exposed.
+//! Everything else on the shared-core logical-key cache and `validators` IS exposed.
 
-use classic_settings_core::validators::{self, CoercedValue, SettingType};
-use classic_settings_core::{
-    self as settings_core, YamlCacheStats, YamlFile as CoreYamlFile, YamlOperations,
-    yaml_cache_stats,
-};
+use classic_settings_core::YamlFile as CoreYamlFile;
+use classic_shared_core::yaml as shared_yaml;
+use classic_shared_core::yaml::validators::{self, CoercedValue, SettingType};
+use classic_shared_core::yaml::{YamlCacheStats, YamlOperations, yaml_cache_stats};
 use classic_user_settings_core::{
     GuiWindow, LegacyTuiStateImportOutcome as CoreLegacyTuiStateImportOutcome,
     LegacyTuiStateImportRestoreOutcome as CoreLegacyTuiStateImportRestoreOutcome,
@@ -1548,8 +1551,7 @@ fn yaml_ops_has_document(ops: &YamlOps) -> bool {
 // ── Settings cache ops (D-09 — process-wide settings cache) ────────
 
 fn settings_load_sync(key: &str, path: &str) -> Result<u32, String> {
-    let docs =
-        settings_core::load_settings_sync(key, Path::new(path)).map_err(|e| e.to_string())?;
+    let docs = shared_yaml::load_settings_sync(key, Path::new(path)).map_err(|e| e.to_string())?;
     Ok(docs.len() as u32)
 }
 
@@ -1557,7 +1559,7 @@ fn settings_load_async_blocking(key: &str, path: &str) -> Result<u32, String> {
     let key = key.to_string();
     let path = path.to_string();
     let docs = classic_shared_core::get_runtime()
-        .block_on(async move { settings_core::load_settings_async(&key, Path::new(&path)).await })
+        .block_on(async move { shared_yaml::load_settings_async(&key, Path::new(&path)).await })
         .map_err(|e| e.to_string())?;
     Ok(docs.len() as u32)
 }
@@ -1565,7 +1567,7 @@ fn settings_load_async_blocking(key: &str, path: &str) -> Result<u32, String> {
 fn settings_load_batch_sync(paths: Vec<String>) -> Result<u32, String> {
     let path_bufs: Vec<std::path::PathBuf> = paths.iter().map(std::path::PathBuf::from).collect();
     let path_refs: Vec<&Path> = path_bufs.iter().map(|p| p.as_path()).collect();
-    let count = settings_core::load_batch_sync(&path_refs).map_err(|e| e.to_string())?;
+    let count = shared_yaml::load_batch_sync(&path_refs).map_err(|e| e.to_string())?;
     Ok(count as u32)
 }
 
@@ -1574,14 +1576,14 @@ fn settings_load_batch_async_blocking(paths: Vec<String>) -> Result<u32, String>
     let count = classic_shared_core::get_runtime()
         .block_on(async move {
             let path_refs: Vec<&Path> = path_bufs.iter().map(|p| p.as_path()).collect();
-            settings_core::load_batch_async(&path_refs).await
+            shared_yaml::load_batch_async(&path_refs).await
         })
         .map_err(|e| e.to_string())?;
     Ok(count as u32)
 }
 
 fn settings_cache_stats() -> ffi::SettingsCacheStats {
-    let stats = settings_core::cache_stats();
+    let stats = shared_yaml::cache_stats();
     ffi::SettingsCacheStats {
         hits: stats.hits,
         misses: stats.misses,
@@ -1592,27 +1594,27 @@ fn settings_cache_stats() -> ffi::SettingsCacheStats {
 }
 
 fn settings_reset_cache_stats() {
-    settings_core::reset_cache_stats();
+    shared_yaml::reset_cache_stats();
 }
 
 fn settings_clear_cache() {
-    settings_core::clear_cache();
+    shared_yaml::clear_cache();
 }
 
 fn settings_cache_size() -> u64 {
-    settings_core::cache_size() as u64
+    shared_yaml::cache_size() as u64
 }
 
 fn settings_cache_keys() -> Vec<String> {
-    settings_core::cache_keys()
+    shared_yaml::cache_keys()
 }
 
 fn settings_is_cached(key: &str) -> bool {
-    settings_core::is_cached(key)
+    shared_yaml::is_cached(key)
 }
 
 fn settings_invalidate(key: &str) -> bool {
-    settings_core::invalidate(key)
+    shared_yaml::invalidate(key)
 }
 
 fn from_bridge_yaml_file(f: ffi::YamlFile) -> CoreYamlFile {

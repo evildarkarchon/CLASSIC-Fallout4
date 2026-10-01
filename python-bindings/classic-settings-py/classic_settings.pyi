@@ -1,10 +1,12 @@
 """Type stubs for classic_settings.
 
-Python bindings for classic-settings-core, providing Rust-accelerated YAML settings
-caching with both synchronous and asynchronous APIs.
+Python bindings for CLASSIC's generic YAML rules, providing Rust-accelerated YAML
+settings caching with both synchronous and asynchronous APIs.
 
 Architecture:
-    - classic-settings-core: Business logic (YAML caching, batch loading)
+    - classic-shared-core (`yaml` module): Business logic (logical-key YAML caching,
+      batch loading, validators, YamlOperations, path/mtime-aware YAML-file cache)
+    - classic-settings-core: YamlFile
     - classic-settings-py: Python bindings (this module - PyO3 adapters)
 
 Features:
@@ -400,8 +402,9 @@ def coerce_setting_value(value: str, target_type: str) -> Any:
 class YamlOperations:
     """Stateful YAML operations handler with file caching.
 
-    Delegates to `classic_settings_core::YamlOperations`. Provides parsing,
-    dumping, file I/O, dot-notation lookups, and per-handle cache inspection.
+    Delegates to `classic_shared_core::yaml::YamlOperations`, bound to this
+    module's YAML-file cache scope. Provides parsing, dumping, file I/O,
+    dot-notation lookups, and cache inspection.
 
     The YAML-file cache is distinct from the settings cache exposed at the
     module level (`cache_stats` vs `get_cache_stats()`).
@@ -433,15 +436,23 @@ class YamlOperations:
 
 
 def clear_global_yaml_cache() -> None:
-    """Clear the process-wide YAML-file cache."""
+    """Clear this module's YAML-file cache.
+
+    Every `YamlOperations` instance shares this cache. Hit/miss counters are
+    kept, and other modules' YAML caches (such as the one
+    `classic_config.clear_yaml_cache()` clears) are not touched.
+    """
 
 
 def reset_yaml_cache_stats() -> None:
-    """Reset the YAML-file cache hit/miss counters to zero."""
+    """Reset this module's YAML-file cache hit/miss counters to zero.
+
+    Cached entries are kept.
+    """
 
 
 def yaml_cache_stats() -> YamlCacheStats:
-    """Get statistics for the process-wide YAML-file cache.
+    """Get statistics for this module's YAML-file cache.
 
     Distinct from `cache_stats()` — that one reports the settings cache.
     """

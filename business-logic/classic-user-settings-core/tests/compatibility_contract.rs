@@ -1,6 +1,6 @@
 //! Executable contract checks for the ADR-0004 User Settings compatibility corpus.
 
-use classic_settings_core::{Yaml, parse_yaml_content};
+use classic_shared_core::yaml::{Yaml, parse_yaml_content};
 use serde_json::Value;
 use std::collections::BTreeSet;
 use std::path::PathBuf;

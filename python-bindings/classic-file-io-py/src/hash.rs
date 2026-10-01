@@ -3,15 +3,28 @@
 //! This module provides SHA256 hashing operations with caching and
 //! parallel batch processing capabilities.
 
-use classic_file_io_core::hash::FileHasher;
+use classic_file_io_core::hash::FileHashScope;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use std::path::PathBuf;
+use std::sync::LazyLock;
+
+/// `classic_file_io`'s file-hash cache scope.
+///
+/// Created on first use and never replaced, so every `FileHasher` static
+/// method sees the same store for the life of the process. Once the Python
+/// facades share one native library, this keeps `classic_file_io`'s cached
+/// hashes, hit/miss counters, clears, and resets independent of
+/// `classic_scangame` and of the unscoped Rust default scope (#233, #242).
+/// Capacity, eviction, counter, and clear rules come from the core scope type.
+static FILE_IO_HASH_SCOPE: LazyLock<FileHashScope> = LazyLock::new(FileHashScope::new_isolated);
 
 /// Python wrapper for file hashing operations.
 ///
-/// Provides SHA256 hashing with caching and parallel batch operations.
+/// Provides SHA256 hashing with caching and parallel batch operations. The
+/// cache and its statistics belong to the `classic_file_io` facade: hashing,
+/// clears, and counter resets here never touch another facade's hash cache.
 ///
 /// Example:
 ///     >>> from classic_file_io import PyFileHasher
@@ -49,7 +62,8 @@ impl PyFileHasher {
     ///     64
     #[staticmethod]
     fn hash_file(path: &str) -> PyResult<String> {
-        FileHasher::hash_file(&PathBuf::from(path))
+        FILE_IO_HASH_SCOPE
+            .hash_file(&PathBuf::from(path))
             .map_err(|e| PyRuntimeError::new_err(format!("Hash calculation failed: {}", e)))
     }
 
@@ -83,7 +97,8 @@ impl PyFileHasher {
         let path_slice: Vec<&std::path::Path> = path_refs.iter().map(|p| p.as_path()).collect();
 
         // Calculate hashes in parallel
-        let results = FileHasher::hash_files_parallel(&path_slice)
+        let results = FILE_IO_HASH_SCOPE
+            .hash_files_parallel(&path_slice)
             .map_err(|e| PyRuntimeError::new_err(format!("Batch hashing failed: {}", e)))?;
 
         // Convert to Python dict
@@ -122,7 +137,8 @@ impl PyFileHasher {
         let path_slice: Vec<&std::path::Path> = path_refs.iter().map(|p| p.as_path()).collect();
 
         // Calculate hashes and get map
-        let hash_map = FileHasher::hash_files_to_map(&path_slice)
+        let hash_map = FILE_IO_HASH_SCOPE
+            .hash_files_to_map(&path_slice)
             .map_err(|e| PyRuntimeError::new_err(format!("Batch hashing failed: {}", e)))?;
 
         // Convert to Python dict
@@ -135,15 +151,16 @@ impl PyFileHasher {
         Ok(dict)
     }
 
-    /// Clear the hash cache.
+    /// Clear this facade's hash cache.
     ///
-    /// Useful for testing or when files are known to have changed.
+    /// Useful for testing or when files are known to have changed. Hit/miss
+    /// counters are kept until `reset_cache_stats()` is called.
     ///
     /// Example:
     ///     >>> PyFileHasher.clear_cache()
     #[staticmethod]
     fn clear_cache() {
-        FileHasher::clear_cache();
+        FILE_IO_HASH_SCOPE.clear_cache();
     }
 
     /// Get the number of cached hashes.
@@ -156,13 +173,13 @@ impl PyFileHasher {
     ///     >>> print(f"Cached hashes: {count}")
     #[staticmethod]
     fn cache_size() -> usize {
-        FileHasher::cache_size()
+        FILE_IO_HASH_SCOPE.cache_size()
     }
 
-    /// Get canonical hash-cache statistics.
+    /// Get canonical statistics for this facade's hash cache.
     #[staticmethod]
     fn cache_stats(py: Python<'_>) -> PyResult<Py<PyAny>> {
-        let stats = FileHasher::cache_stats();
+        let stats = FILE_IO_HASH_SCOPE.cache_stats();
         let dict = PyDict::new(py);
         dict.set_item("hits", stats.hits)?;
         dict.set_item("misses", stats.misses)?;
@@ -172,9 +189,10 @@ impl PyFileHasher {
         Ok(dict.unbind().into())
     }
 
-    /// Reset hash-cache hit and miss counters.
+    /// Reset this facade's hash-cache hit and miss counters without evicting
+    /// cached hashes.
     #[staticmethod]
     fn reset_cache_stats() {
-        FileHasher::reset_cache_stats();
+        FILE_IO_HASH_SCOPE.reset_cache_stats();
     }
 }

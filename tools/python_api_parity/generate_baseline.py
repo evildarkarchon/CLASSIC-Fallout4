@@ -281,7 +281,7 @@ def parse_rust_surface(
     the substitution to take effect.
 
     Post v9.1.0 Phase 1: when a `-core` crate uses nested modules (e.g.,
-    `classic-settings-core/src/yaml_ops/operations.rs`), the shared collector
+    `classic-shared-core/src/yaml/operations.rs`), the shared collector
     walks those source files too, so the parity gate can see methods and types
     declared there.
     """

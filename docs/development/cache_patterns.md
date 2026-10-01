@@ -6,8 +6,8 @@ This document describes the different caching patterns used in the CLASSIC Rust 
 
 | Pattern | Crate | Key Type | Value Type | Invalidation | Use Case |
 |---------|-------|----------|------------|--------------|----------|
-| File Mod-Time Cache | `classic-settings-core` | `PathBuf` | YAML + metadata | Automatic (file change) | Config files |
-| String-Key Cache | `classic-settings-core` | `String` | `Arc<Vec<Yaml>>` | Manual | Loaded YAML settings |
+| File Mod-Time Cache | `classic-shared-core` (`yaml`) | `PathBuf` | YAML + metadata | Automatic (file change) | Config files |
+| String-Key Cache | `classic-shared-core` (`yaml`) | `String` | `Arc<Vec<Yaml>>` | Manual | Loaded YAML settings |
 | Dynamic Registry | `classic-registry-core` | `String` | `Arc<dyn Any>` | Manual | Application state |
 | Path Hash Cache | `classic-file-io-core` | `PathBuf` | `String` | Manual | File integrity |
 | Time Series Metrics | `classic-perf-core` | `String` | `Vec<f64>` | Manual | Performance data |
@@ -17,7 +17,9 @@ This document describes the different caching patterns used in the CLASSIC Rust 
 
 ### 1. File Mod-Time Cache (YAML)
 
-**Location**: `business-logic/classic-settings-core/src/` (absorbed the former `classic-yaml-core` in v9.1.0 Phase 1)
+**Location**: `foundation/classic-shared-core/src/yaml/file_cache.rs` and `operations.rs` (moved from `classic-settings-core`, which absorbed the former `classic-yaml-core` in v9.1.0 Phase 1 and still re-exports it)
+
+**Scopes**: the store lives behind a `YamlFileCacheScope` handle. `YamlOperations::new()` and the free functions use the process default scope; `YamlOperations::with_cache_scope(YamlFileCacheScope::new_isolated())` gives a caller (such as one Python facade) its own entries and counters. The String-Key Cache below has the matching `LogicalKeyCacheScope`.
 
 **Purpose**: Cache parsed YAML files with automatic invalidation when the source file changes.
 
@@ -58,7 +60,7 @@ if let Some(cached) = CACHE.get(&path) {
 
 ### 2. String-Key Cache (Settings)
 
-**Location**: `business-logic/classic-settings-core/src/cache.rs`
+**Location**: `foundation/classic-shared-core/src/yaml/logical_key_cache.rs` (moved from `classic-settings-core`, which still re-exports it)
 
 **Purpose**: Cache loaded YAML settings with logical names for fast lookup.
 
@@ -145,14 +147,21 @@ let is_gui = is_gui_mode(); // Returns bool
 
 **Key Features**:
 - Path-based keys for direct file lookup
-- Pre-allocated capacity for expected load
+- Bounded 1024-entry capacity per scope (`quick_cache`)
 - Parallel batch hashing with Rayon
 - Explicit cache management
+- Independent scopes: each `FileHashScope` owns its own entries and hit/miss counters
 
 **Data Structure**:
 ```rust
-static HASH_CACHE: LazyLock<Arc<DashMap<PathBuf, String>>> =
-    LazyLock::new(|| Arc::new(DashMap::with_capacity(256)));
+// One store per scope; `FileHasher` uses the process default scope.
+struct FileHashStore {
+    entries: quick_cache::sync::Cache<PathBuf, String>,
+    hits: AtomicU64,
+    misses: AtomicU64,
+}
+pub struct FileHashScope { store: Arc<FileHashStore> }
+static DEFAULT_SCOPE: LazyLock<FileHashScope> = LazyLock::new(FileHashScope::new_isolated);
 ```
 
 **When to Use**:
@@ -172,6 +181,11 @@ let hashes = FileHasher::hash_files_parallel(&files)?;
 // Cache management
 FileHasher::clear_cache();
 let size = FileHasher::cache_size();
+
+// A caller-owned scope (e.g. one Python facade) shares nothing with the default
+let scope = FileHashScope::new_isolated();
+let hash = scope.hash_file(Path::new("game.exe"))?;
+let stats = scope.cache_stats();
 ```
 
 ---

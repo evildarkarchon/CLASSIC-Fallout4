@@ -14,8 +14,8 @@ use classic_config_core::{
     load_main_yaml_version_with_bundled_dir as core_load_main_yaml_version_with_bundled_dir,
     persist_game_local_paths as core_persist_game_local_paths,
 };
-use classic_settings_core::SettingsError;
 use classic_shared_core::get_runtime;
+use classic_shared_core::yaml::SettingsError;
 use napi::Status;
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
@@ -655,10 +655,12 @@ pub fn create_yaml_data_from_content(
 
 /// Clear the global YAML cache.
 ///
-/// Useful for testing to ensure clean state between test runs.
+/// Useful for testing to ensure clean state between test runs. Clears the
+/// default (unscoped) path/mtime-aware YAML-file cache that config's loaders
+/// use; counters are kept.
 #[napi]
 pub fn clear_yaml_cache() {
-    classic_config_core::clear_global_yaml_cache();
+    classic_shared_core::yaml::clear_global_yaml_cache();
 }
 
 /// Get the file path for a YAML source.

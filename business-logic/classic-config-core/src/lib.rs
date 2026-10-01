@@ -66,5 +66,7 @@ pub use yamldata::{
 // Re-export get_runtime from classic-shared-core for convenience
 pub use classic_shared_core::get_runtime;
 
-// Re-export YAML cache management from classic-settings-core for testing
-pub use classic_settings_core::clear_global_yaml_cache;
+// Re-export YAML cache management from its classic-shared-core owner for
+// testing. This clears the default YAML-file cache scope that config's own
+// `YamlOperations::new()` loaders use.
+pub use classic_shared_core::yaml::clear_global_yaml_cache;

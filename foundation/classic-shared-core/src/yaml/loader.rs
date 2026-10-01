@@ -1,7 +1,7 @@
 //! YAML file loading with sync and async APIs.
 
-use crate::error::{Result, SettingsError, SettingsSource};
-use crate::merge::documents::merge_yaml_documents_with_source;
+use crate::yaml::error::{Result, SettingsError, SettingsSource};
+use crate::yaml::merge::documents::merge_yaml_documents_with_source;
 use std::fs;
 use std::path::{Path, PathBuf};
 use tokio::fs as async_fs;
@@ -46,7 +46,7 @@ fn parse_yaml_content_with_source(
 /// # Examples
 ///
 /// ```rust
-/// use classic_settings_core::load_yaml_sync;
+/// use classic_shared_core::yaml::load_yaml_sync;
 /// use std::path::Path;
 ///
 /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -91,7 +91,7 @@ pub fn load_yaml_merged_sync(path: &Path) -> Result<Yaml> {
 /// # Examples
 ///
 /// ```rust
-/// use classic_settings_core::load_yaml_async;
+/// use classic_shared_core::yaml::load_yaml_async;
 /// use std::path::Path;
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -132,7 +132,7 @@ pub async fn load_yaml_merged_async(path: &Path) -> Result<Yaml> {
 /// # Examples
 ///
 /// ```rust
-/// use classic_settings_core::load_yaml_batch_sync;
+/// use classic_shared_core::yaml::load_yaml_batch_sync;
 /// use std::path::Path;
 ///
 /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -168,7 +168,7 @@ pub fn load_yaml_batch_sync(paths: &[&Path]) -> Result<Vec<(String, Vec<Yaml>)>>
 /// # Examples
 ///
 /// ```rust
-/// use classic_settings_core::load_yaml_batch_async;
+/// use classic_shared_core::yaml::load_yaml_batch_async;
 /// use std::path::Path;
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {

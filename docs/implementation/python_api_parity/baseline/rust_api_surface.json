@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-01T02:07:39.203485+00:00",
+  "generated_at_utc": "2026-10-01T09:10:30.358388+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -1128,8 +1128,8 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use classic_settings_core::clear_global_yaml_cache;",
-      "source_expr": "classic_settings_core::clear_global_yaml_cache",
+      "source_decl": "pub use classic_shared_core::yaml::clear_global_yaml_cache;",
+      "source_expr": "classic_shared_core::yaml::clear_global_yaml_cache",
       "tier": "tier1"
     },
     {
@@ -1884,6 +1884,16 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/yaml_source.rs",
       "source_decl": "pub fn path(&self, game: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "path_in_registry_scope",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/yaml_source.rs",
+      "source_decl": "pub fn path_in_registry_scope(&self, game: &str, registry: &RegistryScope)",
       "tier": "tier1"
     },
     {
@@ -3151,12 +3161,31 @@
       "tier": "tier1"
     },
     {
+      "symbol": "FileHashScope",
+      "kind": "reexport",
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
+      "source_decl": "pub use hash::{FileHashScope, FileHasher};",
+      "source_expr": "hash::FileHashScope",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FileHashScope",
+      "kind": "struct",
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub struct FileHashScope",
+      "tier": "tier1"
+    },
+    {
       "symbol": "FileHasher",
       "kind": "reexport",
       "crate": "classic-file-io-core",
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use hash::FileHasher;",
+      "source_decl": "pub use hash::{FileHashScope, FileHasher};",
       "source_expr": "hash::FileHasher",
       "tier": "tier1"
     },
@@ -3477,11 +3506,31 @@
     {
       "symbol": "cache_size",
       "kind": "function",
+      "arity": 1,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn cache_size(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cache_size",
+      "kind": "function",
       "arity": 0,
       "crate": "classic-file-io-core",
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/hash.rs",
       "source_decl": "pub fn cache_size()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cache_stats",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn cache_stats(&self)",
       "tier": "tier1"
     },
     {
@@ -3522,6 +3571,16 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/core.rs",
       "source_decl": "pub async fn clear_cache(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "clear_cache",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn clear_cache(&self)",
       "tier": "tier1"
     },
     {
@@ -3610,6 +3669,16 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod dds;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "default_scope",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn default_scope()",
       "tier": "tier1"
     },
     {
@@ -3850,6 +3919,16 @@
     {
       "symbol": "hash_file",
       "kind": "function",
+      "arity": 2,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn hash_file(&self, path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "hash_file",
+      "kind": "function",
       "arity": 1,
       "crate": "classic-file-io-core",
       "owner_module": "file_io",
@@ -3860,11 +3939,31 @@
     {
       "symbol": "hash_files_parallel",
       "kind": "function",
+      "arity": 2,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn hash_files_parallel(\n        &self,\n        paths: &[&Path],\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "hash_files_parallel",
+      "kind": "function",
       "arity": 1,
       "crate": "classic-file-io-core",
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/hash.rs",
       "source_decl": "pub fn hash_files_parallel(\n        paths: &[&Path],\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "hash_files_to_map",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn hash_files_to_map(\n        &self,\n        paths: &[&Path],\n    )",
       "tier": "tier1"
     },
     {
@@ -4087,6 +4186,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "new_isolated",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn new_isolated()",
+      "tier": "tier1"
+    },
+    {
       "symbol": "pastebin_dir",
       "kind": "function",
       "arity": 1,
@@ -4184,6 +4293,16 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/backup.rs",
       "source_decl": "pub async fn remove_backup(&self, backup_type: BackupType)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "reset_cache_stats",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn reset_cache_stats(&self)",
       "tier": "tier1"
     },
     {
@@ -6911,6 +7030,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "RegistryScope",
+      "kind": "reexport",
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/lib.rs",
+      "source_decl": "pub use registry::RegistryScope;",
+      "source_expr": "registry::RegistryScope",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "RegistryScope",
+      "kind": "struct",
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub struct RegistryScope",
+      "tier": "tier1"
+    },
+    {
       "symbol": "VERSION_AUTO_DETECTED",
       "kind": "const",
       "crate": "classic-registry-core",
@@ -6949,6 +7087,16 @@
     {
       "symbol": "clear_all",
       "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn clear_all(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "clear_all",
+      "kind": "function",
       "arity": 0,
       "crate": "classic-registry-core",
       "owner_module": "registry",
@@ -6967,6 +7115,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "default_scope",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn default_scope()",
+      "tier": "tier1"
+    },
+    {
       "symbol": "get",
       "kind": "reexport",
       "crate": "classic-registry-core",
@@ -6974,6 +7132,16 @@
       "source_file": "business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{clear_all, get, is_registered, register, unregister};",
       "source_expr": "registry::get",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_application_dir",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn get_application_dir(&self)",
       "tier": "tier1"
     },
     {
@@ -6994,6 +7162,16 @@
       "source_file": "business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{get_application_dir, set_application_dir};",
       "source_expr": "registry::get_application_dir",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_game",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn get_game(&self)",
       "tier": "tier1"
     },
     {
@@ -7039,6 +7217,16 @@
     {
       "symbol": "get_game_version_string",
       "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn get_game_version_string(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_game_version_string",
+      "kind": "function",
       "arity": 0,
       "crate": "classic-registry-core",
       "owner_module": "registry",
@@ -7054,6 +7242,16 @@
       "source_file": "business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{get_game_version_string, is_enb_present, is_xse_valid};",
       "source_expr": "registry::get_game_version_string",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_local_dir",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn get_local_dir(&self)",
       "tier": "tier1"
     },
     {
@@ -7099,6 +7297,16 @@
     {
       "symbol": "is_enb_present",
       "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn is_enb_present(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_enb_present",
+      "kind": "function",
       "arity": 0,
       "crate": "classic-registry-core",
       "owner_module": "registry",
@@ -7114,6 +7322,16 @@
       "source_file": "business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{get_game_version_string, is_enb_present, is_xse_valid};",
       "source_expr": "registry::is_enb_present",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_gui_mode",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn is_gui_mode(&self)",
       "tier": "tier1"
     },
     {
@@ -7149,6 +7367,16 @@
     {
       "symbol": "is_version_auto_detected",
       "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn is_version_auto_detected(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_version_auto_detected",
+      "kind": "function",
       "arity": 0,
       "crate": "classic-registry-core",
       "owner_module": "registry",
@@ -7164,6 +7392,16 @@
       "source_file": "business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{get_game_version, is_version_auto_detected};",
       "source_expr": "registry::is_version_auto_detected",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_xse_valid",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn is_xse_valid(&self)",
       "tier": "tier1"
     },
     {
@@ -7187,6 +7425,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "new_isolated",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn new_isolated()",
+      "tier": "tier1"
+    },
+    {
       "symbol": "register",
       "kind": "reexport",
       "crate": "classic-registry-core",
@@ -7194,6 +7442,16 @@
       "source_file": "business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{clear_all, get, is_registered, register, unregister};",
       "source_expr": "registry::register",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "set_application_dir",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn set_application_dir(&self, dir: PathBuf)",
       "tier": "tier1"
     },
     {
@@ -9768,6 +10026,16 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/orchestrator.rs",
       "source_decl": "pub async fn run_game_checks(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "run_in_hash_scope",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn run_in_hash_scope(&self, hash_scope: &FileHashScope)",
       "tier": "tier1"
     },
     {
@@ -13506,45 +13774,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
-      "source_expr": "cache::CacheStats",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "CacheStats",
-      "kind": "struct",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/cache.rs",
-      "source_decl": "pub struct CacheStats",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "CoercedValue",
-      "kind": "enum",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators/types.rs",
-      "source_decl": "pub enum CoercedValue",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "CoercedValue",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators.rs",
-      "source_decl": "pub use types::{CoercedValue, SettingType};",
-      "source_expr": "types::CoercedValue",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "Compatibility",
-      "kind": "enum",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version/compat.rs",
-      "source_decl": "pub enum Compatibility",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::CacheStats",
       "tier": "tier1"
     },
     {
@@ -13553,18 +13784,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use schema_version::{ Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, YamlSchemaError, extract_schema_version, schema_compat_check, };",
-      "source_expr": "schema_version::Compatibility",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "Compatibility",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
-      "source_decl": "pub use compat::{Compatibility, SchemaCompat, schema_compat_check};",
-      "source_expr": "compat::Compatibility",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::Compatibility",
       "tier": "tier1"
     },
     {
@@ -13573,26 +13794,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use error::{Result, SettingsError, SettingsSource};",
-      "source_expr": "error::Result",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "Result",
-      "kind": "type",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/error.rs",
-      "source_decl": "pub type Result",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SCHEMA_VERSION_KEY",
-      "kind": "const",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version/extract.rs",
-      "source_decl": "pub const SCHEMA_VERSION_KEY",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::Result",
       "tier": "tier1"
     },
     {
@@ -13601,18 +13804,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use schema_version::{ Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, YamlSchemaError, extract_schema_version, schema_compat_check, };",
-      "source_expr": "schema_version::SCHEMA_VERSION_KEY",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SCHEMA_VERSION_KEY",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
-      "source_decl": "pub use extract::{SCHEMA_VERSION_KEY, YamlSchemaError, extract_schema_version};",
-      "source_expr": "extract::SCHEMA_VERSION_KEY",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::SCHEMA_VERSION_KEY",
       "tier": "tier1"
     },
     {
@@ -13621,36 +13814,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use schema_version::{ Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, YamlSchemaError, extract_schema_version, schema_compat_check, };",
-      "source_expr": "schema_version::SchemaCompat",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SchemaCompat",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
-      "source_decl": "pub use compat::{Compatibility, SchemaCompat, schema_compat_check};",
-      "source_expr": "compat::SchemaCompat",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SchemaCompat",
-      "kind": "struct",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version/compat.rs",
-      "source_decl": "pub struct SchemaCompat",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SchemaParseError",
-      "kind": "enum",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version/version.rs",
-      "source_decl": "pub enum SchemaParseError",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::SchemaCompat",
       "tier": "tier1"
     },
     {
@@ -13659,18 +13824,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use schema_version::{ Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, YamlSchemaError, extract_schema_version, schema_compat_check, };",
-      "source_expr": "schema_version::SchemaParseError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SchemaParseError",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
-      "source_decl": "pub use version::{SchemaParseError, SchemaVersion};",
-      "source_expr": "version::SchemaParseError",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::SchemaParseError",
       "tier": "tier1"
     },
     {
@@ -13679,55 +13834,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use schema_version::{ Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, YamlSchemaError, extract_schema_version, schema_compat_check, };",
-      "source_expr": "schema_version::SchemaVersion",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SchemaVersion",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
-      "source_decl": "pub use version::{SchemaParseError, SchemaVersion};",
-      "source_expr": "version::SchemaVersion",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SchemaVersion",
-      "kind": "struct",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version/version.rs",
-      "source_decl": "pub struct SchemaVersion",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SettingType",
-      "kind": "enum",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators/types.rs",
-      "source_decl": "pub enum SettingType",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SettingType",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators.rs",
-      "source_decl": "pub use types::{CoercedValue, SettingType};",
-      "source_expr": "types::SettingType",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SettingsError",
-      "kind": "enum",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/error.rs",
-      "source_decl": "pub enum SettingsError",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::SchemaVersion",
       "tier": "tier1"
     },
     {
@@ -13736,17 +13844,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use error::{Result, SettingsError, SettingsSource};",
-      "source_expr": "error::SettingsError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SettingsSource",
-      "kind": "enum",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/error.rs",
-      "source_decl": "pub enum SettingsSource",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::SettingsError",
       "tier": "tier1"
     },
     {
@@ -13755,8 +13854,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use error::{Result, SettingsError, SettingsSource};",
-      "source_expr": "error::SettingsSource",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::SettingsSource",
       "tier": "tier1"
     },
     {
@@ -13765,8 +13864,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use yaml_rust2::Yaml;",
-      "source_expr": "yaml_rust2::Yaml",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::Yaml",
       "tier": "tier1"
     },
     {
@@ -13775,36 +13874,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use yaml_ops::{ YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
-      "source_expr": "yaml_ops::YamlCacheStats",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "YamlCacheStats",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
-      "source_decl": "pub use cache::{ YamlCacheStats, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
-      "source_expr": "cache::YamlCacheStats",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "YamlCacheStats",
-      "kind": "struct",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/cache.rs",
-      "source_decl": "pub struct YamlCacheStats",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "YamlError",
-      "kind": "enum",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/error.rs",
-      "source_decl": "pub enum YamlError",
+      "source_decl": "pub use classic_shared_core::yaml::{ YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
+      "source_expr": "classic_shared_core::yaml::YamlCacheStats",
       "tier": "tier1"
     },
     {
@@ -13813,18 +13884,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use yaml_ops::{ YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
-      "source_expr": "yaml_ops::YamlError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "YamlError",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
-      "source_decl": "pub use error::YamlError;",
-      "source_expr": "error::YamlError",
+      "source_decl": "pub use classic_shared_core::yaml::{ YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
+      "source_expr": "classic_shared_core::yaml::YamlError",
       "tier": "tier1"
     },
     {
@@ -13842,36 +13903,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use yaml_ops::{ YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
-      "source_expr": "yaml_ops::YamlOperations",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "YamlOperations",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
-      "source_decl": "pub use operations::YamlOperations;",
-      "source_expr": "operations::YamlOperations",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "YamlOperations",
-      "kind": "struct",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
-      "source_decl": "pub struct YamlOperations",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "YamlSchemaError",
-      "kind": "enum",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version/extract.rs",
-      "source_decl": "pub enum YamlSchemaError",
+      "source_decl": "pub use classic_shared_core::yaml::{ YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
+      "source_expr": "classic_shared_core::yaml::YamlOperations",
       "tier": "tier1"
     },
     {
@@ -13880,18 +13913,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use schema_version::{ Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, YamlSchemaError, extract_schema_version, schema_compat_check, };",
-      "source_expr": "schema_version::YamlSchemaError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "YamlSchemaError",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
-      "source_decl": "pub use extract::{SCHEMA_VERSION_KEY, YamlSchemaError, extract_schema_version};",
-      "source_expr": "extract::YamlSchemaError",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::YamlSchemaError",
       "tier": "tier1"
     },
     {
@@ -13902,46 +13925,6 @@
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/yaml_file.rs",
       "source_decl": "pub const fn all()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "as_bool",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators/types.rs",
-      "source_decl": "pub fn as_bool(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "as_f64",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators/types.rs",
-      "source_decl": "pub fn as_f64(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "as_i64",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators/types.rs",
-      "source_decl": "pub fn as_i64(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "as_str",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators/types.rs",
-      "source_decl": "pub fn as_str(&self)",
       "tier": "tier1"
     },
     {
@@ -13956,32 +13939,12 @@
     },
     {
       "symbol": "cache_keys",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/cache.rs",
-      "source_decl": "pub fn cache_keys()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "cache_keys",
       "kind": "reexport",
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
-      "source_expr": "cache::cache_keys",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "cache_size",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/cache.rs",
-      "source_decl": "pub fn cache_size()",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::cache_keys",
       "tier": "tier1"
     },
     {
@@ -13990,18 +13953,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
-      "source_expr": "cache::cache_size",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "cache_stats",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/cache.rs",
-      "source_decl": "pub fn cache_stats()",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::cache_size",
       "tier": "tier1"
     },
     {
@@ -14010,28 +13963,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
-      "source_expr": "cache::cache_stats",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "clear_cache",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/cache.rs",
-      "source_decl": "pub fn clear_cache()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "clear_cache",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
-      "source_decl": "pub fn clear_cache(&self)",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::cache_stats",
       "tier": "tier1"
     },
     {
@@ -14040,18 +13973,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
-      "source_expr": "cache::clear_cache",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "clear_global_yaml_cache",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/cache.rs",
-      "source_decl": "pub fn clear_global_yaml_cache()",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::clear_cache",
       "tier": "tier1"
     },
     {
@@ -14060,38 +13983,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use yaml_ops::{ YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
-      "source_expr": "yaml_ops::clear_global_yaml_cache",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "clear_global_yaml_cache",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
-      "source_decl": "pub use cache::{ YamlCacheStats, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
-      "source_expr": "cache::clear_global_yaml_cache",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "coerce_setting_value",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators/coerce.rs",
-      "source_decl": "pub fn coerce_setting_value(value: &str, target_type: SettingType)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "coerce_setting_value",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators.rs",
-      "source_decl": "pub use coerce::{coerce_setting_value, validate_setting_value};",
-      "source_expr": "coerce::coerce_setting_value",
+      "source_decl": "pub use classic_shared_core::yaml::{ YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
+      "source_expr": "classic_shared_core::yaml::clear_global_yaml_cache",
       "tier": "tier1"
     },
     {
@@ -14105,63 +13998,13 @@
       "tier": "tier1"
     },
     {
-      "symbol": "dump_yaml",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
-      "source_decl": "pub fn dump_yaml(&self, yaml: &Yaml)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "extract_schema_version",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version/extract.rs",
-      "source_decl": "pub fn extract_schema_version(doc: &Yaml)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "extract_schema_version",
       "kind": "reexport",
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use schema_version::{ Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, YamlSchemaError, extract_schema_version, schema_compat_check, };",
-      "source_expr": "schema_version::extract_schema_version",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "extract_schema_version",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
-      "source_decl": "pub use extract::{SCHEMA_VERSION_KEY, YamlSchemaError, extract_schema_version};",
-      "source_expr": "extract::extract_schema_version",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_cache_stats",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
-      "source_decl": "pub fn get_cache_stats(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_cached",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/cache.rs",
-      "source_decl": "pub fn get_cached(key: &str)",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::extract_schema_version",
       "tier": "tier1"
     },
     {
@@ -14170,98 +14013,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
-      "source_expr": "cache::get_cached",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_hashmap_value",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
-      "source_decl": "pub fn get_hashmap_value(&self, data: &Yaml, key_path: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_hashmap_vec_value",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
-      "source_decl": "pub fn get_hashmap_vec_value(\n        &self,\n        data: &Yaml,\n        key_path: &str,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_indexmap_value",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
-      "source_decl": "pub fn get_indexmap_value(&self, data: &Yaml, key_path: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_indexmap_vec_value",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
-      "source_decl": "pub fn get_indexmap_vec_value(\n        &self,\n        data: &Yaml,\n        key_path: &str,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_setting",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
-      "source_decl": "pub fn get_setting(&self, yaml: &Yaml, key_path: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_settings_batch",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
-      "source_decl": "pub fn get_settings_batch(&self, yaml: &Yaml, key_paths: &[&str])",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_string_value",
-      "kind": "function",
-      "arity": 4,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
-      "source_decl": "pub fn get_string_value(&self, data: &Yaml, key_path: &str, default: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_vec_value",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
-      "source_decl": "pub fn get_vec_value(&self, data: &Yaml, key_path: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "invalidate",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/cache.rs",
-      "source_decl": "pub fn invalidate(key: &str)",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::get_cached",
       "tier": "tier1"
     },
     {
@@ -14270,28 +14023,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
-      "source_expr": "cache::invalidate",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "is_cache_enabled",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
-      "source_decl": "pub fn is_cache_enabled(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "is_cached",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/cache.rs",
-      "source_decl": "pub fn is_cached(key: &str)",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::invalidate",
       "tier": "tier1"
     },
     {
@@ -14300,28 +14033,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
-      "source_expr": "cache::is_cached",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "label",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/error.rs",
-      "source_decl": "pub fn label(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "load_batch_async",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/cache.rs",
-      "source_decl": "pub async fn load_batch_async(paths: &[&Path])",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::is_cached",
       "tier": "tier1"
     },
     {
@@ -14330,18 +14043,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
-      "source_expr": "cache::load_batch_async",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "load_batch_sync",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/cache.rs",
-      "source_decl": "pub fn load_batch_sync(paths: &[&Path])",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::load_batch_async",
       "tier": "tier1"
     },
     {
@@ -14350,18 +14053,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
-      "source_expr": "cache::load_batch_sync",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "load_settings_async",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/cache.rs",
-      "source_decl": "pub async fn load_settings_async(key: &str, path: &Path)",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::load_batch_sync",
       "tier": "tier1"
     },
     {
@@ -14370,18 +14063,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
-      "source_expr": "cache::load_settings_async",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "load_settings_sync",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/cache.rs",
-      "source_decl": "pub fn load_settings_sync(key: &str, path: &Path)",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::load_settings_async",
       "tier": "tier1"
     },
     {
@@ -14390,18 +14073,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
-      "source_expr": "cache::load_settings_sync",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "load_yaml_async",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/loader.rs",
-      "source_decl": "pub async fn load_yaml_async(path: &Path)",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::load_settings_sync",
       "tier": "tier1"
     },
     {
@@ -14410,18 +14083,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
-      "source_expr": "loader::load_yaml_async",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "load_yaml_batch_async",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/loader.rs",
-      "source_decl": "pub async fn load_yaml_batch_async(paths: &[&Path])",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::load_yaml_async",
       "tier": "tier1"
     },
     {
@@ -14430,18 +14093,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
-      "source_expr": "loader::load_yaml_batch_async",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "load_yaml_batch_sync",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/loader.rs",
-      "source_decl": "pub fn load_yaml_batch_sync(paths: &[&Path])",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::load_yaml_batch_async",
       "tier": "tier1"
     },
     {
@@ -14450,38 +14103,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
-      "source_expr": "loader::load_yaml_batch_sync",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "load_yaml_file",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
-      "source_decl": "pub fn load_yaml_file(&self, path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "load_yaml_files_batch",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
-      "source_decl": "pub fn load_yaml_files_batch(&self, paths: &[&Path])",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "load_yaml_merged_async",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/loader.rs",
-      "source_decl": "pub async fn load_yaml_merged_async(path: &Path)",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::load_yaml_batch_sync",
       "tier": "tier1"
     },
     {
@@ -14490,18 +14113,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
-      "source_expr": "loader::load_yaml_merged_async",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "load_yaml_merged_sync",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/loader.rs",
-      "source_decl": "pub fn load_yaml_merged_sync(path: &Path)",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::load_yaml_merged_async",
       "tier": "tier1"
     },
     {
@@ -14510,18 +14123,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
-      "source_expr": "loader::load_yaml_merged_sync",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "load_yaml_sync",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/loader.rs",
-      "source_decl": "pub fn load_yaml_sync(path: &Path)",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::load_yaml_merged_sync",
       "tier": "tier1"
     },
     {
@@ -14530,18 +14133,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
-      "source_expr": "loader::load_yaml_sync",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "merge_keys",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/merge/merge_keys.rs",
-      "source_decl": "pub fn merge_keys(yaml: Yaml)",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::load_yaml_sync",
       "tier": "tier1"
     },
     {
@@ -14550,18 +14143,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use merge::merge_keys;",
-      "source_expr": "merge::merge_keys",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "merge_keys",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/merge.rs",
-      "source_decl": "pub use merge_keys::merge_keys;",
-      "source_expr": "merge_keys::merge_keys",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::merge_keys",
       "tier": "tier1"
     },
     {
@@ -14570,68 +14153,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use merge::merge_yaml_documents;",
-      "source_expr": "merge::merge_yaml_documents",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "merge_yaml_documents",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/merge.rs",
-      "source_decl": "pub use documents::merge_yaml_documents;",
-      "source_expr": "documents::merge_yaml_documents",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version/compat.rs",
-      "source_decl": "pub const fn new(accepted_major: u32, minimum_minor: u32)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version/version.rs",
-      "source_decl": "pub const fn new(major: u32, minor: u32)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
-      "source_decl": "pub fn new()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "parse_yaml",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
-      "source_decl": "pub fn parse_yaml(&self, content: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "parse_yaml_content",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/loader.rs",
-      "source_decl": "pub fn parse_yaml_content(source: impl Into<String>, content: &str)",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::merge_yaml_documents",
       "tier": "tier1"
     },
     {
@@ -14640,28 +14163,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
-      "source_expr": "loader::parse_yaml_content",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "path",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/error.rs",
-      "source_decl": "pub fn path(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "reset_cache_stats",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/cache.rs",
-      "source_decl": "pub fn reset_cache_stats()",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::parse_yaml_content",
       "tier": "tier1"
     },
     {
@@ -14670,18 +14173,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use cache::{ CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
-      "source_expr": "cache::reset_cache_stats",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "reset_yaml_cache_stats",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/cache.rs",
-      "source_decl": "pub fn reset_yaml_cache_stats()",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::reset_cache_stats",
       "tier": "tier1"
     },
     {
@@ -14690,38 +14183,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use yaml_ops::{ YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
-      "source_expr": "yaml_ops::reset_yaml_cache_stats",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "reset_yaml_cache_stats",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
-      "source_decl": "pub use cache::{ YamlCacheStats, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
-      "source_expr": "cache::reset_yaml_cache_stats",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "save_yaml_file",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
-      "source_decl": "pub fn save_yaml_file(&self, path: &Path, yaml: &Yaml)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "schema_compat_check",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version/compat.rs",
-      "source_decl": "pub fn schema_compat_check(version: &SchemaVersion, compat: &SchemaCompat)",
+      "source_decl": "pub use classic_shared_core::yaml::{ YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
+      "source_expr": "classic_shared_core::yaml::reset_yaml_cache_stats",
       "tier": "tier1"
     },
     {
@@ -14730,97 +14193,18 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use schema_version::{ Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, YamlSchemaError, extract_schema_version, schema_compat_check, };",
-      "source_expr": "schema_version::schema_compat_check",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "schema_compat_check",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
-      "source_decl": "pub use compat::{Compatibility, SchemaCompat, schema_compat_check};",
-      "source_expr": "compat::schema_compat_check",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "set_cache_enabled",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/operations.rs",
-      "source_decl": "pub fn set_cache_enabled(&mut self, enabled: bool)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "set_setting",
-      "kind": "function",
-      "arity": 4,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
-      "source_decl": "pub fn set_setting(&self, yaml: &Yaml, key_path: &str, value: Yaml)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "set_settings_batch",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
-      "source_decl": "pub fn set_settings_batch(\n        &self,\n        yaml: &Yaml,\n        settings: &[(&str, Yaml)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_setting_value",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators/coerce.rs",
-      "source_decl": "pub fn validate_setting_value(value: &str, expected_type: SettingType)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_setting_value",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators.rs",
-      "source_decl": "pub use coerce::{coerce_setting_value, validate_setting_value};",
-      "source_expr": "coerce::validate_setting_value",
+      "source_decl": "pub use classic_shared_core::yaml::{ CacheStats, Compatibility, Result, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, SettingsError, SettingsSource, Yaml, YamlSchemaError, cache_keys, cache_size, cache_stats, clear_cache, extract_schema_version, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, merge_keys, merge_yaml_documents, parse_yaml_content, reset_cache_stats, schema_compat_check, };",
+      "source_expr": "classic_shared_core::yaml::schema_compat_check",
       "tier": "tier1"
     },
     {
       "symbol": "validators",
-      "kind": "module",
+      "kind": "reexport",
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub mod validators;",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "with_file",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/schema_version/extract.rs",
-      "source_decl": "pub fn with_file(self, file_label: impl Into<String>)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "yaml_cache_stats",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops/cache.rs",
-      "source_decl": "pub fn yaml_cache_stats()",
+      "source_decl": "pub use classic_shared_core::yaml::validators;",
+      "source_expr": "classic_shared_core::yaml::validators",
       "tier": "tier1"
     },
     {
@@ -14829,18 +14213,8 @@
       "crate": "classic-settings-core",
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
-      "source_decl": "pub use yaml_ops::{ YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
-      "source_expr": "yaml_ops::yaml_cache_stats",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "yaml_cache_stats",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_ops.rs",
-      "source_decl": "pub use cache::{ YamlCacheStats, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
-      "source_expr": "cache::yaml_cache_stats",
+      "source_decl": "pub use classic_shared_core::yaml::{ YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
+      "source_expr": "classic_shared_core::yaml::yaml_cache_stats",
       "tier": "tier1"
     },
     {
@@ -14851,6 +14225,25 @@
       "source_file": "foundation/classic-shared-core/src/lib.rs",
       "source_decl": "pub use game_id::*;",
       "source_expr": "game_id::*",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CacheStats",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use logical_key_cache::{ CacheStats, LogicalKeyCacheScope, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
+      "source_expr": "logical_key_cache::CacheStats",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CacheStats",
+      "kind": "struct",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub struct CacheStats",
       "tier": "tier1"
     },
     {
@@ -14892,6 +14285,54 @@
       "tier": "tier1"
     },
     {
+      "symbol": "CoercedValue",
+      "kind": "enum",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/validators/types.rs",
+      "source_decl": "pub enum CoercedValue",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CoercedValue",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/validators.rs",
+      "source_decl": "pub use types::{CoercedValue, SettingType};",
+      "source_expr": "types::CoercedValue",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Compatibility",
+      "kind": "enum",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version/compat.rs",
+      "source_decl": "pub enum Compatibility",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Compatibility",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use schema_version::{ Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, YamlSchemaError, extract_schema_version, schema_compat_check, };",
+      "source_expr": "schema_version::Compatibility",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Compatibility",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version.rs",
+      "source_decl": "pub use compat::{Compatibility, SchemaCompat, schema_compat_check};",
+      "source_expr": "compat::Compatibility",
+      "tier": "tier1"
+    },
+    {
       "symbol": "GameId",
       "kind": "enum",
       "crate": "classic-shared-core",
@@ -14917,6 +14358,25 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/errors.rs",
       "source_decl": "pub trait IntoClassicError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LogicalKeyCacheScope",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use logical_key_cache::{ CacheStats, LogicalKeyCacheScope, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
+      "source_expr": "logical_key_cache::LogicalKeyCacheScope",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LogicalKeyCacheScope",
+      "kind": "struct",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub struct LogicalKeyCacheScope",
       "tier": "tier1"
     },
     {
@@ -14983,12 +14443,204 @@
       "tier": "tier1"
     },
     {
+      "symbol": "Result",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use error::{Result, SettingsError, SettingsSource};",
+      "source_expr": "error::Result",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Result",
+      "kind": "type",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/error.rs",
+      "source_decl": "pub type Result",
+      "tier": "tier1"
+    },
+    {
       "symbol": "RuntimeConfig",
       "kind": "struct",
       "crate": "classic-shared-core",
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/lib.rs",
       "source_decl": "pub struct RuntimeConfig",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SCHEMA_VERSION_KEY",
+      "kind": "const",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version/extract.rs",
+      "source_decl": "pub const SCHEMA_VERSION_KEY",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SCHEMA_VERSION_KEY",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use schema_version::{ Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, YamlSchemaError, extract_schema_version, schema_compat_check, };",
+      "source_expr": "schema_version::SCHEMA_VERSION_KEY",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SCHEMA_VERSION_KEY",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version.rs",
+      "source_decl": "pub use extract::{SCHEMA_VERSION_KEY, YamlSchemaError, extract_schema_version};",
+      "source_expr": "extract::SCHEMA_VERSION_KEY",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SchemaCompat",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use schema_version::{ Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, YamlSchemaError, extract_schema_version, schema_compat_check, };",
+      "source_expr": "schema_version::SchemaCompat",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SchemaCompat",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version.rs",
+      "source_decl": "pub use compat::{Compatibility, SchemaCompat, schema_compat_check};",
+      "source_expr": "compat::SchemaCompat",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SchemaCompat",
+      "kind": "struct",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version/compat.rs",
+      "source_decl": "pub struct SchemaCompat",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SchemaParseError",
+      "kind": "enum",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version/version.rs",
+      "source_decl": "pub enum SchemaParseError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SchemaParseError",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use schema_version::{ Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, YamlSchemaError, extract_schema_version, schema_compat_check, };",
+      "source_expr": "schema_version::SchemaParseError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SchemaParseError",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version.rs",
+      "source_decl": "pub use version::{SchemaParseError, SchemaVersion};",
+      "source_expr": "version::SchemaParseError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SchemaVersion",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use schema_version::{ Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, YamlSchemaError, extract_schema_version, schema_compat_check, };",
+      "source_expr": "schema_version::SchemaVersion",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SchemaVersion",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version.rs",
+      "source_decl": "pub use version::{SchemaParseError, SchemaVersion};",
+      "source_expr": "version::SchemaVersion",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SchemaVersion",
+      "kind": "struct",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version/version.rs",
+      "source_decl": "pub struct SchemaVersion",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SettingType",
+      "kind": "enum",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/validators/types.rs",
+      "source_decl": "pub enum SettingType",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SettingType",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/validators.rs",
+      "source_decl": "pub use types::{CoercedValue, SettingType};",
+      "source_expr": "types::SettingType",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SettingsError",
+      "kind": "enum",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/error.rs",
+      "source_decl": "pub enum SettingsError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SettingsError",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use error::{Result, SettingsError, SettingsSource};",
+      "source_expr": "error::SettingsError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SettingsSource",
+      "kind": "enum",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/error.rs",
+      "source_decl": "pub enum SettingsSource",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SettingsSource",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use error::{Result, SettingsError, SettingsSource};",
+      "source_expr": "error::SettingsSource",
       "tier": "tier1"
     },
     {
@@ -15028,6 +14680,121 @@
       "tier": "tier1"
     },
     {
+      "symbol": "Yaml",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use yaml_rust2::Yaml;",
+      "source_expr": "yaml_rust2::Yaml",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlCacheStats",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use file_cache::{ YamlCacheStats, YamlFileCacheScope, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
+      "source_expr": "file_cache::YamlCacheStats",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlCacheStats",
+      "kind": "struct",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/file_cache.rs",
+      "source_decl": "pub struct YamlCacheStats",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlError",
+      "kind": "enum",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/operation_error.rs",
+      "source_decl": "pub enum YamlError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlError",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use operation_error::YamlError;",
+      "source_expr": "operation_error::YamlError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlFileCacheScope",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use file_cache::{ YamlCacheStats, YamlFileCacheScope, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
+      "source_expr": "file_cache::YamlFileCacheScope",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlFileCacheScope",
+      "kind": "struct",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/file_cache.rs",
+      "source_decl": "pub struct YamlFileCacheScope",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlOperations",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use operations::YamlOperations;",
+      "source_expr": "operations::YamlOperations",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlOperations",
+      "kind": "struct",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/operations.rs",
+      "source_decl": "pub struct YamlOperations",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlSchemaError",
+      "kind": "enum",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version/extract.rs",
+      "source_decl": "pub enum YamlSchemaError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlSchemaError",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use schema_version::{ Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, YamlSchemaError, extract_schema_version, schema_compat_check, };",
+      "source_expr": "schema_version::YamlSchemaError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlSchemaError",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version.rs",
+      "source_decl": "pub use extract::{SCHEMA_VERSION_KEY, YamlSchemaError, extract_schema_version};",
+      "source_expr": "extract::YamlSchemaError",
+      "tier": "tier1"
+    },
+    {
       "symbol": "all",
       "kind": "function",
       "arity": 0,
@@ -15058,6 +14825,36 @@
       "tier": "tier1"
     },
     {
+      "symbol": "as_bool",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/validators/types.rs",
+      "source_decl": "pub fn as_bool(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "as_f64",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/validators/types.rs",
+      "source_decl": "pub fn as_f64(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "as_i64",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/validators/types.rs",
+      "source_decl": "pub fn as_i64(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "as_str",
       "kind": "function",
       "arity": 1,
@@ -15065,6 +14862,46 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/game_id.rs",
       "source_decl": "pub const fn as_str(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "as_str",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/validators/types.rs",
+      "source_decl": "pub fn as_str(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cache_keys",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn cache_keys(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cache_keys",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn cache_keys()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cache_keys",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use logical_key_cache::{ CacheStats, LogicalKeyCacheScope, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
+      "source_expr": "logical_key_cache::cache_keys",
       "tier": "tier1"
     },
     {
@@ -15078,6 +14915,46 @@
       "tier": "tier1"
     },
     {
+      "symbol": "cache_scope",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/operations.rs",
+      "source_decl": "pub fn cache_scope(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cache_size",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn cache_size(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cache_size",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn cache_size()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cache_size",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use logical_key_cache::{ CacheStats, LogicalKeyCacheScope, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
+      "source_expr": "logical_key_cache::cache_size",
+      "tier": "tier1"
+    },
+    {
       "symbol": "cache_stats",
       "kind": "function",
       "arity": 1,
@@ -15085,6 +14962,36 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/path_core.rs",
       "source_decl": "pub fn cache_stats(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cache_stats",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn cache_stats(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cache_stats",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn cache_stats()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cache_stats",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use logical_key_cache::{ CacheStats, LogicalKeyCacheScope, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
+      "source_expr": "logical_key_cache::cache_stats",
       "tier": "tier1"
     },
     {
@@ -15108,6 +15015,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "clear",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/file_cache.rs",
+      "source_decl": "pub fn clear(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "clear_cache",
       "kind": "function",
       "arity": 1,
@@ -15115,6 +15032,66 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/path_core.rs",
       "source_decl": "pub fn clear_cache(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "clear_cache",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn clear_cache(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "clear_cache",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn clear_cache()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "clear_cache",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/operations.rs",
+      "source_decl": "pub fn clear_cache(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "clear_cache",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use logical_key_cache::{ CacheStats, LogicalKeyCacheScope, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
+      "source_expr": "logical_key_cache::clear_cache",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "clear_global_yaml_cache",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/file_cache.rs",
+      "source_decl": "pub fn clear_global_yaml_cache()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "clear_global_yaml_cache",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use file_cache::{ YamlCacheStats, YamlFileCacheScope, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
+      "source_expr": "file_cache::clear_global_yaml_cache",
       "tier": "tier1"
     },
     {
@@ -15158,6 +15135,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "coerce_setting_value",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/validators/coerce.rs",
+      "source_decl": "pub fn coerce_setting_value(value: &str, target_type: SettingType)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "coerce_setting_value",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/validators.rs",
+      "source_decl": "pub use coerce::{coerce_setting_value, validate_setting_value};",
+      "source_expr": "coerce::coerce_setting_value",
+      "tier": "tier1"
+    },
+    {
       "symbol": "common_prefix",
       "kind": "function",
       "arity": 2,
@@ -15198,6 +15195,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "default_scope",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/file_cache.rs",
+      "source_decl": "pub fn default_scope()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "default_scope",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn default_scope()",
+      "tier": "tier1"
+    },
+    {
       "symbol": "display_name",
       "kind": "function",
       "arity": 1,
@@ -15205,6 +15222,16 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/game_id.rs",
       "source_decl": "pub const fn display_name(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "dump_yaml",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/operations.rs",
+      "source_decl": "pub fn dump_yaml(&self, yaml: &Yaml)",
       "tier": "tier1"
     },
     {
@@ -15287,6 +15314,36 @@
       "tier": "tier1"
     },
     {
+      "symbol": "extract_schema_version",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version/extract.rs",
+      "source_decl": "pub fn extract_schema_version(doc: &Yaml)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "extract_schema_version",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use schema_version::{ Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, YamlSchemaError, extract_schema_version, schema_compat_check, };",
+      "source_expr": "schema_version::extract_schema_version",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "extract_schema_version",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version.rs",
+      "source_decl": "pub use extract::{SCHEMA_VERSION_KEY, YamlSchemaError, extract_schema_version};",
+      "source_expr": "extract::extract_schema_version",
+      "tier": "tier1"
+    },
+    {
       "symbol": "finish",
       "kind": "function",
       "arity": 1,
@@ -15294,6 +15351,46 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/performance_core.rs",
       "source_decl": "pub fn finish(mut self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_cache_stats",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/operations.rs",
+      "source_decl": "pub fn get_cache_stats(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_cached",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn get_cached(&self, key: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_cached",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn get_cached(key: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_cached",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use logical_key_cache::{ CacheStats, LogicalKeyCacheScope, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
+      "source_expr": "logical_key_cache::get_cached",
       "tier": "tier1"
     },
     {
@@ -15327,6 +15424,46 @@
       "tier": "tier1"
     },
     {
+      "symbol": "get_hashmap_value",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/accessors.rs",
+      "source_decl": "pub fn get_hashmap_value(&self, data: &Yaml, key_path: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_hashmap_vec_value",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/accessors.rs",
+      "source_decl": "pub fn get_hashmap_vec_value(\n        &self,\n        data: &Yaml,\n        key_path: &str,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_indexmap_value",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/accessors.rs",
+      "source_decl": "pub fn get_indexmap_value(&self, data: &Yaml, key_path: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_indexmap_vec_value",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/accessors.rs",
+      "source_decl": "pub fn get_indexmap_vec_value(\n        &self,\n        data: &Yaml,\n        key_path: &str,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "get_operations",
       "kind": "function",
       "arity": 1,
@@ -15357,6 +15494,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "get_setting",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/accessors.rs",
+      "source_decl": "pub fn get_setting(&self, yaml: &Yaml, key_path: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_settings_batch",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/accessors.rs",
+      "source_decl": "pub fn get_settings_batch(&self, yaml: &Yaml, key_paths: &[&str])",
+      "tier": "tier1"
+    },
+    {
       "symbol": "get_stats",
       "kind": "function",
       "arity": 2,
@@ -15364,6 +15521,16 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/performance_core.rs",
       "source_decl": "pub fn get_stats(&self, operation: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_string_value",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/accessors.rs",
+      "source_decl": "pub fn get_string_value(&self, data: &Yaml, key_path: &str, default: &str)",
       "tier": "tier1"
     },
     {
@@ -15387,6 +15554,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "get_vec_value",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/accessors.rs",
+      "source_decl": "pub fn get_vec_value(&self, data: &Yaml, key_path: &str)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "intern",
       "kind": "function",
       "arity": 2,
@@ -15407,6 +15584,36 @@
       "tier": "tier1"
     },
     {
+      "symbol": "invalidate",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn invalidate(&self, key: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "invalidate",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn invalidate(key: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "invalidate",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use logical_key_cache::{ CacheStats, LogicalKeyCacheScope, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
+      "source_expr": "logical_key_cache::invalidate",
+      "tier": "tier1"
+    },
+    {
       "symbol": "io_optimized",
       "kind": "function",
       "arity": 0,
@@ -15424,6 +15631,46 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/path_core.rs",
       "source_decl": "pub fn is_absolute(&self, path: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_cache_enabled",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/operations.rs",
+      "source_decl": "pub fn is_cache_enabled(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_cached",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn is_cached(&self, key: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_cached",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn is_cached(key: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_cached",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use logical_key_cache::{ CacheStats, LogicalKeyCacheScope, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
+      "source_expr": "logical_key_cache::is_cached",
       "tier": "tier1"
     },
     {
@@ -15454,6 +15701,326 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/path_core.rs",
       "source_decl": "pub fn join_paths(&self, base: &str, components: &[String])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "label",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/error.rs",
+      "source_decl": "pub fn label(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_batch_async",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub async fn load_batch_async(&self, paths: &[&Path])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_batch_async",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub async fn load_batch_async(paths: &[&Path])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_batch_async",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use logical_key_cache::{ CacheStats, LogicalKeyCacheScope, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
+      "source_expr": "logical_key_cache::load_batch_async",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_batch_sync",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn load_batch_sync(&self, paths: &[&Path])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_batch_sync",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn load_batch_sync(paths: &[&Path])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_batch_sync",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use logical_key_cache::{ CacheStats, LogicalKeyCacheScope, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
+      "source_expr": "logical_key_cache::load_batch_sync",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_settings_async",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub async fn load_settings_async(&self, key: &str, path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_settings_async",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub async fn load_settings_async(key: &str, path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_settings_async",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use logical_key_cache::{ CacheStats, LogicalKeyCacheScope, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
+      "source_expr": "logical_key_cache::load_settings_async",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_settings_sync",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn load_settings_sync(&self, key: &str, path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_settings_sync",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn load_settings_sync(key: &str, path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_settings_sync",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use logical_key_cache::{ CacheStats, LogicalKeyCacheScope, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
+      "source_expr": "logical_key_cache::load_settings_sync",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_yaml_async",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/loader.rs",
+      "source_decl": "pub async fn load_yaml_async(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_yaml_async",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
+      "source_expr": "loader::load_yaml_async",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_yaml_batch_async",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/loader.rs",
+      "source_decl": "pub async fn load_yaml_batch_async(paths: &[&Path])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_yaml_batch_async",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
+      "source_expr": "loader::load_yaml_batch_async",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_yaml_batch_sync",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/loader.rs",
+      "source_decl": "pub fn load_yaml_batch_sync(paths: &[&Path])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_yaml_batch_sync",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
+      "source_expr": "loader::load_yaml_batch_sync",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_yaml_file",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/operations.rs",
+      "source_decl": "pub fn load_yaml_file(&self, path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_yaml_files_batch",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/operations.rs",
+      "source_decl": "pub fn load_yaml_files_batch(&self, paths: &[&Path])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_yaml_merged_async",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/loader.rs",
+      "source_decl": "pub async fn load_yaml_merged_async(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_yaml_merged_async",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
+      "source_expr": "loader::load_yaml_merged_async",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_yaml_merged_sync",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/loader.rs",
+      "source_decl": "pub fn load_yaml_merged_sync(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_yaml_merged_sync",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
+      "source_expr": "loader::load_yaml_merged_sync",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_yaml_sync",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/loader.rs",
+      "source_decl": "pub fn load_yaml_sync(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_yaml_sync",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
+      "source_expr": "loader::load_yaml_sync",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "merge_keys",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/merge/merge_keys.rs",
+      "source_decl": "pub fn merge_keys(yaml: Yaml)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "merge_keys",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use merge::{merge_keys, merge_yaml_documents};",
+      "source_expr": "merge::merge_keys",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "merge_keys",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/merge.rs",
+      "source_decl": "pub use merge_keys::merge_keys;",
+      "source_expr": "merge_keys::merge_keys",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "merge_yaml_documents",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use merge::{merge_keys, merge_yaml_documents};",
+      "source_expr": "merge::merge_yaml_documents",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "merge_yaml_documents",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/merge.rs",
+      "source_decl": "pub use documents::merge_yaml_documents;",
+      "source_expr": "documents::merge_yaml_documents",
       "tier": "tier1"
     },
     {
@@ -15494,6 +16061,56 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/strings_core.rs",
       "source_decl": "pub fn new()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/operations.rs",
+      "source_decl": "pub fn new()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version/compat.rs",
+      "source_decl": "pub const fn new(accepted_major: u32, minimum_minor: u32)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version/version.rs",
+      "source_decl": "pub const fn new(major: u32, minor: u32)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new_isolated",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/file_cache.rs",
+      "source_decl": "pub fn new_isolated()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new_isolated",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn new_isolated()",
       "tier": "tier1"
     },
     {
@@ -15547,6 +16164,36 @@
       "tier": "tier1"
     },
     {
+      "symbol": "parse_yaml",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/operations.rs",
+      "source_decl": "pub fn parse_yaml(&self, content: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "parse_yaml_content",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/loader.rs",
+      "source_decl": "pub fn parse_yaml_content(source: impl Into<String>, content: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "parse_yaml_content",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use loader::{ load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_merged_async, load_yaml_merged_sync, load_yaml_sync, parse_yaml_content, };",
+      "source_expr": "loader::parse_yaml_content",
+      "tier": "tier1"
+    },
+    {
       "symbol": "path",
       "kind": "function",
       "arity": 2,
@@ -15554,6 +16201,16 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/errors.rs",
       "source_decl": "pub fn path(message: impl Into<String>, path: Option<impl Into<String>>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/error.rs",
+      "source_decl": "pub fn path(&self)",
       "tier": "tier1"
     },
     {
@@ -15675,6 +16332,66 @@
       "tier": "tier1"
     },
     {
+      "symbol": "reset_cache_stats",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn reset_cache_stats(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "reset_cache_stats",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/logical_key_cache.rs",
+      "source_decl": "pub fn reset_cache_stats()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "reset_cache_stats",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use logical_key_cache::{ CacheStats, LogicalKeyCacheScope, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats, };",
+      "source_expr": "logical_key_cache::reset_cache_stats",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "reset_stats",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/file_cache.rs",
+      "source_decl": "pub fn reset_stats(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "reset_yaml_cache_stats",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/file_cache.rs",
+      "source_decl": "pub fn reset_yaml_cache_stats()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "reset_yaml_cache_stats",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use file_cache::{ YamlCacheStats, YamlFileCacheScope, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
+      "source_expr": "file_cache::reset_yaml_cache_stats",
+      "tier": "tier1"
+    },
+    {
       "symbol": "resolve",
       "kind": "function",
       "arity": 2,
@@ -15685,6 +16402,46 @@
       "tier": "tier1"
     },
     {
+      "symbol": "save_yaml_file",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/operations.rs",
+      "source_decl": "pub fn save_yaml_file(&self, path: &Path, yaml: &Yaml)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "schema_compat_check",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version/compat.rs",
+      "source_decl": "pub fn schema_compat_check(version: &SchemaVersion, compat: &SchemaCompat)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "schema_compat_check",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use schema_version::{ Compatibility, SCHEMA_VERSION_KEY, SchemaCompat, SchemaParseError, SchemaVersion, YamlSchemaError, extract_schema_version, schema_compat_check, };",
+      "source_expr": "schema_version::schema_compat_check",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "schema_compat_check",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version.rs",
+      "source_decl": "pub use compat::{Compatibility, SchemaCompat, schema_compat_check};",
+      "source_expr": "compat::schema_compat_check",
+      "tier": "tier1"
+    },
+    {
       "symbol": "set_bytes",
       "kind": "function",
       "arity": 2,
@@ -15692,6 +16449,36 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/performance_core.rs",
       "source_decl": "pub fn set_bytes(&mut self, bytes: u64)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "set_cache_enabled",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/operations.rs",
+      "source_decl": "pub fn set_cache_enabled(&mut self, enabled: bool)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "set_setting",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/accessors.rs",
+      "source_decl": "pub fn set_setting(&self, yaml: &Yaml, key_path: &str, value: Yaml)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "set_settings_batch",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/accessors.rs",
+      "source_decl": "pub fn set_settings_batch(\n        &self,\n        yaml: &Yaml,\n        settings: &[(&str, Yaml)",
       "tier": "tier1"
     },
     {
@@ -15732,6 +16519,16 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/performance_core.rs",
       "source_decl": "pub fn start_timer(name: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "stats",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/file_cache.rs",
+      "source_decl": "pub fn stats(&self)",
       "tier": "tier1"
     },
     {
@@ -15794,6 +16591,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "validate_setting_value",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/validators/coerce.rs",
+      "source_decl": "pub fn validate_setting_value(value: &str, expected_type: SettingType)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_setting_value",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/validators.rs",
+      "source_decl": "pub use coerce::{coerce_setting_value, validate_setting_value};",
+      "source_expr": "coerce::validate_setting_value",
+      "tier": "tier1"
+    },
+    {
       "symbol": "validation",
       "kind": "function",
       "arity": 2,
@@ -15804,6 +16621,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "validators",
+      "kind": "module",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub mod validators;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_cache_scope",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/operations.rs",
+      "source_decl": "pub fn with_cache_scope(scope: YamlFileCacheScope)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "with_context",
       "kind": "function",
       "arity": 2,
@@ -15811,6 +16647,45 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/errors.rs",
       "source_decl": "pub fn with_context(self, context: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_file",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/schema_version/extract.rs",
+      "source_decl": "pub fn with_file(self, file_label: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "yaml",
+      "kind": "module",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub mod yaml;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "yaml_cache_stats",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml/file_cache.rs",
+      "source_decl": "pub fn yaml_cache_stats()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "yaml_cache_stats",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/yaml.rs",
+      "source_decl": "pub use file_cache::{ YamlCacheStats, YamlFileCacheScope, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats, };",
+      "source_expr": "file_cache::yaml_cache_stats",
       "tier": "tier1"
     },
     {

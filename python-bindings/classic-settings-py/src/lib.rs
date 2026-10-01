@@ -5,20 +5,66 @@
 //! class that was formerly in `classic-yaml-py`. The two crates were merged in
 //! plan 01-02 (D-05/D-06) after `classic-yaml-core` was absorbed into
 //! `classic-settings-core` in plan 01-01.
+//!
+//! The logical-key cache, loaders, merge-key helper, validators,
+//! `YamlOperations`, and the path/mtime-aware YAML-file cache are owned by
+//! `classic_shared_core::yaml` and are called through that path directly so
+//! parity tooling attributes them to their real owner; `YamlFile` still comes
+//! from `classic-settings-core`.
+//!
+//! # Cache scopes
+//!
+//! Every cache effect of this facade goes through the two core-owned scope
+//! handles below, never through the unscoped default-scope functions. As a
+//! separate extension image that changes nothing observable, but once the
+//! Python facades share one native library it keeps `classic_settings`'
+//! entries, counters, clears, and resets separate from other facades'
+//! (notably `classic_config.clear_yaml_cache()`, which owns the default
+//! YAML-file scope).
 
-use classic_settings_core::{
-    self as core, Yaml, YamlError, YamlOperations,
-    clear_global_yaml_cache as core_clear_yaml_cache, merge_keys as core_merge_keys,
-    reset_yaml_cache_stats as core_reset_yaml_cache_stats,
-    yaml_cache_stats as core_yaml_cache_stats,
-};
 use classic_shared::{PathLike, define_exceptions, register_exceptions, without_gil};
+use classic_shared_core::yaml::merge_keys as core_merge_keys;
+use classic_shared_core::yaml::{
+    LogicalKeyCacheScope, Yaml, YamlCacheStats, YamlError, YamlFileCacheScope, YamlOperations,
+};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::LazyLock;
 
 mod yaml_file;
+
+// ============================================================================
+// Facade-owned cache scopes
+// ============================================================================
+
+/// `classic_settings`' logical-key settings cache scope.
+///
+/// Created on first use and never replaced, so every module function sees the
+/// same store for the life of the process. Capacity, freshness, counter, and
+/// clear rules come from the core scope type.
+static SETTINGS_LOGICAL_KEY_SCOPE: LazyLock<LogicalKeyCacheScope> =
+    LazyLock::new(LogicalKeyCacheScope::new_isolated);
+
+/// `classic_settings`' path/mtime-aware YAML-file cache scope.
+///
+/// Shared by every `classic_settings.YamlOperations` object and by the
+/// module-level `clear_global_yaml_cache`, `reset_yaml_cache_stats`, and
+/// `yaml_cache_stats` helpers, which therefore act on this facade only.
+static SETTINGS_YAML_FILE_SCOPE: LazyLock<YamlFileCacheScope> =
+    LazyLock::new(YamlFileCacheScope::new_isolated);
+
+/// Project YAML-file cache statistics into the facade's five-key dict.
+fn yaml_cache_stats_dict(py: Python<'_>, stats: YamlCacheStats) -> PyResult<Py<PyAny>> {
+    let dict = PyDict::new(py);
+    dict.set_item("hits", stats.hits)?;
+    dict.set_item("misses", stats.misses)?;
+    dict.set_item("hit_rate", stats.hit_rate)?;
+    dict.set_item("size", stats.size)?;
+    dict.set_item("capacity", stats.capacity)?;
+    Ok(dict.unbind().into())
+}
 
 // ============================================================================
 // Exception hierarchy (folded in from classic-yaml-py — D-06)
@@ -182,7 +228,9 @@ fn python_to_yaml(py: Python<'_>, obj: Py<PyAny>) -> PyResult<Yaml> {
 /// Python-facing YAML operations wrapper.
 ///
 /// Stateful YAML handler with caching. Delegates to
-/// `classic_settings_core::YamlOperations`. All methods that do file I/O or
+/// `classic_shared_core::yaml::YamlOperations` bound to this facade's
+/// YAML-file cache scope, so every instance shares one cache and
+/// `clear_cache()` empties that whole scope. All methods that do file I/O or
 /// heavy serialization release the GIL via `without_gil` so concurrent Python
 /// threads can keep running.
 #[pyclass(name = "YamlOperations")]
@@ -195,7 +243,7 @@ impl PyYamlOperations {
     #[new]
     fn new() -> PyResult<Self> {
         Ok(Self {
-            inner: YamlOperations::new(),
+            inner: YamlOperations::with_cache_scope(SETTINGS_YAML_FILE_SCOPE.clone()),
         })
     }
 
@@ -277,27 +325,24 @@ impl PyYamlOperations {
     }
 
     /// Clear the YAML cache.
+    ///
+    /// Empties this facade's whole YAML-file cache scope (shared by every
+    /// `YamlOperations` instance), not just entries this object loaded.
     fn clear_cache(&self) {
         self.inner.clear_cache();
     }
 
     /// Get cache statistics for the YAML-file cache.
     ///
-    /// This delegates to `classic_settings_core::yaml_cache_stats` (distinct
-    /// from the settings cache stats returned by `classic_settings.cache_stats`).
-    /// Plan 01-01 renamed `cache_stats` → `yaml_cache_stats` in settings-core
-    /// per D-03, so this must call `yaml_cache_stats()` to preserve the
-    /// original yaml-py semantics — calling the unrelated `cache_stats()` would
-    /// silently return the settings cache numbers.
+    /// This reports the YAML-file cache scope's stats (the shared-core
+    /// counterpart of `yaml_cache_stats`), distinct from the settings cache
+    /// stats returned by `classic_settings.cache_stats`. Plan 01-01 renamed
+    /// `cache_stats` → `yaml_cache_stats` in settings-core per D-03, so this
+    /// must report the YAML-file cache to preserve the original yaml-py
+    /// semantics — reporting the unrelated logical-key cache would silently
+    /// return the settings cache numbers.
     fn get_cache_stats(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
-        let stats = core_yaml_cache_stats();
-        let dict = PyDict::new(py);
-        dict.set_item("hits", stats.hits)?;
-        dict.set_item("misses", stats.misses)?;
-        dict.set_item("hit_rate", stats.hit_rate)?;
-        dict.set_item("size", stats.size)?;
-        dict.set_item("capacity", stats.capacity)?;
-        Ok(dict.unbind().into())
+        yaml_cache_stats_dict(py, self.inner.cache_scope().stats())
     }
 
     /// Extract a string value from YAML using a dot-separated key path.
@@ -343,15 +388,20 @@ impl PyYamlOperations {
 // ============================================================================
 
 /// Clear the global YAML-file cache.
+///
+/// "Global" means this facade's YAML-file cache scope: every
+/// `YamlOperations` instance shares it. Hit/miss counters are kept.
 #[pyfunction]
 fn clear_global_yaml_cache() {
-    core_clear_yaml_cache();
+    SETTINGS_YAML_FILE_SCOPE.clear();
 }
 
 /// Reset the global YAML-file cache hit/miss counters.
+///
+/// Acts on this facade's YAML-file cache scope and never evicts entries.
 #[pyfunction]
 fn reset_yaml_cache_stats() {
-    core_reset_yaml_cache_stats();
+    SETTINGS_YAML_FILE_SCOPE.reset_stats();
 }
 
 /// Get statistics for the global YAML-file cache.
@@ -359,14 +409,7 @@ fn reset_yaml_cache_stats() {
 /// Distinct from `cache_stats()` — that one covers the settings cache.
 #[pyfunction]
 fn yaml_cache_stats(py: Python) -> PyResult<Py<PyAny>> {
-    let stats = core_yaml_cache_stats();
-    let dict = PyDict::new(py);
-    dict.set_item("hits", stats.hits)?;
-    dict.set_item("misses", stats.misses)?;
-    dict.set_item("hit_rate", stats.hit_rate)?;
-    dict.set_item("size", stats.size)?;
-    dict.set_item("capacity", stats.capacity)?;
-    Ok(dict.unbind().into())
+    yaml_cache_stats_dict(py, SETTINGS_YAML_FILE_SCOPE.stats())
 }
 
 /// Apply YAML merge keys (`<<:`) to a document.
@@ -404,7 +447,8 @@ fn merge_keys(py: Python, data: Py<PyAny>) -> PyResult<Py<PyAny>> {
 #[pyfunction]
 fn load_settings_sync(py: Python, key: &str, path: &str) -> PyResult<Py<PyAny>> {
     let path_buf = PathBuf::from(path);
-    let docs = core::load_settings_sync(key, &path_buf)
+    let docs = SETTINGS_LOGICAL_KEY_SCOPE
+        .load_settings_sync(key, &path_buf)
         .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
 
     let list = PyList::empty(py);
@@ -439,9 +483,13 @@ fn load_settings_sync(py: Python, key: &str, path: &str) -> PyResult<Py<PyAny>> 
 ///     value
 #[pyfunction]
 fn load_settings_async(py: Python, key: String, path: String) -> PyResult<Py<PyAny>> {
+    // Select the facade scope here, at entry, and move the handle into the
+    // future so the entry lands in it whichever runtime thread resumes.
+    let scope = SETTINGS_LOGICAL_KEY_SCOPE.clone();
     let fut = pyo3_async_runtimes::tokio::future_into_py(py, async move {
         let path_buf = PathBuf::from(path);
-        let docs = core::load_settings_async(&key, &path_buf)
+        let docs = scope
+            .load_settings_async(&key, &path_buf)
             .await
             .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
 
@@ -483,7 +531,8 @@ fn load_batch_sync(paths: Vec<String>) -> PyResult<usize> {
     let path_bufs: Vec<PathBuf> = paths.iter().map(PathBuf::from).collect();
     let path_refs: Vec<&std::path::Path> = path_bufs.iter().map(|p| p.as_path()).collect();
 
-    core::load_batch_sync(&path_refs)
+    SETTINGS_LOGICAL_KEY_SCOPE
+        .load_batch_sync(&path_refs)
         .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))
 }
 
@@ -509,11 +558,14 @@ fn load_batch_sync(paths: Vec<String>) -> PyResult<usize> {
 ///     Loaded 2 files
 #[pyfunction]
 fn load_batch_async(py: Python, paths: Vec<String>) -> PyResult<Py<PyAny>> {
+    // Same explicit scope hand-off as `load_settings_async`.
+    let scope = SETTINGS_LOGICAL_KEY_SCOPE.clone();
     let fut = pyo3_async_runtimes::tokio::future_into_py(py, async move {
         let path_bufs: Vec<PathBuf> = paths.iter().map(PathBuf::from).collect();
         let path_refs: Vec<&std::path::Path> = path_bufs.iter().map(|p| p.as_path()).collect();
 
-        let count = core::load_batch_async(&path_refs)
+        let count = scope
+            .load_batch_async(&path_refs)
             .await
             .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
 
@@ -543,7 +595,7 @@ fn load_batch_async(py: Python, paths: Vec<String>) -> PyResult<Py<PyAny>> {
 ///     True
 #[pyfunction]
 fn get_cached(py: Python, key: &str) -> PyResult<Option<Py<PyAny>>> {
-    match core::get_cached(key) {
+    match SETTINGS_LOGICAL_KEY_SCOPE.get_cached(key) {
         Some(docs) => {
             let list = PyList::empty(py);
             for doc in docs.iter() {
@@ -572,7 +624,7 @@ fn get_cached(py: Python, key: &str) -> PyResult<Option<Py<PyAny>>> {
 ///     False
 #[pyfunction]
 fn is_cached(key: &str) -> bool {
-    core::is_cached(key)
+    SETTINGS_LOGICAL_KEY_SCOPE.is_cached(key)
 }
 
 /// Invalidate (remove) a cached entry.
@@ -594,7 +646,7 @@ fn is_cached(key: &str) -> bool {
 ///     False
 #[pyfunction]
 fn invalidate(key: &str) -> bool {
-    core::invalidate(key)
+    SETTINGS_LOGICAL_KEY_SCOPE.invalidate(key)
 }
 
 /// Clear all cached settings.
@@ -610,7 +662,7 @@ fn invalidate(key: &str) -> bool {
 ///     0
 #[pyfunction]
 fn clear_cache() {
-    core::clear_cache();
+    SETTINGS_LOGICAL_KEY_SCOPE.clear_cache();
 }
 
 /// Get the number of cached entries.
@@ -625,7 +677,7 @@ fn clear_cache() {
 ///     1
 #[pyfunction]
 fn cache_size() -> usize {
-    core::cache_size()
+    SETTINGS_LOGICAL_KEY_SCOPE.cache_size()
 }
 
 /// Get all cache keys.
@@ -642,7 +694,7 @@ fn cache_size() -> usize {
 ///     2
 #[pyfunction]
 fn cache_keys() -> Vec<String> {
-    core::cache_keys()
+    SETTINGS_LOGICAL_KEY_SCOPE.cache_keys()
 }
 
 /// Get current cache statistics.
@@ -660,7 +712,7 @@ fn cache_keys() -> Vec<String> {
 ///     >>> print(f"Hit rate: {stats['hit_rate'] * 100:.1f}%")
 #[pyfunction]
 fn cache_stats(py: Python) -> PyResult<Py<PyAny>> {
-    let stats = core::cache_stats();
+    let stats = SETTINGS_LOGICAL_KEY_SCOPE.cache_stats();
     let dict = PyDict::new(py);
     dict.set_item("hits", stats.hits)?;
     dict.set_item("misses", stats.misses)?;
@@ -683,7 +735,7 @@ fn cache_stats(py: Python) -> PyResult<Py<PyAny>> {
 ///     >>> assert stats['hits'] == 0
 #[pyfunction]
 fn reset_cache_stats() {
-    core::reset_cache_stats();
+    SETTINGS_LOGICAL_KEY_SCOPE.reset_cache_stats();
 }
 
 /// Python module for YAML settings cache.
@@ -791,10 +843,7 @@ fn classic_settings(m: &Bound<'_, PyModule>) -> PyResult<()> {
 #[pyfunction]
 fn validate_setting_value(value: &str, expected_type: &str) -> PyResult<bool> {
     let setting_type = parse_setting_type(expected_type)?;
-    Ok(classic_settings_core::validators::validate_setting_value(
-        value,
-        setting_type,
-    ))
+    Ok(classic_shared_core::yaml::validators::validate_setting_value(value, setting_type))
 }
 
 /// Coerce a string value to the target setting type.
@@ -826,7 +875,7 @@ fn validate_setting_value(value: &str, expected_type: &str) -> PyResult<bool> {
 ///     3.14
 #[pyfunction]
 fn coerce_setting_value(py: Python, value: &str, target_type: &str) -> PyResult<Py<PyAny>> {
-    use classic_settings_core::validators::{self, CoercedValue};
+    use classic_shared_core::yaml::validators::{self, CoercedValue};
     use pyo3::IntoPyObject;
 
     let setting_type = parse_setting_type(target_type)?;
@@ -843,8 +892,10 @@ fn coerce_setting_value(py: Python, value: &str, target_type: &str) -> PyResult<
 }
 
 /// Parse a string setting type name into the Rust enum.
-fn parse_setting_type(type_name: &str) -> PyResult<classic_settings_core::validators::SettingType> {
-    use classic_settings_core::validators::SettingType;
+fn parse_setting_type(
+    type_name: &str,
+) -> PyResult<classic_shared_core::yaml::validators::SettingType> {
+    use classic_shared_core::yaml::validators::SettingType;
     match type_name.to_lowercase().as_str() {
         "int" | "integer" => Ok(SettingType::Int),
         "bool" | "boolean" => Ok(SettingType::Bool),

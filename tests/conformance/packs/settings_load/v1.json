@@ -3,7 +3,7 @@
   "familyId": "settings-load",
   "familyVersion": 1,
   "domainOwner": {
-    "rustCrate": "classic-settings-core"
+    "rustCrate": "classic-shared-core"
   },
   "fixtureRoot": "tests/fixtures/settings_load_conformance",
   "fixtures": {

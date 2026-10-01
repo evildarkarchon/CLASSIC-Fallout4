@@ -63,8 +63,10 @@ def observe_registry_accessors(family: str, fixture: dict[str, Any]) -> dict[str
                 replacement = (
                     Path(registry.get_application_dir()).relative_to(root).as_posix()
                 )
-                # Separate extension DLLs own separate Rust statics; validate each
-                # alias in its exporting module, without assuming cross-DLL state.
+                # Separate extension DLLs own separate Rust statics today, and each
+                # facade owns its own core registry scope once they share one
+                # library (#241); validate each alias in its exporting module,
+                # without assuming cross-facade state.
                 config.set_application_dir(str(root / "first"))
                 if config.get_application_dir() != str(root / "first"):
                     raise ValueError("config setter did not preserve first override")

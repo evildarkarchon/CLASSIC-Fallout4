@@ -39,7 +39,7 @@ pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};
 pub use generation::{
     FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml,
 };
-pub use hash::FileHasher;
+pub use hash::{FileHashScope, FileHasher};
 pub use log_collection::{
     CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution,
     resolve_targeted_inputs,

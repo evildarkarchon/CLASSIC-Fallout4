@@ -7,7 +7,7 @@
 
 use std::path::{Path, PathBuf};
 
-use classic_file_io_core::FileHasher;
+use classic_file_io_core::FileHashScope;
 use classic_path_core::{DocsPathFinder, GamePathFinder};
 use classic_shared_core::GameId;
 use classic_user_settings_core::GameSetupSettings;
@@ -367,8 +367,25 @@ impl GameSetupIntake {
     /// Validation failures are represented as [`GameSetupCheck`] values. The
     /// top-level status becomes `ActionRequired` only when the caller needs to
     /// collect missing setup input before all relevant checks can run.
+    ///
+    /// Executable and XSE script hashes go through the process default
+    /// [`FileHashScope`]; use [`GameSetupIntake::run_in_hash_scope`] to keep
+    /// them in a caller-owned scope instead.
     #[must_use]
     pub fn run(&self) -> GameSetupIntakeResult {
+        self.run_in_hash_scope(&FileHashScope::default_scope())
+    }
+
+    /// Run Game Setup Intake, hashing files only through `hash_scope`.
+    ///
+    /// Behaves exactly like [`GameSetupIntake::run`], except that executable and
+    /// XSE script hashes are read from and cached in `hash_scope`, and its
+    /// hit/miss statistics count them. No other hash-cache scope, including the
+    /// process default, is read or changed. This lets a binding facade keep its
+    /// hash cache and statistics independent of other callers in the same
+    /// process.
+    #[must_use]
+    pub fn run_in_hash_scope(&self, hash_scope: &FileHashScope) -> GameSetupIntakeResult {
         let mut checks = Vec::new();
         let mut actions = Vec::new();
         let mut path_updates = Vec::new();
@@ -383,7 +400,8 @@ impl GameSetupIntake {
                         .as_ref()
                         .map(|root| root.join(selected_version_exe_name(self.game_id, &selected)))
                 });
-        let version_context = resolve_version_context(self, auto_detection_exe_path.as_deref());
+        let version_context =
+            resolve_version_context(self, auto_detection_exe_path.as_deref(), hash_scope);
         let mut version_facts = version_context.facts;
         checks.extend(version_context.checks);
         let game_exe_path =
@@ -408,7 +426,12 @@ impl GameSetupIntake {
             path_updates.push(GameSetupPathUpdate::new("docs_root", docs_root.clone()));
         }
 
-        run_executable_checks(&paths, version_context.info.as_ref(), &mut checks);
+        run_executable_checks(
+            &paths,
+            version_context.info.as_ref(),
+            hash_scope,
+            &mut checks,
+        );
         run_documents_checks(
             documents_game_name(self.game_id, version_context.info.as_ref()),
             &paths,
@@ -418,6 +441,7 @@ impl GameSetupIntake {
             self.game_id,
             &paths,
             version_context.info.as_ref(),
+            hash_scope,
             &mut checks,
         );
 
@@ -564,14 +588,19 @@ struct VersionContext {
 }
 
 /// Resolve version registry metadata using any game executable path already discovered.
-fn resolve_version_context(intake: &GameSetupIntake, exe_path: Option<&Path>) -> VersionContext {
-    resolve_version_context_with_registry(intake, exe_path, get_version_registry())
+fn resolve_version_context(
+    intake: &GameSetupIntake,
+    exe_path: Option<&Path>,
+    hash_scope: &FileHashScope,
+) -> VersionContext {
+    resolve_version_context_with_registry(intake, exe_path, get_version_registry(), hash_scope)
 }
 
 fn resolve_version_context_with_registry(
     intake: &GameSetupIntake,
     exe_path: Option<&Path>,
     registry: &VersionRegistry,
+    hash_scope: &FileHashScope,
 ) -> VersionContext {
     let selected = normalize_game_setup_version_selection(&intake.selected_game_version);
     let mut facts = GameSetupVersionFacts {
@@ -599,7 +628,7 @@ fn resolve_version_context_with_registry(
     let info = if selected == "auto" {
         match exe_path {
             Some(path) if path.exists() => {
-                detect_registry_info_from_exe(path, &candidates, &mut facts)
+                detect_registry_info_from_exe(path, &candidates, hash_scope, &mut facts)
             }
             _ => None,
         }
@@ -635,6 +664,7 @@ fn resolve_version_context_with_registry(
 fn detect_registry_info_from_exe(
     exe_path: &Path,
     candidates: &[VersionInfo],
+    hash_scope: &FileHashScope,
     facts: &mut GameSetupVersionFacts,
 ) -> Option<VersionInfo> {
     if let Ok((major, minor, patch, build)) = extract_pe_version(exe_path) {
@@ -661,7 +691,7 @@ fn detect_registry_info_from_exe(
         facts.match_confidence = Some(match_confidence_name(MatchConfidence::Unknown).to_string());
     }
 
-    let hash = FileHasher::hash_file(exe_path).ok()?;
+    let hash = hash_scope.hash_file(exe_path).ok()?;
     candidates
         .iter()
         .find(|info| {
@@ -858,6 +888,7 @@ fn docs_relative_path(docs_name: &str) -> String {
 fn run_executable_checks(
     paths: &GameSetupResolvedPaths,
     info: Option<&VersionInfo>,
+    hash_scope: &FileHashScope,
     checks: &mut Vec<GameSetupCheck>,
 ) {
     let Some(exe_path) = &paths.game_exe_path else {
@@ -920,7 +951,7 @@ fn run_executable_checks(
     }
 
     match (
-        FileHasher::hash_file(exe_path),
+        hash_scope.hash_file(exe_path),
         info.and_then(|info| info.exe_hash.as_deref()),
     ) {
         (Ok(actual), Some(expected)) => {
@@ -1016,6 +1047,7 @@ fn run_xse_checks(
     game_id: GameId,
     paths: &GameSetupResolvedPaths,
     info: Option<&VersionInfo>,
+    hash_scope: &FileHashScope,
     checks: &mut Vec<GameSetupCheck>,
 ) {
     let Some(game_root) = &paths.game_root else {
@@ -1092,7 +1124,7 @@ fn run_xse_checks(
     }
 
     run_address_library_check(paths, info, checks);
-    run_xse_script_hash_checks(paths, info, checks);
+    run_xse_script_hash_checks(paths, info, hash_scope, checks);
 }
 
 fn run_address_library_check(
@@ -1159,6 +1191,7 @@ fn run_address_library_check(
 fn run_xse_script_hash_checks(
     paths: &GameSetupResolvedPaths,
     info: Option<&VersionInfo>,
+    hash_scope: &FileHashScope,
     checks: &mut Vec<GameSetupCheck>,
 ) {
     let Some(xse) = info.and_then(|info| info.xse.as_ref()) else {
@@ -1199,7 +1232,7 @@ fn run_xse_script_hash_checks(
             }
             continue;
         }
-        match FileHasher::hash_file(&script_path) {
+        match hash_scope.hash_file(&script_path) {
             Ok(actual) if actual.eq_ignore_ascii_case(expected_hash) => {}
             Ok(actual) => {
                 mismatched += 1;
