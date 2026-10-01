@@ -92,17 +92,24 @@ Output: `target/profiling/pyspy/pyspy-{timestamp}.svg`
 Profile heap allocations in Rust code:
 
 ```powershell
-# Profile tests
-.\scripts\profile\run_dhat.ps1 -Crate classic-settings-core -Test
+# Profile the YAML benchmarks (parse, dump, traversal, modification)
+.\scripts\profile\run_dhat.ps1 -Crate classic-shared-core -Bench -BenchTarget yaml_benchmarks
 
-# Profile specific test
-.\scripts\profile\run_dhat.ps1 -Crate classic-settings-core -Test -TestFilter "test_load"
-
-# Profile benchmarks
-.\scripts\profile\run_dhat.ps1 -Crate classic-settings-core -Bench
+# Profile tests / a specific test in a crate whose tests install dhat (see below)
+.\scripts\profile\run_dhat.ps1 -Crate {name} -Test
+.\scripts\profile\run_dhat.ps1 -Crate {name} -Test -TestFilter "test_load"
 ```
 
-Output: `target/profiling/dhat/dhat-heap-{timestamp}.json`
+Output: `target/profiling/dhat/dhat-heap-{crate}-{timestamp}.json`
+
+dhat only records anything when the binary being run installs `dhat::Alloc` as
+its `#[global_allocator]` behind the crate's `dhat-heap` feature and holds a
+`dhat::Profiler` for the run. `classic-shared-core`'s `yaml_benchmarks` target
+is wired that way (it reads `DHAT_OUTPUT_FILE`, which the script sets). No
+crate's test suite installs the allocator today, so `-Test` runs pass without
+writing a report until a crate adds that hook. Pass `-BenchTarget` with
+`-Bench`; otherwise every bench binary in the crate runs, and only the
+instrumented one contributes to the report.
 
 View results at: https://nnethercote.github.io/dh_view/dh_view.html
 
@@ -142,11 +149,14 @@ All benchmarks support two modes controlled by the `BENCH_MODE` environment vari
 # Run Rust DB baseline suite only (database + scanlog FormID resolution)
 .\scripts\bench\run_benchmarks.ps1 -Suite rust-db-baseline -Mode quick
 
-# Run specific crate benchmarks
-.\scripts\bench\run_benchmarks.ps1 -Crate classic-settings-core
+# Run the YAML suite only (classic-shared-core yaml_benchmarks)
+.\scripts\bench\run_benchmarks.ps1 -Suite yaml
 
-# Filter to specific benchmark
-.\scripts\bench\run_benchmarks.ps1 -Filter "parse_yaml"
+# Run every bench target in one crate (string, path, performance, and YAML for classic-shared-core)
+.\scripts\bench\run_benchmarks.ps1 -Crate classic-shared-core
+
+# Filter to specific benchmark group
+.\scripts\bench\run_benchmarks.ps1 -Suite yaml -Filter "yaml_parsing"
 ```
 
 ### Saving Baselines
@@ -259,7 +269,7 @@ Pull requests automatically run benchmarks and compare against the `main` baseli
 |------|---------|--------|
 | Flamegraph | `.\scripts\profile\run_flamegraph.ps1` | SVG flamegraph |
 | py-spy | `.\scripts\profile\run_pyspy.ps1` | SVG/speedscope |
-| dhat | `.\scripts\profile\run_dhat.ps1 -Crate {name} -Test` | JSON heap data |
+| dhat | `.\scripts\profile\run_dhat.ps1 -Crate classic-shared-core -Bench -BenchTarget yaml_benchmarks` | JSON heap data |
 | Cache stats | `.\scripts\profile\dump_cache_stats.ps1` | Console/JSON |
 
 ### Benchmark Commands
@@ -272,12 +282,14 @@ Pull requests automatically run benchmarks and compare against the `main` baseli
 | Compare | `.\scripts\bench\compare_baselines.ps1 -Baseline "name"` |
 | List benchmarks | `.\scripts\bench\run_benchmarks.ps1 -List` |
 | DB baseline suite | `.\scripts\bench\run_benchmarks.ps1 -Suite rust-db-baseline -Filter "db_|scanlog_formid_resolution"` |
+| YAML suite | `.\scripts\bench\run_benchmarks.ps1 -Suite yaml` |
 
 ### Environment Variables
 
 | Variable | Values | Effect |
 |----------|--------|--------|
 | `BENCH_MODE` | `quick`, `thorough` | Controls sample size and duration |
+| `DHAT_OUTPUT_FILE` | file path | dhat report path for instrumented binaries (set by `run_dhat.ps1`) |
 
 ## Related Documentation
 

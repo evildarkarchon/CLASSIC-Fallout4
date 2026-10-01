@@ -4,7 +4,8 @@
 
 .DESCRIPTION
     Wrapper around `cargo bench` with consistent mode handling and baseline options.
-    Supports running either all workspace benchmarks or the Rust DB baseline suite.
+    Supports running all workspace benchmarks, the Rust DB baseline suite, or the
+    YAML suite.
 
     Modes:
     - quick (default): sample_size=50, measurement_time=3s
@@ -27,9 +28,12 @@
     Benchmark suite to run:
     - all (default): cargo bench across the workspace
     - rust-db-baseline: targeted DB baseline benches only
+    - yaml: YAML parse/dump/traversal/modification benches only
+      (classic-shared-core yaml_benchmarks)
 
 .PARAMETER Crate
-    Optional crate override. When set, runs only that crate's benchmarks.
+    Optional crate override. When set, runs every bench target in that crate
+    and -Suite is ignored.
 
 .PARAMETER Filter
     Optional benchmark filter passed after `--`.
@@ -45,6 +49,12 @@
 
 .EXAMPLE
     .\scripts\bench\run_benchmarks.ps1 -Suite rust-db-baseline -Mode thorough -Compare -BaselineName "db-baseline-main"
+
+.EXAMPLE
+    .\scripts\bench\run_benchmarks.ps1 -Suite yaml -Filter "yaml_parsing"
+
+.EXAMPLE
+    .\scripts\bench\run_benchmarks.ps1 -Crate classic-shared-core
 #>
 
 [CmdletBinding()]
@@ -63,7 +73,7 @@ param(
     [switch]$Compare,
 
     [Parameter()]
-    [ValidateSet('all', 'rust-db-baseline')]
+    [ValidateSet('all', 'rust-db-baseline', 'yaml')]
     [string]$Suite = 'all',
 
     [Parameter()]
@@ -162,6 +172,15 @@ elseif ($Suite -eq 'rust-db-baseline') {
     $targets += @{
         Label = 'classic-scanlog-core/scanlog_benchmarks'
         Args  = @('-p', 'classic-scanlog-core', '--bench', 'scanlog_benchmarks')
+    }
+}
+elseif ($Suite -eq 'yaml') {
+    # Owned by classic-shared-core since the YAML file cache and operations
+    # moved out of classic-settings-core; target the bench by name so the
+    # crate's string/path/performance benches do not run alongside it.
+    $targets += @{
+        Label = 'classic-shared-core/yaml_benchmarks'
+        Args  = @('-p', 'classic-shared-core', '--bench', 'yaml_benchmarks')
     }
 }
 else {

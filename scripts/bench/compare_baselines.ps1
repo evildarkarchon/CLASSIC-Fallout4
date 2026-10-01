@@ -19,7 +19,8 @@
     quick (default) or thorough benchmark mode for candidate run.
 
 .PARAMETER Suite
-    Benchmark suite to run before comparison.
+    Benchmark suite to run before comparison (same values as
+    run_benchmarks.ps1 -Suite: all, rust-db-baseline, yaml).
 
 .PARAMETER WarningThreshold
     Regression percentage threshold for warning classification (default: 5).
@@ -60,7 +61,7 @@ param(
     [string]$Mode = 'quick',
 
     [Parameter()]
-    [ValidateSet('all', 'rust-db-baseline')]
+    [ValidateSet('all', 'rust-db-baseline', 'yaml')]
     [string]$Suite = 'rust-db-baseline',
 
     [Parameter()]

@@ -1200,6 +1200,7 @@ dependencies = [
  "anyhow",
  "criterion 0.8.2",
  "dashmap",
+ "dhat",
  "futures",
  "indexmap",
  "lasso",

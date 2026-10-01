@@ -10,7 +10,17 @@ repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 [lib]
 crate-type = ["rlib"] # Pure Rust library only - NO Python extension
 
+[features]
+default = []
+# Heap profiling for the YAML benchmark (`scripts/profile/run_dhat.ps1 -Bench`).
+# Only `benches/yaml_benchmarks.rs` installs the dhat allocator; the library
+# itself never references dhat.
+dhat-heap = ["dep:dhat"]
+
 [dependencies]
+# Heap profiling (optional, see the dhat-heap feature)
+dhat = { version = "0.3", optional = true }
+
 # Async runtime (ONE RUNTIME RULE)
 tokio = { workspace = true }
 futures = { workspace = true }
