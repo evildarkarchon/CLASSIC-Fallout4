@@ -580,4 +580,3 @@ def check_app_notification(
 def check_app_notification_configured(owner: str, repo: str, installed_version: str, config_json: str,
                                       cache_dir: str) -> NotificationStatus:
     """Check with endpoint JSON and explicit cache storage; empty disables caching."""
-    ...

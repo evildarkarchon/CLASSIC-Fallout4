@@ -19,3 +19,10 @@ package = false
 
 [tool.uv.sources]
 classic-py-cli = {path = "classic-py-cli", editable = true}
+
+[tool.ruff.lint.per-file-ignores]
+# The maintained stubs must name every native export, including the
+# `__repr__`/`__str__` each pyclass implements: `validate_stubs.py` fails with
+# "Missing maintained stub names" when they are dropped, so ruff's
+# "redundant in a stub" advice (PYI029) conflicts with the stub contract.
+"*.pyi" = ["PYI029"]
