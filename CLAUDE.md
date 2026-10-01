@@ -34,8 +34,8 @@ $env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
 # 2. Create/refresh the tooling venv from the locked manifest.
 #    `--inexact` is load-bearing — it stops uv from pruning the
 #    maturin-built `classic-*-py` wheels (they are not declared in
-#    pyproject.toml). Add `--group drift-guards` if you also need
-#    ruamel.yaml for `tools/schema_version_gate.py`.
+#    pyproject.toml). This also installs ruamel.yaml for
+#    `tools/schema_version_gate.py`; it is a default dependency.
 uv sync --project python-bindings --inexact
 
 # 3. Build and install every `-py` crate into the venv via maturin.
