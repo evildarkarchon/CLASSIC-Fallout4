@@ -1,10 +1,29 @@
-//! Python bindings for the global registry.
+//! Python bindings for the typed registry.
 //!
 //! This crate provides Python bindings for `classic-registry-core`, allowing
-//! Python code to interact with the global registry for singleton management.
+//! Python code to interact with this facade's process-wide registry for
+//! singleton management.
+//!
+//! # Registry scope
+//!
+//! Every registry effect of this facade goes through
+//! [`REGISTRY_FACADE_SCOPE`], never through the unscoped default-scope
+//! functions. As a separate extension image that changes nothing observable,
+//! but once the Python facades share one native library it keeps
+//! `classic_registry`'s values, application directory, and `clear_all()`
+//! separate from the registries owned by `classic_config` and
+//! `classic_scanlog`.
 
+use classic_registry_core::RegistryScope;
 use pyo3::prelude::*;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
+
+/// `classic_registry`'s typed registry scope.
+///
+/// Created on first use and never replaced, so every module function sees the
+/// same store for the life of the process. Lookup, default, and exact-type
+/// rules come from the core scope type.
+static REGISTRY_FACADE_SCOPE: LazyLock<RegistryScope> = LazyLock::new(RegistryScope::new_isolated);
 
 /// Wrapper for Python objects that implements Clone.
 ///
@@ -90,7 +109,7 @@ impl Keys {
     const GAME_VERSION_DETECTED: &'static str = classic_registry_core::Keys::GAME_VERSION_DETECTED;
 }
 
-/// Register a value in the global registry.
+/// Register a value in this facade's registry.
 ///
 /// # Arguments
 ///
@@ -108,7 +127,7 @@ impl Keys {
 #[pyfunction]
 fn register(key: String, value: Py<PyAny>) -> PyResult<()> {
     // Wrap the Python object and store in the registry
-    classic_registry_core::register(key, PyObjectWrapper::new(value));
+    REGISTRY_FACADE_SCOPE.register(key, PyObjectWrapper::new(value));
     Ok(())
 }
 
@@ -132,10 +151,10 @@ fn register(key: String, value: Py<PyAny>) -> PyResult<()> {
 /// ```
 #[pyfunction]
 fn is_registered(key: String) -> bool {
-    classic_registry_core::is_registered(&key)
+    REGISTRY_FACADE_SCOPE.is_registered(&key)
 }
 
-/// Retrieve a value from the global registry.
+/// Retrieve a value from this facade's registry.
 ///
 /// # Arguments
 ///
@@ -156,10 +175,15 @@ fn is_registered(key: String) -> bool {
 /// ```
 #[pyfunction]
 fn get(py: Python, key: String) -> PyResult<Option<Py<PyAny>>> {
-    Ok(classic_registry_core::get::<_, PyObjectWrapper>(key).map(|w| w.get(py)))
+    Ok(REGISTRY_FACADE_SCOPE
+        .get::<_, PyObjectWrapper>(key)
+        .map(|w| w.get(py)))
 }
 
 /// Clear all entries from the registry.
+///
+/// Clears only `classic_registry`'s own registry, including its application
+/// directory; `classic_config` and `classic_scanlog` keep theirs.
 ///
 /// **Warning**: This is primarily for testing. Use with caution in production.
 ///
@@ -173,10 +197,10 @@ fn get(py: Python, key: String) -> PyResult<Option<Py<PyAny>>> {
 /// ```
 #[pyfunction]
 fn clear_all() {
-    classic_registry_core::clear_all();
+    REGISTRY_FACADE_SCOPE.clear_all();
 }
 
-/// Remove a key from the global registry.
+/// Remove a key from this facade's registry.
 ///
 /// # Arguments
 ///
@@ -187,7 +211,7 @@ fn clear_all() {
 /// `True` if the key was found and removed, `False` if it was not present
 #[pyfunction]
 fn unregister(key: String) -> bool {
-    classic_registry_core::unregister(key)
+    REGISTRY_FACADE_SCOPE.unregister(key)
 }
 
 // ============================================================================
@@ -212,13 +236,13 @@ fn unregister(key: String) -> bool {
 fn get_game(py: Python) -> String {
     // Try PyObjectWrapper first (Python-stored value), then native
     if let Some(wrapper) =
-        classic_registry_core::get::<_, PyObjectWrapper>(classic_registry_core::Keys::GAME)
+        REGISTRY_FACADE_SCOPE.get::<_, PyObjectWrapper>(classic_registry_core::Keys::GAME)
         && let Ok(value) = wrapper.get(py).extract::<String>(py)
         && !value.is_empty()
     {
         return value;
     }
-    classic_registry_core::get_game()
+    REGISTRY_FACADE_SCOPE.get_game()
 }
 
 /// Set the current game name.
@@ -238,7 +262,7 @@ fn get_game(py: Python) -> String {
 fn set_game(py: Python, game_name: String) -> PyResult<()> {
     // Store as PyObjectWrapper so get() and get_game() can both retrieve it
     let py_str = PyObjectWrapper::new(game_name.into_pyobject(py)?.into_any().unbind());
-    classic_registry_core::register(classic_registry_core::Keys::GAME.to_string(), py_str);
+    REGISTRY_FACADE_SCOPE.register(classic_registry_core::Keys::GAME.to_string(), py_str);
     Ok(())
 }
 
@@ -259,14 +283,14 @@ fn set_game(py: Python, game_name: String) -> PyResult<()> {
 #[pyfunction]
 fn is_gui_mode(py: Python) -> bool {
     // Try to get as PyObjectWrapper first (for Python bool), then fallback to native bool
-    if let Some(wrapper) = classic_registry_core::get::<_, PyObjectWrapper>(Keys::IS_GUI_MODE) {
+    if let Some(wrapper) = REGISTRY_FACADE_SCOPE.get::<_, PyObjectWrapper>(Keys::IS_GUI_MODE) {
         let obj = wrapper.get(py);
         if let Ok(value) = obj.extract::<bool>(py) {
             return value;
         }
     }
     // Fallback to native bool (for compatibility)
-    classic_registry_core::is_gui_mode()
+    REGISTRY_FACADE_SCOPE.is_gui_mode()
 }
 
 /// Get the YAML settings cache instance.
@@ -286,7 +310,9 @@ fn is_gui_mode(py: Python) -> bool {
 /// ```
 #[pyfunction]
 fn get_yaml_cache(py: Python) -> Option<Py<PyAny>> {
-    classic_registry_core::get_yaml_cache::<PyObjectWrapper>().map(|w| w.get(py))
+    REGISTRY_FACADE_SCOPE
+        .get_yaml_cache::<PyObjectWrapper>()
+        .map(|w| w.get(py))
 }
 
 /// Get the manual documents GUI widget reference.
@@ -296,7 +322,9 @@ fn get_yaml_cache(py: Python) -> Option<Py<PyAny>> {
 /// The GUI widget, or `None` if not registered
 #[pyfunction]
 fn get_manual_docs_gui(py: Python) -> Option<Py<PyAny>> {
-    classic_registry_core::get_manual_docs_gui::<PyObjectWrapper>().map(|w| w.get(py))
+    REGISTRY_FACADE_SCOPE
+        .get_manual_docs_gui::<PyObjectWrapper>()
+        .map(|w| w.get(py))
 }
 
 /// Get the game path GUI widget reference.
@@ -306,7 +334,9 @@ fn get_manual_docs_gui(py: Python) -> Option<Py<PyAny>> {
 /// The GUI widget, or `None` if not registered
 #[pyfunction]
 fn get_game_path_gui(py: Python) -> Option<Py<PyAny>> {
-    classic_registry_core::get_game_path_gui::<PyObjectWrapper>().map(|w| w.get(py))
+    REGISTRY_FACADE_SCOPE
+        .get_game_path_gui::<PyObjectWrapper>()
+        .map(|w| w.get(py))
 }
 
 /// Check if the game version was auto-detected.
@@ -327,13 +357,13 @@ fn get_game_path_gui(py: Python) -> Option<Py<PyAny>> {
 #[pyfunction]
 fn is_version_auto_detected(py: Python) -> bool {
     // Try PyObjectWrapper first (Python-stored value), then native
-    if let Some(wrapper) = classic_registry_core::get::<_, PyObjectWrapper>(
-        classic_registry_core::Keys::VERSION_AUTO_DETECTED,
-    ) && let Ok(value) = wrapper.get(py).extract::<bool>(py)
+    if let Some(wrapper) = REGISTRY_FACADE_SCOPE
+        .get::<_, PyObjectWrapper>(classic_registry_core::Keys::VERSION_AUTO_DETECTED)
+        && let Ok(value) = wrapper.get(py).extract::<bool>(py)
     {
         return value;
     }
-    classic_registry_core::is_version_auto_detected()
+    REGISTRY_FACADE_SCOPE.is_version_auto_detected()
 }
 
 /// Get the local application directory.
@@ -354,21 +384,24 @@ fn is_version_auto_detected(py: Python) -> bool {
 fn get_local_dir(py: Python) -> String {
     // Try PyObjectWrapper first (Python-stored value), then native
     if let Some(wrapper) =
-        classic_registry_core::get::<_, PyObjectWrapper>(classic_registry_core::Keys::LOCAL_DIR)
+        REGISTRY_FACADE_SCOPE.get::<_, PyObjectWrapper>(classic_registry_core::Keys::LOCAL_DIR)
         && let Ok(value) = wrapper.get(py).extract::<String>(py)
         && !value.is_empty()
     {
         return value;
     }
-    classic_registry_core::get_local_dir()
+    REGISTRY_FACADE_SCOPE
+        .get_local_dir()
         .to_string_lossy()
         .to_string()
 }
 
-/// Override the directory used to resolve ``CLASSIC Settings.yaml`` and other
-/// application-local files.  Binding layers auto-register this to
-/// ``os.getcwd()`` at import time; call this only if you need a different
-/// directory.
+/// Set ``classic_registry``'s application directory override.
+///
+/// The override belongs to this facade's registry scope: ``classic_registry``
+/// does not auto-register one at import time, and it is independent of the
+/// overrides ``classic_config`` and ``classic_scanlog`` register for
+/// themselves.
 ///
 /// # Python Example
 ///
@@ -379,10 +412,14 @@ fn get_local_dir(py: Python) -> String {
 /// ```
 #[pyfunction]
 fn set_application_dir(path: String) {
-    classic_registry_core::set_application_dir(std::path::PathBuf::from(path));
+    REGISTRY_FACADE_SCOPE.set_application_dir(std::path::PathBuf::from(path));
 }
 
-/// Return the current application directory override, or ``None`` if not set.
+/// Return ``classic_registry``'s application directory override, or ``None``
+/// if not set.
+///
+/// Only a native override counts; a value stored under the ``"app_dir"`` key
+/// with ``register`` reads as ``None``.
 ///
 /// # Python Example
 ///
@@ -394,7 +431,9 @@ fn set_application_dir(path: String) {
 /// ```
 #[pyfunction]
 fn get_application_dir() -> Option<String> {
-    classic_registry_core::get_application_dir().map(|p| p.to_string_lossy().into_owned())
+    REGISTRY_FACADE_SCOPE
+        .get_application_dir()
+        .map(|p| p.to_string_lossy().into_owned())
 }
 
 /// Check if XSE validation passed.
@@ -402,12 +441,12 @@ fn get_application_dir() -> Option<String> {
 fn is_xse_valid(py: Python) -> bool {
     // Try PyObjectWrapper first, then native
     if let Some(wrapper) =
-        classic_registry_core::get::<_, PyObjectWrapper>(classic_registry_core::Keys::XSE_VALID)
+        REGISTRY_FACADE_SCOPE.get::<_, PyObjectWrapper>(classic_registry_core::Keys::XSE_VALID)
         && let Ok(value) = wrapper.get(py).extract::<bool>(py)
     {
         return value;
     }
-    classic_registry_core::is_xse_valid()
+    REGISTRY_FACADE_SCOPE.is_xse_valid()
 }
 
 /// Check if ENB binaries are present.
@@ -415,12 +454,12 @@ fn is_xse_valid(py: Python) -> bool {
 fn is_enb_present(py: Python) -> bool {
     // Try PyObjectWrapper first, then native
     if let Some(wrapper) =
-        classic_registry_core::get::<_, PyObjectWrapper>(classic_registry_core::Keys::ENB_PRESENT)
+        REGISTRY_FACADE_SCOPE.get::<_, PyObjectWrapper>(classic_registry_core::Keys::ENB_PRESENT)
         && let Ok(value) = wrapper.get(py).extract::<bool>(py)
     {
         return value;
     }
-    classic_registry_core::is_enb_present()
+    REGISTRY_FACADE_SCOPE.is_enb_present()
 }
 
 /// Get the game version as a string.
@@ -430,19 +469,20 @@ fn is_enb_present(py: Python) -> bool {
 fn get_game_version_string(py: Python) -> String {
     // Try PyObjectWrapper first, then native
     if let Some(wrapper) =
-        classic_registry_core::get::<_, PyObjectWrapper>(classic_registry_core::Keys::GAME_VERSION)
+        REGISTRY_FACADE_SCOPE.get::<_, PyObjectWrapper>(classic_registry_core::Keys::GAME_VERSION)
         && let Ok(value) = wrapper.get(py).extract::<String>(py)
         && !value.is_empty()
     {
         return value;
     }
-    classic_registry_core::get_game_version_string()
+    REGISTRY_FACADE_SCOPE.get_game_version_string()
 }
 
-/// Python module for global registry access.
+/// Python module for registry access.
 ///
-/// This module provides a thread-safe global registry for storing and retrieving
-/// singleton instances and configuration values.
+/// This module provides a thread-safe, process-wide registry (owned by this
+/// facade) for storing and retrieving singleton instances and configuration
+/// values.
 ///
 /// # Examples
 ///

@@ -1,9 +1,24 @@
 //! Core registry implementation using DashMap for thread-safe concurrent access.
 //!
-//! This module provides the global registry storage and access functions.
+//! This module provides the registry storage, its scope handles, and the
+//! unscoped access functions.
+//!
+//! # Scopes
+//!
+//! Every typed registry store lives behind a [`RegistryScope`] handle. The
+//! unscoped free functions in this module use one lazily created process
+//! default scope, which is what Rust, CXX, and Node callers have always
+//! observed. A binding adapter that links several former extension images
+//! into one library (the merged Python extension) creates
+//! [`RegistryScope::new_isolated`] handles so each facade keeps its own
+//! values, application directory, and `clear_all` effect. Scope selection is
+//! always explicit: callers hold a handle and pass it (or move it into async
+//! work); nothing is selected through thread-local or ambient state, which
+//! would not follow a task that resumes on another worker thread.
 
 use dashmap::DashMap;
 use std::any::Any;
+use std::fmt;
 use std::path::PathBuf;
 use std::sync::{Arc, LazyLock};
 
@@ -15,11 +30,231 @@ use crate::Keys;
 /// while maintaining thread safety and efficient cloning.
 type RegistryValue = Arc<dyn Any + Send + Sync>;
 
-/// Global registry storage.
+/// Process default registry scope used by the unscoped functions.
 ///
 /// Uses `DashMap` for lock-free concurrent access with minimal contention.
-/// The registry is lazily initialized on first access.
-static REGISTRY: LazyLock<DashMap<String, RegistryValue>> = LazyLock::new(DashMap::new);
+/// The store is lazily initialized on first access.
+static DEFAULT_SCOPE: LazyLock<RegistryScope> = LazyLock::new(RegistryScope::new_isolated);
+
+/// Opaque handle to one typed registry store.
+///
+/// Cloning a handle shares the same store; two handles compare equal exactly
+/// when they name the same store. [`RegistryScope::default_scope`] is the
+/// store behind this crate's unscoped functions ([`register`], [`get`],
+/// [`clear_all`], [`set_application_dir`], ...).
+/// [`RegistryScope::new_isolated`] creates a fresh, empty store that shares
+/// nothing with any other scope. Each method behaves exactly like the free
+/// function of the same name, applied to this scope's store, including its
+/// defaults and exact-type lookup rules.
+///
+/// Handles are `Send + Sync + 'static`, so an adapter can move one into async
+/// work and the work keeps naming the same store wherever it resumes.
+///
+/// # Example
+///
+/// ```rust
+/// use classic_registry_core::{RegistryScope, get_application_dir};
+/// use std::path::PathBuf;
+///
+/// let scope = RegistryScope::new_isolated();
+/// scope.set_application_dir(PathBuf::from("/facade/app"));
+/// assert_eq!(scope.get_application_dir(), Some(PathBuf::from("/facade/app")));
+/// assert_ne!(get_application_dir(), Some(PathBuf::from("/facade/app")));
+/// ```
+#[derive(Clone)]
+pub struct RegistryScope {
+    store: Arc<DashMap<String, RegistryValue>>,
+}
+
+impl RegistryScope {
+    /// Return a handle to the process default scope used by the unscoped
+    /// functions in this crate.
+    #[must_use]
+    pub fn default_scope() -> Self {
+        DEFAULT_SCOPE.clone()
+    }
+
+    /// Create a new, empty scope that shares no values with any other scope,
+    /// including the default one.
+    #[must_use]
+    pub fn new_isolated() -> Self {
+        Self {
+            store: Arc::new(DashMap::new()),
+        }
+    }
+
+    /// Register a value in this scope, replacing any value under `key`.
+    /// See [`register`].
+    pub fn register<K, V>(&self, key: K, value: V)
+    where
+        K: Into<String>,
+        V: Any + Send + Sync + 'static,
+    {
+        self.store.insert(key.into(), Arc::new(value));
+    }
+
+    /// Return whether `key` holds a value of any type in this scope.
+    /// See [`is_registered`].
+    #[must_use]
+    pub fn is_registered<K>(&self, key: K) -> bool
+    where
+        K: AsRef<str>,
+    {
+        self.store.contains_key(key.as_ref())
+    }
+
+    /// Return a clone of the value under `key` when it is exactly type `V`.
+    /// See [`get`].
+    #[must_use]
+    pub fn get<K, V>(&self, key: K) -> Option<V>
+    where
+        K: AsRef<str>,
+        V: Clone + Any + Send + Sync + 'static,
+    {
+        self.store
+            .get(key.as_ref())
+            .and_then(|value| value.downcast_ref::<V>().cloned())
+    }
+
+    /// Remove every value from this scope, including its application
+    /// directory. Other scopes are unaffected. See [`clear_all`].
+    pub fn clear_all(&self) {
+        self.store.clear();
+    }
+
+    /// Remove `key` from this scope, returning whether it was present.
+    /// See [`unregister`].
+    pub fn unregister<K>(&self, key: K) -> bool
+    where
+        K: AsRef<str>,
+    {
+        self.store.remove(key.as_ref()).is_some()
+    }
+
+    /// Return this scope's game name, defaulting to `"Fallout4"`.
+    /// See [`get_game`].
+    #[must_use]
+    pub fn get_game(&self) -> String {
+        self.get::<_, String>(Keys::GAME)
+            .unwrap_or_else(|| "Fallout4".to_string())
+    }
+
+    /// Store the game name in this scope. See [`set_game`].
+    pub fn set_game<S: Into<String>>(&self, game_name: S) {
+        self.register(Keys::GAME, game_name.into());
+    }
+
+    /// Return this scope's native GUI-mode flag, defaulting to `false`.
+    /// See [`is_gui_mode`].
+    #[must_use]
+    pub fn is_gui_mode(&self) -> bool {
+        self.get::<_, bool>(Keys::IS_GUI_MODE).unwrap_or(false)
+    }
+
+    /// Return this scope's YAML cache reference when it is exactly type `T`.
+    /// See [`get_yaml_cache`].
+    #[must_use]
+    pub fn get_yaml_cache<T: Clone + Any + Send + Sync + 'static>(&self) -> Option<T> {
+        self.get(Keys::YAML_CACHE)
+    }
+
+    /// Return this scope's manual-documents GUI reference when it is exactly
+    /// type `T`. See [`get_manual_docs_gui`].
+    #[must_use]
+    pub fn get_manual_docs_gui<T: Clone + Any + Send + Sync + 'static>(&self) -> Option<T> {
+        self.get(Keys::MANUAL_DOCS_GUI)
+    }
+
+    /// Return this scope's game-path GUI reference when it is exactly type
+    /// `T`. See [`get_game_path_gui`].
+    #[must_use]
+    pub fn get_game_path_gui<T: Clone + Any + Send + Sync + 'static>(&self) -> Option<T> {
+        self.get(Keys::GAME_PATH_GUI)
+    }
+
+    /// Return this scope's game version when it is exactly type `T`.
+    /// See [`get_game_version`].
+    #[must_use]
+    pub fn get_game_version<T: Clone + Any + Send + Sync + 'static>(&self) -> Option<T> {
+        self.get(Keys::GAME_VERSION)
+    }
+
+    /// Return this scope's native version-auto-detected flag, defaulting to
+    /// `false`. See [`is_version_auto_detected`].
+    #[must_use]
+    pub fn is_version_auto_detected(&self) -> bool {
+        self.get::<_, bool>(Keys::VERSION_AUTO_DETECTED)
+            .unwrap_or(false)
+    }
+
+    /// Return this scope's native local directory, defaulting to the current
+    /// working directory (or `.` when that cannot be read).
+    /// See [`get_local_dir`].
+    #[must_use]
+    pub fn get_local_dir(&self) -> PathBuf {
+        self.get::<_, PathBuf>(Keys::LOCAL_DIR)
+            .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")))
+    }
+
+    /// Store this scope's native application-directory override.
+    ///
+    /// Replaces any value under [`Keys::APP_DIR`] in this scope, including a
+    /// generic value registered there with [`RegistryScope::register`].
+    /// See [`set_application_dir`].
+    pub fn set_application_dir(&self, dir: PathBuf) {
+        self.register(Keys::APP_DIR, dir);
+    }
+
+    /// Return this scope's native application-directory override.
+    ///
+    /// Only a `PathBuf` stored under [`Keys::APP_DIR`] counts; a value of any
+    /// other type under that key reads as `None`. See [`get_application_dir`].
+    #[must_use]
+    pub fn get_application_dir(&self) -> Option<PathBuf> {
+        self.get::<_, PathBuf>(Keys::APP_DIR)
+    }
+
+    /// Return this scope's native XSE-validation flag, defaulting to `false`.
+    /// See [`is_xse_valid`].
+    #[must_use]
+    pub fn is_xse_valid(&self) -> bool {
+        self.get::<_, bool>(Keys::XSE_VALID).unwrap_or(false)
+    }
+
+    /// Return this scope's native ENB-presence flag, defaulting to `false`.
+    /// See [`is_enb_present`].
+    #[must_use]
+    pub fn is_enb_present(&self) -> bool {
+        self.get::<_, bool>(Keys::ENB_PRESENT).unwrap_or(false)
+    }
+
+    /// Return this scope's game version string, defaulting to `"auto"`.
+    /// See [`get_game_version_string`].
+    #[must_use]
+    pub fn get_game_version_string(&self) -> String {
+        self.get::<_, String>(Keys::GAME_VERSION)
+            .unwrap_or_else(|| "auto".to_string())
+    }
+}
+
+impl PartialEq for RegistryScope {
+    /// Two handles are equal when they name the same store.
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.store, &other.store)
+    }
+}
+
+impl Eq for RegistryScope {}
+
+impl fmt::Debug for RegistryScope {
+    // Report identity and occupancy only; stored values are type-erased.
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RegistryScope")
+            .field("is_default", &(*self == *DEFAULT_SCOPE))
+            .field("len", &self.store.len())
+            .finish()
+    }
+}
 
 /// Register a value in the global registry.
 ///
@@ -50,8 +285,7 @@ where
     K: Into<String>,
     V: Any + Send + Sync + 'static,
 {
-    let key_string = key.into();
-    REGISTRY.insert(key_string, Arc::new(value));
+    DEFAULT_SCOPE.register(key, value);
 }
 
 /// Check if a key is registered in the global registry.
@@ -77,7 +311,7 @@ pub fn is_registered<K>(key: K) -> bool
 where
     K: AsRef<str>,
 {
-    REGISTRY.contains_key(key.as_ref())
+    DEFAULT_SCOPE.is_registered(key)
 }
 
 /// Retrieve a value from the global registry.
@@ -115,9 +349,7 @@ where
     K: AsRef<str>,
     V: Clone + Any + Send + Sync + 'static,
 {
-    REGISTRY
-        .get(key.as_ref())
-        .and_then(|value| value.downcast_ref::<V>().cloned())
+    DEFAULT_SCOPE.get(key)
 }
 
 /// Clear all entries from the registry.
@@ -137,7 +369,7 @@ where
 /// assert!(!is_registered(Keys::GAME));
 /// ```
 pub fn clear_all() {
-    REGISTRY.clear();
+    DEFAULT_SCOPE.clear_all();
 }
 
 /// Remove a key from the global registry.
@@ -167,7 +399,7 @@ pub fn unregister<K>(key: K) -> bool
 where
     K: AsRef<str>,
 {
-    REGISTRY.remove(key.as_ref()).is_some()
+    DEFAULT_SCOPE.unregister(key)
 }
 
 // ============================================================================
@@ -192,7 +424,7 @@ where
 /// assert_eq!(get_game(), "Skyrim");
 /// ```
 pub fn get_game() -> String {
-    get::<_, String>(Keys::GAME).unwrap_or_else(|| "Fallout4".to_string())
+    DEFAULT_SCOPE.get_game()
 }
 
 /// Set the current game name.
@@ -210,7 +442,7 @@ pub fn get_game() -> String {
 /// assert_eq!(get_game(), "Skyrim");
 /// ```
 pub fn set_game<S: Into<String>>(game_name: S) {
-    register(Keys::GAME, game_name.into());
+    DEFAULT_SCOPE.set_game(game_name);
 }
 
 /// Check if the application is running in GUI mode.
@@ -231,7 +463,7 @@ pub fn set_game<S: Into<String>>(game_name: S) {
 /// assert!(is_gui_mode());
 /// ```
 pub fn is_gui_mode() -> bool {
-    get::<_, bool>(Keys::IS_GUI_MODE).unwrap_or(false)
+    DEFAULT_SCOPE.is_gui_mode()
 }
 
 /// Get the YAML settings cache instance.
@@ -255,7 +487,7 @@ pub fn is_gui_mode() -> bool {
 /// assert_eq!(cache, Some("cache_instance".to_string()));
 /// ```
 pub fn get_yaml_cache<T: Clone + Any + Send + Sync + 'static>() -> Option<T> {
-    get(Keys::YAML_CACHE)
+    DEFAULT_SCOPE.get_yaml_cache()
 }
 
 /// Get the manual documents GUI widget reference.
@@ -268,7 +500,7 @@ pub fn get_yaml_cache<T: Clone + Any + Send + Sync + 'static>() -> Option<T> {
 ///
 /// This is typically a Python Qt widget object when called from PyO3 bindings.
 pub fn get_manual_docs_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T> {
-    get(Keys::MANUAL_DOCS_GUI)
+    DEFAULT_SCOPE.get_manual_docs_gui()
 }
 
 /// Get the game path GUI widget reference.
@@ -281,7 +513,7 @@ pub fn get_manual_docs_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T
 ///
 /// This is typically a Python Qt widget object when called from PyO3 bindings.
 pub fn get_game_path_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T> {
-    get(Keys::GAME_PATH_GUI)
+    DEFAULT_SCOPE.get_game_path_gui()
 }
 
 /// Get the current Fallout 4 version.
@@ -309,7 +541,7 @@ pub fn get_game_path_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T> 
 /// assert_eq!(version, Some(Fallout4Version::Vr));
 /// ```
 pub fn get_game_version<T: Clone + std::any::Any + Send + Sync + 'static>() -> Option<T> {
-    get(Keys::GAME_VERSION)
+    DEFAULT_SCOPE.get_game_version()
 }
 
 /// Check if the game version was auto-detected.
@@ -331,7 +563,7 @@ pub fn get_game_version<T: Clone + std::any::Any + Send + Sync + 'static>() -> O
 /// assert!(is_version_auto_detected());
 /// ```
 pub fn is_version_auto_detected() -> bool {
-    get::<_, bool>(Keys::VERSION_AUTO_DETECTED).unwrap_or(false)
+    DEFAULT_SCOPE.is_version_auto_detected()
 }
 
 /// Get the local application directory.
@@ -352,8 +584,7 @@ pub fn is_version_auto_detected() -> bool {
 /// assert_eq!(get_local_dir(), test_path);
 /// ```
 pub fn get_local_dir() -> PathBuf {
-    get::<_, PathBuf>(Keys::LOCAL_DIR)
-        .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")))
+    DEFAULT_SCOPE.get_local_dir()
 }
 
 /// Set the application directory override for settings resolution.
@@ -374,7 +605,7 @@ pub fn get_local_dir() -> PathBuf {
 /// assert_eq!(get_application_dir(), Some(PathBuf::from("/my/app")));
 /// ```
 pub fn set_application_dir(dir: PathBuf) {
-    register(Keys::APP_DIR, dir);
+    DEFAULT_SCOPE.set_application_dir(dir);
 }
 
 /// Get the application directory override, if set.
@@ -395,7 +626,7 @@ pub fn set_application_dir(dir: PathBuf) {
 /// assert_eq!(get_application_dir(), Some(PathBuf::from("/my/app")));
 /// ```
 pub fn get_application_dir() -> Option<PathBuf> {
-    get::<_, PathBuf>(Keys::APP_DIR)
+    DEFAULT_SCOPE.get_application_dir()
 }
 
 /// Check if XSE validation passed.
@@ -416,7 +647,7 @@ pub fn get_application_dir() -> Option<PathBuf> {
 /// assert!(is_xse_valid());
 /// ```
 pub fn is_xse_valid() -> bool {
-    get::<_, bool>(Keys::XSE_VALID).unwrap_or(false)
+    DEFAULT_SCOPE.is_xse_valid()
 }
 
 /// Check if ENB binaries are present.
@@ -437,7 +668,7 @@ pub fn is_xse_valid() -> bool {
 /// assert!(is_enb_present());
 /// ```
 pub fn is_enb_present() -> bool {
-    get::<_, bool>(Keys::ENB_PRESENT).unwrap_or(false)
+    DEFAULT_SCOPE.is_enb_present()
 }
 
 /// Get the game version as a string.
@@ -461,7 +692,7 @@ pub fn is_enb_present() -> bool {
 /// assert_eq!(get_game_version_string(), "NextGen");
 /// ```
 pub fn get_game_version_string() -> String {
-    get::<_, String>(Keys::GAME_VERSION).unwrap_or_else(|| "auto".to_string())
+    DEFAULT_SCOPE.get_game_version_string()
 }
 
 #[cfg(test)]

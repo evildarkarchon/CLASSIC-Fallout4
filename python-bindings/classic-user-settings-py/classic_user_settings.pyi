@@ -1,6 +1,5 @@
 """Typed CLASSIC User Settings access with explicit conflict-safe commits."""
 
-from __future__ import annotations
 
 __version__: str
 

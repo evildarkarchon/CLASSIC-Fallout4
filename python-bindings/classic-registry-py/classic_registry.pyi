@@ -1,7 +1,9 @@
 """Type stubs for classic_registry.
 
-Python bindings for classic-registry-core, providing a thread-safe global registry
-for storing and retrieving singleton instances and configuration values.
+Python bindings for classic-registry-core, providing a thread-safe, process-wide
+registry for storing and retrieving singleton instances and configuration values.
+The registry belongs to this facade: ``classic_config`` and ``classic_scanlog``
+keep their own registry state, including their application directories.
 
 Architecture:
     - classic-registry-core: Business logic (thread-safe registry storage)
@@ -93,7 +95,7 @@ class Keys:
 
 
 def register(key: str, value: Any) -> None:
-    """Register a value in the global registry.
+    """Register a value in this facade's registry.
 
     Stores a Python object in the registry under the given key. The value
     can be any Python object and will be accessible until explicitly cleared.
@@ -129,7 +131,7 @@ def is_registered(key: str) -> bool:
 
 
 def get(key: str) -> Any | None:
-    """Retrieve a value from the global registry.
+    """Retrieve a value from this facade's registry.
 
     Args:
         key: The registry key.
@@ -149,6 +151,10 @@ def get(key: str) -> Any | None:
 def clear_all() -> None:
     """Clear all entries from the registry.
 
+    Clears only ``classic_registry``'s own registry, including its
+    application directory; ``classic_config`` and ``classic_scanlog`` keep
+    theirs.
+
     Warning:
         This is primarily for testing. Use with caution in production
         as it will remove all registered values.
@@ -162,7 +168,7 @@ def clear_all() -> None:
 
 
 def unregister(key: str) -> bool:
-    """Remove a key from the global registry.
+    """Remove a key from this facade's registry.
 
     Args:
         key: The registry key to remove.
@@ -284,10 +290,13 @@ def get_local_dir() -> str:
 
 
 def set_application_dir(path: str) -> None:
-    """Override the directory used to resolve ``CLASSIC Settings.yaml``.
+    """Set ``classic_registry``'s application directory override.
 
-    Binding layers auto-register ``os.getcwd()`` at import time.
-    Call this only if you need a different directory.
+    The override belongs to this facade's registry: ``classic_registry``
+    does not auto-register one at import time, and it is independent of
+    the overrides ``classic_config`` and ``classic_scanlog`` register for
+    themselves. Storing a non-path value under the ``"app_dir"`` key with
+    :func:`register` does not set this override.
 
     Args:
         path: Absolute path to the desired application directory.
@@ -300,7 +309,10 @@ def set_application_dir(path: str) -> None:
 
 
 def get_application_dir() -> str | None:
-    """Return the current application directory override, or ``None``.
+    """Return ``classic_registry``'s application directory override, or ``None``.
+
+    Only an override set with :func:`set_application_dir` counts; a value
+    stored under the ``"app_dir"`` key with :func:`register` reads as ``None``.
 
     Example:
         >>> from classic_registry import get_application_dir

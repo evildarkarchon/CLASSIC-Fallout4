@@ -9,6 +9,8 @@
 //! - **Type-Safe**: Values are stored with their concrete types
 //! - **Predefined Keys**: Common registry keys are provided via the `Keys` struct
 //! - **Flexible Storage**: Support for any type that implements `Send + Sync`
+//! - **Scoped Stores**: [`RegistryScope`] handles name independent stores; the
+//!   unscoped functions use the process default scope
 //!
 //! # Architecture
 //!
@@ -42,6 +44,10 @@ mod registry;
 
 pub use keys::Keys;
 pub use registry::{clear_all, get, is_registered, register, unregister};
+
+// Opaque store handle: the unscoped functions use its default scope, while a
+// multi-facade adapter selects isolated scopes explicitly.
+pub use registry::RegistryScope;
 
 // Convenience functions matching Python API
 pub use registry::{

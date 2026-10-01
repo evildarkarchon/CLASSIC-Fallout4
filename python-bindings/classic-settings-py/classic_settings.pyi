@@ -5,8 +5,8 @@ settings caching with both synchronous and asynchronous APIs.
 
 Architecture:
     - classic-shared-core (`yaml` module): Business logic (logical-key YAML caching,
-      batch loading, validators)
-    - classic-settings-core: YamlFile and YamlOperations (path/mtime-aware YAML cache)
+      batch loading, validators, YamlOperations, path/mtime-aware YAML-file cache)
+    - classic-settings-core: YamlFile
     - classic-settings-py: Python bindings (this module - PyO3 adapters)
 
 Features:
@@ -402,8 +402,9 @@ def coerce_setting_value(value: str, target_type: str) -> Any:
 class YamlOperations:
     """Stateful YAML operations handler with file caching.
 
-    Delegates to `classic_settings_core::YamlOperations`. Provides parsing,
-    dumping, file I/O, dot-notation lookups, and per-handle cache inspection.
+    Delegates to `classic_shared_core::yaml::YamlOperations`, bound to this
+    module's YAML-file cache scope. Provides parsing, dumping, file I/O,
+    dot-notation lookups, and cache inspection.
 
     The YAML-file cache is distinct from the settings cache exposed at the
     module level (`cache_stats` vs `get_cache_stats()`).

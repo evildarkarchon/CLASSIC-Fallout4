@@ -344,7 +344,6 @@ class Message:
 
 def init_logging() -> None:
     """Initialize the Rust logger explicitly using RUST_LOG; repeated calls preserve the existing logger."""
-    ...
 
 
 class Logger:

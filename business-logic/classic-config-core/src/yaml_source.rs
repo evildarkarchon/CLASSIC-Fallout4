@@ -1,6 +1,7 @@
 //! Generic YAML document locations used outside the User Settings domain.
 
 use anyhow::{Context, Result};
+use classic_registry_core::RegistryScope;
 use classic_shared_core::yaml::load_yaml_merged_async;
 use std::path::{Path, PathBuf};
 use yaml_rust2::Yaml;
@@ -11,10 +12,16 @@ fn resolve_application_dir(current_exe: Option<&Path>) -> Option<PathBuf> {
     current_exe.and_then(|path| path.parent().map(Path::to_path_buf))
 }
 
-fn application_dir() -> Option<PathBuf> {
+/// Application directory from `registry`'s override, falling back to the
+/// executable directory.
+///
+/// The fallback never consults another scope, so a facade-owned scope without
+/// an override behaves like a fresh process rather than inheriting the
+/// default scope's value.
+fn application_dir_in(registry: &RegistryScope) -> Option<PathBuf> {
     // Binding layers auto-register APP_DIR so cache paths resolve relative to
     // the launched application rather than the language runtime executable.
-    classic_registry_core::get_application_dir().or_else(|| {
+    registry.get_application_dir().or_else(|| {
         std::env::current_exe()
             .ok()
             .and_then(|path| resolve_application_dir(Some(path.as_path())))
@@ -62,11 +69,30 @@ pub enum YamlSource {
 impl YamlSource {
     /// Returns the path for this generic YAML source.
     ///
+    /// [`Self::Cache`] reads the application-directory override from the
+    /// default registry scope; see [`Self::path_in_registry_scope`].
+    ///
     /// # Panics
     ///
     /// Panics when `game` is empty for [`Self::Game`] or [`Self::GameLocal`].
     #[must_use]
     pub fn path(&self, game: &str) -> PathBuf {
+        self.path_in_registry_scope(game, &RegistryScope::default_scope())
+    }
+
+    /// Returns the path for this generic YAML source, reading any
+    /// application-directory override from `registry`.
+    ///
+    /// Only [`Self::Cache`] consults the registry, and only as a fallback when
+    /// no user config directory is available. A binding facade that owns its
+    /// own registry scope passes it here so its override (or absence of one)
+    /// is the one that applies; other scopes are never read.
+    ///
+    /// # Panics
+    ///
+    /// Panics when `game` is empty for [`Self::Game`] or [`Self::GameLocal`].
+    #[must_use]
+    pub fn path_in_registry_scope(&self, game: &str, registry: &RegistryScope) -> PathBuf {
         match self {
             Self::Main => PathBuf::from("CLASSIC Data/databases/CLASSIC Main.yaml"),
             Self::Ignore => PathBuf::from("CLASSIC Ignore.yaml"),
@@ -84,7 +110,7 @@ impl YamlSource {
             }
             Self::Test => PathBuf::from("tests/test_settings.yaml"),
             Self::Cache => {
-                let app_dir = application_dir();
+                let app_dir = application_dir_in(registry);
                 let user_dir = user_config_dir();
                 resolve_cache_path(user_dir.as_deref(), app_dir.as_deref())
             }
@@ -117,7 +143,8 @@ impl YamlSource {
     /// Loads and merges this generic YAML document.
     ///
     /// Main and supported per-game databases use the shippable cache-aware
-    /// loader; other sources load directly from [`Self::path`].
+    /// loader; other sources load directly from [`Self::path`], so
+    /// [`Self::Cache`] resolves against the default registry scope.
     ///
     /// # Errors
     ///

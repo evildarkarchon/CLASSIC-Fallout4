@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-01T06:47:55.026788+00:00",
+  "generated_at_utc": "2026-10-01T08:20:17.322604+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -1884,6 +1884,16 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/yaml_source.rs",
       "source_decl": "pub fn path(&self, game: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "path_in_registry_scope",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/yaml_source.rs",
+      "source_decl": "pub fn path_in_registry_scope(&self, game: &str, registry: &RegistryScope)",
       "tier": "tier1"
     },
     {
@@ -6911,6 +6921,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "RegistryScope",
+      "kind": "reexport",
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/lib.rs",
+      "source_decl": "pub use registry::RegistryScope;",
+      "source_expr": "registry::RegistryScope",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "RegistryScope",
+      "kind": "struct",
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub struct RegistryScope",
+      "tier": "tier1"
+    },
+    {
       "symbol": "VERSION_AUTO_DETECTED",
       "kind": "const",
       "crate": "classic-registry-core",
@@ -6949,6 +6978,16 @@
     {
       "symbol": "clear_all",
       "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn clear_all(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "clear_all",
+      "kind": "function",
       "arity": 0,
       "crate": "classic-registry-core",
       "owner_module": "registry",
@@ -6967,6 +7006,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "default_scope",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn default_scope()",
+      "tier": "tier1"
+    },
+    {
       "symbol": "get",
       "kind": "reexport",
       "crate": "classic-registry-core",
@@ -6974,6 +7023,16 @@
       "source_file": "business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{clear_all, get, is_registered, register, unregister};",
       "source_expr": "registry::get",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_application_dir",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn get_application_dir(&self)",
       "tier": "tier1"
     },
     {
@@ -6994,6 +7053,16 @@
       "source_file": "business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{get_application_dir, set_application_dir};",
       "source_expr": "registry::get_application_dir",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_game",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn get_game(&self)",
       "tier": "tier1"
     },
     {
@@ -7039,6 +7108,16 @@
     {
       "symbol": "get_game_version_string",
       "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn get_game_version_string(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_game_version_string",
+      "kind": "function",
       "arity": 0,
       "crate": "classic-registry-core",
       "owner_module": "registry",
@@ -7054,6 +7133,16 @@
       "source_file": "business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{get_game_version_string, is_enb_present, is_xse_valid};",
       "source_expr": "registry::get_game_version_string",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_local_dir",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn get_local_dir(&self)",
       "tier": "tier1"
     },
     {
@@ -7099,6 +7188,16 @@
     {
       "symbol": "is_enb_present",
       "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn is_enb_present(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_enb_present",
+      "kind": "function",
       "arity": 0,
       "crate": "classic-registry-core",
       "owner_module": "registry",
@@ -7114,6 +7213,16 @@
       "source_file": "business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{get_game_version_string, is_enb_present, is_xse_valid};",
       "source_expr": "registry::is_enb_present",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_gui_mode",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn is_gui_mode(&self)",
       "tier": "tier1"
     },
     {
@@ -7149,6 +7258,16 @@
     {
       "symbol": "is_version_auto_detected",
       "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn is_version_auto_detected(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_version_auto_detected",
+      "kind": "function",
       "arity": 0,
       "crate": "classic-registry-core",
       "owner_module": "registry",
@@ -7164,6 +7283,16 @@
       "source_file": "business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{get_game_version, is_version_auto_detected};",
       "source_expr": "registry::is_version_auto_detected",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_xse_valid",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn is_xse_valid(&self)",
       "tier": "tier1"
     },
     {
@@ -7187,6 +7316,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "new_isolated",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn new_isolated()",
+      "tier": "tier1"
+    },
+    {
       "symbol": "register",
       "kind": "reexport",
       "crate": "classic-registry-core",
@@ -7194,6 +7333,16 @@
       "source_file": "business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{clear_all, get, is_registered, register, unregister};",
       "source_expr": "registry::register",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "set_application_dir",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-registry-core",
+      "owner_module": "registry",
+      "source_file": "business-logic/classic-registry-core/src/registry.rs",
+      "source_decl": "pub fn set_application_dir(&self, dir: PathBuf)",
       "tier": "tier1"
     },
     {

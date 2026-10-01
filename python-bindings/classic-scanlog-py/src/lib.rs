@@ -63,8 +63,10 @@
 //! All scanlog components are thread-safe and can be used from multiple Python threads
 //! or async tasks. Complete runs execute through the shared Rust runtime.
 
+use classic_registry_core::RegistryScope;
 use classic_shared::{define_exceptions, register_exceptions};
 use pyo3::prelude::*;
+use std::sync::LazyLock;
 
 // Define the standard 3-tier exception hierarchy using the shared macro
 // Note: scanlog uses different naming convention (RustParseError, RustConfigError)
@@ -187,11 +189,24 @@ pub fn to_pyerr(err: impl std::fmt::Display) -> PyErr {
     }
 }
 
+/// `classic_scanlog`'s typed registry scope, which holds its import-time
+/// application directory.
+///
+/// Created on first use and never replaced, so once the Python facades share
+/// one native library this facade's initialization neither reads nor
+/// overwrites the application directory owned by `classic_registry` or
+/// `classic_config`, and their clears cannot remove it. Nothing in this facade
+/// reads the value back today; the write is kept deliberately so the facade's
+/// import-time initialization contract survives the merge (#233, #241).
+static SCANLOG_REGISTRY_SCOPE: LazyLock<RegistryScope> = LazyLock::new(RegistryScope::new_isolated);
+
+/// Register the executed script's directory as this facade's application
+/// directory unless one is already set in its own registry scope.
 fn auto_init_application_dir(py: Python<'_>) {
-    if classic_registry_core::get_application_dir().is_none()
+    if SCANLOG_REGISTRY_SCOPE.get_application_dir().is_none()
         && let Some(app_dir) = classic_shared::resolve_python_entry_dir(py)
     {
-        classic_registry_core::set_application_dir(app_dir);
+        SCANLOG_REGISTRY_SCOPE.set_application_dir(app_dir);
     }
 }
 

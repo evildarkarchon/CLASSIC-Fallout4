@@ -8,7 +8,7 @@ use tempfile::tempdir;
 
 #[test]
 #[serial]
-fn module_init_registers_script_directory_as_application_dir() {
+fn module_init_registers_script_directory_in_its_own_registry_scope() {
     let temp_dir = tempdir().expect("temp dir should be created");
     let script_dir = temp_dir.path().join("script-dir");
     let run_dir = temp_dir.path().join("run-dir");
@@ -17,6 +17,7 @@ fn module_init_registers_script_directory_as_application_dir() {
 
     let original_dir = env::current_dir().expect("current dir should resolve");
     env::set_current_dir(&run_dir).expect("cwd should switch to run dir");
+    SCANLOG_REGISTRY_SCOPE.clear_all();
     clear_all();
 
     let test_result = Python::attach(|py| -> PyResult<()> {
@@ -36,10 +37,17 @@ fn module_init_registers_script_directory_as_application_dir() {
             let module = PyModule::new(py, "classic_scanlog")?;
             classic_scanlog(&module)?;
 
-            if get_application_dir() != Some(script_dir.clone()) {
+            if SCANLOG_REGISTRY_SCOPE.get_application_dir() != Some(script_dir.clone()) {
                 return Err(PyRuntimeError::new_err(format!(
                     "expected APP_DIR to be {}, got {:?}",
                     script_dir.display(),
+                    SCANLOG_REGISTRY_SCOPE.get_application_dir()
+                )));
+            }
+            // The facade writes only its own scope, never the default one.
+            if get_application_dir().is_some() {
+                return Err(PyRuntimeError::new_err(format!(
+                    "default APP_DIR should stay unset, got {:?}",
                     get_application_dir()
                 )));
             }
@@ -54,6 +62,7 @@ fn module_init_registers_script_directory_as_application_dir() {
             }
         }
         sys.setattr("argv", original_argv)?;
+        SCANLOG_REGISTRY_SCOPE.clear_all();
         clear_all();
 
         outcome

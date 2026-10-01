@@ -162,6 +162,7 @@ Variants:
 Important methods:
 
 - `path(&self, game: &str) -> PathBuf`
+- `path_in_registry_scope(&self, game: &str, registry: &classic_registry_core::RegistryScope) -> PathBuf`
 - `display_name(&self) -> &'static str`
 - `display_name_with_game(&self, game: &str) -> String`
 - `load(&self, game: &str) -> anyhow::Result<yaml_rust2::Yaml>`
@@ -170,6 +171,7 @@ Contributor notes:
 
 - `YamlSource::Game` and `YamlSource::GameLocal` require a non-empty `game` string and will panic otherwise.
 - `YamlSource::Cache` uses the `CLASSIC` base directory for user config/cache paths.
+- The `Cache` fallback reads the application-directory override from a registry scope: `path()` and `load()` use the default scope, while `path_in_registry_scope()` reads only the caller's scope (falling back to the executable directory, never to another scope). The Python `classic_config` facade passes its own facade-owned scope so `classic_registry` cannot replace or clear config's application directory once both facades share one native library.
 - `load()` reads the full YAML stream, merges documents with `classic_shared_core::yaml`, and returns one merged mapping.
 
 ## Game Local Path Persistence

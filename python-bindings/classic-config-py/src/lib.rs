@@ -108,6 +108,7 @@ use classic_config_core::{
     ConfigError, CoreModExclude, ModSolutionCriteria, YamlDataCore, YamlSource as CoreYamlSource,
     persist_game_local_paths as core_persist_game_local_paths,
 };
+use classic_registry_core::RegistryScope;
 use classic_shared::{
     ResultExt, ToPyErr, define_exceptions, register_exceptions, without_gil_block_on,
 };
@@ -115,6 +116,7 @@ use classic_shared_core::yaml::SettingsError;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList, PySet};
 use std::path::PathBuf;
+use std::sync::LazyLock;
 
 fn severity_to_str(severity: RuleSeverity) -> &'static str {
     match severity {
@@ -345,7 +347,13 @@ impl PyYamlSource {
     }
 
     fn path(&self, game: &str) -> String {
-        pathbuf_to_string(self.inner.path(game).as_path())
+        // A shared native class still resolves against its owning facade's
+        // registry scope, wherever the class object is reexported.
+        pathbuf_to_string(
+            self.inner
+                .path_in_registry_scope(game, &CONFIG_REGISTRY_SCOPE)
+                .as_path(),
+        )
     }
 
     fn display_name(&self) -> &'static str {
@@ -797,23 +805,34 @@ pub fn clear_yaml_cache() {
     classic_shared_core::yaml::clear_global_yaml_cache();
 }
 
+/// `classic_config`'s typed registry scope, which holds its application
+/// directory.
+///
+/// Created on first use and never replaced. Import-time initialization,
+/// `set_application_dir`/`get_application_dir`, and `YamlSource.path` all use
+/// it, so once the Python facades share one native library
+/// `classic_registry.clear_all()` cannot clear config's application directory
+/// and `classic_registry.set_application_dir()` cannot replace it.
+static CONFIG_REGISTRY_SCOPE: LazyLock<RegistryScope> = LazyLock::new(RegistryScope::new_isolated);
+
 /// Auto-register the application directory so independent YAML/cache paths resolve
 /// relative to the executed Python file rather than the interpreter's install path.
 fn auto_init_application_dir(py: Python<'_>) {
-    if classic_registry_core::get_application_dir().is_none()
+    if CONFIG_REGISTRY_SCOPE.get_application_dir().is_none()
         && let Some(app_dir) = classic_shared::resolve_python_entry_dir(py)
     {
-        classic_registry_core::set_application_dir(app_dir);
+        CONFIG_REGISTRY_SCOPE.set_application_dir(app_dir);
     }
 }
 
 /// Override the directory used by independent application-local YAML helpers.
 ///
 /// User Settings APIs always take an explicit CLASSIC root and do not consult
-/// this registry value.
+/// this registry value. The override belongs to `classic_config`; it is
+/// independent of `classic_registry.set_application_dir()`.
 #[pyfunction]
 fn set_application_dir(path: String) {
-    classic_registry_core::set_application_dir(PathBuf::from(path));
+    CONFIG_REGISTRY_SCOPE.set_application_dir(PathBuf::from(path));
 }
 
 /// Return the current application directory override, or ``None`` if no
@@ -822,7 +841,9 @@ fn set_application_dir(path: String) {
 /// available).
 #[pyfunction]
 fn get_application_dir() -> Option<String> {
-    classic_registry_core::get_application_dir().map(|p| p.to_string_lossy().into_owned())
+    CONFIG_REGISTRY_SCOPE
+        .get_application_dir()
+        .map(|p| p.to_string_lossy().into_owned())
 }
 
 /// Initialize the classic_config Python module
