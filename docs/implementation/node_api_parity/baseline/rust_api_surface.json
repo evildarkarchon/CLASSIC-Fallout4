@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-01T08:20:30.798068+00:00",
+  "generated_at_utc": "2026-10-01T09:10:31.023057+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -3161,12 +3161,31 @@
       "tier": "tier1"
     },
     {
+      "symbol": "FileHashScope",
+      "kind": "reexport",
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
+      "source_decl": "pub use hash::{FileHashScope, FileHasher};",
+      "source_expr": "hash::FileHashScope",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FileHashScope",
+      "kind": "struct",
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub struct FileHashScope",
+      "tier": "tier1"
+    },
+    {
       "symbol": "FileHasher",
       "kind": "reexport",
       "crate": "classic-file-io-core",
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use hash::FileHasher;",
+      "source_decl": "pub use hash::{FileHashScope, FileHasher};",
       "source_expr": "hash::FileHasher",
       "tier": "tier1"
     },
@@ -3487,11 +3506,31 @@
     {
       "symbol": "cache_size",
       "kind": "function",
+      "arity": 1,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn cache_size(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cache_size",
+      "kind": "function",
       "arity": 0,
       "crate": "classic-file-io-core",
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/hash.rs",
       "source_decl": "pub fn cache_size()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cache_stats",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn cache_stats(&self)",
       "tier": "tier1"
     },
     {
@@ -3532,6 +3571,16 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/core.rs",
       "source_decl": "pub async fn clear_cache(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "clear_cache",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn clear_cache(&self)",
       "tier": "tier1"
     },
     {
@@ -3620,6 +3669,16 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod dds;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "default_scope",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn default_scope()",
       "tier": "tier1"
     },
     {
@@ -3860,6 +3919,16 @@
     {
       "symbol": "hash_file",
       "kind": "function",
+      "arity": 2,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn hash_file(&self, path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "hash_file",
+      "kind": "function",
       "arity": 1,
       "crate": "classic-file-io-core",
       "owner_module": "file_io",
@@ -3870,11 +3939,31 @@
     {
       "symbol": "hash_files_parallel",
       "kind": "function",
+      "arity": 2,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn hash_files_parallel(\n        &self,\n        paths: &[&Path],\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "hash_files_parallel",
+      "kind": "function",
       "arity": 1,
       "crate": "classic-file-io-core",
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/hash.rs",
       "source_decl": "pub fn hash_files_parallel(\n        paths: &[&Path],\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "hash_files_to_map",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn hash_files_to_map(\n        &self,\n        paths: &[&Path],\n    )",
       "tier": "tier1"
     },
     {
@@ -4097,6 +4186,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "new_isolated",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn new_isolated()",
+      "tier": "tier1"
+    },
+    {
       "symbol": "pastebin_dir",
       "kind": "function",
       "arity": 1,
@@ -4194,6 +4293,16 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/backup.rs",
       "source_decl": "pub async fn remove_backup(&self, backup_type: BackupType)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "reset_cache_stats",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn reset_cache_stats(&self)",
       "tier": "tier1"
     },
     {
@@ -10112,6 +10221,16 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/orchestrator.rs",
       "source_decl": "pub async fn run_game_checks(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "run_in_hash_scope",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn run_in_hash_scope(&self, hash_scope: &FileHashScope)",
       "tier": "tier1"
     },
     {

@@ -1301,13 +1301,21 @@ class GameSetupIntakeResult:
 
 
 def run_game_setup_intake(intake: GameSetupIntake) -> GameSetupIntakeResult:
-    """Run Game Setup Intake."""
+    """Run Game Setup Intake.
+
+    Executable and XSE script hashes are cached in this facade's own hash
+    cache, never in ``classic_file_io.FileHasher``'s.
+    """
 
 
 def run_game_setup_intake_from_user_settings(
         classic_root: str, xse_log_path: str | None = ...
 ) -> GameSetupIntakeResult:
-    """Open typed User Settings at a CLASSIC root and run read-only Game Setup Intake."""
+    """Open typed User Settings at a CLASSIC root and run read-only Game Setup Intake.
+
+    Executable and XSE script hashes are cached in this facade's own hash
+    cache, never in ``classic_file_io.FileHasher``'s.
+    """
 
 
 def normalize_game_setup_version_selection(game_version: str | None = ...) -> str:

@@ -264,6 +264,7 @@ Important items:
 - `GameSetupIntake::with_papyrus_log_path(path)`
 - `GameSetupIntake::with_xse_log_path(path)`
 - `GameSetupIntake::run() -> GameSetupIntakeResult`
+- `GameSetupIntake::run_in_hash_scope(&FileHashScope) -> GameSetupIntakeResult`
 - `normalize_game_setup_version_selection(value)`
 - `game_setup_needs_path_detection(game_path, docs_path)`
 
@@ -283,6 +284,7 @@ Behavior worth knowing:
 - `from_user_settings(game_setup_settings)` copies every typed Game Setup fact from an already-opened snapshot—including mods/staging, custom-scan, and Papyrus paths—performs no settings I/O, and consumes the effective documents root after User Settings has applied canonical-before-INI alias precedence.
 - `auto` mode reads executable PE version metadata and attempts a Version Registry match.
 - a caller-provided executable path is used for root fallback, auto-version detection, executable version checks, hash checks, and installation-location checks.
+- executable and XSE script hashes go through `classic-file-io-core`'s hash cache: `run()` uses the process default `FileHashScope`; `run_in_hash_scope(scope)` behaves identically but reads, caches, and counts those hashes only in `scope`. The Python `classic_scangame` facade uses its own isolated scope so its hashing never reaches `classic_file_io.FileHasher`'s cache or statistics.
 - failed setup diagnostics are typed checks; the top-level status is `ActionRequired` only when user input is missing.
 - documents-folder state is mapped from `classic-path-core`'s structured `DocumentsCheckState`, not rendered message text.
 - the module covers setup-only diagnostics, not ENB, crashgen TOML, Wrye, BA2, loose-file, or mod INI scans.

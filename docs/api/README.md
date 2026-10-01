@@ -30,7 +30,7 @@ Use this directory in this order:
 15. [`classic-xse-core.md`](classic-xse-core.md) - XSE loader/version detection helpers used by setup checks and bindings
 16. [`game-setup-workflow.md`](game-setup-workflow.md) - current cross-crate setup/install validation flow across path, XSE, scangame, and version registry crates
 17. [`formid-settings-boundary.md`](formid-settings-boundary.md) - current split between Rust config serialization and scan-time FormID DB path consumption
-18. [`classic-file-io-core.md`](classic-file-io-core.md) - shared file I/O, traversal, hashing, and log collection helpers
+18. [`classic-file-io-core.md`](classic-file-io-core.md) - shared file I/O, traversal, hashing (with `FileHashScope` handles for facade-owned hash caches), and log collection helpers
 19. [`classic-resource-core.md`](classic-resource-core.md) - lightweight resource classification, enumeration, and per-file validation helpers
 20. [`classic-database-core.md`](classic-database-core.md) - SQLite/FormID lookup pool used by analysis paths
 21. [`formid-sqlite-conventions.md`](formid-sqlite-conventions.md) - practical fixture/schema/path rules for contributor FormID DB work
@@ -77,7 +77,7 @@ That order matches the current repo-root layering across `foundation/`, `busines
 - `classic-xse-core` builds on path/version helpers to resolve XSE Folder paths, detect XSE installation state, and parse XSE versions
 - `game-setup-workflow.md` explains how current setup/install validation is split across path, XSE, scangame, and Version Registry crates
 - `formid-settings-boundary.md` documents the typed FormID settings boundary shared by scan callers and the C++ bridge
-- `classic-file-io-core` provides shared file-system, decoding, hashing, and log collection helpers used by higher layers
+- `classic-file-io-core` provides shared file-system, decoding, hashing, and log collection helpers used by higher layers; every hash cache sits behind an opaque `FileHashScope` handle whose process default serves every unscoped caller, while the Python `classic_file_io` and `classic_scangame` facades each select their own isolated scope
 - `classic-resource-core` provides lightweight resource classification and enumeration helpers used alongside broader file and scan workflows
 - `classic-database-core` manages async SQLite pools and FormID lookups for analysis consumers
 - `formid-sqlite-conventions.md` captures the current source-backed fixture/schema/path assumptions around FormID databases
