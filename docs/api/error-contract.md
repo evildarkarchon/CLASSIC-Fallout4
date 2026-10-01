@@ -235,6 +235,20 @@ CXX and Node reopen and reproduce the plan from the supplied root, approved base
 
 ---
 
+## Timing sample errors
+
+`classic_shared_core::performance_core::TimingError` rejects a timing or byte record before any metric changes: no operation entry is created and no existing counter moves. Its stable `code()` tokens are `timing_sample_not_finite` (NaN or ±infinity), `timing_sample_negative` (below zero; `-0.0` is accepted as zero), `timing_sample_out_of_range` (above `u64::MAX` nanoseconds), and `timing_counter_overflow` (the operation's sample count, accumulated duration, or byte total would wrap). Every binding treats all four as an invalid argument.
+
+| Binding | Shape on failure |
+| --- | --- |
+| C++ (CXX) | `classic::perf::perf_record_timing(...)` is declared `Result<()>` and throws `rust::Error` whose message begins with the stable token (`"timing_sample_negative: ..."`). The bridge's other `perf_*` functions remain infallible. |
+| Node (NAPI-RS) | `recordTimingMetric(...)` throws an `Error` whose `code` is `"InvalidArg"` and whose message begins with the stable token. Its TypeScript return stays `void`. |
+| Python (PyO3) | `classic_perf.record_timing(...)`, `classic_perf.Timer.finish()` (overflow only), and `classic_shared.RustPerformanceMonitor.stop_timer(...)` / `.record_metric(...)` raise `ValueError` whose message begins with the stable token. `record_metric` raises `ValueError`, not `OverflowError`, for a negative `duration_ms`. |
+
+A dropped timer cannot raise; an overflowing drop record is logged and skipped rather than wrapped. All three use `TimingError::coded_message()`, so the text before the first `": "` is always the token. Branch on the token, not on the rest of the message. The token travels in the message rather than in a dedicated `code` field so Node keeps the documented `InvalidArg` invalid-argument code and Python keeps the built-in `ValueError` type.
+
+---
+
 ## Notification errors (`app-update-manifest-notification`)
 
 The notification check exposes a different-shape-per-binding failure path while sharing a single underlying Rust error family. Variants on `UpdateError` (`NotificationFetchFailed`, `NotificationDecode`, `NotificationInstalledVersionParse`, `NotificationCacheIo`) project onto each binding according to the per-language idiom below. Shared manifest-validation variants (`ManifestInvalid`, `ManifestUnsupportedVersion`) can also surface from this channel when a notification manifest violates cross-field invariants or advertises a newer `manifest_version` major; bindings treat those as notification-channel failures while preserving their existing catch-all shape.
@@ -288,6 +302,7 @@ Source: [`node-bindings/classic-node/src/config.rs`](../../node-bindings/classic
 - `ToPyErr` trait -- standard interface for error-to-`PyErr` conversion
 - `ResultExt` -- extension trait for converting `Result<T, E>` to `PyResult<T>`
 - `without_gil` -- GIL release helper for blocking operations
+- `timing_error_to_py()` -- maps `TimingError` to `ValueError(coded_message())`; defined privately in both [`classic-perf-py`](../../python-bindings/classic-perf-py/src/lib.rs) and [`classic-shared-py`'s `performance_py.rs`](../../foundation/classic-shared-py/src/performance_py.rs) until the single Python adapter lands
 
 Source: [`foundation/classic-shared-py/src/lib.rs`](../../foundation/classic-shared-py/src/lib.rs)
 

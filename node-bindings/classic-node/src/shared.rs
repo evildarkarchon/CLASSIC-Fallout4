@@ -4,7 +4,7 @@
 //! and runtime diagnostics to JavaScript/TypeScript.
 
 use crate::logging_contract;
-use classic_perf_core::{clear_metrics, get_summary, record_timing};
+use classic_perf_core::{clear_metrics, get_summary, record_timing_millis};
 use classic_registry_core::{clear_all, register, unregister};
 use classic_shared_core::GameId;
 use classic_shared_core::path_core::PathHandler;
@@ -168,12 +168,20 @@ pub struct MetricsSummaryResult {
 
 /// Record a timing measurement for an operation.
 ///
-/// The duration should be provided in milliseconds. It is stored internally
-/// in seconds and converted back to milliseconds when retrieved via getMetricsSummary.
+/// The duration is provided in milliseconds and must be finite and
+/// nonnegative; `-0` counts as zero. It is rounded once to the nearest
+/// nanosecond and read back in milliseconds via getMetricsSummary.
+///
+/// @throws an `Error` whose `code` is `"InvalidArg"` when the duration is
+/// negative, NaN, infinite, too large, or would overflow the operation's
+/// accumulated total. The message begins with a stable token
+/// (`timing_sample_negative`, `timing_sample_not_finite`,
+/// `timing_sample_out_of_range`, or `timing_counter_overflow`). No metric
+/// changes when it throws.
 #[napi]
-pub fn record_timing_metric(label: String, duration_ms: f64) {
-    // Core crate stores in seconds
-    record_timing(&label, duration_ms / 1000.0);
+pub fn record_timing_metric(label: String, duration_ms: f64) -> Result<()> {
+    record_timing_millis(&label, duration_ms)
+        .map_err(|error| napi::Error::new(Status::InvalidArg, error.coded_message()))
 }
 
 /// Get aggregate statistics for all recorded performance metrics.

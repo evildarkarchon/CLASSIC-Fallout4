@@ -31,15 +31,15 @@ pub(super) fn execute_timers(fixture: &Value) -> RunnerResult<Value> {
     let mut timers = Vec::new();
     for constructor in ["direct", "factory"] {
         let timer = if constructor == "direct" {
-            classic_perf_core::Timer::new(constructor)
+            classic_perf_core::Timer::start(constructor)
         } else {
             classic_perf_core::start_timer(constructor)
         };
-        let first = timer.elapsed();
+        let first = timer.elapsed().as_secs_f64();
         // Assert progress, not a scheduler-specific elapsed duration.
         std::thread::sleep(std::time::Duration::from_millis(2));
-        let later = timer.elapsed();
-        timer.finish();
+        let later = timer.elapsed().as_secs_f64();
+        timer.finish()?;
         let summary = get_summary();
         let stats = summary.get(constructor);
         timers.push(json!({
@@ -54,6 +54,32 @@ pub(super) fn execute_timers(fixture: &Value) -> RunnerResult<Value> {
     Ok(json!({"timers": timers, "cleared": get_summary().is_empty()}))
 }
 
+/// Convert exact native seconds to whole nanoseconds without hiding drift.
+///
+/// The seconds view is an `f64` of a whole-nanosecond `Duration`, so scaling
+/// lands within a rounding error of an integer; anything further away means
+/// the native value was not a whole nanosecond.
+fn nanoseconds(seconds: f64) -> RunnerResult<u64> {
+    let value = seconds * 1e9;
+    let rounded = value.round();
+    if !value.is_finite() || value < 0.0 || (value - rounded).abs() > 1e-3 {
+        return Err(invalid("metric duration is not a whole nanosecond").into());
+    }
+    Ok(rounded as u64)
+}
+
+/// Read the seconds spelling of a dual-unit fixture sample.
+fn sample_seconds(operation: &Value) -> RunnerResult<f64> {
+    if operation.as_object().is_none_or(|object| object.len() != 4)
+        || !operation["milliseconds"].is_number()
+    {
+        return Err(invalid("unsupported dual-unit sample").into());
+    }
+    operation["seconds"]
+        .as_f64()
+        .ok_or_else(|| invalid("seconds must be a number").into())
+}
+
 /// Project native statistics into integer milliseconds for exact comparison.
 fn observe(fixture: &Value) -> RunnerResult<Value> {
     if fixture.as_object().is_none_or(|object| object.len() != 1) {
@@ -63,6 +89,7 @@ fn observe(fixture: &Value) -> RunnerResult<Value> {
         .as_array()
         .ok_or_else(|| invalid("operations must be an array"))?;
     let mut snapshots = Vec::new();
+    let mut rejections = Vec::new();
     for operation in operations {
         let object = operation
             .as_object()
@@ -78,15 +105,33 @@ fn observe(fixture: &Value) -> RunnerResult<Value> {
                 }
                 snapshots.push(Value::Object(snapshot));
             }
+            "summaryNs" if object.len() == 1 => {
+                let mut snapshot = serde_json::Map::new();
+                for (label, stats) in get_summary() {
+                    snapshot.insert(
+                        label,
+                        json!({"count": stats.count, "averageNs": nanoseconds(stats.average)?}),
+                    );
+                }
+                snapshots.push(Value::Object(snapshot));
+            }
+            "sample" => record_timing(&text(&operation["label"])?, sample_seconds(operation)?)?,
+            "reject" => {
+                match record_timing(&text(&operation["label"])?, sample_seconds(operation)?) {
+                    // The typed core error carries the stable token directly.
+                    Err(error) => rejections.push(json!(error.code())),
+                    Ok(()) => return Err(invalid("invalid sample was accepted").into()),
+                }
+            }
             "record" if object.len() == 3 => {
                 let duration = operation["durationMs"]
                     .as_u64()
                     .filter(|value| *value <= 1_000_000)
                     .ok_or_else(|| invalid("durationMs must be a bounded nonnegative integer"))?;
-                record_timing(&text(&operation["label"])?, duration as f64 / 1000.0);
+                record_timing(&text(&operation["label"])?, duration as f64 / 1000.0)?;
             }
             _ => return Err(invalid("unsupported performance operation").into()),
         }
     }
-    Ok(json!({"snapshots": snapshots}))
+    Ok(json!({"snapshots": snapshots, "rejections": rejections}))
 }

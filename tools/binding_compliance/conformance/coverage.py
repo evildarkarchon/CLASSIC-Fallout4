@@ -526,7 +526,6 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
                     "classic-version-registry-core",
                     "classic-scangame-core",
                     "classic-settings-core",
-                    "classic-perf-core",
                     "classic-update-core",
                     "classic-xse-core",
                     "classic-registry-core",
@@ -542,6 +541,15 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
                         "GameId",
                         "as_str",
                         "get_runtime",
+                        # Timing moved here from classic-perf-core; keep each
+                        # timing export's own operation identity.
+                        "MetricsSummary",
+                        "Timer",
+                        "clear_metrics",
+                        "get_summary",
+                        "record_timing",
+                        "record_timing_millis",
+                        "start_timer",
                     }
                 )
                 or (

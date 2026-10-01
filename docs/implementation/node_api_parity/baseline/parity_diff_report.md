@@ -1,6 +1,6 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-09-25T02:17:26.599848+00:00`
+- Generated: `2026-10-01T01:38:05.391750+00:00`
 - Tier-1 contract rows: **952**
 - Tier-1 matched: **935**
 - Tier-1 missing Rust: **0**
@@ -320,16 +320,16 @@
 | `aux-phase4a-js-message-type` | `aux` | `classic-message-core` | `MessageType` | `JsMessageType` | `matched` |
 | `aux-phase4a-metrics-summary-result` | `aux` | `-` | `None` | `MetricsSummaryResult` | `unmapped` |
 | `aux-phase4a-runtime-info` | `aux` | `-` | `None` | `RuntimeInfo` | `unmapped` |
-| `aux-phase4a-timing-stats` | `aux` | `classic-perf-core` | `MetricsSummary` | `TimingStats` | `matched` |
+| `aux-phase4a-timing-stats` | `aux` | `classic-shared-core` | `MetricsSummary` | `TimingStats` | `matched` |
 | `aux-phase4a-calculate-file-similarity` | `aux` | `classic-file-io-core` | `calculate_similarity` | `calculateFileSimilarity` | `matched` |
 | `aux-phase4a-check-read-permissions` | `aux` | `classic-path-core` | `check_read_permissions` | `checkReadPermissions` | `matched` |
 | `aux-phase4a-check-write-permissions` | `aux` | `classic-path-core` | `check_write_permissions` | `checkWritePermissions` | `matched` |
-| `aux-phase4a-clear-all-metrics` | `aux` | `classic-perf-core` | `clear_metrics` | `clearAllMetrics` | `matched` |
+| `aux-phase4a-clear-all-metrics` | `aux` | `classic-shared-core` | `clear_metrics` | `clearAllMetrics` | `matched` |
 | `aux-phase4a-create-message` | `aux` | `classic-message-core` | `Message` | `createMessage` | `matched` |
 | `aux-phase4a-detect-encoding` | `aux` | `classic-file-io-core` | `EncodingDetector` | `detectEncoding` | `matched` |
 | `aux-phase4a-format-message` | `aux` | `classic-message-core` | `format_log_message` | `formatMessage` | `matched` |
 | `aux-phase4a-generate-ignore-file` | `aux` | `classic-file-io-core` | `generate_ignore_file` | `generateIgnoreFile` | `matched` |
-| `aux-phase4a-get-metrics-summary` | `aux` | `classic-perf-core` | `get_summary` | `getMetricsSummary` | `matched` |
+| `aux-phase4a-get-metrics-summary` | `aux` | `classic-shared-core` | `get_summary` | `getMetricsSummary` | `matched` |
 | `aux-phase4a-get-runtime-info` | `aux` | `classic-shared-core` | `get_runtime` | `getRuntimeInfo` | `matched` |
 | `aux-phase4a-get-system-documents-path` | `aux` | `classic-path-core` | `get_system_documents_path` | `getSystemDocumentsPath` | `matched` |
 | `aux-phase4a-hash-file` | `aux` | `classic-file-io-core` | `FileHasher` | `hashFile` | `matched` |
@@ -347,7 +347,7 @@
 | `aux-phase4a-parse-steam-library` | `aux` | `classic-path-core` | `parse_steam_library` | `parseSteamLibrary` | `matched` |
 | `aux-phase4a-process-string-batch` | `aux` | `classic-shared-core` | `process_batch` | `processStringBatch` | `matched` |
 | `aux-phase4a-query-game-registry` | `aux` | `classic-path-core` | `query_game_registry` | `queryGameRegistry` | `matched` |
-| `aux-phase4a-record-timing-metric` | `aux` | `classic-perf-core` | `record_timing` | `recordTimingMetric` | `matched` |
+| `aux-phase4a-record-timing-metric` | `aux` | `classic-shared-core` | `record_timing_millis` | `recordTimingMetric` | `matched` |
 | `aux-phase4a-registry-clear` | `aux` | `classic-registry-core` | `clear_all` | `registryClear` | `matched` |
 | `aux-phase4a-registry-get` | `aux` | `classic-registry-core` | `get` | `registryGet` | `matched` |
 | `aux-phase4a-registry-get-game` | `aux` | `classic-registry-core` | `get_game` | `registryGetGame` | `matched` |

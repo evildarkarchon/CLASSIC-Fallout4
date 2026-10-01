@@ -1,0 +1,36 @@
+{
+  "operations": [
+    {
+      "op": "clear"
+    },
+    {
+      "op": "record",
+      "label": "scan",
+      "durationMs": 125
+    },
+    {
+      "op": "reject",
+      "label": "scan",
+      "seconds": -0.5,
+      "milliseconds": -500
+    },
+    {
+      "op": "reject",
+      "label": "scan",
+      "seconds": 1000000000000,
+      "milliseconds": 1000000000000000
+    },
+    {
+      "op": "reject",
+      "label": "never",
+      "seconds": -0.25,
+      "milliseconds": -250
+    },
+    {
+      "op": "summary"
+    },
+    {
+      "op": "clear"
+    }
+  ]
+}

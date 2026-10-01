@@ -1,0 +1,25 @@
+{
+  "operations": [
+    {
+      "op": "clear"
+    },
+    {
+      "op": "sample",
+      "label": "full",
+      "seconds": 18000000000,
+      "milliseconds": 18000000000000
+    },
+    {
+      "op": "reject",
+      "label": "full",
+      "seconds": 1000000000,
+      "milliseconds": 1000000000000
+    },
+    {
+      "op": "summary"
+    },
+    {
+      "op": "clear"
+    }
+  ]
+}

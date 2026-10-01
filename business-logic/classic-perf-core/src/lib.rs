@@ -1,20 +1,20 @@
-//! Performance monitoring and timing utilities for CLASSIC.
+//! Seconds-based timing facade for CLASSIC.
 //!
-//! This crate provides high-precision timing, metrics collection, and
-//! performance analysis tools for both Rust and Python (via PyO3 bindings).
+//! This crate no longer owns any timing state. Every item is re-exported from
+//! [`classic_shared_core::performance_core`], the sole rolling `Duration`
+//! implementation, so recording through this facade, through
+//! `classic_shared_core::performance_core::get_global_metrics()`, or through a
+//! [`Timer`] reads and clears the same default store for the linked library
+//! image.
 //!
-//! # Features
+//! The crate identity is scheduled for retirement once its remaining callers
+//! import `classic_shared_core::performance_core` directly.
 //!
-//! - **High-precision timing** using `std::time::Instant`
-//! - **Thread-safe metrics storage** with lock-free concurrent access
-//! - **Summary statistics** (count, total, average, min, max)
-//! - **Zero-allocation timing** for hot paths
-//! - **Context-based timing** with RAII guards
+//! # Sample contract
 //!
-//! # Architecture
-//!
-//! Metrics are stored in a global `DashMap` for lock-free concurrent access.
-//! Each operation stores individual timing samples, enabling detailed analysis.
+//! [`record_timing`] accepts finite, nonnegative seconds, treats `-0.0` as
+//! zero, and rounds once to the nearest nanosecond. Invalid or overflowing
+//! samples return a [`TimingError`] and leave all metrics unchanged.
 //!
 //! # Examples
 //!
@@ -26,7 +26,7 @@
 //! // Time an operation
 //! let timer = start_timer("my_operation");
 //! thread::sleep(Duration::from_millis(100));
-//! timer.finish(); // Automatically records timing
+//! timer.finish().expect("a short sample cannot overflow");
 //!
 //! // Get summary statistics
 //! let summary = get_summary();
@@ -38,11 +38,10 @@
 //! clear_metrics();
 //! ```
 
-mod metrics;
-mod timer;
-
-pub use metrics::{MetricsSummary, clear_metrics, get_summary, record_timing};
-pub use timer::{Timer, start_timer};
+pub use classic_shared_core::performance_core::{
+    MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing,
+    record_timing_millis, start_timer,
+};
 
 #[cfg(test)]
 #[path = "lib_tests.rs"]

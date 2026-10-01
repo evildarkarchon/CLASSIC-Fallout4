@@ -958,12 +958,8 @@ dependencies = [
 name = "classic-perf-core"
 version = "9.1.0"
 dependencies = [
- "dashmap",
- "serde",
- "serde_json",
+ "classic-shared-core",
  "serial_test",
- "thiserror 2.0.18",
- "tokio",
 ]
 
 [[package]]

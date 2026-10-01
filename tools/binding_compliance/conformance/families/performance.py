@@ -1,13 +1,29 @@
 """Exact performance metrics facts without granting wall-clock timer coverage."""
 
+import math
 from collections.abc import Mapping
 from functools import partial
 from typing import Any
 
 from ..coverage import CoveragePredicate, FamilyCoveragePolicy
 
+
+def _single(milliseconds: int) -> dict[str, int]:
+    """One-sample millisecond statistics, where every aggregate equals the sample."""
+    return {
+        "count": 1,
+        "totalMs": milliseconds,
+        "averageMs": milliseconds,
+        "minMs": milliseconds,
+        "maxMs": milliseconds,
+    }
+
+
+# Authored independently of any adapter: invalid samples are rejected with the
+# stable core token and leave earlier samples intact; 1/1024 s and 3/1024 s are
+# exact nanosecond ties that round to the even neighbour.
 _EXPECTED = {
-    "empty": {"snapshots": [{}, {}]},
+    "empty": {"snapshots": [{}, {}], "rejections": []},
     "record-clear-reuse": {
         "snapshots": [
             {},
@@ -37,10 +53,32 @@ _EXPECTED = {
                     "maxMs": 1000,
                 }
             },
-        ]
+        ],
+        "rejections": [],
+    },
+    "invalid-rejected-unchanged": {
+        "snapshots": [{"scan": _single(125)}],
+        "rejections": [
+            "timing_sample_negative",
+            "timing_sample_out_of_range",
+            "timing_sample_negative",
+        ],
+    },
+    "counter-limit": {
+        "snapshots": [{"full": _single(18_000_000_000_000)}],
+        "rejections": ["timing_counter_overflow"],
+    },
+    "nanosecond-precision": {
+        "snapshots": [
+            {
+                "tie": {"count": 1, "averageNs": 976_562},
+                "odd": {"count": 1, "averageNs": 2_929_688},
+                "zero": {"count": 1, "averageNs": 0},
+            }
+        ],
+        "rejections": [],
     },
 }
-
 
 def _matches(kind: str, observation: Mapping[str, Any]) -> bool:
     """Match independent worked examples and reject booleans masquerading as counts."""
@@ -51,8 +89,25 @@ def _matches(kind: str, observation: Mapping[str, Any]) -> bool:
         for snapshot in observation["snapshots"]
         for stats in snapshot.values()
         for value in stats.values()
-    )
+    ) and all(type(token) is str for token in observation["rejections"])
 
+
+# Public operations exercised by every scenario that records explicit samples.
+_RECORD_OPERATIONS = (
+    None,
+    "record_timing",
+    "reset_metrics",
+    "get_summary",
+    "clear_metrics",
+    "recordTimingMetric",
+    "perf_record_timing",
+    "getMetricsSummary",
+    "clearAllMetrics",
+    "perf_clear_metrics",
+    "perf_get_summary",
+    "perf_get_operation_average",
+    "perf_get_operation_count",
+)
 
 PERFORMANCE_COVERAGE_POLICY = FamilyCoveragePolicy(
     "performance",
@@ -87,7 +142,7 @@ PERFORMANCE_COVERAGE_POLICY = FamilyCoveragePolicy(
             (
                 "record-clear-reuse",
                 "values",
-                ("record_timing", "get_summary", "clear_metrics", "MetricsSummary"),
+                ("record_timing", "record_timing_millis", "get_summary", "clear_metrics", "MetricsSummary"),
                 (
                     None,
                     "record_timing",
@@ -104,9 +159,50 @@ PERFORMANCE_COVERAGE_POLICY = FamilyCoveragePolicy(
                     "perf_get_operation_count",
                 ),
             ),
+            (
+                "invalid-rejected-unchanged",
+                "errors",
+                ("record_timing", "record_timing_millis", "get_summary", "clear_metrics"),
+                _RECORD_OPERATIONS,
+            ),
+            (
+                "counter-limit",
+                "errors",
+                ("record_timing", "record_timing_millis", "get_summary", "clear_metrics"),
+                _RECORD_OPERATIONS,
+            ),
+            (
+                "nanosecond-precision",
+                "values",
+                ("record_timing", "record_timing_millis", "get_summary", "clear_metrics", "MetricsSummary"),
+                _RECORD_OPERATIONS,
+            ),
         )
     ),
 )
+
+
+def _validate_dual_unit_sample(operation):
+    """Require one exact sample spelled identically in seconds and milliseconds.
+
+    Seconds-based adapters (Rust, CXX, Python) and millisecond adapters (Node)
+    each read their native unit, so neither performs a lossy unit conversion
+    before the core's single nanosecond rounding.
+    """
+    if set(operation) != {"op", "label", "seconds", "milliseconds"} or not isinstance(
+        operation["label"], str
+    ):
+        raise ValueError("invalid dual-unit performance sample")
+    seconds, milliseconds = operation["seconds"], operation["milliseconds"]
+    if (
+        type(seconds) not in (int, float)
+        or type(milliseconds) not in (int, float)
+        or not math.isfinite(seconds)
+        or not math.isfinite(milliseconds)
+        or seconds * 1000 != milliseconds
+        or math.copysign(1.0, seconds) != math.copysign(1.0, milliseconds)
+    ):
+        raise ValueError("dual-unit sample must state one exact duration")
 
 
 def validate_performance_pack(document, root):
@@ -137,7 +233,12 @@ def validate_performance_pack(document, root):
         for operation in fixture["operations"]:
             if not isinstance(operation, dict):
                 raise TypeError("performance operation must be an object")
-            if operation.get("op") in {"clear", "summary"} and set(operation) == {"op"}:
+            if operation.get("op") in {"clear", "summary", "summaryNs"} and set(
+                operation
+            ) == {"op"}:
+                continue
+            if operation.get("op") in {"sample", "reject"}:
+                _validate_dual_unit_sample(operation)
                 continue
             if (
                 set(operation) != {"op", "label", "durationMs"}

@@ -4,23 +4,15 @@ version = "9.1.0"
 edition = "2024"
 rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
-description = "Performance monitoring and timing utilities for CLASSIC"
+description = "Seconds-based timing facade over classic-shared-core for CLASSIC"
 license = "MIT"
 
 [dependencies]
-# Thread-safe concurrent data structures
-dashmap = "6.1.0"
-
-# Error handling
-thiserror = "2.0.9"
-
-# Serialization
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+# Sole timing implementation; this crate only re-exports its seconds view
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
 [dev-dependencies]
 # Testing
-tokio = { version = "1.49.0", features = ["full", "test-util"] }
 serial_test = "3.2"
 
 [lib]

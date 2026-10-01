@@ -22,13 +22,13 @@ pub(super) fn observe(fixture: &Value) -> RunnerResult<Value> {
                         .as_u64()
                         .ok_or_else(|| invalid("expected milliseconds"))?,
                 ),
-            );
+            )?;
             metrics.record_bytes(
                 "samples",
                 record["bytes"]
                     .as_u64()
                     .ok_or_else(|| invalid("expected byte count"))?,
-            );
+            )?;
         }
         let stats = metrics
             .get_stats("samples")
@@ -40,7 +40,7 @@ pub(super) fn observe(fixture: &Value) -> RunnerResult<Value> {
                 .as_u64()
                 .ok_or_else(|| invalid("expected timer byte count"))?,
         );
-        timer.stop();
+        timer.finish()?;
         let timing = metrics
             .get_stats("timer")
             .ok_or_else(|| invalid("missing timer"))?;

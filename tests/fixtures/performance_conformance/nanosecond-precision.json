@@ -1,0 +1,31 @@
+{
+  "operations": [
+    {
+      "op": "clear"
+    },
+    {
+      "op": "sample",
+      "label": "tie",
+      "seconds": 0.0009765625,
+      "milliseconds": 0.9765625
+    },
+    {
+      "op": "sample",
+      "label": "odd",
+      "seconds": 0.0029296875,
+      "milliseconds": 2.9296875
+    },
+    {
+      "op": "sample",
+      "label": "zero",
+      "seconds": -0.0,
+      "milliseconds": -0.0
+    },
+    {
+      "op": "summaryNs"
+    },
+    {
+      "op": "clear"
+    }
+  ]
+}

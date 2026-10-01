@@ -370,6 +370,8 @@ class RustPerformanceMonitor:
     """Performance monitor for Python.
 
     This class provides Python access to the Rust performance monitoring system.
+    Every instance views this extension's default shared-core metrics store, so
+    clearing through one instance clears timing and byte state for all of them.
     """
 
     def __init__(self) -> None:
@@ -397,6 +399,11 @@ class RustPerformanceMonitor:
         Args:
             timer_info: Dictionary returned from start_timer()
             bytes_processed: Optional number of bytes processed
+
+        Raises:
+            ValueError: If the elapsed time derived from ``start_time`` is
+                negative or not finite, or the timing or byte totals would
+                overflow. Nothing is recorded.
 
         """
 
@@ -432,8 +439,12 @@ class RustPerformanceMonitor:
 
         Args:
             operation: Operation name
-            duration_ms: Duration in milliseconds
+            duration_ms: Duration in whole milliseconds
             bytes_processed: Optional bytes processed
+
+        Raises:
+            ValueError: If ``duration_ms`` is negative or too large, or the
+                timing or byte totals would overflow. Nothing is recorded.
 
         """
 

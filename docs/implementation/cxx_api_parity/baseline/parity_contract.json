@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-08T07:48:54Z",
+  "generated_at_utc": "2026-10-01T01:38:24Z",
   "schema_version": 2,
   "entries": [
     {
@@ -5682,8 +5682,8 @@
         "args": [],
         "returnType": null
       },
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "clear_metrics"
     },
     {
@@ -5702,8 +5702,8 @@
         ],
         "returnType": "f64"
       },
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "get_summary"
     },
     {
@@ -5722,8 +5722,8 @@
         ],
         "returnType": "u32"
       },
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "get_summary"
     },
     {
@@ -5737,8 +5737,8 @@
         "args": [],
         "returnType": "Vec<String>"
       },
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "get_summary"
     },
     {
@@ -5759,10 +5759,10 @@
             "type": "f64"
           }
         ],
-        "returnType": null
+        "returnType": "Result<()>"
       },
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "record_timing"
     },
     {

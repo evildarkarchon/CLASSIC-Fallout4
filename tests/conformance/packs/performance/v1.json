@@ -3,12 +3,15 @@
   "familyId": "performance",
   "familyVersion": 1,
   "domainOwner": {
-    "rustCrate": "classic-perf-core"
+    "rustCrate": "classic-shared-core"
   },
   "fixtureRoot": "tests/fixtures/performance_conformance",
   "fixtures": {
     "empty": "empty.json",
-    "record-clear-reuse": "record-clear-reuse.json"
+    "record-clear-reuse": "record-clear-reuse.json",
+    "invalid-rejected-unchanged": "invalid-rejected-unchanged.json",
+    "counter-limit": "counter-limit.json",
+    "nanosecond-precision": "nanosecond-precision.json"
   },
   "capabilities": [
     {
@@ -16,12 +19,14 @@
       "rustSymbols": [
         "MetricsSummary",
         "record_timing",
+        "record_timing_millis",
         "get_summary",
         "clear_metrics"
       ],
       "observationFamilies": [
         "values",
-        "durable-effects"
+        "durable-effects",
+        "errors"
       ]
     }
   ],
@@ -42,7 +47,8 @@
         "snapshots": [
           {},
           {}
-        ]
+        ],
+        "rejections": []
       },
       "normalization": {
         "rootRelativePaths": false,
@@ -91,7 +97,115 @@
               "maxMs": 1000
             }
           }
+        ],
+        "rejections": []
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "invalid-rejected-unchanged",
+      "action": "performance.metrics",
+      "capabilityIds": [
+        "performance.metrics"
+      ],
+      "fixtureRefs": [
+        "invalid-rejected-unchanged"
+      ],
+      "input": {
+        "fixtureRef": "invalid-rejected-unchanged"
+      },
+      "expected": {
+        "snapshots": [
+          {
+            "scan": {
+              "count": 1,
+              "totalMs": 125,
+              "averageMs": 125,
+              "minMs": 125,
+              "maxMs": 125
+            }
+          }
+        ],
+        "rejections": [
+          "timing_sample_negative",
+          "timing_sample_out_of_range",
+          "timing_sample_negative"
         ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "counter-limit",
+      "action": "performance.metrics",
+      "capabilityIds": [
+        "performance.metrics"
+      ],
+      "fixtureRefs": [
+        "counter-limit"
+      ],
+      "input": {
+        "fixtureRef": "counter-limit"
+      },
+      "expected": {
+        "snapshots": [
+          {
+            "full": {
+              "count": 1,
+              "totalMs": 18000000000000,
+              "averageMs": 18000000000000,
+              "minMs": 18000000000000,
+              "maxMs": 18000000000000
+            }
+          }
+        ],
+        "rejections": [
+          "timing_counter_overflow"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "nanosecond-precision",
+      "action": "performance.metrics",
+      "capabilityIds": [
+        "performance.metrics"
+      ],
+      "fixtureRefs": [
+        "nanosecond-precision"
+      ],
+      "input": {
+        "fixtureRef": "nanosecond-precision"
+      },
+      "expected": {
+        "snapshots": [
+          {
+            "tie": {
+              "count": 1,
+              "averageNs": 976562
+            },
+            "odd": {
+              "count": 1,
+              "averageNs": 2929688
+            },
+            "zero": {
+              "count": 1,
+              "averageNs": 0
+            }
+          }
+        ],
+        "rejections": []
       },
       "normalization": {
         "rootRelativePaths": false,
