@@ -107,7 +107,7 @@ jobs:
       # `--locked` fails the job if the committed uv.lock drifts from
       # pyproject.toml — catches silent lock/manifest divergence.
       - name: Install Python bindings tooling
-        run: uv sync --project python-bindings --inexact --locked --group drift-guards
+        run: uv sync --project python-bindings --inexact --locked
 
       # `maturin` is intentionally installed into `python-bindings/.venv` by
       # the step above. `rebuild_rust.ps1` targets that interpreter explicitly
