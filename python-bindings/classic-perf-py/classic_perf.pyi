@@ -5,15 +5,17 @@ and performance analysis tools. The core functionality is implemented in Rust fo
 performance.
 
 Architecture:
-    - classic-perf-core: Business logic (timing, metrics storage, statistics)
+    - classic-shared-core: Business logic (rolling Duration statistics, the
+      extension's default metrics store, sample validation)
+    - classic-perf-core: Seconds-based facade over that shared-core store
     - classic-perf-py: Python bindings (this module - PyO3 adapters)
 
 Features:
     - High-precision timing using Rust's Instant
-    - Thread-safe metrics collection with DashMap
-    - Automatic statistics calculation (count, total, average, min, max)
-    - RAII timer pattern for automatic measurements
-    - Zero overhead when not collecting metrics
+    - Constant-memory rolling statistics (count, total, average, min, max)
+    - Samples are rounded once to the nearest nanosecond
+    - Invalid or overflowing samples raise ValueError and change nothing
+    - RAII timer pattern that records at most once
 
 Usage:
     import classic_perf
@@ -109,7 +111,12 @@ class Timer:
 
         This consumes the timer and records the elapsed time.
         If the timer is dropped without calling `finish()`, it will
-        automatically record on drop.
+        automatically record on drop. A timer records at most once; later
+        calls do nothing.
+
+        Raises:
+            ValueError: If recording would overflow the operation's accumulated
+                total. The timer is still spent and nothing is recorded.
 
         Example:
             >>> timer = Timer("operation")
@@ -137,13 +144,22 @@ class Timer:
 def record_timing(name: str, duration_secs: float) -> None:
     """Record a timing measurement.
 
-    This function stores a single timing sample for the given operation name.
-    Multiple samples can be recorded for the same operation, and statistics
-    will be computed across all samples.
+    This function adds a single timing sample to the given operation's rolling
+    statistics. Multiple samples can be recorded for the same operation, and
+    statistics are aggregated across all of them. The duration must be finite
+    and nonnegative (``-0.0`` counts as zero) and is rounded once to the
+    nearest nanosecond.
 
     Args:
         name: The operation name.
         duration_secs: The duration in seconds.
+
+    Raises:
+        ValueError: If the duration is negative, NaN, infinite, too large, or
+            would overflow the operation's accumulated total. The message
+            starts with a stable token (``timing_sample_not_finite``,
+            ``timing_sample_negative``, ``timing_sample_out_of_range``, or
+            ``timing_counter_overflow``). No metric changes when it is raised.
 
     Example:
         >>> import classic_perf

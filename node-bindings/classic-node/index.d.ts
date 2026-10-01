@@ -5896,8 +5896,16 @@ export interface QueryParam {
 /**
  * Record a timing measurement for an operation.
  *
- * The duration should be provided in milliseconds. It is stored internally
- * in seconds and converted back to milliseconds when retrieved via getMetricsSummary.
+ * The duration is provided in milliseconds and must be finite and
+ * nonnegative; `-0` counts as zero. It is rounded once to the nearest
+ * nanosecond and read back in milliseconds via getMetricsSummary.
+ *
+ * @throws an `Error` whose `code` is `"InvalidArg"` when the duration is
+ * negative, NaN, infinite, too large, or would overflow the operation's
+ * accumulated total. The message begins with a stable token
+ * (`timing_sample_negative`, `timing_sample_not_finite`,
+ * `timing_sample_out_of_range`, or `timing_counter_overflow`). No metric
+ * changes when it throws.
  */
 export declare function recordTimingMetric(label: string, durationMs: number): void
 

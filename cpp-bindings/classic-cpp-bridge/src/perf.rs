@@ -1,12 +1,21 @@
 //! Performance monitoring bridge for CXX FFI.
 //!
-//! Bridges `classic_perf_core` for recording timings and retrieving
-//! summary statistics.
+//! Bridges the `classic_perf_core` seconds view of the shared-core timing
+//! store for recording timings and retrieving summary statistics. Every
+//! function here reads or clears this linked image's default metrics store.
 
 use classic_perf_core::{clear_metrics, get_summary, record_timing};
 
-fn perf_record_timing(operation: &str, duration_secs: f64) {
-    record_timing(operation, duration_secs);
+/// Record a timing sample in seconds.
+///
+/// # Errors
+///
+/// Rejects negative, NaN, infinite, out-of-range, and counter-overflowing
+/// samples without changing any metric. C++ receives a `rust::Error` whose
+/// message begins with the stable `TimingError::code()` token, e.g.
+/// `"timing_sample_negative: ..."`.
+fn perf_record_timing(operation: &str, duration_secs: f64) -> Result<(), String> {
+    record_timing(operation, duration_secs).map_err(|error| error.coded_message())
 }
 
 fn perf_get_summary() -> Vec<String> {
@@ -39,7 +48,7 @@ fn perf_get_operation_average(operation: &str) -> f64 {
 #[cxx::bridge(namespace = "classic::perf")]
 mod ffi {
     extern "Rust" {
-        fn perf_record_timing(operation: &str, duration_secs: f64);
+        fn perf_record_timing(operation: &str, duration_secs: f64) -> Result<()>;
         fn perf_get_summary() -> Vec<String>;
         fn perf_clear_metrics();
         fn perf_get_operation_count(operation: &str) -> u32;

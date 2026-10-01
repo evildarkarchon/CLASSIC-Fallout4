@@ -3063,7 +3063,7 @@
       "rustSymbol": "MetricsSummary",
       "nodeExport": "TimingStats",
       "nodeKind": "interface",
-      "rustCrate": "classic-perf-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "aux-phase4a-calculate-file-similarity",
@@ -3097,7 +3097,7 @@
       "tier": "tier1",
       "ownerModule": "aux",
       "rustSymbol": "clear_metrics",
-      "rustCrate": "classic-perf-core",
+      "rustCrate": "classic-shared-core",
       "nodeExport": "clearAllMetrics",
       "nodeKind": "function"
     },
@@ -3142,7 +3142,7 @@
       "tier": "tier1",
       "ownerModule": "aux",
       "rustSymbol": "get_summary",
-      "rustCrate": "classic-perf-core",
+      "rustCrate": "classic-shared-core",
       "nodeExport": "getMetricsSummary",
       "nodeKind": "function"
     },
@@ -3303,8 +3303,8 @@
       "id": "aux-phase4a-record-timing-metric",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustSymbol": "record_timing",
-      "rustCrate": "classic-perf-core",
+      "rustSymbol": "record_timing_millis",
+      "rustCrate": "classic-shared-core",
       "nodeExport": "recordTimingMetric",
       "nodeKind": "function"
     },

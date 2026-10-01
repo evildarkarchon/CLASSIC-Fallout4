@@ -1,13 +1,20 @@
 //! PyO3 bindings for performance monitoring
 
-use classic_shared_core::performance_core;
+use classic_shared_core::performance_core::{self, TimingError};
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
-use std::time::Duration;
+
+/// Convert a rejected timing record into `ValueError("<code>: <message>")`.
+fn timing_error_to_py(error: TimingError) -> PyErr {
+    PyValueError::new_err(error.coded_message())
+}
 
 /// Performance monitor for Python (Python wrapper)
 ///
 /// This class provides Python access to the Rust performance monitoring system.
+/// Every instance views this extension's shared-core default metrics store, so
+/// clearing through one instance clears timing and byte state for all of them.
 #[pyclass(name = "RustPerformanceMonitor")]
 pub struct PyRustPerformanceMonitor;
 
@@ -52,6 +59,11 @@ impl PyRustPerformanceMonitor {
     /// # Arguments
     /// * `timer_info` - Dictionary returned from `start_timer()`
     /// * `bytes_processed` - Optional number of bytes processed
+    ///
+    /// # Errors
+    /// Raises `ValueError` when the elapsed time derived from `start_time` is
+    /// negative or not finite (for example a forged start time), or when the
+    /// timing or byte totals would overflow. Nothing is recorded in that case.
     #[pyo3(signature = (timer_info, bytes_processed=None))]
     pub fn stop_timer(
         &self,
@@ -72,18 +84,16 @@ impl PyRustPerformanceMonitor {
             })?
             .extract()?;
 
-        // Calculate actual elapsed time
+        // Calculate actual elapsed time. `start_time` comes from Python and may
+        // be forged, so the difference goes through the validating conversion
+        // instead of `Duration::from_secs_f64`, which would panic.
         let current_time = performance_core::get_timer_start().elapsed().as_secs_f64();
-        let duration = Duration::from_secs_f64(current_time - start_time);
+        let duration = performance_core::duration_from_secs_f64(current_time - start_time)
+            .map_err(timing_error_to_py)?;
 
-        let metrics = performance_core::get_global_metrics();
-        metrics.record_timing(&operation, duration);
-
-        if let Some(bytes) = bytes_processed {
-            metrics.record_bytes(&operation, bytes);
-        }
-
-        Ok(())
+        performance_core::get_global_metrics()
+            .record_timing_with_bytes(&operation, duration, bytes_processed)
+            .map_err(timing_error_to_py)
     }
 
     /// Get performance statistics for all operations.
@@ -160,16 +170,40 @@ impl PyRustPerformanceMonitor {
     ///
     /// # Arguments
     /// * `operation` - Operation name
-    /// * `duration_ms` - Duration in milliseconds
+    /// * `duration_ms` - Duration in whole milliseconds
     /// * `bytes_processed` - Optional bytes processed
+    ///
+    /// # Errors
+    /// Raises `ValueError` when `duration_ms` is negative, too large to hold
+    /// in nanoseconds, or when the timing or byte totals would overflow.
+    /// Nothing is recorded in that case.
     #[pyo3(signature = (operation, duration_ms, bytes_processed=None))]
-    pub fn record_metric(&self, operation: String, duration_ms: u64, bytes_processed: Option<u64>) {
-        let duration = Duration::from_millis(duration_ms);
-        let metrics = performance_core::get_global_metrics();
-        metrics.record_timing(&operation, duration);
+    pub fn record_metric(
+        &self,
+        operation: String,
+        duration_ms: &Bound<'_, PyAny>,
+        bytes_processed: Option<u64>,
+    ) -> PyResult<()> {
+        // Taken as a Python object rather than `u64` so negative and huge ints
+        // reach the shared core validation and raise ValueError instead of
+        // PyO3's OverflowError. An int beyond i128 is far outside the sample
+        // range, so only its sign matters.
+        let millis = match duration_ms.extract::<i128>() {
+            Ok(millis) => millis,
+            Err(_) if duration_ms.is_instance_of::<pyo3::types::PyInt>() => {
+                if duration_ms.lt(0)? {
+                    i128::MIN
+                } else {
+                    i128::MAX
+                }
+            }
+            Err(error) => return Err(error),
+        };
+        let duration =
+            performance_core::duration_from_millis_i128(millis).map_err(timing_error_to_py)?;
 
-        if let Some(bytes) = bytes_processed {
-            metrics.record_bytes(&operation, bytes);
-        }
+        performance_core::get_global_metrics()
+            .record_timing_with_bytes(&operation, duration, bytes_processed)
+            .map_err(timing_error_to_py)
     }
 }

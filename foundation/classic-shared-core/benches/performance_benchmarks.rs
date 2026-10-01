@@ -17,7 +17,9 @@ fn bench_record_timing(c: &mut Criterion) {
     // Benchmark recording timing (now with rolling stats - O(1) memory)
     group.bench_function("record_single", |b| {
         b.iter(|| {
-            metrics.record_timing("test_op", Duration::from_micros(100));
+            metrics
+                .record_timing("test_op", Duration::from_micros(100))
+                .unwrap();
             black_box(());
         });
     });
@@ -32,7 +34,7 @@ fn bench_record_timing(c: &mut Criterion) {
                 b.iter(|| {
                     for i in 0..count {
                         let duration = Duration::from_micros(100 + (i as u64 % 100));
-                        metrics.record_timing("bulk_op", duration);
+                        metrics.record_timing("bulk_op", duration).unwrap();
                         black_box(());
                     }
                 });
@@ -54,7 +56,7 @@ fn bench_get_stats(c: &mut Criterion) {
         // Record timings
         for i in 0..count {
             let duration = Duration::from_micros(100 + (i as u64 % 100));
-            metrics.record_timing("test_op", duration);
+            metrics.record_timing("test_op", duration).unwrap();
         }
 
         group.bench_with_input(
@@ -83,7 +85,7 @@ fn bench_timer(c: &mut Criterion) {
             let timer = Timer::start("benchmark_op");
             // Simulate some work
             std::thread::sleep(Duration::from_micros(1));
-            timer.stop();
+            timer.finish().unwrap();
         });
     });
 
@@ -103,7 +105,7 @@ fn bench_timer(c: &mut Criterion) {
             let mut timer = Timer::start("benchmark_op_bytes");
             timer.set_bytes(1024);
             std::thread::sleep(Duration::from_micros(1));
-            timer.stop();
+            timer.finish().unwrap();
         });
     });
 
@@ -119,7 +121,7 @@ fn bench_record_bytes(c: &mut Criterion) {
     // Benchmark bytes recording
     group.bench_function("record_bytes", |b| {
         b.iter(|| {
-            metrics.record_bytes("file_op", 1024 * 1024);
+            metrics.record_bytes("file_op", 1024 * 1024).unwrap();
             black_box(());
         });
     });
@@ -127,9 +129,11 @@ fn bench_record_bytes(c: &mut Criterion) {
     // Benchmark with timing and bytes
     group.bench_function("record_timing_and_bytes", |b| {
         b.iter(|| {
-            metrics.record_timing("file_op", Duration::from_millis(10));
+            metrics
+                .record_timing("file_op", Duration::from_millis(10))
+                .unwrap();
             black_box(());
-            metrics.record_bytes("file_op", 1024 * 1024);
+            metrics.record_bytes("file_op", 1024 * 1024).unwrap();
             black_box(());
         });
     });
@@ -148,7 +152,9 @@ fn bench_get_operations(c: &mut Criterion) {
         // Create operations
         for i in 0..op_count {
             let op_name = format!("operation_{}", i);
-            metrics.record_timing(&op_name, Duration::from_micros(100));
+            metrics
+                .record_timing(&op_name, Duration::from_micros(100))
+                .unwrap();
         }
 
         group.bench_with_input(
@@ -173,8 +179,12 @@ fn bench_throughput_calculation(c: &mut Criterion) {
 
     // Record some operations with bytes
     for i in 0..100 {
-        metrics.record_timing("throughput_op", Duration::from_millis(10));
-        metrics.record_bytes("throughput_op", (i + 1) * 1024 * 1024);
+        metrics
+            .record_timing("throughput_op", Duration::from_millis(10))
+            .unwrap();
+        metrics
+            .record_bytes("throughput_op", (i + 1) * 1024 * 1024)
+            .unwrap();
     }
 
     group.bench_function("calculate_throughput", |b| {
@@ -203,7 +213,9 @@ fn bench_concurrent_recording(c: &mut Criterion) {
                     std::thread::spawn(move || {
                         for i in 0..100 {
                             let duration = Duration::from_micros(100 + (i % 100));
-                            metrics.record_timing(&format!("thread_{}_op", thread_id), duration);
+                            metrics
+                                .record_timing(&format!("thread_{}_op", thread_id), duration)
+                                .unwrap();
                         }
                     })
                 })
@@ -235,7 +247,7 @@ fn bench_memory_efficiency(c: &mut Criterion) {
                 b.iter(|| {
                     for i in 0..count {
                         let duration = Duration::from_micros(100 + (i as u64 % 100));
-                        metrics.record_timing("memory_test", duration);
+                        metrics.record_timing("memory_test", duration).unwrap();
                         black_box(());
                     }
                     // Stats should be instant (O(1)) regardless of record count

@@ -27,11 +27,6 @@
       "libRs": "business-logic/classic-path-core/src/lib.rs"
     },
     {
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
-      "libRs": "business-logic/classic-perf-core/src/lib.rs"
-    },
-    {
       "ownerModule": "registry",
       "rustCrate": "classic-registry-core",
       "libRs": "business-logic/classic-registry-core/src/lib.rs"
@@ -2446,8 +2441,8 @@
       "rustSymbol": "perf_clear_metrics",
       "kind": "function",
       "bridgeModule": "perf",
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "clear_metrics"
     },
     {
@@ -2455,8 +2450,8 @@
       "rustSymbol": "perf_get_operation_average",
       "kind": "function",
       "bridgeModule": "perf",
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "get_summary"
     },
     {
@@ -2464,8 +2459,8 @@
       "rustSymbol": "perf_get_operation_count",
       "kind": "function",
       "bridgeModule": "perf",
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "get_summary"
     },
     {
@@ -2473,8 +2468,8 @@
       "rustSymbol": "perf_get_summary",
       "kind": "function",
       "bridgeModule": "perf",
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "get_summary"
     },
     {
@@ -2482,8 +2477,8 @@
       "rustSymbol": "perf_record_timing",
       "kind": "function",
       "bridgeModule": "perf",
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "record_timing"
     },
     {
