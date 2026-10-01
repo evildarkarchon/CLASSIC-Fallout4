@@ -1,7 +1,9 @@
 //! Thread-safe YAML settings cache with dual sync/async API.
 
-use crate::error::Result;
-use crate::loader::{load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_sync};
+use crate::yaml::error::Result;
+use crate::yaml::loader::{
+    load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_sync,
+};
 use quick_cache::sync::Cache;
 use serde::Serialize;
 use std::path::Path;
@@ -30,7 +32,7 @@ static CACHE_MISSES: AtomicU64 = AtomicU64::new(0);
 /// # Example
 ///
 /// ```rust
-/// use classic_settings_core::cache_stats;
+/// use classic_shared_core::yaml::cache_stats;
 ///
 /// let stats = cache_stats();
 /// println!("Hit rate: {:.2}%", stats.hit_rate * 100.0);
@@ -56,7 +58,7 @@ pub struct CacheStats {
 /// # Example
 ///
 /// ```rust
-/// use classic_settings_core::cache_stats;
+/// use classic_shared_core::yaml::cache_stats;
 ///
 /// let stats = cache_stats();
 /// println!("Hits: {}, Misses: {}", stats.hits, stats.misses);
@@ -88,7 +90,7 @@ pub fn cache_stats() -> CacheStats {
 /// # Example
 ///
 /// ```rust
-/// use classic_settings_core::{reset_cache_stats, cache_stats};
+/// use classic_shared_core::yaml::{reset_cache_stats, cache_stats};
 ///
 /// reset_cache_stats();
 /// let stats = cache_stats();
@@ -117,7 +119,7 @@ pub fn reset_cache_stats() {
 /// # Examples
 ///
 /// ```rust
-/// use classic_settings_core::load_settings_sync;
+/// use classic_shared_core::yaml::load_settings_sync;
 /// use std::path::Path;
 ///
 /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -149,7 +151,7 @@ pub fn load_settings_sync(key: &str, path: &Path) -> Result<Arc<Vec<Yaml>>> {
 /// # Examples
 ///
 /// ```rust
-/// use classic_settings_core::load_settings_async;
+/// use classic_shared_core::yaml::load_settings_async;
 /// use std::path::Path;
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -179,7 +181,7 @@ pub async fn load_settings_async(key: &str, path: &Path) -> Result<Arc<Vec<Yaml>
 /// # Examples
 ///
 /// ```rust
-/// use classic_settings_core::load_batch_sync;
+/// use classic_shared_core::yaml::load_batch_sync;
 /// use std::path::Path;
 ///
 /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -213,7 +215,7 @@ pub fn load_batch_sync(paths: &[&Path]) -> Result<usize> {
 /// # Examples
 ///
 /// ```rust
-/// use classic_settings_core::load_batch_async;
+/// use classic_shared_core::yaml::load_batch_async;
 /// use std::path::Path;
 ///
 /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -248,7 +250,7 @@ pub async fn load_batch_async(paths: &[&Path]) -> Result<usize> {
 /// # Examples
 ///
 /// ```rust
-/// use classic_settings_core::{get_cached, load_settings_sync};
+/// use classic_shared_core::yaml::{get_cached, load_settings_sync};
 /// use std::path::Path;
 ///
 /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -286,7 +288,7 @@ pub fn get_cached(key: &str) -> Option<Arc<Vec<Yaml>>> {
 /// # Examples
 ///
 /// ```rust
-/// use classic_settings_core::{is_cached, load_settings_sync};
+/// use classic_shared_core::yaml::{is_cached, load_settings_sync};
 /// use std::path::Path;
 ///
 /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -314,7 +316,7 @@ pub fn is_cached(key: &str) -> bool {
 /// # Examples
 ///
 /// ```rust
-/// use classic_settings_core::{invalidate, load_settings_sync};
+/// use classic_shared_core::yaml::{invalidate, load_settings_sync};
 /// use std::path::Path;
 ///
 /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -335,7 +337,7 @@ pub fn invalidate(key: &str) -> bool {
 /// # Examples
 ///
 /// ```rust
-/// use classic_settings_core::clear_cache;
+/// use classic_shared_core::yaml::clear_cache;
 ///
 /// clear_cache();
 /// ```
@@ -352,7 +354,7 @@ pub fn clear_cache() {
 /// # Examples
 ///
 /// ```rust
-/// use classic_settings_core::{cache_size, load_settings_sync};
+/// use classic_shared_core::yaml::{cache_size, load_settings_sync};
 /// use std::path::Path;
 ///
 /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -376,7 +378,7 @@ pub fn cache_size() -> usize {
 /// # Examples
 ///
 /// ```rust
-/// use classic_settings_core::{cache_keys, load_settings_sync};
+/// use classic_shared_core::yaml::{cache_keys, load_settings_sync};
 /// use std::path::Path;
 ///
 /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -392,5 +394,5 @@ pub fn cache_keys() -> Vec<String> {
 }
 
 #[cfg(test)]
-#[path = "cache_tests.rs"]
+#[path = "logical_key_cache_tests.rs"]
 mod tests;

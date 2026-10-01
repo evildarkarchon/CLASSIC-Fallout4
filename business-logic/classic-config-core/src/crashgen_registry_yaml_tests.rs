@@ -1,6 +1,6 @@
 use super::parse_crashgen_registry;
 use crate::AutoscanReportPlacement;
-use classic_settings_core::{merge_yaml_documents, parse_yaml_content};
+use classic_shared_core::yaml::{merge_yaml_documents, parse_yaml_content};
 use std::collections::HashSet;
 use yaml_rust2::Yaml;
 

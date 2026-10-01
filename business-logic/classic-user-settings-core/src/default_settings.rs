@@ -1,6 +1,7 @@
 //! Rust-owned User Settings metadata shared by runtime projection and mirror generation.
 
-use classic_settings_core::{Yaml, YamlOperations};
+use classic_settings_core::YamlOperations;
+use classic_shared_core::yaml::Yaml;
 use std::collections::BTreeSet;
 
 pub(crate) const USER_SETTINGS_SCHEMA_MAJOR: u32 = 1;

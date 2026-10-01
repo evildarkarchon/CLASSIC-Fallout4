@@ -1,6 +1,6 @@
 //! Behavioral checks for explicit legacy TUI remembered-state imports.
 
-use classic_settings_core::{Yaml, parse_yaml_content};
+use classic_shared_core::yaml::{Yaml, parse_yaml_content};
 use classic_user_settings_core::{
     DocumentClassification, LegacyTuiStateImportOutcome, LegacyTuiStateImportRestoreOutcome,
     Revision, UserSettings, import_legacy_tui_state,

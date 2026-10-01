@@ -1,6 +1,6 @@
 use super::*;
-use crate::SettingsError;
-use crate::loader::parse_yaml_content;
+use crate::yaml::SettingsError;
+use crate::yaml::loader::parse_yaml_content;
 
 #[test]
 fn test_merge_yaml_documents_recursively_merges_nested_maps() {

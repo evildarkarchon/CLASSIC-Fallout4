@@ -3,7 +3,7 @@
 use std::path::Path;
 use std::process::{Command, Output};
 
-use classic_settings_core::{Yaml, parse_yaml_content};
+use classic_shared_core::yaml::{Yaml, parse_yaml_content};
 
 /// Runs the checked-in mirror generator against an isolated repository-shaped root.
 fn run_generator(repo_root: &Path, check: bool) -> Output {

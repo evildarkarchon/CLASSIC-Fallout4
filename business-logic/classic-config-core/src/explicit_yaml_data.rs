@@ -2,10 +2,10 @@
 
 use crate::client_schemas;
 use crate::yamldata::{YamlDataCore, parse_and_merge_yaml_content};
-use classic_settings_core::{
+use classic_shared_core::GameId;
+use classic_shared_core::yaml::{
     Compatibility, SchemaCompat, extract_schema_version, schema_compat_check,
 };
-use classic_shared_core::GameId;
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 use thiserror::Error;

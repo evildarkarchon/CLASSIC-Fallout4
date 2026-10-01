@@ -1,10 +1,12 @@
 """Type stubs for classic_settings.
 
-Python bindings for classic-settings-core, providing Rust-accelerated YAML settings
-caching with both synchronous and asynchronous APIs.
+Python bindings for CLASSIC's generic YAML rules, providing Rust-accelerated YAML
+settings caching with both synchronous and asynchronous APIs.
 
 Architecture:
-    - classic-settings-core: Business logic (YAML caching, batch loading)
+    - classic-shared-core (`yaml` module): Business logic (logical-key YAML caching,
+      batch loading, validators)
+    - classic-settings-core: YamlFile and YamlOperations (path/mtime-aware YAML cache)
     - classic-settings-py: Python bindings (this module - PyO3 adapters)
 
 Features:

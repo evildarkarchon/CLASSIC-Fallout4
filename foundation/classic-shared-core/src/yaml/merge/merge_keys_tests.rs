@@ -1,9 +1,46 @@
 use super::*;
-use crate::YamlOperations;
+use yaml_rust2::YamlLoader;
+
+/// Minimal parse/lookup helper for these tests.
+///
+/// `YamlOperations` (which these tests used before the generic merge rules
+/// moved to shared core) lives in a higher crate, so the tests carry the two
+/// behaviors they rely on: first-document parsing and dot-path lookup through
+/// nested mappings.
+struct TestOps;
+
+impl TestOps {
+    fn new() -> Self {
+        Self
+    }
+
+    fn parse_yaml(&self, content: &str) -> Result<Yaml, YamlError> {
+        let docs =
+            YamlLoader::load_from_str(content).map_err(|e| YamlError::ParseError(e.to_string()))?;
+        docs.first().cloned().ok_or(YamlError::EmptyDocument)
+    }
+
+    fn get_setting(&self, yaml: &Yaml, key_path: &str) -> Option<Yaml> {
+        let mut current = yaml;
+        for key in key_path.split('.') {
+            let Yaml::Hash(hash) = current else {
+                return None;
+            };
+            current = hash.get(&Yaml::String(key.to_string()))?;
+        }
+        Some(current.clone())
+    }
+
+    fn get_string_value(&self, yaml: &Yaml, key_path: &str, default: &str) -> String {
+        self.get_setting(yaml, key_path)
+            .and_then(|value| value.as_str().map(str::to_string))
+            .unwrap_or_else(|| default.to_string())
+    }
+}
 
 #[test]
 fn test_merge_keys_single_mapping() {
-    let ops = YamlOperations::new();
+    let ops = TestOps::new();
     let yaml_str = r#"
 defaults: &defaults
   adapter: postgres
@@ -33,7 +70,7 @@ development:
 
 #[test]
 fn test_merge_keys_override() {
-    let ops = YamlOperations::new();
+    let ops = TestOps::new();
     let yaml_str = r#"
 defaults: &defaults
   adapter: postgres
@@ -64,7 +101,7 @@ production:
 
 #[test]
 fn test_merge_keys_multiple_mappings() {
-    let ops = YamlOperations::new();
+    let ops = TestOps::new();
     let yaml_str = r#"
 center: &center
   x: 1
@@ -101,7 +138,7 @@ combined:
 
 #[test]
 fn test_merge_keys_nested() {
-    let ops = YamlOperations::new();
+    let ops = TestOps::new();
     let yaml_str = r#"
 base: &base
   nested:
@@ -124,7 +161,7 @@ derived:
 
 #[test]
 fn test_merge_keys_recursive() {
-    let ops = YamlOperations::new();
+    let ops = TestOps::new();
     let yaml_str = r#"
 level1: &l1
   a: 1
@@ -148,7 +185,7 @@ level3:
 
 #[test]
 fn test_merge_keys_invalid_value() {
-    let ops = YamlOperations::new();
+    let ops = TestOps::new();
     let yaml_str = r#"
 invalid:
   <<: "not_a_mapping"
@@ -167,7 +204,7 @@ invalid:
 
 #[test]
 fn test_merge_keys_no_merge() {
-    let ops = YamlOperations::new();
+    let ops = TestOps::new();
     let yaml_str = r#"
 simple:
   key: value
@@ -183,7 +220,7 @@ simple:
 
 #[test]
 fn test_merge_keys_in_array() {
-    let ops = YamlOperations::new();
+    let ops = TestOps::new();
     let yaml_str = r#"
 base: &base
   type: base

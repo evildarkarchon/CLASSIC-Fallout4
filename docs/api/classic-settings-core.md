@@ -5,15 +5,18 @@ Contributor-facing API documentation for [`business-logic/classic-settings-core/
 Crate metadata:
 
 - Crate: `classic-settings-core`
-- Description: `Core YAML settings cache with dual sync/async API`
+- Description: `CLASSIC YAML settings facade over classic-shared-core generic YAML, plus YamlFile and YamlOperations`
 
-This crate is a small YAML settings utility layer with two distinct responsibilities:
+The generic YAML rules this crate used to own now live in [`classic_shared_core::yaml`](classic-shared-core.md#generic-yaml-yaml) (issue #239): parsing, document and merge-key merging, sync/async loaders, scalar validators, schema-version compatibility, and the logical-key settings cache. This crate re-exports every one of those items unchanged, so `classic_settings_core::load_settings_sync` and `classic_shared_core::yaml::load_settings_sync` are the same function and read and clear the **same** cache, with the same capacity (`64`), freshness, counters, and errors.
 
-1. Load YAML documents from disk through synchronous or asynchronous helpers.
-2. Parse and merge YAML streams for higher-level callers that want one mapping result.
-3. Cache loaded YAML documents behind caller-chosen string keys for later reuse.
+The crate still owns two things until their own migrations land:
 
-It also exposes a public `validators` module for generic string-to-type validation and coercion.
+1. `YamlFile`, CLASSIC's domain-specific YAML file identity, until config becomes the canonical file-policy owner (issue #246).
+2. `YamlOperations` and its path/mtime-aware YAML-file cache, documented under [YAML Operations](#yaml-operations), until it moves to shared core (issue #240).
+
+The crate identity is scheduled for retirement (issue #257) once its remaining callers import the accepted owners directly. Until then its re-exported paths, including `classic_settings_core::validators::*`, stay valid.
+
+Parity ownership: CXX, Node, and Python parity rows for the logical-key cache, loaders, merge, and validators name `classic-shared-core` as the owning Rust crate, because the behavior lives there. Do not restore `classic-settings-core` as the owner of those rows during a baseline refresh. Rows for `YamlOperations`, the YAML-file cache, and `YamlFile` still name `classic-settings-core`.
 
 The Node `yamlGetIndexmapValue` adapter preserves the core map's insertion order
 for ordinary string keys by inserting them directly into its returned JavaScript
@@ -26,91 +29,23 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 
 ---
 
-## Purpose And Scope
+## Root-Level Public API
 
-Use this crate when you need to:
+Re-exported from `classic_shared_core::yaml` (see the [shared-core guide](classic-shared-core.md#generic-yaml-yaml) for full semantics):
 
-- read one or more YAML files into `Vec<Yaml>`
-- merge a multi-document YAML stream into one mapping with deterministic override rules
-- cache parsed YAML documents under a logical string key
-- expose the same YAML-loading behavior through sync and async Rust APIs
-- inspect or clear cache state from tests, bindings, or startup code
-- run lightweight validation or coercion for generic scalar values
+- `SettingsError`, `Result<T>`, `SettingsSource`, `Yaml`
+- loaders: `parse_yaml_content`, `merge_yaml_documents`, `load_yaml_sync`, `load_yaml_merged_sync`, `load_yaml_async`, `load_yaml_merged_async`, `load_yaml_batch_sync`, `load_yaml_batch_async`
+- logical-key cache: `load_settings_sync`, `load_settings_async`, `load_batch_sync`, `load_batch_async`, `get_cached`, `is_cached`, `invalidate`, `clear_cache`, `cache_size`, `cache_keys`, `cache_stats`, `reset_cache_stats`, `CacheStats`
+- schema compatibility: `SchemaVersion`, `SchemaParseError`, `SchemaCompat`, `Compatibility`, `schema_compat_check`, `extract_schema_version`, `YamlSchemaError`, `SCHEMA_VERSION_KEY`
+- `merge_keys`, `YamlError`
+- the public module `validators` (`SettingType`, `CoercedValue`, `validate_setting_value`, `coerce_setting_value`), re-exported as a module so `classic_settings_core::validators::SettingType` still resolves
 
-Do not use this crate for:
+Owned by this crate:
 
-- typed CLASSIC data modeling such as `YamlDataCore`
-- User Settings source discovery, defaults, schema validation, serialization, or persistence
-- automatic file freshness checks or mtime-based cache invalidation
-- owning a Tokio runtime
-- deep schema validation or business-rule enforcement for scan/config workflows
-
-Those higher-level concerns live in related crates such as [`classic-config-core`](../../business-logic/classic-config-core), and binding crates that wrap this cache for JS or Python consumers.
-
----
-
-## Module And API Map
-
-This crate exposes most of its API from the crate root and one public module.
-
-## Root-level re-exports from `lib.rs`
-
-- `SettingsError`, `Result<T>` - crate error type and alias
-- `SettingsSource` - distinguishes path-backed and label-backed parse sources
-- `Yaml` - re-export of `yaml_rust2::Yaml`
 - `YamlFile` - type-safe identifiers for CLASSIC YAML/config files
-- loader functions:
-  - `parse_yaml_content(source, content)`
-  - `merge_yaml_documents(source, docs)`
-  - `load_yaml_sync(path)`
-  - `load_yaml_merged_sync(path)`
-  - `load_yaml_async(path)`
-  - `load_yaml_merged_async(path)`
-  - `load_yaml_batch_sync(paths)`
-  - `load_yaml_batch_async(paths)`
-- cache-facing functions:
-  - `load_settings_sync(key, path)`
-  - `load_settings_async(key, path)`
-  - `load_batch_sync(paths)`
-  - `load_batch_async(paths)`
-  - `get_cached(key)`
-  - `is_cached(key)`
-  - `invalidate(key)`
-  - `clear_cache()`
-  - `cache_size()`
-  - `cache_keys()`
-  - `cache_stats()`
-  - `reset_cache_stats()`
-- `CacheStats` - cache hit/miss snapshot
-
-## Public module
-
-### `validators`
-
-- `SettingType` - expected scalar type for validation/coercion
-- `CoercedValue` - typed coercion result
-- `validate_setting_value(value, expected_type)` - fast string validation
-- `coerce_setting_value(value, target_type)` - string-to-typed-value coercion
-
-Important layout note: `cache`, `loader`, and `error` are internal modules. Their public items are available through crate-root re-exports, while `validators` remains a public module path such as `classic_settings_core::validators::SettingType`.
+- `YamlOperations`, `YamlCacheStats`, `yaml_cache_stats`, `reset_yaml_cache_stats`, `clear_global_yaml_cache` - see [YAML Operations](#yaml-operations)
 
 ---
-
-## Public API Surface
-
-## `SettingsSource`
-
-Variants:
-
-- `Path(PathBuf)` - filesystem-backed source used by path-based loaders
-- `Label(String)` - logical source name for in-memory content
-
-Helpers and conversions:
-
-- `path() -> Option<&PathBuf>` returns the path only for `Path`
-- `label() -> Option<&str>` returns the label only for `Label`
-- `From<PathBuf>`, `From<&Path>`, `From<String>`, and `From<&str>` are implemented
-- `Display` prints the filesystem path or label text used in error messages
 
 ## `YamlFile`
 
@@ -136,278 +71,7 @@ Contributor note:
 
 - this enum labels file roles only; it does not build real paths
 - it moved here from the retired constants crate because the enum is part of the settings domain rather than the version domain
-
-## `SettingsError`
-
-Variants:
-
-- `IoError { path, source }` - disk read failure for a path-backed load
-- `YamlParseError { source, message }` - YAML syntax failure tagged with `SettingsSource`
-- `EmptyDocument { source }` - empty YAML stream or stream where every document is `BadValue`
-- `KeyNotFound(String)` - cache lookup miss for APIs that treat a missing key as an error
-- `InvalidYamlStructure { source, index, found }` - merge-time failure when any document is not a mapping
-- `TaskJoinError { path, source }` - async batch task failed to join
-
-Behavior worth knowing:
-
-- `EmptyDocument`, `InvalidYamlStructure`, and `TaskJoinError` are part of the public error surface now, not internal-only details
-- only `IoError` and `TaskJoinError` expose an underlying `source()` error through `std::error::Error`
-- parse and merge helpers use `SettingsSource::Label(...)` for in-memory content and `SettingsSource::Path(...)` for file-backed content
-
-## Loader API
-
-These functions read or normalize YAML without touching the cache.
-
-## `parse_yaml_content(source, content)`
-
-- parses YAML from an in-memory string and preserves the caller-supplied logical source label in parse errors
-- returns `Vec<Yaml>` so higher layers can decide whether to inspect raw documents or merge them
-- uses `SettingsSource::Label(...)` under the hood
-
-## `merge_yaml_documents(source, docs)`
-
-- reduces a `Vec<Yaml>` into one merged mapping
-- requires every document to be a mapping
-- merges nested mappings recursively
-- replaces sequences, scalars, and type-conflict values with the later document's value
-- returns `SettingsError::EmptyDocument` for an empty stream and `SettingsError::InvalidYamlStructure` when any document is not a mapping
-- document indexes in `InvalidYamlStructure` are zero-based, matching the implementation
-
-## `load_yaml_sync(path)`
-
-- reads the file with `std::fs::read_to_string`
-- parses all YAML documents with `yaml_rust2::YamlLoader::load_from_str`
-- returns `Vec<Yaml>` so multi-document YAML files stay intact
-- returns `SettingsError::IoError` or `SettingsError::YamlParseError` on failure
-
-## `load_yaml_async(path)`
-
-- reads the file with `tokio::fs::read_to_string`
-- uses the same YAML parsing path and error variants as the sync loader
-- is the async equivalent for callers already running on the shared Tokio runtime
-
-## `load_yaml_merged_sync(path)` and `load_yaml_merged_async(path)`
-
-- thin wrappers over `load_yaml_*` plus `merge_yaml_documents`
-- return one merged `Yaml::Hash` value instead of `Vec<Yaml>`
-- are the preferred entry points for crates such as [`classic-config-core`](classic-config-core.md) that consume multi-document settings files as one mapping
-
-## Batch loader helpers
-
-- `load_yaml_batch_sync(paths)` loads files sequentially and returns `Vec<(String, Vec<Yaml>)>`
-- `load_yaml_batch_async(paths)` spawns one Tokio task per path, then collects the same tuple shape
-- both batch APIs stop and return an error if any input file fails
-- tuple keys are `path.display().to_string()`, not caller-supplied logical names
-- async batch loading reports join failures as `SettingsError::TaskJoinError` instead of disguising them as parse failures
-
-Source-observed note:
-
-- the raw loader functions do not reduce input to the first document; multi-document YAML remains a `Vec<Yaml>` until a caller explicitly merges it
-
-  (This is a notable contrast with the historical ``yaml-core`` single-doc behavior that was absorbed into this crate during Phase 1 of the v9.1.0 consolidation milestone.)
-
-## Cache API
-
-The cache stores parsed YAML documents in a global bounded concurrent cache:
-
-- key type: `String`
-- value type: `Arc<Vec<Yaml>>`
-- backing store: `std::sync::LazyLock<quick_cache::sync::Cache<String, Arc<Vec<Yaml>>>>`
-- configured capacity: `64`
-
-That means callers can cheaply clone cached values and compare `Arc` identity across reads.
-
-Phase 4 note:
-
-- the roadmap's older "LRU" shorthand is implemented here through the repo-standard `quick_cache` crate
-- `quick_cache` uses bounded eviction semantics, so contributors should test that the cache stays within capacity rather than asserting an exact victim order
-
-## `load_settings_sync(key, path)` and `load_settings_async(key, path)`
-
-These are the main cache-populating entry points.
-
-- they first load the file through `load_yaml_sync` or `load_yaml_async`
-- they wrap the returned `Vec<Yaml>` in `Arc`
-- they insert the value into the global cache under `key.to_string()`
-- inserting with an existing key replaces the previous cached value
-- they return the same `Arc<Vec<Yaml>>` that was inserted
-- they do not consult file mtimes or other freshness signals; callers still control reload timing explicitly
-
-## `load_batch_sync(paths)` and `load_batch_async(paths)`
-
-- they load many files, then insert each result into the cache
-- each cache key is the path string from `path.display().to_string()`
-- they return `Result<usize>` and, on success, currently return `paths.len()`
-
-Contributor note:
-
-- the success count is the number of requested paths, not a separately computed count of inserted entries
-
-## Cache access and management
-
-- `get_cached(key) -> Option<Arc<Vec<Yaml>>>` returns a cloned `Arc` if present
-- `is_cached(key) -> bool` checks existence without touching hit/miss counters
-- `invalidate(key) -> bool` removes one entry and reports whether it existed
-- `clear_cache()` removes all entries
-- `cache_size() -> usize` returns entry count
-- `cache_keys() -> Vec<String>` returns all keys; ordering is not stable and this helper is now the only public API that exposes key listings
-
-## `CacheStats`, `cache_stats()`, and `reset_cache_stats()`
-
-`CacheStats` fields:
-
-- `hits`
-- `misses`
-- `hit_rate`
-- `size`
-- `capacity`
-
-Behavior worth knowing:
-
-- hit/miss counters are process-global `AtomicU64` values
-- only `get_cached()` updates those counters
-- loading functions do not count as cache hits or misses
-- `cache_stats()` reports the canonical five-field Phase 4 contract only; key listings stay on `cache_keys()`
-- `capacity` is the configured bounded cache size and currently reports `64`
-- `reset_cache_stats()` resets counters only; it does not clear cached entries
-
----
-
-## Settings Cache And Sync/Async Flow
-
-The source-visible flow is split into two layers.
-
-## Raw load flow
-
-1. A caller chooses `load_yaml_sync()` or `load_yaml_async()`.
-2. The file is read from disk.
-3. `YamlLoader::load_from_str()` parses the full YAML stream.
-4. The caller receives `Vec<Yaml>` with every parsed document.
-
-## Cache-backed flow
-
-1. A caller chooses `load_settings_sync(key, path)` or `load_settings_async(key, path)`.
-2. The crate performs the same disk read + parse flow as the raw loader.
-3. The parsed `Vec<Yaml>` is wrapped in `Arc`.
-4. The crate inserts that `Arc<Vec<Yaml>>` into the global bounded `quick_cache::sync::Cache<String, ...>`.
-5. Later callers retrieve it with `get_cached(key)`.
-
-## Batch flow
-
-- sync batch: one file after another
-- async batch: one spawned Tokio task per path, then join all results
-- cache insertion happens only after successful load results are collected
-
-Important cache boundary:
-
-- this cache does not automatically consult disk freshness, file mtimes, or file content hashes
-- if a source file changes, callers must explicitly reload or invalidate the cache entry
-
-Unlike the legacy `YamlOperations` file-backed cache (see [YAML Operations](#yaml-operations) below), this settings cache is key-based rather than path-based, and it does not consult mtime for freshness.
-
----
-
-## Validators API
-
-The `validators` module is independent from the cache and loader helpers.
-
-## `SettingType`
-
-Variants:
-
-- `Int`
-- `Bool`
-- `Float`
-- `Path`
-- `String`
-
-These are used only for scalar string validation and coercion.
-
-## `CoercedValue`
-
-Variants:
-
-- `Int(i64)`
-- `Bool(bool)`
-- `Float(f64)`
-- `Path(String)`
-- `String(String)`
-
-Accessor helpers:
-
-- `as_i64()`
-- `as_bool()`
-- `as_f64()`
-- `as_str()` for `String` and `Path`
-
-## `validate_setting_value(value, expected_type)`
-
-- `Int` uses `parse::<i64>()`
-- `Bool` accepts `true/false`, `yes/no`, `1/0`, and `on/off`, case-insensitive
-- `Float` uses `parse::<f64>()`, so integer strings also validate as float
-- `Path` accepts any non-empty string
-- `String` always validates
-
-## `coerce_setting_value(value, target_type)`
-
-- returns `Result<CoercedValue, String>` rather than `SettingsError`
-- follows the same parsing rules as `validate_setting_value`
-- `Path` rejects only the empty string
-- `String` always succeeds by cloning the input
-
----
-
-## Error Handling Model
-
-The crate uses two error styles depending on API family.
-
-## `SettingsError` for loader/cache APIs
-
-`Result<T>` is an alias for `std::result::Result<T, SettingsError>`.
-
-Public variants:
-
-- `IoError { path, source }`
-- `YamlParseError { source, message }`
-- `EmptyDocument { source }`
-- `KeyNotFound(String)`
-- `InvalidYamlStructure { source, index, found }`
-- `TaskJoinError { path, source }`
-
-Source-observed behavior:
-
-- `IoError` and `YamlParseError` are used by raw load helpers
-- `EmptyDocument` and `InvalidYamlStructure` are used by merge helpers
-- `TaskJoinError` is used by async batch loading when a spawned task fails to join
-- `KeyNotFound` remains part of the public error surface for cache-oriented APIs
-
-That means contributors should treat all of these variants as live public API, even when a specific call path uses only a subset of them.
-
-## `String` errors for coercion
-
-`validators::coerce_setting_value()` returns `Result<CoercedValue, String>`.
-
-That makes the validators module lightweight and binding-friendly, but it also means coercion failures do not carry typed error variants.
-
----
-
-## Runtime And Concurrency Notes
-
-This crate exposes both sync and async APIs, but it does not create a Tokio runtime in its current source.
-
-- sync loading uses `std::fs`
-- async loading uses `tokio::fs`
-- async batch loading uses `tokio::spawn`
-- cache storage uses `DashMap<String, Arc<Vec<Yaml>>>`
-- cache counters use `AtomicU64`
-
-Repo-level runtime note:
-
-- `Cargo.toml` and crate docs say this crate follows the shared-runtime rule from [`classic-shared-core`](../../foundation/classic-shared-core)
-- the current `src/` files do not directly call `classic_shared_core::get_runtime()`
-- in practice, callers and bindings are expected to run async APIs on the shared runtime rather than creating a new one
-
-Contributor rule: keep new async behavior compatible with the repo's shared Tokio runtime assumption even though this crate does not currently own runtime entry points itself.
+- it is domain-specific, so it did not move to shared core with the generic YAML rules; config will take ownership of it
 
 ---
 
@@ -415,30 +79,24 @@ Contributor rule: keep new async behavior compatible with the repo's shared Toki
 
 Important direct dependencies visible in current behavior:
 
-- `yaml-rust2` - YAML parsing and exposed `Yaml` type
-- `tokio` - async file I/O and spawned async batch tasks
-- `quick_cache` and `std::sync::LazyLock` - bounded process-global concurrent cache
-- `serde` - `CacheStats` serialization support
-- `thiserror` - `SettingsError`
-- `tracing` - cache hit/miss instrumentation in `get_cached()`
+- `classic-shared-core` - owner of every re-exported generic YAML item
+- `yaml-rust2` - YAML parsing for `YamlOperations`
+- `quick_cache` - bounded process-global path/mtime-aware YAML-file cache
+- `rayon`, `indexmap`, `serde`, `tracing` - `YamlOperations` batch loading, ordered extraction, stats serialization, and cache instrumentation
 
 Related CLASSIC crates and consumers:
 
+- [`classic-shared-core`](classic-shared-core.md#generic-yaml-yaml) - owner of the generic YAML rules and logical-key cache
 - [`classic-node`](../../node-bindings/classic-node/src/settings.rs) - exposes the cache, loaders, and stats to JavaScript/TypeScript
 - [`classic-settings-py`](../../python-bindings/classic-settings-py/src/lib.rs) - exposes the generic YAML and scalar-validator surface to Python
 - [`classic-config-core`](../../docs/api/classic-config-core.md) - higher-level CLASSIC YAML Data loader; use it when raw `Yaml` documents are not enough
 - [`classic-user-settings-core`](../../docs/api/classic-user-settings-core.md) - exclusive owner of typed User Settings
-- [`classic-shared-core`](../../docs/api/classic-shared-core.md) - repo-wide shared Tokio runtime policy this crate is expected to follow
-
-Source-observed limitation:
-
-- `Cargo.toml` declares `classic-shared-core` and `classic-perf-core`, but the current public `src/` implementation does not visibly expose runtime helpers or performance APIs from those crates
 
 ---
 
 ## Usage Example
 
-This example stays within the real public API and shows the generic cache pattern. Use a non-User-Settings document; first-party production code must use `classic-user-settings-core` for `CLASSIC Settings.yaml`.
+The re-exported paths behave exactly like the shared-core ones. Use a non-User-Settings document; first-party production code must use `classic-user-settings-core` for `CLASSIC Settings.yaml`.
 
 ```rust
 use classic_settings_core::{get_cached, load_settings_sync};
@@ -449,33 +107,28 @@ let docs = load_settings_sync(
     Path::new("CLASSIC Ignore.yaml"),
 )?;
 
-let cached = get_cached("ignore").expect("document should be cached after load");
+// The facade and the shared-core owner see the same cache entry.
+let cached = classic_shared_core::yaml::get_cached("ignore")
+    .expect("document should be cached after load");
 assert!(std::sync::Arc::ptr_eq(&docs, &cached));
+assert!(get_cached("ignore").is_some());
 
 # Ok::<(), classic_settings_core::SettingsError>(())
 ```
-
-For async callers, replace `load_settings_sync()` with `load_settings_async(...).await` and keep the same cache access pattern.
 
 ---
 
 ## Contributor Notes And Known Limits
 
-- cache entries are invalidated manually only; there is no automatic reload when a file changes on disk
-- batch-loading helpers use path strings as cache keys, while single-file helpers accept any logical key the caller chooses
-- `get_cached()` is the only API that updates hit/miss counters
-- cache key ordering from `cache_keys()` is not stable
-- multi-document YAML is preserved rather than collapsed to the first document
-- validator coercion errors use plain `String`, not `SettingsError`
-- crate docs mention shared-runtime integration, but current source does not provide a root-level runtime helper or direct `classic-shared-core` call site
+- Do not add new generic YAML behavior here; add it to `classic_shared_core::yaml` and, only if a current caller needs the old path, re-export it.
+- New code should import generic YAML items from `classic_shared_core::yaml` directly so the eventual retirement of this crate does not need to touch it.
+- Root-level re-exports in `src/lib.rs` are still part of the public crate surface; removing one breaks callers that have not migrated.
 
-If you extend this crate, update this document when you change:
+If you change this crate, update this document when you change:
 
 - root-level re-exports in `src/lib.rs`
-- cache key rules or invalidation behavior
-- sync vs async loading semantics
-- `SettingsError` variant usage
-- scalar validation or coercion rules
+- `YamlFile` variants, methods, display, or serialization
+- the `YamlOperations` surface or its cache behavior
 
 ---
 
@@ -490,9 +143,9 @@ This section documents the `YamlOperations` surface and the path-backed YAML fil
 - synchronous YAML parsing and serialization with `yaml_rust2::Yaml`
 - dot-path value extraction and mutation helpers over parsed YAML
 - a global file-backed YAML cache with hit/miss statistics and mtime-based invalidation
-- YAML merge-key (`<<`) resolution for parsed documents
+- YAML merge-key (`<<`) resolution for parsed documents, through the re-exported shared-core `merge_keys()`
 
-The `YamlOperations` cache is distinct from the `Arc<Vec<Yaml>>` settings cache documented above — it is path-keyed, mtime-aware, and has a fixed capacity of `128` entries (vs. the settings cache's `64`).
+The `YamlOperations` cache is distinct from the `Arc<Vec<Yaml>>` logical-key cache owned by [`classic_shared_core::yaml`](classic-shared-core.md#logical-key-cache) — it is path-keyed, mtime-aware, and has a fixed capacity of `128` entries (vs. the logical-key cache's `64`).
 
 ### `YamlOperations`
 
@@ -531,7 +184,7 @@ Typed extraction helpers:
 
 Behavior worth knowing:
 
-- `parse_yaml()` and `load_yaml_file()` always return only the first YAML document from multi-document input (unlike the `load_yaml_*` loader helpers earlier in this document, which preserve all documents).
+- `parse_yaml()` and `load_yaml_file()` always return only the first YAML document from multi-document input (unlike the shared-core `load_yaml_*` loader helpers, which preserve all documents).
 - Dot-path traversal only walks `Yaml::Hash` nodes. Array indexing is not supported.
 - `get_setting()` clones and returns the final `Yaml` value.
 - `set_setting()` creates missing intermediate hashes and will replace a non-hash intermediate node with a new hash to complete the requested path.
@@ -558,9 +211,11 @@ Notes:
 
 - Counters are global across all `YamlOperations` instances.
 - `capacity` is fixed at `128` entries for the process-global YAML cache (vs. `64` for the settings cache).
-- The D-03 rename in Phase 1 was chosen to keep the two caches unambiguously distinct: `yaml_cache_stats` / `YamlCacheStats` for the path-keyed yaml file cache, and `cache_stats` / `CacheStats` (above) for the key-based settings cache.
+- The D-03 rename in Phase 1 was chosen to keep the two caches unambiguously distinct: `yaml_cache_stats` / `YamlCacheStats` for the path-keyed yaml file cache, and `cache_stats` / `CacheStats` (re-exported from shared core) for the key-based logical-key cache.
 
 ### `YamlError`
+
+`YamlError` is owned by [`classic_shared_core::yaml`](classic-shared-core.md#yamlerror) and re-exported here; `YamlOperations` uses it for all of its errors.
 
 Variants:
 
@@ -581,7 +236,7 @@ Notes:
 
 ### `merge_keys(yaml)`
 
-Resolves YAML merge-key (`<<`) usage after parsing. Semantics:
+Owned by [`classic_shared_core::yaml`](classic-shared-core.md#merging) and re-exported here. Resolves YAML merge-key (`<<`) usage after parsing. Semantics:
 
 - `<<` value may be a single mapping or a sequence of mappings
 - merge resolution is recursive, including nested merged mappings and arrays containing merged mappings
@@ -661,7 +316,7 @@ Two type-system exceptions apply at the CXX boundary (bridge-internal design not
 
 ### Contributor Notes For The Absorbed YAML Surface
 
-- The public YAML API is root-level on `classic-settings-core`; adding or removing items in `src/lib.rs` materially changes the crate surface.
+- The `YamlOperations` API is root-level on `classic-settings-core`; adding or removing items in `src/lib.rs` materially changes the crate surface.
 - `YamlOperations::with_config()` currently stores formatting preferences but the serializer does not visibly honor them.
 - `load_yaml_files_batch()` iterates sequentially and silently skips failures.
 - Dot-path access is hash-only; contributors should not assume support for YAML arrays in path segments.

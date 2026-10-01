@@ -10,9 +10,8 @@
 //! # Example
 //!
 //! ```rust
-//! use classic_settings_core::{YamlOperations, merge_keys};
+//! use classic_shared_core::yaml::{merge_keys, parse_yaml_content};
 //!
-//! let ops = YamlOperations::new();
 //! let yaml_str = r#"
 //! defaults: &defaults
 //!   adapter: postgres
@@ -23,14 +22,11 @@
 //!   database: dev_db
 //! "#;
 //!
-//! let yaml = ops.parse_yaml(yaml_str).unwrap();
+//! let yaml = parse_yaml_content("example", yaml_str).unwrap().remove(0);
 //! let merged = merge_keys(yaml).unwrap();
 //!
 //! // Now development.adapter and development.host are accessible
-//! assert_eq!(
-//!     ops.get_string_value(&merged, "development.adapter", ""),
-//!     "postgres"
-//! );
+//! assert_eq!(merged["development"]["adapter"].as_str(), Some("postgres"));
 //! ```
 //!
 //! # Merge Key Semantics
@@ -41,7 +37,7 @@
 //! - The `<<` key is removed from the result after merging
 //! - Merge keys are resolved recursively (a merged mapping can itself have merge keys)
 
-use crate::YamlError;
+use crate::yaml::YamlError;
 use yaml_rust2::Yaml;
 
 /// Resolve YAML merge keys (`<<`) in a parsed YAML document.
@@ -63,9 +59,8 @@ use yaml_rust2::Yaml;
 /// # Example
 ///
 /// ```rust
-/// use classic_settings_core::{YamlOperations, merge_keys};
+/// use classic_shared_core::yaml::{merge_keys, parse_yaml_content};
 ///
-/// let ops = YamlOperations::new();
 /// let yaml_str = r#"
 /// defaults: &defaults
 ///   adapter: postgres
@@ -76,18 +71,12 @@ use yaml_rust2::Yaml;
 ///   database: dev_db
 /// "#;
 ///
-/// let yaml = ops.parse_yaml(yaml_str).unwrap();
+/// let yaml = parse_yaml_content("example", yaml_str).unwrap().remove(0);
 /// let merged = merge_keys(yaml).unwrap();
 ///
 /// // Now development.adapter and development.host are accessible
-/// assert_eq!(
-///     ops.get_string_value(&merged, "development.adapter", ""),
-///     "postgres"
-/// );
-/// assert_eq!(
-///     ops.get_string_value(&merged, "development.database", ""),
-///     "dev_db"
-/// );
+/// assert_eq!(merged["development"]["adapter"].as_str(), Some("postgres"));
+/// assert_eq!(merged["development"]["database"].as_str(), Some("dev_db"));
 /// ```
 ///
 /// # Errors

@@ -14,9 +14,8 @@ crate-type = ["cdylib", "rlib"]  # cdylib for Python, rlib for Rust consumers
 [dependencies]
 # Core business logic (pure Rust - NO PyO3)
 classic-update-core = { path = "../../business-logic/classic-update-core" }
-# YAML-update DTO inputs need SchemaCompat/SchemaVersion
-classic-settings-core = { path = "../../business-logic/classic-settings-core" }
-# YAML-update orchestrator runs via the shared runtime
+# YAML-update orchestrator runs via the shared runtime; its DTO inputs need
+# the shared-core `yaml::SchemaCompat`/`yaml::SchemaVersion`
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 # Python sync wrappers release the GIL while blocking on async Rust work
 classic-shared-py = { path = "../../foundation/classic-shared-py" }

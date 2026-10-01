@@ -14,8 +14,8 @@ use classic_config_core::{
     load_main_yaml_version_with_bundled_dir as core_load_main_yaml_version_with_bundled_dir,
     persist_game_local_paths as core_persist_game_local_paths,
 };
-use classic_settings_core::SettingsError;
 use classic_shared_core::get_runtime;
+use classic_shared_core::yaml::SettingsError;
 use napi::Status;
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;

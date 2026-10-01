@@ -317,7 +317,7 @@ Variants:
 
 - `InvalidVersion(String)`
 - `NotFound(String)`
-- `YamlError(classic_settings_core::YamlError)` (the `YamlError` type was relocated from the former ``yaml-core`` into `classic-settings-core` during v9.1.0 Phase 1)
+- `YamlError(classic_settings_core::YamlError)` (the `YamlError` type was relocated from the former ``yaml-core`` into `classic-settings-core` during v9.1.0 Phase 1; it is now owned by `classic_shared_core::yaml` and re-exported under the same `classic_settings_core` path)
 - `NotInitialized`
 - `InvalidConfig(String)`
 

@@ -18,7 +18,7 @@ use super::types::{CoercedValue, SettingType};
 /// # Examples
 ///
 /// ```rust
-/// use classic_settings_core::validators::{SettingType, validate_setting_value};
+/// use classic_shared_core::yaml::validators::{SettingType, validate_setting_value};
 ///
 /// assert!(validate_setting_value("42", SettingType::Int));
 /// assert!(validate_setting_value("true", SettingType::Bool));
@@ -60,7 +60,7 @@ pub fn validate_setting_value(value: &str, expected_type: SettingType) -> bool {
 /// # Examples
 ///
 /// ```rust
-/// use classic_settings_core::validators::{SettingType, CoercedValue, coerce_setting_value};
+/// use classic_shared_core::yaml::validators::{SettingType, CoercedValue, coerce_setting_value};
 ///
 /// let result = coerce_setting_value("42", SettingType::Int).unwrap();
 /// assert_eq!(result, CoercedValue::Int(42));

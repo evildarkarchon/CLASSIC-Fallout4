@@ -20,8 +20,8 @@
 //! C++ callers should inspect `tag` first and treat the rest as empty when
 //! a case doesn't apply.
 
-use classic_settings_core::{SchemaCompat, SchemaVersion};
 use classic_shared_core::get_runtime;
+use classic_shared_core::yaml::{SchemaCompat, SchemaVersion};
 use classic_update_core::yaml_update::{
     apply_yaml_data_update_with_decision, check_yaml_data_update, rollback_yaml_data_update,
 };

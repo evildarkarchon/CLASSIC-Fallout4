@@ -1,6 +1,6 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-01T01:38:05.391750+00:00`
+- Generated: `2026-10-01T04:26:06.386863+00:00`
 - Tier-1 contract rows: **952**
 - Tier-1 matched: **935**
 - Tier-1 missing Rust: **0**
@@ -225,17 +225,17 @@
 | `config-get-batch-cache-ttl` | `config` | `classic-database-core` | `BATCH_CACHE_TTL_SECS` | `getBatchCacheTtl` | `matched` |
 | `config-get-max-cache-ttl` | `config` | `classic-database-core` | `MAX_CACHE_TTL_SECS` | `getMaxCacheTtl` | `matched` |
 | `config-generate-local-yaml` | `config` | `classic-file-io-core` | `generate_local_yaml` | `generateLocalYaml` | `matched` |
-| `config-settings-cache-stats-interface` | `config` | `classic-settings-core` | `CacheStats` | `SettingsCacheStats` | `matched` |
-| `config-load-settings-sync` | `config` | `classic-settings-core` | `load_settings_sync` | `loadSettingsSync` | `matched` |
-| `config-load-settings-async` | `config` | `classic-settings-core` | `load_settings_async` | `loadSettingsAsync` | `matched` |
-| `config-get-cached` | `config` | `classic-settings-core` | `get_cached` | `getCached` | `matched` |
-| `config-is-cached` | `config` | `classic-settings-core` | `is_cached` | `isCached` | `matched` |
-| `config-invalidate-settings` | `config` | `classic-settings-core` | `invalidate` | `invalidateSettings` | `matched` |
-| `config-clear-settings-cache` | `config` | `classic-settings-core` | `clear_cache` | `clearSettingsCache` | `matched` |
-| `config-settings-cache-size` | `config` | `classic-settings-core` | `cache_size` | `settingsCacheSize` | `matched` |
-| `config-settings-cache-keys` | `config` | `classic-settings-core` | `cache_keys` | `settingsCacheKeys` | `matched` |
-| `config-get-settings-cache-stats` | `config` | `classic-settings-core` | `cache_stats` | `getSettingsCacheStats` | `matched` |
-| `config-reset-settings-cache-stats` | `config` | `classic-settings-core` | `reset_cache_stats` | `resetSettingsCacheStats` | `matched` |
+| `config-settings-cache-stats-interface` | `config` | `classic-shared-core` | `CacheStats` | `SettingsCacheStats` | `matched` |
+| `config-load-settings-sync` | `config` | `classic-shared-core` | `load_settings_sync` | `loadSettingsSync` | `matched` |
+| `config-load-settings-async` | `config` | `classic-shared-core` | `load_settings_async` | `loadSettingsAsync` | `matched` |
+| `config-get-cached` | `config` | `classic-shared-core` | `get_cached` | `getCached` | `matched` |
+| `config-is-cached` | `config` | `classic-shared-core` | `is_cached` | `isCached` | `matched` |
+| `config-invalidate-settings` | `config` | `classic-shared-core` | `invalidate` | `invalidateSettings` | `matched` |
+| `config-clear-settings-cache` | `config` | `classic-shared-core` | `clear_cache` | `clearSettingsCache` | `matched` |
+| `config-settings-cache-size` | `config` | `classic-shared-core` | `cache_size` | `settingsCacheSize` | `matched` |
+| `config-settings-cache-keys` | `config` | `classic-shared-core` | `cache_keys` | `settingsCacheKeys` | `matched` |
+| `config-get-settings-cache-stats` | `config` | `classic-shared-core` | `cache_stats` | `getSettingsCacheStats` | `matched` |
+| `config-reset-settings-cache-stats` | `config` | `classic-shared-core` | `reset_cache_stats` | `resetSettingsCacheStats` | `matched` |
 | `config-validate-settings-path` | `path` | `classic-path-core` | `validate_settings_path` | `validateSettingsPath` | `matched` |
 | `config-validate-settings-paths` | `path` | `classic-path-core` | `validate_settings_paths` | `validateSettingsPaths` | `matched` |
 | `config-yaml-document-class` | `config` | `classic-settings-core` | `YamlOperations` | `YamlDocument` | `matched` |
@@ -340,8 +340,8 @@
 | `aux-phase4a-is-valid-executable-path` | `aux` | `classic-path-core` | `is_valid_executable_path` | `isValidExecutablePath` | `matched` |
 | `aux-phase4a-is-valid-path` | `aux` | `classic-path-core` | `is_valid_path` | `isValidPath` | `matched` |
 | `aux-phase4a-join-paths` | `aux` | `classic-shared-core` | `join_paths` | `joinPaths` | `matched` |
-| `aux-phase4a-load-batch-async` | `aux` | `classic-settings-core` | `load_batch_async` | `loadBatchAsync` | `matched` |
-| `aux-phase4a-load-batch-sync` | `aux` | `classic-settings-core` | `load_batch_sync` | `loadBatchSync` | `matched` |
+| `aux-phase4a-load-batch-async` | `aux` | `classic-shared-core` | `load_batch_async` | `loadBatchAsync` | `matched` |
+| `aux-phase4a-load-batch-sync` | `aux` | `classic-shared-core` | `load_batch_sync` | `loadBatchSync` | `matched` |
 | `aux-phase4a-normalize-path` | `aux` | `classic-shared-core` | `normalize_path` | `normalizePath` | `matched` |
 | `aux-phase4a-normalize-string` | `aux` | `classic-shared-core` | `normalize_string` | `normalizeString` | `matched` |
 | `aux-phase4a-parse-steam-library` | `aux` | `classic-path-core` | `parse_steam_library` | `parseSteamLibrary` | `matched` |

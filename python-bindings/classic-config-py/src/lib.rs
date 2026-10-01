@@ -108,10 +108,10 @@ use classic_config_core::{
     ConfigError, CoreModExclude, ModSolutionCriteria, YamlDataCore, YamlSource as CoreYamlSource,
     persist_game_local_paths as core_persist_game_local_paths,
 };
-use classic_settings_core::SettingsError;
 use classic_shared::{
     ResultExt, ToPyErr, define_exceptions, register_exceptions, without_gil_block_on,
 };
+use classic_shared_core::yaml::SettingsError;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList, PySet};
 use std::path::PathBuf;

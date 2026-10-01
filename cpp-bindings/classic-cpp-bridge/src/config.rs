@@ -42,12 +42,12 @@ use classic_config_core::{
     load_main_yaml_version_with_bundled_dir as core_load_main_yaml_version_with_bundled_dir,
     persist_game_local_paths,
 };
-use classic_settings_core::{
+use classic_shared_core::GameId as CoreGameId;
+use classic_shared_core::get_runtime;
+use classic_shared_core::yaml::{
     cache_stats as settings_core_cache_stats, clear_cache as clear_settings_cache,
     reset_cache_stats as reset_settings_core_cache_stats,
 };
-use classic_shared_core::GameId as CoreGameId;
-use classic_shared_core::get_runtime;
 use classic_vocabulary::display_label;
 use std::path::{Path, PathBuf};
 

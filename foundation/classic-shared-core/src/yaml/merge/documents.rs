@@ -1,6 +1,6 @@
 //! YAML document stream merge helpers.
 
-use crate::error::{Result, SettingsError, SettingsSource};
+use crate::yaml::error::{Result, SettingsError, SettingsSource};
 use yaml_rust2::Yaml;
 
 /// Merge a YAML document stream into a single mapping.

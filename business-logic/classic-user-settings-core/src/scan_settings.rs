@@ -8,7 +8,7 @@ use crate::preference::{
     OptionalPathField, Preference, aliased_optional_absolute_path_preference,
     optional_absolute_path_preference,
 };
-use classic_settings_core::Yaml;
+use classic_shared_core::yaml::Yaml;
 use std::collections::BTreeMap;
 
 /// Saved game-version selection used while preparing a Crash Log Scan.

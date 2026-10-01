@@ -37,7 +37,7 @@
 //!   Setup and frontend fields remain optional to older 2.x clients.
 
 use crate::shippable::ShippableFile;
-use classic_settings_core::SchemaCompat;
+use classic_shared_core::yaml::SchemaCompat;
 
 /// Schema range the client accepts for `CLASSIC Main.yaml` (and any future
 /// global metadata file under `CLASSIC Data/databases/CLASSIC Main.yaml`).

@@ -2173,7 +2173,7 @@
       "rustSymbol": "CacheStats",
       "nodeExport": "SettingsCacheStats",
       "nodeKind": "interface",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "config-load-settings-sync",
@@ -2182,7 +2182,7 @@
       "rustSymbol": "load_settings_sync",
       "nodeExport": "loadSettingsSync",
       "nodeKind": "function",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "config-load-settings-async",
@@ -2191,7 +2191,7 @@
       "rustSymbol": "load_settings_async",
       "nodeExport": "loadSettingsAsync",
       "nodeKind": "function",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "config-get-cached",
@@ -2200,7 +2200,7 @@
       "rustSymbol": "get_cached",
       "nodeExport": "getCached",
       "nodeKind": "function",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "config-is-cached",
@@ -2209,7 +2209,7 @@
       "rustSymbol": "is_cached",
       "nodeExport": "isCached",
       "nodeKind": "function",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "config-invalidate-settings",
@@ -2218,7 +2218,7 @@
       "rustSymbol": "invalidate",
       "nodeExport": "invalidateSettings",
       "nodeKind": "function",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "config-clear-settings-cache",
@@ -2227,7 +2227,7 @@
       "rustSymbol": "clear_cache",
       "nodeExport": "clearSettingsCache",
       "nodeKind": "function",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "config-settings-cache-size",
@@ -2236,7 +2236,7 @@
       "rustSymbol": "cache_size",
       "nodeExport": "settingsCacheSize",
       "nodeKind": "function",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "config-settings-cache-keys",
@@ -2245,7 +2245,7 @@
       "rustSymbol": "cache_keys",
       "nodeExport": "settingsCacheKeys",
       "nodeKind": "function",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "config-get-settings-cache-stats",
@@ -2254,7 +2254,7 @@
       "rustSymbol": "cache_stats",
       "nodeExport": "getSettingsCacheStats",
       "nodeKind": "function",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "config-reset-settings-cache-stats",
@@ -2263,7 +2263,7 @@
       "rustSymbol": "reset_cache_stats",
       "nodeExport": "resetSettingsCacheStats",
       "nodeKind": "function",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "config-validate-settings-path",
@@ -3243,7 +3243,7 @@
       "rustSymbol": "load_batch_async",
       "nodeExport": "loadBatchAsync",
       "nodeKind": "function",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "aux-phase4a-load-batch-sync",
@@ -3252,7 +3252,7 @@
       "rustSymbol": "load_batch_sync",
       "nodeExport": "loadBatchSync",
       "nodeKind": "function",
-      "rustCrate": "classic-settings-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "aux-phase4a-normalize-path",

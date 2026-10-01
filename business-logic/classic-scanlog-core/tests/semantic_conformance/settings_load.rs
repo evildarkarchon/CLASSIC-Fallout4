@@ -3,6 +3,7 @@
 use super::{RunnerResult, invalid, strings, text};
 use classic_settings_core as settings;
 use classic_shared_core::get_runtime;
+use classic_shared_core::yaml as shared_yaml;
 use serde_json::{Value, json};
 use std::{
     fs,
@@ -13,7 +14,7 @@ use std::{
 struct CacheReset;
 impl Drop for CacheReset {
     fn drop(&mut self) {
-        settings::clear_cache();
+        shared_yaml::clear_cache();
     }
 }
 
@@ -39,10 +40,10 @@ fn owned(root: &Path, relative: &str) -> RunnerResult<PathBuf> {
 }
 
 /// Preserve typed core failures and their attributed path without OS-specific prose.
-fn domain_error(error: settings::SettingsError, root: &Path) -> RunnerResult<Value> {
+fn domain_error(error: shared_yaml::SettingsError, root: &Path) -> RunnerResult<Value> {
     let (kind, path) = match error {
-        settings::SettingsError::IoError { path, .. } => ("io", path),
-        settings::SettingsError::YamlParseError { source, .. } => (
+        shared_yaml::SettingsError::IoError { path, .. } => ("io", path),
+        shared_yaml::SettingsError::YamlParseError { source, .. } => (
             "yaml-parse",
             source
                 .path()
@@ -95,10 +96,10 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
         fs::create_dir_all(path.parent().ok_or_else(|| invalid("missing parent"))?)?;
         fs::write(path, text(content)?.as_bytes())?;
     }
-    settings::reset_cache_stats();
+    shared_yaml::reset_cache_stats();
     let mut observed = serde_json::Map::new();
     for operation in ["sync", "async", "batchSync", "batchAsync"] {
-        settings::clear_cache();
+        shared_yaml::clear_cache();
         let batch = operation.starts_with("batch");
         let relatives = if batch {
             strings(&fixture["request"]["batch"])?
@@ -119,19 +120,19 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
             vec!["conformance.single".to_string()]
         };
         let result = match operation {
-            "sync" => settings::load_settings_sync(&keys[0], &paths[0]).map(|docs| docs.len()),
+            "sync" => shared_yaml::load_settings_sync(&keys[0], &paths[0]).map(|docs| docs.len()),
             "async" => get_runtime()
-                .block_on(settings::load_settings_async(&keys[0], &paths[0]))
+                .block_on(shared_yaml::load_settings_async(&keys[0], &paths[0]))
                 .map(|docs| docs.len()),
-            "batchSync" => settings::load_batch_sync(&refs),
-            _ => get_runtime().block_on(settings::load_batch_async(&refs)),
+            "batchSync" => shared_yaml::load_batch_sync(&refs),
+            _ => get_runtime().block_on(shared_yaml::load_batch_async(&refs)),
         };
         let (count, error) = match result {
             Ok(count) => (json!(count), Value::Null),
             Err(error) => (Value::Null, domain_error(error, root)?),
         };
-        let cached: Vec<_> = keys.iter().map(|key| settings::is_cached(key)).collect();
-        let mut normalized_keys: Vec<_> = settings::cache_keys()
+        let cached: Vec<_> = keys.iter().map(|key| shared_yaml::is_cached(key)).collect();
+        let mut normalized_keys: Vec<_> = shared_yaml::cache_keys()
             .iter()
             .map(|key| {
                 if batch {
@@ -146,22 +147,28 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
             })
             .collect();
         normalized_keys.sort();
-        let size = settings::cache_size();
+        let size = shared_yaml::cache_size();
         let stats = cache_statistics();
-        let invalidated: Vec<_> = keys.iter().map(|key| settings::invalidate(key)).collect();
-        let invalidated_again: Vec<_> = keys.iter().map(|key| settings::invalidate(key)).collect();
-        let after_invalidate = settings::cache_size();
-        settings::reset_cache_stats();
+        let invalidated: Vec<_> = keys
+            .iter()
+            .map(|key| shared_yaml::invalidate(key))
+            .collect();
+        let invalidated_again: Vec<_> = keys
+            .iter()
+            .map(|key| shared_yaml::invalidate(key))
+            .collect();
+        let after_invalidate = shared_yaml::cache_size();
+        shared_yaml::reset_cache_stats();
         let reset_stats = cache_statistics();
         let cache_state = json!({"keys": normalized_keys, "size": size, "stats": stats, "invalidated": invalidated, "invalidatedAgain": invalidated_again, "afterInvalidate": after_invalidate, "resetStats": reset_stats});
         // Refill successfully loaded entries so clearing is observed independently of invalidation.
         for ((key, path), present) in keys.iter().zip(&paths).zip(&cached) {
             if *present {
-                settings::load_settings_sync(key, path)?;
+                shared_yaml::load_settings_sync(key, path)?;
             }
         }
-        settings::clear_cache();
-        let after_clear: Vec<_> = keys.iter().map(|key| settings::is_cached(key)).collect();
+        shared_yaml::clear_cache();
+        let after_clear: Vec<_> = keys.iter().map(|key| shared_yaml::is_cached(key)).collect();
         observed.insert(
             operation.to_string(),
             json!({"count": count, "error": error, "cached": cached, "afterClear": after_clear, "cacheState": cache_state}),
@@ -175,13 +182,13 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
 
 /// Project stable cache counters while retaining whether storage is bounded.
 fn cache_statistics() -> Value {
-    let stats = settings::cache_stats();
+    let stats = shared_yaml::cache_stats();
     json!({"hits": stats.hits, "misses": stats.misses, "hitRateZero": stats.hit_rate == 0.0, "size": stats.size, "bounded": stats.capacity > 0})
 }
 
 /// Project authored JSON-compatible YAML values without hiding typed scalar changes.
-pub(super) fn yaml_json(value: &settings::Yaml) -> RunnerResult<Value> {
-    use settings::Yaml;
+pub(super) fn yaml_json(value: &shared_yaml::Yaml) -> RunnerResult<Value> {
+    use shared_yaml::Yaml;
     Ok(match value {
         Yaml::String(value) => json!(value),
         Yaml::Integer(value) => json!(value),
@@ -221,15 +228,15 @@ fn execute_yaml(fixture: &Value) -> RunnerResult<Value> {
     for key in strings(&fixture["updateOrder"])? {
         let value = &updates[&key];
         let native = match value {
-            Value::String(value) => settings::Yaml::String(value.clone()),
-            Value::Bool(value) => settings::Yaml::Boolean(*value),
-            Value::Number(value) => {
-                settings::Yaml::Integer(value.as_i64().ok_or_else(|| invalid("expected integer"))?)
-            }
-            Value::Array(values) => settings::Yaml::Array(
+            Value::String(value) => shared_yaml::Yaml::String(value.clone()),
+            Value::Bool(value) => shared_yaml::Yaml::Boolean(*value),
+            Value::Number(value) => shared_yaml::Yaml::Integer(
+                value.as_i64().ok_or_else(|| invalid("expected integer"))?,
+            ),
+            Value::Array(values) => shared_yaml::Yaml::Array(
                 values
                     .iter()
-                    .map(|value| Ok(settings::Yaml::String(text(value)?.to_string())))
+                    .map(|value| Ok(shared_yaml::Yaml::String(text(value)?.to_string())))
                     .collect::<RunnerResult<_>>()?,
             ),
             _ => return Err(invalid("unsupported fixture update").into()),
@@ -244,7 +251,7 @@ fn execute_yaml(fixture: &Value) -> RunnerResult<Value> {
                 key.clone(),
                 yaml_json(
                     &ops.get_setting(&round_trip, key)
-                        .unwrap_or(settings::Yaml::Null),
+                        .unwrap_or(shared_yaml::Yaml::Null),
                 )?,
             ))
         })
@@ -262,7 +269,7 @@ fn execute_yaml(fixture: &Value) -> RunnerResult<Value> {
                 key.clone(),
                 yaml_json(
                     &ops.get_setting(&loaded, key)
-                        .unwrap_or(settings::Yaml::Null),
+                        .unwrap_or(shared_yaml::Yaml::Null),
                 )?,
             ))
         })
@@ -287,7 +294,7 @@ fn execute_yaml_batch(fixture: &Value) -> RunnerResult<Value> {
     let keys = strings(&fixture["keys"])?;
     let key_refs: Vec<_> = keys.iter().map(String::as_str).collect();
     let project =
-        |values: std::collections::HashMap<String, settings::Yaml>| -> RunnerResult<Value> {
+        |values: std::collections::HashMap<String, shared_yaml::Yaml>| -> RunnerResult<Value> {
             Ok(Value::Object(
                 values
                     .iter()
@@ -309,7 +316,7 @@ fn execute_yaml_batch(fixture: &Value) -> RunnerResult<Value> {
         .map(|(key, value)| {
             Ok((
                 key.as_str(),
-                settings::Yaml::String(text(value)?.to_string()),
+                shared_yaml::Yaml::String(text(value)?.to_string()),
             ))
         })
         .collect::<RunnerResult<_>>()?;

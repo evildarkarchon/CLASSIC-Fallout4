@@ -1,5 +1,5 @@
 use crate::document::{Diagnostic, PreferenceOrigin};
-use classic_settings_core::Yaml;
+use classic_shared_core::yaml::Yaml;
 
 /// One typed preference together with its source provenance.
 #[derive(Debug, Clone, PartialEq, Eq)]

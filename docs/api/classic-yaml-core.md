@@ -1,6 +1,6 @@
 # `classic-yaml-core` API Guide (retired)
 
-**This crate no longer exists.** It was absorbed into `classic-settings-core` during Phase 1 of the v9.1.0 consolidation milestone. Every symbol it used to own — `YamlOperations`, the path-backed mtime-aware file cache, `merge_keys()`, `clear_global_yaml_cache()`, and `yaml_cache_stats()` — is now re-exported from the `classic-settings-core` crate root.
+**This crate no longer exists.** It was absorbed into `classic-settings-core` during Phase 1 of the v9.1.0 consolidation milestone. Every symbol it used to own — `YamlOperations`, the path-backed mtime-aware file cache, `merge_keys()`, `clear_global_yaml_cache()`, and `yaml_cache_stats()` — is now re-exported from the `classic-settings-core` crate root. `merge_keys()` and `YamlError` have since moved again, to [`classic_shared_core::yaml`](classic-shared-core.md#generic-yaml-yaml); `classic-settings-core` still re-exports them.
 
 Go to [`classic-settings-core.md`](classic-settings-core.md). The absorbed surface is documented there under **YAML Operations**, including the contrast between the path-keyed `YamlOperations` cache and the key-based settings cache.
 

@@ -1,6 +1,8 @@
 # Generic settings loader conformance
 
-The `settings-load` pack belongs to `classic-settings-core`. It is separate from
+The `settings-load` pack belongs to `classic-shared-core`, whose `yaml` module
+owns the logical-key cache that moved out of `classic-settings-core`. The
+`settings-validation` and `settings-cached-docs` packs moved with it. It is separate from
 `config-operations`, whose strict application YAML loader belongs to
 `classic-config-core`, and from installed data selection and User Settings.
 
@@ -55,6 +57,6 @@ Merging, schema and other raw Rust exports without public adapter counterparts
 retain their existing source inventory; these packs do not claim to execute them.
 
 Five retained Node mapping IDs are preserved while correcting their canonical
-Rust metadata from old `config`/`aux` carrier labels to the actual settings-core
-calls in `node-bindings/classic-node/src/settings.rs`. This makes applicability
+Rust metadata from old `config`/`aux` carrier labels to the actual shared-core
+`yaml` calls in `node-bindings/classic-node/src/settings.rs`. This makes applicability
 source-driven without broad owner enrollment.

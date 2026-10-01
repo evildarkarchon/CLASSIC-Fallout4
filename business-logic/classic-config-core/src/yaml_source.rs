@@ -1,7 +1,7 @@
 //! Generic YAML document locations used outside the User Settings domain.
 
 use anyhow::{Context, Result};
-use classic_settings_core::load_yaml_merged_async;
+use classic_shared_core::yaml::load_yaml_merged_async;
 use std::path::{Path, PathBuf};
 use yaml_rust2::Yaml;
 

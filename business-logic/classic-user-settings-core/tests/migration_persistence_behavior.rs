@@ -1,6 +1,6 @@
 //! Behavioral checks for explicit, conflict-safe User Settings migration persistence.
 
-use classic_settings_core::parse_yaml_content;
+use classic_shared_core::yaml::parse_yaml_content;
 use classic_user_settings_core::{
     MigrationPlanningOutcome, UserSettings, UserSettingsMigrationApplyOutcome,
     UserSettingsMigrationRestoreOutcome,
@@ -24,7 +24,7 @@ fn install_fixture(root: &Path, relative_path: &Path, fixture: &str) -> PathBuf 
 }
 
 /// Parses one YAML document so semantic equality is independent of emitter formatting.
-fn parse_one(label: &str, bytes: &[u8]) -> classic_settings_core::Yaml {
+fn parse_one(label: &str, bytes: &[u8]) -> classic_shared_core::yaml::Yaml {
     let content = std::str::from_utf8(bytes).expect("User Settings YAML must be UTF-8");
     let mut documents = parse_yaml_content(label, content).expect("User Settings YAML must parse");
     assert_eq!(documents.len(), 1, "expected exactly one YAML document");

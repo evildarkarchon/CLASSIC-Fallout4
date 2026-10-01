@@ -1,6 +1,6 @@
 //! Behavioral checks for the public read-only User Settings interface.
 
-use classic_settings_core::parse_yaml_content;
+use classic_shared_core::yaml::parse_yaml_content;
 use classic_user_settings_core::{
     CommitEligibility, DocumentClassification, PreferenceOrigin, Revision, SourceLocation,
     UpdateSource, UserSettings,
