@@ -62,11 +62,18 @@ This crate exposes both root-level items and public modules.
 
 ### `performance_core`
 
-- `PerformanceMetrics` - process-wide operation metrics store
+The sole rolling `Duration` timing implementation for every binding.
+
+- `PerformanceMetrics` - operation metrics store (the default store or an explicitly owned one)
 - `OperationStats` - aggregate stats for one named operation
-- `Timer` - RAII timing helper
+- `MetricsSummary` - seconds-based projection of `OperationStats`
+- `TimingError`, `MetricCounter` - typed sample and counter rejections
+- `Timer`, `start_timer()` - RAII timing helper that records at most once
+- `record_timing()`, `record_timing_millis()`, `get_summary()`, `clear_metrics()` - seconds/milliseconds view of the default store
+- `duration_from_secs_f64()`, `duration_from_millis_f64()`, `duration_from_millis_u64()`, `duration_from_millis_i128()` - validating sample conversions
+- `MAX_SAMPLE_NANOS` - largest accepted single sample
 - `time_async()`, `time_operation()`, `time_with_bytes()` - timing helpers
-- `get_global_metrics()` and `get_timer_start()` - global metrics/time accessors
+- `get_global_metrics()` and `get_timer_start()` - default store and timer epoch accessors
 - `timed!` - exported timing macro
 
 ### `strings_core`
@@ -279,24 +286,40 @@ Source-observed limitation:
 
 ## `PerformanceMetrics`, `Timer`, and helpers
 
-`performance_core` provides a process-wide, constant-memory timing system.
+`performance_core` is the single, constant-memory timing implementation. C++, Node, and both Python performance views (`classic_perf` through the `classic-perf-core` facade, and `classic_shared.RustPerformanceMonitor`) all record into it.
+
+### Default store
+
+There is **one default observable store per linked library image**: `get_global_metrics()`, the seconds/milliseconds free functions, and `Timer` all read and clear the same timing and byte state. A `PerformanceMetrics::new()` value owns independent state that the default store never sees. The C++ bridge and Node addon each link their own image and therefore their own default. Today `classic_perf` and `classic_shared` are separate Python extension images with separate stores; the single-wheel adapter (issue #259) puts them in one image.
+
+### Sample contract
+
+- Floating-point samples must be finite and nonnegative; `-0.0` is zero.
+- A valid sample is rounded **once**, from its exact binary value, to the nearest nanosecond (ties to even). Millisecond input is scaled in that same step, not divided into seconds first.
+- One sample may not exceed `MAX_SAMPLE_NANOS` (`u64::MAX`, about 584 years). `Duration` inputs above it are rejected too.
+- Sample counts, accumulated nanoseconds, and byte totals use checked arithmetic; a record that would wrap any of them is rejected.
+- Rejections happen before any mutation: no entry is created and no counter changes.
+
+`TimingError` variants carry a stable `code()` token: `timing_sample_not_finite`, `timing_sample_negative`, `timing_sample_out_of_range`, and `timing_counter_overflow`. Every binding uses `coded_message()` (`"<code>: <message>"`) as its error text ([error contract](error-contract.md#timing-sample-errors)).
 
 ## `PerformanceMetrics`
 
 Important methods:
 
 - `PerformanceMetrics::new()`
-- `record_timing(operation, duration)`
-- `record_bytes(operation, bytes)`
+- `record_timing(operation, duration) -> Result<(), TimingError>`
+- `record_timing_secs(operation, f64)` / `record_timing_millis(operation, f64)`
+- `record_bytes(operation, bytes) -> Result<(), TimingError>`
+- `record_timing_with_bytes(operation, duration, Option<bytes>)` - both counters change or neither does
 - `get_stats(operation) -> Option<OperationStats>`
-- `get_operations() -> Vec<String>`
-- `clear()`
+- `get_operations() -> Vec<String>` and `all_stats() -> HashMap<String, OperationStats>`
+- `clear()` - removes timing **and** byte state
 
 Behavior worth knowing:
 
-- operation names are `String` keys in a global `DashMap`
-- timings are aggregated into rolling stats instead of storing every sample
-- byte counts are tracked separately and combined into `OperationStats` at read time
+- each operation name owns one `DashMap` entry holding its rolling stats (count, sum, min, max as whole nanoseconds) and its byte total
+- a record validates every counter under the entry's shard lock before committing, which is what makes rejection mutation-free
+- an operation with bytes but no timing sample is not reported by `get_stats`, `get_operations`, or `all_stats`
 
 ## `OperationStats`
 
@@ -304,7 +327,7 @@ Fields:
 
 - `count`
 - `total`
-- `average`
+- `average` (total ÷ count, truncated to whole nanoseconds)
 - `min`
 - `max`
 - `bytes_processed`
@@ -317,18 +340,21 @@ Helper:
 
 Important methods:
 
-- `Timer::start(operation)`
+- `Timer::start(operation)` / `start_timer(operation)`
 - `set_bytes(bytes)`
-- `stop()`
+- `elapsed() -> Duration`
+- `finish() -> Result<(), TimingError>`
+- `stop() -> Result<(), TimingError>` - alias of `finish()` kept for existing callers; it now returns the overflow error instead of `()`
 
 Contributor notes:
 
-- `Timer` records on explicit `stop()`
-- if a `Timer` is dropped without `stop()`, `Drop` records the timing automatically
-- `stop(self)` consumes the timer so the later drop does not double-record
+- `finish(self)` consumes the timer and records elapsed time plus any bytes in one atomic update
+- an unfinished `Timer` records on drop; it never records twice
+- drop cannot return an error, so an overflowing drop record is logged and skipped instead of wrapping
 
 ## Free functions and macro
 
+- `record_timing(name, secs)`, `record_timing_millis(name, ms)`, `get_summary()`, `clear_metrics()` - default-store seconds view
 - `time_async(operation, future)`
 - `time_operation(operation, f)`
 - `time_with_bytes(operation, bytes, f)`
@@ -338,7 +364,8 @@ Contributor notes:
 
 Contributor note:
 
-- the metrics collector is process-global and shared by the whole runtime process; `clear()` wipes all recorded operations, not just one crate's metrics
+- the default store is shared by every caller in the linked image; `clear()` / `clear_metrics()` wipe all recorded operations, not just one crate's metrics
+- `time_async`, `time_operation`, and `time_with_bytes` cannot surface errors, so an overflowing record is logged and skipped
 
 ## `StringProcessor`
 

@@ -1,6 +1,6 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-09-25T03:28:32.151065+00:00`
+- Generated: `2026-10-01T01:37:41.998917+00:00`
 - Tier-1 contract rows: **1240**
 - Tier-1 matched: **1238**
 - Tier-1 missing Rust: **0**
@@ -556,16 +556,16 @@
 | `path.lib.validate_required_files@rust` | `path` | `classic-path-core` | `validate_required_files` | `classic_path.PathValidator.validate_required_files` | `matched` |
 | `path.lib.validate_settings_path@rust` | `path` | `classic-path-core` | `validate_settings_path` | `classic_path.BackupManager` | `matched` |
 | `path.lib.validate_settings_paths@rust` | `path` | `classic-path-core` | `validate_settings_paths` | `classic_path.BackupManager` | `matched` |
-| `perf.lib.MetricsSummary` | `perf` | `classic-perf-core` | `MetricsSummary` | `classic_perf.MetricsSummary` | `matched` |
-| `perf.lib.Timer` | `perf` | `classic-perf-core` | `Timer` | `classic_perf.Timer` | `matched` |
-| `perf.lib.Timer.__init__` | `perf` | `classic-perf-core` | `Timer` | `classic_perf.Timer.__init__` | `matched` |
-| `perf.lib.Timer.elapsed` | `perf` | `classic-perf-core` | `Timer` | `classic_perf.Timer.elapsed` | `matched` |
-| `perf.lib.Timer.finish` | `perf` | `classic-perf-core` | `Timer` | `classic_perf.Timer.finish` | `matched` |
-| `perf.lib.clear_metrics` | `perf` | `classic-perf-core` | `clear_metrics` | `classic_perf.clear_metrics` | `matched` |
-| `perf.lib.get_summary` | `perf` | `classic-perf-core` | `get_summary` | `classic_perf.get_summary` | `matched` |
-| `perf.lib.record_timing` | `perf` | `classic-perf-core` | `record_timing` | `classic_perf.record_timing` | `matched` |
-| `perf.lib.reset_metrics` | `perf` | `classic-perf-core` | `clear_metrics` | `classic_perf.reset_metrics` | `matched` |
-| `perf.lib.start_timer` | `perf` | `classic-perf-core` | `start_timer` | `classic_perf.start_timer` | `matched` |
+| `perf.lib.MetricsSummary` | `perf` | `classic-shared-core` | `MetricsSummary` | `classic_perf.MetricsSummary` | `matched` |
+| `perf.lib.Timer` | `perf` | `classic-shared-core` | `Timer` | `classic_perf.Timer` | `matched` |
+| `perf.lib.Timer.__init__` | `perf` | `classic-shared-core` | `Timer` | `classic_perf.Timer.__init__` | `matched` |
+| `perf.lib.Timer.elapsed` | `perf` | `classic-shared-core` | `Timer` | `classic_perf.Timer.elapsed` | `matched` |
+| `perf.lib.Timer.finish` | `perf` | `classic-shared-core` | `Timer` | `classic_perf.Timer.finish` | `matched` |
+| `perf.lib.clear_metrics` | `perf` | `classic-shared-core` | `clear_metrics` | `classic_perf.clear_metrics` | `matched` |
+| `perf.lib.get_summary` | `perf` | `classic-shared-core` | `get_summary` | `classic_perf.get_summary` | `matched` |
+| `perf.lib.record_timing` | `perf` | `classic-shared-core` | `record_timing` | `classic_perf.record_timing` | `matched` |
+| `perf.lib.reset_metrics` | `perf` | `classic-shared-core` | `clear_metrics` | `classic_perf.reset_metrics` | `matched` |
+| `perf.lib.start_timer` | `perf` | `classic-shared-core` | `start_timer` | `classic_perf.start_timer` | `matched` |
 | `registry.lib.Keys` | `registry` | `classic-registry-core` | `Keys` | `classic_registry.Keys` | `matched` |
 | `registry.lib.clear_all` | `registry` | `classic-registry-core` | `clear_all` | `classic_registry.clear_all` | `matched` |
 | `registry.lib.get` | `registry` | `classic-registry-core` | `get` | `classic_registry.get` | `matched` |
@@ -1025,7 +1025,7 @@
 | `shared.performance.RustPerformanceMonitor.record_metric` | `shared` | `classic-shared-core` | `PerformanceMetrics` | `classic_shared.RustPerformanceMonitor.record_metric` | `matched` |
 | `shared.performance.RustPerformanceMonitor.start_timer` | `shared` | `classic-shared-core` | `PerformanceMetrics` | `classic_shared.RustPerformanceMonitor.start_timer` | `matched` |
 | `shared.performance.RustPerformanceMonitor.stop_timer` | `shared` | `classic-shared-core` | `PerformanceMetrics` | `classic_shared.RustPerformanceMonitor.stop_timer` | `matched` |
-| `shared.performance.performance_py@rust` | `shared` | `classic-perf-core` | `record_timing` | `classic_shared.RustPerformanceMonitor` | `matched` |
+| `shared.performance.performance_py@rust` | `shared` | `classic-shared-core` | `record_timing` | `classic_shared.RustPerformanceMonitor` | `matched` |
 | `shared.runtime.ClassicError@rust` | `shared` | `classic-shared-py` | `ClassicError` | `classic_shared.RuntimeStats` | `matched` |
 | `shared.runtime.ClassicResult@rust` | `shared` | `classic-shared-py` | `ClassicResult` | `classic_shared.RuntimeStats` | `matched` |
 | `shared.runtime.ResultExt@rust` | `shared` | `classic-shared-py` | `ResultExt` | `classic_shared.RuntimeStats` | `matched` |

@@ -145,6 +145,61 @@ describe("Performance metrics", () => {
         expect(summary.timings["op_a"].count).toBe(1);
         expect(summary.timings["op_b"].count).toBe(1);
     });
+
+    // JSON conformance fixtures cannot carry NaN or Infinity, so the coded
+    // invalid-argument contract for those inputs is pinned here.
+    test.each([
+        [Number.NaN, "timing_sample_not_finite"],
+        [Number.POSITIVE_INFINITY, "timing_sample_not_finite"],
+        [Number.NEGATIVE_INFINITY, "timing_sample_not_finite"],
+        [-0.001, "timing_sample_negative"],
+        [1e300, "timing_sample_out_of_range"],
+    ])("recordTimingMetric(%p) throws InvalidArg without mutating metrics", (value, token) => {
+        recordTimingMetric("kept", 25.0);
+        const before = getMetricsSummary();
+
+        for (const label of ["kept", "never_created"]) {
+            let caught: unknown;
+            try {
+                recordTimingMetric(label, value as number);
+            } catch (error) {
+                caught = error;
+            }
+            const failure = caught as Error & { code?: string };
+            expect(failure).toBeInstanceOf(Error);
+            expect(failure.code).toBe("InvalidArg");
+            expect(failure.message.startsWith(`${token}: `)).toBe(true);
+        }
+
+        expect(getMetricsSummary()).toEqual(before);
+    });
+
+    test("recordTimingMetric rejects accumulated overflow without mutation", () => {
+        recordTimingMetric("full", 18e12);
+        const before = getMetricsSummary();
+        let caught: unknown;
+        try {
+            recordTimingMetric("full", 1e12);
+        } catch (error) {
+            caught = error;
+        }
+        const failure = caught as Error & { code?: string };
+        expect(failure.code).toBe("InvalidArg");
+        expect(failure.message.startsWith("timing_counter_overflow: ")).toBe(true);
+        expect(getMetricsSummary()).toEqual(before);
+    });
+
+    test("recordTimingMetric rounds milliseconds once and treats -0 as zero", () => {
+        recordTimingMetric("zero", -0);
+        // 2.9296875 ms (3/1024 s) is exactly 2_929_687.5 ns, a tie that
+        // rounds to the even neighbour.
+        recordTimingMetric("tie", 2.9296875);
+
+        const summary = getMetricsSummary();
+        expect(summary.timings["zero"].count).toBe(1);
+        expect(summary.timings["zero"].totalMs).toBe(0);
+        expect(Math.round(summary.timings["tie"].totalMs * 1e6)).toBe(2_929_688);
+    });
 });
 
 // ============================================================================

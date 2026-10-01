@@ -199,10 +199,10 @@ static METRICS: Lazy<DashMap<String, Vec<f64>>> = Lazy::new(DashMap::new);
 
 **Example Usage**:
 ```rust
-// Record timings
-record_timing("database_query", 0.123);
-record_timing("database_query", 0.145);
-record_timing("file_load", 0.045);
+// Record timings (invalid or overflowing samples return Err and change nothing)
+record_timing("database_query", 0.123)?;
+record_timing("database_query", 0.145)?;
+record_timing("file_load", 0.045)?;
 
 // Get summary statistics
 let summary = get_summary();

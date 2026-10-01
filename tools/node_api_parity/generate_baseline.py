@@ -210,9 +210,9 @@ EXECUTABLE_AUX_CRATES = {
     "registryGet": "classic-registry-core",
     "registryRemove": "classic-registry-core",
     "registryClear": "classic-registry-core",
-    "recordTimingMetric": "classic-perf-core",
-    "getMetricsSummary": "classic-perf-core",
-    "clearAllMetrics": "classic-perf-core",
+    "recordTimingMetric": "classic-shared-core",
+    "getMetricsSummary": "classic-shared-core",
+    "clearAllMetrics": "classic-shared-core",
 }
 
 

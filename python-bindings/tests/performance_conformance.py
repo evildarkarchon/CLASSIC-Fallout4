@@ -1,5 +1,6 @@
 """Observe deterministic metrics through the actual Python extension."""
 
+import math
 from collections.abc import Mapping
 from typing import Any
 
@@ -12,6 +13,32 @@ def _milliseconds(seconds: float) -> int:
     return int(value)
 
 
+def _nanoseconds(seconds: float) -> int:
+    """Convert native whole-nanosecond seconds without hiding non-integral drift."""
+    value = seconds * 1e9
+    rounded = round(value)
+    if not math.isfinite(value) or value < 0 or abs(value - rounded) > 1e-3:
+        raise ValueError("metric duration is not a whole nanosecond")
+    return rounded
+
+
+def _sample_seconds(operation: Mapping[str, Any]) -> float:
+    """Read the seconds spelling of a dual-unit fixture sample."""
+    if set(operation) != {"op", "label", "seconds", "milliseconds"} or not isinstance(
+            operation["label"], str
+    ):
+        raise ValueError("unsupported dual-unit sample")
+    return float(operation["seconds"])
+
+
+def _rejection_token(error: ValueError) -> str:
+    """Return the stable core token that prefixes a rejected-sample message."""
+    token, separator, _ = str(error).partition(": ")
+    if not separator:
+        raise ValueError("rejected sample message lacks a stable token") from error
+    return token
+
+
 def observe_performance(fixture: Mapping[str, Any]) -> dict[str, Any]:
     """Execute explicit samples serially and clear process-global metrics on exit."""
     import classic_perf
@@ -19,6 +46,7 @@ def observe_performance(fixture: Mapping[str, Any]) -> dict[str, Any]:
     if set(fixture) != {"operations"} or not isinstance(fixture["operations"], list):
         raise ValueError("unsupported performance fixture")
     snapshots = []
+    rejections = []
     classic_perf.clear_metrics()
     try:
         for operation in fixture["operations"]:
@@ -38,6 +66,29 @@ def observe_performance(fixture: Mapping[str, Any]) -> dict[str, Any]:
                         for label, stats in classic_perf.get_summary().items()
                     }
                 )
+            elif op == "summaryNs" and set(operation) == {"op"}:
+                snapshots.append(
+                    {
+                        label: {
+                            "count": stats.count,
+                            "averageNs": _nanoseconds(stats.average),
+                        }
+                        for label, stats in classic_perf.get_summary().items()
+                    }
+                )
+            elif op == "sample":
+                classic_perf.record_timing(
+                    operation["label"], _sample_seconds(operation)
+                )
+            elif op == "reject":
+                seconds = _sample_seconds(operation)
+                # Only the documented ValueError counts; anything else propagates.
+                try:
+                    classic_perf.record_timing(operation["label"], seconds)
+                except ValueError as error:
+                    rejections.append(_rejection_token(error))
+                else:
+                    raise ValueError("invalid sample was accepted")
             elif (
                     op == "record"
                     and set(operation) == {"op", "label", "durationMs"}
@@ -50,7 +101,7 @@ def observe_performance(fixture: Mapping[str, Any]) -> dict[str, Any]:
                 )
             else:
                 raise ValueError("unsupported performance operation")
-        return {"snapshots": snapshots}
+        return {"snapshots": snapshots, "rejections": rejections}
     finally:
         # Process-global samples must not leak into the next fixture after failure.
         classic_perf.clear_metrics()

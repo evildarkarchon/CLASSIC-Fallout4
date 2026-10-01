@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-25T02:05:30.909132+00:00",
+  "generated_at_utc": "2026-10-01T02:07:39.203485+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -6685,22 +6685,23 @@
       "tier": "tier1"
     },
     {
+      "symbol": "MetricCounter",
+      "kind": "reexport",
+      "crate": "classic-perf-core",
+      "owner_module": "perf",
+      "source_file": "business-logic/classic-perf-core/src/lib.rs",
+      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
+      "source_expr": "classic_shared_core::performance_core::MetricCounter",
+      "tier": "tier1"
+    },
+    {
       "symbol": "MetricsSummary",
       "kind": "reexport",
       "crate": "classic-perf-core",
       "owner_module": "perf",
       "source_file": "business-logic/classic-perf-core/src/lib.rs",
-      "source_decl": "pub use metrics::{MetricsSummary, clear_metrics, get_summary, record_timing};",
-      "source_expr": "metrics::MetricsSummary",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "MetricsSummary",
-      "kind": "struct",
-      "crate": "classic-perf-core",
-      "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/metrics.rs",
-      "source_decl": "pub struct MetricsSummary",
+      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
+      "source_expr": "classic_shared_core::performance_core::MetricsSummary",
       "tier": "tier1"
     },
     {
@@ -6709,27 +6710,18 @@
       "crate": "classic-perf-core",
       "owner_module": "perf",
       "source_file": "business-logic/classic-perf-core/src/lib.rs",
-      "source_decl": "pub use timer::{Timer, start_timer};",
-      "source_expr": "timer::Timer",
+      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
+      "source_expr": "classic_shared_core::performance_core::Timer",
       "tier": "tier1"
     },
     {
-      "symbol": "Timer",
-      "kind": "struct",
+      "symbol": "TimingError",
+      "kind": "reexport",
       "crate": "classic-perf-core",
       "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/timer.rs",
-      "source_decl": "pub struct Timer",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "clear_metrics",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-perf-core",
-      "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/metrics.rs",
-      "source_decl": "pub fn clear_metrics()",
+      "source_file": "business-logic/classic-perf-core/src/lib.rs",
+      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
+      "source_expr": "classic_shared_core::performance_core::TimingError",
       "tier": "tier1"
     },
     {
@@ -6738,38 +6730,8 @@
       "crate": "classic-perf-core",
       "owner_module": "perf",
       "source_file": "business-logic/classic-perf-core/src/lib.rs",
-      "source_decl": "pub use metrics::{MetricsSummary, clear_metrics, get_summary, record_timing};",
-      "source_expr": "metrics::clear_metrics",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "elapsed",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-perf-core",
-      "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/timer.rs",
-      "source_decl": "pub fn elapsed(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "finish",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-perf-core",
-      "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/timer.rs",
-      "source_decl": "pub fn finish(mut self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_summary",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-perf-core",
-      "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/metrics.rs",
-      "source_decl": "pub fn get_summary()",
+      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
+      "source_expr": "classic_shared_core::performance_core::clear_metrics",
       "tier": "tier1"
     },
     {
@@ -6778,28 +6740,8 @@
       "crate": "classic-perf-core",
       "owner_module": "perf",
       "source_file": "business-logic/classic-perf-core/src/lib.rs",
-      "source_decl": "pub use metrics::{MetricsSummary, clear_metrics, get_summary, record_timing};",
-      "source_expr": "metrics::get_summary",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-perf-core",
-      "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/timer.rs",
-      "source_decl": "pub fn new(name: impl Into<String>)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "record_timing",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-perf-core",
-      "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/metrics.rs",
-      "source_decl": "pub fn record_timing(name: &str, duration_secs: f64)",
+      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
+      "source_expr": "classic_shared_core::performance_core::get_summary",
       "tier": "tier1"
     },
     {
@@ -6808,18 +6750,18 @@
       "crate": "classic-perf-core",
       "owner_module": "perf",
       "source_file": "business-logic/classic-perf-core/src/lib.rs",
-      "source_decl": "pub use metrics::{MetricsSummary, clear_metrics, get_summary, record_timing};",
-      "source_expr": "metrics::record_timing",
+      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
+      "source_expr": "classic_shared_core::performance_core::record_timing",
       "tier": "tier1"
     },
     {
-      "symbol": "start_timer",
-      "kind": "function",
-      "arity": 1,
+      "symbol": "record_timing_millis",
+      "kind": "reexport",
       "crate": "classic-perf-core",
       "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/timer.rs",
-      "source_decl": "pub fn start_timer(name: impl Into<String>)",
+      "source_file": "business-logic/classic-perf-core/src/lib.rs",
+      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
+      "source_expr": "classic_shared_core::performance_core::record_timing_millis",
       "tier": "tier1"
     },
     {
@@ -6828,8 +6770,8 @@
       "crate": "classic-perf-core",
       "owner_module": "perf",
       "source_file": "business-logic/classic-perf-core/src/lib.rs",
-      "source_decl": "pub use timer::{Timer, start_timer};",
-      "source_expr": "timer::start_timer",
+      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
+      "source_expr": "classic_shared_core::performance_core::start_timer",
       "tier": "tier1"
     },
     {
@@ -14978,6 +14920,33 @@
       "tier": "tier1"
     },
     {
+      "symbol": "MAX_SAMPLE_NANOS",
+      "kind": "const",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub const MAX_SAMPLE_NANOS",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MetricCounter",
+      "kind": "enum",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub enum MetricCounter",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MetricsSummary",
+      "kind": "struct",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub struct MetricsSummary",
+      "tier": "tier1"
+    },
+    {
       "symbol": "OperationStats",
       "kind": "struct",
       "crate": "classic-shared-core",
@@ -15050,6 +15019,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "TimingError",
+      "kind": "enum",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub enum TimingError",
+      "tier": "tier1"
+    },
+    {
       "symbol": "all",
       "kind": "function",
       "arity": 0,
@@ -15057,6 +15035,16 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/game_id.rs",
       "source_decl": "pub const fn all()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "all_stats",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn all_stats(&self)",
       "tier": "tier1"
     },
     {
@@ -15130,6 +15118,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "clear_metrics",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn clear_metrics()",
+      "tier": "tier1"
+    },
+    {
       "symbol": "clear_pool",
       "kind": "function",
       "arity": 1,
@@ -15137,6 +15135,26 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/strings_core.rs",
       "source_decl": "pub fn clear_pool(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "code",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn code(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "coded_message",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn coded_message(&self)",
       "tier": "tier1"
     },
     {
@@ -15190,6 +15208,56 @@
       "tier": "tier1"
     },
     {
+      "symbol": "duration_from_millis_f64",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn duration_from_millis_f64(millis: f64)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "duration_from_millis_i128",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn duration_from_millis_i128(millis: i128)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "duration_from_millis_u64",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn duration_from_millis_u64(millis: u64)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "duration_from_secs_f64",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn duration_from_secs_f64(secs: f64)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "elapsed",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn elapsed(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "encoding",
       "kind": "function",
       "arity": 2,
@@ -15216,6 +15284,16 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/game_id.rs",
       "source_decl": "pub const fn exe_name(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "finish",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn finish(mut self)",
       "tier": "tier1"
     },
     {
@@ -15286,6 +15364,16 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/performance_core.rs",
       "source_decl": "pub fn get_stats(&self, operation: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_summary",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn get_summary()",
       "tier": "tier1"
     },
     {
@@ -15537,6 +15625,56 @@
       "tier": "tier1"
     },
     {
+      "symbol": "record_timing",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn record_timing(name: &str, duration_secs: f64)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "record_timing_millis",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn record_timing_millis(&self, operation: &str, millis: f64)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "record_timing_millis",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn record_timing_millis(name: &str, duration_ms: f64)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "record_timing_secs",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn record_timing_secs(&self, operation: &str, secs: f64)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "record_timing_with_bytes",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn record_timing_with_bytes(\n        &self,\n        operation: &str,\n        duration: Duration,\n        bytes: Option<u64>,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "resolve",
       "kind": "function",
       "arity": 2,
@@ -15587,13 +15725,23 @@
       "tier": "tier1"
     },
     {
+      "symbol": "start_timer",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/performance_core.rs",
+      "source_decl": "pub fn start_timer(name: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "stop",
       "kind": "function",
       "arity": 1,
       "crate": "classic-shared-core",
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/performance_core.rs",
-      "source_decl": "pub fn stop(mut self)",
+      "source_decl": "pub fn stop(self)",
       "tier": "tier1"
     },
     {
@@ -16267,7 +16415,7 @@
       "crate": "classic-shared-py",
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-py/src/performance_py.rs",
-      "source_decl": "pub fn record_metric(&self, operation: String, duration_ms: u64, bytes_processed: Option<u64>)",
+      "source_decl": "pub fn record_metric(\n        &self,\n        operation: String,\n        duration_ms: &Bound<'_, PyAny>,\n        bytes_processed: Option<u64>,\n    )",
       "tier": "tier1"
     },
     {

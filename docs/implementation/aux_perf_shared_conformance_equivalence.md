@@ -9,7 +9,7 @@ new CI steps; this change does not retire their evidence.
 | Pack | Core owner | Executed domain observations | Semantic adapters |
 |---|---|---|---|
 | `file-fingerprint` | file-io | SHA-256 vectors, batch success filtering, encoding, missing file, cache counters/reset/clear, unchanged bytes | Rust, Node, Python |
-| `performance` | perf | Supplied timing samples, complete summaries, clear and reuse | Rust, CXX, Node, Python |
+| `performance` | perf (facade over shared-core timing) | Supplied timing samples, complete summaries, clear and reuse, rejected samples with stable tokens and no mutation, accumulated-counter limit, nanosecond tie rounding and negative zero | Rust, CXX, Node, Python |
 | `update-decisions` | update | Valid version upgrade/equality/downgrade/prerelease decisions | Rust, CXX, Node, Python |
 | `web-operations` | web | URL validation, domain extraction, joining, query parameters, errors, user agents and all ModSite names/base URLs | Rust, CXX, Node, Python |
 | `resource-operations` | resource | Type catalog, constructors, enumeration, counts, validation errors, unchanged files | Rust, Node, Python |
@@ -44,6 +44,14 @@ host-dependent worker count, or concurrent event ordering is an expectation.
 Performance uses supplied whole-millisecond samples and checks numeric
 integrality rather than rounding. CXX's formatted summary is checked against
 its public numeric accessors. The scope does not claim elapsed timer behavior.
+Its error, counter-limit and precision scenarios state each sample in both
+seconds and milliseconds as exact binary values, so every adapter feeds its
+native unit straight to the core's single nanosecond rounding. Each adapter
+reports the stable token that prefixes its native invalid-argument error, and
+only that documented error type counts. NaN and infinity cannot be written in
+JSON and are pinned by direct Rust, CXX-bridge, Node, and Python binding tests.
+All performance views in one linked image share one default store, so the
+family no longer assumes perf and shared metrics are isolated.
 Update decisions use valid versions because the current CXX boolean API
 collapses malformed-version errors to `false`; existing typed-error tests remain
 responsible for those errors. XSE absence uses the public optional/sentinel

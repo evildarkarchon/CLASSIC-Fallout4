@@ -1,14 +1,22 @@
 //! Python bindings for performance monitoring.
 //!
 //! This crate provides Python bindings for `classic-perf-core`, allowing
-//! Python code to use high-precision timing and metrics collection.
+//! Python code to use high-precision timing and metrics collection. The
+//! metrics live in this extension's shared-core default store; invalid
+//! samples raise `ValueError` and leave that store unchanged.
 //!
 //! The Rust bindings provide the core metrics storage and statistics
 //! calculation, while Python decorators and context managers are
 //! implemented in the Python wrapper layer.
 
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use std::collections::HashMap;
+
+/// Convert a rejected timing record into `ValueError("<code>: <message>")`.
+fn timing_error_to_py(error: classic_perf_core::TimingError) -> PyErr {
+    PyValueError::new_err(error.coded_message())
+}
 
 /// Summary statistics for a performance metric.
 ///
@@ -51,8 +59,8 @@ impl MetricsSummary {
     }
 }
 
-impl From<classic_perf_core::MetricsSummary> for MetricsSummary {
-    fn from(rust_summary: classic_perf_core::MetricsSummary) -> Self {
+impl From<&classic_perf_core::MetricsSummary> for MetricsSummary {
+    fn from(rust_summary: &classic_perf_core::MetricsSummary) -> Self {
         Self {
             count: rust_summary.count,
             total: rust_summary.total,
@@ -69,16 +77,25 @@ impl From<classic_perf_core::MetricsSummary> for MetricsSummary {
 /// Multiple samples can be recorded for the same operation, and statistics
 /// will be computed across all samples.
 ///
+/// The duration must be finite and nonnegative (``-0.0`` counts as zero) and
+/// is rounded once to the nearest nanosecond.
+///
 /// Args:
 ///     name: The operation name
 ///     duration_secs: The duration in seconds
+///
+/// Raises:
+///     ValueError: If the duration is negative, NaN, infinite, too large, or
+///         would overflow the operation's accumulated total. The message
+///         starts with a stable token such as ``timing_sample_negative``.
+///         No metric changes when it is raised.
 ///
 /// Example:
 ///     >>> from classic_core import perf
 ///     >>> perf.record_timing("my_operation", 0.123)
 #[pyfunction]
-fn record_timing(name: String, duration_secs: f64) {
-    classic_perf_core::record_timing(&name, duration_secs);
+fn record_timing(name: String, duration_secs: f64) -> PyResult<()> {
+    classic_perf_core::record_timing(&name, duration_secs).map_err(timing_error_to_py)
 }
 
 /// Get summary statistics for all recorded metrics.
@@ -100,7 +117,7 @@ fn record_timing(name: String, duration_secs: f64) {
 fn get_summary() -> HashMap<String, MetricsSummary> {
     classic_perf_core::get_summary()
         .iter()
-        .map(|(k, v)| (k.clone(), MetricsSummary::from(v.clone())))
+        .map(|(k, v)| (k.clone(), MetricsSummary::from(v)))
         .collect()
 }
 
@@ -162,7 +179,7 @@ impl Timer {
     #[new]
     fn new(name: String) -> Self {
         Self {
-            inner: Some(classic_perf_core::Timer::new(name)),
+            inner: Some(classic_perf_core::Timer::start(name)),
         }
     }
 
@@ -170,10 +187,16 @@ impl Timer {
     ///
     /// This consumes the timer and records the elapsed time.
     /// If the timer is dropped without calling `finish()`, it will
-    /// automatically record on drop.
-    fn finish(&mut self) {
-        if let Some(timer) = self.inner.take() {
-            timer.finish();
+    /// automatically record on drop. A timer records at most once; later
+    /// `finish()` calls do nothing.
+    ///
+    /// Raises:
+    ///     ValueError: If recording would overflow the operation's
+    ///         accumulated total. The timer is still spent.
+    fn finish(&mut self) -> PyResult<()> {
+        match self.inner.take() {
+            Some(timer) => timer.finish().map_err(timing_error_to_py),
+            None => Ok(()),
         }
     }
 
@@ -182,7 +205,10 @@ impl Timer {
     /// Returns:
     ///     float: Elapsed time in seconds
     fn elapsed(&self) -> f64 {
-        self.inner.as_ref().map(|t| t.elapsed()).unwrap_or(0.0)
+        self.inner
+            .as_ref()
+            .map(|t| t.elapsed().as_secs_f64())
+            .unwrap_or(0.0)
     }
 
     fn __repr__(&self) -> String {

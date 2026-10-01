@@ -12,9 +12,15 @@ fn test_rolling_stats_basic() {
     metrics.clear();
 
     // Record some timings
-    metrics.record_timing("test_op", Duration::from_millis(10));
-    metrics.record_timing("test_op", Duration::from_millis(20));
-    metrics.record_timing("test_op", Duration::from_millis(30));
+    metrics
+        .record_timing("test_op", Duration::from_millis(10))
+        .unwrap();
+    metrics
+        .record_timing("test_op", Duration::from_millis(20))
+        .unwrap();
+    metrics
+        .record_timing("test_op", Duration::from_millis(30))
+        .unwrap();
 
     let stats = metrics.get_stats("test_op").expect("Stats should exist");
 
@@ -42,7 +48,7 @@ fn test_rolling_stats_constant_memory() {
     // Record many timings (old Vec<Duration> would use O(n) memory)
     for i in 0..10000 {
         let duration = Duration::from_micros(100 + (i % 100));
-        metrics.record_timing("memory_test", duration);
+        metrics.record_timing("memory_test", duration).unwrap();
     }
 
     let stats = metrics
@@ -82,7 +88,9 @@ fn test_rolling_stats_min_max() {
     let timings = vec![100, 50, 200, 25, 150, 300];
 
     for &t in &timings {
-        metrics.record_timing("minmax_test", Duration::from_micros(t));
+        metrics
+            .record_timing("minmax_test", Duration::from_micros(t))
+            .unwrap();
     }
 
     let stats = metrics
@@ -100,11 +108,15 @@ fn test_rolling_stats_with_bytes() {
     metrics.clear();
 
     // Record timing with bytes
-    metrics.record_timing("file_op", Duration::from_millis(10));
-    metrics.record_bytes("file_op", 1024 * 1024); // 1MB
+    metrics
+        .record_timing("file_op", Duration::from_millis(10))
+        .unwrap();
+    metrics.record_bytes("file_op", 1024 * 1024).unwrap(); // 1MB
 
-    metrics.record_timing("file_op", Duration::from_millis(20));
-    metrics.record_bytes("file_op", 2 * 1024 * 1024); // 2MB
+    metrics
+        .record_timing("file_op", Duration::from_millis(20))
+        .unwrap();
+    metrics.record_bytes("file_op", 2 * 1024 * 1024).unwrap(); // 2MB
 
     let stats = metrics.get_stats("file_op").expect("Stats should exist");
 
@@ -122,9 +134,15 @@ fn test_rolling_stats_multiple_operations() {
     metrics.clear();
 
     // Record timings for multiple operations
-    metrics.record_timing("op1", Duration::from_millis(10));
-    metrics.record_timing("op2", Duration::from_millis(20));
-    metrics.record_timing("op3", Duration::from_millis(30));
+    metrics
+        .record_timing("op1", Duration::from_millis(10))
+        .unwrap();
+    metrics
+        .record_timing("op2", Duration::from_millis(20))
+        .unwrap();
+    metrics
+        .record_timing("op3", Duration::from_millis(30))
+        .unwrap();
 
     let ops = metrics.get_operations();
     assert_eq!(ops.len(), 3, "Should have 3 operations");
@@ -151,7 +169,7 @@ fn test_timer_integration() {
     {
         let timer = Timer::start("timer_test");
         thread::sleep(Duration::from_millis(10));
-        timer.stop();
+        timer.finish().unwrap();
     }
 
     let stats = metrics.get_stats("timer_test").expect("Stats should exist");
@@ -194,7 +212,7 @@ fn test_timer_with_bytes() {
         let mut timer = Timer::start("bytes_test");
         timer.set_bytes(1024);
         thread::sleep(Duration::from_millis(10));
-        timer.stop();
+        timer.finish().unwrap();
     }
 
     let stats = metrics.get_stats("bytes_test").expect("Stats should exist");
@@ -215,7 +233,9 @@ fn test_concurrent_recording() {
             thread::spawn(move || {
                 for i in 0..100 {
                     let duration = Duration::from_micros(100 + (i % 100));
-                    metrics.record_timing(&format!("thread_{}", thread_id), duration);
+                    metrics
+                        .record_timing(&format!("thread_{}", thread_id), duration)
+                        .unwrap();
                 }
             })
         })
@@ -244,7 +264,9 @@ fn test_clear_metrics() {
     let metrics = get_global_metrics();
 
     // Record some data
-    metrics.record_timing("clear_test", Duration::from_millis(10));
+    metrics
+        .record_timing("clear_test", Duration::from_millis(10))
+        .unwrap();
     assert!(
         metrics.get_stats("clear_test").is_some(),
         "Stats should exist before clear"
@@ -280,7 +302,9 @@ fn test_rolling_stats_accuracy() {
     let expected_max = *timings.iter().max().unwrap();
 
     for &t in &timings {
-        metrics.record_timing("accuracy_test", Duration::from_millis(t));
+        metrics
+            .record_timing("accuracy_test", Duration::from_millis(t))
+            .unwrap();
     }
 
     let stats = metrics
