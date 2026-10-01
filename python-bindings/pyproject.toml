@@ -1,22 +1,16 @@
 [project]
-name = "classic-python-bindings-tools"
-version = "0.0.0"
-description = "CLASSIC Python binding build/test tooling: maturin runner for the classic-*-py crates plus the pytest smoke-test suite."
-requires-python = ">=3.12"
 dependencies = [
-    "classic-py-cli",
-    "maturin>=1.7,<2.0",
-    "pyright>=1.1.411",
-    "pytest>=8.0",
-    "ruff>=0.16.1",
+  "classic-py-cli",
+  "maturin>=1.15.0,<2.0",
+  "pyright>=1.1.414",
+  "pytest>=9.1.1",
+  "ruff>=0.16.9",
+  "ruamel.yaml>=0.18,<0.19",
 ]
-
-[dependency-groups]
-# YAML parser for schema drift guards and independent User Settings conformance comparison.
-# Conformance runs select this group explicitly; ordinary binding tools do not need it.
-drift-guards = [
-    "ruamel.yaml>=0.18,<0.19",
-]
+description = "CLASSIC Python binding build/test tooling: maturin runner for the classic-*-py crates plus the pytest smoke-test suite."
+name = "classic-python-bindings-tools"
+requires-python = ">=3.12"
+version = "0.0.0"
 
 [tool.uv]
 # This project hosts tooling, not an installable package. `package = false` tells uv
@@ -24,4 +18,4 @@ drift-guards = [
 package = false
 
 [tool.uv.sources]
-classic-py-cli = { path = "classic-py-cli", editable = true }
+classic-py-cli = {path = "classic-py-cli", editable = true}
