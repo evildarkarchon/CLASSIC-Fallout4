@@ -9,7 +9,9 @@ Crate metadata:
 
 This crate owns no timing state or logic. Its crate root re-exports the seconds view of [`classic_shared_core::performance_core`](classic-shared-core.md#performancemetrics-timer-and-helpers), which is the sole rolling `Duration` timing implementation. Recording through this facade, through `classic_shared_core::performance_core::get_global_metrics()`, or through a `Timer` therefore reads and clears **one default metrics store per linked library image**.
 
-The crate identity is scheduled for retirement (issue #256) once its remaining callers (the C++ bridge, Node, and `classic-perf-py`) import `classic_shared_core::performance_core` directly. Until then its re-exported paths stay valid, and parity rows keep naming `classic-perf-core`.
+The crate identity is scheduled for retirement (issue #256) once its remaining callers (the C++ bridge, Node, and `classic-perf-py`) import `classic_shared_core::performance_core` directly. Until then its re-exported paths stay valid.
+
+Parity ownership: the CXX, Node, and Python parity contracts name `classic-shared-core` as the owning Rust crate for every binding-mapped timing row, because the behavior lives there. Do not restore `classic-perf-core` as the owner during a baseline refresh. The only rows that still name `classic-perf-core` are the Node contract's Rust-only `reexport` rows (`perf.Timer@rust`, `perf.start_timer@rust`), which record this facade's own re-export surface.
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 
