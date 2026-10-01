@@ -125,7 +125,7 @@ pub(super) fn execute(family: &str, fixture: &Value) -> RunnerResult<Value> {
             )
         }
         "version-operations" => {
-            use classic_version_core as version;
+            use classic_shared_core::version;
             let input = text(&request["version"])?;
             let parsed = version::parse_version(&input);
             let (comparison, formatted) = match &parsed {

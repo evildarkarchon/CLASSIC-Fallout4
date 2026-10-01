@@ -2731,7 +2731,7 @@
       "nodeExport": "compareVersions",
       "nodeKind": "function",
       "nodeArity": 2,
-      "rustCrate": "classic-version-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "version-registry-promote-detect-xse-version",
@@ -2751,7 +2751,7 @@
       "nodeExport": "extractAllVersions",
       "nodeKind": "function",
       "nodeArity": 1,
-      "rustCrate": "classic-version-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "version-registry-promote-extract-version-from-filename",
@@ -2761,7 +2761,7 @@
       "nodeExport": "extractVersionFromFilename",
       "nodeKind": "function",
       "nodeArity": 1,
-      "rustCrate": "classic-version-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "version-registry-promote-extract-version-from-log",
@@ -2771,7 +2771,7 @@
       "nodeExport": "extractVersionFromLog",
       "nodeKind": "function",
       "nodeArity": 1,
-      "rustCrate": "classic-version-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "version-registry-promote-format-version",
@@ -2781,7 +2781,7 @@
       "nodeExport": "formatVersion",
       "nodeKind": "function",
       "nodeArity": 1,
-      "rustCrate": "classic-version-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "version-registry-promote-get-address-lib-info",
@@ -2891,7 +2891,7 @@
       "nodeExport": "parseVersion",
       "nodeKind": "function",
       "nodeArity": 1,
-      "rustCrate": "classic-version-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "version-registry-promote-registry-get-game-version",
@@ -2919,7 +2919,7 @@
       "nodeExport": "tryParseVersion",
       "nodeKind": "function",
       "nodeArity": 1,
-      "rustCrate": "classic-version-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "aux-phase4a-backup-manager",
@@ -5424,7 +5424,7 @@
       "id": "version-pe-extract",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "extract_pe_version",
       "nodeExport": "extractPeVersion",
       "nodeKind": "function"
@@ -5433,7 +5433,7 @@
       "id": "version-pe-is-valid-path",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "is_valid_executable_path",
       "nodeExport": "isValidPePath",
       "nodeKind": "function"
@@ -5442,7 +5442,7 @@
       "id": "version-pe-shape",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "PeVersionResult",
       "nodeExport": "JsPeVersion",
       "nodeKind": "interface"
@@ -7375,7 +7375,7 @@
       "id": "version.compare_versions@rust",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-xse-core",
+      "rustCrate": "classic-version-core",
       "rustSymbol": "compare_versions@rust",
       "rustKind": "reexport"
     },
@@ -7431,7 +7431,7 @@
       "id": "version.parse_version@rust",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-xse-core",
+      "rustCrate": "classic-version-core",
       "rustSymbol": "parse_version@rust",
       "rustKind": "reexport"
     },
@@ -7447,7 +7447,7 @@
       "id": "version.try_parse_version@rust",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-xse-core",
+      "rustCrate": "classic-version-core",
       "rustSymbol": "try_parse_version@rust",
       "rustKind": "reexport"
     },
@@ -7620,14 +7620,6 @@
       "rustKind": "function"
     },
     {
-      "id": "xse.compare_versions@rust",
-      "tier": "tier1",
-      "ownerModule": "xse",
-      "rustCrate": "classic-xse-core",
-      "rustSymbol": "compare_versions@rust",
-      "rustKind": "reexport"
-    },
-    {
       "id": "xse.detect_xse_version@rust",
       "tier": "tier1",
       "ownerModule": "xse",
@@ -7690,22 +7682,6 @@
       "rustCrate": "classic-shared-core",
       "rustSymbol": "new@rust",
       "rustKind": "function"
-    },
-    {
-      "id": "xse.parse_version@rust",
-      "tier": "tier1",
-      "ownerModule": "xse",
-      "rustCrate": "classic-xse-core",
-      "rustSymbol": "parse_version@rust",
-      "rustKind": "reexport"
-    },
-    {
-      "id": "xse.try_parse_version@rust",
-      "tier": "tier1",
-      "ownerModule": "xse",
-      "rustCrate": "classic-xse-core",
-      "rustSymbol": "try_parse_version@rust",
-      "rustKind": "reexport"
     },
     {
       "id": "yaml.YamlError@rust",

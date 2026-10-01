@@ -4,7 +4,7 @@ version = "9.1.0"
 edition = "2024"
 rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
-description = "Version detection and parsing utilities for CLASSIC (no PyO3)"
+description = "Known game-version queries and a transitional facade over shared-core version helpers for CLASSIC (no PyO3)"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
@@ -14,23 +14,14 @@ crate-type = ["rlib"]  # Pure Rust library only - no PyO3
 # Version handling
 semver = "1.0"
 
-# Parsing
-regex = { workspace = true }
+# Owner of the loose version and PE helpers this crate re-exports until it
+# retires (#258)
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
-# Error handling
-thiserror = { workspace = true }
-anyhow = { workspace = true }
-
-# PE file parsing
-pelite = { workspace = true }
-
-# Version registry access
+# Version registry access (known-version policy)
 classic-version-registry-core = { path = "../classic-version-registry-core" }
 
 # NO PyO3 dependency!
-
-[dev-dependencies]
-tempfile = { workspace = true }
 
 [lints.rust]
 deprecated = "deny"

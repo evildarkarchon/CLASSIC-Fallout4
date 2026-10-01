@@ -3,7 +3,7 @@
   "familyId": "version-pe",
   "familyVersion": 1,
   "domainOwner": {
-    "rustCrate": "classic-version-core"
+    "rustCrate": "classic-shared-core"
   },
   "fixtureRoot": "tests/fixtures/version_operations_conformance",
   "fixtures": {

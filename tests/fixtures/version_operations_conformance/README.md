@@ -1,6 +1,6 @@
 # Version operations
 
-These input-only cases exercise `classic-version-core` parsing, optional parsing,
+These input-only cases exercise the `classic-shared-core` `version` parsing, optional parsing,
 comparison and formatting. They cover prefix removal, ignored fourth version
 components, default patch zero, equal/less/greater comparisons and an empty-input
 error. Rust and Node transport normalized strings; Python's public parser returns

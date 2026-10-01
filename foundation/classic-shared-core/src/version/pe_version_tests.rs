@@ -75,3 +75,21 @@ fn test_extract_pe_version_real_dll() {
         );
     }
 }
+
+/// Typed PE errors keep their messages after the move to shared core.
+#[test]
+fn test_extract_pe_version_error_messages() {
+    let missing = extract_pe_version(Path::new("nonexistent.exe")).unwrap_err();
+    assert_eq!(
+        missing.to_string(),
+        "Invalid executable path: nonexistent.exe"
+    );
+
+    let temp = tempfile::NamedTempFile::with_suffix(".exe").unwrap();
+    std::fs::write(temp.path(), b"not a real PE file").unwrap();
+    let invalid = extract_pe_version(temp.path()).unwrap_err();
+    assert!(
+        invalid.to_string().starts_with("Not a valid PE file: "),
+        "unexpected message: {invalid}"
+    );
+}

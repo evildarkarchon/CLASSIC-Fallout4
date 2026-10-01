@@ -607,11 +607,34 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
             # identity too, so a future resolver cannot borrow an existing call.
             # Aux constructors also map to shared class carriers; preserve their
             # exported operation so a new factory cannot borrow constructor credit.
-            if rust_symbol in vocabulary_symbols or raw_row.get("rustCrate") in {
-                "classic-web-core",
-                "classic-resource-core",
-                "classic-version-core",
-            }:
+            if (
+                rust_symbol in vocabulary_symbols
+                or raw_row.get("rustCrate")
+                in {
+                    "classic-web-core",
+                    "classic-resource-core",
+                    "classic-version-core",
+                }
+                or (
+                    # The loose version and PE helpers moved here from
+                    # classic-version-core (#243); keep the exported operation
+                    # identity they had there (isValidPePath maps to
+                    # is_valid_executable_path, so the symbol alone is not it).
+                    raw_row.get("rustCrate") == "classic-shared-core"
+                    and rust_symbol
+                    in {
+                        "compare_versions",
+                        "extract_all_versions",
+                        "extract_pe_version",
+                        "extract_version_from_filename",
+                        "extract_version_from_log",
+                        "format_version",
+                        "is_valid_executable_path",
+                        "parse_version",
+                        "try_parse_version",
+                    }
+                )
+            ):
                 if participant_id == "node" and raw_row.get("nodeKind") == "function":
                     export = raw_row.get("nodeExport")
                     if isinstance(export, str):

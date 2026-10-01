@@ -96,9 +96,18 @@ def predicates(family):
                 "extract_pe_version": ("extract_pe_version_string",),
                 "is_valid_executable_path": ("is_valid_pe_path",),
             }.get(symbol, ())
+            # version-extraction mixes two owners: the extract helpers live in
+            # classic-shared-core while the known-version query is Version
+            # Registry policy. Coverage binds one crate per capability, so the
+            # known-version operation credits its own capability (#243).
+            capability = (
+                family + ".known-fallout4"
+                if family == "version-extraction" and operation == "known-fallout4"
+                else family + ".observe"
+            )
             yield CoveragePredicate(
                 id="version-" + symbol.replace("_", "-"),
-                capability_id=family + ".observe",
+                capability_id=capability,
                 action=family + ".observe",
                 observation_family="version-" + operation,
                 rust_symbols=(symbol,),

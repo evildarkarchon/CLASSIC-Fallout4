@@ -7,7 +7,7 @@ Contributor-facing workflow notes for setup and install validation across:
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core)
 - [`classic-user-settings-core`](../../business-logic/classic-user-settings-core)
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core)
-- [`classic-version-core`](../../business-logic/classic-version-core)
+- [`classic-shared-core`](../../foundation/classic-shared-core)
 
 This page documents the current source-backed Game Setup Intake contract.
 
@@ -36,7 +36,7 @@ For crate-by-crate API details, see:
 - [`classic-xse-core.md`](classic-xse-core.md)
 - [`classic-scangame-core.md`](classic-scangame-core.md)
 - [`classic-version-registry-core.md`](classic-version-registry-core.md)
-- [`classic-version-core.md`](classic-version-core.md)
+- [`classic-shared-core.md`](classic-shared-core.md#loose-versions-and-pe-helpers-version)
 
 ---
 
@@ -140,7 +140,7 @@ Supported selections are:
 - `AnniversaryEdition`
 - `VR`
 
-When the selection is `auto`, the intake reads executable PE version metadata through `classic-version-core` and attempts a Version Registry match. If the executable exists but no supported registry entry matches, the result asks the caller to collect `ChooseGameVersion`.
+When the selection is `auto`, the intake reads executable PE version metadata through `classic_shared_core::version` and attempts a Version Registry match. If the executable exists but no supported registry entry matches, the result asks the caller to collect `ChooseGameVersion`.
 
 ## 5. Read Version Registry Expectations
 
@@ -185,7 +185,7 @@ saved settings / frontend inputs
                   |         - game root
                   |         - documents root
                   |
-                  +--> classic-version-core
+                  +--> classic-shared-core::version
                   |         - executable PE version
                   |
                   +--> classic-version-registry-core

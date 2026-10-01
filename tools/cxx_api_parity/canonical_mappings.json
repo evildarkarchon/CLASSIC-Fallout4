@@ -67,11 +67,6 @@
       "libRs": "business-logic/classic-user-settings-core/src/lib.rs"
     },
     {
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
-      "libRs": "business-logic/classic-version-core/src/lib.rs"
-    },
-    {
       "ownerModule": "version_registry",
       "rustCrate": "classic-version-registry-core",
       "libRs": "business-logic/classic-version-registry-core/src/lib.rs"
@@ -2022,8 +2017,8 @@
       "rustSymbol": "extract_pe_version_string",
       "kind": "function",
       "bridgeModule": "game",
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "extract_pe_version"
     },
     {

@@ -11141,7 +11141,7 @@
       "id": "version.lib.compare_versions",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "compare_versions",
       "pythonModule": "classic_version",
       "pythonExportPath": "compare_versions",
@@ -11151,7 +11151,7 @@
       "id": "version.lib.extract_all_versions",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "extract_all_versions",
       "pythonModule": "classic_version",
       "pythonExportPath": "extract_all_versions",
@@ -11161,7 +11161,7 @@
       "id": "version.lib.extract_pe_version",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "extract_pe_version",
       "pythonModule": "classic_version",
       "pythonExportPath": "extract_pe_version",
@@ -11171,7 +11171,7 @@
       "id": "version.lib.extract_version_from_filename",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "extract_version_from_filename",
       "pythonModule": "classic_version",
       "pythonExportPath": "extract_version_from_filename",
@@ -11181,7 +11181,7 @@
       "id": "version.lib.extract_version_from_log",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "extract_version_from_log",
       "pythonModule": "classic_version",
       "pythonExportPath": "extract_version_from_log",
@@ -11191,7 +11191,7 @@
       "id": "version.lib.format_version",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "format_version",
       "pythonModule": "classic_version",
       "pythonExportPath": "format_version",
@@ -11225,13 +11225,13 @@
       "pythonModule": "classic_version",
       "pythonExportPath": "is_valid_pe_path",
       "pythonKind": "function",
-      "rustCrate": "classic-version-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "version.lib.parse_version",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "parse_version",
       "pythonModule": "classic_version",
       "pythonExportPath": "parse_version",
@@ -11241,7 +11241,7 @@
       "id": "version.lib.try_parse_version",
       "tier": "tier1",
       "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "try_parse_version",
       "pythonModule": "classic_version",
       "pythonExportPath": "try_parse_version",
@@ -12099,16 +12099,6 @@
       "pythonKind": "class"
     },
     {
-      "id": "xse.lib.compare_versions@rust",
-      "tier": "tier1",
-      "ownerModule": "xse",
-      "rustCrate": "classic-xse-core",
-      "rustSymbol": "compare_versions",
-      "pythonModule": "classic_xse",
-      "pythonExportPath": "XseInfo",
-      "pythonKind": "class"
-    },
-    {
       "id": "xse.lib.detect_xse_version",
       "tier": "tier1",
       "ownerModule": "xse",
@@ -12179,16 +12169,6 @@
       "pythonKind": "class"
     },
     {
-      "id": "xse.lib.parse_version@rust",
-      "tier": "tier1",
-      "ownerModule": "xse",
-      "rustCrate": "classic-xse-core",
-      "rustSymbol": "parse_version",
-      "pythonModule": "classic_xse",
-      "pythonExportPath": "XseInfo",
-      "pythonKind": "class"
-    },
-    {
       "id": "xse.lib.parse_xse_type",
       "tier": "tier1",
       "ownerModule": "xse",
@@ -12197,16 +12177,6 @@
       "pythonModule": "classic_xse",
       "pythonExportPath": "parse_xse_type",
       "pythonKind": "function"
-    },
-    {
-      "id": "xse.lib.try_parse_version@rust",
-      "tier": "tier1",
-      "ownerModule": "xse",
-      "rustCrate": "classic-xse-core",
-      "rustSymbol": "try_parse_version",
-      "pythonModule": "classic_xse",
-      "pythonExportPath": "XseInfo",
-      "pythonKind": "class"
     },
     {
       "id": "yaml.lib.YamlCacheStats",

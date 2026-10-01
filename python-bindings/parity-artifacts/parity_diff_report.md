@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-01T06:47:55.327036+00:00`
-- Tier-1 contract rows: **1240**
-- Tier-1 matched: **1238**
+- Generated: `2026-10-01T22:19:04.897484+00:00`
+- Tier-1 contract rows: **1237**
+- Tier-1 matched: **1235**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -1093,17 +1093,17 @@
 | `version.lib.PeVersionResult@rust` | `version` | `classic-version-core` | `PeVersionResult` | `classic_version.compare_versions` | `matched` |
 | `version.lib.VersionError@rust` | `version` | `classic-version-core` | `VersionError` | `classic_version.compare_versions` | `matched` |
 | `version.lib.VersionResult@rust` | `version` | `classic-version-core` | `VersionResult` | `classic_version.compare_versions` | `matched` |
-| `version.lib.compare_versions` | `version` | `classic-version-core` | `compare_versions` | `classic_version.compare_versions` | `matched` |
-| `version.lib.extract_all_versions` | `version` | `classic-version-core` | `extract_all_versions` | `classic_version.extract_all_versions` | `matched` |
-| `version.lib.extract_pe_version` | `version` | `classic-version-core` | `extract_pe_version` | `classic_version.extract_pe_version` | `matched` |
-| `version.lib.extract_version_from_filename` | `version` | `classic-version-core` | `extract_version_from_filename` | `classic_version.extract_version_from_filename` | `matched` |
-| `version.lib.extract_version_from_log` | `version` | `classic-version-core` | `extract_version_from_log` | `classic_version.extract_version_from_log` | `matched` |
-| `version.lib.format_version` | `version` | `classic-version-core` | `format_version` | `classic_version.format_version` | `matched` |
+| `version.lib.compare_versions` | `version` | `classic-shared-core` | `compare_versions` | `classic_version.compare_versions` | `matched` |
+| `version.lib.extract_all_versions` | `version` | `classic-shared-core` | `extract_all_versions` | `classic_version.extract_all_versions` | `matched` |
+| `version.lib.extract_pe_version` | `version` | `classic-shared-core` | `extract_pe_version` | `classic_version.extract_pe_version` | `matched` |
+| `version.lib.extract_version_from_filename` | `version` | `classic-shared-core` | `extract_version_from_filename` | `classic_version.extract_version_from_filename` | `matched` |
+| `version.lib.extract_version_from_log` | `version` | `classic-shared-core` | `extract_version_from_log` | `classic_version.extract_version_from_log` | `matched` |
+| `version.lib.format_version` | `version` | `classic-shared-core` | `format_version` | `classic_version.format_version` | `matched` |
 | `version.lib.is_known_f4se_version` | `version` | `classic-version-core` | `is_known_f4se_version` | `classic_version.is_known_f4se_version` | `matched` |
 | `version.lib.is_known_fallout4_version` | `version` | `classic-version-core` | `is_known_fallout4_version` | `classic_version.is_known_fallout4_version` | `matched` |
-| `version.lib.is_valid_pe_path` | `version` | `classic-version-core` | `is_valid_executable_path` | `classic_version.is_valid_pe_path` | `matched` |
-| `version.lib.parse_version` | `version` | `classic-version-core` | `parse_version` | `classic_version.parse_version` | `matched` |
-| `version.lib.try_parse_version` | `version` | `classic-version-core` | `try_parse_version` | `classic_version.try_parse_version` | `matched` |
+| `version.lib.is_valid_pe_path` | `version` | `classic-shared-core` | `is_valid_executable_path` | `classic_version.is_valid_pe_path` | `matched` |
+| `version.lib.parse_version` | `version` | `classic-shared-core` | `parse_version` | `classic_version.parse_version` | `matched` |
+| `version.lib.try_parse_version` | `version` | `classic-shared-core` | `try_parse_version` | `classic_version.try_parse_version` | `matched` |
 | `version_registry.error.VersionRegistryError@rust` | `version_registry` | `classic-version-registry-core` | `VersionRegistryError` | `classic_version_registry.VersionRegistry` | `matched` |
 | `version_registry.lib.Result@rust` | `version_registry` | `classic-version-registry-core` | `Result` | `classic_version_registry.VersionRegistry` | `matched` |
 | `version_registry.matching.MatchConfidence.__eq__` | `version_registry` | `classic-version-registry-core` | `MatchConfidence` | `classic_version_registry.MatchConfidence.__eq__` | `matched` |
@@ -1187,7 +1187,6 @@
 | `xse.lib.XseType.skse64` | `xse` | `classic-xse-core` | `XseType` | `classic_xse.XseType.skse64` | `matched` |
 | `xse.lib.XseType.sksevr` | `xse` | `classic-xse-core` | `XseType` | `classic_xse.XseType.sksevr` | `matched` |
 | `xse.lib.check_installed@rust` | `xse` | `classic-xse-core` | `check_installed` | `classic_xse.XseInfo` | `matched` |
-| `xse.lib.compare_versions@rust` | `xse` | `classic-xse-core` | `compare_versions` | `classic_xse.XseInfo` | `matched` |
 | `xse.lib.detect_xse_version` | `xse` | `classic-xse-core` | `detect_xse_version` | `classic_xse.detect_xse_version` | `matched` |
 | `xse.lib.dll_prefix@rust` | `xse` | `classic-xse-core` | `dll_prefix` | `classic_xse.XseInfo` | `matched` |
 | `xse.lib.from_game_id@rust` | `xse` | `classic-xse-core` | `from_game_id` | `classic_xse.XseInfo` | `matched` |
@@ -1195,9 +1194,7 @@
 | `xse.lib.is_xse_installed` | `xse` | `classic-xse-core` | `is_xse_installed` | `classic_xse.is_xse_installed` | `matched` |
 | `xse.lib.loader_name@rust` | `xse` | `classic-xse-core` | `loader_name` | `classic_xse.XseInfo` | `matched` |
 | `xse.lib.loader_path@rust` | `xse` | `classic-xse-core` | `loader_path` | `classic_xse.XseInfo` | `matched` |
-| `xse.lib.parse_version@rust` | `xse` | `classic-xse-core` | `parse_version` | `classic_xse.XseInfo` | `matched` |
 | `xse.lib.parse_xse_type` | `xse` | `classic-xse-core` | `XseType` | `classic_xse.parse_xse_type` | `matched` |
-| `xse.lib.try_parse_version@rust` | `xse` | `classic-xse-core` | `try_parse_version` | `classic_xse.XseInfo` | `matched` |
 | `yaml.lib.YamlCacheStats` | `settings` | `classic-shared-core` | `YamlOperations` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.YamlError@rust` | `settings` | `classic-settings-core` | `YamlError` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.YamlOperations` | `settings` | `classic-shared-core` | `YamlOperations` | `classic_settings.YamlOperations` | `matched` |

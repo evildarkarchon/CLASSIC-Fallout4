@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-01T06:45:09Z",
+  "generated_at_utc": "2026-10-01T22:13:51Z",
   "schema_version": 2,
   "entries": [
     {
@@ -4540,8 +4540,8 @@
         ],
         "returnType": "String"
       },
-      "ownerModule": "version",
-      "rustCrate": "classic-version-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "extract_pe_version"
     },
     {

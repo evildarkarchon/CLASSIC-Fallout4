@@ -2026,7 +2026,7 @@ export declare function extractFormIds(content: string): Array<string>
  * Extract a PE file's version from its VS_VERSIONINFO resource.
  *
  * Accepts `.exe` and `.dll` files. Delegates to
- * `classic_version_core::pe_version::extract_pe_version`.
+ * `classic_shared_core::version::pe_version::extract_pe_version`.
  *
  * @param path  Filesystem path to a PE file (absolute or relative).
  * @returns     Object `{ major, minor, patch, build }`.
@@ -2640,7 +2640,7 @@ export declare function isValidPath(path: string): boolean
 /**
  * Check whether a path points to a valid executable or DLL file.
  *
- * Delegates to `classic_version_core::pe_version::is_valid_executable_path`.
+ * Delegates to `classic_shared_core::version::pe_version::is_valid_executable_path`.
  * Never throws — returns `false` for unreadable, non-existent, or
  * wrong-extension paths.
  *

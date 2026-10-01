@@ -5,7 +5,7 @@ Contributor-facing API documentation for [`foundation/classic-shared-core/`](../
 Crate metadata:
 
 - Crate: `classic-shared-core`
-- Description: `Pure Rust foundation utilities for CLASSIC - runtime, errors, generic YAML, and business logic`
+- Description: `Pure Rust foundation utilities for CLASSIC - runtime, errors, generic YAML, loose version/PE helpers, and business logic`
 
 This crate is the shared foundation layer under the active Rust business-logic crates, bindings, and some UI integration code. Its most important job is enforcing CLASSIC's shared Tokio runtime model, but it also exposes reusable error, path, performance, and string helpers.
 
@@ -25,11 +25,13 @@ Use this crate when you need to:
 - collect lightweight process-wide timing and throughput metrics
 - intern or normalize strings through reusable foundation utilities
 - parse, load, merge, validate, or schema-check generic YAML, or cache parsed YAML under logical keys (`yaml`)
+- parse, compare, extract, or format loose version strings, or read a Windows PE file's version resource (`version`)
 - bridge async Tokio work back onto the Slint UI event loop when the optional GUI feature is enabled
 
 Do not use this crate for:
 
 - domain-specific YAML, config, scanlog, database, or file-I/O business logic
+- deciding whether a version is a *known* game or script-extender version; that is Version Registry policy (currently `is_known_fallout4_version()` / `is_known_f4se_version()` in [`classic-version-core`](classic-version-core.md), moving to the registry owner in issue #244)
 - creating a second Tokio runtime for a crate, binding layer, or UI surface
 - assuming every helper here is re-exported from the crate root
 
@@ -83,6 +85,15 @@ The sole rolling `Duration` timing implementation for every binding.
 - `StringOperation` - `Upper`, `Lower`, `Trim`, or `Normalize`
 - `ParseStringOperationError` - parse error for `StringOperation`
 
+### `version`
+
+The sole owner of the domain-neutral loose version and PE helpers. See [Loose versions and PE helpers](#loose-versions-and-pe-helpers-version).
+
+- `parse_version()`, `try_parse_version()`, `compare_versions()`, `format_version()`
+- `extract_version_from_filename()`, `extract_version_from_log()`, `extract_all_versions()`
+- `VersionError`, `VersionResult<T>`
+- public submodule `version::pe_version`: `is_valid_executable_path()`, `extract_pe_version()`, `PeVersionError`, `PeVersionResult<T>` (also re-exported at the `version` root)
+
 ### `yaml`
 
 The sole owner of domain-neutral YAML rules. See [Generic YAML](#generic-yaml-yaml).
@@ -102,7 +113,7 @@ The sole owner of domain-neutral YAML rules. See [Generic YAML](#generic-yaml-ya
 - `SlintDispatcher` - default production dispatcher
 - `set_dispatcher()` - one-time dispatcher injection hook for tests/custom startup
 
-Important layout note: `path_core`, `performance_core`, `strings_core`, and `yaml` are public modules, but their types are not re-exported from `lib.rs`. Callers use module paths such as `classic_shared_core::path_core::PathHandler`.
+Important layout note: `path_core`, `performance_core`, `strings_core`, `version`, and `yaml` are public modules, but their types are not re-exported from `lib.rs`. Callers use module paths such as `classic_shared_core::path_core::PathHandler`.
 
 ---
 
@@ -691,6 +702,80 @@ assert!(std::sync::Arc::ptr_eq(&docs, &cached));
 
 Use a non-User-Settings document; first-party production code must use [`classic-user-settings-core`](classic-user-settings-core.md) for `CLASSIC Settings.yaml`.
 
+## Loose versions and PE helpers (`version`)
+
+`classic_shared_core::version` is the domain-neutral owner of CLASSIC's lenient version-string helpers and Windows PE file-version extraction (issue #243). It knows nothing about which game or XSE versions exist: known-version queries are Version Registry policy and stay outside shared core.
+
+The former `classic_version_core` root and `classic_version_core::pe_version` paths re-export these exact items until that crate retires (issue #258). Values, `VersionError` / `PeVersionError` variants, and their messages are unchanged by the move. New callers import `classic_shared_core::version` directly. `classic-xse-core` no longer re-exports `parse_version()`, `try_parse_version()`, or `compare_versions()`.
+
+Parity ownership: CXX, Node, and Python rows for these helpers name `classic-shared-core` while keeping their row IDs and exported operation identities. Rust-only `@rust` proxy rows for items `classic-version-core` still re-exports name that facade. Do not restore `classic-version-core` as the owner of the binding rows during a baseline refresh. The `version-operations`, `version-extraction`, `version-pe`, and `version-pe-path` conformance packs name `classic-shared-core` as their `domainOwner`; `version-f4se` stays with the known-version policy owner.
+
+### `VersionError` and `VersionResult<T>`
+
+Variants:
+
+- `ParseError(String)` - a numeric component failed to parse (`Invalid version string: Invalid major version: x`)
+- `EmptyVersion` - the input was exactly empty (`Version string is empty`)
+- `NotFound(String)` - public, but no current helper constructs it
+- `InvalidFormat(String)` - fewer than two dot-separated components (`Invalid version format: Version must have at least major.minor: 1`)
+
+Whitespace-only input becomes `InvalidFormat` after trimming, not `EmptyVersion`.
+
+### `parse_version()` and `try_parse_version()`
+
+`parse_version(version_str) -> VersionResult<semver::Version>` normalizes loose shapes such as `1.10.163`, `1.10.163.0`, `v1.10.163`, `V1.10.163`, and `1.10`:
+
+- trims surrounding whitespace and strips a leading `v` or `V`
+- requires at least `major.minor`; defaults `patch = 0` when only two components are present
+- ignores any component after the third, including the game build number; extra components are not rejected
+- does not support pre-release or build-metadata syntax such as `1.2.3-alpha` (use `semver::Version::parse` for strict semver, as the update channels do)
+
+`try_parse_version()` is `parse_version().ok()`.
+
+### `compare_versions()` and `format_version()`
+
+- `compare_versions(v1, v2) -> Ordering` is `semver::Version::cmp()`; no registry data is involved.
+- `format_version(version, prefix) -> String` returns `version.to_string()`, or `format!("{prefix}{version}")` when a prefix is supplied. It neither validates nor reparses.
+
+### Text extraction helpers
+
+All three return `Option`/`Vec` rather than a typed error, and all drop a fourth numeric component.
+
+- `extract_version_from_filename(filename) -> Option<Version>` tries `v?major.minor.patch.build`, then `v?major.minor.patch`, then `v?major.minor`, returning the first match of the first pattern that matches.
+- `extract_version_from_log(log_content) -> Option<Version>` first looks for `(?i)version[:\s]+v?major.minor.patch(.build)?` and falls back to `extract_version_from_filename(log_content)`. The first match wins, so an XSE `version` line can precede a later game-version line.
+- `extract_all_versions(content) -> Vec<Version>` collects every `v?major.minor.patch(.build)?` match in regex order, keeping duplicates.
+
+### `pe_version`
+
+- `is_valid_executable_path(path) -> bool` checks that the path exists, is a file, and has a case-insensitive `.exe` or `.dll` extension. It does not verify the bytes are a PE image.
+- `extract_pe_version(path) -> PeVersionResult<(u16, u16, u16, u16)>` validates the path, reads the whole file into memory, parses it with `pelite`, and returns the `VS_FIXEDFILEINFO` `(Major, Minor, Patch, Build)` file version. It is not a streaming API, and it is the only helper that keeps all four components.
+
+`PeVersionError` variants:
+
+- `InvalidPath(PathBuf)` - nonexistent path or wrong extension (both fail `is_valid_executable_path()` first)
+- `IoError { path, source }` - the file passed validation but could not be read
+- `InvalidPe(String)` - `pelite` could not parse a usable PE image or resources block
+- `NoVersionInfo(PathBuf)` - the PE parsed but has no readable version resource
+
+The string helpers are cross-platform. The PE helpers read the Portable Executable format, but they run on any platform when pointed at a real PE file. Nothing here reads ELF or Mach-O metadata.
+
+### Example
+
+```rust,no_run
+use classic_shared_core::version::{compare_versions, extract_pe_version, parse_version};
+use std::path::Path;
+
+let installed = parse_version("1.10.163.0")?;
+let required = parse_version("v1.10.984")?;
+assert!(compare_versions(&installed, &required).is_lt());
+
+let (major, minor, patch, build) =
+    extract_pe_version(Path::new("C:/Games/Fallout4/Fallout4.exe"))?;
+println!("PE file version: {major}.{minor}.{patch}.{build}");
+
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
 ## `AsyncBridge` and GUI-only API
 
 The `async_bridge` module exists only with the `gui-bridge` feature.
@@ -835,6 +920,8 @@ Important direct dependencies:
 - `quick_cache` - bounded logical-key and YAML-file cache stores
 - `indexmap` - insertion-ordered `YamlOperations` extraction helpers
 - `tracing` - logical-key and YAML-file cache hit/miss trace events
+- `semver` and `regex` - the `version` module's normalized 3-part versions and text extraction
+- `pelite` - PE resource parsing for `version::pe_version::extract_pe_version()`
 
 Related CLASSIC crates and consumers:
 
@@ -890,7 +977,7 @@ If you are writing sync wrapper code around async business logic, `get_runtime()
 
 - `get_runtime()` is the supported public runtime entry point; `RUNTIME` itself is crate-private.
 - `RuntimeConfig` is public, but current crate code does not let callers swap the config used by the global runtime.
-- `path_core`, `performance_core`, `strings_core`, and `yaml` are public modules, not root-level re-exports.
+- `path_core`, `performance_core`, `strings_core`, `version`, and `yaml` are public modules, not root-level re-exports.
 - `PathHandler`'s bounded cache eviction is hit-count based, even though comments describe it as LRU.
 - `StringProcessor::clear_pool()` does not clear anything; it warns and expects callers to create a new instance instead.
 - `ClassicError::with_context()` can erase the original variant by wrapping it into `Generic`.
@@ -903,7 +990,8 @@ If you extend this crate, update this document when you change:
 - root-level exports in `src/lib.rs`
 - the shared runtime contract or initialization behavior
 - `ClassicError` variants, conversion rules, or context-wrapping behavior
-- public module types in `path_core`, `performance_core`, `strings_core`, `yaml`, or `async_bridge`
+- public module types in `path_core`, `performance_core`, `strings_core`, `version`, `yaml`, or `async_bridge`
+- loose version acceptance rules, extraction regexes or precedence, or PE validation and extraction behavior
 - logical-key or YAML-file cache capacity, freshness, counter, clear, or scope behavior
 - the `YamlOperations` surface, typed extraction semantics, or merge-key handling
 - feature-gated GUI bridge behavior or dispatcher assumptions

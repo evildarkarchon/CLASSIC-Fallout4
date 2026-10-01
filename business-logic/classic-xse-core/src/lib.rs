@@ -25,6 +25,7 @@
 
 use classic_path_core::DocsPathFinder;
 use classic_shared_core::GameId;
+use classic_shared_core::version::parse_version;
 use classic_shared_core::yaml::YamlOperations;
 use classic_version_registry_core::{Fallout4Version, VersionInfo};
 use semver::Version;
@@ -32,9 +33,6 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use thiserror::Error;
-
-// Re-export version utilities
-pub use classic_version_core::{compare_versions, parse_version, try_parse_version};
 
 /// XSE management errors.
 #[derive(Error, Debug)]

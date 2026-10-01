@@ -1,8 +1,10 @@
-//! Python bindings for classic-version-core.
+//! Python bindings for CLASSIC's version helpers.
 //!
 //! This module provides Python access to version detection and parsing utilities.
-//! All version handling functionality from the core crate is exposed through
-//! Python-friendly wrapper functions.
+//! The loose parsing, extraction, formatting, and PE helpers are owned by
+//! `classic_shared_core::version`; the known-version queries are Version
+//! Registry policy and are delegated to `classic_version_core` until #244 moves
+//! them. Each is exposed through a Python-friendly wrapper function.
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -42,7 +44,7 @@ use std::cmp::Ordering;
 /// ```
 #[pyfunction]
 fn parse_version(version_str: &str) -> PyResult<(u64, u64, u64)> {
-    classic_version_core::parse_version(version_str)
+    classic_shared_core::version::parse_version(version_str)
         .map(|v| (v.major, v.minor, v.patch))
         .map_err(|e| PyValueError::new_err(e.to_string()))
 }
@@ -73,7 +75,8 @@ fn parse_version(version_str: &str) -> PyResult<(u64, u64, u64)> {
 /// ```
 #[pyfunction]
 fn try_parse_version(version_str: &str) -> Option<(u64, u64, u64)> {
-    classic_version_core::try_parse_version(version_str).map(|v| (v.major, v.minor, v.patch))
+    classic_shared_core::version::try_parse_version(version_str)
+        .map(|v| (v.major, v.minor, v.patch))
 }
 
 /// Compare two semantic versions.
@@ -108,7 +111,7 @@ fn compare_versions(v1: (u64, u64, u64), v2: (u64, u64, u64)) -> i32 {
     let version1 = Version::new(v1.0, v1.1, v1.2);
     let version2 = Version::new(v2.0, v2.1, v2.2);
 
-    match classic_version_core::compare_versions(&version1, &version2) {
+    match classic_shared_core::version::compare_versions(&version1, &version2) {
         Ordering::Less => -1,
         Ordering::Equal => 0,
         Ordering::Greater => 1,
@@ -196,7 +199,7 @@ fn is_known_f4se_version(version: (u64, u64, u64)) -> bool {
 /// ```
 #[pyfunction]
 fn extract_version_from_filename(filename: &str) -> Option<(u64, u64, u64)> {
-    classic_version_core::extract_version_from_filename(filename)
+    classic_shared_core::version::extract_version_from_filename(filename)
         .map(|v| (v.major, v.minor, v.patch))
 }
 
@@ -224,7 +227,8 @@ fn extract_version_from_filename(filename: &str) -> Option<(u64, u64, u64)> {
 /// ```
 #[pyfunction]
 fn extract_version_from_log(log_content: &str) -> Option<(u64, u64, u64)> {
-    classic_version_core::extract_version_from_log(log_content).map(|v| (v.major, v.minor, v.patch))
+    classic_shared_core::version::extract_version_from_log(log_content)
+        .map(|v| (v.major, v.minor, v.patch))
 }
 
 /// Extract all versions from a text content.
@@ -250,7 +254,7 @@ fn extract_version_from_log(log_content: &str) -> Option<(u64, u64, u64)> {
 /// ```
 #[pyfunction]
 fn extract_all_versions(content: &str) -> Vec<(u64, u64, u64)> {
-    classic_version_core::extract_all_versions(content)
+    classic_shared_core::version::extract_all_versions(content)
         .into_iter()
         .map(|v| (v.major, v.minor, v.patch))
         .collect()
@@ -291,7 +295,7 @@ fn format_version(version: (u64, u64, u64), prefix: Option<&str>) -> String {
         Some("") => None, // Empty string means no prefix
         Some(p) => Some(p),
     };
-    classic_version_core::format_version(&v, actual_prefix)
+    classic_shared_core::version::format_version(&v, actual_prefix)
 }
 
 /// Extract the file version from a PE executable (.exe or .dll).
@@ -322,7 +326,7 @@ fn format_version(version: (u64, u64, u64), prefix: Option<&str>) -> String {
 /// ```
 #[pyfunction]
 fn extract_pe_version(path: &str) -> PyResult<(u16, u16, u16, u16)> {
-    use classic_version_core::pe_version;
+    use classic_shared_core::version::pe_version;
 
     pe_version::extract_pe_version(std::path::Path::new(path)).map_err(|e| match &e {
         pe_version::PeVersionError::InvalidPath(_) | pe_version::PeVersionError::IoError { .. } => {
@@ -354,7 +358,7 @@ fn extract_pe_version(path: &str) -> PyResult<(u16, u16, u16, u16)> {
 /// ```
 #[pyfunction]
 fn is_valid_pe_path(path: &str) -> bool {
-    classic_version_core::pe_version::is_valid_executable_path(std::path::Path::new(path))
+    classic_shared_core::version::pe_version::is_valid_executable_path(std::path::Path::new(path))
 }
 
 /// Python module for version utilities.

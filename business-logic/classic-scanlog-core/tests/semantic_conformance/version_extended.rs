@@ -4,7 +4,10 @@ use serde_json::{Value, json};
 
 /// Execute public operations, retaining the common CXX PE result contract.
 pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
-    use classic_version_core as version;
+    // Loose extraction and PE helpers are owned by shared core. The known-
+    // version queries are Version Registry policy and stay in
+    // classic-version-core until #244 hands them to the registry owner.
+    use classic_shared_core::version;
     let request = &fixture["request"];
     let operation = text(&request["operation"])?;
     if operation == "extract" {
@@ -16,9 +19,9 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
     if operation.starts_with("known-") {
         let native = version::parse_version(&text(&request["version"])?)?;
         let known = if operation == "known-f4se" {
-            version::is_known_f4se_version(&native)
+            classic_version_core::is_known_f4se_version(&native)
         } else {
-            version::is_known_fallout4_version(&native)
+            classic_version_core::is_known_fallout4_version(&native)
         };
         return Ok(json!({operation:known}));
     }

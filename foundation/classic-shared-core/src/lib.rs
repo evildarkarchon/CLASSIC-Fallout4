@@ -1,8 +1,9 @@
 //! CLASSIC Shared Core - Pure Rust foundation for CLASSIC extensions
 //!
 //! This crate provides the pure Rust business logic foundation used by all CLASSIC crates,
-//! including the global runtime (ONE RUNTIME RULE), error types, common utilities, and the
-//! domain-neutral generic YAML rules in [`yaml`].
+//! including the global runtime (ONE RUNTIME RULE), error types, common utilities, the
+//! domain-neutral generic YAML rules in [`yaml`], and the loose version-parsing and PE
+//! version-extraction helpers in [`version`].
 //!
 //! # Architecture
 //!
@@ -23,6 +24,7 @@ mod game_id;
 pub mod path_core;
 pub mod performance_core;
 pub mod strings_core;
+pub mod version;
 pub mod yaml;
 
 // Re-export key types

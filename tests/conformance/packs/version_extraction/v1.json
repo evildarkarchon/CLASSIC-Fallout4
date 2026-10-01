@@ -3,7 +3,7 @@
   "familyId": "version-extraction",
   "familyVersion": 1,
   "domainOwner": {
-    "rustCrate": "classic-version-core"
+    "rustCrate": "classic-shared-core"
   },
   "fixtureRoot": "tests/fixtures/version_operations_conformance",
   "fixtures": {
@@ -18,11 +18,19 @@
       "rustSymbols": [
         "extract_version_from_filename",
         "extract_version_from_log",
-        "extract_all_versions",
+        "extract_all_versions"
+      ],
+      "observationFamilies": [
+        "version-extract"
+      ]
+    },
+    {
+      "id": "version-extraction.known-fallout4",
+      "rustCrate": "classic-version-core",
+      "rustSymbols": [
         "is_known_fallout4_version"
       ],
       "observationFamilies": [
-        "version-extract",
         "version-known-fallout4"
       ]
     }
@@ -82,7 +90,8 @@
       "id": "known-fallout4-known",
       "action": "version-extraction.observe",
       "capabilityIds": [
-        "version-extraction.observe"
+        "version-extraction.observe",
+        "version-extraction.known-fallout4"
       ],
       "fixtureRefs": [
         "known-fallout4-known"
@@ -103,7 +112,8 @@
       "id": "known-fallout4-unknown",
       "action": "version-extraction.observe",
       "capabilityIds": [
-        "version-extraction.observe"
+        "version-extraction.observe",
+        "version-extraction.known-fallout4"
       ],
       "fixtureRefs": [
         "known-fallout4-unknown"

@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-01T06:46:27.112799+00:00`
-- Tier-1 contract rows: **952**
-- Tier-1 matched: **935**
+- Generated: `2026-10-01T22:18:22.709635+00:00`
+- Tier-1 contract rows: **949**
+- Tier-1 matched: **932**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -285,12 +285,12 @@
 | `version-registry-promote-xse-version` | `version_registry` | `classic-path-core` | `XseVersion` | `XseVersion` | `matched` |
 | `version-registry-promote-check-crashgen-config` | `version_registry` | `classic-scangame-core` | `CrashgenChecker` | `checkCrashgenConfig` | `matched` |
 | `version-registry-promote-check-crashgen-full` | `version_registry` | `classic-scangame-core` | `CrashgenChecker` | `checkCrashgenFull` | `matched` |
-| `version-registry-promote-compare-versions` | `version_registry` | `classic-version-core` | `compare_versions` | `compareVersions` | `matched` |
+| `version-registry-promote-compare-versions` | `version_registry` | `classic-shared-core` | `compare_versions` | `compareVersions` | `matched` |
 | `version-registry-promote-detect-xse-version` | `version_registry` | `classic-xse-core` | `detect_xse_version` | `detectXseVersion` | `matched` |
-| `version-registry-promote-extract-all-versions` | `version_registry` | `classic-version-core` | `extract_all_versions` | `extractAllVersions` | `matched` |
-| `version-registry-promote-extract-version-from-filename` | `version_registry` | `classic-version-core` | `extract_version_from_filename` | `extractVersionFromFilename` | `matched` |
-| `version-registry-promote-extract-version-from-log` | `version_registry` | `classic-version-core` | `extract_version_from_log` | `extractVersionFromLog` | `matched` |
-| `version-registry-promote-format-version` | `version_registry` | `classic-version-core` | `format_version` | `formatVersion` | `matched` |
+| `version-registry-promote-extract-all-versions` | `version_registry` | `classic-shared-core` | `extract_all_versions` | `extractAllVersions` | `matched` |
+| `version-registry-promote-extract-version-from-filename` | `version_registry` | `classic-shared-core` | `extract_version_from_filename` | `extractVersionFromFilename` | `matched` |
+| `version-registry-promote-extract-version-from-log` | `version_registry` | `classic-shared-core` | `extract_version_from_log` | `extractVersionFromLog` | `matched` |
+| `version-registry-promote-format-version` | `version_registry` | `classic-shared-core` | `format_version` | `formatVersion` | `matched` |
 | `version-registry-promote-get-address-lib-info` | `version_registry` | `classic-scangame-core` | `AddressLibInfo` | `getAddressLibInfo` | `matched` |
 | `version-registry-promote-get-all-fallout4-versions` | `version_registry` | `classic-version-registry-core` | `Fallout4Version` | `getAllFallout4Versions` | `matched` |
 | `version-registry-promote-get-classic-version` | `version_registry` | `classic-web-core` | `CLASSIC_VERSION` | `getClassicVersion` | `matched` |
@@ -301,10 +301,10 @@
 | `version-registry-promote-get-version` | `aux` | `-` | `None` | `getVersion` | `unmapped` |
 | `version-registry-promote-get-version-registry` | `version_registry` | `classic-version-registry-core` | `VersionRegistry` | `getVersionRegistry` | `matched` |
 | `version-registry-promote-is-known-fallout4-version` | `version_registry` | `classic-version-core` | `is_known_fallout4_version` | `isKnownFallout4Version` | `matched` |
-| `version-registry-promote-parse-version` | `version_registry` | `classic-version-core` | `parse_version` | `parseVersion` | `matched` |
+| `version-registry-promote-parse-version` | `version_registry` | `classic-shared-core` | `parse_version` | `parseVersion` | `matched` |
 | `version-registry-promote-registry-get-game-version` | `version_registry` | `classic-registry-core` | `get` | `registryGetGameVersion` | `matched` |
 | `version_registry.MatchConfidence@rust` | `version_registry` | `classic-version-registry-core` | `MatchConfidence@rust` | `None` | `matched` |
-| `version-registry-promote-try-parse-version` | `version_registry` | `classic-version-core` | `try_parse_version` | `tryParseVersion` | `matched` |
+| `version-registry-promote-try-parse-version` | `version_registry` | `classic-shared-core` | `try_parse_version` | `tryParseVersion` | `matched` |
 | `aux-phase4a-backup-manager` | `aux` | `classic-path-core` | `BackupManager` | `BackupManager` | `matched` |
 | `aux-phase4a-docs-path-finder` | `aux` | `classic-path-core` | `DocsPathFinder` | `DocsPathFinder` | `matched` |
 | `aux-phase4a-documents-checker` | `aux` | `classic-path-core` | `DocumentsChecker` | `DocumentsChecker` | `matched` |
@@ -576,9 +576,9 @@
 | `config.caches.getDefaultQueryCacheCapacity` | `config` | `classic-database-core` | `DEFAULT_QUERY_CACHE_CAPACITY` | `getDefaultQueryCacheCapacity` | `matched` |
 | `config.hash_cache.getHashCacheStats` | `config` | `classic-file-io-core` | `FileHasher` | `getHashCacheStats` | `matched` |
 | `config.hash_cache.resetHashCacheStats` | `config` | `classic-file-io-core` | `FileHasher` | `resetHashCacheStats` | `matched` |
-| `version-pe-extract` | `version_registry` | `classic-version-core` | `extract_pe_version` | `extractPeVersion` | `matched` |
-| `version-pe-is-valid-path` | `version_registry` | `classic-version-core` | `is_valid_executable_path` | `isValidPePath` | `matched` |
-| `version-pe-shape` | `version_registry` | `classic-version-core` | `PeVersionResult` | `JsPeVersion` | `matched` |
+| `version-pe-extract` | `version_registry` | `classic-shared-core` | `extract_pe_version` | `extractPeVersion` | `matched` |
+| `version-pe-is-valid-path` | `version_registry` | `classic-shared-core` | `is_valid_executable_path` | `isValidPePath` | `matched` |
+| `version-pe-shape` | `version_registry` | `classic-shared-core` | `PeVersionResult` | `JsPeVersion` | `matched` |
 | `version-registry-crashgen-entry` | `version_registry` | `classic-version-registry-core` | `CrashgenConfig` | `JsCrashgenRegistryEntry` | `matched` |
 | `version-registry-crashgen-settings-rules` | `version_registry` | `classic-config-core` | `CrashgenSettingsRules` | `JsCrashgenSettingsRules` | `matched` |
 | `version-registry-check-crashgen-config-with-rules` | `version_registry` | `classic-scangame-core` | `CrashgenCheckOrchestrator` | `checkCrashgenConfigWithRules` | `matched` |
@@ -818,16 +818,16 @@
 | `version.PeVersionError@rust` | `version` | `classic-version-core` | `PeVersionError@rust` | `None` | `matched` |
 | `version.VersionError@rust` | `version` | `classic-version-core` | `VersionError@rust` | `None` | `matched` |
 | `version.VersionResult@rust` | `version` | `classic-version-core` | `VersionResult@rust` | `None` | `matched` |
-| `version.compare_versions@rust` | `version` | `classic-xse-core` | `compare_versions@rust` | `None` | `matched` |
+| `version.compare_versions@rust` | `version` | `classic-version-core` | `compare_versions@rust` | `None` | `matched` |
 | `version.extract_all_versions@rust` | `version` | `classic-version-core` | `extract_all_versions@rust` | `None` | `matched` |
 | `version.extract_version_from_filename@rust` | `version` | `classic-version-core` | `extract_version_from_filename@rust` | `None` | `matched` |
 | `version.extract_version_from_log@rust` | `version` | `classic-version-core` | `extract_version_from_log@rust` | `None` | `matched` |
 | `version.format_version@rust` | `version` | `classic-version-core` | `format_version@rust` | `None` | `matched` |
 | `version.is_known_f4se_version@rust` | `version` | `classic-version-core` | `is_known_f4se_version@rust` | `None` | `matched` |
 | `version.is_known_fallout4_version@rust` | `version` | `classic-version-core` | `is_known_fallout4_version@rust` | `None` | `matched` |
-| `version.parse_version@rust` | `version` | `classic-xse-core` | `parse_version@rust` | `None` | `matched` |
+| `version.parse_version@rust` | `version` | `classic-version-core` | `parse_version@rust` | `None` | `matched` |
 | `version.pe_version@rust` | `version` | `classic-version-core` | `pe_version@rust` | `None` | `matched` |
-| `version.try_parse_version@rust` | `version` | `classic-xse-core` | `try_parse_version@rust` | `None` | `matched` |
+| `version.try_parse_version@rust` | `version` | `classic-version-core` | `try_parse_version@rust` | `None` | `matched` |
 | `web.CLASSIC_VERSION@rust` | `web` | `classic-web-core` | `CLASSIC_VERSION@rust` | `None` | `matched` |
 | `web.ModSite@rust` | `web` | `classic-web-core` | `ModSite@rust` | `None` | `matched` |
 | `web.USER_AGENT_PREFIX@rust` | `web` | `classic-web-core` | `USER_AGENT_PREFIX@rust` | `None` | `matched` |
@@ -849,7 +849,6 @@
 | `xse.XseType@rust` | `xse` | `classic-xse-core` | `XseType@rust` | `None` | `matched` |
 | `xse.as_str@rust` | `xse` | `classic-xse-core` | `as_str@rust` | `None` | `matched` |
 | `xse.check_installed@rust` | `xse` | `classic-xse-core` | `check_installed@rust` | `None` | `matched` |
-| `xse.compare_versions@rust` | `xse` | `classic-xse-core` | `compare_versions@rust` | `None` | `matched` |
 | `xse.detect_xse_version@rust` | `xse` | `classic-xse-core` | `detect_xse_version@rust` | `None` | `matched` |
 | `xse.dll_prefix@rust` | `xse` | `classic-xse-core` | `dll_prefix@rust` | `None` | `matched` |
 | `xse.from_game_id@rust` | `xse` | `classic-xse-core` | `from_game_id@rust` | `None` | `matched` |
@@ -858,8 +857,6 @@
 | `xse.loader_name@rust` | `xse` | `classic-xse-core` | `loader_name@rust` | `None` | `matched` |
 | `xse.loader_path@rust` | `xse` | `classic-xse-core` | `loader_path@rust` | `None` | `matched` |
 | `xse.new@rust` | `xse` | `classic-shared-core` | `new@rust` | `None` | `matched` |
-| `xse.parse_version@rust` | `xse` | `classic-xse-core` | `parse_version@rust` | `None` | `matched` |
-| `xse.try_parse_version@rust` | `xse` | `classic-xse-core` | `try_parse_version@rust` | `None` | `matched` |
 | `yaml.YamlError@rust` | `settings` | `classic-settings-core` | `YamlError@rust` | `None` | `matched` |
 | `yaml.YamlOperations@rust` | `settings` | `classic-settings-core` | `YamlOperations@rust` | `None` | `matched` |
 | `yaml.cache_stats@rust` | `settings` | `classic-settings-core` | `cache_stats@rust` | `None` | `matched` |

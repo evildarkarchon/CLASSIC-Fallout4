@@ -752,7 +752,6 @@ dependencies = [
  "classic-shared-core",
  "classic-update-core",
  "classic-user-settings-core",
- "classic-version-core",
  "classic-version-registry-core",
  "classic-vocabulary",
  "classic-web-core",
@@ -1038,7 +1037,6 @@ dependencies = [
  "classic-path-core",
  "classic-shared-core",
  "classic-user-settings-core",
- "classic-version-core",
  "classic-version-registry-core",
  "classic-xse-core",
  "configparser",
@@ -1205,9 +1203,12 @@ dependencies = [
  "lasso",
  "log",
  "parking_lot",
+ "pelite",
  "quick_cache",
  "rayon",
+ "regex",
  "rustc-hash 2.1.2",
+ "semver",
  "serde",
  "serde_json",
  "serial_test",
@@ -1325,19 +1326,16 @@ dependencies = [
 name = "classic-version-core"
 version = "9.1.0"
 dependencies = [
- "anyhow",
+ "classic-shared-core",
  "classic-version-registry-core",
- "pelite",
- "regex",
  "semver",
- "tempfile",
- "thiserror 2.0.18",
 ]
 
 [[package]]
 name = "classic-version-py"
 version = "9.1.0"
 dependencies = [
+ "classic-shared-core",
  "classic-shared-py",
  "classic-version-core",
  "pyo3",
@@ -1399,7 +1397,6 @@ dependencies = [
  "anyhow",
  "classic-path-core",
  "classic-shared-core",
- "classic-version-core",
  "classic-version-registry-core",
  "semver",
  "serde",

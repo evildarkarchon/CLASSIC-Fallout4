@@ -1,7 +1,9 @@
-//! Version parsing and comparison bindings (classic-version-core)
+//! Version parsing and comparison bindings (classic-shared-core `version`)
 //!
 //! Exposes version parsing, comparison, extraction, and formatting functions
-//! to JavaScript/TypeScript. All business logic is delegated to `classic_version_core`.
+//! to JavaScript/TypeScript. The loose parsing and PE helpers are delegated to
+//! `classic_shared_core::version`; the known-version query is Version Registry
+//! policy and is delegated to `classic_version_core` until #244 moves it.
 //!
 //! The core crate works with `semver::Version` objects internally; this binding layer
 //! converts between JS strings and `Version` at the boundary.
@@ -21,7 +23,7 @@ fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
 /// @throws if the input is not a valid version string.
 #[napi]
 pub fn parse_version(input: String) -> Result<String> {
-    let version = classic_version_core::parse_version(&input).map_err(to_napi_err)?;
+    let version = classic_shared_core::version::parse_version(&input).map_err(to_napi_err)?;
     Ok(version.to_string())
 }
 
@@ -30,7 +32,7 @@ pub fn parse_version(input: String) -> Result<String> {
 /// Non-throwing variant of `parseVersion`.
 #[napi]
 pub fn try_parse_version(input: String) -> Option<String> {
-    classic_version_core::try_parse_version(&input).map(|v| v.to_string())
+    classic_shared_core::version::try_parse_version(&input).map(|v| v.to_string())
 }
 
 /// Compare two version strings.
@@ -40,9 +42,9 @@ pub fn try_parse_version(input: String) -> Option<String> {
 /// @throws if either version string is invalid.
 #[napi]
 pub fn compare_versions(a: String, b: String) -> Result<i32> {
-    let va = classic_version_core::parse_version(&a).map_err(to_napi_err)?;
-    let vb = classic_version_core::parse_version(&b).map_err(to_napi_err)?;
-    let ord = classic_version_core::compare_versions(&va, &vb);
+    let va = classic_shared_core::version::parse_version(&a).map_err(to_napi_err)?;
+    let vb = classic_shared_core::version::parse_version(&b).map_err(to_napi_err)?;
+    let ord = classic_shared_core::version::compare_versions(&va, &vb);
     Ok(match ord {
         std::cmp::Ordering::Less => -1,
         std::cmp::Ordering::Equal => 0,
@@ -55,7 +57,7 @@ pub fn compare_versions(a: String, b: String) -> Result<i32> {
 /// @throws if the version string is invalid.
 #[napi]
 pub fn is_known_fallout4_version(version: String) -> Result<bool> {
-    let v = classic_version_core::parse_version(&version).map_err(to_napi_err)?;
+    let v = classic_shared_core::version::parse_version(&version).map_err(to_napi_err)?;
     Ok(classic_version_core::is_known_fallout4_version(&v))
 }
 
@@ -65,7 +67,7 @@ pub fn is_known_fallout4_version(version: String) -> Result<bool> {
 /// Returns the version string, or null if no version is found.
 #[napi]
 pub fn extract_version_from_filename(filename: String) -> Option<String> {
-    classic_version_core::extract_version_from_filename(&filename).map(|v| v.to_string())
+    classic_shared_core::version::extract_version_from_filename(&filename).map(|v| v.to_string())
 }
 
 /// Extract the first version from log file content.
@@ -74,7 +76,7 @@ pub fn extract_version_from_filename(filename: String) -> Option<String> {
 /// Returns the version string, or null if no version is found.
 #[napi]
 pub fn extract_version_from_log(content: String) -> Option<String> {
-    classic_version_core::extract_version_from_log(&content).map(|v| v.to_string())
+    classic_shared_core::version::extract_version_from_log(&content).map(|v| v.to_string())
 }
 
 /// Find all version strings in the given content.
@@ -82,7 +84,7 @@ pub fn extract_version_from_log(content: String) -> Option<String> {
 /// Returns an array of normalized version strings.
 #[napi]
 pub fn extract_all_versions(content: String) -> Vec<String> {
-    classic_version_core::extract_all_versions(&content)
+    classic_shared_core::version::extract_all_versions(&content)
         .into_iter()
         .map(|v| v.to_string())
         .collect()
@@ -93,8 +95,8 @@ pub fn extract_all_versions(content: String) -> Vec<String> {
 /// @throws if the version string is invalid.
 #[napi]
 pub fn format_version(version: String) -> Result<String> {
-    let v = classic_version_core::parse_version(&version).map_err(to_napi_err)?;
-    Ok(classic_version_core::format_version(&v, None))
+    let v = classic_shared_core::version::parse_version(&version).map_err(to_napi_err)?;
+    Ok(classic_shared_core::version::format_version(&v, None))
 }
 
 // ============================================================================
@@ -118,7 +120,7 @@ pub struct JsPeVersion {
 /// Extract a PE file's version from its VS_VERSIONINFO resource.
 ///
 /// Accepts `.exe` and `.dll` files. Delegates to
-/// `classic_version_core::pe_version::extract_pe_version`.
+/// `classic_shared_core::version::pe_version::extract_pe_version`.
 ///
 /// @param path  Filesystem path to a PE file (absolute or relative).
 /// @returns     Object `{ major, minor, patch, build }`.
@@ -127,7 +129,7 @@ pub struct JsPeVersion {
 #[napi]
 pub fn extract_pe_version(path: String) -> Result<JsPeVersion> {
     let (major, minor, patch, build) =
-        classic_version_core::pe_version::extract_pe_version(Path::new(&path))
+        classic_shared_core::version::pe_version::extract_pe_version(Path::new(&path))
             .map_err(to_napi_err)?;
     Ok(JsPeVersion {
         major: u32::from(major),
@@ -139,7 +141,7 @@ pub fn extract_pe_version(path: String) -> Result<JsPeVersion> {
 
 /// Check whether a path points to a valid executable or DLL file.
 ///
-/// Delegates to `classic_version_core::pe_version::is_valid_executable_path`.
+/// Delegates to `classic_shared_core::version::pe_version::is_valid_executable_path`.
 /// Never throws — returns `false` for unreadable, non-existent, or
 /// wrong-extension paths.
 ///
@@ -147,5 +149,5 @@ pub fn extract_pe_version(path: String) -> Result<JsPeVersion> {
 /// @returns     `true` if the path exists, is a file, and ends in `.exe` or `.dll`.
 #[napi]
 pub fn is_valid_pe_path(path: String) -> bool {
-    classic_version_core::pe_version::is_valid_executable_path(Path::new(&path))
+    classic_shared_core::version::pe_version::is_valid_executable_path(Path::new(&path))
 }
