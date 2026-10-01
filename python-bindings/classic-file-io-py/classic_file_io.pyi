@@ -762,6 +762,11 @@ class FileHasher:
     - Parallel batch hashing for multiple files
     - Automatic cache management
 
+    The cache and its statistics belong to the ``classic_file_io`` facade.
+    Hashing done by other facades (such as Game Setup Intake in
+    ``classic_scangame``) never hits, populates, or counts in this cache, and
+    ``clear_cache()`` / ``reset_cache_stats()`` here never affect theirs.
+
     Example:
         >>> # Single file hash
         >>> hash_val = FileHasher.hash_file("data.bin")
@@ -850,9 +855,10 @@ class FileHasher:
 
     @staticmethod
     def clear_cache() -> None:
-        """Clear the hash cache.
+        """Clear this facade's hash cache.
 
-        Useful for testing or when files are known to have changed.
+        Useful for testing or when files are known to have changed. Hit and
+        miss counters are kept until ``reset_cache_stats()`` is called.
 
         Example:
             >>> FileHasher.clear_cache()
@@ -893,7 +899,9 @@ class FileHasher:
 
     @staticmethod
     def reset_cache_stats() -> None:
-        """Reset hash cache hit and miss counters.
+        """Reset this facade's hash cache hit and miss counters.
+
+        Cached hashes are kept.
 
         Example:
             >>> FileHasher.reset_cache_stats()

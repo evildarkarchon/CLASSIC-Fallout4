@@ -86,7 +86,8 @@ Texture header parsing and validation.
 
 File hashing helpers.
 
-- `FileHasher` - SHA256 hashing with a process-global cache and Rayon batch helpers
+- `FileHasher` - SHA256 hashing with a process default cache and Rayon batch helpers
+- `FileHashScope` - opaque handle to one hash-cache store and its statistics, for callers that need their own cache
 
 ### `log_collection`
 
@@ -256,7 +257,7 @@ Contributor notes:
 
 ## `FileHasher`
 
-`FileHasher` exposes process-wide SHA256 helpers.
+`FileHasher` exposes SHA256 helpers backed by the process default `FileHashScope`.
 
 - `hash_file(path) -> Result<String, FileIOError>`
 - `hash_files_parallel(paths) -> Result<Vec<(PathBuf, Option<String>)>, FileIOError>`
@@ -276,13 +277,44 @@ Contributor notes:
 
 Contributor notes:
 
-- the hash cache is global and keyed only by `PathBuf`
+- the unscoped `FileHasher` cache is the process default scope and is keyed only by `PathBuf`
 - the hash cache is bounded to 1024 entries through `quick_cache::sync::Cache`
 - the implementation does not compare mtimes or file size before returning a cached hash
 - callers that hash mutable files should clear the cache explicitly when freshness matters
 - `clear_cache()` empties cached entries only; `reset_cache_stats()` clears hit/miss counters without dropping entries
 - Phase 4 validates bounded `quick_cache` eviction semantics rather than strict LRU victim order, because the locked cache implementation is `quick_cache`
 - batch hashing is fail-soft per file: the overall call succeeds and failed files get `None`
+
+## File Hash Scopes
+
+Every hash-cache store sits behind an opaque `FileHashScope` handle, so a
+binding adapter can give each caller its own cached hashes and statistics
+while unscoped callers keep the process default.
+
+- `FileHashScope::default_scope()` - the store behind every unscoped `FileHasher` function
+- `FileHashScope::new_isolated()` - a fresh, empty store that shares no entries or counters with any other scope
+- `hash_file`, `hash_files_parallel`, `hash_files_to_map`, `cache_stats`, `reset_cache_stats`, `clear_cache`, `cache_size` - same contract as the `FileHasher` function of the same name, applied to this scope only
+
+Contract:
+
+- cloning a handle shares its store; two handles compare equal exactly when they name the same store
+- every scope has the same 1024-entry bounded capacity, eviction, hit/miss counting, and clear/reset rules; filling one scope never evicts another scope's entries
+- hashing, clearing, and resetting through one scope never changes another scope's entries or statistics, including the default scope
+- handles are `Send + Sync + 'static` and keep naming the same store when moved into Rayon or async work
+
+Current owners: the Rust, CXX, and Node `FileHasher` surfaces use the default
+scope. The Python `classic_file_io.FileHasher` facade and Game Setup Intake runs
+started through `classic_scangame` each hold their own isolated scope, so their
+caches and statistics stay independent once the Python facades share one
+native library. Game Setup Intake selects a scope with
+`GameSetupIntake::run_in_hash_scope` (see `classic-scangame-core.md`).
+
+The FCX setup step of a Crash Log Scan Run (`classic-scanlog-core`) still calls
+`GameSetupIntake::run()`, so `classic_scanlog` scans hash through the default
+scope. No Python facade reads, clears, or resets the default scope, so that work
+cannot change `classic_file_io`'s or `classic_scangame`'s caches or statistics;
+a Python facade that later needs hash-cache controls must select its own
+isolated scope rather than expose the default one.
 
 ## `LogCollector`
 
@@ -519,7 +551,7 @@ Concurrency and caching patterns visible in source:
 - DDS headers use an async `RwLock<LruCache<...>>`
 - `read_multiple_files()` and `write_multiple_files()` use adaptive `buffer_unordered()` concurrency
 - DDS batch validation and hash batch operations use Rayon
-- `FileHasher` cache is process-global; `FileIOCore` caches are per-instance but shared across clones because the internals live behind `Arc`
+- `FileHasher` uses the process default `FileHashScope`; isolated scopes and `FileIOCore` caches are per-handle but shared across clones because the internals live behind `Arc`
 
 Contributor rule: keep runtime ownership outside this crate. If you add new async work here, do not introduce a second independent Tokio runtime.
 
@@ -595,7 +627,7 @@ If the caller needs a guaranteed fresh read after out-of-band file changes, call
 
 - The public API is a mix of direct modules plus root-level re-exports; adding or removing exports in `src/lib.rs` changes the contributor-facing surface.
 - `FileIOCore` caches are freshness-blind today. They do not compare mtimes or file contents before returning cached text or DDS headers.
-- `FileHasher` has the same freshness limitation at process scope; its cache key is only the path.
+- `FileHasher` and every `FileHashScope` have the same freshness limitation; the cache key is only the path.
 - `default_encoding` is stored in `FileIOCore`, but current read logic visibly relies on automatic detection instead of using that configured encoding as an override.
 - `write_file()` does not create parent directories even though some other write helpers do.
 - `walk_directory()` can hide unreadable-entry problems because it drops traversal errors.

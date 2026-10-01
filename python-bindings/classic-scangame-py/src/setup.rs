@@ -4,6 +4,7 @@
 //! collects caller inputs, delegates all setup resolution and validation to
 //! Rust core, then exposes the rendered report and typed diagnostics.
 
+use classic_file_io_core::FileHashScope;
 use classic_scangame_core::{
     GameSetupCheck, GameSetupIntake, GameSetupIntakeResult, GameSetupPathUpdate,
     game_setup_needs_path_detection, normalize_game_setup_version_selection,
@@ -15,6 +16,17 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::sync::LazyLock;
+
+/// `classic_scangame`'s file-hash cache scope.
+///
+/// Every Game Setup Intake run started through this facade hashes the game
+/// executable and XSE scripts through this scope. Created on first use and
+/// never replaced, so once the Python facades share one native library these
+/// hashes neither hit nor populate `classic_file_io`'s `FileHasher` cache and
+/// never move its statistics, and its clears and resets cannot evict them
+/// (#233, #242). The facade exposes no hash-cache controls of its own.
+static SCANGAME_HASH_SCOPE: LazyLock<FileHashScope> = LazyLock::new(FileHashScope::new_isolated);
 
 /// Python wrapper for a Game Setup Intake request.
 ///
@@ -332,7 +344,7 @@ fn convert_result(result: GameSetupIntakeResult) -> PyGameSetupIntakeResult {
 #[pyfunction]
 fn run_game_setup_intake(py: Python<'_>, intake: &PyGameSetupIntake) -> PyGameSetupIntakeResult {
     let core_intake = intake.inner.clone();
-    let result = without_gil(py, || core_intake.run());
+    let result = without_gil(py, || core_intake.run_in_hash_scope(&SCANGAME_HASH_SCOPE));
     convert_result(result)
 }
 
@@ -352,7 +364,7 @@ fn run_game_setup_intake_from_user_settings(
     if let Some(xse_log_path) = xse_log_path {
         intake = intake.with_xse_log_path(xse_log_path);
     }
-    let result = without_gil(py, || intake.run());
+    let result = without_gil(py, || intake.run_in_hash_scope(&SCANGAME_HASH_SCOPE));
     convert_result(result)
 }
 
@@ -393,3 +405,7 @@ pub fn register_setup(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(game_setup_needs_path_detection_py, m)?)?;
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "setup_tests.rs"]
+mod tests;

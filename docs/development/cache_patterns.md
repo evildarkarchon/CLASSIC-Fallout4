@@ -147,14 +147,21 @@ let is_gui = is_gui_mode(); // Returns bool
 
 **Key Features**:
 - Path-based keys for direct file lookup
-- Pre-allocated capacity for expected load
+- Bounded 1024-entry capacity per scope (`quick_cache`)
 - Parallel batch hashing with Rayon
 - Explicit cache management
+- Independent scopes: each `FileHashScope` owns its own entries and hit/miss counters
 
 **Data Structure**:
 ```rust
-static HASH_CACHE: LazyLock<Arc<DashMap<PathBuf, String>>> =
-    LazyLock::new(|| Arc::new(DashMap::with_capacity(256)));
+// One store per scope; `FileHasher` uses the process default scope.
+struct FileHashStore {
+    entries: quick_cache::sync::Cache<PathBuf, String>,
+    hits: AtomicU64,
+    misses: AtomicU64,
+}
+pub struct FileHashScope { store: Arc<FileHashStore> }
+static DEFAULT_SCOPE: LazyLock<FileHashScope> = LazyLock::new(FileHashScope::new_isolated);
 ```
 
 **When to Use**:
@@ -174,6 +181,11 @@ let hashes = FileHasher::hash_files_parallel(&files)?;
 // Cache management
 FileHasher::clear_cache();
 let size = FileHasher::cache_size();
+
+// A caller-owned scope (e.g. one Python facade) shares nothing with the default
+let scope = FileHashScope::new_isolated();
+let hash = scope.hash_file(Path::new("game.exe"))?;
+let stats = scope.cache_stats();
 ```
 
 ---

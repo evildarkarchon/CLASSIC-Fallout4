@@ -258,7 +258,7 @@ fn executable_hash_matching_uses_registry_candidates() {
     let temp = TempDir::new().expect("temp dir");
     let exe_path = temp.path().join("Fallout4VR.exe");
     fs::write(&exe_path, b"registered by hash").expect("fake exe");
-    let exe_hash = FileHasher::hash_file(&exe_path).expect("hash fake exe");
+    let exe_hash = classic_file_io_core::FileHasher::hash_file(&exe_path).expect("hash fake exe");
     let candidate = VersionInfo {
         id: "FO4_VR".to_string(),
         game: "Fallout4VR".to_string(),
@@ -279,8 +279,13 @@ fn executable_hash_matching_uses_registry_candidates() {
     };
     let mut facts = GameSetupVersionFacts::default();
 
-    let matched =
-        detect_registry_info_from_exe(&exe_path, &[candidate], &mut facts).expect("hash match");
+    let matched = detect_registry_info_from_exe(
+        &exe_path,
+        &[candidate],
+        &FileHashScope::default_scope(),
+        &mut facts,
+    )
+    .expect("hash match");
 
     assert_eq!(matched.id, "FO4_VR");
     assert_eq!(facts.match_confidence.as_deref(), Some("exact"));
@@ -368,6 +373,60 @@ fn intake_returns_ready_diagnostics_for_explicit_paths() {
             .any(|check| check.kind == GameSetupCheckKind::ExecutableHash)
     );
     assert!(result.rendered_report.contains("Game Setup Intake"));
+}
+
+/// Every executable and XSE script hash an intake run performs is read from,
+/// cached in, and counted by the caller-supplied scope only.
+#[test]
+fn intake_hashes_only_through_the_supplied_hash_scope() {
+    let (_temp, game_root, docs_root) = setup_roots();
+    write_valid_docs_inis(&docs_root);
+
+    // The executable is always hashed. Give the XSE script check one real
+    // curated script to hash too, so both hashing routes are pinned to the
+    // supplied scope. Requiring the curated entry keeps the script route from
+    // going silently untested if the registry data ever stops providing one.
+    let script = registry_id_for_selection(GameId::Fallout4, "Original")
+        .and_then(|id| get_version_registry().get_by_id(id).cloned())
+        .and_then(|info| info.xse)
+        .and_then(|xse| xse.script_hashes.into_iter().next())
+        .map(|(script, _)| script)
+        .expect("Version Registry curates XSE script hashes for Fallout 4 Original");
+    let script_path = game_root.join("Data").join("Scripts").join(script);
+    fs::create_dir_all(script_path.parent().expect("script parent")).expect("scripts dir");
+    fs::write(&script_path, b"not the curated script").expect("script");
+    let expected_hashes = 2u64;
+
+    let scope = FileHashScope::new_isolated();
+    let sibling = FileHashScope::new_isolated();
+    let intake = GameSetupIntake::new(GameId::Fallout4, "Original")
+        .with_game_root(&game_root)
+        .with_docs_root(&docs_root);
+
+    let first = intake.run_in_hash_scope(&scope);
+    let after_first = scope.cache_stats();
+    assert_eq!(after_first.misses, expected_hashes);
+    assert_eq!(after_first.hits, 0);
+    assert_eq!(
+        after_first.size,
+        usize::try_from(expected_hashes).expect("fits")
+    );
+
+    // A repeat run is served from the same scope's cache.
+    let second = intake.run_in_hash_scope(&scope);
+    let after_second = scope.cache_stats();
+    assert_eq!(after_second.misses, expected_hashes);
+    assert_eq!(after_second.hits, expected_hashes);
+    assert_eq!(first.rendered_report, second.rendered_report);
+
+    // Another scope saw none of that work, and the unscoped entry point
+    // returns the same diagnostics through the default scope.
+    let untouched = sibling.cache_stats();
+    assert_eq!(
+        (untouched.hits, untouched.misses, untouched.size),
+        (0, 0, 0)
+    );
+    assert_eq!(intake.run().rendered_report, first.rendered_report);
 }
 
 #[test]
