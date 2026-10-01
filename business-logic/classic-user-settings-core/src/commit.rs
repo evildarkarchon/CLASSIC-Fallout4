@@ -6,7 +6,7 @@ use crate::{
     UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview,
 };
 use classic_durable_publication as durable_publication;
-use classic_settings_core::YamlOperations;
+use classic_shared_core::yaml::YamlOperations;
 use classic_shared_core::yaml::{Yaml, parse_yaml_content};
 use sha2::{Digest, Sha256};
 use std::fmt;

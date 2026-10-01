@@ -24,7 +24,7 @@ fn main_load_routes_through_shippable_loader() {
     );
     std::fs::write(bundled_dir.join("CLASSIC Main.yaml"), bundled_payload).unwrap();
 
-    classic_settings_core::clear_global_yaml_cache();
+    classic_shared_core::yaml::clear_global_yaml_cache();
     std::env::set_current_dir(work_dir.path()).unwrap();
     let runtime = tokio::runtime::Runtime::new().unwrap();
     let result = runtime.block_on(async { YamlSource::Main.load("").await });

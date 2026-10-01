@@ -3,7 +3,7 @@
   "familyId": "settings-yaml",
   "familyVersion": 1,
   "domainOwner": {
-    "rustCrate": "classic-settings-core"
+    "rustCrate": "classic-shared-core"
   },
   "fixtureRoot": "tests/fixtures/settings_yaml_conformance",
   "fixtures": {

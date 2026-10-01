@@ -1,5 +1,5 @@
 #![allow(missing_docs)]
-//! Criterion benchmarks for classic-settings-core YAML operations.
+//! Criterion benchmarks for classic-shared-core YAML operations (`yaml::YamlOperations`).
 //!
 //! This module benchmarks YAML parsing, serialization, traversal, and modification
 //! operations using realistic workloads similar to CLASSIC's configuration files.
@@ -24,7 +24,7 @@ use yaml_rust2::{Yaml, YamlLoader};
 #[path = "../../../benches/common/mod.rs"]
 mod common;
 
-use classic_settings_core::YamlOperations;
+use classic_shared_core::yaml::YamlOperations;
 
 // =============================================================================
 // Test Data Generation

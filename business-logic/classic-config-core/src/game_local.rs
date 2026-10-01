@@ -1,7 +1,7 @@
 //! Persistence for runtime-discovered paths in the Game Local YAML document.
 
 use anyhow::{Context, Result};
-use classic_settings_core::YamlOperations;
+use classic_shared_core::yaml::YamlOperations;
 use classic_shared_core::yaml::load_yaml_merged_async;
 use std::path::Path;
 use tokio::fs;

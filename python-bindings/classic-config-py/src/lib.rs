@@ -788,9 +788,13 @@ pub fn persist_game_local_paths(
 ///
 /// This function clears all cached YAML data. It's primarily useful for
 /// testing to ensure clean state between test runs.
+///
+/// The config facade owns the default (unscoped) YAML-file cache scope, the
+/// one config-core's own `YamlOperations::new()` loaders fill. It never
+/// touches `classic_settings`' separately scoped YAML caches.
 #[pyfunction]
 pub fn clear_yaml_cache() {
-    classic_config_core::clear_global_yaml_cache();
+    classic_shared_core::yaml::clear_global_yaml_cache();
 }
 
 /// Auto-register the application directory so independent YAML/cache paths resolve

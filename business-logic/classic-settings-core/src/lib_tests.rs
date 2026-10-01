@@ -86,3 +86,42 @@ fn test_facade_and_shared_core_share_one_logical_key_cache() {
     reset_cache_stats();
     assert_eq!(shared_yaml::cache_stats().hits, 0);
 }
+
+/// `YamlOperations` and the path/mtime-aware YAML-file cache are forwarded
+/// from shared core too: a load through the facade lands in the owner's
+/// default scope, and facade clears/resets act on that same scope.
+#[test]
+#[serial]
+fn test_facade_and_shared_core_share_one_default_yaml_file_cache() {
+    use classic_shared_core::yaml as shared_yaml;
+
+    clear_global_yaml_cache();
+    reset_yaml_cache_stats();
+
+    let file = create_test_yaml("game: Fallout4\n");
+    let ops = YamlOperations::new();
+    assert_eq!(
+        ops.cache_scope(),
+        &shared_yaml::YamlFileCacheScope::default_scope()
+    );
+    ops.load_yaml_file(file.path()).unwrap();
+    shared_yaml::YamlOperations::new()
+        .load_yaml_file(file.path())
+        .unwrap();
+
+    let stats = shared_yaml::yaml_cache_stats();
+    assert_eq!((stats.hits, stats.misses, stats.size), (1, 1, 1));
+
+    clear_global_yaml_cache();
+    assert_eq!(shared_yaml::yaml_cache_stats().size, 0);
+    assert_eq!(shared_yaml::yaml_cache_stats().hits, 1);
+    reset_yaml_cache_stats();
+    assert_eq!(shared_yaml::yaml_cache_stats().hits, 0);
+
+    // The YAML-file cache stays distinct from the logical-key cache.
+    clear_cache();
+    load_settings_sync("facade_logical", file.path()).unwrap();
+    clear_global_yaml_cache();
+    assert!(shared_yaml::is_cached("facade_logical"));
+    clear_cache();
+}

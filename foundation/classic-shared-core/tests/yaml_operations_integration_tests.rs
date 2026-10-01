@@ -3,7 +3,7 @@
 //! These tests verify cross-component workflows and file I/O operations
 //! that involve multiple YAML operations working together.
 
-use classic_settings_core::{
+use classic_shared_core::yaml::{
     YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats, yaml_cache_stats,
 };
 use serial_test::serial;

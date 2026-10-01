@@ -35,15 +35,19 @@ xxhash-rust = { workspace = true }
 
 # Logging
 log = { workspace = true }
-# Logical-key YAML cache hit/miss trace events
+# Logical-key and YAML-file cache hit/miss trace events
 tracing = { workspace = true }
 
 # Serialization
 serde = { workspace = true }
 
-# Generic YAML parsing, loaders, and the bounded logical-key cache
+# Generic YAML parsing, loaders, and the bounded logical-key and
+# path/mtime-aware YAML-file caches
 yaml-rust2 = { workspace = true }
 quick_cache = { workspace = true }
+
+# Ordered collections (preserves YAML key order in YamlOperations accessors)
+indexmap = { workspace = true }
 
 [dev-dependencies]
 criterion = { version = "0.8.1", features = ["html_reports"] }
@@ -61,6 +65,10 @@ harness = false
 
 [[bench]]
 name = "performance_benchmarks"
+harness = false
+
+[[bench]]
+name = "yaml_benchmarks"
 harness = false
 
 [lints.rust]

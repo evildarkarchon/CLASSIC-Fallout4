@@ -703,7 +703,6 @@ dependencies = [
  "classic-file-io-core",
  "classic-path-core",
  "classic-registry-core",
- "classic-settings-core",
  "classic-shared-core",
  "classic-version-registry-core",
  "classic-vocabulary",
@@ -1174,18 +1173,12 @@ name = "classic-settings-core"
 version = "9.1.0"
 dependencies = [
  "classic-shared-core",
- "criterion 0.8.2",
  "dhat",
- "indexmap",
- "quick_cache",
- "rayon",
  "serde",
  "serde_json",
  "serial_test",
  "tempfile",
  "tokio",
- "tracing",
- "yaml-rust2",
 ]
 
 [[package]]
@@ -1208,6 +1201,7 @@ dependencies = [
  "criterion 0.8.2",
  "dashmap",
  "futures",
+ "indexmap",
  "lasso",
  "log",
  "parking_lot",
@@ -1310,7 +1304,6 @@ name = "classic-user-settings-core"
 version = "9.1.0"
 dependencies = [
  "classic-durable-publication",
- "classic-settings-core",
  "classic-shared-core",
  "classic-vocabulary",
  "serde_json",
@@ -1355,7 +1348,6 @@ dependencies = [
 name = "classic-version-registry-core"
 version = "9.1.0"
 dependencies = [
- "classic-settings-core",
  "classic-shared-core",
  "semver",
  "serde",
@@ -1406,7 +1398,6 @@ version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-path-core",
- "classic-settings-core",
  "classic-shared-core",
  "classic-version-core",
  "classic-version-registry-core",

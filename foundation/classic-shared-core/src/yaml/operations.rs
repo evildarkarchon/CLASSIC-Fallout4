@@ -1,9 +1,7 @@
 //! Parse, dump, file I/O, and cache-control operations.
 
-use super::cache::{
-    CACHE_HITS, CACHE_MISSES, CachedYaml, YAML_CACHE, total_cached_bytes, yaml_cache_stats,
-};
-use classic_shared_core::yaml::YamlError;
+use super::YamlError;
+use super::file_cache::{CachedYaml, YamlFileCacheScope};
 use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::Path;
@@ -22,18 +20,22 @@ use yaml_rust2::{Yaml, YamlEmitter, YamlLoader};
 /// * `cache_enabled` - A boolean field that enables or disables caching functionality.
 ///   When set to `true`, caching can be used to avoid redundant processing, improving
 ///   performance in scenarios involving multiple reads or writes.
+/// * `cache` - The [`YamlFileCacheScope`] this object reads, fills, invalidates,
+///   clears, and reports on. [`YamlOperations::new`] uses the process default
+///   scope; [`YamlOperations::with_cache_scope`] selects another one.
 ///
 /// # Usage
 ///
 /// Example:
 /// ```rust
-/// use classic_settings_core::YamlOperations;
+/// use classic_shared_core::yaml::YamlOperations;
 ///
 /// let yaml_ops = YamlOperations::new();
 /// assert!(yaml_ops.is_cache_enabled());
 /// ```
 pub struct YamlOperations {
     cache_enabled: bool,
+    cache: YamlFileCacheScope,
 }
 
 impl YamlOperations {
@@ -41,18 +43,46 @@ impl YamlOperations {
     /// # Returns
     /// A new instance where:
     /// - `cache_enabled` is set to `true`.
+    /// - the cache scope is the process default [`YamlFileCacheScope`].
     ///
     /// # Example
     /// ```rust
-    /// use classic_settings_core::YamlOperations;
+    /// use classic_shared_core::yaml::YamlOperations;
     ///
     /// let instance = YamlOperations::new();
     /// assert!(instance.is_cache_enabled());
     /// ```
     pub fn new() -> Self {
+        Self::with_cache_scope(YamlFileCacheScope::default_scope())
+    }
+
+    /// Creates an instance with caching enabled that uses `scope` as its
+    /// path/mtime-aware YAML-file cache.
+    ///
+    /// Every cache effect of the returned object (hits, misses, entries,
+    /// save-time invalidation, [`YamlOperations::clear_cache`], and
+    /// [`YamlOperations::get_cache_stats`]) stays inside `scope`. Binding
+    /// adapters use this to keep one facade's cache separate from another's.
+    ///
+    /// # Example
+    /// ```rust
+    /// use classic_shared_core::yaml::{YamlFileCacheScope, YamlOperations};
+    ///
+    /// let scope = YamlFileCacheScope::new_isolated();
+    /// let ops = YamlOperations::with_cache_scope(scope.clone());
+    /// assert!(ops.is_cache_enabled());
+    /// assert_eq!(ops.cache_scope(), &scope);
+    /// ```
+    pub fn with_cache_scope(scope: YamlFileCacheScope) -> Self {
         Self {
             cache_enabled: true,
+            cache: scope,
         }
+    }
+
+    /// Returns the YAML-file cache scope this object uses.
+    pub fn cache_scope(&self) -> &YamlFileCacheScope {
+        &self.cache
     }
 
     /// Parses a YAML string and returns the first YAML document found.
@@ -130,7 +160,7 @@ impl YamlOperations {
     /// # Behavior
     ///
     /// - **Cache Check**: If caching is enabled (`self.cache_enabled` is `true`), the method will:
-    ///   - Check if the file's contents are already cached in `YAML_CACHE`.
+    ///   - Check if the file's contents are already cached in this object's cache scope.
     ///   - Compare the last modified timestamp of the file to the cached entry's timestamp.
     ///   - Return the cached YAML object if the file hasn't been modified.
     ///
@@ -150,8 +180,8 @@ impl YamlOperations {
     ///
     /// # Caching Details
     ///
-    /// Caching is controlled via the `self.cache_enabled` flag. An internal global cache, `YAML_CACHE`,
-    /// is used to store parsed documents. The cache keeps track of:
+    /// Caching is controlled via the `self.cache_enabled` flag. The object's
+    /// [`YamlFileCacheScope`] stores parsed documents. The cache keeps track of:
     /// - The parsed YAML document.
     /// - The last modification timestamp of the file.
     /// - The raw file contents (optional, for potential future validation).
@@ -166,20 +196,21 @@ impl YamlOperations {
     /// # Notes
     ///
     /// - Ensure that the file exists at the specified path before invoking this method.
-    /// - Caching leverages a global/static cache (`YAML_CACHE`), so proper initialization and handling
-    ///   of this cache is expected prior to method execution.
+    /// - Caching uses this object's cache scope, which is shared by every other object and
+    ///   free function that uses the same scope (the process default scope for `new()`).
     ///
     /// # Thread Safety
     ///
-    /// The method assumes thread-safe operations where necessary, particularly for the global `YAML_CACHE`.
+    /// The method assumes thread-safe operations where necessary, particularly for the shared cache scope.
     /// Use of `Arc` ensures shared ownership of cached YAML data across threads.
     #[must_use = "file loading may fail; handle the Result"]
     pub fn load_yaml_file(&self, path: &Path) -> Result<Yaml, YamlError> {
         let file_path = path.to_path_buf();
+        let store = self.cache.store();
 
         // Check cache first
         if self.cache_enabled
-            && let Some(cached) = YAML_CACHE.get(&file_path)
+            && let Some(cached) = store.entries.get(&file_path)
         {
             // Check if file has been modified
             if let Ok(metadata) = std::fs::metadata(&file_path)
@@ -187,17 +218,17 @@ impl YamlOperations {
             {
                 if modified <= cached.modified {
                     // Cache is still valid - record hit
-                    CACHE_HITS.fetch_add(1, Ordering::Relaxed);
+                    store.hits.fetch_add(1, Ordering::Relaxed);
                     trace!(cache = "yaml", path = %file_path.display(), "cache hit");
                     return Ok((*cached.data).clone());
                 }
 
-                let _ = YAML_CACHE.remove(&file_path);
+                let _ = store.entries.remove(&file_path);
             }
         }
 
         // Cache miss (either not cached, cache disabled, or file modified)
-        CACHE_MISSES.fetch_add(1, Ordering::Relaxed);
+        store.misses.fetch_add(1, Ordering::Relaxed);
         trace!(cache = "yaml", path = %file_path.display(), "cache miss");
 
         // Read and parse file
@@ -213,7 +244,7 @@ impl YamlOperations {
             && let Ok(metadata) = std::fs::metadata(&file_path)
             && let Ok(modified) = metadata.modified()
         {
-            YAML_CACHE.insert(
+            store.entries.insert(
                 file_path.clone(),
                 CachedYaml {
                     data: Arc::new(yaml.clone()),
@@ -289,21 +320,25 @@ impl YamlOperations {
 
         // Invalidate cache
         if self.cache_enabled {
-            YAML_CACHE.remove(&file_path);
+            self.cache.store().entries.remove(&file_path);
         }
 
         Ok(())
     }
 
     /// Clear the YAML cache
+    ///
+    /// Evicts every entry in this object's cache scope, including entries
+    /// loaded through other objects that share the scope. Counters are kept.
     pub fn clear_cache(&self) {
-        YAML_CACHE.clear();
+        self.cache.clear();
     }
 
     /// Returns a `HashMap` containing statistics about the YAML cache.
     ///
     /// The returned `HashMap` contains the following key-value pairs:
-    /// - `"cached_files"`: The number of entries currently stored in the YAML cache.
+    /// - `"cached_files"`: The number of entries currently stored in this object's cache scope.
+    /// - `"capacity"`: The maximum number of entries the scope retains.
     /// - `"total_bytes"`: The total size in bytes of the raw content of all cached entries.
     ///
     /// The helper adapts the canonical cache stats contract and supplements it with
@@ -313,7 +348,7 @@ impl YamlOperations {
     ///
     /// # Example
     /// ```rust
-    /// use classic_settings_core::YamlOperations;
+    /// use classic_shared_core::yaml::YamlOperations;
     ///
     /// let yaml_ops = YamlOperations::new();
     /// let stats = yaml_ops.get_cache_stats();
@@ -322,14 +357,14 @@ impl YamlOperations {
     /// ```
     ///
     /// # Note
-    /// This function assumes that `YAML_CACHE` is a globally accessible data structure
-    /// that holds cached entries, where each entry may contain an optional `raw_content`.
+    /// The figures describe this object's cache scope, where each entry may
+    /// contain an optional `raw_content`.
     pub fn get_cache_stats(&self) -> HashMap<String, usize> {
-        let canonical = yaml_cache_stats();
+        let canonical = self.cache.stats();
         let mut stats = HashMap::new();
         stats.insert("cached_files".to_string(), canonical.size);
         stats.insert("capacity".to_string(), canonical.capacity);
-        stats.insert("total_bytes".to_string(), total_cached_bytes());
+        stats.insert("total_bytes".to_string(), self.cache.total_cached_bytes());
         stats
     }
 
@@ -357,7 +392,7 @@ impl YamlOperations {
     ///
     /// # Example
     /// ```rust,no_run
-    /// use classic_settings_core::YamlOperations;
+    /// use classic_shared_core::yaml::YamlOperations;
     /// use std::path::Path;
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {

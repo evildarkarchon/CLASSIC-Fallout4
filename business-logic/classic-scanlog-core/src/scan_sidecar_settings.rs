@@ -6,7 +6,7 @@
 
 use crate::error::{Result, ScanLogError};
 use crate::scan_intake::{CrashLogScanFacts, CrashLogScanIntakePaths};
-use classic_settings_core::YamlOperations;
+use classic_shared_core::yaml::YamlOperations;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 

@@ -1,7 +1,6 @@
 //! Generic settings loading through public sync/async APIs on the shared runtime.
 
 use super::{RunnerResult, invalid, strings, text};
-use classic_settings_core as settings;
 use classic_shared_core::get_runtime;
 use classic_shared_core::yaml as shared_yaml;
 use serde_json::{Value, json};
@@ -22,7 +21,7 @@ impl Drop for CacheReset {
 struct YamlCacheReset;
 impl Drop for YamlCacheReset {
     fn drop(&mut self) {
-        settings::clear_global_yaml_cache();
+        shared_yaml::clear_global_yaml_cache();
     }
 }
 
@@ -218,7 +217,7 @@ pub(super) fn yaml_json(value: &shared_yaml::Yaml) -> RunnerResult<Value> {
 fn execute_yaml(fixture: &Value) -> RunnerResult<Value> {
     let temporary = tempfile::tempdir()?;
     let _reset = YamlCacheReset;
-    let ops = settings::YamlOperations::new();
+    let ops = shared_yaml::YamlOperations::new();
     ops.clear_cache();
     let mut doc = ops.parse_yaml(&text(&fixture["content"])?)?;
     let before = json!({"name": ops.get_string_value(&doc, "name", "fallback"), "missing": ops.get_string_value(&doc, "absent", "fallback"), "items": ops.get_vec_value(&doc, "items"), "mapping": ops.get_hashmap_value(&doc, "mapping")});
@@ -258,10 +257,10 @@ fn execute_yaml(fixture: &Value) -> RunnerResult<Value> {
         .collect::<RunnerResult<serde_json::Map<_, _>>>()?;
     let path = temporary.path().join("saved.yaml");
     ops.save_yaml_file(&path, &doc)?;
-    let initial = settings::yaml_cache_stats();
+    let initial = shared_yaml::yaml_cache_stats();
     let loaded = ops.load_yaml_file(&path)?;
     ops.load_yaml_file(&path)?;
-    let stats = settings::yaml_cache_stats();
+    let stats = shared_yaml::yaml_cache_stats();
     let persisted = updates
         .keys()
         .map(|key| {
@@ -278,18 +277,18 @@ fn execute_yaml(fixture: &Value) -> RunnerResult<Value> {
     inventory(temporary.path(), temporary.path(), &mut files)?;
     ops.clear_cache();
     ops.load_yaml_file(&path)?;
-    if settings::yaml_cache_stats().size != 1 {
+    if shared_yaml::yaml_cache_stats().size != 1 {
         return Err(invalid("global clear fixture did not populate YAML cache").into());
     }
-    settings::clear_global_yaml_cache();
+    shared_yaml::clear_global_yaml_cache();
     Ok(
-        json!({"before": before, "after": after, "persisted": persisted, "files": files, "cache": {"hits": stats.hits - initial.hits, "misses": stats.misses - initial.misses, "size": stats.size, "afterClear": settings::yaml_cache_stats().size}}),
+        json!({"before": before, "after": after, "persisted": persisted, "files": files, "cache": {"hits": stats.hits - initial.hits, "misses": stats.misses - initial.misses, "size": stats.size, "afterClear": shared_yaml::yaml_cache_stats().size}}),
     )
 }
 
 /// Observe batch access and order-preserving mappings through Rust's public YAML API.
 fn execute_yaml_batch(fixture: &Value) -> RunnerResult<Value> {
-    let ops = settings::YamlOperations::new();
+    let ops = shared_yaml::YamlOperations::new();
     let doc = ops.parse_yaml(&text(&fixture["content"])?)?;
     let keys = strings(&fixture["keys"])?;
     let key_refs: Vec<_> = keys.iter().map(String::as_str).collect();

@@ -24,8 +24,8 @@
 //! ```
 
 use classic_path_core::DocsPathFinder;
-use classic_settings_core::YamlOperations;
 use classic_shared_core::GameId;
+use classic_shared_core::yaml::YamlOperations;
 use classic_version_registry_core::{Fallout4Version, VersionInfo};
 use semver::Version;
 use serde::{Deserialize, Serialize};

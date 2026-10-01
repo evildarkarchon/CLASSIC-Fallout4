@@ -435,15 +435,23 @@ class YamlOperations:
 
 
 def clear_global_yaml_cache() -> None:
-    """Clear the process-wide YAML-file cache."""
+    """Clear this module's YAML-file cache.
+
+    Every `YamlOperations` instance shares this cache. Hit/miss counters are
+    kept, and other modules' YAML caches (such as the one
+    `classic_config.clear_yaml_cache()` clears) are not touched.
+    """
 
 
 def reset_yaml_cache_stats() -> None:
-    """Reset the YAML-file cache hit/miss counters to zero."""
+    """Reset this module's YAML-file cache hit/miss counters to zero.
+
+    Cached entries are kept.
+    """
 
 
 def yaml_cache_stats() -> YamlCacheStats:
-    """Get statistics for the process-wide YAML-file cache.
+    """Get statistics for this module's YAML-file cache.
 
     Distinct from `cache_stats()` — that one reports the settings cache.
     """

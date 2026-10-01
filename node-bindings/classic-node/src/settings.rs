@@ -1,8 +1,9 @@
 //! Settings + YAML bindings (classic-shared-core `yaml` + classic-settings-core)
 //!
-//! The logical-key settings cache is owned by `classic_shared_core::yaml` and
-//! called through that path directly; `YamlOperations` and `YamlFile` still come
-//! from `classic-settings-core`.
+//! The logical-key settings cache, `YamlOperations`, and the path/mtime-aware
+//! YAML-file cache are owned by `classic_shared_core::yaml` and called through
+//! that path directly, always on their default (unscoped) scopes; `YamlFile`
+//! still comes from `classic-settings-core`.
 //!
 //! Exposes the unified YAML settings cache and stateless YAML operations to
 //! JavaScript/TypeScript. This module was created by merging the former
@@ -35,8 +36,9 @@
 //! - `new YamlDocument(content)` with `getValue`, `getStringValue`, `getVecValue`,
 //!   `getHashmapValue`, `setValue`, `toString`
 
-use classic_settings_core::{YamlError, YamlFile, YamlOperations, yaml_cache_stats};
+use classic_settings_core::YamlFile;
 use classic_shared_core::yaml as shared_yaml;
+use classic_shared_core::yaml::{YamlError, YamlOperations, yaml_cache_stats};
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};

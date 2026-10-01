@@ -1,11 +1,13 @@
 //! Settings operations bridge for CXX FFI.
 //!
-//! Bridges `classic_settings_core` and the generic YAML rules in
-//! `classic_shared_core::yaml` to the C++ layer. Covers these surfaces:
+//! Bridges `classic_settings_core` (`YamlFile`) and the generic YAML rules,
+//! YAML operations, and both YAML caches in `classic_shared_core::yaml` to the
+//! C++ layer. Covers these surfaces:
 //!
 //! 1. **YAML operations** (pre-existing): File loading, parsing, settings access
 //!    via dot-notation keys, and per-instance cache observation. Delegates to
-//!    `classic_settings_core::YamlOperations`.
+//!    `classic_shared_core::yaml::YamlOperations`, which uses the default
+//!    (unscoped) path/mtime-aware YAML-file cache of this linked library.
 //! 2. **Settings cache** (new — D-09): Process-wide YAML-settings cache with
 //!    sync and async-blocking load helpers, cache inspection, invalidation,
 //!    and observability. Delegates to the logical-key cache owned by
@@ -38,11 +40,10 @@
 //!
 //! Everything else on the shared-core logical-key cache and `validators` IS exposed.
 
-use classic_settings_core::{
-    YamlCacheStats, YamlFile as CoreYamlFile, YamlOperations, yaml_cache_stats,
-};
+use classic_settings_core::YamlFile as CoreYamlFile;
 use classic_shared_core::yaml as shared_yaml;
 use classic_shared_core::yaml::validators::{self, CoercedValue, SettingType};
+use classic_shared_core::yaml::{YamlCacheStats, YamlOperations, yaml_cache_stats};
 use classic_user_settings_core::{
     GuiWindow, LegacyTuiStateImportOutcome as CoreLegacyTuiStateImportOutcome,
     LegacyTuiStateImportRestoreOutcome as CoreLegacyTuiStateImportRestoreOutcome,

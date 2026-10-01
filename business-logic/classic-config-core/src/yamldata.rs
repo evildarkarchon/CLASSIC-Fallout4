@@ -13,7 +13,7 @@
 
 use crate::CrashgenSettingsRules;
 use crate::crashgen_registry_yaml::parse_crashgen_registry;
-use classic_settings_core::YamlOperations;
+use classic_shared_core::yaml::YamlOperations;
 use classic_shared_core::yaml::{SettingsError, merge_yaml_documents, parse_yaml_content};
 use classic_version_registry_core::{
     GameVersion as RegistryGameVersion, VersionInfo, get_version_registry,
