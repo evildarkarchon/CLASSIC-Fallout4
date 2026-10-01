@@ -3,7 +3,7 @@ use serial_test::serial;
 
 #[test]
 fn test_registry_uses_std_lazy_lock() {
-    assert!(std::any::type_name_of_val(&REGISTRY).contains("LazyLock"));
+    assert!(std::any::type_name_of_val(&DEFAULT_SCOPE).contains("LazyLock"));
 }
 
 #[test]

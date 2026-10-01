@@ -887,7 +887,8 @@ def set_application_dir(path: str | Path) -> None:
     """Override the directory used by independent application-local YAML helpers.
 
     User Settings APIs always take an explicit CLASSIC root and do not consult
-    this registry value.
+    this registry value. The override belongs to ``classic_config``; it is
+    independent of ``classic_registry.set_application_dir()``.
 
     Args:
         path: Absolute path to the desired application directory.

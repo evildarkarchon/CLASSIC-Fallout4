@@ -7,7 +7,7 @@ Crate metadata:
 - Crate: `classic-registry-core`
 - Description: `Core registry for global singleton management in CLASSIC`
 
-This crate is CLASSIC's small process-wide registry layer. It stores values behind string keys in a single global map so Rust code, bindings, and bridge crates can share singleton-like state without passing every value through every call boundary.
+This crate is CLASSIC's small process-wide registry layer. It stores values behind string keys so Rust code, bindings, and bridge crates can share singleton-like state without passing every value through every call boundary. Every store is named by an opaque `RegistryScope` handle: the unscoped root functions use one process default scope, and a binding adapter that links several facades into one library selects an isolated scope per facade (see [Registry Scopes](#registry-scopes)).
 
 It is intentionally generic: the crate does not define a domain model for most entries. Instead, it exposes a typed key-value store plus a handful of convenience helpers around well-known CLASSIC keys such as the current game, GUI mode, and some Fallout 4 version-related flags.
 
@@ -24,6 +24,7 @@ Use this crate when you need to:
 - reuse shared well-known keys through `Keys`
 - bridge simple registry state across Rust, C++, Python, and Node wrappers
 - keep lightweight global state in one place without introducing a new singleton per crate
+- give each facade of a multi-facade adapter its own independent registry and application directory through `RegistryScope`
 
 Do not use this crate for:
 
@@ -44,16 +45,17 @@ This crate has two internal modules, but the public API is re-exported from the 
 ## Internal modules
 
 - `keys` - defines the `Keys` struct with well-known registry key constants
-- `registry` - defines the global storage plus all register/get/remove helpers
+- `registry` - defines `RegistryScope`, the default-scope storage, and all register/get/remove helpers
 
 ## Root-level API
 
 - `Keys` - shared string constants for common CLASSIC registry entries
+- `RegistryScope` - opaque handle to one registry store; see [Registry Scopes](#registry-scopes)
 - `register(key, value)` - insert or replace a value
 - `get(key) -> Option<V>` - retrieve and clone a value if the key exists and the requested type matches
 - `is_registered(key) -> bool` - check key presence only
 - `unregister(key) -> bool` - remove one key
-- `clear_all()` - wipe the entire registry
+- `clear_all()` - wipe the entire default-scope registry
 
 ## Root-level convenience helpers
 
@@ -65,6 +67,7 @@ This crate has two internal modules, but the public API is re-exported from the 
 - `get_game_version<T>()`
 - `is_version_auto_detected()`
 - `get_local_dir()`
+- `set_application_dir(dir)` / `get_application_dir()`
 - `is_xse_valid()`
 - `is_enb_present()`
 - `get_game_version_string()`
@@ -94,6 +97,7 @@ Current public constants include:
 - `GAME_VERSION`
 - `VERSION_AUTO_DETECTED`
 - `LOCAL_DIR`
+- `APP_DIR`
 - `IS_PRERELEASE`
 - `XSE_VALID`
 - `XSE_VERSION`
@@ -148,9 +152,9 @@ That last point matters for contributors: consumers cannot tell "missing key" ap
 
 ## `clear_all()`
 
-- clears the entire global registry
+- clears the entire default-scope registry, including its application directory
 - is heavily used in tests
-- affects all users of the crate in the current process, not one subsystem
+- affects every caller of the unscoped functions in the current process, not one subsystem; isolated `RegistryScope` stores are untouched
 
 ---
 
@@ -189,9 +193,36 @@ assert_eq!(get::<_, String>(Keys::GAME), None);
 
 Source-visible behavior to keep in mind:
 
-- the registry is not scoped per game, task, thread, or runtime handle
+- a store is scoped only by the `RegistryScope` handle a caller holds, never per game, task, thread, or runtime handle
 - overwriting a key discards the previous value without a dedicated migration hook
 - typed retrieval works only when every writer and reader agrees on the exact stored type
+
+---
+
+## Registry Scopes
+
+`RegistryScope` is an opaque, cheaply cloned handle to one registry store. It exists so the merged Python extension can keep the observable registry state of the former separate extension images: `classic_registry`, `classic_config`, and `classic_scanlog` each hold their own scope, so one facade's `set_application_dir`, `register`, or `clear_all` never reaches another facade's store.
+
+- `RegistryScope::default_scope()` returns the store behind every unscoped root function. Rust, CXX (`classic-cpp-bridge`), and Node (`classic-node`) callers use it, so their behavior is unchanged.
+- `RegistryScope::new_isolated()` creates a fresh, empty store that shares nothing with any other scope.
+- Every root function has a same-named method (`register`, `get`, `is_registered`, `unregister`, `clear_all`, `get_game`, `set_game`, `set_application_dir`, `get_application_dir`, and the other convenience helpers) with identical defaults and exact-type lookup rules, applied to that scope's store.
+- Clones share one store; two handles compare equal exactly when they name the same store. `Debug` reports only whether the handle is the default scope and how many entries it holds.
+- Scope selection is explicit. An adapter chooses a handle at facade entry or object construction and passes it, or moves an owned clone into async work. Handles are `Send + Sync + 'static`; nothing is selected through thread-local or ambient state, which would not follow a task that resumes on another worker thread.
+
+```rust
+use classic_registry_core::{RegistryScope, get_application_dir, set_application_dir};
+use std::path::PathBuf;
+
+let facade = RegistryScope::new_isolated();
+facade.set_application_dir(PathBuf::from("C:/facade"));
+set_application_dir(PathBuf::from("C:/default"));
+
+facade.clear_all();
+assert_eq!(facade.get_application_dir(), None);
+assert_eq!(get_application_dir(), Some(PathBuf::from("C:/default")));
+```
+
+The public-interface probes in [`tests/registry_scopes.rs`](../../business-logic/classic-registry-core/tests/registry_scopes.rs) pin isolation, default-scope identity, the application-directory exact-type collision, and handles moved into async tasks. The cross-facade Python probe is [`python-bindings/tests/test_registry_scopes.py`](../../python-bindings/tests/test_registry_scopes.py).
 
 ---
 
@@ -205,6 +236,13 @@ Most of the crate is generic, but a small part of the public API encodes current
 - `set_game(game_name)` stores the provided game name under `Keys::GAME`
 - `is_gui_mode() -> bool` reads `Keys::IS_GUI_MODE` and defaults to `false`
 - `get_local_dir() -> PathBuf` reads `Keys::LOCAL_DIR` and falls back to `std::env::current_dir()`, then `.` if that fails
+
+## Application directory helpers
+
+- `set_application_dir(dir: PathBuf)` stores the native override under `Keys::APP_DIR`, replacing any value there
+- `get_application_dir() -> Option<PathBuf>` returns that override only when the stored value is exactly a `PathBuf`
+- `classic-config-core` reads the override to resolve `YamlSource::Cache` when no user config directory exists; binding layers register it at import time
+- exact-type rule: a value of another type registered under `Keys::APP_DIR` (for example a Python object through the generic `register`) is registered and readable through `get`, but `get_application_dir()` reports `None`; `set_application_dir` then replaces it, after which the generic typed read reports `None`
 
 ## Generic typed passthrough helpers
 
@@ -260,8 +298,8 @@ This crate is explicitly process-global and concurrent.
 
 Implementation details visible in `src/registry.rs`:
 
-- storage is a single `static` `std::sync::LazyLock<DashMap<String, Arc<dyn Any + Send + Sync>>>`
-- initialization is lazy and happens on first registry access
+- each `RegistryScope` owns one `Arc<DashMap<String, Arc<dyn Any + Send + Sync>>>`
+- the default scope behind the unscoped functions is a `static` `std::sync::LazyLock<RegistryScope>`, initialized on first registry access
 - `DashMap` provides concurrent access without one global mutex around every operation
 - values must be `Send + Sync + 'static` to be stored safely
 - reads clone the stored value, so retrieved types must implement `Clone`
@@ -270,7 +308,7 @@ Contributor cautions:
 
 - this is shared mutable global state across the whole process
 - `clear_all()` and key reuse can interfere with parallel tests or unrelated subsystems if used carelessly
-- the crate does not provide namespaces, transactions, or scoped cleanup
+- the crate does not provide namespaces or transactions; `RegistryScope` separates whole stores, and `RegistryScope::clear_all` cleans up only its own store
 - storing large or non-cheaply-clonable values can make `get(...)` more expensive than it looks from the API
 
 The tests in this crate and in `classic-cpp-bridge` use `serial_test` specifically because the registry is global process state.
@@ -288,7 +326,9 @@ Important direct dependencies:
 Related CLASSIC crates and wrappers:
 
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge/src/registry.rs) - exposes CXX-friendly string/bool/i32 registry accessors on top of this crate
-- [`classic-registry-py`](../../python-bindings/classic-registry-py/src/lib.rs) - stores Python objects through a wrapper type so Python code can share registry entries
+- [`classic-registry-py`](../../python-bindings/classic-registry-py/src/lib.rs) - stores Python objects through a wrapper type in its own facade scope
+- [`classic-config-py`](../../python-bindings/classic-config-py/src/lib.rs) and [`classic-scanlog-py`](../../python-bindings/classic-scanlog-py/src/lib.rs) - register their import-time application directory in their own facade scopes
+- [`classic-config-core`](../../business-logic/classic-config-core/src/yaml_source.rs) - reads the application-directory override from the default scope or, through `YamlSource::path_in_registry_scope`, from a caller-selected scope
 - [`classic-node`](../../node-bindings/classic-node/src/shared.rs) - uses `serde_json::Value` plus fallbacks to common Rust scalar types when reading registry values from Node
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - documents the `Fallout4Version` type that many callers store in this generic registry
 
@@ -333,7 +373,7 @@ That final pair of assertions captures an important contract: this registry is t
 - `get(...)` cannot distinguish missing keys from wrong requested types
 - convenience helpers use defaults heavily, so absent state can be masked
 - `get_game_version_string()` remains string-oriented even though comments describe enum-oriented storage under `Keys::GAME_VERSION`
-- `clear_all()` is useful for tests but risky in shared process flows
+- `clear_all()` is useful for tests but risky in shared process flows; prefer an isolated `RegistryScope` when a caller needs state it can clear independently
 - `thiserror` is declared as a dependency even though no public error type is currently exposed
 
 If you extend this crate, update this document when you change:
