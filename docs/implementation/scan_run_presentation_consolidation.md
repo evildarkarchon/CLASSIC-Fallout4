@@ -482,7 +482,7 @@ bun run dts:freshness:check
 Python, from repo root:
 
 ```powershell
-uv sync --project python-bindings --inexact --group drift-guards
+uv sync --project python-bindings --inexact
 $env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
 uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .
 uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
