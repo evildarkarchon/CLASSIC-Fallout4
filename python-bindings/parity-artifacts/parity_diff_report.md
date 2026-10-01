@@ -1,6 +1,6 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-09-25T03:28:32.151065+00:00`
+- Generated: `2026-10-01T04:26:55.370494+00:00`
 - Tier-1 contract rows: **1240**
 - Tier-1 matched: **1238**
 - Tier-1 missing Rust: **0**
@@ -556,16 +556,16 @@
 | `path.lib.validate_required_files@rust` | `path` | `classic-path-core` | `validate_required_files` | `classic_path.PathValidator.validate_required_files` | `matched` |
 | `path.lib.validate_settings_path@rust` | `path` | `classic-path-core` | `validate_settings_path` | `classic_path.BackupManager` | `matched` |
 | `path.lib.validate_settings_paths@rust` | `path` | `classic-path-core` | `validate_settings_paths` | `classic_path.BackupManager` | `matched` |
-| `perf.lib.MetricsSummary` | `perf` | `classic-perf-core` | `MetricsSummary` | `classic_perf.MetricsSummary` | `matched` |
-| `perf.lib.Timer` | `perf` | `classic-perf-core` | `Timer` | `classic_perf.Timer` | `matched` |
-| `perf.lib.Timer.__init__` | `perf` | `classic-perf-core` | `Timer` | `classic_perf.Timer.__init__` | `matched` |
-| `perf.lib.Timer.elapsed` | `perf` | `classic-perf-core` | `Timer` | `classic_perf.Timer.elapsed` | `matched` |
-| `perf.lib.Timer.finish` | `perf` | `classic-perf-core` | `Timer` | `classic_perf.Timer.finish` | `matched` |
-| `perf.lib.clear_metrics` | `perf` | `classic-perf-core` | `clear_metrics` | `classic_perf.clear_metrics` | `matched` |
-| `perf.lib.get_summary` | `perf` | `classic-perf-core` | `get_summary` | `classic_perf.get_summary` | `matched` |
-| `perf.lib.record_timing` | `perf` | `classic-perf-core` | `record_timing` | `classic_perf.record_timing` | `matched` |
-| `perf.lib.reset_metrics` | `perf` | `classic-perf-core` | `clear_metrics` | `classic_perf.reset_metrics` | `matched` |
-| `perf.lib.start_timer` | `perf` | `classic-perf-core` | `start_timer` | `classic_perf.start_timer` | `matched` |
+| `perf.lib.MetricsSummary` | `perf` | `classic-shared-core` | `MetricsSummary` | `classic_perf.MetricsSummary` | `matched` |
+| `perf.lib.Timer` | `perf` | `classic-shared-core` | `Timer` | `classic_perf.Timer` | `matched` |
+| `perf.lib.Timer.__init__` | `perf` | `classic-shared-core` | `Timer` | `classic_perf.Timer.__init__` | `matched` |
+| `perf.lib.Timer.elapsed` | `perf` | `classic-shared-core` | `Timer` | `classic_perf.Timer.elapsed` | `matched` |
+| `perf.lib.Timer.finish` | `perf` | `classic-shared-core` | `Timer` | `classic_perf.Timer.finish` | `matched` |
+| `perf.lib.clear_metrics` | `perf` | `classic-shared-core` | `clear_metrics` | `classic_perf.clear_metrics` | `matched` |
+| `perf.lib.get_summary` | `perf` | `classic-shared-core` | `get_summary` | `classic_perf.get_summary` | `matched` |
+| `perf.lib.record_timing` | `perf` | `classic-shared-core` | `record_timing` | `classic_perf.record_timing` | `matched` |
+| `perf.lib.reset_metrics` | `perf` | `classic-shared-core` | `clear_metrics` | `classic_perf.reset_metrics` | `matched` |
+| `perf.lib.start_timer` | `perf` | `classic-shared-core` | `start_timer` | `classic_perf.start_timer` | `matched` |
 | `registry.lib.Keys` | `registry` | `classic-registry-core` | `Keys` | `classic_registry.Keys` | `matched` |
 | `registry.lib.clear_all` | `registry` | `classic-registry-core` | `clear_all` | `classic_registry.clear_all` | `matched` |
 | `registry.lib.get` | `registry` | `classic-registry-core` | `get` | `classic_registry.get` | `matched` |
@@ -974,18 +974,18 @@
 | `settings.lib.SettingsError@rust` | `settings` | `classic-settings-core` | `SettingsError` | `classic_settings.SettingsCacheStats` | `matched` |
 | `settings.lib.SettingsSource@rust` | `settings` | `classic-settings-core` | `SettingsSource` | `classic_settings.SettingsCacheStats` | `matched` |
 | `settings.lib.Yaml@rust` | `settings` | `classic-settings-core` | `Yaml` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.cache_keys` | `settings` | `classic-settings-core` | `cache_keys` | `classic_settings.cache_keys` | `matched` |
-| `settings.lib.cache_size` | `settings` | `classic-settings-core` | `cache_size` | `classic_settings.cache_size` | `matched` |
-| `settings.lib.cache_stats` | `settings` | `classic-settings-core` | `cache_stats` | `classic_settings.cache_stats` | `matched` |
-| `settings.lib.clear_cache` | `settings` | `classic-settings-core` | `clear_cache` | `classic_settings.clear_cache` | `matched` |
-| `settings.lib.coerce_setting_value` | `settings` | `classic-settings-core` | `coerce_setting_value` | `classic_settings.coerce_setting_value` | `matched` |
-| `settings.lib.get_cached` | `settings` | `classic-settings-core` | `get_cached` | `classic_settings.get_cached` | `matched` |
-| `settings.lib.invalidate` | `settings` | `classic-settings-core` | `invalidate` | `classic_settings.invalidate` | `matched` |
-| `settings.lib.is_cached` | `settings` | `classic-settings-core` | `is_cached` | `classic_settings.is_cached` | `matched` |
-| `settings.lib.load_batch_async` | `settings` | `classic-settings-core` | `load_batch_async` | `classic_settings.load_batch_async` | `matched` |
-| `settings.lib.load_batch_sync` | `settings` | `classic-settings-core` | `load_batch_sync` | `classic_settings.load_batch_sync` | `matched` |
-| `settings.lib.load_settings_async` | `settings` | `classic-settings-core` | `load_settings_async` | `classic_settings.load_settings_async` | `matched` |
-| `settings.lib.load_settings_sync` | `settings` | `classic-settings-core` | `load_settings_sync` | `classic_settings.load_settings_sync` | `matched` |
+| `settings.lib.cache_keys` | `settings` | `classic-shared-core` | `cache_keys` | `classic_settings.cache_keys` | `matched` |
+| `settings.lib.cache_size` | `settings` | `classic-shared-core` | `cache_size` | `classic_settings.cache_size` | `matched` |
+| `settings.lib.cache_stats` | `settings` | `classic-shared-core` | `cache_stats` | `classic_settings.cache_stats` | `matched` |
+| `settings.lib.clear_cache` | `settings` | `classic-shared-core` | `clear_cache` | `classic_settings.clear_cache` | `matched` |
+| `settings.lib.coerce_setting_value` | `settings` | `classic-shared-core` | `coerce_setting_value` | `classic_settings.coerce_setting_value` | `matched` |
+| `settings.lib.get_cached` | `settings` | `classic-shared-core` | `get_cached` | `classic_settings.get_cached` | `matched` |
+| `settings.lib.invalidate` | `settings` | `classic-shared-core` | `invalidate` | `classic_settings.invalidate` | `matched` |
+| `settings.lib.is_cached` | `settings` | `classic-shared-core` | `is_cached` | `classic_settings.is_cached` | `matched` |
+| `settings.lib.load_batch_async` | `settings` | `classic-shared-core` | `load_batch_async` | `classic_settings.load_batch_async` | `matched` |
+| `settings.lib.load_batch_sync` | `settings` | `classic-shared-core` | `load_batch_sync` | `classic_settings.load_batch_sync` | `matched` |
+| `settings.lib.load_settings_async` | `settings` | `classic-shared-core` | `load_settings_async` | `classic_settings.load_settings_async` | `matched` |
+| `settings.lib.load_settings_sync` | `settings` | `classic-shared-core` | `load_settings_sync` | `classic_settings.load_settings_sync` | `matched` |
 | `settings.lib.load_yaml_async@rust` | `settings` | `classic-settings-core` | `load_yaml_async` | `classic_settings.SettingsCacheStats` | `matched` |
 | `settings.lib.load_yaml_batch_async@rust` | `settings` | `classic-settings-core` | `load_yaml_batch_async` | `classic_settings.SettingsCacheStats` | `matched` |
 | `settings.lib.load_yaml_batch_sync@rust` | `settings` | `classic-settings-core` | `load_yaml_batch_sync` | `classic_settings.SettingsCacheStats` | `matched` |
@@ -994,8 +994,8 @@
 | `settings.lib.load_yaml_sync@rust` | `settings` | `classic-settings-core` | `load_yaml_sync` | `classic_settings.SettingsCacheStats` | `matched` |
 | `settings.lib.merge_yaml_documents@rust` | `settings` | `classic-settings-core` | `merge_yaml_documents` | `classic_settings.SettingsCacheStats` | `matched` |
 | `settings.lib.parse_yaml_content@rust` | `settings` | `classic-settings-core` | `parse_yaml_content` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.reset_cache_stats` | `settings` | `classic-settings-core` | `reset_cache_stats` | `classic_settings.reset_cache_stats` | `matched` |
-| `settings.lib.validate_setting_value` | `settings` | `classic-settings-core` | `validate_setting_value` | `classic_settings.validate_setting_value` | `matched` |
+| `settings.lib.reset_cache_stats` | `settings` | `classic-shared-core` | `reset_cache_stats` | `classic_settings.reset_cache_stats` | `matched` |
+| `settings.lib.validate_setting_value` | `settings` | `classic-shared-core` | `validate_setting_value` | `classic_settings.validate_setting_value` | `matched` |
 | `shared.path.PathHandler` | `shared` | `classic-shared-core` | `PathHandler` | `classic_shared.PathHandler` | `matched` |
 | `shared.path.PathHandler.__init__` | `shared` | `classic-shared-core` | `PathHandler` | `classic_shared.PathHandler.__init__` | `matched` |
 | `shared.path.PathHandler.cache_metrics` | `shared` | `classic-shared-core` | `PathHandler` | `classic_shared.PathHandler.cache_metrics` | `matched` |
@@ -1025,7 +1025,7 @@
 | `shared.performance.RustPerformanceMonitor.record_metric` | `shared` | `classic-shared-core` | `PerformanceMetrics` | `classic_shared.RustPerformanceMonitor.record_metric` | `matched` |
 | `shared.performance.RustPerformanceMonitor.start_timer` | `shared` | `classic-shared-core` | `PerformanceMetrics` | `classic_shared.RustPerformanceMonitor.start_timer` | `matched` |
 | `shared.performance.RustPerformanceMonitor.stop_timer` | `shared` | `classic-shared-core` | `PerformanceMetrics` | `classic_shared.RustPerformanceMonitor.stop_timer` | `matched` |
-| `shared.performance.performance_py@rust` | `shared` | `classic-perf-core` | `record_timing` | `classic_shared.RustPerformanceMonitor` | `matched` |
+| `shared.performance.performance_py@rust` | `shared` | `classic-shared-core` | `record_timing` | `classic_shared.RustPerformanceMonitor` | `matched` |
 | `shared.runtime.ClassicError@rust` | `shared` | `classic-shared-py` | `ClassicError` | `classic_shared.RuntimeStats` | `matched` |
 | `shared.runtime.ClassicResult@rust` | `shared` | `classic-shared-py` | `ClassicResult` | `classic_shared.RuntimeStats` | `matched` |
 | `shared.runtime.ResultExt@rust` | `shared` | `classic-shared-py` | `ResultExt` | `classic_shared.RuntimeStats` | `matched` |

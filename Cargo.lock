@@ -727,7 +727,6 @@ dependencies = [
  "anyhow",
  "classic-config-core",
  "classic-registry-core",
- "classic-settings-core",
  "classic-shared-core",
  "classic-shared-py",
  "classic-vocabulary",
@@ -958,12 +957,8 @@ dependencies = [
 name = "classic-perf-core"
 version = "9.1.0"
 dependencies = [
- "dashmap",
- "serde",
- "serde_json",
+ "classic-shared-core",
  "serial_test",
- "thiserror 2.0.18",
- "tokio",
 ]
 
 [[package]]
@@ -1178,21 +1173,16 @@ dependencies = [
 name = "classic-settings-core"
 version = "9.1.0"
 dependencies = [
- "anyhow",
- "classic-perf-core",
  "classic-shared-core",
  "criterion 0.8.2",
- "dashmap",
  "dhat",
  "indexmap",
- "parking_lot",
  "quick_cache",
  "rayon",
  "serde",
  "serde_json",
  "serial_test",
  "tempfile",
- "thiserror 2.0.18",
  "tokio",
  "tracing",
  "yaml-rust2",
@@ -1203,6 +1193,7 @@ name = "classic-settings-py"
 version = "9.1.0"
 dependencies = [
  "classic-settings-core",
+ "classic-shared-core",
  "classic-shared-py",
  "pyo3",
  "pyo3-async-runtimes",
@@ -1220,6 +1211,7 @@ dependencies = [
  "lasso",
  "log",
  "parking_lot",
+ "quick_cache",
  "rayon",
  "rustc-hash 2.1.2",
  "serde",
@@ -1227,9 +1219,12 @@ dependencies = [
  "serial_test",
  "smartstring",
  "string_cache",
+ "tempfile",
  "thiserror 2.0.18",
  "tokio",
+ "tracing",
  "xxhash-rust",
+ "yaml-rust2",
 ]
 
 [[package]]
@@ -1282,7 +1277,6 @@ dependencies = [
  "classic-config-core",
  "classic-file-io-core",
  "classic-path-core",
- "classic-settings-core",
  "classic-shared-core",
  "dotenvy",
  "futures",
@@ -1303,7 +1297,6 @@ dependencies = [
 name = "classic-update-py"
 version = "9.1.0"
 dependencies = [
- "classic-settings-core",
  "classic-shared-core",
  "classic-shared-py",
  "classic-update-core",

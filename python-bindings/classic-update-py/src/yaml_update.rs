@@ -14,7 +14,7 @@
 //! - The pytest smoke test (Section 10.3) only needs the `Update Check:
 //!   false` short-circuit, which is trivially synchronous.
 
-use classic_settings_core::{SchemaCompat, SchemaVersion};
+use classic_shared_core::yaml::{SchemaCompat, SchemaVersion};
 use classic_update_core as core;
 use pyo3::prelude::*;
 use std::path::PathBuf;

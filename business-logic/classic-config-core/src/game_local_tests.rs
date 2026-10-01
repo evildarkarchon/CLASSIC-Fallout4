@@ -1,5 +1,5 @@
 use super::persist_game_local_paths;
-use classic_settings_core::load_yaml_merged_async;
+use classic_shared_core::yaml::load_yaml_merged_async;
 use std::path::Path;
 use tempfile::tempdir;
 

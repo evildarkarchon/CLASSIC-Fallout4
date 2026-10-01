@@ -8,7 +8,8 @@ use crate::default_settings::{
     USER_SETTINGS_SCHEMA_MAJOR, USER_SETTINGS_SCHEMA_MINOR,
 };
 use crate::{DocumentClassification, Revision, SourceLocation, UserSettings};
-use classic_settings_core::{Yaml, YamlOperations, parse_yaml_content};
+use classic_settings_core::YamlOperations;
+use classic_shared_core::yaml::{Yaml, parse_yaml_content};
 use classic_vocabulary::Vocabulary;
 use sha2::{Digest, Sha256};
 use std::fmt;

@@ -7,7 +7,7 @@ This document describes the different caching patterns used in the CLASSIC Rust 
 | Pattern | Crate | Key Type | Value Type | Invalidation | Use Case |
 |---------|-------|----------|------------|--------------|----------|
 | File Mod-Time Cache | `classic-settings-core` | `PathBuf` | YAML + metadata | Automatic (file change) | Config files |
-| String-Key Cache | `classic-settings-core` | `String` | `Arc<Vec<Yaml>>` | Manual | Loaded YAML settings |
+| String-Key Cache | `classic-shared-core` (`yaml`) | `String` | `Arc<Vec<Yaml>>` | Manual | Loaded YAML settings |
 | Dynamic Registry | `classic-registry-core` | `String` | `Arc<dyn Any>` | Manual | Application state |
 | Path Hash Cache | `classic-file-io-core` | `PathBuf` | `String` | Manual | File integrity |
 | Time Series Metrics | `classic-perf-core` | `String` | `Vec<f64>` | Manual | Performance data |
@@ -58,7 +58,7 @@ if let Some(cached) = CACHE.get(&path) {
 
 ### 2. String-Key Cache (Settings)
 
-**Location**: `business-logic/classic-settings-core/src/cache.rs`
+**Location**: `foundation/classic-shared-core/src/yaml/logical_key_cache.rs` (moved from `classic-settings-core`, which still re-exports it)
 
 **Purpose**: Cache loaded YAML settings with logical names for fast lookup.
 
@@ -199,10 +199,10 @@ static METRICS: Lazy<DashMap<String, Vec<f64>>> = Lazy::new(DashMap::new);
 
 **Example Usage**:
 ```rust
-// Record timings
-record_timing("database_query", 0.123);
-record_timing("database_query", 0.145);
-record_timing("file_load", 0.045);
+// Record timings (invalid or overflowing samples return Err and change nothing)
+record_timing("database_query", 0.123)?;
+record_timing("database_query", 0.145)?;
+record_timing("file_load", 0.045)?;
 
 // Get summary statistics
 let summary = get_summary();

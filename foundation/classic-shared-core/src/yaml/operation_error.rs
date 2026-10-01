@@ -44,7 +44,7 @@ use thiserror::Error;
 ///
 /// # Example
 /// ```rust
-/// use classic_settings_core::YamlError;
+/// use classic_shared_core::yaml::YamlError;
 ///
 /// fn handle_yaml() -> Result<(), YamlError> {
 ///     // Example usage of the YamlError enum.
@@ -94,5 +94,5 @@ pub enum YamlError {
 }
 
 #[cfg(test)]
-#[path = "error_tests.rs"]
+#[path = "operation_error_tests.rs"]
 mod tests;

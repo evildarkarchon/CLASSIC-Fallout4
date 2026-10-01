@@ -5,7 +5,7 @@
 //! [`crate::installed_yaml_data`]. This module is the private machinery it (and
 //! the narrow startup-path version reader) share; it is deliberately **not** a
 //! public interface, because a caller that could name a [`ShippableFile`] and
-//! supply its own [`classic_settings_core::SchemaCompat`] would be selecting
+//! supply its own [`classic_shared_core::yaml::SchemaCompat`] would be selecting
 //! Installed YAML Data with a policy config core does not own.
 //!
 //! Only two things escape the crate:

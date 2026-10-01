@@ -1,4 +1,5 @@
 use super::*;
+use classic_shared_core::performance_core::get_global_metrics;
 use serial_test::serial;
 use std::thread;
 use std::time::Duration;
@@ -10,7 +11,7 @@ fn test_timer_basic() {
 
     let timer = start_timer("test_op");
     thread::sleep(Duration::from_millis(10));
-    timer.finish();
+    timer.finish().unwrap();
 
     let summary = get_summary();
     assert!(summary.contains_key("test_op"));
@@ -27,7 +28,7 @@ fn test_multiple_timings() {
     for _i in 0..5 {
         let timer = start_timer("batch_op");
         thread::sleep(Duration::from_millis(10));
-        timer.finish();
+        timer.finish().unwrap();
     }
 
     let summary = get_summary();
@@ -42,11 +43,9 @@ fn test_summary_statistics() {
     clear_metrics();
 
     // Record timings with known values
-    record_timing("stats_test", 1.0);
-    record_timing("stats_test", 2.0);
-    record_timing("stats_test", 3.0);
-    record_timing("stats_test", 4.0);
-    record_timing("stats_test", 5.0);
+    for seconds in [1.0, 2.0, 3.0, 4.0, 5.0] {
+        record_timing("stats_test", seconds).unwrap();
+    }
 
     let summary = get_summary();
     let stats = summary.get("stats_test").unwrap();
@@ -63,7 +62,7 @@ fn test_summary_statistics() {
 fn test_clear_metrics() {
     clear_metrics();
 
-    record_timing("clear_test", 1.0);
+    record_timing("clear_test", 1.0).unwrap();
     assert!(get_summary().contains_key("clear_test"));
 
     clear_metrics();
@@ -81,7 +80,7 @@ fn test_thread_safety() {
                 for _ in 0..10 {
                     let timer = start_timer(format!("thread_{}", i));
                     thread::sleep(Duration::from_micros(100));
-                    timer.finish();
+                    timer.finish().unwrap();
                 }
             })
         })
@@ -116,4 +115,30 @@ fn test_timer_drop_records() {
 
     let summary = get_summary();
     assert!(summary.contains_key("drop_test"));
+}
+
+#[test]
+#[serial]
+fn test_facade_shares_the_shared_core_default_store() {
+    clear_metrics();
+    record_timing("facade", 0.5).unwrap();
+    assert_eq!(get_global_metrics().get_stats("facade").unwrap().count, 1);
+
+    // Clearing the shared-core store is visible through the facade.
+    get_global_metrics().clear();
+    assert!(get_summary().is_empty());
+}
+
+#[test]
+#[serial]
+fn test_invalid_samples_are_rejected_without_mutation() {
+    clear_metrics();
+    record_timing("kept", 0.25).unwrap();
+    let before = get_summary();
+
+    for value in [-0.001, f64::NAN, f64::INFINITY, f64::NEG_INFINITY, 1e300] {
+        assert!(record_timing("kept", value).is_err(), "{value} accepted");
+    }
+    assert_eq!(get_summary(), before);
+    clear_metrics();
 }

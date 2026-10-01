@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-08T07:48:54Z",
+  "generated_at_utc": "2026-10-01T04:25:15Z",
   "schema_version": 2,
   "entries": [
     {
@@ -1492,8 +1492,8 @@
         "args": [],
         "returnType": null
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "reset_cache_stats"
     },
     {
@@ -1535,8 +1535,8 @@
         "args": [],
         "returnType": null
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "clear_cache"
     },
     {
@@ -1550,8 +1550,8 @@
         "args": [],
         "returnType": "usize"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "cache_stats"
     },
     {
@@ -1565,8 +1565,8 @@
         "args": [],
         "returnType": "CacheStats"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "cache_stats"
     },
     {
@@ -2543,8 +2543,8 @@
           "type": "usize"
         }
       ],
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "CacheStats"
     },
     {
@@ -5682,8 +5682,8 @@
         "args": [],
         "returnType": null
       },
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "clear_metrics"
     },
     {
@@ -5702,8 +5702,8 @@
         ],
         "returnType": "f64"
       },
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "get_summary"
     },
     {
@@ -5722,8 +5722,8 @@
         ],
         "returnType": "u32"
       },
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "get_summary"
     },
     {
@@ -5737,8 +5737,8 @@
         "args": [],
         "returnType": "Vec<String>"
       },
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "get_summary"
     },
     {
@@ -5759,10 +5759,10 @@
             "type": "f64"
           }
         ],
-        "returnType": null
+        "returnType": "Result<()>"
       },
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "record_timing"
     },
     {
@@ -11114,8 +11114,8 @@
         "args": [],
         "returnType": "Vec<String>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "cache_keys"
     },
     {
@@ -11129,8 +11129,8 @@
         "args": [],
         "returnType": "u64"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "cache_size"
     },
     {
@@ -11144,8 +11144,8 @@
         "args": [],
         "returnType": "SettingsCacheStats"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "cache_stats"
     },
     {
@@ -11159,8 +11159,8 @@
         "args": [],
         "returnType": null
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "clear_cache"
     },
     {
@@ -11183,8 +11183,8 @@
         ],
         "returnType": "Result<SettingsCoercedValue>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "coerce_setting_value"
     },
     {
@@ -11203,8 +11203,8 @@
         ],
         "returnType": "bool"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "invalidate"
     },
     {
@@ -11223,8 +11223,8 @@
         ],
         "returnType": "bool"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "is_cached"
     },
     {
@@ -11247,8 +11247,8 @@
         ],
         "returnType": "Result<u32>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "load_settings_async"
     },
     {
@@ -11267,8 +11267,8 @@
         ],
         "returnType": "Result<u32>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "load_batch_async"
     },
     {
@@ -11287,8 +11287,8 @@
         ],
         "returnType": "Result<u32>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "load_batch_sync"
     },
     {
@@ -11311,8 +11311,8 @@
         ],
         "returnType": "Result<u32>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "load_settings_sync"
     },
     {
@@ -11326,8 +11326,8 @@
         "args": [],
         "returnType": null
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "reset_cache_stats"
     },
     {
@@ -11350,8 +11350,8 @@
         ],
         "returnType": "Result<bool>"
       },
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "validate_setting_value"
     },
     {
@@ -12725,8 +12725,8 @@
           "type": "u64"
         }
       ],
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "CacheStats"
     },
     {
@@ -12758,8 +12758,8 @@
           "type": "bool"
         }
       ],
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "CoercedValue"
     },
     {

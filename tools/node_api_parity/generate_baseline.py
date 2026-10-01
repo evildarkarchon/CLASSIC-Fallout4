@@ -210,9 +210,9 @@ EXECUTABLE_AUX_CRATES = {
     "registryGet": "classic-registry-core",
     "registryRemove": "classic-registry-core",
     "registryClear": "classic-registry-core",
-    "recordTimingMetric": "classic-perf-core",
-    "getMetricsSummary": "classic-perf-core",
-    "clearAllMetrics": "classic-perf-core",
+    "recordTimingMetric": "classic-shared-core",
+    "getMetricsSummary": "classic-shared-core",
+    "clearAllMetrics": "classic-shared-core",
 }
 
 
@@ -238,8 +238,9 @@ def enrich_executable_aux_owners(contract: dict[str, Any]) -> dict[str, Any]:
         if version_symbol is not None:
             mapping["rustCrate"] = "classic-version-core"
             mapping["rustSymbol"] = version_symbol
-    # settings.rs delegates these exports to the generic settings cache, not
-    # classic-config-core's explicit application YAML loader.
+    # settings.rs delegates these exports to the generic logical-key cache in
+    # classic-shared-core's `yaml` module, not classic-config-core's explicit
+    # application YAML loader.
     settings_routes = {
         "loadSettingsSync": "load_settings_sync",
         "loadSettingsAsync": "load_settings_async",
@@ -257,7 +258,7 @@ def enrich_executable_aux_owners(contract: dict[str, Any]) -> dict[str, Any]:
     for mapping in contract.get("tier1Mappings", []):
         symbol = settings_routes.get(mapping.get("nodeExport"))
         if symbol is not None:
-            mapping["rustCrate"] = "classic-settings-core"
+            mapping["rustCrate"] = "classic-shared-core"
             mapping["rustSymbol"] = symbol
     return enrich_version_registry_owners(contract)
 

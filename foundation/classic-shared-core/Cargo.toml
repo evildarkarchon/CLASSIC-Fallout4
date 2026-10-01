@@ -4,7 +4,7 @@ version = "9.1.0"
 edition = "2024"
 rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
-description = "Pure Rust foundation utilities for CLASSIC - runtime, errors, and business logic"
+description = "Pure Rust foundation utilities for CLASSIC - runtime, errors, generic YAML, and business logic"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
@@ -35,14 +35,21 @@ xxhash-rust = { workspace = true }
 
 # Logging
 log = { workspace = true }
+# Logical-key YAML cache hit/miss trace events
+tracing = { workspace = true }
 
 # Serialization
 serde = { workspace = true }
+
+# Generic YAML parsing, loaders, and the bounded logical-key cache
+yaml-rust2 = { workspace = true }
+quick_cache = { workspace = true }
 
 [dev-dependencies]
 criterion = { version = "0.8.1", features = ["html_reports"] }
 serial_test = "3.2"
 serde_json = { workspace = true }
+tempfile = "3.14"
 
 [[bench]]
 name = "string_benchmarks"

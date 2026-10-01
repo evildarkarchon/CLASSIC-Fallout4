@@ -8,7 +8,7 @@ use crate::default_settings::{
 };
 use crate::document::{Diagnostic, PreferenceOrigin};
 use crate::preference::Preference;
-use classic_settings_core::Yaml;
+use classic_shared_core::yaml::Yaml;
 
 /// Cohesive, widget-independent User Settings state remembered by frontends.
 #[derive(Debug, Clone, PartialEq, Eq)]

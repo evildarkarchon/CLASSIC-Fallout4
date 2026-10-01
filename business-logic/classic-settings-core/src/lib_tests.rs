@@ -58,3 +58,31 @@ async fn test_public_reexports_support_async_workflow() {
     clear_cache();
     assert_eq!(cache_size(), 0);
 }
+
+/// The facade must forward to the shared-core owner rather than keep a second
+/// cache: entries, counters, and clears are visible through both paths.
+#[test]
+#[serial]
+fn test_facade_and_shared_core_share_one_logical_key_cache() {
+    use classic_shared_core::yaml as shared_yaml;
+
+    clear_cache();
+    reset_cache_stats();
+
+    let file = create_test_yaml("game: Fallout4\n");
+    shared_yaml::load_settings_sync("shared_owner_key", file.path()).unwrap();
+
+    assert!(is_cached("shared_owner_key"));
+    assert!(get_cached("shared_owner_key").is_some());
+    assert_eq!(shared_yaml::cache_stats().hits, 1);
+
+    clear_cache();
+    assert!(!shared_yaml::is_cached("shared_owner_key"));
+    assert_eq!(shared_yaml::cache_size(), 0);
+
+    // Clearing entries does not reset counters; resetting through the facade
+    // resets the owner's counters.
+    assert_eq!(shared_yaml::cache_stats().hits, 1);
+    reset_cache_stats();
+    assert_eq!(shared_yaml::cache_stats().hits, 0);
+}

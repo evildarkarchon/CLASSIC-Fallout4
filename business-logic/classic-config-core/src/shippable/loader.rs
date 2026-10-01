@@ -60,7 +60,7 @@
 
 use classic_file_io_core::{SelfHealOutcome, self_heal};
 use classic_path_core::{yaml_cache_dir, yaml_cache_dir_with_env};
-use classic_settings_core::{
+use classic_shared_core::yaml::{
     Compatibility, SchemaCompat, SchemaVersion, YamlSchemaError, extract_schema_version,
     load_yaml_merged_async, schema_compat_check,
 };

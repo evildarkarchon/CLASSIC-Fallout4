@@ -1,20 +1,20 @@
 //! Public validator and cached-document observations without host settings.
 use super::{RunnerResult, invalid, text};
-use classic_settings_core as settings;
+use classic_shared_core::yaml as shared_yaml;
 use serde_json::{Value, json};
 
 /// Reset the process-global cache even when a fixture or native operation fails.
 struct CacheReset;
 impl Drop for CacheReset {
     fn drop(&mut self) {
-        settings::clear_cache();
+        shared_yaml::clear_cache();
     }
 }
 
 /// Exercise public operations and retain exact coerced values or cached payloads.
 pub(super) fn execute(family: &str, fixture: &Value) -> RunnerResult<Value> {
     if family == "settings-validation" {
-        use settings::validators::{
+        use shared_yaml::validators::{
             CoercedValue, SettingType, coerce_setting_value, validate_setting_value,
         };
         let mut results = Vec::new();
@@ -49,18 +49,18 @@ pub(super) fn execute(family: &str, fixture: &Value) -> RunnerResult<Value> {
         }
         return Ok(json!({"results":results}));
     }
-    settings::clear_cache();
+    shared_yaml::clear_cache();
     let _reset = CacheReset;
     let temporary = tempfile::tempdir()?;
     let path = temporary.path().join("input.yaml");
     let key = "conformance.cached-docs";
     let before = cached(key)?;
     std::fs::write(&path, text(&fixture["content"])?)?;
-    settings::load_settings_sync(key, &path)?;
+    shared_yaml::load_settings_sync(key, &path)?;
     let loaded = cached(key)?;
     std::fs::write(&path, text(&fixture["replacement"])?)?;
     let after = cached(key)?;
-    settings::invalidate(key);
+    shared_yaml::invalidate(key);
     let after_invalidate = cached(key)?;
     // Inspect after the final public read so even invalidation-time writeback is visible.
     let mut files = serde_json::Map::new();
@@ -72,7 +72,7 @@ pub(super) fn execute(family: &str, fixture: &Value) -> RunnerResult<Value> {
 
 /// Normalize public YAML values while preserving absent and cached-empty results.
 fn cached(key: &str) -> RunnerResult<Value> {
-    match settings::get_cached(key) {
+    match shared_yaml::get_cached(key) {
         None => Ok(Value::Null),
         Some(docs) => Ok(Value::Array(
             docs.iter()

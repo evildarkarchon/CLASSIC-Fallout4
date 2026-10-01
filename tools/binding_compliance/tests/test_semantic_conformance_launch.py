@@ -24,6 +24,21 @@ def test_new_native_helpers_automatically_enter_source_identity() -> None:
 
 
 @pytest.mark.parametrize("family", SUPPORTED_FAMILIES)
+def test_generic_yaml_owner_enters_every_family_source_identity(family: str) -> None:
+    """Every family fingerprints the shared-core YAML owner it reaches through settings.
+
+    The generic YAML rules and logical-key cache moved out of
+    classic-settings-core, so a change there must still mark CXX evidence stale
+    for families that only hashed the old settings-core location.
+    """
+    from conformance.adapters.prepare_cxx_conformance import _cxx_source_paths
+
+    assert REPO_ROOT / "foundation/classic-shared-core/src/yaml" in _cxx_source_paths(
+        REPO_ROOT, family
+    )
+
+
+@pytest.mark.parametrize("family", SUPPORTED_FAMILIES)
 def test_native_semantic_family_plans_are_fresh_and_input_only(
         tmp_path: Path,
         family: str,

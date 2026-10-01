@@ -18,7 +18,7 @@ fn main() {
     {
         let timer = start_timer("simple_operation");
         thread::sleep(Duration::from_millis(100));
-        timer.finish();
+        timer.finish().expect("short samples cannot overflow");
     }
 
     // Example 2: Automatic timing with drop
@@ -34,7 +34,7 @@ fn main() {
     for i in 1..=5 {
         let timer = start_timer("batch_operation");
         thread::sleep(Duration::from_millis(20 + i * 5));
-        timer.finish();
+        timer.finish().expect("short samples cannot overflow");
     }
 
     // Example 4: Check elapsed time
@@ -43,9 +43,9 @@ fn main() {
         let timer = start_timer("elapsed_check");
         thread::sleep(Duration::from_millis(30));
         let elapsed = timer.elapsed();
-        println!("   Current elapsed: {:.3}s", elapsed);
+        println!("   Current elapsed: {:.3}s", elapsed.as_secs_f64());
         thread::sleep(Duration::from_millis(20));
-        timer.finish();
+        timer.finish().expect("short samples cannot overflow");
     }
 
     // Get and display summary statistics

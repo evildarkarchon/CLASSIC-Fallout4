@@ -5,7 +5,7 @@ use super::default_settings::{
     RESULTS_TAB_DEFAULT, USER_SETTINGS_SCHEMA_MAJOR, USER_SETTINGS_SCHEMA_MINOR,
     published_defaults_document, registry_is_valid,
 };
-use classic_settings_core::{Yaml, parse_yaml_content};
+use classic_shared_core::yaml::{Yaml, parse_yaml_content};
 
 /// Byte offsets and newline convention for the embedded literal scalar.
 struct MirrorBlock {

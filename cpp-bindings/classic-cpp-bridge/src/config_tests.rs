@@ -1386,7 +1386,7 @@ fn test_settings_cache_stats_helpers_forward_core_surface() {
     file.write_all(b"key: value\n").expect("write temp yaml");
     file.flush().expect("flush temp yaml");
 
-    classic_settings_core::load_settings_sync("bridge-settings", file.path())
+    classic_shared_core::yaml::load_settings_sync("bridge-settings", file.path())
         .expect("load settings into cache");
 
     let populated = settings_cache_stats();

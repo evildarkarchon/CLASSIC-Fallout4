@@ -3,7 +3,7 @@
 use super::cache::{
     CACHE_HITS, CACHE_MISSES, CachedYaml, YAML_CACHE, total_cached_bytes, yaml_cache_stats,
 };
-use super::error::YamlError;
+use classic_shared_core::yaml::YamlError;
 use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::Path;

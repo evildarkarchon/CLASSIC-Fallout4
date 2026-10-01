@@ -59,11 +59,11 @@ use classic_config_core::{
 };
 use classic_file_io_core::{FileIOError, RollbackOutcome as FsRollbackOutcome, install_atomic};
 use classic_path_core::{ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env};
-use classic_settings_core::{
+use classic_shared_core::GameId;
+use classic_shared_core::yaml::{
     Compatibility, SchemaCompat, SchemaVersion, extract_schema_version, parse_yaml_content,
     schema_compat_check,
 };
-use classic_shared_core::GameId;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
