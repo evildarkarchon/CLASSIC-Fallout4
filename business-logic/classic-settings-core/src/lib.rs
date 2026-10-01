@@ -2,19 +2,16 @@
 //!
 //! The generic YAML rules this crate used to own (parsing, document and
 //! merge-key merging, sync/async loaders, scalar validators, schema-version
-//! compatibility, and the logical-key settings cache) now live in
+//! compatibility, the logical-key settings cache, and [`YamlOperations`] with
+//! its path/mtime-aware YAML-file cache) now live in
 //! [`classic_shared_core::yaml`]. Every such item below is a `pub use` of that
 //! owner, so loading through this facade or through `classic_shared_core::yaml`
-//! reads and clears the same logical-key cache, with the same capacity,
-//! freshness, counters, and errors.
+//! reads and clears the same default-scope caches, with the same capacity,
+//! freshness, counters, and errors. The two caches stay distinct from each
+//! other.
 //!
-//! This crate still owns two things until their own migrations land:
-//!
-//! - [`YamlFile`], CLASSIC's domain-specific YAML file identity, until config
-//!   takes ownership of file policy.
-//! - [`YamlOperations`] and its path/mtime-aware YAML-file cache
-//!   ([`yaml_cache_stats`], [`clear_global_yaml_cache`], ...), which stays
-//!   distinct from the logical-key cache.
+//! This crate still owns [`YamlFile`], CLASSIC's domain-specific YAML file
+//! identity, until config takes ownership of file policy.
 //!
 //! The crate identity is scheduled for retirement once its remaining callers
 //! import the accepted owners directly.
@@ -81,9 +78,6 @@
 
 mod yaml_file;
 
-// YAML operations (absorbed from classic-yaml-core per D-01)
-mod yaml_ops;
-
 // Generic YAML rules re-exported from their shared-core owner.
 pub use classic_shared_core::yaml::validators;
 pub use classic_shared_core::yaml::{
@@ -97,8 +91,9 @@ pub use classic_shared_core::yaml::{
 };
 pub use yaml_file::*;
 
-// YAML operations re-exports (D-04 flat re-exports)
-pub use yaml_ops::{
+// YAML operations and the path/mtime-aware YAML-file cache, re-exported from
+// their shared-core owner (formerly the D-04 flat re-exports of `yaml_ops`).
+pub use classic_shared_core::yaml::{
     YamlCacheStats, YamlError, YamlOperations, clear_global_yaml_cache, reset_yaml_cache_stats,
     yaml_cache_stats,
 };

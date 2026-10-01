@@ -18,8 +18,6 @@ classic-shared-core = { path = "../../foundation/classic-shared-core" }
 semver = { workspace = true }
 serde = { workspace = true }
 
-# YAML loading
-classic-settings-core = { path = "../classic-settings-core" }
 yaml-rust2 = { workspace = true }
 
 # Error handling

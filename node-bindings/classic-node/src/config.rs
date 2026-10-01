@@ -655,10 +655,12 @@ pub fn create_yaml_data_from_content(
 
 /// Clear the global YAML cache.
 ///
-/// Useful for testing to ensure clean state between test runs.
+/// Useful for testing to ensure clean state between test runs. Clears the
+/// default (unscoped) path/mtime-aware YAML-file cache that config's loaders
+/// use; counters are kept.
 #[napi]
 pub fn clear_yaml_cache() {
-    classic_config_core::clear_global_yaml_cache();
+    classic_shared_core::yaml::clear_global_yaml_cache();
 }
 
 /// Get the file path for a YAML source.

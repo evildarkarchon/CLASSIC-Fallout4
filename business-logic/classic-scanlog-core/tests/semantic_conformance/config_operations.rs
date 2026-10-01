@@ -68,8 +68,8 @@ pub(super) fn execute(fixture: &Value) -> RunnerResult<Value> {
         fs::write(root.join(name), text(content)?)?;
     }
     if fixture["operation"] == "clear-cache" {
-        classic_settings_core::clear_global_yaml_cache();
-        classic_settings_core::clear_global_yaml_cache();
+        classic_shared_core::yaml::clear_global_yaml_cache();
+        classic_shared_core::yaml::clear_global_yaml_cache();
         return Ok(json!({"result": [null, null], "error": null, "files": inventory(root, root)?}));
     }
     if fixture["operation"] == "persist-local" {

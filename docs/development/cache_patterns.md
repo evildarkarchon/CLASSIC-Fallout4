@@ -6,7 +6,7 @@ This document describes the different caching patterns used in the CLASSIC Rust 
 
 | Pattern | Crate | Key Type | Value Type | Invalidation | Use Case |
 |---------|-------|----------|------------|--------------|----------|
-| File Mod-Time Cache | `classic-settings-core` | `PathBuf` | YAML + metadata | Automatic (file change) | Config files |
+| File Mod-Time Cache | `classic-shared-core` (`yaml`) | `PathBuf` | YAML + metadata | Automatic (file change) | Config files |
 | String-Key Cache | `classic-shared-core` (`yaml`) | `String` | `Arc<Vec<Yaml>>` | Manual | Loaded YAML settings |
 | Dynamic Registry | `classic-registry-core` | `String` | `Arc<dyn Any>` | Manual | Application state |
 | Path Hash Cache | `classic-file-io-core` | `PathBuf` | `String` | Manual | File integrity |
@@ -17,7 +17,9 @@ This document describes the different caching patterns used in the CLASSIC Rust 
 
 ### 1. File Mod-Time Cache (YAML)
 
-**Location**: `business-logic/classic-settings-core/src/` (absorbed the former `classic-yaml-core` in v9.1.0 Phase 1)
+**Location**: `foundation/classic-shared-core/src/yaml/file_cache.rs` and `operations.rs` (moved from `classic-settings-core`, which absorbed the former `classic-yaml-core` in v9.1.0 Phase 1 and still re-exports it)
+
+**Scopes**: the store lives behind a `YamlFileCacheScope` handle. `YamlOperations::new()` and the free functions use the process default scope; `YamlOperations::with_cache_scope(YamlFileCacheScope::new_isolated())` gives a caller (such as one Python facade) its own entries and counters. The String-Key Cache below has the matching `LogicalKeyCacheScope`.
 
 **Purpose**: Cache parsed YAML files with automatic invalidation when the source file changes.
 

@@ -4757,8 +4757,8 @@
       "rustSymbol": "yaml_ops_cache_size",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "yaml_cache_stats"
     },
     {
@@ -4766,8 +4766,8 @@
       "rustSymbol": "yaml_ops_cache_stats",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "yaml_cache_stats"
     },
     {
@@ -4775,8 +4775,8 @@
       "rustSymbol": "yaml_ops_clear_cache",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "clear_cache"
     },
     {
@@ -4784,8 +4784,8 @@
       "rustSymbol": "yaml_ops_dump",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "dump_yaml"
     },
     {
@@ -4793,8 +4793,8 @@
       "rustSymbol": "yaml_ops_get_setting_value",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "get_setting"
     },
     {
@@ -4802,8 +4802,8 @@
       "rustSymbol": "yaml_ops_get_string",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "get_string_value"
     },
     {
@@ -4811,8 +4811,8 @@
       "rustSymbol": "yaml_ops_get_vec",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "get_vec_value"
     },
     {
@@ -4820,8 +4820,8 @@
       "rustSymbol": "yaml_ops_has_document",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "YamlOperations"
     },
     {
@@ -4829,8 +4829,8 @@
       "rustSymbol": "yaml_ops_load_file",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "load_yaml_file"
     },
     {
@@ -4838,8 +4838,8 @@
       "rustSymbol": "yaml_ops_new",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "new"
     },
     {
@@ -4847,8 +4847,8 @@
       "rustSymbol": "yaml_ops_parse",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "parse_yaml"
     },
     {
@@ -4856,8 +4856,8 @@
       "rustSymbol": "yaml_ops_save_file",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "save_yaml_file"
     },
     {
@@ -4865,8 +4865,8 @@
       "rustSymbol": "yaml_ops_set_bool_setting",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "set_setting"
     },
     {
@@ -4874,8 +4874,8 @@
       "rustSymbol": "yaml_ops_set_integer_setting",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "set_setting"
     },
     {
@@ -4883,8 +4883,8 @@
       "rustSymbol": "yaml_ops_set_string_setting",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "set_setting"
     },
     {
@@ -4892,8 +4892,8 @@
       "rustSymbol": "yaml_ops_set_vec_setting",
       "kind": "function",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "set_setting"
     },
     {
@@ -4919,8 +4919,8 @@
       "rustSymbol": "YamlOps",
       "kind": "opaque",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "YamlOperations"
     },
     {
@@ -5135,8 +5135,8 @@
       "rustSymbol": "YamlCacheStatsDto",
       "kind": "struct",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "YamlCacheStats"
     },
     {
@@ -5144,8 +5144,8 @@
       "rustSymbol": "YamlValue",
       "kind": "struct",
       "bridgeModule": "settings",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "get_setting"
     },
     {

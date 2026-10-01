@@ -12,7 +12,6 @@ crate-type = ["rlib"]
 
 [dependencies]
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
-classic-settings-core = { path = "../classic-settings-core" }
 
 # Workspace-internal Durable Publication: staging, synchronization, the platform publish step,
 # and the one cross-process lock implementation.

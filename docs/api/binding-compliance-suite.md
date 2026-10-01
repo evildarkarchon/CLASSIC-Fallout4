@@ -343,7 +343,7 @@ tests; no public test API is introduced to reach internal durability failures.
 
 ```powershell
 python -m pip install "ruamel.yaml>=0.18,<0.19"
-uv sync --project python-bindings --inexact --group drift-guards
+uv sync --project python-bindings --inexact
 python tools/binding_compliance/run_user_settings_conformance.py --participant rust
 python tools/binding_compliance/run_user_settings_conformance.py --participant node
 uv run --project python-bindings python tools/binding_compliance/run_user_settings_conformance.py --participant python

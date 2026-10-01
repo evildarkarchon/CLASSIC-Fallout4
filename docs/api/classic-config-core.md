@@ -136,11 +136,11 @@ Changing a token is breaking for every binding consumer; rewording a label is no
 ### Re-exports from `lib.rs`
 
 - `get_runtime` from [`classic-shared-core`](../../foundation/classic-shared-core)
-- `clear_global_yaml_cache` from [`classic-settings-core`](../../business-logic/classic-settings-core) (historical note: that owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
+- `clear_global_yaml_cache` from [`classic_shared_core::yaml`](classic-shared-core.md#yaml-file-cache) (moved there from `classic-settings-core` in issue #240; historical note: that crate absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
 - crashgen rule-model and Crashgen Expectation Parser types/functions from `crashgen_rules` and `crashgen_expectation_parser`
 - Installed YAML Data request/result/snapshot/provenance/diagnostic/error types and loading/inspection functions from `installed_yaml_data`
 
-`clear_global_yaml_cache` is re-exported mainly for tests and cache-sensitive consumers.
+`clear_global_yaml_cache` is re-exported mainly for tests and cache-sensitive consumers. It clears the default YAML-file cache scope, which is the one config's own `YamlOperations::new()` loaders fill.
 
 ---
 
@@ -400,7 +400,7 @@ This flow is independent from User Settings and never opens or saves that docume
 2. The crate resolves file paths and checks that all three YAML files exist.
 3. It reads all three files in parallel with `tokio::join!`.
 4. It parses and merges every YAML document from each file.
-5. `YamlOperations` from [`classic-settings-core`](../../business-logic/classic-settings-core) extracts nested values.
+5. `YamlOperations` from [`classic_shared_core::yaml`](classic-shared-core.md#yamloperations) extracts nested values.
 6. `Crashgen_Registry` is parsed into `HashMap<String, CrashgenEntryRaw>`.
 7. Metadata fallbacks are applied from [`classic-version-registry-core`](../../business-logic/classic-version-registry-core):
    - `crashgen_name`

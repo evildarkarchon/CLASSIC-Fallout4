@@ -1,5 +1,5 @@
 #![allow(missing_docs)]
-//! Criterion benchmarks for classic-settings-core YAML operations.
+//! Criterion benchmarks for classic-shared-core YAML operations (`yaml::YamlOperations`).
 //!
 //! This module benchmarks YAML parsing, serialization, traversal, and modification
 //! operations using realistic workloads similar to CLASSIC's configuration files.
@@ -15,16 +15,19 @@
 //!
 //! # Verify benchmark compiles
 //! cargo bench --bench yaml_benchmarks -- --test
+//!
+//! # Heap profile with dhat (writes $DHAT_OUTPUT_FILE, default dhat-heap.json)
+//! cargo bench -p classic-shared-core --features dhat-heap --bench yaml_benchmarks
 //! ```
 
-use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group};
 use yaml_rust2::{Yaml, YamlLoader};
 
 // Import shared benchmark configuration from workspace benches/common/
 #[path = "../../../benches/common/mod.rs"]
 mod common;
 
-use classic_settings_core::YamlOperations;
+use classic_shared_core::yaml::YamlOperations;
 
 // =============================================================================
 // Test Data Generation
@@ -331,4 +334,35 @@ criterion_group! {
         yaml_operations_benchmarks
 }
 
-criterion_main!(benches);
+// With dhat-heap enabled, every allocation in this bench binary (Criterion's
+// own bookkeeping included) goes through dhat so the profiler can record it.
+#[cfg(feature = "dhat-heap")]
+#[global_allocator]
+static ALLOC: dhat::Alloc = dhat::Alloc;
+
+// Path-qualified so the import list stays warning-free under dhat-heap, where
+// the hand-written main below replaces this macro.
+#[cfg(not(feature = "dhat-heap"))]
+criterion::criterion_main!(benches);
+
+/// Runs the YAML benchmarks under a dhat heap profiler.
+///
+/// Hand-expanded `criterion_main!` so the profiler outlives every benchmark
+/// group: dhat writes its report when `_profiler` drops at the end of `main`.
+/// The report path comes from `DHAT_OUTPUT_FILE` (set by
+/// `scripts/profile/run_dhat.ps1`) and falls back to dhat's own
+/// `dhat-heap.json` in the working directory, which `cargo bench` sets to the
+/// crate root.
+#[cfg(feature = "dhat-heap")]
+fn main() {
+    let builder = dhat::Profiler::builder();
+    let builder = match std::env::var_os("DHAT_OUTPUT_FILE") {
+        Some(path) => builder.file_name(path),
+        None => builder,
+    };
+    let _profiler = builder.build();
+
+    benches();
+
+    Criterion::default().configure_from_args().final_summary();
+}

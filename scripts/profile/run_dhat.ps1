@@ -15,7 +15,7 @@
     https://nnethercote.github.io/dh_view/dh_view.html
 
 .PARAMETER Crate
-    The crate to profile (e.g., classic-yaml-core, classic-settings-core).
+    The crate to profile (e.g., classic-shared-core).
 
 .PARAMETER Test
     Run tests instead of the binary.
@@ -26,21 +26,23 @@
 .PARAMETER Bench
     Run benchmarks with dhat feature enabled.
 
+.PARAMETER BenchTarget
+    Bench target to run when using -Bench (passed as `--bench <name>`).
+    Optional but recommended: without it every bench binary in the crate
+    runs, including ones that never install the dhat allocator.
+
 .PARAMETER Output
     Custom output directory for dhat files.
     Default: target/profiling/dhat/
 
 .EXAMPLE
-    .\run_dhat.ps1 -Crate classic-yaml-core -Test
-    # Profile yaml-core tests with dhat
+    .\run_dhat.ps1 -Crate classic-shared-core -Bench -BenchTarget yaml_benchmarks
+    # Profile the YAML benchmarks (the dhat-instrumented bench target)
 
 .EXAMPLE
-    .\run_dhat.ps1 -Crate classic-settings-core -Test -TestFilter "test_load"
-    # Profile specific test
-
-.EXAMPLE
-    .\run_dhat.ps1 -Crate classic-yaml-core -Bench
-    # Profile benchmarks
+    .\run_dhat.ps1 -Crate <crate> -Test -TestFilter "test_load"
+    # Profile a specific test; the crate's test code must install the dhat
+    # allocator and create a dhat::Profiler (see NOTES)
 
 .NOTES
     Requires the crate to have dhat-heap feature enabled:
@@ -66,6 +68,9 @@ param(
 
     [Parameter(HelpMessage = "Run benchmarks")]
     [switch]$Bench,
+
+    [Parameter(HelpMessage = "Bench target to run with -Bench")]
+    [string]$BenchTarget,
 
     [Parameter(HelpMessage = "Custom output directory")]
     [string]$Output
@@ -117,6 +122,11 @@ if ($Test) {
 } elseif ($Bench) {
     $cargoArgs += @("bench", "-p", $Crate, "--features", "dhat-heap")
     Write-Host "[Config] Running benchmarks" -ForegroundColor Yellow
+
+    if ($BenchTarget) {
+        $cargoArgs += @("--bench", $BenchTarget)
+        Write-Host "[Config] Bench target: $BenchTarget" -ForegroundColor Yellow
+    }
 } else {
     $cargoArgs += @("run", "-p", $Crate, "--features", "dhat-heap", "--release")
     Write-Host "[Config] Running binary" -ForegroundColor Yellow

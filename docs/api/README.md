@@ -9,14 +9,14 @@ The active API set now tracks the surviving 17 Rust business-logic crates plus t
 Use this directory in this order:
 
 1. [`QUICK_START.md`](QUICK_START.md) - repo-level setup, build, and test workflow
-2. [`classic-shared-core.md`](classic-shared-core.md) - shared runtime, error, path, string foundation helpers, the sole rolling timing implementation, and the generic YAML rules (`yaml`: parsing, merge, loaders, validators, schema compatibility, logical-key cache)
+2. [`classic-shared-core.md`](classic-shared-core.md) - shared runtime, error, path, string foundation helpers, the sole rolling timing implementation, and the generic YAML rules (`yaml`: parsing, merge, loaders, validators, schema compatibility, `YamlOperations`, and the scoped logical-key and path/mtime YAML-file caches)
 2a. [`classic-operation-context.md`](classic-operation-context.md) - unpublished task-local operation controls shared across Rust crate boundaries
 2b. [`classic-durable-publication.md`](classic-durable-publication.md) - unpublished business-logic staging, verified-backup, verified-install, and atomic publish mechanism that sits under its config, file-I/O, and User Settings consumers
 2c. [`classic-vocabulary.md`](classic-vocabulary.md) - unpublished Vocabulary naming contract: the trait by which a core crate owns the frozen Vocabulary Token and the reworkable Display Label for each variant of its domain enums
 3. [`classic-perf-core.md`](classic-perf-core.md) - seconds-based facade over the shared-core timing store (scheduled for retirement)
 4. [`classic-registry-core.md`](classic-registry-core.md) - process-wide typed singleton registry and convenience key helpers
 5. [`classic-message-core.md`](classic-message-core.md) - shared message DTOs, routing enums, and startup/log formatting helpers
-6. [`classic-settings-core.md`](classic-settings-core.md) - `YamlFile`, path-backed `YamlOperations`, and re-exports of the generic YAML rules now owned by `classic-shared-core` (scheduled for retirement)
+6. [`classic-settings-core.md`](classic-settings-core.md) - `YamlFile` plus re-exports of the generic YAML rules, `YamlOperations`, and both YAML caches now owned by `classic-shared-core` (scheduled for retirement)
 6a. [`classic-user-settings-core.md`](classic-user-settings-core.md) - exclusive typed, preservation-aware User Settings source/location/default/schema/serialization owner with reversible migrations and conflict-safe commits
 7. [`classic-version-registry-core.md`](classic-version-registry-core.md) - version registry and OG/NG/AE/VR selection metadata
 8. [`classic-version-core.md`](classic-version-core.md) - version parsing, text extraction, and PE-version helpers plus direct Version Registry re-exports
@@ -54,18 +54,18 @@ Need a path translation? Start with the shared [`workspace migration matrix`](..
 
 That order matches the current repo-root layering across `foundation/`, `business-logic/`, and the binding surfaces:
 
-- `classic-shared-core` provides the shared Tokio runtime plus common error, path, and string helpers, owns the one rolling `Duration` timing implementation with one default metrics store per linked library image, and owns the generic YAML rules in `classic_shared_core::yaml`: parsing, document and merge-key merging, sync/async loaders, scalar validators, schema compatibility, and the logical-key cache keyed by caller-chosen strings
+- `classic-shared-core` provides the shared Tokio runtime plus common error, path, and string helpers, owns the one rolling `Duration` timing implementation with one default metrics store per linked library image, and owns the generic YAML rules in `classic_shared_core::yaml`: parsing, document and merge-key merging, sync/async loaders, scalar validators, schema compatibility, the logical-key cache keyed by caller-chosen strings, and `YamlOperations` with its path/mtime-aware YAML-file cache; both caches sit behind opaque scope handles whose process default serves every unscoped caller
 - `classic-operation-context` carries workspace-internal per-operation cancellation state without owning a runtime or adding a binding surface
 - `classic-durable-publication` owns the workspace-internal staging, synchronization, verified-backup, verified-install, and atomic publish sequence plus the one cross-process publication lock, without owning backup location, conflict policy, or any binding surface. Rollback generations stay YAML Data Update Channel policy: the `.prev` convention is implemented only inside `install_verified`, unreachable from the operations the Local Ignore path uses
 - `classic-vocabulary` owns the workspace-internal Vocabulary naming contract - one trait, one token lookup, and one conformance assertion - so that the core crate defining a domain enum also owns what its variants are called, and every frontend and binding projects those names instead of maintaining a table. Vocabulary Tokens are frozen and breaking to change; Display Labels are presentation only and may be reworded. Only the enums cross a binding seam, so the crate itself has no binding surface
 - `classic-perf-core` re-exports the seconds view of the shared-core timing store; it owns no state and is scheduled for retirement once its callers import shared core directly
 - `classic-registry-core` provides process-wide typed singleton storage and key helpers for callers that share state across boundaries
 - `classic-message-core` provides shared message DTOs, routing enums, and structured/startup logging helpers used by bindings and bridge code
-- `classic-settings-core` provides the path-backed `YamlOperations` file cache with mtime-based invalidation and re-exports the generic YAML rules owned by `classic_shared_core::yaml` until its retirement (historical note: this owner absorbed the former `classic-yaml-core` crate during v9.1.0 Phase 1)
+- `classic-settings-core` re-exports the generic YAML rules, `YamlOperations`, and the path/mtime-aware YAML-file cache owned by `classic_shared_core::yaml` until its retirement (historical note: this owner absorbed the former `classic-yaml-core` crate during v9.1.0 Phase 1)
 - `classic-user-settings-core` exclusively owns root-relative User Settings discovery, source selection, schema/default metadata, typed cohesive groups, diagnostics, serialization, semantic preservation, and conflict-safe atomic persistence; adapters retain presentation and consent
 - `classic-version-registry-core` loads registry-backed version and crashgen metadata on top of YAML helpers, and now owns the contributor-facing `Fallout4Version` / `NULL_VERSION` surface that used to live in the retired constants crate
 - `classic-shared-core` also owns the shared `GameId` enum used across bridge, web, and setup flows
-- `classic-settings-core` owns only non-User-Settings `YamlFile` variants alongside `YamlOperations`
+- `classic-settings-core` owns only non-User-Settings `YamlFile` variants
 - `classic-version-core` adds low-level version parsing, text extraction, and PE-version helpers on top of constants and registry re-exports
 - `classic-web-core` provides small web-oriented helpers without owning an HTTP client or runtime
 - `classic-update-core` provides async GitHub release/update-check behavior for callers running on the shared runtime

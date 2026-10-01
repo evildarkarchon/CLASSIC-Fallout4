@@ -89,6 +89,8 @@ The sole owner of domain-neutral YAML rules. See [Generic YAML](#generic-yaml-ya
 
 - parsing and sync/async loaders, multi-document and merge-key (`<<`) merging
 - the bounded logical-key cache (`load_settings_*`, `get_cached`, `cache_stats`, ...)
+- `YamlOperations` and its path/mtime-aware YAML-file cache (`yaml_cache_stats`, `clear_global_yaml_cache`, ...)
+- opaque cache scope handles for both caches (`LogicalKeyCacheScope`, `YamlFileCacheScope`)
 - scalar `validators` and `schema_version` compatibility checks
 - `SettingsError`, `SettingsSource`, `YamlError`, `YamlSchemaError`
 
@@ -423,11 +425,11 @@ Source-observed limitation:
 
 ## Generic YAML (`yaml`)
 
-`classic_shared_core::yaml` is the single owner of CLASSIC's domain-neutral YAML rules. It moved here from `classic-settings-core` (issue #239); `classic-settings-core` now only re-exports these items until its retirement (issue #257), so loading through either path reads and clears the **same** logical-key cache.
+`classic_shared_core::yaml` is the single owner of CLASSIC's domain-neutral YAML rules. The generic rules and logical-key cache moved here from `classic-settings-core` in issue #239, and `YamlOperations` with its path/mtime-aware YAML-file cache followed in issue #240. `classic-settings-core` now only re-exports these items until its retirement (issue #257), so loading through either path reads and clears the **same** default-scope caches.
 
 Everything is reached through the module path, for example `classic_shared_core::yaml::load_yaml_sync` or `classic_shared_core::yaml::validators::SettingType`. Nothing from `yaml` is re-exported at the crate root, which keeps `yaml::Result` from colliding with other crate-root names.
 
-CLASSIC-specific file identity (`YamlFile`) and the path/mtime-aware `YamlOperations` cache are **not** here yet; they stay in [`classic-settings-core`](classic-settings-core.md) until their own migrations (issues #246 and #240).
+CLASSIC-specific file identity (`YamlFile`) is deliberately **not** here; it stays in [`classic-settings-core`](classic-settings-core.md) until config takes file policy (issue #246).
 
 ### Module map
 
@@ -436,12 +438,13 @@ CLASSIC-specific file identity (`YamlFile`) and the path/mtime-aware `YamlOperat
 - `Yaml` - re-export of `yaml_rust2::Yaml`
 - loaders: `parse_yaml_content`, `load_yaml_sync`, `load_yaml_async`, `load_yaml_merged_sync`, `load_yaml_merged_async`, `load_yaml_batch_sync`, `load_yaml_batch_async`
 - merging: `merge_yaml_documents`, `merge_keys`
-- logical-key cache: `load_settings_sync`, `load_settings_async`, `load_batch_sync`, `load_batch_async`, `get_cached`, `is_cached`, `invalidate`, `clear_cache`, `cache_size`, `cache_keys`, `cache_stats`, `reset_cache_stats`, `CacheStats`
+- logical-key cache: `load_settings_sync`, `load_settings_async`, `load_batch_sync`, `load_batch_async`, `get_cached`, `is_cached`, `invalidate`, `clear_cache`, `cache_size`, `cache_keys`, `cache_stats`, `reset_cache_stats`, `CacheStats`, and the scope handle `LogicalKeyCacheScope`
+- YAML-file operations and cache: `YamlOperations`, `YamlCacheStats`, `yaml_cache_stats`, `reset_yaml_cache_stats`, `clear_global_yaml_cache`, and the scope handle `YamlFileCacheScope`
 - schema compatibility: `SchemaVersion`, `SchemaParseError`, `SchemaCompat`, `Compatibility`, `schema_compat_check`, `extract_schema_version`, `YamlSchemaError`, `SCHEMA_VERSION_KEY`
-- `YamlError` - error type for merge-key resolution (also used by `classic-settings-core`'s `YamlOperations`)
+- `YamlError` - error type for merge-key resolution and every `YamlOperations` method
 - public submodule `validators`: `SettingType`, `CoercedValue`, `validate_setting_value`, `coerce_setting_value`
 
-`error`, `loader`, `logical_key_cache`, `merge`, `operation_error`, and `schema_version` are private submodules; their items are reachable only through the `yaml` re-exports.
+`accessors`, `error`, `file_cache`, `loader`, `logical_key_cache`, `merge`, `operation_error`, `operations`, and `schema_version` are private submodules; their items are reachable only through the `yaml` re-exports.
 
 ### `SettingsSource`
 
@@ -510,12 +513,12 @@ No loader applies merge-key resolution automatically; it is opt-in.
 
 ### Logical-key cache
 
-The cache stores parsed YAML documents in one process-wide bounded concurrent cache per linked library image:
+The cache stores parsed YAML documents in a bounded concurrent store per [cache scope](#cache-scopes). The free functions below use the process default scope, of which there is one per linked library image:
 
 - key type: caller-chosen `String`
 - value type: `Arc<Vec<Yaml>>`, so callers can cheaply clone values and compare `Arc` identity across reads
-- backing store: `std::sync::LazyLock<quick_cache::sync::Cache<String, Arc<Vec<Yaml>>>>`
-- configured capacity: `64`; `quick_cache` uses bounded eviction, so tests should check that the cache stays within capacity rather than asserting an exact victim order
+- backing store: one `quick_cache::sync::Cache<String, Arc<Vec<Yaml>>>` plus hit/miss counters per scope; the default scope is created lazily on first use
+- configured capacity: `64` per scope; `quick_cache` uses bounded eviction, so tests should check that the cache stays within capacity rather than asserting an exact victim order
 
 Population:
 
@@ -536,11 +539,106 @@ Access and management:
 `CacheStats`, `cache_stats()`, and `reset_cache_stats()`:
 
 - `CacheStats` fields: `hits`, `misses`, `hit_rate`, `size`, `capacity` (`Serialize`)
-- hit/miss counters are process-global `AtomicU64` values updated **only** by `get_cached()`; loading does not count as a hit or miss
+- hit/miss counters are per-scope `AtomicU64` values updated **only** by `get_cached()`; loading does not count as a hit or miss
 - `capacity` reports the configured bound, `64`
 - `reset_cache_stats()` resets counters only; it does not clear entries
 
-This cache is distinct from `classic-settings-core`'s path-keyed, mtime-aware `YamlOperations` cache (capacity `128`, `yaml_cache_stats()`); the two never share entries or counters.
+`LogicalKeyCacheScope` exposes the same operations as methods (`load_settings_sync`, `load_settings_async`, `load_batch_sync`, `load_batch_async`, `get_cached`, `is_cached`, `invalidate`, `clear_cache`, `cache_size`, `cache_keys`, `cache_stats`, `reset_cache_stats`); each free function is exactly the method of the same name on `LogicalKeyCacheScope::default_scope()`.
+
+This cache is distinct from the path-keyed, mtime-aware [YAML-file cache](#yaml-file-cache) (capacity `128`, `yaml_cache_stats()`); the two never share entries or counters, and their scope handles are separate types.
+
+### Cache scopes
+
+Both caches keep their state behind an opaque, cheaply cloneable scope handle: `LogicalKeyCacheScope` for the logical-key cache and `YamlFileCacheScope` for the YAML-file cache.
+
+- `default_scope()` returns the process default scope. Every unscoped free function (`load_settings_sync`, `get_cached`, `yaml_cache_stats`, `clear_global_yaml_cache`, ...) and every `YamlOperations::new()` object uses it, so Rust, CXX, and Node callers observe one cache per linked library image, exactly as before scopes existed.
+- `new_isolated()` creates an empty scope with the same capacity, freshness, counter, and clear rules that shares no entries or counters with any other scope.
+- Clones of a handle name the same store; `==` compares store identity (not contents). `Debug` reports only whether the handle is the default scope and its entry count.
+- Scopes are never selected from thread-local or task-local state. A caller passes the handle explicitly (or moves a clone into an `async` block), so async work keeps its scope regardless of which runtime thread resumes it.
+
+Why scopes exist: today each of the 18 Python extension modules links its own copy of this crate, so each facade's caches are implicitly separate. When those facades merge into one native extension, the Python adapter preserves that separation by selecting a scope per former facade:
+
+- `classic_settings` uses its own isolated `LogicalKeyCacheScope` and `YamlFileCacheScope`. Its cache functions, every `classic_settings.YamlOperations` object, and its `clear_global_yaml_cache` / `reset_yaml_cache_stats` / `yaml_cache_stats` helpers affect only those stores.
+- `classic_config.clear_yaml_cache()` clears the default `YamlFileCacheScope`, which is the store config-core's own `YamlOperations::new()` loaders fill. It never evicts `classic_settings` entries.
+- `classic_xse`, `classic_version_registry`, `classic_user_settings`, and `classic_scanlog` only fill the YAML-file cache indirectly, through config-core, Version Registry, and scanlog loaders that call `YamlOperations::new()`. After the merge they share the default scope with `classic_config`. This deliberately narrows #233's per-image rule: none of those facades exposes YAML-file cache stats or controls, entries are mtime-validated, and the Version Registry snapshot is loaded once, so the only effect of a `classic_config.clear_yaml_cache()` on their entries is an extra re-read. Threading a scope through those loaders would change their public Rust signatures for no observable gain.
+
+Parity: the scope handles and `YamlOperations::with_cache_scope` / `cache_scope` are deliberately Rust-only. Bindings never hand a scope to their callers; the CXX and Node adapters keep the unscoped default paths, and the Python adapter selects handles internally. They therefore appear in the Rust API surface baselines without a binding mapping row.
+
+### `YamlOperations`
+
+`YamlOperations` is the integration type for parsing, serializing, saving, and reading dot-path values from single YAML documents, with an optional path/mtime-aware file cache. It moved here from `classic-settings-core` (issue #240), which still re-exports it.
+
+Construction and cache control:
+
+- `YamlOperations::new()` - caching enabled, default `YamlFileCacheScope`
+- `YamlOperations::with_cache_scope(scope)` - caching enabled, the given scope
+- `cache_scope() -> &YamlFileCacheScope`
+- `set_cache_enabled(enabled)` / `is_cache_enabled() -> bool`
+- `clear_cache()` - evicts every entry in the object's scope, including entries other objects loaded into it; counters are kept
+- `get_cache_stats() -> HashMap<String, usize>` - `cached_files`, `capacity`, and `total_bytes` (raw YAML text retained) for the object's scope
+
+Parsing and file I/O:
+
+- `parse_yaml(content) -> Result<Yaml, YamlError>`
+- `dump_yaml(yaml) -> Result<String, YamlError>`
+- `load_yaml_file(path) -> Result<Yaml, YamlError>`
+- `save_yaml_file(path, yaml) -> Result<(), YamlError>`
+- `load_yaml_files_batch(paths) -> HashMap<String, Yaml>` - loads in parallel with Rayon and silently skips files that fail
+
+Generic nested access helpers:
+
+- `get_setting(yaml, key_path) -> Option<Yaml>`
+- `set_setting(yaml, key_path, value) -> Result<Yaml, YamlError>`
+- `get_settings_batch(yaml, key_paths) -> HashMap<String, Yaml>`
+- `set_settings_batch(yaml, settings) -> Result<Yaml, YamlError>`
+
+Typed extraction helpers:
+
+- `get_string_value(data, key_path, default) -> String`
+- `get_vec_value(data, key_path) -> Vec<String>`
+- `get_hashmap_value(data, key_path) -> HashMap<String, String>`
+- `get_indexmap_value(data, key_path) -> IndexMap<String, String>`
+- `get_hashmap_vec_value(data, key_path) -> HashMap<String, Vec<String>>`
+- `get_indexmap_vec_value(data, key_path) -> IndexMap<String, Vec<String>>`
+
+Behavior worth knowing:
+
+- `parse_yaml()` and `load_yaml_file()` always return only the first YAML document from multi-document input (unlike the `load_yaml_*` loaders, which preserve all documents).
+- `parse_yaml()` does not apply merge-key resolution; call `merge_keys()` explicitly.
+- Dot-path traversal only walks `Yaml::Hash` nodes. Array indexing is not supported.
+- `get_setting()` clones and returns the final `Yaml` value.
+- `set_setting()` creates missing intermediate hashes and will replace a non-hash intermediate node with a new hash to complete the requested path. Empty or whitespace-only paths return `YamlError::InvalidKeyPath`.
+- Typed extraction helpers are intentionally lossy: they silently drop non-string items and type mismatches instead of raising errors.
+
+The Node `yamlGetIndexmapValue` adapter preserves the core map's insertion order
+for ordinary string keys by inserting them directly into its returned JavaScript
+object. JavaScript enumerates integer-index keys numerically, so that language
+rule still applies to numeric-looking YAML keys.
+
+### YAML-file cache
+
+`load_yaml_file(path)` flow:
+
+1. If the object's caching is enabled, look up the exact `PathBuf` in the object's scope (path spelling is **not** canonicalized).
+2. If an entry exists and the file's current modification time is not newer than the cached one, count a hit and return a clone.
+3. Otherwise remove any stale entry, count a miss, read with `std::fs::read_to_string`, parse with `YamlLoader`, keep the first document, and (if caching is enabled) insert it with its mtime and raw text.
+
+A load with caching disabled always counts a miss and never inserts.
+
+`save_yaml_file(path, yaml)` serializes with `dump_yaml()`, writes `path.with_extension("yaml.tmp")`, renames it onto the target, and, if caching is enabled, removes the target path from the object's scope only.
+
+Observability, all on the default scope unless called through a `YamlFileCacheScope` handle:
+
+- `YamlCacheStats` - `hits`, `misses`, `hit_rate`, `size`, `capacity` (`Serialize`, exactly these five fields)
+- `yaml_cache_stats()` / `YamlFileCacheScope::stats()` - counters plus current size and capacity (`128`)
+- `reset_yaml_cache_stats()` / `YamlFileCacheScope::reset_stats()` - reset hit/miss counters only; entries stay
+- `clear_global_yaml_cache()` / `YamlFileCacheScope::clear()` - remove all entries; counters stay
+
+The `yaml_cache_stats` / `YamlCacheStats` names deliberately differ from the logical-key cache's `cache_stats` / `CacheStats` so the two caches are never confused.
+
+### C++ bridge surface
+
+The C++ bridge module `classic::settings` exposes this surface through `yaml_ops_*` functions (parse, dump, load, save, get/set setting, typed getters, `yaml_ops_cache_stats`, `yaml_ops_cache_size`, `yaml_ops_clear_cache`) on an opaque `YamlOps` handle, plus `YamlCacheStatsDto`. They always use the default scopes. See [`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoints.md) for the full entry-point list.
 
 ### Validators (`yaml::validators`)
 
@@ -571,7 +669,7 @@ Per-file schema ranges (which CLASSIC file accepts which range) are domain polic
 
 Variants: `ParseError(String)`, `SerializeError(String)`, `IoError(std::io::Error)`, `EmptyDocument`, `InvalidValue(String)`, `UnresolvedAlias`, `InvalidKeyPath(String)`, `TypeConversionError(String)`.
 
-In this module only `merge_keys()` returns it (`InvalidValue`). `classic-settings-core`'s `YamlOperations` reuses the same type for its parse, serialize, I/O, and key-path errors.
+`merge_keys()` returns it (`InvalidValue`), and `YamlOperations` uses it for its parse (`ParseError`, `EmptyDocument`), serialize (`SerializeError`), I/O (`IoError`), and key-path (`InvalidKeyPath`) errors.
 
 ### Runtime
 
@@ -734,8 +832,9 @@ Important direct dependencies:
 - `rustc-hash` and `xxhash-rust` - present as foundation dependencies, though the current public source in this crate does not visibly expose hashing APIs
 - `log` - logging for path canonicalization and async bridge dispatch failures
 - `yaml-rust2` - YAML parsing and the exposed `yaml::Yaml` type
-- `quick_cache` - bounded logical-key YAML cache
-- `tracing` - logical-key cache hit/miss trace events
+- `quick_cache` - bounded logical-key and YAML-file cache stores
+- `indexmap` - insertion-ordered `YamlOperations` extraction helpers
+- `tracing` - logical-key and YAML-file cache hit/miss trace events
 
 Related CLASSIC crates and consumers:
 
@@ -805,5 +904,6 @@ If you extend this crate, update this document when you change:
 - the shared runtime contract or initialization behavior
 - `ClassicError` variants, conversion rules, or context-wrapping behavior
 - public module types in `path_core`, `performance_core`, `strings_core`, `yaml`, or `async_bridge`
-- logical-key cache capacity, freshness, counter, or clear behavior
+- logical-key or YAML-file cache capacity, freshness, counter, clear, or scope behavior
+- the `YamlOperations` surface, typed extraction semantics, or merge-key handling
 - feature-gated GUI bridge behavior or dispatcher assumptions

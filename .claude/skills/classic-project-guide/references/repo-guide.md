@@ -78,10 +78,9 @@ Create or refresh the Python binding tool environment before Python binding smok
 
 ```powershell
 uv sync --project python-bindings --inexact
-uv sync --project python-bindings --inexact --group drift-guards
 ```
 
-Use the `--group drift-guards` form when the schema drift guard or YAML publish tooling needs `ruamel.yaml`.
+That sync also installs `ruamel.yaml` for the schema drift guard and YAML publish tooling; it is a default dependency, and there is no `drift-guards` group.
 
 ## Binding Parity Workflows
 
@@ -160,7 +159,7 @@ uv run --project python-bindings python -m pytest python-bindings/tests -q
 When the same change touches shippable YAML data or schema-version constants, start with:
 
 ```powershell
-uv sync --project python-bindings --inexact --group drift-guards
+uv sync --project python-bindings --inexact
 uv run --project python-bindings python tools/schema_version_gate.py --repo-root .
 ```
 
@@ -173,7 +172,7 @@ Commit touched `.pyi` files, shared conformance pack/adapter changes, tracked re
 Use this for shippable YAML databases, client schema ranges, schema-version rules, or YAML publish tooling.
 
 ```powershell
-uv sync --project python-bindings --inexact --group drift-guards
+uv sync --project python-bindings --inexact
 uv run --project python-bindings python tools/schema_version_gate.py --repo-root .
 uv run --project python-bindings python tools/publish_yaml_data/validate.py --databases-dir "CLASSIC Data/databases" --schema-ranges "CLASSIC Data/databases/client-schema-ranges.yaml"
 ```
@@ -185,7 +184,7 @@ Update `docs/api/yaml-update-delivery.md` when loader, manifest, cache, fallback
 Use this for `CLASSIC Data/app-notification.yaml`, notification manifest semantics, or app-notification publish tooling.
 
 ```powershell
-uv sync --project python-bindings --inexact --group drift-guards
+uv sync --project python-bindings --inexact
 uv run --project python-bindings python tools/publish_app_notification/validate.py --source "CLASSIC Data/app-notification.yaml"
 $publishedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 uv run --project python-bindings python tools/publish_app_notification/generate_manifest.py --source "CLASSIC Data/app-notification.yaml" --output "$env:TEMP\classic-app-notification-manifest.json" --published-at $publishedAt

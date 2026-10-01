@@ -1145,7 +1145,7 @@ fn test_save_local_yaml_paths_creates_file() {
     )
     .expect("save_local_yaml_paths should succeed");
 
-    let yaml = classic_settings_core::YamlOperations::new()
+    let yaml = classic_shared_core::yaml::YamlOperations::new()
         .load_yaml_file(&local_yaml_path)
         .expect("load local yaml");
     assert_eq!(
@@ -1181,7 +1181,7 @@ fn test_save_local_yaml_paths_preserves_empty_adapter_field() {
     save_local_yaml_paths(&local_yaml_path.to_string_lossy(), "D:/Games/Fallout4", "")
         .expect("save_local_yaml_paths should preserve an unset docs path");
 
-    let yaml = classic_settings_core::YamlOperations::new()
+    let yaml = classic_shared_core::yaml::YamlOperations::new()
         .load_yaml_file(&local_yaml_path)
         .expect("load local YAML");
     assert_eq!(

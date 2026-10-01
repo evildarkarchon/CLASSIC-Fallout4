@@ -1,6 +1,6 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-01T04:26:06.386863+00:00`
+- Generated: `2026-10-01T06:46:27.112799+00:00`
 - Tier-1 contract rows: **952**
 - Tier-1 matched: **935**
 - Tier-1 missing Rust: **0**
@@ -199,7 +199,7 @@
 | `scanlog-crashgen-version-status-enum` | `scanlog` | `classic-scanlog-core` | `CrashgenVersionStatus` | `JsCrashgenVersionStatus` | `matched` |
 | `config-yamldata-class` | `config` | `classic-config-core` | `YamlDataCore` | `YamlData` | `matched` |
 | `config-create-yamldata-content` | `config` | `classic-config-core` | `YamlDataCore` | `createYamlDataFromContent` | `matched` |
-| `config-clear-yaml-cache` | `config` | `classic-settings-core` | `clear_global_yaml_cache` | `clearYamlCache` | `matched` |
+| `config-clear-yaml-cache` | `config` | `classic-shared-core` | `clear_global_yaml_cache` | `clearYamlCache` | `matched` |
 | `config.game_local.persistGameLocalPaths` | `config` | `classic-config-core` | `persist_game_local_paths` | `persistGameLocalPaths` | `matched` |
 | `config.installed_yaml_data.installedYamlDataProvenanceLabel` | `config` | `classic-config-core` | `InstalledYamlDataProvenance` | `installedYamlDataProvenanceLabel` | `matched` |
 | `config.installed_yaml_data.installedYamlDataDiagnosticKindLabel` | `config` | `classic-config-core` | `InstalledYamlDataDiagnosticKind` | `installedYamlDataDiagnosticKindLabel` | `matched` |
@@ -238,22 +238,22 @@
 | `config-reset-settings-cache-stats` | `config` | `classic-shared-core` | `reset_cache_stats` | `resetSettingsCacheStats` | `matched` |
 | `config-validate-settings-path` | `path` | `classic-path-core` | `validate_settings_path` | `validateSettingsPath` | `matched` |
 | `config-validate-settings-paths` | `path` | `classic-path-core` | `validate_settings_paths` | `validateSettingsPaths` | `matched` |
-| `config-yaml-document-class` | `config` | `classic-settings-core` | `YamlOperations` | `YamlDocument` | `matched` |
-| `config-yaml-parse` | `config` | `classic-settings-core` | `parse_yaml` | `yamlParse` | `matched` |
-| `config-yaml-stringify` | `config` | `classic-settings-core` | `dump_yaml` | `yamlStringify` | `matched` |
-| `config-yaml-load-file` | `config` | `classic-settings-core` | `load_yaml_file` | `yamlLoadFile` | `matched` |
-| `config-yaml-get-value` | `config` | `classic-settings-core` | `parse_yaml` | `yamlGetValue` | `matched` |
-| `config-yaml-get-string-value` | `config` | `classic-settings-core` | `get_string_value` | `yamlGetStringValue` | `matched` |
-| `config-yaml-get-vec-value` | `config` | `classic-settings-core` | `get_vec_value` | `yamlGetVecValue` | `matched` |
-| `config-yaml-get-hashmap-value` | `config` | `classic-settings-core` | `get_hashmap_value` | `yamlGetHashmapValue` | `matched` |
-| `config-yaml-save-file` | `config` | `classic-settings-core` | `save_yaml_file` | `yamlSaveFile` | `matched` |
-| `config-yaml-set-setting` | `config` | `classic-settings-core` | `set_setting` | `yamlSetSetting` | `matched` |
-| `config-yaml-get-settings-batch` | `config` | `classic-settings-core` | `get_settings_batch` | `yamlGetSettingsBatch` | `matched` |
-| `config-yaml-set-settings-batch` | `config` | `classic-settings-core` | `set_settings_batch` | `yamlSetSettingsBatch` | `matched` |
-| `config-yaml-get-indexmap-value` | `config` | `classic-settings-core` | `get_indexmap_value` | `yamlGetIndexmapValue` | `matched` |
-| `config-yaml-get-hashmap-vec-value` | `config` | `classic-settings-core` | `get_hashmap_vec_value` | `yamlGetHashmapVecValue` | `matched` |
-| `config-yaml-clear-cache` | `config` | `classic-settings-core` | `YamlOperations` | `yamlClearCache` | `matched` |
-| `config-yaml-get-cache-stats` | `config` | `classic-settings-core` | `yaml_cache_stats` | `yamlGetCacheStats` | `matched` |
+| `config-yaml-document-class` | `config` | `classic-shared-core` | `YamlOperations` | `YamlDocument` | `matched` |
+| `config-yaml-parse` | `config` | `classic-shared-core` | `parse_yaml` | `yamlParse` | `matched` |
+| `config-yaml-stringify` | `config` | `classic-shared-core` | `dump_yaml` | `yamlStringify` | `matched` |
+| `config-yaml-load-file` | `config` | `classic-shared-core` | `load_yaml_file` | `yamlLoadFile` | `matched` |
+| `config-yaml-get-value` | `config` | `classic-shared-core` | `parse_yaml` | `yamlGetValue` | `matched` |
+| `config-yaml-get-string-value` | `config` | `classic-shared-core` | `get_string_value` | `yamlGetStringValue` | `matched` |
+| `config-yaml-get-vec-value` | `config` | `classic-shared-core` | `get_vec_value` | `yamlGetVecValue` | `matched` |
+| `config-yaml-get-hashmap-value` | `config` | `classic-shared-core` | `get_hashmap_value` | `yamlGetHashmapValue` | `matched` |
+| `config-yaml-save-file` | `config` | `classic-shared-core` | `save_yaml_file` | `yamlSaveFile` | `matched` |
+| `config-yaml-set-setting` | `config` | `classic-shared-core` | `set_setting` | `yamlSetSetting` | `matched` |
+| `config-yaml-get-settings-batch` | `config` | `classic-shared-core` | `get_settings_batch` | `yamlGetSettingsBatch` | `matched` |
+| `config-yaml-set-settings-batch` | `config` | `classic-shared-core` | `set_settings_batch` | `yamlSetSettingsBatch` | `matched` |
+| `config-yaml-get-indexmap-value` | `config` | `classic-shared-core` | `get_indexmap_value` | `yamlGetIndexmapValue` | `matched` |
+| `config-yaml-get-hashmap-vec-value` | `config` | `classic-shared-core` | `get_hashmap_vec_value` | `yamlGetHashmapVecValue` | `matched` |
+| `config-yaml-clear-cache` | `config` | `classic-shared-core` | `YamlOperations` | `yamlClearCache` | `matched` |
+| `config-yaml-get-cache-stats` | `config` | `classic-shared-core` | `yaml_cache_stats` | `yamlGetCacheStats` | `matched` |
 | `version-registry-get-by-id` | `version_registry` | `classic-version-registry-core` | `VersionInfo` | `getVersionById` | `matched` |
 | `version-registry-get-by-version` | `version_registry` | `classic-version-registry-core` | `get_by_version` | `getVersionByVersionString` | `matched` |
 | `version-registry-get-by-short-name` | `version_registry` | `classic-version-registry-core` | `get_by_short_name` | `getVersionByShortName` | `matched` |
@@ -857,31 +857,31 @@
 | `xse.is_xse_installed@rust` | `xse` | `classic-xse-core` | `is_xse_installed@rust` | `None` | `matched` |
 | `xse.loader_name@rust` | `xse` | `classic-xse-core` | `loader_name@rust` | `None` | `matched` |
 | `xse.loader_path@rust` | `xse` | `classic-xse-core` | `loader_path@rust` | `None` | `matched` |
-| `xse.new@rust` | `xse` | `classic-settings-core` | `new@rust` | `None` | `matched` |
+| `xse.new@rust` | `xse` | `classic-shared-core` | `new@rust` | `None` | `matched` |
 | `xse.parse_version@rust` | `xse` | `classic-xse-core` | `parse_version@rust` | `None` | `matched` |
 | `xse.try_parse_version@rust` | `xse` | `classic-xse-core` | `try_parse_version@rust` | `None` | `matched` |
 | `yaml.YamlError@rust` | `settings` | `classic-settings-core` | `YamlError@rust` | `None` | `matched` |
 | `yaml.YamlOperations@rust` | `settings` | `classic-settings-core` | `YamlOperations@rust` | `None` | `matched` |
 | `yaml.cache_stats@rust` | `settings` | `classic-settings-core` | `cache_stats@rust` | `None` | `matched` |
 | `yaml.clear_cache@rust` | `settings` | `classic-settings-core` | `clear_cache@rust` | `None` | `matched` |
-| `yaml.dump_yaml@rust` | `settings` | `classic-settings-core` | `dump_yaml@rust` | `None` | `matched` |
-| `yaml.get_cache_stats@rust` | `settings` | `classic-settings-core` | `get_cache_stats@rust` | `None` | `matched` |
-| `yaml.get_hashmap_value@rust` | `settings` | `classic-settings-core` | `get_hashmap_value@rust` | `None` | `matched` |
-| `yaml.get_indexmap_value@rust` | `settings` | `classic-settings-core` | `get_indexmap_value@rust` | `None` | `matched` |
-| `yaml.get_setting@rust` | `settings` | `classic-settings-core` | `get_setting@rust` | `None` | `matched` |
-| `yaml.get_settings_batch@rust` | `settings` | `classic-settings-core` | `get_settings_batch@rust` | `None` | `matched` |
-| `yaml.get_string_value@rust` | `settings` | `classic-settings-core` | `get_string_value@rust` | `None` | `matched` |
-| `yaml.get_vec_value@rust` | `settings` | `classic-settings-core` | `get_vec_value@rust` | `None` | `matched` |
-| `yaml.is_cache_enabled@rust` | `settings` | `classic-settings-core` | `is_cache_enabled@rust` | `None` | `matched` |
-| `yaml.load_yaml_file@rust` | `settings` | `classic-settings-core` | `load_yaml_file@rust` | `None` | `matched` |
-| `yaml.load_yaml_files_batch@rust` | `settings` | `classic-settings-core` | `load_yaml_files_batch@rust` | `None` | `matched` |
+| `yaml.dump_yaml@rust` | `settings` | `classic-shared-core` | `dump_yaml@rust` | `None` | `matched` |
+| `yaml.get_cache_stats@rust` | `settings` | `classic-shared-core` | `get_cache_stats@rust` | `None` | `matched` |
+| `yaml.get_hashmap_value@rust` | `settings` | `classic-shared-core` | `get_hashmap_value@rust` | `None` | `matched` |
+| `yaml.get_indexmap_value@rust` | `settings` | `classic-shared-core` | `get_indexmap_value@rust` | `None` | `matched` |
+| `yaml.get_setting@rust` | `settings` | `classic-shared-core` | `get_setting@rust` | `None` | `matched` |
+| `yaml.get_settings_batch@rust` | `settings` | `classic-shared-core` | `get_settings_batch@rust` | `None` | `matched` |
+| `yaml.get_string_value@rust` | `settings` | `classic-shared-core` | `get_string_value@rust` | `None` | `matched` |
+| `yaml.get_vec_value@rust` | `settings` | `classic-shared-core` | `get_vec_value@rust` | `None` | `matched` |
+| `yaml.is_cache_enabled@rust` | `settings` | `classic-shared-core` | `is_cache_enabled@rust` | `None` | `matched` |
+| `yaml.load_yaml_file@rust` | `settings` | `classic-shared-core` | `load_yaml_file@rust` | `None` | `matched` |
+| `yaml.load_yaml_files_batch@rust` | `settings` | `classic-shared-core` | `load_yaml_files_batch@rust` | `None` | `matched` |
 | `yaml.merge_keys@rust` | `settings` | `classic-settings-core` | `merge_keys@rust` | `None` | `matched` |
-| `yaml.new@rust` | `settings` | `classic-settings-core` | `new@rust` | `None` | `matched` |
-| `yaml.parse_yaml@rust` | `settings` | `classic-settings-core` | `parse_yaml@rust` | `None` | `matched` |
+| `yaml.new@rust` | `settings` | `classic-shared-core` | `new@rust` | `None` | `matched` |
+| `yaml.parse_yaml@rust` | `settings` | `classic-shared-core` | `parse_yaml@rust` | `None` | `matched` |
 | `yaml.reset_cache_stats@rust` | `settings` | `classic-settings-core` | `reset_cache_stats@rust` | `None` | `matched` |
-| `yaml.save_yaml_file@rust` | `settings` | `classic-settings-core` | `save_yaml_file@rust` | `None` | `matched` |
-| `yaml.set_cache_enabled@rust` | `settings` | `classic-settings-core` | `set_cache_enabled@rust` | `None` | `matched` |
-| `yaml.set_setting@rust` | `settings` | `classic-settings-core` | `set_setting@rust` | `None` | `matched` |
+| `yaml.save_yaml_file@rust` | `settings` | `classic-shared-core` | `save_yaml_file@rust` | `None` | `matched` |
+| `yaml.set_cache_enabled@rust` | `settings` | `classic-shared-core` | `set_cache_enabled@rust` | `None` | `matched` |
+| `yaml.set_setting@rust` | `settings` | `classic-shared-core` | `set_setting@rust` | `None` | `matched` |
 | `aux.JsCheckRule` | `aux` | `classic-config-core` | `CheckRule` | `JsCheckRule` | `matched` |
 | `aux.JsExpectedValue` | `aux` | `classic-config-core` | `ExpectedValue` | `JsExpectedValue` | `matched` |
 | `config.JsModConflictEntry` | `config` | `classic-config-core` | `ModConflictEntry` | `JsModConflictEntry` | `matched` |

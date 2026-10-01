@@ -21,7 +21,7 @@ pub enum VersionRegistryError {
 
     /// Error loading or parsing YAML configuration.
     #[error("YAML loading error: {0}")]
-    YamlError(#[from] classic_settings_core::YamlError),
+    YamlError(#[from] classic_shared_core::yaml::YamlError),
 
     /// Registry has not been initialized.
     ///

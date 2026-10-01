@@ -71,8 +71,8 @@ bun run test:node
 ```powershell
 # python-bindings/ is a uv-managed project (pyproject.toml + uv.lock).
 # `--inexact` stops uv from pruning maturin-built classic-*-py wheels.
-# Add `--group drift-guards` to also install ruamel.yaml for schema_version_gate.py.
-uv sync --project python-bindings --inexact --group drift-guards
+# ruamel.yaml (for schema_version_gate.py) is a default dependency, so this installs it.
+uv sync --project python-bindings --inexact
 uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .
 uv run --project python-bindings python tools/cxx_api_parity/check_parity_gate.py --repo-root .
 uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings

@@ -8,7 +8,7 @@ Contributor-facing documentation for [`business-logic/classic-user-settings-core
 
 This crate is distinct from:
 
-- `classic_shared_core::yaml`, which supplies generic YAML parsing and schema-version utilities, and `classic-settings-core`, which supplies `YamlOperations`
+- `classic_shared_core::yaml`, which supplies generic YAML parsing, schema-version utilities, and `YamlOperations`
 - `classic-config-core`, which supplies generic non-User-Settings YAML Data loading and does not locate or serialize User Settings
 - YAML Data, which is curated application data rather than persisted user choices
 
