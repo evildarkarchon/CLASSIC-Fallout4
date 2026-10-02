@@ -68,7 +68,7 @@ pub enum XseError {
 
     /// Path error.
     #[error("Path error: {0}")]
-    PathError(#[from] classic_path_core::PathError),
+    PathError(#[from] classic_shared_core::path_core::PathError),
 }
 
 /// Result type for XSE operations.

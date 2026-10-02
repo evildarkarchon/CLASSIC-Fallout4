@@ -2,7 +2,10 @@
 //!
 //! Bridges `classic-path-core` helpers so the Qt GUI can reuse the same
 //! automatic game/docs detection logic, path validation, INI checking,
-//! and backup management as other implementations.
+//! and backup management as other implementations. The generic existence
+//! and kind checks (`is_valid_path`, `path_validate_exists`,
+//! `path_validate_is_directory`, `path_validate_is_file`) delegate to
+//! `classic_shared_core::path_core`, which owns those neutral primitives.
 //!
 //! # Architecture
 //!
@@ -29,11 +32,13 @@
 use classic_path_core::{
     BackupManager, DocsPathFinder, DocumentsChecker, GamePathFinder,
     IniCheckResult as CoreIniCheckResult, is_restricted_path as core_is_restricted_path,
-    is_valid_path as core_is_valid_path, parse_xse_log as core_parse_xse_log,
+    parse_xse_log as core_parse_xse_log,
     validate_custom_scan_path as core_validate_custom_scan_path,
-    validate_is_directory as core_validate_is_directory, validate_is_file as core_validate_is_file,
-    validate_path_exists as core_validate_path_exists,
     validate_required_files as core_validate_required_files,
+};
+use classic_shared_core::path_core::{
+    is_valid_path as core_is_valid_path, validate_is_directory as core_validate_is_directory,
+    validate_is_file as core_validate_is_file, validate_path_exists as core_validate_path_exists,
 };
 use classic_version_registry_core::Fallout4Version;
 use std::path::Path;

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-01T22:13:51Z",
+  "generated_at_utc": "2026-10-02T06:46:43Z",
   "entries": [
     {
       "id": "0f1ce653765981f0",
@@ -4643,8 +4643,8 @@
         ],
         "returnType": "bool"
       },
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "is_valid_path"
     },
     {
@@ -5465,8 +5465,8 @@
         ],
         "returnType": "bool"
       },
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "is_valid_path"
     },
     {
@@ -5525,8 +5525,8 @@
         ],
         "returnType": "Result<()>"
       },
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "validate_path_exists"
     },
     {
@@ -5545,8 +5545,8 @@
         ],
         "returnType": "Result<()>"
       },
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "validate_is_directory"
     },
     {
@@ -5565,8 +5565,8 @@
         ],
         "returnType": "Result<()>"
       },
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "validate_is_file"
     },
     {
@@ -5629,8 +5629,8 @@
         ],
         "returnType": "bool"
       },
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "is_valid_path"
     },
     {

@@ -8,6 +8,9 @@ description = "Core path management for CLASSIC (game paths, documents, validati
 license = "MIT"
 
 [dependencies]
+# Generic path primitives, PathError, and the OS cache root
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+
 # Error handling
 thiserror = { workspace = true }
 anyhow = { workspace = true }

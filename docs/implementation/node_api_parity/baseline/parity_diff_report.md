@@ -1,6 +1,6 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-02T01:54:33.795421+00:00`
+- Generated: `2026-10-02T07:21:00.309526+00:00`
 - Tier-1 contract rows: **949**
 - Tier-1 matched: **932**
 - Tier-1 missing Rust: **0**
@@ -322,8 +322,8 @@
 | `aux-phase4a-runtime-info` | `aux` | `-` | `None` | `RuntimeInfo` | `unmapped` |
 | `aux-phase4a-timing-stats` | `aux` | `classic-shared-core` | `MetricsSummary` | `TimingStats` | `matched` |
 | `aux-phase4a-calculate-file-similarity` | `aux` | `classic-file-io-core` | `calculate_similarity` | `calculateFileSimilarity` | `matched` |
-| `aux-phase4a-check-read-permissions` | `aux` | `classic-path-core` | `check_read_permissions` | `checkReadPermissions` | `matched` |
-| `aux-phase4a-check-write-permissions` | `aux` | `classic-path-core` | `check_write_permissions` | `checkWritePermissions` | `matched` |
+| `aux-phase4a-check-read-permissions` | `aux` | `classic-shared-core` | `check_read_permissions` | `checkReadPermissions` | `matched` |
+| `aux-phase4a-check-write-permissions` | `aux` | `classic-shared-core` | `check_write_permissions` | `checkWritePermissions` | `matched` |
 | `aux-phase4a-clear-all-metrics` | `aux` | `classic-shared-core` | `clear_metrics` | `clearAllMetrics` | `matched` |
 | `aux-phase4a-create-message` | `aux` | `classic-message-core` | `Message` | `createMessage` | `matched` |
 | `aux-phase4a-detect-encoding` | `aux` | `classic-file-io-core` | `EncodingDetector` | `detectEncoding` | `matched` |
@@ -337,8 +337,8 @@
 | `aux-phase4a-intern-string` | `aux` | `classic-shared-core` | `intern` | `internString` | `matched` |
 | `aux-phase4a-is-restricted-path` | `aux` | `classic-path-core` | `is_restricted_path` | `isRestrictedPath` | `matched` |
 | `aux-phase4a-is-runtime-available` | `aux` | `classic-shared-core` | `get_runtime` | `isRuntimeAvailable` | `matched` |
-| `aux-phase4a-is-valid-executable-path` | `aux` | `classic-path-core` | `is_valid_executable_path` | `isValidExecutablePath` | `matched` |
-| `aux-phase4a-is-valid-path` | `aux` | `classic-path-core` | `is_valid_path` | `isValidPath` | `matched` |
+| `aux-phase4a-is-valid-executable-path` | `aux` | `classic-shared-core` | `is_executable_file_path` | `isValidExecutablePath` | `matched` |
+| `aux-phase4a-is-valid-path` | `aux` | `classic-shared-core` | `is_valid_path` | `isValidPath` | `matched` |
 | `aux-phase4a-join-paths` | `aux` | `classic-shared-core` | `join_paths` | `joinPaths` | `matched` |
 | `aux-phase4a-load-batch-async` | `aux` | `classic-shared-core` | `load_batch_async` | `loadBatchAsync` | `matched` |
 | `aux-phase4a-load-batch-sync` | `aux` | `classic-shared-core` | `load_batch_sync` | `loadBatchSync` | `matched` |
@@ -354,9 +354,9 @@
 | `aux-phase4a-registry-remove` | `aux` | `classic-registry-core` | `unregister` | `registryRemove` | `matched` |
 | `aux-phase4a-registry-set` | `aux` | `classic-registry-core` | `register` | `registrySet` | `matched` |
 | `aux-phase4a-registry-set-game` | `aux` | `classic-registry-core` | `set_game` | `registrySetGame` | `matched` |
-| `aux-phase4a-remove-readonly` | `aux` | `classic-path-core` | `remove_readonly` | `removeReadonly` | `matched` |
+| `aux-phase4a-remove-readonly` | `aux` | `classic-shared-core` | `remove_readonly` | `removeReadonly` | `matched` |
 | `aux-phase4a-validate-custom-scan-path` | `aux` | `classic-path-core` | `validate_custom_scan_path` | `validateCustomScanPath` | `matched` |
-| `aux-phase4a-validate-path-with-permissions` | `aux` | `classic-path-core` | `validate_path_with_permissions` | `validatePathWithPermissions` | `matched` |
+| `aux-phase4a-validate-path-with-permissions` | `aux` | `classic-shared-core` | `validate_path_with_permissions` | `validatePathWithPermissions` | `matched` |
 | `aux-phase4a-validate-paths-batch` | `aux` | `classic-shared-core` | `validate_paths_batch` | `validatePathsBatch` | `matched` |
 | `aux-phase4a-validate-required-files` | `aux` | `classic-path-core` | `validate_required_files` | `validateRequiredFiles` | `matched` |
 | `aux-phase4b-github-client` | `aux` | `classic-update-core` | `GithubClient` | `GithubClient` | `matched` |
@@ -443,7 +443,7 @@
 | `aux-phase4c-js-ini-check-result` | `aux` | `classic-path-core` | `IniCheckResult` | `JsIniCheckResult` | `matched` |
 | `version-registry-phase4c-js-match-result` | `version_registry` | `classic-version-registry-core` | `MatchResult` | `JsMatchResult` | `matched` |
 | `aux-phase4c-calculate-text-similarity` | `aux` | `classic-file-io-core` | `similarity_ratio` | `calculateTextSimilarity` | `matched` |
-| `aux-phase4c-check-drive-exists` | `aux` | `classic-path-core` | `check_drive_exists` | `checkDriveExists` | `matched` |
+| `aux-phase4c-check-drive-exists` | `aux` | `classic-shared-core` | `check_drive_exists` | `checkDriveExists` | `matched` |
 | `version-registry-phase4c-get-all-exe-hashes` | `version_registry` | `classic-version-registry-core` | `VersionRegistry` | `getAllExeHashes` | `matched` |
 | `aux-phase4c-get-all-game-ids` | `aux` | `classic-shared-core` | `GameId` | `getAllGameIds` | `matched` |
 | `version-registry-phase4c-get-all-script-hashes` | `version_registry` | `classic-version-registry-core` | `VersionRegistry` | `getAllScriptHashes` | `matched` |
@@ -674,8 +674,8 @@
 | `message.logging@rust` | `message` | `classic-message-core` | `logging@rust` | `None` | `matched` |
 | `message.redact_contract_fields@rust` | `message` | `classic-message-core` | `redact_contract_fields@rust` | `None` | `matched` |
 | `message.redact_field_value@rust` | `message` | `classic-message-core` | `redact_field_value@rust` | `None` | `matched` |
-| `path.drive_exists@rust` | `path` | `classic-path-core` | `drive_exists@rust` | `None` | `matched` |
-| `path.is_valid_executable_path@rust` | `path` | `classic-path-core` | `is_valid_executable_path@rust` | `None` | `matched` |
+| `path.drive_exists@rust` | `path` | `classic-shared-core` | `drive_exists@rust` | `None` | `matched` |
+| `path.is_valid_executable_path@rust` | `path` | `classic-shared-core` | `is_executable_file_path@rust` | `None` | `matched` |
 | `path.BackupError@rust` | `path` | `classic-path-core` | `BackupError@rust` | `None` | `matched` |
 | `path.BackupResult@rust` | `path` | `classic-path-core` | `BackupResult@rust` | `None` | `matched` |
 | `path.DocsPathError@rust` | `path` | `classic-path-core` | `DocsPathError@rust` | `None` | `matched` |
@@ -685,18 +685,18 @@
 | `path.GamePathResult@rust` | `path` | `classic-path-core` | `GamePathResult@rust` | `None` | `matched` |
 | `path.IniCheckResult@rust` | `path` | `classic-path-core` | `IniCheckResult@rust` | `None` | `matched` |
 | `path.IniFile@rust` | `path` | `classic-path-core` | `IniFile@rust` | `None` | `matched` |
-| `path.PathError@rust` | `path` | `classic-path-core` | `PathError@rust` | `None` | `matched` |
-| `path.PathResult@rust` | `path` | `classic-path-core` | `PathResult@rust` | `None` | `matched` |
+| `path.PathError@rust` | `path` | `classic-shared-core` | `PathError@rust` | `None` | `matched` |
+| `path.PathResult@rust` | `path` | `classic-shared-core` | `PathResult@rust` | `None` | `matched` |
 | `path.ValidationError@rust` | `path` | `classic-path-core` | `ValidationError@rust` | `None` | `matched` |
 | `path.ValidationResult@rust` | `path` | `classic-scangame-core` | `ValidationResult@rust` | `None` | `matched` |
 | `path.XseVersion@rust` | `path` | `classic-path-core` | `XseVersion@rust` | `None` | `matched` |
-| `path.check_drive_exists@rust` | `path` | `classic-path-core` | `check_drive_exists@rust` | `None` | `matched` |
-| `path.has_read_permission@rust` | `path` | `classic-path-core` | `has_read_permission@rust` | `None` | `matched` |
-| `path.has_write_permission@rust` | `path` | `classic-path-core` | `has_write_permission@rust` | `None` | `matched` |
-| `path.remove_readonly_attribute@rust` | `path` | `classic-path-core` | `remove_readonly_attribute@rust` | `None` | `matched` |
-| `path.validate_is_directory@rust` | `path` | `classic-path-core` | `validate_is_directory@rust` | `None` | `matched` |
-| `path.validate_is_file@rust` | `path` | `classic-path-core` | `validate_is_file@rust` | `None` | `matched` |
-| `path.validate_path_exists@rust` | `path` | `classic-path-core` | `validate_path_exists@rust` | `None` | `matched` |
+| `path.check_drive_exists@rust` | `path` | `classic-shared-core` | `check_drive_exists@rust` | `None` | `matched` |
+| `path.has_read_permission@rust` | `path` | `classic-shared-core` | `has_read_permission@rust` | `None` | `matched` |
+| `path.has_write_permission@rust` | `path` | `classic-shared-core` | `has_write_permission@rust` | `None` | `matched` |
+| `path.remove_readonly_attribute@rust` | `path` | `classic-shared-core` | `remove_readonly_attribute@rust` | `None` | `matched` |
+| `path.validate_is_directory@rust` | `path` | `classic-shared-core` | `validate_is_directory@rust` | `None` | `matched` |
+| `path.validate_is_file@rust` | `path` | `classic-shared-core` | `validate_is_file@rust` | `None` | `matched` |
+| `path.validate_path_exists@rust` | `path` | `classic-shared-core` | `validate_path_exists@rust` | `None` | `matched` |
 | `path.validate_settings_path@rust` | `path` | `classic-path-core` | `validate_settings_path@rust` | `None` | `matched` |
 | `path.validate_settings_paths@rust` | `path` | `classic-path-core` | `validate_settings_paths@rust` | `None` | `matched` |
 | `perf.Timer@rust` | `perf` | `classic-perf-core` | `Timer@rust` | `None` | `matched` |

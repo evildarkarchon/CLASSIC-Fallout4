@@ -100,7 +100,21 @@ fn ensure_is_idempotent() {
 
 #[test]
 fn empty_env_value_is_treated_as_unset_by_process_lookup() {
-    // Sanity check on the production env lookup: an empty string value is
-    // treated as unset so fallback takes over.
-    assert!(process_env_lookup("__CLASSIC_DEFINITELY_UNSET_VAR_XYZZY__").is_none());
+    // Sanity check on the production env lookup (now the shared-core
+    // `non_empty_env_var`): an empty string value is treated as unset so
+    // fallback takes over.
+    assert!(non_empty_env_var("__CLASSIC_DEFINITELY_UNSET_VAR_XYZZY__").is_none());
+}
+
+/// The OS cache root moved to shared core; this cache still words its own
+/// failure, so the message callers observe is unchanged by the move.
+#[test]
+fn missing_cache_root_error_message_is_unchanged() {
+    let err = yaml_cache_dir_with_env(env_map(&[])).unwrap_err();
+    #[cfg(target_os = "windows")]
+    let expected = "Invalid path: neither LOCALAPPDATA nor APPDATA is set; cannot resolve YAML cache directory";
+    #[cfg(not(target_os = "windows"))]
+    let expected =
+        "Invalid path: neither XDG_CACHE_HOME nor HOME is set; cannot resolve YAML cache directory";
+    assert_eq!(err.to_string(), expected);
 }

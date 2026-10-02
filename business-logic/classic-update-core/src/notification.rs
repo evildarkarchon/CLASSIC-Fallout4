@@ -26,7 +26,7 @@ use crate::github::GithubClient;
 use crate::manifest_fetch::{
     CACHED_MANIFEST_FILENAME, ETAG_FILENAME, PagesError, try_pages, write_body_atomically,
 };
-use classic_path_core::PathError;
+use classic_shared_core::path_core::{PathError, non_empty_env_var};
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -387,7 +387,7 @@ pub async fn check_app_notification(
     repo: &str,
     installed_version: &str,
 ) -> Result<NotificationStatus> {
-    check_app_notification_with_env(owner, repo, installed_version, process_env_lookup).await
+    check_app_notification_with_env(owner, repo, installed_version, non_empty_env_var).await
 }
 
 /// Testable form of [`check_app_notification`] that reads cache-root
@@ -434,19 +434,6 @@ where
 
     let pages_url = build_pages_url(&client);
     check_app_notification_with(&client, &pages_url, cache_dir.as_deref(), installed_version).await
-}
-
-/// Read a process env var, returning `None` for unset *or* empty values
-/// so that `%LOCALAPPDATA%=""` degrades to the next fallback rather
-/// than producing a bogus empty path. Mirrors
-/// `classic_path_core::notification_cache::process_env_lookup` so
-/// production callers of [`check_app_notification`] see byte-identical
-/// env resolution through either entry point.
-fn process_env_lookup(name: &str) -> Option<String> {
-    match std::env::var(name) {
-        Ok(s) if !s.is_empty() => Some(s),
-        _ => None,
-    }
 }
 
 /// Project a [`classic_path_core::ensure_notification_cache_dir`] result

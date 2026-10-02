@@ -235,7 +235,7 @@ where
 
 fn resolve_cache_path_via<R>(file_name: &str, resolver: R) -> Option<PathBuf>
 where
-    R: FnOnce() -> Result<PathBuf, classic_path_core::PathError>,
+    R: FnOnce() -> Result<PathBuf, classic_shared_core::path_core::PathError>,
 {
     match resolver() {
         Ok(dir) => Some(dir.join(file_name)),
