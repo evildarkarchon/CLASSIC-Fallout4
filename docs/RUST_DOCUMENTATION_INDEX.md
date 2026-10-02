@@ -32,7 +32,7 @@ For old-to-new workspace translations, see the [Workspace Migration Matrix](work
 ## Contributor API Guides
 
 - [`docs/api/README.md`](api/README.md) — ordered index for contributor-facing crate guides
-- [`docs/api/classic-shared-core.md`](api/classic-shared-core.md) — shared runtime, error, path, performance, string, and generic YAML helpers, including `YamlOperations` and both scoped YAML caches
+- [`docs/api/classic-shared-core.md`](api/classic-shared-core.md) — shared runtime, error, path, performance, string, generic YAML helpers, including `YamlOperations` and both scoped YAML caches, and the loose version and PE helpers (`version`)
 - [`docs/api/classic-perf-core.md`](api/classic-perf-core.md) — seconds-based facade over the shared-core timing store (scheduled for retirement)
 - [`docs/api/classic-registry-core.md`](api/classic-registry-core.md) — process-wide typed singleton registry and convenience key helpers
 - [`docs/api/classic-message-core.md`](api/classic-message-core.md) — shared message DTOs, routing enums, and startup/log formatting helpers
@@ -40,7 +40,7 @@ For old-to-new workspace translations, see the [Workspace Migration Matrix](work
 - [`docs/api/classic-user-settings-core.md`](api/classic-user-settings-core.md) — typed, preservation-aware User Settings discovery, cohesive Update/Crash Log Scan/Game Setup/Frontend State groups, reversible migration plans, verified migration backups/restores, and non-persisting update previews
 - [`docs/api/classic-version-registry-core.md`](api/classic-version-registry-core.md) — version matching and registry-backed metadata, including the surviving owner docs for `Fallout4Version` and `NULL_VERSION`
 - [`docs/api/classic-shared-core.md`](api/classic-shared-core.md) — shared runtime, error, path, performance, and string helpers, including the surviving owner docs for `GameId`
-- [`docs/api/classic-version-core.md`](api/classic-version-core.md) — version parsing, text extraction, and PE-version helpers
+- [`docs/api/classic-version-core.md`](api/classic-version-core.md) — known-version queries and a transitional facade over the shared-core loose version and PE helpers
 - [`docs/api/classic-web-core.md`](api/classic-web-core.md) — small URL, user-agent, and mod-site helper layer
 - [`docs/api/classic-update-core.md`](api/classic-update-core.md) — async GitHub release/update-check client and DTO layer
 - [`docs/api/classic-config-core.md`](api/classic-config-core.md) — CLASSIC settings, Main/Game/Ignore YAML loading, AND the absorbed crashgen rule model (formerly its own crate, merged in v9.1.0 Phase 2)

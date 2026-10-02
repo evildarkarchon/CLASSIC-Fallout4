@@ -33,7 +33,7 @@ Do not use this crate for:
 - general-purpose GitHub API coverage beyond the small releases-focused surface in `github.rs`
 - non-GitHub update providers
 
-Those concerns live in callers, binding layers, or other crates such as [`classic-shared-core`](classic-shared-core.md) and [`classic-version-core`](classic-version-core.md).
+Those concerns live in callers, binding layers, or other crates such as [`classic-shared-core`](classic-shared-core.md) (including its lenient `version` helpers).
 
 ---
 
@@ -266,12 +266,12 @@ Source-visible behavior:
 Important edge cases from the implementation and tests:
 
 - `v1.2.3` parses, but uppercase `V1.2.3` does not because only lowercase `v` is stripped
-- two-part game-style versions like `1.10` are invalid here even though they are accepted by [`classic-version-core`](classic-version-core.md)
+- two-part game-style versions like `1.10` are invalid here even though they are accepted by [`classic_shared_core::version`](classic-shared-core.md#loose-versions-and-pe-helpers-version)
 - four-part version strings like `1.0.0.0` are invalid here
 - prerelease ordering follows semver rules, so `1.0.0-alpha < 1.0.0-beta < 1.0.0`
 - build metadata does not affect semver precedence
 
-That difference from [`classic-version-core`](classic-version-core.md) is intentional: GitHub release tags are treated as proper semver, not as lenient game-version text.
+That difference from [`classic_shared_core::version`](classic-shared-core.md#loose-versions-and-pe-helpers-version) is intentional: GitHub release tags are treated as proper semver, not as lenient game-version text.
 
 ---
 
@@ -385,7 +385,7 @@ Important direct dependencies:
 Related CLASSIC crates and consumers:
 
 - [`classic-shared-core`](classic-shared-core.md) - shared Tokio runtime policy used by callers of this crate
-- [`classic-version-core`](classic-version-core.md) - alternative version helper crate with intentionally different, more lenient parsing rules
+- [`classic_shared_core::version`](classic-shared-core.md#loose-versions-and-pe-helpers-version) - alternative version helpers with intentionally different, more lenient parsing rules
 - [`cpp-bindings/classic-cpp-bridge/src/update.rs`](../../cpp-bindings/classic-cpp-bridge/src/update.rs) - narrower frontend-oriented bridge over latest-release check + comparison
 - [`node-bindings/classic-node/src/update.rs`](../../node-bindings/classic-node/src/update.rs) - fuller binding layer preserving `GithubClient` and DTOs
 - [`python-bindings/classic-update-py/src/github.rs`](../../python-bindings/classic-update-py/src/github.rs) - Python wrapper over the same client model

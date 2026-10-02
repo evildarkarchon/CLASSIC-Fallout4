@@ -12,7 +12,7 @@
 //! # Examples
 //!
 //! ```rust,no_run
-//! use classic_version_core::pe_version::extract_pe_version;
+//! use classic_shared_core::version::pe_version::extract_pe_version;
 //! use std::path::Path;
 //!
 //! let path = Path::new("C:\\Games\\Fallout4\\Fallout4.exe");
@@ -73,7 +73,7 @@ pub type PeVersionResult<T> = Result<T, PeVersionError>;
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_version_core::pe_version::is_valid_executable_path;
+/// use classic_shared_core::version::pe_version::is_valid_executable_path;
 /// use std::path::Path;
 ///
 /// assert!(is_valid_executable_path(Path::new("C:\\Windows\\notepad.exe")));
@@ -118,14 +118,14 @@ pub fn is_valid_executable_path(path: &Path) -> bool {
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_version_core::pe_version::extract_pe_version;
+/// use classic_shared_core::version::pe_version::extract_pe_version;
 /// use std::path::Path;
 ///
 /// let (major, minor, patch, build) = extract_pe_version(
 ///     Path::new("C:\\Games\\Fallout4\\Fallout4.exe")
 /// )?;
 /// assert_eq!(major, 1);
-/// # Ok::<(), classic_version_core::pe_version::PeVersionError>(())
+/// # Ok::<(), classic_shared_core::version::pe_version::PeVersionError>(())
 /// ```
 pub fn extract_pe_version(path: &Path) -> PeVersionResult<(u16, u16, u16, u16)> {
     if !is_valid_executable_path(path) {

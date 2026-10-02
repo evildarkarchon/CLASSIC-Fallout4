@@ -19,7 +19,7 @@ Use this directory in this order:
 6. [`classic-settings-core.md`](classic-settings-core.md) - `YamlFile` plus re-exports of the generic YAML rules, `YamlOperations`, and both YAML caches now owned by `classic-shared-core` (scheduled for retirement)
 6a. [`classic-user-settings-core.md`](classic-user-settings-core.md) - exclusive typed, preservation-aware User Settings source/location/default/schema/serialization owner with reversible migrations and conflict-safe commits
 7. [`classic-version-registry-core.md`](classic-version-registry-core.md) - version registry and OG/NG/AE/VR selection metadata
-8. [`classic-version-core.md`](classic-version-core.md) - version parsing, text extraction, and PE-version helpers plus direct Version Registry re-exports
+8. [`classic-version-core.md`](classic-version-core.md) - known Fallout 4 / F4SE version queries plus a transitional facade over the shared-core loose version and PE helpers and direct Version Registry re-exports
 10. [`classic-web-core.md`](classic-web-core.md) - small URL, user-agent, and mod-site helper layer
 11. [`classic-update-core.md`](classic-update-core.md) - async GitHub release/update-check client and DTO layer
 11a. [`yaml-update-delivery.md`](yaml-update-delivery.md) - cross-crate YAML-data update flow: schema_version contract, client load-precedence, manifest format, Pages-mirrored publish workflow
@@ -66,7 +66,7 @@ That order matches the current repo-root layering across `foundation/`, `busines
 - `classic-version-registry-core` loads registry-backed version and crashgen metadata on top of YAML helpers, and now owns the contributor-facing `Fallout4Version` / `NULL_VERSION` surface that used to live in the retired constants crate
 - `classic-shared-core` also owns the shared `GameId` enum used across bridge, web, and setup flows
 - `classic-settings-core` owns only non-User-Settings `YamlFile` variants
-- `classic-version-core` adds low-level version parsing, text extraction, and PE-version helpers on top of constants and registry re-exports
+- `classic-version-core` keeps the known-version queries and re-exports the loose version and PE helpers now owned by `classic_shared_core::version` until it retires (#258)
 - `classic-web-core` provides small web-oriented helpers without owning an HTTP client or runtime
 - `classic-update-core` provides async GitHub release/update-check behavior for callers running on the shared runtime
 - `yaml-update-delivery.md` documents the cross-crate YAML-data update channel: the `schema_version` contract in `classic_shared_core::yaml`, `client_schemas::*` and the config-owned `inspect_installed_yaml_data` operation in `classic-config-core`, atomic install/rollback in `classic-file-io-core`, the `yaml_update` orchestrator in `classic-update-core`, and the Pages-mirrored maintainer publish workflow

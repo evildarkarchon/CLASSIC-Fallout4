@@ -58,7 +58,6 @@ classic-scan-presentation = { path = "../../business-logic/classic-scan-presenta
 classic-database-core = { path = "../../business-logic/classic-database-core" }
 classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
 classic-scangame-core = { path = "../../business-logic/classic-scangame-core" }
-classic-version-core = { path = "../../business-logic/classic-version-core" }
 classic-version-registry-core = { path = "../../business-logic/classic-version-registry-core" }
 classic-xse-core = { path = "../../business-logic/classic-xse-core" }
 classic-path-core = { path = "../../business-logic/classic-path-core" }

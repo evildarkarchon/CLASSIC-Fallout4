@@ -4,7 +4,7 @@ version = "9.1.0"
 edition = "2024"
 rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
-description = "Python bindings for classic-version-core (PyO3)"
+description = "Python bindings for CLASSIC version helpers (shared-core loose/PE helpers and known-version queries) (PyO3)"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
@@ -13,6 +13,9 @@ name = "classic_version"
 
 [dependencies]
 # Business logic - NO PyO3 here!
+# Loose version parsing and PE helpers (owner)
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+# Known-version queries (Version Registry policy, until #244 moves them)
 classic-version-core = { path = "../../business-logic/classic-version-core" }
 
 # PyO3 bindings

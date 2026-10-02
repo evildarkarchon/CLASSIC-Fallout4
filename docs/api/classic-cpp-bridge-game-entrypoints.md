@@ -32,7 +32,7 @@ For crate-level behavior, see:
 - [`classic-xse-core.md`](classic-xse-core.md)
 - [`classic-scangame-core.md`](classic-scangame-core.md)
 - [`classic-version-registry-core.md`](classic-version-registry-core.md)
-- [`classic-version-core.md`](classic-version-core.md)
+- [`classic-shared-core.md`](classic-shared-core.md#loose-versions-and-pe-helpers-version)
 - [`game-setup-workflow.md`](game-setup-workflow.md)
 
 ---
@@ -238,7 +238,7 @@ Fail-soft behavior:
 
 ### `extract_pe_version_string(exe_path) -> String`
 
-Forwards to `classic_version_core::pe_version::extract_pe_version()`.
+Forwards to `classic_shared_core::version::pe_version::extract_pe_version()`.
 
 Bridge narrowing:
 

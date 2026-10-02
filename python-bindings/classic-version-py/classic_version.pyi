@@ -1,10 +1,12 @@
 """Type stubs for classic_version.
 
-Python bindings for classic-version-core, providing comprehensive version handling
-utilities including parsing, comparison, extraction, and validation.
+Python bindings for CLASSIC's version helpers, providing comprehensive version
+handling utilities including parsing, comparison, extraction, and validation.
 
 Architecture:
-    - classic-version-core: Business logic (version parsing, comparison, extraction)
+    - classic-shared-core (``version`` module): Business logic (loose version
+      parsing, comparison, extraction, formatting, PE version extraction)
+    - classic-version-core: Known-version queries (Version Registry policy)
     - classic-version-py: Python bindings (this module - PyO3 adapters)
 
 Features:

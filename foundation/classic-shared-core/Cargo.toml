@@ -4,7 +4,7 @@ version = "9.1.0"
 edition = "2024"
 rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
-description = "Pure Rust foundation utilities for CLASSIC - runtime, errors, generic YAML, and business logic"
+description = "Pure Rust foundation utilities for CLASSIC - runtime, errors, generic YAML, loose version/PE helpers, and business logic"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
@@ -58,6 +58,12 @@ quick_cache = { workspace = true }
 
 # Ordered collections (preserves YAML key order in YamlOperations accessors)
 indexmap = { workspace = true }
+
+# Loose version parsing (`version` module) and PE version-resource extraction
+# (`version::pe_version`)
+semver = { workspace = true }
+regex = { workspace = true }
+pelite = { workspace = true }
 
 [dev-dependencies]
 criterion = { version = "0.8.1", features = ["html_reports"] }

@@ -10,13 +10,13 @@ use std::path::{Path, PathBuf};
 use classic_file_io_core::FileHashScope;
 use classic_path_core::{DocsPathFinder, GamePathFinder};
 use classic_shared_core::GameId;
+use classic_shared_core::version::{extract_pe_version, parse_version};
 use classic_user_settings_core::GameSetupSettings;
-use classic_version_core::extract_pe_version;
 use classic_version_registry_core::{
     GameVersion as RegistryGameVersion, MatchConfidence, VersionInfo, VersionRegistry,
     get_version_registry,
 };
-use classic_xse_core::{XseType, get_xse_info, parse_version};
+use classic_xse_core::{XseType, get_xse_info};
 
 /// Top-level state for a Game Setup Intake run.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

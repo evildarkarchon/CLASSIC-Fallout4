@@ -225,19 +225,27 @@ def enrich_executable_aux_owners(contract: dict[str, Any]) -> dict[str, Any]:
         # These pre-existing exports call version.rs directly, not the Version
         # Registry carriers historically used by the promoted smoke inventory.
         # Preserve row IDs/owners so retained registry evidence remains intact.
-        version_symbol = {
-            "parseVersion": "parse_version",
-            "tryParseVersion": "try_parse_version",
-            "compareVersions": "compare_versions",
-            "formatVersion": "format_version",
-            "extractVersionFromFilename": "extract_version_from_filename",
-            "extractVersionFromLog": "extract_version_from_log",
-            "extractAllVersions": "extract_all_versions",
-            "isKnownFallout4Version": "is_known_fallout4_version",
+        # The loose helpers are owned by classic-shared-core's `version` module
+        # (#243); only the known-version query is Version Registry policy still
+        # served by classic-version-core.
+        version_route = {
+            "parseVersion": ("classic-shared-core", "parse_version"),
+            "tryParseVersion": ("classic-shared-core", "try_parse_version"),
+            "compareVersions": ("classic-shared-core", "compare_versions"),
+            "formatVersion": ("classic-shared-core", "format_version"),
+            "extractVersionFromFilename": (
+                "classic-shared-core",
+                "extract_version_from_filename",
+            ),
+            "extractVersionFromLog": ("classic-shared-core", "extract_version_from_log"),
+            "extractAllVersions": ("classic-shared-core", "extract_all_versions"),
+            "isKnownFallout4Version": (
+                "classic-version-core",
+                "is_known_fallout4_version",
+            ),
         }.get(mapping.get("nodeExport"))
-        if version_symbol is not None:
-            mapping["rustCrate"] = "classic-version-core"
-            mapping["rustSymbol"] = version_symbol
+        if version_route is not None:
+            mapping["rustCrate"], mapping["rustSymbol"] = version_route
     # settings.rs delegates these exports to the generic logical-key cache in
     # classic-shared-core's `yaml` module, not classic-config-core's explicit
     # application YAML loader.

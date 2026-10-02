@@ -25,7 +25,6 @@ Use this crate when you need to:
 - derive an XSE version from versioned DLL filenames next to the loader
 - package installation status and optional detected version into one `XseInfo` value
 - resolve the XSE Folder from Local.yaml, an optional configured docs root, or Version Registry-backed documents discovery
-- reuse common version helpers re-exported from [`classic-version-core`](../../business-logic/classic-version-core)
 
 Do not use this crate for:
 
@@ -55,7 +54,7 @@ This crate currently exposes a single public file, `src/lib.rs`. There are no pu
 
 ## Root-level re-exports
 
-- `compare_versions()`, `parse_version()`, `try_parse_version()` from [`classic-version-core`](../../business-logic/classic-version-core)
+None. The crate used to re-export `compare_versions()`, `parse_version()`, and `try_parse_version()`; those re-exports ended when the loose version helpers moved to [`classic_shared_core::version`](classic-shared-core.md#loose-versions-and-pe-helpers-version) (issue #243). Import them from shared core.
 
 Contributor note:
 
@@ -138,7 +137,7 @@ Important contributor details:
 
 - detection uses DLL filenames, not PE metadata and not log parsing
 - the loader filename itself is not parsed for version information
-- `parse_version()` comes from [`classic-version-core`](../../business-logic/classic-version-core) and ignores a fourth version component, so `1_10_163_0` becomes semver `1.10.163`
+- `parse_version()` comes from [`classic_shared_core::version`](classic-shared-core.md#loose-versions-and-pe-helpers-version) and ignores a fourth version component, so `1_10_163_0` becomes semver `1.10.163`
 - directory iteration comes from `std::fs::read_dir()`, so if multiple matching DLLs exist, the returned version is simply the first parseable one encountered
 
 ## `is_xse_installed()`
@@ -183,15 +182,9 @@ Behavior worth knowing:
 - explicit `Docs_Folder_XSE` always wins over derived values
 - standard crash scans should keep custom folders additive to XSE Folder collection; use `classic_file_io_core::LogCollector::new_for_scan(...)` when the caller has full scan configuration
 
-## Re-exported version helpers
+## Version helpers
 
-The crate re-exports three helpers from [`classic-version-core`](../../business-logic/classic-version-core):
-
-- `parse_version()`
-- `try_parse_version()`
-- `compare_versions()`
-
-These are useful when a caller wants to compare a detected XSE version with version strings resolved elsewhere, but `classic-xse-core` does not currently expose its own higher-level compatibility-check function.
+The crate does not re-export version helpers. When a caller wants to compare a detected XSE version with version strings resolved elsewhere, it uses `parse_version()` and `compare_versions()` from [`classic_shared_core::version`](classic-shared-core.md#loose-versions-and-pe-helpers-version) directly. `classic-xse-core` does not currently expose its own higher-level compatibility-check function.
 
 ---
 
@@ -204,7 +197,7 @@ The current crate-level flow is intentionally narrow:
 3. The caller already has a game root path or a loader path.
 4. Installation detection checks only for the expected loader filename in that directory.
 5. Version detection scans sibling DLL filenames in the loader's parent directory.
-6. Optional caller-side comparison can then use the re-exported `parse_version()` / `compare_versions()` helpers.
+6. Optional caller-side comparison can then use the shared-core `parse_version()` / `compare_versions()` helpers.
 
 What this crate does not do today:
 
@@ -260,8 +253,7 @@ Contributor note:
 
 Important direct dependencies:
 
-- `classic-shared-core` - provides `GameId` for `XseType::from_game_id()`
-- `classic-version-core` - provides the re-exported version parsing/comparison helpers used by `detect_xse_version()`
+- `classic-shared-core` - provides `GameId` for `XseType::from_game_id()` and the `version::parse_version()` helper used by `detect_xse_version()`
 - `classic-path-core` - currently visible only through `XseError::PathError`
 - `semver` - `XseInfo.version` and `detect_xse_version()` return type
 - `serde` - serialization derives on `XseType`
