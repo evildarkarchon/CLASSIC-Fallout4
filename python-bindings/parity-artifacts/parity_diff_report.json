@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-01T22:19:04.897484+00:00",
+  "generated_at_utc": "2026-10-02T01:55:08.174049+00:00",
   "summary": {
     "tier1_contract_total": 1237,
     "tier1_matched": 1235,
@@ -4018,7 +4018,7 @@
       "owner_module": "version_registry",
       "rust_crate": "classic-version-registry-core",
       "squad": "Squad B (version-registry)",
-      "rust_symbol": "game_version",
+      "rust_symbol": "game_version_in",
       "python_module": "classic_version_registry",
       "python_export": "Fallout4Version.version",
       "python_export_path": "Fallout4Version.version",
@@ -17394,7 +17394,7 @@
       "id": "version.lib.is_known_f4se_version",
       "tier": "tier1",
       "owner_module": "version",
-      "rust_crate": "classic-version-core",
+      "rust_crate": "classic-version-registry-core",
       "squad": "Squad F (perf/message/path/version/web/update)",
       "rust_symbol": "is_known_f4se_version",
       "python_module": "classic_version",
@@ -17410,7 +17410,7 @@
       "id": "version.lib.is_known_fallout4_version",
       "tier": "tier1",
       "owner_module": "version",
-      "rust_crate": "classic-version-core",
+      "rust_crate": "classic-version-registry-core",
       "squad": "Squad F (perf/message/path/version/web/update)",
       "rust_symbol": "is_known_fallout4_version",
       "python_module": "classic_version",

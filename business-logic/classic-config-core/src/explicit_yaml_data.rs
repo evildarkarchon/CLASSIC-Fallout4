@@ -6,6 +6,7 @@ use classic_shared_core::GameId;
 use classic_shared_core::yaml::{
     Compatibility, SchemaCompat, extract_schema_version, schema_compat_check,
 };
+use classic_version_registry_core::VersionRegistryScope;
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 use thiserror::Error;
@@ -229,6 +230,27 @@ pub enum ExplicitYamlDataLoadError {
 pub async fn load_explicit_yaml_data(
     request: ExplicitYamlDataRequest,
 ) -> Result<ExplicitYamlDataSnapshot, ExplicitYamlDataLoadError> {
+    load_explicit_yaml_data_in_version_registry_scope(
+        request,
+        &VersionRegistryScope::default_scope(),
+    )
+    .await
+}
+
+/// Load explicit YAML Data like [`load_explicit_yaml_data`], reading Version
+/// Registry metadata fallbacks only from `version_registry`.
+///
+/// The scope's snapshot is taken lazily, only if the selected game YAML needs
+/// registry metadata; no other snapshot, including the process default, is
+/// read. This lets a binding facade keep its own snapshot.
+///
+/// # Errors
+///
+/// Same as [`load_explicit_yaml_data`].
+pub async fn load_explicit_yaml_data_in_version_registry_scope(
+    request: ExplicitYamlDataRequest,
+    version_registry: &VersionRegistryScope,
+) -> Result<ExplicitYamlDataSnapshot, ExplicitYamlDataLoadError> {
     let game_data_role = game_data_role(request.game)?;
 
     // Each path is read exactly once; every later operation borrows these owned bytes.
@@ -288,6 +310,7 @@ pub async fn load_explicit_yaml_data(
         &ignore_yaml,
         game_data_key(game_data_role),
         &request.selected_game_version,
+        version_registry,
     )
     .map_err(|source| ExplicitYamlDataLoadError::InvalidRoleData {
         role: ExplicitYamlDataRole::Game,

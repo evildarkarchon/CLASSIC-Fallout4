@@ -1,5 +1,6 @@
 //! PyO3 bindings for XSE (F4SE/SKSE) plugin validation
 
+use crate::SCANGAME_VERSION_REGISTRY_SCOPE;
 use classic_scangame_core::{AddressLibInfo, GameVersion, ValidationResult, XseChecker};
 use pyo3::prelude::*;
 use std::path::PathBuf;
@@ -58,7 +59,7 @@ pub struct PyAddressLibInfo {
 impl PyAddressLibInfo {
     #[staticmethod]
     fn vr() -> Self {
-        let info = AddressLibInfo::vr();
+        let info = AddressLibInfo::vr_in(SCANGAME_VERSION_REGISTRY_SCOPE.registry());
         Self {
             version: PyGameVersion::Vr,
             filename: info.filename,
@@ -69,7 +70,7 @@ impl PyAddressLibInfo {
 
     #[staticmethod]
     fn original() -> Self {
-        let info = AddressLibInfo::original();
+        let info = AddressLibInfo::original_in(SCANGAME_VERSION_REGISTRY_SCOPE.registry());
         Self {
             version: PyGameVersion::Original,
             filename: info.filename,
@@ -80,7 +81,7 @@ impl PyAddressLibInfo {
 
     #[staticmethod]
     fn next_gen() -> Self {
-        let info = AddressLibInfo::next_gen();
+        let info = AddressLibInfo::next_gen_in(SCANGAME_VERSION_REGISTRY_SCOPE.registry());
         Self {
             version: PyGameVersion::NextGen,
             filename: info.filename,
@@ -91,7 +92,8 @@ impl PyAddressLibInfo {
 
     #[staticmethod]
     fn anniversary_edition() -> Self {
-        let info = AddressLibInfo::anniversary_edition();
+        let info =
+            AddressLibInfo::anniversary_edition_in(SCANGAME_VERSION_REGISTRY_SCOPE.registry());
         Self {
             version: PyGameVersion::AnniversaryEdition,
             filename: info.filename,
@@ -145,7 +147,9 @@ impl PyXseChecker {
     #[pyo3(signature = (plugins_path, game_version=PyGameVersion::Original))]
     fn new(plugins_path: PathBuf, game_version: PyGameVersion) -> PyResult<Self> {
         let version = to_core_game_version(game_version);
-        let checker = XseChecker::new(plugins_path, version).map_err(crate::to_pyerr)?;
+        let checker = XseChecker::new(plugins_path, version)
+            .map_err(crate::to_pyerr)?
+            .with_version_registry_scope(SCANGAME_VERSION_REGISTRY_SCOPE.clone());
 
         Ok(Self { inner: checker })
     }

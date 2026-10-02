@@ -15,8 +15,8 @@ name = "classic_version"
 # Business logic - NO PyO3 here!
 # Loose version parsing and PE helpers (owner)
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
-# Known-version queries (Version Registry policy, until #244 moves them)
-classic-version-core = { path = "../../business-logic/classic-version-core" }
+# Known-version queries (Version Registry policy owner)
+classic-version-registry-core = { path = "../../business-logic/classic-version-registry-core" }
 
 # PyO3 bindings
 pyo3 = { workspace = true }

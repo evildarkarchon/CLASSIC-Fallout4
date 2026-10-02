@@ -113,6 +113,7 @@ use classic_shared::{
     ResultExt, ToPyErr, define_exceptions, register_exceptions, without_gil_block_on,
 };
 use classic_shared_core::yaml::SettingsError;
+use classic_version_registry_core::VersionRegistryScope;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList, PySet};
 use std::path::PathBuf;
@@ -455,12 +456,13 @@ impl PyYamlData {
         game: String,
         game_version: String,
     ) -> PyResult<Self> {
-        let inner = YamlDataCore::from_yaml_content(
+        let inner = YamlDataCore::from_yaml_content_in_version_registry_scope(
             &main_content,
             &game_content,
             &ignore_content,
             game,
             game_version,
+            &CONFIG_VERSION_REGISTRY_SCOPE,
         )
         .map_err(PyConfigError)
         .map_pyerr()?;
@@ -815,6 +817,16 @@ pub fn clear_yaml_cache() {
 /// and `classic_registry.set_application_dir()` cannot replace it.
 static CONFIG_REGISTRY_SCOPE: LazyLock<RegistryScope> = LazyLock::new(RegistryScope::new_isolated);
 
+/// `classic_config`'s Version Registry scope.
+///
+/// `YamlData.from_yaml_content`, `load_installed_yaml_data`, and
+/// `load_explicit_yaml_data` read registry metadata fallbacks only from this
+/// scope's lazy first-use snapshot, so once the Python facades share one
+/// native library another facade's first use — taken from a different working
+/// directory — cannot decide config's registry metadata.
+pub(crate) static CONFIG_VERSION_REGISTRY_SCOPE: LazyLock<VersionRegistryScope> =
+    LazyLock::new(VersionRegistryScope::new_isolated);
+
 /// Auto-register the application directory so independent YAML/cache paths resolve
 /// relative to the executed Python file rather than the interpreter's install path.
 fn auto_init_application_dir(py: Python<'_>) {
@@ -898,3 +910,7 @@ pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "lib_tests.rs"]
+mod tests;

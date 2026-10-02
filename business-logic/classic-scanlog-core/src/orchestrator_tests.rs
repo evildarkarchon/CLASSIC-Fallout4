@@ -1,5 +1,6 @@
 use super::*;
 use classic_shared_core::get_runtime;
+use classic_version_registry_core::get_version_registry;
 use classic_vocabulary::assert_vocabulary_conformance;
 use tempfile::tempdir;
 
@@ -109,8 +110,16 @@ fn build_orchestrator_with_structured_mods_solu(mods_solu_yaml: &str) -> Orchest
         "auto".to_string(),
     )
     .expect("structured Mods_SOLU yaml should load");
-    let config =
-        build_analysis_config_from_yaml(&yaml, "Fallout4", "auto", false, false, false, Vec::new());
+    let config = build_analysis_config_from_yaml(
+        &yaml,
+        "Fallout4",
+        "auto",
+        false,
+        false,
+        false,
+        Vec::new(),
+        &VersionRegistryScope::default_scope(),
+    );
 
     OrchestratorCore::new(config).expect("orchestrator should build")
 }
@@ -151,8 +160,16 @@ fn structured_mods_solu_log(plugins: &[(&str, &str)]) -> String {
 fn build_analysis_config_does_not_double_prefix_classic_version() {
     let yaml = make_yaml_data("v9.0.0");
 
-    let config =
-        build_analysis_config_from_yaml(&yaml, "Fallout4", "auto", false, false, false, Vec::new());
+    let config = build_analysis_config_from_yaml(
+        &yaml,
+        "Fallout4",
+        "auto",
+        false,
+        false,
+        false,
+        Vec::new(),
+        &VersionRegistryScope::default_scope(),
+    );
 
     assert_eq!(config.classic_version, "v9.0.0");
 }
@@ -185,8 +202,16 @@ fn build_analysis_config_uses_registry_metadata_when_yaml_game_info_is_missing()
         },
     );
 
-    let config =
-        build_analysis_config_from_yaml(&yaml, "Fallout4", "auto", false, false, false, Vec::new());
+    let config = build_analysis_config_from_yaml(
+        &yaml,
+        "Fallout4",
+        "auto",
+        false,
+        false,
+        false,
+        Vec::new(),
+        &VersionRegistryScope::default_scope(),
+    );
 
     assert_eq!(config.crashgen_name, "Buffout 4");
     assert!(!config.crashgen_latest.is_empty());
@@ -220,6 +245,7 @@ fn build_analysis_config_resolves_registry_metadata_for_spaced_game_and_root_nam
         false,
         false,
         Vec::new(),
+        &VersionRegistryScope::default_scope(),
     );
 
     assert_eq!(config.crashgen_name, "Buffout 4");
@@ -246,6 +272,7 @@ fn build_analysis_config_resolves_identical_metadata_for_spaced_and_compact_name
         false,
         false,
         Vec::new(),
+        &VersionRegistryScope::default_scope(),
     );
     let spaced_config = build_analysis_config_from_yaml(
         &spaced_yaml,
@@ -255,6 +282,7 @@ fn build_analysis_config_resolves_identical_metadata_for_spaced_and_compact_name
         false,
         false,
         Vec::new(),
+        &VersionRegistryScope::default_scope(),
     );
 
     assert_eq!(spaced_config.crashgen_name, compact_config.crashgen_name);
@@ -275,8 +303,16 @@ fn orchestrator_plugin_limit_matches_vr_version_from_built_config() {
     let mut yaml = make_yaml_data("v9.0.0");
     yaml.game_ignore_plugins.push("Fallout4.esm".to_string());
 
-    let config =
-        build_analysis_config_from_yaml(&yaml, "Fallout4", "auto", false, false, false, Vec::new());
+    let config = build_analysis_config_from_yaml(
+        &yaml,
+        "Fallout4",
+        "auto",
+        false,
+        false,
+        false,
+        Vec::new(),
+        &VersionRegistryScope::default_scope(),
+    );
     let orchestrator = OrchestratorCore::new(config).unwrap();
     let analyzer = orchestrator.plugin_analyzer.as_ref().unwrap();
 
@@ -1091,8 +1127,16 @@ fn process_log_ignores_legacy_mods_opc2_yaml_entries() {
         "auto".to_string(),
     )
     .expect("yaml fixture should load");
-    let config =
-        build_analysis_config_from_yaml(&yaml, "Fallout4", "auto", false, false, false, Vec::new());
+    let config = build_analysis_config_from_yaml(
+        &yaml,
+        "Fallout4",
+        "auto",
+        false,
+        false,
+        false,
+        Vec::new(),
+        &VersionRegistryScope::default_scope(),
+    );
     let orchestrator = OrchestratorCore::new(config).expect("orchestrator should build");
 
     let log_contents = [

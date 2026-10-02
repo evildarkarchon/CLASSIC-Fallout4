@@ -38,7 +38,6 @@ classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
 # Wave 1: Core Infrastructure
 classic-perf-core = { path = "../../business-logic/classic-perf-core" }
 classic-registry-core = { path = "../../business-logic/classic-registry-core" }
-classic-version-core = { path = "../../business-logic/classic-version-core" }
 classic-message-core = { path = "../../business-logic/classic-message-core" }
 
 # Wave 2: Existing modules (already partial)

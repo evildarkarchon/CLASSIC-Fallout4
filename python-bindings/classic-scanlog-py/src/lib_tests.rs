@@ -71,3 +71,14 @@ fn module_init_registers_script_directory_in_its_own_registry_scope() {
     env::set_current_dir(original_dir).expect("cwd should be restored");
     test_result.expect("module init should register the executed script directory");
 }
+
+/// `PluginAnalyzer` and scan runs started through this facade read its own
+/// Version Registry scope, which must not be the process default (#233, #244).
+#[test]
+fn facade_version_registry_scope_is_not_the_process_default() {
+    use classic_version_registry_core::{VersionRegistryScope, get_version_registry};
+
+    let scope = &*SCANLOG_VERSION_REGISTRY_SCOPE;
+    assert_ne!(*scope, VersionRegistryScope::default_scope());
+    assert!(!std::ptr::eq(scope.registry(), get_version_registry()));
+}

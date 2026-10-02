@@ -65,6 +65,7 @@
 
 use classic_registry_core::RegistryScope;
 use classic_shared::{define_exceptions, register_exceptions};
+use classic_version_registry_core::VersionRegistryScope;
 use pyo3::prelude::*;
 use std::sync::LazyLock;
 
@@ -199,6 +200,16 @@ pub fn to_pyerr(err: impl std::fmt::Display) -> PyErr {
 /// reads the value back today; the write is kept deliberately so the facade's
 /// import-time initialization contract survives the merge (#233, #241).
 static SCANLOG_REGISTRY_SCOPE: LazyLock<RegistryScope> = LazyLock::new(RegistryScope::new_isolated);
+
+/// `classic_scanlog`'s Version Registry scope.
+///
+/// `PluginAnalyzer` and every Crash Log Scan Run started through this facade
+/// (including a resumed continuation) read registry metadata only from this
+/// scope's lazy first-use snapshot, so once the Python facades share one
+/// native library another facade's first use — taken from a different working
+/// directory — cannot decide scanlog's registry metadata.
+pub(crate) static SCANLOG_VERSION_REGISTRY_SCOPE: LazyLock<VersionRegistryScope> =
+    LazyLock::new(VersionRegistryScope::new_isolated);
 
 /// Register the executed script's directory as this facade's application
 /// directory unless one is already set in its own registry scope.

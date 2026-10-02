@@ -50,6 +50,7 @@ This crate currently exposes a single public file, `src/lib.rs`. There are no pu
 - `is_xse_installed()` - loader existence check for a game directory
 - `get_xse_info()` - combined installation + optional version probe
 - `resolve_xse_folder_for_scan()` - fail-soft XSE Folder resolution for Crash Log collection
+- `resolve_xse_folder_for_scan_in_version_registry_scope()` - the same resolution reading Version Registry metadata only from a caller-selected scope
 - `XseError`, `XseResult<T>` - crate-specific error model
 
 ## Root-level re-exports
@@ -181,6 +182,7 @@ Behavior worth knowing:
 - Version Registry XSE metadata selects the XSE family, but the derived documents subfolder uses the on-disk XSE docs folder name; Fallout 4 VR uses the shared `F4SE` folder even though its XSE acronym is `F4SEVR`
 - explicit `Docs_Folder_XSE` always wins over derived values
 - standard crash scans should keep custom folders additive to XSE Folder collection; use `classic_file_io_core::LogCollector::new_for_scan(...)` when the caller has full scan configuration
+- Version Registry metadata comes from the process default snapshot; `resolve_xse_folder_for_scan_in_version_registry_scope(..., &VersionRegistryScope)` applies the same order but reads only the caller's [scope](classic-version-registry-core.md#version-registry-scopes), taking its snapshot only for a Fallout 4 game. The Crash Log Scan Run uses it with the run's scope for Standard discovery, then builds its `LogCollector` from the resolved folder
 
 ## Version helpers
 

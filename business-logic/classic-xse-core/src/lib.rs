@@ -27,7 +27,7 @@ use classic_path_core::DocsPathFinder;
 use classic_shared_core::GameId;
 use classic_shared_core::version::parse_version;
 use classic_shared_core::yaml::YamlOperations;
-use classic_version_registry_core::{Fallout4Version, VersionInfo};
+use classic_version_registry_core::{Fallout4Version, VersionInfo, VersionRegistryScope};
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -502,7 +502,29 @@ pub fn resolve_xse_folder_for_scan(
     selected_game_version: &str,
     configured_docs_root: Option<&Path>,
 ) -> Option<PathBuf> {
-    let version_info = resolve_version_info(game, selected_game_version);
+    resolve_xse_folder_for_scan_in_version_registry_scope(
+        yaml_dir_data,
+        game,
+        selected_game_version,
+        configured_docs_root,
+        &VersionRegistryScope::default_scope(),
+    )
+}
+
+/// Resolve the XSE Folder like [`resolve_xse_folder_for_scan`], reading
+/// Version Registry metadata only from `version_registry`.
+///
+/// The scope's snapshot is taken lazily, and only for a Fallout 4 game; no
+/// other snapshot, including the process default, is read.
+#[must_use]
+pub fn resolve_xse_folder_for_scan_in_version_registry_scope(
+    yaml_dir_data: impl AsRef<Path>,
+    game: &str,
+    selected_game_version: &str,
+    configured_docs_root: Option<&Path>,
+    version_registry: &VersionRegistryScope,
+) -> Option<PathBuf> {
+    let version_info = resolve_version_info(game, selected_game_version, version_registry);
     let local_yaml_path = yaml_dir_data
         .as_ref()
         .join(format!("CLASSIC {game} Local.yaml"));
@@ -534,7 +556,11 @@ pub fn resolve_xse_folder_for_scan(
     discover_xse_folder(version_info)
 }
 
-fn resolve_version_info(game: &str, selected_game_version: &str) -> Option<&'static VersionInfo> {
+fn resolve_version_info<'r>(
+    game: &str,
+    selected_game_version: &str,
+    version_registry: &'r VersionRegistryScope,
+) -> Option<&'r VersionInfo> {
     if !matches!(game, "Fallout4" | "Fallout4VR") {
         return None;
     }
@@ -551,7 +577,7 @@ fn resolve_version_info(game: &str, selected_game_version: &str) -> Option<&'sta
         version_key.parse::<Fallout4Version>().ok()?
     };
 
-    selected.get_version_info()
+    selected.version_info_in(version_registry.registry())
 }
 
 fn clean_path_value(value: &str) -> Option<PathBuf> {
@@ -573,7 +599,7 @@ fn non_empty_path(path: &Path) -> Option<&Path> {
 
 fn xse_folder_from_docs_root(
     docs_root: &Path,
-    version_info: Option<&'static VersionInfo>,
+    version_info: Option<&VersionInfo>,
 ) -> Option<PathBuf> {
     let folder = version_info
         .and_then(|info| info.xse.as_ref())
@@ -596,7 +622,7 @@ fn docs_relative_path(docs_name: &str) -> String {
     format!("My Games/{docs_name}")
 }
 
-fn discover_xse_folder(version_info: Option<&'static VersionInfo>) -> Option<PathBuf> {
+fn discover_xse_folder(version_info: Option<&VersionInfo>) -> Option<PathBuf> {
     let info = version_info?;
     if info.docs_name.trim().is_empty() {
         return None;

@@ -10,6 +10,7 @@ use crate::orchestrator::build_analysis_config_from_yaml;
 use crate::scan_sidecar_settings::{self, ScanSidecarSettings};
 use classic_config_core::{InstalledYamlDataSnapshot, YamlDataCore};
 use classic_database_core::{BATCH_CACHE_TTL_SECS, DatabasePool};
+use classic_version_registry_core::VersionRegistryScope;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
@@ -253,6 +254,9 @@ pub struct CrashLogScanIntake<'a> {
     paths: Option<CrashLogScanIntakePaths>,
     scan_facts: CrashLogScanFacts,
     yaml_source: YamlDataSource<'a>,
+    /// Version Registry scope that analysis configuration and per-log
+    /// analysis read.
+    version_registry: VersionRegistryScope,
 }
 
 impl<'a> CrashLogScanIntake<'a> {
@@ -276,6 +280,7 @@ impl<'a> CrashLogScanIntake<'a> {
             paths,
             scan_facts: CrashLogScanFacts::default(),
             yaml_source: YamlDataSource::InMemory(yaml),
+            version_registry: VersionRegistryScope::default_scope(),
         }
     }
 
@@ -303,6 +308,7 @@ impl<'a> CrashLogScanIntake<'a> {
             )),
             scan_facts: CrashLogScanFacts::default(),
             yaml_source: YamlDataSource::InstalledSnapshot(snapshot),
+            version_registry: VersionRegistryScope::default_scope(),
         }
     }
 
@@ -328,7 +334,17 @@ impl<'a> CrashLogScanIntake<'a> {
             )),
             scan_facts: CrashLogScanFacts::default(),
             yaml_source: YamlDataSource::InstalledSnapshotBorrowed(snapshot),
+            version_registry: VersionRegistryScope::default_scope(),
         }
+    }
+
+    /// Read Version Registry metadata from `version_registry` instead of the
+    /// process default snapshot, both while preparing the analysis
+    /// configuration and, through it, during per-log analysis.
+    #[must_use]
+    pub fn with_version_registry_scope(mut self, version_registry: VersionRegistryScope) -> Self {
+        self.version_registry = version_registry;
+        self
     }
 
     /// Supplies typed scan facts already projected by the caller's User Settings adapter.
@@ -395,6 +411,7 @@ impl<'a> CrashLogScanIntake<'a> {
             self.options.fcx_mode,
             self.options.simplify_logs,
             remove_list,
+            &self.version_registry,
         );
         let show_formid_values = analysis_config.show_formid_values;
 

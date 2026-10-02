@@ -3,7 +3,7 @@
   "familyId": "version-f4se",
   "familyVersion": 1,
   "domainOwner": {
-    "rustCrate": "classic-version-core"
+    "rustCrate": "classic-version-registry-core"
   },
   "fixtureRoot": "tests/fixtures/version_operations_conformance",
   "fixtures": {

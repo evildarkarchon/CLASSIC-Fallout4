@@ -14,7 +14,7 @@ use classic_shared_core::version::{extract_pe_version, parse_version};
 use classic_user_settings_core::GameSetupSettings;
 use classic_version_registry_core::{
     GameVersion as RegistryGameVersion, MatchConfidence, VersionInfo, VersionRegistry,
-    get_version_registry,
+    VersionRegistryScope,
 };
 use classic_xse_core::{XseType, get_xse_info};
 
@@ -386,6 +386,26 @@ impl GameSetupIntake {
     /// process.
     #[must_use]
     pub fn run_in_hash_scope(&self, hash_scope: &FileHashScope) -> GameSetupIntakeResult {
+        self.run_in_scopes(hash_scope, &VersionRegistryScope::default_scope())
+    }
+
+    /// Run Game Setup Intake through caller-selected hash-cache and Version
+    /// Registry scopes.
+    ///
+    /// Behaves exactly like [`GameSetupIntake::run_in_hash_scope`], and
+    /// additionally reads every Version Registry fact (version detection,
+    /// expectations, and known Address Library files) only from
+    /// `version_registry`'s snapshot. No other hash-cache scope or registry
+    /// snapshot, including the process defaults, is read or changed. This lets
+    /// a binding facade keep both independent of other callers in the same
+    /// process.
+    #[must_use]
+    pub fn run_in_scopes(
+        &self,
+        hash_scope: &FileHashScope,
+        version_registry: &VersionRegistryScope,
+    ) -> GameSetupIntakeResult {
+        let registry = version_registry.registry();
         let mut checks = Vec::new();
         let mut actions = Vec::new();
         let mut path_updates = Vec::new();
@@ -400,8 +420,12 @@ impl GameSetupIntake {
                         .as_ref()
                         .map(|root| root.join(selected_version_exe_name(self.game_id, &selected)))
                 });
-        let version_context =
-            resolve_version_context(self, auto_detection_exe_path.as_deref(), hash_scope);
+        let version_context = resolve_version_context_with_registry(
+            self,
+            auto_detection_exe_path.as_deref(),
+            registry,
+            hash_scope,
+        );
         let mut version_facts = version_context.facts;
         checks.extend(version_context.checks);
         let game_exe_path =
@@ -441,6 +465,7 @@ impl GameSetupIntake {
             self.game_id,
             &paths,
             version_context.info.as_ref(),
+            registry,
             hash_scope,
             &mut checks,
         );
@@ -587,15 +612,8 @@ struct VersionContext {
     checks: Vec<GameSetupCheck>,
 }
 
-/// Resolve version registry metadata using any game executable path already discovered.
-fn resolve_version_context(
-    intake: &GameSetupIntake,
-    exe_path: Option<&Path>,
-    hash_scope: &FileHashScope,
-) -> VersionContext {
-    resolve_version_context_with_registry(intake, exe_path, get_version_registry(), hash_scope)
-}
-
+/// Resolve version registry metadata from `registry` using any game executable
+/// path already discovered.
 fn resolve_version_context_with_registry(
     intake: &GameSetupIntake,
     exe_path: Option<&Path>,
@@ -1047,6 +1065,7 @@ fn run_xse_checks(
     game_id: GameId,
     paths: &GameSetupResolvedPaths,
     info: Option<&VersionInfo>,
+    registry: &VersionRegistry,
     hash_scope: &FileHashScope,
     checks: &mut Vec<GameSetupCheck>,
 ) {
@@ -1123,13 +1142,14 @@ fn run_xse_checks(
         )),
     }
 
-    run_address_library_check(paths, info, checks);
+    run_address_library_check(paths, info, registry, checks);
     run_xse_script_hash_checks(paths, info, hash_scope, checks);
 }
 
 fn run_address_library_check(
     paths: &GameSetupResolvedPaths,
     info: Option<&VersionInfo>,
+    registry: &VersionRegistry,
     checks: &mut Vec<GameSetupCheck>,
 ) {
     let Some(expected) = info.and_then(|info| info.address_library.as_ref()) else {
@@ -1168,7 +1188,7 @@ fn run_address_library_check(
         return;
     }
 
-    let known_wrong = known_address_library_files(info.map(|info| info.game.as_str()))
+    let known_wrong = known_address_library_files(registry, info.map(|info| info.game.as_str()))
         .into_iter()
         .filter(|filename| filename != &expected.filename && plugins_path.join(filename).exists())
         .collect::<Vec<_>>();
@@ -1438,11 +1458,11 @@ fn xse_runtime_folder_name(acronym: &str) -> &str {
     }
 }
 
-fn known_address_library_files(game: Option<&str>) -> Vec<String> {
+fn known_address_library_files(registry: &VersionRegistry, game: Option<&str>) -> Vec<String> {
     let Some(game) = game else {
         return Vec::new();
     };
-    get_version_registry()
+    registry
         .get_all_for_game(game, None)
         .into_iter()
         .filter_map(|info| info.address_library.as_ref())

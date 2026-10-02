@@ -39,7 +39,7 @@ use classic_config_core::{
 use classic_database_core::{DatabasePool, FormIdValueLookup};
 use classic_file_io_core::FileIOCore;
 use classic_version_registry_core::{
-    CrashgenConfig, GameVersion as RegistryGameVersion, VersionInfo, get_version_registry,
+    CrashgenConfig, GameVersion as RegistryGameVersion, VersionInfo, VersionRegistryScope,
 };
 use classic_vocabulary::Vocabulary;
 use indexmap::IndexMap;
@@ -256,6 +256,11 @@ pub struct AnalysisConfig {
     /// Registry-backed selected version metadata, if available.
     selected_version: Option<VersionInfo>,
 
+    /// Version Registry scope that per-log analysis (crashgen floors and
+    /// plugin-limit classification) reads. It travels with the configuration
+    /// so a paused and resumed scan run keeps reading the same snapshot.
+    version_registry: VersionRegistryScope,
+
     /// Crashgen name (e.g., "Buffout 4")
     pub crashgen_name: String,
 
@@ -364,6 +369,7 @@ impl AnalysisConfig {
         Self {
             game,
             selected_version,
+            version_registry: VersionRegistryScope::default_scope(),
             crashgen_name: String::new(),
             crashgen_latest: String::new(),
             crashgen_latest_vr: String::new(),
@@ -407,6 +413,9 @@ impl AnalysisConfig {
 /// * `fcx_mode` - Whether FCX (enhanced analysis) mode is enabled
 /// * `simplify_logs` - Whether to remove specified strings from crash logs
 /// * `remove_list` - Strings to remove when `simplify_logs` is enabled
+/// * `version_registry` - Version Registry scope read here and, through the
+///   returned configuration, by per-log analysis
+#[allow(clippy::too_many_arguments)]
 pub fn build_analysis_config_from_yaml(
     yaml: &classic_config_core::YamlDataCore,
     game: &str,
@@ -415,15 +424,20 @@ pub fn build_analysis_config_from_yaml(
     fcx_mode: bool,
     simplify_logs: bool,
     remove_list: Vec<String>,
+    version_registry: &VersionRegistryScope,
 ) -> AnalysisConfig {
     let registry_game_id = match yaml.get_game_root_name().trim() {
         "" => game,
         root_name => root_name,
     };
-    let selected_version =
-        classic_config_core::resolve_registry_version_info(registry_game_id, selected_game_version);
+    let registry = version_registry.registry();
+    let selected_version = classic_config_core::resolve_registry_version_info_in(
+        registry,
+        registry_game_id,
+        selected_game_version,
+    );
     let game_version_vr =
-        classic_config_core::resolve_registry_version_info(registry_game_id, "VR")
+        classic_config_core::resolve_registry_version_info_in(registry, registry_game_id, "VR")
             .map(|info| classic_config_core::format_registry_game_version(&info.version))
             .unwrap_or_default();
     let registry_crashgen = selected_version
@@ -455,6 +469,7 @@ pub fn build_analysis_config_from_yaml(
     AnalysisConfig {
         game: game.to_string(),
         selected_version,
+        version_registry: version_registry.clone(),
         crashgen_name,
         crashgen_latest,
         crashgen_latest_vr: String::new(), // VR-specific data now provided by Version Registry
@@ -940,13 +955,16 @@ impl OrchestratorCore {
     pub fn new(config: AnalysisConfig) -> Result<Self> {
         // Plugin parsing is needed for all mod-detection paths, even when the
         // ignore lists are empty.
-        let plugin_analyzer = Some(PluginAnalyzer::new(
-            config.ignore_plugins.clone(),
-            config.ignore_list.clone(),
-            config.crashgen_name.clone(),
-            config.game_version.clone(),
-            config.game_version_vr.clone(),
-        )?);
+        let plugin_analyzer = Some(
+            PluginAnalyzer::new(
+                config.ignore_plugins.clone(),
+                config.ignore_list.clone(),
+                config.crashgen_name.clone(),
+                config.game_version.clone(),
+                config.game_version_vr.clone(),
+            )?
+            .with_version_registry_scope(config.version_registry.clone()),
+        );
         let plugin_evidence_analyzer = PluginEvidenceAnalyzer::new(config.ignore_plugins.clone())
             .map_err(|error| {
             crate::error::ScanLogError::ConfigError(format!(
@@ -1685,7 +1703,7 @@ impl OrchestratorCore {
             return (current, CrashgenVersionStatus::NoSupportedVersion);
         };
 
-        let registry = get_version_registry();
+        let registry = self.config.version_registry.registry();
         let match_result = registry.match_version(
             &detected_game_version,
             &self.config.game,

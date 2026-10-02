@@ -3,7 +3,8 @@
 //! Exposes version parsing, comparison, extraction, and formatting functions
 //! to JavaScript/TypeScript. The loose parsing and PE helpers are delegated to
 //! `classic_shared_core::version`; the known-version query is Version Registry
-//! policy and is delegated to `classic_version_core` until #244 moves it.
+//! policy owned by `classic_version_registry_core`, answered from the default
+//! snapshot this linked image has always used.
 //!
 //! The core crate works with `semver::Version` objects internally; this binding layer
 //! converts between JS strings and `Version` at the boundary.
@@ -58,7 +59,7 @@ pub fn compare_versions(a: String, b: String) -> Result<i32> {
 #[napi]
 pub fn is_known_fallout4_version(version: String) -> Result<bool> {
     let v = classic_shared_core::version::parse_version(&version).map_err(to_napi_err)?;
-    Ok(classic_version_core::is_known_fallout4_version(&v))
+    Ok(classic_version_registry_core::is_known_fallout4_version(&v))
 }
 
 /// Extract a version from a filename.

@@ -82,7 +82,9 @@ impl PyFallout4Version {
     }
 
     fn version(&self) -> String {
-        self.inner.game_version().to_string()
+        self.inner
+            .game_version_in(crate::facade_registry())
+            .to_string()
     }
 
     fn registry_id(&self) -> &'static str {
@@ -94,11 +96,11 @@ impl PyFallout4Version {
     }
 
     fn xse_acronym(&self) -> &'static str {
-        self.inner.xse_acronym()
+        self.inner.xse_acronym_in(crate::facade_registry())
     }
 
     fn display_name(&self) -> &'static str {
-        self.inner.display_name()
+        self.inner.display_name_in(crate::facade_registry())
     }
 
     fn as_str(&self) -> &'static str {

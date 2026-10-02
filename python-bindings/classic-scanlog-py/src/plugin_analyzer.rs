@@ -77,7 +77,8 @@ impl PyPluginAnalyzer {
             game_version,
             game_version_vr,
         )
-        .map_err(crate::to_pyerr)?;
+        .map_err(crate::to_pyerr)?
+        .with_version_registry_scope(crate::SCANLOG_VERSION_REGISTRY_SCOPE.clone());
         Ok(Self { inner })
     }
 

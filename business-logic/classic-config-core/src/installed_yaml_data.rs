@@ -13,6 +13,7 @@ use classic_shared_core::yaml::YamlOperations;
 use classic_shared_core::yaml::{
     Compatibility, SchemaCompat, SchemaVersion, extract_schema_version, schema_compat_check,
 };
+use classic_version_registry_core::VersionRegistryScope;
 use classic_vocabulary::Vocabulary;
 use fs4::fs_std::FileExt;
 use std::fs::{File, OpenOptions};
@@ -1452,10 +1453,42 @@ where
 pub fn load_installed_yaml_data(
     request: InstalledYamlDataLoadRequest,
 ) -> Result<InstalledYamlDataLoadOutcome, InstalledYamlDataLoadError> {
-    load_installed_yaml_data_with_env(request, |name| match std::env::var(name) {
+    load_installed_yaml_data_in_version_registry_scope(
+        request,
+        &VersionRegistryScope::default_scope(),
+    )
+}
+
+/// Load Installed YAML Data like [`load_installed_yaml_data`], reading Version
+/// Registry metadata fallbacks only from `version_registry`.
+///
+/// Every `YamlDataCore` built during the load, including the eager Local
+/// Ignore recovery snapshots, reads that scope; its snapshot is taken lazily,
+/// only if the selected game YAML needs registry metadata. No other snapshot,
+/// including the process default, is read. This lets a binding facade keep
+/// its own snapshot.
+///
+/// # Errors
+///
+/// Same as [`load_installed_yaml_data`].
+pub fn load_installed_yaml_data_in_version_registry_scope(
+    request: InstalledYamlDataLoadRequest,
+    version_registry: &VersionRegistryScope,
+) -> Result<InstalledYamlDataLoadOutcome, InstalledYamlDataLoadError> {
+    load_installed_yaml_data_with_env_and_io(
+        request,
+        system_env,
+        &SystemLocalIgnoreFileSystem,
+        version_registry,
+    )
+}
+
+/// Production cache-environment lookup: unset and empty variables are absent.
+fn system_env(name: &str) -> Option<String> {
+    match std::env::var(name) {
         Ok(value) if !value.is_empty() => Some(value),
         _ => None,
-    })
+    }
 }
 
 /// Testable form of [`load_installed_yaml_data`] with injected cache environment lookup.
@@ -1469,7 +1502,12 @@ pub fn load_installed_yaml_data_with_env<F>(
 where
     F: Fn(&str) -> Option<String>,
 {
-    load_installed_yaml_data_with_env_and_io(request, env, &SystemLocalIgnoreFileSystem)
+    load_installed_yaml_data_with_env_and_io(
+        request,
+        env,
+        &SystemLocalIgnoreFileSystem,
+        &VersionRegistryScope::default_scope(),
+    )
 }
 
 /// Shared installed loader implementation with private Local Ignore filesystem injection.
@@ -1481,6 +1519,7 @@ fn load_installed_yaml_data_with_env_and_io<F, I>(
     request: InstalledYamlDataLoadRequest,
     env: F,
     local_ignore_io: &I,
+    version_registry: &VersionRegistryScope,
 ) -> Result<InstalledYamlDataLoadOutcome, InstalledYamlDataLoadError>
 where
     F: Fn(&str) -> Option<String>,
@@ -1589,6 +1628,7 @@ where
                 request.selected_game_version,
                 InstalledYamlDataDiagnosticKind::InvalidUtf8,
                 format!("existing Local Ignore YAML Data is not UTF-8: {source}"),
+                version_registry,
             );
         }
     };
@@ -1606,6 +1646,7 @@ where
                 request.selected_game_version,
                 InstalledYamlDataDiagnosticKind::Parse,
                 format!("existing Local Ignore YAML Data could not be parsed: {source}"),
+                version_registry,
             );
         }
     };
@@ -1620,6 +1661,7 @@ where
                 "existing Local Ignore YAML Data is invalid: {}",
                 explicit_validation_reason(source)
             ),
+            version_registry,
         );
     }
     let snapshot = build_installed_yaml_data_snapshot(
@@ -1628,6 +1670,7 @@ where
         local_ignore_state,
         &ignore_yaml,
         &request.selected_game_version,
+        version_registry,
     )?;
 
     Ok(InstalledYamlDataLoadOutcome::Ready(snapshot))
@@ -1643,6 +1686,7 @@ fn build_installed_yaml_data_snapshot(
     local_ignore_state: LocalIgnoreYamlDataState,
     ignore_yaml: &Yaml,
     selected_game_version: &str,
+    version_registry: &VersionRegistryScope,
 ) -> Result<InstalledYamlDataSnapshot, InstalledYamlDataLoadError> {
     // Keep the retained byte buffers tied to the public identities even after parsing.
     debug_assert_eq!(
@@ -1665,6 +1709,7 @@ fn build_installed_yaml_data_snapshot(
         ignore_yaml,
         game_data_key(selected.game_data_role),
         selected_game_version,
+        version_registry,
     )
     .map_err(|source| InstalledYamlDataLoadError::InvalidSelectedData {
         message: source.to_string(),
@@ -1691,6 +1736,7 @@ fn local_ignore_recovery_required(
     selected_game_version: String,
     kind: InstalledYamlDataDiagnosticKind,
     message: String,
+    version_registry: &VersionRegistryScope,
 ) -> Result<InstalledYamlDataLoadOutcome, InstalledYamlDataLoadError> {
     // Proceed Without Ignore never reads or publishes defaults. Preserve their validity state for
     // a later reset decision without turning this non-mutating recovery choice into a fatal load.
@@ -1720,6 +1766,7 @@ fn local_ignore_recovery_required(
                 LocalIgnoreYamlDataState::ResetToDefault,
                 &yaml,
                 &selected_game_version,
+                version_registry,
             )?))
         }
         Err(reason) => PreparedLocalIgnoreReset::Unavailable { reason },
@@ -1738,6 +1785,7 @@ fn local_ignore_recovery_required(
         LocalIgnoreYamlDataState::ProceedWithoutIgnore,
         &Yaml::Hash(empty_ignore_mapping),
         &selected_game_version,
+        version_registry,
     )?;
     let backup_directory = local_ignore_path
         .ancestors()

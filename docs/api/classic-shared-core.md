@@ -31,7 +31,7 @@ Use this crate when you need to:
 Do not use this crate for:
 
 - domain-specific YAML, config, scanlog, database, or file-I/O business logic
-- deciding whether a version is a *known* game or script-extender version; that is Version Registry policy (currently `is_known_fallout4_version()` / `is_known_f4se_version()` in [`classic-version-core`](classic-version-core.md), moving to the registry owner in issue #244)
+- deciding whether a version is a *known* game or script-extender version; that is Version Registry policy (`is_known_fallout4_version()` / `is_known_f4se_version()` in [`classic-version-registry-core`](classic-version-registry-core.md#known-version-queries))
 - creating a second Tokio runtime for a crate, binding layer, or UI surface
 - assuming every helper here is re-exported from the crate root
 
@@ -708,7 +708,7 @@ Use a non-User-Settings document; first-party production code must use [`classic
 
 The former `classic_version_core` root and `classic_version_core::pe_version` paths re-export these exact items until that crate retires (issue #258). Values, `VersionError` / `PeVersionError` variants, and their messages are unchanged by the move. New callers import `classic_shared_core::version` directly. `classic-xse-core` no longer re-exports `parse_version()`, `try_parse_version()`, or `compare_versions()`.
 
-Parity ownership: CXX, Node, and Python rows for these helpers name `classic-shared-core` while keeping their row IDs and exported operation identities. Rust-only `@rust` proxy rows for items `classic-version-core` still re-exports name that facade. Do not restore `classic-version-core` as the owner of the binding rows during a baseline refresh. The `version-operations`, `version-extraction`, `version-pe`, and `version-pe-path` conformance packs name `classic-shared-core` as their `domainOwner`; `version-f4se` stays with the known-version policy owner.
+Parity ownership: CXX, Node, and Python rows for these helpers name `classic-shared-core` while keeping their row IDs and exported operation identities. Rust-only `@rust` proxy rows for items `classic-version-core` still re-exports name that facade. Do not restore `classic-version-core` as the owner of the binding rows during a baseline refresh. The `version-operations`, `version-extraction`, `version-pe`, and `version-pe-path` conformance packs name `classic-shared-core` as their `domainOwner`; `version-f4se` names the known-version policy owner, `classic-version-registry-core`.
 
 ### `VersionError` and `VersionResult<T>`
 

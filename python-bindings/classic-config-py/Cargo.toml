@@ -15,6 +15,8 @@ crate-type = ["cdylib", "rlib"]  # Both for Python and Rust usage
 # Business logic (pure Rust)
 classic-config-core = { path = "../../business-logic/classic-config-core" }
 classic-registry-core = { path = "../../business-logic/classic-registry-core" }
+# Version Registry scope selected at this facade's entry points
+classic-version-registry-core = { path = "../../business-logic/classic-version-registry-core" }
 
 # Foundation
 classic-shared-core = { path = "../../foundation/classic-shared-core" }

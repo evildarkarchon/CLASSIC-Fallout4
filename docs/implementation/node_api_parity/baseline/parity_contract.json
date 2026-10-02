@@ -2881,7 +2881,7 @@
       "nodeExport": "isKnownFallout4Version",
       "nodeKind": "function",
       "nodeArity": 1,
-      "rustCrate": "classic-version-core"
+      "rustCrate": "classic-version-registry-core"
     },
     {
       "id": "version-registry-promote-parse-version",

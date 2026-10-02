@@ -32,6 +32,7 @@ pub use crashgen_rules::*;
 pub use explicit_yaml_data::{
     ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole,
     ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data,
+    load_explicit_yaml_data_in_version_registry_scope,
 };
 
 pub use game_local::persist_game_local_paths;
@@ -44,7 +45,7 @@ pub use installed_yaml_data::{
     LocalIgnoreResetDurabilityReceipt, LocalIgnoreResetError, LocalIgnoreResetOutcome,
     LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState,
     inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data,
-    load_installed_yaml_data_with_env,
+    load_installed_yaml_data_in_version_registry_scope, load_installed_yaml_data_with_env,
 };
 // Only diagnostics and the typed version reader escape `shippable`. Its
 // low-level selection entry points, and the file-identity and
@@ -61,6 +62,7 @@ pub use yamldata::{
     ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry,
     ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule,
     SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info,
+    resolve_registry_version_info_in,
 };
 
 // Re-export get_runtime from classic-shared-core for convenience

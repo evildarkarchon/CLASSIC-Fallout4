@@ -1,7 +1,10 @@
 use semver::Version;
 use serde::{Deserialize, Serialize};
 
-use crate::{AddressLibraryConfig, GameVersion, VersionInfo, XseConfig, get_version_registry};
+use crate::{
+    AddressLibraryConfig, GameVersion, VersionInfo, VersionRegistry, XseConfig,
+    get_version_registry,
+};
 
 /// Null/invalid version identifier (0.0.0).
 pub const NULL_VERSION: Version = Version::new(0, 0, 0);
@@ -64,10 +67,20 @@ impl Fallout4Version {
         }
     }
 
-    /// Get the full [`VersionInfo`] from the version registry.
+    /// Get the full [`VersionInfo`] from the default version registry snapshot.
     #[must_use]
     pub fn get_version_info(&self) -> Option<&'static VersionInfo> {
-        get_version_registry().get_by_id(self.registry_id())
+        self.version_info_in(get_version_registry())
+    }
+
+    /// Get the full [`VersionInfo`] from a caller-selected registry snapshot,
+    /// such as [`VersionRegistryScope::registry`](crate::VersionRegistryScope::registry).
+    ///
+    /// The result borrows from `registry`, so a scoped caller never reaches
+    /// the default snapshot.
+    #[must_use]
+    pub fn version_info_in<'r>(&self, registry: &'r VersionRegistry) -> Option<&'r VersionInfo> {
+        registry.get_by_id(self.registry_id())
     }
 
     /// Report whether this variant represents Fallout 4 VR.
@@ -108,10 +121,17 @@ impl Fallout4Version {
         if self.is_vr() { 611660 } else { 377160 }
     }
 
-    /// Get the game version from the version registry.
+    /// Get the game version from the default version registry snapshot.
     #[must_use]
     pub fn game_version(&self) -> GameVersion {
-        self.get_version_info()
+        self.game_version_in(get_version_registry())
+    }
+
+    /// Get the game version from a caller-selected registry snapshot,
+    /// or `0.0.0.0` when the snapshot has no entry for this variant.
+    #[must_use]
+    pub fn game_version_in(&self, registry: &VersionRegistry) -> GameVersion {
+        self.version_info_in(registry)
             .map(|info| info.version)
             .unwrap_or_else(|| GameVersion::new(0, 0, 0, 0))
     }
@@ -127,10 +147,19 @@ impl Fallout4Version {
         )
     }
 
-    /// Return the canonical script extender acronym for this variant.
+    /// Return the canonical script extender acronym for this variant,
+    /// read from the default version registry snapshot.
     #[must_use]
     pub fn xse_acronym(&self) -> &'static str {
-        self.get_version_info()
+        self.xse_acronym_in(get_version_registry())
+    }
+
+    /// Return the canonical script extender acronym for this variant, read
+    /// from a caller-selected registry snapshot. Without registry XSE data
+    /// the VR variant reports `F4SEVR` and every other variant `F4SE`.
+    #[must_use]
+    pub fn xse_acronym_in(&self, registry: &VersionRegistry) -> &'static str {
+        self.version_info_in(registry)
             .and_then(|info| info.xse.as_ref())
             .map(|xse| match xse.acronym.as_str() {
                 "F4SEVR" => "F4SEVR",
@@ -154,10 +183,19 @@ impl Fallout4Version {
             })
     }
 
-    /// Return a human-readable display name for this version variant.
+    /// Return a human-readable display name for this version variant,
+    /// classified from the default version registry snapshot.
     #[must_use]
     pub fn display_name(&self) -> &'static str {
-        self.get_version_info()
+        self.display_name_in(get_version_registry())
+    }
+
+    /// Return a human-readable display name for this version variant,
+    /// classified from a caller-selected registry snapshot's short name;
+    /// `"Unknown"` when the snapshot has no recognizable entry.
+    #[must_use]
+    pub fn display_name_in(&self, registry: &VersionRegistry) -> &'static str {
+        self.version_info_in(registry)
             .map(|info| match info.short_name.as_str() {
                 "OG" => "Fallout 4 Original",
                 "NG" => "Fallout 4 Next-Gen",

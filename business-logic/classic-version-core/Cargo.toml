@@ -4,24 +4,26 @@ version = "9.1.0"
 edition = "2024"
 rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
-description = "Known game-version queries and a transitional facade over shared-core version helpers for CLASSIC (no PyO3)"
+description = "Transitional facade over shared-core version helpers and Version Registry known-version queries for CLASSIC (no PyO3)"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
 crate-type = ["rlib"]  # Pure Rust library only - no PyO3
 
 [dependencies]
-# Version handling
-semver = "1.0"
-
 # Owner of the loose version and PE helpers this crate re-exports until it
 # retires (#258)
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
-# Version registry access (known-version policy)
+# Owner of the known-version queries and registry types this crate
+# re-exports until it retires (#258)
 classic-version-registry-core = { path = "../classic-version-registry-core" }
 
 # NO PyO3 dependency!
+
+[dev-dependencies]
+# The facade tests build `semver::Version` values to call the re-exports.
+semver = "1.0"
 
 [lints.rust]
 deprecated = "deny"

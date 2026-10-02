@@ -8,7 +8,7 @@
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 
-use classic_version_registry_core::get_version_registry;
+use classic_version_registry_core::{VersionRegistry, VersionRegistryScope, get_version_registry};
 
 /// Error types for XSE plugin validation operations.
 #[derive(Debug, Error)]
@@ -94,19 +94,18 @@ pub struct AddressLibInfo {
 }
 
 impl AddressLibInfo {
-    /// Create Address Library info from VersionRegistry with fallback.
+    /// Create Address Library info from a registry snapshot with fallback.
     ///
-    /// Attempts to get Address Library configuration from the registry,
+    /// Attempts to get Address Library configuration from `registry`,
     /// falling back to hardcoded values if not available.
     fn from_registry_id(
+        registry: &VersionRegistry,
         id: &str,
         version: GameVersion,
         fallback_filename: &str,
         fallback_desc: &str,
         fallback_url: &str,
     ) -> Self {
-        let registry = get_version_registry();
-
         if let Some(info) = registry.get_by_id(id)
             && let Some(addr_lib) = &info.address_library
         {
@@ -129,9 +128,17 @@ impl AddressLibInfo {
 
     /// Create VR Address Library info.
     ///
-    /// Uses VersionRegistry when available, falls back to hardcoded values.
+    /// Uses the default VersionRegistry snapshot when available, falls back
+    /// to hardcoded values.
     pub fn vr() -> Self {
+        Self::vr_in(get_version_registry())
+    }
+
+    /// Create VR Address Library info from a caller-selected
+    /// registry snapshot, falling back to hardcoded values.
+    pub fn vr_in(registry: &VersionRegistry) -> Self {
         Self::from_registry_id(
+            registry,
             "FO4_VR",
             GameVersion::Vr,
             "version-1-2-72-0.csv",
@@ -142,9 +149,17 @@ impl AddressLibInfo {
 
     /// Create Original (OG) Address Library info.
     ///
-    /// Uses VersionRegistry when available, falls back to hardcoded values.
+    /// Uses the default VersionRegistry snapshot when available, falls back
+    /// to hardcoded values.
     pub fn original() -> Self {
+        Self::original_in(get_version_registry())
+    }
+
+    /// Create Original (OG) Address Library info from a caller-selected
+    /// registry snapshot, falling back to hardcoded values.
+    pub fn original_in(registry: &VersionRegistry) -> Self {
         Self::from_registry_id(
+            registry,
             "FO4_OG",
             GameVersion::Original,
             "version-1-10-163-0.bin",
@@ -155,9 +170,17 @@ impl AddressLibInfo {
 
     /// Create Next Gen (NG) Address Library info.
     ///
-    /// Uses VersionRegistry when available, falls back to hardcoded values.
+    /// Uses the default VersionRegistry snapshot when available, falls back
+    /// to hardcoded values.
     pub fn next_gen() -> Self {
+        Self::next_gen_in(get_version_registry())
+    }
+
+    /// Create Next Gen (NG) Address Library info from a caller-selected
+    /// registry snapshot, falling back to hardcoded values.
+    pub fn next_gen_in(registry: &VersionRegistry) -> Self {
         Self::from_registry_id(
+            registry,
             "FO4_NG",
             GameVersion::NextGen,
             "version-1-10-984-0.bin",
@@ -168,9 +191,17 @@ impl AddressLibInfo {
 
     /// Create Anniversary Edition (AE) Address Library info.
     ///
-    /// Uses VersionRegistry when available, falls back to hardcoded values.
+    /// Uses the default VersionRegistry snapshot when available, falls back
+    /// to hardcoded values.
     pub fn anniversary_edition() -> Self {
+        Self::anniversary_edition_in(get_version_registry())
+    }
+
+    /// Create Anniversary Edition (AE) Address Library info from a caller-selected
+    /// registry snapshot, falling back to hardcoded values.
+    pub fn anniversary_edition_in(registry: &VersionRegistry) -> Self {
         Self::from_registry_id(
+            registry,
             "FO4_AE",
             GameVersion::AnniversaryEdition,
             "version-1-11-191-0.bin",
@@ -201,6 +232,8 @@ pub struct XseChecker {
     plugins_path: PathBuf,
     /// Detected game version
     game_version: GameVersion,
+    /// Version Registry scope that supplies Address Library metadata
+    version_registry: VersionRegistryScope,
 }
 
 impl XseChecker {
@@ -230,28 +263,42 @@ impl XseChecker {
         Ok(Self {
             plugins_path,
             game_version,
+            version_registry: VersionRegistryScope::default_scope(),
         })
+    }
+
+    /// Read Address Library metadata from `version_registry` instead of the
+    /// process default snapshot.
+    ///
+    /// The scope's snapshot is taken lazily, on the first check that needs
+    /// registry metadata; no other snapshot is read. This lets a binding facade
+    /// keep its own snapshot.
+    #[must_use]
+    pub fn with_version_registry_scope(mut self, version_registry: VersionRegistryScope) -> Self {
+        self.version_registry = version_registry;
+        self
     }
 
     /// Determine the correct and wrong Address Library versions for the selected game version.
     fn determine_relevant_versions(&self) -> (Vec<AddressLibInfo>, Vec<AddressLibInfo>) {
+        let registry = self.version_registry.registry();
         if matches!(self.game_version, GameVersion::Vr) {
             // VR mode: correct = VR, wrong = OG + NG + AE
-            let correct = vec![AddressLibInfo::vr()];
+            let correct = vec![AddressLibInfo::vr_in(registry)];
             let wrong = vec![
-                AddressLibInfo::original(),
-                AddressLibInfo::next_gen(),
-                AddressLibInfo::anniversary_edition(),
+                AddressLibInfo::original_in(registry),
+                AddressLibInfo::next_gen_in(registry),
+                AddressLibInfo::anniversary_edition_in(registry),
             ];
             (correct, wrong)
         } else {
             // Non-VR mode: correct = OG + NG + AE, wrong = VR
             let correct = vec![
-                AddressLibInfo::original(),
-                AddressLibInfo::next_gen(),
-                AddressLibInfo::anniversary_edition(),
+                AddressLibInfo::original_in(registry),
+                AddressLibInfo::next_gen_in(registry),
+                AddressLibInfo::anniversary_edition_in(registry),
             ];
-            let wrong = vec![AddressLibInfo::vr()];
+            let wrong = vec![AddressLibInfo::vr_in(registry)];
             (correct, wrong)
         }
     }

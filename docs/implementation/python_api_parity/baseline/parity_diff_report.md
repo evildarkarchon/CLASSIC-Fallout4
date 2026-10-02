@@ -1,6 +1,6 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-01T22:19:04.897484+00:00`
+- Generated: `2026-10-02T01:55:08.174049+00:00`
 - Tier-1 contract rows: **1237**
 - Tier-1 matched: **1235**
 - Tier-1 missing Rust: **0**
@@ -263,7 +263,7 @@
 | `version_registry.lib.Fallout4Version.registry_id` | `version_registry` | `classic-version-registry-core` | `Fallout4Version` | `classic_version_registry.Fallout4Version.registry_id` | `matched` |
 | `version_registry.lib.Fallout4Version.short_name` | `version_registry` | `classic-version-registry-core` | `Fallout4Version` | `classic_version_registry.Fallout4Version.short_name` | `matched` |
 | `version_registry.lib.Fallout4Version.steam_app_id` | `version_registry` | `classic-version-registry-core` | `Fallout4Version` | `classic_version_registry.Fallout4Version.steam_app_id` | `matched` |
-| `version_registry.lib.Fallout4Version.version` | `version_registry` | `classic-version-registry-core` | `game_version` | `classic_version_registry.Fallout4Version.version` | `matched` |
+| `version_registry.lib.Fallout4Version.version` | `version_registry` | `classic-version-registry-core` | `game_version_in` | `classic_version_registry.Fallout4Version.version` | `matched` |
 | `version_registry.lib.Fallout4Version.xse_acronym` | `version_registry` | `classic-version-registry-core` | `Fallout4Version` | `classic_version_registry.Fallout4Version.xse_acronym` | `matched` |
 | `shared.lib.GameId` | `shared` | `classic-shared-core` | `GameId` | `classic_shared.GameId` | `matched` |
 | `shared.lib.GameId.__eq__` | `shared` | `classic-shared-core` | `GameId` | `classic_shared.GameId.__eq__` | `matched` |
@@ -1099,8 +1099,8 @@
 | `version.lib.extract_version_from_filename` | `version` | `classic-shared-core` | `extract_version_from_filename` | `classic_version.extract_version_from_filename` | `matched` |
 | `version.lib.extract_version_from_log` | `version` | `classic-shared-core` | `extract_version_from_log` | `classic_version.extract_version_from_log` | `matched` |
 | `version.lib.format_version` | `version` | `classic-shared-core` | `format_version` | `classic_version.format_version` | `matched` |
-| `version.lib.is_known_f4se_version` | `version` | `classic-version-core` | `is_known_f4se_version` | `classic_version.is_known_f4se_version` | `matched` |
-| `version.lib.is_known_fallout4_version` | `version` | `classic-version-core` | `is_known_fallout4_version` | `classic_version.is_known_fallout4_version` | `matched` |
+| `version.lib.is_known_f4se_version` | `version` | `classic-version-registry-core` | `is_known_f4se_version` | `classic_version.is_known_f4se_version` | `matched` |
+| `version.lib.is_known_fallout4_version` | `version` | `classic-version-registry-core` | `is_known_fallout4_version` | `classic_version.is_known_fallout4_version` | `matched` |
 | `version.lib.is_valid_pe_path` | `version` | `classic-shared-core` | `is_valid_executable_path` | `classic_version.is_valid_pe_path` | `matched` |
 | `version.lib.parse_version` | `version` | `classic-shared-core` | `parse_version` | `classic_version.parse_version` | `matched` |
 | `version.lib.try_parse_version` | `version` | `classic-shared-core` | `try_parse_version` | `classic_version.try_parse_version` | `matched` |

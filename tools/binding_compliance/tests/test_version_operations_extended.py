@@ -93,10 +93,11 @@ def test_extended_packs_pass_public_loader():
 def test_moved_version_rows_name_shared_core_and_keep_operation_identity():
     """Loose and PE helper rows name their shared-core owner without re-keying.
 
-    The helpers moved from classic-version-core to classic-shared-core (#243).
-    Every binding row must name the actual owner while keeping the exported
-    operation identity it had, so runtime evidence cannot be borrowed by a
-    different export; the known-version queries stay with their policy owner.
+    The helpers moved from classic-version-core to classic-shared-core (#243),
+    and the known-version queries moved to their Version Registry policy owner
+    (#244). Every binding row must name the actual owner while keeping the
+    exported operation identity it had, so runtime evidence cannot be borrowed
+    by a different export.
     """
     from conformance.coverage import load_source_parity_rows
 
@@ -114,12 +115,17 @@ def test_moved_version_rows_name_shared_core_and_keep_operation_identity():
         row = rows[obligation]
         assert row.rust_crate == "classic-shared-core", obligation
         assert row.runtime_operation == operation, obligation
-    for obligation in (
-            "parity:node:version-registry-promote-is-known-fallout4-version",
-            "parity:python:version.lib.is_known_fallout4_version",
-            "parity:python:version.lib.is_known_f4se_version",
-    ):
-        assert rows[obligation].rust_crate == "classic-version-core", obligation
+    known = {
+        "parity:node:version-registry-promote-is-known-fallout4-version": (
+            "is_known_fallout4_version"
+        ),
+        "parity:python:version.lib.is_known_fallout4_version": "is_known_fallout4_version",
+        "parity:python:version.lib.is_known_f4se_version": "is_known_f4se_version",
+    }
+    for obligation, operation in known.items():
+        row = rows[obligation]
+        assert row.rust_crate == "classic-version-registry-core", obligation
+        assert row.runtime_operation == operation, obligation
     # xse no longer re-exports the loose helpers, so no row may claim it does.
     assert not [
         key
@@ -134,9 +140,9 @@ def test_version_rows_keep_predicate_candidates_across_owners():
     """Every version row still finds an executable predicate after the owner split.
 
     version-extraction exercises both the shared-core extract helpers and the
-    known-version query owned by classic-version-core. Coverage binds one
-    crate per capability, so each owner needs its own capability or its rows
-    silently lose their runtime credit (#243).
+    known-version query owned by classic-version-registry-core. Coverage binds
+    one crate per capability, so each owner needs its own capability or its
+    rows silently lose their runtime credit (#243, #244).
     """
     from conformance.coverage import load_source_parity_rows
     from retirement_readiness import candidate_predicates

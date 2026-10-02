@@ -1,14 +1,32 @@
-//! Version registry singleton.
+//! Version registry snapshots and their scope handles.
 //!
 //! This module provides the main `VersionRegistry` type that manages game version
-//! metadata. It implements a thread-safe singleton pattern using `OnceLock` and
-//! supports loading from YAML with fallback to the embedded `CLASSIC Main.yaml`.
+//! metadata, loaded from YAML with fallback to the embedded `CLASSIC Main.yaml`.
+//!
+//! # Scopes
+//!
+//! Every registry snapshot lives behind a [`VersionRegistryScope`] handle. A
+//! scope takes one immutable snapshot lazily, on first use: it searches the
+//! relative YAML locations against the working directory at that moment and
+//! falls back to the embedded data. Later working-directory or file changes
+//! never reload it, and there is no reset operation.
+//!
+//! The unscoped [`get_version_registry`] and [`VersionRegistry::get_instance`]
+//! use one process default scope, which is what Rust, CXX, and Node callers
+//! have always observed. A binding adapter that links several former
+//! extension images into one library (the merged Python extension) creates
+//! [`VersionRegistryScope::new_isolated`] handles so each facade keeps its own
+//! first-use snapshot. Scope selection is always explicit: callers hold a
+//! handle and pass it (or move it into async work); nothing is selected
+//! through thread-local or ambient state, which would not follow a task that
+//! resumes on another worker thread.
 
 use std::collections::HashMap;
+use std::fmt;
 use std::path::Path;
-use std::sync::OnceLock;
+use std::sync::{Arc, LazyLock, OnceLock};
 
-use classic_shared_core::yaml::YamlOperations;
+use classic_shared_core::yaml::{YamlError, YamlOperations};
 
 use crate::matching::{MatchResult, VersionMatcher};
 use crate::models::{
@@ -20,14 +38,95 @@ use crate::{GameVersion, VersionRegistryError};
 const EMBEDDED_CLASSIC_MAIN_YAML: &str =
     include_str!("../../../CLASSIC Data/databases/CLASSIC Main.yaml");
 
-/// Global singleton registry instance.
-static REGISTRY: OnceLock<VersionRegistry> = OnceLock::new();
+/// Process default scope used by the unscoped accessors.
+///
+/// Held in a `static` so the default snapshot can be lent out for `'static`,
+/// which the unscoped [`get_version_registry`] contract has always promised.
+static DEFAULT_SCOPE: LazyLock<VersionRegistryScope> =
+    LazyLock::new(VersionRegistryScope::new_isolated);
+
+/// Opaque handle to one lazily taken Version Registry snapshot.
+///
+/// Cloning a handle shares the same snapshot; two handles compare equal
+/// exactly when they name the same snapshot.
+/// [`VersionRegistryScope::default_scope`] is the snapshot behind
+/// [`get_version_registry`]. [`VersionRegistryScope::new_isolated`] creates a
+/// scope whose snapshot shares nothing with any other scope.
+///
+/// The snapshot is taken on the first [`registry`](Self::registry) call, not
+/// when the handle is created: the relative YAML locations are resolved
+/// against the working directory at that moment, with fallback to the
+/// embedded `CLASSIC Main.yaml`. After that the snapshot is immutable for the
+/// scope's lifetime.
+///
+/// Handles are `Send + Sync + 'static`, so an adapter can move one into async
+/// work and the work keeps naming the same snapshot wherever it resumes.
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use classic_version_registry_core::{VersionRegistryScope, get_version_registry};
+///
+/// let scope = VersionRegistryScope::new_isolated();
+/// let og = scope.registry().get_by_id("FO4_OG");
+/// assert!(!std::ptr::eq(scope.registry(), get_version_registry()));
+/// # let _ = og;
+/// ```
+#[derive(Clone)]
+pub struct VersionRegistryScope {
+    snapshot: Arc<OnceLock<VersionRegistry>>,
+}
+
+impl VersionRegistryScope {
+    /// Return a handle to the process default scope used by
+    /// [`get_version_registry`] and [`VersionRegistry::get_instance`].
+    #[must_use]
+    pub fn default_scope() -> Self {
+        DEFAULT_SCOPE.clone()
+    }
+
+    /// Create a new scope whose snapshot is shared with no other scope,
+    /// including the default one. No data is loaded until first use.
+    #[must_use]
+    pub fn new_isolated() -> Self {
+        Self {
+            snapshot: Arc::new(OnceLock::new()),
+        }
+    }
+
+    /// Return this scope's snapshot, taking it now if this is the first use.
+    ///
+    /// Concurrent first uses initialize the snapshot exactly once; every
+    /// caller observes the same value afterwards.
+    #[must_use]
+    pub fn registry(&self) -> &VersionRegistry {
+        self.snapshot.get_or_init(VersionRegistry::initialize)
+    }
+}
+
+impl PartialEq for VersionRegistryScope {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.snapshot, &other.snapshot)
+    }
+}
+
+impl Eq for VersionRegistryScope {}
+
+impl fmt::Debug for VersionRegistryScope {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("VersionRegistryScope")
+            .field("snapshot", &Arc::as_ptr(&self.snapshot))
+            .field("initialized", &self.snapshot.get().is_some())
+            .finish()
+    }
+}
 
 /// Thread-safe version registry for game version metadata.
 ///
-/// The registry is implemented as a singleton that is automatically
-/// initialized on first access. It loads version data from YAML
-/// configuration, falling back to the embedded `CLASSIC Main.yaml` if loading fails.
+/// A `VersionRegistry` is one immutable snapshot of version metadata, owned by
+/// a [`VersionRegistryScope`]. It loads version data from YAML configuration,
+/// falling back to the embedded `CLASSIC Main.yaml` if loading fails. The
+/// unscoped accessors return the process default scope's snapshot.
 ///
 /// # Usage
 ///
@@ -49,10 +148,11 @@ pub struct VersionRegistry {
 }
 
 impl VersionRegistry {
-    /// Get the singleton registry instance.
+    /// Get the process default scope's registry snapshot.
     ///
-    /// The registry is automatically initialized on first access.
-    /// This is thread-safe and guaranteed to return the same instance.
+    /// The snapshot is taken on first access. This is thread-safe and
+    /// guaranteed to return the same instance; it is the snapshot behind
+    /// [`VersionRegistryScope::default_scope`].
     ///
     /// # Panics
     ///
@@ -60,7 +160,7 @@ impl VersionRegistry {
     /// If runtime YAML loading fails, it falls back to the embedded `CLASSIC Main.yaml`.
     #[must_use]
     pub fn get_instance() -> &'static Self {
-        REGISTRY.get_or_init(Self::initialize)
+        DEFAULT_SCOPE.registry()
     }
 
     /// Initialize the registry, loading from YAML or using defaults.
@@ -98,9 +198,17 @@ impl VersionRegistry {
     }
 
     /// Load the registry from a YAML file.
+    ///
+    /// Reads and parses the file directly instead of through the shared
+    /// path/mtime YAML-file cache. Each scope loads its file exactly once, so
+    /// the cache would save nothing, and its default scope belongs to another
+    /// owner (the config facade once the Python facades merge): routing a
+    /// snapshot load through it would add that owner's entries and move its
+    /// counters, and its path-keyed entries could hand a scope first used from
+    /// one root another root's cached parse of the same relative path.
     fn load_from_yaml(yaml_path: &Path) -> Result<Self, VersionRegistryError> {
-        let yaml_ops = YamlOperations::new();
-        let yaml = yaml_ops.load_yaml_file(yaml_path)?;
+        let content = std::fs::read_to_string(yaml_path).map_err(YamlError::from)?;
+        let yaml = YamlOperations::new().parse_yaml(&content)?;
 
         Self::load_from_parsed_yaml(&yaml, true)
     }
@@ -682,9 +790,10 @@ impl VersionRegistry {
     }
 }
 
-/// Get the singleton version registry instance.
+/// Get the process default scope's version registry snapshot.
 ///
-/// Convenience function for accessing the registry.
+/// Convenience function for accessing the registry; equivalent to
+/// `VersionRegistryScope::default_scope().registry()` but lent for `'static`.
 ///
 /// # Examples
 ///

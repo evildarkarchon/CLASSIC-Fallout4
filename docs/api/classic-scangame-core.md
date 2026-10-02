@@ -119,6 +119,7 @@ Contributor note:
 Important methods:
 
 - `GameScanOrchestrator::new(config)`
+- `with_version_registry_scope(VersionRegistryScope) -> Self` - read Address Library metadata for the XSE plugins check from that scope; the handle moves into the blocking check task
 - `run_game_checks() -> Result<GameScanResult, OrchestratorError>`
 - `run_mod_scans() -> Result<ModScanResult, OrchestratorError>`
 - `run_full_scan() -> Result<(GameScanResult, ModScanResult), OrchestratorError>`
@@ -206,8 +207,9 @@ Important types and methods:
 
 - `GameVersion` variants: `Null`, `Original`, `NextGen`, `AnniversaryEdition`, `Vr`
 - `GameVersion::is_null()` and `description()`
-- `AddressLibInfo::{vr, original, next_gen, anniversary_edition}()`
+- `AddressLibInfo::{vr, original, next_gen, anniversary_edition}()` and the `*_in(&VersionRegistry)` forms
 - `XseChecker::new(plugins_path, game_version)`
+- `XseChecker::with_version_registry_scope(VersionRegistryScope) -> Self`
 - `check() -> ValidationResult`
 - `format_message(result)`
 - `validate()`
@@ -222,7 +224,7 @@ Important types and methods:
 
 Behavior worth knowing:
 
-- Address Library metadata is pulled from [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) when available, with hardcoded Fallout 4 fallbacks otherwise
+- Address Library metadata is pulled from [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) when available, with hardcoded Fallout 4 fallbacks otherwise; the unscoped constructors read the process default snapshot, `AddressLibInfo::*_in(registry)` reads the snapshot it is given, and an `XseChecker` reads the [scope](classic-version-registry-core.md#version-registry-scopes) set by `with_version_registry_scope()` (default scope otherwise)
 - non-VR mode treats OG, NG, and AE Address Library files as acceptable; VR mode expects only the VR file
 - `PluginsPathNotFound` is public but not produced by `check()`; invalid paths fail earlier in `XseChecker::new()` with `XseError::InvalidPath`
 
@@ -265,6 +267,7 @@ Important items:
 - `GameSetupIntake::with_xse_log_path(path)`
 - `GameSetupIntake::run() -> GameSetupIntakeResult`
 - `GameSetupIntake::run_in_hash_scope(&FileHashScope) -> GameSetupIntakeResult`
+- `GameSetupIntake::run_in_scopes(&FileHashScope, &VersionRegistryScope) -> GameSetupIntakeResult`
 - `normalize_game_setup_version_selection(value)`
 - `game_setup_needs_path_detection(game_path, docs_path)`
 
@@ -285,6 +288,7 @@ Behavior worth knowing:
 - `auto` mode reads executable PE version metadata and attempts a Version Registry match.
 - a caller-provided executable path is used for root fallback, auto-version detection, executable version checks, hash checks, and installation-location checks.
 - executable and XSE script hashes go through `classic-file-io-core`'s hash cache: `run()` uses the process default `FileHashScope`; `run_in_hash_scope(scope)` behaves identically but reads, caches, and counts those hashes only in `scope`. The Python `classic_scangame` facade uses its own isolated scope so its hashing never reaches `classic_file_io.FileHasher`'s cache or statistics.
+- every Version Registry fact (version detection and matching, expectations, and known Address Library files) comes from one snapshot: `run()` and `run_in_hash_scope()` read the process default scope; `run_in_scopes(hash_scope, version_registry)` reads only `version_registry`. The Python `classic_scangame` facade passes its own isolated Version Registry scope to intake, `AddressLibInfo`, `XseChecker`, and `GameScanOrchestrator`.
 - failed setup diagnostics are typed checks; the top-level status is `ActionRequired` only when user input is missing.
 - documents-folder state is mapped from `classic-path-core`'s structured `DocumentsCheckState`, not rendered message text.
 - the module covers setup-only diagnostics, not ENB, crashgen TOML, Wrye, BA2, loose-file, or mod INI scans.

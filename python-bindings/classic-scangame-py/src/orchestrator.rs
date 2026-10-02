@@ -290,7 +290,8 @@ impl PyGameScanOrchestrator {
         let config = self.config.clone();
         without_gil(py, || {
             get_runtime().block_on(async {
-                let orch = GameScanOrchestrator::new(config);
+                let orch = GameScanOrchestrator::new(config)
+                    .with_version_registry_scope(crate::SCANGAME_VERSION_REGISTRY_SCOPE.clone());
                 orch.run_game_checks().await
             })
         })
@@ -312,7 +313,8 @@ impl PyGameScanOrchestrator {
         let config = self.config.clone();
         without_gil(py, || {
             get_runtime().block_on(async {
-                let orch = GameScanOrchestrator::new(config);
+                let orch = GameScanOrchestrator::new(config)
+                    .with_version_registry_scope(crate::SCANGAME_VERSION_REGISTRY_SCOPE.clone());
                 orch.run_mod_scans().await
             })
         })
@@ -334,7 +336,8 @@ impl PyGameScanOrchestrator {
         let config = self.config.clone();
         without_gil(py, || {
             get_runtime().block_on(async {
-                let orch = GameScanOrchestrator::new(config);
+                let orch = GameScanOrchestrator::new(config)
+                    .with_version_registry_scope(crate::SCANGAME_VERSION_REGISTRY_SCOPE.clone());
                 orch.run_full_scan().await
             })
         })

@@ -634,6 +634,14 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
                         "try_parse_version",
                     }
                 )
+                or (
+                    # The known-version queries moved here from
+                    # classic-version-core (#244); keep the exported operation
+                    # identity they had there.
+                    raw_row.get("rustCrate") == "classic-version-registry-core"
+                    and rust_symbol
+                    in {"is_known_f4se_version", "is_known_fallout4_version"}
+                )
             ):
                 if participant_id == "node" and raw_row.get("nodeKind") == "function":
                     export = raw_row.get("nodeExport")

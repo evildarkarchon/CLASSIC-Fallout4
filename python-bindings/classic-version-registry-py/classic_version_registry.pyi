@@ -10,7 +10,7 @@ Architecture:
 Usage:
     import classic_version_registry
 
-    # Get singleton registry
+    # Get a handle to this module's registry snapshot
     registry = classic_version_registry.VersionRegistry()
 
     # Lookup by ID
@@ -539,10 +539,12 @@ class VersionInfo:
 
 
 class VersionRegistry:
-    """Singleton version registry for game version metadata.
+    """Version registry for game version metadata.
 
-    The registry is automatically initialized on first access and loads
-    version data from YAML configuration with fallback to hardcoded defaults.
+    The registry snapshot is taken on first access and loads version data
+    from YAML configuration with fallback to the embedded defaults. It is
+    this module's own snapshot: it never reloads, and it is independent of
+    the snapshot any other CLASSIC module takes.
 
     Example:
         >>> import classic_version_registry
@@ -556,8 +558,8 @@ class VersionRegistry:
     def __init__(self) -> None:
         """Create a VersionRegistry instance.
 
-        This is a lightweight handle to the Rust singleton -- no data is
-        copied. Multiple instances share the same underlying registry.
+        This is a lightweight handle to this module's registry snapshot --
+        no data is copied. Multiple instances share the same snapshot.
 
         """
 
@@ -803,9 +805,9 @@ def match_version_string(
 
 
 def get_version_registry() -> VersionRegistry:
-    """Get the singleton registry instance.
+    """Get a handle to this module's registry snapshot.
 
     Returns:
-        A VersionRegistry instance (lightweight handle to Rust singleton).
+        A VersionRegistry instance (lightweight handle to this module's snapshot).
 
     """

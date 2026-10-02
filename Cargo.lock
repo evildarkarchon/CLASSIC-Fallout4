@@ -728,6 +728,7 @@ dependencies = [
  "classic-registry-core",
  "classic-shared-core",
  "classic-shared-py",
+ "classic-version-registry-core",
  "classic-vocabulary",
  "pyo3",
  "serde_json",
@@ -899,7 +900,6 @@ dependencies = [
  "classic-shared-core",
  "classic-update-core",
  "classic-user-settings-core",
- "classic-version-core",
  "classic-version-registry-core",
  "classic-vocabulary",
  "classic-web-core",
@@ -1080,6 +1080,7 @@ dependencies = [
  "classic-shared-core",
  "classic-shared-py",
  "classic-user-settings-core",
+ "classic-version-registry-core",
  "pyo3",
  "tempfile",
 ]
@@ -1104,7 +1105,6 @@ dependencies = [
  "classic-shared-core",
  "classic-update-core",
  "classic-user-settings-core",
- "classic-version-core",
  "classic-version-registry-core",
  "classic-vocabulary",
  "classic-web-core",
@@ -1153,6 +1153,7 @@ dependencies = [
  "classic-shared-core",
  "classic-shared-py",
  "classic-user-settings-core",
+ "classic-version-registry-core",
  "classic-vocabulary",
  "criterion 0.5.1",
  "futures",
@@ -1337,7 +1338,7 @@ version = "9.1.0"
 dependencies = [
  "classic-shared-core",
  "classic-shared-py",
- "classic-version-core",
+ "classic-version-registry-core",
  "pyo3",
  "semver",
 ]

@@ -1,3 +1,4 @@
+use classic_version_registry_core::VersionRegistryScope;
 use super::{
     LocalIgnoreFileSystem, LocalIgnoreResetPublicationKind, SystemLocalIgnoreFileSystem,
     load_installed_yaml_data_with_env_and_io, project_publication_error, reset_fault,
@@ -460,6 +461,7 @@ fn concurrent_generation_preserves_one_winner_and_every_loader_rereads_it() {
                 },
                 isolated_cache_env(&cache_root),
                 &local_ignore_io,
+                &VersionRegistryScope::default_scope(),
             )
             .expect("each concurrent loader should become Ready");
             let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome else {
@@ -567,6 +569,7 @@ fn publication_failure_leaves_no_local_ignore_or_staging_content() {
         },
         isolated_cache_env(cache_root.path()),
         &PublicationFailureLocalIgnoreFileSystem,
+        &VersionRegistryScope::default_scope(),
     )
     .expect_err("an injected publication failure should abort the load");
 
@@ -619,6 +622,7 @@ fn authoritative_reread_failure_returns_error_after_complete_publication() {
         },
         isolated_cache_env(cache_root.path()),
         &local_ignore_io,
+        &VersionRegistryScope::default_scope(),
     )
     .expect_err("an injected authoritative reread failure should abort the load");
 
@@ -682,6 +686,7 @@ fn generation_uses_retained_main_when_selected_path_changes_before_publication()
         },
         isolated_cache_env(cache_root.path()),
         &local_ignore_io,
+        &VersionRegistryScope::default_scope(),
     )
     .expect("generation should remain bound to the retained selected Main bytes");
     let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome else {

@@ -4,7 +4,7 @@
 
 use crate::error::Result;
 use crate::version::crashgen_version_gen;
-use classic_version_registry_core::{GameVersion as RegistryGameVersion, get_version_registry};
+use classic_version_registry_core::{GameVersion as RegistryGameVersion, VersionRegistryScope};
 use indexmap::IndexMap;
 use rayon::prelude::*;
 use regex::Regex;
@@ -67,6 +67,8 @@ pub struct PluginAnalyzer {
     ignore_plugins_list: HashSet<String>,
     game_version: String,
     game_version_vr: String,
+    /// Version Registry scope used to classify detected game versions.
+    version_registry: VersionRegistryScope,
 }
 
 impl PluginAnalyzer {
@@ -124,7 +126,20 @@ impl PluginAnalyzer {
             ignore_plugins_list,
             game_version,
             game_version_vr,
+            version_registry: VersionRegistryScope::default_scope(),
         })
+    }
+
+    /// Classify detected game versions from `version_registry` instead of the
+    /// process default snapshot.
+    ///
+    /// The scope's snapshot is taken lazily, on the first plugin-limit check
+    /// that needs it; no other snapshot is read. This lets a binding facade or
+    /// a scan run keep its own snapshot.
+    #[must_use]
+    pub fn with_version_registry_scope(mut self, version_registry: VersionRegistryScope) -> Self {
+        self.version_registry = version_registry;
+        self
     }
 
     /// Scans an external `loadorder.txt` file in the CLASSIC folder for plugin override functionality.
@@ -272,11 +287,11 @@ impl PluginAnalyzer {
     ) -> Result<(bool, bool)> {
         let current = crashgen_version_gen(version_current);
         let is_crashgen_pre_137 = (current.major, current.minor, current.patch) < (1, 37, 0);
-        let detected_short_name = Self::resolve_registry_short_name(game_version).or_else(|| {
+        let detected_short_name = self.resolve_registry_short_name(game_version).or_else(|| {
             if game_version == self.game_version_vr {
                 Some("VR".to_string())
             } else if game_version == self.game_version {
-                Self::resolve_registry_short_name(&self.game_version)
+                self.resolve_registry_short_name(&self.game_version)
             } else {
                 None
             }
@@ -304,7 +319,7 @@ impl PluginAnalyzer {
         Ok((plugin_limit_triggered, limit_check_disabled))
     }
 
-    fn resolve_registry_short_name(game_version: &str) -> Option<String> {
+    fn resolve_registry_short_name(&self, game_version: &str) -> Option<String> {
         let parsed = crashgen_version_gen(game_version);
         if parsed.major == 0 && parsed.minor == 0 && parsed.patch == 0 {
             return None;
@@ -315,8 +330,8 @@ impl PluginAnalyzer {
         let patch = u32::try_from(parsed.patch).ok()?;
         let detected = RegistryGameVersion::new(major, minor, patch, 0);
 
-        let registry = get_version_registry();
-        registry
+        self.version_registry
+            .registry()
             .get_all_for_game("Fallout4", None)
             .into_iter()
             .find(|info| info.is_compatible_with(&detected))
