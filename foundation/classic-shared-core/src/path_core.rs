@@ -2,6 +2,40 @@
 //!
 //! This module provides path operations optimized for the CLASSIC application.
 //! It caches path lookups and provides efficient path validation.
+//!
+//! It is also the domain-neutral owner of CLASSIC's generic path primitives:
+//!
+//! - **Existence and kind checks**: [`is_valid_path`], [`validate_path_exists`],
+//!   [`validate_is_directory`], [`validate_is_file`], [`is_executable_file_path`]
+//! - **Permission and drive checks**: [`check_drive_exists`],
+//!   [`check_read_permissions`], [`check_write_permissions`],
+//!   [`validate_path_with_permissions`], plus the boolean wrappers
+//!   [`drive_exists`], [`has_read_permission`], and [`has_write_permission`]
+//! - **Read-only attribute removal**: [`remove_readonly_attribute`] and the
+//!   Windows-only `remove_readonly`
+//! - **OS cache root**: [`user_cache_root`] / [`user_cache_root_with_env`]
+//!
+//! These primitives know nothing about games, documents folders, custom-scan
+//! restrictions, or settings: game/documents discovery and setup/scan path
+//! policy stay with their domain owners (`classic-path-core` and the workflows
+//! above it), which build on the primitives here.
+
+mod cache_root;
+mod error;
+mod validation;
+
+pub use cache_root::{
+    CacheRootUnavailable, non_empty_env_var, user_cache_root, user_cache_root_with_env,
+};
+pub use error::{PathError, PathResult};
+#[cfg(target_os = "windows")]
+pub use validation::remove_readonly;
+pub use validation::{
+    check_drive_exists, check_read_permissions, check_write_permissions, drive_exists,
+    has_read_permission, has_write_permission, is_executable_file_path, is_valid_path,
+    remove_readonly_attribute, validate_is_directory, validate_is_file, validate_path_exists,
+    validate_path_with_permissions,
+};
 
 use dashmap::DashMap;
 use rayon::prelude::*;

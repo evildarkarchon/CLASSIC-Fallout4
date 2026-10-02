@@ -47,7 +47,7 @@
 //! (which is `unsafe` in edition 2024 and forbidden by this crate's
 //! `unsafe_code = "deny"` lint).
 
-use crate::error::PathError;
+use classic_shared_core::path_core::{PathError, non_empty_env_var, user_cache_root_with_env};
 use std::path::PathBuf;
 
 /// The per-user cache subdirectory name, relative to the platform cache root.
@@ -78,7 +78,7 @@ const MAX_SEGMENT_LEN: usize = 100;
 ///   [`MAX_SEGMENT_LEN`], contains a character outside `A-Za-z0-9._-`, or
 ///   matches a traversal segment (`.` or `..`).
 pub fn notification_cache_dir(owner: &str, repo: &str) -> Result<PathBuf, PathError> {
-    notification_cache_dir_with_env(owner, repo, process_env_lookup)
+    notification_cache_dir_with_env(owner, repo, non_empty_env_var)
 }
 
 /// Testable form of [`notification_cache_dir`] that reads environment
@@ -116,7 +116,7 @@ where
 ///   when `owner`/`repo` fail validation (see [`notification_cache_dir`]).
 /// - [`PathError::IoError`] when directory creation fails after resolution.
 pub fn ensure_notification_cache_dir(owner: &str, repo: &str) -> Result<PathBuf, PathError> {
-    ensure_notification_cache_dir_with_env(owner, repo, process_env_lookup)
+    ensure_notification_cache_dir_with_env(owner, repo, non_empty_env_var)
 }
 
 /// Testable form of [`ensure_notification_cache_dir`] that reads
@@ -171,48 +171,17 @@ fn validate_segment<'a>(label: &str, segment: &'a str) -> Result<&'a str, PathEr
     Ok(segment)
 }
 
-#[cfg(target_os = "windows")]
+/// Resolve the shared OS cache root, wording a failure for this cache so the
+/// error message stays identical to the pre-move per-platform resolvers.
 fn cache_root<F>(env: &F) -> Result<PathBuf, PathError>
 where
     F: Fn(&str) -> Option<String>,
 {
-    if let Some(local) = env("LOCALAPPDATA") {
-        return Ok(PathBuf::from(local));
-    }
-    if let Some(roaming) = env("APPDATA") {
-        return Ok(PathBuf::from(roaming));
-    }
-    Err(PathError::InvalidPath(
-        "neither LOCALAPPDATA nor APPDATA is set; cannot resolve notification cache directory"
-            .into(),
-    ))
-}
-
-#[cfg(not(target_os = "windows"))]
-fn cache_root<F>(env: &F) -> Result<PathBuf, PathError>
-where
-    F: Fn(&str) -> Option<String>,
-{
-    if let Some(xdg) = env("XDG_CACHE_HOME") {
-        return Ok(PathBuf::from(xdg));
-    }
-    if let Some(home) = env("HOME") {
-        return Ok(PathBuf::from(home).join(".cache"));
-    }
-    Err(PathError::InvalidPath(
-        "neither XDG_CACHE_HOME nor HOME is set; cannot resolve notification cache directory"
-            .into(),
-    ))
-}
-
-/// Read a process env var, returning `None` for unset *or* empty values so
-/// that `%LOCALAPPDATA%=""` degrades to the next fallback rather than
-/// producing a bogus empty path.
-fn process_env_lookup(name: &str) -> Option<String> {
-    match std::env::var(name) {
-        Ok(s) if !s.is_empty() => Some(s),
-        _ => None,
-    }
+    user_cache_root_with_env(env).map_err(|missing| {
+        PathError::InvalidPath(format!(
+            "{missing}; cannot resolve notification cache directory"
+        ))
+    })
 }
 
 #[cfg(test)]

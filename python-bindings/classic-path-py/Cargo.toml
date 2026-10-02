@@ -21,6 +21,9 @@ classic-shared-py = { path = "../../foundation/classic-shared-py" }
 # Core path management business logic
 classic-path-core = { path = "../../business-logic/classic-path-core" }
 
+# Generic path primitives (existence, kind, permission, drive, read-only) and PathError
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+
 [lints.rust]
 deprecated = "deny"
 rust_2024_compatibility = "deny"

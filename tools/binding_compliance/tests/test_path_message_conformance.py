@@ -436,3 +436,134 @@ def test_node_message_aliases_keep_their_actual_public_operation_names():
             "parity:node:aux-phase4a-format-message",
         }:
             assert candidate_predicates(row, pack, policy), row.obligation_id
+
+
+# Generic path primitives moved from classic-path-core to classic-shared-core
+# (#245). Each binding row keeps its ID and exported operation; only the owner
+# changes, so runtime evidence stays bound to the export that produced it.
+_MOVED_PATH_PRIMITIVE_ROWS = {
+    "parity:node:aux-phase4a-is-valid-path": ("isValidPath", "is_valid_path"),
+    "parity:node:aux-phase4a-check-read-permissions": (
+        "checkReadPermissions",
+        "check_read_permissions",
+    ),
+    "parity:node:aux-phase4a-check-write-permissions": (
+        "checkWritePermissions",
+        "check_write_permissions",
+    ),
+    "parity:node:aux-phase4a-validate-path-with-permissions": (
+        "validatePathWithPermissions",
+        "validate_path_with_permissions",
+    ),
+    "parity:node:aux-phase4a-is-valid-executable-path": (
+        "isValidExecutablePath",
+        "is_executable_file_path",
+    ),
+    "parity:node:aux-phase4a-remove-readonly": ("removeReadonly", "remove_readonly"),
+    "parity:node:aux-phase4c-check-drive-exists": (
+        "checkDriveExists",
+        "check_drive_exists",
+    ),
+    "parity:python:path.lib.PathValidator.is_valid_path": (
+        "PathValidator.is_valid_path",
+        "is_valid_path",
+    ),
+    "parity:python:path.lib.PathValidator.check_drive_exists": (
+        "PathValidator.check_drive_exists",
+        "check_drive_exists",
+    ),
+    "parity:python:path.lib.PathValidator.check_read_permissions": (
+        "PathValidator.check_read_permissions",
+        "check_read_permissions",
+    ),
+    "parity:python:path.lib.PathValidator.check_write_permissions": (
+        "PathValidator.check_write_permissions",
+        "check_write_permissions",
+    ),
+    "parity:python:path.lib.PathValidator.validate_path_with_permissions": (
+        "PathValidator.validate_path_with_permissions",
+        "validate_path_with_permissions",
+    ),
+    "parity:python:path.lib.PathValidator.is_valid_executable_path": (
+        "PathValidator.is_valid_executable_path",
+        "is_executable_file_path",
+    ),
+    "parity:python:path.lib.remove_readonly": ("remove_readonly", "remove_readonly"),
+}
+
+
+def test_moved_path_primitive_rows_name_shared_core_and_keep_operation_identity():
+    """Moved primitive rows name shared core without re-keying their export.
+
+    The path-core root re-exports of the moved primitives end with the move, so
+    no row may still claim classic-path-core owns one of them.
+    """
+    rows = {row.obligation_id: row for row in load_source_parity_rows(ROOT)}
+    for obligation, (operation, symbol) in _MOVED_PATH_PRIMITIVE_ROWS.items():
+        row = rows[obligation]
+        assert row.rust_crate == "classic-shared-core", obligation
+        assert row.rust_symbol == symbol, obligation
+        assert row.runtime_operation == operation, obligation
+    moved_symbols = {
+        "is_valid_path",
+        "validate_path_exists",
+        "validate_is_directory",
+        "validate_is_file",
+        "check_drive_exists",
+        "check_read_permissions",
+        "check_write_permissions",
+        "validate_path_with_permissions",
+        "drive_exists",
+        "has_read_permission",
+        "has_write_permission",
+        "remove_readonly_attribute",
+        "remove_readonly",
+        "is_valid_executable_path",
+        "PathError",
+        "PathResult",
+    }
+    assert not [
+        key
+        for key, row in rows.items()
+        if row.rust_crate == "classic-path-core"
+        and (row.rust_symbol or "").removesuffix("@rust") in moved_symbols
+    ]
+
+
+def test_moved_path_primitive_rows_keep_predicate_candidates():
+    """Every moved row still finds an executable predicate after the owner split.
+
+    Coverage binds one crate per capability, so the shared-core primitives need
+    their own capabilities or their rows silently lose runtime credit (#245).
+    The CXX existence/kind validators keep theirs through installation-paths.
+    """
+    from retirement_readiness import candidate_predicates
+
+    rows = {row.obligation_id: row for row in load_source_parity_rows(ROOT)}
+    installation = (_pack("installation-paths"), FAMILY_COVERAGE_POLICIES["installation-paths"])
+    operations = (_pack("path-operations"), path_operations_coverage_policy())
+    cxx_validators = (
+        "parity:cxx:05e39e517d1d52d7",
+        "parity:cxx:cda253fce9192d69",
+        "parity:cxx:92a0085674e7c6c0",
+    )
+    for obligation in (*_MOVED_PATH_PRIMITIVE_ROWS, *cxx_validators):
+        row = rows[obligation]
+        assert row.rust_crate == "classic-shared-core", obligation
+        assert candidate_predicates(row, *installation), obligation
+    for obligation in (
+        "parity:cxx:ef0c70d7c9e34cd5",
+        "parity:cxx:18b69f0fbebc68bc",
+        "parity:cxx:5318454026bb9a08",
+        "parity:node:aux-phase4a-is-valid-path",
+        "parity:python:path.lib.PathValidator.is_valid_path",
+    ):
+        assert candidate_predicates(rows[obligation], *operations), obligation
+    # validate_required_files stays path-core policy and keeps its own credit.
+    for obligation in (
+        "parity:cxx:cff13ceeb2ccbf58",
+        "parity:node:aux-phase4a-validate-required-files",
+        "parity:python:path.lib.PathValidator.validate_required_files",
+    ):
+        assert rows[obligation].rust_crate == "classic-path-core", obligation
+        assert candidate_predicates(rows[obligation], *operations), obligation

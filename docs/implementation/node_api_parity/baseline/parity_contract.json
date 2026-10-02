@@ -3081,7 +3081,7 @@
       "rustSymbol": "check_read_permissions",
       "nodeExport": "checkReadPermissions",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "aux-phase4a-check-write-permissions",
@@ -3090,7 +3090,7 @@
       "rustSymbol": "check_write_permissions",
       "nodeExport": "checkWritePermissions",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "aux-phase4a-clear-all-metrics",
@@ -3213,10 +3213,10 @@
       "id": "aux-phase4a-is-valid-executable-path",
       "tier": "tier1",
       "ownerModule": "aux",
-      "rustSymbol": "is_valid_executable_path",
+      "rustSymbol": "is_executable_file_path",
       "nodeExport": "isValidExecutablePath",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "aux-phase4a-is-valid-path",
@@ -3225,7 +3225,7 @@
       "rustSymbol": "is_valid_path",
       "nodeExport": "isValidPath",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "aux-phase4a-join-paths",
@@ -3369,7 +3369,7 @@
       "rustSymbol": "remove_readonly",
       "nodeExport": "removeReadonly",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "aux-phase4a-validate-custom-scan-path",
@@ -3387,7 +3387,7 @@
       "rustSymbol": "validate_path_with_permissions",
       "nodeExport": "validatePathWithPermissions",
       "nodeKind": "function",
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "aux-phase4a-validate-paths-batch",
@@ -4208,7 +4208,7 @@
       "nodeExport": "checkDriveExists",
       "nodeKind": "function",
       "nodeArity": 1,
-      "rustCrate": "classic-path-core"
+      "rustCrate": "classic-shared-core"
     },
     {
       "id": "version-registry-phase4c-get-all-exe-hashes",
@@ -6223,7 +6223,7 @@
       "id": "path.drive_exists@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "drive_exists@rust",
       "rustKind": "reexport"
     },
@@ -6231,8 +6231,8 @@
       "id": "path.is_valid_executable_path@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
-      "rustSymbol": "is_valid_executable_path@rust",
+      "rustCrate": "classic-shared-core",
+      "rustSymbol": "is_executable_file_path@rust",
       "rustKind": "reexport"
     },
     {
@@ -6311,7 +6311,7 @@
       "id": "path.PathError@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "PathError@rust",
       "rustKind": "reexport"
     },
@@ -6319,7 +6319,7 @@
       "id": "path.PathResult@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "PathResult@rust",
       "rustKind": "reexport"
     },
@@ -6351,7 +6351,7 @@
       "id": "path.check_drive_exists@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "check_drive_exists@rust",
       "rustKind": "reexport"
     },
@@ -6359,7 +6359,7 @@
       "id": "path.has_read_permission@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "has_read_permission@rust",
       "rustKind": "reexport"
     },
@@ -6367,7 +6367,7 @@
       "id": "path.has_write_permission@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "has_write_permission@rust",
       "rustKind": "reexport"
     },
@@ -6375,7 +6375,7 @@
       "id": "path.remove_readonly_attribute@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "remove_readonly_attribute@rust",
       "rustKind": "reexport"
     },
@@ -6383,7 +6383,7 @@
       "id": "path.validate_is_directory@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "validate_is_directory@rust",
       "rustKind": "reexport"
     },
@@ -6391,7 +6391,7 @@
       "id": "path.validate_is_file@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "validate_is_file@rust",
       "rustKind": "reexport"
     },
@@ -6399,7 +6399,7 @@
       "id": "path.validate_path_exists@rust",
       "tier": "tier1",
       "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "rustCrate": "classic-shared-core",
       "rustSymbol": "validate_path_exists@rust",
       "rustKind": "reexport"
     },

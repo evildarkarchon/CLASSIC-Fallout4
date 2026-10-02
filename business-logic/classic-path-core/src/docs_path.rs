@@ -318,14 +318,14 @@ impl DocsPathFinder {
     /// ```
     pub fn validate_docs_path(&self, path: &Path) -> DocsPathResult<()> {
         if !path.exists() {
-            return Err(DocsPathError::PathError(crate::error::PathError::NotFound(
-                path.to_path_buf(),
-            )));
+            return Err(DocsPathError::PathError(
+                classic_shared_core::path_core::PathError::NotFound(path.to_path_buf()),
+            ));
         }
 
         if !path.is_dir() {
             return Err(DocsPathError::PathError(
-                crate::error::PathError::NotADirectory(path.to_path_buf()),
+                classic_shared_core::path_core::PathError::NotADirectory(path.to_path_buf()),
             ));
         }
 

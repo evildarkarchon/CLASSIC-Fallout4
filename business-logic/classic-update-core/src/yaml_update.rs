@@ -60,6 +60,7 @@ use classic_config_core::{
 use classic_file_io_core::{FileIOError, RollbackOutcome as FsRollbackOutcome, install_atomic};
 use classic_path_core::{ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env};
 use classic_shared_core::GameId;
+use classic_shared_core::path_core::{PathError, non_empty_env_var};
 use classic_shared_core::yaml::{
     Compatibility, SchemaCompat, SchemaVersion, extract_schema_version, parse_yaml_content,
     schema_compat_check,
@@ -1199,7 +1200,7 @@ pub async fn check_yaml_data_update_with(
     pages_url: &str,
     config: UpdateCheckConfig,
 ) -> Result<YamlUpdateStatus> {
-    check_yaml_data_update_with_env(client, pages_url, config, process_env_lookup).await
+    check_yaml_data_update_with_env(client, pages_url, config, non_empty_env_var).await
 }
 
 /// Testable first-party check with one injected cache environment.
@@ -1485,9 +1486,7 @@ fn enrich_installed(
 }
 
 /// Convert cache preparation into the updater's best-effort manifest-cache policy.
-fn prepare_yaml_cache_dir(
-    result: std::result::Result<PathBuf, classic_path_core::PathError>,
-) -> Option<PathBuf> {
+fn prepare_yaml_cache_dir(result: std::result::Result<PathBuf, PathError>) -> Option<PathBuf> {
     match result {
         Ok(directory) => Some(directory),
         Err(source) => {
@@ -1560,14 +1559,6 @@ fn installation_root_from_layout_hint(directory: &Path) -> PathBuf {
         return root.to_path_buf();
     }
     directory.to_path_buf()
-}
-
-/// Read one process environment value while treating empty strings as unset.
-fn process_env_lookup(name: &str) -> Option<String> {
-    match std::env::var(name) {
-        Ok(value) if !value.is_empty() => Some(value),
-        _ => None,
-    }
 }
 
 /// Enforce the manifest's published `min_client_schema` /

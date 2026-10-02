@@ -31,8 +31,7 @@ use std::str::FromStr;
 use thiserror::Error;
 use walkdir::WalkDir;
 
-// Re-export path utilities
-pub use classic_path_core::{PathError, PathResult};
+use classic_shared_core::path_core::PathError;
 
 /// Resource management errors.
 #[derive(Error, Debug)]

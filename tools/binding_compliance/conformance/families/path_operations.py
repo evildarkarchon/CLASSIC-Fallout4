@@ -182,9 +182,12 @@ def path_operations_coverage_policy() -> FamilyCoveragePolicy:
                 }[operation],
             )
             for operation, capability, symbol, aliases in (
+                # is_valid_path is a generic primitive owned by
+                # classic-shared-core (#245); its capability carries that owner
+                # while validate_required_files stays with classic-path-core.
                 (
                     "is_valid_path",
-                    "path-operations.validate",
+                    "path-operations.exists",
                     "is_valid_path",
                     ("validate_path", "PathValidator.is_valid_path", "isValidPath"),
                 ),

@@ -3,7 +3,8 @@
 //! Bridges version registry, version parsing, PE version extraction,
 //! XSE detection, and path validation/detection.
 
-use classic_path_core::{GamePathFinder, is_restricted_path, is_valid_path};
+use classic_path_core::{GamePathFinder, is_restricted_path};
+use classic_shared_core::path_core::is_valid_path;
 use classic_shared_core::version::pe_version::extract_pe_version;
 use classic_version_registry_core::{GameVersion, get_version_registry};
 use classic_xse_core::{XseType, detect_xse_version, is_xse_installed};

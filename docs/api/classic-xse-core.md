@@ -59,7 +59,7 @@ None. The crate used to re-export `compare_versions()`, `parse_version()`, and `
 
 Contributor note:
 
-- `classic-path-core` supports documents-folder discovery and is still visible in the public error surface through `XseError::PathError`
+- `classic-path-core` supports documents-folder discovery (`DocsPathFinder`); the generic `PathError` carried by `XseError::PathError` is owned by `classic_shared_core::path_core` (#245)
 - `classic-settings-core` is used internally for Local.yaml parsing
 - `classic-version-registry-core` is the source of truth for docs folder names, Steam app IDs, and XSE acronyms used by XSE Folder derivation
 
@@ -223,7 +223,7 @@ Variants:
 - `VersionDetectionFailed(String)`
 - `IncompatibleVersion { found, expected }`
 - `IoError { source }`
-- `PathError(classic_path_core::PathError)`
+- `PathError(classic_shared_core::path_core::PathError)`
 
 What contributors should know:
 
@@ -255,8 +255,8 @@ Contributor note:
 
 Important direct dependencies:
 
-- `classic-shared-core` - provides `GameId` for `XseType::from_game_id()` and the `version::parse_version()` helper used by `detect_xse_version()`
-- `classic-path-core` - currently visible only through `XseError::PathError`
+- `classic-shared-core` - provides `GameId` for `XseType::from_game_id()`, the `version::parse_version()` helper used by `detect_xse_version()`, and the `path_core::PathError` wrapped by `XseError::PathError`
+- `classic-path-core` - `DocsPathFinder` for XSE Folder discovery
 - `semver` - `XseInfo.version` and `detect_xse_version()` return type
 - `serde` - serialization derives on `XseType`
 - `thiserror` - `XseError`
