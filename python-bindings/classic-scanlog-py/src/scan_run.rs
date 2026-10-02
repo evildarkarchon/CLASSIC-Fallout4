@@ -2047,8 +2047,9 @@ pub fn scan_run_execute(
             delivery_error: None,
             delivery_failed: false,
         });
-        let result = contract::execute(
+        let result = contract::execute_in_version_registry_scope(
             request,
+            crate::SCANLOG_VERSION_REGISTRY_SCOPE.clone(),
             &cancellation,
             observer
                 .as_mut()

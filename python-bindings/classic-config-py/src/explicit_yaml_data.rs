@@ -4,7 +4,8 @@ use super::PyYamlData;
 use classic_config_core::{
     ExplicitYamlDataLoadError as CoreExplicitYamlDataLoadError, ExplicitYamlDataRequest,
     ExplicitYamlDataRole as CoreExplicitYamlDataRole, ExplicitYamlDataSnapshot as CoreSnapshot,
-    GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data as core_load_explicit_yaml_data,
+    GameDataRole, YamlDataContentIdentity,
+    load_explicit_yaml_data_in_version_registry_scope as core_load_explicit_yaml_data,
 };
 use classic_shared::without_gil_block_on;
 use classic_shared_core::GameId;
@@ -238,8 +239,10 @@ fn load_explicit_yaml_data(
         game: game.inner,
         selected_game_version,
     };
-    let inner = without_gil_block_on(py, || core_load_explicit_yaml_data(request))
-        .map_err(explicit_yaml_data_error_to_py)?;
+    let inner = without_gil_block_on(py, || {
+        core_load_explicit_yaml_data(request, &crate::CONFIG_VERSION_REGISTRY_SCOPE)
+    })
+    .map_err(explicit_yaml_data_error_to_py)?;
     Ok(PyExplicitYamlDataSnapshot { inner })
 }
 

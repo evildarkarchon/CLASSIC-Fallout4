@@ -61,7 +61,7 @@ Bulk YAML dataset loader for scanlog/business logic.
 - `YamlDataCore` - combined view of Main/Game/Ignore YAML data
 - `CrashgenEntryRaw` - raw per-crashgen registry entry extracted from merged game YAML
 - `ConfigError` - typed errors for bulk YAML loading/parsing
-- `resolve_registry_version_info()` - version-registry lookup helper
+- `resolve_registry_version_info()` / `resolve_registry_version_info_in()` - version-registry lookup helper against the default or a caller-selected snapshot
 - `format_registry_game_version()` - formatting helper for registry versions
 
 ### `explicit_yaml_data`
@@ -75,6 +75,7 @@ Typed, mutation-free loading for caller-selected Main, game, and Local Ignore YA
 - `ExplicitYamlDataRole` - Main, game, or Local Ignore error attribution
 - `ExplicitYamlDataLoadError` - typed unsupported-game, read, decoding, parse, and role-validation failures
 - `load_explicit_yaml_data()` - async entry point for the deterministic explicit-file operation
+- `load_explicit_yaml_data_in_version_registry_scope()` - the same operation reading Version Registry metadata only from a caller-selected scope
 
 ### `installed_yaml_data`
 
@@ -93,6 +94,7 @@ Config-owned selection and immutable loading of Installed YAML Data.
 - `LocalIgnoreYamlDataState::{Existing, Generated, ProceedWithoutIgnore, ResetToDefault}` - distinguishes preserved user content, successful initialization, operation-scoped empty ignores, and accepted reset state
 - `InstalledYamlDataLoadError` - typed fatal selection, I/O, default, publication, and parsed-data failures
 - `load_installed_yaml_data()` - production installed snapshot entry point
+- `load_installed_yaml_data_in_version_registry_scope()` - the same production load reading Version Registry metadata only from a caller-selected scope
 - `load_installed_yaml_data_with_env()` - deterministic Rust test/tooling seam for cache-environment injection
 
 ### Vocabulary Tokens and Display Labels
@@ -325,6 +327,7 @@ Representative field groups:
 Important methods:
 
 - `from_yaml_content(main_content, game_content, ignore_content, game, selected_game_version) -> Result<YamlDataCore, ConfigError>`
+- `from_yaml_content_in_version_registry_scope(main_content, game_content, ignore_content, game, selected_game_version, &VersionRegistryScope) -> Result<YamlDataCore, ConfigError>`
 - `get_crashgen_name(&self) -> &str`
 - `get_crashgen_ignore(&self) -> &[String]`
 - `get_game_root_name(&self) -> &str`
@@ -370,9 +373,20 @@ Variants:
 ## Registry Helpers
 
 - `resolve_registry_version_info(main_root_name, selected_game_version) -> Option<VersionInfo>`
+- `resolve_registry_version_info_in(&VersionRegistry, main_root_name, selected_game_version) -> Option<VersionInfo>`
 - `format_registry_game_version(version: &RegistryGameVersion) -> String`
 
 These helpers bridge the config layer to [`classic-version-registry-core`](../../business-logic/classic-version-registry-core). They are used both inside this crate and by downstream analysis code.
+
+### Version Registry scope
+
+Building a `YamlDataCore` backfills crashgen name, latest crashgen version, XSE acronym, and game version from Version Registry metadata, but only when the game YAML sets `Game_Info.Main_Root_Name`. Every construction path reads that metadata from one [`VersionRegistryScope`](classic-version-registry-core.md#version-registry-scopes):
+
+- `from_yaml_content()`, `load_installed_yaml_data()`, `load_explicit_yaml_data()`, and `resolve_registry_version_info()` read the process default scope, as Rust, CXX, and Node callers always have
+- the `*_in_version_registry_scope()` forms read only the caller's scope, including the eager Local Ignore recovery snapshots built during an installed load; `resolve_registry_version_info_in()` reads only the snapshot it is given
+- the scope's snapshot is taken lazily, so a document without `Main_Root_Name` never takes it
+
+The Python `classic_config` facade passes its own facade-owned scope to `YamlData.from_yaml_content`, `load_installed_yaml_data`, and `load_explicit_yaml_data`, so once the facades share one native library another facade's first use cannot decide config's registry metadata.
 
 ---
 

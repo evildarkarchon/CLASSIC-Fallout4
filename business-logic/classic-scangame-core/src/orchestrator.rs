@@ -20,6 +20,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 use classic_config_core::CrashgenSettingsRules;
+use classic_version_registry_core::VersionRegistryScope;
 use thiserror::Error;
 use tokio::task::JoinSet;
 
@@ -192,12 +193,30 @@ pub fn detect_config_issues(game_path: &Path, game_name: &str) -> Vec<ConfigIssu
 /// ```
 pub struct GameScanOrchestrator {
     config: GameScanConfig,
+    /// Version Registry scope that supplies Address Library metadata to the
+    /// XSE plugins check.
+    version_registry: VersionRegistryScope,
 }
 
 impl GameScanOrchestrator {
     /// Create a new orchestrator with the given configuration
     pub fn new(config: GameScanConfig) -> Self {
-        Self { config }
+        Self {
+            config,
+            version_registry: VersionRegistryScope::default_scope(),
+        }
+    }
+
+    /// Read Version Registry metadata from `version_registry` instead of the
+    /// process default snapshot.
+    ///
+    /// The handle moves into the blocking XSE plugins task, so the check keeps
+    /// naming this scope on whichever worker thread runs it. No other snapshot
+    /// is read. This lets a binding facade keep its own snapshot.
+    #[must_use]
+    pub fn with_version_registry_scope(mut self, version_registry: VersionRegistryScope) -> Self {
+        self.version_registry = version_registry;
+        self
     }
 
     /// Run all game integrity checks concurrently.
@@ -216,11 +235,14 @@ impl GameScanOrchestrator {
         {
             let plugins_path = config.plugins_path.clone();
             let game_version = config.game_version;
+            let version_registry = self.version_registry.clone();
             join_set.spawn_blocking(move || match plugins_path {
                 Some(path) => match XseChecker::new(&path, game_version) {
                     Ok(checker) => Ok(CheckResult {
                         name: "xse_plugins".to_string(),
-                        output: checker.validate(),
+                        output: checker
+                            .with_version_registry_scope(version_registry)
+                            .validate(),
                     }),
                     Err(e) => Err(format!("XSE check error: {}", e)),
                 },

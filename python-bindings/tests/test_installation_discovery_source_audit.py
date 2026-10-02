@@ -47,12 +47,15 @@ def test_platform_discovery_retains_native_owner_delegation() -> None:
     assert ".find_game_path(cached.as_deref(), xse_log.as_deref())" in binding
     assert ".find_docs_path(cached_path.as_deref())" in binding
     xse = (ROOT / "business-logic/classic-xse-core/src/lib.rs").read_text()
-    resolver = xse[xse.index("pub fn resolve_xse_folder_for_scan("):]
+    # The unscoped resolver delegates to the scoped one, which holds the body.
+    resolver = xse[
+        xse.index("pub fn resolve_xse_folder_for_scan_in_version_registry_scope("):
+    ]
     assert resolver.index(
         "configured_docs_root.and_then(non_empty_path)"
     ) < resolver.index("discover_xse_folder(version_info)")
     version = xse[
-        xse.index("fn resolve_version_info("): xse.index("fn clean_path_value(")
+        xse.index("fn resolve_version_info<"): xse.index("fn clean_path_value(")
     ]
     assert version.index(
         'if !matches!(game, "Fallout4" | "Fallout4VR")'

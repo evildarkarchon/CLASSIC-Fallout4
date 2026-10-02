@@ -17,16 +17,18 @@ use crate::{
 use classic_config_core::{InstalledYamlDataLoadError, load_installed_yaml_data_with_env};
 use classic_config_core::{
     InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataSnapshot,
-    LocalIgnoreRecoveryPlan, load_installed_yaml_data,
+    LocalIgnoreRecoveryPlan, load_installed_yaml_data_in_version_registry_scope,
 };
 use classic_database_core::DatabasePool;
-use classic_file_io_core::{LogCollector, RejectedInput, resolve_targeted_inputs};
+use classic_file_io_core::{FileHashScope, LogCollector, RejectedInput, resolve_targeted_inputs};
 use classic_operation_context::scope_cancellation;
 use classic_scangame_core::{
     ConfigFileCache, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, ModIniScanner,
 };
 use classic_shared_core::GameId;
+use classic_version_registry_core::VersionRegistryScope;
 use classic_vocabulary::Vocabulary;
+use classic_xse_core::resolve_xse_folder_for_scan_in_version_registry_scope;
 use futures::stream::{FuturesUnordered, StreamExt};
 use std::collections::VecDeque;
 use std::future::Future;
@@ -173,9 +175,14 @@ where
     };
     let installed_yaml_data_path = request.installation_root.join("CLASSIC Data");
     #[cfg(test)]
-    let installed_outcome = load_installed_yaml_data_for_run(load_request, &request.test_hooks);
+    let installed_outcome = load_installed_yaml_data_for_run(
+        load_request,
+        &request.version_registry,
+        &request.test_hooks,
+    );
     #[cfg(not(test))]
-    let installed_outcome = load_installed_yaml_data(load_request);
+    let installed_outcome =
+        load_installed_yaml_data_in_version_registry_scope(load_request, &request.version_registry);
     let installed_outcome = installed_outcome.map_err(|error| {
         CrashLogScanRunServiceError::new(
             contract::InfrastructureErrorStage::Intake,
@@ -205,6 +212,7 @@ where
                 request.options,
             )
             .with_scan_facts(scan_facts)
+            .with_version_registry_scope(request.version_registry.clone())
             .prepare()
             .await
             .map_err(|error| {
@@ -244,6 +252,7 @@ where
                 request.options,
             )
             .with_scan_facts(scan_facts)
+            .with_version_registry_scope(request.version_registry.clone())
             .prepare()
             .await
             .map_err(|error| {
@@ -415,13 +424,18 @@ where
 }
 
 /// Loads Installed YAML Data with a request-scoped cache environment for deterministic tests.
+///
+/// Without a cache-root hook this is the production scoped load. With one, the
+/// injected-environment loader reads the process default Version Registry
+/// snapshot; no hook-driven test depends on a non-default snapshot.
 #[cfg(test)]
 fn load_installed_yaml_data_for_run(
     request: InstalledYamlDataLoadRequest,
+    version_registry: &VersionRegistryScope,
     hooks: &ScanRunTestHooks,
 ) -> std::result::Result<InstalledYamlDataLoadOutcome, InstalledYamlDataLoadError> {
     let Some(cache_root) = hooks.yaml_cache_root() else {
-        return load_installed_yaml_data(request);
+        return load_installed_yaml_data_in_version_registry_scope(request, version_registry);
     };
     let cache_root = cache_root.to_string_lossy().into_owned();
     load_installed_yaml_data_with_env(request, move |name| match name {
@@ -493,6 +507,10 @@ pub(crate) struct CrashLogScanRunServiceRequest {
     pub cancellation: Option<Arc<AtomicBool>>,
     /// Return log outcomes in input order instead of completion order.
     pub preserve_order: bool,
+    /// Version Registry scope every stage of this run reads: XSE Folder
+    /// discovery, FCX setup, Installed YAML Data metadata, analysis
+    /// configuration, and per-log analysis (also after a resume).
+    pub version_registry: VersionRegistryScope,
     /// Request-scoped deterministic hooks used only by internal behavior tests.
     #[cfg(test)]
     pub(crate) test_hooks: ScanRunTestHooks,
@@ -1476,12 +1494,19 @@ async fn discover_scan_source(
     match &request.source {
         CrashLogScanSource::Standard(source) => {
             let yaml_dir_data = request.installation_root.join("CLASSIC Data");
-            let collector = LogCollector::new_for_scan(
-                source.base_directory.clone(),
+            // Same composition as `LogCollector::new_for_scan`, but the XSE
+            // Folder is derived from this run's Version Registry scope rather
+            // than the process default snapshot.
+            let xse_folder = resolve_xse_folder_for_scan_in_version_registry_scope(
                 &yaml_dir_data,
                 request.game.as_str(),
                 &request.game_version,
                 source.configured_documents_root.as_deref(),
+                &request.version_registry,
+            );
+            let collector = LogCollector::new(
+                source.base_directory.clone(),
+                xse_folder,
                 source.custom_scan_directory.clone(),
             );
             let logs = collector.collect_all().await?;
@@ -1555,7 +1580,10 @@ fn evaluate_setup_for_scan(
         intake = intake.with_xse_log_path(path);
     }
 
-    let game_setup = intake.run();
+    // FCX setup hashes through the process default hash scope (#242 keeps
+    // scanlog's setup step there) but reads this run's Version Registry scope.
+    let game_setup =
+        intake.run_in_scopes(&FileHashScope::default_scope(), &request.version_registry);
     let configuration_issues = detect_setup_configuration_issues(
         game_setup.paths.game_root.as_deref(),
         context.game_root.as_deref(),

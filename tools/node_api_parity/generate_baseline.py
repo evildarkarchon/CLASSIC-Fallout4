@@ -226,8 +226,8 @@ def enrich_executable_aux_owners(contract: dict[str, Any]) -> dict[str, Any]:
         # Registry carriers historically used by the promoted smoke inventory.
         # Preserve row IDs/owners so retained registry evidence remains intact.
         # The loose helpers are owned by classic-shared-core's `version` module
-        # (#243); only the known-version query is Version Registry policy still
-        # served by classic-version-core.
+        # (#243); the known-version query is Version Registry policy owned by
+        # classic-version-registry-core (#244).
         version_route = {
             "parseVersion": ("classic-shared-core", "parse_version"),
             "tryParseVersion": ("classic-shared-core", "try_parse_version"),
@@ -240,7 +240,7 @@ def enrich_executable_aux_owners(contract: dict[str, Any]) -> dict[str, Any]:
             "extractVersionFromLog": ("classic-shared-core", "extract_version_from_log"),
             "extractAllVersions": ("classic-shared-core", "extract_all_versions"),
             "isKnownFallout4Version": (
-                "classic-version-core",
+                "classic-version-registry-core",
                 "is_known_fallout4_version",
             ),
         }.get(mapping.get("nodeExport"))

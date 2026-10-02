@@ -1,57 +1,30 @@
 use super::*;
+use semver::Version;
 
+/// Until this crate retires (#258), its known-version paths are a facade over
+/// the Version Registry owner (#244); both answer from the same default
+/// snapshot, for known and unknown inputs alike.
 #[test]
-fn test_is_known_fallout4_version() {
-    // Use VersionRegistry to get known versions
-    let registry = get_version_registry();
+fn test_facade_reexports_version_registry_known_queries() {
+    use classic_version_registry_core as owner;
 
-    // Get OG version from registry
-    if let Some(og_info) = registry.get_by_id("FO4_OG") {
-        let og_version = Version::new(
-            u64::from(og_info.version.major),
-            u64::from(og_info.version.minor),
-            u64::from(og_info.version.patch),
+    for version in [
+        Version::new(1, 10, 163),
+        Version::new(1, 10, 984),
+        Version::new(0, 6, 23),
+        Version::new(9, 9, 9),
+    ] {
+        assert_eq!(
+            is_known_fallout4_version(&version),
+            owner::get_version_registry().is_known_fallout4_version(&version)
         );
-        assert!(is_known_fallout4_version(&og_version));
-    }
-
-    // Get NG version from registry
-    if let Some(ng_info) = registry.get_by_id("FO4_NG") {
-        let ng_version = Version::new(
-            u64::from(ng_info.version.major),
-            u64::from(ng_info.version.minor),
-            u64::from(ng_info.version.patch),
+        assert_eq!(
+            is_known_f4se_version(&version),
+            owner::get_version_registry().is_known_f4se_version(&version)
         );
-        assert!(is_known_fallout4_version(&ng_version));
     }
-
-    // Unknown version should not be known
-    assert!(!is_known_fallout4_version(&Version::new(9, 9, 9)));
-}
-
-#[test]
-fn test_is_known_f4se_version() {
-    // Use VersionRegistry to get known F4SE versions
-    let registry = get_version_registry();
-
-    // Get OG F4SE version from registry
-    if let Some(og_info) = registry.get_by_id("FO4_OG")
-        && let Some(xse) = &og_info.xse
-        && let Some(parsed) = try_parse_version(&xse.compatible_version)
-    {
-        assert!(is_known_f4se_version(&parsed));
-    }
-
-    // Get NG F4SE version from registry
-    if let Some(ng_info) = registry.get_by_id("FO4_NG")
-        && let Some(xse) = &ng_info.xse
-        && let Some(parsed) = try_parse_version(&xse.compatible_version)
-    {
-        assert!(is_known_f4se_version(&parsed));
-    }
-
-    // Unknown version should not be known
-    assert!(!is_known_f4se_version(&Version::new(9, 9, 9)));
+    assert!(is_known_fallout4_version(&Version::new(1, 10, 163)));
+    assert!(is_known_f4se_version(&Version::new(0, 6, 23)));
 }
 
 /// Until this crate retires (#258), its loose-parsing and PE paths are a

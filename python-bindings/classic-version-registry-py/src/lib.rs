@@ -15,7 +15,7 @@
 //! ```python
 //! import classic_version_registry
 //!
-//! # Get singleton registry
+//! # Get a handle to this module's registry snapshot
 //! registry = classic_version_registry.VersionRegistry()
 //!
 //! # Lookup by ID
@@ -33,6 +33,9 @@
 //! print(f"Matched: {result.version_info.display_name}")
 //! ```
 
+use std::sync::LazyLock;
+
+use classic_version_registry_core::{VersionRegistry, VersionRegistryScope};
 use pyo3::prelude::*;
 
 mod fallout4_version;
@@ -41,13 +44,27 @@ mod models;
 mod registry;
 mod version;
 
+/// This facade's own Version Registry scope.
+///
+/// Every registry read in this facade goes through this scope's lazy
+/// first-use snapshot rather than the process default, so once the Python
+/// facades share one native extension (#259) each keeps the snapshot taken
+/// from the working directory at its own first use.
+static FACADE_SCOPE: LazyLock<VersionRegistryScope> =
+    LazyLock::new(VersionRegistryScope::new_isolated);
+
+/// Return this facade's registry snapshot, taking it on first use.
+pub(crate) fn facade_registry() -> &'static VersionRegistry {
+    FACADE_SCOPE.registry()
+}
+
 /// Python module for CLASSIC version registry.
 ///
 /// Provides game version detection, matching, and registry lookup
 /// powered by Rust for performance and reliability.
 ///
 /// Core Classes:
-///     VersionRegistry: Singleton registry for game version metadata
+///     VersionRegistry: this module's registry snapshot for game version metadata
 ///     GameVersion: 4-component game version (major.minor.patch.build)
 ///     VersionInfo: Complete version information for a game version
 ///     MatchResult: Result of version matching with confidence level
@@ -74,3 +91,7 @@ fn classic_version_registry(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "lib_tests.rs"]
+mod tests;

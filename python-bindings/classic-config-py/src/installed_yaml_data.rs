@@ -16,7 +16,7 @@ use classic_config_core::{
     LocalIgnoreResetPublicationStage as CoreResetPublicationStage,
     YamlDataContentIdentity as CoreYamlDataContentIdentity,
     inspect_installed_yaml_data as core_inspect_installed_yaml_data,
-    load_installed_yaml_data as core_load_installed_yaml_data,
+    load_installed_yaml_data_in_version_registry_scope as core_load_installed_yaml_data,
 };
 use classic_shared::without_gil;
 use classic_vocabulary::{Vocabulary, from_token};
@@ -682,8 +682,10 @@ fn load_installed_yaml_data(
         game: game.into_core(),
         selected_game_version,
     };
-    let outcome = without_gil(py, || core_load_installed_yaml_data(request))
-        .map_err(installed_yaml_data_load_error_to_py)?;
+    let outcome = without_gil(py, || {
+        core_load_installed_yaml_data(request, &crate::CONFIG_VERSION_REGISTRY_SCOPE)
+    })
+    .map_err(installed_yaml_data_load_error_to_py)?;
     match outcome {
         CoreLoadOutcome::Ready(inner) => {
             let snapshot = Py::new(py, PyInstalledYamlDataSnapshot { inner })?;

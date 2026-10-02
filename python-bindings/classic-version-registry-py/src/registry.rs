@@ -1,4 +1,5 @@
-//! Python bindings for the VersionRegistry singleton.
+//! Python bindings for the VersionRegistry, read through this facade's own
+//! registry scope (see `crate::facade_registry`).
 
 use classic_version_registry_core as core;
 use pyo3::prelude::*;
@@ -6,13 +7,15 @@ use pyo3::prelude::*;
 use crate::matching::PyMatchResult;
 use crate::models::{PyCrashgenConfig, PyUnknownVersionHandling, PyVersionInfo};
 
-/// Singleton version registry for game version metadata.
+/// Version registry for game version metadata.
 ///
-/// The registry is automatically initialized on first access and loads
-/// version data from YAML configuration with fallback to hardcoded defaults.
+/// The registry snapshot is taken on first access and loads version data
+/// from YAML configuration with fallback to the embedded defaults. It is
+/// this module's own snapshot: it never reloads, and it is independent of
+/// the snapshot any other CLASSIC module takes.
 ///
-/// All methods delegate to the Rust singleton via OnceLock, ensuring
-/// thread-safe, zero-copy access to version metadata.
+/// All methods delegate to that Rust snapshot, ensuring thread-safe access
+/// to version metadata.
 ///
 /// Example:
 ///     >>> import classic_version_registry
@@ -31,8 +34,8 @@ pub struct PyVersionRegistry;
 impl PyVersionRegistry {
     /// Create a VersionRegistry instance.
     ///
-    /// This is a lightweight handle to the Rust singleton -- no data is
-    /// copied. Multiple instances share the same underlying registry.
+    /// This is a lightweight handle to this module's registry snapshot --
+    /// no data is copied. Multiple instances share the same snapshot.
     #[new]
     fn new() -> Self {
         Self
@@ -53,7 +56,7 @@ impl PyVersionRegistry {
     ///     >>> print(og.version)
     ///     1.10.163.0
     fn get_by_id(&self, version_id: &str) -> Option<PyVersionInfo> {
-        core::get_version_registry()
+        crate::facade_registry()
             .get_by_id(version_id)
             .cloned()
             .map(PyVersionInfo::from)
@@ -73,7 +76,7 @@ impl PyVersionRegistry {
         let v = core::GameVersion::parse(version_str).map_err(|e| {
             pyo3::exceptions::PyValueError::new_err(format!("Invalid version: {e}"))
         })?;
-        Ok(core::get_version_registry()
+        Ok(crate::facade_registry()
             .get_by_version(&v)
             .cloned()
             .map(PyVersionInfo::from))
@@ -87,7 +90,7 @@ impl PyVersionRegistry {
     /// Returns:
     ///     The VersionInfo, or None if not found.
     fn get_by_short_name(&self, short_name: &str) -> Option<PyVersionInfo> {
-        core::get_version_registry()
+        crate::facade_registry()
             .get_by_short_name(short_name)
             .cloned()
             .map(PyVersionInfo::from)
@@ -100,7 +103,7 @@ impl PyVersionRegistry {
     /// Returns:
     ///     List of VersionInfo objects.
     fn get_all(&self) -> Vec<PyVersionInfo> {
-        core::get_version_registry()
+        crate::facade_registry()
             .get_all()
             .into_iter()
             .cloned()
@@ -118,7 +121,7 @@ impl PyVersionRegistry {
     ///     List of matching VersionInfo objects, sorted by priority (descending).
     #[pyo3(signature = (game, is_vr=None))]
     fn get_all_for_game(&self, game: &str, is_vr: Option<bool>) -> Vec<PyVersionInfo> {
-        core::get_version_registry()
+        crate::facade_registry()
             .get_all_for_game(game, is_vr)
             .into_iter()
             .cloned()
@@ -134,7 +137,7 @@ impl PyVersionRegistry {
     /// Returns:
     ///     List of versions matching the VR mode.
     fn get_correct_versions(&self, is_vr: bool) -> Vec<PyVersionInfo> {
-        core::get_version_registry()
+        crate::facade_registry()
             .get_correct_versions(is_vr)
             .into_iter()
             .cloned()
@@ -150,7 +153,7 @@ impl PyVersionRegistry {
     /// Returns:
     ///     List of versions NOT matching the VR mode.
     fn get_wrong_versions(&self, is_vr: bool) -> Vec<PyVersionInfo> {
-        core::get_version_registry()
+        crate::facade_registry()
             .get_wrong_versions(is_vr)
             .into_iter()
             .cloned()
@@ -188,7 +191,7 @@ impl PyVersionRegistry {
         let detected = core::GameVersion::parse(version_str).map_err(|e| {
             pyo3::exceptions::PyValueError::new_err(format!("Invalid version: {e}"))
         })?;
-        let result = core::get_version_registry().match_version(&detected, game, is_vr);
+        let result = crate::facade_registry().match_version(&detected, game, is_vr);
         Ok(PyMatchResult::from(result))
     }
 
@@ -212,7 +215,7 @@ impl PyVersionRegistry {
         let v = core::GameVersion::parse(version_str).map_err(|e| {
             pyo3::exceptions::PyValueError::new_err(format!("Invalid version: {e}"))
         })?;
-        Ok(core::get_version_registry().get_address_library_filename(&v, is_vr))
+        Ok(crate::facade_registry().get_address_library_filename(&v, is_vr))
     }
 
     // === Crashgen API ===
@@ -225,7 +228,7 @@ impl PyVersionRegistry {
     /// Returns:
     ///     List of CrashgenConfig objects.
     fn get_crashgen_configs(&self, version_id: &str) -> Vec<PyCrashgenConfig> {
-        core::get_version_registry()
+        crate::facade_registry()
             .get_crashgen_versions(version_id)
             .into_iter()
             .cloned()
@@ -241,7 +244,7 @@ impl PyVersionRegistry {
     /// Returns:
     ///     List of version strings.
     fn get_crashgen_versions(&self, version_id: &str) -> Vec<String> {
-        core::get_version_registry()
+        crate::facade_registry()
             .get_crashgen_version_strings(version_id)
             .into_iter()
             .map(String::from)
@@ -261,7 +264,7 @@ impl PyVersionRegistry {
         version_id: &str,
         crashgen_version: &str,
     ) -> Option<PyCrashgenConfig> {
-        core::get_version_registry()
+        crate::facade_registry()
             .get_crashgen_for_version(version_id, crashgen_version)
             .cloned()
             .map(PyCrashgenConfig::from)
@@ -283,7 +286,7 @@ impl PyVersionRegistry {
         game: &str,
         is_vr: Option<bool>,
     ) -> std::collections::HashSet<String> {
-        let registry = core::get_version_registry();
+        let registry = crate::facade_registry();
         registry
             .get_all_for_game(game, is_vr)
             .into_iter()
@@ -307,7 +310,7 @@ impl PyVersionRegistry {
         game: &str,
         is_vr: Option<bool>,
     ) -> std::collections::HashMap<String, std::collections::HashSet<String>> {
-        let registry = core::get_version_registry();
+        let registry = crate::facade_registry();
         let mut result: std::collections::HashMap<String, std::collections::HashSet<String>> =
             std::collections::HashMap::new();
         for version in registry.get_all_for_game(game, is_vr) {
@@ -335,7 +338,7 @@ impl PyVersionRegistry {
         &self,
         version_id: &str,
     ) -> std::collections::HashMap<String, String> {
-        let registry = core::get_version_registry();
+        let registry = crate::facade_registry();
         registry
             .get_by_id(version_id)
             .and_then(|v| v.xse.as_ref())
@@ -348,16 +351,12 @@ impl PyVersionRegistry {
     /// Gets the unknown version handling configuration.
     #[getter]
     fn unknown_version_handling(&self) -> PyUnknownVersionHandling {
-        PyUnknownVersionHandling::from(
-            core::get_version_registry()
-                .unknown_version_handling()
-                .clone(),
-        )
+        PyUnknownVersionHandling::from(crate::facade_registry().unknown_version_handling().clone())
     }
 
     /// String representation.
     fn __repr__(&self) -> String {
-        let count = core::get_version_registry().get_all().len();
+        let count = crate::facade_registry().get_all().len();
         format!("VersionRegistry({count} versions)")
     }
 }
@@ -388,14 +387,14 @@ impl PyVersionRegistry {
 fn match_version_string(version_str: &str, game: &str, is_vr: bool) -> PyResult<PyMatchResult> {
     let detected = core::GameVersion::parse(version_str)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid version: {e}")))?;
-    let result = core::get_version_registry().match_version(&detected, game, is_vr);
+    let result = crate::facade_registry().match_version(&detected, game, is_vr);
     Ok(PyMatchResult::from(result))
 }
 
-/// Convenience function: get the singleton registry instance.
+/// Convenience function: get a handle to this module's registry snapshot.
 ///
 /// Returns:
-///     A VersionRegistry instance (lightweight handle to Rust singleton).
+///     A VersionRegistry instance (lightweight handle to this module's snapshot).
 ///
 /// Example:
 ///     >>> registry = classic_version_registry.get_version_registry()

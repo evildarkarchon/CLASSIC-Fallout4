@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-01T22:18:22.709635+00:00",
+  "generated_at_utc": "2026-10-02T01:54:33.795421+00:00",
   "summary": {
     "tier1_contract_total": 949,
     "tier1_matched": 932,
@@ -4040,7 +4040,7 @@
       "id": "version-registry-promote-is-known-fallout4-version",
       "tier": "tier1",
       "owner_module": "version_registry",
-      "rust_crate": "classic-version-core",
+      "rust_crate": "classic-version-registry-core",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "is_known_fallout4_version",
       "node_export": "isKnownFallout4Version",

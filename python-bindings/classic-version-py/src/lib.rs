@@ -3,13 +3,24 @@
 //! This module provides Python access to version detection and parsing utilities.
 //! The loose parsing, extraction, formatting, and PE helpers are owned by
 //! `classic_shared_core::version`; the known-version queries are Version
-//! Registry policy and are delegated to `classic_version_core` until #244 moves
-//! them. Each is exposed through a Python-friendly wrapper function.
+//! Registry policy owned by `classic_version_registry_core`. Each is exposed
+//! through a Python-friendly wrapper function.
 
+use classic_version_registry_core::VersionRegistryScope;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use semver::Version;
 use std::cmp::Ordering;
+use std::sync::LazyLock;
+
+/// This facade's own Version Registry scope.
+///
+/// The known-version queries answer from this scope's lazy first-use snapshot
+/// rather than the process default, so once the Python facades share one
+/// native extension (#259) another facade's first use — taken from a
+/// different working directory — cannot decide what `classic_version` knows.
+static VERSION_REGISTRY_SCOPE: LazyLock<VersionRegistryScope> =
+    LazyLock::new(VersionRegistryScope::new_isolated);
 
 /// Parse a version string into a semantic version.
 ///
@@ -140,7 +151,9 @@ fn compare_versions(v1: (u64, u64, u64), v2: (u64, u64, u64)) -> i32 {
 #[pyfunction]
 fn is_known_fallout4_version(version: (u64, u64, u64)) -> bool {
     let v = Version::new(version.0, version.1, version.2);
-    classic_version_core::is_known_fallout4_version(&v)
+    VERSION_REGISTRY_SCOPE
+        .registry()
+        .is_known_fallout4_version(&v)
 }
 
 /// Check if a version is a known F4SE version.
@@ -165,7 +178,7 @@ fn is_known_fallout4_version(version: (u64, u64, u64)) -> bool {
 #[pyfunction]
 fn is_known_f4se_version(version: (u64, u64, u64)) -> bool {
     let v = Version::new(version.0, version.1, version.2);
-    classic_version_core::is_known_f4se_version(&v)
+    VERSION_REGISTRY_SCOPE.registry().is_known_f4se_version(&v)
 }
 
 /// Extract a version from a filename.
@@ -403,3 +416,7 @@ fn classic_version(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "lib_tests.rs"]
+mod tests;

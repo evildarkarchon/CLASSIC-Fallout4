@@ -50,7 +50,20 @@
 //! All scangame components are thread-safe and can be used from multiple Python threads
 //! or async tasks.
 
+use std::sync::LazyLock;
+
+use classic_version_registry_core::VersionRegistryScope;
 use pyo3::prelude::*;
+
+/// `classic_scangame`'s Version Registry scope.
+///
+/// Address Library info, XSE plugin checks, Game Setup Intake, and the game
+/// scan orchestrator all read registry metadata only from this scope's lazy
+/// first-use snapshot, so once the Python facades share one native library
+/// another facade's first use — taken from a different working directory —
+/// cannot decide scangame's registry metadata.
+pub(crate) static SCANGAME_VERSION_REGISTRY_SCOPE: LazyLock<VersionRegistryScope> =
+    LazyLock::new(VersionRegistryScope::new_isolated);
 
 // Module declarations - Phase 3B-3C implementations
 pub mod ba2; // BA2 archive handling (Phase 3B) - IMPLEMENTED

@@ -27,6 +27,7 @@ use classic_config_core::{
     LocalIgnoreYamlDataState, YamlDataContentIdentity,
 };
 use classic_shared_core::GameId;
+use classic_version_registry_core::VersionRegistryScope;
 use classic_vocabulary::Vocabulary;
 use std::fmt;
 use std::path::PathBuf;
@@ -299,7 +300,11 @@ impl Request {
     }
 
     /// Projects the invariant-preserving request into the crate-private engine shape.
-    fn into_engine_request(self, cancellation: &Cancellation) -> CrashLogScanRunServiceRequest {
+    fn into_engine_request(
+        self,
+        cancellation: &Cancellation,
+        version_registry: VersionRegistryScope,
+    ) -> CrashLogScanRunServiceRequest {
         let (configuration, source, setup, move_unsolved_logs, custom_destination) = match self {
             Self::Standard(request) => {
                 let (move_unsolved_logs, custom_destination) = match request.unsolved_logs {
@@ -351,6 +356,7 @@ impl Request {
             cancellation: Some(cancellation.engine_flag()),
             // Discovery order is mandatory in the final result contract.
             preserve_order: true,
+            version_registry,
             #[cfg(test)]
             test_hooks: ScanRunTestHooks::default(),
         }
@@ -1740,8 +1746,37 @@ pub async fn execute(
     cancellation: &Cancellation,
     observer: Option<&mut dyn Observer>,
 ) -> Result<RunResult, InfrastructureError> {
+    execute_in_version_registry_scope(
+        request,
+        VersionRegistryScope::default_scope(),
+        cancellation,
+        observer,
+    )
+    .await
+}
+
+/// Executes one Crash Log Scan Run like [`execute`], reading Version Registry
+/// metadata only from `version_registry`.
+///
+/// Every registry-backed stage of the run reads that scope: Standard XSE
+/// Folder discovery, FCX setup, Installed YAML Data metadata, analysis
+/// configuration, and per-log analysis. A continuation returned for Local
+/// Ignore recovery keeps the scope, so [`CrashLogScanRunContinuation::resume`]
+/// reads it too. No other snapshot, including the process default, is read.
+/// This lets a binding facade keep its own snapshot.
+///
+/// # Errors
+///
+/// Same as [`execute`].
+pub async fn execute_in_version_registry_scope(
+    request: Request,
+    version_registry: VersionRegistryScope,
+    cancellation: &Cancellation,
+    observer: Option<&mut dyn Observer>,
+) -> Result<RunResult, InfrastructureError> {
     execute_inner(
         request,
+        version_registry,
         cancellation,
         observer,
         #[cfg(test)]
@@ -1758,12 +1793,20 @@ pub(crate) async fn execute_with_test_hooks(
     observer: Option<&mut dyn Observer>,
     test_hooks: ScanRunTestHooks,
 ) -> Result<RunResult, InfrastructureError> {
-    execute_inner(request, cancellation, observer, test_hooks).await
+    execute_inner(
+        request,
+        VersionRegistryScope::default_scope(),
+        cancellation,
+        observer,
+        test_hooks,
+    )
+    .await
 }
 
 /// Shared implementation for the public operation and its request-scoped test harness.
 async fn execute_inner(
     request: Request,
+    version_registry: VersionRegistryScope,
     cancellation: &Cancellation,
     mut observer: Option<&mut dyn Observer>,
     #[cfg(test)] test_hooks: ScanRunTestHooks,
@@ -1784,7 +1827,7 @@ async fn execute_inner(
         ));
     }
 
-    let engine_request = request.into_engine_request(cancellation);
+    let engine_request = request.into_engine_request(cancellation, version_registry);
     #[cfg(test)]
     let engine_request = {
         let mut engine_request = engine_request;

@@ -344,7 +344,12 @@ fn convert_result(result: GameSetupIntakeResult) -> PyGameSetupIntakeResult {
 #[pyfunction]
 fn run_game_setup_intake(py: Python<'_>, intake: &PyGameSetupIntake) -> PyGameSetupIntakeResult {
     let core_intake = intake.inner.clone();
-    let result = without_gil(py, || core_intake.run_in_hash_scope(&SCANGAME_HASH_SCOPE));
+    let result = without_gil(py, || {
+        core_intake.run_in_scopes(
+            &SCANGAME_HASH_SCOPE,
+            &crate::SCANGAME_VERSION_REGISTRY_SCOPE,
+        )
+    });
     convert_result(result)
 }
 
@@ -364,7 +369,12 @@ fn run_game_setup_intake_from_user_settings(
     if let Some(xse_log_path) = xse_log_path {
         intake = intake.with_xse_log_path(xse_log_path);
     }
-    let result = without_gil(py, || intake.run_in_hash_scope(&SCANGAME_HASH_SCOPE));
+    let result = without_gil(py, || {
+        intake.run_in_scopes(
+            &SCANGAME_HASH_SCOPE,
+            &crate::SCANGAME_VERSION_REGISTRY_SCOPE,
+        )
+    });
     convert_result(result)
 }
 

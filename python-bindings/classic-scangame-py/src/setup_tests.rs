@@ -51,3 +51,14 @@ fn run_game_setup_intake_hashes_only_in_the_scangame_facade_scope() {
     );
     assert_ne!(*SCANGAME_HASH_SCOPE, FileHashScope::default_scope());
 }
+
+/// Every registry-backed scangame entry point reads the facade's own Version
+/// Registry scope, which must not be the process default (#233, #244).
+#[test]
+fn facade_version_registry_scope_is_not_the_process_default() {
+    use classic_version_registry_core::{VersionRegistryScope, get_version_registry};
+
+    let scope = &*crate::SCANGAME_VERSION_REGISTRY_SCOPE;
+    assert_ne!(*scope, VersionRegistryScope::default_scope());
+    assert!(!std::ptr::eq(scope.registry(), get_version_registry()));
+}

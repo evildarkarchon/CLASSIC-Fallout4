@@ -2,6 +2,7 @@ use super::*;
 use classic_user_settings_core::{
     UserSettings, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview,
 };
+use classic_version_registry_core::get_version_registry;
 use std::fs;
 use std::path::Path;
 use tempfile::TempDir;

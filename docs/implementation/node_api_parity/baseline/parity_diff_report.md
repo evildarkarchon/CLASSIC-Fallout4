@@ -1,6 +1,6 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-01T22:18:22.709635+00:00`
+- Generated: `2026-10-02T01:54:33.795421+00:00`
 - Tier-1 contract rows: **949**
 - Tier-1 matched: **932**
 - Tier-1 missing Rust: **0**
@@ -300,7 +300,7 @@
 | `version-registry-promote-get-unknown-version-handling` | `version_registry` | `classic-version-registry-core` | `unknown_version_handling` | `getUnknownVersionHandling` | `matched` |
 | `version-registry-promote-get-version` | `aux` | `-` | `None` | `getVersion` | `unmapped` |
 | `version-registry-promote-get-version-registry` | `version_registry` | `classic-version-registry-core` | `VersionRegistry` | `getVersionRegistry` | `matched` |
-| `version-registry-promote-is-known-fallout4-version` | `version_registry` | `classic-version-core` | `is_known_fallout4_version` | `isKnownFallout4Version` | `matched` |
+| `version-registry-promote-is-known-fallout4-version` | `version_registry` | `classic-version-registry-core` | `is_known_fallout4_version` | `isKnownFallout4Version` | `matched` |
 | `version-registry-promote-parse-version` | `version_registry` | `classic-shared-core` | `parse_version` | `parseVersion` | `matched` |
 | `version-registry-promote-registry-get-game-version` | `version_registry` | `classic-registry-core` | `get` | `registryGetGameVersion` | `matched` |
 | `version_registry.MatchConfidence@rust` | `version_registry` | `classic-version-registry-core` | `MatchConfidence@rust` | `None` | `matched` |

@@ -98,8 +98,9 @@ def predicates(family):
             }.get(symbol, ())
             # version-extraction mixes two owners: the extract helpers live in
             # classic-shared-core while the known-version query is Version
-            # Registry policy. Coverage binds one crate per capability, so the
-            # known-version operation credits its own capability (#243).
+            # Registry policy owned by classic-version-registry-core (#244).
+            # Coverage binds one crate per capability, so the known-version
+            # operation credits its own capability (#243).
             capability = (
                 family + ".known-fallout4"
                 if family == "version-extraction" and operation == "known-fallout4"

@@ -16,7 +16,8 @@ use crate::crashgen_registry_yaml::parse_crashgen_registry;
 use classic_shared_core::yaml::YamlOperations;
 use classic_shared_core::yaml::{SettingsError, merge_yaml_documents, parse_yaml_content};
 use classic_version_registry_core::{
-    GameVersion as RegistryGameVersion, VersionInfo, get_version_registry,
+    GameVersion as RegistryGameVersion, VersionInfo, VersionRegistry, VersionRegistryScope,
+    get_version_registry,
 };
 use std::collections::{HashMap, HashSet};
 use yaml_rust2::Yaml;
@@ -726,7 +727,31 @@ fn main_root_matches_registry_info(main_root_name: &str, info: &VersionInfo) -> 
 ///
 /// This prefers explicit defaults from `unknown_version_handling.defaults` and
 /// falls back to the highest-priority registry entry that matches `Main_Root_Name`.
+/// It reads the process default Version Registry snapshot; see
+/// [`resolve_registry_version_info_in`] for a caller-selected snapshot.
 pub fn resolve_registry_version_info(
+    main_root_name: &str,
+    selected_game_version: &str,
+) -> Option<VersionInfo> {
+    // Checked here as well as in `_in` so an empty root never forces the
+    // lazy default snapshot just to return `None`.
+    if main_root_name.trim().is_empty() {
+        return None;
+    }
+    resolve_registry_version_info_in(
+        get_version_registry(),
+        main_root_name,
+        selected_game_version,
+    )
+}
+
+/// Resolve registry-backed static metadata from a caller-selected Version
+/// Registry snapshot, such as `VersionRegistryScope::registry()`.
+///
+/// Same rules as [`resolve_registry_version_info`]; no other snapshot,
+/// including the process default, is read.
+pub fn resolve_registry_version_info_in(
+    registry: &VersionRegistry,
     main_root_name: &str,
     selected_game_version: &str,
 ) -> Option<VersionInfo> {
@@ -734,7 +759,6 @@ pub fn resolve_registry_version_info(
         return None;
     }
 
-    let registry = get_version_registry();
     let selected_short_name = selected_short_name(selected_game_version);
     let selected_version_is_vr = selected_short_name.is_some_and(|short_name| short_name == "VR");
 
@@ -1039,12 +1063,15 @@ impl YamlDataCore {
         &self.game_root_name
     }
 
+    /// Build from already-parsed documents; the metadata fallbacks read only
+    /// `version_registry`, and only when `Game_Info.Main_Root_Name` is set.
     pub(crate) fn build_from_yaml_documents(
         main_data: &Yaml,
         game_data: &Yaml,
         ignore_data: &Yaml,
         game: &str,
         selected_game_version: &str,
+        version_registry: &VersionRegistryScope,
     ) -> Result<Self, ConfigError> {
         let yaml_ops = YamlOperations::new();
         let data_game = canonical_game_data_name(game);
@@ -1110,7 +1137,11 @@ impl YamlDataCore {
             crashgen_registry: parse_crashgen_registry(game_data),
         };
 
-        data.apply_metadata_fallbacks(selected_game_version, crashgen_ignore_is_configured);
+        data.apply_metadata_fallbacks(
+            selected_game_version,
+            crashgen_ignore_is_configured,
+            version_registry,
+        );
         Ok(data)
     }
 
@@ -1118,10 +1149,16 @@ impl YamlDataCore {
         &mut self,
         selected_game_version: &str,
         crashgen_ignore_is_configured: bool,
+        version_registry: &VersionRegistryScope,
     ) {
         if !self.game_root_name.trim().is_empty() {
-            let registry_info =
-                resolve_registry_version_info(&self.game_root_name, selected_game_version);
+            // Only this branch touches the scope, so a document without a
+            // Main_Root_Name never takes the scope's lazy first-use snapshot.
+            let registry_info = resolve_registry_version_info_in(
+                version_registry.registry(),
+                &self.game_root_name,
+                selected_game_version,
+            );
             let registry_crashgen = registry_info
                 .as_ref()
                 .and_then(|info| info.crashgen_versions.first());
@@ -1224,6 +1261,34 @@ impl YamlDataCore {
         game: String,
         selected_game_version: String,
     ) -> Result<Self, ConfigError> {
+        Self::from_yaml_content_in_version_registry_scope(
+            main_content,
+            game_content,
+            ignore_content,
+            game,
+            selected_game_version,
+            &VersionRegistryScope::default_scope(),
+        )
+    }
+
+    /// Build from YAML content like [`YamlDataCore::from_yaml_content`], reading
+    /// Version Registry metadata fallbacks only from `version_registry`.
+    ///
+    /// The scope's snapshot is taken lazily, and only when the game YAML sets
+    /// `Game_Info.Main_Root_Name`. No other snapshot, including the process
+    /// default, is read. This lets a binding facade keep its own snapshot.
+    ///
+    /// # Errors
+    ///
+    /// Same as [`YamlDataCore::from_yaml_content`].
+    pub fn from_yaml_content_in_version_registry_scope(
+        main_content: &str,
+        game_content: &str,
+        ignore_content: &str,
+        game: String,
+        selected_game_version: String,
+        version_registry: &VersionRegistryScope,
+    ) -> Result<Self, ConfigError> {
         let main_data = parse_and_merge_yaml_content("main YAML", "Main YAML", main_content)?;
         let game_data = parse_and_merge_yaml_content("game YAML", "Game YAML", game_content)?;
         let ignore_data =
@@ -1235,6 +1300,7 @@ impl YamlDataCore {
             &ignore_data,
             &game,
             &selected_game_version,
+            version_registry,
         )
     }
 }

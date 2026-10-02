@@ -18,6 +18,8 @@ classic-registry-core = { path = "../../business-logic/classic-registry-core" }
 
 # Core business logic (pure Rust - no PyO3)
 classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
+# Version Registry scope selected at this facade's entry points
+classic-version-registry-core = { path = "../../business-logic/classic-version-registry-core" }
 
 # Crash Log Scan Run Display Content. Rust decides what a run says; this binding
 # only carries the rendered lines across the seam, because a `RunResult` retains a

@@ -8,13 +8,18 @@
 //!
 //! - **Version Lookup**: Find version info by ID, exact version, or short name
 //! - **Version Matching**: Match unknown versions to nearest known version
+//! - **Known-Version Queries**: Answer whether a game or F4SE version is known
+//!   ([`is_known_fallout4_version`], [`is_known_f4se_version`])
+//! - **Scoped Snapshots**: [`VersionRegistryScope`] handles keep independent,
+//!   lazily taken, immutable registry snapshots
 //! - **YAML Loading**: Load version data from CLASSIC Main.yaml
 //! - **Embedded YAML Fallback**: Use the checked-in CLASSIC Main.yaml when runtime loading fails
 //!
 //! ## Architecture
 //!
 //! - Pure Rust - no PyO3, usable by TUI/CLI directly
-//! - Thread-safe singleton pattern using `OnceLock`
+//! - Thread-safe lazy snapshots: one per [`VersionRegistryScope`], with a
+//!   process default scope behind [`get_version_registry`]
 //! - Custom `GameVersion` type for 4-component versions (e.g., 1.10.163.0)
 //!
 //! # Usage Example
@@ -47,6 +52,7 @@
 mod defaults;
 mod error;
 mod fallout4_version;
+mod known_versions;
 mod matching;
 mod models;
 mod registry;
@@ -55,12 +61,13 @@ mod version;
 // Re-export public API
 pub use error::VersionRegistryError;
 pub use fallout4_version::*;
+pub use known_versions::{is_known_f4se_version, is_known_fallout4_version};
 pub use matching::{MatchConfidence, MatchResult, VersionMatcher};
 pub use models::{
     AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel,
     UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig,
 };
-pub use registry::{VersionRegistry, get_version_registry};
+pub use registry::{VersionRegistry, VersionRegistryScope, get_version_registry};
 pub use version::GameVersion;
 
 /// Result type for version registry operations.

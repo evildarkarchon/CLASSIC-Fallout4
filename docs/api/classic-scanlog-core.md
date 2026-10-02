@@ -30,6 +30,17 @@ It accepts one tagged request, a separate monotonic cancellation control, and
 an optional observer. It returns either a meaningful terminal `RunResult` or a
 typed run-wide `InfrastructureError`.
 
+`scan_run::contract::execute_in_version_registry_scope(request, version_registry,
+cancellation, observer)` runs the same operation but reads Version Registry
+metadata only from the supplied
+[`VersionRegistryScope`](classic-version-registry-core.md#version-registry-scopes):
+Standard XSE Folder discovery, FCX setup, Installed YAML Data metadata, the
+analysis configuration, and per-log crashgen and plugin-limit analysis. A
+continuation returned for Local Ignore recovery keeps the scope, so `resume`
+reads it too. `execute` uses the process default scope. FCX setup still hashes
+through the process default `FileHashScope`. The Python `classic_scanlog`
+facade runs every scan through its own isolated scope.
+
 Malformed Local Ignore is a meaningful `LocalIgnoreRecoveryRequired` result.
 That result owns an opaque `CrashLogScanRunContinuation`; callers explicitly
 choose `LocalIgnoreRecoveryDecision::ProceedWithoutIgnore` or
@@ -444,7 +455,9 @@ only a complete Crash Log Scan Run needs to coordinate all six results.
   helpers remain available for independent utility use.
 - `PluginAnalyzer` retains independently useful load-order parsing, plugin-limit,
   filtering, and batch detection utilities; its former report-producing match
-  methods are removed.
+  methods are removed. Plugin-limit checks classify the detected game version
+  from the process default Version Registry snapshot unless
+  `with_version_registry_scope(scope)` selects another scope.
 - `RecordScanner` remains a utility-only raw record extractor and lazily caches
   its per-instance Aho-Corasick matchers with `std::sync::OnceLock`. Its former
   report-producing `scan_named_records` family is removed; `contains_record`
