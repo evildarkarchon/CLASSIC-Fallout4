@@ -11,7 +11,7 @@ is different from game-path validation. No production API is added.
 | --- | --- | --- | --- |
 | `config-operations` | `classic-config-core` | Rust, CXX (MSVC and clang-cl), Node, Python | Explicit Main/Game/Ignore loading; stable version, XSE, Crashgen, game version, ordered ignore values; parse and missing-input errors with role/path; unchanged input bytes |
 | `file-operations` | `classic-file-io-core` | Rust, CXX (both compilers), Node, Python | UTF-8 and empty reads; read aliases; create and overwrite; missing read and missing-parent write failures; exact before/after file contents and forbidden effects |
-| `path-operations` | `classic-path-core` | Rust, CXX (both compilers), Node, Python | Existence predicate and required-file validation; successful empty requirements; missing paths, wrong kind, missing required files; root-relative domain errors |
+| `path-operations` | `classic-path-core` (required files); `classic-shared-core` (existence predicate, `path-operations.exists`, #245) | Rust, CXX (both compilers), Node, Python | Existence predicate and required-file validation; successful empty requirements; missing paths, wrong kind, missing required files; root-relative domain errors |
 | `path-normalization` | `classic-shared-core` | Rust, Node, Python | Join and normalize; ordered batch existence hits and successful misses; temporary-root and Windows separator normalization |
 | `message-operations` | `classic-message-core` | Rust, Node, Python | All seven message severities, routing targets, null/empty/nonempty details, Unicode and multiline content, exact public formatter output |
 

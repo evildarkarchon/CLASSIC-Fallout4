@@ -57,11 +57,7 @@ This crate currently exposes a single public file, `src/lib.rs`. There are no pu
 
 ## Root-level re-exports
 
-- `PathError`, `PathResult` from [`classic-path-core`](../../business-logic/classic-path-core)
-
-Contributor note:
-
-- `PathResult` is re-exported but not used by this crate's own public functions today; the crate's native result alias is `ResourceResult<T>`
+None. The former `PathError` / `PathResult` re-exports from `classic-path-core` ended in #245: the generic path error is owned by `classic_shared_core::path_core`, which callers import directly. `ResourceError::PathError` wraps that shared-core type, and the crate's native result alias is `ResourceResult<T>`.
 
 ---
 
@@ -182,7 +178,7 @@ Source-visible limitation:
 
 Practical implication:
 
-- if a caller needs strict path validation before enumeration, validate the directory separately with [`classic-path-core`](../../business-logic/classic-path-core) helpers first
+- if a caller needs strict path validation before enumeration, validate the directory separately with the [`classic_shared_core::path_core`](classic-shared-core.md#generic-path-primitives-path_core) helpers first
 
 ## `count_resources_by_type()`
 
@@ -228,7 +224,7 @@ Variants:
 Behavior worth knowing:
 
 - `ArchiveError` is part of the public API surface, but the current `src/lib.rs` implementation does not construct it anywhere
-- `PathError` conversion exists because the crate re-exports path error types, but current root-level functions do not call into `classic-path-core` validators directly
+- `PathError` conversion wraps `classic_shared_core::path_core::PathError`, but current root-level functions do not call the shared-core path validators directly
 
 ---
 
@@ -277,7 +273,7 @@ Important direct dependencies:
 - `walkdir` - recursive directory traversal for enumeration
 - `serde` - serialization/deserialization for `ResourceType`
 - `thiserror` - `ResourceError`
-- `classic-path-core` - re-exported `PathError` and `PathResult`
+- `classic-shared-core` - `path_core::PathError` wrapped by `ResourceError::PathError`
 
 Declared dependency with no visible use in current `src/lib.rs`:
 
@@ -285,7 +281,7 @@ Declared dependency with no visible use in current `src/lib.rs`:
 
 Related CLASSIC crates and wrappers:
 
-- [`classic-path-core`](../../business-logic/classic-path-core) - neighboring path-validation layer whose error types are re-exported here
+- [`classic-path-core`](../../business-logic/classic-path-core) - neighboring game/documents path layer (this crate no longer depends on it)
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core) - higher-level install and mod scanning crate; it handles real scan orchestration rather than reusing this crate directly in current source
 - [`classic-resource-py`](../../python-bindings/classic-resource-py) - Python wrapper for this crate's public API
 - [`classic-node`](../../node-bindings/classic-node) - Node binding surface that forwards this crate's detection, enumeration, count, and validation helpers
@@ -326,7 +322,7 @@ validate_resource(Path::new("C:/Games/Fallout4/Data/example.esp"))?;
 # Ok::<(), classic_resource_core::ResourceError>(())
 ```
 
-If the caller needs stricter directory validation before enumeration, validate the root separately with [`classic-path-core`](classic-path-core.md) before calling `enumerate_resources()`.
+If the caller needs stricter directory validation before enumeration, validate the root separately with [`classic_shared_core::path_core`](classic-shared-core.md#generic-path-primitives-path_core) before calling `enumerate_resources()`.
 
 ---
 

@@ -62,6 +62,10 @@ This crate exposes both root-level items and public modules.
 ### `path_core`
 
 - `PathHandler` - cached path normalization, validation, joining, splitting, and prefix helpers
+- generic path primitives (#245): `is_valid_path`, `validate_path_exists`, `validate_is_directory`, `validate_is_file`, `is_executable_file_path`, `check_drive_exists`, `check_read_permissions`, `check_write_permissions`, `validate_path_with_permissions`, `drive_exists`, `has_read_permission`, `has_write_permission`, `remove_readonly_attribute`, Windows-only `remove_readonly`, and `PathError` / `PathResult<T>`
+- OS cache root: `user_cache_root()`, `user_cache_root_with_env()`, `CacheRootUnavailable`, `non_empty_env_var()`
+
+See [Generic path primitives](#generic-path-primitives-path_core).
 
 ### `performance_core`
 
@@ -306,6 +310,47 @@ Behavior worth knowing from the source:
 Source-observed limitation:
 
 - comments describe the bounded cache as LRU, but the current eviction logic removes the bottom 20% of entries by `hit_count`, not by recency timestamp
+
+## Generic path primitives (`path_core`)
+
+`path_core` is the domain-neutral owner of CLASSIC's generic path checks. They moved unchanged from `classic-path-core` in #245 so callers that only need a neutral check depend on shared core alone; `classic-path-core` keeps game/documents discovery, custom-scan and settings-path policy, required-file checks, and the per-user cache directories, and no longer re-exports these items.
+
+Existence and kind:
+
+- `is_valid_path(path) -> bool` - `Path::exists()`
+- `validate_path_exists(path)`, `validate_is_directory(path)`, `validate_is_file(path) -> PathResult<()>` - a missing path is always `NotFound` before any kind check
+- `is_executable_file_path(path) -> bool` - an existing file whose extension is `.exe`, `.app`, or absent. This was `classic_path_core::is_valid_executable_path`; it is renamed because `version::pe_version::is_valid_executable_path` (an existing `.exe`/`.dll` whose PE version can be read) answers a different question, and the parity tooling keys Rust symbols by crate and bare name.
+
+Permission and drive:
+
+- `check_drive_exists(path)` - checks the Windows drive prefix; always `Ok(())` elsewhere
+- `check_read_permissions(path)` - lists a directory or opens a file; anything else is `InvalidPath("Path is neither a file nor directory: ..")`
+- `check_write_permissions(path)` - creates and removes `.classic_test_write` in the directory (or the file's parent)
+- `validate_path_with_permissions(path, check_read, check_write)` - drive, existence, then the requested permission checks
+- `drive_exists`, `has_read_permission`, `has_write_permission` - boolean wrappers over the checks above
+
+Read-only:
+
+- `remove_readonly_attribute(path)` - clears the read-only flag on Windows; a no-op elsewhere
+- `remove_readonly(path)` (Windows only) - same flag change, but also writes a warning to stderr when clearing fails; kept distinct because the Node and Python `remove_readonly` exports rely on that behavior
+
+`PathError` variants and messages are unchanged and are observed by the CXX, Node, and Python path adapters:
+
+- `NotFound(PathBuf)` - `Path does not exist: ..`
+- `NotADirectory(PathBuf)` - `Path is not a directory: ..`
+- `NotAFile(PathBuf)` - `Path is not a file: ..`
+- `IoError { path, source }` - `I/O error for path ..: ..`
+- `PermissionDenied(String)` - `Permission denied: ..`
+- `InvalidPath(String)` - `Invalid path: ..`
+
+OS cache root:
+
+- `user_cache_root_with_env(env) -> Result<PathBuf, CacheRootUnavailable>` - `%LOCALAPPDATA%`, then `%APPDATA%` on Windows; `$XDG_CACHE_HOME`, then `$HOME/.cache` elsewhere. Pure resolution; nothing is created.
+- `user_cache_root()` - the same, reading the process environment through `non_empty_env_var()`
+- `non_empty_env_var(name)` - treats unset *and* empty variables as absent so an empty `%LOCALAPPDATA%` falls through to the next candidate
+- `CacheRootUnavailable` displays as `neither LOCALAPPDATA nor APPDATA is set` (or the Unix pair). Cache owners append their own context, which is how `classic-path-core`'s YAML and app-notification cache errors keep their exact pre-move messages.
+
+The root holds no `CLASSIC/...` subdirectory policy; each cache owner joins its own.
 
 ## `PerformanceMetrics`, `Timer`, and helpers
 
