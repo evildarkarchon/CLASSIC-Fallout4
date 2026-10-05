@@ -73,9 +73,9 @@
         "gamePath": "game",
         "docsPath": "docs",
         "checks": [
-          "❌ CAUTION: Fallout4.ini file is missing from your documents folder!\nYou need to run the game at least once with Fallout4Launcher.exe.\nThis will create files and INI settings required for the game to run.\n-----",
-          "❌ WARNING: Fallout4Custom.ini is missing.\nArchive Invalidation / Loose Files setting is not enabled.\nThis setting is required for mods to work properly.\n-----",
-          "❌ CAUTION: Fallout4Prefs.ini file is missing from your documents folder!\n-----"
+          "\u274c CAUTION: Fallout4.ini file is missing from your documents folder!\nYou need to run the game at least once with Fallout4Launcher.exe.\nThis will create files and INI settings required for the game to run.\n-----",
+          "\u274c WARNING: Fallout4Custom.ini is missing.\nArchive Invalidation / Loose Files setting is not enabled.\nThis setting is required for mods to work properly.\n-----",
+          "\u274c CAUTION: Fallout4Prefs.ini file is missing from your documents folder!\n-----"
         ],
         "files": [
           {
@@ -115,9 +115,9 @@
         "gamePath": "Game Folder",
         "docsPath": "Docs Folder",
         "checks": [
-          "❌ CAUTION: Fallout4.ini file is missing from your documents folder!\nYou need to run the game at least once with Fallout4Launcher.exe.\nThis will create files and INI settings required for the game to run.\n-----",
-          "❌ WARNING: Fallout4Custom.ini is missing.\nArchive Invalidation / Loose Files setting is not enabled.\nThis setting is required for mods to work properly.\n-----",
-          "❌ CAUTION: Fallout4Prefs.ini file is missing from your documents folder!\n-----"
+          "\u274c CAUTION: Fallout4.ini file is missing from your documents folder!\nYou need to run the game at least once with Fallout4Launcher.exe.\nThis will create files and INI settings required for the game to run.\n-----",
+          "\u274c WARNING: Fallout4Custom.ini is missing.\nArchive Invalidation / Loose Files setting is not enabled.\nThis setting is required for mods to work properly.\n-----",
+          "\u274c CAUTION: Fallout4Prefs.ini file is missing from your documents folder!\n-----"
         ],
         "files": [
           {
