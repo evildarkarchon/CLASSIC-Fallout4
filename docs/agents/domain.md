@@ -6,7 +6,7 @@ Configured layout: single-context.
 
 ## Before exploring, read these
 
-- **`CONTEXT.md`** at the repo root.
+- **`GLOSSARY.md`** at the repo root.
 - **`docs/adr/`** for ADRs that touch the area about to be changed.
 
 If any of these files do not exist, proceed silently. Do not flag their absence and do not suggest creating them upfront. The `/domain-modeling` skill, reached via `/grill-with-docs` and `/improve-codebase-architecture`, creates them lazily when terms or decisions actually get resolved.
@@ -17,7 +17,7 @@ Single-context repo:
 
 ```text
 /
-|-- CONTEXT.md
+|-- GLOSSARY.md
 |-- docs/
 |   `-- adr/
 `-- src/
@@ -25,7 +25,7 @@ Single-context repo:
 
 ## Use the glossary's vocabulary
 
-When your output names a domain concept, such as in an issue title, refactor proposal, hypothesis, or test name, use the term as defined in `CONTEXT.md`. Do not drift to synonyms the glossary explicitly avoids.
+When your output names a domain concept, such as in an issue title, refactor proposal, hypothesis, or test name, use the term as defined in `GLOSSARY.md`. Do not drift to synonyms the glossary explicitly avoids.
 
 If the concept you need is not in the glossary yet, that is a signal. Either you are inventing language the project does not use, or there is a real gap to note for `/domain-modeling`.
 

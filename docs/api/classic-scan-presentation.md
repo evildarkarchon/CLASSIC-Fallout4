@@ -4,7 +4,7 @@
 Crash Log Scan Run Result, a single run event, a run-wide infrastructure failure, or a resume failure
 into an ordered sequence of display lines. Each frontend decides only **how it looks**.
 
-`CONTEXT.md` defines **Display Content** and **Display Layout**;
+`GLOSSARY.md` defines **Display Content** and **Display Layout**;
 [`../adr/0007-rust-owns-crash-log-scan-run-display-content.md`](../adr/0007-rust-owns-crash-log-scan-run-display-content.md)
 records the decision and supersedes the ADR-0002 clause that assigned presentation to adapters.
 

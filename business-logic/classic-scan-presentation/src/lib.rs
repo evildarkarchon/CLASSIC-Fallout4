@@ -10,7 +10,7 @@
 //!
 //! Frontends keep Display Layout: what order to show lines in, what to group, what to
 //! colour, what to truncate, which widget to use, and which key or button offers a choice.
-//! They lose only the ability to invent or reword what the run says. `CONTEXT.md` defines
+//! They lose only the ability to invent or reword what the run says. `GLOSSARY.md` defines
 //! Display Content and Display Layout; `docs/adr/0007-rust-owns-crash-log-scan-run-display-content.md`
 //! records the decision.
 //!

@@ -13,7 +13,7 @@
 
 This brief captures the accepted design from the entry #2 grilling session for `architecture-review-20260630-205128.html`: move Autoscan Report ordering and rendering into a deep Rust module.
 
-Canonical domain language is in [`CONTEXT.md`](../../CONTEXT.md). The data-owned placement decision is recorded in [`docs/adr/0003-autoscan-report-placement-yaml-data.md`](../adr/0003-autoscan-report-placement-yaml-data.md).
+Canonical domain language is in [`GLOSSARY.md`](../../GLOSSARY.md). The data-owned placement decision is recorded in [`docs/adr/0003-autoscan-report-placement-yaml-data.md`](../adr/0003-autoscan-report-placement-yaml-data.md).
 
 > Historical status: the `lines` payloads below describe the temporary first
 > assembly slice. Crash Suspect, Mod Guidance, and Plugin Evidence have since

@@ -16,7 +16,7 @@ Triage uses the canonical label vocabulary: `needs-triage`, `needs-info`, `ready
 
 ### Domain docs
 
-Domain documentation uses a single-context layout: root `CONTEXT.md` and root `docs/adr/`. See `docs/agents/domain.md`.
+Domain documentation uses a single-context layout: root `GLOSSARY.md` and root `docs/adr/`. See `docs/agents/domain.md`.
 
 Read on demand, not up front:
 
