@@ -34,7 +34,7 @@
       "description": "classic_registry binding (classic-registry-py wrapping classic-registry-core)"
     },
     "perf": {
-      "description": "classic_perf binding (classic-perf-py wrapping classic-perf-core)"
+      "description": "classic_perf binding (classic-perf-py wrapping classic-shared-core performance_core)"
     },
     "settings": {
       "description": "classic_settings binding (classic-settings-py wrapping classic-settings-core)"

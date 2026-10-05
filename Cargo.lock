@@ -744,7 +744,6 @@ dependencies = [
  "classic-file-io-core",
  "classic-message-core",
  "classic-path-core",
- "classic-perf-core",
  "classic-registry-core",
  "classic-scan-presentation",
  "classic-scangame-core",
@@ -890,7 +889,6 @@ dependencies = [
  "classic-file-io-core",
  "classic-message-core",
  "classic-path-core",
- "classic-perf-core",
  "classic-registry-core",
  "classic-resource-core",
  "classic-scan-presentation",
@@ -952,18 +950,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "classic-perf-core"
-version = "9.1.0"
-dependencies = [
- "classic-shared-core",
- "serial_test",
-]
-
-[[package]]
 name = "classic-perf-py"
 version = "9.1.0"
 dependencies = [
- "classic-perf-core",
+ "classic-shared-core",
  "classic-shared-py",
  "pyo3",
 ]
@@ -1097,7 +1087,6 @@ dependencies = [
  "classic-message-core",
  "classic-operation-context",
  "classic-path-core",
- "classic-perf-core",
  "classic-registry-core",
  "classic-resource-core",
  "classic-scangame-core",

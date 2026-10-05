@@ -92,8 +92,6 @@
       <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-message-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-path-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-path-core/tests" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-perf-core/examples" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-perf-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-registry-core/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-registry-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/business-logic/classic-resource-core/src" isTestSource="false" />

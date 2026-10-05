@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-02T01:54:33.501062+00:00",
+  "generated_at_utc": "2026-10-05T22:54:49.367812+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -11,7 +11,6 @@
       "classic-path-core",
       "classic-settings-core",
       "classic-message-core",
-      "classic-perf-core",
       "classic-registry-core",
       "classic-shared-core",
       "classic-version-core",
@@ -32,7 +31,6 @@
       "business-logic/classic-path-core/src/lib.rs",
       "business-logic/classic-settings-core/src/lib.rs",
       "business-logic/classic-message-core/src/lib.rs",
-      "business-logic/classic-perf-core/src/lib.rs",
       "business-logic/classic-registry-core/src/lib.rs",
       "foundation/classic-shared-core/src/lib.rs",
       "business-logic/classic-version-core/src/lib.rs",
@@ -6871,96 +6869,6 @@
       "source_file": "business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use yaml_cache::{ ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env, yaml_cache_dir, yaml_cache_dir_with_env, };",
       "source_expr": "yaml_cache::yaml_cache_dir_with_env",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "MetricCounter",
-      "kind": "reexport",
-      "crate": "classic-perf-core",
-      "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
-      "source_expr": "classic_shared_core::performance_core::MetricCounter",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "MetricsSummary",
-      "kind": "reexport",
-      "crate": "classic-perf-core",
-      "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
-      "source_expr": "classic_shared_core::performance_core::MetricsSummary",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "Timer",
-      "kind": "reexport",
-      "crate": "classic-perf-core",
-      "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
-      "source_expr": "classic_shared_core::performance_core::Timer",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "TimingError",
-      "kind": "reexport",
-      "crate": "classic-perf-core",
-      "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
-      "source_expr": "classic_shared_core::performance_core::TimingError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "clear_metrics",
-      "kind": "reexport",
-      "crate": "classic-perf-core",
-      "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
-      "source_expr": "classic_shared_core::performance_core::clear_metrics",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_summary",
-      "kind": "reexport",
-      "crate": "classic-perf-core",
-      "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
-      "source_expr": "classic_shared_core::performance_core::get_summary",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "record_timing",
-      "kind": "reexport",
-      "crate": "classic-perf-core",
-      "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
-      "source_expr": "classic_shared_core::performance_core::record_timing",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "record_timing_millis",
-      "kind": "reexport",
-      "crate": "classic-perf-core",
-      "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
-      "source_expr": "classic_shared_core::performance_core::record_timing_millis",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "start_timer",
-      "kind": "reexport",
-      "crate": "classic-perf-core",
-      "owner_module": "perf",
-      "source_file": "business-logic/classic-perf-core/src/lib.rs",
-      "source_decl": "pub use classic_shared_core::performance_core::{ MetricCounter, MetricsSummary, Timer, TimingError, clear_metrics, get_summary, record_timing, record_timing_millis, start_timer, };",
-      "source_expr": "classic_shared_core::performance_core::start_timer",
       "tier": "tier1"
     },
     {

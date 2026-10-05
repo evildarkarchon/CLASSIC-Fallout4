@@ -1263,7 +1263,6 @@
 | `file_io` | 0 |
 | `scangame` | 0 |
 | `registry` | 0 |
-| `perf` | 0 |
 | `settings` | 0 |
 | `message` | 0 |
 | `path` | 0 |

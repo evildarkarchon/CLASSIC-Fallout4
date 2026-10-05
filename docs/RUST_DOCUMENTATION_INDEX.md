@@ -33,7 +33,6 @@ For old-to-new workspace translations, see the [Workspace Migration Matrix](work
 
 - [`docs/api/README.md`](api/README.md) — ordered index for contributor-facing crate guides
 - [`docs/api/classic-shared-core.md`](api/classic-shared-core.md) — shared runtime, error, path, performance, string, generic YAML helpers, including `YamlOperations` and both scoped YAML caches, and the loose version and PE helpers (`version`)
-- [`docs/api/classic-perf-core.md`](api/classic-perf-core.md) — seconds-based facade over the shared-core timing store (scheduled for retirement)
 - [`docs/api/classic-registry-core.md`](api/classic-registry-core.md) — process-wide typed singleton registry and convenience key helpers
 - [`docs/api/classic-message-core.md`](api/classic-message-core.md) — shared message DTOs, routing enums, and startup/log formatting helpers
 - [`docs/api/classic-settings-core.md`](api/classic-settings-core.md) — facade re-exporting the shared-core generic YAML rules, `YamlOperations`, and both YAML caches, plus the surviving owner docs for `YamlFile` (scheduled for retirement)
