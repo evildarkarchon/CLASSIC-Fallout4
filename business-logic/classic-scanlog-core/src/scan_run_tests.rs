@@ -85,7 +85,7 @@ fn every_crash_log_scan_run_status_label_stays_distinct_from_its_token() {
 fn the_run_status_labels_are_the_glossary_wording() {
     // The wording decision this module is the arbiter of, pinned exactly because
     // it is a settled decision rather than free prose. Every label below is the
-    // prose `CONTEXT.md` already uses to define this concept, so this adoption
+    // prose `GLOSSARY.md` already uses to define this concept, so this adoption
     // records a decision the glossary had made rather than making a new one.
     //
     // Two of them could not have been derived from their tokens. `no Crash Logs

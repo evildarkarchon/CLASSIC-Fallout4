@@ -2,7 +2,7 @@
 
 This brief captures the accepted design from the architecture review and grilling session for the `Scan Run Policy` candidate. Use it as an implementation brief for a fresh agent session.
 
-Canonical domain language is in [`CONTEXT.md`](../../CONTEXT.md). ADR-0002, [`Rust owns Crash Log Scan Run behavior`](../adr/0002-rust-owns-crash-log-scan-run.md), is the key decision to preserve: adapters select Crash Logs and present results, while Rust owns execution, Autoscan Report writing, progress/cancellation semantics, failed-log accounting, and Unsolved Logs decisions.
+Canonical domain language is in [`GLOSSARY.md`](../../GLOSSARY.md). ADR-0002, [`Rust owns Crash Log Scan Run behavior`](../adr/0002-rust-owns-crash-log-scan-run.md), is the key decision to preserve: adapters select Crash Logs and present results, while Rust owns execution, Autoscan Report writing, progress/cancellation semantics, failed-log accounting, and Unsolved Logs decisions.
 
 ## Target
 
@@ -68,7 +68,7 @@ Primary files likely affected:
 
 ## Domain And Settings Decisions
 
-`CONTEXT.md` now defines **Unsolved Logs Destination**:
+`GLOSSARY.md` now defines **Unsolved Logs Destination**:
 
 > The directory where a Standard Crash Log Scan Run may move Unsolved Logs when relocation is enabled. It can be the canonical CLASSIC backup location or a user-selected location; Targeted Crash Log Scan Runs do not use it.
 
@@ -253,7 +253,7 @@ If root `CLASSIC Settings.yaml` is tracked as a sample or active test fixture, a
 
 ## Implementation Order
 
-1. Update `CONTEXT.md` only if the `Unsolved Logs Destination` term is missing. It is already present if this brief was created from the grilling session.
+1. Update `GLOSSARY.md` only if the `Unsolved Logs Destination` term is missing. It is already present if this brief was created from the grilling session.
 2. Add intake readiness fields for path roots and configured Unsolved Logs Destination.
 3. Add parsing/validation for `CLASSIC_Settings.Unsolved Logs Destination` in path-backed Crash Log Scan Intake.
 4. Replace the public Rust `scan_run` request mode/policy surface with scan intent types that make Targeted relocation impossible.

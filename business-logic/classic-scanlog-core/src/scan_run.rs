@@ -599,7 +599,7 @@ impl Vocabulary for CrashLogScanRunStatus {
         }
     }
 
-    /// The prose `CONTEXT.md` already uses to define this concept, rather than
+    /// The prose `GLOSSARY.md` already uses to define this concept, rather than
     /// wording invented here: *completed, no Crash Logs found, Local Ignore
     /// recovery required, setup failed, cancelled before discovery, or cancelled
     /// after discovery*.

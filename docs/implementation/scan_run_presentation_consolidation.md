@@ -8,7 +8,7 @@ This brief deliberately does not repeat work already finished. Vocabulary Token 
 
 ## Accepted Decisions
 
-1. Core owns Display Content; adapters own Display Layout. Both terms are defined in `CONTEXT.md`.
+1. Core owns Display Content; adapters own Display Layout. Both terms are defined in `GLOSSARY.md`.
 2. `docs/adr/0007-rust-owns-crash-log-scan-run-display-content.md` supersedes the clause of ADR-0002 that assigned presentation to adapters. Every other ADR-0002 clause stands.
 3. Display Content is a flat sequence of display lines built from semantic segments. It is not a nested tree; grouping and nesting are Display Layout.
 4. Core never interpolates. Counts, paths, and names are typed segment payloads, and the plural form of a counted noun is resolved once by core.
@@ -446,7 +446,7 @@ Display Content wording is pinned **once**, at the `classic-scan-presentation` r
 - `docs/api/classic-cpp-bridge-scan-progress-callback.md` — the event DTO's new field.
 - `docs/api/classic-vocabulary.md` — the four new adopters in the adoption inventory, and a note that `ResumeErrorKind` is token-only by decision.
 - `docs/api/classic-scanlog-core.md` — `CrashLogScanRunContinuation::abandon`.
-- `CONTEXT.md` and `docs/adr/0007-rust-owns-crash-log-scan-run-display-content.md` are already updated.
+- `GLOSSARY.md` and `docs/adr/0007-rust-owns-crash-log-scan-run-display-content.md` are already updated.
 
 ## Validation Commands
 

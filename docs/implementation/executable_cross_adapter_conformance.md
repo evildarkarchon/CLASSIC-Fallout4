@@ -713,4 +713,4 @@ Do not update current API pages to claim executable coverage before it is blocki
 - Affected domain API pages — scenario-owned behavior and any contract-shaping observation changes.
 - CI and contributor command references — only after the corresponding profile is blocking.
 
-This specification introduces tooling terminology, not a new CLASSIC domain concept, so it does not add a glossary entry to `CONTEXT.md`.
+This specification introduces tooling terminology, not a new CLASSIC domain concept, so it does not add a glossary entry to `GLOSSARY.md`.
