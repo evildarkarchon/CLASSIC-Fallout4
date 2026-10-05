@@ -1727,7 +1727,7 @@ mod orchestrator {
 
 mod cache_result_mapping {
     use super::*;
-    use classic_path_core::PathError;
+    use classic_shared_core::path_core::PathError;
     use std::path::{Path, PathBuf};
 
     #[test]

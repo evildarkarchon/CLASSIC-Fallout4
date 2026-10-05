@@ -589,6 +589,18 @@ def load_source_parity_rows(repo_root: Path) -> tuple[SourceParityRow, ...]:
                         "set_setting",
                         "set_settings_batch",
                         "yaml_cache_stats",
+                        # The generic path primitives moved here from
+                        # classic-path-core (#245); keep the exported operation
+                        # identity they had there (isValidExecutablePath maps
+                        # to is_executable_file_path, so the symbol alone is not
+                        # it).
+                        "check_drive_exists",
+                        "check_read_permissions",
+                        "check_write_permissions",
+                        "is_executable_file_path",
+                        "is_valid_path",
+                        "remove_readonly",
+                        "validate_path_with_permissions",
                     }
                 )
                 or (

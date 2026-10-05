@@ -1,6 +1,6 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-05T23:03:15.428242+00:00`
+- Generated: `2026-10-05T23:38:54.911769+00:00`
 - Tier-1 contract rows: **1237**
 - Tier-1 matched: **1235**
 - Tier-1 missing Rust: **0**
@@ -516,17 +516,17 @@
 | `path.lib.IniCheckResult` | `path` | `classic-path-core` | `IniCheckResult` | `classic_path.IniCheckResult` | `matched` |
 | `path.lib.IniCheckResult.has_issue` | `path` | `classic-path-core` | `IniCheckResult` | `classic_path.IniCheckResult.has_issue` | `matched` |
 | `path.lib.IniFile@rust` | `path` | `classic-path-core` | `IniFile` | `classic_path.BackupManager` | `matched` |
-| `path.lib.PathError@rust` | `path` | `classic-path-core` | `PathError` | `classic_path.BackupManager` | `matched` |
-| `path.lib.PathResult@rust` | `path` | `classic-path-core` | `PathResult` | `classic_path.BackupManager` | `matched` |
+| `path.lib.PathError@rust` | `path` | `classic-shared-core` | `PathError` | `classic_path.BackupManager` | `matched` |
+| `path.lib.PathResult@rust` | `path` | `classic-shared-core` | `PathResult` | `classic_path.BackupManager` | `matched` |
 | `path.lib.PathValidator` | `path` | `None` | `None` | `classic_path.PathValidator` | `unmapped` |
-| `path.lib.PathValidator.check_drive_exists` | `path` | `classic-path-core` | `check_drive_exists` | `classic_path.PathValidator.check_drive_exists` | `matched` |
-| `path.lib.PathValidator.check_read_permissions` | `path` | `classic-path-core` | `check_read_permissions` | `classic_path.PathValidator.check_read_permissions` | `matched` |
-| `path.lib.PathValidator.check_write_permissions` | `path` | `classic-path-core` | `check_write_permissions` | `classic_path.PathValidator.check_write_permissions` | `matched` |
+| `path.lib.PathValidator.check_drive_exists` | `path` | `classic-shared-core` | `check_drive_exists` | `classic_path.PathValidator.check_drive_exists` | `matched` |
+| `path.lib.PathValidator.check_read_permissions` | `path` | `classic-shared-core` | `check_read_permissions` | `classic_path.PathValidator.check_read_permissions` | `matched` |
+| `path.lib.PathValidator.check_write_permissions` | `path` | `classic-shared-core` | `check_write_permissions` | `classic_path.PathValidator.check_write_permissions` | `matched` |
 | `path.lib.PathValidator.is_restricted_path` | `path` | `classic-path-core` | `is_restricted_path` | `classic_path.PathValidator.is_restricted_path` | `matched` |
-| `path.lib.PathValidator.is_valid_executable_path` | `path` | `classic-path-core` | `is_valid_executable_path` | `classic_path.PathValidator.is_valid_executable_path` | `matched` |
-| `path.lib.PathValidator.is_valid_path` | `path` | `classic-path-core` | `is_valid_path` | `classic_path.PathValidator.is_valid_path` | `matched` |
+| `path.lib.PathValidator.is_valid_executable_path` | `path` | `classic-shared-core` | `is_executable_file_path` | `classic_path.PathValidator.is_valid_executable_path` | `matched` |
+| `path.lib.PathValidator.is_valid_path` | `path` | `classic-shared-core` | `is_valid_path` | `classic_path.PathValidator.is_valid_path` | `matched` |
 | `path.lib.PathValidator.validate_custom_scan_path` | `path` | `classic-path-core` | `validate_custom_scan_path` | `classic_path.PathValidator.validate_custom_scan_path` | `matched` |
-| `path.lib.PathValidator.validate_path_with_permissions` | `path` | `classic-path-core` | `validate_path_with_permissions` | `classic_path.PathValidator.validate_path_with_permissions` | `matched` |
+| `path.lib.PathValidator.validate_path_with_permissions` | `path` | `classic-shared-core` | `validate_path_with_permissions` | `classic_path.PathValidator.validate_path_with_permissions` | `matched` |
 | `path.lib.PathValidator.validate_required_files` | `path` | `classic-path-core` | `validate_required_files` | `classic_path.PathValidator.validate_required_files` | `matched` |
 | `path.lib.PathValidator.validate_settings_path` | `path` | `classic-path-core` | `validate_settings_path` | `classic_path.PathValidator.validate_settings_path` | `matched` |
 | `path.lib.PathValidator.validate_settings_paths` | `path` | `classic-path-core` | `validate_settings_paths` | `classic_path.PathValidator.validate_settings_paths` | `matched` |
@@ -535,24 +535,24 @@
 | `path.lib.XseVersion.__init__` | `path` | `classic-path-core` | `XseVersion` | `classic_path.XseVersion.__init__` | `matched` |
 | `path.lib.XseVersion.full_version` | `path` | `classic-path-core` | `XseVersion` | `classic_path.XseVersion.full_version` | `matched` |
 | `path.lib.XseVersion.sanitized` | `path` | `classic-path-core` | `XseVersion` | `classic_path.XseVersion.sanitized` | `matched` |
-| `path.lib.check_drive_exists@rust` | `path` | `classic-path-core` | `check_drive_exists` | `classic_path.BackupManager` | `matched` |
-| `path.lib.check_read_permissions@rust` | `path` | `classic-path-core` | `check_read_permissions` | `classic_path.BackupManager` | `matched` |
-| `path.lib.check_write_permissions@rust` | `path` | `classic-path-core` | `check_write_permissions` | `classic_path.BackupManager` | `matched` |
+| `path.lib.check_drive_exists@rust` | `path` | `classic-shared-core` | `check_drive_exists` | `classic_path.BackupManager` | `matched` |
+| `path.lib.check_read_permissions@rust` | `path` | `classic-shared-core` | `check_read_permissions` | `classic_path.BackupManager` | `matched` |
+| `path.lib.check_write_permissions@rust` | `path` | `classic-shared-core` | `check_write_permissions` | `classic_path.BackupManager` | `matched` |
 | `path.lib.get_system_documents_path@rust` | `path` | `classic-path-core` | `get_system_documents_path` | `classic_path.BackupManager` | `matched` |
-| `path.lib.has_read_permission@rust` | `path` | `classic-path-core` | `has_read_permission` | `classic_path.BackupManager` | `matched` |
-| `path.lib.has_write_permission@rust` | `path` | `classic-path-core` | `has_write_permission` | `classic_path.BackupManager` | `matched` |
+| `path.lib.has_read_permission@rust` | `path` | `classic-shared-core` | `has_read_permission` | `classic_path.BackupManager` | `matched` |
+| `path.lib.has_write_permission@rust` | `path` | `classic-shared-core` | `has_write_permission` | `classic_path.BackupManager` | `matched` |
 | `path.lib.is_restricted_path@rust` | `path` | `classic-path-core` | `is_restricted_path` | `classic_path.BackupManager` | `matched` |
-| `path.lib.is_valid_path@rust` | `path` | `classic-path-core` | `is_valid_path` | `classic_path.PathValidator.is_valid_path` | `matched` |
+| `path.lib.is_valid_path@rust` | `path` | `classic-shared-core` | `is_valid_path` | `classic_path.PathValidator.is_valid_path` | `matched` |
 | `path.lib.parse_steam_library@rust` | `path` | `classic-path-core` | `parse_steam_library` | `classic_path.BackupManager` | `matched` |
 | `path.lib.parse_xse_log@rust` | `path` | `classic-path-core` | `parse_xse_log` | `classic_path.BackupManager` | `matched` |
 | `path.lib.query_game_registry@rust` | `path` | `classic-path-core` | `query_game_registry` | `classic_path.BackupManager` | `matched` |
-| `path.lib.remove_readonly` | `path` | `classic-path-core` | `remove_readonly` | `classic_path.remove_readonly` | `matched` |
-| `path.lib.remove_readonly_attribute@rust` | `path` | `classic-path-core` | `remove_readonly_attribute` | `classic_path.BackupManager` | `matched` |
+| `path.lib.remove_readonly` | `path` | `classic-shared-core` | `remove_readonly` | `classic_path.remove_readonly` | `matched` |
+| `path.lib.remove_readonly_attribute@rust` | `path` | `classic-shared-core` | `remove_readonly_attribute` | `classic_path.BackupManager` | `matched` |
 | `path.lib.validate_custom_scan_path@rust` | `path` | `classic-path-core` | `validate_custom_scan_path` | `classic_path.BackupManager` | `matched` |
-| `path.lib.validate_is_directory@rust` | `path` | `classic-path-core` | `validate_is_directory` | `classic_path.BackupManager` | `matched` |
-| `path.lib.validate_is_file@rust` | `path` | `classic-path-core` | `validate_is_file` | `classic_path.BackupManager` | `matched` |
-| `path.lib.validate_path_exists@rust` | `path` | `classic-path-core` | `validate_path_exists` | `classic_path.BackupManager` | `matched` |
-| `path.lib.validate_path_with_permissions@rust` | `path` | `classic-path-core` | `validate_path_with_permissions` | `classic_path.BackupManager` | `matched` |
+| `path.lib.validate_is_directory@rust` | `path` | `classic-shared-core` | `validate_is_directory` | `classic_path.BackupManager` | `matched` |
+| `path.lib.validate_is_file@rust` | `path` | `classic-shared-core` | `validate_is_file` | `classic_path.BackupManager` | `matched` |
+| `path.lib.validate_path_exists@rust` | `path` | `classic-shared-core` | `validate_path_exists` | `classic_path.BackupManager` | `matched` |
+| `path.lib.validate_path_with_permissions@rust` | `path` | `classic-shared-core` | `validate_path_with_permissions` | `classic_path.BackupManager` | `matched` |
 | `path.lib.validate_required_files@rust` | `path` | `classic-path-core` | `validate_required_files` | `classic_path.PathValidator.validate_required_files` | `matched` |
 | `path.lib.validate_settings_path@rust` | `path` | `classic-path-core` | `validate_settings_path` | `classic_path.BackupManager` | `matched` |
 | `path.lib.validate_settings_paths@rust` | `path` | `classic-path-core` | `validate_settings_paths` | `classic_path.BackupManager` | `matched` |

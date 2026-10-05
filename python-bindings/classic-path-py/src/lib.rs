@@ -2,7 +2,9 @@
 //!
 //! This crate provides Python bindings for all path management functionality,
 //! including game path detection, documents path management, path validation,
-//! backup operations, and configuration checking.
+//! backup operations, and configuration checking. The generic existence, kind,
+//! permission, drive, and read-only checks exposed here delegate to
+//! `classic_shared_core::path_core`, which owns those neutral primitives.
 //!
 //! # Python Usage
 //!
@@ -282,7 +284,7 @@ impl PathValidator {
     /// ```
     #[staticmethod]
     fn is_valid_path(path: String) -> bool {
-        classic_path_core::is_valid_path(&PathBuf::from(path))
+        classic_shared_core::path_core::is_valid_path(&PathBuf::from(path))
     }
 
     /// Check if a path is restricted for custom scans.
@@ -484,7 +486,7 @@ impl PathValidator {
     /// ```
     #[staticmethod]
     fn is_valid_executable_path(path: String) -> bool {
-        classic_path_core::is_valid_executable_path(&PathBuf::from(path))
+        classic_shared_core::path_core::is_executable_file_path(&PathBuf::from(path))
     }
 
     /// Check if the drive exists (Windows only).
@@ -513,7 +515,7 @@ impl PathValidator {
     /// ```
     #[staticmethod]
     fn check_drive_exists(path: String) -> PyResult<()> {
-        classic_path_core::check_drive_exists(&PathBuf::from(path))
+        classic_shared_core::path_core::check_drive_exists(&PathBuf::from(path))
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))
     }
 
@@ -545,7 +547,7 @@ impl PathValidator {
     /// ```
     #[staticmethod]
     fn check_read_permissions(path: String) -> PyResult<()> {
-        classic_path_core::check_read_permissions(&PathBuf::from(path))
+        classic_shared_core::path_core::check_read_permissions(&PathBuf::from(path))
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyPermissionError, _>(e.to_string()))
     }
 
@@ -577,7 +579,7 @@ impl PathValidator {
     /// ```
     #[staticmethod]
     fn check_write_permissions(path: String) -> PyResult<()> {
-        classic_path_core::check_write_permissions(&PathBuf::from(path))
+        classic_shared_core::path_core::check_write_permissions(&PathBuf::from(path))
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyPermissionError, _>(e.to_string()))
     }
 
@@ -605,7 +607,7 @@ impl PathValidator {
     /// ```
     #[staticmethod]
     fn drive_exists(path: String) -> bool {
-        classic_path_core::drive_exists(&PathBuf::from(path))
+        classic_shared_core::path_core::drive_exists(&PathBuf::from(path))
     }
 
     /// Check if a path has read permission (boolean convenience wrapper).
@@ -630,7 +632,7 @@ impl PathValidator {
     /// ```
     #[staticmethod]
     fn has_read_permission(path: String) -> bool {
-        classic_path_core::has_read_permission(&PathBuf::from(path))
+        classic_shared_core::path_core::has_read_permission(&PathBuf::from(path))
     }
 
     /// Check if a path has write permission (boolean convenience wrapper).
@@ -655,7 +657,7 @@ impl PathValidator {
     /// ```
     #[staticmethod]
     fn has_write_permission(path: String) -> bool {
-        classic_path_core::has_write_permission(&PathBuf::from(path))
+        classic_shared_core::path_core::has_write_permission(&PathBuf::from(path))
     }
 
     /// Remove the read-only attribute from a file (via PathValidator).
@@ -685,7 +687,7 @@ impl PathValidator {
     /// ```
     #[staticmethod]
     fn remove_readonly_attribute(path: String) -> PyResult<()> {
-        classic_path_core::remove_readonly_attribute(&PathBuf::from(path))
+        classic_shared_core::path_core::remove_readonly_attribute(&PathBuf::from(path))
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyPermissionError, _>(e.to_string()))
     }
 
@@ -736,19 +738,19 @@ impl PathValidator {
         check_read: bool,
         check_write: bool,
     ) -> PyResult<()> {
-        classic_path_core::validate_path_with_permissions(
+        classic_shared_core::path_core::validate_path_with_permissions(
             &PathBuf::from(path),
             check_read,
             check_write,
         )
         .map_err(|e| match e {
-            classic_path_core::PathError::NotFound(_) => {
+            classic_shared_core::path_core::PathError::NotFound(_) => {
                 PyErr::new::<pyo3::exceptions::PyFileNotFoundError, _>(e.to_string())
             }
-            classic_path_core::PathError::PermissionDenied(_) => {
+            classic_shared_core::path_core::PathError::PermissionDenied(_) => {
                 PyErr::new::<pyo3::exceptions::PyPermissionError, _>(e.to_string())
             }
-            classic_path_core::PathError::InvalidPath(_) => {
+            classic_shared_core::path_core::PathError::InvalidPath(_) => {
                 PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string())
             }
             _ => PyErr::new::<pyo3::exceptions::PyOSError, _>(e.to_string()),
@@ -1495,7 +1497,7 @@ impl DocumentsChecker {
 #[pyfunction]
 #[cfg(target_os = "windows")]
 fn remove_readonly(file_path: String) -> PyResult<()> {
-    classic_path_core::remove_readonly(&PathBuf::from(file_path))
+    classic_shared_core::path_core::remove_readonly(&PathBuf::from(file_path))
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyPermissionError, _>(e.to_string()))
 }
 

@@ -2,6 +2,8 @@
 //!
 //! Exposes game path detection, validation, and document path utilities
 //! to JavaScript/TypeScript. Windows registry access gated behind cfg.
+//! The generic existence, permission, drive, and read-only checks delegate
+//! to `classic_shared_core::path_core`, which owns those neutral primitives.
 
 use napi::bindgen_prelude::*;
 use std::path::PathBuf;
@@ -127,7 +129,7 @@ pub fn parse_xse_log(log_path: String) -> Option<String> {
 /// @returns `true` if the path exists, `false` otherwise.
 #[napi]
 pub fn is_valid_path(path: String) -> bool {
-    classic_path_core::is_valid_path(&PathBuf::from(path))
+    classic_shared_core::path_core::is_valid_path(&PathBuf::from(path))
 }
 
 /// Check if a path is restricted for custom scans.
@@ -151,7 +153,7 @@ pub fn is_restricted_path(path: String) -> bool {
 /// @returns `true` if the path is a valid executable, `false` otherwise.
 #[napi]
 pub fn is_valid_executable_path(path: String) -> bool {
-    classic_path_core::is_valid_executable_path(&PathBuf::from(path))
+    classic_shared_core::path_core::is_executable_file_path(&PathBuf::from(path))
 }
 
 /// Validate a custom scan path.
@@ -229,7 +231,7 @@ pub fn validate_settings_paths(
 /// @throws if the drive does not exist (Windows only).
 #[napi]
 pub fn check_drive_exists(path: String) -> Result<()> {
-    classic_path_core::check_drive_exists(&PathBuf::from(path)).map_err(to_napi_err)
+    classic_shared_core::path_core::check_drive_exists(&PathBuf::from(path)).map_err(to_napi_err)
 }
 
 /// Check read permissions for a path.
@@ -241,7 +243,8 @@ pub fn check_drive_exists(path: String) -> Result<()> {
 /// @throws if read access is denied.
 #[napi]
 pub fn check_read_permissions(path: String) -> Result<()> {
-    classic_path_core::check_read_permissions(&PathBuf::from(path)).map_err(to_napi_err)
+    classic_shared_core::path_core::check_read_permissions(&PathBuf::from(path))
+        .map_err(to_napi_err)
 }
 
 /// Check write permissions for a path.
@@ -253,7 +256,8 @@ pub fn check_read_permissions(path: String) -> Result<()> {
 /// @throws if write access is denied.
 #[napi]
 pub fn check_write_permissions(path: String) -> Result<()> {
-    classic_path_core::check_write_permissions(&PathBuf::from(path)).map_err(to_napi_err)
+    classic_shared_core::path_core::check_write_permissions(&PathBuf::from(path))
+        .map_err(to_napi_err)
 }
 
 /// Comprehensive path validation with permission checks.
@@ -270,7 +274,7 @@ pub fn validate_path_with_permissions(
     check_read: Option<bool>,
     check_write: Option<bool>,
 ) -> Result<()> {
-    classic_path_core::validate_path_with_permissions(
+    classic_shared_core::path_core::validate_path_with_permissions(
         &PathBuf::from(path),
         check_read.unwrap_or(true),
         check_write.unwrap_or(false),
@@ -643,7 +647,7 @@ pub fn get_system_documents_path() -> Option<String> {
 #[napi]
 #[cfg(target_os = "windows")]
 pub fn remove_readonly(file_path: String) -> Result<()> {
-    classic_path_core::remove_readonly(&PathBuf::from(file_path)).map_err(to_napi_err)
+    classic_shared_core::path_core::remove_readonly(&PathBuf::from(file_path)).map_err(to_napi_err)
 }
 
 /// Remove the read-only attribute (stub for non-Windows platforms).

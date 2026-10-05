@@ -2,42 +2,13 @@
 //!
 //! This module defines comprehensive error types for all path management operations,
 //! providing rich context for debugging and user-facing error messages.
+//!
+//! The generic [`PathError`] wrapped by these domain errors is owned by
+//! `classic_shared_core::path_core` alongside the neutral path primitives.
 
+use classic_shared_core::path_core::PathError;
 use std::path::PathBuf;
 use thiserror::Error;
-
-/// General path operation errors.
-#[derive(Error, Debug)]
-pub enum PathError {
-    /// Path does not exist in filesystem.
-    #[error("Path does not exist: {0}")]
-    NotFound(PathBuf),
-
-    /// Path is not a directory when one was expected.
-    #[error("Path is not a directory: {0}")]
-    NotADirectory(PathBuf),
-
-    /// Path is not a file when one was expected.
-    #[error("Path is not a file: {0}")]
-    NotAFile(PathBuf),
-
-    /// I/O error occurred.
-    #[error("I/O error for path {path}: {source}")]
-    IoError {
-        /// The path where the I/O error occurred.
-        path: PathBuf,
-        /// The underlying I/O error.
-        source: std::io::Error,
-    },
-
-    /// Permission denied accessing path.
-    #[error("Permission denied: {0}")]
-    PermissionDenied(String),
-
-    /// Invalid path format or characters.
-    #[error("Invalid path: {0}")]
-    InvalidPath(String),
-}
 
 /// Path validation errors.
 #[derive(Error, Debug)]
@@ -241,9 +212,6 @@ pub enum BackupError {
     #[error(transparent)]
     IoError(#[from] std::io::Error),
 }
-
-/// Convenience type alias for Results with PathError.
-pub type PathResult<T> = Result<T, PathError>;
 
 /// Convenience type alias for Results with ValidationError.
 pub type ValidationResult<T> = Result<T, ValidationError>;

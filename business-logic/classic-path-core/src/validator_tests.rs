@@ -4,15 +4,6 @@ use std::path::PathBuf;
 use tempfile::TempDir;
 
 #[test]
-fn test_is_valid_path() {
-    let temp_dir = TempDir::new().unwrap();
-    let temp_path = temp_dir.path();
-
-    assert!(is_valid_path(temp_path));
-    assert!(!is_valid_path(&PathBuf::from("nonexistent_path_12345")));
-}
-
-#[test]
 fn test_is_restricted_path() {
     // System directories should be restricted
     assert!(is_restricted_path(&PathBuf::from("C:\\Windows")));
@@ -30,59 +21,6 @@ fn test_is_restricted_path() {
         "C:\\Users\\Name\\Downloads"
     )));
     assert!(!is_restricted_path(&PathBuf::from("/home/user/downloads")));
-}
-
-#[test]
-fn test_validate_path_exists() {
-    let temp_dir = TempDir::new().unwrap();
-    let temp_path = temp_dir.path();
-
-    assert!(validate_path_exists(temp_path).is_ok());
-
-    let nonexistent = PathBuf::from("nonexistent_12345");
-    let result = validate_path_exists(&nonexistent);
-    assert!(result.is_err());
-    match result {
-        Err(PathError::NotFound(p)) => assert_eq!(p, nonexistent),
-        _ => panic!("Expected NotFound error"),
-    }
-}
-
-#[test]
-fn test_validate_is_directory() {
-    let temp_dir = TempDir::new().unwrap();
-    let temp_path = temp_dir.path();
-
-    // Directory should validate
-    assert!(validate_is_directory(temp_path).is_ok());
-
-    // File should fail
-    let file_path = temp_path.join("test.txt");
-    fs::write(&file_path, "test").unwrap();
-    let result = validate_is_directory(&file_path);
-    assert!(result.is_err());
-    match result {
-        Err(PathError::NotADirectory(_)) => {}
-        _ => panic!("Expected NotADirectory error"),
-    }
-}
-
-#[test]
-fn test_validate_is_file() {
-    let temp_dir = TempDir::new().unwrap();
-    let file_path = temp_dir.path().join("test.txt");
-    fs::write(&file_path, "test").unwrap();
-
-    // File should validate
-    assert!(validate_is_file(&file_path).is_ok());
-
-    // Directory should fail
-    let result = validate_is_file(temp_dir.path());
-    assert!(result.is_err());
-    match result {
-        Err(PathError::NotAFile(_)) => {}
-        _ => panic!("Expected NotAFile error"),
-    }
 }
 
 #[test]
@@ -191,85 +129,5 @@ fn test_validate_settings_paths() {
     let invalid_game = temp_dir.path().join("invalid");
     fs::create_dir(&invalid_game).unwrap();
     let result = validate_settings_paths(&invalid_game, &docs_dir, None, "Missing.exe");
-    assert!(result.is_err());
-}
-
-// ====================================================================
-// Boolean wrapper tests
-// ====================================================================
-
-#[test]
-fn test_drive_exists_current_dir() {
-    // Current working directory's drive should always exist
-    let cwd = std::env::current_dir().unwrap();
-    assert!(drive_exists(&cwd));
-}
-
-#[test]
-fn test_has_read_permission_temp() {
-    let temp_dir = TempDir::new().unwrap();
-    let file_path = temp_dir.path().join("readable.txt");
-    fs::write(&file_path, "content").unwrap();
-    assert!(has_read_permission(&file_path));
-}
-
-#[test]
-fn test_has_read_permission_nonexistent() {
-    assert!(!has_read_permission(&PathBuf::from(
-        "nonexistent_path_12345"
-    )));
-}
-
-#[test]
-fn test_has_write_permission_temp() {
-    let temp_dir = TempDir::new().unwrap();
-    assert!(has_write_permission(temp_dir.path()));
-}
-
-#[test]
-fn test_has_write_permission_nonexistent() {
-    // Use a path with a nonexistent parent chain to ensure write check fails
-    assert!(!has_write_permission(&PathBuf::from(
-        "Z:\\nonexistent_drive_12345\\deeply\\nested\\path"
-    )));
-}
-
-#[test]
-fn test_remove_readonly_attribute_normal_file() {
-    let temp_dir = TempDir::new().unwrap();
-    let file_path = temp_dir.path().join("normal.txt");
-    fs::write(&file_path, "content").unwrap();
-
-    // Should succeed on a normal (non-readonly) file
-    assert!(remove_readonly_attribute(&file_path).is_ok());
-}
-
-#[test]
-fn test_remove_readonly_attribute_readonly_file() {
-    let temp_dir = TempDir::new().unwrap();
-    let file_path = temp_dir.path().join("readonly.txt");
-    fs::write(&file_path, "content").unwrap();
-
-    // Set read-only
-    let mut perms = fs::metadata(&file_path).unwrap().permissions();
-    perms.set_readonly(true);
-    fs::set_permissions(&file_path, perms).unwrap();
-
-    // Remove read-only
-    let result = remove_readonly_attribute(&file_path);
-    assert!(
-        result.is_ok(),
-        "Failed to remove readonly: {:?}",
-        result.err()
-    );
-
-    // Verify it's writable now
-    let perms = fs::metadata(&file_path).unwrap().permissions();
-    assert!(!perms.readonly());
-}
-
-#[test]
-fn test_remove_readonly_attribute_nonexistent() {
-    let result = remove_readonly_attribute(Path::new("nonexistent_12345.txt"));
     assert!(result.is_err());
 }

@@ -926,6 +926,7 @@ name = "classic-path-core"
 version = "9.1.0"
 dependencies = [
  "anyhow",
+ "classic-shared-core",
  "configparser",
  "dirs",
  "regex",
@@ -943,6 +944,7 @@ name = "classic-path-py"
 version = "9.1.0"
 dependencies = [
  "classic-path-core",
+ "classic-shared-core",
  "classic-shared-py",
  "pyo3",
 ]
@@ -982,7 +984,7 @@ name = "classic-resource-core"
 version = "9.1.0"
 dependencies = [
  "anyhow",
- "classic-path-core",
+ "classic-shared-core",
  "serde",
  "tempfile",
  "thiserror 2.0.21",

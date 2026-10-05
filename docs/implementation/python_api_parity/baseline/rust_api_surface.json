@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-05T23:37:44.649065+00:00",
+  "generated_at_utc": "2026-10-05T23:38:54.574149+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -5133,7 +5133,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
+      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::BackupError",
       "tier": "tier1"
     },
@@ -5172,7 +5172,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
+      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::BackupResult",
       "tier": "tier1"
     },
@@ -5200,7 +5200,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
+      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::DocsPathError",
       "tier": "tier1"
     },
@@ -5229,7 +5229,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
+      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::DocsPathResult",
       "tier": "tier1"
     },
@@ -5334,7 +5334,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
+      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::GamePathError",
       "tier": "tier1"
     },
@@ -5373,7 +5373,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
+      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::GamePathResult",
       "tier": "tier1"
     },
@@ -5425,44 +5425,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "PathError",
-      "kind": "enum",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/error.rs",
-      "source_decl": "pub enum PathError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "PathError",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
-      "source_expr": "error::PathError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "PathResult",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
-      "source_expr": "error::PathResult",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "PathResult",
-      "kind": "type",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/error.rs",
-      "source_decl": "pub type PathResult",
-      "tier": "tier1"
-    },
-    {
       "symbol": "ValidationError",
       "kind": "enum",
       "crate": "classic-path-core",
@@ -5477,7 +5439,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
+      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::ValidationError",
       "tier": "tier1"
     },
@@ -5487,7 +5449,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, PathError, PathResult, ValidationError, ValidationResult, };",
+      "source_decl": "pub use error::{ BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult, ValidationError, ValidationResult, };",
       "source_expr": "error::ValidationResult",
       "tier": "tier1"
     },
@@ -5540,36 +5502,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "check_drive_exists",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn check_drive_exists(path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "check_drive_exists",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn check_drive_exists(_path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "check_drive_exists",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
-      "source_expr": "validator::check_drive_exists",
-      "tier": "tier1"
-    },
-    {
       "symbol": "check_onedrive_in_path",
       "kind": "function",
       "arity": 2,
@@ -5590,46 +5522,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "check_read_permissions",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn check_read_permissions(path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "check_read_permissions",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
-      "source_expr": "validator::check_read_permissions",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "check_write_permissions",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn check_write_permissions(path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "check_write_permissions",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
-      "source_expr": "validator::check_write_permissions",
-      "tier": "tier1"
-    },
-    {
       "symbol": "construct_proton_docs_path",
       "kind": "function",
       "arity": 3,
@@ -5647,26 +5539,6 @@
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/backup.rs",
       "source_decl": "pub fn create_backup(&self, source_file: &Path, version: &XseVersion)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "drive_exists",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn drive_exists(path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "drive_exists",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
-      "source_expr": "validator::drive_exists",
       "tier": "tier1"
     },
     {
@@ -5920,26 +5792,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "has_read_permission",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn has_read_permission(path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "has_read_permission",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
-      "source_expr": "validator::has_read_permission",
-      "tier": "tier1"
-    },
-    {
       "symbol": "has_section",
       "kind": "function",
       "arity": 2,
@@ -5947,26 +5799,6 @@
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/ini_parser.rs",
       "source_decl": "pub fn has_section(&self, section: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "has_write_permission",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn has_write_permission(path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "has_write_permission",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
-      "source_expr": "validator::has_write_permission",
       "tier": "tier1"
     },
     {
@@ -5985,48 +5817,8 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
+      "source_decl": "pub use validator::{ is_restricted_path, validate_custom_scan_path, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::is_restricted_path",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "is_valid_executable_path",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn is_valid_executable_path(path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "is_valid_executable_path",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
-      "source_expr": "validator::is_valid_executable_path",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "is_valid_path",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn is_valid_path(path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "is_valid_path",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
-      "source_expr": "validator::is_valid_path",
       "tier": "tier1"
     },
     {
@@ -6254,7 +6046,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use platform::{remove_readonly, windows::query_game_registry};",
+      "source_decl": "pub use platform::windows::query_game_registry;",
       "source_expr": "platform::windows::query_game_registry",
       "tier": "tier1"
     },
@@ -6266,66 +6058,6 @@
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/docs_path.rs",
       "source_decl": "pub fn relative_path(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "remove_readonly",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/platform/windows.rs",
-      "source_decl": "pub fn remove_readonly(file_path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "remove_readonly",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use platform::{remove_readonly, windows::query_game_registry};",
-      "source_expr": "platform::remove_readonly",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "remove_readonly",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/platform/mod.rs",
-      "source_decl": "pub use windows::remove_readonly;",
-      "source_expr": "windows::remove_readonly",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "remove_readonly_attribute",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn remove_readonly_attribute(path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "remove_readonly_attribute",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn remove_readonly_attribute(_path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "remove_readonly_attribute",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
-      "source_expr": "validator::remove_readonly_attribute",
       "tier": "tier1"
     },
     {
@@ -6394,7 +6126,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
+      "source_decl": "pub use validator::{ is_restricted_path, validate_custom_scan_path, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::validate_custom_scan_path",
       "tier": "tier1"
     },
@@ -6439,46 +6171,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "validate_is_directory",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn validate_is_directory(path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_is_directory",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
-      "source_expr": "validator::validate_is_directory",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_is_file",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn validate_is_file(path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_is_file",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
-      "source_expr": "validator::validate_is_file",
-      "tier": "tier1"
-    },
-    {
       "symbol": "validate_keys",
       "kind": "function",
       "arity": 3,
@@ -6486,46 +6178,6 @@
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/ini_parser.rs",
       "source_decl": "pub fn validate_keys(&self, section: &str, required_keys: &[&str])",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_path_exists",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn validate_path_exists(path: &Path)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_path_exists",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
-      "source_expr": "validator::validate_path_exists",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_path_with_permissions",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/validator.rs",
-      "source_decl": "pub fn validate_path_with_permissions(\n    path: &Path,\n    check_read: bool,\n    check_write: bool,\n)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_path_with_permissions",
-      "kind": "reexport",
-      "crate": "classic-path-core",
-      "owner_module": "path",
-      "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
-      "source_expr": "validator::validate_path_with_permissions",
       "tier": "tier1"
     },
     {
@@ -6544,7 +6196,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
+      "source_decl": "pub use validator::{ is_restricted_path, validate_custom_scan_path, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::validate_required_files",
       "tier": "tier1"
     },
@@ -6574,7 +6226,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
+      "source_decl": "pub use validator::{ is_restricted_path, validate_custom_scan_path, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::validate_settings_path",
       "tier": "tier1"
     },
@@ -6594,7 +6246,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
+      "source_decl": "pub use validator::{ is_restricted_path, validate_custom_scan_path, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::validate_settings_paths",
       "tier": "tier1"
     },
@@ -7256,26 +6908,6 @@
       "source_file": "business-logic/classic-registry-core/src/lib.rs",
       "source_decl": "pub use registry::{clear_all, get, is_registered, register, unregister};",
       "source_expr": "registry::unregister",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "PathError",
-      "kind": "reexport",
-      "crate": "classic-resource-core",
-      "owner_module": "resource",
-      "source_file": "business-logic/classic-resource-core/src/lib.rs",
-      "source_decl": "pub use classic_path_core::{PathError, PathResult};",
-      "source_expr": "classic_path_core::PathError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "PathResult",
-      "kind": "reexport",
-      "crate": "classic-resource-core",
-      "owner_module": "resource",
-      "source_file": "business-logic/classic-resource-core/src/lib.rs",
-      "source_decl": "pub use classic_path_core::{PathError, PathResult};",
-      "source_expr": "classic_path_core::PathResult",
       "tier": "tier1"
     },
     {
@@ -14305,6 +13937,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "CacheRootUnavailable",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use cache_root::{ CacheRootUnavailable, non_empty_env_var, user_cache_root, user_cache_root_with_env, };",
+      "source_expr": "cache_root::CacheRootUnavailable",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CacheRootUnavailable",
+      "kind": "struct",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/cache_root.rs",
+      "source_decl": "pub struct CacheRootUnavailable",
+      "tier": "tier1"
+    },
+    {
       "symbol": "CacheStats",
       "kind": "reexport",
       "crate": "classic-shared-core",
@@ -14502,12 +14153,50 @@
       "tier": "tier1"
     },
     {
+      "symbol": "PathError",
+      "kind": "enum",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/error.rs",
+      "source_decl": "pub enum PathError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PathError",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use error::{PathError, PathResult};",
+      "source_expr": "error::PathError",
+      "tier": "tier1"
+    },
+    {
       "symbol": "PathHandler",
       "kind": "struct",
       "crate": "classic-shared-core",
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/path_core.rs",
       "source_decl": "pub struct PathHandler",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PathResult",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use error::{PathError, PathResult};",
+      "source_expr": "error::PathResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PathResult",
+      "kind": "type",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/error.rs",
+      "source_decl": "pub type PathResult",
       "tier": "tier1"
     },
     {
@@ -15128,6 +14817,76 @@
       "tier": "tier1"
     },
     {
+      "symbol": "check_drive_exists",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/validation.rs",
+      "source_decl": "pub fn check_drive_exists(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_drive_exists",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/validation.rs",
+      "source_decl": "pub fn check_drive_exists(_path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_drive_exists",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use validation::{ check_drive_exists, check_read_permissions, check_write_permissions, drive_exists, has_read_permission, has_write_permission, is_executable_file_path, is_valid_path, remove_readonly_attribute, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, };",
+      "source_expr": "validation::check_drive_exists",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_read_permissions",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/validation.rs",
+      "source_decl": "pub fn check_read_permissions(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_read_permissions",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use validation::{ check_drive_exists, check_read_permissions, check_write_permissions, drive_exists, has_read_permission, has_write_permission, is_executable_file_path, is_valid_path, remove_readonly_attribute, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, };",
+      "source_expr": "validation::check_read_permissions",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_write_permissions",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/validation.rs",
+      "source_decl": "pub fn check_write_permissions(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_write_permissions",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use validation::{ check_drive_exists, check_read_permissions, check_write_permissions, drive_exists, has_read_permission, has_write_permission, is_executable_file_path, is_valid_path, remove_readonly_attribute, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, };",
+      "source_expr": "validation::check_write_permissions",
+      "tier": "tier1"
+    },
+    {
       "symbol": "cleanup_cache",
       "kind": "function",
       "arity": 1,
@@ -15365,6 +15124,26 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/game_id.rs",
       "source_decl": "pub const fn display_name(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "drive_exists",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/validation.rs",
+      "source_decl": "pub fn drive_exists(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "drive_exists",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use validation::{ check_drive_exists, check_read_permissions, check_write_permissions, drive_exists, has_read_permission, has_write_permission, is_executable_file_path, is_valid_path, remove_readonly_attribute, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, };",
+      "source_expr": "validation::drive_exists",
       "tier": "tier1"
     },
     {
@@ -15767,6 +15546,46 @@
       "tier": "tier1"
     },
     {
+      "symbol": "has_read_permission",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/validation.rs",
+      "source_decl": "pub fn has_read_permission(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "has_read_permission",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use validation::{ check_drive_exists, check_read_permissions, check_write_permissions, drive_exists, has_read_permission, has_write_permission, is_executable_file_path, is_valid_path, remove_readonly_attribute, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, };",
+      "source_expr": "validation::has_read_permission",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "has_write_permission",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/validation.rs",
+      "source_decl": "pub fn has_write_permission(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "has_write_permission",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use validation::{ check_drive_exists, check_read_permissions, check_write_permissions, drive_exists, has_read_permission, has_write_permission, is_executable_file_path, is_valid_path, remove_readonly_attribute, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, };",
+      "source_expr": "validation::has_write_permission",
+      "tier": "tier1"
+    },
+    {
       "symbol": "intern",
       "kind": "function",
       "arity": 2,
@@ -15877,6 +15696,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "is_executable_file_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/validation.rs",
+      "source_decl": "pub fn is_executable_file_path(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_executable_file_path",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use validation::{ check_drive_exists, check_read_permissions, check_write_permissions, drive_exists, has_read_permission, has_write_permission, is_executable_file_path, is_valid_path, remove_readonly_attribute, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, };",
+      "source_expr": "validation::is_executable_file_path",
+      "tier": "tier1"
+    },
+    {
       "symbol": "is_valid_executable_path",
       "kind": "function",
       "arity": 1,
@@ -15894,6 +15733,26 @@
       "source_file": "foundation/classic-shared-core/src/version.rs",
       "source_decl": "pub use pe_version::{ PeVersionError, PeVersionResult, extract_pe_version, is_valid_executable_path, };",
       "source_expr": "pe_version::is_valid_executable_path",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_valid_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/validation.rs",
+      "source_decl": "pub fn is_valid_path(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_valid_path",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use validation::{ check_drive_exists, check_read_permissions, check_write_permissions, drive_exists, has_read_permission, has_write_permission, is_executable_file_path, is_valid_path, remove_readonly_attribute, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, };",
+      "source_expr": "validation::is_valid_path",
       "tier": "tier1"
     },
     {
@@ -16347,6 +16206,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "non_empty_env_var",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/cache_root.rs",
+      "source_decl": "pub fn non_empty_env_var(name: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "non_empty_env_var",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use cache_root::{ CacheRootUnavailable, non_empty_env_var, user_cache_root, user_cache_root_with_env, };",
+      "source_expr": "cache_root::non_empty_env_var",
+      "tier": "tier1"
+    },
+    {
       "symbol": "normalize_path",
       "kind": "function",
       "arity": 2,
@@ -16571,6 +16450,56 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/performance_core.rs",
       "source_decl": "pub fn record_timing_with_bytes(\n        &self,\n        operation: &str,\n        duration: Duration,\n        bytes: Option<u64>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "remove_readonly",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/validation.rs",
+      "source_decl": "pub fn remove_readonly(file_path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "remove_readonly",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use validation::remove_readonly;",
+      "source_expr": "validation::remove_readonly",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "remove_readonly_attribute",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/validation.rs",
+      "source_decl": "pub fn remove_readonly_attribute(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "remove_readonly_attribute",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/validation.rs",
+      "source_decl": "pub fn remove_readonly_attribute(_path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "remove_readonly_attribute",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use validation::{ check_drive_exists, check_read_permissions, check_write_permissions, drive_exists, has_read_permission, has_write_permission, is_executable_file_path, is_valid_path, remove_readonly_attribute, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, };",
+      "source_expr": "validation::remove_readonly_attribute",
       "tier": "tier1"
     },
     {
@@ -16830,6 +16759,116 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/version.rs",
       "source_decl": "pub fn try_parse_version(version_str: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "user_cache_root",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/cache_root.rs",
+      "source_decl": "pub fn user_cache_root()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "user_cache_root",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use cache_root::{ CacheRootUnavailable, non_empty_env_var, user_cache_root, user_cache_root_with_env, };",
+      "source_expr": "cache_root::user_cache_root",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "user_cache_root_with_env",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use cache_root::{ CacheRootUnavailable, non_empty_env_var, user_cache_root, user_cache_root_with_env, };",
+      "source_expr": "cache_root::user_cache_root_with_env",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_is_directory",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/validation.rs",
+      "source_decl": "pub fn validate_is_directory(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_is_directory",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use validation::{ check_drive_exists, check_read_permissions, check_write_permissions, drive_exists, has_read_permission, has_write_permission, is_executable_file_path, is_valid_path, remove_readonly_attribute, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, };",
+      "source_expr": "validation::validate_is_directory",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_is_file",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/validation.rs",
+      "source_decl": "pub fn validate_is_file(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_is_file",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use validation::{ check_drive_exists, check_read_permissions, check_write_permissions, drive_exists, has_read_permission, has_write_permission, is_executable_file_path, is_valid_path, remove_readonly_attribute, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, };",
+      "source_expr": "validation::validate_is_file",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_path_exists",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/validation.rs",
+      "source_decl": "pub fn validate_path_exists(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_path_exists",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use validation::{ check_drive_exists, check_read_permissions, check_write_permissions, drive_exists, has_read_permission, has_write_permission, is_executable_file_path, is_valid_path, remove_readonly_attribute, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, };",
+      "source_expr": "validation::validate_path_exists",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_path_with_permissions",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core/validation.rs",
+      "source_decl": "pub fn validate_path_with_permissions(\n    path: &Path,\n    check_read: bool,\n    check_write: bool,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_path_with_permissions",
+      "kind": "reexport",
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/path_core.rs",
+      "source_decl": "pub use validation::{ check_drive_exists, check_read_permissions, check_write_permissions, drive_exists, has_read_permission, has_write_permission, is_executable_file_path, is_valid_path, remove_readonly_attribute, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, };",
+      "source_expr": "validation::validate_path_with_permissions",
       "tier": "tier1"
     },
     {

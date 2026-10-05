@@ -92,12 +92,28 @@ fn unix_errors_when_both_env_vars_missing() {
     assert!(matches!(err, PathError::InvalidPath(_)));
 }
 
-// Empty-string env handling lives in the `process_env_lookup` helper
-// shared with yaml_cache (filters `Ok("")` to `None`). The `*_with_env`
-// closure seam does not apply that filter — tests that want to exercise
-// it should drive `process_env_lookup` directly, as yaml_cache_tests.rs
-// does. Re-running that coverage here would duplicate without adding
-// notification-specific value.
+/// The OS cache root moved to shared core; this cache still words its own
+/// failure, so the message callers observe is unchanged by the move.
+#[test]
+fn missing_cache_root_error_message_is_unchanged() {
+    let err =
+        notification_cache_dir_with_env(TEST_OWNER, TEST_REPO, env_from_map(&[])).unwrap_err();
+    #[cfg(target_os = "windows")]
+    let missing = "neither LOCALAPPDATA nor APPDATA is set";
+    #[cfg(not(target_os = "windows"))]
+    let missing = "neither XDG_CACHE_HOME nor HOME is set";
+    assert_eq!(
+        err.to_string(),
+        format!("Invalid path: {missing}; cannot resolve notification cache directory")
+    );
+}
+
+// Empty-string env handling lives in the shared-core `non_empty_env_var`
+// helper used by both this cache and yaml_cache (filters `Ok("")` to
+// `None`). The `*_with_env` closure seam does not apply that filter — tests
+// that want to exercise it should drive `non_empty_env_var` directly, as
+// yaml_cache_tests.rs does. Re-running that coverage here would duplicate
+// without adding notification-specific value.
 
 // ---------------------------------------------------------------------------
 // Disjoint from yaml-cache (design D-06)

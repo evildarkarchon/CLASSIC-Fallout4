@@ -2053,8 +2053,8 @@
       "rustSymbol": "validate_path",
       "kind": "function",
       "bridgeModule": "game",
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "is_valid_path"
     },
     {
@@ -2346,8 +2346,8 @@
       "rustSymbol": "is_valid_path",
       "kind": "function",
       "bridgeModule": "path",
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "is_valid_path"
     },
     {
@@ -2373,8 +2373,8 @@
       "rustSymbol": "path_validate_exists",
       "kind": "function",
       "bridgeModule": "path",
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "validate_path_exists"
     },
     {
@@ -2382,8 +2382,8 @@
       "rustSymbol": "path_validate_is_directory",
       "kind": "function",
       "bridgeModule": "path",
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "validate_is_directory"
     },
     {
@@ -2391,8 +2391,8 @@
       "rustSymbol": "path_validate_is_file",
       "kind": "function",
       "bridgeModule": "path",
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "validate_is_file"
     },
     {
@@ -2418,8 +2418,8 @@
       "rustSymbol": "validate_path",
       "kind": "function",
       "bridgeModule": "path",
-      "ownerModule": "path",
-      "rustCrate": "classic-path-core",
+      "ownerModule": "shared",
+      "rustCrate": "classic-shared-core",
       "coreRustSymbol": "is_valid_path"
     },
     {

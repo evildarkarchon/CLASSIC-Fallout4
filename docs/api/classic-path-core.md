@@ -7,7 +7,9 @@ Crate metadata:
 - Crate: `classic-path-core`
 - Description: `Core path management for CLASSIC (game paths, documents, validation, backups)`
 
-This crate is the shared Rust path/setup helper layer for CLASSIC. It covers game-install detection, documents-folder detection, general path validation, lightweight INI parsing, read-only documents checks, and versioned file backups.
+This crate is the shared Rust path/setup helper layer for CLASSIC. It covers game-install detection, documents-folder detection, custom-scan and settings-path validation, lightweight INI parsing, read-only documents checks, the per-user YAML and app-notification cache directories, and versioned file backups.
+
+The generic path primitives it builds on - existence, file/directory, permission, drive, and read-only checks, the OS cache root, and the `PathError` they report - are owned by [`classic-shared-core::path_core`](classic-shared-core.md#generic-path-primitives-path_core) (#245). This crate does not re-export them; see [Moved primitives](#moved-primitives) for the old-to-new import map.
 
 It is a synchronous business-logic crate. It does not own a Tokio runtime, UI surface, or binding layer.
 
@@ -21,13 +23,14 @@ Use this crate when you need to:
 
 - resolve or validate a game installation path
 - resolve or validate a game documents folder
-- check common CLASSIC path inputs such as custom-scan folders and required files
+- check common CLASSIC path inputs such as custom-scan folders, settings paths, and required files
 - parse Bethesda-style INI files with case-insensitive section/key lookup
 - run read-only checks over the documents folder before setup or scanning
 - create version-labeled backups using version data extracted from an XSE log
 
 Do not use this crate for:
 
+- generic existence, file/directory, permission, drive, or read-only checks - use `classic_shared_core::path_core`
 - loading YAML settings or version-registry metadata
 - async file I/O or runtime ownership
 - higher-level game scan orchestration
@@ -51,12 +54,16 @@ All contributor-facing APIs are re-exported from `src/lib.rs`; the internal modu
 
 ### Validation APIs
 
-- `is_valid_path()`, `validate_path_exists()`, `validate_is_directory()`, `validate_is_file()`
-- `validate_required_files()`, `validate_custom_scan_path()`, `validate_settings_path()`, `validate_settings_paths()`
-- `is_valid_executable_path()`
-- `check_drive_exists()`, `check_read_permissions()`, `check_write_permissions()`, `validate_path_with_permissions()`
-- `drive_exists()`, `has_read_permission()`, `has_write_permission()` - boolean wrappers over the stricter checks
-- `remove_readonly_attribute()` - cross-platform read-only clearing helper
+- `is_restricted_path()`, `validate_custom_scan_path()` - custom-scan restriction policy
+- `validate_settings_path()`, `validate_settings_paths()` - settings/setup path validation
+- `validate_required_files()` - directory plus required-entry presence check
+
+### Cache directory APIs
+
+- `yaml_cache_dir()`, `ensure_yaml_cache_dir()` (plus `_with_env` forms) - per-user `CLASSIC/yaml-cache` directory
+- `notification_cache_dir()`, `ensure_notification_cache_dir()` (plus `_with_env` forms) - per-user `CLASSIC/app-notification/<owner>/<repo>` directory
+
+Both resolve their root through `classic_shared_core::path_core::user_cache_root_with_env()` and word their own failure, so their `PathError::InvalidPath` messages (for example `neither LOCALAPPDATA nor APPDATA is set; cannot resolve YAML cache directory`) are unchanged.
 
 ### Documents and INI APIs
 
@@ -72,13 +79,29 @@ All contributor-facing APIs are re-exported from `src/lib.rs`; the internal modu
 
 ### Error APIs
 
-- `PathError`, `ValidationError`, `GamePathError`, `DocsPathError`, `BackupError`
-- `PathResult<T>`, `ValidationResult<T>`, `GamePathResult<T>`, `DocsPathResult<T>`, `BackupResult<T>`
+- `ValidationError`, `GamePathError`, `DocsPathError`, `BackupError`
+- `ValidationResult<T>`, `GamePathResult<T>`, `DocsPathResult<T>`, `BackupResult<T>`
+
+Each domain error wraps the shared-core `PathError` through a `PathError(#[from] classic_shared_core::path_core::PathError)` variant.
 
 ### Windows-only root re-exports
 
 - `query_game_registry()` - direct Windows registry lookup for game installs
-- `remove_readonly()` - Windows-specific best-effort read-only clearing helper
+
+### Moved primitives
+
+These root exports ended in #245; import them from `classic_shared_core::path_core` instead. Values, error variants, and messages are unchanged.
+
+| Old `classic_path_core::` path | New `classic_shared_core::path_core::` path |
+| --- | --- |
+| `is_valid_path`, `validate_path_exists`, `validate_is_directory`, `validate_is_file` | same names |
+| `check_drive_exists`, `check_read_permissions`, `check_write_permissions`, `validate_path_with_permissions` | same names |
+| `drive_exists`, `has_read_permission`, `has_write_permission` | same names |
+| `remove_readonly_attribute`, `remove_readonly` (Windows only) | same names |
+| `is_valid_executable_path` | `is_executable_file_path` (renamed so it cannot be confused with the different `classic_shared_core::version::pe_version::is_valid_executable_path`) |
+| `PathError`, `PathResult` | same names |
+
+The CXX, Node, and Python path adapters keep their existing export names (`is_valid_path`, `isValidExecutablePath`, `PathValidator.is_valid_executable_path`, `removeReadonly`, ...) and delegate to the shared-core owner.
 
 Contributor note:
 
@@ -147,22 +170,19 @@ Behavior visible in source:
 
 ## Validation helpers
 
-The free functions in `validator.rs` are the crate's low-level path guardrails.
+The free functions in `validator.rs` are the crate's custom-scan and settings-path guardrails. They build on the shared-core generic primitives (`validate_is_directory()` and friends).
 
 Most-used functions:
 
 - `validate_required_files(directory, required_files)` - directory plus required-entry presence check
 - `validate_custom_scan_path(path)` - directory check plus restricted-path guard
 - `validate_settings_paths(game_path, docs_path, custom_scan_path, game_exe)` - combined setup validation helper
-- `validate_path_with_permissions(path, check_read, check_write)` - existence plus optional permission checks
 
 Behavior worth knowing:
 
 - `is_restricted_path()` uses substring checks against names like `windows`, `program files`, `system32`, and `appdata`
 - `is_restricted_path()` also treats very shallow paths and roots as restricted when `parent().is_none()` or component count is `<= 2`
-- `check_write_permissions()` probes writability by creating and deleting `.classic_test_write`
-- `check_drive_exists()` is meaningful only on Windows; other platforms always return `Ok(())`
-- `remove_readonly_attribute()` is a no-op on non-Windows builds
+- a missing directory surfaces as `ValidationError::PathError(PathError::NotFound(..))`, and a file where a directory was expected as `ValidationError::PathError(PathError::NotADirectory(..))`
 
 Contributor note:
 
@@ -288,9 +308,9 @@ The main source-visible flows are:
 
 ## Setup validation flow
 
-1. Validate base filesystem facts with `validate_path_exists()`, `validate_is_directory()`, or `validate_required_files()`.
+1. Validate base filesystem facts with the shared-core `validate_path_exists()` / `validate_is_directory()`, or with `validate_required_files()` here.
 2. For user-provided scan targets, call `validate_custom_scan_path()` to reject system or root-like locations.
-3. For combined setup checks, call `validate_settings_paths()` or `validate_path_with_permissions()` depending on whether the caller needs required-file checks or permission checks.
+3. For combined setup checks, call `validate_settings_paths()` here, or the shared-core `validate_path_with_permissions()` when the caller needs permission checks rather than required-file checks.
 4. For documents-specific checks, build `DocumentsChecker` and call `run_all_checks()`.
 
 ## Backup flow
@@ -309,16 +329,7 @@ This crate uses several domain-specific error enums rather than one shared top-l
 
 ## `PathError`
 
-Used by the low-level path validators and permission helpers.
-
-Variants:
-
-- `NotFound(PathBuf)`
-- `NotADirectory(PathBuf)`
-- `NotAFile(PathBuf)`
-- `IoError { path, source }`
-- `PermissionDenied(String)`
-- `InvalidPath(String)`
+Owned by `classic_shared_core::path_core` (see [its guide](classic-shared-core.md#generic-path-primitives-path_core)). This crate reports it from the cache-directory resolvers and wraps it in every domain error below.
 
 ## `ValidationError`
 
@@ -385,12 +396,11 @@ Contributor note:
 
 ## Platform-Specific Notes
 
-- Windows builds expose extra root-level APIs: `query_game_registry()` and `remove_readonly()`
+- Windows builds expose an extra root-level API: `query_game_registry()`
 - `GamePathFinder` registry lookup exists only on Windows; non-Windows builds skip that strategy entirely
 - `DocsPathFinder` uses the registry-backed `Personal` folder on Windows
 - `get_system_documents_path()` returns the Windows documents folder on Windows, but only the home directory on Linux
 - `parse_steam_library()` is useful only on Linux; the Windows stub returns `DocsPathError::NotFound`
-- `remove_readonly_attribute()` is a no-op on non-Windows platforms
 - the crate has Windows and Linux implementations in source, but no macOS-specific implementation today
 
 ---
@@ -399,6 +409,7 @@ Contributor note:
 
 Important direct dependencies:
 
+- `classic-shared-core` - generic path primitives, `PathError`, and the OS cache root
 - `winreg` - Windows registry queries for game and documents paths
 - `dirs` - home-directory discovery on non-Windows builds
 - `configparser` - INI parsing with lowercase-normalized section/key maps
@@ -409,9 +420,9 @@ Related CLASSIC crates and consumers:
 
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core) - uses `DocumentsChecker` in setup-time combined checks
 - [`classic-config-core`](../../business-logic/classic-config-core) - neighboring config loader that supplies path settings but does not replace this crate's validation logic
-- [`classic-xse-core`](../../business-logic/classic-xse-core) - converts or reuses `PathError` in its own error model
-- [`classic-resource-core`](../../business-logic/classic-resource-core) - re-exports `PathError` and `PathResult`
-- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - uses `GamePathFinder`, `is_valid_path()`, and `is_restricted_path()` for C++ interop
+- [`classic-xse-core`](../../business-logic/classic-xse-core) - uses `DocsPathFinder` for XSE folder derivation
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - uses `GamePathFinder`, `is_restricted_path()`, the documents checker, and backups for C++ interop
+- [`classic-update-core`](../../business-logic/classic-update-core) and [`classic-config-core`](../../business-logic/classic-config-core) - consume the YAML and app-notification cache directories
 - [`classic-node`](../../node-bindings/classic-node) and [`classic-path-py`](../../python-bindings/classic-path-py) - binding surfaces over this crate's APIs
 - [`classic-tui`](../../ui-applications/classic-tui) - uses `DocsPathFinder` for local path discovery
 
@@ -462,7 +473,6 @@ If the caller only needs the raw XSE-derived path, use `parse_xse_log()` directl
 - `DocsPathFinder`'s Linux Proton lookup is opt-in via `with_steam_app_id(app_id)`; the default is `home/.local/share/...` only. Game-specific callers like the CXX bridge's `detect_fallout4_docs_path` and the TUI's `resolve_xse_folder_for_scan` opt in with `Fallout4Version::Original.steam_app_id()` (377160).
 - `parse_xse_log()` assumes a fixed `.../Data/XSE/Plugins`-style suffix and pops exactly three path components
 - `is_restricted_path()` is heuristic string matching, not a canonicalized allow/deny policy
-- `check_write_permissions()` writes a temporary `.classic_test_write` file into the target directory
 - `DocumentsChecker::run_all_check_results()` ignores per-file `Err` results internally and only appends messages from successful `validate_ini_file()` calls; `run_all_checks()` preserves the historical string-only wrapper
 - `GamePathError` includes `ExecutableNotFound` and `XseFileNotFound`, but the current `GamePathFinder` implementation does not construct those variants during its normal validation path
 - some public error variants such as `UserCancelled` are part of the API surface even though the current Rust crate does not include an interactive prompt path that returns them

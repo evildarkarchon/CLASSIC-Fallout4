@@ -319,7 +319,7 @@ Bridge simplification versus `classic-path-core`:
 
 ### `validate_path(path) -> bool`
 
-Forwards to `classic_path_core::is_valid_path()`.
+Forwards to `classic_shared_core::path_core::is_valid_path()` (moved from `classic-path-core` in #245).
 
 Important boundary:
 
@@ -447,7 +447,7 @@ When `run_game_setup_intake_from_user_settings()` output looks wrong:
 - `src/path.rs` and `src/game.rs` both expose game-path detection, but only `src/game.rs` is generic and XSE-log-aware
 - `src/path.rs::detect_fallout4_game_path()` constructs `GamePathFinder` without an XSE loader, so it can accept a Fallout 4 root that lacks `f4se_loader.exe`
 - `src/path.rs` exposes no document validation beyond discovery
-- `src/game.rs::validate_path()` is only `Path::exists()` through `classic_path_core::is_valid_path()`
+- `src/game.rs::validate_path()` is only `Path::exists()` through `classic_shared_core::path_core::is_valid_path()`
 - `src/game.rs::check_restricted_path()` reflects the current heuristic `classic-path-core` restriction rules, including shallow-path rejection
 - `src/game.rs::detect_xse_version_string()` expects a loader path even though the parameter name is `exe_path`
 - `src/game.rs` stringifies many failures as `""`; C++ callers cannot recover typed causes without adding new bridge surface
