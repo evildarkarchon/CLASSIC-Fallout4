@@ -37,6 +37,10 @@ classic-xse-core = { path = "../classic-xse-core" }
 # second copy of their strings.
 classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
 
+# Crash Log collection globs crash-*.log / AUTOSCAN reports (moved from
+# classic-file-io-core with `log_collection`, #254).
+glob = "0.3"
+
 # Parsing and pattern matching
 regex = { workspace = true }
 memchr = { workspace = true }
@@ -75,6 +79,8 @@ semver = { workspace = true }
 
 # Logging
 log = { workspace = true }
+# `log_collection` keeps its original `tracing` debug events after the move.
+tracing = { workspace = true }
 
 # Serialization
 serde = { workspace = true }

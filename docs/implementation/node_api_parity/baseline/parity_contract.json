@@ -4116,7 +4116,7 @@
       "rustSymbol": "CRASH_AUTOSCAN_PATTERN",
       "nodeExport": "CRASH_AUTOSCAN_PATTERN",
       "nodeKind": "const",
-      "rustCrate": "classic-file-io-core"
+      "rustCrate": "classic-scanlog-core"
     },
     {
       "id": "version-registry-phase4c-js-compatible-range",
@@ -5076,7 +5076,7 @@
       "id": "scanlog.patterns.CRASH_LOG_PATTERN",
       "tier": "tier1",
       "ownerModule": "scanlog",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "CRASH_LOG_PATTERN",
       "rustKind": "const",
       "nodeExport": "CRASH_LOG_PATTERN",
@@ -5967,7 +5967,7 @@
       "id": "file_io.CRASH_AUTOSCAN_PATTERN@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "CRASH_AUTOSCAN_PATTERN@rust",
       "rustKind": "reexport"
     },
@@ -6031,7 +6031,7 @@
       "id": "file_io.LogCollector@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "LogCollector@rust",
       "rustKind": "reexport"
     },
@@ -6039,7 +6039,7 @@
       "id": "file_io.RejectedInput@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "RejectedInput@rust",
       "rustKind": "reexport"
     },
@@ -6047,7 +6047,7 @@
       "id": "file_io.TargetedResolution@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "TargetedResolution@rust",
       "rustKind": "reexport"
     },
@@ -6119,7 +6119,7 @@
       "id": "file_io.log_collection@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "log_collection@rust",
       "rustKind": "module"
     },
@@ -6127,7 +6127,7 @@
       "id": "file_io.resolve_targeted_inputs@rust",
       "tier": "tier1",
       "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "resolve_targeted_inputs@rust",
       "rustKind": "reexport"
     },
@@ -7971,7 +7971,7 @@
       "id": "scanlog.JsLogCollector",
       "tier": "tier1",
       "ownerModule": "scanlog",
-      "rustCrate": "classic-file-io-core",
+      "rustCrate": "classic-scanlog-core",
       "rustSymbol": "LogCollector",
       "nodeExport": "JsLogCollector",
       "nodeKind": "class"

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-02T01:55:07.761032+00:00",
+  "generated_at_utc": "2026-10-05T23:03:15.029263+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -3070,44 +3070,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "CRASH_AUTOSCAN_PATTERN",
-      "kind": "const",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/log_collection.rs",
-      "source_decl": "pub const CRASH_AUTOSCAN_PATTERN",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "CRASH_AUTOSCAN_PATTERN",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
-      "source_expr": "log_collection::CRASH_AUTOSCAN_PATTERN",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "CRASH_LOG_PATTERN",
-      "kind": "const",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/log_collection.rs",
-      "source_decl": "pub const CRASH_LOG_PATTERN",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "CRASH_LOG_PATTERN",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
-      "source_expr": "log_collection::CRASH_LOG_PATTERN",
-      "tier": "tier1"
-    },
-    {
       "symbol": "CacheStats",
       "kind": "struct",
       "crate": "classic-file-io-core",
@@ -3402,44 +3364,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "LogCollector",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
-      "source_expr": "log_collection::LogCollector",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "LogCollector",
-      "kind": "struct",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/log_collection.rs",
-      "source_decl": "pub struct LogCollector",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "RejectedInput",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
-      "source_expr": "log_collection::RejectedInput",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "RejectedInput",
-      "kind": "struct",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/log_collection.rs",
-      "source_decl": "pub struct RejectedInput",
-      "tier": "tier1"
-    },
-    {
       "symbol": "Result",
       "kind": "type",
       "crate": "classic-file-io-core",
@@ -3484,25 +3408,6 @@
       "source_file": "business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub use atomic_install::{ InstallOutcome, RollbackOutcome, SelfHealOutcome, install_atomic, rollback, self_heal, };",
       "source_expr": "atomic_install::SelfHealOutcome",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "TargetedResolution",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
-      "source_expr": "log_collection::TargetedResolution",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "TargetedResolution",
-      "kind": "struct",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/log_collection.rs",
-      "source_decl": "pub struct TargetedResolution",
       "tier": "tier1"
     },
     {
@@ -3664,26 +3569,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "collect_all",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/log_collection.rs",
-      "source_decl": "pub async fn collect_all(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "collect_crash_logs",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/log_collection.rs",
-      "source_decl": "pub async fn collect_crash_logs(&self)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "config",
       "kind": "function",
       "arity": 1,
@@ -3694,32 +3579,12 @@
       "tier": "tier1"
     },
     {
-      "symbol": "copy_from_xse_folder",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/log_collection.rs",
-      "source_decl": "pub async fn copy_from_xse_folder(&self)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "core",
       "kind": "module",
       "crate": "classic-file-io-core",
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/lib.rs",
       "source_decl": "pub mod core;",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "crash_logs_dir",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/log_collection.rs",
-      "source_decl": "pub fn crash_logs_dir(&self)",
       "tier": "tier1"
     },
     {
@@ -4137,15 +4002,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "log_collection",
-      "kind": "module",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub mod log_collection;",
-      "tier": "tier1"
-    },
-    {
       "symbol": "metadata_cache_size",
       "kind": "function",
       "arity": 1,
@@ -4153,16 +4009,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/core.rs",
       "source_decl": "pub fn metadata_cache_size(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "move_from_base_folder",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/log_collection.rs",
-      "source_decl": "pub async fn move_from_base_folder(&self)",
       "tier": "tier1"
     },
     {
@@ -4236,26 +4082,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/log_collection.rs",
-      "source_decl": "pub fn new(\n        base_folder: PathBuf,\n        xse_folder: Option<PathBuf>,\n        custom_folder: Option<PathBuf>,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new_for_scan",
-      "kind": "function",
-      "arity": 6,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/log_collection.rs",
-      "source_decl": "pub fn new_for_scan(\n        base_folder: PathBuf,\n        yaml_dir_data: impl AsRef<Path>,\n        game: &str,\n        selected_game_version: &str,\n        configured_docs_root: Option<&Path>,\n        custom_folder: Option<PathBuf>,\n    )",
-      "tier": "tier1"
-    },
-    {
       "symbol": "new_isolated",
       "kind": "function",
       "arity": 0,
@@ -4263,16 +4089,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/hash.rs",
       "source_decl": "pub fn new_isolated()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "pastebin_dir",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/log_collection.rs",
-      "source_decl": "pub fn pastebin_dir(&self)",
       "tier": "tier1"
     },
     {
@@ -4383,26 +4199,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/hash.rs",
       "source_decl": "pub fn reset_cache_stats()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "resolve_targeted_inputs",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/log_collection.rs",
-      "source_decl": "pub async fn resolve_targeted_inputs(inputs: Vec<PathBuf>)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "resolve_targeted_inputs",
-      "kind": "reexport",
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/lib.rs",
-      "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
-      "source_expr": "log_collection::resolve_targeted_inputs",
       "tier": "tier1"
     },
     {
@@ -4562,16 +4358,6 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/core.rs",
       "source_decl": "pub fn walk_directory(\n        &self,\n        path: &Path,\n        pattern: Option<&str>,\n        max_depth: Option<usize>,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "with_current_dir",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-file-io-core",
-      "owner_module": "file_io",
-      "source_file": "business-logic/classic-file-io-core/src/log_collection.rs",
-      "source_decl": "pub fn with_current_dir(xse_folder: Option<PathBuf>, custom_folder: Option<PathBuf>)",
       "tier": "tier1"
     },
     {
@@ -10589,6 +10375,44 @@
       "tier": "tier1"
     },
     {
+      "symbol": "CRASH_AUTOSCAN_PATTERN",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/log_collection.rs",
+      "source_decl": "pub const CRASH_AUTOSCAN_PATTERN",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CRASH_AUTOSCAN_PATTERN",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
+      "source_expr": "log_collection::CRASH_AUTOSCAN_PATTERN",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CRASH_LOG_PATTERN",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/log_collection.rs",
+      "source_decl": "pub const CRASH_LOG_PATTERN",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CRASH_LOG_PATTERN",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
+      "source_expr": "log_collection::CRASH_LOG_PATTERN",
+      "tier": "tier1"
+    },
+    {
       "symbol": "Cancellation",
       "kind": "struct",
       "crate": "classic-scanlog-core",
@@ -11390,6 +11214,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "LogCollector",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
+      "source_expr": "log_collection::LogCollector",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LogCollector",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/log_collection.rs",
+      "source_decl": "pub struct LogCollector",
+      "tier": "tier1"
+    },
+    {
       "symbol": "LogDisposition",
       "kind": "enum",
       "crate": "classic-scanlog-core",
@@ -11879,6 +11722,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "RejectedInput",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
+      "source_expr": "log_collection::RejectedInput",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "RejectedInput",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/log_collection.rs",
+      "source_decl": "pub struct RejectedInput",
+      "tier": "tier1"
+    },
+    {
       "symbol": "Request",
       "kind": "enum",
       "crate": "classic-scanlog-core",
@@ -11893,6 +11755,15 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/error.rs",
+      "source_decl": "pub type Result",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Result",
+      "kind": "type",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/log_collection.rs",
       "source_decl": "pub type Result",
       "tier": "tier1"
     },
@@ -12119,6 +11990,25 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
       "source_decl": "pub struct TargetedRequest",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "TargetedResolution",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
+      "source_expr": "log_collection::TargetedResolution",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "TargetedResolution",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/log_collection.rs",
+      "source_decl": "pub struct TargetedResolution",
       "tier": "tier1"
     },
     {
@@ -12510,6 +12400,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "collect_all",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/log_collection.rs",
+      "source_decl": "pub async fn collect_all(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "collect_crash_logs",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/log_collection.rs",
+      "source_decl": "pub async fn collect_crash_logs(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "configuration",
       "kind": "function",
       "arity": 1,
@@ -12586,6 +12496,26 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
       "source_decl": "pub mod contract;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "copy_from_xse_folder",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/log_collection.rs",
+      "source_decl": "pub async fn copy_from_xse_folder(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "crash_logs_dir",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/log_collection.rs",
+      "source_decl": "pub fn crash_logs_dir(&self)",
       "tier": "tier1"
     },
     {
@@ -13170,6 +13100,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "log_collection",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod log_collection;",
+      "tier": "tier1"
+    },
+    {
       "symbol": "log_exists",
       "kind": "function",
       "arity": 1,
@@ -13226,6 +13165,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod mod_guidance_analyzer;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "move_from_base_folder",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/log_collection.rs",
+      "source_decl": "pub async fn move_from_base_folder(&self)",
       "tier": "tier1"
     },
     {
@@ -13315,6 +13264,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/gpu_detector.rs",
       "source_decl": "pub fn new()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/log_collection.rs",
+      "source_decl": "pub fn new(\n        base_folder: PathBuf,\n        xse_folder: Option<PathBuf>,\n        custom_folder: Option<PathBuf>,\n    )",
       "tier": "tier1"
     },
     {
@@ -13458,6 +13417,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "new_for_scan",
+      "kind": "function",
+      "arity": 6,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/log_collection.rs",
+      "source_decl": "pub fn new_for_scan(\n        base_folder: PathBuf,\n        yaml_dir_data: impl AsRef<Path>,\n        game: &str,\n        selected_game_version: &str,\n        configured_docs_root: Option<&Path>,\n        custom_folder: Option<PathBuf>,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "papyrus",
       "kind": "module",
       "crate": "classic-scanlog-core",
@@ -13543,6 +13512,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod parser;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "pastebin_dir",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/log_collection.rs",
+      "source_decl": "pub fn pastebin_dir(&self)",
       "tier": "tier1"
     },
     {
@@ -13639,6 +13618,26 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
       "source_decl": "pub fn reset(&mut self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_targeted_inputs",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/log_collection.rs",
+      "source_decl": "pub async fn resolve_targeted_inputs(inputs: Vec<PathBuf>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_targeted_inputs",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use log_collection::{ CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution, resolve_targeted_inputs, };",
+      "source_expr": "log_collection::resolve_targeted_inputs",
       "tier": "tier1"
     },
     {
@@ -13906,6 +13905,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod version;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_current_dir",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/log_collection.rs",
+      "source_decl": "pub fn with_current_dir(xse_folder: Option<PathBuf>, custom_folder: Option<PathBuf>)",
       "tier": "tier1"
     },
     {

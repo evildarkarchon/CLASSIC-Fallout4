@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-01T22:13:51Z",
+  "generated_at_utc": "2026-10-05T23:02:01Z",
   "entries": [
     {
       "id": "0f1ce653765981f0",
@@ -4197,8 +4197,8 @@
         ],
         "returnType": "Result<Vec<String>>"
       },
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "collect_all"
     },
     {
@@ -4217,8 +4217,8 @@
         ],
         "returnType": "Result<Vec<String>>"
       },
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "collect_crash_logs"
     },
     {
@@ -4245,8 +4245,8 @@
         ],
         "returnType": "Box<CxxLogCollector>"
       },
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "LogCollector"
     },
     {
@@ -4285,8 +4285,8 @@
         ],
         "returnType": "Box<CxxLogCollector>"
       },
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "new_for_scan"
     },
     {
@@ -4360,8 +4360,8 @@
         ],
         "returnType": "TargetedResolutionDto"
       },
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "resolve_targeted_inputs"
     },
     {
@@ -4417,8 +4417,8 @@
       "bridgeModule": "files",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
       "blockOrigin": "Rust",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "LogCollector"
     },
     {
@@ -4475,8 +4475,8 @@
           "type": "Vec<String>"
         }
       ],
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "TargetedResolution"
     },
     {

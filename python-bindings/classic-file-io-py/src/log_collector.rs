@@ -1,10 +1,12 @@
 //! Python bindings for LogCollector (thin PyO3 adapter)
 //!
-//! This module provides THIN adapters that delegate all business logic to classic-file-io-core.
+//! This module provides THIN adapters that delegate all business logic to classic-scanlog-core,
+//! which owns Crash Log collection (moved from classic-file-io-core in #254). Errors keep
+//! their `classic_file_io_core::FileIOError` type, so `to_pyerr` maps them unchanged.
 //! It ONLY handles Python ↔ Rust type conversions and async runtime bridging.
 
 use crate::to_pyerr;
-use classic_file_io_core::LogCollector;
+use classic_scanlog_core::LogCollector;
 use classic_shared::without_gil_block_on;
 use pyo3::prelude::*;
 use std::path::PathBuf;

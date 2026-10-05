@@ -358,6 +358,79 @@ empty results into failures.
 
 ---
 
+## Crash Log Collection And Targeted Input Resolution
+
+The `log_collection` module is the discovery/intake area of this crate. It
+moved here from `classic-file-io-core` (#254), so file I/O no longer depends on
+XSE Folder resolution or `classic-operation-context`. A Crash Log Scan Run's
+Standard discovery builds a `LogCollector` and its Targeted discovery calls
+`resolve_targeted_inputs`; the same primitives stay public because the CXX,
+Node, and Python collection surfaces expose them directly. Calling them does
+not start, schedule, or finalize a run, and never moves Unsolved Logs.
+
+Root re-exports: `LogCollector`, `CRASH_LOG_PATTERN` (`crash-*.log`),
+`CRASH_AUTOSCAN_PATTERN` (`crash-*-AUTOSCAN.md`), `resolve_targeted_inputs`,
+`TargetedResolution`, and `RejectedInput`. `log_collection::Result<T>` is
+`Result<T, classic_file_io_core::FileIOError>`: the moved APIs kept their typed
+filesystem error so binding error projections did not change. There is no
+re-export from `classic_file_io_core`; import these names from
+`classic_scanlog_core`.
+
+### `LogCollector`
+
+Construction and accessors:
+
+- `LogCollector::new(base_folder, xse_folder, custom_folder)`
+- `LogCollector::new_for_scan(base_folder, yaml_dir_data, game, selected_game_version, configured_docs_root, custom_folder)` - resolves the XSE Folder through `classic_xse_core::resolve_xse_folder_for_scan` (process default Version Registry snapshot) and keeps the custom folder additive
+- `with_current_dir(xse_folder, custom_folder)`
+- `crash_logs_dir()` (`<base>/Crash Logs`) and `pastebin_dir()` (`<base>/Crash Logs/Pastebin`)
+
+Workflow methods, all `async` and returning `Result<_, FileIOError>`:
+
+- `move_from_base_folder() -> usize`
+- `copy_from_xse_folder() -> usize`
+- `collect_crash_logs() -> Vec<PathBuf>`
+- `collect_all() -> Vec<PathBuf>`
+
+`collect_all()` flow:
+
+1. Ensure `Crash Logs/` and `Crash Logs/Pastebin/` exist.
+2. Move `crash-*.log` and `crash-*-AUTOSCAN.md` from the base folder into `Crash Logs/`.
+3. Copy `crash-*.log` from the optional XSE Folder into `Crash Logs/`.
+4. Return all `crash-*.log` files found recursively under `Crash Logs/` plus the optional custom folder.
+
+Behavior worth knowing:
+
+- base-folder files are moved, and XSE Folder files copied, only when the destination path does not already exist; XSE originals are preserved
+- the custom folder is searched with a non-recursive `crash-*.log` glob and is additive to XSE Folder import, never a replacement
+- autoscan markdown is organized by `move_from_base_folder()`, but `collect_crash_logs()` returns only `.log` files and does not deduplicate across sources
+- `Io(String)` carries formatted glob or directory-setup failures
+- inside the unpublished `classic-operation-context` cancellation scope, collection checks only at safe boundaries between completed directory/file operations and enumeration entries; cancellation discards the accumulator and the public method returns its zero/empty sentinel, which the scope-owning scan service distinguishes by reading the same monotonic control; completed moves and copies are not rolled back
+
+The Crash Log Scan Run does not call `new_for_scan`: it derives the XSE Folder
+from the run's own Version Registry scope with
+`resolve_xse_folder_for_scan_in_version_registry_scope` and passes it to
+`LogCollector::new`.
+
+### `resolve_targeted_inputs`
+
+`resolve_targeted_inputs(inputs: Vec<PathBuf>) -> TargetedResolution` resolves
+explicit user-supplied file and directory paths for Targeted runs.
+
+- `TargetedResolution { logs: Vec<PathBuf>, rejected: Vec<RejectedInput> }` - deduplicated accepted logs in first-seen order, plus rejected inputs
+- `RejectedInput { path: PathBuf, reason: String }` - the original input and a human-readable reason; the run contract converts it into `CrashLogScanRejectedInput`
+
+Behavior worth knowing:
+
+- explicit regular file inputs are accepted directly regardless of file name
+- directory inputs are searched recursively with `**/crash-*.log`
+- paths are canonicalized for deduplication while preserving first-seen order
+- non-existent paths, non-file/non-directory paths, unreadable paths, and directories without matches are rejected with specific reasons
+- no directories are created and no files are moved or copied
+- inside the `classic-operation-context` cancellation scope, resolution yields between recursive entries, discards partial accumulators on cancellation, and returns an empty resolution for the scope-owning scan service to discard
+
+---
+
 ## Independently Useful Public Utilities
 
 The complete-run boundary does not absorb tools whose use-case is independent

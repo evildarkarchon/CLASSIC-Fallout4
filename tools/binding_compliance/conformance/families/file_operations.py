@@ -138,14 +138,17 @@ FILE_OPERATIONS_COVERAGE_POLICY = FamilyCoveragePolicy(
         for outcome in outcomes
     )
     + (
-        # The Python inventory maps stream wrappers to LogCollector. Explicit
-        # selectors retain the unrelated collection/move operations as gaps.
+        # The Python stream wrappers are produced by FileIOCore's stream_lines
+        # methods. Their rows formerly borrowed the LogCollector carrier, which
+        # moved to classic-scanlog-core (#254); row IDs are kept. Explicit
+        # selectors keep the unrelated collection/move operations out of this
+        # file-operations credit.
         CoveragePredicate(
             id="read-stream-carriers",
             capability_id="file-operations.streams",
             action="file-operations.read-text",
             observation_family="file-effects",
-            rust_symbols=("LogCollector",),
+            rust_symbols=("FileIOCore",),
             matches=partial(_observed, "read-text", "nonempty"),
             binding_obligation_ids=(
                 "parity:python:file_io.log_collection.PyLineStreamer",

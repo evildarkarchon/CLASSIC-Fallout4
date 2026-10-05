@@ -11,7 +11,6 @@
 //! - Parallel directory traversal
 //! - Multi-level caching
 //! - Encoding detection
-//! - Log collection and organization
 //! - SHA256 file hashing with caching
 //! - Configuration file generation (Phase 5)
 
@@ -24,7 +23,6 @@ pub mod error;
 pub mod game_files;
 pub mod generation;
 pub mod hash;
-pub mod log_collection;
 pub mod similarity;
 
 pub use atomic_install::{
@@ -40,8 +38,7 @@ pub use generation::{
     FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml,
 };
 pub use hash::{FileHashScope, FileHasher};
-pub use log_collection::{
-    CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution,
-    resolve_targeted_inputs,
-};
+// Crash Log collection and Targeted input resolution are owned by
+// classic-scanlog-core (#254). No re-export here: scanlog depends on file I/O,
+// so a re-export would close a dependency cycle.
 pub use similarity::{calculate_similarity, similarity_ratio};

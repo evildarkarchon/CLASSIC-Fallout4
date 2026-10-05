@@ -636,16 +636,16 @@ pub fn calculate_text_similarity(text1: String, text2: String) -> f64 {
 }
 
 // ============================================================================
-// 6. Log Collection (path info only)
+// 6. Log Collection (path info only; owned by classic-scanlog-core, #254)
 // ============================================================================
 
 /// File pattern for standard crash log files.
 #[napi]
-pub const CRASH_LOG_PATTERN: &str = classic_file_io_core::CRASH_LOG_PATTERN;
+pub const CRASH_LOG_PATTERN: &str = classic_scanlog_core::CRASH_LOG_PATTERN;
 
 /// File pattern for AUTOSCAN report files generated during crash analysis.
 #[napi]
-pub const CRASH_AUTOSCAN_PATTERN: &str = classic_file_io_core::CRASH_AUTOSCAN_PATTERN;
+pub const CRASH_AUTOSCAN_PATTERN: &str = classic_scanlog_core::CRASH_AUTOSCAN_PATTERN;
 
 /// Log collector for organizing crash logs from multiple sources.
 ///
@@ -653,7 +653,7 @@ pub const CRASH_AUTOSCAN_PATTERN: &str = classic_file_io_core::CRASH_AUTOSCAN_PA
 /// For actual log collection (file moves/copies), use the async collect methods.
 #[napi]
 pub struct JsLogCollector {
-    inner: classic_file_io_core::LogCollector,
+    inner: classic_scanlog_core::LogCollector,
     base_folder: String,
     xse_folder: Option<String>,
     custom_folder: Option<String>,
@@ -677,7 +677,7 @@ impl JsLogCollector {
         let custom_path = custom_folder.clone().map(PathBuf::from);
 
         Self {
-            inner: classic_file_io_core::LogCollector::new(base_path, xse_path, custom_path),
+            inner: classic_scanlog_core::LogCollector::new(base_path, xse_path, custom_path),
             base_folder,
             xse_folder,
             custom_folder,
@@ -699,7 +699,7 @@ impl JsLogCollector {
     /// Execute the full log collection workflow and return discovered crash log paths.
     #[napi]
     pub async fn collect_all(&self) -> Result<Vec<String>> {
-        let collector = classic_file_io_core::LogCollector::new(
+        let collector = classic_scanlog_core::LogCollector::new(
             PathBuf::from(&self.base_folder),
             self.xse_folder.clone().map(PathBuf::from),
             self.custom_folder.clone().map(PathBuf::from),

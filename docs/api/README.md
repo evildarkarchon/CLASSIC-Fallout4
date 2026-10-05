@@ -30,7 +30,7 @@ Use this directory in this order:
 15. [`classic-xse-core.md`](classic-xse-core.md) - XSE loader/version detection helpers used by setup checks and bindings
 16. [`game-setup-workflow.md`](game-setup-workflow.md) - current cross-crate setup/install validation flow across path, XSE, scangame, and version registry crates
 17. [`formid-settings-boundary.md`](formid-settings-boundary.md) - current split between Rust config serialization and scan-time FormID DB path consumption
-18. [`classic-file-io-core.md`](classic-file-io-core.md) - shared file I/O, traversal, hashing (with `FileHashScope` handles for facade-owned hash caches), and log collection helpers
+18. [`classic-file-io-core.md`](classic-file-io-core.md) - shared file I/O, traversal, and hashing (with `FileHashScope` handles for facade-owned hash caches); Crash Log collection moved to scanlog core
 19. [`classic-resource-core.md`](classic-resource-core.md) - lightweight resource classification, enumeration, and per-file validation helpers
 20. [`classic-database-core.md`](classic-database-core.md) - SQLite/FormID lookup pool used by analysis paths
 21. [`formid-sqlite-conventions.md`](formid-sqlite-conventions.md) - practical fixture/schema/path rules for contributor FormID DB work
@@ -45,7 +45,7 @@ Use this directory in this order:
 30. [`node-python-contract-map.md`](node-python-contract-map.md) - where the active Node and Python public contracts, wrapper files, and parity artifacts live
 31. [`binding-contract-refresh-note.md`](binding-contract-refresh-note.md) - when Node `index.d.ts` and Python `.pyi` contract artifacts should refresh separately versus together
 32. [`binding-compliance-suite.md`](binding-compliance-suite.md) - canonical umbrella binding gate that maps policy requirements to executable checks and gap reporting
-33. [`classic-scanlog-core.md`](classic-scanlog-core.md) - crash-log analysis built on top of loaded config data and optional DB lookups
+33. [`classic-scanlog-core.md`](classic-scanlog-core.md) - Crash Log collection, Targeted input resolution, and crash-log analysis built on top of loaded config data and optional DB lookups
 33a. [`classic-scan-presentation.md`](classic-scan-presentation.md) - unpublished Crash Log Scan Run Display Content owner: the render functions that turn a run result, event, or failure into typed display lines, so every frontend states the same run the same way. Consumed by `classic-tui` directly and by `classic-cli` and `classic-gui` through the C++ bridge, and mirrored onto the Node and Python bindings, which carry the lines for whatever a consumer builds. Every frontend now renders it
 34. [`binding-parity-policy.md`](binding-parity-policy.md) - one-tier binding parity policy, gate ownership, and new-API contributor workflow
 35. [`error-contract.md`](error-contract.md) - per-binding error shape conventions for C++ (CXX), Node (NAPI-RS), and Python (PyO3)
@@ -77,7 +77,7 @@ That order matches the current repo-root layering across `foundation/`, `busines
 - `classic-xse-core` builds on path/version helpers to resolve XSE Folder paths, detect XSE installation state, and parse XSE versions
 - `game-setup-workflow.md` explains how current setup/install validation is split across path, XSE, scangame, and Version Registry crates
 - `formid-settings-boundary.md` documents the typed FormID settings boundary shared by scan callers and the C++ bridge
-- `classic-file-io-core` provides shared file-system, decoding, hashing, and log collection helpers used by higher layers; every hash cache sits behind an opaque `FileHashScope` handle whose process default serves every unscoped caller, while the Python `classic_file_io` and `classic_scangame` facades each select their own isolated scope
+- `classic-file-io-core` provides shared file-system, decoding, and hashing helpers used by higher layers (Crash Log collection and Targeted input resolution belong to `classic-scanlog-core`); every hash cache sits behind an opaque `FileHashScope` handle whose process default serves every unscoped caller, while the Python `classic_file_io` and `classic_scangame` facades each select their own isolated scope
 - `classic-resource-core` provides lightweight resource classification and enumeration helpers used alongside broader file and scan workflows
 - `classic-database-core` manages async SQLite pools and FormID lookups for analysis consumers
 - `formid-sqlite-conventions.md` captures the current source-backed fixture/schema/path assumptions around FormID databases

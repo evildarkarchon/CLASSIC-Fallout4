@@ -10,6 +10,9 @@ crate-type = ["cdylib", "rlib"]  # Python extension + Rust library
 
 [dependencies]
 classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
+# `PyLogCollector` stays exported from `classic_file_io` for import
+# compatibility, but Crash Log collection is owned by scanlog core (#254).
+classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-shared-py = { path = "../../foundation/classic-shared-py" }
 pyo3 = { workspace = true }
