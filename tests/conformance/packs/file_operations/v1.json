@@ -40,7 +40,7 @@
     {
       "id": "file-operations.streams",
       "rustSymbols": [
-        "LogCollector"
+        "FileIOCore"
       ],
       "operationScoped": true,
       "observationFamilies": [

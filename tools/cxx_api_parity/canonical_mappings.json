@@ -1873,8 +1873,8 @@
       "rustSymbol": "log_collector_collect_all",
       "kind": "function",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "collect_all"
     },
     {
@@ -1882,8 +1882,8 @@
       "rustSymbol": "log_collector_collect_crash_logs",
       "kind": "function",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "collect_crash_logs"
     },
     {
@@ -1891,8 +1891,8 @@
       "rustSymbol": "log_collector_new",
       "kind": "function",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "LogCollector"
     },
     {
@@ -1900,8 +1900,8 @@
       "rustSymbol": "log_collector_new_for_scan",
       "kind": "function",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "new_for_scan"
     },
     {
@@ -1936,8 +1936,8 @@
       "rustSymbol": "resolve_targeted_inputs",
       "kind": "function",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "resolve_targeted_inputs"
     },
     {
@@ -1972,8 +1972,8 @@
       "rustSymbol": "CxxLogCollector",
       "kind": "opaque",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "LogCollector"
     },
     {
@@ -1990,8 +1990,8 @@
       "rustSymbol": "TargetedResolutionDto",
       "kind": "struct",
       "bridgeModule": "files",
-      "ownerModule": "file_io",
-      "rustCrate": "classic-file-io-core",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
       "coreRustSymbol": "TargetedResolution"
     },
     {

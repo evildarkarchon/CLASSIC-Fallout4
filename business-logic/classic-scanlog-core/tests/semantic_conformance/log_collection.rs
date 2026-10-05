@@ -2,7 +2,7 @@
 
 use super::file_operations::{destination, files};
 use super::{RunnerResult, invalid, text};
-use classic_file_io_core::LogCollector;
+use classic_scanlog_core::LogCollector;
 use serde_json::{Value, json};
 use std::{
     fs,
@@ -121,7 +121,7 @@ pub(super) fn observe(fixture: &Value) -> RunnerResult<Value> {
         .collect::<RunnerResult<Vec<_>>>()?;
     targeted.push(root.join("missing-target.log"));
     let resolved =
-        runtime.block_on(classic_file_io_core::log_collection::resolve_targeted_inputs(targeted));
+        runtime.block_on(classic_scanlog_core::log_collection::resolve_targeted_inputs(targeted));
     if json!(paths(root, resolved.logs)?) != result["second"]
         || resolved.rejected.len() != 1
         || resolved.rejected[0].path != root.join("missing-target.log")

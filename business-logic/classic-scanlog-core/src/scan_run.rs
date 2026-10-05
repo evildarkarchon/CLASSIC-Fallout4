@@ -7,6 +7,7 @@
 pub mod contract;
 
 use crate::error::{Result, ScanLogError};
+use crate::log_collection::{LogCollector, RejectedInput, resolve_targeted_inputs};
 use crate::orchestrator::resolve_batch_concurrency;
 use crate::report::autoscan_report_path;
 use crate::{
@@ -20,7 +21,7 @@ use classic_config_core::{
     LocalIgnoreRecoveryPlan, load_installed_yaml_data_in_version_registry_scope,
 };
 use classic_database_core::DatabasePool;
-use classic_file_io_core::{FileHashScope, LogCollector, RejectedInput, resolve_targeted_inputs};
+use classic_file_io_core::FileHashScope;
 use classic_operation_context::scope_cancellation;
 use classic_scangame_core::{
     ConfigFileCache, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, ModIniScanner,

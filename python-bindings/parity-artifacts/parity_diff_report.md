@@ -1,6 +1,6 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-02T01:55:08.174049+00:00`
+- Generated: `2026-10-05T23:03:15.428242+00:00`
 - Tier-1 contract rows: **1237**
 - Tier-1 matched: **1235**
 - Tier-1 missing Rust: **0**
@@ -375,12 +375,12 @@
 | `file_io.core.FileOperationResult@rust` | `file_io` | `classic-file-io-core` | `FileOperationResult` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.GameFilesManager@rust` | `file_io` | `classic-file-io-core` | `GameFilesManager` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.GameTarget@rust` | `file_io` | `classic-file-io-core` | `GameTarget` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.RejectedInput@rust` | `file_io` | `classic-file-io-core` | `RejectedInput` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.TargetedResolution@rust` | `file_io` | `classic-file-io-core` | `TargetedResolution` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.RejectedInput@rust` | `file_io` | `classic-scanlog-core` | `RejectedInput` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.TargetedResolution@rust` | `file_io` | `classic-scanlog-core` | `TargetedResolution` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.backup@rust` | `file_io` | `classic-file-io-core` | `backup` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.calculate_similarity` | `file_io` | `classic-file-io-core` | `calculate_similarity` | `classic_file_io.calculate_similarity` | `matched` |
 | `file_io.core.core@rust` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.FileIOCore` | `matched` |
-| `file_io.core.resolve_targeted_inputs@rust` | `file_io` | `classic-file-io-core` | `resolve_targeted_inputs` | `classic_file_io.FileIOCore` | `matched` |
+| `file_io.core.resolve_targeted_inputs@rust` | `file_io` | `classic-scanlog-core` | `resolve_targeted_inputs` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.similarity_ratio` | `file_io` | `classic-file-io-core` | `similarity_ratio` | `classic_file_io.similarity_ratio` | `matched` |
 | `file_io.dds.DDSAnalyzer@rust` | `file_io` | `classic-file-io-core` | `DDSAnalyzer` | `classic_file_io.DDSHeader` | `matched` |
 | `file_io.dds.DDSHeader` | `file_io` | `classic-file-io-core` | `DDSHeader` | `classic_file_io.DDSHeader` | `matched` |
@@ -422,23 +422,23 @@
 | `file_io.hash.FileHasher.reset_cache_stats` | `file_io` | `classic-file-io-core` | `FileHasher` | `classic_file_io.FileHasher.reset_cache_stats` | `matched` |
 | `file_io.hash.FileHasherCacheStats` | `file_io` | `classic-file-io-core` | `FileHasher` | `classic_file_io.FileHasherCacheStats` | `matched` |
 | `file_io.hash.hash@rust` | `file_io` | `classic-file-io-core` | `FileHasher` | `classic_file_io.FileHasher` | `matched` |
-| `file_io.log_collection.CRASH_AUTOSCAN_PATTERN@rust` | `file_io` | `classic-file-io-core` | `CRASH_AUTOSCAN_PATTERN` | `classic_file_io.PyLogCollector` | `matched` |
-| `file_io.log_collection.CRASH_LOG_PATTERN@rust` | `file_io` | `classic-file-io-core` | `CRASH_LOG_PATTERN` | `classic_file_io.PyLogCollector` | `matched` |
-| `file_io.log_collection.PyLineStreamer` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLineStreamer` | `matched` |
-| `file_io.log_collection.PyLineStreamer.__aiter__` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLineStreamer.__aiter__` | `matched` |
-| `file_io.log_collection.PyLineStreamer.__anext__` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLineStreamer.__anext__` | `matched` |
-| `file_io.log_collection.PyLogCollector` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector` | `matched` |
-| `file_io.log_collection.PyLogCollector.__init__` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector.__init__` | `matched` |
-| `file_io.log_collection.PyLogCollector.collect_all` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector.collect_all` | `matched` |
-| `file_io.log_collection.PyLogCollector.collect_crash_logs` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector.collect_crash_logs` | `matched` |
-| `file_io.log_collection.PyLogCollector.copy_from_xse_folder` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector.copy_from_xse_folder` | `matched` |
-| `file_io.log_collection.PyLogCollector.crash_logs_dir` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector.crash_logs_dir` | `matched` |
-| `file_io.log_collection.PyLogCollector.move_from_base_folder` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector.move_from_base_folder` | `matched` |
-| `file_io.log_collection.PyLogCollector.pastebin_dir` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector.pastebin_dir` | `matched` |
-| `file_io.log_collection.PySyncLineStreamer` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PySyncLineStreamer` | `matched` |
-| `file_io.log_collection.PySyncLineStreamer.__iter__` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PySyncLineStreamer.__iter__` | `matched` |
-| `file_io.log_collection.PySyncLineStreamer.__next__` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PySyncLineStreamer.__next__` | `matched` |
-| `file_io.log_collection.log_collection@rust` | `file_io` | `classic-file-io-core` | `LogCollector` | `classic_file_io.PyLogCollector` | `matched` |
+| `file_io.log_collection.CRASH_AUTOSCAN_PATTERN@rust` | `file_io` | `classic-scanlog-core` | `CRASH_AUTOSCAN_PATTERN` | `classic_file_io.PyLogCollector` | `matched` |
+| `file_io.log_collection.CRASH_LOG_PATTERN@rust` | `file_io` | `classic-scanlog-core` | `CRASH_LOG_PATTERN` | `classic_file_io.PyLogCollector` | `matched` |
+| `file_io.log_collection.PyLineStreamer` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.PyLineStreamer` | `matched` |
+| `file_io.log_collection.PyLineStreamer.__aiter__` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.PyLineStreamer.__aiter__` | `matched` |
+| `file_io.log_collection.PyLineStreamer.__anext__` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.PyLineStreamer.__anext__` | `matched` |
+| `file_io.log_collection.PyLogCollector` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector` | `matched` |
+| `file_io.log_collection.PyLogCollector.__init__` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector.__init__` | `matched` |
+| `file_io.log_collection.PyLogCollector.collect_all` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector.collect_all` | `matched` |
+| `file_io.log_collection.PyLogCollector.collect_crash_logs` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector.collect_crash_logs` | `matched` |
+| `file_io.log_collection.PyLogCollector.copy_from_xse_folder` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector.copy_from_xse_folder` | `matched` |
+| `file_io.log_collection.PyLogCollector.crash_logs_dir` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector.crash_logs_dir` | `matched` |
+| `file_io.log_collection.PyLogCollector.move_from_base_folder` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector.move_from_base_folder` | `matched` |
+| `file_io.log_collection.PyLogCollector.pastebin_dir` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector.pastebin_dir` | `matched` |
+| `file_io.log_collection.PySyncLineStreamer` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.PySyncLineStreamer` | `matched` |
+| `file_io.log_collection.PySyncLineStreamer.__iter__` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.PySyncLineStreamer.__iter__` | `matched` |
+| `file_io.log_collection.PySyncLineStreamer.__next__` | `file_io` | `classic-file-io-core` | `FileIOCore` | `classic_file_io.PySyncLineStreamer.__next__` | `matched` |
+| `file_io.log_collection.log_collection@rust` | `file_io` | `classic-scanlog-core` | `LogCollector` | `classic_file_io.PyLogCollector` | `matched` |
 | `message.lib.Message` | `message` | `classic-message-core` | `Message` | `classic_message.Message` | `matched` |
 | `message.lib.Message.__init__` | `message` | `classic-message-core` | `Message` | `classic_message.Message.__init__` | `matched` |
 | `message.lib.Message.content` | `message` | `classic-message-core` | `Message` | `classic_message.Message.content` | `matched` |

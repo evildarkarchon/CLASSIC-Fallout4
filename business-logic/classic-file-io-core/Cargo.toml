@@ -13,8 +13,8 @@ crate-type = ["rlib"]  # Pure Rust library only - no PyO3
 [dependencies]
 # CLASSIC shared utilities
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
-classic-operation-context = { path = "../../foundation/classic-operation-context" }
-classic-xse-core = { path = "../classic-xse-core" }
+# Crash Log collection (and with it the XSE Folder and operation-context
+# cancellation dependencies) moved to classic-scanlog-core (#254).
 
 # Durable Publication (staging, verified backup, atomic publish) for the YAML
 # Data Update Channel install path. It owns the digest verification, the
@@ -27,7 +27,6 @@ encoding_rs = { workspace = true }
 memmap2 = { workspace = true }
 walkdir = { workspace = true }
 ddsfile = { workspace = true }
-glob = "0.3"
 
 # Async runtime
 tokio = { workspace = true, features = ["full"] }

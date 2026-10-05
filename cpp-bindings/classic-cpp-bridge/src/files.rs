@@ -1,15 +1,17 @@
 //! File operations bridge for CXX FFI.
 //!
 //! Bridges `classic_file_io_core` for backup management, game files,
-//! log collection, file similarity, and encoding-aware file I/O.
+//! file similarity, and encoding-aware file I/O, plus
+//! `classic_scanlog_core::log_collection` for Crash Log collection and
+//! Targeted input resolution (moved from file I/O in #254).
 
 use crate::runtime_support::{block_on, block_on_result};
 use classic_file_io_core::FileIOCore;
 use classic_file_io_core::backup::{BackupManager, BackupType};
 use classic_file_io_core::game_files::GameFilesManager;
 use classic_file_io_core::hash::FileHasher;
-use classic_file_io_core::log_collection::LogCollector;
 use classic_file_io_core::similarity::calculate_similarity;
+use classic_scanlog_core::log_collection::LogCollector;
 use std::path::{Path, PathBuf};
 
 /// Opaque wrapper around BackupManager.
@@ -189,7 +191,7 @@ fn log_collector_collect_crash_logs(collector: &CxxLogCollector) -> Result<Vec<S
 
 fn resolve_targeted_inputs(input_paths: &[String]) -> ffi::TargetedResolutionDto {
     let paths: Vec<PathBuf> = input_paths.iter().map(PathBuf::from).collect();
-    let resolution = block_on(classic_file_io_core::log_collection::resolve_targeted_inputs(paths));
+    let resolution = block_on(classic_scanlog_core::log_collection::resolve_targeted_inputs(paths));
     ffi::TargetedResolutionDto {
         logs: resolution
             .logs

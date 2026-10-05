@@ -5,6 +5,7 @@
 //! - FormID extraction and validation
 //! - Plugin and record detection
 //! - Mod detection algorithms
+//! - Standard Crash Log collection and Targeted input resolution
 //! - Rust-owned Crash Log Scan Run execution
 //! - Report generation
 //!
@@ -35,6 +36,7 @@ pub mod formid;
 pub mod formid_analyzer;
 pub mod formid_finding_analyzer;
 pub mod gpu_detector;
+pub mod log_collection;
 pub mod mod_guidance_analyzer;
 pub mod named_record_finding_analyzer;
 // These implementation modules retain focused characterization helpers that are
@@ -76,6 +78,12 @@ pub use formid_finding_analyzer::{
     FormIDPlugin, FormIDValueLookupStatus,
 };
 pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};
+// Standard collection and Targeted input resolution moved here from
+// classic-file-io-core (#254); file I/O keeps no reverse re-export.
+pub use log_collection::{
+    CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector, RejectedInput, TargetedResolution,
+    resolve_targeted_inputs,
+};
 pub use mod_guidance_analyzer::{
     ImportantModGuidance, ModConflictGuidance, ModGuidanceAnalysisInput, ModGuidanceAnalysisResult,
     ModGuidanceAnalyzer, ModGuidanceMatchState, ModSolutionGuidance,

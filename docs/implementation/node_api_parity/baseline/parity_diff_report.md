@@ -1,6 +1,6 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-02T01:54:33.795421+00:00`
+- Generated: `2026-10-05T23:02:36.989277+00:00`
 - Tier-1 contract rows: **949**
 - Tier-1 matched: **932**
 - Tier-1 missing Rust: **0**
@@ -433,7 +433,7 @@
 | `aux-phase4b-xse-loader-name` | `aux` | `classic-xse-core` | `loader_name` | `xseLoaderName` | `matched` |
 | `aux-phase4b-xse-type-for-game` | `aux` | `classic-xse-core` | `from_game_id` | `xseTypeForGame` | `matched` |
 | `aux-phase4b-xse-type-name` | `aux` | `classic-xse-core` | `XseType` | `xseTypeName` | `matched` |
-| `aux-phase4c-crash-autoscan-pattern` | `aux` | `classic-file-io-core` | `CRASH_AUTOSCAN_PATTERN` | `CRASH_AUTOSCAN_PATTERN` | `matched` |
+| `aux-phase4c-crash-autoscan-pattern` | `aux` | `classic-scanlog-core` | `CRASH_AUTOSCAN_PATTERN` | `CRASH_AUTOSCAN_PATTERN` | `matched` |
 | `version-registry-phase4c-js-compatible-range` | `version_registry` | `classic-version-registry-core` | `CompatibleRange` | `JsCompatibleRange` | `matched` |
 | `aux-phase4c-js-dds-analyzer-alias` | `aux` | `classic-file-io-core` | `DDSAnalyzer` | `JsDDSAnalyzer` | `matched` |
 | `aux-phase4c-js-dds-analyzer-class` | `aux` | `classic-file-io-core` | `DDSAnalyzer` | `JsDdsAnalyzer` | `matched` |
@@ -539,7 +539,7 @@
 | `scanlog.crash_suspect_analyzer.crash_suspect_analyzer@rust` | `scanlog` | `classic-scanlog-core` | `crash_suspect_analyzer@rust` | `None` | `matched` |
 | `scanlog.formid_analyzer.validate_formids_batch@rust` | `scanlog` | `classic-scanlog-core` | `validate_formids_batch@rust` | `None` | `matched` |
 | `scanlog.version.version@rust` | `scanlog` | `classic-scanlog-core` | `version@rust` | `None` | `matched` |
-| `scanlog.patterns.CRASH_LOG_PATTERN` | `scanlog` | `classic-file-io-core` | `CRASH_LOG_PATTERN` | `CRASH_LOG_PATTERN` | `matched` |
+| `scanlog.patterns.CRASH_LOG_PATTERN` | `scanlog` | `classic-scanlog-core` | `CRASH_LOG_PATTERN` | `CRASH_LOG_PATTERN` | `matched` |
 | `scanlog.gpu_detector.JsGpuInfo` | `scanlog` | `classic-scanlog-core` | `GpuInfo` | `JsGpuInfo` | `matched` |
 | `scanlog.parser.JsLogErrorEntry` | `scanlog` | `classic-scangame-core` | `LogErrorEntry` | `JsLogErrorEntry` | `matched` |
 | `scanlog.parser.JsLogSegments` | `scanlog` | `classic-scanlog-core` | `LogParser` | `JsLogSegments` | `matched` |
@@ -642,7 +642,7 @@
 | `database.MIN_QUERY_CACHE_CAPACITY@rust` | `database` | `classic-database-core` | `MIN_QUERY_CACHE_CAPACITY@rust` | `None` | `matched` |
 | `database.PoolStatistics@rust` | `database` | `classic-database-core` | `PoolStatistics@rust` | `None` | `matched` |
 | `file_io.BackupType@rust` | `file_io` | `classic-file-io-core` | `BackupType@rust` | `None` | `matched` |
-| `file_io.CRASH_AUTOSCAN_PATTERN@rust` | `file_io` | `classic-file-io-core` | `CRASH_AUTOSCAN_PATTERN@rust` | `None` | `matched` |
+| `file_io.CRASH_AUTOSCAN_PATTERN@rust` | `file_io` | `classic-scanlog-core` | `CRASH_AUTOSCAN_PATTERN@rust` | `None` | `matched` |
 | `file_io.DDSAnalyzer@rust` | `file_io` | `classic-file-io-core` | `DDSAnalyzer@rust` | `None` | `matched` |
 | `file_io.DDSHeader@rust` | `file_io` | `classic-file-io-core` | `DDSHeader@rust` | `None` | `matched` |
 | `file_io.DDSIssue@rust` | `file_io` | `classic-file-io-core` | `DDSIssue@rust` | `None` | `matched` |
@@ -650,9 +650,9 @@
 | `file_io.FileIOError@rust` | `file_io` | `classic-file-io-core` | `FileIOError@rust` | `None` | `matched` |
 | `file_io.FileOperation@rust` | `file_io` | `classic-file-io-core` | `FileOperation@rust` | `None` | `matched` |
 | `file_io.GameTarget@rust` | `file_io` | `classic-file-io-core` | `GameTarget@rust` | `None` | `matched` |
-| `file_io.LogCollector@rust` | `file_io` | `classic-file-io-core` | `LogCollector@rust` | `None` | `matched` |
-| `file_io.RejectedInput@rust` | `file_io` | `classic-file-io-core` | `RejectedInput@rust` | `None` | `matched` |
-| `file_io.TargetedResolution@rust` | `file_io` | `classic-file-io-core` | `TargetedResolution@rust` | `None` | `matched` |
+| `file_io.LogCollector@rust` | `file_io` | `classic-scanlog-core` | `LogCollector@rust` | `None` | `matched` |
+| `file_io.RejectedInput@rust` | `file_io` | `classic-scanlog-core` | `RejectedInput@rust` | `None` | `matched` |
+| `file_io.TargetedResolution@rust` | `file_io` | `classic-scanlog-core` | `TargetedResolution@rust` | `None` | `matched` |
 | `file_io.backup@rust` | `file_io` | `classic-file-io-core` | `backup@rust` | `None` | `matched` |
 | `file_io.core@rust` | `file_io` | `classic-file-io-core` | `core@rust` | `None` | `matched` |
 | `file_io.dds@rust` | `file_io` | `classic-file-io-core` | `dds@rust` | `None` | `matched` |
@@ -661,8 +661,8 @@
 | `file_io.generate_local_yaml@rust` | `file_io` | `classic-file-io-core` | `generate_local_yaml@rust` | `None` | `matched` |
 | `file_io.generation@rust` | `file_io` | `classic-file-io-core` | `generation@rust` | `None` | `matched` |
 | `file_io.hash@rust` | `file_io` | `classic-file-io-core` | `hash@rust` | `None` | `matched` |
-| `file_io.log_collection@rust` | `file_io` | `classic-file-io-core` | `log_collection@rust` | `None` | `matched` |
-| `file_io.resolve_targeted_inputs@rust` | `file_io` | `classic-file-io-core` | `resolve_targeted_inputs@rust` | `None` | `matched` |
+| `file_io.log_collection@rust` | `file_io` | `classic-scanlog-core` | `log_collection@rust` | `None` | `matched` |
+| `file_io.resolve_targeted_inputs@rust` | `file_io` | `classic-scanlog-core` | `resolve_targeted_inputs@rust` | `None` | `matched` |
 | `file_io.similarity@rust` | `file_io` | `classic-file-io-core` | `similarity@rust` | `None` | `matched` |
 | `file_io.similarity_ratio@rust` | `file_io` | `classic-file-io-core` | `similarity_ratio@rust` | `None` | `matched` |
 | `message.ContractEvent@rust` | `message` | `classic-message-core` | `ContractEvent@rust` | `None` | `matched` |
@@ -891,7 +891,7 @@
 | `aux.JsSuspectErrorRule` | `aux` | `classic-config-core` | `SuspectErrorRule` | `JsSuspectErrorRule` | `matched` |
 | `aux.JsSuspectStackCountRule` | `aux` | `classic-config-core` | `SuspectStackCountRule` | `JsSuspectStackCountRule` | `matched` |
 | `aux.JsSuspectStackRule` | `aux` | `classic-config-core` | `SuspectStackRule` | `JsSuspectStackRule` | `matched` |
-| `scanlog.JsLogCollector` | `scanlog` | `classic-file-io-core` | `LogCollector` | `JsLogCollector` | `matched` |
+| `scanlog.JsLogCollector` | `scanlog` | `classic-scanlog-core` | `LogCollector` | `JsLogCollector` | `matched` |
 | `scanlog.JsLogProcessor` | `scanlog` | `classic-scangame-core` | `LogProcessor` | `JsLogProcessor` | `matched` |
 | `scanlog.JsLogger` | `scanlog` | `classic-message-core` | `Logger` | `JsLogger` | `matched` |
 | `scanlog.createLogger` | `scanlog` | `classic-message-core` | `Logger` | `createLogger` | `matched` |

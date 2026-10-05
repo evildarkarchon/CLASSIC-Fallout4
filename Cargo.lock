@@ -820,15 +820,12 @@ dependencies = [
  "anyhow",
  "chrono",
  "classic-durable-publication",
- "classic-operation-context",
  "classic-shared-core",
- "classic-xse-core",
  "criterion 0.6.0",
  "dashmap",
  "ddsfile",
  "encoding_rs",
  "futures",
- "glob",
  "log",
  "lru 0.18.0",
  "memmap2",
@@ -850,6 +847,7 @@ name = "classic-file-io-py"
 version = "9.1.0"
 dependencies = [
  "classic-file-io-core",
+ "classic-scanlog-core",
  "classic-shared-core",
  "classic-shared-py",
  "criterion 0.8.2",
@@ -1113,6 +1111,7 @@ dependencies = [
  "crossbeam",
  "dashmap",
  "futures",
+ "glob",
  "indexmap",
  "linked-hash-map",
  "log",
@@ -1135,6 +1134,7 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.21",
  "tokio",
+ "tracing",
  "xxhash-rust",
 ]
 

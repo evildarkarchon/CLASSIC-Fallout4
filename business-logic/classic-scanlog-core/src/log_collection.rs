@@ -1,18 +1,28 @@
-//! Log collection and organization utilities
+//! Crash Log collection and Targeted input resolution.
 //!
-//! This module provides functionality to collect crash logs from various locations
-//! (game documents folder, working directory, custom paths) and organize them into
-//! a central Crash Logs directory for processing.
+//! This module is the discovery/intake area of the Crash Log Scan Run owner.
+//! It collects crash logs from various locations (game documents folder,
+//! working directory, custom paths), organizes them into a central Crash Logs
+//! directory for Standard runs, and resolves explicit user-supplied paths for
+//! Targeted runs without moving anything.
+//!
+//! Collection policy moved here from `classic-file-io-core` (#254) so the
+//! file I/O owner no longer depends on XSE Folder resolution or operation
+//! context. The filesystem failures it reports keep their existing typed
+//! [`FileIOError`] values so binding projections stay unchanged.
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use tokio::fs;
 use tracing::debug;
 
+use classic_file_io_core::FileIOError;
 use classic_operation_context::cancellation_requested;
 use classic_xse_core::resolve_xse_folder_for_scan;
 
-use crate::error::{FileIOError, Result};
+/// Result type for Crash Log collection: failures keep the general file I/O
+/// owner's typed [`FileIOError`] so existing binding error mapping applies.
+pub type Result<T> = std::result::Result<T, FileIOError>;
 
 /// File pattern for standard crash log files
 pub const CRASH_LOG_PATTERN: &str = "crash-*.log";
@@ -31,7 +41,7 @@ pub const CRASH_AUTOSCAN_PATTERN: &str = "crash-*-AUTOSCAN.md";
 ///
 /// ```no_run
 /// use std::path::PathBuf;
-/// use classic_file_io_core::LogCollector;
+/// use classic_scanlog_core::LogCollector;
 ///
 /// # async fn example() -> anyhow::Result<()> {
 /// let collector = LogCollector::new(
@@ -541,7 +551,7 @@ impl LogCollector {
     ///
     /// ```no_run
     /// use std::path::PathBuf;
-    /// use classic_file_io_core::LogCollector;
+    /// use classic_scanlog_core::LogCollector;
     ///
     /// # async fn example() -> anyhow::Result<()> {
     /// let collector = LogCollector::new(
