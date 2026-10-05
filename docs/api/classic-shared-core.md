@@ -309,7 +309,9 @@ Source-observed limitation:
 
 ## `PerformanceMetrics`, `Timer`, and helpers
 
-`performance_core` is the single, constant-memory timing implementation. C++, Node, and both Python performance views (`classic_perf` through the `classic-perf-core` facade, and `classic_shared.RustPerformanceMonitor`) all record into it.
+`performance_core` is the single, constant-memory timing implementation. C++, Node, and both Python performance views (`classic_perf` through `classic-perf-py`, and `classic_shared.RustPerformanceMonitor`) all record into it.
+
+The former `classic-perf-core` crate, a seconds-view re-export facade over this module, was retired in issue #256. Its `classic_perf_core::*` import paths end with no forwarding shim; Rust callers import `classic_shared_core::performance_core` directly. The CXX, Node, and Python parity contracts name `classic-shared-core` as the owning Rust crate for every timing row; do not restore `classic-perf-core` as an owner during a baseline refresh.
 
 ### Default store
 
@@ -324,6 +326,42 @@ There is **one default observable store per linked library image**: `get_global_
 - Rejections happen before any mutation: no entry is created and no counter changes.
 
 `TimingError` variants carry a stable `code()` token: `timing_sample_not_finite`, `timing_sample_negative`, `timing_sample_out_of_range`, and `timing_counter_overflow`. Every binding uses `coded_message()` (`"<code>: <message>"`) as its error text ([error contract](error-contract.md#timing-sample-errors)).
+
+### Binding projections
+
+| Binding | Entry points | Units | Invalid input |
+|---|---|---|---|
+| [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge/src/perf.rs) (`classic::perf`) | `perf_record_timing -> Result<()>`, `perf_get_summary`, `perf_clear_metrics`, `perf_get_operation_count`, `perf_get_operation_average` | seconds | `rust::Error`, message begins with the stable token |
+| [`classic-node`](../../node-bindings/classic-node/src/shared.rs) | `recordTimingMetric`, `getMetricsSummary`, `clearAllMetrics` | milliseconds | `Error` with `code === "InvalidArg"`, message begins with the stable token |
+| [`classic-perf-py`](../../python-bindings/classic-perf-py/src/lib.rs) (`classic_perf`) | `record_timing`, `get_summary`, `clear_metrics`, `reset_metrics`, `Timer`, `start_timer`, `MetricsSummary` | seconds | `ValueError`, message begins with the stable token |
+
+Missing operations keep their existing projections: absent from summary maps, and `0` / `0.0` from the CXX numeric accessors.
+
+### Seconds-view example
+
+```rust
+use classic_shared_core::performance_core::{
+    clear_metrics, get_summary, record_timing, start_timer,
+};
+use std::thread;
+use std::time::Duration;
+
+clear_metrics();
+
+for _ in 0..3 {
+    let timer = start_timer("load_config");
+    thread::sleep(Duration::from_millis(10));
+    timer.finish().expect("a short sample cannot overflow");
+}
+
+let summary = get_summary();
+assert_eq!(summary["load_config"].count, 3);
+assert!(summary["load_config"].average >= 0.010);
+
+// Invalid samples are rejected before any state changes.
+assert!(record_timing("load_config", f64::NAN).is_err());
+assert_eq!(get_summary()["load_config"].count, 3);
+```
 
 ## `PerformanceMetrics`
 

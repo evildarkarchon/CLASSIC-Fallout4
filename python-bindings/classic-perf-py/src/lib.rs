@@ -1,7 +1,8 @@
 //! Python bindings for performance monitoring.
 //!
-//! This crate provides Python bindings for `classic-perf-core`, allowing
-//! Python code to use high-precision timing and metrics collection. The
+//! This crate provides Python bindings for the seconds view of
+//! `classic_shared_core::performance_core`, allowing Python code to use
+//! high-precision timing and metrics collection. The
 //! metrics live in this extension's shared-core default store; invalid
 //! samples raise `ValueError` and leave that store unchanged.
 //!
@@ -9,12 +10,13 @@
 //! calculation, while Python decorators and context managers are
 //! implemented in the Python wrapper layer.
 
+use classic_shared_core::performance_core;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use std::collections::HashMap;
 
 /// Convert a rejected timing record into `ValueError("<code>: <message>")`.
-fn timing_error_to_py(error: classic_perf_core::TimingError) -> PyErr {
+fn timing_error_to_py(error: performance_core::TimingError) -> PyErr {
     PyValueError::new_err(error.coded_message())
 }
 
@@ -59,8 +61,8 @@ impl MetricsSummary {
     }
 }
 
-impl From<&classic_perf_core::MetricsSummary> for MetricsSummary {
-    fn from(rust_summary: &classic_perf_core::MetricsSummary) -> Self {
+impl From<&performance_core::MetricsSummary> for MetricsSummary {
+    fn from(rust_summary: &performance_core::MetricsSummary) -> Self {
         Self {
             count: rust_summary.count,
             total: rust_summary.total,
@@ -95,7 +97,7 @@ impl From<&classic_perf_core::MetricsSummary> for MetricsSummary {
 ///     >>> perf.record_timing("my_operation", 0.123)
 #[pyfunction]
 fn record_timing(name: String, duration_secs: f64) -> PyResult<()> {
-    classic_perf_core::record_timing(&name, duration_secs).map_err(timing_error_to_py)
+    performance_core::record_timing(&name, duration_secs).map_err(timing_error_to_py)
 }
 
 /// Get summary statistics for all recorded metrics.
@@ -115,7 +117,7 @@ fn record_timing(name: String, duration_secs: f64) -> PyResult<()> {
 ///     0.15
 #[pyfunction]
 fn get_summary() -> HashMap<String, MetricsSummary> {
-    classic_perf_core::get_summary()
+    performance_core::get_summary()
         .iter()
         .map(|(k, v)| (k.clone(), MetricsSummary::from(v)))
         .collect()
@@ -134,7 +136,7 @@ fn get_summary() -> HashMap<String, MetricsSummary> {
 ///     {}
 #[pyfunction]
 fn clear_metrics() {
-    classic_perf_core::clear_metrics();
+    performance_core::clear_metrics();
 }
 
 /// Alias for clear_metrics() for API compatibility.
@@ -149,7 +151,7 @@ fn clear_metrics() {
 ///     {}
 #[pyfunction]
 fn reset_metrics() {
-    classic_perf_core::clear_metrics();
+    performance_core::clear_metrics();
 }
 
 /// RAII timer that automatically records timing on drop.
@@ -167,7 +169,7 @@ fn reset_metrics() {
 ///     >>> timer.finish()
 #[pyclass]
 pub struct Timer {
-    inner: Option<classic_perf_core::Timer>,
+    inner: Option<performance_core::Timer>,
 }
 
 #[pymethods]
@@ -179,7 +181,7 @@ impl Timer {
     #[new]
     fn new(name: String) -> Self {
         Self {
-            inner: Some(classic_perf_core::Timer::start(name)),
+            inner: Some(performance_core::Timer::start(name)),
         }
     }
 

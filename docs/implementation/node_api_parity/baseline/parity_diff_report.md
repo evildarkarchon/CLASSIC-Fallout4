@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-05T23:02:36.989277+00:00`
-- Tier-1 contract rows: **949**
-- Tier-1 matched: **932**
+- Generated: `2026-10-05T23:37:43.564808+00:00`
+- Tier-1 contract rows: **947**
+- Tier-1 matched: **930**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -699,8 +699,6 @@
 | `path.validate_path_exists@rust` | `path` | `classic-path-core` | `validate_path_exists@rust` | `None` | `matched` |
 | `path.validate_settings_path@rust` | `path` | `classic-path-core` | `validate_settings_path@rust` | `None` | `matched` |
 | `path.validate_settings_paths@rust` | `path` | `classic-path-core` | `validate_settings_paths@rust` | `None` | `matched` |
-| `perf.Timer@rust` | `perf` | `classic-perf-core` | `Timer@rust` | `None` | `matched` |
-| `perf.start_timer@rust` | `perf` | `classic-perf-core` | `start_timer@rust` | `None` | `matched` |
 | `registry.Keys@rust` | `registry` | `classic-registry-core` | `Keys@rust` | `None` | `matched` |
 | `registry.get_application_dir@rust` | `registry` | `classic-registry-core` | `get_application_dir@rust` | `None` | `matched` |
 | `registry.get_game_path_gui@rust` | `registry` | `classic-registry-core` | `get_game_path_gui@rust` | `None` | `matched` |

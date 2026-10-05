@@ -6420,22 +6420,6 @@
       "rustKind": "reexport"
     },
     {
-      "id": "perf.Timer@rust",
-      "tier": "tier1",
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
-      "rustSymbol": "Timer@rust",
-      "rustKind": "reexport"
-    },
-    {
-      "id": "perf.start_timer@rust",
-      "tier": "tier1",
-      "ownerModule": "perf",
-      "rustCrate": "classic-perf-core",
-      "rustSymbol": "start_timer@rust",
-      "rustKind": "reexport"
-    },
-    {
       "id": "registry.Keys@rust",
       "tier": "tier1",
       "ownerModule": "registry",

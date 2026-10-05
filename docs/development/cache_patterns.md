@@ -10,7 +10,7 @@ This document describes the different caching patterns used in the CLASSIC Rust 
 | String-Key Cache | `classic-shared-core` (`yaml`) | `String` | `Arc<Vec<Yaml>>` | Manual | Loaded YAML settings |
 | Dynamic Registry | `classic-registry-core` | `String` | `Arc<dyn Any>` | Manual | Application state |
 | Path Hash Cache | `classic-file-io-core` | `PathBuf` | `String` | Manual | File integrity |
-| Time Series Metrics | `classic-perf-core` | `String` | `Vec<f64>` | Manual | Performance data |
+| Time Series Metrics | `classic-shared-core` (`performance_core`) | `String` | Rolling `Duration` stats | Manual | Performance data |
 | Typed FormID Lookup Cache | `classic-database-core` | `CacheKey` | `CacheEntry` | TTL + capacity eviction | FormID DB lookups |
 
 ## Pattern Details
@@ -192,18 +192,20 @@ let stats = scope.cache_stats();
 
 ### 5. Time Series Metrics
 
-**Location**: `business-logic/classic-perf-core/src/metrics.rs`
+**Location**: `foundation/classic-shared-core/src/performance_core.rs` (the former `classic-perf-core` seconds facade was retired in #256)
 
 **Purpose**: Record and summarize performance timing data.
 
 **Key Features**:
-- Stores multiple samples per operation
+- Constant-memory rolling statistics per operation (whole-nanosecond count, sum, min, max) instead of a sample vector
 - Computes summary statistics (count, total, avg, min, max)
-- Thread-safe concurrent recording
+- Thread-safe concurrent recording; invalid or overflowing samples are rejected before any mutation
 
 **Data Structure**:
 ```rust
-static METRICS: Lazy<DashMap<String, Vec<f64>>> = Lazy::new(DashMap::new);
+static METRICS: LazyLock<Arc<PerformanceMetrics>> =
+    LazyLock::new(|| Arc::new(PerformanceMetrics::new()));
+// PerformanceMetrics { operations: DashMap<String, OperationState> }
 ```
 
 **When to Use**:

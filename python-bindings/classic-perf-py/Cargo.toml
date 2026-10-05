@@ -4,7 +4,7 @@ version = "9.1.0"
 edition = "2024"
 rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
-description = "Python bindings for classic-perf-core with decorator support"
+description = "Python bindings for classic-shared-core timing with decorator support"
 license = "MIT"
 
 [lib]
@@ -18,8 +18,8 @@ pyo3 = { workspace = true, features = ["extension-module"] }
 # Shared Python binding utilities
 classic-shared-py = { path = "../../foundation/classic-shared-py" }
 
-# Core performance monitoring business logic
-classic-perf-core = { path = "../../business-logic/classic-perf-core" }
+# Sole timing implementation (performance_core seconds view)
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
 [lints.rust]
 deprecated = "deny"

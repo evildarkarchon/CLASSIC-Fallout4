@@ -321,9 +321,9 @@ def test_rust_only_symbols_in_core_surface() -> None:
     # Keyed by (crate, symbol) rather than by symbol alone, because a shared
     # row's owning crate is not always the `-py` binding crate. "Enforce
     # verified Rust symbols in binding parity contracts" re-pointed several
-    # rows at the crate that actually declares the symbol: `PathHandler` and
-    # `StringProcessor` live in `classic-shared-core` and `record_timing` in
-    # `classic-perf-core`, while `classic-shared-py` exports the wrapper types
+    # rows at the crate that actually declares the symbol: `PathHandler`,
+    # `StringProcessor`, and `record_timing` live in `classic-shared-core`,
+    # while `classic-shared-py` exports the wrapper types
     # `PyPathHandler` and `PyStringProcessor` under different names. Honouring
     # each row's own `rustCrate` also verifies the crate attribution, which
     # matching on the bare symbol never did.

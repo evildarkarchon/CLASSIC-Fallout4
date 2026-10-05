@@ -122,7 +122,7 @@ def _cxx_source_paths(
         ),
         *(
             repo_root / "business-logic" / ("classic-" + name + "-core/src")
-            for name in ("registry", "web", "perf", "update", "xse")
+            for name in ("registry", "web", "update", "xse")
         ),
         repo_root
         / "classic-cli/tests/conformance/classic_cxx_vocabulary_conformance.h",

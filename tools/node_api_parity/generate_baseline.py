@@ -39,7 +39,6 @@ RUST_TARGET_CRATES: dict[str, str] = {
     "classic-path-core": "business-logic/classic-path-core/src/lib.rs",
     "classic-settings-core": "business-logic/classic-settings-core/src/lib.rs",
     "classic-message-core": "business-logic/classic-message-core/src/lib.rs",
-    "classic-perf-core": "business-logic/classic-perf-core/src/lib.rs",
     "classic-registry-core": "business-logic/classic-registry-core/src/lib.rs",
     "classic-shared-core": "foundation/classic-shared-core/src/lib.rs",
     # Phase 4 Plan 1 expansion — matches Phase 3's set.
@@ -76,7 +75,6 @@ RUST_OWNER_BY_CRATE: dict[str, str] = {
     "classic-path-core": "path",
     "classic-settings-core": "settings",
     "classic-message-core": "message",
-    "classic-perf-core": "perf",
     "classic-registry-core": "registry",
     "classic-shared-core": "shared",
     # Phase 4 expansion — each new crate gets its own distinct owner label.

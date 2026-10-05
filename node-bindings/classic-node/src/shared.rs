@@ -1,13 +1,13 @@
-//! Shared utilities bindings (classic-shared-core + classic-perf-core + classic-registry-core)
+//! Shared utilities bindings (classic-shared-core + classic-registry-core)
 //!
 //! Provides path utilities, string interning, performance metrics, registry access,
 //! and runtime diagnostics to JavaScript/TypeScript.
 
 use crate::logging_contract;
-use classic_perf_core::{clear_metrics, get_summary, record_timing_millis};
 use classic_registry_core::{clear_all, register, unregister};
 use classic_shared_core::GameId;
 use classic_shared_core::path_core::PathHandler;
+use classic_shared_core::performance_core::{clear_metrics, get_summary, record_timing_millis};
 use classic_shared_core::strings_core::StringProcessor;
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
@@ -141,7 +141,7 @@ pub fn normalize_string(value: String) -> String {
 }
 
 // ============================================================================
-// 3. Performance Metrics (from classic-perf-core)
+// 3. Performance Metrics (from classic-shared-core performance_core)
 // ============================================================================
 
 /// Timing statistics for a single operation.

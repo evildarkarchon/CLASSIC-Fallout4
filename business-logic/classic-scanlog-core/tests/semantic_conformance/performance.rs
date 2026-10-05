@@ -1,6 +1,6 @@
 //! Observe explicit performance samples and measured timer lifecycle invariants.
 use super::{RunnerResult, invalid, text};
-use classic_perf_core::{clear_metrics, get_summary, record_timing};
+use classic_shared_core::performance_core::{clear_metrics, get_summary, record_timing};
 use serde_json::{Value, json};
 
 /// Convert exact authored durations without rounding away native differences.
@@ -31,9 +31,9 @@ pub(super) fn execute_timers(fixture: &Value) -> RunnerResult<Value> {
     let mut timers = Vec::new();
     for constructor in ["direct", "factory"] {
         let timer = if constructor == "direct" {
-            classic_perf_core::Timer::start(constructor)
+            classic_shared_core::performance_core::Timer::start(constructor)
         } else {
-            classic_perf_core::start_timer(constructor)
+            classic_shared_core::performance_core::start_timer(constructor)
         };
         let first = timer.elapsed().as_secs_f64();
         // Assert progress, not a scheduler-specific elapsed duration.

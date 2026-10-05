@@ -1,13 +1,12 @@
 """Type stubs for classic_perf.
 
-Python bindings for classic-perf-core, providing high-precision timing, metrics collection,
-and performance analysis tools. The core functionality is implemented in Rust for maximum
-performance.
+Python bindings for the seconds view of classic-shared-core's performance_core, providing
+high-precision timing, metrics collection, and performance analysis tools. The core
+functionality is implemented in Rust for maximum performance.
 
 Architecture:
     - classic-shared-core: Business logic (rolling Duration statistics, the
-      extension's default metrics store, sample validation)
-    - classic-perf-core: Seconds-based facade over that shared-core store
+      extension's default metrics store, sample validation, seconds view)
     - classic-perf-py: Python bindings (this module - PyO3 adapters)
 
 Features:

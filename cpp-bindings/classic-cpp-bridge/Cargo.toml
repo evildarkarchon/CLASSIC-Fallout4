@@ -42,7 +42,6 @@ classic-vocabulary = { path = "../../foundation/classic-vocabulary" }
 
 # Business Logic crates
 classic-registry-core = { path = "../../business-logic/classic-registry-core" }
-classic-perf-core = { path = "../../business-logic/classic-perf-core" }
 classic-message-core = { path = "../../business-logic/classic-message-core" }
 classic-settings-core = { path = "../../business-logic/classic-settings-core" }
 classic-user-settings-core = { path = "../../business-logic/classic-user-settings-core" }
