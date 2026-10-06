@@ -35,13 +35,20 @@ pub fn locate_installation_root(
     executable_dir: Option<&Path>,
     working_dir: Option<&Path>,
 ) -> Option<PathBuf> {
-    let executable_parent = executable_dir.and_then(Path::parent);
+    // An empty path (an empty input, or the parent of a one-component relative path such as
+    // `bin`) would silently mean "relative to the working directory" once joined, so it is
+    // dropped before anything is derived from it. Filtering only the finished candidates is not
+    // enough: `"".join("install")` is the nonempty relative path `install`.
+    let executable_dir = executable_dir.and_then(non_empty);
+    let working_dir = working_dir.and_then(non_empty);
+    let executable_parent = executable_dir.and_then(Path::parent).and_then(non_empty);
     let candidates = [
         executable_dir.map(Path::to_path_buf),
         working_dir.map(Path::to_path_buf),
         executable_parent.map(Path::to_path_buf),
         executable_parent
             .and_then(Path::parent)
+            .and_then(non_empty)
             .map(Path::to_path_buf),
         executable_parent.map(|parent| parent.join("install")),
         working_dir.map(|directory| directory.join("install")),
@@ -50,10 +57,12 @@ pub fn locate_installation_root(
     candidates
         .into_iter()
         .flatten()
-        // An empty path (an empty input, or the parent of a one-component relative path) would
-        // silently mean "relative to the working directory" once joined, so it is no candidate.
-        .filter(|candidate| !candidate.as_os_str().is_empty())
         .find(|candidate| candidate.join(CLASSIC_DATA_DIR).is_dir())
+}
+
+/// Returns `path` unless it is empty, which is no usable base for a candidate.
+fn non_empty(path: &Path) -> Option<&Path> {
+    (!path.as_os_str().is_empty()).then_some(path)
 }
 
 #[cfg(test)]

@@ -1327,18 +1327,23 @@ fn setup_context_to_core(value: &PyScanRunSetupContext) -> CrashLogScanSetupCont
     }
 }
 
-/// Validates required path text at the adapter boundary.
+/// Validates required path text at the adapter boundary and builds the path from it trimmed.
+///
+/// Trimming matches the CXX and Node adapters, so the same text names the same folder in every
+/// binding. Raises `ValueError` when the text is blank.
 pub(crate) fn required_path(value: String, label: &str) -> PyResult<PathBuf> {
-    if value.trim().is_empty() {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
         return Err(PyValueError::new_err(format!("{label} must not be blank")));
     }
-    Ok(PathBuf::from(value))
+    Ok(PathBuf::from(trimmed))
 }
 
-/// Converts optional path text while treating blank binding sentinels as absent.
+/// Converts optional path text, trimmed like `required_path`, treating blank sentinels as absent.
 fn optional_path(value: Option<&str>) -> Option<PathBuf> {
     value
-        .filter(|path| !path.trim().is_empty())
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
         .map(PathBuf::from)
 }
 

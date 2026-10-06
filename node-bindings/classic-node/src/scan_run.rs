@@ -1449,21 +1449,27 @@ fn setup_context_to_core(value: JsScanRunSetupContext) -> CrashLogScanSetupConte
     }
 }
 
-/// Rejects blank path text, which cannot name a file or folder.
+/// Rejects blank path text, which cannot name a file or folder, and builds the path trimmed.
+///
+/// Trimming matches the CXX and Python adapters, so the same text names the same folder in every
+/// binding. Fails with `InvalidArg` when the text is blank.
 pub(crate) fn required_path(value: String, label: &str) -> napi::Result<PathBuf> {
-    if value.trim().is_empty() {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
         return Err(napi::Error::new(
             Status::InvalidArg,
             format!("{label} must not be blank"),
         ));
     }
-    Ok(PathBuf::from(value))
+    Ok(PathBuf::from(trimmed))
 }
 
-/// Converts optional path text while treating blank binding sentinels as absent.
+/// Converts optional path text, trimmed like `required_path`, treating blank sentinels as absent.
 fn optional_path(value: Option<String>) -> Option<PathBuf> {
     value
-        .filter(|path| !path.trim().is_empty())
+        .as_deref()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
         .map(PathBuf::from)
 }
 

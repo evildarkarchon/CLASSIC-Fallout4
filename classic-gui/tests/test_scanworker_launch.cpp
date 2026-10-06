@@ -19,7 +19,7 @@ class ScanWorkerLaunchTests : public QObject {
 private slots:
     /// Verifies a Standard scan finds Crash Logs under the Installation Root, not the executable folder.
     void standard_scan_discovers_crash_logs_under_the_installation_root();
-    /// Verifies FCX Mode with missing saved folders runs and carries a Crash Log Scan Setup Result.
+    /// Verifies FCX Mode with unusable saved folders runs and carries a Crash Log Scan Setup Result.
     void fcx_scan_with_missing_setup_folders_runs_and_reports_the_setup_result();
     /// Verifies launch diagnostics are published as a warning while the run goes ahead.
     void launch_diagnostics_are_published_as_a_warning();
@@ -92,14 +92,22 @@ void ScanWorkerLaunchTests::fcx_scan_with_missing_setup_folders_runs_and_reports
     QTemporaryDir root;
     QVERIFY(root.isValid());
     QVERIFY(stageInstallation(root));
-    // Both saved folders are absent. The GUI used to refuse to start here; now the scan runs and
-    // Rust's FCX setup validation reports on them in the run's Crash Log Scan Setup Result.
+    // Neither saved folder is a usable setup: the documents folder is absent and the game folder
+    // holds no game. The GUI used to refuse to start here; now the scan runs and Rust's FCX setup
+    // validation reports on them in the run's Crash Log Scan Setup Result.
+    //
+    // The game folder exists on purpose. When setup validation finds no game on the host (a CI
+    // runner), Rust scans the saved game folder for configuration issues, and a folder that does
+    // not exist ends the run as a typed Intake failure with no setup result at all — the contract
+    // pinned by `fcx_configuration_scan_failure_is_a_typed_intake_error`.
+    const QString emptyGameFolder = root.filePath(QStringLiteral("Not A Game Install"));
+    QVERIFY(QDir().mkpath(emptyGameFolder));
     const QByteArray settings = QByteArray("schema_version: \"1.0\"\n"
                                            "CLASSIC_Settings:\n"
                                            "  Managed Game: Fallout 4\n"
                                            "  FCX Mode: true\n"
                                            "  Game Folder Path: '") +
-                                root.filePath(QStringLiteral("Missing Game")).toUtf8() + QByteArray("'\n") +
+                                emptyGameFolder.toUtf8() + QByteArray("'\n") +
                                 documentsFolderLine(root.filePath(QStringLiteral("Missing Documents")));
     QVERIFY(writeSettings(root, settings));
 

@@ -1916,6 +1916,23 @@ fn fcx_configuration_scan_failure_is_a_typed_intake_error() {
 }
 
 #[test]
+fn fcx_configuration_scan_of_an_existing_fallback_root_without_config_files_finds_nothing() {
+    // The counterpart to the missing-root failure above: a configured folder that exists but is
+    // no game install leaves setup validation to report it, so the run keeps its setup result.
+    // Frontend tests rely on this to reach `SetupFailed` on hosts with no game installed.
+    let temp = tempdir().expect("tempdir should succeed");
+
+    let issues = super::super::detect_setup_configuration_issues(
+        None,
+        Some(temp.path()),
+        GameId::Fallout4.as_str(),
+    )
+    .expect("an existing fallback root should scan cleanly");
+
+    assert!(issues.is_empty());
+}
+
+#[test]
 fn fcx_configuration_scan_uses_the_game_root_resolved_by_setup() {
     let configured_root = PathBuf::from("C:/stale-configured-root");
     let resolved_root = PathBuf::from("D:/resolved-game-root");

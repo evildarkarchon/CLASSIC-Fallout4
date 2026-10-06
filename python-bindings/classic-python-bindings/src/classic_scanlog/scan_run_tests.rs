@@ -29,7 +29,7 @@ use super::{
     installed_yaml_data_provenance_to_string, installed_yaml_data_role_to_string,
     local_ignore_recovery_decision_to_py, local_ignore_state_to_string,
     log_failure_stage_to_string, log_result_to_py, phase_to_string, recovery_prompt_to_py,
-    reset_failure_stage_to_string, run_result_to_py, run_status_to_string,
+    required_path, reset_failure_stage_to_string, run_result_to_py, run_status_to_string,
     scan_run_infrastructure_error_stage_label, scan_run_installed_yaml_data_diagnostic_kind_label,
     scan_run_local_ignore_reset_failure_stage_label, scan_run_local_ignore_yaml_data_state_label,
     scan_run_log_disposition_label, scan_run_log_failure_stage_label, scan_run_resume_error_to_py,
@@ -94,6 +94,33 @@ fn configuration_conversion_treats_blank_destination_as_absent() {
     assert_eq!(converted.installation_root, PathBuf::from("C:/CLASSIC"));
     assert_eq!(converted.game, classic_shared_core::GameId::Fallout4);
     assert!(converted.scan_facts.unsolved_logs_destination.is_none());
+}
+
+#[test]
+fn path_conversion_trims_surrounding_whitespace_like_the_other_bindings() {
+    // The CXX bridge builds paths from trimmed text; identical input must name the same folder here.
+    assert_eq!(
+        required_path(" \tC:/CLASSIC  ".to_string(), "installation_root")
+            .expect("padded path text should convert"),
+        PathBuf::from("C:/CLASSIC")
+    );
+    let configuration = PyScanRunConfiguration {
+        installation_root: "  C:/CLASSIC ".to_string(),
+        game: classic_shared_core::GameId::Fallout4,
+        game_version: "auto".to_string(),
+        show_formid_values: false,
+        simplify_logs: false,
+        formid_database_paths: Vec::new(),
+        unsolved_logs_destination: Some(" D:/Unsolved Logs\t".to_string()),
+        max_concurrent: None,
+    };
+
+    let converted = configuration_to_core(&configuration).expect("configuration should convert");
+    assert_eq!(converted.installation_root, PathBuf::from("C:/CLASSIC"));
+    assert_eq!(
+        converted.scan_facts.unsolved_logs_destination,
+        Some(PathBuf::from("D:/Unsolved Logs"))
+    );
 }
 
 #[test]

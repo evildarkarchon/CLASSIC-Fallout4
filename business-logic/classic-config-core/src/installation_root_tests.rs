@@ -188,3 +188,17 @@ fn an_empty_input_is_no_candidate_rather_than_the_working_directory() {
         None
     );
 }
+
+#[test]
+#[serial_test::serial]
+fn an_empty_parent_or_input_derives_no_relative_install_candidate() {
+    // A one-component relative executable folder such as `bin` has an empty parent, and joining
+    // `install` onto that (or onto an empty working directory) would yield the relative path
+    // `install`, which resolves against the process working directory. Plant exactly that folder.
+    let layout = Layout::new();
+    layout.add_classic_data(&layout.working_dir.join("install"));
+    let _cwd = WorkingDirectory::enter(&layout.working_dir);
+
+    assert_eq!(locate_installation_root(Some(Path::new("bin")), None), None);
+    assert_eq!(locate_installation_root(None, Some(Path::new(""))), None);
+}

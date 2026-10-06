@@ -73,6 +73,31 @@ fn request_conversion_treats_blank_optional_paths_as_absent() {
 }
 
 #[test]
+fn path_conversion_trims_surrounding_whitespace_like_the_other_bindings() {
+    // The CXX bridge builds paths from trimmed text; identical input must name the same folder here.
+    assert_eq!(
+        required_path(" \tC:/CLASSIC  ".to_string(), "installationRoot")
+            .expect("padded path text should convert"),
+        PathBuf::from("C:/CLASSIC")
+    );
+    let source = standard_source_to_core(JsScanRunStandardSource {
+        base_directory: "  C:/CLASSIC ".to_string(),
+        custom_scan_directory: Some(" D:/One-off Logs\t".to_string()),
+        configured_documents_root: Some("\tE:/Documents/My Games/Fallout4 ".to_string()),
+    })
+    .expect("standard source should convert");
+    assert_eq!(source.base_directory, PathBuf::from("C:/CLASSIC"));
+    assert_eq!(
+        source.custom_scan_directory,
+        Some(PathBuf::from("D:/One-off Logs"))
+    );
+    assert_eq!(
+        source.configured_documents_root,
+        Some(PathBuf::from("E:/Documents/My Games/Fallout4"))
+    );
+}
+
+#[test]
 fn installed_yaml_data_run_enums_cover_recovery_and_every_diagnostic() {
     assert!(matches!(
         local_ignore_run_state_to_js(contract::LocalIgnoreRunState::Existing),

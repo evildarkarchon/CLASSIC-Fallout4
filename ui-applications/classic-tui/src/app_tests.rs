@@ -357,9 +357,37 @@ fn pump_until_scan_finished(app: &mut App) {
 /// `CLASSIC_Settings` table without the canonical schema version.
 const SETTINGS_NEEDING_MIGRATION: &str = "CLASSIC_Settings:\n  Managed Game: Fallout 4\n  Game Version: Original\n  Max Concurrent Scans: 2\n";
 
+/// Makes a Standard scan of `root` see exactly one staged Crash Log and nothing from the host.
+///
+/// Stages the shared valid Crash Log in `<root>/Crash Logs`, then appends an empty, absolute
+/// `Documents Folder Path` to the root's flat `CLASSIC_Settings` document. Without that saved
+/// folder, Standard discovery finds this machine's real XSE folder through platform discovery and
+/// copies its Crash Logs into the run, so the outcome would depend on whether the host has any.
+/// Only valid for documents whose last top-level mapping is `CLASSIC_Settings`.
+fn stage_one_crash_log_and_isolate_from_host_logs(root: &std::path::Path) {
+    let crash_logs = root.join("Crash Logs");
+    std::fs::create_dir_all(&crash_logs).unwrap();
+    std::fs::copy(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/fixtures/crash_log_scan_run/valid-crash.log"),
+        crash_logs.join("crash-tui-launch.log"),
+    )
+    .unwrap();
+    let documents = root.join("Documents");
+    std::fs::create_dir_all(&documents).unwrap();
+    let settings_path = root.join("CLASSIC Settings.yaml");
+    let mut settings = std::fs::read_to_string(&settings_path).unwrap();
+    settings.push_str(&format!(
+        "  Documents Folder Path: '{}'\n",
+        documents.to_string_lossy()
+    ));
+    std::fs::write(&settings_path, settings).unwrap();
+}
+
 #[test]
 fn standard_scan_runs_from_settings_needing_migration_and_shows_their_diagnostics() {
     let (root, mut app) = app_with_installation(SETTINGS_NEEDING_MIGRATION);
+    stage_one_crash_log_and_isolate_from_host_logs(root.path());
     let settings_path = root.path().join("CLASSIC Settings.yaml");
     let before = std::fs::read(&settings_path).unwrap();
     let opened = classic_user_settings_core::UserSettings::open(root.path());
