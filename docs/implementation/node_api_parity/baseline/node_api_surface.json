@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-06T11:09:07.714951+00:00",
+  "generated_at_utc": "2026-10-06T11:28:41.889771+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -3462,6 +3462,15 @@
       "arity": 1
     },
     {
+      "export": "locateInstallationRoot",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function locateInstallationRoot(executableDir?: string | undefined | null, workingDir?: string | undefined | null): string | null",
+      "arity": 2
+    },
+    {
       "export": "matchVersion",
       "kind": "function",
       "owner_module": "version_registry",
@@ -3748,6 +3757,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function resetSettingsCacheStats(): void",
       "arity": 0
+    },
+    {
+      "export": "resolveXseLogForScan",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function resolveXseLogForScan(yamlDirData: string, game: string, selectedGameVersion: string, configuredDocsRoot?: string | undefined | null): string | null",
+      "arity": 4
     },
     {
       "export": "reverseUserSettingsMigrationPlan",

@@ -68,8 +68,12 @@ pub use wrye::{WryeBashParser, WryeError, WryeIssue, WryeSeverity};
 pub use xse::{AddressLibInfo, GameVersion, ValidationResult, XseChecker, XseError};
 pub use xse_folder::{
     resolve_xse_folder_for_scan, resolve_xse_folder_for_scan_in_scopes,
-    resolve_xse_folder_for_scan_in_version_registry_scope,
+    resolve_xse_folder_for_scan_in_version_registry_scope, resolve_xse_log_for_scan,
+    resolve_xse_log_for_scan_in_scopes,
 };
+// The XSE log resolvers' operational-failure error, re-exported so composing
+// callers need not depend on classic-xse-core just to name it.
+pub use classic_xse_core::XseLogError;
 
 /// Version of the classic-scangame-core crate
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

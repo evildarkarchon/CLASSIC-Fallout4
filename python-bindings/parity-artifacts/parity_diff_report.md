@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-06T11:05:29.428990+00:00`
-- Tier-1 contract rows: **1226**
-- Tier-1 matched: **1224**
+- Generated: `2026-10-06T11:28:44.240407+00:00`
+- Tier-1 contract rows: **1228**
+- Tier-1 matched: **1226**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -242,6 +242,7 @@
 | `config.yamldata.SuspectStackRule@rust` | `config` | `classic-config-core` | `SuspectStackRule` | `classic_config.YamlData` | `matched` |
 | `config.yamldata.YamlData.__repr__` | `config` | `classic-config-core` | `YamlDataCore` | `classic_config.YamlData.__repr__` | `matched` |
 | `config.game_local.persist_game_local_paths` | `config` | `classic-config-core` | `persist_game_local_paths` | `classic_config.persist_game_local_paths` | `matched` |
+| `config.installation_root.locate_installation_root` | `config` | `classic-config-core` | `locate_installation_root` | `classic_config.locate_installation_root` | `matched` |
 | `config.installed_yaml_data.installed_yaml_data_provenance_label` | `config` | `classic-config-core` | `InstalledYamlDataProvenance` | `classic_config.installed_yaml_data_provenance_label` | `matched` |
 | `config.installed_yaml_data.installed_yaml_data_diagnostic_kind_label` | `config` | `classic-config-core` | `InstalledYamlDataDiagnosticKind` | `classic_config.installed_yaml_data_diagnostic_kind_label` | `matched` |
 | `config.installed_yaml_data.local_ignore_yaml_data_state_label` | `config` | `classic-config-core` | `LocalIgnoreYamlDataState` | `classic_config.local_ignore_yaml_data_state_label` | `matched` |
@@ -1180,6 +1181,7 @@
 | `xse.lib.dll_prefix@rust` | `xse` | `classic-xse-core` | `dll_prefix` | `classic_xse.XseInfo` | `matched` |
 | `xse.lib.from_game_id@rust` | `xse` | `classic-xse-core` | `from_game_id` | `classic_xse.XseInfo` | `matched` |
 | `xse.lib.get_xse_info` | `xse` | `classic-xse-core` | `get_xse_info` | `classic_xse.get_xse_info` | `matched` |
+| `xse.lib.resolve_xse_log_for_scan` | `xse` | `classic-scangame-core` | `resolve_xse_log_for_scan` | `classic_xse.resolve_xse_log_for_scan` | `matched` |
 | `xse.lib.is_xse_installed` | `xse` | `classic-xse-core` | `is_xse_installed` | `classic_xse.is_xse_installed` | `matched` |
 | `xse.lib.loader_name@rust` | `xse` | `classic-xse-core` | `loader_name` | `classic_xse.XseInfo` | `matched` |
 | `xse.lib.loader_path@rust` | `xse` | `classic-xse-core` | `loader_path` | `classic_xse.XseInfo` | `matched` |

@@ -535,7 +535,9 @@ fn execute(plan: &Value, scenario: &Value) -> RunnerResult<Value> {
             return settings_load::execute(&fixture);
         }
         Some("xse-folder") => return xse_folder::execute(&text(&scenario["action"])?, &fixture),
-        Some("installation-paths") => return installation_paths::execute(&fixture),
+        Some("installation-paths") => {
+            return installation_paths::execute(&text(&scenario["action"])?, &fixture);
+        }
         Some("xse-operations") => return xse_operations::execute(&fixture),
         Some("game-identity" | "runtime-access") => {
             return shared_identity::execute(&text(&plan["familyId"])?, &fixture);

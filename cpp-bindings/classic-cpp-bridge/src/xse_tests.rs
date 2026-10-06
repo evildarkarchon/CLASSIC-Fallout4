@@ -142,3 +142,58 @@ fn test_resolve_xse_folder_for_scan_returns_empty_for_missing_inputs() {
         ""
     );
 }
+
+#[test]
+fn test_resolve_xse_log_for_scan_bridges_the_located_vr_log() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let data = temp.path().join("CLASSIC Data");
+    std::fs::create_dir_all(&data).expect("create data dir");
+    let xse_folder = temp.path().join("docs").join("F4SE");
+    std::fs::create_dir_all(&xse_folder).expect("create XSE folder");
+    std::fs::write(xse_folder.join("f4se.log"), b"").expect("write log");
+    std::fs::write(xse_folder.join("f4sevr.log"), b"").expect("write VR log");
+
+    let located = resolve_xse_log_for_scan(
+        &data.to_string_lossy(),
+        "Fallout4VR",
+        "auto",
+        &temp.path().join("docs").to_string_lossy(),
+    )
+    .expect("probe succeeds");
+
+    assert_eq!(located, xse_folder.join("f4sevr.log").to_string_lossy());
+}
+
+#[test]
+fn test_resolve_xse_log_for_scan_returns_empty_when_the_log_is_missing() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let data = temp.path().join("CLASSIC Data");
+    std::fs::create_dir_all(&data).expect("create data dir");
+
+    let located = resolve_xse_log_for_scan(
+        &data.to_string_lossy(),
+        "Fallout4",
+        "Original",
+        &temp.path().join("docs").to_string_lossy(),
+    )
+    .expect("absence is not a failure");
+
+    assert_eq!(located, "");
+}
+
+#[test]
+fn test_resolve_xse_log_for_scan_raises_operational_failures() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let data = temp.path().join("CLASSIC Data");
+    std::fs::create_dir_all(&data).expect("create data dir");
+    std::fs::write(
+        data.join("CLASSIC Fallout4 Local.yaml"),
+        "Game_Info:\n  Docs_Folder_XSE: \"bad\\0xse\"\n",
+    )
+    .expect("write Local.yaml");
+
+    let error = resolve_xse_log_for_scan(&data.to_string_lossy(), "Fallout4", "Original", "")
+        .expect_err("an uninspectable log is an operational failure");
+
+    assert!(error.starts_with("cannot inspect XSE log "), "{error}");
+}

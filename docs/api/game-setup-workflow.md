@@ -223,7 +223,7 @@ saved settings / frontend inputs
 
 Current binding surfaces should stay thin:
 
-- C++ bridge: `classic::scangame::run_game_setup_intake_from_user_settings(classic_root, xse_log_path)` is the typed GUI path. The bridge does not expose positional Game Setup compatibility entry points.
+- C++ bridge: `classic::scangame::run_game_setup_intake_from_user_settings(classic_root, xse_log_path)` is the typed GUI path. The bridge does not expose positional Game Setup compatibility entry points. The GUI gets `xse_log_path` from `classic::xse::resolve_xse_log_for_scan` (Rust owns the XSE log location, #283); an empty result means no hint.
 - Node binding: `runGameSetupIntakeFromUserSettings(classicRoot, xseLogPath?)` is the cohesive read-only path and delegates `GameSetupIntake::from_user_settings`; `runGameSetupIntake(...)` remains the explicit-facts entry point, while `normalizeGameSetupVersionSelection(...)` and `gameSetupNeedsPathDetection(...)` remain narrow helpers. Both intake paths return proposals without persisting them.
 - Python binding: `run_game_setup_intake_from_user_settings(classic_root, xse_log_path=None)` is the cohesive read-only path; `GameSetupIntake` and `run_game_setup_intake(...)` remain the explicit-facts path. Both return typed path proposals without persisting them.
 

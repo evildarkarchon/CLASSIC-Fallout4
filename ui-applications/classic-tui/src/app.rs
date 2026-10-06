@@ -35,7 +35,9 @@ use crate::scan_run::{
     describe_local_ignore_recovery, format_error, format_event, format_result, format_resume_error,
     join_presented,
 };
-use crate::state::{classic_root, legacy_tui_state_file_path};
+use crate::state::{
+    InstallationRootNotFound, legacy_tui_state_file_path, locate_installation_root,
+};
 use crate::tabs::articles_tab::{ARTICLE_LINKS, ArticlesClickAreas};
 use crate::tabs::backup_tab::BackupClickAreas;
 use crate::tabs::main_tab::{MainClickAreas, MainFocus};
@@ -395,16 +397,21 @@ pub struct App {
     pub clipboard_writer: ClipboardWriter,
 }
 
-impl Default for App {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl App {
     /// Opens the shared canonical User Settings store for the normal TUI process.
-    pub fn new() -> Self {
-        Self::new_with_settings_root(classic_root(), legacy_tui_state_file_path())
+    ///
+    /// The store lives under the Installation Root located from this process's executable folder
+    /// and working directory. `App` deliberately has no `Default`: without an Installation Root
+    /// there is no installation to open, and the caller must show the returned error instead.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`InstallationRootNotFound`] when no candidate folder holds `CLASSIC Data`.
+    pub fn new() -> Result<Self, InstallationRootNotFound> {
+        Ok(Self::new_with_settings_root(
+            locate_installation_root()?,
+            legacy_tui_state_file_path(),
+        ))
     }
 
     /// Opens the TUI against an explicit CLASSIC root and optional legacy import source.

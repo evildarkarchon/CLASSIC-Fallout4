@@ -1930,6 +1930,17 @@
       "nodeArity": 3
     },
     {
+      "id": "config.installation_root.locateInstallationRoot",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "locate_installation_root",
+      "rustKind": "function",
+      "nodeExport": "locateInstallationRoot",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
       "id": "config.installed_yaml_data.installedYamlDataProvenanceLabel",
       "tier": "tier1",
       "ownerModule": "config",
@@ -3928,6 +3939,16 @@
       "nodeKind": "function",
       "nodeArity": 2,
       "rustCrate": "classic-xse-core"
+    },
+    {
+      "id": "aux-xse-resolve-log-for-scan",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "resolve_xse_log_for_scan",
+      "nodeExport": "resolveXseLogForScan",
+      "nodeKind": "function",
+      "nodeArity": 4,
+      "rustCrate": "classic-scangame-core"
     },
     {
       "id": "aux-phase4b-has-update",

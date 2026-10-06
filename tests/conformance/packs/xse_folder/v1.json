@@ -17,7 +17,13 @@
     "derive-local-docs": "derive-local-docs.json",
     "derive-configured-docs": "derive-configured-docs.json",
     "derive-vr-docs": "derive-vr-docs.json",
-    "derive-absent": "derive-absent.json"
+    "derive-absent": "derive-absent.json",
+    "log-fallout4": "log-fallout4.json",
+    "log-vr": "log-vr.json",
+    "log-explicit": "log-explicit.json",
+    "log-precedence-missing": "log-precedence-missing.json",
+    "log-missing": "log-missing.json",
+    "log-uninspectable": "log-uninspectable.json"
   },
   "capabilities": [
     {
@@ -36,6 +42,17 @@
       "rustCrate": "classic-scangame-core",
       "rustSymbols": [
         "resolve_xse_folder_for_scan"
+      ],
+      "observationFamilies": [
+        "values"
+      ]
+    },
+    {
+      "id": "xse-folder.log",
+      "operationScoped": true,
+      "rustCrate": "classic-scangame-core",
+      "rustSymbols": [
+        "resolve_xse_log_for_scan"
       ],
       "observationFamilies": [
         "values"
@@ -345,6 +362,138 @@
             "content": "Version_Registry:\n  versions:\n    - id: FO4_OG\n      game: Fallout4\n      version: \"1.10.163\"\n      short_name: Fixture Standard\n      display_name: Fixture Standard Edition\n      docs_name: FixtureDocs\n      steam_id: 12345\n      is_vr: false\n      priority: 20\n      exe_hash: fixture-exe-hash\n      address_library:\n        filename: fixture-address.bin\n        format: bin\n        nexus_url: https://example.invalid/address\n      xse:\n        acronym: F4SE\n        full_name: Fixture Extender\n        compatible_version: \"0.6.23\"\n        loader: fixture_loader.exe\n        file_count: 1\n        script_hashes:\n          Fixture.pex: fixture-script-hash\n      crashgen_versions:\n        - version: \"1.2.3\"\n          name: Fixture Crashgen\n          acronym: FCG\n          dll_file: fixture.dll\n          description: Fixture diagnostics\n          download_url: https://example.invalid/crashgen\n    - id: FO4_VR\n      game: Fallout4\n      version: \"1.2.72.0\"\n      short_name: Fixture VR\n      display_name: Fixture VR Edition\n      docs_name: FixtureVRDocs\n      steam_id: 54321\n      is_vr: true\n      priority: 10\n      xse:\n        acronym: F4SEVR\n        full_name: Fixture VR Extender\n        compatible_version: \"0.6.23\"\n        loader: f4sevr_loader.exe\n        file_count: 0\n        script_hashes: {}\n  unknown_version_handling:\n    strategy: nearest_match\n    log_level: warning\n    defaults:\n      Fallout4: FO4_OG\n"
           }
         ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "log-fallout4",
+      "action": "xse-folder.log",
+      "capabilityIds": [
+        "xse-folder.log"
+      ],
+      "fixtureRefs": [
+        "log-fallout4"
+      ],
+      "input": {
+        "fixtureRef": "log-fallout4"
+      },
+      "expected": {
+        "log": "configured-docs/F4SE/f4se.log",
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "log-vr",
+      "action": "xse-folder.log",
+      "capabilityIds": [
+        "xse-folder.log"
+      ],
+      "fixtureRefs": [
+        "log-vr"
+      ],
+      "input": {
+        "fixtureRef": "log-vr"
+      },
+      "expected": {
+        "log": "configured-docs/F4SE/f4sevr.log",
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "log-explicit",
+      "action": "xse-folder.log",
+      "capabilityIds": [
+        "xse-folder.log"
+      ],
+      "fixtureRefs": [
+        "log-explicit"
+      ],
+      "input": {
+        "fixtureRef": "log-explicit"
+      },
+      "expected": {
+        "log": "explicit-xse/f4se.log",
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "log-precedence-missing",
+      "action": "xse-folder.log",
+      "capabilityIds": [
+        "xse-folder.log"
+      ],
+      "fixtureRefs": [
+        "log-precedence-missing"
+      ],
+      "input": {
+        "fixtureRef": "log-precedence-missing"
+      },
+      "expected": {
+        "log": null,
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "log-missing",
+      "action": "xse-folder.log",
+      "capabilityIds": [
+        "xse-folder.log"
+      ],
+      "fixtureRefs": [
+        "log-missing"
+      ],
+      "input": {
+        "fixtureRef": "log-missing"
+      },
+      "expected": {
+        "log": null,
+        "error": null
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "log-uninspectable",
+      "action": "xse-folder.log",
+      "capabilityIds": [
+        "xse-folder.log"
+      ],
+      "fixtureRefs": [
+        "log-uninspectable"
+      ],
+      "input": {
+        "fixtureRef": "log-uninspectable"
+      },
+      "expected": {
+        "log": null,
+        "error": "inspect"
       },
       "normalization": {
         "rootRelativePaths": false,

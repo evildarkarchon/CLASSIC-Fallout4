@@ -101,6 +101,10 @@ _Avoid_: backup path string, automatic repair, `.prev` rollback
 The first-party distribution channel through which CLASSIC clients discover, review, install, and roll back newer YAML Data. It is the maintained update path for curated YAML Data, not a generic arbitrary data feed.
 _Avoid_: YAML updater, data update constants, update feed
 
+**Installation Root**:
+The directory of one CLASSIC installation that holds its CLASSIC Data, User Settings, and Local Ignore YAML Data. Every operation for that installation is anchored to the same Installation Root.
+_Avoid_: data root, CLASSIC root, app dir
+
 **User Settings**:
 The complete set of persisted user choices that customize CLASSIC behavior and remember frontend state, including scan and setup preferences, saved paths, limits, and presentation state. They are distinct from curated YAML Data.
 _Avoid_: user config, raw settings keys, frontend settings

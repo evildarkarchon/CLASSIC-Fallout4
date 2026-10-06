@@ -67,6 +67,7 @@ from _classic_native._native.classic_config import (
     load_installed_yaml_data,
     load_main_yaml_version,
     local_ignore_yaml_data_state_label,
+    locate_installation_root,
     persist_game_local_paths,
     set_application_dir,
 )
@@ -131,6 +132,7 @@ __all__ = [
     "load_installed_yaml_data",
     "load_main_yaml_version",
     "local_ignore_yaml_data_state_label",
+    "locate_installation_root",
     "persist_game_local_paths",
     "set_application_dir",
 ]

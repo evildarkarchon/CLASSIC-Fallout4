@@ -23,7 +23,8 @@ classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
 classic-scan-presentation = { path = "../../business-logic/classic-scan-presentation" }
 # The final scan-run contract exposes Installed YAML Data provenance from config core without
 # re-exporting it, so naming those types directly still requires the dependency. Presentation no
-# longer does; the scan-run sibling tests do, to build the fixtures the contract consumes.
+# longer does; the scan-run sibling tests do, to build the fixtures the contract consumes. Config
+# also owns the one Installation Root locator the TUI shares with the GUI and update-core.
 classic-config-core = { path = "../../business-logic/classic-config-core" }
 classic-user-settings-core = { path = "../../business-logic/classic-user-settings-core" }
 # Game-target backup workflow (moved from file I/O in #250).

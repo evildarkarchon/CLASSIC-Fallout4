@@ -8,7 +8,15 @@
   "fixtureRoot": "tests/fixtures/installation_paths_conformance",
   "fixtures": {
     "cached": "cached.json",
-    "cached-spaces": "cached-spaces.json"
+    "cached-spaces": "cached-spaces.json",
+    "locate-executable-folder": "locate-executable-folder.json",
+    "locate-working-directory": "locate-working-directory.json",
+    "locate-executable-parent": "locate-executable-parent.json",
+    "locate-development-build-grandparent": "locate-development-build-grandparent.json",
+    "locate-executable-parent-install": "locate-executable-parent-install.json",
+    "locate-working-directory-install": "locate-working-directory-install.json",
+    "locate-first-match-wins": "locate-first-match-wins.json",
+    "locate-not-found": "locate-not-found.json"
   },
   "capabilities": [
     {
@@ -62,6 +70,17 @@
       ],
       "observationFamilies": [
         "installation-results"
+      ]
+    },
+    {
+      "id": "installation-paths.locate",
+      "operationScoped": true,
+      "rustCrate": "classic-config-core",
+      "rustSymbols": [
+        "locate_installation_root"
+      ],
+      "observationFamilies": [
+        "installation-root"
       ]
     }
   ],
@@ -144,6 +163,234 @@
         "directories": [
           "Docs Folder",
           "Game Folder"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "locate-executable-folder",
+      "action": "installation-paths.locate",
+      "capabilityIds": [
+        "installation-paths.locate"
+      ],
+      "fixtureRefs": [
+        "locate-executable-folder"
+      ],
+      "input": {
+        "fixtureRef": "locate-executable-folder"
+      },
+      "expected": {
+        "installationRoot": "tree/build/bin",
+        "directories": [
+          "tree",
+          "tree/build",
+          "tree/build/bin",
+          "tree/build/bin/CLASSIC Data",
+          "tree/work"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "locate-working-directory",
+      "action": "installation-paths.locate",
+      "capabilityIds": [
+        "installation-paths.locate"
+      ],
+      "fixtureRefs": [
+        "locate-working-directory"
+      ],
+      "input": {
+        "fixtureRef": "locate-working-directory"
+      },
+      "expected": {
+        "installationRoot": "tree/work",
+        "directories": [
+          "tree",
+          "tree/build",
+          "tree/build/bin",
+          "tree/work",
+          "tree/work/CLASSIC Data"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "locate-executable-parent",
+      "action": "installation-paths.locate",
+      "capabilityIds": [
+        "installation-paths.locate"
+      ],
+      "fixtureRefs": [
+        "locate-executable-parent"
+      ],
+      "input": {
+        "fixtureRef": "locate-executable-parent"
+      },
+      "expected": {
+        "installationRoot": "tree/build",
+        "directories": [
+          "tree",
+          "tree/build",
+          "tree/build/CLASSIC Data",
+          "tree/build/bin",
+          "tree/work"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "locate-development-build-grandparent",
+      "action": "installation-paths.locate",
+      "capabilityIds": [
+        "installation-paths.locate"
+      ],
+      "fixtureRefs": [
+        "locate-development-build-grandparent"
+      ],
+      "input": {
+        "fixtureRef": "locate-development-build-grandparent"
+      },
+      "expected": {
+        "installationRoot": "tree",
+        "directories": [
+          "tree",
+          "tree/CLASSIC Data",
+          "tree/build",
+          "tree/build/bin",
+          "tree/work"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "locate-executable-parent-install",
+      "action": "installation-paths.locate",
+      "capabilityIds": [
+        "installation-paths.locate"
+      ],
+      "fixtureRefs": [
+        "locate-executable-parent-install"
+      ],
+      "input": {
+        "fixtureRef": "locate-executable-parent-install"
+      },
+      "expected": {
+        "installationRoot": "tree/build/install",
+        "directories": [
+          "tree",
+          "tree/build",
+          "tree/build/bin",
+          "tree/build/install",
+          "tree/build/install/CLASSIC Data",
+          "tree/work"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "locate-working-directory-install",
+      "action": "installation-paths.locate",
+      "capabilityIds": [
+        "installation-paths.locate"
+      ],
+      "fixtureRefs": [
+        "locate-working-directory-install"
+      ],
+      "input": {
+        "fixtureRef": "locate-working-directory-install"
+      },
+      "expected": {
+        "installationRoot": "tree/work/install",
+        "directories": [
+          "tree",
+          "tree/build",
+          "tree/build/bin",
+          "tree/work",
+          "tree/work/install",
+          "tree/work/install/CLASSIC Data"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "locate-first-match-wins",
+      "action": "installation-paths.locate",
+      "capabilityIds": [
+        "installation-paths.locate"
+      ],
+      "fixtureRefs": [
+        "locate-first-match-wins"
+      ],
+      "input": {
+        "fixtureRef": "locate-first-match-wins"
+      },
+      "expected": {
+        "installationRoot": "tree/work",
+        "directories": [
+          "tree",
+          "tree/CLASSIC Data",
+          "tree/build",
+          "tree/build/bin",
+          "tree/work",
+          "tree/work/CLASSIC Data",
+          "tree/work/install",
+          "tree/work/install/CLASSIC Data"
+        ]
+      },
+      "normalization": {
+        "rootRelativePaths": false,
+        "unorderedPaths": [],
+        "excludedPaths": []
+      }
+    },
+    {
+      "id": "locate-not-found",
+      "action": "installation-paths.locate",
+      "capabilityIds": [
+        "installation-paths.locate"
+      ],
+      "fixtureRefs": [
+        "locate-not-found"
+      ],
+      "input": {
+        "fixtureRef": "locate-not-found"
+      },
+      "expected": {
+        "installationRoot": null,
+        "directories": [
+          "tree",
+          "tree/build",
+          "tree/build/bin",
+          "tree/work"
         ]
       },
       "normalization": {

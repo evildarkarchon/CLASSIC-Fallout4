@@ -293,6 +293,17 @@ Current behavior:
 - appends the Rust XSE resolver's documents folder name for derived paths; Fallout 4 VR uses the shared `F4SE` subfolder even though its XSE acronym is `F4SEVR`
 - returns `""` when the Rust module returns `None`
 
+### `resolve_xse_log_for_scan(yaml_dir_data, game, selected_game_version, configured_docs_root) -> Result<String>`
+
+Forwards to `classic_scangame_core::resolve_xse_log_for_scan()` (#283). The CXX parity row maps it to `ownerModule: scangame`. It replaced the GUI's own `f4se.log`/`f4sevr.log` probe, so no frontend names XSE log files.
+
+Current behavior:
+
+- looks for the log only in the XSE Folder that `resolve_xse_folder_for_scan` would return, under the selected version's Version Registry XSE log name; Fallout 4 VR has its own `f4sevr.log` in the shared `F4SE` folder
+- returns the existing log path, or `""` when no XSE Folder resolves or the folder or log is missing
+- an empty `configured_docs_root` means none
+- throws `rust::Error` (message `cannot inspect XSE log ...`) when the log cannot be inspected for a reason other than absence; the GUI logs it and continues without the hint
+
 Bridge narrowing:
 
 - `configured_docs_root = ""` is treated as `None`
