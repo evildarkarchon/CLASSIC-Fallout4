@@ -1,13 +1,8 @@
 #!/usr/bin/env node
 
 import {basename} from "node:path";
-import type {CliOptions, SupportedGame} from "./types";
-import {SUPPORTED_GAMES} from "./types";
+import type {CliOptions} from "./types";
 import {getSupportedGameVersions, runCli} from "./run-scan";
-
-function isSupportedGame(value: string): value is SupportedGame {
-    return (SUPPORTED_GAMES as readonly string[]).includes(value);
-}
 
 function printHelp(): void {
     const gameVersionModes = getSupportedGameVersions("Fallout4", __dirname).join(", ");
@@ -15,7 +10,7 @@ function printHelp(): void {
     console.log("CLASSIC - Crash Log Auto Scanner & Setup Integrity Checker");
     console.log("");
     console.log("Options:");
-    console.log("  --game <name>             Game to scan (Fallout4)");
+    console.log("  --game <name>             Game to scan (default: the managed game)");
     console.log(`  --game-version <mode>     ${gameVersionModes}`);
     console.log("  --scan-path <path>        Custom crash log directory");
     console.log("  --fcx-mode                Enable FCX enhanced analysis");
@@ -43,8 +38,8 @@ function requireValue(flag: string, value: string | undefined): string {
 }
 
 function parseArgs(argv: string[]): CliOptions {
+    // No default game: an absent `--game` lets the launch scan the managed game.
     const options: CliOptions = {
-        game: "Fallout4",
         version: false,
         json: false,
     };
@@ -59,11 +54,8 @@ function parseArgs(argv: string[]): CliOptions {
                 process.exit(0);
                 break;
             case "--game": {
-                const value = requireValue(argument, argv[index + 1]);
-                if (!isSupportedGame(value)) {
-                    throw new Error(`--game must be one of: ${SUPPORTED_GAMES.join(", ")}`);
-                }
-                options.game = value;
+                // Validated by Crash Log Scan Launch, which owns the game vocabulary.
+                options.game = requireValue(argument, argv[index + 1]);
                 index += 1;
                 break;
             }
