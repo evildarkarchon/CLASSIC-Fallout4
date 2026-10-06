@@ -1,11 +1,14 @@
-import type {JsInstalledYamlDataRunData} from "../index.js";
+import type {JsInstalledYamlDataRunData, JsScanRunLaunchDiagnostic} from "../index.js";
 
-export const SUPPORTED_GAMES = ["Fallout4"] as const;
-
-export type SupportedGame = (typeof SUPPORTED_GAMES)[number];
+/** One launch diagnostic as the JSON summary carries it: Rust's kind, code and message. */
+export type JsonLaunchDiagnostic = Pick<JsScanRunLaunchDiagnostic, "kind" | "code" | "message">;
 
 export type CliOptions = {
-    game: SupportedGame;
+    /**
+     * The `--game` token, passed to Crash Log Scan Launch as a `JsGameId` override.
+     * Absent means the managed game; the binding rejects a token it does not know.
+     */
+    game?: string;
     gameVersion?: string;
     scanPath?: string;
     fcxMode?: boolean;
@@ -39,6 +42,8 @@ export type JsonSummary = {
     scanErrors?: number;
     durationSeconds?: number;
     installedYamlData?: JsInstalledYamlDataRunData;
+    /** Crash Log Scan Launch's typed diagnostics, in the order the launch produced them. */
+    launchDiagnostics?: JsonLaunchDiagnostic[];
     version?: string;
     message?: string;
 };
