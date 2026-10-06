@@ -83,7 +83,7 @@ Persistent settings decision:
 
 Important current-code warning:
 
-- GUI and scan intake currently use nested `CLASSIC_Settings.*` keys through `classic-settings-core::YamlOperations`.
+- GUI and scan intake currently use nested `CLASSIC_Settings.*` keys through `classic_shared_core::yaml::YamlOperations`.
 - `classic-config-core::ClassicConfig` currently uses flat keys such as `move_unsolved_logs` and does not read the nested `CLASSIC_Settings.*` settings shape used by active GUI/intake paths.
 - Do not add a third independent settings interpretation. Either add a small shared helper for the nested key, or deliberately dual-read/dual-write where the existing interface requires it. Document the choice.
 

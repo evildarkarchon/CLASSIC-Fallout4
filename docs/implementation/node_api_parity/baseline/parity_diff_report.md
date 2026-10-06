@@ -1,6 +1,6 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-10-06T02:14:58.868892+00:00`
+- Generated: `2026-10-06T02:23:32.887012+00:00`
 - Tier-1 contract rows: **937**
 - Tier-1 matched: **920**
 - Tier-1 missing Rust: **0**
@@ -774,28 +774,28 @@
 | `scangame.unpacked@rust` | `scangame` | `classic-scangame-core` | `unpacked@rust` | `None` | `matched` |
 | `scangame.wrye@rust` | `scangame` | `classic-scangame-core` | `wrye@rust` | `None` | `matched` |
 | `scangame.xse@rust` | `scangame` | `classic-scangame-core` | `xse@rust` | `None` | `matched` |
-| `settings.SettingsError@rust` | `settings` | `classic-settings-core` | `SettingsError@rust` | `None` | `matched` |
-| `settings.SettingsSource@rust` | `settings` | `classic-settings-core` | `SettingsSource@rust` | `None` | `matched` |
-| `settings.Yaml@rust` | `settings` | `classic-settings-core` | `Yaml@rust` | `None` | `matched` |
-| `settings.cache_keys@rust` | `settings` | `classic-settings-core` | `cache_keys@rust` | `None` | `matched` |
-| `settings.cache_size@rust` | `settings` | `classic-settings-core` | `cache_size@rust` | `None` | `matched` |
-| `settings.cache_stats@rust` | `settings` | `classic-settings-core` | `cache_stats@rust` | `None` | `matched` |
-| `settings.clear_cache@rust` | `settings` | `classic-settings-core` | `clear_cache@rust` | `None` | `matched` |
-| `settings.get_cached@rust` | `settings` | `classic-settings-core` | `get_cached@rust` | `None` | `matched` |
-| `settings.invalidate@rust` | `settings` | `classic-settings-core` | `invalidate@rust` | `None` | `matched` |
-| `settings.is_cached@rust` | `settings` | `classic-settings-core` | `is_cached@rust` | `None` | `matched` |
-| `settings.load_settings_async@rust` | `settings` | `classic-settings-core` | `load_settings_async@rust` | `None` | `matched` |
-| `settings.load_settings_sync@rust` | `settings` | `classic-settings-core` | `load_settings_sync@rust` | `None` | `matched` |
-| `settings.load_yaml_async@rust` | `settings` | `classic-settings-core` | `load_yaml_async@rust` | `None` | `matched` |
-| `settings.load_yaml_batch_async@rust` | `settings` | `classic-settings-core` | `load_yaml_batch_async@rust` | `None` | `matched` |
-| `settings.load_yaml_batch_sync@rust` | `settings` | `classic-settings-core` | `load_yaml_batch_sync@rust` | `None` | `matched` |
-| `settings.load_yaml_merged_async@rust` | `settings` | `classic-settings-core` | `load_yaml_merged_async@rust` | `None` | `matched` |
-| `settings.load_yaml_merged_sync@rust` | `settings` | `classic-settings-core` | `load_yaml_merged_sync@rust` | `None` | `matched` |
-| `settings.load_yaml_sync@rust` | `settings` | `classic-settings-core` | `load_yaml_sync@rust` | `None` | `matched` |
-| `settings.merge_yaml_documents@rust` | `settings` | `classic-settings-core` | `merge_yaml_documents@rust` | `None` | `matched` |
-| `settings.parse_yaml_content@rust` | `settings` | `classic-settings-core` | `parse_yaml_content@rust` | `None` | `matched` |
-| `settings.reset_cache_stats@rust` | `settings` | `classic-settings-core` | `reset_cache_stats@rust` | `None` | `matched` |
-| `settings.validators@rust` | `settings` | `classic-settings-core` | `validators@rust` | `None` | `matched` |
+| `settings.SettingsError@rust` | `settings` | `classic-shared-core` | `SettingsError@rust` | `None` | `matched` |
+| `settings.SettingsSource@rust` | `settings` | `classic-shared-core` | `SettingsSource@rust` | `None` | `matched` |
+| `settings.Yaml@rust` | `settings` | `classic-shared-core` | `Yaml@rust` | `None` | `matched` |
+| `settings.cache_keys@rust` | `settings` | `classic-shared-core` | `cache_keys@rust` | `None` | `matched` |
+| `settings.cache_size@rust` | `settings` | `classic-shared-core` | `cache_size@rust` | `None` | `matched` |
+| `settings.cache_stats@rust` | `settings` | `classic-shared-core` | `cache_stats@rust` | `None` | `matched` |
+| `settings.clear_cache@rust` | `settings` | `classic-shared-core` | `clear_cache@rust` | `None` | `matched` |
+| `settings.get_cached@rust` | `settings` | `classic-shared-core` | `get_cached@rust` | `None` | `matched` |
+| `settings.invalidate@rust` | `settings` | `classic-shared-core` | `invalidate@rust` | `None` | `matched` |
+| `settings.is_cached@rust` | `settings` | `classic-shared-core` | `is_cached@rust` | `None` | `matched` |
+| `settings.load_settings_async@rust` | `settings` | `classic-shared-core` | `load_settings_async@rust` | `None` | `matched` |
+| `settings.load_settings_sync@rust` | `settings` | `classic-shared-core` | `load_settings_sync@rust` | `None` | `matched` |
+| `settings.load_yaml_async@rust` | `settings` | `classic-shared-core` | `load_yaml_async@rust` | `None` | `matched` |
+| `settings.load_yaml_batch_async@rust` | `settings` | `classic-shared-core` | `load_yaml_batch_async@rust` | `None` | `matched` |
+| `settings.load_yaml_batch_sync@rust` | `settings` | `classic-shared-core` | `load_yaml_batch_sync@rust` | `None` | `matched` |
+| `settings.load_yaml_merged_async@rust` | `settings` | `classic-shared-core` | `load_yaml_merged_async@rust` | `None` | `matched` |
+| `settings.load_yaml_merged_sync@rust` | `settings` | `classic-shared-core` | `load_yaml_merged_sync@rust` | `None` | `matched` |
+| `settings.load_yaml_sync@rust` | `settings` | `classic-shared-core` | `load_yaml_sync@rust` | `None` | `matched` |
+| `settings.merge_yaml_documents@rust` | `settings` | `classic-shared-core` | `merge_yaml_documents@rust` | `None` | `matched` |
+| `settings.parse_yaml_content@rust` | `settings` | `classic-shared-core` | `parse_yaml_content@rust` | `None` | `matched` |
+| `settings.reset_cache_stats@rust` | `settings` | `classic-shared-core` | `reset_cache_stats@rust` | `None` | `matched` |
+| `settings.validators@rust` | `settings` | `classic-shared-core` | `validators@rust` | `None` | `matched` |
 | `shared.ClassicError@rust` | `shared` | `classic-shared-core` | `ClassicError@rust` | `None` | `matched` |
 | `shared.ClassicResult@rust` | `shared` | `classic-shared-core` | `ClassicResult@rust` | `None` | `matched` |
 | `shared.IntoClassicError@rust` | `shared` | `classic-shared-core` | `IntoClassicError@rust` | `None` | `matched` |
@@ -845,10 +845,10 @@
 | `xse.loader_name@rust` | `xse` | `classic-xse-core` | `loader_name@rust` | `None` | `matched` |
 | `xse.loader_path@rust` | `xse` | `classic-xse-core` | `loader_path@rust` | `None` | `matched` |
 | `xse.new@rust` | `xse` | `classic-shared-core` | `new@rust` | `None` | `matched` |
-| `yaml.YamlError@rust` | `settings` | `classic-settings-core` | `YamlError@rust` | `None` | `matched` |
-| `yaml.YamlOperations@rust` | `settings` | `classic-settings-core` | `YamlOperations@rust` | `None` | `matched` |
-| `yaml.cache_stats@rust` | `settings` | `classic-settings-core` | `cache_stats@rust` | `None` | `matched` |
-| `yaml.clear_cache@rust` | `settings` | `classic-settings-core` | `clear_cache@rust` | `None` | `matched` |
+| `yaml.YamlError@rust` | `settings` | `classic-shared-core` | `YamlError@rust` | `None` | `matched` |
+| `yaml.YamlOperations@rust` | `settings` | `classic-shared-core` | `YamlOperations@rust` | `None` | `matched` |
+| `yaml.cache_stats@rust` | `settings` | `classic-shared-core` | `cache_stats@rust` | `None` | `matched` |
+| `yaml.clear_cache@rust` | `settings` | `classic-shared-core` | `clear_cache@rust` | `None` | `matched` |
 | `yaml.dump_yaml@rust` | `settings` | `classic-shared-core` | `dump_yaml@rust` | `None` | `matched` |
 | `yaml.get_cache_stats@rust` | `settings` | `classic-shared-core` | `get_cache_stats@rust` | `None` | `matched` |
 | `yaml.get_hashmap_value@rust` | `settings` | `classic-shared-core` | `get_hashmap_value@rust` | `None` | `matched` |
@@ -860,10 +860,10 @@
 | `yaml.is_cache_enabled@rust` | `settings` | `classic-shared-core` | `is_cache_enabled@rust` | `None` | `matched` |
 | `yaml.load_yaml_file@rust` | `settings` | `classic-shared-core` | `load_yaml_file@rust` | `None` | `matched` |
 | `yaml.load_yaml_files_batch@rust` | `settings` | `classic-shared-core` | `load_yaml_files_batch@rust` | `None` | `matched` |
-| `yaml.merge_keys@rust` | `settings` | `classic-settings-core` | `merge_keys@rust` | `None` | `matched` |
+| `yaml.merge_keys@rust` | `settings` | `classic-shared-core` | `merge_keys@rust` | `None` | `matched` |
 | `yaml.new@rust` | `settings` | `classic-shared-core` | `new@rust` | `None` | `matched` |
 | `yaml.parse_yaml@rust` | `settings` | `classic-shared-core` | `parse_yaml@rust` | `None` | `matched` |
-| `yaml.reset_cache_stats@rust` | `settings` | `classic-settings-core` | `reset_cache_stats@rust` | `None` | `matched` |
+| `yaml.reset_cache_stats@rust` | `settings` | `classic-shared-core` | `reset_cache_stats@rust` | `None` | `matched` |
 | `yaml.save_yaml_file@rust` | `settings` | `classic-shared-core` | `save_yaml_file@rust` | `None` | `matched` |
 | `yaml.set_cache_enabled@rust` | `settings` | `classic-shared-core` | `set_cache_enabled@rust` | `None` | `matched` |
 | `yaml.set_setting@rust` | `settings` | `classic-shared-core` | `set_setting@rust` | `None` | `matched` |

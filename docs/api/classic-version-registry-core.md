@@ -367,7 +367,7 @@ Variants:
 
 - `InvalidVersion(String)`
 - `NotFound(String)`
-- `YamlError(classic_settings_core::YamlError)` (the `YamlError` type was relocated from the former ``yaml-core`` into `classic-settings-core` during v9.1.0 Phase 1; it is now owned by `classic_shared_core::yaml` and re-exported under the same `classic_settings_core` path)
+- `YamlError(classic_shared_core::yaml::YamlError)` (the `YamlError` type was relocated from the former ``yaml-core`` into `classic-settings-core` during v9.1.0 Phase 1 and is now owned by `classic_shared_core::yaml`; the `classic_settings_core` path ended when that crate retired in issue #257)
 - `NotInitialized`
 - `InvalidConfig(String)`
 
@@ -389,7 +389,7 @@ This crate is synchronous.
 
 - It does not expose async APIs.
 - It does not construct a Tokio runtime.
-- Registry initialization uses synchronous YAML loading through [`classic-settings-core`](../../business-logic/classic-settings-core) (historical note: the former `classic-yaml-core` crate was absorbed into `classic-settings-core` in v9.1.0 Phase 1).
+- Registry initialization uses synchronous YAML loading through [`classic_shared_core::yaml`](classic-shared-core.md#generic-yaml-yaml) (historical note: that surface came from the former `classic-yaml-core` crate by way of the now-retired `classic-settings-core`).
 - This fits the repo rule that runtime ownership stays in shared higher layers rather than inside business-logic crates.
 
 Contributor rule: if you extend this crate, keep it runtime-agnostic and compatible with the shared-runtime assumptions used elsewhere in CLASSIC.
@@ -398,7 +398,7 @@ Contributor rule: if you extend this crate, keep it runtime-agnostic and compati
 
 ## Related Crates And Integration Points
 
-- [`classic-settings-core`](../../business-logic/classic-settings-core) - YAML loading and extraction used during registry initialization (historical note: this owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
+- [`classic-shared-core`](classic-shared-core.md#generic-yaml-yaml) - YAML loading and extraction (`YamlOperations`) used during registry initialization (historical note: formerly reached through `classic-settings-core`, which absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1 and retired in issue #257)
 - [`classic-config-core`](../../business-logic/classic-config-core) - resolves registry-backed version metadata for config building and fallback values
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - consumes registry-backed version data when building analysis configuration
 - [`classic-node`](../../node-bindings/classic-node) - exposes registry lookups and snapshots to JavaScript/TypeScript

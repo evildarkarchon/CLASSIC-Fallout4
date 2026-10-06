@@ -40,6 +40,12 @@ def test_retired_classic_perf_core_is_not_tracked() -> None:
     assert "classic-perf-core" not in gb.RUST_OWNER_BY_CRATE
 
 
+def test_retired_classic_settings_core_is_not_tracked() -> None:
+    """#257 retired classic-settings-core; generic YAML rows are owned by classic-shared-core."""
+    assert "classic-settings-core" not in gb.RUST_TARGET_CRATES
+    assert "classic-settings-core" not in gb.RUST_OWNER_BY_CRATE
+
+
 def test_retired_classic_version_core_is_not_tracked() -> None:
     """#258 retired the classic-version-core facade; loose version and PE rows
     are owned by classic-shared-core and known-version rows by

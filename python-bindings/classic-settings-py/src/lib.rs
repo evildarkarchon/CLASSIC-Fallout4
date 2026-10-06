@@ -4,7 +4,8 @@
 //! (sync + async loading, cache management, validators) AND the YAML operations
 //! class that was formerly in `classic-yaml-py`. The two crates were merged in
 //! plan 01-02 (D-05/D-06) after `classic-yaml-core` was absorbed into
-//! `classic-settings-core` in plan 01-01.
+//! `classic-settings-core` in plan 01-01. That facade crate has since retired
+//! (#257); this binding keeps its `classic_settings` module name.
 //!
 //! The logical-key cache, loaders, merge-key helper, validators,
 //! `YamlOperations`, and the path/mtime-aware YAML-file cache are owned by

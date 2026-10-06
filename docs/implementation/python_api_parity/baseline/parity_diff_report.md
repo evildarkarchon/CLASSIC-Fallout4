@@ -1,6 +1,6 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-10-06T02:14:57.307540+00:00`
+- Generated: `2026-10-06T02:23:33.706875+00:00`
 - Tier-1 contract rows: **1237**
 - Tier-1 matched: **1235**
 - Tier-1 missing Rust: **0**
@@ -969,11 +969,11 @@
 | `scanlog.version.CrashgenVersion.__init__` | `scanlog` | `classic-scanlog-core` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion.__init__` | `matched` |
 | `scanlog.version.CrashgenVersion.to_tuple` | `scanlog` | `classic-scanlog-core` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion.to_tuple` | `matched` |
 | `scanlog.version.crashgen_version_gen@rust` | `scanlog` | `classic-scanlog-core` | `crashgen_version_gen` | `classic_scanlog.parse_crashgen_version` | `matched` |
-| `settings.lib.CacheStats@rust` | `settings` | `classic-settings-core` | `CacheStats` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.CacheStats@rust` | `settings` | `classic-shared-core` | `CacheStats` | `classic_settings.SettingsCacheStats` | `matched` |
 | `settings.lib.SettingsCacheStats` | `settings` | `None` | `None` | `classic_settings.SettingsCacheStats` | `unmapped` |
-| `settings.lib.SettingsError@rust` | `settings` | `classic-settings-core` | `SettingsError` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.SettingsSource@rust` | `settings` | `classic-settings-core` | `SettingsSource` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.Yaml@rust` | `settings` | `classic-settings-core` | `Yaml` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.SettingsError@rust` | `settings` | `classic-shared-core` | `SettingsError` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.SettingsSource@rust` | `settings` | `classic-shared-core` | `SettingsSource` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.Yaml@rust` | `settings` | `classic-shared-core` | `Yaml` | `classic_settings.SettingsCacheStats` | `matched` |
 | `settings.lib.cache_keys` | `settings` | `classic-shared-core` | `cache_keys` | `classic_settings.cache_keys` | `matched` |
 | `settings.lib.cache_size` | `settings` | `classic-shared-core` | `cache_size` | `classic_settings.cache_size` | `matched` |
 | `settings.lib.cache_stats` | `settings` | `classic-shared-core` | `cache_stats` | `classic_settings.cache_stats` | `matched` |
@@ -986,14 +986,14 @@
 | `settings.lib.load_batch_sync` | `settings` | `classic-shared-core` | `load_batch_sync` | `classic_settings.load_batch_sync` | `matched` |
 | `settings.lib.load_settings_async` | `settings` | `classic-shared-core` | `load_settings_async` | `classic_settings.load_settings_async` | `matched` |
 | `settings.lib.load_settings_sync` | `settings` | `classic-shared-core` | `load_settings_sync` | `classic_settings.load_settings_sync` | `matched` |
-| `settings.lib.load_yaml_async@rust` | `settings` | `classic-settings-core` | `load_yaml_async` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.load_yaml_batch_async@rust` | `settings` | `classic-settings-core` | `load_yaml_batch_async` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.load_yaml_batch_sync@rust` | `settings` | `classic-settings-core` | `load_yaml_batch_sync` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.load_yaml_merged_async@rust` | `settings` | `classic-settings-core` | `load_yaml_merged_async` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.load_yaml_merged_sync@rust` | `settings` | `classic-settings-core` | `load_yaml_merged_sync` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.load_yaml_sync@rust` | `settings` | `classic-settings-core` | `load_yaml_sync` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.merge_yaml_documents@rust` | `settings` | `classic-settings-core` | `merge_yaml_documents` | `classic_settings.SettingsCacheStats` | `matched` |
-| `settings.lib.parse_yaml_content@rust` | `settings` | `classic-settings-core` | `parse_yaml_content` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.load_yaml_async@rust` | `settings` | `classic-shared-core` | `load_yaml_async` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.load_yaml_batch_async@rust` | `settings` | `classic-shared-core` | `load_yaml_batch_async` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.load_yaml_batch_sync@rust` | `settings` | `classic-shared-core` | `load_yaml_batch_sync` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.load_yaml_merged_async@rust` | `settings` | `classic-shared-core` | `load_yaml_merged_async` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.load_yaml_merged_sync@rust` | `settings` | `classic-shared-core` | `load_yaml_merged_sync` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.load_yaml_sync@rust` | `settings` | `classic-shared-core` | `load_yaml_sync` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.merge_yaml_documents@rust` | `settings` | `classic-shared-core` | `merge_yaml_documents` | `classic_settings.SettingsCacheStats` | `matched` |
+| `settings.lib.parse_yaml_content@rust` | `settings` | `classic-shared-core` | `parse_yaml_content` | `classic_settings.SettingsCacheStats` | `matched` |
 | `settings.lib.reset_cache_stats` | `settings` | `classic-shared-core` | `reset_cache_stats` | `classic_settings.reset_cache_stats` | `matched` |
 | `settings.lib.validate_setting_value` | `settings` | `classic-shared-core` | `validate_setting_value` | `classic_settings.validate_setting_value` | `matched` |
 | `shared.path.PathHandler` | `shared` | `classic-shared-core` | `PathHandler` | `classic_shared.PathHandler` | `matched` |
@@ -1196,7 +1196,7 @@
 | `xse.lib.loader_path@rust` | `xse` | `classic-xse-core` | `loader_path` | `classic_xse.XseInfo` | `matched` |
 | `xse.lib.parse_xse_type` | `xse` | `classic-xse-core` | `XseType` | `classic_xse.parse_xse_type` | `matched` |
 | `yaml.lib.YamlCacheStats` | `settings` | `classic-shared-core` | `YamlOperations` | `classic_settings.YamlCacheStats` | `matched` |
-| `yaml.lib.YamlError@rust` | `settings` | `classic-settings-core` | `YamlError` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.YamlError@rust` | `settings` | `classic-shared-core` | `YamlError` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.YamlOperations` | `settings` | `classic-shared-core` | `YamlOperations` | `classic_settings.YamlOperations` | `matched` |
 | `yaml.lib.YamlOperations.__init__` | `settings` | `classic-shared-core` | `YamlOperations` | `classic_settings.YamlOperations.__init__` | `matched` |
 | `yaml.lib.YamlOperations.clear_cache` | `settings` | `classic-shared-core` | `YamlOperations` | `classic_settings.YamlOperations.clear_cache` | `matched` |
@@ -1219,7 +1219,7 @@
 | `yaml.lib.is_cache_enabled@rust` | `settings` | `classic-shared-core` | `is_cache_enabled` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.load_yaml_file@rust` | `settings` | `classic-shared-core` | `load_yaml_file` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.load_yaml_files_batch@rust` | `settings` | `classic-shared-core` | `load_yaml_files_batch` | `classic_settings.YamlCacheStats` | `matched` |
-| `yaml.lib.merge_keys@rust` | `settings` | `classic-settings-core` | `merge_keys` | `classic_settings.YamlCacheStats` | `matched` |
+| `yaml.lib.merge_keys@rust` | `settings` | `classic-shared-core` | `merge_keys` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.parse_yaml@rust` | `settings` | `classic-shared-core` | `parse_yaml` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.save_yaml_file@rust` | `settings` | `classic-shared-core` | `save_yaml_file` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.set_cache_enabled@rust` | `settings` | `classic-shared-core` | `set_cache_enabled` | `classic_settings.YamlCacheStats` | `matched` |
@@ -1263,7 +1263,6 @@
 | `file_io` | 0 |
 | `scangame` | 0 |
 | `registry` | 0 |
-| `settings` | 0 |
 | `message` | 0 |
 | `path` | 0 |
 | `resource` | 0 |

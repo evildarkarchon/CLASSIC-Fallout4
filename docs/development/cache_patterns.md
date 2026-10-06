@@ -17,7 +17,7 @@ This document describes the different caching patterns used in the CLASSIC Rust 
 
 ### 1. File Mod-Time Cache (YAML)
 
-**Location**: `foundation/classic-shared-core/src/yaml/file_cache.rs` and `operations.rs` (moved from `classic-settings-core`, which absorbed the former `classic-yaml-core` in v9.1.0 Phase 1 and still re-exports it)
+**Location**: `foundation/classic-shared-core/src/yaml/file_cache.rs` and `operations.rs` (moved from `classic-settings-core`, which absorbed the former `classic-yaml-core` in v9.1.0 Phase 1 and retired in #257)
 
 **Scopes**: the store lives behind a `YamlFileCacheScope` handle. `YamlOperations::new()` and the free functions use the process default scope; `YamlOperations::with_cache_scope(YamlFileCacheScope::new_isolated())` gives a caller (such as one Python facade) its own entries and counters. The String-Key Cache below has the matching `LogicalKeyCacheScope`.
 
@@ -60,7 +60,7 @@ if let Some(cached) = CACHE.get(&path) {
 
 ### 2. String-Key Cache (Settings)
 
-**Location**: `foundation/classic-shared-core/src/yaml/logical_key_cache.rs` (moved from `classic-settings-core`, which still re-exports it)
+**Location**: `foundation/classic-shared-core/src/yaml/logical_key_cache.rs` (moved from `classic-settings-core`, since retired in #257)
 
 **Purpose**: Cache loaded YAML settings with logical names for fast lookup.
 

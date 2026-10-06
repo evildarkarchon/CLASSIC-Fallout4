@@ -52,7 +52,7 @@
     "should_trigger": false
   },
   {
-    "query": "A Rust test is failing in `business-logic/classic-settings-core`, and I want you to use a systematic debugging process to find the root cause before changing anything.",
+    "query": "A Rust test is failing in `business-logic/classic-config-core`, and I want you to use a systematic debugging process to find the root cause before changing anything.",
     "should_trigger": false
   },
   {

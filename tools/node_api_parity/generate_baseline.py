@@ -37,7 +37,6 @@ RUST_TARGET_CRATES: dict[str, str] = {
     "classic-version-registry-core": "business-logic/classic-version-registry-core/src/lib.rs",
     "classic-file-io-core": "business-logic/classic-file-io-core/src/lib.rs",
     "classic-path-core": "business-logic/classic-path-core/src/lib.rs",
-    "classic-settings-core": "business-logic/classic-settings-core/src/lib.rs",
     "classic-message-core": "business-logic/classic-message-core/src/lib.rs",
     "classic-registry-core": "business-logic/classic-registry-core/src/lib.rs",
     "classic-shared-core": "foundation/classic-shared-core/src/lib.rs",
@@ -72,7 +71,6 @@ RUST_OWNER_BY_CRATE: dict[str, str] = {
     # Foundation/aux crates kept as distinct owners per Phase 3 A5.
     "classic-file-io-core": "file_io",
     "classic-path-core": "path",
-    "classic-settings-core": "settings",
     "classic-message-core": "message",
     "classic-registry-core": "registry",
     "classic-shared-core": "shared",

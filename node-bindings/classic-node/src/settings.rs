@@ -10,7 +10,8 @@
 //! `yaml` NAPI module into `settings` per plan 01-02 D-08: after plan 01-01
 //! absorbed `classic-yaml-core` into `classic-settings-core` the two NAPI
 //! modules were redundant. All functions continue to be exported from
-//! `index.js` under the same names.
+//! `index.js` under the same names. (`classic-settings-core` itself has since
+//! retired, #257; this module keeps its `settings` name.)
 //!
 //! ## API Overview
 //!

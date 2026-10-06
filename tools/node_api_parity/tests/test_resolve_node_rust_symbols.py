@@ -24,7 +24,7 @@ SURFACE = {
         }
     ],
     "YamlOperations": [
-        {"symbol": "YamlOperations", "kind": "struct", "crate": "classic-settings-core"}
+        {"symbol": "YamlOperations", "kind": "struct", "crate": "classic-shared-core"}
     ],
     "XseType": [{"symbol": "XseType", "kind": "enum", "crate": "classic-xse-core"}],
     "GameId": [{"symbol": "GameId", "kind": "enum", "crate": "classic-shared-core"}],
